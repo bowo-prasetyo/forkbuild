@@ -1,3 +1,10 @@
+/*
+Owns
+
+THREE.Scene
+
+Provides
+*/
 
 sceneManager.add(object);
 
