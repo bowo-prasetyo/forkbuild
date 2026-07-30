@@ -1,1 +1,15 @@
+/*
+Responsible for
 
+  Ambient Light
+
+  Directional Light
+
+Later
+
+  Sun
+  
+  Night
+  
+  Shadows
+*/
