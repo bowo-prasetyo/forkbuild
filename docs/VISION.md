@@ -1,0 +1,1 @@
+ForkBuild is an open construction platform where digital creations can be built, forked, shared, and preserved across decentralized publishing systems. The project aims to define an open protocol for collaborative world-building rather than a game tied to any single platform or blockchain.
