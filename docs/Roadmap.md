@@ -3,10 +3,11 @@
 0.1.3  Core Domain Model             (done)
 0.1.4  WorldRenderer                 (done)
 0.1.5  Brick Registry & Definitions  (done)
-0.1.6  Event System
-0.1.7  Selection System
-0.1.8  Camera Controls
-0.1.9  Brick Placement
-0.1.10 Serialization
-0.1.11 Local Storage
-0.1.12 Publisher
+0.1.6  Event System & Incremental Renderer  (done)
+0.1.7  Camera Controller
+0.1.8  Selection System
+0.1.9  Placement Tool
+0.1.10 Command System
+0.1.11 Serializer
+0.1.12 Local Storage
+0.1.13 Publisher Adapter
