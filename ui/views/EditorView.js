@@ -1,3 +1,4 @@
+import { CreateEventBusUseCase } from '../../application/CreateEventBusUseCase.js';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateDemoWorldUseCase } from '../../application/CreateDemoWorldUseCase.js';
 import { RenderWorldUseCase } from '../../application/RenderWorldUseCase.js';
@@ -6,8 +7,7 @@ import Sidebar from '../components/Sidebar.js';
 
 // EditorView is intentionally dumb: it never imports core/ or renderer/
 // directly. It asks application/ use cases to do the work and only keeps
-// the handle they return, so it knows what to clean up on unmount. A future
-// desktop client could reuse these same use cases without Vue at all.
+// the handle they return, so it knows what to clean up on unmount.
 export default {
     name: 'EditorView',
     components: { Toolbar, Sidebar },
@@ -21,9 +21,14 @@ export default {
         </div>
     `,
     mounted() {
+        const eventBus = new CreateEventBusUseCase().execute();
         const registry = new CreateBrickRegistryUseCase().execute();
-        const world = new CreateDemoWorldUseCase().execute();
-        this._session = new RenderWorldUseCase().execute(this.$refs.viewport, world, registry);
+
+        // Wire rendering first, so it's already subscribed before the world
+        // gets populated below — the demo brick appears through the exact
+        // same BuildingAdded event pipeline as everything placed after it.
+        this._session = new RenderWorldUseCase().execute(this.$refs.viewport, eventBus, registry);
+        this._world = new CreateDemoWorldUseCase().execute(eventBus);
     },
     beforeUnmount() {
         this._session.dispose();
