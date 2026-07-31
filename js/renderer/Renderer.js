@@ -30,8 +30,6 @@ export class Renderer {
         this._lights = new Lights(this._sceneManager);
         this._grid = new GridHelper(this._sceneManager);
 
-        this._diagnosticCube = null;
-
         this._animationLoop = new AnimationLoop(() => this._renderFrame());
 
         this._onResize = this._onResize.bind(this);
@@ -67,32 +65,6 @@ export class Renderer {
         window.removeEventListener('resize', this._onResize);
         this._container.removeChild(this._webglRenderer.domElement);
         this._webglRenderer.dispose();
-    }
-
-    // TEMPORARY diagnostic object proving the renderer pipeline works end to
-    // end (scene, camera, lights, grid, render loop all wired correctly).
-    // Not game data — just a self-test. Will be removed once the World model
-    // (Step 4) supplies real content for the renderer to display instead.
-    addDiagnosticCube() {
-        if (this._diagnosticCube) {
-            return;
-        }
-
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshStandardMaterial({ color: 0x4caf7d });
-        const cube = new THREE.Mesh(geometry, material);
-        cube.position.y = 0.5;
-
-        this._diagnosticCube = cube;
-        this.add(cube);
-    }
-
-    removeDiagnosticCube() {
-        if (!this._diagnosticCube) {
-            return;
-        }
-        this.remove(this._diagnosticCube);
-        this._diagnosticCube = null;
     }
 
     _renderFrame() {
