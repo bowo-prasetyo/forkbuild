@@ -1,9 +1,13 @@
 import { Position } from './Position.js';
 
+// A Brick is a placement: which definition, where, and how rotated. It
+// never carries geometry — that lives behind BrickRegistry, looked up by
+// definitionId. This keeps World serializable as plain data and keeps the
+// renderer free to change how a "core:cube" looks without touching World.
 export class Brick {
-    constructor({ id, type, position = new Position(), rotation = 0 }) {
+    constructor({ id, definitionId, position = new Position(), rotation = 0 }) {
         this._id = id;
-        this._type = type;
+        this._definitionId = definitionId;
         this._position = position;
         this._rotation = rotation;
     }
@@ -12,8 +16,8 @@ export class Brick {
         return this._id;
     }
 
-    get type() {
-        return this._type;
+    get definitionId() {
+        return this._definitionId;
     }
 
     get position() {
@@ -35,7 +39,7 @@ export class Brick {
     clone() {
         return new Brick({
             id: this._id,
-            type: this._type,
+            definitionId: this._definitionId,
             position: this._position.clone(),
             rotation: this._rotation
         });
@@ -44,7 +48,7 @@ export class Brick {
     toJSON() {
         return {
             id: this._id,
-            type: this._type,
+            definitionId: this._definitionId,
             position: this._position.toJSON(),
             rotation: this._rotation
         };
@@ -53,7 +57,7 @@ export class Brick {
     static fromJSON(json) {
         return new Brick({
             id: json.id,
-            type: json.type,
+            definitionId: json.definitionId,
             position: Position.fromJSON(json.position),
             rotation: json.rotation
         });
