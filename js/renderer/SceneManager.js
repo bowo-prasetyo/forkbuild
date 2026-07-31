@@ -1,13 +1,19 @@
-/*
-Owns
+import * as THREE from 'three';
 
-THREE.Scene
+export class SceneManager {
+    constructor() {
+        this._scene = new THREE.Scene();
+    }
 
-Provides
-*/
+    get scene() {
+        return this._scene;
+    }
 
-sceneManager.add(object);
+    add(object) {
+        this._scene.add(object);
+    }
 
-sceneManager.remove(object);
-
-sceneManager.scene;
+    remove(object) {
+        this._scene.remove(object);
+    }
+}
