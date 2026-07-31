@@ -1,5 +1,11 @@
 import { Brick } from './Brick.js';
 
+// Building owns its bricks. Its addBrick()/removeBrick() are plain
+// mutations with no event publishing — World.addBrickToBuilding() /
+// removeBrickFromBuilding() are the versions that also publish
+// BrickAdded/BrickRemoved. Call these directly only when you deliberately
+// don't want the rest of the engine notified (e.g. while constructing a
+// building before it's added to a World).
 export class Building {
     constructor({ id, creator = null, library = 'core' } = {}) {
         this._id = id;
