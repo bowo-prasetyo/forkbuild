@@ -24,6 +24,7 @@ export class Renderer {
         this._sceneManager.scene.background = new THREE.Color(SKY_COLOR);
 
         this._cameraController = new CameraController(
+            this._webglRenderer.domElement,
             container.clientWidth / container.clientHeight
         );
 
@@ -52,6 +53,10 @@ export class Renderer {
         this._sceneManager.remove(object);
     }
 
+    resetCameraView() {
+        this._cameraController.resetView();
+    }
+
     start() {
         this._animationLoop.start();
     }
@@ -63,11 +68,13 @@ export class Renderer {
     dispose() {
         this.stop();
         window.removeEventListener('resize', this._onResize);
+        this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
         this._webglRenderer.dispose();
     }
 
     _renderFrame() {
+        this._cameraController.update();
         this._webglRenderer.render(this._sceneManager.scene, this._cameraController.camera);
     }
 
