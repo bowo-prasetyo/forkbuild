@@ -15,7 +15,7 @@ export class CreateDemoWorldUseCase {
         const building = new Building({ id: 'demo-building', creator: 'local' });
         building.addBrick(new Brick({
             id: 'demo-brick-1',
-            type: 'core:cube',
+            definitionId: 'core:cube',
             position: new Position(0, 0.5, 0)
         }));
 

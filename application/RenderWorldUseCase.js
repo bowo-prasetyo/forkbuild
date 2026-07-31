@@ -7,9 +7,9 @@ import { WorldRenderer } from '../renderer/WorldRenderer.js';
 // use case, never to Renderer or WorldRenderer directly. A future non-Vue
 // client (desktop, CLI preview, etc.) could call this exact same class.
 export class RenderWorldUseCase {
-    execute(container, world) {
+    execute(container, world, registry) {
         const renderer = new Renderer(container);
-        const worldRenderer = new WorldRenderer(renderer);
+        const worldRenderer = new WorldRenderer(renderer, registry);
 
         worldRenderer.render(world);
         renderer.start();
