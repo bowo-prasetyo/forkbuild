@@ -1,23 +1,22 @@
-import * as THREE from 'three';
+import { ThreeBrickFactory } from './ThreeBrickFactory.js';
 
-// TEMPORARY placeholder geometry: every brick becomes the same plain colored
-// box regardless of its `type`. This class is the seam the Brick Library
-// (Step 5) plugs into — a real library swaps out what happens inside
-// createMesh() (a lookup by brick.type against registered geometries), but
-// the interface itself — one Brick in, one THREE.Object3D out — won't change.
-const PLACEHOLDER_SIZE = 1;
-const PLACEHOLDER_COLOR = 0x4caf7d;
-
+// BrickRenderer no longer knows what a brick looks like. Given a Brick, it
+// asks the registry for its BrickDefinition (so an unknown definitionId
+// fails loudly instead of silently rendering the wrong thing), then asks
+// ThreeBrickFactory to build the actual mesh for that id.
 export class BrickRenderer {
-    createMesh(brick) {
-        const geometry = new THREE.BoxGeometry(
-            PLACEHOLDER_SIZE,
-            PLACEHOLDER_SIZE,
-            PLACEHOLDER_SIZE
-        );
-        const material = new THREE.MeshStandardMaterial({ color: PLACEHOLDER_COLOR });
-        const mesh = new THREE.Mesh(geometry, material);
+    constructor(registry, brickFactory = new ThreeBrickFactory()) {
+        this._registry = registry;
+        this._brickFactory = brickFactory;
+    }
 
+    createMesh(brick) {
+        const definition = this._registry.get(brick.definitionId);
+        if (!definition) {
+            throw new Error(`Unknown brick definition: ${brick.definitionId}`);
+        }
+
+        const mesh = this._brickFactory.createMesh(brick.definitionId);
         mesh.position.set(brick.position.x, brick.position.y, brick.position.z);
         mesh.rotation.y = brick.rotation;
         mesh.name = brick.id;

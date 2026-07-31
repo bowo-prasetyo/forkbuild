@@ -3,14 +3,16 @@ import { BuildingRenderer } from './BuildingRenderer.js';
 // WorldRenderer's only job: render(world).
 //
 // World -> (for each) Building -> BuildingRenderer -> (for each) Brick ->
-// BrickRenderer -> Mesh -> Renderer.add()
+// BrickRenderer -> BrickRegistry.get(definitionId) -> ThreeBrickFactory ->
+// Mesh -> Renderer.add()
 //
 // WorldRenderer itself creates nothing directly — it delegates to
-// BuildingRenderer, which delegates to BrickRenderer. Renderer never knows
-// any of this exists; it only ever receives finished meshes through
-// add()/remove().
+// BuildingRenderer, which delegates to BrickRenderer, which resolves each
+// brick's definitionId against the registry it was constructed with.
+// Renderer never knows any of this exists; it only ever receives finished
+// meshes through add()/remove().
 export class WorldRenderer {
-    constructor(renderer, buildingRenderer = new BuildingRenderer()) {
+    constructor(renderer, registry, buildingRenderer = new BuildingRenderer(registry)) {
         this._renderer = renderer;
         this._buildingRenderer = buildingRenderer;
         this._meshesByBrickId = new Map();
