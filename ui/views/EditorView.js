@@ -1,3 +1,4 @@
+import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateDemoWorldUseCase } from '../../application/CreateDemoWorldUseCase.js';
 import { RenderWorldUseCase } from '../../application/RenderWorldUseCase.js';
 import Toolbar from '../components/Toolbar.js';
@@ -20,8 +21,9 @@ export default {
         </div>
     `,
     mounted() {
+        const registry = new CreateBrickRegistryUseCase().execute();
         const world = new CreateDemoWorldUseCase().execute();
-        this._session = new RenderWorldUseCase().execute(this.$refs.viewport, world);
+        this._session = new RenderWorldUseCase().execute(this.$refs.viewport, world, registry);
     },
     beforeUnmount() {
         this._session.dispose();
