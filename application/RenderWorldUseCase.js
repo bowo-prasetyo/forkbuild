@@ -1,21 +1,22 @@
 import { Renderer } from '../renderer/Renderer.js';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
 
-// Wires a World up to the rendering pipeline and starts displaying it inside
-// a given container element. This is the seam between "UI wants to show a
-// world" and the renderer/core internals: ui/ code only ever talks to this
-// use case, never to Renderer or WorldRenderer directly. A future non-Vue
-// client (desktop, CLI preview, etc.) could call this exact same class.
+// Wires the rendering pipeline up to a container element and an EventBus,
+// then starts it. Notice this no longer takes a World: the renderer never
+// needs a reference to "a world" object, only the events it publishes.
+// That's the practical payoff of the event system — rendering and the
+// domain model are now connected only by events, not by object references.
 export class RenderWorldUseCase {
-    execute(container, world, registry) {
+    execute(container, eventBus, registry) {
         const renderer = new Renderer(container);
         const worldRenderer = new WorldRenderer(renderer, registry);
 
-        worldRenderer.render(world);
+        worldRenderer.subscribe(eventBus);
         renderer.start();
 
         return {
             dispose() {
+                worldRenderer.unsubscribe();
                 renderer.dispose();
             }
         };
