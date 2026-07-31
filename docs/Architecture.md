@@ -53,6 +53,14 @@ Owns the scene, camera, lights, grid, and render loop. Owns no game state,
 and (as of the event system) doesn't even hold a reference to a World —
 only to the events it emits.
 
+CameraController owns orbit/pan/zoom (via Three.js's OrbitControls
+addon), resize, and reset (bound to the Home key). CameraState is a pure
+data snapshot (position, target, zoom — reusing core/Position) exchanged
+via getState()/setState(). Focus(), saved/restored camera state, and
+smooth transitions (CameraAnimator) are Camera Intelligence and
+deliberately not here yet — CameraController only knows how to be driven
+by hand, not how to decide where to go on its own.
+
 ui/
 
 Vue. The application shell, routes, views, and components. Talks only to
