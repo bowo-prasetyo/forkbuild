@@ -4,9 +4,10 @@ infrastructure adapters that surround them.
 core/
 
 Pure game model. World, Building, Brick, Position, BrickDefinition,
-BrickRegistry, createId, and events/ (EventBus, Event, EventListener). No
-Three.js, no Vue, no browser APIs. Never imports anything from
-application/, renderer/, or ui/.
+BrickRegistry, createId, and events/ (EventBus, DomainEvent,
+EventListener, and — as of 0.1.10 — EditorEvent). No Three.js, no Vue, no
+browser APIs. Never imports anything from application/, renderer/, or
+ui/.
 
 Every World, Building, and Brick has a first-class UUID identity
 (createId(), defaulted in each constructor) rather than a hand-picked or
@@ -42,20 +43,30 @@ other directly, only the events between them.
 EditorContext (application/EditorContext.js) holds all transient editor
 state: selection, active tool, active brick, camera pose, settings. This
 is Editor State, not Domain State — see the distinction below. It has its
-own EventBus (application/events/EditorEvent.js defines SelectionChanged,
-ToolChanged, ActiveBrickChanged, CameraStateChanged, SettingsChanged),
-kept separate from the domain EventBus on purpose: nothing about "what
-tool is active" should ever be reachable from a subscription meant for
-"what changed in the world." Unlike the domain EventBus, EditorContext
-correctly lives in application/ rather than core/ — nothing in core/
-needs to publish or receive editor events, so there's no dependency-
-direction problem requiring it to live lower. Sub-state pieces
+own EventBus (SelectionChanged, ToolChanged, ActiveBrickChanged,
+CameraStateChanged, SettingsChanged), kept separate from the domain
+EventBus on purpose: nothing about "what tool is active" should ever be
+reachable from a subscription meant for "what changed in the world."
+EditorContext itself correctly lives in application/, as originally
+proposed — nothing in core/ needs to publish or receive editor events.
+But the EditorEvent *constants* (core/events/EditorEvent.js) had to move
+to core/events/ once renderer/SelectionRenderer needed to subscribe to
+them: renderer/ must never depend on application/, so the shared
+vocabulary between EditorContext (publisher, application/) and
+SelectionRenderer (subscriber, renderer/) needed a home both can reach
+without depending on each other — the same reasoning as the domain
+EventBus, just discovered one milestone later. Sub-state pieces
 (SelectionState, ToolState, ActiveBrickState, EditorSettings) live in
 application/editor-state/, each pure data with no Three.js/Vue/DOM.
 
 This is also where commands/ (undoable actions) and services/ (export,
 import, screenshot) live — cross-cutting operations, as distinct from
-EditorContext's stateful editor concerns.
+EditorContext's stateful editor concerns. SelectionUseCase
+(application/SelectionUseCase.js) is the single entry point for changing
+selection — UI calls select()/clear() here rather than touching
+EditorContext.selection directly, so history/analytics/multiplayer can
+hook into "a selection happened" in one place later without
+SelectionState needing to know any of them exist.
 
 renderer/
 
@@ -89,6 +100,33 @@ via getState()/setState(). Focus(), saved/restored camera state, and
 smooth transitions (CameraAnimator) are Camera Intelligence and
 deliberately not here yet — CameraController only knows how to be driven
 by hand, not how to decide where to go on its own.
+
+SelectionRenderer is the renderer's first overlay: WorldRenderer's job is
+World -> Meshes, SelectionRenderer's is Selection -> Visual Highlight,
+kept deliberately separate since selection isn't part of rendering the
+world. Subscribes to EditorEvent.SELECTION_CHANGED (not a domain event)
+and sets the selected mesh's material.emissive color directly — no
+OutlinePass or post-processing pipeline for Version 0.1. Known trade-off:
+this mutates a mesh BrickRenderer already owns rather than adding an
+independent overlay object, so it's not a "true" overlay in the strict
+sense yet (see Render Layers below); it was the simplest thing that looks
+right for this milestone.
+
+Render Layers (conceptual, not yet code)
+
+Think of the scene as three logical layers even though everything
+currently lives in one Three.js Scene: a World Layer (bricks, buildings,
+terrain — what WorldRenderer manages), an Overlay Layer (selection,
+hover, placement preview, measurements — purely visual, never modifies
+the World), and a Gizmo Layer (future transform handles, axes,
+manipulators). None of this requires separate THREE.Scene or THREE.Group
+objects yet — the point is that new visual features should be reasoned
+about as "which layer does this belong to" before writing code, so they
+land in the right place by default. SelectionRenderer conceptually
+belongs to the Overlay Layer even though its current implementation
+(mutating the brick's own material) blurs that line slightly — a future
+pass could replace it with a true independent overlay mesh without
+changing SelectionRenderer's public shape.
 
 ui/
 
@@ -142,3 +180,27 @@ renderer -> core (reads domain events and data; never the reverse)
 core never depends on anything above it. renderer never owns data, only
 visualizes what it's given, and now only reacts to events rather than
 being handed a World directly.
+
+Naming convention
+
+| Purpose                           | Suffix    |
+|------------------------------------|-----------|
+| Persistent domain object          | *(none)* — World, Brick, Building |
+| Mutable editor state               | State     |
+| Long-lived shared state container | Context   |
+| Lookup/index                       | Registry  |
+| Adapter to external systems        | Provider  |
+| Pure application workflow          | UseCase   |
+| Renderer subsystem                 | Renderer  |
+| Short-lived event payload          | Event     |
+
+Adopted for everything introduced from 0.1.10 onward (SelectionUseCase,
+SelectionRenderer, SelectionState, EditorEvent all already fit). Not
+retroactively applied to existing names — PickingService ("Service" isn't
+in this table at all) and CameraController ("Controller" isn't either,
+and it's arguably a renderer subsystem that should read CameraRenderer or
+similar) both predate this convention and don't fit it cleanly. Left
+alone deliberately rather than renamed as a drive-by inside an unrelated
+milestone — a dedicated pass renaming these (and deciding what a
+"Service" even means going forward, since the table doesn't define one)
+is worth doing on its own, not bundled into a feature diff.
