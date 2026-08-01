@@ -11,7 +11,7 @@ ForkBuild is a modular building platform where creations are stored using interc
 
 Current Status
 
-Version 0.1.7 — Camera Infrastructure (see docs/Roadmap.md for the full milestone list)
+Version 0.1.10 — Selection Tool (see docs/Roadmap.md for the full milestone list)
 
 Roadmap
 
@@ -22,10 +22,14 @@ Roadmap
 - [x] 0.1.5 Brick Registry & Definitions
 - [x] 0.1.6 Event System & Incremental Renderer
 - [x] 0.1.7 Camera Infrastructure
-- [ ] 0.1.8 Camera Intelligence
-- [ ] 0.1.9 Selection System
-- [ ] 0.1.10 Placement Tool
-- [ ] 0.1.11 Command System
-- [ ] 0.1.12 Serializer
-- [ ] 0.1.13 Local Storage
-- [ ] 0.1.14 Publisher Adapter
+- [x] 0.1.8 Picking System
+- [x] 0.1.9 Editor Context
+- [x] 0.1.10 Selection Tool
+- [ ] 0.1.11 Camera Intelligence
+- [ ] 0.1.12 Brick Palette
+- [ ] 0.1.13 Placement Preview
+- [ ] 0.1.14 Placement Tool
+- [ ] 0.1.15 Command System
+- [ ] 0.1.16 Serializer
+- [ ] 0.1.17 Local Storage
+- [ ] 0.1.18 Publisher Adapter
