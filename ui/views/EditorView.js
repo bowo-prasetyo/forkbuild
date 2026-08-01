@@ -29,8 +29,20 @@ export default {
         // same BuildingAdded event pipeline as everything placed after it.
         this._session = new RenderWorldUseCase().execute(this.$refs.viewport, eventBus, registry);
         this._world = new CreateDemoWorldUseCase().execute(eventBus);
+
+        // TEMPORARY: proves PickingService works end to end. Picking itself
+        // has no concept of "selected" — only "what's under the cursor
+        // right now" — so this just logs the answer. Once SelectionService
+        // exists (0.1.10) this click handler moves there and starts
+        // actually doing something with the result (highlighting, etc).
+        this._onViewportClick = (event) => {
+            const result = this._session.pick(event.clientX, event.clientY);
+            console.log('picked:', result);
+        };
+        this.$refs.viewport.addEventListener('click', this._onViewportClick);
     },
     beforeUnmount() {
+        this.$refs.viewport.removeEventListener('click', this._onViewportClick);
         this._session.dispose();
     }
 };
