@@ -24,4 +24,17 @@ export class BrickRegistry {
     getAll() {
         return Array.from(this._definitions.values());
     }
+
+    getByCategory(category) {
+        return this.getAll().filter((definition) => definition.category === category);
+    }
+
+    // Accepts a single tag or an array of tags; matches a definition if
+    // ANY of its tags match ANY of the queried tags.
+    search(tags) {
+        const query = Array.isArray(tags) ? tags : [tags];
+        return this.getAll().filter((definition) =>
+            query.some((tag) => definition.tags.includes(tag))
+        );
+    }
 }
