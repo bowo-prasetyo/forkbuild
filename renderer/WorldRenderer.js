@@ -2,10 +2,10 @@ import { BuildingRenderer } from './BuildingRenderer.js';
 import { MeshRegistry } from './MeshRegistry.js';
 import { DomainEvent } from '../core/events/Event.js';
 
-// WorldRenderer no longer has a render(world) sweep. It subscribes to the
-// domain events World publishes and reacts incrementally — one event, one
-// mesh created or removed — instead of deleting and rebuilding everything
-// on every change. This is the same approach editors like Blender or Unity
+// WorldRenderer has no render(world) sweep. It subscribes to the domain
+// events World publishes and reacts incrementally — one event, one mesh
+// created or removed — instead of deleting and rebuilding everything on
+// every change. This is the same approach editors like Blender or Unity
 // use to keep a scene view in sync with a document.
 //
 // BuildingAdded/BuildingRemoved handle bulk changes (a whole building,
@@ -13,6 +13,11 @@ import { DomainEvent } from '../core/events/Event.js';
 // BrickRemoved handle single-brick changes. Both paths go through
 // BuildingRenderer -> BrickRenderer -> BrickRegistry -> ThreeBrickFactory,
 // exactly as before; only how they get triggered has changed.
+//
+// meshRegistry is exposed via a getter so PickingService (constructed
+// alongside this in RenderWorldUseCase) can resolve raycast hits back to
+// brick/building ids without WorldRenderer needing to know PickingService
+// exists.
 export class WorldRenderer {
     constructor(
         renderer,
@@ -26,11 +31,15 @@ export class WorldRenderer {
         this._subscriptions = [];
     }
 
+    get meshRegistry() {
+        return this._meshRegistry;
+    }
+
     subscribe(eventBus) {
         this._subscriptions.push(
             eventBus.subscribe(DomainEvent.BUILDING_ADDED, ({ building }) => this._onBuildingAdded(building)),
             eventBus.subscribe(DomainEvent.BUILDING_REMOVED, ({ building }) => this._onBuildingRemoved(building)),
-            eventBus.subscribe(DomainEvent.BRICK_ADDED, ({ brick }) => this._onBrickAdded(brick)),
+            eventBus.subscribe(DomainEvent.BRICK_ADDED, ({ buildingId, brick }) => this._onBrickAdded(buildingId, brick)),
             eventBus.subscribe(DomainEvent.BRICK_REMOVED, ({ brick }) => this._onBrickRemoved(brick))
         );
     }
@@ -44,7 +53,7 @@ export class WorldRenderer {
 
     _onBuildingAdded(building) {
         for (const { brickId, mesh } of this._buildingRenderer.renderBricks(building)) {
-            this._addBrickMesh(brickId, mesh);
+            this._addBrickMesh(brickId, building.id, mesh);
         }
     }
 
@@ -54,22 +63,22 @@ export class WorldRenderer {
         }
     }
 
-    _onBrickAdded(brick) {
+    _onBrickAdded(buildingId, brick) {
         const { brickId, mesh } = this._buildingRenderer.renderBrick(brick);
-        this._addBrickMesh(brickId, mesh);
+        this._addBrickMesh(brickId, buildingId, mesh);
     }
 
     _onBrickRemoved(brick) {
         this._removeBrickMesh(brick.id);
     }
 
-    _addBrickMesh(brickId, mesh) {
-        this._meshRegistry.set(brickId, mesh);
+    _addBrickMesh(brickId, buildingId, mesh) {
+        this._meshRegistry.set(brickId, buildingId, mesh);
         this._renderer.add(mesh);
     }
 
     _removeBrickMesh(brickId) {
-        const mesh = this._meshRegistry.get(brickId);
+        const mesh = this._meshRegistry.getMesh(brickId);
         if (mesh) {
             this._renderer.remove(mesh);
             this._meshRegistry.delete(brickId);

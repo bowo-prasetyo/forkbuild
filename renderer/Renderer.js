@@ -45,6 +45,10 @@ export class Renderer {
         return this._cameraController.camera;
     }
 
+    get domElement() {
+        return this._webglRenderer.domElement;
+    }
+
     add(object) {
         this._sceneManager.add(object);
     }
