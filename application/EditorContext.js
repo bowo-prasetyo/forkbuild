@@ -1,6 +1,6 @@
 import { EventBus } from '../core/events/EventBus.js';
+import { EditorEvent } from '../core/events/EditorEvent.js';
 import { CameraState } from '../renderer/CameraState.js';
-import { EditorEvent } from './events/EditorEvent.js';
 import { SelectionState } from './editor-state/SelectionState.js';
 import { ToolState } from './editor-state/ToolState.js';
 import { ActiveBrickState } from './editor-state/ActiveBrickState.js';
