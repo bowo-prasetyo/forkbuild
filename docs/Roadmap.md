@@ -6,11 +6,12 @@
 0.1.6  Event System & Incremental Renderer  (done)
 0.1.7  Camera Infrastructure                (done)
 0.1.8  Picking System                       (done)
-0.1.9  Camera Intelligence (focus, save/restore state, transitions)
-0.1.10 Selection Service
-0.1.11 Brick Palette
-0.1.12 Placement Tool
-0.1.13 Command System
-0.1.14 Serializer
-0.1.15 Local Storage
-0.1.16 Publisher Adapter
+0.1.9  Editor Context                       (done)
+0.1.10 Camera Intelligence (focus, save/restore state, transitions)
+0.1.11 Selection
+0.1.12 Brick Palette
+0.1.13 Placement Tool
+0.1.14 Command System
+0.1.15 Serializer
+0.1.16 Local Storage
+0.1.17 Publisher Adapter

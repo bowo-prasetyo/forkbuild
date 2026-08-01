@@ -35,17 +35,27 @@ application/
 
 Use cases. Coordinates core/ and the infrastructure layers to do
 something (e.g. CreateEventBusUseCase, RenderWorldUseCase, and later
-PlaceBrickUseCase). Constructs the shared EventBus and wires it to both
-World and the renderer — core/ and renderer/ never reference each other
-directly, only the events between them.
+PlaceBrickUseCase). Constructs the shared domain EventBus and wires it to
+both World and the renderer — core/ and renderer/ never reference each
+other directly, only the events between them.
+
+EditorContext (application/EditorContext.js) holds all transient editor
+state: selection, active tool, active brick, camera pose, settings. This
+is Editor State, not Domain State — see the distinction below. It has its
+own EventBus (application/events/EditorEvent.js defines SelectionChanged,
+ToolChanged, ActiveBrickChanged, CameraStateChanged, SettingsChanged),
+kept separate from the domain EventBus on purpose: nothing about "what
+tool is active" should ever be reachable from a subscription meant for
+"what changed in the world." Unlike the domain EventBus, EditorContext
+correctly lives in application/ rather than core/ — nothing in core/
+needs to publish or receive editor events, so there's no dependency-
+direction problem requiring it to live lower. Sub-state pieces
+(SelectionState, ToolState, ActiveBrickState, EditorSettings) live in
+application/editor-state/, each pure data with no Three.js/Vue/DOM.
 
 This is also where commands/ (undoable actions) and services/ (export,
-import, screenshot today; later SelectionService, CameraService,
-ToolService, ClipboardService) live. Two flavors of "service" share this
-folder: cross-cutting operations (export/import/screenshot) and stateful
-editor services (selection, active tool, camera mode). Neither belongs in
-core/ (they describe how the editor behaves, not what the world is) or
-renderer/ (they're independent of Three.js).
+import, screenshot) live — cross-cutting operations, as distinct from
+EditorContext's stateful editor concerns.
 
 renderer/
 
@@ -102,6 +112,25 @@ Wallet / key management, tied to whichever publisher is active.
 serializer/
 
 World <-> JSON, used by both storage/ and publisher/.
+
+Domain State vs Editor State
+
+Two kinds of state exist in ForkBuild, and they must never mix.
+
+Domain State — World, Building, Brick (core/). Publishable, serializable,
+shared, forkable. This is what the ForkBuild Protocol describes and what
+storage/publisher eventually persist and transmit.
+
+Editor State — everything in EditorContext (application/): selection,
+active tool, active brick, camera pose, settings. Purely local to one
+editing session. Never part of a World, never serialized into the
+Protocol, never sent to a publisher.
+
+The practical rule: if a serializer (0.1.14+) is ever tempted to write a
+field from EditorContext into a World's JSON, that's a bug. Domain State
+answers "what did the user build?" Editor State answers "what is the
+user currently doing while building it?" — the second question's answer
+should never leak into the first's.
 
 Dependency direction
 
