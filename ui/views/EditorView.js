@@ -3,17 +3,20 @@ import { CreateEventBusUseCase } from '../../application/CreateEventBusUseCase.j
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
 import { CreateDemoWorldUseCase } from '../../application/CreateDemoWorldUseCase.js';
+import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
 import { RenderWorldUseCase } from '../../application/RenderWorldUseCase.js';
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
+import { ToolManager } from '../../application/ToolManager.js';
 import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
 
-const CLEAR_SELECTION_KEY = 'Escape';
-
 // EditorView is intentionally dumb: it never imports core/ or renderer/
-// directly. It asks application/ use cases to do the work and only keeps
-// the handles they return, so it knows what to clean up on unmount.
+// directly, and — as of the Tool Framework — no longer contains any
+// selection/input LOGIC either. It just normalizes raw DOM events into
+// plain pointer/key objects and forwards them to ToolManager. What
+// happens on a click depends entirely on which tool is active; EditorView
+// doesn't know or care.
 export default {
     name: 'EditorView',
     components: { Toolbar, Sidebar },
@@ -38,9 +41,11 @@ export default {
         const editorContext = new CreateEditorContextUseCase().execute();
         const selectionUseCase = new SelectionUseCase(editorContext);
         const paletteUseCase = new PaletteUseCase(registry, editorContext);
+        const toolRegistry = new CreateToolRegistryUseCase().execute();
 
         let session = null;
-        let onViewportClick = null;
+        let toolManager = null;
+        let onPointerDown = null;
         let onKeyDown = null;
 
         onMounted(() => {
@@ -54,36 +59,41 @@ export default {
                 registry,
                 editorContext.eventBus
             );
-            new CreateDemoWorldUseCase().execute(eventBus);
+            const world = new CreateDemoWorldUseCase().execute(eventBus);
 
-            // Click brick -> select it. Click empty space -> clear
-            // selection. Click the already-selected brick -> stays
-            // selected (select() is idempotent; no toggle-off yet).
-            onViewportClick = (event) => {
-                const result = session.pick(event.clientX, event.clientY);
-                if (result) {
-                    selectionUseCase.select(result.brickId, result.buildingId);
-                } else {
-                    selectionUseCase.clear();
-                }
+            // ToolContext: a plain, explicit bag of what tools are allowed
+            // to touch. No raw Three.js/Renderer reference (pick() is the
+            // narrow capability instead) and no raw editorContext writes
+            // (selectionUseCase is the entry point for those) — tools stay
+            // bound by the same discipline as ui/ itself.
+            const toolContext = {
+                world,
+                editorContext,
+                pick: (screenX, screenY) => session.pick(screenX, screenY),
+                selectionUseCase
             };
-            viewport.value.addEventListener('click', onViewportClick);
+            toolManager = new ToolManager(toolRegistry, toolContext, editorContext);
+            toolManager.start();
 
-            // Escape clears selection. Unlike CameraController's Home-reset
-            // (a renderer-internal concern), "what's selected" is editor
-            // state, so this shortcut is wired here at the UI/application
-            // boundary instead.
+            onPointerDown = (event) => {
+                toolManager.onPointerDown({
+                    screenX: event.clientX,
+                    screenY: event.clientY,
+                    button: event.button
+                });
+            };
+            viewport.value.addEventListener('pointerdown', onPointerDown);
+
             onKeyDown = (event) => {
-                if (event.key === CLEAR_SELECTION_KEY) {
-                    selectionUseCase.clear();
-                }
+                toolManager.onKeyDown({ key: event.key });
             };
             window.addEventListener('keydown', onKeyDown);
         });
 
         onBeforeUnmount(() => {
             window.removeEventListener('keydown', onKeyDown);
-            viewport.value.removeEventListener('click', onViewportClick);
+            viewport.value.removeEventListener('pointerdown', onPointerDown);
+            toolManager.stop();
             session.dispose();
         });
 
