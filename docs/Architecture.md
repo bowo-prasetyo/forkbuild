@@ -4,9 +4,17 @@ infrastructure adapters that surround them.
 core/
 
 Pure game model. World, Building, Brick, Position, BrickDefinition,
-BrickRegistry, and events/ (EventBus, Event, EventListener). No Three.js,
-no Vue, no browser APIs. Never imports anything from application/,
-renderer/, or ui/.
+BrickRegistry, createId, and events/ (EventBus, Event, EventListener). No
+Three.js, no Vue, no browser APIs. Never imports anything from
+application/, renderer/, or ui/.
+
+Every World, Building, and Brick has a first-class UUID identity
+(createId(), defaulted in each constructor) rather than a hand-picked or
+sequential id. This matters once forking, merging, multiplayer, and
+comments/annotations exist — everything references an id, never an array
+index or a caller-chosen string. Don't confuse this with a
+BrickDefinition id like "core:cube": that's a stable, namespaced *type*
+identifier (docs/BrickIDs.md), not a per-instance UUID.
 
 A Brick stores a definitionId, not geometry. BrickRegistry resolves
 definitionId -> BrickDefinition (metadata only). Libraries (e.g.
@@ -45,13 +53,24 @@ Three.js. WorldRenderer subscribes to World's domain events and reacts
 incrementally — BrickAdded creates one mesh, BrickRemoved deletes one,
 BuildingAdded/BuildingRemoved handle a whole building at once (e.g. on
 initial load). There is no render(world) sweep. MeshRegistry maps brick
-id -> mesh so removal never has to search the scene graph.
+id <-> mesh (bidirectional) plus brick id -> building id, so removal
+never has to search the scene graph and a raycast hit can be resolved
+straight back to a brick/building id.
 BuildingRenderer -> BrickRenderer resolve each brick's definitionId
 against the registry, then ask renderer/ThreeBrickFactory.js — the
 renderer-side counterpart to BrickRegistry — to build the actual mesh.
 Owns the scene, camera, lights, grid, and render loop. Owns no game state,
 and (as of the event system) doesn't even hold a reference to a World —
 only to the events it emits.
+
+PickingService answers exactly one question: what brick is under this
+screen position? It raycasts against MeshRegistry's meshes and resolves
+the hit back to { brickId, buildingId } via the same registry. It knows
+nothing about selection, highlighting, or any other UI state — Picking
+does not depend on Selection; Selection (0.1.10+) will depend on Picking.
+RenderWorldUseCase wires PickingService up alongside Renderer/
+WorldRenderer and exposes a plain pick(screenX, screenY) function on its
+returned handle, so ui/ never needs a Three.js reference to use it.
 
 CameraController owns orbit/pan/zoom (via Three.js's OrbitControls
 addon), resize, and reset (bound to the Home key). CameraState is a pure
