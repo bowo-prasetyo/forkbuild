@@ -22,6 +22,13 @@ definitionId -> BrickDefinition (metadata only). Libraries (e.g.
 core/library/CoreLibrary.js) register their definitions with the
 registry at startup — see docs/BrickLibrary.md.
 
+BrickDefinition metadata: id, name, category, thumbnail, defaultRotation,
+tags, description. thumbnail already serves the role a separate "icon"
+field would (both are just "the palette's visual for this definition") —
+kept as one field rather than two. BrickRegistry is a proper catalog:
+get(id), has(id), getAll(), getByCategory(category), search(tags) (single
+tag or array; matches if a definition's tags intersect the query at all).
+
 World is the aggregate root. addBuilding/removeBuilding and
 addBrickToBuilding/removeBrickFromBuilding publish BuildingAdded /
 BuildingRemoved / BrickAdded / BrickRemoved through an EventBus. The bus
@@ -67,6 +74,15 @@ selection — UI calls select()/clear() here rather than touching
 EditorContext.selection directly, so history/analytics/multiplayer can
 hook into "a selection happened" in one place later without
 SelectionState needing to know any of them exist.
+
+PaletteUseCase (application/PaletteUseCase.js) is the Brick Palette's
+single entry point, and deliberately holds no state of its own —
+getDefinitions() reads BrickRegistry, getSelectedDefinitionId()/
+selectDefinition() read/write EditorContext.activeBrick (built in 0.1.9
+specifically for this). A PaletteModel duplicating either would create
+two sources of truth that could disagree; skipped for that reason.
+onActiveBrickChanged() wraps the event subscription so ui/ never needs
+to import core/events/EditorEvent itself.
 
 renderer/
 
@@ -133,7 +149,15 @@ ui/
 Vue. The application shell, routes, views, and components. Talks only to
 application/, never directly to core/ or renderer/. Kept intentionally
 "dumb" so a future non-Vue client could reuse core/ and application/
-unchanged.
+unchanged. Known exception: ui/views/AboutView.js imports core/version.js
+directly to display the version number — a leftover from Step 2, before
+this rule existed. Inert (a static constant, no behavior) but technically
+a violation; noted rather than fixed as a drive-by inside an unrelated
+milestone. As of 0.1.11, EditorView.js and BrickPalette.js use the Vue 3
+Composition API (setup(), ref, onMounted/onBeforeUnmount) per
+CodingConventions.md — earlier views used Options-API-flavored lifecycle
+hooks (mounted()/beforeUnmount() directly), which still worked but wasn't
+strictly the stated convention.
 
 storage/
 
