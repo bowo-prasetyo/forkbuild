@@ -1,5 +1,6 @@
 import { Building } from './Building.js';
 import { DomainEvent } from './events/Event.js';
+import { createId } from './createId.js';
 
 // World is the aggregate root. It owns Buildings and publishes domain
 // events whenever something changes, so nothing else — not the renderer,
@@ -7,10 +8,15 @@ import { DomainEvent } from './events/Event.js';
 // called manually after a mutation. eventBus is optional: a World created
 // without one (e.g. during JSON hydration) simply publishes nothing.
 export class World {
-    constructor({ metadata = {}, eventBus = null } = {}) {
+    constructor({ id = createId(), metadata = {}, eventBus = null } = {}) {
+        this._id = id;
         this._buildings = new Map();
         this._metadata = metadata;
         this._eventBus = eventBus;
+    }
+
+    get id() {
+        return this._id;
     }
 
     get metadata() {
@@ -67,13 +73,14 @@ export class World {
 
     toJSON() {
         return {
+            id: this._id,
             metadata: this._metadata,
             buildings: this.getBuildings().map((building) => building.toJSON())
         };
     }
 
     static fromJSON(json, eventBus = null) {
-        const world = new World({ metadata: json.metadata, eventBus });
+        const world = new World({ id: json.id, metadata: json.metadata, eventBus });
 
         for (const buildingJson of json.buildings) {
             world.addBuilding(Building.fromJSON(buildingJson));

@@ -1,11 +1,12 @@
 import { Position } from './Position.js';
+import { createId } from './createId.js';
 
 // A Brick is a placement: which definition, where, and how rotated. It
 // never carries geometry — that lives behind BrickRegistry, looked up by
 // definitionId. This keeps World serializable as plain data and keeps the
 // renderer free to change how a "core:cube" looks without touching World.
 export class Brick {
-    constructor({ id, definitionId, position = new Position(), rotation = 0 }) {
+    constructor({ id = createId(), definitionId, position = new Position(), rotation = 0 }) {
         this._id = id;
         this._definitionId = definitionId;
         this._position = position;

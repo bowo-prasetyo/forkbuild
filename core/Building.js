@@ -1,4 +1,5 @@
 import { Brick } from './Brick.js';
+import { createId } from './createId.js';
 
 // Building owns its bricks. Its addBrick()/removeBrick() are plain
 // mutations with no event publishing — World.addBrickToBuilding() /
@@ -7,7 +8,7 @@ import { Brick } from './Brick.js';
 // don't want the rest of the engine notified (e.g. while constructing a
 // building before it's added to a World).
 export class Building {
-    constructor({ id, creator = null, library = 'core' } = {}) {
+    constructor({ id = createId(), creator = null, library = 'core' } = {}) {
         this._id = id;
         this._creator = creator;
         this._library = library;
