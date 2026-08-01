@@ -123,9 +123,48 @@ html, body {
     padding: 1rem;
 }
 
-.placeholder-text {
-    color: #707070;
+.brick-palette {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.palette-title {
+    margin: 0 0 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.palette-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.palette-item {
+    padding: 0.5rem 0.6rem;
+    border-radius: 4px;
     font-size: 0.85rem;
+    color: #d0d0d0;
+    background: #1f1f1f;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.palette-item:hover {
+    background: #262626;
+}
+
+.palette-item--active {
+    background: #234433;
+    border-color: #4caf7d;
+    color: #ffffff;
 }
 
 .viewport {
