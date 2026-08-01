@@ -84,6 +84,42 @@ two sources of truth that could disagree; skipped for that reason.
 onActiveBrickChanged() wraps the event subscription so ui/ never needs
 to import core/events/EditorEvent itself.
 
+Tool Framework (application/tools/, application/ToolManager.js,
+application/CreateToolRegistryUseCase.js): Tool is the base class every
+tool extends (activate/deactivate, onPointerMove/Down/Up, onKeyDown/Up,
+onWheel — pointer terminology throughout, not mouse-specific, so touch/
+stylus/VR input can drive the same tools later without an API change).
+ToolRegistry maps a tool id to its Tool subclass — same shape as
+BrickRegistry, but deliberately in application/ rather than core/, since
+nothing in core/ ever needs to know which tools exist. ToolManager owns
+"what is the current tool" and dispatches input to it, reacting to
+EditorEvent.TOOL_CHANGED (published by EditorContext.setActiveTool(),
+unchanged since 0.1.9) to swap the live Tool instance via
+deactivate()/activate(). SelectionTool (application/tools/SelectionTool.js)
+is the first tool: pointer down -> pick -> select or clear, plus
+Escape-to-clear moved out of EditorView and into the tool's own
+onKeyDown() — a concrete demonstration of the framework's payoff, since
+that input handling used to live in ui/.
+
+ToolContext is a plain object, not a class — it has no behavior of its
+own, just references a tool is allowed to touch (world, editorContext,
+pick, selectionUseCase today; more as tools need them). Deliberately
+narrower than the { world, editorContext, renderer, picking, commands }
+originally proposed: no raw Renderer reference (would let any tool bypass
+PickingService/WorldRenderer and touch Three.js directly, undoing "the
+editor manipulates domain objects, not meshes"), and tools mutate editor
+state only through use cases like selectionUseCase, never by calling
+editorContext.setX() directly — reading editorContext is fine, writing
+isn't, mirroring the discipline ui/ already follows.
+
+Naming collision avoided: application/editor-state/Tool.js (the tool id
+constants, e.g. ToolId.SELECT) was renamed to ToolId.js/ToolId once the
+Tool base class needed the name Tool for itself. ToolState still stores
+just the id string (e.g. "select"), not a resolved Tool instance — same
+pattern as SelectionState storing brickId (not a Brick) and ActiveBrickState
+storing definitionId (not a BrickDefinition): EditorContext holds ids,
+resolution happens through the relevant registry when needed.
+
 renderer/
 
 Three.js. WorldRenderer subscribes to World's domain events and reacts
@@ -217,14 +253,13 @@ Naming convention
 | Pure application workflow          | UseCase   |
 | Renderer subsystem                 | Renderer  |
 | Short-lived event payload          | Event     |
+| Engine capability                  | Service   |
 
-Adopted for everything introduced from 0.1.10 onward (SelectionUseCase,
-SelectionRenderer, SelectionState, EditorEvent all already fit). Not
-retroactively applied to existing names — PickingService ("Service" isn't
-in this table at all) and CameraController ("Controller" isn't either,
-and it's arguably a renderer subsystem that should read CameraRenderer or
-similar) both predate this convention and don't fit it cleanly. Left
-alone deliberately rather than renamed as a drive-by inside an unrelated
-milestone — a dedicated pass renaming these (and deciding what a
-"Service" even means going forward, since the table doesn't define one)
-is worth doing on its own, not bundled into a feature diff.
+Refined as of 0.1.12: Service was originally going to be avoided entirely,
+but PickingService doesn't fit any other row — it's not a lookup, not a
+renderer, not a workflow, not editor state. It's a capability the engine
+provides. So is CameraController, which is left as Controller rather than
+forced into Renderer: it directly drives interactive hardware-like input
+(mouse, keyboard, OrbitControls), which reads differently from "visualizes
+domain data," the actual job every other *Renderer class does. Neither
+name changes.

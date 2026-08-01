@@ -9,7 +9,7 @@
 0.1.9  Editor Context                       (done)
 0.1.10 Selection Tool                       (done)
 0.1.11 Brick Palette                        (done)
-0.1.12 Tool Framework
+0.1.12 Tool Framework                       (done)
 0.1.13 Placement Preview
 0.1.14 PlaceBrickCommand
 0.1.15 Placement Tool
