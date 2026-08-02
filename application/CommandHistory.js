@@ -1,3 +1,6 @@
+import { EventBus } from '../core/events/EventBus.js';
+import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
+
 // Tools call commandHistory.execute(command) instead of
 // command.execute(context) directly — the history decides what happens
 // next, and tools never need to know whether undo/redo exists.
@@ -11,17 +14,29 @@
 // undo stack, calls command.undo(), and pushes onto the redo stack.
 // redo() is literally execute() again — Command has no redo() method;
 // CommandHistory manages direction, not the command.
+//
+// Publishes CommandExecuted/CommandUndone/CommandRedone through its own
+// EventBus on every successful operation, so interested subscribers
+// (DocumentManager, today) can react without CommandHistory needing to
+// know they exist — it doesn't call documentManager.markDirty() itself;
+// that coupling lives in DocumentManager.trackCommandHistory() instead.
 export class CommandHistory {
-    constructor(context) {
+    constructor(context, eventBus = new EventBus()) {
         this._context = context;
+        this._eventBus = eventBus;
         this._undoStack = [];
         this._redoStack = [];
+    }
+
+    get eventBus() {
+        return this._eventBus;
     }
 
     execute(command) {
         command.execute(this._context);
         this._undoStack.push(command);
         this._redoStack = [];
+        this._eventBus.publish(CommandHistoryEvent.COMMAND_EXECUTED, { command });
         return command;
     }
 
@@ -37,6 +52,7 @@ export class CommandHistory {
         const command = this._undoStack.pop();
         command.undo(this._context);
         this._redoStack.push(command);
+        this._eventBus.publish(CommandHistoryEvent.COMMAND_UNDONE, { command });
         return command;
     }
 
@@ -51,6 +67,7 @@ export class CommandHistory {
         const command = this._redoStack.pop();
         command.execute(this._context);
         this._undoStack.push(command);
+        this._eventBus.publish(CommandHistoryEvent.COMMAND_REDONE, { command });
         return command;
     }
 
