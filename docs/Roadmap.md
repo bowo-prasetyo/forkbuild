@@ -12,8 +12,8 @@
 0.1.12 Tool Framework                       (done)
 0.1.13 Placement Preview                    (done)
 0.1.14 PlaceBrickCommand + Placement Tool (click commits)  (done)
-0.1.15 DeleteBrickCommand
-0.1.16 Command History (Undo/Redo)
+0.1.15 CommandHistory + DeleteBrickCommand  (done)
+0.1.16 Undo/Redo (Command.undo())
 0.1.17 Input System (DOM -> platform-independent engine events)
 0.1.18 Serializer
 0.1.19 Local Storage

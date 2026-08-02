@@ -139,12 +139,13 @@ raycast hit and stays deferred until it's actually needed.
 As of 0.1.14, PlacementTool.onPointerDown is real: PlacementValidator
 (core/PlacementValidator.js — see below for why it's in core/, not
 application/) checks the previewed position is unoccupied, then
-PlaceBrickCommand (application/commands/PlaceBrickCommand.js) executes.
-PlaceBrickCommand is immutable and holds no brickId — it creates the
-Brick's identity when executed, not before — which is what makes it
-serializable (toJSON()/fromJSON() round-trip worldId/buildingId/
-definitionId/position/rotation as plain data) and, eventually, what a
-future command-history/undo system and multiplayer transport can work
+PlaceBrickCommand (application/commands/PlaceBrickCommand.js) is
+constructed and routed through CommandHistory.execute() rather than
+called directly. PlaceBrickCommand is immutable and holds no brickId —
+it creates the Brick's identity when executed, not before — which is
+what makes it serializable (toJSON()/fromJSON() round-trip worldId/
+buildingId/definitionId/position/rotation as plain data) and, eventually,
+what a command-history/undo system and multiplayer transport can work
 with directly. It is completely renderer-ignorant: execute() calls
 World.addBrickToBuilding() (which publishes BrickAdded) and stops — the
 renderer, preview, and selection systems react to that event on their
@@ -157,17 +158,40 @@ successful commit, PlacementTool immediately hides the preview so the
 ghost doesn't sit visually overlapping the brick WorldRenderer just
 created for real.
 
-PlacementValidator lives in core/ rather than application/, despite
-being introduced as part of a tool's pipeline: "is this placement legal"
-is a World-level invariant — the same rule a future multiplayer server
-would need to enforce before accepting a PlaceBrickCommand from a
-client, not just client-side UI convenience. Today it does one thing:
-reject a position already occupied by another brick in the same
-building, iterating that building's bricks because no SpatialIndex
-exists yet. Deliberately not written to assume that's permanent; a
-future SpatialIndex would make this an O(1) lookup without
-PlacementValidator's public shape changing — not built now, since there's
-no evidence yet that brick counts are high enough to need it.
+As of 0.1.15, Command (application/commands/Command.js) is the base
+class every command extends — execute(context) only, so CommandHistory
+has exactly one thing to call. DeleteBrickCommand
+(application/commands/DeleteBrickCommand.js) mirrors PlaceBrickCommand
+closely (immutable, worldId/buildingId, same worldId-mismatch guard,
+same toJSON()/fromJSON()) but carries a brickId instead of a
+definitionId/position/rotation, and calls
+World.removeBrickFromBuilding() (publishing BrickRemoved) instead of
+addBrickToBuilding(). Wired into SelectionTool: Delete/Backspace deletes
+the current selection and clears it — input handling living with the
+tool it belongs to, same reasoning as Escape-to-clear.
+
+CommandHistory (application/CommandHistory.js) is what tools actually
+call — commandHistory.execute(command), not command.execute(context)
+directly. context ({ world } today) is bound once at construction, not
+passed per call. This means a tool never knows or cares whether
+undo/redo/history recording exists; PlacementTool and SelectionTool both
+already call commandHistory.execute() instead of touching a command's
+execute() method themselves. undo()/redo() exist as real methods on
+CommandHistory today, but both throw: no Command implements undo() yet
+(only execute()), so there's nothing to reverse. The API surface is
+established now specifically so that once Command.undo() exists,
+CommandHistory's shape doesn't need to change — only its internals do.
+
+Entities vs Domain Services (a distinction within core/, worth naming
+explicitly): World, Building, and Brick are entities — they own state
+and behavior tied directly to themselves. PlacementValidator is a
+domain service — it owns a rule that spans multiple entities (a Brick's
+legality depends on the whole Building it would join) and doesn't
+naturally belong to any single object. Both live in core/ under the same
+dependency rules, but they answer different questions: an entity answers
+"what am I," a domain service answers "is this operation valid." Future
+rules like structural stability, connectivity validation, or import
+verification are domain services in this same sense, not entity methods.
 
 PlacementTool constructs its own PlacementValidator internally rather
 than receiving it through ToolContext from EditorView: EditorView (ui/)
@@ -335,6 +359,7 @@ Naming convention
 | Renderer subsystem                 | Renderer  |
 | Short-lived event payload          | Event     |
 | Engine capability                  | Service   |
+| Executable action (undoable later)| Command   |
 
 Refined as of 0.1.12: Service was originally going to be avoided entirely,
 but PickingService doesn't fit any other row — it's not a lookup, not a
