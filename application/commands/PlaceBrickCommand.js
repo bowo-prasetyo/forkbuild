@@ -2,19 +2,36 @@ import { Brick } from '../../core/Brick.js';
 import { Position } from '../../core/Position.js';
 import { Command } from './Command.js';
 
-// Immutable: describes what SHOULD happen, not what already happened.
-// Deliberately holds no brickId — the command creates the Brick's
-// identity when executed, it doesn't receive one. That's what makes a
-// command serializable, replayable, and transmittable: until execute()
-// runs, this is just plain data (worldId, buildingId, definitionId,
-// position, rotation), not a live object graph.
+// Immutable in the sense that matters: worldId, buildingId, definitionId,
+// position, and rotation are set once at construction and never
+// reassigned — this is what makes the command serializable, replayable,
+// and transmittable (toJSON()/fromJSON() round-trip exactly those fields,
+// nothing else). No brickId in the constructor: the command creates the
+// Brick's identity when executed, it doesn't receive one.
+//
+// One narrow exception to immutability, required for undo() to be
+// correct: after execute() runs, this command remembers the id of the
+// brick IT created, in _executedBrickId. Without that, undo() would only
+// know "a brick matching this definition and position" — ambiguous if
+// two identical bricks exist. This is bookkeeping about what happened,
+// not part of the command's own stated intent, and it's deliberately excluded
+// from toJSON() — a command replayed elsewhere (multiplayer, a fresh
+// session loading from storage) creates a brand new brick with a brand
+// new identity, which is correct: that's a different placement than the
+// original, not a resurrection of it.
+//
+// execute() reuses _executedBrickId if it's already set, so that
+// undo() -> redo() (execute() again) recreates the SAME brick identity
+// rather than a new one each time — redo should be indistinguishable
+// from "the undo never happened," not "a new brick that looks similar."
 //
 // Completely ignorant of the renderer. Its job ends at
-// World.addBrickToBuilding() (which publishes BrickAdded) — the renderer,
-// preview system, selection system, and eventually networking all react
-// to that event on their own. No collision checking here either; that's
-// PlacementValidator's job, called by whoever constructs this command
-// (PlacementTool), not by the command itself.
+// World.addBrickToBuilding()/removeBrickFromBuilding() (which publish
+// BrickAdded/BrickRemoved) — the renderer, preview system, selection
+// system, and eventually networking all react to those events on their
+// own. No collision checking here either; that's PlacementValidator's
+// job, called by whoever constructs this command (PlacementTool), not by
+// the command itself.
 export class PlaceBrickCommand extends Command {
     constructor({ worldId, buildingId, definitionId, position, rotation = 0 }) {
         super();
@@ -23,6 +40,7 @@ export class PlaceBrickCommand extends Command {
         this._definitionId = definitionId;
         this._position = position;
         this._rotation = rotation;
+        this._executedBrickId = null;
     }
 
     get worldId() {
@@ -46,24 +64,31 @@ export class PlaceBrickCommand extends Command {
     }
 
     // context: { world } — the live World this command applies to.
-    // Resolving worldId -> a live World is the caller's job. Today there
-    // is only ever one World per session, so that's trivial; a future
-    // multi-world/multiplayer setup would resolve worldId through some
-    // WorldRegistry before calling execute(). Returns the created Brick.
+    // Returns the created (or, on redo, re-created with the same id) Brick.
     execute(context) {
-        if (context.world.id !== this._worldId) {
-            throw new Error(
-                `PlaceBrickCommand: worldId mismatch (command targets ${this._worldId}, context has ${context.world.id})`
-            );
-        }
+        this._assertWorldMatches(context);
 
         const brick = new Brick({
+            id: this._executedBrickId || undefined,
             definitionId: this._definitionId,
             position: this._position,
             rotation: this._rotation
         });
         context.world.addBrickToBuilding(this._buildingId, brick);
+        this._executedBrickId = brick.id;
         return brick;
+    }
+
+    undo(context) {
+        this._assertWorldMatches(context);
+        if (!this._executedBrickId) {
+            throw new Error('PlaceBrickCommand: cannot undo before execute() has run');
+        }
+        context.world.removeBrickFromBuilding(this._buildingId, this._executedBrickId);
+    }
+
+    canUndo() {
+        return this._executedBrickId !== null;
     }
 
     toJSON() {
@@ -84,5 +109,13 @@ export class PlaceBrickCommand extends Command {
             position: Position.fromJSON(json.position),
             rotation: json.rotation
         });
+    }
+
+    _assertWorldMatches(context) {
+        if (context.world.id !== this._worldId) {
+            throw new Error(
+                `PlaceBrickCommand: worldId mismatch (command targets ${this._worldId}, context has ${context.world.id})`
+            );
+        }
     }
 }
