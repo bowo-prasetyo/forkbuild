@@ -11,7 +11,7 @@ ForkBuild is a modular building platform where creations are stored using interc
 
 Current Status
 
-Version 0.1.16 — CompositeCommand + Undo/Redo (see docs/Roadmap.md for the full milestone list)
+Version 0.1.17 — Document + DocumentManager (see docs/Roadmap.md for the full milestone list)
 
 Roadmap
 
@@ -31,10 +31,10 @@ Roadmap
 - [x] 0.1.14 PlaceBrickCommand + Placement Tool
 - [x] 0.1.15 CommandHistory + DeleteBrickCommand
 - [x] 0.1.16 CompositeCommand + Undo/Redo
-- [ ] 0.1.17 DocumentContext
+- [x] 0.1.17 Document + DocumentManager
 - [ ] 0.1.18 Input System
-- [ ] 0.1.19 Serializer
+- [ ] 0.1.19 Serializer (Document <-> JSON)
 - [ ] 0.1.20 Local Storage
 - [ ] 0.1.21 Publisher Adapter (stub)
 - [ ] 0.1.22 Forking
-- [ ] 0.2 Blockchain publishing
+- [ ] 0.2 Blockchain publishing, multiplayer
