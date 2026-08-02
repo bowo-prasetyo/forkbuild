@@ -14,10 +14,10 @@
 0.1.14 PlaceBrickCommand + Placement Tool (click commits)  (done)
 0.1.15 CommandHistory + DeleteBrickCommand  (done)
 0.1.16 CompositeCommand + Undo/Redo         (done)
-0.1.17 DocumentContext (dirty, version, lastSaved)
+0.1.17 Document + DocumentManager (dirty/version/lastSaved)  (done)
 0.1.18 Input System (DOM -> platform-independent engine events)
-0.1.19 Serializer
+0.1.19 Serializer (Document <-> JSON)
 0.1.20 Local Storage
 0.1.21 Publisher Adapter (stub)
 0.1.22 Forking
-0.2    Blockchain publishing
+0.2    Blockchain publishing, multiplayer

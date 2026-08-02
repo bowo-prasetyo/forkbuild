@@ -4,10 +4,11 @@ infrastructure adapters that surround them.
 core/
 
 Pure game model. World, Building, Brick, Position, BrickDefinition,
-BrickRegistry, PlacementValidator, createId, and events/ (EventBus,
-DomainEvent, EventListener, and — as of 0.1.10 — EditorEvent). No
-Three.js, no Vue, no browser APIs. Never imports anything from
-application/, renderer/, or ui/.
+BrickRegistry, PlacementValidator, Document, DocumentMetadata,
+protocolVersion, createId, and events/ (EventBus, DomainEvent,
+EventListener, and — as of 0.1.10 — EditorEvent). No Three.js, no Vue, no
+browser APIs. Never imports anything from application/, renderer/, or
+ui/.
 
 Every World, Building, and Brick has a first-class UUID identity
 (createId(), defaulted in each constructor) rather than a hand-picked or
@@ -28,6 +29,19 @@ field would (both are just "the palette's visual for this definition") —
 kept as one field rather than two. BrickRegistry is a proper catalog:
 get(id), has(id), getAll(), getByCategory(category), search(tags) (single
 tag or array; matches if a definition's tags intersect the query at all).
+
+Document (core/Document.js) is the publishable/persistable unit: a World
+plus DocumentMetadata (title, author, created, modified, protocolVersion,
+engineVersion — the latter two reusing core/protocolVersion.js and
+core/version.js rather than duplicating those numbers). A Document is
+not a World; it CONTAINS one, the same relationship as Building
+containing Bricks. This is what a future Serializer will read/write and
+what a Publisher eventually transmits — both toJSON()/fromJSON() exist
+now, before either consumer does, matching how every other core/ class
+has gotten this pair ahead of need. Deliberately excludes anything
+session-local (dirty, readOnly, "loaded from") — that's DocumentState,
+Editor State, in application/editor-state/. See "Domain State vs Editor
+State" below.
 
 World is the aggregate root. addBuilding/removeBuilding and
 addBrickToBuilding/removeBrickFromBuilding publish BuildingAdded /
@@ -224,11 +238,48 @@ knows or cares whether undo/redo exists; PlacementTool and SelectionTool
 both call commandHistory.execute() exactly as before, unchanged by any
 of this.
 
-Deferred deliberately: DocumentContext (dirty/version/lastSaved
-tracking). It's a genuinely separate concept — a document wrapper around
-World, not an extension of the command architecture — and bundling it
-into the same diff as Command's contract change would blur two things
-that are each substantial enough to review on their own.
+As of 0.1.17, CommandHistory also publishes CommandExecuted/
+CommandUndone/CommandRedone (application/events/CommandHistoryEvent.js)
+through its own EventBus on every successful operation. This is a third
+event vocabulary, distinct from both DomainEvent and EditorEvent — and
+unlike those two, it does NOT need to live in core/: both the publisher
+(CommandHistory) and its only subscriber (DocumentManager) live in
+application/, so the lowest layer both sides can reach without depending
+on each other is application/ itself this time. The general rule that's
+crystallized across all three cases: event vocabulary lives at the
+lowest layer both the publisher and every subscriber can reach — that's
+sometimes core/, sometimes the layer the publisher already sits in.
+CommandHistory doesn't call documentManager.markDirty() itself; that
+coupling lives entirely in DocumentManager.trackCommandHistory(), so
+CommandHistory has no idea DocumentManager exists.
+
+DocumentManager (application/DocumentManager.js) owns document lifecycle
+— mirrors what CommandHistory does for command execution: one place
+decides what "the current document" is and how its DocumentState
+changes. markDirty()/markSaved()/newDocument()/load()/close() are the
+only ways DocumentState should change. trackCommandHistory(commandHistory)
+subscribes to that history's CommandExecuted/Undone/Redone events and
+calls markDirty() on each, returning an unsubscribe function — so a
+tool placing or deleting a brick automatically dirties the document
+without PlacementTool or SelectionTool needing to know DocumentManager
+exists, the same way neither needs to know CommandHistory publishes
+those events at all. Known simplification: undo also marks dirty, even
+if it happens to land exactly back on a previously-saved state — true
+"is the content identical to what's on disk" tracking is future work,
+not observable (or needed) until Serializer/Local Storage exist.
+CreateDocumentManagerUseCase (application/CreateDocumentManagerUseCase.js)
+constructs Document/DocumentMetadata (both core/ classes) on
+application/'s behalf, so ui/ never has to import core/Document directly
+just to get a DocumentManager — same reasoning as PlacementTool
+constructing its own PlacementValidator instead of EditorView doing it.
+
+Recognized, not implemented: CommandHistory's undo stack is, in effect,
+an append-only log of everything that changed this document — which
+means World = Replay(all commands) is already a valid way to describe
+the architecture, even though nothing here is event-sourced. Worth
+naming for future debugging/replay tooling (step through a building
+session command by command), but not a system to build until something
+actually needs it.
 
 Entities vs Domain Services (a distinction within core/, worth naming
 explicitly): World, Building, and Brick are entities — they own state
@@ -364,14 +415,20 @@ Domain State vs Editor State
 
 Two kinds of state exist in ForkBuild, and they must never mix.
 
-Domain State — World, Building, Brick (core/). Publishable, serializable,
-shared, forkable. This is what the ForkBuild Protocol describes and what
-storage/publisher eventually persist and transmit.
+Domain State — World, Building, Brick, and (as of 0.1.17) Document/
+DocumentMetadata (core/). Publishable, serializable, shared, forkable.
+This is what the ForkBuild Protocol describes and what storage/publisher
+eventually persist and transmit. Document doesn't replace World as the
+aggregate root — it wraps World plus the metadata (title, author,
+timestamps, versions) that travels alongside it when saved or published.
 
 Editor State — everything in EditorContext (application/): selection,
-active tool, active brick, camera pose, placement preview, settings.
-Purely local to one editing session. Never part of a World, never
-serialized into the Protocol, never sent to a publisher. The placement
+active tool, active brick, camera pose, placement preview, settings —
+plus, as of 0.1.17, DocumentState (dirty, readOnly, loadedFrom,
+lastSaved), owned by DocumentManager rather than EditorContext (a
+deliberate peer, not a sub-field — see the application/ section above).
+Purely local to one editing session. Never part of a World or Document,
+never serialized into the Protocol, never sent to a publisher. The placement
 preview in particular is worth being explicit about: it looks like a
 brick, sits in the same 3D space as real bricks, but is Editor State
 through and through — it never becomes a Brick until PlaceBrickCommand
