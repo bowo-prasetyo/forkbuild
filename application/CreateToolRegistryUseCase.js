@@ -1,5 +1,6 @@
 import { ToolRegistry } from './tools/ToolRegistry.js';
 import { SelectionTool } from './tools/SelectionTool.js';
+import { PlacementTool } from './tools/PlacementTool.js';
 import { ToolId } from './editor-state/ToolId.js';
 
 // Builds the ToolRegistry and registers every built-in tool. Later,
@@ -10,6 +11,7 @@ export class CreateToolRegistryUseCase {
     execute() {
         const registry = new ToolRegistry();
         registry.register(ToolId.SELECT, SelectionTool);
+        registry.register(ToolId.PLACE, PlacementTool);
         return registry;
     }
 }
