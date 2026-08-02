@@ -11,11 +11,11 @@
 0.1.11 Brick Palette                        (done)
 0.1.12 Tool Framework                       (done)
 0.1.13 Placement Preview                    (done)
-0.1.14 PlaceBrickCommand
-0.1.15 Placement Tool (wire onPointerDown)
-0.1.16 DeleteBrickCommand
-0.1.17 Command History (Undo/Redo)
-0.1.18 Input System (DOM -> platform-independent engine events)
-0.1.19 Serializer
-0.1.20 Local Storage
-0.1.21 Publisher Adapter
+0.1.14 PlaceBrickCommand + Placement Tool (click commits)  (done)
+0.1.15 DeleteBrickCommand
+0.1.16 Command History (Undo/Redo)
+0.1.17 Input System (DOM -> platform-independent engine events)
+0.1.18 Serializer
+0.1.19 Local Storage
+0.1.20 Publisher Adapter (stub)
+0.2    Blockchain publishing

@@ -4,10 +4,10 @@ infrastructure adapters that surround them.
 core/
 
 Pure game model. World, Building, Brick, Position, BrickDefinition,
-BrickRegistry, createId, and events/ (EventBus, DomainEvent,
-EventListener, and — as of 0.1.10 — EditorEvent). No Three.js, no Vue, no
-browser APIs. Never imports anything from application/, renderer/, or
-ui/.
+BrickRegistry, PlacementValidator, createId, and events/ (EventBus,
+DomainEvent, EventListener, and — as of 0.1.10 — EditorEvent). No
+Three.js, no Vue, no browser APIs. Never imports anything from
+application/, renderer/, or ui/.
 
 Every World, Building, and Brick has a first-class UUID identity
 (createId(), defaulted in each constructor) rather than a hand-picked or
@@ -127,24 +127,62 @@ PreviewUseCase (application/PreviewUseCase.js) is the placement preview's
 single entry point: show(definitionId, position, rotation)/hide(),
 writing through EditorContext.preview (PreviewState — visible,
 definitionId, position, rotation; Editor State, never becomes a real
-Brick until a future PlaceBrickCommand commits it). PlacementTool
+Brick until PlaceBrickCommand commits it). PlacementTool
 (application/tools/PlacementTool.js) drives it: pointer move -> pick (is
 an existing brick under the cursor?) -> pickGround (where would a ray
 hit the ground plane?) -> snap to EditorSettings.gridSnapSize ->
-previewUseCase.show(). onPointerDown is a documented no-op — actual
-placement needs PlaceBrickCommand, which doesn't exist until the next
-milestone. Known limitation: hovering an existing brick hides the preview
-rather than stacking on top of it; face-relative placement needs
-face-normal detection from the raycast hit and is deliberately deferred
-to when PlaceBrickCommand needs to decide exact placement rules anyway.
+previewUseCase.show(). Known limitation carried over from 0.1.13:
+hovering an existing brick hides the preview rather than stacking on top
+of it; face-relative placement needs face-normal detection from the
+raycast hit and stays deferred until it's actually needed.
+
+As of 0.1.14, PlacementTool.onPointerDown is real: PlacementValidator
+(core/PlacementValidator.js — see below for why it's in core/, not
+application/) checks the previewed position is unoccupied, then
+PlaceBrickCommand (application/commands/PlaceBrickCommand.js) executes.
+PlaceBrickCommand is immutable and holds no brickId — it creates the
+Brick's identity when executed, not before — which is what makes it
+serializable (toJSON()/fromJSON() round-trip worldId/buildingId/
+definitionId/position/rotation as plain data) and, eventually, what a
+future command-history/undo system and multiplayer transport can work
+with directly. It is completely renderer-ignorant: execute() calls
+World.addBrickToBuilding() (which publishes BrickAdded) and stops — the
+renderer, preview, and selection systems react to that event on their
+own, the same as any other BrickAdded. execute(context) takes { world }
+rather than storing a live World reference, and checks context.world.id
+against its own worldId as a data-integrity guard (not collision
+logic — that's PlacementValidator's job, called by PlacementTool before
+the command is even constructed, never by the command itself). After a
+successful commit, PlacementTool immediately hides the preview so the
+ghost doesn't sit visually overlapping the brick WorldRenderer just
+created for real.
+
+PlacementValidator lives in core/ rather than application/, despite
+being introduced as part of a tool's pipeline: "is this placement legal"
+is a World-level invariant — the same rule a future multiplayer server
+would need to enforce before accepting a PlaceBrickCommand from a
+client, not just client-side UI convenience. Today it does one thing:
+reject a position already occupied by another brick in the same
+building, iterating that building's bricks because no SpatialIndex
+exists yet. Deliberately not written to assume that's permanent; a
+future SpatialIndex would make this an O(1) lookup without
+PlacementValidator's public shape changing — not built now, since there's
+no evidence yet that brick counts are high enough to need it.
+
+PlacementTool constructs its own PlacementValidator internally rather
+than receiving it through ToolContext from EditorView: EditorView (ui/)
+must never import core/ directly (see the ui/ section below), and
+threading a core/ class through ui/-assembled ToolContext would do
+exactly that. application/tools/ -> core/ is an allowed dependency on
+its own, so the tool just constructs what it needs.
 
 Input System: not built yet. EditorView currently normalizes raw DOM
 PointerEvent/KeyboardEvent into plain {screenX, screenY, button}/{key}
 objects inline before calling ToolManager. Extracting that into a proper
 platform-independent InputSystem (so desktop/Electron/touch input could
 drive the same tools without ui/ changes) is worthwhile future work, but
-deliberately not bundled into the Placement Preview milestone — mixing
-architectural cleanup with feature work makes both harder to review.
+deliberately not bundled into feature milestones — mixing architectural
+cleanup with feature work makes both harder to review.
 
 renderer/
 
@@ -265,10 +303,10 @@ serialized into the Protocol, never sent to a publisher. The placement
 preview in particular is worth being explicit about: it looks like a
 brick, sits in the same 3D space as real bricks, but is Editor State
 through and through — it never becomes a Brick until PlaceBrickCommand
-(0.1.14) commits it to World.
+commits it to World.
 
-The practical rule: if a serializer (0.1.14+) is ever tempted to write a
-field from EditorContext into a World's JSON, that's a bug. Domain State
+The practical rule: if a serializer is ever tempted to write a field
+from EditorContext into a World's JSON, that's a bug. Domain State
 answers "what did the user build?" Editor State answers "what is the
 user currently doing while building it?" — the second question's answer
 should never leak into the first's.
