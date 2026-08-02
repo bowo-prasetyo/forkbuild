@@ -1,5 +1,6 @@
 import { Brick } from '../../core/Brick.js';
 import { Position } from '../../core/Position.js';
+import { Command } from './Command.js';
 
 // Immutable: describes what SHOULD happen, not what already happened.
 // Deliberately holds no brickId — the command creates the Brick's
@@ -14,8 +15,9 @@ import { Position } from '../../core/Position.js';
 // to that event on their own. No collision checking here either; that's
 // PlacementValidator's job, called by whoever constructs this command
 // (PlacementTool), not by the command itself.
-export class PlaceBrickCommand {
+export class PlaceBrickCommand extends Command {
     constructor({ worldId, buildingId, definitionId, position, rotation = 0 }) {
+        super();
         this._worldId = worldId;
         this._buildingId = buildingId;
         this._definitionId = definitionId;
