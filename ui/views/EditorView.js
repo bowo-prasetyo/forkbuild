@@ -9,6 +9,7 @@ import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
 import { CommandHistory } from '../../application/CommandHistory.js';
+import { CreateDocumentManagerUseCase } from '../../application/CreateDocumentManagerUseCase.js';
 import { ToolManager } from '../../application/ToolManager.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
 import Toolbar from '../components/Toolbar.js';
@@ -60,6 +61,7 @@ export default {
 
         let session = null;
         let toolManager = null;
+        let untrackDirtyState = null;
         let onPointerDown = null;
         let onPointerMove = null;
         let onKeyDown = null;
@@ -77,6 +79,8 @@ export default {
             );
             const world = new CreateDemoWorldUseCase().execute(eventBus);
             const commandHistory = new CommandHistory({ world });
+            const documentManager = new CreateDocumentManagerUseCase().execute(world);
+            untrackDirtyState = documentManager.trackCommandHistory(commandHistory);
 
             // ToolContext: a plain, explicit bag of what tools are allowed
             // to touch. No raw Three.js/Renderer reference (pick/pickGround
@@ -145,6 +149,7 @@ export default {
             window.removeEventListener('keydown', onKeyDown);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
+            untrackDirtyState();
             toolManager.stop();
             session.dispose();
         });
