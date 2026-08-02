@@ -6,9 +6,10 @@ import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
 const BRICK_REST_HEIGHT = 0.5;
 
 // Pointer move -> pick -> (ground plane -> snap) -> PreviewUseCase.show().
-// Pointer down -> PlacementValidator -> PlaceBrickCommand -> World, as of
-// this milestone. Renderer-ignorant throughout: this tool never touches
-// Three.js, only World (via the command) and EditorContext (via the use
+// Pointer down -> PlacementValidator -> PlaceBrickCommand ->
+// CommandHistory.execute(), as of this milestone. Renderer-ignorant
+// throughout: this tool never touches Three.js, only World (via the
+// command, routed through CommandHistory) and EditorContext (via the use
 // cases).
 //
 // PlacementValidator is constructed here rather than threaded through
@@ -83,7 +84,7 @@ export class PlacementTool extends Tool {
             position: preview.position,
             rotation: preview.rotation
         });
-        command.execute({ world });
+        this.context.commandHistory.execute(command);
 
         // The previewed brick now exists for real — hide the ghost until
         // the next pointer move recalculates it, so it doesn't sit
