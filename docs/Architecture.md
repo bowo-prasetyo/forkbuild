@@ -48,23 +48,25 @@ both World and the renderer — core/ and renderer/ never reference each
 other directly, only the events between them.
 
 EditorContext (application/EditorContext.js) holds all transient editor
-state: selection, active tool, active brick, camera pose, settings. This
-is Editor State, not Domain State — see the distinction below. It has its
-own EventBus (SelectionChanged, ToolChanged, ActiveBrickChanged,
-CameraStateChanged, SettingsChanged), kept separate from the domain
-EventBus on purpose: nothing about "what tool is active" should ever be
-reachable from a subscription meant for "what changed in the world."
-EditorContext itself correctly lives in application/, as originally
-proposed — nothing in core/ needs to publish or receive editor events.
-But the EditorEvent *constants* (core/events/EditorEvent.js) had to move
-to core/events/ once renderer/SelectionRenderer needed to subscribe to
-them: renderer/ must never depend on application/, so the shared
-vocabulary between EditorContext (publisher, application/) and
-SelectionRenderer (subscriber, renderer/) needed a home both can reach
+state: selection, active tool, active brick, camera pose, preview,
+settings. This is Editor State, not Domain State — see the distinction
+below. It has its own EventBus (SelectionChanged, ToolChanged,
+ActiveBrickChanged, CameraStateChanged, PreviewChanged, SettingsChanged),
+kept separate from the domain EventBus on purpose: nothing about "what
+tool is active" should ever be reachable from a subscription meant for
+"what changed in the world." EditorContext itself correctly lives in
+application/, as originally proposed — nothing in core/ needs to publish
+or receive editor events. But the EditorEvent *constants*
+(core/events/EditorEvent.js) had to move to core/events/ once
+renderer/SelectionRenderer needed to subscribe to them: renderer/ must
+never depend on application/, so the shared vocabulary between
+EditorContext (publisher, application/) and SelectionRenderer/
+PreviewRenderer (subscribers, renderer/) needed a home both can reach
 without depending on each other — the same reasoning as the domain
 EventBus, just discovered one milestone later. Sub-state pieces
-(SelectionState, ToolState, ActiveBrickState, EditorSettings) live in
-application/editor-state/, each pure data with no Three.js/Vue/DOM.
+(SelectionState, ToolState, ActiveBrickState, PreviewState,
+EditorSettings) live in application/editor-state/, each pure data with no
+Three.js/Vue/DOM.
 
 This is also where commands/ (undoable actions) and services/ (export,
 import, screenshot) live — cross-cutting operations, as distinct from
@@ -103,14 +105,15 @@ that input handling used to live in ui/.
 
 ToolContext is a plain object, not a class — it has no behavior of its
 own, just references a tool is allowed to touch (world, editorContext,
-pick, selectionUseCase today; more as tools need them). Deliberately
-narrower than the { world, editorContext, renderer, picking, commands }
-originally proposed: no raw Renderer reference (would let any tool bypass
-PickingService/WorldRenderer and touch Three.js directly, undoing "the
-editor manipulates domain objects, not meshes"), and tools mutate editor
-state only through use cases like selectionUseCase, never by calling
-editorContext.setX() directly — reading editorContext is fine, writing
-isn't, mirroring the discipline ui/ already follows.
+pick, pickGround, selectionUseCase, previewUseCase today; more as tools
+need them). Deliberately narrower than the { world, editorContext,
+renderer, picking, commands } originally proposed: no raw Renderer
+reference (would let any tool bypass PickingService/WorldRenderer and
+touch Three.js directly, undoing "the editor manipulates domain objects,
+not meshes"), and tools mutate editor state only through use cases like
+selectionUseCase/previewUseCase, never by calling editorContext.setX()
+directly — reading editorContext is fine, writing isn't, mirroring the
+discipline ui/ already follows.
 
 Naming collision avoided: application/editor-state/Tool.js (the tool id
 constants, e.g. ToolId.SELECT) was renamed to ToolId.js/ToolId once the
@@ -119,6 +122,29 @@ just the id string (e.g. "select"), not a resolved Tool instance — same
 pattern as SelectionState storing brickId (not a Brick) and ActiveBrickState
 storing definitionId (not a BrickDefinition): EditorContext holds ids,
 resolution happens through the relevant registry when needed.
+
+PreviewUseCase (application/PreviewUseCase.js) is the placement preview's
+single entry point: show(definitionId, position, rotation)/hide(),
+writing through EditorContext.preview (PreviewState — visible,
+definitionId, position, rotation; Editor State, never becomes a real
+Brick until a future PlaceBrickCommand commits it). PlacementTool
+(application/tools/PlacementTool.js) drives it: pointer move -> pick (is
+an existing brick under the cursor?) -> pickGround (where would a ray
+hit the ground plane?) -> snap to EditorSettings.gridSnapSize ->
+previewUseCase.show(). onPointerDown is a documented no-op — actual
+placement needs PlaceBrickCommand, which doesn't exist until the next
+milestone. Known limitation: hovering an existing brick hides the preview
+rather than stacking on top of it; face-relative placement needs
+face-normal detection from the raycast hit and is deliberately deferred
+to when PlaceBrickCommand needs to decide exact placement rules anyway.
+
+Input System: not built yet. EditorView currently normalizes raw DOM
+PointerEvent/KeyboardEvent into plain {screenX, screenY, button}/{key}
+objects inline before calling ToolManager. Extracting that into a proper
+platform-independent InputSystem (so desktop/Electron/touch input could
+drive the same tools without ui/ changes) is worthwhile future work, but
+deliberately not bundled into the Placement Preview milestone — mixing
+architectural cleanup with feature work makes both harder to review.
 
 renderer/
 
@@ -136,14 +162,17 @@ Owns the scene, camera, lights, grid, and render loop. Owns no game state,
 and (as of the event system) doesn't even hold a reference to a World —
 only to the events it emits.
 
-PickingService answers exactly one question: what brick is under this
-screen position? It raycasts against MeshRegistry's meshes and resolves
-the hit back to { brickId, buildingId } via the same registry. It knows
-nothing about selection, highlighting, or any other UI state — Picking
-does not depend on Selection; Selection (0.1.10+) will depend on Picking.
+PickingService answers two questions from screen coordinates: what brick
+is under this position (pick), and where would a ray hit the ground
+plane (pickGroundPosition, added 0.1.13 for placement preview — returns a
+core/Position, never a Three.js type). It raycasts against MeshRegistry's
+meshes and resolves the hit back to { brickId, buildingId } via the same
+registry. It knows nothing about selection, preview, or any other UI
+state — Picking does not depend on them; they depend on Picking.
 RenderWorldUseCase wires PickingService up alongside Renderer/
-WorldRenderer and exposes a plain pick(screenX, screenY) function on its
-returned handle, so ui/ never needs a Three.js reference to use it.
+WorldRenderer and exposes plain pick(screenX, screenY)/
+pickGround(screenX, screenY) functions on its returned handle, so ui/
+(and tools) never need a Three.js reference to use it.
 
 CameraController owns orbit/pan/zoom (via Three.js's OrbitControls
 addon), resize, and reset (bound to the Home key). CameraState is a pure
@@ -164,6 +193,15 @@ independent overlay object, so it's not a "true" overlay in the strict
 sense yet (see Render Layers below); it was the simplest thing that looks
 right for this milestone.
 
+PreviewRenderer is the renderer's second overlay: PreviewState -> a
+single semi-transparent ghost mesh, subscribed to
+EditorEvent.PREVIEW_CHANGED. Reuses ThreeBrickFactory so the ghost has
+the exact geometry the real brick would have, then clones the material
+and sets transparent/opacity — never touches the World, never creates a
+real Brick. Recreates the mesh only when definitionId changes (e.g. the
+palette selection changed); otherwise just moves the existing mesh, so
+dragging the pointer around doesn't churn geometry every frame.
+
 Render Layers (conceptual, not yet code)
 
 Think of the scene as three logical layers even though everything
@@ -174,11 +212,12 @@ the World), and a Gizmo Layer (future transform handles, axes,
 manipulators). None of this requires separate THREE.Scene or THREE.Group
 objects yet — the point is that new visual features should be reasoned
 about as "which layer does this belong to" before writing code, so they
-land in the right place by default. SelectionRenderer conceptually
-belongs to the Overlay Layer even though its current implementation
-(mutating the brick's own material) blurs that line slightly — a future
-pass could replace it with a true independent overlay mesh without
-changing SelectionRenderer's public shape.
+land in the right place by default. SelectionRenderer and PreviewRenderer
+both conceptually belong to the Overlay Layer, even though SelectionRenderer's
+current implementation (mutating the brick's own material) blurs that
+line slightly — a future pass could replace it with a true independent
+overlay mesh, matching how PreviewRenderer already adds its own separate
+mesh, without changing either renderer's public shape.
 
 ui/
 
@@ -220,9 +259,13 @@ shared, forkable. This is what the ForkBuild Protocol describes and what
 storage/publisher eventually persist and transmit.
 
 Editor State — everything in EditorContext (application/): selection,
-active tool, active brick, camera pose, settings. Purely local to one
-editing session. Never part of a World, never serialized into the
-Protocol, never sent to a publisher.
+active tool, active brick, camera pose, placement preview, settings.
+Purely local to one editing session. Never part of a World, never
+serialized into the Protocol, never sent to a publisher. The placement
+preview in particular is worth being explicit about: it looks like a
+brick, sits in the same 3D space as real bricks, but is Editor State
+through and through — it never becomes a Brick until PlaceBrickCommand
+(0.1.14) commits it to World.
 
 The practical rule: if a serializer (0.1.14+) is ever tempted to write a
 field from EditorContext into a World's JSON, that's a bug. Domain State
