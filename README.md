@@ -11,7 +11,7 @@ ForkBuild is a modular building platform where creations are stored using interc
 
 Current Status
 
-Version 0.1.12 — Tool Framework (see docs/Roadmap.md for the full milestone list)
+Version 0.1.13 — Placement Preview (see docs/Roadmap.md for the full milestone list)
 
 Roadmap
 
@@ -27,11 +27,12 @@ Roadmap
 - [x] 0.1.10 Selection Tool
 - [x] 0.1.11 Brick Palette
 - [x] 0.1.12 Tool Framework
-- [ ] 0.1.13 Placement Preview
+- [x] 0.1.13 Placement Preview
 - [ ] 0.1.14 PlaceBrickCommand
-- [ ] 0.1.15 Placement Tool
+- [ ] 0.1.15 Placement Tool (wire onPointerDown)
 - [ ] 0.1.16 DeleteBrickCommand
 - [ ] 0.1.17 Command History (Undo/Redo)
-- [ ] 0.1.18 Serializer
-- [ ] 0.1.19 Local Storage
-- [ ] 0.1.20 Publisher Adapter
+- [ ] 0.1.18 Input System
+- [ ] 0.1.19 Serializer
+- [ ] 0.1.20 Local Storage
+- [ ] 0.1.21 Publisher Adapter
