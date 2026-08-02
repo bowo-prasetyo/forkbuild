@@ -18,5 +18,6 @@ export const EditorEvent = Object.freeze({
     TOOL_CHANGED: 'ToolChanged',
     ACTIVE_BRICK_CHANGED: 'ActiveBrickChanged',
     CAMERA_STATE_CHANGED: 'CameraStateChanged',
-    SETTINGS_CHANGED: 'SettingsChanged'
+    SETTINGS_CHANGED: 'SettingsChanged',
+    PREVIEW_CHANGED: 'PreviewChanged'
 });
