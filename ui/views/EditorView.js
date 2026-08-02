@@ -7,16 +7,25 @@ import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryU
 import { RenderWorldUseCase } from '../../application/RenderWorldUseCase.js';
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
+import { PreviewUseCase } from '../../application/PreviewUseCase.js';
 import { ToolManager } from '../../application/ToolManager.js';
+import { ToolId } from '../../application/editor-state/ToolId.js';
 import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
 
+// TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool.
+// No real Toolbar UI exists yet to click "Select"/"Place" — this is the
+// same kind of lightweight, honest verification mechanism used throughout
+// this build (the diagnostic cube, the console.log pick handler) rather
+// than a real feature. Replace with actual Toolbar buttons calling the
+// same editorContext.setActiveTool() when that UI is built.
+const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
+
 // EditorView is intentionally dumb: it never imports core/ or renderer/
-// directly, and — as of the Tool Framework — no longer contains any
-// selection/input LOGIC either. It just normalizes raw DOM events into
-// plain pointer/key objects and forwards them to ToolManager. What
-// happens on a click depends entirely on which tool is active; EditorView
-// doesn't know or care.
+// directly, and contains no selection/placement LOGIC — it just
+// normalizes raw DOM events into plain pointer/key objects and forwards
+// them to ToolManager. What happens on a click or a mouse move depends
+// entirely on which tool is active; EditorView doesn't know or care.
 export default {
     name: 'EditorView',
     components: { Toolbar, Sidebar },
@@ -41,11 +50,13 @@ export default {
         const editorContext = new CreateEditorContextUseCase().execute();
         const selectionUseCase = new SelectionUseCase(editorContext);
         const paletteUseCase = new PaletteUseCase(registry, editorContext);
+        const previewUseCase = new PreviewUseCase(editorContext);
         const toolRegistry = new CreateToolRegistryUseCase().execute();
 
         let session = null;
         let toolManager = null;
         let onPointerDown = null;
+        let onPointerMove = null;
         let onKeyDown = null;
 
         onMounted(() => {
@@ -62,15 +73,18 @@ export default {
             const world = new CreateDemoWorldUseCase().execute(eventBus);
 
             // ToolContext: a plain, explicit bag of what tools are allowed
-            // to touch. No raw Three.js/Renderer reference (pick() is the
-            // narrow capability instead) and no raw editorContext writes
-            // (selectionUseCase is the entry point for those) — tools stay
-            // bound by the same discipline as ui/ itself.
+            // to touch. No raw Three.js/Renderer reference (pick/pickGround
+            // are the narrow capabilities instead) and no raw editorContext
+            // writes (selectionUseCase/previewUseCase are the entry points
+            // for those) — tools stay bound by the same discipline as ui/
+            // itself.
             const toolContext = {
                 world,
                 editorContext,
                 pick: (screenX, screenY) => session.pick(screenX, screenY),
-                selectionUseCase
+                pickGround: (screenX, screenY) => session.pickGround(screenX, screenY),
+                selectionUseCase,
+                previewUseCase
             };
             toolManager = new ToolManager(toolRegistry, toolContext, editorContext);
             toolManager.start();
@@ -84,7 +98,20 @@ export default {
             };
             viewport.value.addEventListener('pointerdown', onPointerDown);
 
+            onPointerMove = (event) => {
+                toolManager.onPointerMove({
+                    screenX: event.clientX,
+                    screenY: event.clientY
+                });
+            };
+            viewport.value.addEventListener('pointermove', onPointerMove);
+
             onKeyDown = (event) => {
+                const shortcutTool = TOOL_SHORTCUTS[event.key];
+                if (shortcutTool) {
+                    editorContext.setActiveTool(shortcutTool);
+                    return;
+                }
                 toolManager.onKeyDown({ key: event.key });
             };
             window.addEventListener('keydown', onKeyDown);
@@ -92,6 +119,7 @@ export default {
 
         onBeforeUnmount(() => {
             window.removeEventListener('keydown', onKeyDown);
+            viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
             toolManager.stop();
             session.dispose();
