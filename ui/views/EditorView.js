@@ -8,6 +8,7 @@ import { RenderWorldUseCase } from '../../application/RenderWorldUseCase.js';
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
+import { CommandHistory } from '../../application/CommandHistory.js';
 import { ToolManager } from '../../application/ToolManager.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
 import Toolbar from '../components/Toolbar.js';
@@ -71,20 +72,24 @@ export default {
                 editorContext.eventBus
             );
             const world = new CreateDemoWorldUseCase().execute(eventBus);
+            const commandHistory = new CommandHistory({ world });
 
             // ToolContext: a plain, explicit bag of what tools are allowed
             // to touch. No raw Three.js/Renderer reference (pick/pickGround
             // are the narrow capabilities instead) and no raw editorContext
             // writes (selectionUseCase/previewUseCase are the entry points
             // for those) — tools stay bound by the same discipline as ui/
-            // itself.
+            // itself. Tools execute commands through commandHistory rather
+            // than calling command.execute() directly, so a tool never
+            // needs to know whether undo/redo exists.
             const toolContext = {
                 world,
                 editorContext,
                 pick: (screenX, screenY) => session.pick(screenX, screenY),
                 pickGround: (screenX, screenY) => session.pickGround(screenX, screenY),
                 selectionUseCase,
-                previewUseCase
+                previewUseCase,
+                commandHistory
             };
             toolManager = new ToolManager(toolRegistry, toolContext, editorContext);
             toolManager.start();
