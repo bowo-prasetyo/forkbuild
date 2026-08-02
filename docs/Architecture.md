@@ -159,28 +159,76 @@ ghost doesn't sit visually overlapping the brick WorldRenderer just
 created for real.
 
 As of 0.1.15, Command (application/commands/Command.js) is the base
-class every command extends — execute(context) only, so CommandHistory
-has exactly one thing to call. DeleteBrickCommand
-(application/commands/DeleteBrickCommand.js) mirrors PlaceBrickCommand
-closely (immutable, worldId/buildingId, same worldId-mismatch guard,
-same toJSON()/fromJSON()) but carries a brickId instead of a
+class every command extends. As of 0.1.16, its contract is
+execute(context) + undo(context) + canUndo() — both execute() and
+undo() throw by default (a command must explicitly implement undo() to
+support it; existing is not the same as being reversible) and canUndo()
+defaults to true, overridden per command. No redo() on Command: redo is
+simply execute() again, with CommandHistory managing which direction is
+being replayed.
+
+DeleteBrickCommand (application/commands/DeleteBrickCommand.js) mirrors
+PlaceBrickCommand closely (same worldId-mismatch guard, same
+toJSON()/fromJSON() shape) but carries a brickId instead of a
 definitionId/position/rotation, and calls
 World.removeBrickFromBuilding() (publishing BrickRemoved) instead of
 addBrickToBuilding(). Wired into SelectionTool: Delete/Backspace deletes
 the current selection and clears it — input handling living with the
 tool it belongs to, same reasoning as Escape-to-clear.
 
+Both PlaceBrickCommand and DeleteBrickCommand have one narrow,
+deliberate crack in immutability: constructor fields never change, but
+each command remembers "what actually happened" after execute() runs —
+PlaceBrickCommand keeps the id of the brick it created
+(_executedBrickId); DeleteBrickCommand snapshots the removed brick's
+full data (_removedBrickSnapshot) before removing it, since that data is
+gone once World.removeBrickFromBuilding() runs. Both are deliberately
+excluded from toJSON() — they're bookkeeping for THIS command instance's
+own undo/redo within a session, not part of the command's serializable
+intent. A command reconstructed via fromJSON() starts fresh
+(canUndo() === false) and would need its own execute() call before it
+could be undone; replaying a command elsewhere (multiplayer, a fresh
+session) correctly creates a new placement with a new identity, not a
+resurrection of the original.
+
+Redo stability: PlaceBrickCommand.execute() reuses _executedBrickId if
+already set, so undo() -> redo() (execute() again) recreates the SAME
+brick identity rather than a new one. DeleteBrickCommand.undo() restores
+the brick with its ORIGINAL id from the snapshot, for the same reason:
+delete -> undo should be indistinguishable from "the delete never
+happened," which requires the exact identity back.
+
+CompositeCommand (application/commands/CompositeCommand.js) is a Command
+made of other Commands: add(command) before execute(), then
+CommandHistory treats the whole thing as one undo step regardless of
+how many children it has. execute() runs children in the order added;
+undo() reverses them in the OPPOSITE order, since a later child might
+depend on an earlier one having already happened. canUndo() is true only
+if there's at least one child and every child can be undone — a
+composite is only as undoable as its least-undoable part.
+
 CommandHistory (application/CommandHistory.js) is what tools actually
 call — commandHistory.execute(command), not command.execute(context)
 directly. context ({ world } today) is bound once at construction, not
-passed per call. This means a tool never knows or cares whether
-undo/redo/history recording exists; PlacementTool and SelectionTool both
-already call commandHistory.execute() instead of touching a command's
-execute() method themselves. undo()/redo() exist as real methods on
-CommandHistory today, but both throw: no Command implements undo() yet
-(only execute()), so there's nothing to reverse. The API surface is
-established now specifically so that once Command.undo() exists,
-CommandHistory's shape doesn't need to change — only its internals do.
+passed per call. Traditional undo/redo stacks: execute() pushes onto the
+undo stack and clears the redo stack entirely (a fresh action
+invalidates whatever "future" an undo had left available). undo() pops
+the undo stack, calls command.undo(), pushes onto the redo stack.
+redo() pops the redo stack and calls command.execute() again — literally
+the same method as the first execution, per Command having no redo() of
+its own. getExecutedCommands() reflects the current undo stack (what's
+presently applied to the document), not a permanent audit log of
+everything ever run — a command that's been undone moves to the redo
+stack and drops out of this list until/unless it's redone. A tool never
+knows or cares whether undo/redo exists; PlacementTool and SelectionTool
+both call commandHistory.execute() exactly as before, unchanged by any
+of this.
+
+Deferred deliberately: DocumentContext (dirty/version/lastSaved
+tracking). It's a genuinely separate concept — a document wrapper around
+World, not an extension of the command architecture — and bundling it
+into the same diff as Command's contract change would blur two things
+that are each substantial enough to review on their own.
 
 Entities vs Domain Services (a distinction within core/, worth naming
 explicitly): World, Building, and Brick are entities — they own state
