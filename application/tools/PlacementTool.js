@@ -1,19 +1,37 @@
 import { Tool } from './Tool.js';
 import { Position } from '../../core/Position.js';
+import { PlacementValidator } from '../../core/PlacementValidator.js';
+import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
 
 const BRICK_REST_HEIGHT = 0.5;
 
 // Pointer move -> pick -> (ground plane -> snap) -> PreviewUseCase.show().
-// Pointer down -> PlaceBrickCommand -> World is deliberately NOT wired
-// yet: PlaceBrickCommand doesn't exist until 0.1.14. onPointerDown is a
-// documented no-op until then, not an oversight.
+// Pointer down -> PlacementValidator -> PlaceBrickCommand -> World, as of
+// this milestone. Renderer-ignorant throughout: this tool never touches
+// Three.js, only World (via the command) and EditorContext (via the use
+// cases).
 //
-// Known limitation: only snaps to the ground plane. Hovering an existing
-// brick hides the preview rather than attempting to stack on top of it —
-// face-relative placement needs face-normal detection from the raycast
-// hit, real added complexity deliberately deferred to when
-// PlaceBrickCommand needs to decide exact placement rules anyway.
+// PlacementValidator is constructed here rather than threaded through
+// ToolContext from ui/: application/tools/ -> core/ is an allowed
+// dependency, but ui/ -> core/ isn't (see the AboutView exception noted
+// in Architecture.md — deliberately not repeating that mistake here just
+// because EditorView happens to assemble ToolContext).
+//
+// Known limitation carried over from Placement Preview: only supports
+// placing on the ground plane. Hovering an existing brick hides the
+// preview rather than stacking on top of it — face-relative placement
+// needs face-normal detection from the raycast hit, deferred until it's
+// actually needed.
+//
+// V0.1 simplification: assumes exactly one building exists in the world
+// (true for the demo world) and places into it. Choosing which building
+// to build into is future work — not yet part of any roadmap milestone.
 export class PlacementTool extends Tool {
+    constructor(context) {
+        super(context);
+        this._placementValidator = new PlacementValidator();
+    }
+
     deactivate() {
         this.context.previewUseCase.hide();
     }
@@ -42,8 +60,35 @@ export class PlacementTool extends Tool {
     }
 
     onPointerDown(pointerEvent) {
-        // Placement itself arrives in 0.1.14 (PlaceBrickCommand). Until
-        // then, this tool only previews where a brick would go.
+        const preview = this.context.editorContext.preview;
+        if (!preview.visible || !preview.definitionId) {
+            return;
+        }
+
+        const world = this.context.world;
+        const buildings = world.getBuildings();
+        if (buildings.length === 0) {
+            return;
+        }
+        const buildingId = buildings[0].id;
+
+        if (!this._placementValidator.canPlace(world, buildingId, preview.position)) {
+            return;
+        }
+
+        const command = new PlaceBrickCommand({
+            worldId: world.id,
+            buildingId,
+            definitionId: preview.definitionId,
+            position: preview.position,
+            rotation: preview.rotation
+        });
+        command.execute({ world });
+
+        // The previewed brick now exists for real — hide the ghost until
+        // the next pointer move recalculates it, so it doesn't sit
+        // visually overlapping the brick WorldRenderer just created.
+        this.context.previewUseCase.hide();
     }
 
     _snapToGrid(position) {
