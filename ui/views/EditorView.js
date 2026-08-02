@@ -14,12 +14,16 @@ import { ToolId } from '../../application/editor-state/ToolId.js';
 import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
 
-// TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool.
-// No real Toolbar UI exists yet to click "Select"/"Place" — this is the
-// same kind of lightweight, honest verification mechanism used throughout
-// this build (the diagnostic cube, the console.log pick handler) rather
-// than a real feature. Replace with actual Toolbar buttons calling the
-// same editorContext.setActiveTool() when that UI is built.
+// TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool,
+// and Ctrl/Cmd+Z / Ctrl/Cmd+Y (or +Shift+Z) drive CommandHistory directly.
+// No real Toolbar UI or Edit menu exists yet — this is the same kind of
+// lightweight, honest verification mechanism used throughout this build
+// (the diagnostic cube, the console.log pick handler) rather than a real
+// feature. Replace with actual Toolbar/menu buttons calling the same
+// editorContext.setActiveTool()/commandHistory.undo()/.redo() when that
+// UI is built. Undo/redo is wired globally here (not inside a tool's
+// onKeyDown, unlike Escape/Delete) because it applies regardless of which
+// tool is currently active.
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 // EditorView is intentionally dumb: it never imports core/ or renderer/
@@ -117,6 +121,21 @@ export default {
                     editorContext.setActiveTool(shortcutTool);
                     return;
                 }
+
+                const modifierPressed = event.ctrlKey || event.metaKey;
+                if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
+                    if (commandHistory.canUndo()) {
+                        commandHistory.undo();
+                    }
+                    return;
+                }
+                if (modifierPressed && (event.key.toLowerCase() === 'y' || (event.key.toLowerCase() === 'z' && event.shiftKey))) {
+                    if (commandHistory.canRedo()) {
+                        commandHistory.redo();
+                    }
+                    return;
+                }
+
                 toolManager.onKeyDown({ key: event.key });
             };
             window.addEventListener('keydown', onKeyDown);
