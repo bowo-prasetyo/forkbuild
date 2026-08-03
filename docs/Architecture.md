@@ -434,6 +434,47 @@ storage/
 
 Local persistence adapter (LocalStorage to start).
 
+serializer/
+
+World <-> JSON and Document <-> JSON, used by both storage/ and
+publisher/ once those exist. Filled in at 0.1.19 — the first top-level
+adapter folder (of storage/publisher/identity/serializer, all sketched
+back at the core/application/renderer/ui reorg) to get real content,
+confirming the dependency-direction rule stated then (application ->
+storage/publisher/identity/serializer) rather than needing revision now
+that there's something to depend on.
+
+Serializer (serializer/Serializer.js) is the shared base: serialize(object)/
+deserialize(json), both throwing by default — same discipline as Command.
+WorldSerializer wraps World.toJSON()/fromJSON(); DocumentSerializer wraps
+Document.toJSON()/fromJSON() (which itself delegates to WorldSerializer
+for the nested world) and additionally validates metadata.protocolVersion
+against core/protocolVersion.js on every deserialize — a mismatch throws
+today ("Later: migration," not yet needed with only one protocol version
+in existence). validate(json) is public on both, returning a
+ValidationResult (serializer/ValidationResult.js — valid/errors/warnings)
+rather than being a private step inside deserialize(), so a future
+caller (a load dialog, say) can check validity and show a friendly error
+without needing to catch an exception.
+
+Deliberately not done: moving World.fromJSON()/Document.fromJSON() out
+of core/ and into the serializers entirely, so the domain model would
+own zero knowledge of JSON. That's a real direction worth keeping in
+mind — it would make future formats (binary, compressed, a blockchain
+payload) cleaner to add — but refactoring it now, with exactly one format
+and no second consumer yet, would be a wide, disruptive change (touching
+World, Document, and every existing call site) for a benefit nothing
+currently needs. WorldSerializer/DocumentSerializer delegate to the
+existing methods rather than duplicating or replacing them.
+
+serializer/ depends on core/ only — never application/, renderer/, or
+ui/ — the same one-directional relationship renderer/ has with core/,
+just for a different top-level adapter. Nothing calls these serializers
+yet (Local Storage, 0.1.20, is the first real consumer); both classes
+are fully tested standalone, same as EditorContext shipping "wired to
+nothing" in 0.1.9 and DocumentManager shipping with no UI surface in
+0.1.17.
+
 publisher/
 
 Publishing adapter interface, with Steem as the first concrete provider.
@@ -441,10 +482,6 @@ Publishing adapter interface, with Steem as the first concrete provider.
 identity/
 
 Wallet / key management, tied to whichever publisher is active.
-
-serializer/
-
-World <-> JSON, used by both storage/ and publisher/.
 
 Domain State vs Editor State
 

@@ -16,7 +16,7 @@
 0.1.16 CompositeCommand + Undo/Redo         (done)
 0.1.17 Document + DocumentManager (dirty/version/lastSaved)  (done)
 0.1.18 Interaction System (InputDispatcher + undo/redo labels)  (done)
-0.1.19 Serializer (Document <-> JSON)
+0.1.19 WorldSerializer + DocumentSerializer (with validation)  (done)
 0.1.20 Local Storage
 0.1.21 Publisher Adapter (stub)
 0.1.22 Forking
