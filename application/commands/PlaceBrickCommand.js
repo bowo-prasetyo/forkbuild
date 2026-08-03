@@ -91,6 +91,10 @@ export class PlaceBrickCommand extends Command {
         return this._executedBrickId !== null;
     }
 
+    describe() {
+        return 'Place Brick';
+    }
+
     toJSON() {
         return {
             worldId: this._worldId,

@@ -41,4 +41,11 @@ export class CompositeCommand extends Command {
     canUndo() {
         return this._commands.length > 0 && this._commands.every((command) => command.canUndo());
     }
+
+    describe() {
+        if (this._commands.length === 1) {
+            return this._commands[0].describe();
+        }
+        return `${this._commands.length} actions`;
+    }
 }

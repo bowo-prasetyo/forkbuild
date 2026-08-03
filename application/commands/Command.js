@@ -7,6 +7,11 @@
 // false when they haven't run yet (nothing to reverse) or, for
 // CompositeCommand, when any child can't be undone.
 //
+// describe() returns a short human-readable label (e.g. "Place Brick"),
+// used by CommandHistory.getUndoLabel()/getRedoLabel() — defaults to the
+// class name so a command that forgets to override it still produces
+// something reasonable rather than throwing.
+//
 // No redo() here — redo is simply execute() again. CommandHistory
 // manages which direction is being replayed; Command doesn't need to
 // know.
@@ -21,5 +26,9 @@ export class Command {
 
     canUndo() {
         return true;
+    }
+
+    describe() {
+        return this.constructor.name;
     }
 }

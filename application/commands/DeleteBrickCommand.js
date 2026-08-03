@@ -78,6 +78,10 @@ export class DeleteBrickCommand extends Command {
         return this._removedBrickSnapshot !== null;
     }
 
+    describe() {
+        return 'Delete Brick';
+    }
+
     toJSON() {
         return {
             worldId: this._worldId,
