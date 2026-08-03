@@ -10,6 +10,7 @@ import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
 import { CommandHistory } from '../../application/CommandHistory.js';
 import { CreateDocumentManagerUseCase } from '../../application/CreateDocumentManagerUseCase.js';
+import { InputDispatcher } from '../../application/InputDispatcher.js';
 import { ToolManager } from '../../application/ToolManager.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
 import Toolbar from '../components/Toolbar.js';
@@ -22,16 +23,19 @@ import Sidebar from '../components/Sidebar.js';
 // (the diagnostic cube, the console.log pick handler) rather than a real
 // feature. Replace with actual Toolbar/menu buttons calling the same
 // editorContext.setActiveTool()/commandHistory.undo()/.redo() when that
-// UI is built. Undo/redo is wired globally here (not inside a tool's
-// onKeyDown, unlike Escape/Delete) because it applies regardless of which
-// tool is currently active.
+// UI is built. These stay here rather than moving into InputDispatcher:
+// undo/redo and tool-switching are global, tool-independent decisions,
+// not something that gets normalized-and-forwarded to whichever tool
+// happens to be active — InputDispatcher's job stops at "what happened,
+// pre-picked," not "what should the editor do about it globally."
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 // EditorView is intentionally dumb: it never imports core/ or renderer/
-// directly, and contains no selection/placement LOGIC — it just
-// normalizes raw DOM events into plain pointer/key objects and forwards
-// them to ToolManager. What happens on a click or a mouse move depends
-// entirely on which tool is active; EditorView doesn't know or care.
+// directly, and — as of 0.1.18 — no longer even normalizes DOM events
+// itself. It hands raw browser events straight to InputDispatcher, which
+// normalizes and picks before forwarding to ToolManager. EditorView's
+// only remaining input-related job is the temporary global shortcuts
+// above, which fall outside "route input to the active tool" entirely.
 export default {
     name: 'EditorView',
     components: { Toolbar, Sidebar },
@@ -61,6 +65,7 @@ export default {
 
         let session = null;
         let toolManager = null;
+        let inputDispatcher = null;
         let untrackDirtyState = null;
         let onPointerDown = null;
         let onPointerMove = null;
@@ -83,18 +88,19 @@ export default {
             untrackDirtyState = documentManager.trackCommandHistory(commandHistory);
 
             // ToolContext: a plain, explicit bag of what tools are allowed
-            // to touch. No raw Three.js/Renderer reference (pick/pickGround
-            // are the narrow capabilities instead) and no raw editorContext
-            // writes (selectionUseCase/previewUseCase are the entry points
-            // for those) — tools stay bound by the same discipline as ui/
-            // itself. Tools execute commands through commandHistory rather
-            // than calling command.execute() directly, so a tool never
-            // needs to know whether undo/redo exists.
+            // to touch. No pick/pickGround anymore — as of 0.1.18,
+            // InputDispatcher does picking once per event and hands tools
+            // the result directly, so tools never call PickingService
+            // themselves. No raw Three.js/Renderer reference either, and
+            // no raw editorContext writes (selectionUseCase/previewUseCase
+            // are the entry points for those) — tools stay bound by the
+            // same discipline as ui/ itself. Tools execute commands
+            // through commandHistory rather than calling command.execute()
+            // directly, so a tool never needs to know whether undo/redo
+            // exists.
             const toolContext = {
                 world,
                 editorContext,
-                pick: (screenX, screenY) => session.pick(screenX, screenY),
-                pickGround: (screenX, screenY) => session.pickGround(screenX, screenY),
                 selectionUseCase,
                 previewUseCase,
                 commandHistory
@@ -102,21 +108,16 @@ export default {
             toolManager = new ToolManager(toolRegistry, toolContext, editorContext);
             toolManager.start();
 
-            onPointerDown = (event) => {
-                toolManager.onPointerDown({
-                    screenX: event.clientX,
-                    screenY: event.clientY,
-                    button: event.button
-                });
-            };
+            inputDispatcher = new InputDispatcher(
+                toolManager,
+                (screenX, screenY) => session.pick(screenX, screenY),
+                (screenX, screenY) => session.pickGround(screenX, screenY)
+            );
+
+            onPointerDown = (event) => inputDispatcher.dispatchPointerDown(event);
             viewport.value.addEventListener('pointerdown', onPointerDown);
 
-            onPointerMove = (event) => {
-                toolManager.onPointerMove({
-                    screenX: event.clientX,
-                    screenY: event.clientY
-                });
-            };
+            onPointerMove = (event) => inputDispatcher.dispatchPointerMove(event);
             viewport.value.addEventListener('pointermove', onPointerMove);
 
             onKeyDown = (event) => {
@@ -140,7 +141,7 @@ export default {
                     return;
                 }
 
-                toolManager.onKeyDown({ key: event.key });
+                inputDispatcher.dispatchKeyDown(event);
             };
             window.addEventListener('keydown', onKeyDown);
         });
