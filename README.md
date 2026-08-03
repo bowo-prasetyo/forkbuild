@@ -11,7 +11,7 @@ ForkBuild is a modular building platform where creations are stored using interc
 
 Current Status
 
-Version 0.1.19 — WorldSerializer + DocumentSerializer (see docs/Roadmap.md for the full milestone list)
+Version 0.1.20A — Local Storage: persistence API (see docs/Roadmap.md for the full milestone list)
 
 Roadmap
 
@@ -34,7 +34,8 @@ Roadmap
 - [x] 0.1.17 Document + DocumentManager
 - [x] 0.1.18 Interaction System
 - [x] 0.1.19 WorldSerializer + DocumentSerializer
-- [ ] 0.1.20 Local Storage
+- [x] 0.1.20A Local Storage — persistence API
+- [ ] 0.1.20B Local Storage — UI integration
 - [ ] 0.1.21 Publisher Adapter (stub)
 - [ ] 0.1.22 Forking
 - [ ] 0.2 Blockchain publishing, multiplayer
