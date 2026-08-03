@@ -432,7 +432,39 @@ strictly the stated convention.
 
 storage/
 
-Local persistence adapter (LocalStorage to start).
+Filled in at 0.1.20A (persistence API; UI integration is a deliberately
+separate 0.1.20B, not yet done). StorageProvider is the base class: save/
+load/remove/list, operating on plain string names and JSON-safe values.
+LocalStorageProvider is the first concrete implementation, backed by
+window.localStorage, namespacing every key under "forkbuild:" so list()
+never returns unrelated data the page's localStorage might hold.
+
+storage/ is the most decoupled layer in the engine — more so than
+renderer/ or serializer/, both of which at least need core/. Storage
+doesn't know what a Document is, let alone a World or a Brick; it only
+knows names and blobs. That pairing — "a Document is the thing being
+saved" — happens one layer up, in application/SaveDocumentUseCase.js and
+application/LoadDocumentUseCase.js, which take a storageProvider purely
+as an injected constructor parameter and never import a concrete
+provider themselves. Whoever wires the editor together (0.1.20B) decides
+which backend to use; the use cases work identically with any of them.
+
+application/DocumentManifest.js is the catalog of saved documents ({id,
+title, modified} entries), kept as its own stored blob ("forkbuild-index")
+so a future Open Document dialog can read one small object instead of
+scanning every StorageProvider key. SaveDocumentUseCase upserts an entry
+on every save (replacing, not duplicating, an existing entry for the
+same id); LoadDocumentUseCase.listSavedDocuments() reads it back.
+
+The stored id is document.world.id — a stable UUID since 0.1.10 — not a
+separately invented one. Saving the same document twice naturally
+overwrites the same slot. SaveDocumentUseCase.execute(documentManager)
+serializes via DocumentSerializer, saves, upserts the manifest, then
+calls documentManager.markSaved() — the only correct way DocumentState
+changes, per DocumentManager's own rule. LoadDocumentUseCase.execute()
+mirrors this: load, deserialize (through DocumentSerializer's validation
+gate — protocol version mismatches are caught here exactly the same as
+anywhere else JSON enters the engine), then documentManager.load().
 
 serializer/
 
