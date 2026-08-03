@@ -3,15 +3,19 @@ import { DeleteBrickCommand } from '../commands/DeleteBrickCommand.js';
 
 const DELETE_KEYS = new Set(['Delete', 'Backspace']);
 
-// Pointer down -> pick -> select the hit brick, or clear on a miss.
-// Escape-to-clear and (as of this milestone) Delete/Backspace-to-remove
-// both live here rather than in EditorView — input handling belongs with
-// the tool it belongs to, not the UI shell.
+// Pointer down -> select the hit brick (pointerEvent.pickedBrick, already
+// computed by InputDispatcher), or clear on a miss. As of 0.1.18 this
+// tool no longer calls PickingService itself — the event already carries
+// the answer. Escape-to-clear and Delete/Backspace-to-remove both live
+// here rather than in EditorView — input handling belongs with the tool
+// it belongs to, not the UI shell.
 export class SelectionTool extends Tool {
     onPointerDown(pointerEvent) {
-        const result = this.context.pick(pointerEvent.screenX, pointerEvent.screenY);
-        if (result) {
-            this.context.selectionUseCase.select(result.brickId, result.buildingId);
+        if (pointerEvent.pickedBrick) {
+            this.context.selectionUseCase.select(
+                pointerEvent.pickedBrick.brickId,
+                pointerEvent.pickedBrick.buildingId
+            );
         } else {
             this.context.selectionUseCase.clear();
         }

@@ -5,12 +5,14 @@ import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
 
 const BRICK_REST_HEIGHT = 0.5;
 
-// Pointer move -> pick -> (ground plane -> snap) -> PreviewUseCase.show().
+// Pointer move -> read pointerEvent.pickedBrick/worldPosition (already
+// computed by InputDispatcher) -> snap -> PreviewUseCase.show().
 // Pointer down -> PlacementValidator -> PlaceBrickCommand ->
-// CommandHistory.execute(), as of this milestone. Renderer-ignorant
-// throughout: this tool never touches Three.js, only World (via the
-// command, routed through CommandHistory) and EditorContext (via the use
-// cases).
+// CommandHistory.execute(). Renderer-ignorant throughout: this tool never
+// touches Three.js, only World (via the command, routed through
+// CommandHistory) and EditorContext (via the use cases). As of 0.1.18 it
+// also never calls PickingService directly — InputDispatcher already did
+// the picking before this tool ever sees the event.
 //
 // PlacementValidator is constructed here rather than threaded through
 // ToolContext from ui/: application/tools/ -> core/ is an allowed
@@ -38,8 +40,7 @@ export class PlacementTool extends Tool {
     }
 
     onPointerMove(pointerEvent) {
-        const hit = this.context.pick(pointerEvent.screenX, pointerEvent.screenY);
-        if (hit) {
+        if (pointerEvent.pickedBrick) {
             this.context.previewUseCase.hide();
             return;
         }
@@ -50,13 +51,12 @@ export class PlacementTool extends Tool {
             return;
         }
 
-        const groundPosition = this.context.pickGround(pointerEvent.screenX, pointerEvent.screenY);
-        if (!groundPosition) {
+        if (!pointerEvent.worldPosition) {
             this.context.previewUseCase.hide();
             return;
         }
 
-        const snapped = this._snapToGrid(groundPosition);
+        const snapped = this._snapToGrid(pointerEvent.worldPosition);
         this.context.previewUseCase.show(definitionId, snapped, 0);
     }
 
