@@ -78,4 +78,21 @@ export class CommandHistory {
     getExecutedCommands() {
         return [...this._undoStack];
     }
+
+    // Human-readable labels for a future Edit menu / status bar, e.g.
+    // "Undo Place Brick". null when there's nothing to undo/redo, so
+    // callers can disable a menu item without a separate canUndo() check.
+    getUndoLabel() {
+        if (!this.canUndo()) {
+            return null;
+        }
+        return `Undo ${this._undoStack[this._undoStack.length - 1].describe()}`;
+    }
+
+    getRedoLabel() {
+        if (!this.canRedo()) {
+            return null;
+        }
+        return `Redo ${this._redoStack[this._redoStack.length - 1].describe()}`;
+    }
 }
