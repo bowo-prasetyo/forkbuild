@@ -119,7 +119,7 @@ that input handling used to live in ui/.
 
 ToolContext is a plain object, not a class — it has no behavior of its
 own, just references a tool is allowed to touch (world, editorContext,
-pick, pickGround, selectionUseCase, previewUseCase today; more as tools
+selectionUseCase, previewUseCase, commandHistory today; more as tools
 need them). Deliberately narrower than the { world, editorContext,
 renderer, picking, commands } originally proposed: no raw Renderer
 reference (would let any tool bypass PickingService/WorldRenderer and
@@ -127,7 +127,10 @@ touch Three.js directly, undoing "the editor manipulates domain objects,
 not meshes"), and tools mutate editor state only through use cases like
 selectionUseCase/previewUseCase, never by calling editorContext.setX()
 directly — reading editorContext is fine, writing isn't, mirroring the
-discipline ui/ already follows.
+discipline ui/ already follows. As of 0.1.18, pick/pickGround are gone
+from ToolContext entirely — see InputDispatcher below; tools receive
+picking results pre-computed on the event itself and never call
+PickingService.
 
 Naming collision avoided: application/editor-state/Tool.js (the tool id
 constants, e.g. ToolId.SELECT) was renamed to ToolId.js/ToolId once the
@@ -136,6 +139,33 @@ just the id string (e.g. "select"), not a resolved Tool instance — same
 pattern as SelectionState storing brickId (not a Brick) and ActiveBrickState
 storing definitionId (not a BrickDefinition): EditorContext holds ids,
 resolution happens through the relevant registry when needed.
+
+InputDispatcher (application/InputDispatcher.js) normalizes raw DOM
+PointerEvent/KeyboardEvent/WheelEvent into stable, platform-independent
+interaction events and performs picking ONCE per pointer event, before
+forwarding to ToolManager. Pointer event shape: { pointerType, buttons,
+modifiers: {ctrl,shift,alt,meta}, screenPosition: {x,y}, worldPosition,
+pickedBrick }. pickedBrick is { brickId, buildingId } | null — kept as a
+pair rather than a lone id, since PickingService has returned brickId
+paired with buildingId since 0.1.8 specifically because a brick's
+identity is meaningless for World mutation without knowing which
+building it belongs to; collapsing to a scalar here would just force
+tools to re-derive the pairing elsewhere. Both pickedBrick and
+worldPosition are always computed on every pointer event, regardless of
+which one a given tool ends up using — a conscious trade-off (two
+raycasts per move instead of one) in exchange for InputDispatcher never
+having to guess which half a tool cares about; SelectionTool and
+PlacementTool each just read the field they need. pointerType is always
+'mouse' today (only DOM PointerEvent is wired in EditorView), but
+nothing about the shape assumes that — touch/pen/gamepad input could
+construct the identical event without ToolManager or any Tool changing.
+Key events: { key, modifiers }. Wheel events: { deltaY, modifiers }.
+
+Deliberately outside InputDispatcher's job: the temporary '1'/'2'
+tool-switch shortcuts and Ctrl/Cmd+Z / Ctrl/Cmd+Y undo/redo, still wired
+directly in EditorView. These are global, tool-independent decisions —
+"normalize and forward to whichever tool is active" doesn't apply to
+them, since they don't go to a tool at all.
 
 PreviewUseCase (application/PreviewUseCase.js) is the placement preview's
 single entry point: show(definitionId, position, rotation)/hide(),
@@ -236,7 +266,14 @@ everything ever run — a command that's been undone moves to the redo
 stack and drops out of this list until/unless it's redone. A tool never
 knows or cares whether undo/redo exists; PlacementTool and SelectionTool
 both call commandHistory.execute() exactly as before, unchanged by any
-of this.
+of this. As of 0.1.18, getUndoLabel()/getRedoLabel() expose human-readable
+labels (e.g. "Undo Place Brick") for a future Edit menu/status bar,
+built on Command.describe() (defaults to the class name; PlaceBrickCommand/
+DeleteBrickCommand override it to "Place Brick"/"Delete Brick";
+CompositeCommand delegates to its single child or falls back to "N
+actions"). Both label methods return null rather than throwing when
+there's nothing to undo/redo, so a caller can disable a menu item
+without a separate canUndo()/canRedo() check.
 
 As of 0.1.17, CommandHistory also publishes CommandExecuted/
 CommandUndone/CommandRedone (application/events/CommandHistoryEvent.js)
@@ -299,13 +336,11 @@ threading a core/ class through ui/-assembled ToolContext would do
 exactly that. application/tools/ -> core/ is an allowed dependency on
 its own, so the tool just constructs what it needs.
 
-Input System: not built yet. EditorView currently normalizes raw DOM
-PointerEvent/KeyboardEvent into plain {screenX, screenY, button}/{key}
-objects inline before calling ToolManager. Extracting that into a proper
-platform-independent InputSystem (so desktop/Electron/touch input could
-drive the same tools without ui/ changes) is worthwhile future work, but
-deliberately not bundled into feature milestones — mixing architectural
-cleanup with feature work makes both harder to review.
+Input System: built as of 0.1.18 — see InputDispatcher, documented above
+alongside ToolContext. What used to be inline DOM normalization in
+EditorView is now a proper application/ class, and picking moved from
+"something every tool calls" to "something computed once and handed to
+tools" as part of the same change.
 
 renderer/
 
@@ -474,3 +509,11 @@ forced into Renderer: it directly drives interactive hardware-like input
 (mouse, keyboard, OrbitControls), which reads differently from "visualizes
 domain data," the actual job every other *Renderer class does. Neither
 name changes.
+
+Recognized, not implemented (future direction, not a commitment):
+Workspace — deliberately above DocumentManager, not a replacement for
+it. Today: one EditorView, one Document, one DocumentManager. A future
+desktop build might want multiple open documents, an active-document
+pointer, window layout, recent files. None of that changes the document
+model itself; it would sit above DocumentManager the same way
+DocumentManager sits above Document. Not a Version 0.1 concern.
