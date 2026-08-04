@@ -10,6 +10,7 @@ import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
 import { CommandHistory } from '../../application/CommandHistory.js';
 import { CreateDocumentManagerUseCase } from '../../application/CreateDocumentManagerUseCase.js';
+import { CreatePersistenceUseCase } from '../../application/CreatePersistenceUseCase.js';
 import { InputDispatcher } from '../../application/InputDispatcher.js';
 import { ToolManager } from '../../application/ToolManager.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
@@ -18,30 +19,31 @@ import Sidebar from '../components/Sidebar.js';
 
 // TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool,
 // and Ctrl/Cmd+Z / Ctrl/Cmd+Y (or +Shift+Z) drive CommandHistory directly.
-// No real Toolbar UI or Edit menu exists yet — this is the same kind of
+// No tool-switching UI or Edit menu exists yet — this is the same kind of
 // lightweight, honest verification mechanism used throughout this build
 // (the diagnostic cube, the console.log pick handler) rather than a real
-// feature. Replace with actual Toolbar/menu buttons calling the same
-// editorContext.setActiveTool()/commandHistory.undo()/.redo() when that
-// UI is built. These stay here rather than moving into InputDispatcher:
-// undo/redo and tool-switching are global, tool-independent decisions,
-// not something that gets normalized-and-forwarded to whichever tool
-// happens to be active — InputDispatcher's job stops at "what happened,
-// pre-picked," not "what should the editor do about it globally."
+// feature. Ctrl/Cmd+S, added in 0.1.20B, is different: it's a companion
+// to a REAL Save button that now exists in Toolbar, not a stand-in for a
+// missing one — a standard save shortcut is expected UX, not scaffolding.
+// All of these stay here rather than moving into InputDispatcher: they're
+// global, tool-independent decisions, not something that gets normalized-
+// and-forwarded to whichever tool happens to be active.
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
-// EditorView is intentionally dumb: it never imports core/ or renderer/
-// directly, and — as of 0.1.18 — no longer even normalizes DOM events
-// itself. It hands raw browser events straight to InputDispatcher, which
-// normalizes and picks before forwarding to ToolManager. EditorView's
-// only remaining input-related job is the temporary global shortcuts
-// above, which fall outside "route input to the active tool" entirely.
+// EditorView is intentionally dumb: it never imports core/, renderer/, or
+// storage/ directly, and — as of 0.1.18 — no longer even normalizes DOM
+// events itself. It hands raw browser events straight to InputDispatcher,
+// which normalizes and picks before forwarding to ToolManager.
 export default {
     name: 'EditorView',
     components: { Toolbar, Sidebar },
     template: `
         <div class="editor-view">
-            <Toolbar />
+            <Toolbar
+                :document-manager="documentManager"
+                :save-document-use-case="saveDocumentUseCase"
+                :load-document-use-case="loadDocumentUseCase"
+            />
             <div class="editor-body">
                 <Sidebar :palette-use-case="paletteUseCase" />
                 <div ref="viewport" class="viewport"></div>
@@ -52,9 +54,12 @@ export default {
         const viewport = ref(null);
 
         // Constructed here (before mount) rather than in onMounted(), since
-        // Sidebar/BrickPalette need paletteUseCase for their very first
-        // render — waiting until onMounted() would leave them without a
-        // required prop for one frame.
+        // Sidebar/BrickPalette/Toolbar need these as required props for
+        // their very first render — waiting until onMounted() would leave
+        // them without one for a frame. documentManager starts out wrapping
+        // an empty placeholder Document (CreateDocumentManagerUseCase's
+        // default) and gets pointed at the real World via attachWorld()
+        // once CreateDemoWorldUseCase has run, inside onMounted().
         const eventBus = new CreateEventBusUseCase().execute();
         const registry = new CreateBrickRegistryUseCase().execute();
         const editorContext = new CreateEditorContextUseCase().execute();
@@ -62,6 +67,9 @@ export default {
         const paletteUseCase = new PaletteUseCase(registry, editorContext);
         const previewUseCase = new PreviewUseCase(editorContext);
         const toolRegistry = new CreateToolRegistryUseCase().execute();
+        const createDocumentManagerUseCase = new CreateDocumentManagerUseCase();
+        const documentManager = createDocumentManagerUseCase.execute();
+        const { saveDocumentUseCase, loadDocumentUseCase } = new CreatePersistenceUseCase().execute();
 
         let session = null;
         let toolManager = null;
@@ -83,8 +91,8 @@ export default {
                 editorContext.eventBus
             );
             const world = new CreateDemoWorldUseCase().execute(eventBus);
+            createDocumentManagerUseCase.attachWorld(documentManager, world);
             const commandHistory = new CommandHistory({ world });
-            const documentManager = new CreateDocumentManagerUseCase().execute(world);
             untrackDirtyState = documentManager.trackCommandHistory(commandHistory);
 
             // ToolContext: a plain, explicit bag of what tools are allowed
@@ -128,6 +136,12 @@ export default {
                 }
 
                 const modifierPressed = event.ctrlKey || event.metaKey;
+
+                if (modifierPressed && event.key.toLowerCase() === 's') {
+                    event.preventDefault();
+                    saveDocumentUseCase.execute(documentManager);
+                    return;
+                }
                 if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
                     if (commandHistory.canUndo()) {
                         commandHistory.undo();
@@ -155,6 +169,6 @@ export default {
             session.dispose();
         });
 
-        return { viewport, paletteUseCase };
+        return { viewport, paletteUseCase, documentManager, saveDocumentUseCase, loadDocumentUseCase };
     }
 };
