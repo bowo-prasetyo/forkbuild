@@ -18,7 +18,9 @@
 0.1.18 Interaction System (InputDispatcher + undo/redo labels)  (done)
 0.1.19 WorldSerializer + DocumentSerializer (with validation)  (done)
 0.1.20A Local Storage — persistence API (StorageProvider, Save/LoadDocumentUseCase)  (done)
-0.1.20B Local Storage — UI integration (Save/Load/New buttons, dirty indicator, Recent Documents)
-0.1.21 Publisher Adapter (stub)
-0.1.22 Forking
+0.1.20B Local Storage — UI integration (Save button, dirty indicator, Recent Documents)  (done)
+0.1.20C Runtime World replacement (needed for Load-to-open and New Document)
+0.1.21 Identity Adapter (IdentityProvider, wallet-agnostic)
+0.1.22 Publisher Adapter (stub) — depends on Identity, not the reverse
+0.1.23 Forking
 0.2    Blockchain publishing, multiplayer

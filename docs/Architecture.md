@@ -294,7 +294,14 @@ DocumentManager (application/DocumentManager.js) owns document lifecycle
 — mirrors what CommandHistory does for command execution: one place
 decides what "the current document" is and how its DocumentState
 changes. markDirty()/markSaved()/newDocument()/load()/close() are the
-only ways DocumentState should change. trackCommandHistory(commandHistory)
+only ways DocumentState should change; all of them funnel through a
+private _setState() helper that also publishes
+DocumentManagerEvent.STATE_CHANGED (application/events/
+DocumentManagerEvent.js) through DocumentManager's own EventBus, added
+in 0.1.20B so ui/ (Toolbar's dirty indicator, recent-documents list) can
+react without polling. onStateChanged(callback) wraps the subscription —
+ui/ never imports DocumentManagerEvent or EventBus itself, same pattern
+as PaletteUseCase.onActiveBrickChanged(). trackCommandHistory(commandHistory)
 subscribes to that history's CommandExecuted/Undone/Redone events and
 calls markDirty() on each, returning an unsubscribe function — so a
 tool placing or deleting a brick automatically dirties the document
@@ -303,12 +310,40 @@ exists, the same way neither needs to know CommandHistory publishes
 those events at all. Known simplification: undo also marks dirty, even
 if it happens to land exactly back on a previously-saved state — true
 "is the content identical to what's on disk" tracking is future work,
-not observable (or needed) until Serializer/Local Storage exist.
+not needed until this dirty indicator makes the distinction observable
+enough to matter.
+
 CreateDocumentManagerUseCase (application/CreateDocumentManagerUseCase.js)
 constructs Document/DocumentMetadata (both core/ classes) on
 application/'s behalf, so ui/ never has to import core/Document directly
 just to get a DocumentManager — same reasoning as PlacementTool
 constructing its own PlacementValidator instead of EditorView doing it.
+Split into two methods as of 0.1.20B: execute() builds an empty
+DocumentManager (wrapping DocumentManager's own default empty Document),
+safe to construct in EditorView's setup() before a World exists — Toolbar
+needs one as a required prop for its very first render, well before
+CreateDemoWorldUseCase has run. attachWorld(documentManager, world)
+points that SAME manager at a real World once one exists, called from
+onMounted() after the World has already been populated and its events
+fired into an already-subscribed renderer — internally just
+documentManager.newDocument(new Document({world, metadata})), so it also
+resets DocumentState to clean, exactly as loading a fresh document
+should.
+
+No separate DocumentSession/CurrentDocument class: document.world.id
+(stable since 0.1.10) already is the active document id. A parallel
+tracker would risk exactly the two-sources-of-truth problem
+PaletteModel was skipped for in 0.1.11 — DocumentManager already owns
+"what document is open."
+
+CreatePersistenceUseCase (application/CreatePersistenceUseCase.js)
+constructs the concrete LocalStorageProvider and the SaveDocumentUseCase/
+LoadDocumentUseCase that depend on it, so ui/ never imports storage/
+directly — the same "ui/ only ever talks to application/" discipline
+applied to reaching an infrastructure adapter, not just core/ or
+renderer/. Swapping storage backends later means changing exactly this
+one file; the use cases themselves stay storage-agnostic exactly as
+designed in 0.1.20A.
 
 Recognized, not implemented: CommandHistory's undo stack is, in effect,
 an append-only log of everything that changed this document — which
@@ -418,16 +453,21 @@ mesh, without changing either renderer's public shape.
 ui/
 
 Vue. The application shell, routes, views, and components. Talks only to
-application/, never directly to core/ or renderer/. Kept intentionally
-"dumb" so a future non-Vue client could reuse core/ and application/
-unchanged. Known exception: ui/views/AboutView.js imports core/version.js
-directly to display the version number — a leftover from Step 2, before
-this rule existed. Inert (a static constant, no behavior) but technically
-a violation; noted rather than fixed as a drive-by inside an unrelated
-milestone. As of 0.1.11, EditorView.js and BrickPalette.js use the Vue 3
-Composition API (setup(), ref, onMounted/onBeforeUnmount) per
-CodingConventions.md — earlier views used Options-API-flavored lifecycle
-hooks (mounted()/beforeUnmount() directly), which still worked but wasn't
+application/, never directly to core/, renderer/, or (confirmed
+explicitly as of 0.1.20B, via CreatePersistenceUseCase) storage/ — the
+rule isn't really "never touch core/ or renderer/," it's "never reach
+past application/ to any layer beneath it," which just hadn't had a
+storage/ case to prove out until Toolbar needed a save button. Kept
+intentionally "dumb" so a future non-Vue client could reuse core/ and
+application/ unchanged. Known exception: ui/views/AboutView.js imports
+core/version.js directly to display the version number — a leftover
+from Step 2, before this rule existed. Inert (a static constant, no
+behavior) but technically a violation; noted rather than fixed as a
+drive-by inside an unrelated milestone. As of 0.1.11, EditorView.js and
+BrickPalette.js use the Vue 3 Composition API (setup(), ref,
+onMounted/onBeforeUnmount) per CodingConventions.md — earlier views used
+Options-API-flavored lifecycle hooks (mounted()/beforeUnmount()
+directly), which still worked but wasn't
 strictly the stated convention.
 
 storage/
