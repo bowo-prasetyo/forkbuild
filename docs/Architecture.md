@@ -167,9 +167,51 @@ directly in EditorView. These are global, tool-independent decisions —
 "normalize and forward to whichever tool is active" doesn't apply to
 them, since they don't go to a tool at all.
 
+EditorSession (application/EditorSession.js), added 0.1.20C, owns the
+entire live runtime graph — the render session (Renderer/WorldRenderer/
+PickingService/SelectionRenderer/PreviewRenderer, via
+RenderWorldUseCase), the domain EventBus, World, CommandHistory,
+ToolManager, and InputDispatcher — as one unit. start(container) builds
+it the first time; loadDocument(id) and newDocument() tear the whole
+thing down and rebuild it against a different World, sharing the exact
+same _rebuild() path start() uses — there is only one way the runtime
+graph gets built, whether it's the first time or the fifth. This exists
+because "replace the current document" turned out to require more than
+swapping a reference: WorldRenderer's MeshRegistry would go stale, a
+fresh domain EventBus is needed so the old and new worlds' events can
+never cross-contaminate, and the renderer has to be subscribed to that
+fresh EventBus BEFORE the new World is populated — the same ordering
+constraint the engine has followed since the Event System milestone,
+now enforced inside _rebuild() itself rather than only at initial
+bootstrap.
+
+registry/editorContext/toolRegistry/documentManager/selectionUseCase/
+previewUseCase are constructed once, outside EditorSession, and are the
+SAME instances across every replacement — only the per-world runtime
+gets torn down and rebuilt. EditorContext.selection and the preview are
+explicitly cleared on every _rebuild(), since a brickId from the old
+world means nothing in the new one. DOM listeners (wired once, by
+EditorView, in onMounted()) delegate to session.onPointerDown()/
+onPointerMove()/onKeyDown() at call time rather than capturing
+toolManager/inputDispatcher directly — this is what lets EditorView
+attach listeners exactly once and never touch them again, even across
+repeated document replacements: only the instance fields those methods
+read get swapped underneath.
+
+EditorView.js shrank considerably as a result: it no longer imports
+CreateEventBusUseCase, CreateDemoWorldUseCase, RenderWorldUseCase,
+CommandHistory, or ToolManager at all — it builds the collaborators
+EditorSession needs, then only ever calls start()/dispose() and forwards
+raw events. It has no idea a document replacement tears down and rebuilds
+an entire runtime graph underneath it. Ctrl/Cmd+Z/Y still read
+editorSession.commandHistory fresh on every keypress (a getter, not a
+captured reference), so undo/redo keep working correctly across a
+document replacement without EditorView needing to resubscribe anything.
+
 PreviewUseCase (application/PreviewUseCase.js) is the placement preview's
 single entry point: show(definitionId, position, rotation)/hide(),
 writing through EditorContext.preview (PreviewState — visible,
+
 definitionId, position, rotation; Editor State, never becomes a real
 Brick until PlaceBrickCommand commits it). PlacementTool
 (application/tools/PlacementTool.js) drives it: pointer move -> pick (is
@@ -344,6 +386,17 @@ applied to reaching an infrastructure adapter, not just core/ or
 renderer/. Swapping storage backends later means changing exactly this
 one file; the use cases themselves stay storage-agnostic exactly as
 designed in 0.1.20A.
+
+CreateEmptyWorldUseCase (application/CreateEmptyWorldUseCase.js), added
+0.1.20C for "New Document" — one Building, no bricks, mirroring
+CreateDemoWorldUseCase's shape without a demo brick to place inside.
+Toolbar's Save/New buttons and clickable Recent Documents entries call
+saveDocumentUseCase.execute()/editorSession.newDocument()/
+editorSession.loadDocument(id) directly — none of the three needed new
+wiring in Toolbar beyond what 0.1.20B already built, since New and Load
+both go through DocumentManager's own state-changing methods internally
+(attachWorld -> newDocument, or LoadDocumentUseCase -> load), which the
+Toolbar's existing onStateChanged() subscription already reacts to.
 
 Recognized, not implemented: CommandHistory's undo stack is, in effect,
 an append-only log of everything that changed this document — which
