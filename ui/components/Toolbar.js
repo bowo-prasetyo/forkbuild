@@ -1,23 +1,18 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 
-// The toolbar's first real content: a Save button and a live dirty
-// indicator, both driven by DocumentManager, plus a read-only Recent
-// Documents list driven by LoadDocumentUseCase.listSavedDocuments().
-//
-// Click-to-load and New are deliberately not here yet — both need a way
-// to replace the currently-rendered World at runtime, which EditorView
-// doesn't support (it constructs its render session once, at mount).
-// That's real, separate work, not squeezed into "add some buttons."
+// Save/New/dirty indicator/Recent Documents — all driven by
+// DocumentManager, LoadDocumentUseCase, and (as of 0.1.20C) EditorSession
+// for New/Load, which the toolbar calls without knowing that either
+// operation tears down and rebuilds the entire runtime graph underneath.
 //
 // Reactivity: DocumentManager isn't a Vue reactive object, so this
 // component keeps its own refs and refreshes them by subscribing to
 // documentManager.onStateChanged() — the same imperative-subscription
-// pattern BrickPalette uses for the active brick. The recent-documents
-// list is also refreshed on every state change rather than having its
-// own separate event: any state change (dirty, saved, loaded) is a
-// reasonable moment to re-check what's on disk, and a localStorage read
-// of a handful of entries is cheap enough that this doesn't need finer
-// granularity yet.
+// pattern BrickPalette uses for the active brick. Both New and Load go
+// through DocumentManager's own state-changing methods internally
+// (attachWorld -> newDocument, or LoadDocumentUseCase -> load), so the
+// SAME subscription that updates the dirty indicator after a save also
+// picks up New/Load automatically — no separate wiring needed for either.
 export default {
     name: 'Toolbar',
     props: {
@@ -32,6 +27,10 @@ export default {
         loadDocumentUseCase: {
             type: Object,
             required: true
+        },
+        editorSession: {
+            type: Object,
+            required: true
         }
     },
     setup(props) {
@@ -41,6 +40,14 @@ export default {
 
         function save() {
             props.saveDocumentUseCase.execute(props.documentManager);
+        }
+
+        function createNew() {
+            props.editorSession.newDocument();
+        }
+
+        function load(id) {
+            props.editorSession.loadDocument(id);
         }
 
         function refresh() {
@@ -58,13 +65,14 @@ export default {
             }
         });
 
-        return { dirty, recentDocuments, save };
+        return { dirty, recentDocuments, save, createNew, load };
     },
     template: `
         <div class="toolbar">
             <span class="toolbar-title">ForkBuild</span>
 
             <button class="toolbar-save" @click="save">Save</button>
+            <button class="toolbar-new" @click="createNew">New</button>
 
             <span class="toolbar-dirty" :class="{ 'toolbar-dirty--clean': !dirty }">
                 {{ dirty ? '\u25CF Unsaved changes' : 'Saved' }}
@@ -72,12 +80,13 @@ export default {
 
             <div class="toolbar-recent" v-if="recentDocuments.length">
                 <span class="toolbar-recent-label">Recent:</span>
-                <span
+                <button
                     v-for="doc in recentDocuments"
                     :key="doc.id"
                     class="toolbar-recent-item"
                     :title="doc.modified"
-                >{{ doc.title }}</span>
+                    @click="load(doc.id)"
+                >{{ doc.title }}</button>
             </div>
         </div>
     `
