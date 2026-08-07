@@ -183,7 +183,12 @@ never cross-contaminate, and the renderer has to be subscribed to that
 fresh EventBus BEFORE the new World is populated — the same ordering
 constraint the engine has followed since the Event System milestone,
 now enforced inside _rebuild() itself rather than only at initial
-bootstrap.
+bootstrap. As of 0.1.21, EditorSession also accepts an optional
+identityProvider, passed through to CreateDocumentManagerUseCase.
+attachWorld() on every start()/newDocument() so DocumentMetadata.author
+gets populated whenever someone's logged in — loadDocument() doesn't
+pass it through, since a loaded document already has its own saved
+author from when it was originally created.
 
 registry/editorContext/toolRegistry/documentManager/selectionUseCase/
 previewUseCase are constructed once, outside EditorSession, and are the
@@ -606,7 +611,40 @@ Publishing adapter interface, with Steem as the first concrete provider.
 
 identity/
 
-Wallet / key management, tied to whichever publisher is active.
+Filled in at 0.1.21 — the last of the three top-level adapter folders
+sketched back at the core/application/renderer/ui reorg (storage/,
+serializer/, identity/) to get real content. Same shape as the others:
+IdentityProvider is the base class — login(credentials)/logout()/
+currentUser()/sign(data), all throwing by default. LocalIdentityProvider
+is the first concrete provider: no wallet, no cryptographic signing,
+just a remembered username, persisted via an injected StorageProvider
+(the same DI pattern SaveDocumentUseCase/LoadDocumentUseCase use —
+LocalIdentityProvider never imports a concrete storage backend itself).
+Identity is the pure-data return shape (username, displayName, providerId).
+
+identity/ imports nothing from this codebase, matching storage/'s
+complete decoupling — it doesn't know what a Document is, only usernames
+and signed payloads. CreateIdentityProviderUseCase
+(application/CreateIdentityProviderUseCase.js) constructs the concrete
+LocalStorageProvider + LocalIdentityProvider pair, so ui/ never imports
+identity/ or storage/ directly — same reasoning as
+CreatePersistenceUseCase. A future Steem Keychain / Hive Keychain /
+wallet provider slots in by changing exactly this one file.
+
+sign(data) is honest about what it currently is: an attribution stamp
+({ signedBy, providerId, data }), not a cryptographic signature. Nothing
+consumes it yet — that's the Publisher Adapter's job (0.1.22).
+
+The satisfying connection this milestone made: DocumentMetadata.author
+has existed since 0.1.17 and been null every single time nothing set
+it. CreateDocumentManagerUseCase.attachWorld() now accepts an optional
+identityProvider and populates author from currentUser().username when
+someone's logged in. As of 0.1.21 there is still no login UI — same
+0.1.20A/0.1.20B split applied consistently: this round is the adapter
+shape plus its wiring into document creation, fully tested with a
+pre-logged-in provider constructed directly in tests. author will stay
+null in the running app until a login UI exists to actually call
+login() — that's the natural 0.1.21B, not yet built.
 
 Domain State vs Editor State
 
