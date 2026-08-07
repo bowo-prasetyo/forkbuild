@@ -31,7 +31,8 @@ export class EditorSession {
         documentManager,
         selectionUseCase,
         previewUseCase,
-        loadDocumentUseCase
+        loadDocumentUseCase,
+        identityProvider = null
     }) {
         this._registry = registry;
         this._editorContext = editorContext;
@@ -40,6 +41,7 @@ export class EditorSession {
         this._selectionUseCase = selectionUseCase;
         this._previewUseCase = previewUseCase;
         this._loadDocumentUseCase = loadDocumentUseCase;
+        this._identityProvider = identityProvider;
 
         this._container = null;
         this._session = null;
@@ -59,7 +61,7 @@ export class EditorSession {
         this._container = container;
         this._rebuild((eventBus) => {
             const world = new CreateDemoWorldUseCase().execute(eventBus);
-            new CreateDocumentManagerUseCase().attachWorld(this._documentManager, world);
+            new CreateDocumentManagerUseCase().attachWorld(this._documentManager, world, this._identityProvider);
             return world;
         });
     }
@@ -78,7 +80,7 @@ export class EditorSession {
     newDocument() {
         this._rebuild((eventBus) => {
             const world = new CreateEmptyWorldUseCase().execute(eventBus);
-            new CreateDocumentManagerUseCase().attachWorld(this._documentManager, world);
+            new CreateDocumentManagerUseCase().attachWorld(this._documentManager, world, this._identityProvider);
             return world;
         });
     }

@@ -19,8 +19,19 @@ export class CreateDocumentManagerUseCase {
         return new DocumentManager();
     }
 
-    attachWorld(documentManager, world) {
-        const metadata = new DocumentMetadata({ created: new Date() });
+    // identityProvider is optional and, as of 0.1.21, only ever used to
+    // populate DocumentMetadata.author from currentUser().username — the
+    // first thing that gives that field real meaning since it was added
+    // in 0.1.17. No login UI exists yet, so currentUser() will return
+    // null (and author will stay null) until 0.1.21B builds one; the
+    // wiring is correct and tested regardless of whether anyone is
+    // actually logged in.
+    attachWorld(documentManager, world, identityProvider = null) {
+        const currentUser = identityProvider ? identityProvider.currentUser() : null;
+        const metadata = new DocumentMetadata({
+            created: new Date(),
+            author: currentUser ? currentUser.username : null
+        });
         documentManager.newDocument(new Document({ world, metadata }));
     }
 }
