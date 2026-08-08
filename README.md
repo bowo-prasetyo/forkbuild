@@ -11,7 +11,7 @@ ForkBuild is a modular building platform where creations are stored using interc
 
 Current Status
 
-Version 0.1.21A — Identity Adapter: provider shape (see docs/Roadmap.md for the full milestone list)
+Version 0.1.22 — Publisher Adapter (stub) (see docs/Roadmap.md for the full milestone list)
 
 Roadmap
 
@@ -38,7 +38,7 @@ Roadmap
 - [x] 0.1.20B Local Storage — UI integration
 - [x] 0.1.20C EditorSession — runtime World replacement
 - [x] 0.1.21A Identity Adapter — provider shape
-- [ ] 0.1.21B Identity Adapter — UI integration
-- [ ] 0.1.22 Publisher Adapter (stub)
+- [ ] 0.1.21B Identity Adapter — UI integration (login prompt)
+- [x] 0.1.22 Publisher Adapter (stub)
 - [ ] 0.1.23 Forking
 - [ ] 0.2 Blockchain publishing, multiplayer
