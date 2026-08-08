@@ -642,6 +642,18 @@ parentDocumentId — reserved for the upcoming Forking milestone.
 Repository View, Author View, and World View all consume these fields
 directly without knowing how the Publication was created.
 
+identity/
+
+As of 0.1.21B, IdentityUseCase provides the UI-facing wrapper, and
+ui/components/UserWidget.js / LoginModal.js are the first identity UI.
+The widget lives in the global app header, so the current user is
+visible across all views; the modal prompts for a username and calls
+identityUseCase.login(). The same shared provider instance is injected
+into EditorView, so documents created or forked after login
+automatically carry the correct author — completing the loop from
+login → currentUser() → DocumentMetadata.author → Publication.author
+→ Repository View.
+
 discovery/
 
 Filled in at 0.1.23 — the Discovery Adapter stub. DiscoveryProvider is
