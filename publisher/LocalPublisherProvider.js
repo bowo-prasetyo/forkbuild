@@ -35,7 +35,8 @@ export class LocalPublisherProvider extends PublisherProvider {
             author: user ? user.username : null,
             providerId: 'local',
             publishedAt: new Date(),
-            url: null
+            url: null,
+            parentDocumentId: document.metadata.parentDocumentId
         });
 
         // Persist so a future Discovery layer can list publications.
