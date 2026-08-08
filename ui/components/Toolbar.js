@@ -31,6 +31,10 @@ export default {
         editorSession: {
             type: Object,
             required: true
+        },
+        publishDocumentUseCase: {
+            type: Object,
+            required: true
         }
     },
     setup(props) {
@@ -55,6 +59,15 @@ export default {
             recentDocuments.value = props.loadDocumentUseCase.listSavedDocuments();
         }
 
+        function publish() {
+            try {
+                const publication = props.publishDocumentUseCase.execute(props.documentManager);
+                alert(`Published "${publication.title}"\nID: ${publication.id}\nProvider: ${publication.providerId}`);
+            } catch (err) {
+                alert(`Publish failed: ${err.message}`);
+            }
+        }
+                
         onMounted(() => {
             unsubscribe = props.documentManager.onStateChanged(refresh);
         });
@@ -65,13 +78,14 @@ export default {
             }
         });
 
-        return { dirty, recentDocuments, save, createNew, load };
+        return { dirty, recentDocuments, save, createNew, load, publish };
     },
     template: `
         <div class="toolbar">
             <span class="toolbar-title">ForkBuild</span>
 
             <button class="toolbar-save" @click="save">Save</button>
+            <button class="toolbar-publish" @click="publish">Publish</button>
             <button class="toolbar-new" @click="createNew">New</button>
 
             <span class="toolbar-dirty" :class="{ 'toolbar-dirty--clean': !dirty }">
