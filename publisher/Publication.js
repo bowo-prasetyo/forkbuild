@@ -10,7 +10,8 @@ export class Publication {
         author,
         providerId,
         publishedAt,
-        url = null
+        url = null,
+        parentDocumentId = null
     } = {}) {
         this._id = id;
         this._documentId = documentId;
@@ -19,35 +20,17 @@ export class Publication {
         this._providerId = providerId;
         this._publishedAt = publishedAt;
         this._url = url;
+        this._parentDocumentId = parentDocumentId;
     }
 
-    get id() {
-        return this._id;
-    }
-
-    get documentId() {
-        return this._documentId;
-    }
-
-    get title() {
-        return this._title;
-    }
-
-    get author() {
-        return this._author;
-    }
-
-    get providerId() {
-        return this._providerId;
-    }
-
-    get publishedAt() {
-        return this._publishedAt;
-    }
-
-    get url() {
-        return this._url;
-    }
+    get id() { return this._id; }
+    get documentId() { return this._documentId; }
+    get title() { return this._title; }
+    get author() { return this._author; }
+    get providerId() { return this._providerId; }
+    get publishedAt() { return this._publishedAt; }
+    get url() { return this._url; }
+    get parentDocumentId() { return this._parentDocumentId; }
 
     toJSON() {
         return {
@@ -57,7 +40,8 @@ export class Publication {
             author: this._author,
             providerId: this._providerId,
             publishedAt: this._publishedAt ? this._publishedAt.toISOString() : null,
-            url: this._url
+            url: this._url,
+            parentDocumentId: this._parentDocumentId
         };
     }
 
@@ -69,7 +53,8 @@ export class Publication {
             author: json.author,
             providerId: json.providerId,
             publishedAt: json.publishedAt ? new Date(json.publishedAt) : null,
-            url: json.url
+            url: json.url,
+            parentDocumentId: json.parentDocumentId || null
         });
     }
 }
