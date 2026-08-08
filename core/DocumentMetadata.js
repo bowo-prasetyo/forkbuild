@@ -15,7 +15,8 @@ export class DocumentMetadata {
         created = null,
         modified = null,
         protocolVersion = PROTOCOL_VERSION,
-        engineVersion = DEFAULT_ENGINE_VERSION
+        engineVersion = DEFAULT_ENGINE_VERSION,
+        parentDocumentId = null
     } = {}) {
         this._title = title;
         this._author = author;
@@ -23,31 +24,16 @@ export class DocumentMetadata {
         this._modified = modified;
         this._protocolVersion = protocolVersion;
         this._engineVersion = engineVersion;
+        this._parentDocumentId = parentDocumentId;
     }
 
-    get title() {
-        return this._title;
-    }
-
-    get author() {
-        return this._author;
-    }
-
-    get created() {
-        return this._created;
-    }
-
-    get modified() {
-        return this._modified;
-    }
-
-    get protocolVersion() {
-        return this._protocolVersion;
-    }
-
-    get engineVersion() {
-        return this._engineVersion;
-    }
+    get title() { return this._title; }
+    get author() { return this._author; }
+    get created() { return this._created; }
+    get modified() { return this._modified; }
+    get protocolVersion() { return this._protocolVersion; }
+    get engineVersion() { return this._engineVersion; }
+    get parentDocumentId() { return this._parentDocumentId; }
 
     toJSON() {
         return {
@@ -56,7 +42,8 @@ export class DocumentMetadata {
             created: this._created ? this._created.toISOString() : null,
             modified: this._modified ? this._modified.toISOString() : null,
             protocolVersion: this._protocolVersion,
-            engineVersion: this._engineVersion
+            engineVersion: this._engineVersion,
+            parentDocumentId: this._parentDocumentId
         };
     }
 
@@ -67,7 +54,8 @@ export class DocumentMetadata {
             created: json.created ? new Date(json.created) : null,
             modified: json.modified ? new Date(json.modified) : null,
             protocolVersion: json.protocolVersion,
-            engineVersion: json.engineVersion
+            engineVersion: json.engineVersion,
+            parentDocumentId: json.parentDocumentId || null
         });
     }
 }
