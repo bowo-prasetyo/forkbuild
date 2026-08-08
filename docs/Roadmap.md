@@ -22,6 +22,6 @@
 0.1.20C EditorSession (runtime World replacement — New/Load)  (done)
 0.1.21A Identity Adapter — provider shape (IdentityProvider, LocalIdentityProvider, author wiring)  (done)
 0.1.21B Identity Adapter — UI integration (login prompt, current-user display)
-0.1.22 Publisher Adapter (stub) — depends on Identity, not the reverse
+0.1.22 Publisher Adapter (stub) — depends on Identity, not the reverse  (done)
 0.1.23 Forking
 0.2    Blockchain publishing, multiplayer

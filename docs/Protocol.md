@@ -12,7 +12,9 @@ Library
 
 Metadata
 
-Fork
+Publication (new in 0.1.22)
+
+Fork (future)
 
 Merge (future)
 
@@ -35,3 +37,21 @@ this protocol. Editor State — selection, active tool, active brick,
 camera pose, editor settings — is local to a single editing session and
 must never appear in a serialized World or be transmitted to a
 publisher. See docs/Architecture.md, "Domain State vs Editor State."
+
+Publication
+
+As of 0.1.22, a Publication is the standardized result of publishing a
+Document. It carries:
+
+- id: a UUID for this specific publication event
+- documentId: the World UUID of the published Document
+- title, author: from DocumentMetadata
+- providerId: which publisher produced this (e.g. "local", "steem")
+- publishedAt: timestamp
+- url: optional link to the live publication
+
+Publication is not Domain State in the same sense as World/Building/Brick,
+but it is part of the protocol layer that connects ForkBuild to external
+systems. A future Discovery layer will index Publications so that
+Repository View, World View, and Author View can query them without
+depending on any specific blockchain.
