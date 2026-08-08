@@ -87,6 +87,8 @@ export default {
         let onKeyDown = null;
 
         onMounted(() => {
+            // ALWAYS initialize the renderer first so _container is set.
+            editorSession.start(viewport.value);
             // Handle deep-linking from Repository View: fork or load
             if (route.query.fork) {
                 try {
@@ -94,7 +96,6 @@ export default {
                     editorSession.openDocument(forkedDocument);
                 } catch (err) {
                     alert(`Fork failed: ${err.message}`);
-                    editorSession.start(viewport.value);
                 }
                 router.replace({ path: '/editor' });
             } else if (route.query.load) {
@@ -102,11 +103,8 @@ export default {
                     editorSession.loadDocument(route.query.load);
                 } catch (err) {
                     alert(`Load failed: ${err.message}`);
-            editorSession.start(viewport.value);
                 }
                 router.replace({ path: '/editor' });
-            } else {
-                editorSession.start(viewport.value);
             }
 
             onPointerDown = (event) => editorSession.onPointerDown(event);
