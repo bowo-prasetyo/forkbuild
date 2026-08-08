@@ -1,4 +1,6 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
 import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
@@ -52,6 +54,8 @@ export default {
         </div>
     `,
     setup() {
+        const route = useRoute();
+        const router = useRouter();
         const viewport = ref(null);
 
         // Constructed here (before mount) rather than in onMounted(),
@@ -64,7 +68,7 @@ export default {
         const previewUseCase = new PreviewUseCase(editorContext);
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
-        const { saveDocumentUseCase, loadDocumentUseCase } = new CreatePersistenceUseCase().execute();
+        const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase } = new CreatePersistenceUseCase().execute();
         const identityProvider = new CreateIdentityProviderUseCase().execute();
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
 
@@ -84,7 +88,27 @@ export default {
         let onKeyDown = null;
 
         onMounted(() => {
+            // Handle deep-linking from Repository View: fork or load
+            if (route.query.fork) {
+                try {
+                    const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider);
+                    editorSession.openDocument(forkedDocument);
+                } catch (err) {
+                    alert(`Fork failed: ${err.message}`);
+                    editorSession.start(viewport.value);
+                }
+                router.replace({ path: '/editor' });
+            } else if (route.query.load) {
+                try {
+                    editorSession.loadDocument(route.query.load);
+                } catch (err) {
+                    alert(`Load failed: ${err.message}`);
             editorSession.start(viewport.value);
+                }
+                router.replace({ path: '/editor' });
+            } else {
+                editorSession.start(viewport.value);
+            }
 
             onPointerDown = (event) => editorSession.onPointerDown(event);
             viewport.value.addEventListener('pointerdown', onPointerDown);
