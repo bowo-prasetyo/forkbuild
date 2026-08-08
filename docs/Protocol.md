@@ -14,6 +14,8 @@ Metadata
 
 Publication (new in 0.1.22)
 
+Discovery (new in 0.1.23)
+
 Fork (future)
 
 Merge (future)
@@ -32,8 +34,8 @@ Two distinct kinds of id exist and must not be confused:
 
 Scope
 
-Only Domain State (World, Building, Brick, and their metadata) is part of
-this protocol. Editor State — selection, active tool, active brick,
+Only Domain State (World, Building, Brick, and their metadata) is part
+of this protocol. Editor State — selection, active tool, active brick,
 camera pose, editor settings — is local to a single editing session and
 must never appear in a serialized World or be transmitted to a
 publisher. See docs/Architecture.md, "Domain State vs Editor State."
@@ -49,9 +51,29 @@ Document. It carries:
 - providerId: which publisher produced this (e.g. "local", "steem")
 - publishedAt: timestamp
 - url: optional link to the live publication
+- parentDocumentId: optional reference to the Document this was forked
+  from (null for original works). Added in 0.1.23 as the foundation
+  for Forking.
 
 Publication is not Domain State in the same sense as World/Building/Brick,
 but it is part of the protocol layer that connects ForkBuild to external
 systems. A future Discovery layer will index Publications so that
 Repository View, World View, and Author View can query them without
 depending on any specific blockchain.
+
+Discovery
+
+As of 0.1.23, Discovery is a separate protocol concern from Publishing.
+While a PublisherProvider answers "how do I publish?", a DiscoveryProvider
+answers "how do I find what has been published?" The Discovery interface
+operates on Publications, not on raw blockchain posts or storage keys.
+
+DiscoveryProvider contract:
+- list() → Publication[]
+- findById(id) → Publication | null
+- findByAuthor(author) → Publication[]
+- findByParentId(parentDocumentId) → Publication[]
+
+This separation ensures that Repository View, Author View, and World View
+can consume Publications without knowing whether the underlying source is
+LocalStorage, Steem, Hive, Ethereum, IPFS, or another ForkBuild node.
