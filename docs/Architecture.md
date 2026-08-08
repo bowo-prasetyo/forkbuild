@@ -642,6 +642,18 @@ parentDocumentId — reserved for the upcoming Forking milestone.
 Repository View, Author View, and World View all consume these fields
 directly without knowing how the Publication was created.
 
+As of 0.1.25, the local publication lifecycle is complete. A document
+can be created → saved → published → discovered in Repository View →
+opened for viewing or forked into a new independent document. The three
+identity layers (Document, Publication, Blockchain) are kept strictly
+separate: Publication.id is not Document.world.id, and a future
+blockchain transaction ID will not replace either.
+
+DiscoveryProvider gained findByDocumentId(documentId) so callers can
+locate every publication that references a given document — necessary
+when one document has been published multiple times or through multiple
+providers.
+
 identity/
 
 As of 0.1.21B, IdentityUseCase provides the UI-facing wrapper, and
