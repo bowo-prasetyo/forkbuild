@@ -436,6 +436,17 @@ EditorView is now a proper application/ class, and picking moved from
 "something every tool calls" to "something computed once and handed to
 tools" as part of the same change.
 
+IdentityUseCase (application/IdentityUseCase.js) wraps IdentityProvider
+to provide a subscription-based interface for UI components, mirroring
+DocumentManager's onStateChanged pattern. login(username)/logout()
+publish IdentityChanged events; onUserChanged(callback) returns an
+unsubscribe function. The underlying provider is exposed via
+identityUseCase.provider so that EditorSession, ForkDocumentUseCase,
+and CreatePublisherUseCase can receive the same shared instance that
+the UI layer logs in and out of. Constructed once in ui/main.js and
+provided to the Vue app via provide/inject, so every view shares the
+same login state without ui/ importing identity/ directly.
+
 renderer/
 
 Three.js. WorldRenderer subscribes to World's domain events and reacts
