@@ -11,7 +11,7 @@ ForkBuild is a modular building platform where creations are stored using interc
 
 Current Status
 
-Version 0.1.24 — Forking (see docs/Roadmap.md for the full milestone list)
+Version 0.1.21B — Identity UI (see docs/Roadmap.md for the full milestone list)
 
 Roadmap
 
@@ -38,7 +38,7 @@ Roadmap
 - [x] 0.1.20B Local Storage — UI integration
 - [x] 0.1.20C EditorSession — runtime World replacement
 - [x] 0.1.21A Identity Adapter — provider shape
-- [ ] 0.1.21B Identity Adapter — UI integration (login prompt)
+- [x] 0.1.21B Identity Adapter — UI integration (login prompt, current-user display)
 - [x] 0.1.22 Publisher Adapter (stub)
 - [x] 0.1.23 Discovery Adapter (stub)
 - [x] 0.1.24 Forking
