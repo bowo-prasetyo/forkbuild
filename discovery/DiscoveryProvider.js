@@ -19,4 +19,8 @@ export class DiscoveryProvider {
     findByParentId(parentDocumentId) {
         throw new Error('DiscoveryProvider.findByParentId() must be implemented by a subclass');
     }
+
+    findByDocumentId(documentId) {
+        throw new Error('DiscoveryProvider.findByDocumentId() must be implemented by a subclass');
+    }
 }
