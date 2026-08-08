@@ -67,6 +67,26 @@ systems. A future Discovery layer will index Publications so that
 Repository View, World View, and Author View can query them without
 depending on any specific blockchain.
 
+Identity Layers
+
+ForkBuild distinguishes three kinds of identity, each at a different
+layer of the protocol:
+
+1. Document Identity — `world.id` (UUID). The canonical identifier for
+   a creation itself. One document may be published multiple times; its
+   `world.id` remains the stable pointer to that creation.
+
+2. Publication Identity — `publication.id` (UUID). Identifies a specific
+   publish event, not the document. A document may have many publications
+   (republished to another provider, or published again after edits).
+   Publication carries `documentId` to reference the document it
+   published, but retains its own distinct identity.
+
+3. Blockchain Identity — future. A transaction hash, operation ID, or
+   on-chain content identifier. The publisher adapter maps between
+   Publication and blockchain-native identifiers without either concept
+   leaking into the other layers.
+   
 Discovery
 
 As of 0.1.23, Discovery is a separate protocol concern from Publishing.
