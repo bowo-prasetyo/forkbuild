@@ -12,6 +12,8 @@ import { EditorSession } from '../../application/EditorSession.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
 import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
+import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
+
 
 // TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool.
 // No tool-switching UI exists yet — same lightweight, honest verification
@@ -41,6 +43,7 @@ export default {
                 :save-document-use-case="saveDocumentUseCase"
                 :load-document-use-case="loadDocumentUseCase"
                 :editor-session="editorSession"
+                :publish-document-use-case="publishDocumentUseCase"
             />
             <div class="editor-body">
                 <Sidebar :palette-use-case="paletteUseCase" />
@@ -63,6 +66,7 @@ export default {
         const documentManager = new CreateDocumentManagerUseCase().execute();
         const { saveDocumentUseCase, loadDocumentUseCase } = new CreatePersistenceUseCase().execute();
         const identityProvider = new CreateIdentityProviderUseCase().execute();
+        const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
 
         const editorSession = new EditorSession({
             registry,
@@ -127,6 +131,14 @@ export default {
             editorSession.dispose();
         });
 
-        return { viewport, paletteUseCase, documentManager, saveDocumentUseCase, loadDocumentUseCase, editorSession };
+        return {
+            viewport,
+            paletteUseCase,
+            documentManager,
+            saveDocumentUseCase,
+            loadDocumentUseCase,
+            editorSession,
+            publishDocumentUseCase
+        };
     }
 };
