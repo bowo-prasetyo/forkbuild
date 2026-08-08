@@ -339,3 +339,132 @@ html, body {
 .action-btn--fork:hover {
     background: #5fc490;
 }
+/* App Header Right Group */
+.app-header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* User Widget */
+.user-widget {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-name {
+    color: #4caf7d;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.user-btn {
+    padding: 0.3rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.user-btn--login {
+    background: #4caf7d;
+    color: #121212;
+}
+
+.user-btn--login:hover {
+    background: #5fc490;
+}
+
+.user-btn--logout {
+    background: transparent;
+    color: #b0b0b0;
+    border: 1px solid #3a3a3a;
+}
+
+.user-btn--logout:hover {
+    background: #262626;
+    color: #ffffff;
+}
+
+/* Login Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 1.5rem;
+    width: 320px;
+    max-width: 90vw;
+}
+
+.modal-content h3 {
+    margin: 0 0 0.25rem;
+    color: #e0e0e0;
+}
+
+.modal-subtitle {
+    margin: 0 0 1rem;
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: #4caf7d;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.modal-btn {
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.modal-btn--secondary {
+    background: transparent;
+    color: #b0b0b0;
+    border: 1px solid #3a3a3a;
+}
+
+.modal-btn--secondary:hover {
+    background: #262626;
+}
+
+.modal-btn--primary {
+    background: #4caf7d;
+    color: #121212;
+}
+
+.modal-btn--primary:hover {
+    background: #5fc490;
+}
