@@ -13,6 +13,9 @@ export class ListPublicationsUseCase {
         if (filter.parentDocumentId) {
             return this._discoveryProvider.findByParentId(filter.parentDocumentId);
         }
+        if (filter.documentId) {
+            return this._discoveryProvider.findByDocumentId(filter.documentId);
+        }
         return this._discoveryProvider.list();
     }
 }
