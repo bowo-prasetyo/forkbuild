@@ -1,6 +1,5 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
 import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
