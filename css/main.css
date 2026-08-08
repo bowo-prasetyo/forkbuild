@@ -468,3 +468,14 @@ html, body {
 .modal-btn--primary:hover {
     background: #5fc490;
 }
+.publication-fork-of {
+    margin: 0.25rem 0;
+    color: #e0a34c;
+    font-size: 0.85rem;
+}
+
+.publication-forks {
+    margin: 0.25rem 0;
+    color: #707070;
+    font-size: 0.8rem;
+}
