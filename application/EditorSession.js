@@ -1,3 +1,5 @@
+import { World } from '../core/World.js';
+import { Document } from '../core/Document.js';
 import { CreateEventBusUseCase } from './CreateEventBusUseCase.js';
 import { CreateDemoWorldUseCase } from './CreateDemoWorldUseCase.js';
 import { CreateEmptyWorldUseCase } from './CreateEmptyWorldUseCase.js';
@@ -81,6 +83,20 @@ export class EditorSession {
         this._rebuild((eventBus) => {
             const world = new CreateEmptyWorldUseCase().execute(eventBus);
             new CreateDocumentManagerUseCase().attachWorld(this._documentManager, world, this._identityProvider);
+            return world;
+        });
+    }
+
+    // Opens an already-constructed Document (e.g. from ForkDocumentUseCase)
+    // by re-hydrating its world against a fresh EventBus so the renderer
+    // subscribes correctly. Used when the document is already in memory
+    // rather than loaded from storage by id.
+    openDocument(document) {
+        this._rebuild((eventBus) => {
+            const worldJson = document.world.toJSON();
+            const world = World.fromJSON(worldJson, eventBus);
+            const newDocument = new Document({ world, metadata: document.metadata });
+            this._documentManager.newDocument(newDocument);
             return world;
         });
     }
