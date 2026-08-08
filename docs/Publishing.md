@@ -47,6 +47,25 @@ This separation means the UI (Repository View, Author View, World View)
 consumes `Publication` objects through `DiscoveryProvider` without
 knowing the blockchain source.
 
+## Publication Lifecycle (0.1.25)
+
+The local simulation is now complete:
+
+1. Alice creates a document in the Editor.
+2. Alice saves it (SaveDocumentUseCase → StorageProvider).
+3. Alice publishes it (PublishDocumentUseCase → PublisherProvider).
+   LocalPublisherProvider persists both the Publication record and the
+   document JSON, so the document remains available for Open/Fork.
+4. Bob discovers it in Repository View (DiscoveryProvider.list()).
+5. Bob opens it (loads by documentId) or forks it (clones with fresh
+   IDs and parentDocumentId).
+6. Bob's fork gets his identity via IdentityProvider, and can be
+   published as a new Publication with its own publication.id.
+
+This exercises the full social/creation lifecycle without blockchain.
+When a SteemPublisherProvider arrives, it replaces only the concrete
+publisher adapter; the use cases, discovery, and UI remain unchanged.
+
 ## Forking (0.1.24)
 
 Implemented as a first-class document operation. ForkDocumentUseCase
