@@ -7,4 +7,8 @@ export class FindPublicationUseCase {
     execute(id) {
         return this._discoveryProvider.findById(id);
     }
+
+    executeByDocumentId(documentId) {
+        return this._discoveryProvider.findByDocumentId(documentId);
+    }
 }
