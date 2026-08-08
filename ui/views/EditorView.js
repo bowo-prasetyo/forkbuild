@@ -4,6 +4,7 @@ import { CreateEditorContextUseCase } from '../../application/CreateEditorContex
 import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
 import { CreateDocumentManagerUseCase } from '../../application/CreateDocumentManagerUseCase.js';
 import { CreatePersistenceUseCase } from '../../application/CreatePersistenceUseCase.js';
+import { CreateIdentityProviderUseCase } from '../../application/CreateIdentityProviderUseCase.js';
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
@@ -61,6 +62,7 @@ export default {
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
         const { saveDocumentUseCase, loadDocumentUseCase } = new CreatePersistenceUseCase().execute();
+        const identityProvider = new CreateIdentityProviderUseCase().execute();
 
         const editorSession = new EditorSession({
             registry,
@@ -69,7 +71,8 @@ export default {
             documentManager,
             selectionUseCase,
             previewUseCase,
-            loadDocumentUseCase
+            loadDocumentUseCase,
+            identityProvider
         });
 
         let onPointerDown = null;
