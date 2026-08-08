@@ -626,48 +626,98 @@ IdentityProvider.
 
 Publication (publisher/Publication.js) is the pure-data bridge between
 Publisher and a future Discovery layer. It carries: id, documentId,
-title, author, providerId, publishedAt, url. Repository View and Author
-View will consume these fields directly. World View will later add an
-optional worldPosition (either on Publication or via a separate
-WorldLayout record) without changing the publisher interface — the
-publisher attests; the layout system decides where something appears.
+title, author, providerId, publishedAt, url, and (as of 0.1.23)
+parentDocumentId — reserved for the upcoming Forking milestone.
+Repository View, Author View, and World View all consume these fields
+directly without knowing how the Publication was created.
 
-identity/
+discovery/
 
-Filled in at 0.1.21A — the last of the three top-level adapter folders
-sketched back at the core/application/renderer/ui reorg (storage/,
-serializer/, identity/) to get real content. Same shape as the others:
-IdentityProvider is the base class — login(credentials)/logout()/
-currentUser()/sign(data), all throwing by default. LocalIdentityProvider
-is the first concrete provider: no wallet, no cryptographic signing,
-just a remembered username, persisted via an injected StorageProvider
-(the same DI pattern SaveDocumentUseCase/LoadDocumentUseCase use —
-LocalIdentityProvider never imports a concrete storage backend itself).
-Identity is the pure-data return shape (username, displayName, providerId).
+Filled in at 0.1.23 — the Discovery Adapter stub. DiscoveryProvider is
+the base class: list(), findById(id), findByAuthor(author),
+findByParentId(parentDocumentId). LocalDiscoveryProvider is the first
+concrete implementation: reads the same localStorage key that
+LocalPublisherProvider writes to, returning Publication objects.
 
-identity/ imports nothing from this codebase, matching storage/'s
-complete decoupling — it doesn't know what a Document is, only usernames
-and signed payloads. CreateIdentityProviderUseCase
-(application/CreateIdentityProviderUseCase.js) constructs the concrete
-LocalStorageProvider + LocalIdentityProvider pair, so ui/ never imports
-identity/ or storage/ directly — same reasoning as
-CreatePersistenceUseCase. A future Steem Keychain / Hive Keychain /
-wallet provider slots in by changing exactly this one file.
+The critical architectural separation: Publisher answers "How do I
+publish this document?" Discovery answers "How do I find published
+documents?" The UI should never care whether the source is
+LocalStorage, Steem, Hive, Ethereum, IPFS, or another ForkBuild node.
+It simply asks the application: "find publications."
 
-sign(data) is honest about what it currently is: an attribution stamp
-({ signedBy, providerId, data }), not a cryptographic signature. Nothing
-consumes it yet — that's the Publisher Adapter's job (0.1.22).
+This separation becomes essential once Steem is introduced.
+SteemPublisherProvider posts a document; SteemDiscoveryProvider queries
+Steem posts and converts them into Publication objects. Neither the
+publisher nor the discovery provider knows about the other, and the UI
+depends on neither.
 
-The satisfying connection this milestone made: DocumentMetadata.author
-has existed since 0.1.17 and been null every single time nothing set
-it. CreateDocumentManagerUseCase.attachWorld() now accepts an optional
-identityProvider and populates author from currentUser().username when
-someone's logged in. As of 0.1.21 there is still no login UI — same
-0.1.20A/0.1.20B split applied consistently: this round is the adapter
-shape plus its wiring into document creation, fully tested with a
-pre-logged-in provider constructed directly in tests. author will stay
-null in the running app until a login UI exists to actually call
-login() — that's the natural 0.1.21B, not yet built.
+View Modes (conceptual architecture, partially implemented)
+
+ForkBuild's Document abstraction makes three distinct presentation
+modes possible without duplicating data:
+
+Repository View — the "GitHub" mode. A list of projects per author,
+searchable, forkable. Each entry is a Publication (or a local
+DocumentSummary). Users open one, inspect bricks, fork it, modify it.
+This is the builder's primary interface. Implemented as of 0.1.23 as
+ui/views/RepositoryView.js.
+
+Author View — the "profile" mode. Every Publication has an author
+field. Grouping by author produces a portfolio page: published works,
+fork counts, follower counts. Nothing about the document changes;
+only the query differs. Not yet implemented; will follow the exact
+same pattern as Repository View.
+
+World View — the "Minecraft" mode. Published documents that carry an
+optional worldPosition appear as placed objects inside a shared virtual
+world. The renderer streams documents on demand based on camera
+position (like Google Maps tiles). Walking farther loads new creations;
+older ones unload. The same Japanese Temple document can be a project
+in Repository View and a physical place in World View simultaneously.
+Not yet implemented; will add a WorldLayoutProvider abstraction.
+
+All three modes are views over the same underlying data graph:
+
+          Alice (author)
+             │
+     Medieval House (Publication)
+        │      │      │
+     uses    near   forked
+        │      │      │
+   Stone Pack Castle  Bob's House
+
+Repository View explores the "contains" edge.
+World View explores the "near" edge.
+Author View explores the "authored" edge.
+
+The publisher interface intentionally knows nothing about which view
+mode will consume its output. It simply produces a Publication. A
+future DiscoveryProvider (or the view layers themselves) decides how to
+index and present them.
+
+World Layout (future, not yet implemented)
+
+Rather than hard-coding "The Global World," ForkBuild will likely
+introduce a WorldLayoutProvider abstraction whose sole job is
+findVisibleDocuments(camera). Implementations could be:
+
+- Geographic: documents have lat/long coordinates.
+- Random island: one island per author.
+- Theme park: fantasy district, sci-fi district, modern district.
+- Time-based: newest builds nearby, older builds farther away.
+
+The renderer doesn't care. It asks the layout provider what to show,
+then loads the corresponding Documents via a Discovery layer.
+
+Forking (upcoming: 0.1.24)
+
+A fork is a new Document whose metadata records a parentDocumentId.
+The Publisher layer passes this field through automatically (as of
+0.1.23). The fork flow is: load original Document → mutate → publish
+→ receive new Publication with parent reference. Repository View can
+then render fork trees visually; World View might place evolutionary
+stages next to each other so visitors walk from Castle → Castle+ →
+Castle++.
 
 Domain State vs Editor State
 
@@ -678,7 +728,8 @@ DocumentMetadata (core/). Publishable, serializable, shared, forkable.
 This is what the ForkBuild Protocol describes and what storage/publisher
 eventually persist and transmit. Document doesn't replace World as the
 aggregate root — it wraps World plus the metadata (title, author,
-timestamps, versions) that travels alongside it when saved or published.
+timestamps, versions, parentDocumentId) that travels alongside it when
+saved or published.
 
 Editor State — everything in EditorContext (application/): selection,
 active tool, active brick, camera pose, placement preview, settings —
@@ -702,7 +753,7 @@ Dependency direction
 
 ui -> application -> core
 application -> renderer
-application -> storage / publisher / identity / serializer
+application -> storage / publisher / identity / serializer / discovery
 renderer -> core (reads domain events and data; never the reverse)
 
 core never depends on anything above it. renderer never owns data, only
@@ -740,69 +791,3 @@ desktop build might want multiple open documents, an active-document
 pointer, window layout, recent files. None of that changes the document
 model itself; it would sit above DocumentManager the same way
 DocumentManager sits above Document. Not a Version 0.1 concern.
-
-View Modes (future, not yet implemented)
-
-ForkBuild's Document abstraction makes three distinct presentation
-modes possible without duplicating data:
-
-Repository View — the "GitHub" mode. A list of projects per author,
-searchable, forkable. Each entry is a Publication (or a local
-DocumentSummary). Users open one, inspect bricks, fork it, modify it.
-This is the builder's primary interface.
-
-World View — the "Minecraft" mode. Published documents that carry an
-optional worldPosition appear as placed objects inside a shared virtual
-world. The renderer streams documents on demand based on camera
-position (like Google Maps tiles). Walking farther loads new creations;
-older ones unload. The same Japanese Temple document can be a project
-in Repository View and a physical place in World View simultaneously.
-
-Author View — the "profile" mode. Every Publication has an author
-field. Grouping by author produces a portfolio page: published works,
-fork counts, follower counts. Nothing about the document changes;
-only the query differs.
-
-All three modes are views over the same underlying data graph:
-
-```text
-          Alice (author)
-             │
-     Medieval House (Publication)
-        │      │      │
-     uses    near   forked
-        │      │      │
-   Stone Pack Castle  Bob's House
-```
-
-Repository View explores the "contains" edge.
-World View explores the "near" edge.
-Author View explores the "authored" edge.
-
-The publisher interface intentionally knows nothing about which view
-mode will consume its output. It simply produces a Publication. A
-future DiscoveryProvider (or the view layers themselves) decides how to
-index and present them.
-
-World Layout (future, not yet implemented)
-
-Rather than hard-coding "The Global World," ForkBuild will likely
-introduce a WorldLayoutProvider abstraction whose sole job is
-findVisibleDocuments(camera). Implementations could be:
-
-- Geographic: documents have lat/long coordinates.
-- Random island: one island per author.
-- Theme park: fantasy district, sci-fi district, modern district.
-- Time-based: newest builds nearby, older builds farther away.
-
-The renderer doesn't care. It asks the layout provider what to show,
-then loads the corresponding Documents via a Discovery layer.
-
-Forking (upcoming: 0.1.23)
-
-A fork is a new Document whose metadata records a parentDocumentId.
-The Publisher layer will likely add this field to Publication. The
-fork flow is: load original Document → mutate → publish → receive new
-Publication with parent reference. Repository View can then render
-fork trees visually; World View might place evolutionary stages next
-to each other so visitors walk from Castle → Castle+ → Castle++.
