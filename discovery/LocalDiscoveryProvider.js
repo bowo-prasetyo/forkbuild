@@ -34,6 +34,12 @@ export class LocalDiscoveryProvider extends DiscoveryProvider {
             .map((record) => Publication.fromJSON(record));
     }
 
+    findByDocumentId(documentId) {
+        return this._loadRecords()
+            .filter((r) => r.documentId === documentId)
+            .map((record) => Publication.fromJSON(record));
+    }
+
     _loadRecords() {
         return this._storageProvider.load(PUBLICATIONS_KEY) || [];
     }
