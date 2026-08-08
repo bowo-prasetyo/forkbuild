@@ -47,6 +47,14 @@ This separation means the UI (Repository View, Author View, World View)
 consumes `Publication` objects through `DiscoveryProvider` without
 knowing the blockchain source.
 
+## Forking (0.1.24)
+
+Implemented as a first-class document operation. ForkDocumentUseCase
+loads a source document, deep-clones its world with fresh instance IDs,
+sets DocumentMetadata.parentDocumentId to the source document's ID,
+and opens the result as a new editable document. The publisher passes
+parentDocumentId through automatically when the fork is later published.
+
 ## Future Directions
 
 - **SteemPublisherProvider**: posts document JSON as a Steem custom_json
@@ -54,6 +62,3 @@ knowing the blockchain source.
 - **World Position**: an optional `worldPosition` field (or separate
   `WorldLayout` record) will let World View place published documents
   into a shared virtual space without changing the publisher interface.
-- **Forking**: `parentDocumentId` on `Publication` (already wired in
-  0.1.23) will let Repository View render fork trees and World View
-  place evolutionary stages next to each other.
