@@ -1,4 +1,5 @@
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 
 // Repository View — the "GitHub" mode. Lists all published documents as
@@ -9,6 +10,7 @@ import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase
 export default {
     name: 'RepositoryView',
     setup() {
+        const router = useRouter();
         const publications = ref([]);
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
 
@@ -16,7 +18,15 @@ export default {
             publications.value = listPublicationsUseCase.execute();
         });
 
-        return { publications };
+        function openPublication(pub) {
+            router.push({ path: '/editor', query: { load: pub.documentId } });
+        }
+
+        function forkPublication(pub) {
+            router.push({ path: '/editor', query: { fork: pub.documentId } });
+        }
+
+        return { publications, openPublication, forkPublication };
     },
     template: `
         <section class="repository-view">
@@ -33,6 +43,10 @@ export default {
                     <p class="publication-date" v-if="pub.publishedAt">
                         {{ new Date(pub.publishedAt).toLocaleDateString() }}
                     </p>
+                    <div class="publication-actions">
+                        <button class="action-btn action-btn--open" @click="openPublication(pub)">Open</button>
+                        <button class="action-btn action-btn--fork" @click="forkPublication(pub)">Fork</button>
+                    </div>
                 </li>
             </ul>
         </section>
