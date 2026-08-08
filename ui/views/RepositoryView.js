@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 
@@ -18,6 +18,14 @@ export default {
             publications.value = listPublicationsUseCase.execute();
         });
 
+        const publicationByDocumentId = computed(() => {
+            const map = new Map();
+            for (const pub of publications.value) {
+                map.set(pub.documentId, pub);
+            }
+            return map;
+        });
+
         function openPublication(pub) {
             router.push({ path: '/editor', query: { load: pub.documentId } });
         }
@@ -26,7 +34,17 @@ export default {
             router.push({ path: '/editor', query: { fork: pub.documentId } });
         }
 
-        return { publications, openPublication, forkPublication };
+        function getForkCount(pub) {
+            return publications.value.filter((p) => p.parentDocumentId === pub.documentId).length;
+        }
+
+        function getParentTitle(pub) {
+            if (!pub.parentDocumentId) return null;
+            const parent = publicationByDocumentId.value.get(pub.parentDocumentId);
+            return parent ? parent.title : 'Unknown';
+        }
+
+        return { publications, openPublication, forkPublication, getForkCount, getParentTitle };
     },
     template: `
         <section class="repository-view">
@@ -37,11 +55,17 @@ export default {
             <ul v-else class="publication-list">
                 <li v-for="pub in publications" :key="pub.id" class="publication-card">
                     <h3>{{ pub.title }}</h3>
+                    <p v-if="pub.parentDocumentId" class="publication-fork-of">
+                        ↳ Fork of {{ getParentTitle(pub) }}
+                    </p>
                     <p class="publication-meta">
                         by {{ pub.author || 'anonymous' }} via {{ pub.providerId }}
                     </p>
                     <p class="publication-date" v-if="pub.publishedAt">
                         {{ new Date(pub.publishedAt).toLocaleDateString() }}
+                    </p>
+                    <p class="publication-forks" v-if="getForkCount(pub) > 0">
+                        {{ getForkCount(pub) }} fork(s)
                     </p>
                     <div class="publication-actions">
                         <button class="action-btn action-btn--open" @click="openPublication(pub)">Open</button>
