@@ -18,6 +18,9 @@ export class LocalPublisherProvider extends PublisherProvider {
     publish(document, identityProvider) {
         const user = identityProvider ? identityProvider.currentUser() : null;
         const payload = document.toJSON();
+        
+        // Ensure the document is persisted so Open / Fork can retrieve it later.
+        this._storageProvider.save(document.world.id, payload);
 
         // Attestation: proves the provider invoked identityProvider.sign()
         // as part of the publish flow. For LocalIdentityProvider this is
