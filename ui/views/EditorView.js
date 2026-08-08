@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
@@ -68,7 +68,11 @@ export default {
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
         const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase } = new CreatePersistenceUseCase().execute();
-        const identityProvider = new CreateIdentityProviderUseCase().execute();
+
+        // Shared identity instance — same login state across all views
+        const identityUseCase = inject('identityUseCase');
+        const identityProvider = identityUseCase.provider;
+
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
 
         const editorSession = new EditorSession({
