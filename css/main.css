@@ -120,6 +120,20 @@ html, body {
     background: #5fc490;
 }
 
+.toolbar-new {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-new:hover {
+    background: #262626;
+}
+
 .toolbar-dirty {
     color: #e0a34c;
     font-size: 0.8rem;
@@ -147,11 +161,20 @@ html, body {
 .toolbar-recent-item {
     padding: 0.15rem 0.5rem;
     background: #1f1f1f;
+    border: none;
+    color: #b0b0b0;
     border-radius: 3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 140px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.toolbar-recent-item:hover {
+    background: #2a2a2a;
+    color: #ffffff;
 }
 
 .editor-body {
