@@ -709,15 +709,33 @@ findVisibleDocuments(camera). Implementations could be:
 The renderer doesn't care. It asks the layout provider what to show,
 then loads the corresponding Documents via a Discovery layer.
 
-Forking (upcoming: 0.1.24)
+Forking (0.1.24)
 
-A fork is a new Document whose metadata records a parentDocumentId.
-The Publisher layer passes this field through automatically (as of
-0.1.23). The fork flow is: load original Document → mutate → publish
-→ receive new Publication with parent reference. Repository View can
-then render fork trees visually; World View might place evolutionary
-stages next to each other so visitors walk from Castle → Castle+ →
-Castle++.
+A fork is a new Document derived from an existing published document,
+not merely a copy of its JSON. The operation is:
+
+1. Load the source Document from storage (via its publication.documentId).
+2. Deep-clone the World, stripping all instance IDs so that World,
+   Building, and Brick all regenerate fresh UUIDs.
+3. Create new DocumentMetadata with:
+   - title: "Fork of {original title}"
+   - author: current user (from IdentityProvider)
+   - parentDocumentId: source document's world.id
+4. Open the resulting Document as an ordinary editable document.
+
+The lineage is immutable from the parent's perspective. The complete
+ancestry graph can be reconstructed by querying DiscoveryProvider with
+findByParentId().
+
+Fork is distinguished from View (open another document without copying)
+and Import (bring external data into the workspace). Repository View
+offers both Open and Fork actions on each Publication card.
+
+The implementation lives in ForkDocumentUseCase (application/). It is
+deliberately not a Command — forking creates a new document, it does
+not mutate the current one, so it lives outside the undo/redo stack.
+EditorSession gained openDocument() to load an already-constructed
+Document (as opposed to loadDocument() which loads from storage by id).
 
 Domain State vs Editor State
 
