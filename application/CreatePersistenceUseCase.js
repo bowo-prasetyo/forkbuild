@@ -1,6 +1,7 @@
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
 import { LoadDocumentUseCase } from './LoadDocumentUseCase.js';
+import { ForkDocumentUseCase } from './ForkDocumentUseCase.js';
 
 // Builds the concrete storage backend and the two use cases that depend
 // on it, so ui/ never imports storage/ directly — the dependency
@@ -16,7 +17,8 @@ export class CreatePersistenceUseCase {
         const storageProvider = new LocalStorageProvider();
         return {
             saveDocumentUseCase: new SaveDocumentUseCase(storageProvider),
-            loadDocumentUseCase: new LoadDocumentUseCase(storageProvider)
+            loadDocumentUseCase: new LoadDocumentUseCase(storageProvider),
+            forkDocumentUseCase: new ForkDocumentUseCase(storageProvider)
         };
     }
 }
