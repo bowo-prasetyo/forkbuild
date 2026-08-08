@@ -16,7 +16,13 @@ Publication (new in 0.1.22)
 
 Discovery (new in 0.1.23)
 
-Fork (future)
+Forking (0.1.24)
+
+A fork is created by deriving a new Document from an existing one.
+The new Document's metadata carries parentDocumentId pointing to the
+source document's world.id. The forked world's buildings and bricks
+receive fresh instance IDs, making the fork an independent document.
+DiscoveryProvider.findByParentId() reconstructs the ancestry graph.
 
 Merge (future)
 
