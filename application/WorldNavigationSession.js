@@ -7,6 +7,11 @@ import { SpatialInspectionService } from './SpatialInspectionService.js';
 import { SpatialInspectionState } from './spatial-state/SpatialInspectionState.js';
 import { SpatialEditingService } from './SpatialEditingService.js';
 import { SpatialEditingContext } from './spatial-state/SpatialEditingContext.js';
+import { SpatialPlacementService } from './SpatialPlacementService.js';
+import { SpatialPlacementState } from './spatial-state/SpatialPlacementState.js';
+import { PlaceBrickCommand } from './commands/PlaceBrickCommand.js';
+import { CommandHistory } from './CommandHistory.js';
+import { PlacementValidator } from '../core/PlacementValidator.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -22,12 +27,17 @@ export class WorldNavigationSession {
         this._spatialCameraController = null;
         this._inspectionService = null;
         this._editingService = null;
+        this._placementService = new SpatialPlacementService(registry);
         this._loadedDocuments = new Map();
+        this._commandHistories = new Map();
         this._failedLoads = new Map();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
         this._spatialInspection = SpatialInspectionState.empty();
         this._spatialEditingContext = SpatialEditingContext.empty();
+        this._spatialPlacement = SpatialPlacementState.empty();
+        this._activeDefinitionId = null;
+        this._focusedDocumentId = null;
     }
 
     start(container) {
@@ -41,9 +51,86 @@ export class WorldNavigationSession {
         this._editingService = new SpatialEditingService(this);
     }
 
+    // -----------------------------------------------------------------
+    // Placement Mode
+    // -----------------------------------------------------------------
+
+    setActiveDefinitionId(definitionId) {
+        this._activeDefinitionId = definitionId;
+        if (!definitionId) {
+            this._spatialPlacement = SpatialPlacementState.empty();
+            this._session.hidePreview();
+        }
+    }
+
+    getActiveDefinitionId() {
+        return this._activeDefinitionId;
+    }
+
+    isPlacementMode() {
+        return this._activeDefinitionId !== null;
+    }
+
+    getSpatialPlacement() {
+        return this._spatialPlacement;
+    }
+
+    commitPlacement() {
+        if (!this._spatialPlacement || !this._spatialPlacement.valid) {
+            return false;
+        }
+
+        const placement = this._spatialPlacement;
+        const targetDocumentId = placement.targetDocumentId || this._focusedDocumentId;
+        const document = this._loadedDocuments.get(targetDocumentId);
+        if (!document) {
+            return false;
+        }
+
+        const world = document.world;
+        const buildings = world.getBuildings();
+        if (buildings.length === 0) {
+            return false;
+        }
+
+        const buildingId = placement.targetBuildingId || buildings[0].id;
+
+        const validator = new PlacementValidator();
+        if (!validator.canPlace(world, buildingId, placement.position)) {
+            return false;
+        }
+
+        const command = new PlaceBrickCommand({
+            worldId: world.id,
+            buildingId,
+            definitionId: placement.definitionId,
+            position: placement.position,
+            rotation: placement.rotation
+        });
+
+        let history = this._commandHistories.get(world.id);
+        if (!history) {
+            history = new CommandHistory({ world });
+            this._commandHistories.set(world.id, history);
+        }
+        history.execute(command);
+
+        this._spatialPlacement = SpatialPlacementState.empty();
+        return true;
+    }
+
+    cancelPlacement() {
+        this.setActiveDefinitionId(null);
+    }
+
+    // -----------------------------------------------------------------
+    // Navigation
+    // -----------------------------------------------------------------
+
     // Client-side spatial navigation: move camera to the world's layout
     // coordinate and stream it in. No page reload.
     focusDocument(documentId) {
+        this._focusedDocumentId = documentId;
         const layoutPos = this._worldLayoutProvider.getPosition(documentId);
         this._spatialCameraController.focusDocument(documentId, layoutPos);
         return this.updateSpatialView();
@@ -84,7 +171,11 @@ export class WorldNavigationSession {
         }
 
         const cameraState = this._spatialCameraController.getSpatialCameraState();
-        const cameraPos = new Position(cameraState.position.x, cameraState.position.y, cameraState.position.z);
+        const cameraPos = new Position(
+            cameraState.position.x,
+            cameraState.position.y,
+            cameraState.position.z
+        );
 
         const visibleIds = this._worldLayoutProvider.findVisibleDocuments(
             cameraPos,
@@ -136,6 +227,10 @@ export class WorldNavigationSession {
         };
     }
 
+    // -----------------------------------------------------------------
+    // Interaction
+    // -----------------------------------------------------------------
+
     pick(screenX, screenY) {
         if (!this._session) {
             return null;
@@ -180,6 +275,7 @@ export class WorldNavigationSession {
             const hover = SpatialHoverState.brick(brickHit);
             this._setSpatialHover(hover);
             this._session.hoverBrick(brickHit.brickId);
+            this._updatePlacementPreview(brickHit);
             return hover;
         }
 
@@ -188,11 +284,13 @@ export class WorldNavigationSession {
             const hover = SpatialHoverState.ground(groundHit.position);
             this._setSpatialHover(hover);
             this._session.clearHover();
+            this._updatePlacementPreview(groundHit);
             return hover;
         }
 
         this._setSpatialHover(SpatialHoverState.empty());
         this._session.clearHover();
+        this._clearPlacementPreview();
         return null;
     }
 
@@ -262,14 +360,30 @@ export class WorldNavigationSession {
 
     getSpatialState() {
         if (!this._session) {
-            return { loaded: [], visible: [], nearby: [], failed: [], cameraPosition: null };
+            return {
+                loaded: [],
+                visible: [],
+                nearby: [],
+                failed: [],
+                cameraPosition: null
+            };
         }
 
         const cameraState = this._spatialCameraController.getSpatialCameraState();
-        const cameraPos = new Position(cameraState.position.x, cameraState.position.y, cameraState.position.z);
+        const cameraPos = new Position(
+            cameraState.position.x,
+            cameraState.position.y,
+            cameraState.position.z
+        );
 
-        const visible = this._worldLayoutProvider.findVisibleDocuments(cameraPos, STREAMING_RADIUS);
-        const nearby = this._worldLayoutProvider.findVisibleDocuments(cameraPos, NAVIGATION_RADIUS);
+        const visible = this._worldLayoutProvider.findVisibleDocuments(
+            cameraPos,
+            STREAMING_RADIUS
+        );
+        const nearby = this._worldLayoutProvider.findVisibleDocuments(
+            cameraPos,
+            NAVIGATION_RADIUS
+        );
 
         return {
             loaded: Array.from(this._loadedDocuments.keys()),
@@ -292,6 +406,10 @@ export class WorldNavigationSession {
         return this._worldLayoutProvider.getPosition(documentId);
     }
 
+    // -----------------------------------------------------------------
+    // Internal
+    // -----------------------------------------------------------------
+
     _loadWorld(documentId) {
         const document = this._loadPublicationDocumentUseCase.execute(documentId);
         this._loadedDocuments.set(documentId, document);
@@ -300,6 +418,9 @@ export class WorldNavigationSession {
     }
 
     _unloadWorld(documentId) {
+        if (this._focusedDocumentId === documentId) {
+            this._focusedDocumentId = null;
+        }
         if (this._spatialSelection.documentId === documentId) {
             this.clearSelection();
         }
@@ -311,6 +432,9 @@ export class WorldNavigationSession {
         }
 
         const document = this._loadedDocuments.get(documentId);
+        if (document) {
+            this._commandHistories.delete(document.world.id);
+        }
         if (document && this._session) {
             this._session.removeWorld(document.world, documentId);
         }
@@ -341,6 +465,63 @@ export class WorldNavigationSession {
         this._spatialEditingContext = this._editingService.getEditingContext(this._spatialSelection);
     }
 
+    _updatePlacementPreview(hitResult) {
+        if (!this._activeDefinitionId || !this._session) {
+            return;
+        }
+
+        let existingBrick = null;
+        let layoutOffset = null;
+        let targetDocumentId = this._focusedDocumentId;
+
+        if (hitResult.type === 'brick') {
+            targetDocumentId = hitResult.documentId;
+            const document = this._loadedDocuments.get(targetDocumentId);
+            if (document) {
+                const building = document.world.getBuilding(hitResult.buildingId);
+                existingBrick = building?.findBrick(hitResult.brickId);
+                layoutOffset = this._worldLayoutProvider.getPosition(targetDocumentId);
+            }
+        } else if (hitResult.type === 'ground') {
+            if (targetDocumentId) {
+                layoutOffset = this._worldLayoutProvider.getPosition(targetDocumentId);
+            }
+        }
+
+        if (!targetDocumentId || !layoutOffset) {
+            this._clearPlacementPreview();
+            return;
+        }
+
+        const placement = this._placementService.calculateFromHit(
+            hitResult,
+            this._activeDefinitionId,
+            existingBrick,
+            layoutOffset,
+            { gridSnapEnabled: true, gridSnapSize: 1 }
+        );
+
+        this._spatialPlacement = placement;
+
+        if (placement.valid) {
+            const worldPos = {
+                x: placement.position.x + layoutOffset.x,
+                y: placement.position.y + layoutOffset.y,
+                z: placement.position.z + layoutOffset.z
+            };
+            this._session.showPreview(placement.definitionId, worldPos, placement.rotation);
+        } else {
+            this._session.hidePreview();
+        }
+    }
+
+    _clearPlacementPreview() {
+        this._spatialPlacement = SpatialPlacementState.empty();
+        if (this._session) {
+            this._session.hidePreview();
+        }
+    }
+
     _getFailedIds() {
         return Array.from(this._failedLoads.keys());
     }
@@ -353,11 +534,16 @@ export class WorldNavigationSession {
         this._spatialCameraController = null;
         this._inspectionService = null;
         this._editingService = null;
+        this._placementService = null;
+        this._commandHistories.clear();
         this._loadedDocuments.clear();
         this._failedLoads.clear();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
         this._spatialInspection = SpatialInspectionState.empty();
         this._spatialEditingContext = SpatialEditingContext.empty();
+        this._spatialPlacement = SpatialPlacementState.empty();
+        this._activeDefinitionId = null;
+        this._focusedDocumentId = null;
     }
 }
