@@ -844,3 +844,56 @@ html, body {
 .spatial-panel--hover .spatial-type {
     color: #3a6ea5;
 }
+/* ... existing styles above remain unchanged ... */
+
+.spatial-panel--inspection {
+    border-color: #e0a34c;
+}
+
+.spatial-panel--inspection h4 {
+    color: #e0a34c;
+}
+
+.spatial-panel--inspection .spatial-type {
+    color: #e0a34c;
+}
+
+.inspection-fields {
+    margin: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.inspection-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.inspection-label {
+    color: #707070;
+    flex-shrink: 0;
+}
+
+.inspection-value {
+    color: #d0d0d0;
+    text-align: right;
+    word-break: break-all;
+}
+
+.inspection-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.action-btn--primary {
+    background: #4caf7d;
+    color: #121212;
+}
+
+.action-btn--primary:hover {
+    background: #5fc490;
+}
