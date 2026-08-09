@@ -1,33 +1,62 @@
-const HIGHLIGHT_COLOR = 0xffaa00;
+const SELECTION_COLOR = 0xffaa00;
+const HOVER_COLOR = 0x44aaff;
 const NO_HIGHLIGHT_COLOR = 0x000000;
 
-// The renderer's third overlay: SpatialSelectionState -> visual highlight.
-// Driven imperatively (highlight/clear methods) rather than by EventBus,
-// because spatial selection is session-local and read-only. Keeps the
-// renderer ignorant of why something is selected.
+// The renderer's third overlay: spatial selection and hover highlights.
+// Driven imperatively rather than by EventBus. Selection (orange) and
+// hover (blue) are independent — one does not clear the other.
 export class SpatialSelectionRenderer {
     constructor(meshRegistry) {
         this._meshRegistry = meshRegistry;
-        this._highlightedBrickId = null;
+        this._selectedBrickId = null;
+        this._hoveredBrickId = null;
     }
 
-    highlight(brickId) {
-        this.clear();
+    select(brickId) {
+        this.clearSelection();
         const mesh = this._meshRegistry.getMesh(brickId);
         if (!mesh || !mesh.material || !mesh.material.emissive) {
             return;
         }
-        mesh.material.emissive.setHex(HIGHLIGHT_COLOR);
-        this._highlightedBrickId = brickId;
+        mesh.material.emissive.setHex(SELECTION_COLOR);
+        this._selectedBrickId = brickId;
     }
 
-    clear() {
-        if (this._highlightedBrickId) {
-            const mesh = this._meshRegistry.getMesh(this._highlightedBrickId);
+    hover(brickId) {
+        if (this._hoveredBrickId === brickId) {
+            return;
+        }
+        this.clearHover();
+        const mesh = this._meshRegistry.getMesh(brickId);
+        if (!mesh || !mesh.material || !mesh.material.emissive) {
+            return;
+        }
+        mesh.material.emissive.setHex(HOVER_COLOR);
+        this._hoveredBrickId = brickId;
+    }
+
+    clearSelection() {
+        if (this._selectedBrickId) {
+            const mesh = this._meshRegistry.getMesh(this._selectedBrickId);
             if (mesh && mesh.material && mesh.material.emissive) {
                 mesh.material.emissive.setHex(NO_HIGHLIGHT_COLOR);
             }
         }
-        this._highlightedBrickId = null;
+        this._selectedBrickId = null;
+    }
+
+    clearHover() {
+        if (this._hoveredBrickId) {
+            const mesh = this._meshRegistry.getMesh(this._hoveredBrickId);
+            if (mesh && mesh.material && mesh.material.emissive) {
+                mesh.material.emissive.setHex(NO_HIGHLIGHT_COLOR);
+            }
+        }
+        this._hoveredBrickId = null;
+    }
+
+    clear() {
+        this.clearSelection();
+        this.clearHover();
     }
 }
