@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Position } from '../core/Position.js';
+import { WorldPosition } from '../core/WorldPosition.js';
 
 // Answers two questions, both from screen coordinates: what brick (if
 // any) is under this position (pick), and where would a ray hit the
@@ -15,8 +16,17 @@ export class PickingService {
         this._groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     }
 
-    // Returns null, or { brickId, buildingId }.
+    // Legacy shape for EditorView: { brickId, buildingId } | null.
     pick(screenX, screenY) {
+        const result = this.pickRich(screenX, screenY);
+        if (!result || result.type !== 'brick') {
+            return null;
+        }
+        return { brickId: result.brickId, buildingId: result.buildingId };
+    }
+
+    // Rich shape for World View: { type, documentId, buildingId, brickId, point } | null.
+    pickRich(screenX, screenY) {
         const ndc = this._toNormalizedDeviceCoordinates(screenX, screenY);
         this._raycaster.setFromCamera(ndc, this._camera);
 
@@ -27,14 +37,23 @@ export class PickingService {
             return null;
         }
 
-        const hitMesh = intersections[0].object;
+        const hit = intersections[0];
+        const hitMesh = hit.object;
         const brickId = this._meshRegistry.getBrickId(hitMesh.uuid);
         if (!brickId) {
             return null;
         }
 
+        const documentId = this._meshRegistry.getDocumentId(brickId);
         const buildingId = this._meshRegistry.getBuildingId(brickId);
-        return { brickId, buildingId };
+
+        return {
+            type: 'brick',
+            documentId,
+            buildingId,
+            brickId,
+            point: new Position(hit.point.x, hit.point.y, hit.point.z)
+        };
     }
 
     // Returns a core/Position (never a Three.js type) where the ray from
@@ -50,7 +69,7 @@ export class PickingService {
             return null;
         }
 
-        return new Position(target.x, target.y, target.z);
+        return new WorldPosition(target.x, target.y, target.z);
     }
 
     _toNormalizedDeviceCoordinates(screenX, screenY) {
