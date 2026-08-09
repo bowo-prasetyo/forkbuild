@@ -755,3 +755,27 @@ html, body {
     font-size: 0.75rem;
     flex-shrink: 0;
 }
+.world-view-error {
+    color: #e74c3c;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.world-view-section--error {
+    border-color: #e74c3c !important;
+}
+
+.world-view-section--error h4 {
+    color: #e74c3c;
+}
+
+.world-item--failed {
+    opacity: 0.5;
+    border-color: #3a1f1f;
+    background: #1f1f1f;
+}
+
+.world-item--failed .world-item-title {
+    color: #707070;
+    text-decoration: line-through;
+}
