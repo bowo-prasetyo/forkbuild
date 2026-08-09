@@ -21,6 +21,7 @@ export default {
         const failedWorlds = ref([]);
         const spatialSelection = ref(null);
         const spatialHover = ref(null);
+        const spatialInspection = ref(null);
         const cameraPosition = ref(null);
 
         const registry = new CreateBrickRegistryUseCase().execute();
@@ -88,6 +89,16 @@ export default {
                 spatialSelection.value = null;
             }
 
+            const inspection = session.getSpatialInspection();
+            if (inspection && !inspection.isEmpty) {
+                spatialInspection.value = {
+                    type: inspection.type,
+                    ...inspection.data
+                };
+            } else {
+                spatialInspection.value = null;
+            }
+
             const initialDoc = docs.find((d) => d.world.id === initialDocumentId);
             if (initialDoc) {
                 title.value = initialDoc.metadata.title || 'Untitled';
@@ -117,6 +128,11 @@ export default {
         function focusWorld(documentId) {
             session.focusDocument(documentId);
             router.replace({ path: `/world/${documentId}` });
+            refreshSpatialUI();
+        }
+
+        function focusSelection() {
+            session.focusSelection();
             refreshSpatialUI();
         }
 
@@ -188,8 +204,10 @@ export default {
             failedWorlds,
             spatialSelection,
             spatialHover,
+            spatialInspection,
             cameraPosition,
-            focusWorld
+            focusWorld,
+            focusSelection
         };
     },
     template: `
@@ -219,28 +237,80 @@ export default {
                     </p>
                 </div>
 
-                <div v-if="spatialSelection" class="spatial-panel spatial-panel--selection">
-                    <h4>Selected</h4>
-                    <p class="spatial-type">{{ spatialSelection.type }}</p>
-                    <p v-if="spatialSelection.worldTitle" class="spatial-world">
-                        World: {{ spatialSelection.worldTitle }}
-                        <span class="spatial-author">by {{ spatialSelection.worldAuthor }}</span>
-                    </p>
-                    <p v-if="spatialSelection.brickId" class="spatial-id">
-                        Brick: {{ spatialSelection.brickId.slice(0, 8) }}…
-                    </p>
-                    <p v-if="spatialSelection.position" class="spatial-pos">
-                        {{ spatialSelection.position.x.toFixed(2) }},
-                        {{ spatialSelection.position.y.toFixed(2) }},
-                        {{ spatialSelection.position.z.toFixed(2) }}
-                    </p>
-                    <button
-                        v-if="spatialSelection.documentId"
-                        class="action-btn action-btn--explore"
-                        @click="focusWorld(spatialSelection.documentId)"
-                    >
-                        Focus World
-                    </button>
+                <div v-if="spatialInspection" class="spatial-panel spatial-panel--inspection">
+                    <h4>Inspection</h4>
+                    <p class="spatial-type">{{ spatialInspection.type }}</p>
+
+                    <div v-if="spatialInspection.type === 'brick'" class="inspection-fields">
+                        <div class="inspection-row">
+                            <span class="inspection-label">Type</span>
+                            <span class="inspection-value">{{ spatialInspection.brickType }}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">ID</span>
+                            <span class="inspection-value">{{ spatialInspection.brickId.slice(0, 8) }}…</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Position</span>
+                            <span class="inspection-value">
+                                {{ spatialInspection.position.x.toFixed(2) }},
+                                {{ spatialInspection.position.y.toFixed(2) }},
+                                {{ spatialInspection.position.z.toFixed(2) }}
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Rotation</span>
+                            <span class="inspection-value">{{ spatialInspection.rotation }}°</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Building</span>
+                            <span class="inspection-value">{{ spatialInspection.buildingId.slice(0, 8) }}… ({{ spatialInspection.buildingBrickCount }} bricks)</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">World</span>
+                            <span class="inspection-value">{{ spatialInspection.worldTitle }}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Author</span>
+                            <span class="inspection-value">{{ spatialInspection.worldAuthor }}</span>
+                        </div>
+                    </div>
+
+                    <div v-if="spatialInspection.type === 'ground'" class="inspection-fields">
+                        <div class="inspection-row">
+                            <span class="inspection-label">Position</span>
+                            <span class="inspection-value">
+                                {{ spatialInspection.position.x.toFixed(2) }},
+                                {{ spatialInspection.position.y.toFixed(2) }},
+                                {{ spatialInspection.position.z.toFixed(2) }}
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">World</span>
+                            <span class="inspection-value">{{ spatialInspection.worldTitle }}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Author</span>
+                            <span class="inspection-value">{{ spatialInspection.worldAuthor }}</span>
+                        </div>
+                    </div>
+
+                    <div class="inspection-actions">
+                        <button
+                            v-if="spatialInspection.documentId"
+                            class="action-btn action-btn--explore"
+                            @click="focusWorld(spatialInspection.documentId)"
+                        >
+                            Focus World
+                        </button>
+                        <button
+                            v-if="spatialInspection.type === 'brick'"
+                            class="action-btn action-btn--primary"
+                            @click="focusSelection"
+                        >
+                            Focus Brick
+                        </button>
+                    </div>
                 </div>
 
                 <div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
