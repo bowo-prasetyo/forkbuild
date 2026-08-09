@@ -29,7 +29,7 @@ export class RenderWorldViewUseCase {
             getCameraState: () => renderer.cameraController.getState(),
             setCameraState: (state) => renderer.cameraController.setState(state),
             addWorld: (world, documentId, layoutPosition) => worldRenderer.addWorld(world, documentId, layoutPosition),
-            removeWorld: (world) => worldRenderer.removeWorld(world),
+            removeWorld: (world, documentId) => worldRenderer.removeWorld(world, documentId),
             selectBrick: (brickId) => spatialSelectionRenderer.select(brickId),
             clearSelection: () => spatialSelectionRenderer.clearSelection(),
             hoverBrick: (brickId) => spatialSelectionRenderer.hover(brickId),
