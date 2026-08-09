@@ -1195,7 +1195,10 @@ Spatial State — as of 0.1.30, a third kind of runtime state exists for
 the World View: SpatialCameraState, SpatialSelectionState, and
 SpatialHoverState. These are neither Domain State nor Editor State;
 they are transient navigation observations local to a spatial viewing
-session. Like Editor State, they are never serialized into the Protocol.
+session. As of 0.1.31, SpatialInspectionState joins this group — it
+describes what the viewer currently knows about a selected object, not
+the object itself. Like Editor State, all spatial state is never
+serialized into the Protocol.
 
 Spatial Selection Invariant
 
