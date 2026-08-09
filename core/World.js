@@ -70,7 +70,27 @@ export class World {
         building.removeBrick(brickId);
         this._publish(DomainEvent.BRICK_REMOVED, { buildingId, brick });
     }
-
+    
+    // Mutates an existing brick and publishes BRICK_UPDATED so the
+    // renderer can react incrementally. changes: { position, rotation }.
+    updateBrick(buildingId, brickId, changes) {
+        const building = this.getBuilding(buildingId);
+        if (!building) {
+            throw new Error(`Unknown building: ${buildingId}`);
+        }
+        const brick = building.findBrick(brickId);
+        if (!brick) {
+            return;
+        }
+        if (changes.position) {
+            brick.position = changes.position;
+        }
+        if (changes.rotation !== undefined) {
+            brick.rotation = changes.rotation;
+        }
+        this._publish(DomainEvent.BRICK_UPDATED, { buildingId, brick });
+    }
+    
     toJSON() {
         return {
             id: this._id,
