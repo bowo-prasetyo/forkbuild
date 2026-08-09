@@ -51,6 +51,13 @@ editing session and must never appear in a serialized World or be
 transmitted to a publisher. See docs/Architecture.md, "Domain State vs
 Editor State."
 
+Spatial Inspection State (added 0.1.31) is explicitly excluded from
+the protocol. It is runtime-only viewer state produced by resolving
+a SpatialSelectionState against a loaded Document/World. It describes
+what the current viewer knows about an object, not the object itself,
+and therefore never appears in serialized Documents, Publications, or
+WorldLayout records.
+
 WorldPosition
 
 Added in 0.1.27. A coordinate in shared world space, distinct from
