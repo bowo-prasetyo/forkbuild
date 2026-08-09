@@ -977,6 +977,90 @@ automatically carry the correct author — completing the loop from
 login → currentUser() → DocumentMetadata.author → Publication.author
 → Repository View.
 
+Spatial Inspection (0.1.31)
+
+The spatial layer gained a fourth responsibility: domain inspection.
+Picking answers "what is under the cursor?" Selection answers "what did
+the user choose?" Inspection answers "what do we know about it?" — and
+it answers by reaching into the loaded Document/World, never into the
+renderer.
+
+SpatialInspectionState (application/spatial-state/SpatialInspectionState.js)
+is pure runtime data: type, documentId, buildingId, brickId, and a data
+payload carrying resolved domain metadata (title, author, brick type,
+position, rotation, building brick count, etc.). It is deliberately
+not serializable and not part of the ForkBuild Protocol — it describes
+the current viewer's observation, not the persisted world.
+
+SpatialInspectionService (application/SpatialInspectionService.js)
+resolves a SpatialSelectionState against the session's loaded documents.
+If the selection references a brick, it walks World -> Building ->
+Brick and returns a populated SpatialInspectionState. If the selection
+references ground, it returns world metadata plus the ground position.
+The service knows nothing about Three.js; the UI consumes its output
+without ever importing renderer/.
+
+This creates a clean four-layer boundary:
+
+    PickingService          (renderer/ — raycasts meshes)
+         ↓
+    SpatialSelectionState   (application/ — what was chosen)
+         ↓
+    SpatialInspectionService (application/ — what do we know about it)
+         ↓
+    World / Document        (core/ — domain truth)
+
+WorldNavigationSession owns the inspection lifecycle: pick() refreshes
+the inspection after every selection change, and clearSelection() resets
+it. Unloading a world that owns the current selection also clears the
+inspection, maintaining the Spatial Selection Invariant.
+
+Highlight Compositor (0.1.31)
+
+SpatialSelectionRenderer (renderer/SpatialSelectionRenderer.js) was
+rewritten as a composited state machine. It internally tracks
+_selectedBrickId and _hoveredBrickId independently, and a single private
+_applyHighlight(brickId) method decides the actual emissive color:
+
+    selected + hovered → combined amber (#ffcc00)
+    selected only      → orange (#ffaa00)
+    hovered only       → blue (#44aaff)
+    neither            → black (#000000)
+
+This fixes the 0.1.30 bug where hover could overwrite selection and
+clearHover could erase a selected brick's highlight. The architecture
+already said selection and hover were independent; the renderer now
+matches that promise.
+
+Spatial Focus Navigation (0.1.31)
+
+SpatialCameraController gained focusTarget(target, offset) in addition
+to the existing focusDocument(documentId, layoutPosition). This enables
+three levels of spatial focus:
+
+    focusDocument(documentId)  → jump to a world's layout coordinate
+    focusBuilding(...)         → jump to a building's centroid
+    focusBrick(...)            → jump to a brick's position
+
+WorldNavigationSession exposes focusSelection(), which reads the current
+SpatialInspectionState and, if it carries a position, calls
+focusTarget() with a tight offset (12 units). This lets a user click a
+brick, inspect it, and then focus the camera directly on it — the
+first step toward a navigable building environment rather than just a
+world viewer.
+
+Multi-World Layout Offsets (0.1.31)
+
+WorldRenderer.addWorld(world, documentId, layoutPosition) now accepts
+an optional layoutPosition. When provided, every brick mesh in that
+world is translated by the layout offset before entering the scene.
+This lets multiple worlds coexist in shared space without overlapping,
+since each occupies the region assigned by WorldLayoutProvider.
+
+LocalWorldLayoutProvider places publications on a 40-unit grid, so worlds
+are naturally separated. The renderer no longer needs to know why worlds
+are where they are — it simply applies the offset it is given.
+
 View Modes
 
 ForkBuild's Document abstraction makes three distinct presentation
