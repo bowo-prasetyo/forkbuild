@@ -22,6 +22,19 @@ export class SpatialCameraController {
         this._applyToRenderer(new SpatialCameraState({ position: pos, target, mode: 'orbit' }));
     }
 
+    focusTarget(target, offset = { x: 15, y: 15, z: 15 }) {
+        const pos = new WorldPosition(
+            target.x + offset.x,
+            target.y + offset.y,
+            target.z + offset.z
+        );
+        this._applyToRenderer(new SpatialCameraState({
+            position: pos,
+            target: new WorldPosition(target.x, target.y, target.z),
+            mode: 'orbit'
+        }));
+    }
+
     moveCamera(delta) {
         const current = this.getSpatialCameraState();
         const newPos = new WorldPosition(
