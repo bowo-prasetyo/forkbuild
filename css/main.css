@@ -1028,3 +1028,10 @@ html, body {
 .world-view-overlay > * {
     pointer-events: auto;   /* re-enable clicks on actual content */
 }
+
+.placement-hint {
+    margin: 0.5rem 0 0;
+    color: #9b59b6;
+    font-size: 0.8rem;
+    font-style: italic;
+}
