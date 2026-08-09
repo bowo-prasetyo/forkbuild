@@ -17,7 +17,8 @@ export default {
         const loadedWorlds = ref([]);
         const nearbyWorlds = ref([]);
         const failedWorlds = ref([]);
-        const error = ref(null);
+        const spatialSelection = ref(null);
+        const cameraPosition = ref(null);
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute();
@@ -64,6 +65,24 @@ export default {
                 };
             });
 
+            cameraPosition.value = state.cameraPosition;
+
+            const sel = session.getSpatialSelection();
+            if (sel && !sel.isEmpty) {
+                const pub = pubMap.get(sel.documentId);
+                spatialSelection.value = {
+                    type: sel.type,
+                    documentId: sel.documentId,
+                    buildingId: sel.buildingId,
+                    brickId: sel.brickId,
+                    position: sel.position,
+                    worldTitle: pub?.title || 'Untitled',
+                    worldAuthor: pub?.author || 'anonymous'
+                };
+            } else {
+                spatialSelection.value = null;
+            }
+
             const initialDoc = docs.find((d) => d.world.id === initialDocumentId);
             if (initialDoc) {
                 title.value = initialDoc.metadata.title || 'Untitled';
@@ -71,24 +90,27 @@ export default {
             }
         }
 
-        function navigateToWorld(id) {
-            router.push({ path: `/world/${id}` });
-            window.location.reload();
+        function focusWorld(documentId) {
+            session.focusDocument(documentId);
+            router.replace({ path: `/world/${documentId}` });
+            refreshSpatialUI();
         }
 
-        onMounted(async () => {
+        function onPointerDown(event) {
+            const rect = viewport.value.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const result = session.pick(x, y);
+            refreshSpatialUI();
+        }
+
+        onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
-
-            try {
-                await session.navigateToDocument(initialDocumentId);
-            } catch (err) {
-                console.error('WorldView: initial navigation failed', err);
-                error.value = err.message;
-                title.value = 'Failed to load world';
-            }
-
+            session.navigateToDocument(initialDocumentId);
             refreshSpatialUI();
+
+            viewport.value.addEventListener('pointerdown', onPointerDown);
 
             spatialInterval = setInterval(() => {
                 session.updateSpatialView();
@@ -98,6 +120,7 @@ export default {
 
         onBeforeUnmount(() => {
             clearInterval(spatialInterval);
+            viewport.value.removeEventListener('pointerdown', onPointerDown);
             session.dispose();
         });
 
@@ -108,8 +131,9 @@ export default {
             loadedWorlds,
             nearbyWorlds,
             failedWorlds,
-            error,
-            navigateToWorld
+            spatialSelection,
+            cameraPosition,
+            focusWorld
         };
     },
     template: `
@@ -117,8 +141,34 @@ export default {
             <div class="world-view-overlay">
                 <h2>{{ title }}</h2>
                 <p v-if="author">by {{ author }}</p>
-                <p v-if="error" class="world-view-error">{{ error }}</p>
-                <p v-else class="world-view-hint">Drag to orbit • Scroll to zoom • Home to reset</p>
+                <p v-if="cameraPosition" class="world-view-coords">
+                    Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
+                </p>
+                <p class="world-view-hint">Drag to orbit • Scroll to zoom • Home to reset • Click to inspect</p>
+
+                <div v-if="spatialSelection" class="spatial-panel spatial-panel--selection">
+                    <h4>Selected</h4>
+                    <p class="spatial-type">{{ spatialSelection.type }}</p>
+                    <p v-if="spatialSelection.worldTitle" class="spatial-world">
+                        World: {{ spatialSelection.worldTitle }}
+                        <span class="spatial-author">by {{ spatialSelection.worldAuthor }}</span>
+                    </p>
+                    <p v-if="spatialSelection.brickId" class="spatial-id">
+                        Brick: {{ spatialSelection.brickId.slice(0, 8) }}…
+                    </p>
+                    <p v-if="spatialSelection.position" class="spatial-pos">
+                        {{ spatialSelection.position.x.toFixed(2) }},
+                        {{ spatialSelection.position.y.toFixed(2) }},
+                        {{ spatialSelection.position.z.toFixed(2) }}
+                    </p>
+                    <button
+                        v-if="spatialSelection.documentId"
+                        class="action-btn action-btn--explore"
+                        @click="focusWorld(spatialSelection.documentId)"
+                    >
+                        Focus World
+                    </button>
+                </div>
 
                 <div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
                     <h4>Unavailable ({{ failedWorlds.length }})</h4>
@@ -151,7 +201,7 @@ export default {
                             v-for="w in nearbyWorlds"
                             :key="w.documentId"
                             class="world-item world-item--clickable"
-                            @click="navigateToWorld(w.documentId)"
+                            @click="focusWorld(w.documentId)"
                         >
                             <span class="world-item-title">{{ w.title }}</span>
                             <span class="world-item-author">{{ w.author }}</span>
