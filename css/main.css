@@ -691,3 +691,67 @@ html, body {
     border-color: #4caf7d;
     color: #ffffff;
 }
+/* World View 0.1.28 — Spatial Streaming UI */
+
+.world-view-section {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.world-view-section h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.world-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.world-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.5rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 3px;
+    font-size: 0.85rem;
+}
+
+.world-item--current {
+    background: #234433;
+    border-color: #4caf7d;
+}
+
+.world-item--clickable {
+    cursor: pointer;
+}
+
+.world-item--clickable:hover {
+    background: #2a2a2a;
+    border-color: #3a3a3a;
+}
+
+.world-item-title {
+    color: #d0d0d0;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.world-item-author {
+    color: #707070;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
