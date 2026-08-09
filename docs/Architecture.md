@@ -19,7 +19,7 @@ BrickDefinition id like "core:cube": that's a stable, namespaced *type*
 identifier (docs/BrickIDs.md), not a per-instance UUID.
 
 A Brick stores a definitionId, not geometry. BrickRegistry resolves
-definitionId -&gt; BrickDefinition (metadata only). Libraries (e.g.
+definitionId -> BrickDefinition (metadata only). Libraries (e.g.
 core/library/CoreLibrary.js) register their definitions with the
 registry at startup — see docs/BrickLibrary.md.
 
@@ -53,34 +53,77 @@ from a "use cases live in application/" instinct — event *plumbing* is
 domain infrastructure, not a use case.
 
 RenderWorldViewUseCase (application/RenderWorldViewUseCase.js), updated
-0.1.29, no longer subscribes to an EventBus. Instead it exposes:
-
-    addWorld(world, documentId)
-    removeWorld(world)
-    pick(screenX, screenY)     // rich brick hit
-    pickGround(screenX, screenY) // ground hit
-    highlightBrick(brickId)
-    clearHighlight()
-
-This is the complete vocabulary for spatial interaction without
-leaking Three.js or editor concepts.
+0.1.30, exposes selectBrick(brickId), clearSelection(),
+hoverBrick(brickId), and clearHover() on its returned handle so
+WorldNavigationSession can drive spatial highlighting without touching
+Renderer directly. It also exposes removeWorld(world) for spatial
+unloading. This is the same abstraction discipline as getCameraState/
+setCameraState: the use case decides what the session can do; the
+session does not reach past the use case into renderer internals.
 
 application/
 
 WorldNavigationSession (application/WorldNavigationSession.js), updated
-0.1.29, is now a full spatial interaction coordinator. It adds:
+0.1.30, owns the live read-only runtime graph for World View. It
+coordinates six responsibilities: camera positioning via
+SpatialCameraController, spatial discovery via WorldLayoutProvider,
+document loading via LoadPublicationDocumentUseCase, world load/unload
+reconciliation, spatial selection/hover state, and a shared EventBus
+that feeds a single WorldRenderer.
 
-- pick(screenX, screenY): asks RenderWorldViewUseCase for a rich hit,
-  translates it into SpatialSelectionState, and drives
-  SpatialSelectionRenderer to highlight the selected brick.
-- clearSelection(): resets SpatialSelectionState and clears highlight.
-- focusDocument(documentId): client-side spatial navigation. Moves the
-  camera to the world's layout coordinate and reconciles the streaming
-  radius, all without a page reload. The URL updates via
-  router.replace() so deep-linking still works, but the runtime graph
-  is never destroyed.
-- getSpatialSelection(): returns the current SpatialSelectionState for
-  the HUD.
+SpatialCameraController (application/SpatialCameraController.js) is the
+navigation abstraction: it translates spatial movement commands
+(moveCamera(delta), focusDocument(documentId)) into renderer
+CameraState changes, without WorldNavigationSession touching Three.js.
+focusDocument() jumps the camera to a world's layout coordinate;
+moveCamera() translates both position and target through world space.
+The controller always reads the current renderer state before
+modifying it, so user-driven orbit/pan remains synchronized.
+
+The shared EventBus is the critical architectural change: all loaded
+worlds publish domain events through the same bus, and WorldRenderer
+subscribes exactly once. This lets multiple worlds coexist in the same
+scene without WorldRenderer knowing why they are there. When a world
+leaves the streaming radius, WorldNavigationSession calls
+session.removeWorld(world) — a new renderer-level operation that purges
+meshes without touching the world itself or unsubscribing from the bus.
+
+WorldNavigationSession maintains two radii:
+- STREAMING_RADIUS (150 units): worlds inside this are loaded.
+- NAVIGATION_RADIUS (80 units): worlds inside this are shown in the
+  "Nearby Worlds" UI panel but may or may not be loaded.
+
+The larger streaming radius provides hysteresis: a world near the
+boundary won't thrash between loaded/unloaded as the camera drifts.
+Only when it exits the streaming radius is it actually purged.
+
+navigateToDocument(documentId) positions the camera at the world's
+layout coordinate (plus an offset) and immediately calls
+updateSpatialView() to populate the scene. updateSpatialView() reads
+the camera's current world-space position, asks WorldLayoutProvider for
+visible documentIds, and reconciles the difference with the currently
+loaded set — unloading departed worlds and loading newly visible ones.
+Failed loads are retried with exponential cooldown (2s, 5s, 10s) rather
+than permanently blacklisted. Both operations return { loaded, visible,
+failed } so the UI can refresh its HUD.
+
+getSpatialState() is the UI-facing query: it returns loaded documentIds,
+visible documentIds (streaming radius), nearby documentIds (navigation
+radius), failed documentIds, and the camera position — everything the
+World View overlay needs without the UI reaching into the session's
+private state.
+
+Spatial selection and hover are kept strictly separate:
+- pick(screenX, screenY) → SpatialSelectionState (persistent until
+  cleared or the referenced world is unloaded).
+- hover(screenX, screenY) → SpatialHoverState (transient, updated on
+  every pointer move with no buttons pressed).
+
+The UI distinguishes click from drag using a 6-pixel threshold: a
+pointerdown followed by pointerup with movement below the threshold is
+a click (calls pick()); above the threshold is a drag (handled by the
+renderer OrbitControls). This prevents accidental selection while
+starting a camera orbit.
 
 SpatialSelectionState (application/spatial-state/SpatialSelectionState.js)
 is pure data representing what is currently selected in the spatial
@@ -89,6 +132,17 @@ position. It is deliberately NOT the same as editor SelectionState —
 spatial selection is observation, not editing. A user may select a
 brick in another world without entering an editing session. Immutable
 factories: SpatialSelectionState.empty(), .brick({...}), .ground(...).
+
+SpatialHoverState (application/spatial-state/SpatialHoverState.js)
+mirrors SpatialSelectionState but represents transient hover
+observation rather than persistent selection. It is used by the
+World View HUD to show temporary identity information without
+committing to a selection.
+
+SpatialCameraState (application/spatial-state/SpatialCameraState.js)
+holds position, target, and mode ('orbit') for the spatial camera —
+navigation semantics, not Three.js. Like the other spatial-state
+objects, it is runtime-only and never serialized.
 
 Use cases. Coordinates core/ and the infrastructure layers to do
 something (e.g. CreateEventBusUseCase, RenderWorldUseCase, and later
@@ -177,7 +231,7 @@ nothing in core/ ever needs to know which tools exist. ToolManager owns
 EditorEvent.TOOL_CHANGED (published by EditorContext.setActiveTool(),
 unchanged since 0.1.9) to swap the live Tool instance via
 deactivate()/activate(). SelectionTool (application/tools/SelectionTool.js)
-is the first tool: pointer down -&gt; pick -&gt; select or clear, plus
+is the first tool: pointer down -> pick -> select or clear, plus
 Escape-to-clear moved out of EditorView and into the tool's own
 onKeyDown() — a concrete demonstration of the framework's payoff, since
 that input handling used to live in ui/.
@@ -283,9 +337,9 @@ single entry point: show(definitionId, position, rotation)/hide(),
 writing through EditorContext.preview (PreviewState — visible,
 definitionId, position, rotation; Editor State, never becomes a real
 Brick until PlaceBrickCommand commits it). PlacementTool
-(application/tools/PlacementTool.js) drives it: pointer move -&gt; pick (is
-an existing brick under the cursor?) -&gt; pickGround (where would a ray
-hit the ground plane?) -&gt; snap to EditorSettings.gridSnapSize -&gt;
+(application/tools/PlacementTool.js) drives it: pointer move -> pick (is
+an existing brick under the cursor?) -> pickGround (where would a ray
+hit the ground plane?) -> snap to EditorSettings.gridSnapSize ->
 previewUseCase.show(). Known limitation carried over from 0.1.13:
 hovering an existing brick hides the preview rather than stacking on top
 of it; face-relative placement needs face-normal detection from the
@@ -347,10 +401,10 @@ session) correctly creates a new placement with a new identity, not a
 resurrection of the original.
 
 Redo stability: PlaceBrickCommand.execute() reuses _executedBrickId if
-already set, so undo() -&gt; redo() (execute() again) recreates the SAME
+already set, so undo() -> redo() (execute() again) recreates the SAME
 brick identity rather than a new one. DeleteBrickCommand.undo() restores
 the brick with its ORIGINAL id from the snapshot, for the same reason:
-delete -&gt; undo should be indistinguishable from "the delete never
+delete -> undo should be indistinguishable from "the delete never
 happened," which requires the exact identity back.
 
 CompositeCommand (application/commands/CompositeCommand.js) is a Command
@@ -466,7 +520,7 @@ saveDocumentUseCase.execute()/editorSession.newDocument()/
 editorSession.loadDocument(id) directly — none of the three needed new
 wiring in Toolbar beyond what 0.1.20B already built, since New and Load
 both go through DocumentManager's own state-changing methods internally
-(attachWorld -&gt; newDocument, or LoadDocumentUseCase -&gt; load), which the
+(attachWorld -> newDocument, or LoadDocumentUseCase -> load), which the
 Toolbar's existing onStateChanged() subscription already reacts to.
 
 Recognized, not implemented: CommandHistory's undo stack is, in effect,
@@ -492,7 +546,7 @@ PlacementTool constructs its own PlacementValidator internally rather
 than receiving it through ToolContext from EditorView: EditorView (ui/)
 must never import core/ directly (see the ui/ section below), and
 threading a core/ class through ui/-assembled ToolContext would do
-exactly that. application/tools/ -&gt; core/ is an allowed dependency on
+exactly that. application/tools/ -> core/ is an allowed dependency on
 its own, so the tool just constructs what it needs.
 
 Input System: built as of 0.1.18 — see InputDispatcher, documented above
@@ -593,10 +647,10 @@ Three.js. WorldRenderer subscribes to World's domain events and reacts
 incrementally — BrickAdded creates one mesh, BrickRemoved deletes one,
 BuildingAdded/BuildingRemoved handle a whole building at once (e.g. on
 initial load). There is no render(world) sweep. MeshRegistry maps brick
-id &lt;-&gt; mesh (bidirectional) plus brick id -&gt; building id, so removal
+id <-> mesh (bidirectional) plus brick id -> building id, so removal
 never has to search the scene graph and a raycast hit can be resolved
 straight back to a brick/building id.
-BuildingRenderer -&gt; BrickRenderer resolve each brick's definitionId
+BuildingRenderer -> BrickRenderer resolve each brick's definitionId
 against the registry, then ask renderer/ThreeBrickFactory.js — the
 renderer-side counterpart to BrickRegistry — to build the actual mesh.
 Owns the scene, camera, lights, grid, and render loop. Owns no game state,
@@ -624,7 +678,7 @@ deliberately not here yet — CameraController only knows how to be driven
 by hand, not how to decide where to go on its own.
 
 SelectionRenderer is the renderer's first overlay: WorldRenderer's job is
-World -&gt; Meshes, SelectionRenderer's is Selection -&gt; Visual Highlight,
+World -> Meshes, SelectionRenderer's is Selection -> Visual Highlight,
 kept deliberately separate since selection isn't part of rendering the
 world. Subscribes to EditorEvent.SELECTION_CHANGED (not a domain event)
 and sets the selected mesh's material.emissive color directly — no
@@ -634,7 +688,7 @@ independent overlay object, so it's not a "true" overlay in the strict
 sense yet (see Render Layers below); it was the simplest thing that looks
 right for this milestone.
 
-PreviewRenderer is the renderer's second overlay: PreviewState -&gt; a
+PreviewRenderer is the renderer's second overlay: PreviewState -> a
 single semi-transparent ghost mesh, subscribed to
 EditorEvent.PREVIEW_CHANGED. Reuses ThreeBrickFactory so the ghost has
 the exact geometry the real brick would have, then clones the material
@@ -644,7 +698,7 @@ palette selection changed); otherwise just moves the existing mesh, so
 dragging the pointer around doesn't churn geometry every frame.
 
 MeshRegistry (renderer/MeshRegistry.js), updated 0.1.29, now tracks
-documentId per mesh. The registry maps brickId -&gt; { documentId,
+documentId per mesh. The registry maps brickId -> { documentId,
 buildingId, mesh } so that a raycast hit can be resolved not just to
 a brick and building, but to the world/document that owns it. This is
 the critical identity bridge for multi-world spatial interaction:
@@ -665,9 +719,11 @@ shape.
 
 SpatialSelectionRenderer (renderer/SpatialSelectionRenderer.js) is the
 third overlay layer (after SelectionRenderer and PreviewRenderer). It
-highlights the currently selected brick in the spatial world using
-emissive color, same technique as SelectionRenderer but driven
-imperatively by WorldNavigationSession rather than by EventBus. This
+handles both selection (orange) and hover (blue) highlighting for the
+spatial world using emissive color, driven imperatively by
+WorldNavigationSession rather than by EventBus. selectBrick() and
+hoverBrick() operate independently — a brick can be hovered while
+another is selected, and clearing one does not affect the other. This
 keeps spatial selection completely separate from editor selection.
 
 WorldRenderer (renderer/WorldRenderer.js), updated 0.1.29, adds
@@ -697,21 +753,16 @@ mesh, without changing either renderer's public shape.
 
 ui/
 
-WorldView (ui/views/WorldView.js), updated 0.1.29, is now fully
-interactive. Pointer clicks on the viewport call session.pick(), which
-returns a SpatialSelectionState. The overlay displays:
-
-- Selected type (brick or ground)
-- World title and author (resolved from DiscoveryProvider)
-- Brick ID (truncated)
-- World-space coordinates
-- A "Focus World" button to navigate to the selected world's location
-
-Nearby Worlds are now focused via focusWorld(documentId), which calls
-session.focusDocument() and updates the URL with router.replace() —
-no window.location.reload(). This proves that client-side spatial
-navigation works without destroying the runtime graph.
-
+WorldView (ui/views/WorldView.js), updated 0.1.30, is now fully
+interactive with free spatial navigation. Pointer clicks on the
+viewport call session.pick() only when the pointer movement stays
+below a 6-pixel drag threshold; above the threshold, the interaction
+is treated as a camera drag. Pointer moves with no buttons pressed
+drive session.hover(), producing transient SpatialHoverState. The
+overlay displays both hover and selection panels, including world
+title, author, brick identity, and coordinates. Nearby Worlds are
+focused via focusWorld(documentId), which calls session.focusDocument()
+and updates the URL with router.replace() — no page reload.
 
 The renderer remains ignorant of why multiple worlds are present. It
 simply renders whatever meshes the shared EventBus delivers.
