@@ -833,3 +833,14 @@ html, body {
     font-size: 0.8rem;
     color: #707070;
 }
+.spatial-panel--hover {
+    border-color: #3a6ea5;
+}
+
+.spatial-panel--hover h4 {
+    color: #3a6ea5;
+}
+
+.spatial-panel--hover .spatial-type {
+    color: #3a6ea5;
+}
