@@ -864,11 +864,11 @@ anywhere else JSON enters the engine), then documentManager.load().
 
 serializer/
 
-World &lt;-&gt; JSON and Document &lt;-&gt; JSON, used by both storage/ and
+World <-> JSON and Document <-> JSON, used by both storage/ and
 publisher/ once those exist. Filled in at 0.1.19 — the first top-level
 adapter folder (of storage/publisher/identity/serializer, all sketched
 back at the core/application/renderer/ui reorg) to get real content,
-confirming the dependency-direction rule stated then (application -&gt;
+confirming the dependency-direction rule stated then (application ->
 storage/publisher/identity/serializer) rather than needing revision now
 that there's something to depend on.
 
@@ -994,15 +994,14 @@ field. Grouping by author produces a portfolio page: published works,
 fork counts, and recursive fork trees reconstructed client-side from
 parentDocumentId. Implemented as of 0.1.26 as ui/views/AuthorView.js.
 
-World View — the "Minecraft" mode. As of 0.1.29, World View is an
-interactive spatial environment. Users can click bricks to identify
-which document/world owns them, click ground to see world-space
-coordinates, and navigate between nearby worlds without page reload.
-The renderer translates Three.js intersections into domain identity;
-the application translates domain identity into spatial selection state;
-the UI decides what that means (display metadata, offer navigation).
-Editing is explicitly not part of this milestone — spatial interaction
-is observation, not mutation.
+World View — the "Minecraft" mode. As of 0.1.30, World View is a
+free spatial navigation environment. Users can orbit, pan, and zoom
+through a continuous 3D space while worlds stream in and out based on
+camera position. Clicking selects a brick or ground point; hovering
+shows transient identity information without committing to a selection.
+The camera position is the source of truth for streaming — not UI
+buttons. Editing is explicitly not part of this milestone — spatial
+interaction is observation, not mutation.
 
 All three modes are views over the same underlying data graph:
 
@@ -1108,6 +1107,25 @@ answers "what did the user build?" Editor State answers "what is the
 user currently doing while building it?" — the second question's answer
 should never leak into the first's.
 
+Spatial State — as of 0.1.30, a third kind of runtime state exists for
+the World View: SpatialCameraState, SpatialSelectionState, and
+SpatialHoverState. These are neither Domain State nor Editor State;
+they are transient navigation observations local to a spatial viewing
+session. Like Editor State, they are never serialized into the Protocol.
+
+Spatial Selection Invariant
+
+A SpatialSelectionState may reference only a currently loaded document.
+When that document leaves the streaming radius, the selection is cleared
+before its meshes are removed. This invariant is enforced by
+WorldNavigationSession._unloadWorld(), which checks whether the
+selection or hover references the departing document and clears them
+before the renderer purges the world's meshes. Violating this invariant
+would produce application state pointing to unloaded geometry, which
+does not crash the renderer (MeshRegistry simply returns null) but
+creates a logical inconsistency that would confuse UI and future
+multiplayer synchronization.
+
 Publication vs Document vs Location
 
 Three distinct abstractions, kept strictly separate:
@@ -1132,10 +1150,10 @@ geometry is temporarily unavailable, without breaking any view.
 
 Dependency direction
 
-ui -&gt; application -&gt; core
-application -&gt; renderer
-application -&gt; storage / publisher / identity / serializer / discovery / world-layout
-renderer -&gt; core (reads domain events and data; never the reverse)
+ui -> application -> core
+application -> renderer
+application -> storage / publisher / identity / serializer / discovery / world-layout
+renderer -> core (reads domain events and data; never the reverse)
 
 core never depends on anything above it. renderer never owns data, only
 visualizes what it's given, and now only reacts to events rather than
