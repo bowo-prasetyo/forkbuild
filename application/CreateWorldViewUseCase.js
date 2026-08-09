@@ -1,17 +1,25 @@
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
+import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LoadPublicationDocumentUseCase } from './LoadPublicationDocumentUseCase.js';
-import { WorldViewSession } from './WorldViewSession.js';
-import { CreateWorldLayoutUseCase } from './CreateWorldLayoutUseCase.js';
+import { WorldNavigationSession } from './WorldNavigationSession.js';
 
 export class CreateWorldViewUseCase {
     execute() {
         const storageProvider = new LocalStorageProvider();
-        const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(storageProvider);
-        const { worldLayoutProvider } = new CreateWorldLayoutUseCase().execute();
+        const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
+        const worldLayoutProvider = new LocalWorldLayoutProvider(discoveryProvider);
+        const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(
+            storageProvider
+        );
 
         return {
             createSession(registry) {
-                return new WorldViewSession({ registry, loadPublicationDocumentUseCase, worldLayoutProvider });
+                return new WorldNavigationSession({
+                    registry,
+                    loadPublicationDocumentUseCase,
+                    worldLayoutProvider
+                });
             }
         };
     }
