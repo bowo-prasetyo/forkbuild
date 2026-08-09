@@ -52,7 +52,43 @@ sit at or below the layer that uses it. This is a deliberate deviation
 from a "use cases live in application/" instinct — event *plumbing* is
 domain infrastructure, not a use case.
 
+RenderWorldViewUseCase (application/RenderWorldViewUseCase.js), updated
+0.1.29, no longer subscribes to an EventBus. Instead it exposes:
+
+    addWorld(world, documentId)
+    removeWorld(world)
+    pick(screenX, screenY)     // rich brick hit
+    pickGround(screenX, screenY) // ground hit
+    highlightBrick(brickId)
+    clearHighlight()
+
+This is the complete vocabulary for spatial interaction without
+leaking Three.js or editor concepts.
+
 application/
+
+WorldNavigationSession (application/WorldNavigationSession.js), updated
+0.1.29, is now a full spatial interaction coordinator. It adds:
+
+- pick(screenX, screenY): asks RenderWorldViewUseCase for a rich hit,
+  translates it into SpatialSelectionState, and drives
+  SpatialSelectionRenderer to highlight the selected brick.
+- clearSelection(): resets SpatialSelectionState and clears highlight.
+- focusDocument(documentId): client-side spatial navigation. Moves the
+  camera to the world's layout coordinate and reconciles the streaming
+  radius, all without a page reload. The URL updates via
+  router.replace() so deep-linking still works, but the runtime graph
+  is never destroyed.
+- getSpatialSelection(): returns the current SpatialSelectionState for
+  the HUD.
+
+SpatialSelectionState (application/spatial-state/SpatialSelectionState.js)
+is pure data representing what is currently selected in the spatial
+world: type ('brick' | 'ground'), documentId, buildingId, brickId,
+position. It is deliberately NOT the same as editor SelectionState —
+spatial selection is observation, not editing. A user may select a
+brick in another world without entering an editing session. Immutable
+factories: SpatialSelectionState.empty(), .brick({...}), .ground(...).
 
 Use cases. Coordinates core/ and the infrastructure layers to do
 something (e.g. CreateEventBusUseCase, RenderWorldUseCase, and later
@@ -607,6 +643,41 @@ real Brick. Recreates the mesh only when definitionId changes (e.g. the
 palette selection changed); otherwise just moves the existing mesh, so
 dragging the pointer around doesn't churn geometry every frame.
 
+MeshRegistry (renderer/MeshRegistry.js), updated 0.1.29, now tracks
+documentId per mesh. The registry maps brickId -&gt; { documentId,
+buildingId, mesh } so that a raycast hit can be resolved not just to
+a brick and building, but to the world/document that owns it. This is
+the critical identity bridge for multi-world spatial interaction:
+without it, picking in a scene with multiple loaded worlds would be
+ambiguous.
+
+PickingService (renderer/PickingService.js), updated 0.1.29, adds
+pickRich(screenX, screenY) returning a renderer-independent interaction
+result:
+
+    { type: 'brick', documentId, buildingId, brickId, point }
+
+or null. The legacy pick() shape ({ brickId, buildingId }) remains for
+EditorView compatibility. pickGroundPosition() now returns a
+core/WorldPosition and is wrapped by pickGround() in
+RenderWorldViewUseCase to return a consistent { type: 'ground', position }
+shape.
+
+SpatialSelectionRenderer (renderer/SpatialSelectionRenderer.js) is the
+third overlay layer (after SelectionRenderer and PreviewRenderer). It
+highlights the currently selected brick in the spatial world using
+emissive color, same technique as SelectionRenderer but driven
+imperatively by WorldNavigationSession rather than by EventBus. This
+keeps spatial selection completely separate from editor selection.
+
+WorldRenderer (renderer/WorldRenderer.js), updated 0.1.29, adds
+addWorld(world, documentId) for imperative multi-world loading. When
+WorldNavigationSession loads a document, it calls addWorld() with the
+documentId so MeshRegistry can associate every brick mesh with its
+owning document. The event-driven subscribe() mode still works for
+single-world EditorView sessions, but World View now uses imperative
+addWorld/removeWorld instead.
+
 Render Layers (conceptual, not yet code)
 
 Think of the scene as three logical layers even though everything
@@ -626,14 +697,21 @@ mesh, without changing either renderer's public shape.
 
 ui/
 
-WorldView (ui/views/WorldView.js), updated 0.1.28, is now a spatial
-streaming interface. It starts a WorldNavigationSession, navigates to
-the initial document, and begins a periodic refresh (every 3 seconds)
-that calls updateSpatialView() and refreshes the HUD. The overlay
-displays three new pieces of state:
-- Worlds in View: currently loaded documents inside the streaming radius.
-- Nearby Worlds: documents inside the navigation radius but not loaded.
-- Click-to-navigate: selecting a nearby world routes to it via vue-router.
+WorldView (ui/views/WorldView.js), updated 0.1.29, is now fully
+interactive. Pointer clicks on the viewport call session.pick(), which
+returns a SpatialSelectionState. The overlay displays:
+
+- Selected type (brick or ground)
+- World title and author (resolved from DiscoveryProvider)
+- Brick ID (truncated)
+- World-space coordinates
+- A "Focus World" button to navigate to the selected world's location
+
+Nearby Worlds are now focused via focusWorld(documentId), which calls
+session.focusDocument() and updates the URL with router.replace() —
+no window.location.reload(). This proves that client-side spatial
+navigation works without destroying the runtime graph.
+
 
 The renderer remains ignorant of why multiple worlds are present. It
 simply renders whatever meshes the shared EventBus delivers.
@@ -865,15 +943,15 @@ field. Grouping by author produces a portfolio page: published works,
 fork counts, and recursive fork trees reconstructed client-side from
 parentDocumentId. Implemented as of 0.1.26 as ui/views/AuthorView.js.
 
-World View — the "Minecraft" mode. As of 0.1.28, World View is no
-longer a single-world viewer. It is a spatially navigable world where
-documents are loaded and unloaded according to the camera's position.
-WorldLayoutProvider decides which documentIds are visible;
-WorldNavigationSession loads their Documents through a shared EventBus;
-WorldRenderer renders them all simultaneously. The user sees multiple
-creations in the same scene and can navigate between them via the Nearby
-Worlds panel or by moving the camera. This is the first concrete step
-toward "a spatial network of independently published worlds."
+World View — the "Minecraft" mode. As of 0.1.29, World View is an
+interactive spatial environment. Users can click bricks to identify
+which document/world owns them, click ground to see world-space
+coordinates, and navigate between nearby worlds without page reload.
+The renderer translates Three.js intersections into domain identity;
+the application translates domain identity into spatial selection state;
+the UI decides what that means (display metadata, offer navigation).
+Editing is explicitly not part of this milestone — spatial interaction
+is observation, not mutation.
 
 All three modes are views over the same underlying data graph:
 
@@ -1018,6 +1096,7 @@ Naming convention
 |------------------------------------|-----------|
 | Persistent domain object          | *(none)* — World, Brick, Building |
 | Mutable editor state               | State     |
+| Spatial observation state          | State     |
 | Long-lived shared state container | Context   |
 | Lookup/index                       | Registry  |
 | Adapter to external systems        | Provider  |
