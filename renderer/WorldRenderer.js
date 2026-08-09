@@ -51,6 +51,17 @@ export class WorldRenderer {
         this._subscriptions = [];
     }
 
+    // Remove every mesh belonging to a specific world. Called during
+    // spatial unload — the world itself is not mutated, only its
+    // visual representation is removed from the renderer.
+    removeWorld(world) {
+        for (const building of world.getBuildings()) {
+            for (const brick of building.getBricks()) {
+                this._removeBrickMesh(brick.id);
+            }
+        }
+    }
+
     _onBuildingAdded(building) {
         for (const { brickId, mesh } of this._buildingRenderer.renderBricks(building)) {
             this._addBrickMesh(brickId, building.id, mesh);
