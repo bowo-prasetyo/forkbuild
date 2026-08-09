@@ -11,7 +11,7 @@ ForkBuild is a modular building platform where creations are stored using interc
 
 Current Status
 
-Version 0.1.28 — World Navigation & Spatial Streaming (see docs/Roadmap.md for the full milestone list)
+Version 0.1.29 — Spatial Interaction & World-Aware Picking (see docs/Roadmap.md for the full milestone list)
 
 Roadmap
 
@@ -46,5 +46,5 @@ Roadmap
 - [x] 0.1.26 Discovery Views — Repository, Author, World
 - [x] 0.1.27 World Layout & Spatial Discovery
 - [x] 0.1.28 World Navigation / Spatial Streaming
-- [ ] 0.1.29 Spatial Interaction
+- [x] 0.1.29 Spatial Interaction & World-Aware Picking
 - [ ] 0.2 Blockchain publishing, multiplayer
