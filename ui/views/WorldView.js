@@ -163,20 +163,16 @@ export default {
             }
 
             if (event.buttons === 0) {
-                const rect = viewport.value.getBoundingClientRect();
-                const x = event.clientX - rect.left;
-                const y = event.clientY - rect.top;
-                session.hover(x, y);
+                // Pass client coordinates directly — PickingService handles rect math.
+                session.hover(event.clientX, event.clientY);
                 refreshHoverUI();
             }
         }
 
         function onPointerUp(event) {
             if (!isDragging && pointerStart) {
-                const rect = viewport.value.getBoundingClientRect();
-                const x = event.clientX - rect.left;
-                const y = event.clientY - rect.top;
-                session.pick(x, y);
+                // Pass client coordinates directly — PickingService handles rect math.
+                session.pick(event.clientX, event.clientY);
                 refreshSpatialUI();
             }
             pointerStart = null;
