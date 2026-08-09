@@ -22,7 +22,11 @@ export class PickingService {
         if (!result || result.type !== 'brick') {
             return null;
         }
-        return { brickId: result.brickId, buildingId: result.buildingId };
+        return {
+            brickId: result.brickId,
+            buildingId: result.buildingId,
+            normal: result.normal
+        };
     }
 
     // Rich shape for World View: { type, documentId, buildingId, brickId, point } | null.
@@ -47,12 +51,22 @@ export class PickingService {
         const documentId = this._meshRegistry.getDocumentId(brickId);
         const buildingId = this._meshRegistry.getBuildingId(brickId);
 
+        let normal = { x: 0, y: 1, z: 0 };
+        if (hit.face) {
+            const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
+            const nx = Math.abs(n.x) > 0.5 ? Math.sign(n.x) : 0;
+            const ny = Math.abs(n.y) > 0.5 ? Math.sign(n.y) : 0;
+            const nz = Math.abs(n.z) > 0.5 ? Math.sign(n.z) : 0;
+            normal = { x: nx, y: ny, z: nz };
+        }
+
         return {
             type: 'brick',
             documentId,
             buildingId,
             brickId,
-            point: new Position(hit.point.x, hit.point.y, hit.point.z)
+            point: new Position(hit.point.x, hit.point.y, hit.point.z),
+            normal
         };
     }
 
