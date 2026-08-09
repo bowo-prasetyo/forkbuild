@@ -10,41 +10,79 @@ export default {
         const route = useRoute();
         const router = useRouter();
         const viewport = ref(null);
-        const documentId = route.params.documentId;
+        const initialDocumentId = route.params.documentId;
+
         const title = ref('Loading...');
         const author = ref(null);
-        const publishedAt = ref(null);
-        const worldPosition = ref(null);
-        const nearbyPublications = ref([]);
+        const loadedWorlds = ref([]);
+        const nearbyWorlds = ref([]);
+        const spatialState = ref(null);
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute();
         const session = worldViewFactory.createSession(registry);
 
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
+        const allPublications = ref([]);
+
+        let spatialInterval = null;
+
+        function refreshSpatialUI() {
+            const state = session.getSpatialState();
+            spatialState.value = state;
+
+            const docs = session.getLoadedDocuments();
+            const pubMap = new Map(allPublications.value.map((p) => [p.documentId, p]));
+
+            loadedWorlds.value = state.loaded.map((id) => {
+                const doc = docs.find((d) => d.world.id === id);
+                const pub = pubMap.get(id);
+                return {
+                    documentId: id,
+                    title: doc?.metadata?.title || pub?.title || 'Untitled',
+                    author: doc?.metadata?.author || pub?.author || 'anonymous'
+                };
+            });
+
+            const loadedSet = new Set(state.loaded);
+            nearbyWorlds.value = state.nearby
+                .filter((id) => !loadedSet.has(id))
+                .map((id) => {
+                    const pub = pubMap.get(id);
+                    return {
+                        documentId: id,
+                        title: pub?.title || 'Untitled',
+                        author: pub?.author || 'anonymous'
+                    };
+                });
+
+            const initialDoc = docs.find((d) => d.world.id === initialDocumentId);
+            if (initialDoc) {
+                title.value = initialDoc.metadata.title || 'Untitled';
+                author.value = initialDoc.metadata.author;
+            }
+        }
 
         function navigateToWorld(id) {
             router.push({ path: `/world/${id}` });
+            window.location.reload();
         }
 
         onMounted(() => {
-            try {
-                const document = session.viewDocument(viewport.value, documentId);
-                title.value = document.metadata.title || 'Untitled';
-                author.value = document.metadata.author;
-                publishedAt.value = document.metadata.created;
-                worldPosition.value = session.getDocumentPosition(documentId);
+            allPublications.value = listPublicationsUseCase.execute();
 
-                const nearbyIds = new Set(session.getNearbyDocuments(documentId, 120));
-                const allPubs = listPublicationsUseCase.execute();
-                nearbyPublications.value = allPubs.filter((p) => nearbyIds.has(p.documentId));
-            } catch (err) {
-                title.value = 'Error loading world';
-                console.error(err);
-            }
+            session.start(viewport.value);
+            session.navigateToDocument(initialDocumentId);
+            refreshSpatialUI();
+
+            spatialInterval = setInterval(() => {
+                session.updateSpatialView();
+                refreshSpatialUI();
+            }, 3000);
         });
 
         onBeforeUnmount(() => {
+            clearInterval(spatialInterval);
             session.dispose();
         });
 
@@ -52,9 +90,9 @@ export default {
             viewport,
             title,
             author,
-            publishedAt,
-            worldPosition,
-            nearbyPublications,
+            loadedWorlds,
+            nearbyWorlds,
+            spatialState,
             navigateToWorld
         };
     },
@@ -63,24 +101,33 @@ export default {
             <div class="world-view-overlay">
                 <h2>{{ title }}</h2>
                 <p v-if="author">by {{ author }}</p>
-                <p v-if="publishedAt" class="world-view-date">
-                    Created {{ new Date(publishedAt).toLocaleDateString() }}
-                </p>
-                <p v-if="worldPosition" class="world-view-coords">
-                    Layout: {{ worldPosition.x.toFixed(1) }}, {{ worldPosition.y.toFixed(1) }}, {{ worldPosition.z.toFixed(1) }}
-                </p>
                 <p class="world-view-hint">Drag to orbit • Scroll to zoom • Home to reset</p>
 
-                <div v-if="nearbyPublications.length > 0" class="world-view-nearby">
-                    <h4>Nearby Worlds</h4>
-                    <ul class="nearby-list">
+                <div v-if="loadedWorlds.length > 0" class="world-view-section">
+                    <h4>Worlds in View ({{ loadedWorlds.length }})</h4>
+                    <ul class="world-list world-list--loaded">
                         <li
-                            v-for="pub in nearbyPublications"
-                            :key="pub.id"
-                            class="nearby-item"
-                            @click="navigateToWorld(pub.documentId)"
+                            v-for="w in loadedWorlds"
+                            :key="w.documentId"
+                            :class="['world-item', { 'world-item--current': w.documentId === $route.params.documentId }]"
                         >
-                            {{ pub.title }}
+                            <span class="world-item-title">{{ w.title }}</span>
+                            <span class="world-item-author">{{ w.author }}</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div v-if="nearbyWorlds.length > 0" class="world-view-section">
+                    <h4>Nearby Worlds</h4>
+                    <ul class="world-list world-list--nearby">
+                        <li
+                            v-for="w in nearbyWorlds"
+                            :key="w.documentId"
+                            class="world-item world-item--clickable"
+                            @click="navigateToWorld(w.documentId)"
+                        >
+                            <span class="world-item-title">{{ w.title }}</span>
+                            <span class="world-item-author">{{ w.author }}</span>
                         </li>
                     </ul>
                 </div>
