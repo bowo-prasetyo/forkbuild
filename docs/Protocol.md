@@ -20,6 +20,8 @@ Forking (0.1.24)
 
 Discovery Views (0.1.26)
 
+World Layout (0.1.27)
+
 A fork is created by deriving a new Document from an existing one.
 The new Document's metadata carries parentDocumentId pointing to the
 source document's world.id. The forked world's buildings and bricks
@@ -42,11 +44,19 @@ Two distinct kinds of id exist and must not be confused:
 
 Scope
 
-Only Domain State (World, Building, Brick, and their metadata) is part
-of this protocol. Editor State — selection, active tool, active brick,
-camera pose, editor settings — is local to a single editing session and
-must never appear in a serialized World or be transmitted to a
-publisher. See docs/Architecture.md, "Domain State vs Editor State."
+Only Domain State (World, Building, Brick, WorldPosition, and their
+metadata) is part of this protocol. Editor State — selection, active
+tool, active brick, camera pose, editor settings — is local to a single
+editing session and must never appear in a serialized World or be
+transmitted to a publisher. See docs/Architecture.md, "Domain State vs
+Editor State."
+
+WorldPosition
+
+Added in 0.1.27. A coordinate in shared world space, distinct from
+brick-local Position. Used by WorldLayoutProvider to place published
+documents in a spatial coordinate system without embedding layout data
+into Publication or Document. Pure data: {x, y, z}.
 
 Publication
 
@@ -69,19 +79,19 @@ systems. A future Discovery layer will index Publications so that
 Repository View, World View, and Author View can query them without
 depending on any specific blockchain.
 
-Publication vs Document Boundary
+Publication vs Document vs Location
 
-A Publication describes that something was published; a Document (and
-its World) describes what exists. This boundary is critical for the
-discovery architecture introduced in 0.1.26:
+Three protocol layers, kept strictly separate:
 
-- Repository View and Author View consume Publication metadata only.
-- World View loads the actual Document by documentId to render geometry.
+- Publication — the publishing fact. Metadata only.
+- Document/World — the creation itself. Geometry and structure.
+- WorldLayout/WorldPosition — the spatial placement. Where the creation
+  exists in a shared coordinate system.
 
-The DiscoveryProvider contract operates on Publications. Loading the
-full Document is a separate concern handled by LoadPublicationDocumentUseCase.
-This separation keeps discovery indexing lightweight while ensuring
-spatial exploration has access to every brick and building.
+Publication does not carry geometry or coordinates. Document does not
+carry layout data. WorldLayoutProvider does not load Documents. This
+separation means the same Document can appear in multiple exhibitions,
+layouts, or worlds without protocol changes.
 
 Discovery
 
@@ -101,9 +111,10 @@ This separation ensures that Repository View, Author View, and World View
 can consume Publications without knowing whether the underlying source is
 LocalStorage, Steem, Hive, Ethereum, IPFS, or another ForkBuild node.
 
-Discovery Views (0.1.26)
+Discovery Views (0.1.26–0.1.27)
 
-Three view modes consume the same DiscoveryProvider abstraction:
+Three view modes consume the same DiscoveryProvider abstraction,
+augmented by WorldLayoutProvider for spatial navigation:
 
 1. **Repository View** — technical exploration. A flat or filtered list
    of Publications with fork counts, lineage hints, and actions (Open,
@@ -114,14 +125,25 @@ Three view modes consume the same DiscoveryProvider abstraction:
    trees reconstructed from parentDocumentId.
 
 3. **World View** — spatial exploration. A read-only 3D rendering of
-   a published Document's World. Requires loading the full Document
-   geometry; metadata alone is insufficient.
+   a published Document's World, positioned in a shared coordinate system
+   by WorldLayoutProvider. Requires loading the full Document geometry;
+   metadata alone is insufficient. As of 0.1.27, the camera is placed at
+   the world's layout coordinate and spatial neighbors are surfaced.
 
 All three views navigate the same underlying creation graph through
 different edges: Repository explores "contains" (publication lists),
 Author explores "authored" (creator attribution), and World explores
-"spatial" (geometry and placement). None require separate discovery
-systems; all consume Publication through DiscoveryProvider.
+"spatial" (geometry and placement via WorldLayoutProvider). None require
+separate discovery systems; all consume Publication through
+DiscoveryProvider.
+
+WorldLayoutProvider contract (0.1.27):
+- findVisibleDocuments(viewCenter, viewRadius) → string[] (documentIds)
+- getPosition(documentId) → WorldPosition
+
+Implementations may be deterministic grids, geographic coordinates,
+procedural islands, or curated exhibitions. The protocol does not
+prescribe the placement algorithm, only the query interface.
 
 Identity Layers
 
