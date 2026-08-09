@@ -11,6 +11,7 @@ import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
 import { EditorSession } from '../../application/EditorSession.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
+import { EditorEvent } from '../../core/events/EditorEvent.js';
 import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
@@ -47,7 +48,23 @@ export default {
                 :publish-document-use-case="publishDocumentUseCase"
             />
             <div class="editor-body">
-                <Sidebar :palette-use-case="paletteUseCase" />
+                <div class="sidebar">
+                    <div class="tool-switcher">
+                        <button
+                            :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.SELECT }]"
+                            @click="setTool(ToolId.SELECT)"
+                        >
+                            Select
+                        </button>
+                        <button
+                            :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.PLACE }]"
+                            @click="setTool(ToolId.PLACE)"
+                        >
+                            Place
+                        </button>
+                    </div>
+                    <Sidebar :palette-use-case="paletteUseCase" />
+                </div>
                 <div ref="viewport" class="viewport"></div>
             </div>
         </div>
@@ -86,6 +103,13 @@ export default {
             identityProvider
         });
 
+        const activeTool = ref(editorContext.tool.activeTool);
+        let unsubTool = null;
+
+        function setTool(toolId) {
+            editorContext.setActiveTool(toolId);
+        }
+
         let onPointerDown = null;
         let onPointerMove = null;
         let onKeyDown = null;
@@ -93,7 +117,14 @@ export default {
         onMounted(() => {
             // ALWAYS initialize the renderer first so _container is set.
             editorSession.start(viewport.value);
-            // Handle deep-linking from Repository View: fork or load
+
+            unsubTool = editorContext.eventBus.subscribe(
+                EditorEvent.TOOL_CHANGED,
+                ({ activeTool: t }) => {
+                    activeTool.value = t;
+                }
+            );
+
             if (route.query.fork) {
                 try {
                     const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider);
@@ -150,6 +181,9 @@ export default {
         });
 
         onBeforeUnmount(() => {
+            if (unsubTool) {
+                unsubTool.unsubscribe();
+            }
             window.removeEventListener('keydown', onKeyDown);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
@@ -163,7 +197,10 @@ export default {
             saveDocumentUseCase,
             loadDocumentUseCase,
             editorSession,
-            publishDocumentUseCase
+            publishDocumentUseCase,
+            activeTool,
+            setTool,
+            ToolId
         };
     }
 };
