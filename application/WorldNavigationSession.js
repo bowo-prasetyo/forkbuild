@@ -5,6 +5,8 @@ import { SpatialHoverState } from './spatial-state/SpatialHoverState.js';
 import { SpatialCameraController } from './SpatialCameraController.js';
 import { SpatialInspectionService } from './SpatialInspectionService.js';
 import { SpatialInspectionState } from './spatial-state/SpatialInspectionState.js';
+import { SpatialEditingService } from './SpatialEditingService.js';
+import { SpatialEditingContext } from './spatial-state/SpatialEditingContext.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -19,11 +21,13 @@ export class WorldNavigationSession {
         this._session = null;
         this._spatialCameraController = null;
         this._inspectionService = null;
+        this._editingService = null;
         this._loadedDocuments = new Map();
         this._failedLoads = new Map();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
         this._spatialInspection = SpatialInspectionState.empty();
+        this._spatialEditingContext = SpatialEditingContext.empty();
     }
 
     start(container) {
@@ -34,6 +38,7 @@ export class WorldNavigationSession {
         );
         this._spatialCameraController = new SpatialCameraController(this._session);
         this._inspectionService = new SpatialInspectionService(this);
+        this._editingService = new SpatialEditingService(this);
     }
 
     // Client-side spatial navigation: move camera to the world's layout
@@ -49,13 +54,15 @@ export class WorldNavigationSession {
             return;
         }
         const data = this._spatialInspection.data;
-        if (data && data.position) {
-            const target = {
-                x: data.position.x,
-                y: data.position.y,
-                z: data.position.z
-            };
-            this._spatialCameraController.focusTarget(target, { x: 12, y: 12, z: 12 });
+        if (data?.worldPosition) {
+            this._spatialCameraController.focusTarget(
+                {
+                    x: data.worldPosition.x,
+                    y: data.worldPosition.y,
+                    z: data.worldPosition.z
+                },
+                { x: 12, y: 12, z: 12 }
+            );
         }
     }
 
@@ -140,6 +147,7 @@ export class WorldNavigationSession {
             this._session.selectBrick(brickHit.brickId);
             this._session.clearHover();
             this._refreshInspection();
+            this._refreshEditingContext();
             return this._spatialSelection;
         }
 
@@ -149,6 +157,7 @@ export class WorldNavigationSession {
             this._session.clearSelection();
             this._session.clearHover();
             this._refreshInspection();
+            this._refreshEditingContext();
             return this._spatialSelection;
         }
 
@@ -156,6 +165,7 @@ export class WorldNavigationSession {
         this._session.clearSelection();
         this._session.clearHover();
         this._refreshInspection();
+        this._refreshEditingContext();
         return null;
     }
 
@@ -189,9 +199,49 @@ export class WorldNavigationSession {
     clearSelection() {
         this._setSpatialSelection(SpatialSelectionState.empty());
         this._spatialInspection = SpatialInspectionState.empty();
+        this._spatialEditingContext = SpatialEditingContext.empty();
         if (this._session) {
             this._session.clearSelection();
         }
+    }
+
+    moveSelection(delta) {
+        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
+            return false;
+        }
+        const ctx = this._spatialEditingContext;
+        if (!ctx.can('move')) {
+            return false;
+        }
+        const success = this._editingService.moveBrick(
+            ctx.documentId,
+            ctx.buildingId,
+            ctx.brickId,
+            delta
+        );
+        if (success) {
+            this._refreshInspection();
+        }
+        return success;
+    }
+
+    deleteSelection() {
+        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
+            return false;
+        }
+        const ctx = this._spatialEditingContext;
+        if (!ctx.can('delete')) {
+            return false;
+        }
+        const success = this._editingService.deleteBrick(
+            ctx.documentId,
+            ctx.buildingId,
+            ctx.brickId
+        );
+        if (success) {
+            this.clearSelection();
+        }
+        return success;
     }
 
     getSpatialSelection() {
@@ -206,7 +256,10 @@ export class WorldNavigationSession {
         return this._spatialInspection;
     }
 
-    // Returns everything the UI needs to render the spatial HUD.
+    getSpatialEditingContext() {
+        return this._spatialEditingContext;
+    }
+
     getSpatialState() {
         if (!this._session) {
             return { loaded: [], visible: [], nearby: [], failed: [], cameraPosition: null };
@@ -259,7 +312,7 @@ export class WorldNavigationSession {
 
         const document = this._loadedDocuments.get(documentId);
         if (document && this._session) {
-            this._session.removeWorld(document.world);
+            this._session.removeWorld(document.world, documentId);
         }
         this._loadedDocuments.delete(documentId);
     }
@@ -280,6 +333,14 @@ export class WorldNavigationSession {
         this._spatialInspection = this._inspectionService.inspect(this._spatialSelection);
     }
 
+    _refreshEditingContext() {
+        if (!this._editingService) {
+            this._spatialEditingContext = SpatialEditingContext.empty();
+            return;
+        }
+        this._spatialEditingContext = this._editingService.getEditingContext(this._spatialSelection);
+    }
+
     _getFailedIds() {
         return Array.from(this._failedLoads.keys());
     }
@@ -291,10 +352,12 @@ export class WorldNavigationSession {
         }
         this._spatialCameraController = null;
         this._inspectionService = null;
+        this._editingService = null;
         this._loadedDocuments.clear();
         this._failedLoads.clear();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
         this._spatialInspection = SpatialInspectionState.empty();
+        this._spatialEditingContext = SpatialEditingContext.empty();
     }
 }
