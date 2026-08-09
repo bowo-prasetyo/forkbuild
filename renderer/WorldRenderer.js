@@ -35,6 +35,7 @@ export class WorldRenderer {
         return this._meshRegistry;
     }
 
+    // Event-driven mode (EditorView)
     subscribe(eventBus) {
         this._subscriptions.push(
             eventBus.subscribe(DomainEvent.BUILDING_ADDED, ({ building }) => this._onBuildingAdded(building)),
@@ -51,6 +52,17 @@ export class WorldRenderer {
         this._subscriptions = [];
     }
 
+    // Imperative mode (WorldView): render an entire world at once with
+    // its documentId so picking can resolve cross-world identity.
+    addWorld(world, documentId) {
+        for (const building of world.getBuildings()) {
+            for (const brick of building.getBricks()) {
+                const { brickId, mesh } = this._buildingRenderer.renderBrick(brick);
+                this._addBrickMesh(brickId, documentId, building.id, mesh);
+            }
+        }
+    }
+
     // Remove every mesh belonging to a specific world. Called during
     // spatial unload — the world itself is not mutated, only its
     // visual representation is removed from the renderer.
@@ -64,7 +76,7 @@ export class WorldRenderer {
 
     _onBuildingAdded(building) {
         for (const { brickId, mesh } of this._buildingRenderer.renderBricks(building)) {
-            this._addBrickMesh(brickId, building.id, mesh);
+            this._addBrickMesh(brickId, null, building.id, mesh);
         }
     }
 
@@ -76,15 +88,15 @@ export class WorldRenderer {
 
     _onBrickAdded(buildingId, brick) {
         const { brickId, mesh } = this._buildingRenderer.renderBrick(brick);
-        this._addBrickMesh(brickId, buildingId, mesh);
+        this._addBrickMesh(brickId, null, buildingId, mesh);
     }
 
     _onBrickRemoved(brick) {
         this._removeBrickMesh(brick.id);
     }
 
-    _addBrickMesh(brickId, buildingId, mesh) {
-        this._meshRegistry.set(brickId, buildingId, mesh);
+    _addBrickMesh(brickId, documentId, buildingId, mesh) {
+        this._meshRegistry.set(brickId, documentId, buildingId, mesh);
         this._renderer.add(mesh);
     }
 
