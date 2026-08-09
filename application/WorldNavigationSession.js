@@ -49,6 +49,7 @@ export class WorldNavigationSession {
         this._spatialCameraController = new SpatialCameraController(this._session);
         this._inspectionService = new SpatialInspectionService(this);
         this._editingService = new SpatialEditingService(this);
+        this._placementService = new SpatialPlacementService(this._registry); // ← ADD THIS
     }
 
     // -----------------------------------------------------------------
