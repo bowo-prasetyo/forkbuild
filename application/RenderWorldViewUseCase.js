@@ -21,6 +21,7 @@ export class RenderWorldViewUseCase {
             pickGround: (screenX, screenY) => pickingService.pickGroundPosition(screenX, screenY),
             getCameraState: () => renderer.cameraController.getState(),
             setCameraState: (state) => renderer.cameraController.setState(state),
+            removeWorld: (world) => worldRenderer.removeWorld(world),
             dispose() {
                 worldRenderer.unsubscribe();
                 renderer.dispose();
