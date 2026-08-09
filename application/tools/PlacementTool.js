@@ -1,9 +1,7 @@
 import { Tool } from './Tool.js';
-import { Position } from '../../core/Position.js';
 import { PlacementValidator } from '../../core/PlacementValidator.js';
 import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
-
-const BRICK_REST_HEIGHT = 0.5;
+import { PlacementPositionService } from '../PlacementPositionService.js';
 
 // Pointer move -> read pointerEvent.pickedBrick/worldPosition (already
 // computed by InputDispatcher) -> snap -> PreviewUseCase.show().
@@ -20,19 +18,18 @@ const BRICK_REST_HEIGHT = 0.5;
 // in Architecture.md — deliberately not repeating that mistake here just
 // because EditorView happens to assemble ToolContext).
 //
-// Known limitation carried over from Placement Preview: only supports
-// placing on the ground plane. Hovering an existing brick hides the
-// preview rather than stacking on top of it — face-relative placement
-// needs face-normal detection from the raycast hit, deferred until it's
-// actually needed.
-//
 // V0.1 simplification: assumes exactly one building exists in the world
 // (true for the demo world) and places into it. Choosing which building
 // to build into is future work — not yet part of any roadmap milestone.
+//
+// PlacementTool now supports stacking on existing bricks using face-normal
+// detection from PickingService. It reuses PlacementPositionService so
+// the same dimension-aware logic applies in both Editor and Spatial views.
 export class PlacementTool extends Tool {
     constructor(context) {
         super(context);
         this._placementValidator = new PlacementValidator();
+        this._positionService = new PlacementPositionService(context.registry);
     }
 
     deactivate() {
@@ -40,11 +37,6 @@ export class PlacementTool extends Tool {
     }
 
     onPointerMove(pointerEvent) {
-        if (pointerEvent.pickedBrick) {
-            this.context.previewUseCase.hide();
-            return;
-        }
-
         const definitionId = this.context.editorContext.activeBrick.definitionId;
         if (!definitionId) {
             this.context.previewUseCase.hide();
@@ -56,8 +48,31 @@ export class PlacementTool extends Tool {
             return;
         }
 
-        const snapped = this._snapToGrid(pointerEvent.worldPosition);
-        this.context.previewUseCase.show(definitionId, snapped, 0);
+        let position = null;
+
+        if (pointerEvent.pickedBrick && pointerEvent.pickedBrick.normal) {
+            const world = this.context.world;
+            const building = world.getBuilding(pointerEvent.pickedBrick.buildingId);
+            const existingBrick = building?.findBrick(pointerEvent.pickedBrick.brickId);
+            if (existingBrick) {
+                position = this._positionService.calculateStack(
+                    existingBrick,
+                    pointerEvent.pickedBrick.normal,
+                    definitionId,
+                    this.context.editorContext.settings
+                );
+            }
+        }
+
+        if (!position) {
+            position = this._positionService.calculateGround(
+                pointerEvent.worldPosition,
+                definitionId,
+                this.context.editorContext.settings
+            );
+        }
+
+        this.context.previewUseCase.show(definitionId, position, 0);
     }
 
     onPointerDown(pointerEvent) {
@@ -85,22 +100,6 @@ export class PlacementTool extends Tool {
             rotation: preview.rotation
         });
         this.context.commandHistory.execute(command);
-
-        // The previewed brick now exists for real — hide the ghost until
-        // the next pointer move recalculates it, so it doesn't sit
-        // visually overlapping the brick WorldRenderer just created.
         this.context.previewUseCase.hide();
-    }
-
-    _snapToGrid(position) {
-        const settings = this.context.editorContext.settings;
-        if (!settings.gridSnapEnabled) {
-            return new Position(position.x, BRICK_REST_HEIGHT, position.z);
-        }
-
-        const size = settings.gridSnapSize;
-        const snappedX = Math.round(position.x / size) * size;
-        const snappedZ = Math.round(position.z / size) * size;
-        return new Position(snappedX, BRICK_REST_HEIGHT, snappedZ);
     }
 }
