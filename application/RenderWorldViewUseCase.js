@@ -2,6 +2,7 @@ import { Renderer } from '../renderer/Renderer.js';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
 import { PickingService } from '../renderer/PickingService.js';
 import { SpatialSelectionRenderer } from '../renderer/SpatialSelectionRenderer.js';
+import { SpatialPreviewRenderer } from '../renderer/SpatialPreviewRenderer.js';
 
 export class RenderWorldViewUseCase {
     execute(container, registry) {
@@ -20,6 +21,8 @@ export class RenderWorldViewUseCase {
             worldRenderer.meshRegistry
         );
 
+        const spatialPreviewRenderer = new SpatialPreviewRenderer(renderer);
+
         return {
             pick: (screenX, screenY) => pickingService.pickRich(screenX, screenY),
             pickGround: (screenX, screenY) => {
@@ -34,9 +37,10 @@ export class RenderWorldViewUseCase {
             clearSelection: () => spatialSelectionRenderer.clearSelection(),
             hoverBrick: (brickId) => spatialSelectionRenderer.hover(brickId),
             clearHover: () => spatialSelectionRenderer.clearHover(),
-            addObject: (object) => renderer.add(object),
-            removeObject: (object) => renderer.remove(object),
+            showPreview: (definitionId, position, rotation) => spatialPreviewRenderer.show(definitionId, position, rotation),
+            hidePreview: () => spatialPreviewRenderer.hide(),
             dispose() {
+                spatialPreviewRenderer.dispose();
                 spatialSelectionRenderer.clear();
                 renderer.dispose();
             }
