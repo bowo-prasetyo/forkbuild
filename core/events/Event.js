@@ -4,6 +4,7 @@
 export const DomainEvent = Object.freeze({
     BRICK_ADDED: 'BrickAdded',
     BRICK_REMOVED: 'BrickRemoved',
+    BRICK_UPDATED: 'BrickUpdated',
     BUILDING_ADDED: 'BuildingAdded',
     BUILDING_REMOVED: 'BuildingRemoved'
 });
