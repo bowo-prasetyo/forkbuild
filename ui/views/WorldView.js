@@ -44,7 +44,22 @@ export default {
         if (availableDefinitions.value.length > 0) {
             selectedDefinitionId.value = availableDefinitions.value[0].id;
         }
+        const isPlacementMode = ref(false);
 
+        function startPlacement() {
+            if (selectedDefinitionId.value) {
+                session.setActiveDefinitionId(selectedDefinitionId.value);
+                isPlacementMode.value = true;
+                refreshSpatialUI();
+            }
+        }
+
+        function cancelPlacement() {
+            session.cancelPlacement();
+            isPlacementMode.value = false;
+            refreshSpatialUI();
+        }
+        
         function refreshSpatialUI() {
             const state = session.getSpatialState();
             const docs = session.getLoadedDocuments();
@@ -315,6 +330,7 @@ export default {
             cameraPosition,
             availableDefinitions,
             selectedDefinitionId,
+            isPlacementMode,          // ← added
             focusWorld,
             focusSelection,
             startPlacement,
@@ -470,11 +486,15 @@ export default {
                         </p>
                     </div>
                 </div>
-
-                <div class="world-view-section">
+                
+                <div class="world-view-section placement-section">
                     <h4>Place Brick</h4>
                     <div class="placement-controls">
-                        <select v-model="selectedDefinitionId" class="placement-select">
+                        <select
+                            v-model="selectedDefinitionId"
+                            class="placement-select"
+                            :disabled="isPlacementMode"
+                        >
                             <option
                                 v-for="def in availableDefinitions"
                                 :key="def.id"
@@ -484,7 +504,7 @@ export default {
                             </option>
                         </select>
                         <button
-                            v-if="!spatialPlacement"
+                            v-if="!isPlacementMode"
                             class="action-btn action-btn--primary"
                             @click="startPlacement"
                             :disabled="!selectedDefinitionId"
@@ -499,6 +519,9 @@ export default {
                             Cancel
                         </button>
                     </div>
+                    <p v-if="isPlacementMode" class="placement-hint">
+                        Hover over ground or a brick face, then click to place.
+                    </p>
                 </div>
 
                 <div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
