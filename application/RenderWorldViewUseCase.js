@@ -34,6 +34,8 @@ export class RenderWorldViewUseCase {
             clearSelection: () => spatialSelectionRenderer.clearSelection(),
             hoverBrick: (brickId) => spatialSelectionRenderer.hover(brickId),
             clearHover: () => spatialSelectionRenderer.clearHover(),
+            addObject: (object) => renderer.add(object),
+            removeObject: (object) => renderer.remove(object),
             dispose() {
                 spatialSelectionRenderer.clear();
                 renderer.dispose();
