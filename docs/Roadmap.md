@@ -30,4 +30,6 @@
 0.1.27 World Layout & Spatial Discovery  (done)
 0.1.28 World Navigation / Spatial Streaming  (done)
 0.1.29 Spatial Interaction & World-Aware Picking  (done)
+0.1.30 Free Spatial Navigation & Interaction Refinement  (done)
+0.1.31 World Inspection & Spatial Metadata  (planned)
 0.2    Blockchain publishing, multiplayer
