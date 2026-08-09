@@ -1,4 +1,5 @@
 import { SpatialInspectionState } from './spatial-state/SpatialInspectionState.js';
+import { Position } from '../core/Position.js';
 
 // Resolves SpatialSelectionState into domain metadata by reaching into
 // the loaded Document/World model. Keeps all Three.js knowledge out
@@ -38,6 +39,13 @@ export class SpatialInspectionService {
             return SpatialInspectionState.empty();
         }
 
+        const layoutPos = this._session.getDocumentPosition(selection.documentId);
+        const worldPos = new Position(
+            brick.position.x + layoutPos.x,
+            brick.position.y + layoutPos.y,
+            brick.position.z + layoutPos.z
+        );
+
         const data = {
             worldTitle: document.metadata.title || 'Untitled',
             worldAuthor: document.metadata.author || 'anonymous',
@@ -46,7 +54,8 @@ export class SpatialInspectionService {
             buildingBrickCount: building.getBricks().length,
             brickId: brick.id,
             brickType: brick.definitionId,
-            position: brick.position,
+            localPosition: brick.position,
+            worldPosition: worldPos,
             rotation: brick.rotation
         };
 
@@ -64,7 +73,7 @@ export class SpatialInspectionService {
             worldTitle: document.metadata.title || 'Untitled',
             worldAuthor: document.metadata.author || 'anonymous',
             worldId: document.world.id,
-            position: selection.position
+            position: selection.position // already world-space from pickGround
         };
 
         return new SpatialInspectionState({
