@@ -11,7 +11,7 @@ ForkBuild is a modular building platform where creations are stored using interc
 
 Current Status
 
-Version 0.1.25 — Publication Lifecycle (see docs/Roadmap.md for the full milestone list)
+Version 0.1.26 — Discovery Views (see docs/Roadmap.md for the full milestone list)
 
 Roadmap
 
@@ -43,4 +43,5 @@ Roadmap
 - [x] 0.1.23 Discovery Adapter (stub)
 - [x] 0.1.24 Forking
 - [x] 0.1.25 Publication lifecycle
+- [x] 0.1.26 Discovery Views — Repository, Author, World
 - [ ] 0.2 Blockchain publishing, multiplayer
