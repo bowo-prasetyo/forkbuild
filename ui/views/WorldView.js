@@ -5,6 +5,7 @@ import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 
 const DRAG_THRESHOLD_PX = 6;
+const NUDGE = 1;
 
 export default {
     name: 'WorldView',
@@ -22,6 +23,7 @@ export default {
         const spatialSelection = ref(null);
         const spatialHover = ref(null);
         const spatialInspection = ref(null);
+        const spatialEditingContext = ref(null);
         const cameraPosition = ref(null);
 
         const registry = new CreateBrickRegistryUseCase().execute();
@@ -99,6 +101,16 @@ export default {
                 spatialInspection.value = null;
             }
 
+            const editingCtx = session.getSpatialEditingContext();
+            if (editingCtx && !editingCtx.isEmpty) {
+                spatialEditingContext.value = {
+                    type: editingCtx.type,
+                    capabilities: editingCtx.capabilities
+                };
+            } else {
+                spatialEditingContext.value = null;
+            }
+
             const initialDoc = docs.find((d) => d.world.id === initialDocumentId);
             if (initialDoc) {
                 title.value = initialDoc.metadata.title || 'Untitled';
@@ -171,6 +183,57 @@ export default {
             isDragging = false;
         }
 
+        function moveSelectedBrick(delta) {
+            session.moveSelection(delta);
+            refreshSpatialUI();
+        }
+
+        function deleteSelectedBrick() {
+            session.deleteSelection();
+            refreshSpatialUI();
+        }
+
+        function onKeyDown(event) {
+            if (!spatialEditingContext.value || spatialEditingContext.value.isEmpty) {
+                return;
+            }
+            const ctx = spatialEditingContext.value;
+            if (ctx.type === 'brick' && ctx.capabilities.move) {
+                switch (event.key) {
+                    case 'ArrowUp':
+                        event.preventDefault();
+                        moveSelectedBrick({ x: 0, y: 0, z: -NUDGE });
+                        break;
+                    case 'ArrowDown':
+                        event.preventDefault();
+                        moveSelectedBrick({ x: 0, y: 0, z: NUDGE });
+                        break;
+                    case 'ArrowLeft':
+                        event.preventDefault();
+                        moveSelectedBrick({ x: -NUDGE, y: 0, z: 0 });
+                        break;
+                    case 'ArrowRight':
+                        event.preventDefault();
+                        moveSelectedBrick({ x: NUDGE, y: 0, z: 0 });
+                        break;
+                    case 'PageUp':
+                        event.preventDefault();
+                        moveSelectedBrick({ x: 0, y: NUDGE, z: 0 });
+                        break;
+                    case 'PageDown':
+                        event.preventDefault();
+                        moveSelectedBrick({ x: 0, y: -NUDGE, z: 0 });
+                        break;
+                }
+            }
+            if (ctx.type === 'brick' && ctx.capabilities.delete) {
+                if (event.key === 'Delete' || event.key === 'Backspace') {
+                    event.preventDefault();
+                    deleteSelectedBrick();
+                }
+            }
+        }
+
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
@@ -180,6 +243,7 @@ export default {
             viewport.value.addEventListener('pointerdown', onPointerDown);
             viewport.value.addEventListener('pointermove', onPointerMove);
             viewport.value.addEventListener('pointerup', onPointerUp);
+            window.addEventListener('keydown', onKeyDown);
 
             spatialInterval = setInterval(() => {
                 session.updateSpatialView();
@@ -189,6 +253,7 @@ export default {
 
         onBeforeUnmount(() => {
             clearInterval(spatialInterval);
+            window.removeEventListener('keydown', onKeyDown);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerup', onPointerUp);
@@ -205,9 +270,12 @@ export default {
             spatialSelection,
             spatialHover,
             spatialInspection,
+            spatialEditingContext,
             cameraPosition,
             focusWorld,
-            focusSelection
+            focusSelection,
+            moveSelectedBrick,
+            deleteSelectedBrick
         };
     },
     template: `
@@ -251,11 +319,19 @@ export default {
                             <span class="inspection-value">{{ spatialInspection.brickId.slice(0, 8) }}…</span>
                         </div>
                         <div class="inspection-row">
-                            <span class="inspection-label">Position</span>
+                            <span class="inspection-label">Local Pos</span>
                             <span class="inspection-value">
-                                {{ spatialInspection.position.x.toFixed(2) }},
-                                {{ spatialInspection.position.y.toFixed(2) }},
-                                {{ spatialInspection.position.z.toFixed(2) }}
+                                {{ spatialInspection.localPosition.x.toFixed(2) }},
+                                {{ spatialInspection.localPosition.y.toFixed(2) }},
+                                {{ spatialInspection.localPosition.z.toFixed(2) }}
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">World Pos</span>
+                            <span class="inspection-value">
+                                {{ spatialInspection.worldPosition.x.toFixed(2) }},
+                                {{ spatialInspection.worldPosition.y.toFixed(2) }},
+                                {{ spatialInspection.worldPosition.z.toFixed(2) }}
                             </span>
                         </div>
                         <div class="inspection-row">
@@ -310,6 +386,30 @@ export default {
                         >
                             Focus Brick
                         </button>
+                    </div>
+                </div>
+
+                <div v-if="spatialEditingContext" class="spatial-panel spatial-panel--editing">
+                    <h4>Editing</h4>
+                    <p class="spatial-type">{{ spatialEditingContext.type }}</p>
+
+                    <div v-if="spatialEditingContext.type === 'brick'" class="editing-actions">
+                        <p v-if="spatialEditingContext.capabilities.move" class="editing-hint">
+                            Arrow keys: move X/Z • Page Up/Down: move Y
+                        </p>
+                        <button
+                            v-if="spatialEditingContext.capabilities.delete"
+                            class="action-btn action-btn--danger"
+                            @click="deleteSelectedBrick"
+                        >
+                            Delete Brick
+                        </button>
+                    </div>
+
+                    <div v-if="spatialEditingContext.type === 'ground'" class="editing-actions">
+                        <p class="editing-hint">
+                            Ground selected. Placement context ready.
+                        </p>
                     </div>
                 </div>
 
