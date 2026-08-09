@@ -58,6 +58,12 @@ what the current viewer knows about an object, not the object itself,
 and therefore never appears in serialized Documents, Publications, or
 WorldLayout records.
 
+Spatial Editing Context (added 0.1.32) is explicitly excluded from
+the protocol. It describes what operations the current viewer is
+permitted to perform on a selected spatial object, not the object
+itself. Like all spatial state, it is derived from the current session
+and loaded documents rather than persisted or transmitted.
+
 WorldPosition
 
 Added in 0.1.27. A coordinate in shared world space, distinct from
@@ -171,3 +177,12 @@ layer of the protocol:
    on-chain content identifier. The publisher adapter maps between
    Publication and blockchain-native identifiers without either concept
    leaking into the other layers.
+
+Protocol 
+
+DomainEvent vocabulary (0.1.32):
+- BRICK_ADDED
+- BRICK_REMOVED
+- BRICK_UPDATED
+- BUILDING_ADDED
+- BUILDING_REMOVED
