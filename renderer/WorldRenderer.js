@@ -29,6 +29,7 @@ export class WorldRenderer {
         this._buildingRenderer = buildingRenderer;
         this._meshRegistry = meshRegistry;
         this._subscriptions = [];
+        this._documentOffsets = new Map(); // documentId -> {x, y, z}
     }
 
     get meshRegistry() {
@@ -41,7 +42,8 @@ export class WorldRenderer {
             eventBus.subscribe(DomainEvent.BUILDING_ADDED, ({ building }) => this._onBuildingAdded(building)),
             eventBus.subscribe(DomainEvent.BUILDING_REMOVED, ({ building }) => this._onBuildingRemoved(building)),
             eventBus.subscribe(DomainEvent.BRICK_ADDED, ({ buildingId, brick }) => this._onBrickAdded(buildingId, brick)),
-            eventBus.subscribe(DomainEvent.BRICK_REMOVED, ({ brick }) => this._onBrickRemoved(brick))
+            eventBus.subscribe(DomainEvent.BRICK_REMOVED, ({ brick }) => this._onBrickRemoved(brick)),
+            eventBus.subscribe(DomainEvent.BRICK_UPDATED, ({ buildingId, brick }) => this._onBrickUpdated(buildingId, brick))
         );
     }
 
@@ -56,14 +58,17 @@ export class WorldRenderer {
     // its documentId and optional layout offset so multiple worlds occupy
     // distinct regions of shared space.
     addWorld(world, documentId, layoutPosition = null) {
+        const offset = layoutPosition
+            ? { x: layoutPosition.x, y: layoutPosition.y, z: layoutPosition.z }
+            : { x: 0, y: 0, z: 0 };
+        this._documentOffsets.set(documentId, offset);
+
         for (const building of world.getBuildings()) {
             for (const brick of building.getBricks()) {
                 const { brickId, mesh } = this._buildingRenderer.renderBrick(brick);
-                if (layoutPosition) {
-                    mesh.position.x += layoutPosition.x;
-                    mesh.position.y += layoutPosition.y;
-                    mesh.position.z += layoutPosition.z;
-                }
+                mesh.position.x += offset.x;
+                mesh.position.y += offset.y;
+                mesh.position.z += offset.z;
                 this._addBrickMesh(brickId, documentId, building.id, mesh);
             }
         }
@@ -72,7 +77,8 @@ export class WorldRenderer {
     // Remove every mesh belonging to a specific world. Called during
     // spatial unload — the world itself is not mutated, only its
     // visual representation is removed from the renderer.
-    removeWorld(world) {
+    removeWorld(world, documentId) {
+        this._documentOffsets.delete(documentId);
         for (const building of world.getBuildings()) {
             for (const brick of building.getBricks()) {
                 this._removeBrickMesh(brick.id);
@@ -99,6 +105,21 @@ export class WorldRenderer {
 
     _onBrickRemoved(brick) {
         this._removeBrickMesh(brick.id);
+    }
+
+    _onBrickUpdated(buildingId, brick) {
+        const mesh = this._meshRegistry.getMesh(brick.id);
+        if (!mesh) {
+            return;
+        }
+        const documentId = this._meshRegistry.getDocumentId(brick.id);
+        const offset = this._documentOffsets.get(documentId) || { x: 0, y: 0, z: 0 };
+        mesh.position.set(
+            brick.position.x + offset.x,
+            brick.position.y + offset.y,
+            brick.position.z + offset.z
+        );
+        mesh.rotation.y = brick.rotation;
     }
 
     _addBrickMesh(brickId, documentId, buildingId, mesh) {
