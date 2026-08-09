@@ -1101,6 +1101,116 @@ reverse. The renderer reacts to BRICK_UPDATED by reading the brick's
 new local position, adding the world's layout offset, and updating the
 mesh — it does not mutate the brick.
 
+Spatial Placement & Stacking (0.1.33)
+
+The spatial editing loop is now complete: Select → Position → Preview
+→ Place → Domain Mutation → Event → Renderer.
+
+SpatialPlacementState (application/spatial-state/SpatialPlacementState.js)
+is runtime-only state describing where a brick would be placed if
+committed. It carries document-local position, rotation, the target
+document/building, and a valid flag. Like all spatial state, it never
+enters the Protocol.
+
+SpatialPlacementService (application/SpatialPlacementService.js)
+translates world-space pick results into document-local placement
+positions. It handles two cases:
+
+- Ground hit: uses PlacementPositionService.calculateGround() to snap
+  to grid and rest the brick on the ground plane using its half-height.
+
+- Brick surface hit: uses PlacementPositionService.calculateStack() to
+  derive the new position from the clicked face normal and both bricks'
+  dimensions. A click on the top face of a 1×1×1 cube places another
+  cube at y + 1; a click on the side places it adjacent in X or Z.
+
+The placement position is always in document-local space. The renderer
+adds the world's layout offset when showing the preview ghost and when
+reacting to BRICK_ADDED. This keeps the domain model ignorant of where
+its world lives in shared space.
+
+PlacementPositionService (application/PlacementPositionService.js) is
+shared between PlacementTool (EditorView) and SpatialPlacementService
+(WorldView). It is geometry-aware: it reads width/height/depth from
+BrickDefinition rather than hard-coding offsets. This means a 2×4 plate
+(0.25 height) stacks correctly on top of a 1×1 cube (1.0 height) because
+the service adds half of each dimension along the face normal.
+
+PickingService (renderer/PickingService.js) now returns face normals
+for brick hits. pickRich() computes the world-space normal from the
+intersected face, quantizes it to the nearest axis (±X, ±Y, ±Z), and
+returns it as { x, y, z } integers. This gives the placement system a
+clean "which face was clicked" signal without Three.js leaking upward.
+
+SpatialPreviewRenderer (renderer/SpatialPreviewRenderer.js) is the
+World View counterpart to PreviewRenderer. It is driven imperatively by
+WorldNavigationSession rather than by EventBus: show(definitionId,
+position, rotation) adds or moves a ghost mesh; hide() removes it.
+The ghost uses the same ThreeBrickFactory as real bricks but with
+transparent material. It never touches domain state.
+
+The placement flow in World View:
+
+    Hover over ground or brick
+         ↓
+    SpatialPlacementService.calculateFromHit()
+         ↓
+    SpatialPlacementState (document-local position)
+         ↓
+    SpatialPreviewRenderer shows ghost at world-space position
+         ↓
+    User clicks
+         ↓
+    WorldNavigationSession.commitPlacement()
+         ↓
+    PlaceBrickCommand (reused from 0.1.14)
+         ↓
+    CommandHistory.execute()
+         ↓
+    World.addBrickToBuilding()
+         ↓
+    DomainEvent.BRICK_ADDED
+         ↓
+    WorldRenderer._onBrickAdded()
+         ↓
+    Mesh appears at correct world-space position (local + layout offset)
+
+This reuses the exact same PlaceBrickCommand and CommandHistory that
+the Editor View has used since 0.1.14. There is no second mutation
+mechanism for spatial editing — one authoritative path exists for
+adding bricks.
+
+Brick Dimensions (0.1.33)
+
+BrickDefinition now carries width, height, and depth (default 1, 1, 1).
+CoreLibrary definitions declare their true sizes: plate_2x4 is
+width=2, height=0.25, depth=4; window_small is depth=0.25. These
+dimensions are pure metadata — no geometry — but they let the placement
+system calculate correct stacking positions without assuming every brick
+is a 1×1×1 cube.
+
+The renderer's ThreeBrickFactory already produced correctly-sized
+meshes (BoxGeometry sizes). Now the domain model agrees with the
+renderer about how much space each brick occupies, making placement
+calculations accurate in both directions.
+
+Coordinate Space Discipline (0.1.33)
+
+Placement maintains strict separation between three frames:
+
+    Screen Space     — mouse coordinates (clientX/Y)
+         ↓
+    Ray / Hit Space  — world-space intersection point from PickingService
+         ↓
+    World Space      — hit point minus layout offset = document-local
+         ↓
+    Domain Position  — stored in Brick.position
+
+SpatialPlacementState.position is always document-local. The preview
+renderer adds the layout offset. The focus camera uses worldPosition
+(from inspection). This prevents the coordinate drift that would
+otherwise accumulate when placing bricks in offset worlds.
+
 Coordinate Spaces (0.1.32)
 
 A strict distinction now exists between three coordinate frames:
