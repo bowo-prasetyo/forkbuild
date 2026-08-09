@@ -4,6 +4,11 @@ Version 0.1
 
 Building
 
+BrickDefinition carries pure metadata: id, name, category, tags,
+description, and (as of 0.1.33) width, height, depth. These dimensions
+are protocol-level metadata, not geometry — they describe the brick's
+logical bounds so placement calculations can be geometry-agnostic.
+
 Brick
 
 World
@@ -63,6 +68,12 @@ the protocol. It describes what operations the current viewer is
 permitted to perform on a selected spatial object, not the object
 itself. Like all spatial state, it is derived from the current session
 and loaded documents rather than persisted or transmitted.
+
+Spatial Placement State (added 0.1.33) is explicitly excluded from
+the protocol. It describes where a brick would be placed in the
+current viewer's session, not a committed placement. The committed
+placement becomes part of the domain model (World/Brick) only after
+PlaceBrickCommand executes.
 
 WorldPosition
 
