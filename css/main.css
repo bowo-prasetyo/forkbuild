@@ -1019,3 +1019,12 @@ html, body {
 .tool-btn--active:hover {
     background: #2a5540;
 }
+
+/* Allow interaction with controls inside the overlay */
+.world-view-overlay {
+    pointer-events: none;   /* let clicks pass through empty space */
+}
+
+.world-view-overlay > * {
+    pointer-events: auto;   /* re-enable clicks on actual content */
+}
