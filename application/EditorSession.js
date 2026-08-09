@@ -153,6 +153,7 @@ export class EditorSession {
 
         const toolContext = {
             world,
+            registry: this._registry,        // ← added for PlacementTool
             editorContext: this._editorContext,
             selectionUseCase: this._selectionUseCase,
             previewUseCase: this._previewUseCase,
