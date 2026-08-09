@@ -28,5 +28,6 @@
 0.1.25 Publication lifecycle  (done)
 0.1.26 Discovery Views — Repository, Author, World  (done)
 0.1.27 World Layout & Spatial Discovery  (done)
-0.1.28 World Navigation / spatial streaming
+0.1.28 World Navigation / Spatial Streaming  (done)
+0.1.29 Spatial Interaction
 0.2    Blockchain publishing, multiplayer
