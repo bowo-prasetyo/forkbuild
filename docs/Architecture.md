@@ -19,7 +19,7 @@ BrickDefinition id like "core:cube": that's a stable, namespaced *type*
 identifier (docs/BrickIDs.md), not a per-instance UUID.
 
 A Brick stores a definitionId, not geometry. BrickRegistry resolves
-definitionId -> BrickDefinition (metadata only). Libraries (e.g.
+definitionId -&gt; BrickDefinition (metadata only). Libraries (e.g.
 core/library/CoreLibrary.js) register their definitions with the
 registry at startup — see docs/BrickLibrary.md.
 
@@ -112,7 +112,7 @@ nothing in core/ ever needs to know which tools exist. ToolManager owns
 EditorEvent.TOOL_CHANGED (published by EditorContext.setActiveTool(),
 unchanged since 0.1.9) to swap the live Tool instance via
 deactivate()/activate(). SelectionTool (application/tools/SelectionTool.js)
-is the first tool: pointer down -> pick -> select or clear, plus
+is the first tool: pointer down -&gt; pick -&gt; select or clear, plus
 Escape-to-clear moved out of EditorView and into the tool's own
 onKeyDown() — a concrete demonstration of the framework's payoff, since
 that input handling used to live in ui/.
@@ -218,9 +218,9 @@ single entry point: show(definitionId, position, rotation)/hide(),
 writing through EditorContext.preview (PreviewState — visible,
 definitionId, position, rotation; Editor State, never becomes a real
 Brick until PlaceBrickCommand commits it). PlacementTool
-(application/tools/PlacementTool.js) drives it: pointer move -> pick (is
-an existing brick under the cursor?) -> pickGround (where would a ray
-hit the ground plane?) -> snap to EditorSettings.gridSnapSize ->
+(application/tools/PlacementTool.js) drives it: pointer move -&gt; pick (is
+an existing brick under the cursor?) -&gt; pickGround (where would a ray
+hit the ground plane?) -&gt; snap to EditorSettings.gridSnapSize -&gt;
 previewUseCase.show(). Known limitation carried over from 0.1.13:
 hovering an existing brick hides the preview rather than stacking on top
 of it; face-relative placement needs face-normal detection from the
@@ -282,10 +282,10 @@ session) correctly creates a new placement with a new identity, not a
 resurrection of the original.
 
 Redo stability: PlaceBrickCommand.execute() reuses _executedBrickId if
-already set, so undo() -> redo() (execute() again) recreates the SAME
+already set, so undo() -&gt; redo() (execute() again) recreates the SAME
 brick identity rather than a new one. DeleteBrickCommand.undo() restores
 the brick with its ORIGINAL id from the snapshot, for the same reason:
-delete -> undo should be indistinguishable from "the delete never
+delete -&gt; undo should be indistinguishable from "the delete never
 happened," which requires the exact identity back.
 
 CompositeCommand (application/commands/CompositeCommand.js) is a Command
@@ -401,7 +401,7 @@ saveDocumentUseCase.execute()/editorSession.newDocument()/
 editorSession.loadDocument(id) directly — none of the three needed new
 wiring in Toolbar beyond what 0.1.20B already built, since New and Load
 both go through DocumentManager's own state-changing methods internally
-(attachWorld -> newDocument, or LoadDocumentUseCase -> load), which the
+(attachWorld -&gt; newDocument, or LoadDocumentUseCase -&gt; load), which the
 Toolbar's existing onStateChanged() subscription already reacts to.
 
 Recognized, not implemented: CommandHistory's undo stack is, in effect,
@@ -427,7 +427,7 @@ PlacementTool constructs its own PlacementValidator internally rather
 than receiving it through ToolContext from EditorView: EditorView (ui/)
 must never import core/ directly (see the ui/ section below), and
 threading a core/ class through ui/-assembled ToolContext would do
-exactly that. application/tools/ -> core/ is an allowed dependency on
+exactly that. application/tools/ -&gt; core/ is an allowed dependency on
 its own, so the tool just constructs what it needs.
 
 Input System: built as of 0.1.18 — see InputDispatcher, documented above
@@ -447,16 +447,52 @@ the UI layer logs in and out of. Constructed once in ui/main.js and
 provided to the Vue app via provide/inject, so every view shares the
 same login state without ui/ importing identity/ directly.
 
+CreatePublisherUseCase (application/CreatePublisherUseCase.js) wires the
+concrete publishing backend and returns the use case, so ui/ never
+imports publisher/ or storage/ directly. Same shape as
+CreatePersistenceUseCase and CreateIdentityProviderUseCase.
+Swapping to a Steem/Hive/Ethereum publisher later means changing
+exactly this one file — the use case and UI stay untouched.
+
+CreateWorldViewUseCase (application/CreateWorldViewUseCase.js) constructs
+the read-only world exploration backend and returns a session factory,
+so ui/ never imports storage/ or renderer/ directly. Same shape as
+CreatePersistenceUseCase and CreatePublisherUseCase — swapping to a
+networked document loader later means changing exactly this one file.
+
+WorldViewSession (application/WorldViewSession.js) owns the live read-only
+runtime graph for World View: a fresh EventBus, a RenderWorldViewUseCase
+session, and the loaded Document. viewDocument(container, documentId)
+tears down any existing session, builds a new one, and loads the Document
+geometry. dispose() cleans up. This mirrors EditorSession's ownership
+pattern but omits everything editor-specific — no EditorContext,
+ToolManager, CommandHistory, or InputDispatcher.
+
+RenderWorldViewUseCase (application/RenderWorldViewUseCase.js) is the
+read-only counterpart to RenderWorldUseCase. It wires Renderer,
+WorldRenderer, and PickingService, but deliberately omits
+SelectionRenderer and PreviewRenderer — spatial exploration has no
+selection state or placement preview. The returned handle exposes pick()
+and pickGround() for future hover-to-inspect features without requiring
+tool infrastructure.
+
+LoadPublicationDocumentUseCase (application/LoadPublicationDocumentUseCase.js)
+loads a Document by its world id for read-only consumption. It bypasses
+DocumentManager entirely because World View does not track dirty/saved
+state. This use case is the concrete architectural boundary between
+Publication (metadata that navigates) and Document/World (geometry that
+renders).
+
 renderer/
 
 Three.js. WorldRenderer subscribes to World's domain events and reacts
 incrementally — BrickAdded creates one mesh, BrickRemoved deletes one,
 BuildingAdded/BuildingRemoved handle a whole building at once (e.g. on
 initial load). There is no render(world) sweep. MeshRegistry maps brick
-id <-> mesh (bidirectional) plus brick id -> building id, so removal
+id &lt;-&gt; mesh (bidirectional) plus brick id -&gt; building id, so removal
 never has to search the scene graph and a raycast hit can be resolved
 straight back to a brick/building id.
-BuildingRenderer -> BrickRenderer resolve each brick's definitionId
+BuildingRenderer -&gt; BrickRenderer resolve each brick's definitionId
 against the registry, then ask renderer/ThreeBrickFactory.js — the
 renderer-side counterpart to BrickRegistry — to build the actual mesh.
 Owns the scene, camera, lights, grid, and render loop. Owns no game state,
@@ -469,7 +505,7 @@ plane (pickGroundPosition, added 0.1.13 for placement preview — returns a
 core/Position, never a Three.js type). It raycasts against MeshRegistry's
 meshes and resolves the hit back to { brickId, buildingId } via the same
 registry. It knows nothing about selection, preview, or any other UI
-state — Picking does not depend on them; they depend on Picking.
+state — Picking does not depend on them; they depend on it.
 RenderWorldUseCase wires PickingService up alongside Renderer/
 WorldRenderer and exposes plain pick(screenX, screenY)/
 pickGround(screenX, screenY) functions on its returned handle, so ui/
@@ -484,7 +520,7 @@ deliberately not here yet — CameraController only knows how to be driven
 by hand, not how to decide where to go on its own.
 
 SelectionRenderer is the renderer's first overlay: WorldRenderer's job is
-World -> Meshes, SelectionRenderer's is Selection -> Visual Highlight,
+World -&gt; Meshes, SelectionRenderer's is Selection -&gt; Visual Highlight,
 kept deliberately separate since selection isn't part of rendering the
 world. Subscribes to EditorEvent.SELECTION_CHANGED (not a domain event)
 and sets the selected mesh's material.emissive color directly — no
@@ -494,7 +530,7 @@ independent overlay object, so it's not a "true" overlay in the strict
 sense yet (see Render Layers below); it was the simplest thing that looks
 right for this milestone.
 
-PreviewRenderer is the renderer's second overlay: PreviewState -> a
+PreviewRenderer is the renderer's second overlay: PreviewState -&gt; a
 single semi-transparent ghost mesh, subscribed to
 EditorEvent.PREVIEW_CHANGED. Reuses ThreeBrickFactory so the ghost has
 the exact geometry the real brick would have, then clones the material
@@ -537,8 +573,11 @@ drive-by inside an unrelated milestone. As of 0.1.11, EditorView.js and
 BrickPalette.js use the Vue 3 Composition API (setup(), ref,
 onMounted/onBeforeUnmount) per CodingConventions.md — earlier views used
 Options-API-flavored lifecycle hooks (mounted()/beforeUnmount()
-directly), which still worked but wasn't
-strictly the stated convention.
+directly), which still worked but wasn't strictly the stated convention.
+
+ForkTree (ui/components/ForkTree.js) is a recursive component that renders
+a Publication's descendant lineage from parentDocumentId links. Consumed
+by Author View; could be reused anywhere a fork graph is needed.
 
 storage/
 
@@ -578,11 +617,11 @@ anywhere else JSON enters the engine), then documentManager.load().
 
 serializer/
 
-World <-> JSON and Document <-> JSON, used by both storage/ and
+World &lt;-&gt; JSON and Document &lt;-&gt; JSON, used by both storage/ and
 publisher/ once those exist. Filled in at 0.1.19 — the first top-level
 adapter folder (of storage/publisher/identity/serializer, all sketched
 back at the core/application/renderer/ui reorg) to get real content,
-confirming the dependency-direction rule stated then (application ->
+confirming the dependency-direction rule stated then (application -&gt;
 storage/publisher/identity/serializer) rather than needing revision now
 that there's something to depend on.
 
@@ -686,7 +725,12 @@ Steem posts and converts them into Publication objects. Neither the
 publisher nor the discovery provider knows about the other, and the UI
 depends on neither.
 
-View Modes (conceptual architecture, partially implemented)
+As of 0.1.26, three views consume the same DiscoveryProvider
+abstraction: Repository View (technical exploration), Author View
+(social exploration), and World View (spatial exploration). No separate
+discovery systems are needed for each.
+
+View Modes
 
 ForkBuild's Document abstraction makes three distinct presentation
 modes possible without duplicating data:
@@ -694,22 +738,21 @@ modes possible without duplicating data:
 Repository View — the "GitHub" mode. A list of projects per author,
 searchable, forkable. Each entry is a Publication (or a local
 DocumentSummary). Users open one, inspect bricks, fork it, modify it.
-This is the builder's primary interface. Implemented as of 0.1.23 as
-ui/views/RepositoryView.js.
+This is the builder's primary interface. Implemented as of 0.1.23;
+enhanced in 0.1.26 with Explore actions and clickable author links that
+route to Author View.
 
 Author View — the "profile" mode. Every Publication has an author
 field. Grouping by author produces a portfolio page: published works,
-fork counts, follower counts. Nothing about the document changes;
-only the query differs. Not yet implemented; will follow the exact
-same pattern as Repository View.
+fork counts, and recursive fork trees reconstructed client-side from
+parentDocumentId. Implemented as of 0.1.26 as ui/views/AuthorView.js.
 
-World View — the "Minecraft" mode. Published documents that carry an
-optional worldPosition appear as placed objects inside a shared virtual
-world. The renderer streams documents on demand based on camera
-position (like Google Maps tiles). Walking farther loads new creations;
-older ones unload. The same Japanese Temple document can be a project
+World View — the "Minecraft" mode. Published documents appear as
+navigable 3D scenes. The renderer loads documents on demand based on
+user selection (today: one at a time; later: by camera position and
+WorldLayoutProvider). The same Japanese Temple document can be a project
 in Repository View and a physical place in World View simultaneously.
-Not yet implemented; will add a WorldLayoutProvider abstraction.
+Implemented as of 0.1.26 as ui/views/WorldView.js.
 
 All three modes are views over the same underlying data graph:
 
@@ -722,13 +765,16 @@ All three modes are views over the same underlying data graph:
    Stone Pack Castle  Bob's House
 
 Repository View explores the "contains" edge.
-World View explores the "near" edge.
+World View explores the "near" edge (future: via WorldLayoutProvider).
 Author View explores the "authored" edge.
 
-The publisher interface intentionally knows nothing about which view
-mode will consume its output. It simply produces a Publication. A
-future DiscoveryProvider (or the view layers themselves) decides how to
-index and present them.
+The three views consume the same DiscoveryProvider and Publication
+abstraction — no separate discovery systems. Repository View and Author
+View operate almost entirely on Publication metadata. World View loads
+the actual Document/World through LoadPublicationDocumentUseCase because
+it needs geometry and semantic information to render. This is the concrete
+demonstration of the Publication/Document boundary: Publication describes
+that something was published; World describes what exists.
 
 World Layout (future, not yet implemented)
 
@@ -742,7 +788,9 @@ findVisibleDocuments(camera). Implementations could be:
 - Time-based: newest builds nearby, older builds farther away.
 
 The renderer doesn't care. It asks the layout provider what to show,
-then loads the corresponding Documents via a Discovery layer.
+then loads the corresponding Documents via a Discovery layer. As of
+0.1.26, World View loads one document at a time by direct navigation;
+a WorldLayoutProvider would extend this to ambient spatial streaming.
 
 Forking (0.1.24)
 
@@ -764,7 +812,8 @@ findByParentId().
 
 Fork is distinguished from View (open another document without copying)
 and Import (bring external data into the workspace). Repository View
-offers both Open and Fork actions on each Publication card.
+offers both Open and Fork actions on each Publication card; World View
+offers Open and Fork from the spatial scene.
 
 The implementation lives in ForkDocumentUseCase (application/). It is
 deliberately not a Command — forking creates a new document, it does
@@ -802,12 +851,29 @@ answers "what did the user build?" Editor State answers "what is the
 user currently doing while building it?" — the second question's answer
 should never leak into the first's.
 
+Publication vs Document Boundary
+
+A Publication describes that something was published; a World describes
+what exists. This distinction is critical for discovery architecture:
+
+- Repository View and Author View operate almost entirely on Publication
+  metadata (title, author, publishedAt, parentDocumentId).
+- World View must load the actual Document/World to render geometry.
+
+DiscoveryProvider returns Publications. Only when the user enters World
+View does LoadPublicationDocumentUseCase fetch the full Document by
+documentId. This keeps discovery indexing lightweight (metadata only)
+while ensuring spatial exploration has access to every brick and building.
+It also means a Publication can exist even if its underlying Document is
+temporarily unavailable — the metadata is enough for Repository and
+Author Views to remain useful.
+
 Dependency direction
 
-ui -> application -> core
-application -> renderer
-application -> storage / publisher / identity / serializer / discovery
-renderer -> core (reads domain events and data; never the reverse)
+ui -&gt; application -&gt; core
+application -&gt; renderer
+application -&gt; storage / publisher / identity / serializer / discovery
+renderer -&gt; core (reads domain events and data; never the reverse)
 
 core never depends on anything above it. renderer never owns data, only
 visualizes what it's given, and now only reacts to events rather than
