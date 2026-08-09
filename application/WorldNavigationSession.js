@@ -3,6 +3,8 @@ import { Position } from '../core/Position.js';
 import { SpatialSelectionState } from './spatial-state/SpatialSelectionState.js';
 import { SpatialHoverState } from './spatial-state/SpatialHoverState.js';
 import { SpatialCameraController } from './SpatialCameraController.js';
+import { SpatialInspectionService } from './SpatialInspectionService.js';
+import { SpatialInspectionState } from './spatial-state/SpatialInspectionState.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -16,10 +18,12 @@ export class WorldNavigationSession {
         this._worldLayoutProvider = worldLayoutProvider;
         this._session = null;
         this._spatialCameraController = null;
+        this._inspectionService = null;
         this._loadedDocuments = new Map();
-        this._failedLoads = new Map(); // documentId -> { attempts, lastAttemptAt }
+        this._failedLoads = new Map();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
+        this._spatialInspection = SpatialInspectionState.empty();
     }
 
     start(container) {
@@ -29,6 +33,7 @@ export class WorldNavigationSession {
             this._registry
         );
         this._spatialCameraController = new SpatialCameraController(this._session);
+        this._inspectionService = new SpatialInspectionService(this);
     }
 
     // Client-side spatial navigation: move camera to the world's layout
@@ -39,7 +44,21 @@ export class WorldNavigationSession {
         return this.updateSpatialView();
     }
 
-    // Legacy entry point for deep-linking: start session + focus.
+    focusSelection() {
+        if (!this._spatialInspection || this._spatialInspection.isEmpty) {
+            return;
+        }
+        const data = this._spatialInspection.data;
+        if (data && data.position) {
+            const target = {
+                x: data.position.x,
+                y: data.position.y,
+                z: data.position.z
+            };
+            this._spatialCameraController.focusTarget(target, { x: 12, y: 12, z: 12 });
+        }
+    }
+
     navigateToDocument(documentId) {
         return this.focusDocument(documentId);
     }
@@ -120,6 +139,7 @@ export class WorldNavigationSession {
             this._setSpatialSelection(SpatialSelectionState.brick(brickHit));
             this._session.selectBrick(brickHit.brickId);
             this._session.clearHover();
+            this._refreshInspection();
             return this._spatialSelection;
         }
 
@@ -128,12 +148,14 @@ export class WorldNavigationSession {
             this._setSpatialSelection(SpatialSelectionState.ground(groundHit.position));
             this._session.clearSelection();
             this._session.clearHover();
+            this._refreshInspection();
             return this._spatialSelection;
         }
 
         this._setSpatialSelection(SpatialSelectionState.empty());
         this._session.clearSelection();
         this._session.clearHover();
+        this._refreshInspection();
         return null;
     }
 
@@ -166,6 +188,7 @@ export class WorldNavigationSession {
 
     clearSelection() {
         this._setSpatialSelection(SpatialSelectionState.empty());
+        this._spatialInspection = SpatialInspectionState.empty();
         if (this._session) {
             this._session.clearSelection();
         }
@@ -177,6 +200,10 @@ export class WorldNavigationSession {
 
     getSpatialHover() {
         return this._spatialHover;
+    }
+
+    getSpatialInspection() {
+        return this._spatialInspection;
     }
 
     // Returns everything the UI needs to render the spatial HUD.
@@ -215,12 +242,11 @@ export class WorldNavigationSession {
     _loadWorld(documentId) {
         const document = this._loadPublicationDocumentUseCase.execute(documentId);
         this._loadedDocuments.set(documentId, document);
-        this._session.addWorld(document.world, documentId);
+        const layoutPos = this._worldLayoutProvider.getPosition(documentId);
+        this._session.addWorld(document.world, documentId, layoutPos);
     }
 
     _unloadWorld(documentId) {
-        // Spatial Selection Invariant: clear selection/hover if they
-        // reference the document that is being unloaded.
         if (this._spatialSelection.documentId === documentId) {
             this.clearSelection();
         }
@@ -246,6 +272,14 @@ export class WorldNavigationSession {
         this._spatialHover = hover;
     }
 
+    _refreshInspection() {
+        if (!this._inspectionService) {
+            this._spatialInspection = SpatialInspectionState.empty();
+            return;
+        }
+        this._spatialInspection = this._inspectionService.inspect(this._spatialSelection);
+    }
+
     _getFailedIds() {
         return Array.from(this._failedLoads.keys());
     }
@@ -256,9 +290,11 @@ export class WorldNavigationSession {
             this._session = null;
         }
         this._spatialCameraController = null;
+        this._inspectionService = null;
         this._loadedDocuments.clear();
         this._failedLoads.clear();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
+        this._spatialInspection = SpatialInspectionState.empty();
     }
 }
