@@ -3,12 +3,12 @@ infrastructure adapters that surround them.
 
 core/
 
-Pure game model. World, Building, Brick, Position, BrickDefinition,
-BrickRegistry, PlacementValidator, Document, DocumentMetadata,
-protocolVersion, createId, and events/ (EventBus, DomainEvent,
-EventListener, and — as of 0.1.10 — EditorEvent). No Three.js, no Vue, no
-browser APIs. Never imports anything from application/, renderer/, or
-ui/.
+Pure game model. World, Building, Brick, Position, WorldPosition,
+BrickDefinition, BrickRegistry, PlacementValidator, Document,
+DocumentMetadata, protocolVersion, createId, and events/ (EventBus,
+DomainEvent, EventListener, and — as of 0.1.10 — EditorEvent). No
+Three.js, no Vue, no browser APIs. Never imports anything from
+application/, renderer/, or ui/.
 
 Every World, Building, and Brick has a first-class UUID identity
 (createId(), defaulted in each constructor) rather than a hand-picked or
@@ -23,12 +23,11 @@ definitionId -&gt; BrickDefinition (metadata only). Libraries (e.g.
 core/library/CoreLibrary.js) register their definitions with the
 registry at startup — see docs/BrickLibrary.md.
 
-BrickDefinition metadata: id, name, category, thumbnail, defaultRotation,
-tags, description. thumbnail already serves the role a separate "icon"
-field would (both are just "the palette's visual for this definition") —
-kept as one field rather than two. BrickRegistry is a proper catalog:
-get(id), has(id), getAll(), getByCategory(category), search(tags) (single
-tag or array; matches if a definition's tags intersect the query at all).
+WorldPosition (core/WorldPosition.js), added 0.1.27, is a coordinate
+in shared world space — distinct from Position so brick-local and
+world-global concepts never merge accidentally. toJSON()/fromJSON()
+round-trip {x,y,z}; equals()/clone() exist for the same reasons as
+Position.
 
 Document (core/Document.js) is the publishable/persistable unit: a World
 plus DocumentMetadata (title, author, created, modified, protocolVersion,
@@ -81,6 +80,36 @@ EventBus, just discovered one milestone later. Sub-state pieces
 (SelectionState, ToolState, ActiveBrickState, PreviewState,
 EditorSettings) live in application/editor-state/, each pure data with no
 Three.js/Vue/DOM.
+
+CreateWorldLayoutUseCase (application/CreateWorldLayoutUseCase.js)
+constructs the concrete world layout backend and returns the provider,
+so ui/ never imports world-layout/ or discovery/ directly. Same shape as
+CreatePersistenceUseCase, CreatePublisherUseCase, and
+CreateIdentityProviderUseCase. Swapping to a geographic, procedural, or
+blockchain-anchored layout later means changing exactly this one file.
+
+WorldViewSession (application/WorldViewSession.js), updated 0.1.27, owns
+the live read-only runtime graph for World View. It now accepts a
+WorldLayoutProvider and uses it to position the camera when a document
+is loaded, and to answer spatial queries (getNearbyDocuments,
+getDocumentPosition) for the navigation UI. This keeps the renderer
+completely ignorant of layout: WorldViewSession translates layout
+coordinates into CameraState, then hands that state to
+RenderWorldViewUseCase's abstraction.
+
+RenderWorldViewUseCase (application/RenderWorldViewUseCase.js), updated
+0.1.27, now exposes getCameraState()/setCameraState() on its returned
+handle so WorldViewSession can position the camera without touching
+Renderer directly. This is the same abstraction discipline used
+elsewhere: the use case decides what the session can do; the session does
+not reach past the use case into renderer internals.
+
+LoadPublicationDocumentUseCase (application/LoadPublicationDocumentUseCase.js)
+loads a Document by its world id for read-only consumption. It bypasses
+DocumentManager entirely because World View does not track dirty/saved
+state. This use case is the concrete architectural boundary between
+Publication (metadata that navigates) and Document/World (geometry that
+renders).
 
 This is also where commands/ (undoable actions) and services/ (export,
 import, screenshot) live — cross-cutting operations, as distinct from
@@ -460,28 +489,33 @@ so ui/ never imports storage/ or renderer/ directly. Same shape as
 CreatePersistenceUseCase and CreatePublisherUseCase — swapping to a
 networked document loader later means changing exactly this one file.
 
-WorldViewSession (application/WorldViewSession.js) owns the live read-only
-runtime graph for World View: a fresh EventBus, a RenderWorldViewUseCase
-session, and the loaded Document. viewDocument(container, documentId)
-tears down any existing session, builds a new one, and loads the Document
-geometry. dispose() cleans up. This mirrors EditorSession's ownership
-pattern but omits everything editor-specific — no EditorContext,
-ToolManager, CommandHistory, or InputDispatcher.
+world-layout/
 
-RenderWorldViewUseCase (application/RenderWorldViewUseCase.js) is the
-read-only counterpart to RenderWorldUseCase. It wires Renderer,
-WorldRenderer, and PickingService, but deliberately omits
-SelectionRenderer and PreviewRenderer — spatial exploration has no
-selection state or placement preview. The returned handle exposes pick()
-and pickGround() for future hover-to-inspect features without requiring
-tool infrastructure.
+The spatial adapter family, added 0.1.27. Answers "Where do published
+worlds exist in a shared spatial coordinate system?" It does NOT load
+Documents — that is LoadPublicationDocumentUseCase's job. It only answers
+spatial questions: given a camera/view region, which documents are
+visible? Given a documentId, where is it?
 
-LoadPublicationDocumentUseCase (application/LoadPublicationDocumentUseCase.js)
-loads a Document by its world id for read-only consumption. It bypasses
-DocumentManager entirely because World View does not track dirty/saved
-state. This use case is the concrete architectural boundary between
-Publication (metadata that navigates) and Document/World (geometry that
-renders).
+WorldLayoutProvider (world-layout/WorldLayoutProvider.js) is the base
+class: findVisibleDocuments(viewCenter, viewRadius) returns documentIds;
+getPosition(documentId) returns a core/WorldPosition. Both throw by
+default — same discipline as DiscoveryProvider, PublisherProvider, etc.
+
+LocalWorldLayoutProvider (world-layout/LocalWorldLayoutProvider.js) is the
+first concrete implementation: a deterministic 2D grid layout computed
+from the discovery catalog. No persistence, no GPS, no blockchain — just
+a pure function of the publication list so the spatial boundary can be
+exercised before external complexity is introduced. Publications are spaced
+at 40-unit intervals on the XZ plane; the grid rebuilds whenever the
+discovery catalog changes.
+
+The critical architectural separation: DiscoveryProvider answers "What
+has been published?" WorldLayoutProvider answers "Where are those
+publications in space?" Neither knows about the other at the protocol
+level; LocalWorldLayoutProvider consumes a DiscoveryProvider as an
+implementation detail, but the UI consumes them through separate use-case
+factories.
 
 renderer/
 
@@ -578,6 +612,13 @@ directly), which still worked but wasn't strictly the stated convention.
 ForkTree (ui/components/ForkTree.js) is a recursive component that renders
 a Publication's descendant lineage from parentDocumentId links. Consumed
 by Author View; could be reused anywhere a fork graph is needed.
+
+WorldView (ui/views/WorldView.js), updated 0.1.27, is now spatially
+aware. It displays the loaded world's layout coordinates and a "Nearby
+Worlds" panel populated via WorldLayoutProvider.findVisibleDocuments().
+Clicking a nearby world navigates to it. The renderer itself remains
+ignorant of why worlds are where they are — it simply renders whatever
+WorldViewSession asks it to.
 
 storage/
 
@@ -693,18 +734,6 @@ locate every publication that references a given document — necessary
 when one document has been published multiple times or through multiple
 providers.
 
-identity/
-
-As of 0.1.21B, IdentityUseCase provides the UI-facing wrapper, and
-ui/components/UserWidget.js / LoginModal.js are the first identity UI.
-The widget lives in the global app header, so the current user is
-visible across all views; the modal prompts for a username and calls
-identityUseCase.login(). The same shared provider instance is injected
-into EditorView, so documents created or forked after login
-automatically carry the correct author — completing the loop from
-login → currentUser() → DocumentMetadata.author → Publication.author
-→ Repository View.
-
 discovery/
 
 Filled in at 0.1.23 — the Discovery Adapter stub. DiscoveryProvider is
@@ -730,6 +759,18 @@ abstraction: Repository View (technical exploration), Author View
 (social exploration), and World View (spatial exploration). No separate
 discovery systems are needed for each.
 
+identity/
+
+As of 0.1.21B, IdentityUseCase provides the UI-facing wrapper, and
+ui/components/UserWidget.js / LoginModal.js are the first identity UI.
+The widget lives in the global app header, so the current user is
+visible across all views; the modal prompts for a username and calls
+identityUseCase.login(). The same shared provider instance is injected
+into EditorView, so documents created or forked after login
+automatically carry the correct author — completing the loop from
+login → currentUser() → DocumentMetadata.author → Publication.author
+→ Repository View.
+
 View Modes
 
 ForkBuild's Document abstraction makes three distinct presentation
@@ -748,11 +789,13 @@ fork counts, and recursive fork trees reconstructed client-side from
 parentDocumentId. Implemented as of 0.1.26 as ui/views/AuthorView.js.
 
 World View — the "Minecraft" mode. Published documents appear as
-navigable 3D scenes. The renderer loads documents on demand based on
-user selection (today: one at a time; later: by camera position and
-WorldLayoutProvider). The same Japanese Temple document can be a project
-in Repository View and a physical place in World View simultaneously.
-Implemented as of 0.1.26 as ui/views/WorldView.js.
+navigable 3D scenes positioned in a shared spatial layout by
+WorldLayoutProvider. As of 0.1.27, the camera is placed at the world's
+layout coordinate and a Nearby Worlds panel shows spatial neighbors.
+The renderer loads one document at a time; a future WorldLayoutProvider
+could drive ambient spatial streaming (0.1.28). The same Japanese Temple
+document can be a project in Repository View, an entry in an author's
+portfolio, and a physical place in World View simultaneously.
 
 All three modes are views over the same underlying data graph:
 
@@ -765,32 +808,39 @@ All three modes are views over the same underlying data graph:
    Stone Pack Castle  Bob's House
 
 Repository View explores the "contains" edge.
-World View explores the "near" edge (future: via WorldLayoutProvider).
+World View explores the "near" edge via WorldLayoutProvider.
 Author View explores the "authored" edge.
 
 The three views consume the same DiscoveryProvider and Publication
 abstraction — no separate discovery systems. Repository View and Author
 View operate almost entirely on Publication metadata. World View loads
 the actual Document/World through LoadPublicationDocumentUseCase because
-it needs geometry and semantic information to render. This is the concrete
-demonstration of the Publication/Document boundary: Publication describes
-that something was published; World describes what exists.
+it needs geometry and semantic information to render. World View also
+consumes WorldLayoutProvider because it needs to know where to place
+the camera and which neighbors exist. This is the concrete
+demonstration of the Publication/Document/Location boundary:
+Publication describes that something was published; World describes
+what exists; WorldLayout describes where it exists.
 
-World Layout (future, not yet implemented)
+World Layout (0.1.27)
 
-Rather than hard-coding "The Global World," ForkBuild will likely
-introduce a WorldLayoutProvider abstraction whose sole job is
-findVisibleDocuments(camera). Implementations could be:
+Rather than hard-coding "The Global World," ForkBuild introduces a
+WorldLayoutProvider abstraction whose sole job is spatial placement.
+The LocalWorldLayoutProvider implementation arranges publications on
+a deterministic grid; future implementations could be:
 
 - Geographic: documents have lat/long coordinates.
 - Random island: one island per author.
 - Theme park: fantasy district, sci-fi district, modern district.
 - Time-based: newest builds nearby, older builds farther away.
 
-The renderer doesn't care. It asks the layout provider what to show,
-then loads the corresponding Documents via a Discovery layer. As of
-0.1.26, World View loads one document at a time by direct navigation;
-a WorldLayoutProvider would extend this to ambient spatial streaming.
+The renderer doesn't care. It asks the layout provider where to place
+the camera, then loads the corresponding Documents via
+LoadPublicationDocumentUseCase and renders them through
+RenderWorldViewUseCase. As of 0.1.27, World View loads one document at
+a time by direct navigation, positioned at its layout coordinate; a
+future milestone could extend this to ambient spatial streaming based
+on camera movement.
 
 Forking (0.1.24)
 
@@ -851,28 +901,33 @@ answers "what did the user build?" Editor State answers "what is the
 user currently doing while building it?" — the second question's answer
 should never leak into the first's.
 
-Publication vs Document Boundary
+Publication vs Document vs Location
 
-A Publication describes that something was published; a World describes
-what exists. This distinction is critical for discovery architecture:
+Three distinct abstractions, kept strictly separate:
 
-- Repository View and Author View operate almost entirely on Publication
-  metadata (title, author, publishedAt, parentDocumentId).
-- World View must load the actual Document/World to render geometry.
+- Publication — describes that something was published. Metadata only:
+  title, author, publishedAt, parentDocumentId. Enough for Repository
+  and Author Views.
 
-DiscoveryProvider returns Publications. Only when the user enters World
-View does LoadPublicationDocumentUseCase fetch the full Document by
-documentId. This keeps discovery indexing lightweight (metadata only)
-while ensuring spatial exploration has access to every brick and building.
-It also means a Publication can exist even if its underlying Document is
-temporarily unavailable — the metadata is enough for Repository and
-Author Views to remain useful.
+- Document/World — describes what exists. Geometry, bricks, buildings.
+  Required for World View rendering. Loaded on demand by
+  LoadPublicationDocumentUseCase.
+
+- WorldLayout/WorldPosition — describes where it exists in a shared
+  spatial coordinate system. Required for World View camera placement
+  and neighbor discovery. Answered by WorldLayoutProvider.
+
+No abstraction leaks into another. Publication does not carry geometry.
+Document does not carry layout coordinates. WorldLayoutProvider does not
+load Documents. This separation means the same Document can appear in
+multiple layouts, or the same Publication can reference a Document whose
+geometry is temporarily unavailable, without breaking any view.
 
 Dependency direction
 
 ui -&gt; application -&gt; core
 application -&gt; renderer
-application -&gt; storage / publisher / identity / serializer / discovery
+application -&gt; storage / publisher / identity / serializer / discovery / world-layout
 renderer -&gt; core (reads domain events and data; never the reverse)
 
 core never depends on anything above it. renderer never owns data, only
