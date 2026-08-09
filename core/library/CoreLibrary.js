@@ -12,28 +12,40 @@ export const CoreLibrary = {
             name: 'Cube',
             category: 'primitive',
             tags: ['basic', 'block'],
-            description: 'A basic 1x1x1 cube — the simplest building block.'
+            description: 'A basic 1x1x1 cube — the simplest building block.',
+            width: 1,
+            height: 1,
+            depth: 1
         }),
         new BrickDefinition({
             id: 'core:slope_45',
             name: 'Slope 45°',
             category: 'primitive',
             tags: ['basic', 'roof'],
-            description: 'A 45-degree sloped block, useful for roofs and ramps.'
+            description: 'A 45-degree sloped block, useful for roofs and ramps.',
+            width: 1,
+            height: 1,
+            depth: 1
         }),
         new BrickDefinition({
             id: 'core:plate_2x4',
             name: 'Plate 2x4',
             category: 'primitive',
             tags: ['basic', 'flat'],
-            description: 'A thin 2x4 plate for floors and flat surfaces.'
+            description: 'A thin 2x4 plate for floors and flat surfaces.',
+            width: 2,
+            height: 0.25,
+            depth: 4
         }),
         new BrickDefinition({
             id: 'core:window_small',
             name: 'Small Window',
             category: 'primitive',
             tags: ['basic', 'window'],
-            description: 'A small window opening.'
+            description: 'A small window opening.',
+            width: 1,
+            height: 1,
+            depth: 0.25
         })
     ]
 };
