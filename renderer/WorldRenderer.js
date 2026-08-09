@@ -53,11 +53,17 @@ export class WorldRenderer {
     }
 
     // Imperative mode (WorldView): render an entire world at once with
-    // its documentId so picking can resolve cross-world identity.
-    addWorld(world, documentId) {
+    // its documentId and optional layout offset so multiple worlds occupy
+    // distinct regions of shared space.
+    addWorld(world, documentId, layoutPosition = null) {
         for (const building of world.getBuildings()) {
             for (const brick of building.getBricks()) {
                 const { brickId, mesh } = this._buildingRenderer.renderBrick(brick);
+                if (layoutPosition) {
+                    mesh.position.x += layoutPosition.x;
+                    mesh.position.y += layoutPosition.y;
+                    mesh.position.z += layoutPosition.z;
+                }
                 this._addBrickMesh(brickId, documentId, building.id, mesh);
             }
         }
