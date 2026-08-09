@@ -7,8 +7,6 @@ export class RenderWorldViewUseCase {
     execute(container, registry) {
         const renderer = new Renderer(container);
         const worldRenderer = new WorldRenderer(renderer, registry);
-        // NOTE: Not subscribed to EventBus — WorldNavigationSession drives
-        // addWorld/removeWorld imperatively for multi-world spatial streaming.
 
         renderer.start();
 
@@ -30,7 +28,7 @@ export class RenderWorldViewUseCase {
             },
             getCameraState: () => renderer.cameraController.getState(),
             setCameraState: (state) => renderer.cameraController.setState(state),
-            addWorld: (world, documentId) => worldRenderer.addWorld(world, documentId),
+            addWorld: (world, documentId, layoutPosition) => worldRenderer.addWorld(world, documentId, layoutPosition),
             removeWorld: (world) => worldRenderer.removeWorld(world),
             selectBrick: (brickId) => spatialSelectionRenderer.select(brickId),
             clearSelection: () => spatialSelectionRenderer.clearSelection(),
