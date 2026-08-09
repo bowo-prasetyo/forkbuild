@@ -18,6 +18,8 @@ Discovery (new in 0.1.23)
 
 Forking (0.1.24)
 
+Discovery Views (0.1.26)
+
 A fork is created by deriving a new Document from an existing one.
 The new Document's metadata carries parentDocumentId pointing to the
 source document's world.id. The forked world's buildings and bricks
@@ -67,6 +69,60 @@ systems. A future Discovery layer will index Publications so that
 Repository View, World View, and Author View can query them without
 depending on any specific blockchain.
 
+Publication vs Document Boundary
+
+A Publication describes that something was published; a Document (and
+its World) describes what exists. This boundary is critical for the
+discovery architecture introduced in 0.1.26:
+
+- Repository View and Author View consume Publication metadata only.
+- World View loads the actual Document by documentId to render geometry.
+
+The DiscoveryProvider contract operates on Publications. Loading the
+full Document is a separate concern handled by LoadPublicationDocumentUseCase.
+This separation keeps discovery indexing lightweight while ensuring
+spatial exploration has access to every brick and building.
+
+Discovery
+
+As of 0.1.23, Discovery is a separate protocol concern from Publishing.
+While a PublisherProvider answers "how do I publish?", a DiscoveryProvider
+answers "how do I find what has been published?" The Discovery interface
+operates on Publications, not on raw blockchain posts or storage keys.
+
+DiscoveryProvider contract:
+- list() → Publication[]
+- findById(id) → Publication | null
+- findByAuthor(author) → Publication[]
+- findByParentId(parentDocumentId) → Publication[]
+- findByDocumentId(documentId) → Publication[]
+
+This separation ensures that Repository View, Author View, and World View
+can consume Publications without knowing whether the underlying source is
+LocalStorage, Steem, Hive, Ethereum, IPFS, or another ForkBuild node.
+
+Discovery Views (0.1.26)
+
+Three view modes consume the same DiscoveryProvider abstraction:
+
+1. **Repository View** — technical exploration. A flat or filtered list
+   of Publications with fork counts, lineage hints, and actions (Open,
+   Fork, Explore).
+
+2. **Author View** — social exploration. A portfolio page for a single
+   author, including their original works, forks, and recursive fork
+   trees reconstructed from parentDocumentId.
+
+3. **World View** — spatial exploration. A read-only 3D rendering of
+   a published Document's World. Requires loading the full Document
+   geometry; metadata alone is insufficient.
+
+All three views navigate the same underlying creation graph through
+different edges: Repository explores "contains" (publication lists),
+Author explores "authored" (creator attribution), and World explores
+"spatial" (geometry and placement). None require separate discovery
+systems; all consume Publication through DiscoveryProvider.
+
 Identity Layers
 
 ForkBuild distinguishes three kinds of identity, each at a different
@@ -86,20 +142,3 @@ layer of the protocol:
    on-chain content identifier. The publisher adapter maps between
    Publication and blockchain-native identifiers without either concept
    leaking into the other layers.
-   
-Discovery
-
-As of 0.1.23, Discovery is a separate protocol concern from Publishing.
-While a PublisherProvider answers "how do I publish?", a DiscoveryProvider
-answers "how do I find what has been published?" The Discovery interface
-operates on Publications, not on raw blockchain posts or storage keys.
-
-DiscoveryProvider contract:
-- list() → Publication[]
-- findById(id) → Publication | null
-- findByAuthor(author) → Publication[]
-- findByParentId(parentDocumentId) → Publication[]
-
-This separation ensures that Repository View, Author View, and World View
-can consume Publications without knowing whether the underlying source is
-LocalStorage, Steem, Hive, Ethereum, IPFS, or another ForkBuild node.
