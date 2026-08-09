@@ -1,7 +1,7 @@
-import { CreateEventBusUseCase } from './CreateEventBusUseCase.js';
 import { RenderWorldViewUseCase } from './RenderWorldViewUseCase.js';
 import { Position } from '../core/Position.js';
 import { CameraState } from '../renderer/CameraState.js';
+import { SpatialSelectionState } from './spatial-state/SpatialSelectionState.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -14,23 +14,21 @@ export class WorldNavigationSession {
         this._worldLayoutProvider = worldLayoutProvider;
         this._session = null;
         this._loadedDocuments = new Map();
-        this._sharedEventBus = null;
         this._failedLoads = new Set();
+        this._spatialSelection = SpatialSelectionState.empty();
     }
 
     start(container) {
         this.dispose();
-        this._sharedEventBus = new CreateEventBusUseCase().execute();
         this._session = new RenderWorldViewUseCase().execute(
             container,
-            this._sharedEventBus,
             this._registry
         );
     }
 
-    // Position the camera at the world's layout coordinate and stream
-    // everything visible from that vantage point.
-    navigateToDocument(documentId) {
+    // Client-side spatial navigation: move camera to the world's layout
+    // coordinate and stream it in. No page reload.
+    focusDocument(documentId) {
         const layoutPos = this._worldLayoutProvider.getPosition(documentId);
         const cameraPos = new Position(
             layoutPos.x + CAMERA_OFFSET,
@@ -46,6 +44,11 @@ export class WorldNavigationSession {
         }));
 
         return this.updateSpatialView();
+    }
+
+    // Legacy entry point for deep-linking: start session + focus.
+    navigateToDocument(documentId) {
+        return this.focusDocument(documentId);
     }
 
     // Reconcile the set of loaded worlds with whatever the layout
@@ -96,6 +99,42 @@ export class WorldNavigationSession {
         };
     }
 
+    // Spatial picking: translates renderer hits into domain identity.
+    pick(screenX, screenY) {
+        if (!this._session) {
+            return null;
+        }
+
+        const brickHit = this._session.pick(screenX, screenY);
+        if (brickHit) {
+            this._setSpatialSelection(SpatialSelectionState.brick(brickHit));
+            this._session.highlightBrick(brickHit.brickId);
+            return this._spatialSelection;
+        }
+
+        const groundHit = this._session.pickGround(screenX, screenY);
+        if (groundHit) {
+            this._setSpatialSelection(SpatialSelectionState.ground(groundHit.position));
+            this._session.clearHighlight();
+            return this._spatialSelection;
+        }
+
+        this._setSpatialSelection(SpatialSelectionState.empty());
+        this._session.clearHighlight();
+        return null;
+    }
+
+    clearSelection() {
+        this._setSpatialSelection(SpatialSelectionState.empty());
+        if (this._session) {
+            this._session.clearHighlight();
+        }
+    }
+
+    getSpatialSelection() {
+        return this._spatialSelection;
+    }
+
     // Returns everything the UI needs to render the spatial HUD.
     getSpatialState() {
         if (!this._session) {
@@ -131,16 +170,18 @@ export class WorldNavigationSession {
         return Array.from(this._loadedDocuments.values());
     }
 
+    getDocument(documentId) {
+        return this._loadedDocuments.get(documentId) || null;
+    }
+
     getDocumentPosition(documentId) {
         return this._worldLayoutProvider.getPosition(documentId);
     }
 
     _loadWorld(documentId) {
-        const document = this._loadPublicationDocumentUseCase.execute(
-            documentId,
-            this._sharedEventBus
-        );
+        const document = this._loadPublicationDocumentUseCase.execute(documentId);
         this._loadedDocuments.set(documentId, document);
+        this._session.addWorld(document.world, documentId);
     }
 
     _unloadWorld(documentId) {
@@ -151,6 +192,10 @@ export class WorldNavigationSession {
         this._loadedDocuments.delete(documentId);
     }
 
+    _setSpatialSelection(selection) {
+        this._spatialSelection = selection;
+    }
+
     dispose() {
         if (this._session) {
             this._session.dispose();
@@ -158,6 +203,6 @@ export class WorldNavigationSession {
         }
         this._loadedDocuments.clear();
         this._failedLoads.clear();
-        this._sharedEventBus = null;
+        this._spatialSelection = SpatialSelectionState.empty();
     }
 }
