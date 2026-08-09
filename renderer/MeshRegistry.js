@@ -1,26 +1,27 @@
-// Maps brick id <-> mesh, plus brick id -> building id, so the renderer can
-// go either direction in O(1): given a brick id, find its mesh (for
-// removal); given a mesh — e.g. a raycast hit from PickingService — find
-// which brick, and which building, it belongs to.
+// Maps brick id <-> mesh, plus brick id -> building id and
+// brick id -> document id, so the renderer can go either direction
+// in O(1). documentId may be null for single-world editor sessions.
 export class MeshRegistry {
     constructor() {
-        this._meshesByBrickId = new Map();
-        this._buildingIdsByBrickId = new Map();
+        this._entries = new Map();
         this._brickIdsByMeshUuid = new Map();
     }
 
-    set(brickId, buildingId, mesh) {
-        this._meshesByBrickId.set(brickId, mesh);
-        this._buildingIdsByBrickId.set(brickId, buildingId);
+    set(brickId, documentId, buildingId, mesh) {
+        this._entries.set(brickId, { documentId, buildingId, mesh });
         this._brickIdsByMeshUuid.set(mesh.uuid, brickId);
     }
 
     getMesh(brickId) {
-        return this._meshesByBrickId.get(brickId) || null;
+        return this._entries.get(brickId)?.mesh || null;
+    }
+
+    getDocumentId(brickId) {
+        return this._entries.get(brickId)?.documentId || null;
     }
 
     getBuildingId(brickId) {
-        return this._buildingIdsByBrickId.get(brickId) || null;
+        return this._entries.get(brickId)?.buildingId || null;
     }
 
     getBrickId(meshUuid) {
@@ -28,21 +29,19 @@ export class MeshRegistry {
     }
 
     getAllMeshes() {
-        return Array.from(this._meshesByBrickId.values());
+        return Array.from(this._entries.values()).map((e) => e.mesh);
     }
 
     delete(brickId) {
-        const mesh = this._meshesByBrickId.get(brickId);
-        if (mesh) {
-            this._brickIdsByMeshUuid.delete(mesh.uuid);
+        const entry = this._entries.get(brickId);
+        if (entry) {
+            this._brickIdsByMeshUuid.delete(entry.mesh.uuid);
         }
-        this._meshesByBrickId.delete(brickId);
-        this._buildingIdsByBrickId.delete(brickId);
+        this._entries.delete(brickId);
     }
 
     clear() {
-        this._meshesByBrickId.clear();
-        this._buildingIdsByBrickId.clear();
+        this._entries.clear();
         this._brickIdsByMeshUuid.clear();
     }
 }
