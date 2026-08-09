@@ -4,6 +4,8 @@ import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistr
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 
+const DRAG_THRESHOLD_PX = 6;
+
 export default {
     name: 'WorldView',
     setup() {
@@ -18,6 +20,7 @@ export default {
         const nearbyWorlds = ref([]);
         const failedWorlds = ref([]);
         const spatialSelection = ref(null);
+        const spatialHover = ref(null);
         const cameraPosition = ref(null);
 
         const registry = new CreateBrickRegistryUseCase().execute();
@@ -28,6 +31,8 @@ export default {
         const allPublications = ref([]);
 
         let spatialInterval = null;
+        let pointerStart = null;
+        let isDragging = false;
 
         function refreshSpatialUI() {
             const state = session.getSpatialState();
@@ -90,6 +95,25 @@ export default {
             }
         }
 
+        function refreshHoverUI() {
+            const pubMap = new Map(allPublications.value.map((p) => [p.documentId, p]));
+            const hover = session.getSpatialHover();
+            if (hover && !hover.isEmpty) {
+                const pub = pubMap.get(hover.documentId);
+                spatialHover.value = {
+                    type: hover.type,
+                    documentId: hover.documentId,
+                    buildingId: hover.buildingId,
+                    brickId: hover.brickId,
+                    position: hover.position,
+                    worldTitle: pub?.title || 'Untitled',
+                    worldAuthor: pub?.author || 'anonymous'
+                };
+            } else {
+                spatialHover.value = null;
+            }
+        }
+
         function focusWorld(documentId) {
             session.focusDocument(documentId);
             router.replace({ path: `/world/${documentId}` });
@@ -97,11 +121,38 @@ export default {
         }
 
         function onPointerDown(event) {
-            const rect = viewport.value.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-            const result = session.pick(x, y);
-            refreshSpatialUI();
+            isDragging = false;
+            pointerStart = { x: event.clientX, y: event.clientY };
+        }
+
+        function onPointerMove(event) {
+            if (pointerStart) {
+                const dx = event.clientX - pointerStart.x;
+                const dy = event.clientY - pointerStart.y;
+                if (Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD_PX) {
+                    isDragging = true;
+                }
+            }
+
+            if (event.buttons === 0) {
+                const rect = viewport.value.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                session.hover(x, y);
+                refreshHoverUI();
+            }
+        }
+
+        function onPointerUp(event) {
+            if (!isDragging && pointerStart) {
+                const rect = viewport.value.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                session.pick(x, y);
+                refreshSpatialUI();
+            }
+            pointerStart = null;
+            isDragging = false;
         }
 
         onMounted(() => {
@@ -111,6 +162,8 @@ export default {
             refreshSpatialUI();
 
             viewport.value.addEventListener('pointerdown', onPointerDown);
+            viewport.value.addEventListener('pointermove', onPointerMove);
+            viewport.value.addEventListener('pointerup', onPointerUp);
 
             spatialInterval = setInterval(() => {
                 session.updateSpatialView();
@@ -121,6 +174,8 @@ export default {
         onBeforeUnmount(() => {
             clearInterval(spatialInterval);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
+            viewport.value.removeEventListener('pointermove', onPointerMove);
+            viewport.value.removeEventListener('pointerup', onPointerUp);
             session.dispose();
         });
 
@@ -132,6 +187,7 @@ export default {
             nearbyWorlds,
             failedWorlds,
             spatialSelection,
+            spatialHover,
             cameraPosition,
             focusWorld
         };
@@ -144,7 +200,24 @@ export default {
                 <p v-if="cameraPosition" class="world-view-coords">
                     Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
-                <p class="world-view-hint">Drag to orbit • Scroll to zoom • Home to reset • Click to inspect</p>
+                <p class="world-view-hint">Drag to orbit • Scroll to zoom • Home to reset • Click to inspect • Move to explore</p>
+
+                <div v-if="spatialHover" class="spatial-panel spatial-panel--hover">
+                    <h4>Hover</h4>
+                    <p class="spatial-type">{{ spatialHover.type }}</p>
+                    <p v-if="spatialHover.worldTitle" class="spatial-world">
+                        World: {{ spatialHover.worldTitle }}
+                        <span class="spatial-author">by {{ spatialHover.worldAuthor }}</span>
+                    </p>
+                    <p v-if="spatialHover.brickId" class="spatial-id">
+                        Brick: {{ spatialHover.brickId.slice(0, 8) }}…
+                    </p>
+                    <p v-if="spatialHover.position" class="spatial-pos">
+                        {{ spatialHover.position.x.toFixed(2) }},
+                        {{ spatialHover.position.y.toFixed(2) }},
+                        {{ spatialHover.position.z.toFixed(2) }}
+                    </p>
+                </div>
 
                 <div v-if="spatialSelection" class="spatial-panel spatial-panel--selection">
                     <h4>Selected</h4>
