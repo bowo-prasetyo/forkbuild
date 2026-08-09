@@ -489,35 +489,69 @@ so ui/ never imports storage/ or renderer/ directly. Same shape as
 CreatePersistenceUseCase and CreatePublisherUseCase — swapping to a
 networked document loader later means changing exactly this one file.
 
-world-layout/
+WorldNavigationSession (application/WorldNavigationSession.js), added
+0.1.28, replaces WorldViewSession as the owner of the live read-only
+runtime graph for World View. It coordinates five responsibilities:
+camera positioning, spatial discovery via WorldLayoutProvider,
+document loading via LoadPublicationDocumentUseCase, world load/unload
+reconciliation, and a shared EventBus that feeds a single
+WorldRenderer.
 
-The spatial adapter family, added 0.1.27. Answers "Where do published
-worlds exist in a shared spatial coordinate system?" It does NOT load
-Documents — that is LoadPublicationDocumentUseCase's job. It only answers
-spatial questions: given a camera/view region, which documents are
-visible? Given a documentId, where is it?
+The shared EventBus is the critical architectural change: all loaded
+worlds publish domain events through the same bus, and WorldRenderer
+subscribes exactly once. This lets multiple worlds coexist in the same
+scene without WorldRenderer knowing why they are there. When a world
+leaves the streaming radius, WorldNavigationSession calls
+session.removeWorld(world) — a new renderer-level operation that purges
+meshes without touching the world itself or unsubscribing from the bus.
 
-WorldLayoutProvider (world-layout/WorldLayoutProvider.js) is the base
-class: findVisibleDocuments(viewCenter, viewRadius) returns documentIds;
-getPosition(documentId) returns a core/WorldPosition. Both throw by
-default — same discipline as DiscoveryProvider, PublisherProvider, etc.
+WorldNavigationSession maintains two radii:
+- STREAMING_RADIUS (150 units): worlds inside this are loaded.
+- NAVIGATION_RADIUS (80 units): worlds inside this are shown in the
+  "Nearby Worlds" UI panel but may or may not be loaded.
 
-LocalWorldLayoutProvider (world-layout/LocalWorldLayoutProvider.js) is the
-first concrete implementation: a deterministic 2D grid layout computed
-from the discovery catalog. No persistence, no GPS, no blockchain — just
-a pure function of the publication list so the spatial boundary can be
-exercised before external complexity is introduced. Publications are spaced
-at 40-unit intervals on the XZ plane; the grid rebuilds whenever the
-discovery catalog changes.
+The larger streaming radius provides hysteresis: a world near the
+boundary won't thrash between loaded/unloaded as the camera drifts.
+Only when it exits the streaming radius is it actually purged.
 
-The critical architectural separation: DiscoveryProvider answers "What
-has been published?" WorldLayoutProvider answers "Where are those
-publications in space?" Neither knows about the other at the protocol
-level; LocalWorldLayoutProvider consumes a DiscoveryProvider as an
-implementation detail, but the UI consumes them through separate use-case
-factories.
+navigateToDocument(documentId) positions the camera at the world's
+layout coordinate (plus an offset) and immediately calls
+updateSpatialView() to populate the scene. updateSpatialView() reads
+the camera's current world-space position, asks WorldLayoutProvider for
+visible documentIds, and reconciles the difference with the currently
+loaded set — unloading departed worlds and loading newly visible ones.
+Both operations return { loaded, visible } so the UI can refresh its HUD.
+
+getSpatialState() is the UI-facing query: it returns loaded documentIds,
+visible documentIds (streaming radius), nearby documentIds (navigation
+radius), and the camera position — everything the World View overlay
+needs without the UI reaching into the session's private state.
+
+RenderWorldViewUseCase (application/RenderWorldViewUseCase.js), updated
+0.1.28, exposes removeWorld(world) on its returned handle so
+WorldNavigationSession can unload geometry without touching Renderer
+directly. This is the same abstraction discipline as getCameraState/
+setCameraState: the use case decides what the session can do; the
+session does not reach past the use case into renderer internals.
+
+CreateWorldViewUseCase (application/CreateWorldViewUseCase.js), updated
+0.1.28, now constructs a single shared LocalStorageProvider and wires
+it to LocalDiscoveryProvider, LocalWorldLayoutProvider, and
+LoadPublicationDocumentUseCase. This fixes the 0.1.27 issue where two
+independent storage graphs existed; the same provider instances now
+flow through the entire composition root.
 
 renderer/
+
+WorldRenderer (renderer/WorldRenderer.js), updated 0.1.28, adds
+removeWorld(world). It iterates every building and brick in the world
+and purges each mesh from MeshRegistry and the Three.js scene. The
+EventBus subscription remains active because other loaded worlds still
+publish through the same bus. This is the concrete multi-world support:
+WorldRenderer now manages a heterogeneous set of meshes from arbitrary
+documents without knowing which world each mesh came from — it only
+knows brickIds, and brickIds are globally unique UUIDs.
+
 
 Three.js. WorldRenderer subscribes to World's domain events and reacts
 incrementally — BrickAdded creates one mesh, BrickRemoved deletes one,
@@ -592,6 +626,19 @@ mesh, without changing either renderer's public shape.
 
 ui/
 
+WorldView (ui/views/WorldView.js), updated 0.1.28, is now a spatial
+streaming interface. It starts a WorldNavigationSession, navigates to
+the initial document, and begins a periodic refresh (every 3 seconds)
+that calls updateSpatialView() and refreshes the HUD. The overlay
+displays three new pieces of state:
+- Worlds in View: currently loaded documents inside the streaming radius.
+- Nearby Worlds: documents inside the navigation radius but not loaded.
+- Click-to-navigate: selecting a nearby world routes to it via vue-router.
+
+The renderer remains ignorant of why multiple worlds are present. It
+simply renders whatever meshes the shared EventBus delivers.
+
+
 Vue. The application shell, routes, views, and components. Talks only to
 application/, never directly to core/, renderer/, or (confirmed
 explicitly as of 0.1.20B, via CreatePersistenceUseCase) storage/ — the
@@ -619,6 +666,36 @@ Worlds" panel populated via WorldLayoutProvider.findVisibleDocuments().
 Clicking a nearby world navigates to it. The renderer itself remains
 ignorant of why worlds are where they are — it simply renders whatever
 WorldViewSession asks it to.
+
+
+
+world-layout/
+
+The spatial adapter family, added 0.1.27. Answers "Where do published
+worlds exist in a shared spatial coordinate system?" It does NOT load
+Documents — that is LoadPublicationDocumentUseCase's job. It only answers
+spatial questions: given a camera/view region, which documents are
+visible? Given a documentId, where is it?
+
+WorldLayoutProvider (world-layout/WorldLayoutProvider.js) is the base
+class: findVisibleDocuments(viewCenter, viewRadius) returns documentIds;
+getPosition(documentId) returns a core/WorldPosition. Both throw by
+default — same discipline as DiscoveryProvider, PublisherProvider, etc.
+
+LocalWorldLayoutProvider (world-layout/LocalWorldLayoutProvider.js) is the
+first concrete implementation: a deterministic 2D grid layout computed
+from the discovery catalog. No persistence, no GPS, no blockchain — just
+a pure function of the publication list so the spatial boundary can be
+exercised before external complexity is introduced. Publications are spaced
+at 40-unit intervals on the XZ plane; the grid rebuilds whenever the
+discovery catalog changes.
+
+The critical architectural separation: DiscoveryProvider answers "What
+has been published?" WorldLayoutProvider answers "Where are those
+publications in space?" Neither knows about the other at the protocol
+level; LocalWorldLayoutProvider consumes a DiscoveryProvider as an
+implementation detail, but the UI consumes them through separate use-case
+factories.
 
 storage/
 
@@ -788,14 +865,15 @@ field. Grouping by author produces a portfolio page: published works,
 fork counts, and recursive fork trees reconstructed client-side from
 parentDocumentId. Implemented as of 0.1.26 as ui/views/AuthorView.js.
 
-World View — the "Minecraft" mode. Published documents appear as
-navigable 3D scenes positioned in a shared spatial layout by
-WorldLayoutProvider. As of 0.1.27, the camera is placed at the world's
-layout coordinate and a Nearby Worlds panel shows spatial neighbors.
-The renderer loads one document at a time; a future WorldLayoutProvider
-could drive ambient spatial streaming (0.1.28). The same Japanese Temple
-document can be a project in Repository View, an entry in an author's
-portfolio, and a physical place in World View simultaneously.
+World View — the "Minecraft" mode. As of 0.1.28, World View is no
+longer a single-world viewer. It is a spatially navigable world where
+documents are loaded and unloaded according to the camera's position.
+WorldLayoutProvider decides which documentIds are visible;
+WorldNavigationSession loads their Documents through a shared EventBus;
+WorldRenderer renders them all simultaneously. The user sees multiple
+creations in the same scene and can navigate between them via the Nearby
+Worlds panel or by moving the camera. This is the first concrete step
+toward "a spatial network of independently published worlds."
 
 All three modes are views over the same underlying data graph:
 
