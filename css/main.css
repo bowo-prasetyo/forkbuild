@@ -982,3 +982,40 @@ html, body {
     opacity: 0.5;
     cursor: not-allowed;
 }
+/* Editor View tool switcher */
+
+.tool-switcher {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+}
+
+.tool-btn {
+    padding: 0.5rem 0.75rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #b0b0b0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s, border-color 0.1s;
+}
+
+.tool-btn:hover {
+    background: #262626;
+    border-color: #3a3a3a;
+    color: #e0e0e0;
+}
+
+.tool-btn--active {
+    background: #234433;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+
+.tool-btn--active:hover {
+    background: #2a5540;
+}
