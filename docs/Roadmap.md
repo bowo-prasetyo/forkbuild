@@ -26,4 +26,5 @@
 0.1.23 Discovery Adapter (stub) — depends on Publisher, not the reverse  (done)
 0.1.24 Forking  (done)
 0.1.25 Publication lifecycle  (done)
+0.1.26 Discovery Views — Repository, Author, World  (done)
 0.2    Blockchain publishing, multiplayer
