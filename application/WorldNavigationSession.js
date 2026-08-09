@@ -15,6 +15,7 @@ export class WorldNavigationSession {
         this._session = null;
         this._loadedDocuments = new Map();
         this._sharedEventBus = null;
+        this._failedLoads = new Set();
     }
 
     start(container) {
@@ -52,7 +53,7 @@ export class WorldNavigationSession {
     // Returns { loaded: string[], visible: string[] }.
     updateSpatialView() {
         if (!this._session) {
-            return { loaded: [], visible: [] };
+            return { loaded: [], visible: [], failed: Array.from(this._failedLoads) };
         }
 
         const cameraState = this._session.getCameraState();
@@ -68,7 +69,9 @@ export class WorldNavigationSession {
         );
 
         const currentlyLoaded = new Set(this._loadedDocuments.keys());
-        const toLoad = visibleIds.filter((id) => !currentlyLoaded.has(id));
+        const toLoad = visibleIds.filter(
+            (id) => !currentlyLoaded.has(id) && !this._failedLoads.has(id)
+        );
         const toUnload = Array.from(currentlyLoaded).filter(
             (id) => !visibleIds.includes(id)
         );
@@ -78,19 +81,25 @@ export class WorldNavigationSession {
         }
 
         for (const id of toLoad) {
-            this._loadWorld(id);
+            try {
+                this._loadWorld(id);
+            } catch (err) {
+                console.warn(`WorldNavigationSession: failed to load world ${id} — ${err.message}`);
+                this._failedLoads.add(id);
+            }
         }
 
         return {
             loaded: Array.from(this._loadedDocuments.keys()),
-            visible: visibleIds
+            visible: visibleIds,
+            failed: Array.from(this._failedLoads)
         };
     }
 
     // Returns everything the UI needs to render the spatial HUD.
     getSpatialState() {
         if (!this._session) {
-            return { loaded: [], visible: [], nearby: [], cameraPosition: null };
+            return { loaded: [], visible: [], nearby: [], failed: [], cameraPosition: null };
         }
 
         const cameraState = this._session.getCameraState();
@@ -113,6 +122,7 @@ export class WorldNavigationSession {
             loaded: Array.from(this._loadedDocuments.keys()),
             visible,
             nearby,
+            failed: Array.from(this._failedLoads),
             cameraPosition: cameraPos
         };
     }
@@ -147,6 +157,7 @@ export class WorldNavigationSession {
             this._session = null;
         }
         this._loadedDocuments.clear();
+        this._failedLoads.clear();
         this._sharedEventBus = null;
     }
 }
