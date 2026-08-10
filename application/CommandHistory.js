@@ -19,12 +19,33 @@ const COMMAND_HISTORY_SCHEMA_VERSION = 1;
 // Linear history invariant: execute() after undo() clears the redo branch
 // entirely. A fresh action invalidates whatever "future" an undo had left
 // available.
+//
+// As of 0.1.39, CommandHistory also tracks a *save point*: markSaved()
+// records the current cursor as "the state that is on disk," and isDirty()
+// answers "does the current state differ from it." This is what makes the
+// dirty indicator honest about undo: execute -> dirty, undo back onto the
+// save point -> clean again.
+//
+// One subtlety: undoing PAST the save point and then executing a NEW
+// command wipes the redo branch that contained the saved state — the save
+// point becomes permanently unreachable and isDirty() stays true until the
+// next markSaved(). Executing exactly AT the save point (normal forward
+// work) keeps it valid.
+//
+// The save point is deliberately session-local: it is NOT part of
+// toJSON()/fromJSON(). A restored history starts with its save point at
+// cursor 0 (i.e. "dirty" whenever it contains commands); a caller that
+// knows the restored state matches disk calls markSaved(). Canonical
+// document persistence and session history persistence remain separate
+// concerns (see 0.1.37).
 export class CommandHistory {
     constructor(context, eventBus = new EventBus()) {
         this._context = context;
         this._eventBus = eventBus;
         this._undoStack = [];
         this._redoStack = [];
+        this._savedCursor = 0;
+        this._savePointValid = true;
     }
 
     get eventBus() {
@@ -33,6 +54,14 @@ export class CommandHistory {
 
     execute(command) {
         command.execute(this._context);
+        // If the save point was sitting in the redo branch, this execute
+        // just wiped it — the saved state is no longer reachable. Checked
+        // AFTER a successful execute (a throwing command changes nothing)
+        // and BEFORE the push, so _undoStack.length is the pre-execute
+        // cursor.
+        if (this._undoStack.length < this._savedCursor) {
+            this._savePointValid = false;
+        }
         this._undoStack.push(command);
         this._redoStack = [];
         this._eventBus.publish(CommandHistoryEvent.COMMAND_EXECUTED, { command });
@@ -68,6 +97,19 @@ export class CommandHistory {
         this._undoStack.push(command);
         this._eventBus.publish(CommandHistoryEvent.COMMAND_REDONE, { command });
         return command;
+    }
+
+    // Marks the current cursor as the saved state. Called by
+    // DocumentManager.markSaved() (which SaveDocumentUseCase calls after a
+    // successful save) — CommandHistory itself never knows about storage.
+    markSaved() {
+        this._savedCursor = this._undoStack.length;
+        this._savePointValid = true;
+    }
+
+    // True when the current state differs from the save point.
+    isDirty() {
+        return !this._savePointValid || this._undoStack.length !== this._savedCursor;
     }
 
     getExecutedCommands() {
@@ -113,7 +155,6 @@ export class CommandHistory {
         if (!registry) {
             throw new Error('CommandHistory.fromJSON(): a CommandRegistry is required');
         }
-
         const normalized = CommandHistory._normalizePersistentJSON(json);
         const commands = normalized.commands.map((cmdJson, index) => {
             try {
@@ -122,7 +163,6 @@ export class CommandHistory {
                 throw new Error(`CommandHistory.fromJSON(): invalid command at index ${index}: ${error.message}`);
             }
         });
-
         const history = new CommandHistory(context, eventBus);
         history._undoStack = commands.slice(0, normalized.cursor);
         history._redoStack = commands.slice(normalized.cursor).reverse();
@@ -132,8 +172,7 @@ export class CommandHistory {
     static _normalizePersistentJSON(json) {
         if (!json || typeof json !== 'object' || Array.isArray(json)) {
             throw new Error('CommandHistory.fromJSON(): history JSON must be an object');
-         }
- 
+        }
         // Backward compatibility for the pre-0.1.37 stack shape. New writes
         // always use the cursor-based representation below.
         if (Array.isArray(json.executed) || Array.isArray(json.redo)) {
@@ -143,12 +182,10 @@ export class CommandHistory {
                 cursor: executed.length,
                 commands: [...executed, ...redo.slice().reverse()]
             };
-         }
- 
+        }
         if (json.schemaVersion !== COMMAND_HISTORY_SCHEMA_VERSION) {
             throw new Error(`CommandHistory.fromJSON(): unsupported schemaVersion ${json.schemaVersion}`);
         }
-
         const commands = CommandHistory._requireArray(json.commands, 'commands');
         if (!Number.isInteger(json.cursor)) {
             throw new Error('CommandHistory.fromJSON(): cursor must be an integer');
@@ -156,7 +193,6 @@ export class CommandHistory {
         if (json.cursor < 0 || json.cursor > commands.length) {
             throw new Error('CommandHistory.fromJSON(): cursor must be within command bounds');
         }
-
         return { cursor: json.cursor, commands };
     }
 
