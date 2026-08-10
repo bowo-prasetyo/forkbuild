@@ -52,7 +52,7 @@ export class WorldNavigationSession {
         );
         this._spatialCameraController = new SpatialCameraController(this._session);
         this._inspectionService = new SpatialInspectionService(this);
-        this._editingService = new SpatialEditingService(this, this._commandHistories);
+        this._editingService = new SpatialEditingService(this, this._commandHistories, this._registry);
         this._placementService = new SpatialPlacementService(this._registry);
     }
 
