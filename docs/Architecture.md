@@ -1527,6 +1527,94 @@ publishDocument() and reads session.isDocumentDirty(). Identity flows in
 through the same injected IdentityUseCase the Editor uses, so publishing
 from World View is attributed to whoever is logged in.
 
+Command Replay & Operation Timeline (0.1.40)
+--------------------------------------------
+0.1.40 turns the persistent command history (0.1.37) into a genuine
+event/operation model. The history itself is the source of replay — no
+second recording mechanism exists anywhere in the engine.
+
+**Baseline snapshot.** Every CommandHistory captures context.world.toJSON()
+at construction — the document state BEFORE the first command — and
+persists it as `baselineWorld` inside the envelope:
+{ schemaVersion, cursor, commands, baselineWorld }. A restored history is
+therefore self-sufficient for replay: baseline + commands reconstruct any
+intermediate state without touching the live document. fromJSON() prefers
+the persisted baseline over whatever world the caller passes as context —
+a restored world already has commands applied, so it is NOT the baseline.
+Envelopes written before 0.1.40 deserialize fine but carry no baseline and
+cannot be replayed; ReplayDocumentUseCase throws rather than guessing.
+The baseline is replay/session data riding inside the history envelope —
+canonical document persistence (SaveDocumentUseCase) is unchanged, and the
+0.1.37 rule "document persistence ≠ history persistence" still holds.
+The save point (0.1.39) remains excluded from the envelope: it is pure
+session bookkeeping, while the baseline is required for correctness after
+restore.
+
+**Replay kernel.** CommandHistory.replay(targetContext, { registry,
+startCursor, endCursor }) serializes its own envelope, reconstructs each
+command in range through CommandRegistry.fromJSON(), and executes the
+FRESH instances against targetContext. Two invariants:
+  * Genuine replay — deserialized copies are executed, never the
+    already-mutated live command objects. A replayed command gets its own
+    execution bookkeeping, the same reasoning as PlaceBrickCommand
+    excluding _executedBrickId from its serializable intent.
+  * History suppression — replay never calls history.execute(). The
+    undo/redo stacks, cursor, and save point are untouched, so replay can
+    never pollute history (no A B C A B C duplication).
+Replay is transactional like CompositeCommand: a throwing command rolls
+back everything replay already executed, in reverse order, then the error
+is rethrown. startCursor > 0 is an advanced option — it assumes the
+target already reflects commands [0..startCursor); every caller that
+reconstructs from the baseline (ReplayDocumentUseCase, the timeline)
+starts at 0.
+
+**ReplayDocumentUseCase** (application/ReplayDocumentUseCase.js) builds
+the historical world: World.fromJSON(baseline) — silent, no eventBus —
+then history.replay() up to endCursor (default: the current cursor). The
+result is a standalone World with EXACT instance identities (baseline ids
+plus each serialized PlaceBrickCommand's executedBrickId), so replayed
+documents compare byte-for-byte against the live one.
+
+**World View preview.** WorldNavigationSession exposes getTimeline(),
+beginHistoryPreview(), previewHistoryAt(cursor), and
+cancelHistoryPreview(). Preview is a VISUAL SWAP, never a document
+mutation: on the first scrub the live world's meshes are removed and the
+replay world is addWorld()ed under a synthetic documentId
+("replay:<documentId>") at the same layout position; later scrubs replace
+the previous replay world; cancel removes the replay world, re-adds the
+live world, and re-applies the selection highlight. The live Document,
+World, CommandHistory, and DocumentState are untouched throughout — the
+user can scrub backward through history without destroying their editing
+state, and Cancel is a true no-op against the document. Consequences of
+the mode:
+  * editing is gated — commitPlacement/move/rotate/delete/undo/redo all
+    return false during preview, and the editing context reports empty;
+  * the previewed document is pinned against streaming unload, exactly
+    like dirty documents (0.1.39);
+  * Save/Publish keep working and still act on the live document.
+Replay worlds are constructed without an eventBus on purpose: replay
+noise never flows through the shared domain event stream; rendering is
+imperative (addWorld/removeWorld), matching how streaming already works.
+
+**Timeline projection.** CommandHistory.getTimeline() maps the linear
+envelope to { index, id, type, description, timestamp, childCount,
+applied } — chronological, one entry per TOP-LEVEL command.
+CompositeCommand stays one entry (describe() already reads "Move 3
+Bricks"); childCount comes from Command.getChildCount() (0 by default,
+overridden by CompositeCommand), so CommandHistory never imports a
+concrete command class. Entries beyond the current cursor are marked
+applied: false — undone-but-remembered, shown dimmed, and still
+replayable (the linear model makes even an undone future
+reconstructible).
+
+**Deliberately not in 0.1.40.** The timeline is observation and replay,
+not history editing: no deleting or reordering operations — that would be
+non-linear history, and the clean linear invariant stands. "Restore this
+state as the current document" is postponed until document cloning makes
+it trivial. The Editor view does not host a timeline yet; the entire
+replay stack (kernel, use case, timeline projection) is view-agnostic and
+ready for it.
+
 Domain State vs Editor State
 
 Two kinds of state exist in ForkBuild, and they must never mix.
