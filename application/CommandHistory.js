@@ -167,7 +167,7 @@ export class CommandHistory {
         return value;
         }
 
-        for (const cmdJson of json.redo || []) {
+        for (let cmdJson of json.redo || []) {
             history._redoStack.push(registry.fromJSON(cmdJson));
         }
 
