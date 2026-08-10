@@ -1,19 +1,44 @@
-ForkBuild
+# ForkBuild
 
-An open-source, browser-based, decentralized building game.
+**Build. Fork. Share. Evolve.**
 
-Build.
-Fork.
-Share.
-Evolve.
+An open-source, browser-based, decentralized building platform. Creations are stored using interchangeable publishing providers and can be explored in a shared spatial world.
 
-ForkBuild is a modular building platform where creations are stored using interchangeable publishing providers, beginning with Steem Blockchain.
+## Current Status
 
-Current Status
+**Version 0.1.33** — Spatial Brick Placement & Stacking
 
-Version 0.1.33 — Spatial Brick Placement & Stacking (see docs/Roadmap.md for the full milestone list)
+The engine now supports a complete creation lifecycle: build in the editor, save locally, publish to the discovery index, explore worlds spatially, inspect and edit bricks directly in World View, and fork existing creations into new independent documents.
 
-Roadmap
+## Features
+
+- **Editor** — Place, select, move, rotate, and delete bricks with full undo/redo support. Grid snapping and placement preview.
+- **Brick Palette** — Core library with dimension-aware definitions (cube, slope, plate, window).
+- **Persistence** — Save and load documents via localStorage with a document manifest.
+- **Identity** — Local username-based identity provider; author attribution on documents and publications.
+- **Publishing & Discovery** — Publish documents to a local discovery catalog; browse Repository View and Author View.
+- **Forking** — Derive new documents from existing ones with fresh instance IDs and preserved lineage.
+- **Spatial World View** — Free camera navigation (orbit, pan, zoom) through a shared coordinate system where multiple worlds stream in and out based on camera position.
+- **Spatial Inspection** — Click any brick to inspect its type, position, rotation, and metadata.
+- **Spatial Editing** — Move, rotate, and delete bricks directly in World View; place new bricks with face-aware stacking on existing geometry.
+- **Command History** — Every mutation is an undoable command; shared between Editor and Spatial views.
+
+## Architecture
+
+ForkBuild is layered as **core / application / renderer / ui**, with infrastructure adapters (storage, publisher, discovery, serializer, world-layout) surrounding them.
+
+- **core/** — Pure domain model: World, Building, Brick, events. No Three.js, no Vue.
+- **application/** — Use cases, editor state, commands, tool framework, and spatial session management.
+- **renderer/** — Three.js incremental renderer, picking, camera, and overlay layers.
+- **ui/** — Vue 3 Composition API views and components.
+
+See [docs/Architecture.md](docs/Architecture.md) for the full architectural overview.
+
+## Quick Start
+
+Open `index.html` in a modern browser. No build step is required.
+
+## Roadmap
 
 - [x] 0.1.1 Project Skeleton
 - [x] 0.1.2 Rendering Infrastructure
@@ -53,3 +78,7 @@ Roadmap
 - [x] 0.1.33 Spatial Brick Placement & Stacking
 - [ ] 0.1.34 Selection/Transform Tool Refinement
 - [ ] 0.2 Blockchain publishing, multiplayer
+
+## License
+
+Mozilla Public License Version 2.0
