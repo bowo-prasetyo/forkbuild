@@ -1046,3 +1046,30 @@ html, body {
     flex: 1;
     text-align: center;
 }
+
+/* World View Persistence & Publication (0.1.39) */
+.world-view-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+.world-view-dirty {
+    color: #e0a34c;
+    font-size: 0.8rem;
+}
+.world-view-dirty--clean {
+    color: #707070;
+}
+.action-btn--publish {
+    background: #8e44ad;
+    color: #ffffff;
+}
+.action-btn--publish:hover {
+    background: #9b59b6;
+}
+.world-item-dirty {
+    color: #e0a34c;
+    flex-shrink: 0;
+    margin-left: 0.35rem;
+}
