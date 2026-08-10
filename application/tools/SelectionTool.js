@@ -1,5 +1,8 @@
+=== FILE: ./application/tools/SelectionTool.js ===
 import { Tool } from './Tool.js';
 import { DeleteBrickCommand } from '../commands/DeleteBrickCommand.js';
+import { CompositeCommand } from '../commands/CompositeCommand.js';
+import { SelectionState } from '../editor-state/SelectionState.js';
 
 const DELETE_KEYS = new Set(['Delete', 'Backspace']);
 
@@ -11,12 +14,22 @@ const DELETE_KEYS = new Set(['Delete', 'Backspace']);
 // it belongs to, not the UI shell.
 export class SelectionTool extends Tool {
     onPointerDown(pointerEvent) {
+        const isToggle = pointerEvent.modifiers.ctrl || pointerEvent.modifiers.meta;
+        const current = this.context.editorContext.selection;
+
         if (pointerEvent.pickedBrick) {
-            this.context.selectionUseCase.select(
-                pointerEvent.pickedBrick.brickId,
-                pointerEvent.pickedBrick.buildingId
-            );
-        } else {
+            const { brickId, buildingId } = pointerEvent.pickedBrick;
+            
+            if (isToggle) {
+                const isSelected = current.contains(brickId);
+                const newItems = isSelected
+                    ? current.items.filter(i => i.brickId !== brickId)
+                    : [...current.items, { brickId, buildingId }];
+                this.context.selectionUseCase.setSelection(new SelectionState(newItems));
+            } else {
+                this.context.selectionUseCase.select(brickId, buildingId);
+            }
+        } else if (!isToggle) {
             this.context.selectionUseCase.clear();
         }
     }
@@ -27,23 +40,25 @@ export class SelectionTool extends Tool {
             return;
         }
 
-        if (DELETE_KEYS.has(keyEvent.key)) {
+        if (keyEvent.key === 'Delete' || keyEvent.key === 'Backspace') {
             this._deleteSelected();
         }
     }
 
     _deleteSelected() {
         const selection = this.context.editorContext.selection;
-        if (selection.isEmpty) {
-            return;
+        if (selection.isEmpty) return;
+
+        const composite = new CompositeCommand();
+        for (const item of selection.items) {
+            composite.add(new DeleteBrickCommand({
+                worldId: this.context.world.id,
+                buildingId: item.buildingId,
+                brickId: item.brickId
+            }));
         }
 
-        const command = new DeleteBrickCommand({
-            worldId: this.context.world.id,
-            buildingId: selection.buildingId,
-            brickId: selection.brickId
-        });
-        this.context.commandHistory.execute(command);
+        this.context.commandHistory.execute(composite);
         this.context.selectionUseCase.clear();
     }
 }
