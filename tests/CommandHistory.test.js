@@ -1,6 +1,7 @@
 import { Command } from '../application/commands/Command.js';
 import { CommandHistory } from '../application/CommandHistory.js';
 import { CommandRegistry } from '../application/commands/CommandRegistry.js';
+import { CompositeCommand } from '../application/commands/CompositeCommand.js';
 
 // ---------------------------------------------------------------------
 // Mock command for isolated history testing
@@ -26,6 +27,10 @@ class IncrementCommand extends Command {
 
     canUndo() {
         return this._executed;
+    }
+
+    describe() {
+        return `Increment ${this._delta}`;
     }
 
     toJSON() {
@@ -59,6 +64,7 @@ function assert(condition, message) {
 function runTests() {
     const registry = new CommandRegistry();
     registry.register('increment', IncrementCommand);
+    registry.register('composite', CompositeCommand);
 
     // -----------------------------------------------------------------
     // 1. Basic execute / undo / redo
@@ -109,9 +115,145 @@ function runTests() {
 
         history.execute(new IncrementCommand({ delta: 1 })); // 1
         history.execute(new IncrementCommand({ delta: 2 })); // 3
-        history.undo(); // 1, redo has +2
+        history.undo(); // back to 1, redo stack has +2
         assert(history.canRedo(), 'should have redo after undo');
 
         history.execute(new IncrementCommand({ delta: 10 })); // 11
         assert(!history.canRedo(), 'redo should be cleared after new execute');
-        assert(context.value === 11, 'value
+        assert(context.value === 11, 'value should be 11');
+        assert(history.getExecutedCommands().length === 2, 'should have 2 executed commands');
+        console.log('✓ linear history invariant');
+    }
+
+    // -----------------------------------------------------------------
+    // 4. Complex sequence: Place → Move → Rotate → Undo → Redo → New
+    // -----------------------------------------------------------------
+    {
+        const context = { value: 0 };
+        const history = new CommandHistory(context);
+
+        history.execute(new IncrementCommand({ delta: 1 }));  // +1
+        history.execute(new IncrementCommand({ delta: 2 }));  // +2
+        history.execute(new IncrementCommand({ delta: 4 }));   // +4
+        history.execute(new IncrementCommand({ delta: 8 }));   // +8
+        // total = 15
+        assert(context.value === 15, 'value should be 15');
+
+        history.undo(); // -8 → 7
+        history.undo(); // -4 → 3
+        assert(context.value === 3, 'value should be 3 after 2 undos');
+        assert(history.canRedo(), 'should be able to redo');
+
+        history.redo(); // +4 → 7
+        assert(context.value === 7, 'value should be 7 after redo');
+
+        history.execute(new IncrementCommand({ delta: 100 })); // +100, clears redo
+        assert(context.value === 107, 'value should be 107');
+        assert(!history.canRedo(), 'should have no redo after new execute');
+        assert(history.getExecutedCommands().length === 3, 'should have 3 executed');
+        console.log('✓ complex sequence');
+    }
+
+    // -----------------------------------------------------------------
+    // 5. CompositeCommand atomicity and serialization
+    // -----------------------------------------------------------------
+    {
+        const context = { value: 0 };
+        const history = new CommandHistory(context);
+
+        const composite = new CompositeCommand();
+        composite.add(new IncrementCommand({ delta: 3 }));
+        composite.add(new IncrementCommand({ delta: 5 }));
+
+        history.execute(composite); // +8
+        assert(context.value === 8, 'composite should add 8');
+        assert(history.getExecutedCommands().length === 1, 'history should have 1 entry');
+
+        history.undo(); // -8 → 0
+        assert(context.value === 0, 'composite undo should subtract 8');
+        assert(history.canRedo(), 'should be able to redo composite');
+
+        // Serialize history with composite in redo stack
+        const json = history.toJSON();
+        assert(json.executed.length === 0, '0 executed after undo');
+        assert(json.redo.length === 1, '1 redo command');
+        assert(json.redo[0].type === 'composite', 'redo should be composite');
+        assert(json.redo[0].commands.length === 2, 'composite should have 2 children');
+
+        const history2 = CommandHistory.fromJSON(json, context, registry);
+        assert(history2.canRedo(), 'deserialized history should allow redo');
+        history2.redo();
+        assert(context.value === 8, 'composite redo should restore 8');
+        console.log('✓ CompositeCommand atomicity and serialization');
+    }
+
+    // -----------------------------------------------------------------
+    // 6. CommandRegistry error handling
+    // -----------------------------------------------------------------
+    {
+        try {
+            registry.fromJSON({ type: 'nonexistent' });
+            assert(false, 'should throw for unknown command type');
+        } catch (e) {
+            assert(e.message.includes('unknown command type'), 'correct error for unknown type');
+        }
+
+        try {
+            const badRegistry = new CommandRegistry();
+            badRegistry.register('', IncrementCommand);
+            assert(false, 'should throw for empty type');
+        } catch (e) {
+            assert(e.message.includes('type must be'), 'correct error for empty type');
+        }
+
+        try {
+            const badRegistry = new CommandRegistry();
+            badRegistry.register('foo', class NotACommand {});
+            assert(false, 'should throw for non-Command class');
+        } catch (e) {
+            assert(e.message.includes('must extend Command'), 'correct error for non-Command');
+        }
+        console.log('✓ CommandRegistry error handling');
+    }
+
+    // -----------------------------------------------------------------
+    // 7. Command metadata (id, timestamp)
+    // -----------------------------------------------------------------
+    {
+        const cmd = new IncrementCommand({ delta: 1 });
+        assert(typeof cmd.id === 'string' && cmd.id.length > 0, 'id should be a non-empty string');
+        assert(cmd.timestamp instanceof Date, 'timestamp should be a Date');
+
+        const json = cmd.toJSON();
+        assert(json.id === cmd.id, 'id preserved in JSON');
+        assert(json.timestamp === cmd.timestamp.toISOString(), 'timestamp preserved in JSON');
+
+        const restored = IncrementCommand.fromJSON(json, registry);
+        assert(restored.id === cmd.id, 'id round-trips');
+        assert(restored.timestamp.getTime() === cmd.timestamp.getTime(), 'timestamp round-trips');
+        console.log('✓ command metadata');
+    }
+
+    // -----------------------------------------------------------------
+    // 8. CommandHistory labels reflect current state
+    // -----------------------------------------------------------------
+    {
+        const context = { value: 0 };
+        const history = new CommandHistory(context);
+        assert(history.getUndoLabel() === null, 'no undo label initially');
+        assert(history.getRedoLabel() === null, 'no redo label initially');
+
+        history.execute(new IncrementCommand({ delta: 7 }));
+        assert(history.getUndoLabel() === 'Undo Increment 7', 'undo label correct');
+        assert(history.getRedoLabel() === null, 'still no redo label');
+
+        history.undo();
+        assert(history.getUndoLabel() === null, 'no undo label after undo');
+        assert(history.getRedoLabel() === 'Redo Increment 7', 'redo label correct');
+        console.log('✓ undo/redo labels');
+    }
+
+    console.log('\nAll CommandHistory persistence tests passed.');
+}
+
+runTests();
