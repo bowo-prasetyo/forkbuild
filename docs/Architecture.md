@@ -114,8 +114,10 @@ World View overlay needs without the UI reaching into the session's
 private state.
 
 Spatial selection and hover are kept strictly separate:
-- pick(screenX, screenY) → SpatialSelectionState (persistent until
-  cleared or the referenced world is unloaded).
+- pick(screenX, screenY, { toggle }) → SpatialSelectionState (persistent until
+  cleared or the referenced world is unloaded). A normal click replaces the
+  selection; Ctrl/Cmd/Shift-click toggles the hit brick in the current
+  selection.
 - hover(screenX, screenY) → SpatialHoverState (transient, updated on
   every pointer move with no buttons pressed).
 
@@ -127,11 +129,16 @@ starting a camera orbit.
 
 SpatialSelectionState (application/spatial-state/SpatialSelectionState.js)
 is pure data representing what is currently selected in the spatial
-world: type ('brick' | 'ground'), documentId, buildingId, brickId,
-position. It is deliberately NOT the same as editor SelectionState —
-spatial selection is observation, not editing. A user may select a
-brick in another world without entering an editing session. Immutable
-factories: SpatialSelectionState.empty(), .brick({...}), .ground(...).
+world. As of 0.1.36 it can represent one brick, many bricks, ground, or
+nothing. Brick selections store references only: documentId plus an
+items[] array whose entries are { type: 'brick', buildingId, brickId }.
+Convenience accessors preserve the old single-selection shape: type,
+buildingId, brickId, primary, isEmpty, isSingle, and brickIds. It is
+deliberately NOT the same as editor SelectionState — spatial selection
+is observation, not editing. A user may select a brick in another world
+without entering an editing session. Immutable factories:
+SpatialSelectionState.empty(), .brick({...}), .bricks({...}),
+.ground(...).
 
 SpatialHoverState (application/spatial-state/SpatialHoverState.js)
 mirrors SpatialSelectionState but represents transient hover
@@ -410,11 +417,16 @@ happened," which requires the exact identity back.
 CompositeCommand (application/commands/CompositeCommand.js) is a Command
 made of other Commands: add(command) before execute(), then
 CommandHistory treats the whole thing as one undo step regardless of
-how many children it has. execute() runs children in the order added;
-undo() reverses them in the OPPOSITE order, since a later child might
-depend on an earlier one having already happened. canUndo() is true only
-if there's at least one child and every child can be undone — a
-composite is only as undoable as its least-undoable part.
+how many children it has. execute() runs children in the order added.
+As of 0.1.36, execution is transactional: if a later child throws,
+CompositeCommand undoes the already-executed children in reverse order
+and then rethrows the original error, so the world is not left partially
+modified. undo() also reverses children in the OPPOSITE order, since a
+later child might depend on an earlier one having already happened.
+canUndo() is true only if there's at least one child and every child can
+be undone — a composite is only as undoable as its least-undoable part.
+CompositeCommand can also carry an optional description such as
+"Move 5 Bricks" for user-facing undo/redo labels.
 
 CommandHistory (application/CommandHistory.js) is what tools actually
 call — commandHistory.execute(command), not command.execute(context)
@@ -435,8 +447,9 @@ of this. As of 0.1.18, getUndoLabel()/getRedoLabel() expose human-readable
 labels (e.g. "Undo Place Brick") for a future Edit menu/status bar,
 built on Command.describe() (defaults to the class name; PlaceBrickCommand/
 DeleteBrickCommand override it to "Place Brick"/"Delete Brick";
-CompositeCommand delegates to its single child or falls back to "N
-actions"). Both label methods return null rather than throwing when
+CompositeCommand delegates to its single child, reports grouped brick
+labels such as "Move 5 Bricks" when children share the same action, or
+falls back to "N actions"). Both label methods return null rather than throwing when
 there's nothing to undo/redo, so a caller can disable a menu item
 without a separate canUndo()/canRedo() check.
 
@@ -483,9 +496,10 @@ callers.
 
 CompositeCommand is fully serializable via the registry. Its fromJSON()
 recursively deserializes child commands through the same registry,
-preserving atomicity across save/load boundaries. This makes
-CompositeCommand the foundation for future multi-selection operations:
-select ten bricks, rotate them as one command, undo once.
+preserving atomicity across save/load boundaries. As of 0.1.36 this
+foundation is active: selecting ten bricks and moving, rotating, or
+deleting them produces one CompositeCommand and therefore one undo/redo
+entry.
 
 The command subsystem is now a first-class architectural layer:
 
@@ -1069,11 +1083,13 @@ inspection, maintaining the Spatial Selection Invariant.
 Highlight Compositor (0.1.31)
 
 SpatialSelectionRenderer (renderer/SpatialSelectionRenderer.js) was
-rewritten as a composited state machine. It internally tracks
-_selectedBrickId and _hoveredBrickId independently, and a single private
-_applyHighlight(brickId) method decides the actual emissive color:
+rewritten as a composited state machine. As of 0.1.36 it tracks a Set of
+selected brick ids, a primary selected brick id, and the hovered brick id
+independently. A single private _applyHighlight(brickId) method decides
+the actual emissive color:
 
     selected + hovered → combined amber (#ffcc00)
+    primary selected   → bright amber (#ffdd33)
     selected only      → orange (#ffaa00)
     hovered only       → blue (#44aaff)
     neither            → black (#000000)
@@ -1127,9 +1143,13 @@ it never assumes "a brick can always be moved."
 
 SpatialEditingService (application/SpatialEditingService.js) is the
 sole authority for translating editing intent into domain mutations.
-It exposes getEditingContext(selection) -> SpatialEditingContext and
-imperative operations like moveBrick(documentId, buildingId, brickId,
-delta). The UI calls these; it never touches Brick.position directly.
+It exposes getEditingContext(selection) -> SpatialEditingContext,
+single-brick operations like moveBrick(documentId, buildingId, brickId,
+delta), and selection-level operations moveSelection(), rotateSelection(),
+and deleteSelection(). For multi-selection, the service builds one child
+MoveBrickCommand/RotateBrickCommand/DeleteBrickCommand per selected item
+and wraps them in a CompositeCommand. The UI calls these operations; it
+never touches Brick.position directly.
 
 The editing flow is:
 
@@ -1137,7 +1157,11 @@ The editing flow is:
          ↓
     WorldNavigationSession.moveSelection(delta)
          ↓
-    SpatialEditingService.moveBrick(...)
+    SpatialEditingService.moveSelection(...)
+         ↓
+    CompositeCommand
+         ↓
+    MoveBrickCommand / RotateBrickCommand / DeleteBrickCommand
          ↓
     World.updateBrick(buildingId, brickId, { position })
          ↓
@@ -1448,8 +1472,10 @@ SpatialHoverState. These are neither Domain State nor Editor State;
 they are transient navigation observations local to a spatial viewing
 session. As of 0.1.31, SpatialInspectionState joins this group. As of
 0.1.32, SpatialEditingContext completes it — describing what the viewer
-can currently do to a selected object. All spatial state is runtime-only
-and never serialized into the Protocol.
+can currently do to a selected object. As of 0.1.36, SpatialSelectionState
+and SpatialEditingContext can carry multi-selection references through
+items[] while still exposing a primary item for single-selection UI. All
+spatial state is runtime-only and never serialized into the Protocol.
 
 Spatial Selection Invariant
 
