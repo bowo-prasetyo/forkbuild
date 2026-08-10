@@ -6,23 +6,23 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.35** — Command History Persistence & Transaction Integrity
+**Version 0.1.36** — Multi-Selection & Atomic Group Operations
 
-The engine now supports durable, serializable command histories with a central `CommandRegistry`. Every mutation (place, move, rotate, delete, composite) can be reconstructed from JSON, enabling future features such as persistent undo stacks, replay, and collaborative operational transforms. The command architecture is now a first-class subsystem independent of the UI.
+ForkBuild now supports multi-brick selection and group editing. Ctrl/Cmd-click toggles bricks into and out of the current selection, while move, rotate-in-place, and delete operations are emitted as `CompositeCommand` trees so the whole group appears as one undo/redo step. `CompositeCommand` execution is now transactional: if a child command fails, already-executed children are rolled back before the error is rethrown.
 
 ## Features
 
-- **Editor** — Place, select, move, rotate, and delete bricks with full undo/redo support. Grid snapping and placement preview.
+- **Editor** — Place, select one or many bricks, move, rotate, and delete with full undo/redo support. Grid snapping and placement preview.
 - **Brick Palette** — Core library with dimension-aware definitions (cube, slope, plate, window).
 - **Persistence** — Save and load documents via localStorage with a document manifest.
 - **Identity** — Local username-based identity provider; author attribution on documents and publications.
 - **Publishing & Discovery** — Publish documents to a local discovery catalog; browse Repository View and Author View.
 - **Forking** — Derive new documents from existing ones with fresh instance IDs and preserved lineage.
 - **Spatial World View** — Free camera navigation (orbit, pan, zoom) through a shared coordinate system where multiple worlds stream in and out based on camera position.
-- **Spatial Inspection** — Click any brick to inspect its type, position, rotation, and metadata.
-- **Spatial Editing** — Move, rotate, and delete bricks directly in World View; place new bricks with face-aware stacking on existing geometry.
+- **Spatial Inspection** — Click any brick to inspect its type, position, rotation, and metadata; multi-selection exposes a primary brick plus selection count.
+- **Spatial Editing** — Move, rotate-in-place, and delete one or many selected bricks directly in World View; place new bricks with face-aware stacking on existing geometry.
 - **Command History** — Every mutation is an undoable command; shared between Editor and Spatial views. Now fully serializable via `CommandRegistry`.
-- **Composite Commands** — Multi-brick operations execute and undo as a single atomic step.
+- **Composite Commands** — Multi-brick operations execute, rollback on child failure, and undo/redo as a single atomic step.
 
 ## Architecture
 
@@ -78,7 +78,12 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.32 Spatial Editing Context & Domain Mutation
 - [x] 0.1.33 Spatial Brick Placement & Stacking
 - [x] 0.1.34 Selection/Transform Tool Refinement
-- [x] 0.1.35 Command History Persistence & Transaction Integrity
+- [x] 0.1.35 Command History Serialization & Integrity
+- [x] 0.1.36 Multi-Selection & Atomic Group Operations
+- [ ] 0.1.37 Persistent Command History
+- [ ] 0.1.38 Transform Gizmo & Group Pivot
+- [ ] 0.1.39 Command Replay / Operation Timeline
+- [ ] 0.1.40 Advanced Selection & Grouping
 - [ ] 0.2 Blockchain publishing, multiplayer
 
 ## License
