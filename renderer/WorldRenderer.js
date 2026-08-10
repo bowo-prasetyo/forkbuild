@@ -29,7 +29,8 @@ export class WorldRenderer {
         this._buildingRenderer = buildingRenderer;
         this._meshRegistry = meshRegistry;
         this._subscriptions = [];
-        this._documentOffsets = new Map(); // documentId -> {x, y, z}
+        this._documentOffsets = new Map();
+        this._buildingToDocument = new Map();
     }
 
     get meshRegistry() {
@@ -64,6 +65,7 @@ export class WorldRenderer {
         this._documentOffsets.set(documentId, offset);
 
         for (const building of world.getBuildings()) {
+            this._buildingToDocument.set(building.id, documentId);
             for (const brick of building.getBricks()) {
                 const { brickId, mesh } = this._buildingRenderer.renderBrick(brick);
                 mesh.position.x += offset.x;
@@ -80,6 +82,7 @@ export class WorldRenderer {
     removeWorld(world, documentId) {
         this._documentOffsets.delete(documentId);
         for (const building of world.getBuildings()) {
+            this._buildingToDocument.delete(building.id);
             for (const brick of building.getBricks()) {
                 this._removeBrickMesh(brick.id);
             }
@@ -87,8 +90,13 @@ export class WorldRenderer {
     }
 
     _onBuildingAdded(building) {
+        const documentId = this._buildingToDocument.get(building.id);
+        const offset = this._documentOffsets.get(documentId) || { x: 0, y: 0, z: 0 };
         for (const { brickId, mesh } of this._buildingRenderer.renderBricks(building)) {
-            this._addBrickMesh(brickId, null, building.id, mesh);
+            mesh.position.x += offset.x;
+            mesh.position.y += offset.y;
+            mesh.position.z += offset.z;
+            this._addBrickMesh(brickId, documentId, building.id, mesh);
         }
     }
 
@@ -99,8 +107,13 @@ export class WorldRenderer {
     }
 
     _onBrickAdded(buildingId, brick) {
+        const documentId = this._buildingToDocument.get(buildingId);
+        const offset = this._documentOffsets.get(documentId) || { x: 0, y: 0, z: 0 };
         const { brickId, mesh } = this._buildingRenderer.renderBrick(brick);
-        this._addBrickMesh(brickId, null, buildingId, mesh);
+        mesh.position.x += offset.x;
+        mesh.position.y += offset.y;
+        mesh.position.z += offset.z;
+        this._addBrickMesh(brickId, documentId, buildingId, mesh);
     }
 
     _onBrickRemoved(brick) {
