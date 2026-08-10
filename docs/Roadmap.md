@@ -34,5 +34,6 @@
 0.1.31 World Inspection & Spatial Metadata  (done)
 0.1.32 Spatial Editing Context & Domain Mutation  (done)
 0.1.33 Spatial Brick Placement & Stacking  (done)
-0.1.34 Selection/Transform Tool Refinement  (planned)
+0.1.34 Selection/Transform Tool Refinement  (done)
+0.1.35 Command History Persistence & Transaction Integrity  (done)
 0.2    Blockchain publishing, multiplayer
