@@ -102,7 +102,7 @@ function runTests() {
         assert(history2.canUndo(), 'deserialized history should be undoable');
 
         history2.undo();
-        assert(context.value === 0, 'undo after deserialization should work');
+        assert(context.value === 5, 'undo after deserialization should return to serialized document state');
         console.log('✓ serialization round-trip');
     }
 
@@ -150,7 +150,7 @@ function runTests() {
         history.execute(new IncrementCommand({ delta: 100 })); // +100, clears redo
         assert(context.value === 107, 'value should be 107');
         assert(!history.canRedo(), 'should have no redo after new execute');
-        assert(history.getExecutedCommands().length === 3, 'should have 3 executed');
+        assert(history.getExecutedCommands().length === 4, 'should have 4 executed');
         console.log('✓ complex sequence');
     }
 
@@ -251,6 +251,40 @@ function runTests() {
         assert(history.getUndoLabel() === null, 'no undo label after undo');
         assert(history.getRedoLabel() === 'Redo Increment 7', 'redo label correct');
         console.log('✓ undo/redo labels');
+    }
+
+
+
+    // -----------------------------------------------------------------
+    // 9. CompositeCommand rolls back executed children when a later child fails
+    // -----------------------------------------------------------------
+    {
+        class FailingCommand extends Command {
+            get type() { return 'failing'; }
+            execute(context) { throw new Error('intentional failure'); }
+            undo(context) { context.value = -999; }
+            canUndo() { return false; }
+            describe() { return 'Failing Command'; }
+            toJSON() { return { type: this.type }; }
+        }
+
+        const context = { value: 0 };
+        const history = new CommandHistory(context);
+        const composite = new CompositeCommand();
+        composite.add(new IncrementCommand({ delta: 3 }));
+        composite.add(new IncrementCommand({ delta: 5 }));
+        composite.add(new FailingCommand());
+
+        try {
+            history.execute(composite);
+            assert(false, 'composite execute should throw');
+        } catch (e) {
+            assert(e.message.includes('intentional failure'), 'should rethrow child failure');
+        }
+
+        assert(context.value === 0, 'rollback should undo successfully executed children');
+        assert(history.getExecutedCommands().length === 0, 'failed composite should not enter history');
+        console.log('✓ CompositeCommand rollback on child failure');
     }
 
     console.log('\nAll CommandHistory persistence tests passed.');
