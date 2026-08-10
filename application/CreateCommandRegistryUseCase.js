@@ -4,6 +4,7 @@ import { DeleteBrickCommand } from './commands/DeleteBrickCommand.js';
 import { MoveBrickCommand } from './commands/MoveBrickCommand.js';
 import { RotateBrickCommand } from './commands/RotateBrickCommand.js';
 import { CompositeCommand } from './commands/CompositeCommand.js';
+import { TransformSelectionCommand } from './commands/TransformSelectionCommand.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
@@ -17,6 +18,7 @@ export class CreateCommandRegistryUseCase {
         registry.register('move-brick', MoveBrickCommand);
         registry.register('rotate-brick', RotateBrickCommand);
         registry.register('composite', CompositeCommand);
+        registry.register('transform-selection', TransformSelectionCommand);
         return registry;
     }
 }
