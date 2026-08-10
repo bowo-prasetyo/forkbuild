@@ -18,6 +18,9 @@ import { EventBus } from '../core/events/EventBus.js';
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
 const RETRY_DELAYS = [2000, 5000, 10000];
+// Synthetic renderer documentId for history-preview worlds, so a replay
+// world can never collide with a real publication's id.
+const REPLAY_DOCUMENT_PREFIX = 'replay:';
 
 export class WorldNavigationSession {
     constructor({
@@ -25,13 +28,15 @@ export class WorldNavigationSession {
         loadPublicationDocumentUseCase,
         worldLayoutProvider,
         saveDocumentUseCase = null,
-        publishDocumentUseCase = null
+        publishDocumentUseCase = null,
+        replayDocumentUseCase = null
     }) {
         this._registry = registry;
         this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
         this._worldLayoutProvider = worldLayoutProvider;
         this._saveDocumentUseCase = saveDocumentUseCase;
         this._publishDocumentUseCase = publishDocumentUseCase;
+        this._replayDocumentUseCase = replayDocumentUseCase;
         this._session = null;
         this._spatialCameraController = null;
         this._inspectionService = null;
@@ -49,6 +54,15 @@ export class WorldNavigationSession {
         this._activeDefinitionId = null;
         this._focusedDocumentId = null;
         this._eventBus = null;
+        // 0.1.40 — history preview is a VISUAL mode. The live document is
+        // never mutated while it is active.
+        this._historyPreview = {
+            active: false,
+            documentId: null,
+            cursor: null,
+            previewWorld: null,
+            previewRendered: false
+        };
     }
 
     start(container) {
@@ -90,6 +104,10 @@ export class WorldNavigationSession {
     }
 
     commitPlacement() {
+        // Editing is suspended while a history preview is showing.
+        if (this._historyPreview.active) {
+            return false;
+        }
         if (!this._spatialPlacement || !this._spatialPlacement.valid) {
             return false;
         }
@@ -129,8 +147,6 @@ export class WorldNavigationSession {
     // Navigation
     // -----------------------------------------------------------------
 
-    // Client-side spatial navigation: move camera to the world's layout
-    // coordinate and stream it in. No page reload.
     focusDocument(documentId) {
         this._focusedDocumentId = documentId;
         const layoutPos = this._worldLayoutProvider.getPosition(documentId);
@@ -172,6 +188,10 @@ export class WorldNavigationSession {
     // edits is never stream-unloaded, even when it leaves the streaming
     // radius — silently discarding edits on camera movement would be
     // data loss. Saving unpins it.
+    //
+    // As of 0.1.40, the document under HISTORY PREVIEW is pinned too:
+    // unloading it mid-preview would strand the replay world and break
+    // cancelHistoryPreview().
     updateSpatialView() {
         if (!this._session) {
             return { loaded: [], visible: [], failed: this._getFailedIds() };
@@ -188,7 +208,9 @@ export class WorldNavigationSession {
         );
         const currentlyLoaded = new Set(this._loadedDocuments.keys());
         const toUnload = Array.from(currentlyLoaded).filter(
-            (id) => !visibleIds.includes(id) && !this.isDocumentDirty(id)
+            (id) => !visibleIds.includes(id)
+                && !this.isDocumentDirty(id)
+                && !(this._historyPreview.active && this._historyPreview.documentId === id)
         );
         const now = Date.now();
         const toLoad = visibleIds.filter((id) => {
@@ -247,9 +269,6 @@ export class WorldNavigationSession {
             .map(([id]) => id);
     }
 
-    // The document Save/Publish act on: the selection's document when
-    // something is selected, otherwise the focused document, otherwise
-    // the sole loaded document (unambiguous). Null when nothing applies.
     getActiveDocumentId() {
         const selectedId = this._spatialSelection ? this._spatialSelection.documentId : null;
         if (selectedId && this._loadedDocuments.has(selectedId)) {
@@ -264,9 +283,6 @@ export class WorldNavigationSession {
         return null;
     }
 
-    // Persists the canonical Document through SaveDocumentUseCase —
-    // selection, hover, gizmo, editing-context, and command-history state
-    // are Spatial/Editor State and are never part of what gets saved.
     saveDocument(documentId = null) {
         if (!this._saveDocumentUseCase) {
             throw new Error('WorldNavigationSession: no persistence configured');
@@ -280,10 +296,6 @@ export class WorldNavigationSession {
         return id;
     }
 
-    // Publishes the canonical current Document through
-    // PublishDocumentUseCase. Rule: never publish a stale saved version —
-    // if the live document has unsaved edits, save first, so the
-    // Publication references exactly what the user is looking at.
     publishDocument(documentId = null) {
         if (!this._publishDocumentUseCase) {
             throw new Error('WorldNavigationSession: no publisher configured');
@@ -297,6 +309,121 @@ export class WorldNavigationSession {
             this.saveDocument(id);
         }
         return this._publishDocumentUseCase.execute(entry.manager);
+    }
+
+    // -----------------------------------------------------------------
+    // History Preview & Operation Timeline (0.1.40)
+    // -----------------------------------------------------------------
+
+    // Projects the active (or given) document's command history as a
+    // chronological operation timeline. Composites are single entries
+    // with childCount > 0. Empty when there is no history.
+    getTimeline(documentId = null) {
+        const history = this._getHistoryForDocument(documentId || this.getActiveDocumentId());
+        return history ? history.getTimeline() : [];
+    }
+
+    // Null when no preview is active; { active, documentId, cursor }
+    // otherwise. cursor is how many operations the preview world has
+    // applied (0 = initial state).
+    getHistoryPreview() {
+        if (!this._historyPreview.active) {
+            return null;
+        }
+        return {
+            active: true,
+            documentId: this._historyPreview.documentId,
+            cursor: this._historyPreview.cursor
+        };
+    }
+
+    // Enters preview mode for a document. Does not swap visuals yet —
+    // previewHistoryAt() does. Entering for a second document cancels
+    // the first preview (restoring it) automatically.
+    beginHistoryPreview(documentId = null) {
+        const id = documentId || this.getActiveDocumentId();
+        const history = this._getHistoryForDocument(id);
+        if (!id || !this._loadedDocuments.has(id) || !history) {
+            throw new Error(`WorldNavigationSession: no loaded document to preview (${id || 'no active document'})`);
+        }
+        if (this._historyPreview.active) {
+            if (this._historyPreview.documentId === id) {
+                return id;
+            }
+            this.cancelHistoryPreview();
+        }
+        this._historyPreview = {
+            active: true,
+            documentId: id,
+            cursor: null,
+            previewWorld: null,
+            previewRendered: false
+        };
+        return id;
+    }
+
+    // Reconstructs the world as it existed after the first `cursor`
+    // operations and shows it INSTEAD of the live world. The live
+    // Document/World/history are never mutated — this is a visual swap:
+    //   first scrub : remove live world, add replay world
+    //   later scrubs: replace the previous replay world
+    // The replay world renders under "replay:<documentId>" at the same
+    // layout position, built silently (no eventBus) so replay noise never
+    // enters the shared domain event stream.
+    previewHistoryAt(cursor) {
+        if (!this._historyPreview.active) {
+            throw new Error('WorldNavigationSession: no active history preview');
+        }
+        if (!this._replayDocumentUseCase) {
+            throw new Error('WorldNavigationSession: no replay configured');
+        }
+        if (!this._session) {
+            throw new Error('WorldNavigationSession: renderer not started');
+        }
+        const id = this._historyPreview.documentId;
+        const document = this._loadedDocuments.get(id);
+        const history = this._commandHistories.get(document.world.id);
+        const replayWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
+        const layoutPos = this._worldLayoutProvider.getPosition(id);
+        if (this._historyPreview.previewRendered) {
+            this._session.removeWorld(this._historyPreview.previewWorld, REPLAY_DOCUMENT_PREFIX + id);
+        } else {
+            this._session.removeWorld(document.world, id);
+        }
+        this._session.addWorld(replayWorld, REPLAY_DOCUMENT_PREFIX + id, layoutPos);
+        this._historyPreview.previewWorld = replayWorld;
+        this._historyPreview.previewRendered = true;
+        this._historyPreview.cursor = cursor;
+        return true;
+    }
+
+    // Leaves preview mode: removes the replay world, restores the live
+    // world's meshes, and re-applies the selection highlight (fresh
+    // meshes start un-highlighted). The live document was never touched,
+    // so there is nothing else to roll back.
+    cancelHistoryPreview() {
+        if (!this._historyPreview.active) {
+            return false;
+        }
+        const id = this._historyPreview.documentId;
+        const document = this._loadedDocuments.get(id);
+        if (this._historyPreview.previewRendered && this._historyPreview.previewWorld && this._session) {
+            this._session.removeWorld(this._historyPreview.previewWorld, REPLAY_DOCUMENT_PREFIX + id);
+        }
+        if (document && this._session) {
+            this._session.addWorld(document.world, id, this._worldLayoutProvider.getPosition(id));
+            if (this._spatialSelection && !this._spatialSelection.isEmpty) {
+                this._session.selectBricks(this._spatialSelection.brickIds, this._spatialSelection.brickId);
+            }
+        }
+        this._historyPreview = {
+            active: false,
+            documentId: null,
+            cursor: null,
+            previewWorld: null,
+            previewRendered: false
+        };
+        return true;
     }
 
     // -----------------------------------------------------------------
@@ -373,6 +500,10 @@ export class WorldNavigationSession {
     }
 
     moveSelection(delta) {
+        // Editing is suspended while a history preview is showing.
+        if (this._historyPreview.active) {
+            return false;
+        }
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -388,6 +519,9 @@ export class WorldNavigationSession {
     }
 
     deleteSelection() {
+        if (this._historyPreview.active) {
+            return false;
+        }
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -403,6 +537,9 @@ export class WorldNavigationSession {
     }
 
     rotateSelection(deltaRotation) {
+        if (this._historyPreview.active) {
+            return false;
+        }
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -418,6 +555,12 @@ export class WorldNavigationSession {
     }
 
     undo() {
+        // Undo/redo would move the cursor the preview is based on — and
+        // mutate the live world the user expects to come back to. Both
+        // are suspended during preview.
+        if (this._historyPreview.active) {
+            return false;
+        }
         const history = this._getActiveCommandHistory();
         if (history && history.canUndo()) {
             history.undo();
@@ -429,6 +572,9 @@ export class WorldNavigationSession {
     }
 
     redo() {
+        if (this._historyPreview.active) {
+            return false;
+        }
         const history = this._getActiveCommandHistory();
         if (history && history.canRedo()) {
             history.redo();
@@ -521,6 +667,17 @@ export class WorldNavigationSession {
         return null;
     }
 
+    _getHistoryForDocument(documentId) {
+        if (!documentId) {
+            return null;
+        }
+        const document = this._loadedDocuments.get(documentId);
+        if (!document) {
+            return null;
+        }
+        return this._commandHistories.get(document.world.id) || null;
+    }
+
     _ensureCommandHistory(world) {
         let history = this._commandHistories.get(world.id);
         if (!history) {
@@ -536,14 +693,11 @@ export class WorldNavigationSession {
         const layoutPos = this._worldLayoutProvider.getPosition(documentId);
         this._session.addWorld(document.world, documentId, layoutPos);
         // Ensure a CommandHistory exists for every loaded world so that
-        // move/rotate/delete work even before the first placement.
+        // move/rotate/delete work even before the first placement. The
+        // history's constructor captures the BASELINE snapshot here —
+        // the document exactly as loaded, before any edit (0.1.40).
         const history = this._ensureCommandHistory(document.world);
-        // Per-document lifecycle + dirty tracking (0.1.39). One
-        // DocumentManager per loaded document — World View keeps several
-        // documents alive at once, and each one's dirty state must
-        // survive the camera focusing elsewhere. load() starts clean;
-        // trackCommandHistory() keeps dirty in sync with the history's
-        // save point from here on.
+        // Per-document lifecycle + dirty tracking (0.1.39).
         if (!this._documentManagers.has(documentId)) {
             const manager = new DocumentManager();
             manager.load(document, documentId);
@@ -553,6 +707,11 @@ export class WorldNavigationSession {
     }
 
     _unloadWorld(documentId) {
+        // Defensive: a preview whose document is being unloaded must end
+        // first, so cancel can still reach the renderer and the world.
+        if (this._historyPreview.active && this._historyPreview.documentId === documentId) {
+            this.cancelHistoryPreview();
+        }
         if (this._focusedDocumentId === documentId) {
             this._focusedDocumentId = null;
         }
@@ -597,7 +756,8 @@ export class WorldNavigationSession {
     }
 
     _refreshEditingContext() {
-        if (!this._editingService) {
+        // Nothing is editable while a historical preview is showing.
+        if (!this._editingService || this._historyPreview.active) {
             this._spatialEditingContext = SpatialEditingContext.empty();
             return;
         }
@@ -605,6 +765,10 @@ export class WorldNavigationSession {
     }
 
     _updatePlacementPreview(hitResult) {
+        if (this._historyPreview.active) {
+            this._clearPlacementPreview();
+            return;
+        }
         if (!this._activeDefinitionId || !this._session) {
             return;
         }
@@ -660,6 +824,9 @@ export class WorldNavigationSession {
     }
 
     dispose() {
+        if (this._historyPreview.active) {
+            this.cancelHistoryPreview();
+        }
         if (this._session) {
             this._session.dispose();
             this._session = null;
