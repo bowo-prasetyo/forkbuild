@@ -22,7 +22,7 @@ export class CommandRegistry {
     }
 
     fromJSON(json) {
-        if (!json || typeof json !== 'object' || !json.type) {
+        if (!json || typeof json !== 'object' || Array.isArray(json) || !json.type) {
             throw new Error('CommandRegistry.fromJSON(): JSON must have a type field');
         }
 
@@ -31,6 +31,10 @@ export class CommandRegistry {
             throw new Error(`CommandRegistry.fromJSON(): unknown command type "${json.type}"`);
         }
 
-        return CommandClass.fromJSON(json, this);
+        const command = CommandClass.fromJSON(json, this);
+        if (!(command instanceof Command)) {
+            throw new Error(`CommandRegistry.fromJSON(): command type "${json.type}" did not deserialize to a Command`);
+        }
+        return command;
     }
 }
