@@ -18,29 +18,21 @@ import { Command } from './Command.js';
 // happened," which requires the exact same identity back, not a
 // similar-looking replacement.
 export class DeleteBrickCommand extends Command {
-    constructor({ worldId, buildingId, brickId }) {
-        super();
+    constructor({ worldId, buildingId, brickId, id, timestamp } = {}) {
+        super({ id, timestamp });
         this._worldId = worldId;
         this._buildingId = buildingId;
         this._brickId = brickId;
         this._removedBrickSnapshot = null;
     }
 
-    get worldId() {
-        return this._worldId;
-    }
-
-    get buildingId() {
-        return this._buildingId;
-    }
-
-    get brickId() {
-        return this._brickId;
-    }
+    get worldId() { return this._worldId; }
+    get buildingId() { return this._buildingId; }
+    get brickId() { return this._brickId; }
+    get type() { return 'delete-brick'; }
 
     execute(context) {
         this._assertWorldMatches(context);
-
         const building = context.world.getBuilding(this._buildingId);
         const brick = building ? building.findBrick(this._brickId) : null;
         if (!brick) {
@@ -84,18 +76,26 @@ export class DeleteBrickCommand extends Command {
 
     toJSON() {
         return {
+            type: this.type,
+            id: this._id,
+            timestamp: this._timestamp.toISOString(),
             worldId: this._worldId,
             buildingId: this._buildingId,
-            brickId: this._brickId
+            brickId: this._brickId,
+            removedBrickSnapshot: this._removedBrickSnapshot
         };
     }
 
-    static fromJSON(json) {
-        return new DeleteBrickCommand({
+    static fromJSON(json, registry) {
+        const cmd = new DeleteBrickCommand({
             worldId: json.worldId,
             buildingId: json.buildingId,
-            brickId: json.brickId
+            brickId: json.brickId,
+            id: json.id,
+            timestamp: new Date(json.timestamp)
         });
+        cmd._removedBrickSnapshot = json.removedBrickSnapshot || null;
+        return cmd;
     }
 
     _assertWorldMatches(context) {
