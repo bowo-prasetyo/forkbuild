@@ -37,7 +37,7 @@
 0.1.34 Selection/Transform Tool Refinement  (done)
 0.1.35 Command History Serialization & Integrity  (done)
 0.1.36 Multi-Selection & Atomic Group Operations  (done)
-0.1.37 Persistent Command History
+0.1.37 Persistent Command History  (done)
 0.1.38 Transform Gizmo & Group Pivot
 0.1.39 Command Replay / Operation Timeline
 0.1.40 Advanced Selection & Grouping
