@@ -455,6 +455,57 @@ CommandHistory doesn't call documentManager.markDirty() itself; that
 coupling lives entirely in DocumentManager.trackCommandHistory(), so
 CommandHistory has no idea DocumentManager exists.
 
+Command Serialization & Registry (0.1.35)
+
+Every Command now carries a stable identity (id, timestamp) and a type
+string (e.g. "place-brick", "move-brick"). All concrete commands implement
+toJSON() and fromJSON(json, registry), making them serializable without
+losing undo capability.
+
+CommandRegistry (application/commands/CommandRegistry.js) is the central
+factory: register(type, CommandClass) maps a type string to a class,
+and fromJSON(json) reconstructs any registered command from its JSON
+representation. This eliminates the need for CommandHistory or
+persistence code to know about concrete command classes.
+
+CommandHistory gained toJSON() and CommandHistory.fromJSON(json, context,
+registry) in 0.1.35. The serialized shape is:
+
+    {
+        executed: [ { type: "move-brick", ... }, ... ],
+        redo: [ { type: "rotate-brick", ... }, ... ]
+    }
+
+Linear history invariant: executing a new command after undo() clears
+the redo branch entirely. A fresh action invalidates whatever "future"
+an undo had left available. This is enforced inside execute(), not by
+callers.
+
+CompositeCommand is fully serializable via the registry. Its fromJSON()
+recursively deserializes child commands through the same registry,
+preserving atomicity across save/load boundaries. This makes
+CompositeCommand the foundation for future multi-selection operations:
+select ten bricks, rotate them as one command, undo once.
+
+The command subsystem is now a first-class architectural layer:
+
+    UI / Session
+         ↓
+    SpatialEditingService / Tool
+         ↓
+    CommandHistory
+         ↓
+    CommandRegistry
+         ↓
+    ┌────┴────┬────────┐
+    ↓         ↓        ↓
+  Place     Move    Rotate
+  Delete  Composite  ...
+
+CommandHistory knows nothing about World View, selection, Vue, or the
+renderer. It only knows: execute, undo, redo, serialize. The session
+remains the coordinator.
+
 DocumentManager (application/DocumentManager.js) owns document lifecycle
 — mirrors what CommandHistory does for command execution: one place
 decides what "the current document" is and how its DocumentState
