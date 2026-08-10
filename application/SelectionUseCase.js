@@ -14,6 +14,12 @@ export class SelectionUseCase {
         this._editorContext.setSelection(new SelectionState({ brickId, buildingId }));
     }
 
+    toggle(brickId, buildingId) {
+        this._editorContext.setSelection(
+            this._editorContext.selection.toggle(brickId, buildingId)
+        );
+    }
+
     clear() {
         this._editorContext.clearSelection();
     }
