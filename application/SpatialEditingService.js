@@ -1,8 +1,8 @@
 import { SpatialEditingContext } from './spatial-state/SpatialEditingContext.js';
-import { Position } from '../core/Position.js';
 import { MoveBrickCommand } from './commands/MoveBrickCommand.js';
 import { RotateBrickCommand } from './commands/RotateBrickCommand.js';
 import { DeleteBrickCommand } from './commands/DeleteBrickCommand.js';
+import { CompositeCommand } from './commands/CompositeCommand.js';
 
 // Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
@@ -13,21 +13,16 @@ export class SpatialEditingService {
     }
 
     getEditingContext(selection) {
-        if (!selection || selection.isEmpty) {
-            return SpatialEditingContext.empty();
-        }
+        if (!selection || selection.isEmpty) return SpatialEditingContext.empty();
 
         const document = this._session.getDocument(selection.documentId);
-        if (!document) {
-            return SpatialEditingContext.empty();
-        }
+        if (!document) return SpatialEditingContext.empty();
 
         if (selection.type === 'brick') {
             return new SpatialEditingContext({
-                type: 'brick',
+                type: selection.isSingle ? 'brick' : 'bricks',
                 documentId: selection.documentId,
-                buildingId: selection.buildingId,
-                brickId: selection.brickId,
+                items: selection.items,
                 capabilities: { move: true, rotate: true, delete: true }
             });
         }
@@ -43,80 +38,61 @@ export class SpatialEditingService {
         return SpatialEditingContext.empty();
     }
 
-    moveBrick(documentId, buildingId, brickId, delta) {
-        const document = this._session.getDocument(documentId);
-        if (!document) {
-            return false;
+    moveBricks(documentId, items, delta) {
+        const history = this._getHistory(documentId);
+        if (!history || items.length === 0) return false;
+
+        const composite = new CompositeCommand();
+        for (const item of items) {
+            composite.add(new MoveBrickCommand({
+                worldId: history._context.world.id,
+                buildingId: item.buildingId,
+                brickId: item.brickId,
+                delta
+            }));
         }
 
-        const world = document.world;
-        const history = this._commandHistories.get(world.id);
-        if (!history) {
-            return false;
-        }
-
-        const building = world.getBuilding(buildingId);
-        const brick = building ? building.findBrick(brickId) : null;
-        if (!brick) {
-            return false;
-        }
-
-        const command = new MoveBrickCommand({
-            worldId: world.id,
-            buildingId,
-            brickId,
-            delta
-        });
-        history.execute(command);
+        history.execute(composite);
         return true;
     }
 
-    rotateBrick(documentId, buildingId, brickId, deltaRotation) {
-        const document = this._session.getDocument(documentId);
-        if (!document) {
-            return false;
+    rotateBricks(documentId, items, deltaRotation) {
+        const history = this._getHistory(documentId);
+        if (!history || items.length === 0) return false;
+
+        const composite = new CompositeCommand();
+        for (const item of items) {
+            composite.add(new RotateBrickCommand({
+                worldId: history._context.world.id,
+                buildingId: item.buildingId,
+                brickId: item.brickId,
+                deltaRotation
+            }));
         }
 
-        const world = document.world;
-        const history = this._commandHistories.get(world.id);
-        if (!history) {
-            return false;
-        }
-
-        const building = world.getBuilding(buildingId);
-        const brick = building ? building.findBrick(brickId) : null;
-        if (!brick) {
-            return false;
-        }
-
-        const command = new RotateBrickCommand({
-            worldId: world.id,
-            buildingId,
-            brickId,
-            deltaRotation
-        });
-        history.execute(command);
+        history.execute(composite);
         return true;
     }
 
-    deleteBrick(documentId, buildingId, brickId) {
-        const document = this._session.getDocument(documentId);
-        if (!document) {
-            return false;
+    deleteBricks(documentId, items) {
+        const history = this._getHistory(documentId);
+        if (!history || items.length === 0) return false;
+
+        const composite = new CompositeCommand();
+        for (const item of items) {
+            composite.add(new DeleteBrickCommand({
+                worldId: history._context.world.id,
+                buildingId: item.buildingId,
+                brickId: item.brickId
+            }));
         }
 
-        const world = document.world;
-        const history = this._commandHistories.get(world.id);
-        if (!history) {
-            return false;
-        }
-
-        const command = new DeleteBrickCommand({
-            worldId: world.id,
-            buildingId,
-            brickId
-        });
-        history.execute(command);
+        history.execute(composite);
         return true;
+    }
+
+    _getHistory(documentId) {
+        const doc = this._session.getDocument(documentId);
+        return doc ? this._commandHistories.get(doc.world.id) : null;
     }
 }
