@@ -4,8 +4,8 @@ import { Position } from '../../core/Position.js';
 // Undoable spatial translation. Remembers the original position so
 // undo() can restore it exactly. delta is a plain {x,y,z} offset.
 export class MoveBrickCommand extends Command {
-    constructor({ worldId, buildingId, brickId, delta }) {
-        super();
+    constructor({ worldId, buildingId, brickId, delta, id, timestamp } = {}) {
+        super({ id, timestamp });
         this._worldId = worldId;
         this._buildingId = buildingId;
         this._brickId = brickId;
@@ -16,6 +16,7 @@ export class MoveBrickCommand extends Command {
     get worldId() { return this._worldId; }
     get buildingId() { return this._buildingId; }
     get brickId() { return this._brickId; }
+    get type() { return 'move-brick'; }
 
     execute(context) {
         this._assertWorldMatches(context);
@@ -54,20 +55,30 @@ export class MoveBrickCommand extends Command {
 
     toJSON() {
         return {
+            type: this.type,
+            id: this._id,
+            timestamp: this._timestamp.toISOString(),
             worldId: this._worldId,
             buildingId: this._buildingId,
             brickId: this._brickId,
-            delta: this._delta
+            delta: this._delta,
+            originalPosition: this._originalPosition ? this._originalPosition.toJSON() : null
         };
     }
 
-    static fromJSON(json) {
-        return new MoveBrickCommand({
+    static fromJSON(json, registry) {
+        const cmd = new MoveBrickCommand({
             worldId: json.worldId,
             buildingId: json.buildingId,
             brickId: json.brickId,
-            delta: json.delta
+            delta: json.delta,
+            id: json.id,
+            timestamp: new Date(json.timestamp)
         });
+        if (json.originalPosition) {
+            cmd._originalPosition = Position.fromJSON(json.originalPosition);
+        }
+        return cmd;
     }
 
     _assertWorldMatches(context) {
