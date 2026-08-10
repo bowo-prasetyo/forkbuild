@@ -6,9 +6,9 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.33** — Spatial Brick Placement & Stacking
+**Version 0.1.35** — Command History Persistence & Transaction Integrity
 
-The engine now supports a complete creation lifecycle: build in the editor, save locally, publish to the discovery index, explore worlds spatially, inspect and edit bricks directly in World View, and fork existing creations into new independent documents.
+The engine now supports durable, serializable command histories with a central `CommandRegistry`. Every mutation (place, move, rotate, delete, composite) can be reconstructed from JSON, enabling future features such as persistent undo stacks, replay, and collaborative operational transforms. The command architecture is now a first-class subsystem independent of the UI.
 
 ## Features
 
@@ -21,14 +21,15 @@ The engine now supports a complete creation lifecycle: build in the editor, save
 - **Spatial World View** — Free camera navigation (orbit, pan, zoom) through a shared coordinate system where multiple worlds stream in and out based on camera position.
 - **Spatial Inspection** — Click any brick to inspect its type, position, rotation, and metadata.
 - **Spatial Editing** — Move, rotate, and delete bricks directly in World View; place new bricks with face-aware stacking on existing geometry.
-- **Command History** — Every mutation is an undoable command; shared between Editor and Spatial views.
+- **Command History** — Every mutation is an undoable command; shared between Editor and Spatial views. Now fully serializable via `CommandRegistry`.
+- **Composite Commands** — Multi-brick operations execute and undo as a single atomic step.
 
 ## Architecture
 
 ForkBuild is layered as **core / application / renderer / ui**, with infrastructure adapters (storage, publisher, discovery, serializer, world-layout) surrounding them.
 
 - **core/** — Pure domain model: World, Building, Brick, events. No Three.js, no Vue.
-- **application/** — Use cases, editor state, commands, tool framework, and spatial session management.
+- **application/** — Use cases, editor state, commands, tool framework, spatial session management, and the command subsystem (CommandHistory, CommandRegistry).
 - **renderer/** — Three.js incremental renderer, picking, camera, and overlay layers.
 - **ui/** — Vue 3 Composition API views and components.
 
@@ -76,7 +77,8 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.31 World Inspection & Spatial Metadata
 - [x] 0.1.32 Spatial Editing Context & Domain Mutation
 - [x] 0.1.33 Spatial Brick Placement & Stacking
-- [ ] 0.1.34 Selection/Transform Tool Refinement
+- [x] 0.1.34 Selection/Transform Tool Refinement
+- [x] 0.1.35 Command History Persistence & Transaction Integrity
 - [ ] 0.2 Blockchain publishing, multiplayer
 
 ## License
