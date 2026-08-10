@@ -119,7 +119,7 @@ export class WorldRenderer {
             brick.position.y + offset.y,
             brick.position.z + offset.z
         );
-        mesh.rotation.y = brick.rotation;
+        mesh.rotation.y = brick.rotation * (Math.PI / 180);
     }
 
     _addBrickMesh(brickId, documentId, buildingId, mesh) {
