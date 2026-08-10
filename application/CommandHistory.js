@@ -4,22 +4,14 @@ import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
 // Tools call commandHistory.execute(command) instead of
 // command.execute(context) directly — the history decides what happens
 // next, and tools never need to know whether undo/redo exists.
-// context (today: { world }) is bound once at construction, not passed
-// per call.
 //
-// Traditional undo/redo stacks: execute() pushes onto the undo stack and
-// clears the redo stack (a fresh action invalidates whatever "future" an
-// undo had left available — you can't redo into a timeline that no
-// longer exists once you've done something new). undo() pops from the
-// undo stack, calls command.undo(), and pushes onto the redo stack.
-// redo() is literally execute() again — Command has no redo() method;
-// CommandHistory manages direction, not the command.
+// As of 0.1.35, CommandHistory is fully serializable:
+//   toJSON()      → { executed: [...], redo: [...] }
+//   fromJSON()    → reconstructs stacks via CommandRegistry
 //
-// Publishes CommandExecuted/CommandUndone/CommandRedone through its own
-// EventBus on every successful operation, so interested subscribers
-// (DocumentManager, today) can react without CommandHistory needing to
-// know they exist — it doesn't call documentManager.markDirty() itself;
-// that coupling lives in DocumentManager.trackCommandHistory() instead.
+// Linear history invariant: execute() after undo() clears the redo
+// branch entirely. A fresh action invalidates whatever "future" an undo
+// had left available.
 export class CommandHistory {
     constructor(context, eventBus = new EventBus()) {
         this._context = context;
@@ -79,6 +71,10 @@ export class CommandHistory {
         return [...this._undoStack];
     }
 
+    getRedoCommands() {
+        return [...this._redoStack];
+    }
+
     // Human-readable labels for a future Edit menu / status bar, e.g.
     // "Undo Place Brick". null when there's nothing to undo/redo, so
     // callers can disable a menu item without a separate canUndo() check.
@@ -94,5 +90,37 @@ export class CommandHistory {
             return null;
         }
         return `Redo ${this._redoStack[this._redoStack.length - 1].describe()}`;
+    }
+
+    // -----------------------------------------------------------------
+    // Serialization (0.1.35)
+    // -----------------------------------------------------------------
+
+    toJSON() {
+        return {
+            executed: this._undoStack.map((command) => command.toJSON()),
+            redo: this._redoStack.map((command) => command.toJSON())
+        };
+    }
+
+    static fromJSON(json, context, registry) {
+        if (!json || typeof json !== 'object') {
+            throw new Error('CommandHistory.fromJSON(): invalid JSON');
+        }
+        if (!registry) {
+            throw new Error('CommandHistory.fromJSON(): a CommandRegistry is required');
+        }
+
+        const history = new CommandHistory(context);
+
+        for (const cmdJson of json.executed || []) {
+            history._undoStack.push(registry.fromJSON(cmdJson));
+        }
+
+        for (const cmdJson of json.redo || []) {
+            history._redoStack.push(registry.fromJSON(cmdJson));
+        }
+
+        return history;
     }
 }
