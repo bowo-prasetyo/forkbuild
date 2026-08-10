@@ -1456,6 +1456,77 @@ not mutate the current one, so it lives outside the undo/redo stack.
 EditorSession gained openDocument() to load an already-constructed
 Document (as opposed to loadDocument() which loads from storage by id).
 
+World View Persistence & Publication (0.1.39)
+---------------------------------------------
+World View became editable in 0.1.32–0.1.33; 0.1.39 connects that editing
+experience to the persistence and publication pipelines built in
+0.1.20A–0.1.25 instead of growing parallel ones.
+
+**Per-document DocumentManager.** WorldNavigationSession now keeps a
+Map<documentId, { manager, untrack }> alongside its existing
+Map<worldId, CommandHistory>. _loadWorld() creates a DocumentManager,
+calls manager.load(document, documentId), and trackCommandHistory()s the
+world's history; _unloadWorld() unsubscribes and drops it. This is the
+same DocumentManager class EditorSession uses — one per loaded document
+here, because World View keeps several documents alive at once and each
+one's dirty state must survive the camera focusing elsewhere.
+
+**Active document.** Save/Publish act on getActiveDocumentId(): the
+selection's document when something is selected, otherwise the focused
+document, otherwise the sole loaded document. UI buttons are disabled
+when none exists.
+
+**Save** is SaveDocumentUseCase.execute(manager) — the canonical Document
+only. Selection, hover, gizmo, editing-context, and command-history state
+are Spatial/Editor State and are never serialized, per the Domain State
+vs Editor State rule. Save overwrites the document's own storage slot
+(document.world.id), the same semantics as saving a loaded document in
+the Editor; Fork remains the "make it mine" path.
+
+**Publish** is PublishDocumentUseCase.execute(manager), with one rule: if
+the manager's state is dirty, save first. A Publication must always
+reference exactly the content the user is looking at — never a stale
+saved version, and never transient editor state. LocalPublisherProvider
+re-persists the document JSON and appends a fresh Publication record, so
+republishing accumulates publication records pointing at one documentId
+(the three identity layers at work: document identity stable, publication
+identity fresh per publish).
+
+**Dirty tracking became save-point aware.** The 0.1.17 simplification
+("undo also marks dirty") is resolved. CommandHistory gained
+markSaved()/isDirty(): markSaved() records the current cursor as the
+saved state; isDirty() is true when the cursor has moved off it. One
+subtlety: undoing PAST the save point and then executing a new command
+wipes the redo branch that contained the saved state, so the save point
+is permanently invalidated and isDirty() stays true until the next
+markSaved(). Executing exactly at the save point keeps it valid.
+DocumentManager.trackCommandHistory() now computes dirty from
+history.isDirty() on every CommandExecuted/Undone/Redone instead of
+calling markDirty() blindly, and DocumentManager.markSaved() moves the
+tracked history's save point in lockstep. This improves the Editor's
+dirty indicator too, not just World View's. Save-point bookkeeping is
+session-local: it is deliberately excluded from CommandHistory.toJSON(),
+keeping canonical document persistence and session history persistence
+separate (0.1.37) — Save answers "what the world is," history answers
+"how the user got there," and Publication publishes the world, never the
+undo stack.
+
+**Dirty documents are pinned.** updateSpatialView() never stream-unloads
+a document whose manager is dirty, even when it leaves the streaming
+radius — silently discarding unsaved edits on camera movement would be
+data loss. Saving unpins it. (Leaving the World View route entirely with
+dirty documents still drops them; a beforeunload-style confirmation is
+future work.)
+
+**Wiring.** CreateWorldViewUseCase.execute(identityProvider) now builds
+SaveDocumentUseCase and PublishDocumentUseCase (via LocalPublisherProvider)
+into the SAME shared LocalStorageProvider graph the session already uses —
+preserving the 0.1.28 single-storage-graph fix. ui/views/WorldView.js
+never imports storage/ or publisher/; it calls session.saveDocument()/
+publishDocument() and reads session.isDocumentDirty(). Identity flows in
+through the same injected IdentityUseCase the Editor uses, so publishing
+from World View is attributed to whoever is logged in.
+
 Domain State vs Editor State
 
 Two kinds of state exist in ForkBuild, and they must never mix.
