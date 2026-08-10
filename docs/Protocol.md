@@ -56,18 +56,21 @@ editing session and must never appear in a serialized World or be
 transmitted to a publisher. See docs/Architecture.md, "Domain State vs
 Editor State."
 
-Spatial Inspection State (added 0.1.31) is explicitly excluded from
-the protocol. It is runtime-only viewer state produced by resolving
-a SpatialSelectionState against a loaded Document/World. It describes
-what the current viewer knows about an object, not the object itself,
-and therefore never appears in serialized Documents, Publications, or
-WorldLayout records.
+Spatial Selection and Inspection State are explicitly excluded from
+the protocol. SpatialSelectionState is runtime-only viewer state that may
+reference one or many selected bricks by documentId/buildingId/brickId,
+but never embeds Brick objects and never appears in serialized Documents.
+SpatialInspectionState (added 0.1.31) is produced by resolving a
+SpatialSelectionState against a loaded Document/World. It describes what
+the current viewer knows about an object or selection, not the object
+itself, and therefore never appears in serialized Documents, Publications,
+or WorldLayout records.
 
 Spatial Editing Context (added 0.1.32) is explicitly excluded from
 the protocol. It describes what operations the current viewer is
-permitted to perform on a selected spatial object, not the object
-itself. Like all spatial state, it is derived from the current session
-and loaded documents rather than persisted or transmitted.
+permitted to perform on a selected spatial object or multi-selection,
+not the object itself. Like all spatial state, it is derived from the
+current session and loaded documents rather than persisted or transmitted.
 
 Spatial Placement State (added 0.1.33) is explicitly excluded from
 the protocol. It describes where a brick would be placed in the
