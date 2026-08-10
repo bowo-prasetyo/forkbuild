@@ -21,7 +21,7 @@ const NO_HIGHLIGHT_COLOR = 0x000000;
 export class SelectionRenderer {
     constructor(meshRegistry) {
         this._meshRegistry = meshRegistry;
-        this._highlightedBrickId = null;
+        this._highlightedBrickIds = new Set();
         this._subscription = null;
     }
 
@@ -45,23 +45,25 @@ export class SelectionRenderer {
             return;
         }
         mesh.material.emissive.setHex(HIGHLIGHT_COLOR);
-        this._highlightedBrickId = brickId;
+        this._highlightedBrickIds.add(brickId);
     }
 
     clear() {
-        if (this._highlightedBrickId) {
-            const mesh = this._meshRegistry.getMesh(this._highlightedBrickId);
+        for (const brickId of this._highlightedBrickIds) {
+            const mesh = this._meshRegistry.getMesh(brickId);
             if (mesh && mesh.material && mesh.material.emissive) {
                 mesh.material.emissive.setHex(NO_HIGHLIGHT_COLOR);
             }
         }
-        this._highlightedBrickId = null;
+        this._highlightedBrickIds.clear();
     }
 
     _onSelectionChanged(selection) {
         this.clear();
         if (!selection.isEmpty) {
-            this.highlight(selection.brickId);
+            for (const brickId of selection.brickIds) {
+                this.highlight(brickId);
+            }
         }
     }
 }
