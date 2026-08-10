@@ -18,7 +18,7 @@ export class BrickRenderer {
 
         const mesh = this._brickFactory.createMesh(brick.definitionId);
         mesh.position.set(brick.position.x, brick.position.y, brick.position.z);
-        mesh.rotation.y = brick.rotation;
+        mesh.rotation.y = brick.rotation * (Math.PI / 180);
         mesh.name = brick.id;
 
         return mesh;
