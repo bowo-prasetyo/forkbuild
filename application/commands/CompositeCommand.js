@@ -23,9 +23,20 @@ export class CompositeCommand extends Command {
         return [...this._commands];
     }
 
+    // Transactional execution: if any child fails, roll back all 
+    // previously executed children in reverse order and re-throw.
     execute(context) {
+        const executed = [];
+        try {
         for (const command of this._commands) {
             command.execute(context);
+                executed.push(command);
+            }
+        } catch (error) {
+            for (let i = executed.length - 1; i >= 0; i--) {
+                executed[i].undo(context);
+            }
+            throw error;
         }
     }
 
@@ -40,8 +51,15 @@ export class CompositeCommand extends Command {
     }
 
     describe() {
-        if (this._commands.length === 1) {
-            return this._commands[0].describe();
+        if (this._commands.length === 0) return 'Empty Action';
+        if (this._commands.length === 1) return this._commands[0].describe();
+
+        const descriptions = new Set(this._commands.map(c => c.describe()));
+        
+        // If all children are "Move Brick", return "Move N Bricks"
+        if (descriptions.size === 1) {
+            const base = Array.from(descriptions)[0];
+            return `${this._commands.length} ${base.replace(' Brick', ' Bricks')}`;
         }
         return `${this._commands.length} actions`;
     }
