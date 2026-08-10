@@ -1,20 +1,17 @@
 import { Command } from './Command.js';
+import { createId } from '../../core/createId.js';
 
 // A Command made of other Commands, treated as one atomic unit by
 // CommandHistory — one undo step regardless of how many child commands
-// it contains. add(command) before execute(); order matters both ways:
-// execute() runs children in the order they were added, undo() reverses
-// them in the OPPOSITE order, since a later command might depend on an
-// earlier one having already happened (undo has to unwind in the reverse
-// sequence physical actions would).
-//
-// canUndo() is true only if the composite actually has children AND
-// every one of them can be undone — a composite is only as undoable as
-// its least-undoable part.
+// it contains. Now fully serializable via CommandRegistry.
 export class CompositeCommand extends Command {
-    constructor() {
-        super();
+    constructor({ id, timestamp } = {}) {
+        super({ id, timestamp });
         this._commands = [];
+    }
+
+    get type() {
+        return 'composite';
     }
 
     add(command) {
@@ -47,5 +44,30 @@ export class CompositeCommand extends Command {
             return this._commands[0].describe();
         }
         return `${this._commands.length} actions`;
+    }
+
+    toJSON() {
+        return {
+            type: this.type,
+            id: this._id,
+            timestamp: this._timestamp.toISOString(),
+            commands: this._commands.map((command) => command.toJSON())
+        };
+    }
+
+    static fromJSON(json, registry) {
+        const cmd = new CompositeCommand({
+            id: json.id,
+            timestamp: new Date(json.timestamp)
+        });
+        if (json.commands && json.commands.length > 0) {
+            if (!registry) {
+                throw new Error('CompositeCommand.fromJSON(): a CommandRegistry is required to deserialize child commands');
+            }
+            for (const childJson of json.commands) {
+                cmd.add(registry.fromJSON(childJson));
+            }
+        }
+        return cmd;
     }
 }
