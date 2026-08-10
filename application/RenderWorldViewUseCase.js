@@ -5,9 +5,13 @@ import { SpatialSelectionRenderer } from '../renderer/SpatialSelectionRenderer.j
 import { SpatialPreviewRenderer } from '../renderer/SpatialPreviewRenderer.js';
 
 export class RenderWorldViewUseCase {
-    execute(container, registry) {
+    execute(container, registry, eventBus = null) {
         const renderer = new Renderer(container);
         const worldRenderer = new WorldRenderer(renderer, registry);
+
+        if (eventBus) {
+            worldRenderer.subscribe(eventBus);
+        }
 
         renderer.start();
 
