@@ -1,5 +1,6 @@
 import { Tool } from './Tool.js';
 import { DeleteBrickCommand } from '../commands/DeleteBrickCommand.js';
+import { CompositeCommand } from '../commands/CompositeCommand.js';
 
 const DELETE_KEYS = new Set(['Delete', 'Backspace']);
 
@@ -12,10 +13,18 @@ const DELETE_KEYS = new Set(['Delete', 'Backspace']);
 export class SelectionTool extends Tool {
     onPointerDown(pointerEvent) {
         if (pointerEvent.pickedBrick) {
-            this.context.selectionUseCase.select(
-                pointerEvent.pickedBrick.brickId,
-                pointerEvent.pickedBrick.buildingId
-            );
+            const toggle = pointerEvent.modifiers.ctrl || pointerEvent.modifiers.meta || pointerEvent.modifiers.shift;
+            if (toggle) {
+                this.context.selectionUseCase.toggle(
+                    pointerEvent.pickedBrick.brickId,
+                    pointerEvent.pickedBrick.buildingId
+                );
+            } else {
+                this.context.selectionUseCase.select(
+                    pointerEvent.pickedBrick.brickId,
+                    pointerEvent.pickedBrick.buildingId
+                );
+            }
         } else {
             this.context.selectionUseCase.clear();
         }
@@ -38,11 +47,14 @@ export class SelectionTool extends Tool {
             return;
         }
 
-        const command = new DeleteBrickCommand({
+        const commands = selection.items.map((item) => new DeleteBrickCommand({
             worldId: this.context.world.id,
-            buildingId: selection.buildingId,
-            brickId: selection.brickId
-        });
+            buildingId: item.buildingId,
+            brickId: item.brickId
+        }));
+        const command = commands.length === 1
+            ? commands[0]
+            : commands.reduce((composite, child) => composite.add(child), new CompositeCommand({ description: `Delete ${commands.length} Bricks` }));
         this.context.commandHistory.execute(command);
         this.context.selectionUseCase.clear();
     }
