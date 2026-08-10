@@ -236,15 +236,18 @@ export class WorldNavigationSession {
     // Interaction
     // -----------------------------------------------------------------
 
-    pick(screenX, screenY) {
+    pick(screenX, screenY, { toggle = false } = {}) {
         if (!this._session) {
             return null;
         }
 
         const brickHit = this._session.pick(screenX, screenY);
         if (brickHit) {
-            this._setSpatialSelection(SpatialSelectionState.brick(brickHit));
-            this._session.selectBrick(brickHit.brickId);
+            const nextSelection = toggle
+                ? this._spatialSelection.toggleBrick(brickHit)
+                : SpatialSelectionState.brick(brickHit);
+            this._setSpatialSelection(nextSelection);
+            this._session.selectBricks(nextSelection.brickIds, nextSelection.brickId);
             this._session.clearHover();
             this._refreshInspection();
             this._refreshEditingContext();
@@ -316,12 +319,7 @@ export class WorldNavigationSession {
         if (!ctx.can('move')) {
             return false;
         }
-        const success = this._editingService.moveBrick(
-            ctx.documentId,
-            ctx.buildingId,
-            ctx.brickId,
-            delta
-        );
+        const success = this._editingService.moveSelection(this._spatialSelection, delta);
         if (success) {
             this._refreshInspection();
         }
@@ -336,11 +334,7 @@ export class WorldNavigationSession {
         if (!ctx.can('delete')) {
             return false;
         }
-        const success = this._editingService.deleteBrick(
-            ctx.documentId,
-            ctx.buildingId,
-            ctx.brickId
-        );
+        const success = this._editingService.deleteSelection(this._spatialSelection);
         if (success) {
             this.clearSelection();
         }
@@ -355,12 +349,7 @@ export class WorldNavigationSession {
         if (!ctx.can('rotate')) {
             return false;
         }
-        const success = this._editingService.rotateBrick(
-            ctx.documentId,
-            ctx.buildingId,
-            ctx.brickId,
-            deltaRotation
-        );
+        const success = this._editingService.rotateSelection(this._spatialSelection, deltaRotation);
         if (success) {
             this._refreshInspection();
         }
