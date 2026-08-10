@@ -46,6 +46,83 @@ export default {
         }
         const isPlacementMode = ref(false);
 
+        function onKeyDown(event) {
+            if (event.key === 'Escape') {
+                if (session.isPlacementMode()) {
+                    cancelPlacement();
+                } else {
+                    session.clearSelection();
+                    refreshSpatialUI();
+                }
+                return;
+            }
+
+            const modifierPressed = event.ctrlKey || event.metaKey;
+
+            if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
+                event.preventDefault();
+                session.undo();
+                refreshSpatialUI();
+                return;
+            }
+            if (modifierPressed && (event.key.toLowerCase() === 'y' || (event.key.toLowerCase() === 'z' && event.shiftKey))) {
+                event.preventDefault();
+                session.redo();
+                refreshSpatialUI();
+                return;
+            }
+
+            if (!session.isPlacementMode() && spatialEditingContext.value) {
+                const ctx = spatialEditingContext.value;
+
+                if (ctx.type === 'brick' && ctx.capabilities.rotate) {
+                    if (event.key.toLowerCase() === 'r') {
+                        event.preventDefault();
+                        const delta = event.shiftKey ? -90 : 90;
+                        session.rotateSelection(delta);
+                        refreshSpatialUI();
+                        return;
+                    }
+                }
+
+                if (ctx.type === 'brick' && ctx.capabilities.move) {
+                    switch (event.key) {
+                        case 'ArrowUp':
+                            event.preventDefault();
+                            moveSelectedBrick({ x: 0, y: 0, z: -NUDGE });
+                            break;
+                        case 'ArrowDown':
+                            event.preventDefault();
+                            moveSelectedBrick({ x: 0, y: 0, z: NUDGE });
+                            break;
+                        case 'ArrowLeft':
+                            event.preventDefault();
+                            moveSelectedBrick({ x: -NUDGE, y: 0, z: 0 });
+                            break;
+                        case 'ArrowRight':
+                            event.preventDefault();
+                            moveSelectedBrick({ x: NUDGE, y: 0, z: 0 });
+                            break;
+                        case 'PageUp':
+                            event.preventDefault();
+                            moveSelectedBrick({ x: 0, y: NUDGE, z: 0 });
+                            break;
+                        case 'PageDown':
+                            event.preventDefault();
+                            moveSelectedBrick({ x: 0, y: -NUDGE, z: 0 });
+                            break;
+                    }
+                }
+
+                if (ctx.type === 'brick' && ctx.capabilities.delete) {
+                    if (event.key === 'Delete' || event.key === 'Backspace') {
+                        event.preventDefault();
+                        deleteSelectedBrick();
+                    }
+                }
+            }
+        }
+        
         function startPlacement() {
             if (selectedDefinitionId.value) {
                 session.setActiveDefinitionId(selectedDefinitionId.value);
@@ -479,6 +556,22 @@ export default {
                             Delete Brick
                         </button>
                     </div>
+                    
+                    <div v-if="spatialEditingContext.type === 'brick'" class="editing-actions">
+                        <p v-if="spatialEditingContext.capabilities.move" class="editing-hint">
+                            Arrow keys: move X/Z • Page Up/Down: move Y
+                        </p>
+                        <p v-if="spatialEditingContext.capabilities.rotate" class="editing-hint">
+                            R: rotate 90° • Shift+R: rotate –90°
+                        </p>
+                        <button
+                            v-if="spatialEditingContext.capabilities.delete"
+                            class="action-btn action-btn--danger"
+                            @click="deleteSelectedBrick"
+                        >
+                            Delete Brick
+                        </button>
+                    </div>                    
 
                     <div v-if="spatialEditingContext.type === 'ground'" class="editing-actions">
                         <p class="editing-hint">
