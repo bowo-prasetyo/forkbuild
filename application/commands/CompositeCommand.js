@@ -66,6 +66,12 @@ export class CompositeCommand extends Command {
         return `${this._commands.length} actions`;
     }
 
+    // The Operation Timeline shows a composite as ONE entry; this is how
+    // it learns there are children inside without exposing them by default.
+    getChildCount() {
+        return this._commands.length;
+    }
+
     toJSON() {
         return {
             type: this.type,
