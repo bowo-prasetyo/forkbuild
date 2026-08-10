@@ -3,6 +3,7 @@ import { Position } from '../core/Position.js';
 import { MoveBrickCommand } from './commands/MoveBrickCommand.js';
 import { RotateBrickCommand } from './commands/RotateBrickCommand.js';
 import { DeleteBrickCommand } from './commands/DeleteBrickCommand.js';
+import { CompositeCommand } from './commands/CompositeCommand.js';
 
 // Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
@@ -22,12 +23,13 @@ export class SpatialEditingService {
             return SpatialEditingContext.empty();
         }
 
-        if (selection.type === 'brick') {
+        if (selection.type === 'brick' || selection.type === 'bricks') {
             return new SpatialEditingContext({
-                type: 'brick',
+                type: selection.isSingle ? 'brick' : 'bricks',
                 documentId: selection.documentId,
                 buildingId: selection.buildingId,
                 brickId: selection.brickId,
+                items: selection.items,
                 capabilities: { move: true, rotate: true, delete: true }
             });
         }
@@ -119,4 +121,42 @@ export class SpatialEditingService {
         history.execute(command);
         return true;
     }
+
+    moveSelection(selection, delta) {
+        return this._executeForSelection(selection, (world, item) => new MoveBrickCommand({
+            worldId: world.id, buildingId: item.buildingId, brickId: item.brickId, delta
+        }), `Move ${selection.items.length} Bricks`);
+    }
+
+    rotateSelection(selection, deltaRotation) {
+        return this._executeForSelection(selection, (world, item) => new RotateBrickCommand({
+            worldId: world.id, buildingId: item.buildingId, brickId: item.brickId, deltaRotation
+        }), `Rotate ${selection.items.length} Bricks`);
+    }
+
+    deleteSelection(selection) {
+        return this._executeForSelection(selection, (world, item) => new DeleteBrickCommand({
+            worldId: world.id, buildingId: item.buildingId, brickId: item.brickId
+        }), `Delete ${selection.items.length} Bricks`);
+    }
+
+    _executeForSelection(selection, createCommand, description) {
+        if (!selection || selection.isEmpty || selection.type === 'ground') return false;
+        const document = this._session.getDocument(selection.documentId);
+        if (!document) return false;
+        const world = document.world;
+        const history = this._commandHistories.get(world.id);
+        if (!history) return false;
+        const commands = [];
+        for (const item of selection.items) {
+            const building = world.getBuilding(item.buildingId);
+            if (!building || !building.findBrick(item.brickId)) return false;
+            commands.push(createCommand(world, item));
+        }
+        if (commands.length === 0) return false;
+        const command = commands.length === 1 ? commands[0] : commands.reduce((composite, child) => composite.add(child), new CompositeCommand({ description }));
+        history.execute(command);
+        return true;
+    }
+
 }
