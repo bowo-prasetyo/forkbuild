@@ -22,7 +22,7 @@ export class SpatialPreviewRenderer {
         }
 
         this._mesh.position.set(position.x, position.y, position.z);
-        this._mesh.rotation.y = rotation;
+        this._mesh.rotation.y = rotation * (Math.PI / 180);
     }
 
     hide() {
