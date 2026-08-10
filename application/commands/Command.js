@@ -37,4 +37,12 @@ export class Command {
     describe() {
         return this.constructor.name;
     }
+
+    // Number of DIRECT child commands (0 for atomic commands). Exposed so
+    // projections like the Operation Timeline (0.1.40) can describe
+    // composite operations without importing concrete command classes —
+    // CommandHistory stays registry-agnostic.
+    getChildCount() {
+        return 0;
+    }
 }
