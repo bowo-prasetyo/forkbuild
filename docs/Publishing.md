@@ -20,7 +20,7 @@ ForkBuild's publishing layer is built on three principles:
    `transaction`, and `block`. ForkBuild doesn't care. The publisher
    contract is simply:
 
-## Current Implementation (0.1.22–0.1.26)
+## Current Implementation (0.1.22–0.1.33)
 
 `LocalPublisherProvider` exercises the interface without a blockchain.
 It persists `Publication` records via an injected `StorageProvider`,
@@ -61,7 +61,7 @@ This separation means the UI (Repository View, Author View, World View)
 consumes `Publication` objects through `DiscoveryProvider` without
 knowing the blockchain source.
 
-## Publication Lifecycle (0.1.25–0.1.26)
+## Publication Lifecycle (0.1.25–0.1.33)
 
 The local simulation is now complete:
 
@@ -89,10 +89,19 @@ sets `DocumentMetadata.parentDocumentId` to the source document's ID,
 and opens the result as a new editable document. The publisher passes
 `parentDocumentId` through automatically when the fork is later published.
 
+## Spatial Integration (0.1.27–0.1.33)
+
+Published documents are positioned in a shared spatial coordinate system
+via `WorldLayoutProvider`. `LocalWorldLayoutProvider` arranges publications
+on a deterministic grid; future providers could use geographic coordinates,
+procedural islands, or curated exhibitions. World View streams documents
+in and out based on camera position, and users can inspect and edit bricks
+directly in this spatial context — all without the publisher interface
+changing.
+
 ## Future Directions
 
 - **SteemPublisherProvider**: posts document JSON as a Steem custom_json
   operation, using `identityProvider.sign()` via Steem Keychain.
-- **World Position**: an optional `worldPosition` field (or separate
-  `WorldLayout` record) will let World View place published documents
-  into a shared virtual space without changing the publisher interface.
+- **Multiplayer Publishing**: real-time collaborative editing with
+  operational transform or CRDT-based synchronization.
