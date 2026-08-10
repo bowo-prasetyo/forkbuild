@@ -482,12 +482,32 @@ representation. This eliminates the need for CommandHistory or
 persistence code to know about concrete command classes.
 
 CommandHistory gained toJSON() and CommandHistory.fromJSON(json, context,
-registry) in 0.1.35. The serialized shape is:
+registry) in 0.1.35. As of 0.1.37, its persistent-session envelope is
+cursor-based rather than stack-based:
 
     {
-        executed: [ { type: "move-brick", ... }, ... ],
-        redo: [ { type: "rotate-brick", ... }, ... ]
+        schemaVersion: 1,
+        cursor: 2,
+        commands: [
+            { type: "move-brick", ... },
+            { type: "composite", commands: [ ... ], ... },
+            { type: "rotate-brick", ... }
+        ]
     }
+
+Commands before cursor are currently applied and form the undo stack.
+Commands at and after cursor form the redo branch. CommandHistory validates
+this envelope, rejects unsupported schema versions and out-of-bounds cursors,
+and lets CommandRegistry reject malformed or unknown command payloads safely.
+The older { executed, redo } shape is still accepted as a migration input,
+but new writes use { schemaVersion, cursor, commands }.
+
+This history envelope is explicitly separate from Document serialization:
+Document JSON remains the canonical persisted world state, while command
+history JSON is optional editing/session persistence layered around that
+state. This keeps runtime selection/spatial-editing state and protocol state
+separate, and leaves command replay as a later concern rather than making the
+undo stack part of the core document format.
 
 Linear history invariant: executing a new command after undo() clears
 the redo branch entirely. A fresh action invalidates whatever "future"
