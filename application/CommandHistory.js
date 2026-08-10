@@ -33,11 +33,53 @@ const COMMAND_HISTORY_SCHEMA_VERSION = 1;
 // work) keeps it valid.
 //
 // The save point is deliberately session-local: it is NOT part of
-// toJSON()/fromJSON(). A restored history starts with its save point at
-// cursor 0 (i.e. "dirty" whenever it contains commands); a caller that
-// knows the restored state matches disk calls markSaved(). Canonical
-// document persistence and session history persistence remain separate
-// concerns (see 0.1.37).
+// toJSON()/fromJSON(). Canonical document persistence and session history
+// persistence remain separate concerns (see 0.1.37).
+//
+// As of 0.1.40, CommandHistory is also the source of REPLAY — the history
+// itself, never a second recording mechanism. Two additions:
+//
+// 1. Baseline snapshot. The constructor captures context.world.toJSON() —
+//    the document state BEFORE the first command — and persists it as
+//    `baselineWorld` inside the envelope:
+//        { schemaVersion, cursor, commands, baselineWorld }
+//    A restored history is therefore self-sufficient for replay:
+//    baseline + commands reconstruct any intermediate state without
+//    touching the live document. fromJSON() prefers the persisted
+//    baseline over whatever world the caller passes as context — a
+//    restored world already has commands applied, so it is NOT the
+//    baseline. Envelopes written before 0.1.40 carry no baselineWorld and
+//    cannot be replayed; ReplayDocumentUseCase throws rather than
+//    guessing. The baseline is replay/session data riding inside the
+//    history envelope — canonical document persistence
+//    (SaveDocumentUseCase) is unchanged, and the rule "document
+//    persistence ≠ history persistence" still holds.
+//
+// 2. replay(targetContext, { registry, startCursor, endCursor }) —
+//    serializes this history's own envelope, reconstructs each command in
+//    range through CommandRegistry.fromJSON(), and executes the FRESH
+//    instances against targetContext. Two invariants:
+//      * Genuine replay: deserialized copies are executed, never the
+//        already-mutated live command objects. A replayed command gets
+//        its own execution bookkeeping, the same reasoning as
+//        PlaceBrickCommand excluding _executedBrickId from its intent.
+//      * History suppression: replay never calls this.execute(). The
+//        undo/redo stacks, cursor, and save point are untouched, so
+//        replay can NEVER pollute history with duplicate entries.
+//    Replay is transactional like CompositeCommand: if a command throws,
+//    everything replay already executed is undone in reverse order and
+//    the error is rethrown. startCursor > 0 is an advanced option — it
+//    assumes targetContext already reflects commands [0..startCursor);
+//    callers that reconstruct from the baseline (ReplayDocumentUseCase,
+//    the Operation Timeline) always start at 0.
+//
+// getTimeline() projects the linear envelope for the Operation Timeline
+// UI: { index, id, type, description, timestamp, childCount, applied }
+// per top-level command, in chronological order. CompositeCommand remains
+// ONE entry (its describe() already reads "Move 3 Bricks"); childCount
+// comes from Command.getChildCount(), so CommandHistory never imports a
+// concrete command class. Entries beyond the current cursor are marked
+// applied: false — undone-but-remembered, still replayable.
 export class CommandHistory {
     constructor(context, eventBus = new EventBus()) {
         this._context = context;
@@ -46,6 +88,7 @@ export class CommandHistory {
         this._redoStack = [];
         this._savedCursor = 0;
         this._savePointValid = true;
+        this._baselineWorld = CommandHistory._captureBaseline(context);
     }
 
     get eventBus() {
@@ -99,15 +142,11 @@ export class CommandHistory {
         return command;
     }
 
-    // Marks the current cursor as the saved state. Called by
-    // DocumentManager.markSaved() (which SaveDocumentUseCase calls after a
-    // successful save) — CommandHistory itself never knows about storage.
     markSaved() {
         this._savedCursor = this._undoStack.length;
         this._savePointValid = true;
     }
 
-    // True when the current state differs from the save point.
     isDirty() {
         return !this._savePointValid || this._undoStack.length !== this._savedCursor;
     }
@@ -128,6 +167,13 @@ export class CommandHistory {
         return [...this._undoStack, ...[...this._redoStack].reverse()];
     }
 
+    // The world state BEFORE the first command in this history, captured
+    // at construction (or restored from the envelope). Null for contexts
+    // without a world and for pre-0.1.40 envelopes. Treat as immutable.
+    getBaselineWorld() {
+        return this._baselineWorld;
+    }
+
     getUndoLabel() {
         if (!this.canUndo()) {
             return null;
@@ -142,13 +188,72 @@ export class CommandHistory {
         return `Redo ${this._redoStack[this._redoStack.length - 1].describe()}`;
     }
 
+    // Operation Timeline projection (0.1.40). One entry per top-level
+    // command, chronological. `applied` marks whether the entry sits
+    // before the current cursor; entries beyond it are the
+    // undone-but-remembered tail of the linear sequence.
+    getTimeline() {
+        const cursor = this.getCursor();
+        return this.getCommands().map((command, index) => ({
+            index,
+            id: command.id,
+            type: command.type,
+            description: command.describe(),
+            timestamp: command.timestamp,
+            childCount: command.getChildCount(),
+            applied: index < cursor
+        }));
+    }
+
+    // Replay kernel (0.1.40). Reconstructs commands[startCursor..endCursor)
+    // from SERIALIZED form via the CommandRegistry and executes the fresh
+    // instances against targetContext. Never touches this history's
+    // stacks, cursor, or save point — replay cannot pollute history.
+    // Transactional: on failure, already-executed commands are undone in
+    // reverse and the error is rethrown. Returns the number of commands
+    // executed.
+    replay(targetContext, { registry, startCursor = 0, endCursor = null } = {}) {
+        if (!registry) {
+            throw new Error('CommandHistory.replay(): a CommandRegistry is required');
+        }
+        const commands = this.toJSON().commands;
+        const end = endCursor === null ? commands.length : endCursor;
+        if (!Number.isInteger(startCursor) || !Number.isInteger(end)
+            || startCursor < 0 || end < startCursor || end > commands.length) {
+            throw new Error(
+                `CommandHistory.replay(): invalid range [${startCursor}, ${end}) for ${commands.length} commands`
+            );
+        }
+        const executed = [];
+        try {
+            for (let i = startCursor; i < end; i++) {
+                const command = registry.fromJSON(commands[i]);
+                command.execute(targetContext);
+                executed.push(command);
+            }
+        } catch (error) {
+            for (let i = executed.length - 1; i >= 0; i--) {
+                executed[i].undo(targetContext);
+            }
+            throw error;
+        }
+        return executed.length;
+    }
+
     toJSON() {
         const commands = this.getCommands().map((command) => command.toJSON());
-        return {
+        const json = {
             schemaVersion: COMMAND_HISTORY_SCHEMA_VERSION,
             cursor: this._undoStack.length,
             commands
         };
+        // The baseline makes a persisted history self-sufficient for
+        // replay. Omitted when there is no world context (keeps
+        // world-less test contexts lightweight and old writers unchanged).
+        if (this._baselineWorld) {
+            json.baselineWorld = this._baselineWorld;
+        }
+        return json;
     }
 
     static fromJSON(json, context, registry, eventBus = new EventBus()) {
@@ -166,6 +271,12 @@ export class CommandHistory {
         const history = new CommandHistory(context, eventBus);
         history._undoStack = commands.slice(0, normalized.cursor);
         history._redoStack = commands.slice(normalized.cursor).reverse();
+        // The persisted baseline wins over the constructor snapshot: a
+        // world passed as restore-context already has commands applied,
+        // so it is NOT the baseline. Pre-0.1.40 envelopes have none.
+        history._baselineWorld = normalized.baselineWorld !== undefined
+            ? normalized.baselineWorld
+            : null;
         return history;
     }
 
@@ -180,7 +291,8 @@ export class CommandHistory {
             const redo = CommandHistory._requireArray(json.redo || [], 'redo');
             return {
                 cursor: executed.length,
-                commands: [...executed, ...redo.slice().reverse()]
+                commands: [...executed, ...redo.slice().reverse()],
+                baselineWorld: undefined
             };
         }
         if (json.schemaVersion !== COMMAND_HISTORY_SCHEMA_VERSION) {
@@ -193,7 +305,11 @@ export class CommandHistory {
         if (json.cursor < 0 || json.cursor > commands.length) {
             throw new Error('CommandHistory.fromJSON(): cursor must be within command bounds');
         }
-        return { cursor: json.cursor, commands };
+        if (json.baselineWorld !== undefined
+            && (json.baselineWorld === null || typeof json.baselineWorld !== 'object' || Array.isArray(json.baselineWorld))) {
+            throw new Error('CommandHistory.fromJSON(): baselineWorld must be an object');
+        }
+        return { cursor: json.cursor, commands, baselineWorld: json.baselineWorld };
     }
 
     static _requireArray(value, fieldName) {
@@ -201,5 +317,13 @@ export class CommandHistory {
             throw new Error(`CommandHistory.fromJSON(): ${fieldName} must be an array`);
         }
         return value;
+    }
+
+    static _captureBaseline(context) {
+        const world = context ? context.world : null;
+        if (world && typeof world.toJSON === 'function') {
+            return world.toJSON();
+        }
+        return null;
     }
 }
