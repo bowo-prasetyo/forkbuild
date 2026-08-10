@@ -12,45 +12,65 @@ const NO_HIGHLIGHT_COLOR = 0x000000;
 export class SpatialSelectionRenderer {
     constructor(meshRegistry) {
         this._meshRegistry = meshRegistry;
-        this._selectedIds = new Set();
-        this._hoveredId = null;
+        this._selectedBrickId = null;
+        this._hoveredBrickId = null;
     }
 
-    select(brickIds) {
-        const previous = new Set(this._selectedIds);
-        this._selectedIds = new Set(brickIds);
-        
-        // Refresh everything that changed
-        for (const id of previous) this._applyHighlight(id);
-        for (const id of this._selectedIds) this._applyHighlight(id);
+    select(brickId) {
+        this.clearSelection();
+        this._selectedBrickId = brickId;
+        this._applyHighlight(brickId);
     }
 
     hover(brickId) {
-        if (this._hoveredId === brickId) return;
-        const prev = this._hoveredId;
-        this._hoveredId = brickId;
-        if (prev) this._applyHighlight(prev);
-        if (brickId) this._applyHighlight(brickId);
+        if (this._hoveredBrickId === brickId) {
+            return;
+        }
+        const previousHover = this._hoveredBrickId;
+        this._hoveredBrickId = brickId;
+        if (previousHover) {
+            this._applyHighlight(previousHover);
+        }
+        this._applyHighlight(brickId);
     }
 
     clearSelection() {
-        const prev = Array.from(this._selectedIds);
-        this._selectedIds.clear();
-        for (const id of prev) this._applyHighlight(id);
+        const previous = this._selectedBrickId;
+        this._selectedBrickId = null;
+        if (previous) {
+            this._applyHighlight(previous);
+        }
     }
 
     clearHover() {
-        const prev = this._hoveredId;
-        this._hoveredId = null;
-        if (prev) this._applyHighlight(prev);
+        const previous = this._hoveredBrickId;
+        this._hoveredBrickId = null;
+        if (previous) {
+            this._applyHighlight(previous);
+        }
+    }
+
+    clear() {
+        const previousSelected = this._selectedBrickId;
+        const previousHover = this._hoveredBrickId;
+        this._selectedBrickId = null;
+        this._hoveredBrickId = null;
+        if (previousSelected) {
+            this._applyHighlight(previousSelected);
+        }
+        if (previousHover && previousHover !== previousSelected) {
+            this._applyHighlight(previousHover);
+        }
     }
 
     _applyHighlight(brickId) {
         const mesh = this._meshRegistry.getMesh(brickId);
-        if (!mesh || !mesh.material || !mesh.material.emissive) return;
+        if (!mesh || !mesh.material || !mesh.material.emissive) {
+            return;
+        }
 
-        const isSelected = this._selectedIds.has(brickId);
-        const isHovered = this._hoveredId === brickId;
+        const isSelected = this._selectedBrickId === brickId;
+        const isHovered = this._hoveredBrickId === brickId;
 
         if (isSelected && isHovered) {
             mesh.material.emissive.setHex(COMBINED_COLOR);
