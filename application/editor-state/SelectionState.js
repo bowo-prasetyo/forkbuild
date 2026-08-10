@@ -2,39 +2,31 @@
 // building it belongs to. Deliberately mirrors PickingService's return
 // shape ({ brickId, buildingId }) — Selection (0.1.11) is built directly
 // on top of Picking, not a separate concept with its own shape.
-// SelectionState (0.1.36): Now supports multiple items. 
-// items: [{ brickId, buildingId }, ...]
 export class SelectionState {
-    constructor(items = []) {
-        this._items = items;
+    constructor({ brickId = null, buildingId = null } = {}) {
+        this._brickId = brickId;
+        this._buildingId = buildingId;
     }
 
-    get items() { return this._items; }
+    get brickId() {
+        return this._brickId;
+    }
 
-    get isEmpty() { return this._items.length === 0; }
-    get isSingle() { return this._items.length === 1; }
-    get count() { return this._items.length; }
+    get buildingId() {
+        return this._buildingId;
+    }
 
-    // Helper for single-item legacy code
-    get primary() { return this._items.length > 0 ? this._items[0] : null; }
-    get brickId() { return this.primary?.brickId || null; }
-    get buildingId() { return this.primary?.buildingId || null; }
-
-    contains(brickId) {
-        return this._items.some(item => item.brickId === brickId);
+    get isEmpty() {
+        return this._brickId === null;
     }
 
     equals(other) {
-        if (!(other instanceof SelectionState) || this.count !== other.count) return false;
-        return this._items.every((item, i) => 
-            item.brickId === other.items[i].brickId && 
-            item.buildingId === other.items[i].buildingId
-        );
+        return other instanceof SelectionState
+            && this._brickId === other.brickId
+            && this._buildingId === other.buildingId;
     }
 
-    static empty() { return new SelectionState([]); }
-    
-    static single(brickId, buildingId) {
-        return new SelectionState([{ brickId, buildingId }]);
+    static empty() {
+        return new SelectionState();
     }
 }
