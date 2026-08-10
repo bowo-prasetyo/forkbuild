@@ -19,6 +19,7 @@ export class DocumentManager {
         this._document = document;
         this._state = new DocumentState();
         this._eventBus = new EventBus();
+        this._trackedCommandHistory = null;
     }
 
     get document() {
@@ -38,7 +39,14 @@ export class DocumentManager {
         }));
     }
 
+    // As of 0.1.39, also moves the tracked CommandHistory's save point to
+    // its current cursor — SaveDocumentUseCase calls this after a
+    // successful save, and from that moment on history.isDirty() answers
+    // "changed relative to what is on disk."
     markSaved() {
+        if (this._trackedCommandHistory) {
+            this._trackedCommandHistory.markSaved();
+        }
         this._setState(new DocumentState({
             dirty: false,
             readOnly: this._state.readOnly,
@@ -72,25 +80,44 @@ export class DocumentManager {
     }
 
     // Subscribes to a CommandHistory's own event bus so every executed,
-    // undone, or redone command marks this document dirty — without
-    // CommandHistory, or any tool, needing to call markDirty() directly.
-    // History already knows which operations actually changed the
-    // document; that's exactly why this responsibility lives here rather
-    // than being called from PlacementTool/SelectionTool. Simplification
-    // worth naming: undo currently also marks dirty, even if it happens
-    // to land exactly back on a previously-saved state — true "is the
-    // content identical to what's on disk" tracking is future work, not
-    // needed until this dirty indicator makes the distinction observable
-    // enough to matter.
+    // undone, or redone command refreshes this document's dirty flag —
+    // without CommandHistory, or any tool, needing to call markDirty()
+    // directly.
+    //
+    // As of 0.1.39 dirty is COMPUTED from the history's save point
+    // (history.isDirty()) rather than set blindly on every event. This
+    // resolves the 0.1.17 simplification: undoing back onto the saved
+    // state correctly reports clean again, because the history knows
+    // whether its current cursor sits on the save point. DocumentManager
+    // remembers the tracked history so markSaved() can move the save
+    // point in lockstep with DocumentState.
     // Returns an unsubscribe function.
     trackCommandHistory(commandHistory) {
-        const markDirty = () => this.markDirty();
+        this._trackedCommandHistory = commandHistory;
+        const syncDirty = () => this._syncDirtyFromHistory();
         const subscriptions = [
-            commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, markDirty),
-            commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_UNDONE, markDirty),
-            commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_REDONE, markDirty)
+            commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, syncDirty),
+            commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_UNDONE, syncDirty),
+            commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_REDONE, syncDirty)
         ];
-        return () => subscriptions.forEach((subscription) => subscription.unsubscribe());
+        return () => {
+            subscriptions.forEach((subscription) => subscription.unsubscribe());
+            if (this._trackedCommandHistory === commandHistory) {
+                this._trackedCommandHistory = null;
+            }
+        };
+    }
+
+    _syncDirtyFromHistory() {
+        if (!this._trackedCommandHistory) {
+            return;
+        }
+        this._setState(new DocumentState({
+            dirty: this._trackedCommandHistory.isDirty(),
+            readOnly: this._state.readOnly,
+            loadedFrom: this._state.loadedFrom,
+            lastSaved: this._state.lastSaved
+        }));
     }
 
     _setState(state) {
