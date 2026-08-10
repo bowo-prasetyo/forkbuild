@@ -46,7 +46,7 @@ export class PreviewRenderer {
         }
 
         this._mesh.position.set(preview.position.x, preview.position.y, preview.position.z);
-        this._mesh.rotation.y = preview.rotation;
+        this._mesh.rotation.y = preview.rotation * (Math.PI / 180);
     }
 
     _createGhostMesh(definitionId) {
