@@ -38,6 +38,7 @@ export class RenderWorldViewUseCase {
             addWorld: (world, documentId, layoutPosition) => worldRenderer.addWorld(world, documentId, layoutPosition),
             removeWorld: (world, documentId) => worldRenderer.removeWorld(world, documentId),
             selectBrick: (brickId) => spatialSelectionRenderer.select(brickId),
+            selectBricks: (brickIds, primaryBrickId = null) => spatialSelectionRenderer.selectMany(brickIds, primaryBrickId),
             clearSelection: () => spatialSelectionRenderer.clearSelection(),
             hoverBrick: (brickId) => spatialSelectionRenderer.hover(brickId),
             clearHover: () => spatialSelectionRenderer.clearHover(),
