@@ -99,6 +99,19 @@ in and out based on camera position, and users can inspect and edit bricks
 directly in this spatial context — all without the publisher interface
 changing.
 
+## World View Publishing (0.1.39)
+
+Publish is now reachable from World View — the place where worlds are
+actually edited. WorldNavigationSession.publishDocument() resolves the
+active document (selection → focus → sole loaded), auto-saves it when
+dirty, then delegates to PublishDocumentUseCase — the exact same use case
+the Editor's Publish button uses. The rule: a Publication always
+references the canonical current Document, never a stale saved version,
+and never transient spatial/editor state. Republishing an edited world
+appends a new Publication record pointing at the same documentId —
+document identity stays stable, publication identity is fresh per
+publish.
+
 ## Future Directions
 
 - **SteemPublisherProvider**: posts document JSON as a Steem custom_json
