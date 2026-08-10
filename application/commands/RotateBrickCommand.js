@@ -4,8 +4,8 @@ import { Command } from './Command.js';
 // converts to radians at the Three.js boundary. deltaRotation is added
 // to the current rotation (e.g. +90 or –90).
 export class RotateBrickCommand extends Command {
-    constructor({ worldId, buildingId, brickId, deltaRotation }) {
-        super();
+    constructor({ worldId, buildingId, brickId, deltaRotation, id, timestamp } = {}) {
+        super({ id, timestamp });
         this._worldId = worldId;
         this._buildingId = buildingId;
         this._brickId = brickId;
@@ -16,6 +16,7 @@ export class RotateBrickCommand extends Command {
     get worldId() { return this._worldId; }
     get buildingId() { return this._buildingId; }
     get brickId() { return this._brickId; }
+    get type() { return 'rotate-brick'; }
 
     execute(context) {
         this._assertWorldMatches(context);
@@ -50,20 +51,28 @@ export class RotateBrickCommand extends Command {
 
     toJSON() {
         return {
+            type: this.type,
+            id: this._id,
+            timestamp: this._timestamp.toISOString(),
             worldId: this._worldId,
             buildingId: this._buildingId,
             brickId: this._brickId,
-            deltaRotation: this._deltaRotation
+            deltaRotation: this._deltaRotation,
+            originalRotation: this._originalRotation
         };
     }
 
-    static fromJSON(json) {
-        return new RotateBrickCommand({
+    static fromJSON(json, registry) {
+        const cmd = new RotateBrickCommand({
             worldId: json.worldId,
             buildingId: json.buildingId,
             brickId: json.brickId,
-            deltaRotation: json.deltaRotation
+            deltaRotation: json.deltaRotation,
+            id: json.id,
+            timestamp: new Date(json.timestamp)
         });
+        cmd._originalRotation = json.originalRotation !== undefined ? json.originalRotation : null;
+        return cmd;
     }
 
     _assertWorldMatches(context) {
