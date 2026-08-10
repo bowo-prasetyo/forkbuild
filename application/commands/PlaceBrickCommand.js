@@ -33,8 +33,8 @@ import { Command } from './Command.js';
 // job, called by whoever constructs this command (PlacementTool), not by
 // the command itself.
 export class PlaceBrickCommand extends Command {
-    constructor({ worldId, buildingId, definitionId, position, rotation = 0 }) {
-        super();
+    constructor({ worldId, buildingId, definitionId, position, rotation = 0, id, timestamp } = {}) {
+        super({ id, timestamp });
         this._worldId = worldId;
         this._buildingId = buildingId;
         this._definitionId = definitionId;
@@ -43,31 +43,17 @@ export class PlaceBrickCommand extends Command {
         this._executedBrickId = null;
     }
 
-    get worldId() {
-        return this._worldId;
-    }
-
-    get buildingId() {
-        return this._buildingId;
-    }
-
-    get definitionId() {
-        return this._definitionId;
-    }
-
-    get position() {
-        return this._position;
-    }
-
-    get rotation() {
-        return this._rotation;
-    }
+    get worldId() { return this._worldId; }
+    get buildingId() { return this._buildingId; }
+    get definitionId() { return this._definitionId; }
+    get position() { return this._position; }
+    get rotation() { return this._rotation; }
+    get type() { return 'place-brick'; }
 
     // context: { world } — the live World this command applies to.
     // Returns the created (or, on redo, re-created with the same id) Brick.
     execute(context) {
         this._assertWorldMatches(context);
-
         const brick = new Brick({
             id: this._executedBrickId || undefined,
             definitionId: this._definitionId,
@@ -97,22 +83,30 @@ export class PlaceBrickCommand extends Command {
 
     toJSON() {
         return {
+            type: this.type,
+            id: this._id,
+            timestamp: this._timestamp.toISOString(),
             worldId: this._worldId,
             buildingId: this._buildingId,
             definitionId: this._definitionId,
             position: this._position.toJSON(),
-            rotation: this._rotation
+            rotation: this._rotation,
+            executedBrickId: this._executedBrickId
         };
     }
 
-    static fromJSON(json) {
-        return new PlaceBrickCommand({
+    static fromJSON(json, registry) {
+        const cmd = new PlaceBrickCommand({
             worldId: json.worldId,
             buildingId: json.buildingId,
             definitionId: json.definitionId,
             position: Position.fromJSON(json.position),
-            rotation: json.rotation
+            rotation: json.rotation,
+            id: json.id,
+            timestamp: new Date(json.timestamp)
         });
+        cmd._executedBrickId = json.executedBrickId || null;
+        return cmd;
     }
 
     _assertWorldMatches(context) {
