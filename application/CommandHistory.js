@@ -165,12 +165,5 @@ export class CommandHistory {
             throw new Error(`CommandHistory.fromJSON(): ${fieldName} must be an array`);
         }
         return value;
-        }
-
-        for (cmdJson of json.redo || []) {
-            history._redoStack.push(registry.fromJSON(cmdJson));
-        }
-
-        return history;
     }
 }
