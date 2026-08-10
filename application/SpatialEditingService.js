@@ -1,11 +1,15 @@
 import { SpatialEditingContext } from './spatial-state/SpatialEditingContext.js';
 import { Position } from '../core/Position.js';
+import { MoveBrickCommand } from './commands/MoveBrickCommand.js';
+import { RotateBrickCommand } from './commands/RotateBrickCommand.js';
+import { DeleteBrickCommand } from './commands/DeleteBrickCommand.js';
 
-// Translates spatial editing intent into domain mutations.
+// Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
 export class SpatialEditingService {
-    constructor(session) {
+    constructor(session, commandHistories) {
         this._session = session;
+        this._commandHistories = commandHistories;
     }
 
     getEditingContext(selection) {
@@ -24,7 +28,7 @@ export class SpatialEditingService {
                 documentId: selection.documentId,
                 buildingId: selection.buildingId,
                 brickId: selection.brickId,
-                capabilities: { move: true, rotate: false, delete: true }
+                capabilities: { move: true, rotate: true, delete: true }
             });
         }
 
@@ -46,20 +50,52 @@ export class SpatialEditingService {
         }
 
         const world = document.world;
+        const history = this._commandHistories.get(world.id);
+        if (!history) {
+            return false;
+        }
+
         const building = world.getBuilding(buildingId);
         const brick = building ? building.findBrick(brickId) : null;
         if (!brick) {
             return false;
         }
 
-        const current = brick.position;
-        const newPos = new Position(
-            current.x + delta.x,
-            current.y + delta.y,
-            current.z + delta.z
-        );
+        const command = new MoveBrickCommand({
+            worldId: world.id,
+            buildingId,
+            brickId,
+            delta
+        });
+        history.execute(command);
+        return true;
+    }
 
-        world.updateBrick(buildingId, brickId, { position: newPos });
+    rotateBrick(documentId, buildingId, brickId, deltaRotation) {
+        const document = this._session.getDocument(documentId);
+        if (!document) {
+            return false;
+        }
+
+        const world = document.world;
+        const history = this._commandHistories.get(world.id);
+        if (!history) {
+            return false;
+        }
+
+        const building = world.getBuilding(buildingId);
+        const brick = building ? building.findBrick(brickId) : null;
+        if (!brick) {
+            return false;
+        }
+
+        const command = new RotateBrickCommand({
+            worldId: world.id,
+            buildingId,
+            brickId,
+            deltaRotation
+        });
+        history.execute(command);
         return true;
     }
 
@@ -70,7 +106,17 @@ export class SpatialEditingService {
         }
 
         const world = document.world;
-        world.removeBrickFromBuilding(buildingId, brickId);
+        const history = this._commandHistories.get(world.id);
+        if (!history) {
+            return false;
+        }
+
+        const command = new DeleteBrickCommand({
+            worldId: world.id,
+            buildingId,
+            brickId
+        });
+        history.execute(command);
         return true;
     }
 }
