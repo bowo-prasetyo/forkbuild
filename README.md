@@ -6,9 +6,9 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.39** — World View Persistence & Publication UI
+**Version 0.1.40** — Command Replay & Operation Timeline
 
-World View is now a complete editing loop: place, move, rotate, and delete bricks in the shared spatial world, then **Save** the document and **Publish** it to the discovery catalog — through the exact same persistence and publication pipelines the Editor uses. Dirty tracking is save-point aware: undoing back onto the saved state correctly reports clean, and dirty documents are pinned against streaming unload so edits are never silently lost.
+The persistent command history is now a genuine event/operation model. Every CommandHistory captures a **baseline snapshot** of the world it was created against, and `replay()` deterministically reconstructs any intermediate document state by re-executing **deserialized** commands through the CommandRegistry — never the live command objects, and never touching the history itself. World View gains an **Operation Timeline**: composites appear as single entries, clicking any operation previews the world exactly as it existed at that point, scrubbing back and forth is non-destructive, and Cancel returns to the untouched live document.
 
 ## Features
 
@@ -24,6 +24,7 @@ World View is now a complete editing loop: place, move, rotate, and delete brick
 - **Command History** — Every mutation is an undoable command; shared between Editor and Spatial views. Now fully serializable via `CommandRegistry`.
 - **Composite Commands** — Multi-brick operations execute, rollback on child failure, and undo/redo as a single atomic step.
 - **World View Save & Publish** — Save the active world (button or Ctrl/Cmd+S) and publish it with automatic save-first when dirty. Per-world dirty indicators; dirty worlds are never stream-unloaded.
+- **Command Replay & Operation Timeline** — Deterministic reconstruction of any historical world state from the persistent command history (baseline snapshot + serialized command re-execution, transactional and history-suppressed). Timeline panel in World View with click-to-preview, composite-aware entries, undone-state awareness, and non-destructive cancel.
 
 ## Architecture
 
@@ -84,6 +85,9 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.37 Persistent Command History
 - [x] 0.1.38 Transform Gizmo & Group Pivot
 - [x] 0.1.39 World View Persistence & Publication UI
+- [x] 0.1.40 Command Replay / Operation Timeline
+- [ ] 0.1.41 Advanced Selection & Grouping
+- [ ] 0.2 Blockchain publishing, multiplayer
 - [ ] 0.1.40 Command Replay / Operation Timeline
 - [ ] 0.1.41 Advanced Selection & Grouping
 - [ ] 0.2 Blockchain publishing, multiplayer
