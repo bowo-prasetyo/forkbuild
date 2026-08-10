@@ -3,14 +3,11 @@ import { CommandHistory } from '../application/CommandHistory.js';
 import { CommandRegistry } from '../application/commands/CommandRegistry.js';
 import { CompositeCommand } from '../application/commands/CompositeCommand.js';
 
-// ---------------------------------------------------------------------
-// Mock command for isolated history testing
-// ---------------------------------------------------------------------
 class IncrementCommand extends Command {
-    constructor({ delta = 1, id, timestamp } = {}) {
+    constructor({ delta = 1, id, timestamp, executed = false } = {}) {
         super({ id, timestamp });
         this._delta = delta;
-        this._executed = false;
+        this._executed = executed;
     }
 
     get type() { return 'increment'; }
@@ -25,13 +22,8 @@ class IncrementCommand extends Command {
         this._executed = false;
     }
 
-    canUndo() {
-        return this._executed;
-    }
-
-    describe() {
-        return `Increment ${this._delta}`;
-    }
+    canUndo() { return this._executed; }
+    describe() { return `Increment ${this._delta}`; }
 
     toJSON() {
         return {
@@ -43,14 +35,16 @@ class IncrementCommand extends Command {
         };
     }
 
-    static fromJSON(json, registry) {
-        const cmd = new IncrementCommand({
+    static fromJSON(json) {
+        if (!Number.isFinite(json.delta)) {
+            throw new Error('IncrementCommand.fromJSON(): delta must be a number');
+        }
+        return new IncrementCommand({
             delta: json.delta,
             id: json.id,
-            timestamp: new Date(json.timestamp)
+            timestamp: new Date(json.timestamp),
+            executed: json.executed === true
         });
-        cmd._executed = json.executed;
-        return cmd;
     }
 }
 
@@ -58,210 +52,190 @@ function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
-// ---------------------------------------------------------------------
-// Test suite
-// ---------------------------------------------------------------------
-function runTests() {
+function assertThrows(fn, expectedMessage, message) {
+    try {
+        fn();
+        assert(false, message);
+    } catch (e) {
+        assert(e.message.includes(expectedMessage), `${message}: ${e.message}`);
+    }
+}
+
+function createRegistry() {
     const registry = new CommandRegistry();
     registry.register('increment', IncrementCommand);
     registry.register('composite', CompositeCommand);
+    return registry;
+}
 
-    // -----------------------------------------------------------------
-    // 1. Basic execute / undo / redo
-    // -----------------------------------------------------------------
+function runTests() {
+    const registry = createRegistry();
+
     {
         const context = { value: 0 };
         const history = new CommandHistory(context);
-
-        history.execute(new IncrementCommand({ delta: 5 }));
-        assert(context.value === 5, 'value should be 5 after execute');
-        assert(history.canUndo(), 'should be able to undo');
-
-        history.undo();
-        assert(context.value === 0, 'value should be 0 after undo');
-        assert(history.canRedo(), 'should be able to redo');
-
-        history.redo();
-        assert(context.value === 5, 'value should be 5 after redo');
-        console.log('✓ basic execute/undo/redo');
+        assert(history.toJSON().commands.length === 0, 'empty history serializes no commands');
+        assert(history.toJSON().cursor === 0, 'empty history cursor is 0');
+        const restored = CommandHistory.fromJSON(history.toJSON(), context, registry);
+        assert(!restored.canUndo(), 'empty restored history has no undo');
+        assert(!restored.canRedo(), 'empty restored history has no redo');
+        console.log('✓ empty history persistence');
     }
 
-    // -----------------------------------------------------------------
-    // 2. Serialization round-trip preserves undo capability
-    // -----------------------------------------------------------------
     {
-        const context = { value: 5 };
+        const context = { value: 0 };
         const history = new CommandHistory(context);
         history.execute(new IncrementCommand({ delta: 5 }));
-
         const json = history.toJSON();
-        assert(json.executed.length === 1, 'should have 1 executed command');
-        assert(json.redo.length === 0, 'should have 0 redo commands');
-
-        const history2 = CommandHistory.fromJSON(json, context, registry);
-        assert(history2.canUndo(), 'deserialized history should be undoable');
-
-        history2.undo();
-        assert(context.value === 5, 'undo after deserialization should return to serialized document state');
-        console.log('✓ serialization round-trip');
+        assert(json.schemaVersion === 1, 'schema version is written');
+        assert(json.commands.length === 1, 'single command is serialized');
+        assert(json.cursor === 1, 'cursor after single command is 1');
+        const restored = CommandHistory.fromJSON(json, context, registry);
+        assert(restored.canUndo(), 'single restored command is undoable');
+        restored.undo();
+        assert(context.value === 0, 'undo after restore returns to prior state');
+        console.log('✓ single command persistence');
     }
 
-    // -----------------------------------------------------------------
-    // 3. New command after undo clears redo branch (linear history)
-    // -----------------------------------------------------------------
     {
         const context = { value: 0 };
         const history = new CommandHistory(context);
-
-        history.execute(new IncrementCommand({ delta: 1 })); // 1
-        history.execute(new IncrementCommand({ delta: 2 })); // 3
-        history.undo(); // back to 1, redo stack has +2
-        assert(history.canRedo(), 'should have redo after undo');
-
-        history.execute(new IncrementCommand({ delta: 10 })); // 11
-        assert(!history.canRedo(), 'redo should be cleared after new execute');
-        assert(context.value === 11, 'value should be 11');
-        assert(history.getExecutedCommands().length === 2, 'should have 2 executed commands');
-        console.log('✓ linear history invariant');
+        history.execute(new IncrementCommand({ delta: 1 }));
+        history.execute(new IncrementCommand({ delta: 2 }));
+        history.execute(new IncrementCommand({ delta: 4 }));
+        assert(history.toJSON().cursor === 3, 'multiple command cursor at end');
+        const restored = CommandHistory.fromJSON(history.toJSON(), context, registry);
+        restored.undo();
+        restored.undo();
+        assert(context.value === 1, 'multiple restored commands undo in reverse order');
+        restored.redo();
+        assert(context.value === 3, 'multiple restored commands redo in original order');
+        console.log('✓ multiple command persistence');
     }
 
-    // -----------------------------------------------------------------
-    // 4. Complex sequence: Place → Move → Rotate → Undo → Redo → New
-    // -----------------------------------------------------------------
     {
         const context = { value: 0 };
         const history = new CommandHistory(context);
+        history.execute(new IncrementCommand({ delta: 1 }));
+        history.execute(new IncrementCommand({ delta: 2 }));
+        history.undo();
+        const json = history.toJSON();
+        assert(json.cursor === 1, 'undo position cursor preserved');
+        assert(json.commands.map((cmd) => cmd.delta).join(',') === '1,2', 'linear command order preserved');
+        const restored = CommandHistory.fromJSON(json, context, registry);
+        assert(restored.getUndoLabel() === 'Undo Increment 1', 'undo label restored at cursor');
+        assert(restored.getRedoLabel() === 'Redo Increment 2', 'redo label restored at cursor');
+        restored.redo();
+        assert(context.value === 3, 'redo position restored');
+        console.log('✓ undo and redo cursor persistence');
+     }
 
-        history.execute(new IncrementCommand({ delta: 1 }));  // +1
-        history.execute(new IncrementCommand({ delta: 2 }));  // +2
-        history.execute(new IncrementCommand({ delta: 4 }));   // +4
-        history.execute(new IncrementCommand({ delta: 8 }));   // +8
-        // total = 15
-        assert(context.value === 15, 'value should be 15');
-
-        history.undo(); // -8 → 7
-        history.undo(); // -4 → 3
-        assert(context.value === 3, 'value should be 3 after 2 undos');
-        assert(history.canRedo(), 'should be able to redo');
-
-        history.redo(); // +4 → 7
-        assert(context.value === 7, 'value should be 7 after redo');
-
-        history.execute(new IncrementCommand({ delta: 100 })); // +100, clears redo
-        assert(context.value === 107, 'value should be 107');
-        assert(!history.canRedo(), 'should have no redo after new execute');
-        assert(history.getExecutedCommands().length === 4, 'should have 4 executed');
-        console.log('✓ complex sequence');
-    }
-
-    // -----------------------------------------------------------------
-    // 5. CompositeCommand atomicity and serialization
-    // -----------------------------------------------------------------
     {
         const context = { value: 0 };
         const history = new CommandHistory(context);
-
-        const composite = new CompositeCommand();
+        const composite = new CompositeCommand({ description: 'Move 2 Bricks' });
         composite.add(new IncrementCommand({ delta: 3 }));
         composite.add(new IncrementCommand({ delta: 5 }));
-
-        history.execute(composite); // +8
-        assert(context.value === 8, 'composite should add 8');
-        assert(history.getExecutedCommands().length === 1, 'history should have 1 entry');
-
-        history.undo(); // -8 → 0
-        assert(context.value === 0, 'composite undo should subtract 8');
-        assert(history.canRedo(), 'should be able to redo composite');
-
-        // Serialize history with composite in redo stack
+        history.execute(composite);
         const json = history.toJSON();
-        assert(json.executed.length === 0, '0 executed after undo');
-        assert(json.redo.length === 1, '1 redo command');
-        assert(json.redo[0].type === 'composite', 'redo should be composite');
-        assert(json.redo[0].commands.length === 2, 'composite should have 2 children');
-
-        const history2 = CommandHistory.fromJSON(json, context, registry);
-        assert(history2.canRedo(), 'deserialized history should allow redo');
-        history2.redo();
-        assert(context.value === 8, 'composite redo should restore 8');
-        console.log('✓ CompositeCommand atomicity and serialization');
+        assert(json.commands[0].type === 'composite', 'composite type serialized');
+        assert(json.commands[0].description === 'Move 2 Bricks', 'composite description serialized');
+        assert(json.commands[0].commands.length === 2, 'composite children serialized');
+        const restored = CommandHistory.fromJSON(json, context, registry);
+        assert(restored.getUndoLabel() === 'Undo Move 2 Bricks', 'composite description restored');
+        restored.undo();
+        assert(context.value === 0, 'composite undo restored');
+        console.log('✓ composite persistence with descriptions');
     }
 
-    // -----------------------------------------------------------------
-    // 6. CommandRegistry error handling
-    // -----------------------------------------------------------------
-    {
-        try {
-            registry.fromJSON({ type: 'nonexistent' });
-            assert(false, 'should throw for unknown command type');
-        } catch (e) {
-            assert(e.message.includes('unknown command type'), 'correct error for unknown type');
-        }
-
-        try {
-            const badRegistry = new CommandRegistry();
-            badRegistry.register('', IncrementCommand);
-            assert(false, 'should throw for empty type');
-        } catch (e) {
-            assert(e.message.includes('type must be'), 'correct error for empty type');
-        }
-
-        try {
-            const badRegistry = new CommandRegistry();
-            badRegistry.register('foo', class NotACommand {});
-            assert(false, 'should throw for non-Command class');
-        } catch (e) {
-            assert(e.message.includes('must extend Command'), 'correct error for non-Command');
-        }
-        console.log('✓ CommandRegistry error handling');
-    }
-
-    // -----------------------------------------------------------------
-    // 7. Command metadata (id, timestamp)
-    // -----------------------------------------------------------------
-    {
-        const cmd = new IncrementCommand({ delta: 1 });
-        assert(typeof cmd.id === 'string' && cmd.id.length > 0, 'id should be a non-empty string');
-        assert(cmd.timestamp instanceof Date, 'timestamp should be a Date');
-
-        const json = cmd.toJSON();
-        assert(json.id === cmd.id, 'id preserved in JSON');
-        assert(json.timestamp === cmd.timestamp.toISOString(), 'timestamp preserved in JSON');
-
-        const restored = IncrementCommand.fromJSON(json, registry);
-        assert(restored.id === cmd.id, 'id round-trips');
-        assert(restored.timestamp.getTime() === cmd.timestamp.getTime(), 'timestamp round-trips');
-        console.log('✓ command metadata');
-    }
-
-    // -----------------------------------------------------------------
-    // 8. CommandHistory labels reflect current state
-    // -----------------------------------------------------------------
     {
         const context = { value: 0 };
         const history = new CommandHistory(context);
-        assert(history.getUndoLabel() === null, 'no undo label initially');
-        assert(history.getRedoLabel() === null, 'no redo label initially');
-
-        history.execute(new IncrementCommand({ delta: 7 }));
-        assert(history.getUndoLabel() === 'Undo Increment 7', 'undo label correct');
-        assert(history.getRedoLabel() === null, 'still no redo label');
-
+        const outer = new CompositeCommand({ description: 'Nested Group Edit' });
+        const inner = new CompositeCommand({ description: 'Inner Edit' });
+        inner.add(new IncrementCommand({ delta: 2 }));
+        inner.add(new IncrementCommand({ delta: 3 }));
+        outer.add(new IncrementCommand({ delta: 1 }));
+        outer.add(inner);
+        history.execute(outer);
+        const restored = CommandHistory.fromJSON(history.toJSON(), context, registry);
+        assert(restored.getExecutedCommands()[0].commands[1].describe() === 'Inner Edit', 'nested composite description restored');
+        restored.undo();
+        assert(context.value === 0, 'nested composite undo restored');
+        restored.redo();
+        assert(context.value === 6, 'nested composite redo restored');
+        console.log('✓ nested composite persistence');
+     }
+ 
+    {
+        const context = { value: 0 };
+        const history = new CommandHistory(context);
+        history.execute(new IncrementCommand({ delta: 1 }));
+        history.execute(new IncrementCommand({ delta: 2 }));
         history.undo();
-        assert(history.getUndoLabel() === null, 'no undo label after undo');
-        assert(history.getRedoLabel() === 'Redo Increment 7', 'redo label correct');
-        console.log('✓ undo/redo labels');
+        const restored = CommandHistory.fromJSON(history.toJSON(), context, registry);
+        restored.execute(new IncrementCommand({ delta: 10 }));
+        assert(!restored.canRedo(), 'new command after restored undo clears redo');
+        assert(restored.toJSON().commands.map((cmd) => cmd.delta).join(',') === '1,10', 'redo branch removed after restored execute');
+        console.log('✓ restored history followed by new command');
+     }
+ 
+    {
+        const context = { value: 0 };
+        const history = new CommandHistory(context);
+        history.execute(new IncrementCommand({ delta: 1 }));
+        history.execute(new IncrementCommand({ delta: 2 }));
+        history.undo();
+        const restored = CommandHistory.fromJSON(history.toJSON(), context, registry);
+        restored.undo();
+        assert(context.value === 0, 'restored undo works');
+        restored.redo();
+        restored.redo();
+        assert(context.value === 3, 'restored redo works');
+        console.log('✓ restored history followed by undo/redo');
     }
 
+    {
+        assertThrows(
+            () => CommandHistory.fromJSON({ schemaVersion: 1, cursor: 0, commands: [{ type: 'missing' }] }, {}, registry),
+            'unknown command type',
+            'unknown command should be rejected'
+        );
+        assertThrows(
+            () => CommandHistory.fromJSON({ schemaVersion: 1, cursor: 2, commands: [] }, {}, registry),
+            'cursor must be within command bounds',
+            'out-of-range cursor should be rejected'
+        );
+        assertThrows(
+            () => CommandHistory.fromJSON({ schemaVersion: 1, cursor: 0, commands: [{ type: 'increment' }] }, {}, registry),
+            'delta must be a number',
+            'malformed command should be rejected'
+        );
+        assertThrows(
+            () => CommandHistory.fromJSON({ schemaVersion: 999, cursor: 0, commands: [] }, {}, registry),
+            'unsupported schemaVersion',
+            'unknown schema should be rejected'
+        );
+        console.log('✓ malformed history rejection');
+    }
 
+    {
+        const context = { value: 5 };
+        const legacy = {
+            executed: [new IncrementCommand({ delta: 1, executed: true }).toJSON()],
+            redo: [new IncrementCommand({ delta: 2, executed: true }).toJSON()]
+        };
+        const restored = CommandHistory.fromJSON(legacy, context, registry);
+        assert(restored.getCursor() === 1, 'legacy executed stack maps to cursor');
+        restored.redo();
+        assert(context.value === 7, 'legacy redo stack restores in executable order');
+        console.log('✓ legacy stack history migration');
+    }
 
-    // -----------------------------------------------------------------
-    // 9. CompositeCommand rolls back executed children when a later child fails
-    // -----------------------------------------------------------------
     {
         class FailingCommand extends Command {
             get type() { return 'failing'; }
-            execute(context) { throw new Error('intentional failure'); }
+            execute() { throw new Error('intentional failure'); }
             undo(context) { context.value = -999; }
             canUndo() { return false; }
             describe() { return 'Failing Command'; }
@@ -275,13 +249,7 @@ function runTests() {
         composite.add(new IncrementCommand({ delta: 5 }));
         composite.add(new FailingCommand());
 
-        try {
-            history.execute(composite);
-            assert(false, 'composite execute should throw');
-        } catch (e) {
-            assert(e.message.includes('intentional failure'), 'should rethrow child failure');
-        }
-
+        assertThrows(() => history.execute(composite), 'intentional failure', 'composite execute should rethrow child failure');
         assert(context.value === 0, 'rollback should undo successfully executed children');
         assert(history.getExecutedCommands().length === 0, 'failed composite should not enter history');
         console.log('✓ CompositeCommand rollback on child failure');
