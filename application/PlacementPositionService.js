@@ -47,9 +47,8 @@ export class PlacementPositionService {
         if (snapEnabled) {
             newX = Math.round(newX / snapSize) * snapSize;
             newZ = Math.round(newZ / snapSize) * snapSize;
-            if (Math.abs(normal.y) < 0.5) {
-                newY = Math.round(newY / snapSize) * snapSize;
-            }
+            // Y is intentionally NOT snapped — exact dimensional stacking preserves
+            // face-contact geometry (e.g. a 0.25-height plate on a 1.0-height cube).
         }
 
         return new Position(newX, newY, newZ);
