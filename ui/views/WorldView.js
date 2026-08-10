@@ -222,7 +222,7 @@ export default {
                     session.commitPlacement();
                     refreshSpatialUI();
                 } else {
-                    session.pick(event.clientX, event.clientY);
+                    session.pick(event.clientX, event.clientY, { toggle: event.ctrlKey || event.metaKey || event.shiftKey });
                     refreshSpatialUI();
                 }
             }
@@ -265,7 +265,7 @@ export default {
             if (activeTool.value === 'select' && spatialEditingContext.value) {
                 const ctx = spatialEditingContext.value;
 
-                if (ctx.type === 'brick' && ctx.capabilities.rotate) {
+                if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.rotate) {
                     if (event.key.toLowerCase() === 'r') {
                         event.preventDefault();
                         const delta = event.shiftKey ? -90 : 90;
@@ -275,7 +275,7 @@ export default {
                     }
                 }
 
-                if (ctx.type === 'brick' && ctx.capabilities.move) {
+                if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.move) {
                     switch (event.key) {
                         case 'ArrowUp':
                             event.preventDefault();
@@ -304,7 +304,7 @@ export default {
                     }
                 }
 
-                if (ctx.type === 'brick' && ctx.capabilities.delete) {
+                if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.delete) {
                     if (event.key === 'Delete' || event.key === 'Backspace') {
                         event.preventDefault();
                         deleteSelectedBrick();
