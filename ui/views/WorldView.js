@@ -28,6 +28,7 @@ export default {
         const cameraPosition = ref(null);
         const availableDefinitions = ref([]);
         const selectedDefinitionId = ref(null);
+        const activeTool = ref('select');
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute();
@@ -44,99 +45,31 @@ export default {
         if (availableDefinitions.value.length > 0) {
             selectedDefinitionId.value = availableDefinitions.value[0].id;
         }
-        const isPlacementMode = ref(false);
 
-        function onKeyDown(event) {
-            if (event.key === 'Escape') {
-                if (session.isPlacementMode()) {
-                    cancelPlacement();
-                } else {
-                    session.clearSelection();
-                    refreshSpatialUI();
+        // -----------------------------------------------------------------
+        // Tool switching (unified with Editor View)
+        // -----------------------------------------------------------------
+        function setTool(tool) {
+            activeTool.value = tool;
+            if (tool === 'place') {
+                if (selectedDefinitionId.value) {
+                    session.setActiveDefinitionId(selectedDefinitionId.value);
                 }
-                return;
+            } else {
+                session.cancelPlacement();
             }
-
-            const modifierPressed = event.ctrlKey || event.metaKey;
-
-            if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
-                event.preventDefault();
-                session.undo();
-                refreshSpatialUI();
-                return;
-            }
-            if (modifierPressed && (event.key.toLowerCase() === 'y' || (event.key.toLowerCase() === 'z' && event.shiftKey))) {
-                event.preventDefault();
-                session.redo();
-                refreshSpatialUI();
-                return;
-            }
-
-            if (!session.isPlacementMode() && spatialEditingContext.value) {
-                const ctx = spatialEditingContext.value;
-
-                if (ctx.type === 'brick' && ctx.capabilities.rotate) {
-                    if (event.key.toLowerCase() === 'r') {
-                        event.preventDefault();
-                        const delta = event.shiftKey ? -90 : 90;
-                        session.rotateSelection(delta);
-                        refreshSpatialUI();
-                        return;
-                    }
-                }
-
-                if (ctx.type === 'brick' && ctx.capabilities.move) {
-                    switch (event.key) {
-                        case 'ArrowUp':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: 0, z: -NUDGE });
-                            break;
-                        case 'ArrowDown':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: 0, z: NUDGE });
-                            break;
-                        case 'ArrowLeft':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: -NUDGE, y: 0, z: 0 });
-                            break;
-                        case 'ArrowRight':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: NUDGE, y: 0, z: 0 });
-                            break;
-                        case 'PageUp':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: NUDGE, z: 0 });
-                            break;
-                        case 'PageDown':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: -NUDGE, z: 0 });
-                            break;
-                    }
-                }
-
-                if (ctx.type === 'brick' && ctx.capabilities.delete) {
-                    if (event.key === 'Delete' || event.key === 'Backspace') {
-                        event.preventDefault();
-                        deleteSelectedBrick();
-                    }
-                }
-            }
-        }
-        
-        function startPlacement() {
-            if (selectedDefinitionId.value) {
-                session.setActiveDefinitionId(selectedDefinitionId.value);
-                isPlacementMode.value = true;
-                refreshSpatialUI();
-            }
-        }
-
-        function cancelPlacement() {
-            session.cancelPlacement();
-            isPlacementMode.value = false;
             refreshSpatialUI();
         }
-        
+
+        function onBrickSelectionChange() {
+            if (activeTool.value === 'place' && selectedDefinitionId.value) {
+                session.setActiveDefinitionId(selectedDefinitionId.value);
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Spatial UI refresh
+        // -----------------------------------------------------------------
         function refreshSpatialUI() {
             const state = session.getSpatialState();
             const docs = session.getLoadedDocuments();
@@ -260,18 +193,9 @@ export default {
             refreshSpatialUI();
         }
 
-        function startPlacement() {
-            if (selectedDefinitionId.value) {
-                session.setActiveDefinitionId(selectedDefinitionId.value);
-                refreshSpatialUI();
-            }
-        }
-
-        function cancelPlacement() {
-            session.cancelPlacement();
-            refreshSpatialUI();
-        }
-
+        // -----------------------------------------------------------------
+        // Pointer interaction
+        // -----------------------------------------------------------------
         function onPointerDown(event) {
             isDragging = false;
             pointerStart = { x: event.clientX, y: event.clientY };
@@ -294,7 +218,7 @@ export default {
 
         function onPointerUp(event) {
             if (!isDragging && pointerStart) {
-                if (session.isPlacementMode()) {
+                if (activeTool.value === 'place') {
                     session.commitPlacement();
                     refreshSpatialUI();
                 } else {
@@ -306,20 +230,14 @@ export default {
             isDragging = false;
         }
 
-        function moveSelectedBrick(delta) {
-            session.moveSelection(delta);
-            refreshSpatialUI();
-        }
-
-        function deleteSelectedBrick() {
-            session.deleteSelection();
-            refreshSpatialUI();
-        }
-
+        // -----------------------------------------------------------------
+        // Keyboard interaction (merged and deduplicated)
+        // -----------------------------------------------------------------
         function onKeyDown(event) {
+            // Escape: cancel placement if in Place mode, else clear selection
             if (event.key === 'Escape') {
-                if (session.isPlacementMode()) {
-                    cancelPlacement();
+                if (activeTool.value === 'place') {
+                    setTool('select');
                 } else {
                     session.clearSelection();
                     refreshSpatialUI();
@@ -327,8 +245,36 @@ export default {
                 return;
             }
 
-            if (!session.isPlacementMode() && spatialEditingContext.value) {
+            const modifierPressed = event.ctrlKey || event.metaKey;
+
+            // Undo / Redo (global, works in both tools)
+            if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
+                event.preventDefault();
+                session.undo();
+                refreshSpatialUI();
+                return;
+            }
+            if (modifierPressed && (event.key.toLowerCase() === 'y' || (event.key.toLowerCase() === 'z' && event.shiftKey))) {
+                event.preventDefault();
+                session.redo();
+                refreshSpatialUI();
+                return;
+            }
+
+            // Select-tool editing shortcuts
+            if (activeTool.value === 'select' && spatialEditingContext.value) {
                 const ctx = spatialEditingContext.value;
+
+                if (ctx.type === 'brick' && ctx.capabilities.rotate) {
+                    if (event.key.toLowerCase() === 'r') {
+                        event.preventDefault();
+                        const delta = event.shiftKey ? -90 : 90;
+                        session.rotateSelection(delta);
+                        refreshSpatialUI();
+                        return;
+                    }
+                }
+
                 if (ctx.type === 'brick' && ctx.capabilities.move) {
                     switch (event.key) {
                         case 'ArrowUp':
@@ -357,6 +303,7 @@ export default {
                             break;
                     }
                 }
+
                 if (ctx.type === 'brick' && ctx.capabilities.delete) {
                     if (event.key === 'Delete' || event.key === 'Backspace') {
                         event.preventDefault();
@@ -366,6 +313,19 @@ export default {
             }
         }
 
+        function moveSelectedBrick(delta) {
+            session.moveSelection(delta);
+            refreshSpatialUI();
+        }
+
+        function deleteSelectedBrick() {
+            session.deleteSelection();
+            refreshSpatialUI();
+        }
+
+        // -----------------------------------------------------------------
+        // Lifecycle
+        // -----------------------------------------------------------------
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
@@ -407,11 +367,11 @@ export default {
             cameraPosition,
             availableDefinitions,
             selectedDefinitionId,
-            isPlacementMode,          // ← added
+            activeTool,
+            setTool,
+            onBrickSelectionChange,
             focusWorld,
             focusSelection,
-            startPlacement,
-            cancelPlacement,
             moveSelectedBrick,
             deleteSelectedBrick
         };
@@ -425,10 +385,10 @@ export default {
                     Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
                 <p class="world-view-hint">
-                    Drag to orbit • Scroll to zoom • Home to reset • Click to inspect • Move to explore
+                    Drag to orbit • Scroll to zoom • Home to reset • 1/2 to switch tools • Click to inspect / place
                 </p>
 
-                <div v-if="spatialHover && !spatialPlacement" class="spatial-panel spatial-panel--hover">
+                <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
                     <h4>Hover</h4>
                     <p class="spatial-type">{{ spatialHover.type }}</p>
                     <p v-if="spatialHover.worldTitle" class="spatial-world">
@@ -537,26 +497,13 @@ export default {
                         {{ spatialPlacement.position.y.toFixed(2) }},
                         {{ spatialPlacement.position.z.toFixed(2) }}
                     </p>
-                    <p class="editing-hint">Click to place • Escape to cancel</p>
+                    <p class="editing-hint">Click to place • Escape to switch to Select</p>
                 </div>
 
-                <div v-if="spatialEditingContext && !spatialPlacement" class="spatial-panel spatial-panel--editing">
+                <div v-if="spatialEditingContext && activeTool === 'select'" class="spatial-panel spatial-panel--editing">
                     <h4>Editing</h4>
                     <p class="spatial-type">{{ spatialEditingContext.type }}</p>
 
-                    <div v-if="spatialEditingContext.type === 'brick'" class="editing-actions">
-                        <p v-if="spatialEditingContext.capabilities.move" class="editing-hint">
-                            Arrow keys: move X/Z • Page Up/Down: move Y
-                        </p>
-                        <button
-                            v-if="spatialEditingContext.capabilities.delete"
-                            class="action-btn action-btn--danger"
-                            @click="deleteSelectedBrick"
-                        >
-                            Delete Brick
-                        </button>
-                    </div>
-                    
                     <div v-if="spatialEditingContext.type === 'brick'" class="editing-actions">
                         <p v-if="spatialEditingContext.capabilities.move" class="editing-hint">
                             Arrow keys: move X/Z • Page Up/Down: move Y
@@ -571,22 +518,37 @@ export default {
                         >
                             Delete Brick
                         </button>
-                    </div>                    
+                    </div>
 
                     <div v-if="spatialEditingContext.type === 'ground'" class="editing-actions">
                         <p class="editing-hint">
-                            Ground selected. Choose a brick type to place.
+                            Ground selected. Switch to Place tool to build.
                         </p>
                     </div>
                 </div>
-                
-                <div class="world-view-section placement-section">
-                    <h4>Place Brick</h4>
-                    <div class="placement-controls">
+
+                <div class="world-view-section">
+                    <h4>Tools</h4>
+                    <div class="tool-switcher tool-switcher--spatial">
+                        <button
+                            :class="['tool-btn', { 'tool-btn--active': activeTool === 'select' }]"
+                            @click="setTool('select')"
+                        >
+                            Select
+                        </button>
+                        <button
+                            :class="['tool-btn', { 'tool-btn--active': activeTool === 'place' }]"
+                            @click="setTool('place')"
+                        >
+                            Place
+                        </button>
+                    </div>
+
+                    <div v-if="activeTool === 'place'" class="placement-controls">
                         <select
                             v-model="selectedDefinitionId"
                             class="placement-select"
-                            :disabled="isPlacementMode"
+                            @change="onBrickSelectionChange"
                         >
                             <option
                                 v-for="def in availableDefinitions"
@@ -596,25 +558,10 @@ export default {
                                 {{ def.name }}
                             </option>
                         </select>
-                        <button
-                            v-if="!isPlacementMode"
-                            class="action-btn action-btn--primary"
-                            @click="startPlacement"
-                            :disabled="!selectedDefinitionId"
-                        >
-                            Start Placement
-                        </button>
-                        <button
-                            v-else
-                            class="action-btn action-btn--secondary"
-                            @click="cancelPlacement"
-                        >
-                            Cancel
-                        </button>
+                        <p class="placement-hint">
+                            Hover over ground or a brick face, then click to place.
+                        </p>
                     </div>
-                    <p v-if="isPlacementMode" class="placement-hint">
-                        Hover over ground or a brick face, then click to place.
-                    </p>
                 </div>
 
                 <div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
@@ -659,4 +606,4 @@ export default {
             <div ref="viewport" class="world-viewport"></div>
         </div>
     `
-};                
+};
