@@ -19,7 +19,7 @@ export class SpatialInspectionService {
             return SpatialInspectionState.empty();
         }
 
-        if (selection.type === 'brick') {
+        if (selection.type === 'brick' || selection.type === 'bricks') {
             return this._inspectBrick(document, selection);
         }
 
