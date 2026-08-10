@@ -28,15 +28,17 @@ export default {
         const availableDefinitions = ref([]);
         const selectedDefinitionId = ref(null);
         const activeTool = ref('select');
-        // 0.1.39 — persistence/publication UI state. Read from the session
-        // on every refresh; no direct storage/publisher access here.
+        // 0.1.39 — persistence/publication UI state.
         const activeDocumentId = ref(null);
         const activeDocumentDirty = ref(false);
+        // 0.1.40 — Operation Timeline state. Read from the session on
+        // every refresh; the preview itself is a visual swap inside the
+        // session, never a mutation of the live document.
+        const showTimeline = ref(false);
+        const timeline = ref([]);
+        const historyPreview = ref(null);
 
         const registry = new CreateBrickRegistryUseCase().execute();
-        // Shared identity instance — same login state across all views,
-        // so publishing from World View is attributed to whoever is
-        // logged in (or anonymous when nobody is).
         const identityUseCase = inject('identityUseCase', null);
         const identityProvider = identityUseCase ? identityUseCase.provider : null;
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityProvider);
@@ -54,7 +56,7 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Tool switching (unified with Editor View)
+        // Tool switching
         // -----------------------------------------------------------------
 
         function setTool(tool) {
@@ -105,6 +107,39 @@ export default {
         }
 
         // -----------------------------------------------------------------
+        // Operation Timeline (0.1.40)
+        // -----------------------------------------------------------------
+
+        function toggleTimeline() {
+            showTimeline.value = !showTimeline.value;
+            refreshSpatialUI();
+        }
+
+        // Reconstructs and shows the world after the first `cursor`
+        // operations (0 = initial state). Enters preview mode on first
+        // use. The live document is never modified.
+        function previewAt(cursor) {
+            try {
+                if (!session.getHistoryPreview()) {
+                    session.beginHistoryPreview();
+                }
+                session.previewHistoryAt(cursor);
+            } catch (err) {
+                alert(`Preview failed: ${err.message}`);
+            }
+            refreshSpatialUI();
+        }
+
+        function cancelPreview() {
+            session.cancelHistoryPreview();
+            refreshSpatialUI();
+        }
+
+        function formatTime(timestamp) {
+            return timestamp ? new Date(timestamp).toLocaleTimeString() : '';
+        }
+
+        // -----------------------------------------------------------------
         // Spatial UI refresh
         // -----------------------------------------------------------------
 
@@ -147,11 +182,14 @@ export default {
 
             cameraPosition.value = state.cameraPosition;
 
-            // Dirty indicator for the document Save/Publish would act on.
             activeDocumentId.value = session.getActiveDocumentId();
             activeDocumentDirty.value = activeDocumentId.value
                 ? session.isDocumentDirty(activeDocumentId.value)
                 : false;
+
+            // 0.1.40 — timeline + preview state.
+            timeline.value = session.getTimeline();
+            historyPreview.value = session.getHistoryPreview();
 
             const sel = session.getSpatialSelection();
             if (sel && !sel.isEmpty) {
@@ -276,7 +314,7 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Keyboard interaction (merged and deduplicated)
+        // Keyboard interaction
         // -----------------------------------------------------------------
 
         function onKeyDown(event) {
@@ -300,7 +338,7 @@ export default {
                 return;
             }
 
-            // Undo / Redo (global, works in both tools)
+            // Undo / Redo (global; suspended by the session during preview)
             if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
                 event.preventDefault();
                 session.undo();
@@ -424,6 +462,9 @@ export default {
             activeTool,
             activeDocumentId,
             activeDocumentDirty,
+            showTimeline,
+            timeline,
+            historyPreview,
             setTool,
             onBrickSelectionChange,
             focusWorld,
@@ -431,7 +472,11 @@ export default {
             moveSelectedBrick,
             deleteSelectedBrick,
             saveActiveDocument,
-            publishActiveDocument
+            publishActiveDocument,
+            toggleTimeline,
+            previewAt,
+            cancelPreview,
+            formatTime
         };
     },
     template: `
@@ -443,7 +488,7 @@ export default {
             Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
         </p>
         <p class="world-view-hint">
-            Drag to orbit • Scroll to zoom • Home to reset • 1/2 to switch tools • Click to inspect / place • Ctrl+S to save
+            Drag to orbit • Scroll to zoom • Home to reset • Click to inspect / place • Ctrl+S to save
         </p>
 
         <div class="world-view-actions">
@@ -461,6 +506,13 @@ export default {
             >
                 Publish
             </button>
+            <button
+                class="action-btn action-btn--secondary"
+                :disabled="!activeDocumentId"
+                @click="toggleTimeline"
+            >
+                {{ showTimeline ? 'Hide Timeline' : 'Timeline' }}
+            </button>
             <span
                 v-if="activeDocumentId"
                 class="world-view-dirty"
@@ -468,6 +520,40 @@ export default {
             >
                 {{ activeDocumentDirty ? '● Unsaved changes' : 'Saved' }}
             </span>
+        </div>
+
+        <div v-if="showTimeline" class="world-view-section">
+            <h4>Operation Timeline ({{ timeline.length }})</h4>
+            <p class="timeline-hint">
+                Click an operation to preview the world as it existed at that point.
+            </p>
+            <ul class="timeline-list">
+                <li
+                    class="timeline-item timeline-item--initial"
+                    :class="{ 'timeline-item--previewing': historyPreview && historyPreview.cursor === 0 }"
+                    @click="previewAt(0)"
+                >
+                    <span class="timeline-desc">Initial state</span>
+                </li>
+                <li
+                    v-for="op in timeline"
+                    :key="op.id"
+                    class="timeline-item"
+                    :class="{
+                        'timeline-item--undone': !op.applied,
+                        'timeline-item--previewing': historyPreview && historyPreview.cursor === op.index + 1
+                    }"
+                    @click="previewAt(op.index + 1)"
+                >
+                    <span class="timeline-desc">{{ op.description }}</span>
+                    <span v-if="op.childCount > 0" class="timeline-children">└─ {{ op.childCount }} ops</span>
+                    <span class="timeline-time">{{ formatTime(op.timestamp) }}</span>
+                </li>
+            </ul>
+            <div v-if="historyPreview && historyPreview.active" class="timeline-preview-bar">
+                <span>Previewing {{ historyPreview.cursor }} / {{ timeline.length }} operations</span>
+                <button class="action-btn action-btn--secondary" @click="cancelPreview">Cancel Preview</button>
+            </div>
         </div>
 
         <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
