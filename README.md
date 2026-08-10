@@ -80,7 +80,7 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.34 Selection/Transform Tool Refinement
 - [x] 0.1.35 Command History Serialization & Integrity
 - [x] 0.1.36 Multi-Selection & Atomic Group Operations
-- [ ] 0.1.37 Persistent Command History
+- [x] 0.1.37 Persistent Command History
 - [ ] 0.1.38 Transform Gizmo & Group Pivot
 - [ ] 0.1.39 Command Replay / Operation Timeline
 - [ ] 0.1.40 Advanced Selection & Grouping
