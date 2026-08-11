@@ -6,14 +6,13 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.0** — Durable Documents & Publishing Boundary
+**Version 0.2.1** — Editor / World Editing Parity
 
-The editing kernel (0.1.42–0.1.50) is complete. 0.2.0 establishes the
-document as a durable, portable artifact: schema-versioned envelope,
-independent validation, canonical serialization, content hashing, and
-immutable published snapshots with mutation isolation. The editing
-kernel is frozen; all changes are in the serialization, validation,
-and publishing layers.
+Both editing surfaces now share the same editing capabilities through
+the action registry. The difference between Editor View and World View
+is presentation and navigation emphasis, not different meanings of
+operations. The capability matrix is the normative reference. A parity
+test locks the invariant against regression.
 
 ## Features
 
