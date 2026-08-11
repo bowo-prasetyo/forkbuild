@@ -58,9 +58,9 @@ to the Brick and publishes BRICK_UPDATED. As of 0.1.46 this is also the
 exact path the interactive gizmo's live preview and committed
 TransformSelectionCommand flow through — the gizmo never touches a mesh
 to "move" anything; it changes domain state and lets the renderer react.
-As of 0.1.48 the same path carries alignment and distribution results —
-two more generators of absolute transforms, same event, same renderer
-reaction.
+As of 0.1.48 the same path carries alignment and distribution results,
+and as of 0.1.49 numeric transform input — more generators of absolute
+transforms, same event, same renderer reaction.
 
 application/
 
@@ -131,13 +131,21 @@ modifiers: {ctrl,shift,alt,meta}, screenPosition: {x,y}, worldPosition,
 pickedBrick }. Both pickedBrick and worldPosition are always computed on
 every pointer event, regardless of which one a given tool ends up using —
 a conscious trade-off (two raycasts per move instead of one) in exchange
-for InputDispatcher never having to guess which half a tool cares about.
-Deliberately outside InputDispatcher's job: global, tool-independent
-decisions (tool switch shortcuts, Ctrl/Cmd+S/Z/Y) — those don't go to a
-tool at all. As of 0.1.46, both EditorSession and WorldNavigationSession
-offer every event to the interactive gizmo BEFORE the normal input
-pipeline: an active gizmo gesture owns the pointer and keyboard
-exclusively (see "Interactive Transform Gizmo" below).
+for InputDispatcher never having to guess which half a tool cares about;
+SelectionTool and PlacementTool each just read the field they need.
+pointerType is always 'mouse' today (only DOM PointerEvent is wired in
+EditorView), but nothing about the shape assumes that — touch/pen/gamepad
+input could construct the identical event without ToolManager or any Tool
+changing. Key events: { key, modifiers }. Wheel events: { deltaY,
+modifiers }. Deliberately outside InputDispatcher's job: the temporary
+'1'/'2' tool-switch shortcuts and Ctrl/Cmd+S/Z/Y undo/redo, still wired
+directly in EditorView. These are global, tool-independent decisions —
+"normalize and forward to whichever tool is active" doesn't apply to
+them, since they don't go to a tool at all. As of 0.1.46, both
+EditorSession and WorldNavigationSession offer every event to the
+interactive gizmo BEFORE the normal input pipeline: an active gizmo
+gesture owns the pointer and keyboard exclusively (see "Interactive
+Transform Gizmo" below).
 
 EditorSession (application/EditorSession.js), added 0.1.20C, owns the
 entire live runtime graph — the render session (Renderer/WorldRenderer/
@@ -159,10 +167,10 @@ as World View's. Input routing is exclusive: every pointer/key event is
 offered to the gizmo FIRST; while a gesture is active, nothing reaches
 the tools (only Escape cancels). As of 0.1.47 pointer move/up forward
 modifier state into the transaction and return gesture feedback upward
-for the transient overlay. As of 0.1.48 EditorSession also exposes
-alignSelection(mode)/distributeSelection(axis) — the same gateway as
-every other transform input, so the Editor's alignment panel, keyboard
-transforms, and gizmo drags all terminate in the same command machinery.
+for the transient overlay. As of 0.1.48 EditorSession exposes
+alignSelection(mode)/distributeSelection(axis); as of 0.1.49,
+applyNumericTransform(intent, options) — all routed to the same gesture
+service, all terminating in the same command.
 
 registry/editorContext/toolRegistry/documentManager/selectionUseCase/
 previewUseCase are constructed once, outside EditorSession, and are the
@@ -192,9 +200,10 @@ and a pointer drag in the Editor produce identical
 TransformSelectionCommand semantics. As of 0.1.47 the same methods carry
 modifier state (precision mode) and gesture feedback; keyboard selection
 transforms route through the gesture transaction. As of 0.1.48 the
-session exposes alignSelection(mode)/distributeSelection(axis),
-refreshing inspection and gizmo presentation after each committed
-operation.
+session exposes alignSelection(mode)/distributeSelection(axis), and as
+of 0.1.49 applyNumericTransform(intent, options) — one gateway, one
+command type, byte-identical behavior to the Editor for the same
+selection.
 
 SpatialCameraController (application/SpatialCameraController.js) is the
 navigation abstraction: it translates spatial movement commands
@@ -203,15 +212,18 @@ CameraState changes, without WorldNavigationSession touching Three.js.
 
 SpatialEditingService (application/SpatialEditingService.js) translates
 spatial editing intent into domain mutations via CommandHistory (see
-"Spatial Editing Context (0.1.32)" below). Since 0.1.38 it also owns the
+"Spatial Editing Context (0.1.32)" below). Since 0.1.38 it owns the
 transform gesture transaction — beginTransformGesture /
 previewTransformGesture / commitTransformGesture /
-cancelTransformGesture — driven since 0.1.46 by BOTH the keyboard paths
-and the interactive pointer gizmo, and since 0.1.47 the single home of
-transform snapping. As of 0.1.48 it additionally owns alignment and
-distribution (alignSelection/distributeSelection). See "Transform
-Gesture Architecture", "Transform Precision & Snapping (0.1.47)", and
-"Alignment & Distribution (0.1.48)" below for the full invariants.
+cancelTransformGesture. Since 0.1.46 the interactive pointer gizmo
+drives it alongside the keyboard paths. Since 0.1.47 snapping is applied
+inside the transaction so keyboard and pointer stay byte-identical.
+Since 0.1.48 it owns alignment and distribution
+(alignSelection/distributeSelection). Since 0.1.49 it owns numeric
+transform input (applyNumericTransform). See "Transform Gesture
+Architecture", "Transform Precision & Snapping (0.1.47)", "Alignment &
+Distribution (0.1.48)", and "Numeric Transform Input (0.1.49)" below
+for the full invariants.
 
 TransformMath (application/TransformMath.js), added 0.1.46, is the
 single source of truth for every transform calculation in the engine:
@@ -219,14 +231,15 @@ translation, Y-axis rotation around a pivot, angle measurement around
 the pivot, axis projection for constrained drags, rotation deltas from
 pointer angles, and the calculateTransforms()/transformsEqual() pair the
 gesture transaction uses for preview and commit. Keyboard transforms,
-the gizmo's live drag preview, and the committed
-TransformSelectionCommand all resolve to these functions — parity is a
-construction-time property, not a bug class to test away later.
-TransformMath lives in application/, and renderer/ needs it — resolved
-by INJECTION, not by importing upward: RenderWorldUseCase and
-RenderWorldViewUseCase import it and hand it to the gizmo controller
-they construct. If a second consumer below application/ ever needs it,
-the correct move is to lower it into core/, never to copy it.
+the gizmo's live drag preview, alignment, distribution, numeric input,
+and the committed TransformSelectionCommand all resolve to these
+functions — parity is a construction-time property, not a bug class to
+test away later. TransformMath lives in application/, and renderer/
+needs it — resolved by INJECTION, not by importing upward:
+RenderWorldUseCase and RenderWorldViewUseCase import it and hand it to
+the gizmo controller they construct. If a second consumer below
+application/ ever needs it, the correct move is to lower it into core/,
+never to copy it.
 
 TransformGizmoUseCase (application/TransformGizmoUseCase.js), added
 0.1.46, is the gizmo's presentation decision: given a selection, should
@@ -262,7 +275,7 @@ to its gesture service; precision changes gesture interpretation, never
 document state.
 
 TransformAlignment (application/TransformAlignment.js), added 0.1.48, is
-the pure alignment/distribution math — the entire geometry of the
+the pure alignment/distribution math — the entire geometry of that
 milestone. calculateAlignmentTransforms(entries, selectionBounds, mode)
 implements the nine world-axis operations ('x-min' … 'z-max');
 calculateDistributionTransforms(entries, axis) implements even center
@@ -271,6 +284,18 @@ buildingId, then brickId) and pinned endpoints. Inputs and outputs are
 plain data — no World, Group, Brick, renderer, history, or UI — which is
 exactly what keeps groups invisible to this layer and makes it trivially
 testable.
+
+TransformInput (application/TransformInput.js), added 0.1.49, parses and
+interprets numeric transform input — it never transforms anything.
+parseNumericValue(text) applies a strict grammar (10, 10.5, -3.75, +2,
+.5, surrounding whitespace; no exponentials, no units, no expressions)
+and returns structured results ({ valid, value } / { valid: false,
+reason: 'empty' | 'invalid-number' | 'non-finite' }). parsePanelInput()
+turns the four panel fields into one structured intent where empty
+fields mean "unchanged", never silent zero. No domain, renderer, or
+history dependencies; no transformed position is ever calculated here —
+that remains the job of the existing transform machinery. Numeric input
+is an INPUT SURFACE, not a transform system.
 
 Spatial selection/hover/inspection/placement state classes live in
 application/spatial-state/ (SpatialSelectionState, SpatialHoverState,
@@ -376,7 +401,10 @@ hover updates, and no tool shortcuts until pointer-up or Escape. The
 gizmo's pointer-up listener sits on window (not the viewport) so a drag
 released outside the canvas still commits cleanly. Both views forward
 the same raw events; neither knows or cares which gesture service sits
-underneath — that parity is the session's job, not the UI's.
+underneath — that parity is the session's job, not the UI's. As of
+0.1.48 both views host the AlignmentPanel; as of 0.1.49, the
+NumericTransformPanel — the same components, the same session APIs, the
+same commands in both surfaces.
 
 TransformFeedback (ui/components/TransformFeedback.js), added 0.1.47, is
 the transient gesture overlay: mode/axis, effective snap increment,
@@ -386,13 +414,25 @@ styles, no state of its own; it displays exactly what the transaction
 decided will commit.
 
 AlignmentPanel (ui/components/AlignmentPanel.js), added 0.1.48, is the
-compact alignment/distribution surface hosted by both views: nine
-alignment buttons (world-axis edges/centers) and three center-
+compact alignment/distribution surface: nine alignment buttons
+(world-axis edges/centers, never camera directions) and three center-
 distribution buttons. It knows the operation identifiers ('x-min' …
 'z-max', 'x'/'y'/'z') and nothing about the geometry underneath — the
 application layer decides what they mean. Enable/disable mirrors the
-operation requirements (alignment needs 2+, distribution 3+); no
-keyboard shortcuts in this milestone by design.
+operation requirements (alignment needs 2+, distribution 3+). No
+keyboard shortcuts — a scoped command palette belongs to 0.1.50.
+
+NumericTransformPanel (ui/components/NumericTransformPanel.js), added
+0.1.49, is the numeric input surface — an input surface, NOT a mode.
+There is no "numeric mode" application state anywhere: the panel parses
+exact intent (via TransformInput) and hands one structured intent per
+Apply to the session's applyNumericTransform. X/Y/Z + rotation fields,
+Absolute/Offset toggle, Apply/Clear; Enter applies, Escape clears (both
+stopped locally so the global Escape-clears-selection handler never
+fires from panel typing); empty fields mean "unchanged"; invalid fields
+block the whole Apply and nothing reaches the transform layer. Disabled
+with no selection. Fields clear after a successful apply — the panel is
+a "next operation" surface, not a live property editor.
 
 world-layout/
 
@@ -505,7 +545,7 @@ SpatialEditingService (application/SpatialEditingService.js) is the
 sole authority for translating editing intent into domain mutations.
 The editing flow is:
 
-UI input (keyboard nudge, delete key, gizmo drag, align button)
+UI input (keyboard nudge, delete key, gizmo drag, align button, numeric Apply)
 ↓
 WorldNavigationSession / EditorSession
 ↓
@@ -574,8 +614,8 @@ mesh position/rotation without touching the domain object.
 Spatial Identity Note (0.1.32)
 
 MeshRegistry keys meshes by brickId alone. In practice, brickIds are
-UUIDs generated by core/createId.js, and ForkDocumentUseCase strips and
-regenerates all instance IDs during a fork, making collisions
+UUIDs generated by core/createId.js, and ForkDocumentUseCase strips
+and regenerates all instance IDs during a fork, making collisions
 astronomically unlikely. MeshRegistry.set() also stores documentId per
 entry, so a future migration to composite keys would be localized.
 
@@ -596,44 +636,33 @@ through one transaction owned by SpatialEditingService:
         restore original state — NO command
 
 0.1.46 added the pointer surface on top of exactly this transaction,
-without adding a second one:
+without adding a second one. As of 0.1.49, five fundamentally different
+input sources all terminate in the same command:
 
-    Selection (Editor or World View)
-            │
-            ├── keyboard transform ──┐
-            ├── gizmo drag ──────────┤
-            └── future input ────────┘
-                                     ▼
-                      gesture contract above
-                                     ▼
-                    TransformMath (one source of truth)
-                                     ▼
-              TransformSelectionCommand — exactly one per gesture
-                                     ▼
-                              CommandHistory
-                                     ▼
-                                  World
-
-As of 0.1.48 the same diagram gains two more arrows into the
-transaction's command machinery — align and distribute — which bypass
-the preview step (they are not gestures) but terminate in the identical
-TransformSelectionCommand. See "Alignment & Distribution (0.1.48)".
+    keyboard ──┐
+    gizmo ─────┤
+    alignment ─┼──► TransformSelectionCommand
+    distribute ┤
+    numeric ───┘
 
 The invariants this architecture protects:
 
 - One command per operation. Pointer moves never create commands; the
   preview mutates the live world directly, and only pointer-up produces
-  history. A drag with no effective movement commits nothing — the
-  commitTransformGesture no-op check, unchanged since 0.1.38.
-- One math source. Keyboard transforms, the gizmo's live preview, and
-  the committed command all resolve to TransformMath. A "the gizmo
-  looked slightly different from keyboard rotation" class of bug cannot
-  exist by construction.
+  history. A drag with no effective movement commits nothing; an
+  already-aligned selection commits nothing; already-at-target numeric
+  input commits nothing — the transformsEqual discipline, unchanged
+  since 0.1.38.
+- One math source. Keyboard transforms, the gizmo's live preview,
+  alignment, distribution, numeric input, and the committed command all
+  resolve to TransformMath. A "the gizmo looked slightly different from
+  keyboard rotation" class of bug cannot exist by construction.
 - The gizmo never knows about groups. A group selection is flattened to
   its member bricks before the gizmo ever sees it; the gizmo receives
   Selection -> items[] + bounds + pivot and nothing group-shaped.
   Transform operations change only brick transforms; group membership is
-  untouched, and one undo restores every member.
+  untouched, and one undo restores every member. Alignment,
+  distribution, and numeric input inherit the same invisibility.
 - Pivot semantics are the 0.1.44 semantics, made visible. Single brick:
   the brick's own center. Multi-selection — manual or group-resolved:
   the union-bounds center. Rotation happens around that pivot. No
@@ -650,9 +679,8 @@ The invariants this architecture protects:
   marquee established.
 - Parity is structural. EditorSession and WorldNavigationSession wire
   the same gizmo renderer/controller design against the same gesture
-  contract and the same TransformMath. Same gesture in either view ->
-  byte-identical committed transforms, asserted directly by
-  tests/InteractiveGizmo.test.js.
+  contract and the same TransformMath. Same operation in either view ->
+  byte-identical committed transforms.
 
 Dependency-direction note: TransformMath lives in application/, but
 renderer/TransformGizmoController needs it — and renderer/ must never
@@ -666,16 +694,15 @@ need.
 Interactive Transform Gizmo (0.1.46) — what was deliberately NOT built
 
 - No scale handles. The domain has position/rotation/definition but no
-  settled scale semantics. Translate + Rotate only — still true as of
-  0.1.48; alignment and distribution change positions only and leave
-  rotation untouched.
+  settled scale semantics. Translate + Rotate only — still true through
+  0.1.49.
 - No new commands. No MoveGizmoCommand, no RotateGizmoCommand, no
-  GroupTransformCommand — and 0.1.48 added no AlignCommand /
-  DistributeCommand either.
+  GroupTransformCommand — and 0.1.48/0.1.49 added no AlignCommand,
+  DistributeCommand, or NumericTransformCommand either.
 - No snapping in 0.1.46 — that arrived in 0.1.47, inside the
   transaction, not in the gizmo.
 - No generic GestureManager — the lifecycle is already shared shape-wise;
-  the abstraction waits for a third gesture to prove it.
+  the abstraction waits for a third true gesture to prove it.
 
 Transform Precision & Snapping (0.1.47)
 
@@ -684,24 +711,19 @@ transform input converges — so keyboard and pointer are byte-identical
 by construction. The invariants:
 
 - Snap the gesture DELTA, never absolute positions, always measured from
-  the gesture origin. A brick at x = 2.37 dragged by raw +0.2 stays at
-  2.37; crossing +0.7 lands at 3.37. Snapping is a gesture increment,
-  not a re-alignment of the world to a global grid.
+  the gesture origin.
 - Snap once per frame from the origin; never re-snap a snapped value.
-  Combined with the 0.1.38 discipline (every frame recomputes from the
-  captured initial transforms), this makes previews stable and pointer
-  motion reversible.
-- One snapped delta for the whole selection — relative arrangement is
+- One snapped delta for the whole selection — relative arrangement
   preserved exactly.
-- Constraint first, then snap — axis handles resolve to {x: d, y: 0,
-  z: 0} before snapping touches anything.
+- Constraint first, then snap — axis handles resolve before snapping
+  touches anything.
 - Precision mode (Shift) scales increments down by the precision
   multiplier (1 → 0.1 units, 15 → 1.5°) per gesture frame. Precision
   changes gesture interpretation, not document state.
 - Keyboard selection transforms route through the transaction as
   instantaneous gestures (begin + commit), so a keyboard nudge and an
   equivalently-snapped gizmo drag produce byte-identical
-  TransformSelectionCommand payloads — the flagship parity property.
+  TransformSelectionCommand payloads.
 - The no-op discipline survives: a gesture that never crosses a snap
   boundary snaps to zero, transformsEqual rejects it, and zero history
   entries are created.
@@ -721,10 +743,7 @@ alignment reference. The calculated absolute transforms are submitted
 through the existing TransformSelectionCommand.
 
 Alignment never passes through gesture snapping: it produces exact
-geometric targets rather than user-authored movement deltas. 0.1.47
-snapping governs user-authored transform deltas; alignment/distribution
-bypass it entirely, because snapping a computed target can destroy the
-very relationship being established.
+geometric targets rather than user-authored movement deltas.
 
 Alignment references the WHOLE selection bounds (min/center/max edge),
 never the first selected brick, so selection ordering is irrelevant.
@@ -757,6 +776,50 @@ exactly one TransformSelectionCommand; undo, redo, serialization, and
 replay require no architectural changes whatsoever — that is the point
 of building on the closed transform architecture.
 
+Numeric Transform Input (0.1.49)
+
+Numeric transform input is an input surface, not a transform system.
+
+The panel parses exact translation and rotation intent and delegates
+the resulting transform to the existing selection transformation
+pipeline. No numeric-specific command exists.
+
+Numeric values bypass gesture snapping because numeric entry represents
+explicit user intent rather than an imprecise pointer gesture. The
+snapping policy, stated once for the whole engine:
+
+    keyboard/gizmo          → snapping applies (0.1.47)
+    numeric input           → exact requested value (0.1.49)
+    alignment/distribution  → exact geometric result (0.1.48)
+
+Snapping interprets imprecise gestures; explicit intent is respected
+literally.
+
+Absolute translation operates on the selection pivot, preserving the
+relative geometry of multi-selections and resolved groups: every member
+receives the same delta (target − pivot). Absolute rotation targets the
+PRIMARY brick's orientation; every member receives the same delta,
+preserving relative orientations. Relative (offset) input applies the
+requested delta to every selected member directly. Single brick,
+multi-selection, and resolved group all share these rules.
+
+One Apply operation produces at most one TransformSelectionCommand, even
+when translation and rotation are combined. No-op input (already at
+target, zero delta, nothing entered, invalid fields) produces no history
+entry. Undo, redo, replay, serialization, and Editor/World parity all
+work unchanged — the flagship tests assert numeric parity with keyboard
+and gizmo byte-for-byte, including the three-way rotation trio
+(keyboard R === numeric 90 === gizmo drag 90 → identical serialized
+transforms).
+
+The parser (application/TransformInput.js) contains no domain or
+renderer dependencies and never calculates transformed positions. Empty
+fields mean "unchanged", never silent zero. There is no persistent
+"numeric mode" anywhere — input → intent → existing use case, never
+"application enters special mode → mode manages state → mode owns
+transforms." Seven milestones deliberately avoided that direction;
+0.1.49 didn't start it.
+
 View Modes
 
 ForkBuild's Document abstraction makes three distinct presentation
@@ -775,7 +838,8 @@ World View — the "Minecraft" mode. As of 0.1.30, World View is a free
 spatial navigation environment. As of 0.1.46 it is also a full editing
 surface: the same interactive gizmo available in the Editor works here
 against the spatial selection, with identical gesture semantics — and as
-of 0.1.48 the same alignment/distribution operations.
+of 0.1.48/0.1.49 the same alignment, distribution, and numeric
+transform operations.
 
 All three modes are views over the same underlying data graph. The three
 views consume the same DiscoveryProvider and Publication abstraction —
@@ -896,14 +960,19 @@ did NOT join it — they are not gestures (no preview, no pointer
 ownership), just transform generators that terminate in the same
 command. A common gesture abstraction waits for a third true gesture.
 
-Smart guides, magnetic snapping, edge-to-edge distribution, collision-
-aware distribution, camera-relative alignment — all explicitly deferred
-behind 0.1.48; each would introduce a new interaction or presentation
-subsystem immediately after the transform kernel was proven. Numeric
-transform input is 0.1.49; a scoped command palette (rather than a
-keyboard shortcut matrix) belongs to 0.1.50.
+Command palette & shortcut discoverability — the intended home for any
+keyboard surface behind alignment/distribution/numeric operations; part
+of 0.1.50 (Editing UX Consolidation), deliberately not a per-feature
+shortcut matrix.
 
-Scale semantics — no settled domain model yet; the gizmo stays
-Translate + Rotate, and alignment/distribution change positions only,
-until there is one. Nested groups — optional/post-0.2; groups remain
-useful without being hierarchical.
+Smart guides, magnetic snapping, edge-to-edge distribution, collision-
+aware distribution, camera-relative alignment, expression languages,
+unit conversion — all explicitly deferred; each would introduce a new
+interaction/presentation subsystem or a mini-language immediately after
+the transform kernel was proven. Scale semantics — no settled domain
+model yet; every transform surface stays Translate + Rotate until there
+is one. Numeric transform input shipped in 0.1.49 as an input surface,
+not a mode — the next numeric-adjacent candidate (live property display
+of the current selection) waits for 0.1.50's feedback-consistency pass.
+Nested groups — optional/post-0.2; groups remain useful without being
+hierarchical.
