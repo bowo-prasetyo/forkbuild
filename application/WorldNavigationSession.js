@@ -26,15 +26,14 @@ const RETRY_DELAYS = [2000, 5000, 10000];
 // identical TransformSelectionCommand semantics.
 //
 // 0.1.47 note: transform precision. This session owns the World View's
-// TransformSettings and hands it to the editing service; snapping is
-// applied INSIDE the gesture transaction, never here and never in the
-// view. Gizmo pointer move/up forward modifier state (Shift = precision
-// mode) into the transaction and carry gesture feedback back up to the
-// view's transient overlay. Keyboard selection transforms
-// (moveSelection/rotateSelection) now route through the same gesture
-// transaction as instantaneous gestures, so arrow-key nudges and R
-// rotations snap identically to equivalently-snapped gizmo drags and
-// emit the same transform-selection commands.
+// TransformSettings; snapping is applied INSIDE the gesture transaction,
+// keyboard selection transforms route through it as instantaneous
+// gestures, and gesture feedback travels up to the view's overlay.
+//
+// 0.1.48 note: alignment & distribution. alignSelection(mode) and
+// distributeSelection(axis) go through the same editing service as
+// every other transform input — one gateway, one command type, and
+// byte-identical behavior to the Editor for the same selection.
 export class WorldNavigationSession {
     constructor({ registry, loadPublicationDocumentUseCase, worldLayoutProvider }) {
         this._registry = registry;
@@ -394,7 +393,6 @@ export class WorldNavigationSession {
     // Keyboard translation — routed through the gesture transaction
     // (0.1.47), so snapping, precision mode, pivot semantics, and the
     // emitted transform-selection command are identical to a gizmo drag.
-    // modifiers: { shift } enables precision increments for this nudge.
     moveSelection(delta, modifiers = null) {
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
@@ -436,6 +434,34 @@ export class WorldNavigationSession {
             return false;
         }
         const success = this._editingService.rotateSelection(this._spatialSelection, deltaRotation, { modifiers });
+        if (success) {
+            this._refreshInspection();
+            this._refreshGizmo();
+        }
+        return success;
+    }
+
+    // Alignment & distribution (0.1.48) — same gateway as every other
+    // transform input. A selected group arrives at the editing service
+    // already resolved to its member bricks; this layer never sees group
+    // identity either.
+    alignSelection(mode) {
+        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
+            return false;
+        }
+        const success = this._editingService.alignSelection(this._spatialSelection, mode);
+        if (success) {
+            this._refreshInspection();
+            this._refreshGizmo();
+        }
+        return success;
+    }
+
+    distributeSelection(axis) {
+        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
+            return false;
+        }
+        const success = this._editingService.distributeSelection(this._spatialSelection, axis);
         if (success) {
             this._refreshInspection();
             this._refreshGizmo();
