@@ -6,15 +6,14 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.2** — Schema Versioning & Real Migration Fixtures
+**Version 0.2.3** — Publish / Unpublish Lifecycle
 
-The document envelope now carries an explicit schemaVersion. The
-deserialization pipeline migrates old-format documents to the current
-schema before they enter the domain, validates them structurally, and
-constructs domain objects. Historical fixtures prove the pipeline works
-with real documents from every era of the project. The migration
-infrastructure is extensible: adding a future schema 2 means writing
-one migration function and registering it.
+Publishing now creates an immutable, validated, versioned snapshot of
+the document, stored separately from the editable source. Subsequent
+edits never modify existing publications. Unpublishing removes the
+publication without touching the document. Content hashing provides
+integrity verification. The full publish → edit → verify → unpublish →
+republish lifecycle is tested end-to-end.
 
 ## Features
 
