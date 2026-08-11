@@ -21,6 +21,7 @@ import { DeleteGroupCommand } from './commands/DeleteGroupCommand.js';
 import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
 import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
+import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -799,6 +800,34 @@ export class WorldNavigationSession {
         return true;
     }
 
+    removeFromGroupWithSelection(groupId, documentId = null) {
+        if (this._historyPreview.active) {
+            return false;
+        }
+        const id = documentId || this.getActiveDocumentId();
+        const document = this._loadedDocuments.get(id);
+        const selection = this._spatialSelection;
+        if (!document || !document.world.getGroup(groupId)) {
+            return false;
+        }
+        if (!selection || selection.isEmpty || selection.type === 'ground') {
+            return false;
+        }
+        if (selection.documentId !== id) {
+            return false;
+        }
+        const brickIds = selection.brickIds.filter((brickId) =>
+            document.world.getBuildings().some((building) => building.findBrick(brickId))
+        );
+        if (brickIds.length === 0) {
+            return false;
+        }
+        this._ensureCommandHistory(document.world).execute(
+            new RemoveFromGroupCommand({ worldId: document.world.id, groupId, brickIds })
+        );
+        return true;
+    }
+    
     // Resolves a group's membership into SpatialSelectionState — the
     // group is document state; the resulting selection is session state.
     // Missing brick ids are skipped (membership is referential).
@@ -836,18 +865,107 @@ export class WorldNavigationSession {
     }
 
     // -----------------------------------------------------------------
+    // Advanced selection (0.1.45)
+    // -----------------------------------------------------------------
+
+    // Select every brick in the active (or given) document. Session
+    // state only — zero history entries.
+    selectAll(documentId = null) {
+        const id = documentId || this.getActiveDocumentId();
+        const document = this._loadedDocuments.get(id);
+        if (!document) {
+            return false;
+        }
+        const items = [];
+        for (const building of document.world.getBuildings()) {
+            for (const brick of building.getBricks()) {
+                items.push({ type: 'brick', buildingId: building.id, brickId: brick.id });
+            }
+        }
+        if (items.length === 0) {
+            return false;
+        }
+        this._setSpatialSelection(SpatialSelectionState.bricks({ documentId: id, items }));
+        if (this._session) {
+            this._session.selectBricks(
+                items.map((item) => item.brickId),
+                items[items.length - 1].brickId
+            );
+        }
+        this._refreshInspection();
+        this._refreshEditingContext();
+        return true;
+    }
+
+    // Marquee selection: the VIEW owns the Shift+drag gesture and the
+    // rectangle overlay; the RENDERER answers containment
+    // (pickRectangle); this method owns the selection semantics. Hits
+    // from other documents are ignored — a marquee selects within the
+    // focused document (single-document selection rule). additive=true
+    // (Ctrl/Cmd held during the drag) unions hits with the current
+    // selection; otherwise the marquee REPLACES it. Session state only
+    // — zero history entries.
+    marqueeSelect(rect, { additive = false } = {}) {
+        if (!this._session || !this._session.pickRectangle) {
+            return false;
+        }
+        const hits = this._session.pickRectangle(rect.x0, rect.y0, rect.x1, rect.y1);
+        const documentId = this._focusedDocumentId
+            || (hits.length > 0 ? hits[0].documentId : null);
+        if (!documentId || !this._loadedDocuments.has(documentId)) {
+            return false;
+        }
+        const items = hits
+            .filter((hit) => hit.documentId === documentId)
+            .map((hit) => ({ type: 'brick', buildingId: hit.buildingId, brickId: hit.brickId }));
+        if (items.length === 0) {
+            if (!additive) {
+                this.clearSelection();
+            }
+            return false;
+        }
+        let nextItems = items;
+        if (additive
+            && !this._spatialSelection.isEmpty
+            && this._spatialSelection.documentId === documentId) {
+            nextItems = [...this._spatialSelection.items, ...items];
+        }
+        const nextSelection = SpatialSelectionState.bricks({ documentId, items: nextItems });
+        this._setSpatialSelection(nextSelection);
+        this._session.selectBricks(nextSelection.brickIds, nextSelection.brickId);
+        this._refreshInspection();
+        this._refreshEditingContext();
+        return true;
+    }
+
+    // Suspends/resumes camera interaction during a marquee gesture.
+    setControlsEnabled(enabled) {
+        if (this._session && this._session.setControlsEnabled) {
+            this._session.setControlsEnabled(enabled);
+        }
+    }
+    
+    // -----------------------------------------------------------------
     // Interaction
     // -----------------------------------------------------------------
 
-    pick(screenX, screenY, { toggle = false } = {}) {
+    pick(screenX, screenY, { toggle = false, additive = false } = {}) {
         if (!this._session) {
             return null;
         }
         const brickHit = this._session.pick(screenX, screenY);
         if (brickHit) {
-            const nextSelection = toggle
-                ? this._spatialSelection.toggleBrick(brickHit)
-                : SpatialSelectionState.brick(brickHit);
+            // 0.1.45 contract: click replaces, Ctrl/Cmd toggles,
+            // Shift adds (union). All three are session state changes —
+            // zero history entries.
+            let nextSelection;
+            if (additive) {
+                nextSelection = this._spatialSelection.addBrick(brickHit);
+            } else if (toggle) {
+                nextSelection = this._spatialSelection.toggleBrick(brickHit);
+            } else {
+                nextSelection = SpatialSelectionState.brick(brickHit);
+            }
             this._setSpatialSelection(nextSelection);
             this._session.selectBricks(nextSelection.brickIds, nextSelection.brickId);
             this._session.clearHover();
@@ -871,7 +989,7 @@ export class WorldNavigationSession {
         this._refreshEditingContext();
         return null;
     }
-
+    
     hover(screenX, screenY) {
         if (!this._session) {
             this._setSpatialHover(SpatialHoverState.empty());
