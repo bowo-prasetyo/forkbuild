@@ -589,3 +589,28 @@ Historical fixtures in tests/fixtures/historicalDocuments.js represent
 documents as they were serialized at various points in the project's
 history: pre-groups (0.1.19), with-groups (0.1.43), and current (0.2.x).
 Each fixture exercises a different migration path.
+
+Publish / Unpublish Lifecycle (0.2.3)
+
+Publishing creates an immutable snapshot of the document at a point in
+time. The snapshot is stored at `snapshot:{publicationId}`, separate
+from the editable document at `{documentId}`. This is the
+mutation-isolation guarantee: editing and saving the source document
+cannot overwrite a published snapshot.
+
+The Publication record carries identity and integrity metadata (id,
+documentId, contentHash, schemaVersion, publishedAt, author). It is
+pure data — no editing capability, no commands, no document mutation.
+
+Unpublishing removes the publication record and its snapshot. The
+editable document is never touched.
+
+The publish pipeline: serialize → migrate → validate → hash → store
+immutably. The load pipeline: load → migrate → validate → deserialize.
+Both use the same DocumentSerializer infrastructure, ensuring published
+snapshots are always valid and can be loaded after schema evolution.
+
+Storage model:
+  - `{documentId}` — editable document (managed by SaveDocumentUseCase)
+  - `snapshot:{publicationId}` — immutable published snapshot
+  - `forkbuild-publications` — array of Publication metadata records
