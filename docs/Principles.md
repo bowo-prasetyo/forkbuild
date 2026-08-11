@@ -63,3 +63,23 @@ availability rules — is shared by all of them through the
 EditorActionRegistry. Keyboard dispatch, the command palette, the
 sidebar, and the controls documentation all read the same metadata. A
 second shortcut table is a bug waiting to drift.
+
+A document snapshot is the authoritative portable representation of a
+world (0.2.0). Not Vue state, not Three.js objects, not command history,
+not editor session, not renderer state — the serialized document envelope
+is the single artifact that crosses every boundary: file, publish,
+network. Everything else is a consumer or mechanism around it.
+
+Migration happens before domain entry (0.2.0). Old-format compatibility
+code lives in the schema migrator, never in Brick, Group, World, or any
+editing service. Domain classes only ever see current-schema JSON.
+
+Save is not Publish (0.2.0). Saving persists the editable document
+(mutable, overwriteable). Publishing creates an immutable, validated,
+versioned snapshot. These are different operations with different storage
+paths, different semantics, and different lifetimes. Conflating them
+makes mutation isolation impossible.
+
+Publishing validates before storing (0.2.0). A corrupt document must not
+enter the published corpus. The DocumentValidator runs as part of the
+publish pipeline, and refusal is a hard error, not a warning.
