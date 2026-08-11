@@ -3,17 +3,24 @@ import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
+import TransformFeedback from '../components/TransformFeedback.js';
 
 const DRAG_THRESHOLD_PX = 6;
 const NUDGE = 1;
 
-// 0.1.46: the viewport now hosts the interactive transform gizmo. The
-// view stays dumb about gestures: every pointer/key event is offered to
-// the session's gizmo FIRST, and only events the gizmo does not consume
-// continue into hover/picking/camera handling. pointerup moved to window
-// so a drag released outside the viewport still commits.
+// 0.1.46: the viewport hosts the interactive transform gizmo; every
+// pointer/key event is offered to the session's gizmo FIRST.
+//
+// 0.1.47: while a gizmo drag is in flight, the gesture feedback blob
+// returned by session.gizmoPointerMove feeds the transient
+// TransformFeedback overlay (snapped delta + effective increment +
+// precision flag) and is cleared on release/cancel. Keyboard selection
+// transforms now forward the Shift modifier into the gesture
+// transaction, so arrow-key nudges and R rotations honor precision
+// snapping exactly like gizmo drags do.
 export default {
     name: 'WorldView',
+    components: { TransformFeedback },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -30,6 +37,7 @@ export default {
         const spatialInspection = ref(null);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
+        const transformFeedback = ref(null);
         const cameraPosition = ref(null);
         const availableDefinitions = ref([]);
         const selectedDefinitionId = ref(null);
@@ -217,6 +225,7 @@ export default {
         function onPointerMove(event) {
             const gizmoResult = session.gizmoPointerMove(event);
             if (gizmoResult.consumed) {
+                transformFeedback.value = gizmoResult.feedback || null;
                 return;
             }
             if (pointerStart) {
@@ -235,6 +244,7 @@ export default {
         function onPointerUp(event) {
             const gizmoResult = session.gizmoPointerUp(event);
             if (gizmoResult.consumed) {
+                transformFeedback.value = null;
                 refreshSpatialUI();
                 pointerStart = null;
                 isDragging = false;
@@ -262,6 +272,7 @@ export default {
             // (cancel) does anything, everything else is swallowed.
             if (session.isGestureActive()) {
                 if (session.gizmoKeyDown({ key: event.key })) {
+                    transformFeedback.value = null;
                     refreshSpatialUI();
                 }
                 return;
@@ -294,14 +305,17 @@ export default {
                 return;
             }
 
-            // Select-tool editing shortcuts
+            // Select-tool editing shortcuts. Modifiers travel into the
+            // gesture transaction: Shift selects precision increments
+            // for keyboard transforms exactly as it does for gizmo drags.
             if (activeTool.value === 'select' && spatialEditingContext.value) {
                 const ctx = spatialEditingContext.value;
+                const gestureModifiers = { shift: event.shiftKey || false };
                 if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.rotate) {
                     if (event.key.toLowerCase() === 'r') {
                         event.preventDefault();
                         const delta = event.shiftKey ? -90 : 90;
-                        session.rotateSelection(delta);
+                        session.rotateSelection(delta, gestureModifiers);
                         refreshSpatialUI();
                         return;
                     }
@@ -310,27 +324,27 @@ export default {
                     switch (event.key) {
                         case 'ArrowUp':
                             event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: 0, z: -NUDGE });
+                            moveSelectedBrick({ x: 0, y: 0, z: -NUDGE }, event);
                             break;
                         case 'ArrowDown':
                             event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: 0, z: NUDGE });
+                            moveSelectedBrick({ x: 0, y: 0, z: NUDGE }, event);
                             break;
                         case 'ArrowLeft':
                             event.preventDefault();
-                            moveSelectedBrick({ x: -NUDGE, y: 0, z: 0 });
+                            moveSelectedBrick({ x: -NUDGE, y: 0, z: 0 }, event);
                             break;
                         case 'ArrowRight':
                             event.preventDefault();
-                            moveSelectedBrick({ x: NUDGE, y: 0, z: 0 });
+                            moveSelectedBrick({ x: NUDGE, y: 0, z: 0 }, event);
                             break;
                         case 'PageUp':
                             event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: NUDGE, z: 0 });
+                            moveSelectedBrick({ x: 0, y: NUDGE, z: 0 }, event);
                             break;
                         case 'PageDown':
                             event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: -NUDGE, z: 0 });
+                            moveSelectedBrick({ x: 0, y: -NUDGE, z: 0 }, event);
                             break;
                     }
                 }
@@ -343,8 +357,9 @@ export default {
             }
         }
 
-        function moveSelectedBrick(delta) {
-            session.moveSelection(delta);
+        function moveSelectedBrick(delta, rawEvent) {
+            const modifiers = rawEvent ? { shift: rawEvent.shiftKey || false } : null;
+            session.moveSelection(delta, modifiers);
             refreshSpatialUI();
         }
 
@@ -395,6 +410,7 @@ export default {
             spatialInspection,
             spatialEditingContext,
             spatialPlacement,
+            transformFeedback,
             cameraPosition,
             availableDefinitions,
             selectedDefinitionId,
@@ -416,7 +432,7 @@ export default {
                     Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
                 <p class="world-view-hint">
-                    Drag to orbit • Scroll to zoom • Home to reset • Drag gizmo handles to move/rotate • Esc cancels a drag
+                    Drag to orbit • Scroll to zoom • Home to reset • Drag gizmo handles to move/rotate • Shift while dragging/nudging for precision • Esc cancels a drag
                 </p>
 
                 <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
@@ -533,10 +549,10 @@ export default {
                     <p class="spatial-type">{{ spatialEditingContext.type }}</p>
                     <div v-if="spatialEditingContext.type === 'brick'" class="editing-actions">
                         <p v-if="spatialEditingContext.capabilities.move" class="editing-hint">
-                            Arrow keys: move X/Z • Page Up/Down: move Y • or drag the gizmo
+                            Arrow keys: move X/Z • Page Up/Down: move Y • or drag the gizmo (Shift = precision)
                         </p>
                         <p v-if="spatialEditingContext.capabilities.rotate" class="editing-hint">
-                            R: rotate 90° • Shift+R: rotate –90° • or drag the gizmo ring
+                            R: rotate 90° • Shift+R: rotate –90° • or drag the gizmo ring (Shift = precision)
                         </p>
                         <button
                             v-if="spatialEditingContext.capabilities.delete"
@@ -629,6 +645,7 @@ export default {
                 </div>
             </div>
             <div ref="viewport" class="world-viewport"></div>
+            <TransformFeedback :feedback="transformFeedback" />
         </div>
     `
 };
