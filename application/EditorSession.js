@@ -165,6 +165,227 @@ export class EditorSession {
         return this._gestureService.applyNumericTransform(this._editorContext.selection, intent, options);
     }
 
+    // They close the method-surface gap so the action registry and
+    // EditorActionContext.capture() work identically on both surfaces.
+    
+    // ---------------------------------------------------------------
+    // Transform operations (delegate to the gesture service, exactly
+    // as WorldNavigationSession does)
+    // ---------------------------------------------------------------
+    moveSelection(delta, gestureOptions = {}) {
+        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
+            return false;
+        }
+        return this._gestureService.moveSelection(
+            this._editorContext.selection, delta, gestureOptions
+        );
+    }
+    
+    rotateSelection(deltaRotation, gestureOptions = {}) {
+        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
+            return false;
+        }
+        return this._gestureService.rotateSelection(
+            this._editorContext.selection, deltaRotation, gestureOptions
+        );
+    }
+    
+    // ---------------------------------------------------------------
+    // Clipboard operations (delegate to shared use cases)
+    // ---------------------------------------------------------------
+    copySelection() {
+        if (!this._copySelectionUseCase || !this._documentManager.document) {
+            return null;
+        }
+        return this._copySelectionUseCase.execute(
+            this._editorContext.selection,
+            this._documentManager.document
+        );
+    }
+    
+    paste() {
+        if (!this._pasteClipboardUseCase || !this._clipboardState
+            || this._clipboardState.isEmpty || !this._documentManager.document
+            || !this._commandHistory) {
+            return false;
+        }
+        const document = this._documentManager.document;
+        const world = document.world;
+        const buildings = world.getBuildings();
+        if (buildings.length === 0) {
+            return false;
+        }
+        const buildingId = buildings[0].id;
+        const command = this._pasteClipboardUseCase.execute(
+            this._clipboardState,
+            {
+                worldId: world.id,
+                buildingId,
+                position: { x: 2, y: 0, z: 2 }
+            }
+        );
+        if (!command) {
+            return false;
+        }
+        this._commandHistory.execute(command);
+        return true;
+    }
+    
+    // ---------------------------------------------------------------
+    // Group operations (delegate to existing group commands)
+    // ---------------------------------------------------------------
+    createGroupFromSelection(name = null) {
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (selection.isEmpty || !document || !this._commandHistory) {
+            return null;
+        }
+        const worldId = document.world.id;
+        const brickIds = selection.brickIds;
+        if (brickIds.length === 0) {
+            return null;
+        }
+        const command = new CreateGroupCommand({ worldId, brickIds, name });
+        this._commandHistory.execute(command);
+        return command.executedGroupId;
+    }
+    
+    renameSelectedGroup(name) {
+        const groupId = this._selectedGroupId;
+        const document = this._documentManager.document;
+        if (!groupId || !document || !this._commandHistory) {
+            return false;
+        }
+        this._commandHistory.execute(new RenameGroupCommand({
+            worldId: document.world.id,
+            groupId,
+            name
+        }));
+        return true;
+    }
+    
+    duplicateSelectedGroup() {
+        const groupId = this._selectedGroupId;
+        const document = this._documentManager.document;
+        if (!groupId || !document || !this._commandHistory) {
+            return null;
+        }
+        const command = new DuplicateGroupCommand({
+            worldId: document.world.id,
+            groupId
+        });
+        this._commandHistory.execute(command);
+        return command.executedGroupId;
+    }
+    
+    deleteSelectedGroup() {
+        const groupId = this._selectedGroupId;
+        const document = this._documentManager.document;
+        if (!groupId || !document || !this._commandHistory) {
+            return false;
+        }
+        this._commandHistory.execute(new DeleteGroupCommand({
+            worldId: document.world.id,
+            groupId
+        }));
+        this._selectedGroupId = null;
+        return true;
+    }
+    
+    addSelectionToSelectedGroup() {
+        const groupId = this._selectedGroupId;
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (!groupId || selection.isEmpty || !document || !this._commandHistory) {
+            return false;
+        }
+        this._commandHistory.execute(new AddToGroupCommand({
+            worldId: document.world.id,
+            groupId,
+            brickIds: selection.brickIds
+        }));
+        return true;
+    }
+    
+    removeSelectionFromSelectedGroup() {
+        const groupId = this._selectedGroupId;
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (!groupId || selection.isEmpty || !document || !this._commandHistory) {
+            return false;
+        }
+        this._commandHistory.execute(new RemoveFromGroupCommand({
+            worldId: document.world.id,
+            groupId,
+            brickIds: selection.brickIds
+        }));
+        return true;
+    }
+    
+    selectGroup(groupId) {
+        const document = this._documentManager.document;
+        if (!document) {
+            return false;
+        }
+        const group = document.world.getGroup(groupId);
+        if (!group) {
+            return false;
+        }
+        this._selectedGroupId = groupId;
+        const items = [];
+        for (const brickId of group.brickIds) {
+            for (const building of document.world.getBuildings()) {
+                if (building.findBrick(brickId)) {
+                    items.push({ type: 'brick', buildingId: building.id, brickId });
+                    break;
+                }
+            }
+        }
+        if (items.length > 0) {
+            this._editorContext.setSelection(new SelectionState({ items }));
+        }
+        return true;
+    }
+    
+    // ---------------------------------------------------------------
+    // Context-query methods (used by EditorActionContext.capture())
+    // ---------------------------------------------------------------
+    getGroups() {
+        const document = this._documentManager.document;
+        if (!document) {
+            return [];
+        }
+        return document.world.getGroups().map((group) => ({
+            id: group.id,
+            name: group.name,
+            memberCount: group.memberCount
+        }));
+    }
+    
+    getSelectedGroupId() {
+        return this._selectedGroupId || null;
+    }
+    
+    getClipboardCount() {
+        return this._clipboardState ? this._clipboardState.count : 0;
+    }
+    
+    canUndo() {
+        return this._commandHistory ? this._commandHistory.canUndo() : false;
+    }
+    
+    canRedo() {
+        return this._commandHistory ? this._commandHistory.canRedo() : false;
+    }
+    
+    getUndoLabel() {
+        return this._commandHistory ? this._commandHistory.getUndoLabel() : null;
+    }
+    
+    getRedoLabel() {
+        return this._commandHistory ? this._commandHistory.getRedoLabel() : null;
+    }
+        
     // ------------------------------------------------------ lifecycle
 
     start(container) {
