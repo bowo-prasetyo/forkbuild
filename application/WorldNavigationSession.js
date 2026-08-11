@@ -15,6 +15,12 @@ import { CommandHistory } from './CommandHistory.js';
 import { DocumentManager } from './DocumentManager.js';
 import { PlacementValidator } from '../core/PlacementValidator.js';
 import { EventBus } from '../core/events/EventBus.js';
+import { PASTE_OFFSET } from './PasteClipboardUseCase.js';
+import { CreateGroupCommand } from './commands/CreateGroupCommand.js';
+import { DeleteGroupCommand } from './commands/DeleteGroupCommand.js';
+import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
+import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
+import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -22,9 +28,6 @@ const RETRY_DELAYS = [2000, 5000, 10000];
 // Synthetic renderer documentId for history-preview worlds, so a replay
 // world can never collide with a real publication's id.
 const REPLAY_DOCUMENT_PREFIX = 'replay:';
-// Successive pastes cascade by this offset (× paste count) so repeated
-// Ctrl+V doesn't stack pastes exactly on top of each other.
-const PASTE_OFFSET = { x: 2, y: 0, z: 2 };
 
 export class WorldNavigationSession {
     constructor({
@@ -668,6 +671,168 @@ export class WorldNavigationSession {
             );
         }
         return documentId;
+    }
+
+    // -----------------------------------------------------------------
+    // Groups (0.1.43)
+    // -----------------------------------------------------------------
+    // Groups are DOCUMENT STATE (core/Group, owned by World) — unlike
+    // selection, which stays session state. Every group mutation goes
+    // through CommandHistory, so groups inherit undo/redo, dirty
+    // tracking, persistence, replay, and restoration automatically.
+    // All mutations are gated during history preview, like every other
+    // editing entry point.
+
+    getGroups(documentId = null) {
+        const id = documentId || this.getActiveDocumentId();
+        const document = this._loadedDocuments.get(id);
+        if (!document) {
+            return [];
+        }
+        return document.world.getGroups().map((group) => ({
+            id: group.id,
+            name: group.name || 'Unnamed Group',
+            memberCount: group.memberCount
+        }));
+    }
+
+    // Creates a flat group over the current selection. Returns the new
+    // group id, or false when nothing can be grouped.
+    createGroupFromSelection(name = null) {
+        if (this._historyPreview.active) {
+            return false;
+        }
+        const selection = this._spatialSelection;
+        if (!selection || selection.isEmpty || selection.type === 'ground') {
+            return false;
+        }
+        const document = this._loadedDocuments.get(selection.documentId);
+        if (!document) {
+            return false;
+        }
+        const brickIds = selection.brickIds.filter((brickId) =>
+            document.world.getBuildings().some((building) => building.findBrick(brickId))
+        );
+        if (brickIds.length === 0) {
+            return false;
+        }
+        const command = new CreateGroupCommand({
+            worldId: document.world.id,
+            brickIds,
+            name: name || `Group ${document.world.getGroups().length + 1}`
+        });
+        this._ensureCommandHistory(document.world).execute(command);
+        return command.executedGroupId;
+    }
+
+    deleteGroup(groupId, documentId = null) {
+        if (this._historyPreview.active) {
+            return false;
+        }
+        const id = documentId || this.getActiveDocumentId();
+        const document = this._loadedDocuments.get(id);
+        if (!document || !document.world.getGroup(groupId)) {
+            return false;
+        }
+        this._ensureCommandHistory(document.world).execute(
+            new DeleteGroupCommand({ worldId: document.world.id, groupId })
+        );
+        return true;
+    }
+
+    renameGroup(groupId, name, documentId = null) {
+        if (this._historyPreview.active) {
+            return false;
+        }
+        const id = documentId || this.getActiveDocumentId();
+        const document = this._loadedDocuments.get(id);
+        if (!document || !document.world.getGroup(groupId)) {
+            return false;
+        }
+        this._ensureCommandHistory(document.world).execute(
+            new RenameGroupCommand({ worldId: document.world.id, groupId, name })
+        );
+        return true;
+    }
+
+    // Fresh identities throughout: new bricks (offset), new group.
+    // The source group is never mutated.
+    duplicateGroup(groupId, documentId = null) {
+        if (this._historyPreview.active) {
+            return false;
+        }
+        const id = documentId || this.getActiveDocumentId();
+        const document = this._loadedDocuments.get(id);
+        if (!document || !document.world.getGroup(groupId)) {
+            return false;
+        }
+        const command = new DuplicateGroupCommand({ worldId: document.world.id, groupId });
+        this._ensureCommandHistory(document.world).execute(command);
+        return command.executedGroupId;
+    }
+
+    addToGroupWithSelection(groupId, documentId = null) {
+        if (this._historyPreview.active) {
+            return false;
+        }
+        const id = documentId || this.getActiveDocumentId();
+        const document = this._loadedDocuments.get(id);
+        const selection = this._spatialSelection;
+        if (!document || !document.world.getGroup(groupId)) {
+            return false;
+        }
+        if (!selection || selection.isEmpty || selection.type === 'ground') {
+            return false;
+        }
+        if (selection.documentId !== id) {
+            return false;
+        }
+        const brickIds = selection.brickIds.filter((brickId) =>
+            document.world.getBuildings().some((building) => building.findBrick(brickId))
+        );
+        if (brickIds.length === 0) {
+            return false;
+        }
+        this._ensureCommandHistory(document.world).execute(
+            new AddToGroupCommand({ worldId: document.world.id, groupId, brickIds })
+        );
+        return true;
+    }
+
+    // Resolves a group's membership into SpatialSelectionState — the
+    // group is document state; the resulting selection is session state.
+    // Missing brick ids are skipped (membership is referential).
+    selectGroup(groupId, documentId = null) {
+        const id = documentId || this.getActiveDocumentId();
+        const document = this._loadedDocuments.get(id);
+        if (!document) {
+            return false;
+        }
+        const group = document.world.getGroup(groupId);
+        if (!group) {
+            return false;
+        }
+        const items = [];
+        for (const building of document.world.getBuildings()) {
+            for (const brick of building.getBricks()) {
+                if (group.hasMember(brick.id)) {
+                    items.push({ type: 'brick', buildingId: building.id, brickId: brick.id });
+                }
+            }
+        }
+        if (items.length === 0) {
+            return false;
+        }
+        this._setSpatialSelection(SpatialSelectionState.bricks({ documentId: id, items }));
+        if (this._session) {
+            this._session.selectBricks(
+                items.map((item) => item.brickId),
+                items[items.length - 1].brickId
+            );
+        }
+        this._refreshInspection();
+        this._refreshEditingContext();
+        return true;
     }
 
     // -----------------------------------------------------------------
