@@ -44,7 +44,7 @@
 0.1.41 Historical State Restoration  (done)
 0.1.42 Document Duplication, Forking & Clipboard  (done)
 0.1.43 Advanced Selection, Grouping & Editing Parity  (done)
-0.1.44 Transform Parity & Group Gizmo Integration  (done)
-0.1.45 Advanced Selection / Editor Group Surface
+0.1.44 Transform Parity & Group Gizmo Architecture  (done)
+0.1.45 Advanced Selection & Editor Group Surface  (done)
 0.1.46 Nested Groups / Hierarchical Editing  (optional)
 0.2    Blockchain publishing, multiplayer
