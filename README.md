@@ -6,45 +6,69 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.45** — Advanced Selection & Editor Group Surface
+**Version 0.1.46** — Interactive Transform Gizmo & Viewport Editing Parity
 
-The classic editing core is complete. Marquee selection (Shift+drag) works in both surfaces as a pure session-state gesture — renderer answers containment, session owns semantics, zero history entries. The selection modifier contract is explicit and identical everywhere: click replaces, Ctrl/Cmd toggles, Shift adds, Ctrl/Cmd+A selects all. The Editor gains the Groups panel — the same six group commands World View uses — closing the last major surface-parity gap. Selection, groups, copy/paste, transform, undo/redo, replay, and restore now form one coherent editing experience.
+The viewport is now a real editing surface. Selecting bricks shows an interactive transform gizmo — X/Y/Z axis handles, a center free-move pad, and a Y-rotation ring — anchored to the selection's pivot. Grabbing a handle starts a gesture: the selection follows the pointer as a live preview, releasing commits **exactly one** `transform-selection` command (one undo step, regardless of how many bricks moved), and Escape cancels with zero history. A drag with no effective movement commits nothing at all.
+
+The gizmo is a renderer/UI milestone on top of the existing transform architecture: the pointer surface, the keyboard shortcuts, and the final command all compute through the same shared `TransformMath`, so what you see while dragging is exactly what gets committed — in **both** the Editor and the World View.
 
 ## Features
 
-- **Editor** — Place, select one or many bricks, move, rotate, and delete with full undo/redo support. Grid snapping and placement preview.
+- **Editor** — Place, select, move, rotate, and delete bricks with full undo/redo support. Grid snapping and placement preview.
+- **Interactive Transform Gizmo (0.1.46)** — Drag axis handles for constrained translation, the center pad for free ground-plane movement, or the rotation ring to spin the selection around its pivot. Hover highlighting, live drag preview, commit-on-release, Escape-to-cancel, and a visible selection pivot.
+- **Viewport Editing Parity (0.1.46)** — The same gizmo, gesture transaction, and transform math in both the Editor and the World View. Same gesture, identical command semantics.
+- **Groups (0.1.43)** — Bricks can be grouped; selecting a group resolves to its member bricks. Transform gestures change only brick transforms — group membership is never touched, and the gizmo itself has no concept of groups at all.
+- **Advanced Selection (0.1.40/0.1.45)** — Click, Ctrl/Cmd/Shift-click to toggle, and marquee-select in the viewport. Multi-selection rotation happens around the selection bounds center.
+- **Transform Parity (0.1.44)** — Keyboard and pointer transforms share one architecture: one gesture transaction, one math source, one `TransformSelectionCommand` per completed gesture.
+- **Command Replay / Operation Timeline (0.1.39)** — Editing sessions persist as serialized command histories that replay exactly.
 - **Brick Palette** — Core library with dimension-aware definitions (cube, slope, plate, window).
 - **Persistence** — Save and load documents via localStorage with a document manifest.
 - **Identity** — Local username-based identity provider; author attribution on documents and publications.
 - **Publishing & Discovery** — Publish documents to a local discovery catalog; browse Repository View and Author View.
 - **Forking** — Derive new documents from existing ones with fresh instance IDs and preserved lineage.
 - **Spatial World View** — Free camera navigation (orbit, pan, zoom) through a shared coordinate system where multiple worlds stream in and out based on camera position.
-- **Spatial Inspection** — Click any brick to inspect its type, position, rotation, and metadata; multi-selection exposes a primary brick plus selection count.
-- **Spatial Editing** — Move, rotate-in-place, and delete one or many selected bricks directly in World View; place new bricks with face-aware stacking on existing geometry.
-- **Command History** — Every mutation is an undoable command; shared between Editor and Spatial views. Now fully serializable via `CommandRegistry`.
-- **Composite Commands** — Multi-brick operations execute, rollback on child failure, and undo/redo as a single atomic step.
-- **World View Save & Publish** — Save the active world (button or Ctrl/Cmd+S) and publish it with automatic save-first when dirty. Per-world dirty indicators; dirty worlds are never stream-unloaded.
-- **Command Replay & Operation Timeline** — Deterministic reconstruction of any historical world state from the persistent command history (baseline snapshot + serialized command re-execution, transactional and history-suppressed). Timeline panel in World View with click-to-preview, composite-aware entries, undone-state awareness, and non-destructive cancel.
-- **Historical State Restoration** — Commit any previewed timeline state as the current document via an explicit, confirmed destructive action: replay-based reconstruction, rebased history with save-point invalidation (dirty until saved), retired-history artifacts, and full save/publish compatibility.
-- **Document Duplication & Forking** — Duplicate or fork any loaded world from World View: fresh identities throughout, lineage metadata (`parentDocumentId`), current-user attribution, and a fresh dirty editing session. The Repository/Author fork flow now delegates to the same cloning mechanism.
-- **Clipboard Copy/Paste** — Ctrl+C copies a multi-selection as pivot-relative intent (never ids); Ctrl+V pastes it as one atomic `Paste 3 Bricks` command with cascading offset, full undo/redo/replay/restore support, and automatic selection of the pasted bricks.
-- **Persistent Groups** — Flat named groups as document state, with create/delete/rename/add/remove/duplicate commands; full undo/replay/restore support and a World View group panel (group selection, select/add/rename/duplicate/delete).
-- **Editor Clipboard Parity** — Ctrl+C / Ctrl+V in the Editor reuse the World View clipboard machinery verbatim; group-aware copy/paste on both surfaces.
-- **Unified Transform Layer** — One transform path for every selection kind with pivot semantics (multi/group rotation orbits the selection bounds center), shared transform math, and no-op suppression across keyboard and gizmo gestures.
-- **Editor Transform Parity** — Arrow/Page-key nudges and R/Shift+R pivot rotation in the Editor through the exact same use case World View uses — no second transform implementation anywhere.
-- **Marquee Selection** — Shift+drag rectangular selection in both views (Ctrl/Cmd held to add); viewport overlay, camera controls suspended for the gesture, containment via projected brick centers. Selection operations never create history entries.
-- **Editor Groups Panel** — Create/select/rename/duplicate/delete groups and add/remove the current selection, all through the existing group commands; group selection resolves membership without mutating the document.
-    
+- **Spatial Inspection** — Click any brick to inspect its type, position, rotation, and metadata.
+- **Spatial Editing** — Move, rotate, and delete one or many selected bricks directly in World View; place new bricks with face-aware stacking on existing geometry.
+- **Command History** — Every mutation is an undoable command; shared between Editor and Spatial views. Fully serializable via `CommandRegistry`.
+- **Composite Commands** — Multi-brick operations execute, roll back on child failure, and undo/redo as a single atomic step.
+
 ## Architecture
 
 ForkBuild is layered as **core / application / renderer / ui**, with infrastructure adapters (storage, publisher, discovery, serializer, world-layout) surrounding them.
 
 - **core/** — Pure domain model: World, Building, Brick, events. No Three.js, no Vue.
-- **application/** — Use cases, editor state, commands, tool framework, spatial session management, and the command subsystem (CommandHistory, CommandRegistry).
-- **renderer/** — Three.js incremental renderer, picking, camera, and overlay layers.
+- **application/** — Use cases, editor state, commands, tool framework, spatial session management, the transform gesture transaction (`SpatialEditingService`), shared `TransformMath`, and the command subsystem (CommandHistory, CommandRegistry).
+- **renderer/** — Three.js incremental renderer, picking, camera, overlay layers, and (as of 0.1.46) the interactive transform gizmo: `TransformGizmoRenderer` (visual) + `TransformGizmoController` (interaction).
 - **ui/** — Vue 3 Composition API views and components.
 
-See [docs/Architecture.md](docs/Architecture.md) for the full architectural overview.
+The 0.1.46 transform pipeline, end to end:
+
+Selection ── keyboard / gizmo drag / future input
+│
+▼
+gesture contract (begin / preview / commit / cancel)
+│
+▼
+TransformMath (one source of truth)
+│
+▼
+TransformSelectionCommand — exactly one per gesture
+│
+▼
+CommandHistory
+│
+▼
+World
+
+
+See [docs/Architecture.md](docs/Architecture.md) for the full architectural overview and [docs/user/](docs/user/README.md) for how-to guides.
+
+## Documentation
+
+- [docs/Architecture.md](docs/Architecture.md) — engine architecture, layer rules, milestone notes.
+- [docs/Roadmap.md](docs/Roadmap.md) — milestone roadmap.
+- [docs/Protocol.md](docs/Protocol.md) — the ForkBuild Protocol.
+- [docs/user/README.md](docs/user/README.md) — user guides, including the [Controls Reference](docs/user/ControlsReference.md) and the [Interactive Transform Gizmo guide](docs/user/InteractiveTransformGizmo.md).
 
 ## Quick Start
 
@@ -93,16 +117,18 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.36 Multi-Selection & Atomic Group Operations
 - [x] 0.1.37 Persistent Command History
 - [x] 0.1.38 Transform Gizmo & Group Pivot
-- [x] 0.1.39 World View Persistence & Publication UI
-- [x] 0.1.40 Command Replay / Operation Timeline
-- [x] 0.1.41 Historical State Restoration
-- [x] 0.1.42 Document Duplication, Forking & Clipboard
-- [x] 0.1.43 Advanced Selection, Grouping & Editing Parity 
-- [x] 0.1.44 Transform Parity & Group Gizmo Architecture 
-- [x] 0.1.45 Advanced Selection & Editor Group Surface 
-- [ ] 0.1.46 Nested Groups / Hierarchical Editing  (optional)
-- [ ] 0.2    Blockchain publishing, multiplayer
-            
+- [x] 0.1.39 Command Replay / Operation Timeline
+- [x] 0.1.40 Advanced Selection & Grouping
+- [x] 0.1.41 Unified Transform Architecture
+- [x] 0.1.42 Clipboard & Editing Kernel Consolidation
+- [x] 0.1.43 Groups & Selection Separation
+- [x] 0.1.44 Transform Parity & Group Gizmo Architecture
+- [x] 0.1.45 Advanced Selection & Editor Group Surface
+- [x] 0.1.46 Interactive Transform Gizmo & Viewport Editing Parity
+- [ ] 0.1.47 Editing UX / Alignment / Snapping
+- [ ] 0.1.48 Nested Groups / Hierarchical Editing (optional)
+- [ ] 0.2 Blockchain publishing, multiplayer
+
 ## License
 
 Mozilla Public License Version 2.0
