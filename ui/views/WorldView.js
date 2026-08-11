@@ -3,30 +3,24 @@ import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
-import TransformFeedback from '../components/TransformFeedback.js';
-import AlignmentPanel from '../components/AlignmentPanel.js';
-import NumericTransformPanel from '../components/NumericTransformPanel.js';
+import { EditorActionRegistry, createStandardActions } from '../../application/EditorActionRegistry.js';
+import { EditorActionContext } from '../../application/EditorActionContext.js';
+import { InputRouter } from '../../application/InputRouter.js';
+import EditingSidebar from '../components/EditingSidebar.js';
+import CommandPalette from '../components/CommandPalette.js';
+import ActionFeedback from '../components/ActionFeedback.js';
 
 const DRAG_THRESHOLD_PX = 6;
-const NUDGE = 1;
 
-// 0.1.46: the viewport hosts the interactive transform gizmo; every
-// pointer/key event is offered to the session's gizmo FIRST.
-//
-// 0.1.47: gesture feedback feeds the transient TransformFeedback
-// overlay; keyboard transforms forward the Shift modifier for precision.
-//
-// 0.1.48: the overlay gains an Alignment section (AlignmentPanel) shown
-// whenever 2+ bricks are selected in the Select tool. Clicks call
-// session.alignSelection(mode) / session.distributeSelection(axis) —
-// the view decides nothing about the geometry underneath.
-//
-// 0.1.49: the overlay gains a Transform section (NumericTransformPanel),
-// always visible, disabled when nothing is selected. One Apply forwards
-// one structured intent to session.applyNumericTransform.
+// 0.1.50: the World View joins the consolidated command surface.
+// Editing shortcuts now come from the SAME EditorActionRegistry the
+// Editor uses — parity by construction. Escape priority: text input >
+// palette > gizmo gesture > placement mode > selection. The overlay
+// gains the consolidated EditingSidebar; hover/inspection/placement
+// panels are unchanged.
 export default {
     name: 'WorldView',
-    components: { TransformFeedback, AlignmentPanel, NumericTransformPanel },
+    components: { EditingSidebar, CommandPalette, ActionFeedback },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -43,11 +37,13 @@ export default {
         const spatialInspection = ref(null);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
-        const transformFeedback = ref(null);
         const cameraPosition = ref(null);
         const availableDefinitions = ref([]);
         const selectedDefinitionId = ref(null);
         const activeTool = ref('select');
+        const paletteOpen = ref(false);
+        const feedbackMessage = ref('');
+        const feedbackVisible = ref(false);
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute();
@@ -58,14 +54,63 @@ export default {
         let spatialInterval = null;
         let pointerStart = null;
         let isDragging = false;
+        let feedbackTimer = null;
 
         availableDefinitions.value = registry.getAll();
         if (availableDefinitions.value.length > 0) {
             selectedDefinitionId.value = availableDefinitions.value[0].id;
         }
 
+        // ----------------------------- 0.1.50 action surface -------------
+
+        const feedback = {
+            show(message) {
+                feedbackMessage.value = message;
+                feedbackVisible.value = true;
+                if (feedbackTimer) {
+                    clearTimeout(feedbackTimer);
+                }
+                feedbackTimer = setTimeout(() => {
+                    feedbackVisible.value = false;
+                }, 2500);
+            }
+        };
+        const actionUi = {
+            togglePalette() {
+                paletteOpen.value = !paletteOpen.value;
+            },
+            focusNumeric: null
+        };
+        const actionRegistry = new EditorActionRegistry(
+            createStandardActions({ session, feedback, ui: actionUi })
+        );
+        const getActionContext = () => EditorActionContext.capture({
+            session,
+            selectionCount: spatialSelection.value ? spatialSelection.value.count : 0,
+            paletteOpen: paletteOpen.value,
+            activeTool: activeTool.value
+        });
+        function closePalette() {
+            paletteOpen.value = false;
+        }
+
+        function alignSelection(mode) {
+            session.alignSelection(mode);
+            refreshSpatialUI();
+        }
+
+        function distributeSelection(axis) {
+            session.distributeSelection(axis);
+            refreshSpatialUI();
+        }
+
+        function applyNumericTransform(intent, options) {
+            session.applyNumericTransform(intent, options);
+            refreshSpatialUI();
+        }
+
         // -----------------------------------------------------------------
-        // Tool switching (unified with Editor View)
+        // Tool switching
         // -----------------------------------------------------------------
 
         function setTool(tool) {
@@ -214,31 +259,13 @@ export default {
             refreshSpatialUI();
         }
 
-        function alignSelection(mode) {
-            session.alignSelection(mode);
-            refreshSpatialUI();
-        }
-
-        function distributeSelection(axis) {
-            session.distributeSelection(axis);
-            refreshSpatialUI();
-        }
-
-        function applyNumericTransform(intent, options) {
-            session.applyNumericTransform(intent, options);
-            refreshSpatialUI();
-        }
-
         // -----------------------------------------------------------------
-        // Pointer interaction
+        // Pointer interaction (gizmo-first, unchanged since 0.1.46)
         // -----------------------------------------------------------------
 
         function onPointerDown(event) {
             isDragging = false;
             pointerStart = { x: event.clientX, y: event.clientY };
-            // The gizmo gets first refusal. If it starts a gesture, the
-            // gesture owns the pointer: no camera drag, no selection,
-            // no hover, until pointer up.
             if (session.gizmoPointerDown(event)) {
                 return;
             }
@@ -247,7 +274,6 @@ export default {
         function onPointerMove(event) {
             const gizmoResult = session.gizmoPointerMove(event);
             if (gizmoResult.consumed) {
-                transformFeedback.value = gizmoResult.feedback || null;
                 return;
             }
             if (pointerStart) {
@@ -266,7 +292,6 @@ export default {
         function onPointerUp(event) {
             const gizmoResult = session.gizmoPointerUp(event);
             if (gizmoResult.consumed) {
-                transformFeedback.value = null;
                 refreshSpatialUI();
                 pointerStart = null;
                 isDragging = false;
@@ -286,108 +311,49 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Keyboard interaction (merged and deduplicated)
+        // Keyboard interaction — registry-driven (0.1.50)
         // -----------------------------------------------------------------
 
         function onKeyDown(event) {
-            // An active gizmo gesture owns the keyboard: only Escape
-            // (cancel) does anything, everything else is swallowed.
+            // 1. Text inputs own their keys.
+            if (InputRouter.isTextInputTarget(event.target)) {
+                if (event.key === 'Escape') {
+                    event.target.blur();
+                }
+                return;
+            }
+            // 2. An open palette owns the keyboard.
+            if (paletteOpen.value) {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    paletteOpen.value = false;
+                } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                    event.preventDefault();
+                    paletteOpen.value = false;
+                }
+                return;
+            }
+            // 3. An active gizmo gesture owns the keyboard.
             if (session.isGestureActive()) {
                 if (session.gizmoKeyDown({ key: event.key })) {
-                    transformFeedback.value = null;
                     refreshSpatialUI();
                 }
                 return;
             }
-
-            // Escape: cancel placement if in Place mode, else clear selection
-            if (event.key === 'Escape') {
-                if (activeTool.value === 'place') {
-                    setTool('select');
-                } else {
-                    session.clearSelection();
+            // 4. Placement mode keeps its own Escape (exit placement).
+            if (activeTool.value === 'place' && event.key === 'Escape') {
+                setTool('select');
+                return;
+            }
+            // 5. Registry-driven editing shortcuts.
+            const action = InputRouter.matchShortcut(event, actionRegistry);
+            if (action) {
+                if (actionRegistry.execute(action.id, getActionContext())) {
+                    event.preventDefault();
                     refreshSpatialUI();
                 }
                 return;
             }
-
-            const modifierPressed = event.ctrlKey || event.metaKey;
-
-            // Undo / Redo (global, works in both tools)
-            if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
-                event.preventDefault();
-                session.undo();
-                refreshSpatialUI();
-                return;
-            }
-            if (modifierPressed && (event.key.toLowerCase() === 'y' || (event.key.toLowerCase() === 'z' && event.shiftKey))) {
-                event.preventDefault();
-                session.redo();
-                refreshSpatialUI();
-                return;
-            }
-
-            // Select-tool editing shortcuts. Modifiers travel into the
-            // gesture transaction: Shift selects precision increments
-            // for keyboard transforms exactly as it does for gizmo drags.
-            if (activeTool.value === 'select' && spatialEditingContext.value) {
-                const ctx = spatialEditingContext.value;
-                const gestureModifiers = { shift: event.shiftKey || false };
-                if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.rotate) {
-                    if (event.key.toLowerCase() === 'r') {
-                        event.preventDefault();
-                        const delta = event.shiftKey ? -90 : 90;
-                        session.rotateSelection(delta, gestureModifiers);
-                        refreshSpatialUI();
-                        return;
-                    }
-                }
-                if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.move) {
-                    switch (event.key) {
-                        case 'ArrowUp':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: 0, z: -NUDGE }, event);
-                            break;
-                        case 'ArrowDown':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: 0, z: NUDGE }, event);
-                            break;
-                        case 'ArrowLeft':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: -NUDGE, y: 0, z: 0 }, event);
-                            break;
-                        case 'ArrowRight':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: NUDGE, y: 0, z: 0 }, event);
-                            break;
-                        case 'PageUp':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: NUDGE, z: 0 }, event);
-                            break;
-                        case 'PageDown':
-                            event.preventDefault();
-                            moveSelectedBrick({ x: 0, y: -NUDGE, z: 0 }, event);
-                            break;
-                    }
-                }
-                if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.delete) {
-                    if (event.key === 'Delete' || event.key === 'Backspace') {
-                        event.preventDefault();
-                        deleteSelectedBrick();
-                    }
-                }
-            }
-        }
-
-        function moveSelectedBrick(delta, rawEvent) {
-            const modifiers = rawEvent ? { shift: rawEvent.shiftKey || false } : null;
-            session.moveSelection(delta, modifiers);
-            refreshSpatialUI();
-        }
-
-        function deleteSelectedBrick() {
-            session.deleteSelection();
-            refreshSpatialUI();
         }
 
         // -----------------------------------------------------------------
@@ -402,7 +368,7 @@ export default {
 
             viewport.value.addEventListener('pointerdown', onPointerDown);
             viewport.value.addEventListener('pointermove', onPointerMove);
-            window.addEventListener('pointerup', onPointerUp);
+            viewport.value.addEventListener('pointerup', onPointerUp);
             window.addEventListener('keydown', onKeyDown);
 
             spatialInterval = setInterval(() => {
@@ -413,8 +379,11 @@ export default {
 
         onBeforeUnmount(() => {
             clearInterval(spatialInterval);
+            if (feedbackTimer) {
+                clearTimeout(feedbackTimer);
+            }
             window.removeEventListener('keydown', onKeyDown);
-            window.removeEventListener('pointerup', onPointerUp);
+            viewport.value.removeEventListener('pointerup', onPointerUp);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
             session.dispose();
@@ -432,20 +401,24 @@ export default {
             spatialInspection,
             spatialEditingContext,
             spatialPlacement,
-            transformFeedback,
             cameraPosition,
             availableDefinitions,
             selectedDefinitionId,
             activeTool,
+            paletteOpen,
+            feedbackMessage,
+            feedbackVisible,
+            actionRegistry,
+            getActionContext,
+            actionUi,
+            closePalette,
             setTool,
             onBrickSelectionChange,
             focusWorld,
             focusSelection,
             alignSelection,
             distributeSelection,
-            applyNumericTransform,
-            moveSelectedBrick,
-            deleteSelectedBrick
+            applyNumericTransform
         };
     },
     template: `
@@ -457,7 +430,7 @@ export default {
                     Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
                 <p class="world-view-hint">
-                    Drag to orbit • Scroll to zoom • Home to reset • Drag gizmo handles to move/rotate • Shift while dragging/nudging for precision • Esc cancels a drag
+                    Drag to orbit • Scroll to zoom • Home to reset • Ctrl/Cmd+K command palette • Click to inspect / place
                 </p>
 
                 <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
@@ -569,51 +542,6 @@ export default {
                     <p class="editing-hint">Click to place • Escape to switch to Select</p>
                 </div>
 
-                <div v-if="spatialEditingContext && activeTool === 'select'" class="spatial-panel spatial-panel--editing">
-                    <h4>Editing</h4>
-                    <p class="spatial-type">{{ spatialEditingContext.type }}</p>
-                    <div v-if="spatialEditingContext.type === 'brick'" class="editing-actions">
-                        <p v-if="spatialEditingContext.capabilities.move" class="editing-hint">
-                            Arrow keys: move X/Z • Page Up/Down: move Y • or drag the gizmo (Shift = precision)
-                        </p>
-                        <p v-if="spatialEditingContext.capabilities.rotate" class="editing-hint">
-                            R: rotate 90° • Shift+R: rotate –90° • or drag the gizmo ring (Shift = precision)
-                        </p>
-                        <button
-                            v-if="spatialEditingContext.capabilities.delete"
-                            class="action-btn action-btn--danger"
-                            @click="deleteSelectedBrick"
-                        >
-                            Delete Brick
-                        </button>
-                    </div>
-                    <div v-if="spatialEditingContext.type === 'ground'" class="editing-actions">
-                        <p class="editing-hint">
-                            Ground selected. Switch to Place tool to build.
-                        </p>
-                    </div>
-                </div>
-
-                <div
-                    v-if="spatialSelection && spatialSelection.count >= 2 && activeTool === 'select'"
-                    class="world-view-section"
-                >
-                    <h4>Alignment ({{ spatialSelection.count }} selected)</h4>
-                    <AlignmentPanel
-                        :selection-count="spatialSelection.count"
-                        :align="alignSelection"
-                        :distribute="distributeSelection"
-                    />
-                </div>
-
-                <div v-if="activeTool === 'select'" class="world-view-section">
-                    <h4>Transform</h4>
-                    <NumericTransformPanel
-                        :selection-count="spatialSelection ? spatialSelection.count : 0"
-                        :apply="applyNumericTransform"
-                    />
-                </div>
-
                 <div class="world-view-section">
                     <h4>Tools</h4>
                     <div class="tool-switcher tool-switcher--spatial">
@@ -648,6 +576,19 @@ export default {
                             Hover over ground or a brick face, then click to place.
                         </p>
                     </div>
+                </div>
+
+                <div v-if="activeTool === 'select'" class="world-view-section">
+                    <h4>Editing</h4>
+                    <EditingSidebar
+                        :registry="actionRegistry"
+                        :get-context="getActionContext"
+                        :ui="actionUi"
+                        :selection-count="spatialSelection ? spatialSelection.count : 0"
+                        :apply-numeric="applyNumericTransform"
+                        :align="alignSelection"
+                        :distribute="distributeSelection"
+                    />
                 </div>
 
                 <div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
@@ -690,7 +631,13 @@ export default {
                 </div>
             </div>
             <div ref="viewport" class="world-viewport"></div>
-            <TransformFeedback :feedback="transformFeedback" />
+            <CommandPalette
+                v-if="paletteOpen"
+                :registry="actionRegistry"
+                :get-context="getActionContext"
+                @close="closePalette"
+            />
+            <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
         </div>
     `
 };
