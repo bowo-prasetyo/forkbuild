@@ -7,13 +7,14 @@ import { TransformGizmoRenderer } from '../renderer/TransformGizmoRenderer.js';
 import { TransformGizmoController } from '../renderer/TransformGizmoController.js';
 import { TransformMath } from './TransformMath.js';
 
-// World View's render wiring. As of 0.1.46 it exposes the same narrow
-// gizmo surface RenderWorldUseCase does — one shared
-// TransformGizmoController design, one shared gesture contract, no
-// second gizmo implementation. WorldNavigationSession passes its
-// SpatialEditingService as gestureService; TransformMath is injected so
-// the gizmo drag preview and the committed TransformSelectionCommand are
-// computed from identical definitions.
+// World View's render wiring. Exposes the same narrow gizmo surface
+// RenderWorldUseCase does — one shared TransformGizmoController design,
+// one shared gesture contract, no second gizmo implementation.
+// WorldNavigationSession passes its SpatialEditingService as
+// gestureService; TransformMath is injected so the gizmo drag preview
+// and the committed TransformSelectionCommand are computed from
+// identical definitions. As of 0.1.47 the pointer move/up functions
+// carry modifier state down (precision mode) and gesture feedback up.
 export class RenderWorldViewUseCase {
     execute(container, registry, eventBus = null, { gestureService = null } = {}) {
         const renderer = new Renderer(container);
@@ -61,10 +62,10 @@ export class RenderWorldViewUseCase {
             hideGizmo: () => transformGizmoController.hide(),
             gizmoPointerDown: (screenX, screenY, selection) =>
                 transformGizmoController.onPointerDown(screenX, screenY, selection),
-            gizmoPointerMove: (screenX, screenY, selection) =>
-                transformGizmoController.onPointerMove(screenX, screenY, selection),
-            gizmoPointerUp: (screenX, screenY, selection) =>
-                transformGizmoController.onPointerUp(screenX, screenY, selection),
+            gizmoPointerMove: (screenX, screenY, selection, modifiers = null) =>
+                transformGizmoController.onPointerMove(screenX, screenY, selection, modifiers),
+            gizmoPointerUp: (screenX, screenY, selection, modifiers = null) =>
+                transformGizmoController.onPointerUp(screenX, screenY, selection, modifiers),
             gizmoKeyDown: (keyEvent, selection) =>
                 transformGizmoController.onKeyDown(keyEvent, selection),
             cancelGizmoGesture: () => transformGizmoController.cancelGesture(),
