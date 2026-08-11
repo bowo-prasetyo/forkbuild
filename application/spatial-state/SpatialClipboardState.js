@@ -1,22 +1,27 @@
-// Runtime-only state: what is currently on the clipboard (0.1.42).
-// Session state, not document state — copying never touches the
-// document and never enters command history.
+// Runtime-only state: what is currently on the clipboard (0.1.42,
+// group-aware as of 0.1.43). Session state, not document state — copying
+// never touches the document and never enters command history.
 //
 // The clipboard carries INTENT, not identity: definitionId, transform
-// RELATIVE to the copied selection's pivot (origin), and source
-// metadata. No brick id is ever stored here — pasting therefore can
-// never collide with or resurrect the copied bricks; PasteBricksCommand
-// creates fresh identities at execution time, the same contract
-// PlaceBrickCommand established. Positions are plain {x,y,z} data.
+// RELATIVE to the copied selection's pivot (origin), source metadata —
+// and, as of 0.1.43, any group whose ENTIRE membership was selected,
+// expressed as { name, memberIndices } pointing into items[]. No brick
+// ids and no group ids are ever stored here — pasting therefore can
+// never collide with or resurrect copied identities; PasteBricksCommand
+// creates fresh identities at execution time.
 export class SpatialClipboardState {
-    constructor({ items = [], origin = null, sourceDocumentId = null, copiedAt = null } = {}) {
+    constructor({ items = [], groups = [], origin = null, sourceDocumentId = null, copiedAt = null } = {}) {
         this._items = items.map((item) => ({
             definitionId: item.definitionId,
             position: { ...item.position },
             rotation: item.rotation || 0
         }));
+        this._groups = groups.map((group) => ({
+            name: group.name || null,
+            memberIndices: [...group.memberIndices]
+        }));
         this._origin = origin ? { ...origin } : null;
-        this._sourceDocumentId = sourceDocumentId;
+        this._sourceDocumentId = sourceDocumentId || null;
         this._copiedAt = copiedAt;
     }
 
@@ -25,6 +30,15 @@ export class SpatialClipboardState {
             definitionId: item.definitionId,
             position: { ...item.position },
             rotation: item.rotation
+        }));
+    }
+
+    // Groups whose entire membership was selected at copy time, expressed
+    // as indices into items — never ids.
+    get groups() {
+        return this._groups.map((group) => ({
+            name: group.name,
+            memberIndices: [...group.memberIndices]
         }));
     }
 
