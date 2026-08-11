@@ -12,6 +12,7 @@ import { CommandHistory } from './CommandHistory.js';
 import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
 import { SpatialEditingService } from './SpatialEditingService.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
+import { TransformSettings } from './TransformSettings.js';
 import { ToolId } from './editor-state/ToolId.js';
 
 // Owns the live runtime graph — the render session, World, CommandHistory,
@@ -22,35 +23,17 @@ import { ToolId } from './editor-state/ToolId.js';
 // — it never touches a World, Renderer, or ToolManager directly, before
 // or after a document is replaced.
 //
-// registry/editorContext/toolRegistry/documentManager/selectionUseCase/
-// previewUseCase are constructed once, outside EditorSession, and are the
-// SAME instances across every document replacement — only the per-world
-// runtime gets torn down and rebuilt. DOM listeners (wired once, by
-// EditorView) delegate to this.onPointerDown()/etc. at call time rather
-// than capturing toolManager/inputDispatcher directly, so they never need
-// to be re-attached when the runtime underneath them changes — only the
-// instance fields those methods read get swapped.
+// 0.1.46 — interactive transform gizmo wiring (unchanged in 0.1.47):
+// EditorSession owns the Editor's gesture service, gizmo presentation
+// refresh, and exclusive input routing.
 //
-// 0.1.46 — Interactive transform gizmo. EditorSession now owns the
-// Editor's gesture service and gizmo presentation:
-//   * The gesture service is a SpatialEditingService wired to the open
-//     document through a trivial getDocument() shim and a world-id ->
-//     CommandHistory map refreshed on every _rebuild(). It satisfies the
-//     exact gesture contract the gizmo drives (begin/preview/commit/
-//     cancelTransformGesture) — the same contract World View's editing
-//     service implements, which is the parity: one gesture transaction,
-//     one math source (TransformMath), one TransformSelectionCommand per
-//     completed drag, in BOTH views. If a dedicated
-//     TransformSelectionUseCase exists in the tree, it can be swapped in
-//     right here without the gizmo noticing — the contract is the point.
-//   * Input routing is exclusive: every pointer/key event is offered to
-//     the gizmo FIRST; while a gesture is active the gesture owns the
-//     pointer and the keyboard (only Escape cancels), OrbitControls is
-//     disabled by the controller, and nothing reaches the tools.
-//   * Gizmo presentation is refreshed from state, never from gesture
-//     internals: selection changes, tool changes, and every command
-//     executed/undone/redone re-resolve { pivot, bounds } through
-//     TransformGizmoUseCase and reposition (or hide) the gizmo.
+// 0.1.47 — transform precision: the session constructs ONE
+// TransformSettings (session preferences, never document state) and
+// hands it to the gesture service, where snapping is applied inside the
+// gesture transaction. Pointer move/up forward the raw modifier state
+// into the transaction (Shift = precision mode) and return the
+// transaction's gesture feedback upward, so EditorView's transient
+// overlay can show exactly the snapped transform that will commit.
 export class EditorSession {
     constructor({
         registry,
@@ -77,10 +60,12 @@ export class EditorSession {
         this._inputDispatcher = null;
         this._untrackDirtyState = null;
         this._editorCommandHistories = new Map();
+        this._transformSettings = new TransformSettings();
         this._gestureService = new SpatialEditingService(
             { getDocument: () => this._documentManager.document },
             this._editorCommandHistories,
-            registry
+            registry,
+            this._transformSettings
         );
         this._gizmoUseCase = new TransformGizmoUseCase(this._gestureService);
         this._gizmoSubscriptions = [];
@@ -88,6 +73,10 @@ export class EditorSession {
 
     get commandHistory() {
         return this._commandHistory;
+    }
+
+    get transformSettings() {
+        return this._transformSettings;
     }
 
     isGestureActive() {
@@ -126,8 +115,7 @@ export class EditorSession {
 
     // Opens an already-constructed Document (e.g. from ForkDocumentUseCase)
     // by re-hydrating its world against a fresh EventBus so the renderer
-    // subscribes correctly. Used when the document is already in memory
-    // rather than loaded from storage by id.
+    // subscribes correctly.
     openDocument(document) {
         this._rebuild((eventBus) => {
             const worldJson = document.world.toJSON();
@@ -143,38 +131,54 @@ export class EditorSession {
         // orbit/pan gestures keep their mouse buttons.
         if (event.button === 0 && this._session
             && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
-            return;
+            return null;
         }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerDown(event);
         }
+        return null;
     }
 
+    // Returns the gizmo result ({ consumed, feedback }) when a gesture
+    // owns the pointer — EditorView reads feedback off it for the
+    // transient overlay — and null otherwise.
     onPointerMove(event) {
         if (this._session) {
-            const result = this._session.gizmoPointerMove(event.clientX, event.clientY, this._editorContext.selection);
+            const result = this._session.gizmoPointerMove(
+                event.clientX,
+                event.clientY,
+                this._editorContext.selection,
+                this._toKeyEvent(event).modifiers
+            );
             if (result && result.consumed) {
-                return;
+                return result;
             }
         }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerMove(event);
         }
+        return null;
     }
 
     onPointerUp(event) {
         if (this._session) {
-            const result = this._session.gizmoPointerUp(event.clientX, event.clientY, this._editorContext.selection);
+            const result = this._session.gizmoPointerUp(
+                event.clientX,
+                event.clientY,
+                this._editorContext.selection,
+                this._toKeyEvent(event).modifiers
+            );
             if (result && result.consumed) {
                 // Repositions the gizmo on the committed transforms (or
                 // snaps it back after an exact no-op drag).
                 this._refreshGizmo();
-                return;
+                return result;
             }
         }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerUp(event);
         }
+        return null;
     }
 
     onKeyDown(event) {
@@ -201,14 +205,7 @@ export class EditorSession {
 
     // Shared by start()/loadDocument()/newDocument() — there is exactly
     // one way the runtime graph gets built, whether it's the first time
-    // or the fifth. Tears down whatever currently exists, wires a fresh
-    // render session (subscribed BEFORE any world content exists — the
-    // same ordering constraint the engine has followed since the Event
-    // System milestone), then calls populateWorldFn(eventBus) to actually
-    // build/populate the World, whose events land on an
-    // already-listening renderer. Only after that does the rest of the
-    // per-world runtime (CommandHistory, ToolManager, InputDispatcher)
-    // get built against the real world.
+    // or the fifth.
     _rebuild(populateWorldFn) {
         this._teardown();
         this._editorContext.clearSelection();
