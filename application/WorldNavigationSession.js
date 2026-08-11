@@ -29,7 +29,8 @@ export class WorldNavigationSession {
         worldLayoutProvider,
         saveDocumentUseCase = null,
         publishDocumentUseCase = null,
-        replayDocumentUseCase = null
+        replayDocumentUseCase = null,
+        restoreHistoryStateUseCase = null
     }) {
         this._registry = registry;
         this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -37,6 +38,7 @@ export class WorldNavigationSession {
         this._saveDocumentUseCase = saveDocumentUseCase;
         this._publishDocumentUseCase = publishDocumentUseCase;
         this._replayDocumentUseCase = replayDocumentUseCase;
+        this._restoreHistoryStateUseCase = restoreHistoryStateUseCase;
         this._session = null;
         this._spatialCameraController = null;
         this._inspectionService = null;
@@ -45,6 +47,7 @@ export class WorldNavigationSession {
         this._loadedDocuments = new Map();
         this._commandHistories = new Map();
         this._documentManagers = new Map();
+        this._retiredHistories = new Map();
         this._failedLoads = new Map();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
@@ -182,16 +185,12 @@ export class WorldNavigationSession {
 
     // Reconcile the set of loaded worlds with whatever the layout
     // provider says should be visible from the current camera position.
-    // Returns { loaded: string[], visible: string[] }.
     //
-    // As of 0.1.39, DIRTY DOCUMENTS ARE PINNED: a document with unsaved
-    // edits is never stream-unloaded, even when it leaves the streaming
-    // radius — silently discarding edits on camera movement would be
-    // data loss. Saving unpins it.
-    //
-    // As of 0.1.40, the document under HISTORY PREVIEW is pinned too:
-    // unloading it mid-preview would strand the replay world and break
-    // cancelHistoryPreview().
+    // DIRTY DOCUMENTS ARE PINNED (0.1.39): a document with unsaved edits
+    // is never stream-unloaded — silently discarding edits on camera
+    // movement would be data loss. Saving unpins it. The document under
+    // HISTORY PREVIEW (0.1.40) is pinned too. Restored documents (0.1.41)
+    // are dirty by definition, so they inherit pinning automatically.
     updateSpatialView() {
         if (!this._session) {
             return { loaded: [], visible: [], failed: this._getFailedIds() };
@@ -312,20 +311,14 @@ export class WorldNavigationSession {
     }
 
     // -----------------------------------------------------------------
-    // History Preview & Operation Timeline (0.1.40)
+    // History Preview, Timeline & Restoration (0.1.40 / 0.1.41)
     // -----------------------------------------------------------------
 
-    // Projects the active (or given) document's command history as a
-    // chronological operation timeline. Composites are single entries
-    // with childCount > 0. Empty when there is no history.
     getTimeline(documentId = null) {
         const history = this._getHistoryForDocument(documentId || this.getActiveDocumentId());
         return history ? history.getTimeline() : [];
     }
 
-    // Null when no preview is active; { active, documentId, cursor }
-    // otherwise. cursor is how many operations the preview world has
-    // applied (0 = initial state).
     getHistoryPreview() {
         if (!this._historyPreview.active) {
             return null;
@@ -337,9 +330,6 @@ export class WorldNavigationSession {
         };
     }
 
-    // Enters preview mode for a document. Does not swap visuals yet —
-    // previewHistoryAt() does. Entering for a second document cancels
-    // the first preview (restoring it) automatically.
     beginHistoryPreview(documentId = null) {
         const id = documentId || this.getActiveDocumentId();
         const history = this._getHistoryForDocument(id);
@@ -362,14 +352,6 @@ export class WorldNavigationSession {
         return id;
     }
 
-    // Reconstructs the world as it existed after the first `cursor`
-    // operations and shows it INSTEAD of the live world. The live
-    // Document/World/history are never mutated — this is a visual swap:
-    //   first scrub : remove live world, add replay world
-    //   later scrubs: replace the previous replay world
-    // The replay world renders under "replay:<documentId>" at the same
-    // layout position, built silently (no eventBus) so replay noise never
-    // enters the shared domain event stream.
     previewHistoryAt(cursor) {
         if (!this._historyPreview.active) {
             throw new Error('WorldNavigationSession: no active history preview');
@@ -397,10 +379,6 @@ export class WorldNavigationSession {
         return true;
     }
 
-    // Leaves preview mode: removes the replay world, restores the live
-    // world's meshes, and re-applies the selection highlight (fresh
-    // meshes start un-highlighted). The live document was never touched,
-    // so there is nothing else to roll back.
     cancelHistoryPreview() {
         if (!this._historyPreview.active) {
             return false;
@@ -424,6 +402,104 @@ export class WorldNavigationSession {
             previewRendered: false
         };
         return true;
+    }
+
+    // Commits a historical state as the new live document (0.1.41).
+    // The state is reconstructed THROUGH THE REPLAY SYSTEM — never by
+    // rewinding the live world — then:
+    //   * the loaded Document and the DocumentManager's document become
+    //     the reconstructed world (original metadata preserved);
+    //   * editing is rebased onto a FRESH CommandHistory rooted at the
+    //     restored state (baseline = restored state, no commands,
+    //     cursor 0), so undo/redo never reach into the discarded future
+    //     and no old command can ever be duplicated into the new
+    //     timeline — restoration is NOT undo, it starts a new line;
+    //   * the new history's save point is invalidated by the use case —
+    //     storage still holds the pre-restore document — so the restored
+    //     document stays dirty until an explicit Save establishes the
+    //     new save point (and dirty pinning keeps it loaded meanwhile);
+    //   * the old history is retired to getRetiredHistories() as an
+    //     inspectable session artifact — kept in memory, never
+    //     persisted, never editable again;
+    //   * any active preview for the document ends, the renderer swaps
+    //     to the restored world under the REAL documentId, and
+    //     selection/hover/inspection are cleared — they may reference
+    //     bricks the restored state no longer contains.
+    // Restoration cannot itself be undone: the retired history is the
+    // only record of the pre-restore session. The UI is expected to
+    // confirm before calling this.
+    restoreHistoryAt(cursor, documentId = null) {
+        if (!this._restoreHistoryStateUseCase) {
+            throw new Error('WorldNavigationSession: no restore configured');
+        }
+        const id = documentId
+            || (this._historyPreview.active ? this._historyPreview.documentId : this.getActiveDocumentId());
+        const document = this._loadedDocuments.get(id);
+        if (!document) {
+            throw new Error(`WorldNavigationSession: no loaded document to restore (${id || 'no active document'})`);
+        }
+        const history = this._commandHistories.get(document.world.id);
+        const entry = this._documentManagers.get(id);
+        if (!history || !entry) {
+            throw new Error(`WorldNavigationSession: document ${id} has no editable session`);
+        }
+
+        // Reconstruct and rebase. If the replay fails (e.g. invalid
+        // cursor), nothing below runs and tracking stays untouched.
+        const result = this._restoreHistoryStateUseCase.execute(entry.manager, history, cursor);
+
+        // Retire the old history, then swap tracking over to the new one.
+        if (!this._retiredHistories.has(id)) {
+            this._retiredHistories.set(id, []);
+        }
+        this._retiredHistories.get(id).push(result.previousHistory);
+        entry.untrack();
+        entry.untrack = entry.manager.trackCommandHistory(result.history);
+
+        // Rewire the session onto the restored document/history. The
+        // world id is unchanged (replay preserves identities), so the
+        // map keys, the storage slot, and publication references all
+        // stay valid.
+        this._loadedDocuments.set(id, result.document);
+        this._commandHistories.set(result.document.world.id, result.history);
+
+        // End any preview of this document.
+        if (this._historyPreview.active && this._historyPreview.documentId === id) {
+            if (this._historyPreview.previewRendered && this._historyPreview.previewWorld && this._session) {
+                this._session.removeWorld(this._historyPreview.previewWorld, REPLAY_DOCUMENT_PREFIX + id);
+            }
+            this._historyPreview = {
+                active: false,
+                documentId: null,
+                cursor: null,
+                previewWorld: null,
+                previewRendered: false
+            };
+        }
+
+        // Swap the renderer onto the restored world. When a preview was
+        // active the old world's meshes were already removed, so
+        // removeWorld() safely no-ops on brick ids with no registered
+        // meshes — this matters because old and restored worlds share
+        // brick ids wherever their states overlap.
+        if (this._session) {
+            this._session.removeWorld(document.world, id);
+            this._session.addWorld(result.document.world, id, this._worldLayoutProvider.getPosition(id));
+        }
+
+        // Reconcile transient interaction state.
+        this.clearSelection();
+        this._setSpatialHover(SpatialHoverState.empty());
+        if (this._session) {
+            this._session.clearHover();
+        }
+        return id;
+    }
+
+    // Histories replaced by restoreHistoryAt(), newest last. Inspectable
+    // session artifacts only — never persisted, never re-editable.
+    getRetiredHistories(documentId) {
+        return this._retiredHistories.get(documentId) || [];
     }
 
     // -----------------------------------------------------------------
@@ -733,6 +809,7 @@ export class WorldNavigationSession {
             managerEntry.untrack();
             this._documentManagers.delete(documentId);
         }
+        this._retiredHistories.delete(documentId);
         if (document && this._session) {
             this._session.removeWorld(document.world, documentId);
         }
@@ -840,6 +917,7 @@ export class WorldNavigationSession {
         }
         this._documentManagers.clear();
         this._commandHistories.clear();
+        this._retiredHistories.clear();
         this._loadedDocuments.clear();
         this._failedLoads.clear();
         this._spatialSelection = SpatialSelectionState.empty();
