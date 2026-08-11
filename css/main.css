@@ -1183,3 +1183,29 @@ html, body {
     border-color: #c0392b;
     color: #e74c3c;
 }
+/* Advanced selection (0.1.45) */
+.viewport,
+.world-viewport {
+    position: relative;
+}
+.marquee-rect {
+    position: absolute;
+    border: 1px solid #4caf7d;
+    background: rgba(76, 175, 125, 0.12);
+    pointer-events: none;
+    z-index: 20;
+}
+
+/* Editor Groups panel (0.1.45) */
+.groups-panel {
+    margin-top: 1rem;
+}
+.groups-panel-create {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+.groups-panel-empty {
+    color: #707070;
+    font-size: 0.8rem;
+    margin: 0.25rem 0 0;
+}
