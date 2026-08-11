@@ -6,9 +6,9 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.42** — Document Duplication, Forking & Clipboard
+**Version 0.1.43** — Advanced Selection, Grouping & Editing Surface Parity
 
-Worlds are now safely cloneable, forkable, and copy/pasteable. One cloning mechanism (`DocumentCloneService`) powers both Duplicate and Fork — new document identity, fresh brick identities, lineage preserved, source never touched. Copy is pure observation (clipboard state carrying pivot-relative intent — brick ids are never copied); Paste is a single atomic `PasteBricksCommand` through `CommandHistory`, so it is undoable, replayable, and restorable like every other operation. Clones and forks start as fresh dirty sessions and become real publications when published.
+Groups are now first-class **document entities** (`core/Group`: id, name, brick references — flat, independent identity, no geometry). Every group mutation is a command, so groups inherit undo/redo, dirty tracking, persistence, replay, and restoration with zero special-casing. Copy/paste is group-aware (fully-selected groups travel as name + member indices — never ids), and the **Editor now has copy/paste parity** through the exact same use cases and `PasteBricksCommand` the World View uses — one clipboard implementation in the whole engine.
 
 ## Features
 
@@ -28,7 +28,9 @@ Worlds are now safely cloneable, forkable, and copy/pasteable. One cloning mecha
 - **Historical State Restoration** — Commit any previewed timeline state as the current document via an explicit, confirmed destructive action: replay-based reconstruction, rebased history with save-point invalidation (dirty until saved), retired-history artifacts, and full save/publish compatibility.
 - **Document Duplication & Forking** — Duplicate or fork any loaded world from World View: fresh identities throughout, lineage metadata (`parentDocumentId`), current-user attribution, and a fresh dirty editing session. The Repository/Author fork flow now delegates to the same cloning mechanism.
 - **Clipboard Copy/Paste** — Ctrl+C copies a multi-selection as pivot-relative intent (never ids); Ctrl+V pastes it as one atomic `Paste 3 Bricks` command with cascading offset, full undo/redo/replay/restore support, and automatic selection of the pasted bricks.
-  
+- **Persistent Groups** — Flat named groups as document state, with create/delete/rename/add/remove/duplicate commands; full undo/replay/restore support and a World View group panel (group selection, select/add/rename/duplicate/delete).
+- **Editor Clipboard Parity** — Ctrl+C / Ctrl+V in the Editor reuse the World View clipboard machinery verbatim; group-aware copy/paste on both surfaces.
+    
 ## Architecture
 
 ForkBuild is layered as **core / application / renderer / ui**, with infrastructure adapters (storage, publisher, discovery, serializer, world-layout) surrounding them.
@@ -91,7 +93,9 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.40 Command Replay / Operation Timeline
 - [x] 0.1.41 Historical State Restoration
 - [x] 0.1.42 Document Duplication, Forking & Clipboard
-- [ ] 0.1.43 Advanced Selection & Grouping
+- [x] 0.1.43 Advanced Selection, Grouping & Editing Surface Parity
+- [ ] 0.1.44 Group Transforms & Gizmo Integration
+- [ ] 0.1.45 Nested Groups / Advanced Editing (optional)
 - [ ] 0.2 Blockchain publishing, multiplayer
 
 ## License
