@@ -1161,3 +1161,25 @@ html, body {
     color: #d0d0d0;
     font-size: 0.85rem;
 }
+/* Groups (0.1.43) */
+.group-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+.group-action-btn {
+    padding: 0.1rem 0.4rem;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 3px;
+    color: #d0d0d0;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+.group-action-btn:hover {
+    background: #333333;
+}
+.group-action-btn--danger {
+    border-color: #c0392b;
+    color: #e74c3c;
+}
