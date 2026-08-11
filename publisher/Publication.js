@@ -3,11 +3,19 @@
 // Author View, and (later) World View all consume Publications without
 // knowing how they were created.
 //
-// As of 0.2.0, a Publication is a PUBLISHED SNAPSHOT: an immutable,
-// validated, versioned artifact. The snapshotId identifies this
+// As of 0.2.3, a Publication is a PUBLISHED SNAPSHOT: an immutable,
+// validated, versioned artifact. The publication id identifies this
 // particular published state (distinct from documentId, which identifies
 // the editable work). contentHash provides integrity verification.
 // schemaVersion records the document envelope schema at publish time.
+//
+// The actual snapshot content is stored separately at
+// `snapshot:{publicationId}` in storage — NOT embedded in this record.
+// This keeps the publications list lightweight while the snapshot
+// remains independently loadable.
+//
+// Publication is PURE DATA. It has no editing capability, no commands,
+// no document mutation. It describes what was published and when.
 export class Publication {
     constructor({
         id,
@@ -18,8 +26,7 @@ export class Publication {
         publishedAt,
         url = null,
         parentDocumentId = null,
-        // 0.2.0 — snapshot identity and integrity
-        snapshotId = null,
+        // 0.2.3 — snapshot identity and integrity
         contentHash = null,
         schemaVersion = null
     } = {}) {
@@ -31,10 +38,10 @@ export class Publication {
         this._publishedAt = publishedAt;
         this._url = url;
         this._parentDocumentId = parentDocumentId;
-        this._snapshotId = snapshotId || id;
         this._contentHash = contentHash;
         this._schemaVersion = schemaVersion;
     }
+
     get id() { return this._id; }
     get documentId() { return this._documentId; }
     get title() { return this._title; }
@@ -43,9 +50,9 @@ export class Publication {
     get publishedAt() { return this._publishedAt; }
     get url() { return this._url; }
     get parentDocumentId() { return this._parentDocumentId; }
-    get snapshotId() { return this._snapshotId; }
     get contentHash() { return this._contentHash; }
     get schemaVersion() { return this._schemaVersion; }
+
     toJSON() {
         return {
             id: this._id,
@@ -56,11 +63,11 @@ export class Publication {
             publishedAt: this._publishedAt ? this._publishedAt.toISOString() : null,
             url: this._url,
             parentDocumentId: this._parentDocumentId,
-            snapshotId: this._snapshotId,
             contentHash: this._contentHash,
             schemaVersion: this._schemaVersion
         };
     }
+
     static fromJSON(json) {
         return new Publication({
             id: json.id,
@@ -71,7 +78,6 @@ export class Publication {
             publishedAt: json.publishedAt ? new Date(json.publishedAt) : null,
             url: json.url,
             parentDocumentId: json.parentDocumentId || null,
-            snapshotId: json.snapshotId || json.id,
             contentHash: json.contentHash || null,
             schemaVersion: json.schemaVersion !== undefined ? json.schemaVersion : null
         });
