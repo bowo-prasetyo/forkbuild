@@ -5,46 +5,34 @@ import { CreateEditorContextUseCase } from '../../application/CreateEditorContex
 import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
 import { CreateDocumentManagerUseCase } from '../../application/CreateDocumentManagerUseCase.js';
 import { CreatePersistenceUseCase } from '../../application/CreatePersistenceUseCase.js';
-import { CreateIdentityProviderUseCase } from '../../application/CreateIdentityProviderUseCase.js';
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
 import { EditorSession } from '../../application/EditorSession.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
 import { EditorEvent } from '../../core/events/EditorEvent.js';
+import { EditorActionRegistry, createStandardActions } from '../../application/EditorActionRegistry.js';
+import { EditorActionContext } from '../../application/EditorActionContext.js';
+import { InputRouter } from '../../application/InputRouter.js';
 import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
-import TransformFeedback from '../components/TransformFeedback.js';
-import AlignmentPanel from '../components/AlignmentPanel.js';
-import NumericTransformPanel from '../components/NumericTransformPanel.js';
+import EditingSidebar from '../components/EditingSidebar.js';
+import CommandPalette from '../components/CommandPalette.js';
+import ActionFeedback from '../components/ActionFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 
-// TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool.
-// Ctrl/Cmd+S/Z/Y are companions to real Toolbar actions. All of these
-// stay here rather than moving into EditorSession/InputDispatcher:
-// they're global, tool-independent decisions that don't go to a tool.
-//
-// 0.1.46: while a gizmo gesture is active it owns the keyboard too;
-// pointerup is forwarded on window so a release outside the viewport
-// still commits cleanly.
-//
-// 0.1.47: the view hosts the transient TransformFeedback overlay, fed
-// by the gesture feedback blob on EditorSession.onPointerMove's return.
-//
-// 0.1.48: the sidebar hosts the AlignmentPanel whenever 2+ bricks are
-// selected in the Select tool. The view tracks the selection count via
-// SELECTION_CHANGED and forwards align/distribute clicks to
-// EditorSession — it decides neither the geometry nor the commands.
-//
-// 0.1.49: the sidebar hosts the NumericTransformPanel. The panel parses;
-// this view forwards one structured intent per Apply to
-// EditorSession.applyNumericTransform — no numeric-specific command,
-// no transform mode.
+// 0.1.50: the Editor's keyboard surface is consolidated. Editing
+// shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
+// command palette) come from the EditorActionRegistry — one source of
+// truth shared with the palette, the sidebar, and the controls docs.
+// Escape follows the explicit priority chain: text input > palette >
+// gizmo gesture > selection. Tool switching (1/2) and Ctrl+S stay
+// view-local: they are not editing actions.
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, Sidebar, TransformFeedback, AlignmentPanel, NumericTransformPanel },
+    components: { Toolbar, Sidebar, EditingSidebar, CommandPalette, ActionFeedback },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -71,22 +59,27 @@ export default {
                         </button>
                     </div>
                     <Sidebar :palette-use-case="paletteUseCase" />
-                    <AlignmentPanel
-                        v-if="selectionCount >= 2 && activeTool === ToolId.SELECT"
+                    <EditingSidebar
+                        :registry="actionRegistry"
+                        :get-context="getActionContext"
+                        :ui="actionUi"
                         :selection-count="selectionCount"
+                        :apply-numeric="applyNumericTransform"
                         :align="alignSelection"
                         :distribute="distributeSelection"
-                    />
-                    <NumericTransformPanel
-                        :selection-count="selectionCount"
-                        :apply="applyNumericTransform"
                     />
                 </div>
                 <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
                     <div ref="viewport" class="viewport"></div>
-                    <TransformFeedback :feedback="transformFeedback" />
                 </div>
             </div>
+            <CommandPalette
+                v-if="paletteOpen"
+                :registry="actionRegistry"
+                :get-context="getActionContext"
+                @close="closePalette"
+            />
+            <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
         </div>
     `,
     setup() {
@@ -94,9 +87,6 @@ export default {
         const router = useRouter();
         const viewport = ref(null);
 
-        // Constructed here (before mount) rather than in onMounted(),
-        // since Sidebar/BrickPalette/Toolbar need these as required props
-        // for their very first render.
         const registry = new CreateBrickRegistryUseCase().execute();
         const editorContext = new CreateEditorContextUseCase().execute();
         const selectionUseCase = new SelectionUseCase(editorContext);
@@ -106,7 +96,6 @@ export default {
         const documentManager = new CreateDocumentManagerUseCase().execute();
         const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase } = new CreatePersistenceUseCase().execute();
 
-        // Shared identity instance — same login state across all views
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
@@ -123,9 +112,9 @@ export default {
         });
 
         const activeTool = ref(editorContext.tool.activeTool);
-        const transformFeedback = ref(null);
         const selectionCount = ref(0);
-        const subscriptions = [];
+        let unsubTool = null;
+        let unsubSelection = null;
 
         function setTool(toolId) {
             editorContext.setActiveTool(toolId);
@@ -143,28 +132,63 @@ export default {
             editorSession.applyNumericTransform(intent, options);
         }
 
+        // ------------------------- 0.1.50 action surface ----------------
+
+        const feedbackMessage = ref('');
+        const feedbackVisible = ref(false);
+        let feedbackTimer = null;
+        const feedback = {
+            show(message) {
+                feedbackMessage.value = message;
+                feedbackVisible.value = true;
+                if (feedbackTimer) {
+                    clearTimeout(feedbackTimer);
+                }
+                feedbackTimer = setTimeout(() => {
+                    feedbackVisible.value = false;
+                }, 2500);
+            }
+        };
+
+        const paletteOpen = ref(false);
+        const actionUi = {
+            togglePalette() {
+                paletteOpen.value = !paletteOpen.value;
+            },
+            focusNumeric: null
+        };
+        const actionRegistry = new EditorActionRegistry(
+            createStandardActions({ session: editorSession, feedback, ui: actionUi })
+        );
+        const getActionContext = () => EditorActionContext.capture({
+            session: editorSession,
+            selectionCount: selectionCount.value,
+            paletteOpen: paletteOpen.value,
+            activeTool: activeTool.value
+        });
+        function closePalette() {
+            paletteOpen.value = false;
+        }
+
         let onPointerDown = null;
         let onPointerMove = null;
         let onPointerUp = null;
         let onKeyDown = null;
 
         onMounted(() => {
-            // ALWAYS initialize the renderer first so _container is set.
             editorSession.start(viewport.value);
 
-            subscriptions.push(
-                editorContext.eventBus.subscribe(
-                    EditorEvent.TOOL_CHANGED,
-                    ({ activeTool: t }) => {
-                        activeTool.value = t;
-                    }
-                ),
-                editorContext.eventBus.subscribe(
-                    EditorEvent.SELECTION_CHANGED,
-                    ({ selection }) => {
-                        selectionCount.value = selection.items.length;
-                    }
-                )
+            unsubTool = editorContext.eventBus.subscribe(
+                EditorEvent.TOOL_CHANGED,
+                ({ activeTool: t }) => {
+                    activeTool.value = t;
+                }
+            );
+            unsubSelection = editorContext.eventBus.subscribe(
+                EditorEvent.SELECTION_CHANGED,
+                ({ selection }) => {
+                    selectionCount.value = selection.items.length;
+                }
             );
 
             if (route.query.fork) {
@@ -189,60 +213,73 @@ export default {
             };
             viewport.value.addEventListener('pointerdown', onPointerDown);
             onPointerMove = (event) => {
-                const result = editorSession.onPointerMove(event);
-                if (result && result.consumed) {
-                    transformFeedback.value = result.feedback || null;
-                }
+                editorSession.onPointerMove(event);
             };
             viewport.value.addEventListener('pointermove', onPointerMove);
-            // Window-level so a gizmo drag released outside the viewport
-            // still commits instead of leaving the gesture stuck.
             onPointerUp = (event) => {
                 editorSession.onPointerUp(event);
-                transformFeedback.value = null;
             };
             window.addEventListener('pointerup', onPointerUp);
 
             onKeyDown = (event) => {
-                // An active gizmo gesture owns the keyboard: route it
-                // straight to the session (Escape cancels) and skip
-                // every global shortcut.
-                if (editorSession.isGestureActive()) {
-                    editorSession.onKeyDown(event);
-                    transformFeedback.value = null;
+                // 1. Text inputs own their keys; Escape blurs them.
+                if (InputRouter.isTextInputTarget(event.target)) {
+                    if (event.key === 'Escape') {
+                        event.target.blur();
+                    }
                     return;
                 }
+                // 2. An open palette owns the keyboard.
+                if (paletteOpen.value) {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        paletteOpen.value = false;
+                    } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                        event.preventDefault();
+                        paletteOpen.value = false;
+                    }
+                    return;
+                }
+                // 3. An active gizmo gesture owns the keyboard (Escape
+                //    cancels it inside the session).
+                if (editorSession.isGestureActive()) {
+                    editorSession.onKeyDown(event);
+                    return;
+                }
+                // 4. View-local, non-action shortcuts.
                 const shortcutTool = TOOL_SHORTCUTS[event.key];
-                if (shortcutTool) {
+                if (shortcutTool && !event.ctrlKey && !event.metaKey) {
                     editorContext.setActiveTool(shortcutTool);
                     return;
                 }
-                const modifierPressed = event.ctrlKey || event.metaKey;
-                if (modifierPressed && event.key.toLowerCase() === 's') {
+                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
                     event.preventDefault();
                     saveDocumentUseCase.execute(documentManager);
                     return;
                 }
-                if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
-                    if (editorSession.commandHistory.canUndo()) {
-                        editorSession.commandHistory.undo();
+                // 5. Registry-driven editing shortcuts.
+                const action = InputRouter.matchShortcut(event, actionRegistry);
+                if (action) {
+                    if (actionRegistry.execute(action.id, getActionContext())) {
+                        event.preventDefault();
                     }
                     return;
                 }
-                if (modifierPressed && (event.key.toLowerCase() === 'y' || (event.key.toLowerCase() === 'z' && event.shiftKey))) {
-                    if (editorSession.commandHistory.canRedo()) {
-                        editorSession.commandHistory.redo();
-                    }
-                    return;
-                }
+                // 6. Everything else falls through to tools.
                 editorSession.onKeyDown(event);
             };
             window.addEventListener('keydown', onKeyDown);
         });
 
         onBeforeUnmount(() => {
-            for (const subscription of subscriptions) {
-                subscription.unsubscribe();
+            if (unsubTool) {
+                unsubTool.unsubscribe();
+            }
+            if (unsubSelection) {
+                unsubSelection.unsubscribe();
+            }
+            if (feedbackTimer) {
+                clearTimeout(feedbackTimer);
             }
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('pointerup', onPointerUp);
@@ -260,8 +297,14 @@ export default {
             editorSession,
             publishDocumentUseCase,
             activeTool,
-            transformFeedback,
             selectionCount,
+            actionRegistry,
+            getActionContext,
+            actionUi,
+            paletteOpen,
+            closePalette,
+            feedbackMessage,
+            feedbackVisible,
             setTool,
             alignSelection,
             distributeSelection,
