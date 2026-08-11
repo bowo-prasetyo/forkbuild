@@ -226,3 +226,15 @@ Published snapshots carry additional identity fields:
 Snapshots are stored at snapshot:{snapshotId}, not at the document's
 own storage key. Editing and saving the source document cannot overwrite
 a published snapshot.
+
+## Document Envelope Schema (0.2.2)
+
+As of 0.2.2, the serialized document envelope carries an explicit
+`schemaVersion` field at the top level:
+
+```json
+{
+    "schemaVersion": 1,
+    "world": { ... },
+    "metadata": { ... }
+}
