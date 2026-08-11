@@ -95,3 +95,12 @@ object, it answers "is this structurally a valid ForkBuild document?"
 The same validator runs from file import, server receipt, published-world
 loading, and test suites. The validation result is the same regardless
 of context.
+
+Publishing creates an immutable snapshot, not a boolean flag (0.2.3).
+A Publication represents a specific point-in-time capture of a Document,
+stored immutably and independently. Editing the source document after
+publishing never modifies the publication. Unpublishing removes the
+publication without touching the source. This separation is what makes
+read-only published worlds, spatial placement, and collaboration
+possible without conflating "what is being edited" with "what has been
+released."
