@@ -9,8 +9,8 @@ export class RenameGroupCommand extends Command {
         this._groupId = groupId;
         this._name = name;
         this._originalName = null;
+        this._executedFlag = false;
     }
-
     get worldId() { return this._worldId; }
     get groupId() { return this._groupId; }
     get name() { return this._name; }
@@ -24,6 +24,7 @@ export class RenameGroupCommand extends Command {
         }
         this._originalName = group.name;
         context.world.renameGroup(this._groupId, this._name);
+        this._executedFlag = true;
     }
 
     undo(context) {
