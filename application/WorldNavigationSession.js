@@ -34,6 +34,10 @@ const RETRY_DELAYS = [2000, 5000, 10000];
 // distributeSelection(axis) go through the same editing service as
 // every other transform input — one gateway, one command type, and
 // byte-identical behavior to the Editor for the same selection.
+//
+// 0.1.49 note: numeric transform input. applyNumericTransform(intent,
+// options) forwards exact user intent to the same editing service — the
+// fifth input source terminating in the same TransformSelectionCommand.
 export class WorldNavigationSession {
     constructor({ registry, loadPublicationDocumentUseCase, worldLayoutProvider }) {
         this._registry = registry;
@@ -462,6 +466,23 @@ export class WorldNavigationSession {
             return false;
         }
         const success = this._editingService.distributeSelection(this._spatialSelection, axis);
+        if (success) {
+            this._refreshInspection();
+            this._refreshGizmo();
+        }
+        return success;
+    }
+
+    // Numeric transform input (0.1.49). intent:
+    //   { translation: { x, y, z } | null, rotation: number | null }
+    // options.absolute selects pivot/primary-target semantics vs. plain
+    // offsets. Snapping never applies to numeric input — explicit intent
+    // is respected literally.
+    applyNumericTransform(intent, options = {}) {
+        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
+            return false;
+        }
+        const success = this._editingService.applyNumericTransform(this._spatialSelection, intent, options);
         if (success) {
             this._refreshInspection();
             this._refreshGizmo();
