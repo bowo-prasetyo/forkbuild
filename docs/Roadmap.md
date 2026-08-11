@@ -49,65 +49,78 @@
 0.1.46 Interactive Transform Gizmo & Viewport Editing Parity  (done)
 0.1.47 Transform Precision, Snapping & Editing Polish  (done)
 0.1.48 Alignment & Distribution Tools  (done)
-0.1.49 Numeric Transform Input / Precision Editing
+0.1.49 Numeric Transform Input  (done)
 0.1.50 Editing UX Consolidation
 0.2    Blockchain publishing, multiplayer
 
-Nested Groups / Hierarchical Editing — remains OPTIONAL / post-0.2. The
-architecture has reached a very nice property: groups are useful without
-being hierarchical. 0.1.43–0.1.48 kept proving that resolved selections
-cover the real editing needs; nothing in alignment/distribution required
-a group-transform concept.
+Nested Groups / Hierarchical Editing — remains OPTIONAL / post-0.2.
+Groups are useful without being hierarchical, and nothing in
+0.1.43–0.1.49 has produced evidence that nesting is worth the extra
+semantics.
 
-## 0.1.48 — What shipped
+## 0.1.49 — What shipped
 
-Alignment and distribution as transform-generation algorithms on the
-existing selection → bounds → transform pipeline. No new entities, no
-new commands, no persistent alignment state, no second transform engine.
+Exact numeric translation and Y-rotation as the fifth input source on
+the closed transform pipeline. No new command, no new entity, no
+transform model, no persistent editing mode.
 
-- application/TransformAlignment.js — pure math. Nine alignment modes
-  (x/y/z × min/center/max, all WORLD axes, never camera directions) and
-  center distribution along x/y/z. Inputs: captured transforms +
-  per-brick bounds + selection bounds. Outputs: exact absolute
-  transforms or null for degenerate cases. No World, Group, Brick,
-  renderer, history, or UI.
-- SpatialEditingService.alignSelection(mode) / distributeSelection(axis)
-  — the shared transaction: resolve selection → capture transforms →
-  generate exact targets → transformsEqual no-op check → exactly one
-  TransformSelectionCommand. Deliberately bypasses 0.1.47 gesture
-  snapping: snapping governs user-authored deltas; alignment targets are
-  geometric relationships and must land exactly.
-- Distribution semantics: deterministic sort by axis coordinate, then
-  buildingId, then brickId; endpoints pinned exactly; only interior
-  members move; fewer than three bricks or a zero span is a no-op.
-- Alignment semantics: reference is the WHOLE selection bounds (never
-  the first brick), so selection order is irrelevant; requires two or
-  more bricks to do anything useful; one brick collapses to a no-op.
-- ui/components/AlignmentPanel.js — compact 9-align + 3-distribute
-  surface, hosted by both EditorView (sidebar) and WorldView (overlay),
-  enabled at 2+ selected bricks, distribution enabled at 3+. The UI
-  passes operation identifiers only; the application layer decides what
-  they mean. No keyboard shortcuts in this milestone — by design.
-- tests/TransformAlignment.test.js — pure math tables, all three axes
-  for both operations, selection-order independence, deterministic
-  ties, two-brick / already-aligned / zero-span no-ops with zero
-  history entries, exact floating-point behavior, multi-building
-  selections, membership invariance, one-command commits, exact
-  undo/redo, byte-equivalent replay, Editor/World parity, the flagship
-  snap-independence test (1.37 / 4.91 / 9.26 aligning exactly with
-  snapping enabled, undo restoring bit-exact), and rotation
-  preservation.
+- application/TransformInput.js — pure parser. Strict grammar (10,
+  10.5, -3.75, +2, .5, surrounding whitespace); rejects abc, 10foo,
+  1..5, Infinity, NaN, and all exponential notation. Structured
+  results ({ valid, value } / { valid: false, reason }) and a
+  parsePanelInput() helper where empty fields mean "unchanged", never
+  silent zero. No domain, renderer, or history dependencies; never
+  calculates a transformed position.
+- SpatialEditingService.applyNumericTransform(selection, intent,
+  { absolute }) — translates exact intent into the same gesture-shaped
+  transform every other input produces and commits it through the
+  existing transaction with snapping DISABLED (gestureOptions.snap ===
+  false): keyboard/gizmo → snapping applies; numeric/alignment/
+  distribution → exact values. Absolute translation targets the
+  selection PIVOT (every member receives the same delta, geometry
+  preserved); absolute rotation targets the PRIMARY brick's orientation
+  (every member receives the same delta, relative orientations
+  preserved). One Apply = at most one TransformSelectionCommand;
+  already-at-target input commits nothing.
+- ui/components/NumericTransformPanel.js — input surface, not a mode:
+  X/Y/Z + rotation fields, Absolute/Offset toggle, Apply/Clear, Enter
+  applies, Escape clears (stopped locally so it never clears the
+  selection), invalid fields marked and blocking, disabled with no
+  selection. Hosted by EditorView (sidebar) and WorldView (overlay).
+- EditorSession / WorldNavigationSession — route applyNumericTransform
+  to the shared gesture service; the executed command refreshes gizmo
+  presentation through the existing subscriptions.
+- tests/NumericTransform.test.js — 27 sections: full parser tables,
+  absolute/relative translation and rotation, partial fields, single/
+  multi/group-resolved pivots, exact float preservation, the flagship
+  snap-bypass test (pivot 4.37 → X=10 lands exactly 10 with snap=1,
+  undo restores 4.37 exactly), already-at-target no-ops, one-Apply-one-
+  command, exact undo/redo, serialization roundtrip, Editor/World
+  parity, numeric-vs-keyboard parity, numeric-vs-gizmo parity, the
+  three-way rotation trio (keyboard R === numeric 90 === gizmo 90,
+  byte-identical serialized transforms), rotation/translation
+  preservation, and membership invariance.
 
-Deliberately rejected in 0.1.48: scale, nested groups, AlignCommand/
-DistributeCommand/AlignGroupCommand, persistent alignment state, smart
-guides, magnetic snapping, collision-aware distribution, numeric input,
-a generic GestureManager, camera-relative alignment, arbitrary-angle
-alignment, and a keyboard shortcut matrix (a scoped command palette
-belongs to 0.1.50).
+Deliberately rejected in 0.1.49: TransformInputCommand/
+NumericTransformCommand, scale input, arbitrary Euler rotation,
+persistent transform modes, expression languages, unit conversion, an
+undo-transaction framework, transform presets, smart guides, nested
+groups, and camera-relative numeric transforms.
 
-The milestone's payoff: 0.1.47 proved the transform kernel is precise;
-0.1.48 proves higher-level editing operations can be built entirely on
-that kernel. Alignment and distribution are just two more consumers of
-the closed transform architecture — selection determines participants,
-bounds determine reference geometry, and TransformSelectionCommand
-records the result. 0.1.49 (Numeric Transform Input) will be the third.
+## 0.1.50 — Editing UX Consolidation (next)
+
+A genuine consolidation milestone, not another feature dump: command
+palette, shortcut discoverability, selection/transform feedback
+consistency, panel organization, empty/disabled states, accessibility,
+and cleanup of any API seams the 0.1.42–0.1.49 run exposed. The goal
+is a clean, stable editing surface before the 0.2 publishing/
+multiplayer architecture is seriously considered.
+
+The kernel now has five fundamentally different input sources, all
+terminating in one command type:
+
+    keyboard ──┐
+    gizmo ─────┤
+    alignment ─┼──► TransformSelectionCommand
+    distribute ┤
+    numeric ───┘
