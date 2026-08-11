@@ -1,4 +1,7 @@
 import { ValidationResult } from './ValidationResult.js';
+import { PROTOCOL_VERSION } from '../core/protocolVersion.js';
+import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
+
 // Pure structural validation of a document JSON envelope. No Vue, no
 // Three.js, no EditorSession, no WorldNavigationSession, no browser
 // APIs, no CommandHistory. Given only a plain object, answers:
@@ -20,12 +23,18 @@ export const DocumentValidator = Object.freeze({
         }
         const errors = [];
         const warnings = [];
-        // --- schemaVersion (required as of 0.2.0) ---
+
+        // --- schemaVersion ---
         if (json.schemaVersion === undefined) {
             warnings.push('Document JSON has no schemaVersion (pre-0.2.0 format)');
         } else if (!Number.isInteger(json.schemaVersion) || json.schemaVersion < 1) {
             errors.push(`schemaVersion must be a positive integer, got ${json.schemaVersion}`);
+        } else if (json.schemaVersion > DOCUMENT_SCHEMA_VERSION) {
+            errors.push(
+                `schemaVersion ${json.schemaVersion} is newer than supported version ${DOCUMENT_SCHEMA_VERSION}`
+            );
         }
+
         // --- metadata ---
         if (!json.metadata || typeof json.metadata !== 'object' || Array.isArray(json.metadata)) {
             errors.push('Document JSON must have a metadata object');
@@ -35,21 +44,29 @@ export const DocumentValidator = Object.freeze({
             }
             if (typeof json.metadata.protocolVersion !== 'string') {
                 errors.push('metadata.protocolVersion is required');
+            } else if (json.metadata.protocolVersion !== PROTOCOL_VERSION) {
+                errors.push(
+                    `Unsupported protocol version: document is ${json.metadata.protocolVersion}, `
+                    + `engine supports ${PROTOCOL_VERSION}`
+                );
             }
             if (typeof json.metadata.engineVersion !== 'string') {
                 warnings.push('metadata.engineVersion is missing');
             }
         }
+
         // --- world ---
         if (!json.world || typeof json.world !== 'object' || Array.isArray(json.world)) {
             errors.push('Document JSON must have a world object');
         } else {
             DocumentValidator._validateWorld(json.world, errors, warnings);
         }
+
         return errors.length > 0
             ? ValidationResult.fail(errors, warnings)
             : ValidationResult.ok(warnings);
     },
+
     _validateWorld(world, errors, warnings) {
         if (typeof world.id !== 'string' || world.id.length === 0) {
             errors.push('world.id must be a non-empty string');
@@ -72,6 +89,7 @@ export const DocumentValidator = Object.freeze({
             }
         }
     },
+
     _validateBuilding(building, index, errors, warnings) {
         const prefix = `world.buildings[${index}]`;
         if (!building || typeof building !== 'object') {
@@ -89,6 +107,7 @@ export const DocumentValidator = Object.freeze({
             DocumentValidator._validateBrick(building.bricks[j], `${prefix}.bricks[${j}]`, errors);
         }
     },
+
     _validateBrick(brick, prefix, errors) {
         if (!brick || typeof brick !== 'object') {
             errors.push(`${prefix} must be an object`);
@@ -113,6 +132,7 @@ export const DocumentValidator = Object.freeze({
             errors.push(`${prefix}.rotation must be a number when present`);
         }
     },
+
     _validateGroup(group, index, errors, warnings) {
         const prefix = `world.groups[${index}]`;
         if (!group || typeof group !== 'object') {
