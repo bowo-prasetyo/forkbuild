@@ -560,3 +560,32 @@ The parity test (tests/EditingParity.test.js) verifies:
 This is the foundation for collaboration: when multiplayer arrives,
 both surfaces will synchronize document mutations through the same
 command layer, not through surface-specific behavior.
+
+Schema Versioning & Migration (0.2.2)
+
+The document envelope carries an explicit `schemaVersion` field at the
+top level, distinct from `metadata.protocolVersion` (the domain model
+version) and `metadata.engineVersion` (the engine version).
+
+The deserialization pipeline is:
+    1. Migrate (DocumentSchemaMigrator) — bring the envelope to the
+       current schema BEFORE anything domain-shaped sees it.
+    2. Validate (DocumentValidator) — pure structural check, no UI,
+       no renderer, no session.
+    3. Construct (Document.fromJSON) — enter the domain.
+
+Migration is idempotent, never mutates the input, and walks a chain
+of registered pure functions from the document's declared version to
+DOCUMENT_SCHEMA_VERSION. Adding a future schema 2 means writing one
+migration function and registering it.
+
+DocumentValidator is pure: no Vue, no Three.js, no session, no browser
+APIs. Given only a plain object, it answers "is this structurally a
+valid ForkBuild document?" This makes validation usable from file
+import, server receipt, published-world loading, and test suites
+identically.
+
+Historical fixtures in tests/fixtures/historicalDocuments.js represent
+documents as they were serialized at various points in the project's
+history: pre-groups (0.1.19), with-groups (0.1.43), and current (0.2.x).
+Each fixture exercises a different migration path.
