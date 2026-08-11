@@ -1,4 +1,3 @@
-=== FILE: ./application/RenderWorldUseCase.js ===
 import { Renderer } from '../renderer/Renderer.js';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
 import { PickingService } from '../renderer/PickingService.js';
