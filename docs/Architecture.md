@@ -1062,6 +1062,60 @@ automatically carry the correct author — completing the loop from
 login → currentUser() → DocumentMetadata.author → Publication.author
 → Repository View.
 
+Domain State vs Editor State
+
+Two kinds of state exist in ForkBuild, and they must never mix.
+
+Domain State — World, Building, Brick, and (as of 0.1.17) Document/
+DocumentMetadata (core/). Publishable, serializable, shared, forkable.
+This is what the ForkBuild Protocol describes and what storage/publisher
+eventually persist and transmit. Document doesn't replace World as the
+aggregate root — it wraps World plus the metadata (title, author,
+timestamps, versions, parentDocumentId) that travels alongside it when
+saved or published.
+
+Editor State — everything in EditorContext (application/): selection,
+active tool, active brick, camera pose, placement preview, settings —
+plus, as of 0.1.17, DocumentState (dirty, readOnly, loadedFrom,
+lastSaved), owned by DocumentManager rather than EditorContext (a
+deliberate peer, not a sub-field — see the application/ section above).
+Purely local to one editing session. Never part of a World or Document,
+never serialized into the Protocol, never sent to a publisher. The placement
+preview in particular is worth being explicit about: it looks like a
+brick, sits in the same 3D space as real bricks, but is Editor State
+through and through — it never becomes a Brick until PlaceBrickCommand
+commits it to World.
+
+The practical rule: if a serializer is ever tempted to write a field
+from EditorContext into a World's JSON, that's a bug. Domain State
+answers "what did the user build?" Editor State answers "what is the
+user currently doing while building it?" — the second question's answer
+should never leak into the first's.
+
+Spatial State — as of 0.1.30, a third kind of runtime state exists for
+the World View: SpatialCameraState, SpatialSelectionState, and
+SpatialHoverState. These are neither Domain State nor Editor State;
+they are transient navigation observations local to a spatial viewing
+session. As of 0.1.31, SpatialInspectionState joins this group. As of
+0.1.32, SpatialEditingContext completes it — describing what the viewer
+can currently do to a selected object. As of 0.1.36, SpatialSelectionState
+and SpatialEditingContext can carry multi-selection references through
+items[] while still exposing a primary item for single-selection UI. All
+spatial state is runtime-only and never serialized into the Protocol.
+
+Spatial Selection Invariant
+
+A SpatialSelectionState may reference only a currently loaded document.
+When that document leaves the streaming radius, the selection is cleared
+before its meshes are removed. This invariant is enforced by
+WorldNavigationSession._unloadWorld(), which checks whether the
+selection or hover references the departing document and clears them
+before the renderer purges the world's meshes. Violating this invariant
+would produce application state pointing to unloaded geometry, which
+does not crash the renderer (MeshRegistry simply returns null) but
+creates a logical inconsistency that would confuse UI and future
+multiplayer synchronization.
+
 Spatial Inspection (0.1.31)
 
 The spatial layer gained a fourth responsibility: domain inspection.
@@ -1767,59 +1821,80 @@ settled duplication semantics: a future group duplication reuses
 exactly this intent-without-ids clipboard model and this
 identity-preserving command contract.
 
-Domain State vs Editor State
+Advanced Selection, Grouping & Editing Surface Parity (0.1.43)
+--------------------------------------------------------------
+0.1.43 establishes the group model and brings the 0.1.42 clipboard
+machinery to the Editor. The governing distinction:
 
-Two kinds of state exist in ForkBuild, and they must never mix.
+    Selection is transient (session state). Groups are document state.
 
-Domain State — World, Building, Brick, and (as of 0.1.17) Document/
-DocumentMetadata (core/). Publishable, serializable, shared, forkable.
-This is what the ForkBuild Protocol describes and what storage/publisher
-eventually persist and transmit. Document doesn't replace World as the
-aggregate root — it wraps World plus the metadata (title, author,
-timestamps, versions, parentDocumentId) that travels alongside it when
-saved or published.
+**Group is a core entity.** core/Group.js: { id, name, brickIds } — a
+named, persistent RELATIONSHIP between bricks, not a container: bricks
+stay in their Buildings, the group references them by id, and group
+identity is independent from brick identity (its own UUID). Flat only,
+deliberately — no nested groups in 0.1.43 (transform inheritance,
+membership cycles, hierarchy deletion/duplication semantics are a later
+milestone if they prove necessary). Membership is an unordered set
+(duplicates ignored) and REFERENTIAL: a deleted brick's id may remain
+referenced; every consumer resolves membership against the live world
+(World.getGroupBricks) and skips ids that no longer exist. This keeps
+DeleteBrickCommand group-agnostic and deterministic.
 
-Editor State — everything in EditorContext (application/): selection,
-active tool, active brick, camera pose, placement preview, settings —
-plus, as of 0.1.17, DocumentState (dirty, readOnly, loadedFrom,
-lastSaved), owned by DocumentManager rather than EditorContext (a
-deliberate peer, not a sub-field — see the application/ section above).
-Purely local to one editing session. Never part of a World or Document,
-never serialized into the Protocol, never sent to a publisher. The placement
-preview in particular is worth being explicit about: it looks like a
-brick, sits in the same 3D space as real bricks, but is Editor State
-through and through — it never becomes a Brick until PlaceBrickCommand
-commits it to World.
+**World mediates group mutations** exactly as it mediates brick
+mutations: addGroup/removeGroup/renameGroup/addMemberToGroup/
+removeMemberFromGroup publish GROUP_ADDED / GROUP_REMOVED /
+GROUP_UPDATED domain events; Group's own setName/addMember/removeMember
+are plain mutations (the Building/Brick discipline). World.toJSON/
+fromJSON carry groups; worlds serialized before 0.1.43 deserialize with
+zero groups unchanged.
 
-The practical rule: if a serializer is ever tempted to write a field
-from EditorContext into a World's JSON, that's a bug. Domain State
-answers "what did the user build?" Editor State answers "what is the
-user currently doing while building it?" — the second question's answer
-should never leak into the first's.
+**Every group mutation is a command.** CreateGroupCommand (group
+identity created at execution, recorded + serialized — the
+PlaceBrickCommand contract; atomic against missing bricks),
+DeleteGroupCommand (snapshot; undo restores the ORIGINAL group id — the
+DeleteBrickCommand contract), RenameGroupCommand, AddToGroupCommand /
+RemoveFromGroupCommand (record the ACTUAL effect — already-members and
+non-members are skipped — and undo exactly that), DuplicateGroupCommand
+(fresh brick identities + fresh group identity over copied geometry
+shifted by an offset; the source group is never mutated; everything
+created is recorded for undo/replay identity). All registered in
+CreateCommandRegistryUseCase, so groups inherit undo/redo, dirty
+tracking, persistence, replay, and restoration with no changes to those
+systems. There is deliberately NO MoveGroupCommand: flat groups own no
+transform, so moving a group is moving its resolved members through the
+existing move/transform commands — group-level gizmo transforms land in
+0.1.44.
 
-Spatial State — as of 0.1.30, a third kind of runtime state exists for
-the World View: SpatialCameraState, SpatialSelectionState, and
-SpatialHoverState. These are neither Domain State nor Editor State;
-they are transient navigation observations local to a spatial viewing
-session. As of 0.1.31, SpatialInspectionState joins this group. As of
-0.1.32, SpatialEditingContext completes it — describing what the viewer
-can currently do to a selected object. As of 0.1.36, SpatialSelectionState
-and SpatialEditingContext can carry multi-selection references through
-items[] while still exposing a primary item for single-selection UI. All
-spatial state is runtime-only and never serialized into the Protocol.
+**Group-aware clipboard.** CopySelectionUseCase attaches any flat group
+whose ENTIRE membership is inside the selection as clipboard intent —
+{ name, memberIndices } pointing into the copied items; no group id and
+no brick id, ever. PasteBricksCommand gained a groups intent: after
+creating the pasted bricks it creates the carried groups over the newly
+created brick ids (recorded + serialized exactly like the brick ids),
+and undo removes groups then bricks. Partially selected groups copy as
+plain bricks. PASTE_OFFSET is exported from PasteClipboardUseCase — one
+definition shared by every paste surface.
 
-Spatial Selection Invariant
+**Editor parity.** EditorSession grew copySelection()/pasteClipboard()
+calling the SAME CopySelectionUseCase / PasteClipboardUseCase /
+PasteBricksCommand the World View uses, through the Editor's own
+CommandHistory. Copy is observation (no history entry); paste is one
+command — undoable, replayable, restorable. EditorView wires Ctrl+C /
+Ctrl+V. The Editor's SelectionState flows through the shared use cases
+unchanged (SelectionBoundsService already consumed its items[] shape).
+There is no second copy/paste implementation anywhere; a group panel in
+the Editor and marquee selection remain future work.
 
-A SpatialSelectionState may reference only a currently loaded document.
-When that document leaves the streaming radius, the selection is cleared
-before its meshes are removed. This invariant is enforced by
-WorldNavigationSession._unloadWorld(), which checks whether the
-selection or hover references the departing document and clears them
-before the renderer purges the world's meshes. Violating this invariant
-would produce application state pointing to unloaded geometry, which
-does not crash the renderer (MeshRegistry simply returns null) but
-creates a logical inconsistency that would confuse UI and future
-multiplayer synchronization.
+**World View group surface.** The session exposes getGroups(),
+createGroupFromSelection(), deleteGroup(), renameGroup(),
+duplicateGroup(), addToGroupWithSelection(), and selectGroup()
+(resolves membership into SpatialSelectionState — selection stays
+session state), all gated during history preview like every other
+editing entry point; the overlay gains a Groups panel.
+
+**Not in 0.1.43.** Nested groups, first-class group transforms (0.1.44),
+marquee selection, Editor group UI, and cross-document group semantics
+beyond what the id-free clipboard already makes possible.
 
 Publication vs Document vs Location
 
