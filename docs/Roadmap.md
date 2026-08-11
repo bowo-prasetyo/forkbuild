@@ -55,12 +55,13 @@
 0.1.52 Protocol & Persistence Hardening
 0.2.0   Durable Documents & Publishing Boundary       ✓
 0.2.1   Editor / World Editing Parity                 ✓
-0.2.2   Schema Versioning & Real Migration Fixtures
+0.2.2   Schema Versioning & Real Migration Fixtures   ✓
 0.2.3   Publish / Unpublish Lifecycle
 0.2.4   Read-only Published World
-0.2.5   Persistence, Recovery & Autosave
-0.2.6   Collaboration Protocol Foundation
-0.2.7   Multi-client Synchronization
+0.2.5   World Placement & Spatial Discovery
+0.2.6   Persistence, Recovery & Autosave
+0.2.7   Collaboration Protocol Foundation
+0.2.8   Multi-client Synchronization
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
