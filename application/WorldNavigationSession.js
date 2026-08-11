@@ -14,20 +14,27 @@ import { CommandHistory } from './CommandHistory.js';
 import { PlacementValidator } from '../core/PlacementValidator.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
+import { TransformSettings } from './TransformSettings.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
 const RETRY_DELAYS = [2000, 5000, 10000];
 
-// 0.1.46 note: World View's interactive gizmo is wired here. The gesture
-// service is the SAME SpatialEditingService this session already owned —
-// the gizmo simply drives its existing begin/preview/commit/cancel
-// contract, so a pointer drag in World View and a pointer drag in the
-// Editor produce identical TransformSelectionCommand semantics. Gizmo
-// presentation is resolved by TransformGizmoUseCase in document-local
-// coordinates, then translated into shared world space with the layout
-// offset before reaching the renderer — the same coordinate discipline
-// placement uses.
+// 0.1.46 note: World View's interactive gizmo is wired here — the SAME
+// SpatialEditingService this session already owned drives it, so a
+// pointer drag in World View and a pointer drag in the Editor produce
+// identical TransformSelectionCommand semantics.
+//
+// 0.1.47 note: transform precision. This session owns the World View's
+// TransformSettings and hands it to the editing service; snapping is
+// applied INSIDE the gesture transaction, never here and never in the
+// view. Gizmo pointer move/up forward modifier state (Shift = precision
+// mode) into the transaction and carry gesture feedback back up to the
+// view's transient overlay. Keyboard selection transforms
+// (moveSelection/rotateSelection) now route through the same gesture
+// transaction as instantaneous gestures, so arrow-key nudges and R
+// rotations snap identically to equivalently-snapped gizmo drags and
+// emit the same transform-selection commands.
 export class WorldNavigationSession {
     constructor({ registry, loadPublicationDocumentUseCase, worldLayoutProvider }) {
         this._registry = registry;
@@ -39,6 +46,7 @@ export class WorldNavigationSession {
         this._inspectionService = null;
         this._editingService = null;
         this._gizmoUseCase = null;
+        this._transformSettings = new TransformSettings();
         this._placementService = new SpatialPlacementService(registry);
         this._loadedDocuments = new Map();
         this._commandHistories = new Map();
@@ -53,13 +61,22 @@ export class WorldNavigationSession {
         this._eventBus = null;
     }
 
+    get transformSettings() {
+        return this._transformSettings;
+    }
+
     start(container) {
         this.dispose();
         this._container = container;
         this._eventBus = new EventBus();
         // Constructed before the render session so the session can be
         // handed the gesture service at wiring time.
-        this._editingService = new SpatialEditingService(this, this._commandHistories, this._registry);
+        this._editingService = new SpatialEditingService(
+            this,
+            this._commandHistories,
+            this._registry,
+            this._transformSettings
+        );
         this._gizmoUseCase = new TransformGizmoUseCase(this._editingService);
         this._session = new RenderWorldViewUseCase().execute(
             container,
@@ -143,12 +160,8 @@ export class WorldNavigationSession {
     }
 
     // -----------------------------------------------------------------
-    // Gizmo interaction (0.1.46)
+    // Gizmo interaction (0.1.46; modifiers + feedback in 0.1.47)
     // -----------------------------------------------------------------
-    // Raw DOM events arrive here; the render session's gizmo controller
-    // receives coordinates plus the current spatial selection. A gesture
-    // that starts owns the pointer exclusively: WorldView skips hover,
-    // picking, and camera interpretation while these report consumed.
 
     gizmoPointerDown(rawEvent) {
         if (!this._session || rawEvent.button !== 0) {
@@ -166,23 +179,25 @@ export class WorldNavigationSession {
 
     gizmoPointerMove(rawEvent) {
         if (!this._session) {
-            return { consumed: false, hovered: false };
+            return { consumed: false, hovered: false, feedback: null };
         }
         return this._session.gizmoPointerMove(
             rawEvent.clientX,
             rawEvent.clientY,
-            this._spatialSelection
-        ) || { consumed: false, hovered: false };
+            this._spatialSelection,
+            this._toModifiers(rawEvent)
+        ) || { consumed: false, hovered: false, feedback: null };
     }
 
     gizmoPointerUp(rawEvent) {
         if (!this._session) {
-            return { consumed: false, committed: false };
+            return { consumed: false, committed: false, feedback: null };
         }
         const result = this._session.gizmoPointerUp(
             rawEvent.clientX,
             rawEvent.clientY,
-            this._spatialSelection
+            this._spatialSelection,
+            this._toModifiers(rawEvent)
         );
         if (result && result.consumed) {
             this._refreshInspection();
@@ -190,7 +205,7 @@ export class WorldNavigationSession {
             this._refreshGizmo();
             return result;
         }
-        return { consumed: false, committed: false };
+        return { consumed: false, committed: false, feedback: null };
     }
 
     gizmoKeyDown(keyEvent) {
@@ -208,8 +223,6 @@ export class WorldNavigationSession {
     // Navigation
     // -----------------------------------------------------------------
 
-    // Client-side spatial navigation: move camera to the world's layout
-    // coordinate and stream it in. No page reload.
     focusDocument(documentId) {
         this._focusedDocumentId = documentId;
         const layoutPos = this._worldLayoutProvider.getPosition(documentId);
@@ -245,7 +258,6 @@ export class WorldNavigationSession {
 
     // Reconcile the set of loaded worlds with whatever the layout
     // provider says should be visible from the current camera position.
-    // Returns { loaded: string[], visible: string[] }.
     updateSpatialView() {
         if (!this._session) {
             return { loaded: [], visible: [], failed: this._getFailedIds() };
@@ -379,7 +391,11 @@ export class WorldNavigationSession {
         this._refreshGizmo();
     }
 
-    moveSelection(delta) {
+    // Keyboard translation — routed through the gesture transaction
+    // (0.1.47), so snapping, precision mode, pivot semantics, and the
+    // emitted transform-selection command are identical to a gizmo drag.
+    // modifiers: { shift } enables precision increments for this nudge.
+    moveSelection(delta, modifiers = null) {
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -387,7 +403,7 @@ export class WorldNavigationSession {
         if (!ctx.can('move')) {
             return false;
         }
-        const success = this._editingService.moveSelection(this._spatialSelection, delta);
+        const success = this._editingService.moveSelection(this._spatialSelection, delta, { modifiers });
         if (success) {
             this._refreshInspection();
             this._refreshGizmo();
@@ -410,7 +426,8 @@ export class WorldNavigationSession {
         return success;
     }
 
-    rotateSelection(deltaRotation) {
+    // Keyboard rotation around the selection pivot — same routing.
+    rotateSelection(deltaRotation, modifiers = null) {
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -418,7 +435,7 @@ export class WorldNavigationSession {
         if (!ctx.can('rotate')) {
             return false;
         }
-        const success = this._editingService.rotateSelection(this._spatialSelection, deltaRotation);
+        const success = this._editingService.rotateSelection(this._spatialSelection, deltaRotation, { modifiers });
         if (success) {
             this._refreshInspection();
             this._refreshGizmo();
@@ -537,8 +554,6 @@ export class WorldNavigationSession {
         this._loadedDocuments.set(documentId, document);
         const layoutPos = this._worldLayoutProvider.getPosition(documentId);
         this._session.addWorld(document.world, documentId, layoutPos);
-        // Ensure a CommandHistory exists for every loaded world so that
-        // move/rotate/delete work even before the first placement.
         if (!this._commandHistories.has(document.world.id)) {
             this._commandHistories.set(document.world.id, new CommandHistory({ world: document.world }));
         }
@@ -684,6 +699,15 @@ export class WorldNavigationSession {
         if (this._session) {
             this._session.hidePreview();
         }
+    }
+
+    _toModifiers(rawEvent) {
+        return {
+            ctrl: rawEvent.ctrlKey || false,
+            shift: rawEvent.shiftKey || false,
+            alt: rawEvent.altKey || false,
+            meta: rawEvent.metaKey || false
+        };
     }
 
     _getFailedIds() {
