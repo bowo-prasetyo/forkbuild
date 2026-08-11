@@ -6,5 +6,10 @@ export const DomainEvent = Object.freeze({
     BRICK_REMOVED: 'BrickRemoved',
     BRICK_UPDATED: 'BrickUpdated',
     BUILDING_ADDED: 'BuildingAdded',
-    BUILDING_REMOVED: 'BuildingRemoved'
+    BUILDING_REMOVED: 'BuildingRemoved',
+    // 0.1.43 — groups are document state, so their lifecycle is a domain
+    // concern exactly like bricks and buildings.
+    GROUP_ADDED: 'GroupAdded',
+    GROUP_REMOVED: 'GroupRemoved',
+    GROUP_UPDATED: 'GroupUpdated'
 });
