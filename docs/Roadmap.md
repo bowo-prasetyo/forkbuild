@@ -1,4 +1,3 @@
-=== FILE: ./docs/Roadmap.md ===
 0.1.1  Project Skeleton                     (done)
 0.1.2  Rendering Infrastructure             (done)
 0.1.3  Core Domain Model                    (done)
@@ -51,3 +50,42 @@
 0.1.47 Editing UX / Alignment / Snapping
 0.1.48 Nested Groups / Hierarchical Editing  (optional)
 0.2    Blockchain publishing, multiplayer
+
+## 0.1.46 — What shipped
+
+A renderer/UI milestone on top of the transform architecture completed in
+0.1.44 — no new domain entities, no new transform commands, no
+group-transform abstraction.
+
+- renderer/TransformGizmoRenderer.js — purely visual: axis handles
+  (X/Y/Z), center free-move pad, Y-rotation ring, pivot marker, bounds
+  box, hover/active highlighting, camera-distance scaling.
+- renderer/TransformGizmoController.js — purely interactive: hit
+  testing, pointer down/move/up, active handle, gesture state, Escape
+  cancellation. Drives the existing gesture contract
+  (begin/preview/commit/cancelTransformGesture); never mutates World.
+- application/TransformMath.js — the single math source shared by
+  keyboard transforms, the gizmo's live preview, and the committed
+  command. Injected into the renderer controller by the render use
+  cases, so renderer/ never imports application/.
+- application/TransformGizmoUseCase.js — selection -> { pivot, bounds }
+  presentation decision, shared by Editor and World View.
+- Gizmo wiring in RenderWorldUseCase / RenderWorldViewUseCase,
+  EditorSession, WorldNavigationSession, EditorView, WorldView —
+  one shared gizmo design feeding one gesture contract in both views.
+- CameraController.setEnabled() — an active gesture freezes the camera.
+- tests/InteractiveGizmo.test.js — visibility, pivot, axis constraints,
+  shared-math rotation, preview-without-history, one-command commit,
+  Escape cancel, no-op discipline, membership invariance, undo/redo,
+  serialized replay, and Editor/World View parity.
+
+Deliberately deferred to 0.1.47+: snapping, alignment guides,
+distribution, drag-duplication, scale handles (scale has no settled
+domain semantics yet), and a generic GestureManager (the
+begin/preview/commit lifecycle is already shared; no abstraction was
+needed yet).
+
+Deliberately not next: nested groups. 0.1.47 is a polish/precision
+milestone; 0.1.48 (nested groups / hierarchical editing) remains
+optional until the interactive kernel proves it deserves that
+complexity.
