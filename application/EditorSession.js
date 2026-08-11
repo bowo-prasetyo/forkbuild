@@ -1,6 +1,9 @@
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
+import { SelectionState } from './editor-state/SelectionState.js';
+import { DeleteBrickCommand } from './commands/DeleteBrickCommand.js';
+import { CompositeCommand } from './commands/CompositeCommand.js';
 import { CreateEventBusUseCase } from './CreateEventBusUseCase.js';
 import { CreateDemoWorldUseCase } from './CreateDemoWorldUseCase.js';
 import { CreateEmptyWorldUseCase } from './CreateEmptyWorldUseCase.js';
@@ -23,25 +26,19 @@ import { ToolId } from './editor-state/ToolId.js';
 // — it never touches a World, Renderer, or ToolManager directly, before
 // or after a document is replaced.
 //
-// 0.1.46 — interactive transform gizmo wiring: EditorSession owns the
-// Editor's gesture service, gizmo presentation refresh, and exclusive
-// input routing.
+// 0.1.46 — interactive transform gizmo wiring. 0.1.47 — transform
+// precision (TransformSettings + modifier plumbing + gesture feedback).
+// 0.1.48 — alignSelection/distributeSelection. 0.1.49 —
+// applyNumericTransform. All routed to the same gesture service.
 //
-// 0.1.47 — transform precision: ONE TransformSettings (session
-// preferences, never document state) handed to the gesture service,
-// where snapping is applied inside the gesture transaction; pointer
-// move/up forward modifier state down and gesture feedback up.
-//
-// 0.1.48 — alignment & distribution: alignSelection(mode) and
-// distributeSelection(axis) route the current editor selection through
-// the same gesture service the Editor's keyboard and gizmo transforms
-// use — one gateway, one command type, identical semantics in both
-// views.
-//
-// 0.1.49 — numeric transform input: applyNumericTransform(intent,
-// options) forwards exact user intent to the gesture service. The panel
-// parses; the service transforms; this session merely routes — no
-// numeric-specific command, no persistent transform mode.
+// 0.1.50 — the Editor half of the consolidated editing surface:
+// selectAll()/clearSelection()/deleteSelection()/getSelectionCount()
+// join the session API so the EditorActionRegistry can drive selection
+// operations from the command palette, the sidebar, and keyboard
+// shortcuts without any Editor-only code paths. Group and clipboard
+// surface (0.1.42/0.1.43) belongs wherever this session is extended in
+// the deployed tree; the action layer degrades gracefully when those
+// methods are absent rather than assuming them.
 export class EditorSession {
     constructor({
         registry,
@@ -91,10 +88,62 @@ export class EditorSession {
         return this._gestureService.transformGizmoState.active;
     }
 
-    // Alignment & distribution (0.1.48). Both delegate straight to the
-    // gesture service with the current editor selection; the executed
-    // command fires COMMAND_EXECUTED, which the existing gizmo-refresh
-    // subscriptions already react to — no extra wiring needed.
+    // -------------------------------- 0.1.50 consolidated editing surface
+
+    getSelectionCount() {
+        return this._editorContext.selection.items.length;
+    }
+
+    selectAll() {
+        const document = this._documentManager.document;
+        if (!document) {
+            return false;
+        }
+        const items = [];
+        for (const building of document.world.getBuildings()) {
+            for (const brick of building.getBricks()) {
+                items.push({ type: 'brick', buildingId: building.id, brickId: brick.id });
+            }
+        }
+        if (items.length === 0) {
+            return false;
+        }
+        this._editorContext.setSelection(new SelectionState({ items }));
+        return true;
+    }
+
+    clearSelection() {
+        this._editorContext.clearSelection();
+        return true;
+    }
+
+    // Mirrors SelectionTool's delete path exactly: one DeleteBrickCommand
+    // per brick, wrapped in a CompositeCommand, one undo step, selection
+    // cleared afterwards. Session state + existing commands only — the
+    // action layer that calls this never touches CommandHistory itself.
+    deleteSelection() {
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (selection.isEmpty || !document || !this._commandHistory) {
+            return false;
+        }
+        const worldId = document.world.id;
+        const commands = selection.items.map((item) => new DeleteBrickCommand({
+            worldId,
+            buildingId: item.buildingId,
+            brickId: item.brickId
+        }));
+        const command = commands.length === 1
+            ? commands[0]
+            : commands.reduce((composite, child) => composite.add(child),
+                new CompositeCommand({ description: `Delete ${commands.length} Bricks` }));
+        this._commandHistory.execute(command);
+        this._editorContext.clearSelection();
+        return true;
+    }
+
+    // ------------------------ alignment / distribution / numeric (0.1.48/49)
+
     alignSelection(mode) {
         if (this._editorContext.tool.activeTool === ToolId.PLACE) {
             return false;
@@ -109,12 +158,6 @@ export class EditorSession {
         return this._gestureService.distributeSelection(this._editorContext.selection, axis);
     }
 
-    // Numeric transform input (0.1.49). intent:
-    //   { translation: { x, y, z } | null, rotation: number | null }
-    // with null components meaning "unchanged". options.absolute selects
-    // pivot/primary-target semantics vs. plain offsets. One call = at
-    // most one TransformSelectionCommand; the executed command refreshes
-    // the gizmo through the existing subscriptions.
     applyNumericTransform(intent, options = {}) {
         if (this._editorContext.tool.activeTool === ToolId.PLACE) {
             return false;
@@ -122,8 +165,8 @@ export class EditorSession {
         return this._gestureService.applyNumericTransform(this._editorContext.selection, intent, options);
     }
 
-    // Builds the initial runtime graph against the demo world. Called
-    // once, from EditorView's onMounted().
+    // ------------------------------------------------------ lifecycle
+
     start(container) {
         this._container = container;
         this._rebuild((eventBus) => {
@@ -133,8 +176,6 @@ export class EditorSession {
         });
     }
 
-    // Loads a previously-saved document, replacing the entire runtime
-    // graph with one built against it.
     loadDocument(id) {
         this._rebuild((eventBus) => {
             const document = this._loadDocumentUseCase.execute(this._documentManager, id, eventBus);
@@ -142,8 +183,6 @@ export class EditorSession {
         });
     }
 
-    // Starts a brand-new, empty document, replacing the runtime graph
-    // the same way loadDocument() does.
     newDocument() {
         this._rebuild((eventBus) => {
             const world = new CreateEmptyWorldUseCase().execute(eventBus);
@@ -152,9 +191,6 @@ export class EditorSession {
         });
     }
 
-    // Opens an already-constructed Document (e.g. from ForkDocumentUseCase)
-    // by re-hydrating its world against a fresh EventBus so the renderer
-    // subscribes correctly.
     openDocument(document) {
         this._rebuild((eventBus) => {
             const worldJson = document.world.toJSON();
@@ -166,8 +202,6 @@ export class EditorSession {
     }
 
     onPointerDown(event) {
-        // The gizmo gets first refusal — but only on the primary button;
-        // orbit/pan gestures keep their mouse buttons.
         if (event.button === 0 && this._session
             && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
             return null;
@@ -178,9 +212,6 @@ export class EditorSession {
         return null;
     }
 
-    // Returns the gizmo result ({ consumed, feedback }) when a gesture
-    // owns the pointer — EditorView reads feedback off it for the
-    // transient overlay — and null otherwise.
     onPointerMove(event) {
         if (this._session) {
             const result = this._session.gizmoPointerMove(
@@ -208,8 +239,6 @@ export class EditorSession {
                 this._toKeyEvent(event).modifiers
             );
             if (result && result.consumed) {
-                // Repositions the gizmo on the committed transforms (or
-                // snaps it back after an exact no-op drag).
                 this._refreshGizmo();
                 return result;
             }
@@ -228,9 +257,6 @@ export class EditorSession {
             return;
         }
         if (this.isGestureActive()) {
-            // An active gesture owns the keyboard: swallow everything
-            // that isn't the Escape handled above. No tool shortcuts,
-            // no deletes, no undo mid-drag.
             return;
         }
         if (this._inputDispatcher) {
@@ -242,9 +268,6 @@ export class EditorSession {
         this._teardown();
     }
 
-    // Shared by start()/loadDocument()/newDocument() — there is exactly
-    // one way the runtime graph gets built, whether it's the first time
-    // or the fifth.
     _rebuild(populateWorldFn) {
         this._teardown();
         this._editorContext.clearSelection();
@@ -309,9 +332,6 @@ export class EditorSession {
         this._commandHistory = null;
     }
 
-    // Selection changes reposition the gizmo; clearing it (or switching
-    // to the Place tool) hides it. During an active gesture the gesture
-    // owns presentation, so this is a no-op mid-drag.
     _refreshGizmo() {
         if (!this._session) {
             return;
