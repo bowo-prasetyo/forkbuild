@@ -1,37 +1,30 @@
 import { SpatialEditingContext } from './spatial-state/SpatialEditingContext.js';
 import { Position } from '../core/Position.js';
+import { MoveBrickCommand } from './commands/MoveBrickCommand.js';
+import { RotateBrickCommand } from './commands/RotateBrickCommand.js';
 import { DeleteBrickCommand } from './commands/DeleteBrickCommand.js';
 import { CompositeCommand } from './commands/CompositeCommand.js';
+import { TransformSelectionCommand } from './commands/TransformSelectionCommand.js';
 import { SelectionBoundsService } from './SelectionBoundsService.js';
 import { TransformGizmoState } from './spatial-state/TransformGizmoState.js';
-import { TransformSelectionUseCase } from './TransformSelectionUseCase.js';
-import { calculateTransforms } from './TransformMath.js';
-import { SpatialSelectionState } from './spatial-state/SpatialSelectionState.js';
+import { TransformMath } from './TransformMath.js';
 
 // Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
 //
-// As of 0.1.44 every TRANSFORM routes through one path:
-// TransformSelectionUseCase -> exactly one TransformSelectionCommand,
-// whether the selection is a single brick, a multi-selection, or a
-// resolved group. moveSelection/rotateSelection (keyboard), single-brick
-// moveBrick/rotateBrick, and gizmo commit all produce the same command
-// type with the same pivot semantics — rotation orbits the selection
-// bounds center; for a single brick that's its own center, identical to
-// the pre-0.1.44 per-brick behavior. Deletion is not a transform:
-// deleteSelection/deleteBrick stay composites of DeleteBrickCommand.
-//
-// The gizmo's live preview still mutates the world directly (no command)
-// between begin/commit, exactly as since 0.1.38 — but commit now
-// restores the pre-gesture state and commits through the SAME use case
-// every other transform uses, so no-op suppression and command shape
-// can never drift between paths.
+// As of 0.1.46 this class is also the concrete implementation of the
+// gesture contract the interactive viewport gizmo drives:
+// beginTransformGesture / previewTransformGesture /
+// commitTransformGesture / cancelTransformGesture. The pointer-driven
+// gizmo and the keyboard paths therefore share one gesture transaction
+// and one math source — every preview and every committed transform is
+// computed by TransformMath, and a completed gizmo drag still produces
+// exactly ONE TransformSelectionCommand, exactly as it did in 0.1.38.
 export class SpatialEditingService {
     constructor(session, commandHistories, brickRegistry = null) {
         this._session = session;
         this._commandHistories = commandHistories;
         this._boundsService = new SelectionBoundsService(brickRegistry);
-        this._transformSelectionUseCase = new TransformSelectionUseCase(brickRegistry);
         this._gizmoState = TransformGizmoState.idle();
     }
 
@@ -75,26 +68,54 @@ export class SpatialEditingService {
         return SpatialEditingContext.empty();
     }
 
-    // -----------------------------------------------------------------
-    // Transforms — all through TransformSelectionUseCase (0.1.44)
-    // -----------------------------------------------------------------
-
     moveBrick(documentId, buildingId, brickId, delta) {
-        const selection = SpatialSelectionState.brick({ documentId, buildingId, brickId });
-        return this._transformForSelection(selection, { translation: delta }, 'Move Brick');
+        const document = this._session.getDocument(documentId);
+        if (!document) {
+            return false;
+        }
+        const world = document.world;
+        const history = this._commandHistories.get(world.id);
+        if (!history) {
+            return false;
+        }
+        const building = world.getBuilding(buildingId);
+        const brick = building ? building.findBrick(brickId) : null;
+        if (!brick) {
+            return false;
+        }
+        const command = new MoveBrickCommand({
+            worldId: world.id,
+            buildingId,
+            brickId,
+            delta
+        });
+        history.execute(command);
+        return true;
     }
 
     rotateBrick(documentId, buildingId, brickId, deltaRotation) {
-        const selection = SpatialSelectionState.brick({ documentId, buildingId, brickId });
-        return this._transformForSelection(selection, { rotation: deltaRotation }, 'Rotate Brick');
-    }
-
-    moveSelection(selection, delta) {
-        return this._transformForSelection(selection, { translation: delta }, 'Move');
-    }
-
-    rotateSelection(selection, deltaRotation) {
-        return this._transformForSelection(selection, { rotation: deltaRotation }, 'Rotate');
+        const document = this._session.getDocument(documentId);
+        if (!document) {
+            return false;
+        }
+        const world = document.world;
+        const history = this._commandHistories.get(world.id);
+        if (!history) {
+            return false;
+        }
+        const building = world.getBuilding(buildingId);
+        const brick = building ? building.findBrick(brickId) : null;
+        if (!brick) {
+            return false;
+        }
+        const command = new RotateBrickCommand({
+            worldId: world.id,
+            buildingId,
+            brickId,
+            deltaRotation
+        });
+        history.execute(command);
+        return true;
     }
 
     deleteBrick(documentId, buildingId, brickId) {
@@ -116,15 +137,23 @@ export class SpatialEditingService {
         return true;
     }
 
+    moveSelection(selection, delta) {
+        return this._executeForSelection(selection, (world, item) => new MoveBrickCommand({
+            worldId: world.id, buildingId: item.buildingId, brickId: item.brickId, delta
+        }), `Move ${selection.items.length} Bricks`);
+    }
+
+    rotateSelection(selection, deltaRotation) {
+        return this._executeForSelection(selection, (world, item) => new RotateBrickCommand({
+            worldId: world.id, buildingId: item.buildingId, brickId: item.brickId, deltaRotation
+        }), `Rotate ${selection.items.length} Bricks`);
+    }
+
     deleteSelection(selection) {
         return this._executeForSelection(selection, (world, item) => new DeleteBrickCommand({
             worldId: world.id, buildingId: item.buildingId, brickId: item.brickId
         }), `Delete ${selection.items.length} Bricks`);
     }
-
-    // -----------------------------------------------------------------
-    // Transform gizmo gesture lifecycle (0.1.38, unified in 0.1.44)
-    // -----------------------------------------------------------------
 
     beginTransformGesture(selection, { mode, axis = null } = {}) {
         if (!selection || selection.isEmpty || selection.type === 'ground') return null;
@@ -148,7 +177,7 @@ export class SpatialEditingService {
         if (!this._gizmoState.active || !selection) return false;
         const document = this._session.getDocument(selection.documentId);
         if (!document) return false;
-        const nextTransforms = calculateTransforms(this._gizmoState.initialTransforms, this._gizmoState.pivot, transform);
+        const nextTransforms = this._calculatePreviewTransforms(this._gizmoState.initialTransforms, this._gizmoState.pivot, transform);
         this._applyTransforms(document.world, nextTransforms);
         return true;
     }
@@ -161,25 +190,19 @@ export class SpatialEditingService {
         const history = this._commandHistories.get(world.id);
         if (!history) return false;
         const before = this._gizmoState.initialTransforms;
-        const after = calculateTransforms(before, this._gizmoState.pivot, transform);
-        // Restore the pre-gesture state first, then commit through the
-        // unified path — the gesture produces the exact same single
-        // TransformSelectionCommand every other transform produces.
+        const after = this._calculatePreviewTransforms(before, this._gizmoState.pivot, transform);
         this._applyTransforms(world, before);
         this._gizmoState = TransformGizmoState.idle({
             selectionBounds: this._boundsService.calculate(selection, document),
             pivot: this.getGroupPivot(selection)
         });
-        if (transformsEqualLocal(before, after)) return false;
-        const count = selection.items.length;
-        const command = this._transformSelectionUseCase.execute(
-            history,
-            document,
-            selection,
-            transform,
-            `${transform.rotation !== undefined ? 'Rotate' : 'Move'} ${count} ${count === 1 ? 'Brick' : 'Bricks'}`
-        );
-        return command !== null;
+        if (this._transformsEqual(before, after)) return false;
+        history.execute(new TransformSelectionCommand({
+            worldId: world.id,
+            transforms: after,
+            description: `${transform.rotation !== undefined ? 'Rotate' : 'Move'} ${after.length} ${after.length === 1 ? 'Brick' : 'Bricks'}`
+        }));
+        return true;
     }
 
     cancelTransformGesture(selection) {
@@ -188,30 +211,6 @@ export class SpatialEditingService {
         if (document) this._applyTransforms(document.world, this._gizmoState.initialTransforms);
         this._gizmoState = TransformGizmoState.idle();
         return true;
-    }
-
-    // -----------------------------------------------------------------
-    // Internal
-    // -----------------------------------------------------------------
-
-    _transformForSelection(selection, transform, verb) {
-        if (!selection || selection.isEmpty || selection.type === 'ground') {
-            return false;
-        }
-        const document = this._session.getDocument(selection.documentId);
-        if (!document) {
-            return false;
-        }
-        const history = this._commandHistories.get(document.world.id);
-        if (!history) {
-            return false;
-        }
-        const count = selection.items.length;
-        const description = verb.includes('Brick')
-            ? verb
-            : `${verb} ${count} ${count === 1 ? 'Brick' : 'Bricks'}`;
-        const command = this._transformSelectionUseCase.execute(history, document, selection, transform, description);
-        return command !== null;
     }
 
     _captureTransforms(world, items) {
@@ -230,6 +229,12 @@ export class SpatialEditingService {
         return transforms;
     }
 
+    // Delegates to TransformMath — the single math definition shared
+    // with keyboard transforms and the gizmo's live drag preview.
+    _calculatePreviewTransforms(initialTransforms, pivot, gesture) {
+        return TransformMath.calculateTransforms(initialTransforms, pivot, gesture);
+    }
+
     _applyTransforms(world, transforms) {
         for (const transform of transforms) {
             world.updateBrick(transform.buildingId, transform.brickId, {
@@ -237,6 +242,10 @@ export class SpatialEditingService {
                 rotation: transform.rotation
             });
         }
+    }
+
+    _transformsEqual(a, b) {
+        return TransformMath.transformsEqual(a, b);
     }
 
     _executeForSelection(selection, createCommand, description) {
@@ -258,6 +267,3 @@ export class SpatialEditingService {
         return true;
     }
 }
-
-// Local alias so the gesture commit reads exactly like the shared math.
-import { transformsEqual as transformsEqualLocal } from './TransformMath.js';
