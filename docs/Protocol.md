@@ -172,6 +172,17 @@ Implementations may be deterministic grids, geographic coordinates,
 procedural islands, or curated exhibitions. The protocol does not
 prescribe the placement algorithm, only the query interface.
 
+Group (new in 0.1.43)
+A Group is document state: { id, name, brickIds[] } — a flat, named
+relationship between bricks, serialized inside World JSON. Group ids are
+independent UUIDs; membership references brick ids and is resolved
+against the live world (referential). Groups never carry geometry or
+transforms. Selection/clipboard state remains excluded from the
+protocol; group CREATION/MEMBERSHIP mutations travel as commands
+(create-group, delete-group, rename-group, add-to-group,
+remove-from-group, duplicate-group) through the command history like
+every other persistent mutation.
+
 Identity Layers
 
 ForkBuild distinguishes three kinds of identity, each at a different
