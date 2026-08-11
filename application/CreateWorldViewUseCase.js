@@ -26,6 +26,7 @@ import { WorldNavigationSession } from './WorldNavigationSession.js';
 export class CreateWorldViewUseCase {
     execute(identityProvider = null) {
         const storageProvider = new LocalStorageProvider();
+        const publisherProvider = new LocalPublisherProvider();
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
         const worldLayoutProvider = new LocalWorldLayoutProvider(discoveryProvider);
         const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(
