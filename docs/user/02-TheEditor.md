@@ -6,6 +6,7 @@ transform bricks, and how to organize your build with groups.
 ## The layout
 
 `
+<pre>
 ┌────────────────────────────────────────────────────────────┐
 │ Toolbar: Save · Publish · New · Saved ● · Recent │
 ├──────────────┬─────────────────────────────────────────────┤
@@ -18,6 +19,7 @@ transform bricks, and how to organize your build with groups.
 │ │ │
 │ Groups │ │
 └──────────────┴─────────────────────────────────────────────┘
+</pre>
 `
 
 
