@@ -8,16 +8,20 @@ import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
 import { CreateCommandRegistryUseCase } from './CreateCommandRegistryUseCase.js';
 import { ReplayDocumentUseCase } from './ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from './RestoreHistoryStateUseCase.js';
+import { DocumentCloneService } from './DocumentCloneService.js';
+import { CopySelectionUseCase } from './CopySelectionUseCase.js';
+import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
 //
 // 0.1.39 wired persistence & publication; 0.1.40 wired replay and the
-// Operation Timeline; 0.1.41 adds restoration: a RestoreHistoryStateUseCase
-// built on the same ReplayDocumentUseCase the timeline preview uses — one
-// reconstruction path for both, differing only in where the result lands
-// (preview world vs live document). ui/ still never imports any of it.
+// Operation Timeline; 0.1.41 wired restoration; 0.1.42 wires cloning,
+// forking, and the clipboard: a DocumentCloneService plus
+// CopySelectionUseCase / PasteClipboardUseCase, all constructed here and
+// injected into the session. identityProvider flows to the session so
+// forks/clones can attribute authorship to whoever is logged in.
 export class CreateWorldViewUseCase {
     execute(identityProvider = null) {
         const storageProvider = new LocalStorageProvider();
@@ -37,6 +41,7 @@ export class CreateWorldViewUseCase {
         const restoreHistoryStateUseCase = new RestoreHistoryStateUseCase(
             replayDocumentUseCase
         );
+        const documentCloneService = new DocumentCloneService();
         return {
             createSession(registry) {
                 return new WorldNavigationSession({
@@ -46,7 +51,11 @@ export class CreateWorldViewUseCase {
                     saveDocumentUseCase,
                     publishDocumentUseCase,
                     replayDocumentUseCase,
-                    restoreHistoryStateUseCase
+                    restoreHistoryStateUseCase,
+                    identityProvider,
+                    documentCloneService,
+                    copySelectionUseCase: new CopySelectionUseCase(registry),
+                    pasteClipboardUseCase: new PasteClipboardUseCase()
                 });
             }
         };
