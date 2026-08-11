@@ -600,7 +600,14 @@ export default {
             pasteFromClipboard,
             duplicateActiveDocument,
             forkActiveDocument,
-            formatTime
+            formatTime, 
+            groups, 
+            groupSelection, 
+            selectGroupById, 
+            renameGroupById, 
+            duplicateGroupById, 
+            deleteGroupById, 
+            addSelectionToGroup
         };
     },
     template: `
