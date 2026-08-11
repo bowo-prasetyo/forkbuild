@@ -6,13 +6,15 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.1** — Editor / World Editing Parity
+**Version 0.2.2** — Schema Versioning & Real Migration Fixtures
 
-Both editing surfaces now share the same editing capabilities through
-the action registry. The difference between Editor View and World View
-is presentation and navigation emphasis, not different meanings of
-operations. The capability matrix is the normative reference. A parity
-test locks the invariant against regression.
+The document envelope now carries an explicit schemaVersion. The
+deserialization pipeline migrates old-format documents to the current
+schema before they enter the domain, validates them structurally, and
+constructs domain objects. Historical fixtures prove the pipeline works
+with real documents from every era of the project. The migration
+infrastructure is extensible: adding a future schema 2 means writing
+one migration function and registering it.
 
 ## Features
 
