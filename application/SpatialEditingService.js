@@ -10,6 +10,7 @@ import { TransformGizmoState } from './spatial-state/TransformGizmoState.js';
 import { TransformMath } from './TransformMath.js';
 import { TransformSnap } from './TransformSnap.js';
 import { TransformSettings } from './TransformSettings.js';
+import { TransformAlignment } from './TransformAlignment.js';
 
 // Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
@@ -17,26 +18,24 @@ import { TransformSettings } from './TransformSettings.js';
 // Since 0.1.38 this class is the gesture transaction every transform
 // gesture runs through: beginTransformGesture / previewTransformGesture /
 // commitTransformGesture / cancelTransformGesture. Since 0.1.46 the
-// interactive pointer gizmo drives it alongside the keyboard paths.
+// interactive pointer gizmo drives it alongside the keyboard paths, and
+// since 0.1.47 snapping is applied inside the transaction so keyboard
+// and pointer stay byte-identical.
 //
-// As of 0.1.47 this transaction is also the single home of transform
-// SNAPPING:
-//
-//   raw gesture (keyboard nudge or pointer drag)
-//       -> axis constraint (already resolved by the caller)
-//       -> TransformSnap (delta snapping, precision mode)
-//       -> TransformMath.calculateTransforms
-//       -> exactly ONE TransformSelectionCommand on commit
-//
-// Snapping lives here — not in the gizmo controller, not in the views —
-// because this is the one place every transform input converges. The
-// controller reports raw gesture values and forwards modifier state;
-// this service decides how the gesture is interpreted, using
-// TransformSettings (session preferences, never document state).
-// Keyboard selection transforms (moveSelection/rotateSelection) are now
-// routed through the very same transaction as instantaneous gestures,
-// so a keyboard nudge and an equivalently-snapped gizmo drag produce
-// byte-identical TransformSelectionCommand payloads.
+// As of 0.1.48 this transaction is also the home of ALIGNMENT and
+// DISTRIBUTION (alignSelection/distributeSelection). These are
+// transform-generation algorithms, not new command types: they compute
+// exact absolute transforms for the resolved selection (pure math in
+// TransformAlignment) and submit them through the SAME
+// TransformSelectionCommand every other transform input uses. One
+// deliberate distinction: alignment/distribution BYPASS gesture snapping.
+// 0.1.47 snapping governs user-authored gesture deltas; alignment and
+// distribution produce geometric relationships and must land exactly on
+// their computed targets. No-op operations (fewer than two bricks for
+// alignment, fewer than three or a zero span for distribution, or an
+// already-satisfied arrangement) create zero history entries — the same
+// transformsEqual discipline commitTransformGesture has enforced since
+// 0.1.38, not a special history rule.
 export class SpatialEditingService {
     constructor(session, commandHistories, brickRegistry = null, transformSettings = new TransformSettings()) {
         this._session = session;
@@ -167,10 +166,10 @@ export class SpatialEditingService {
 
     // Keyboard selection translation, routed through the gesture
     // transaction as an instantaneous gesture (begin + commit, no
-    // preview). Snapping, precision handling, no-op detection, pivot
-    // semantics, and the emitted command type are therefore IDENTICAL to
-    // an equivalently-snapped gizmo drag — that parity is the flagship
-    // acceptance criterion of 0.1.47. gestureOptions: { modifiers }.
+    // preview). Snapping, precision handling, pivot semantics, no-op
+    // detection, and the emitted command type are therefore IDENTICAL to
+    // an equivalently-snapped gizmo drag — the 0.1.47 parity property.
+    // gestureOptions: { modifiers }.
     moveSelection(selection, delta, gestureOptions = {}) {
         if (!selection || selection.isEmpty || selection.type === 'ground') {
             return false;
@@ -199,6 +198,66 @@ export class SpatialEditingService {
             worldId: world.id, buildingId: item.buildingId, brickId: item.brickId
         }), `Delete ${selection.items.length} Bricks`);
     }
+
+    // ----------------------------------------- alignment & distribution
+
+    // Aligns the resolved selection along one world axis, referencing
+    // the WHOLE selection bounds (never the first brick, so selection
+    // order is irrelevant). mode: 'x-min' | 'x-center' | 'x-max' |
+    // 'y-min' | ... | 'z-max'. Requires >= 2 bricks to do anything
+    // useful; fewer collapses to a no-op through the transformsEqual
+    // check. Bypasses gesture snapping by design — see class header.
+    alignSelection(selection, mode) {
+        return this._executeLayoutOperation(
+            selection,
+            (entries, selectionBounds) =>
+                TransformAlignment.calculateAlignmentTransforms(entries, selectionBounds, mode),
+            'Align'
+        );
+    }
+
+    // Distributes the resolved selection's centers evenly along one
+    // world axis. Requires >= 3 bricks and a non-zero span; anything
+    // less is a defensive no-op (null from the math, zero history).
+    // Endpoints never move; only interior members do.
+    distributeSelection(selection, axis) {
+        return this._executeLayoutOperation(
+            selection,
+            (entries) =>
+                TransformAlignment.calculateDistributionTransforms(entries, axis),
+            'Distribute'
+        );
+    }
+
+    // Shared transaction for alignment and distribution:
+    //   resolve selection -> capture transforms -> generate exact
+    //   absolute targets -> compare before/after -> exactly one
+    //   TransformSelectionCommand (or zero history entries on no-op).
+    _executeLayoutOperation(selection, calculate, verb) {
+        if (!selection || selection.isEmpty || selection.type === 'ground') return false;
+        if (this._gizmoState.active) return false;
+        const document = this._session.getDocument(selection.documentId);
+        if (!document) return false;
+        const world = document.world;
+        const history = this._commandHistories.get(world.id);
+        if (!history) return false;
+        const before = this._captureTransforms(world, selection.items);
+        if (!before) return false;
+        const entries = this._captureEntries(world, selection.items);
+        if (!entries) return false;
+        const selectionBounds = this._boundsService.calculate(selection, document);
+        if (!selectionBounds) return false;
+        const after = calculate(entries, selectionBounds);
+        if (!after || this._transformsEqual(before, after)) return false;
+        history.execute(new TransformSelectionCommand({
+            worldId: world.id,
+            transforms: after,
+            description: `${verb} ${after.length} ${after.length === 1 ? 'Brick' : 'Bricks'}`
+        }));
+        return true;
+    }
+
+    // -------------------------------------------------- gesture contract
 
     beginTransformGesture(selection, { mode, axis = null } = {}) {
         if (!selection || selection.isEmpty || selection.type === 'ground') return null;
@@ -340,6 +399,26 @@ export class SpatialEditingService {
             });
         }
         return transforms;
+    }
+
+    // Alignment/distribution need each member's OWN bounds (edges and
+    // center) in addition to its transform — captured in one pass so the
+    // pure math module receives plain data only.
+    _captureEntries(world, items) {
+        const entries = [];
+        for (const item of items) {
+            const building = world.getBuilding(item.buildingId);
+            const brick = building ? building.findBrick(item.brickId) : null;
+            if (!brick) return null;
+            entries.push({
+                buildingId: item.buildingId,
+                brickId: item.brickId,
+                position: brick.position.toJSON(),
+                rotation: brick.rotation,
+                bounds: this._boundsService.calculateBrickBounds(brick)
+            });
+        }
+        return entries;
     }
 
     // Delegates to TransformMath — the single math definition shared by
