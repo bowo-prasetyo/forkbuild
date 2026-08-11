@@ -1959,6 +1959,76 @@ selection, an Editor group panel, scale (the domain has no scale), and
 cross-document transform semantics — each a separate architectural
 decision, each building on this closed layer.
 
+Advanced Selection & Editor Group Surface (0.1.45)
+--------------------------------------------------
+0.1.45 completes the classic editing core. No new selection model, no
+new command types — the milestone is interaction and surface parity on
+top of the stable 0.1.42–0.1.44 machinery.
+
+**The selection contract** (identical in World View and Editor):
+    click brick            -> replace selection
+    Ctrl/Cmd + click brick -> toggle brick
+    Shift + click brick    -> add brick (union)
+    Shift + drag           -> marquee, replaces selection
+    Ctrl/Cmd + Shift+drag  -> marquee, adds hits to selection
+    Escape                 -> clear selection
+    Ctrl/Cmd + A           -> select all bricks in the active document
+    Select Group           -> replace selection with resolved members
+SpatialSelectionState gained addBrick() next to toggleBrick();
+SelectionState gained add() next to toggle(); both factories/
+constructors now dedupe (marquee/select-all/select-group can propose
+duplicates; membership is a set). SelectionUseCase gained add(). The
+two state classes were deliberately NOT merged — they keep the
+lightweight items[] contract the shared use cases consume, and nothing
+required forcing them into one type.
+
+**The zero-history rule.** Every operation above is a SESSION STATE
+change and produces ZERO history entries. There is no
+GroupSelectionCommand and never will be: selecting a group resolves
+Group -> brickIds -> SelectionState and stops. The timeline remains a
+log of operations on the WORLD — selection, hover, clipboard, gizmo,
+preview, and marquee rectangles are all session state.
+
+**Marquee architecture — three owners, no commands.**
+    view       owns the gesture: tracks the Shift+drag, draws the
+               rectangle overlay, disables camera controls via
+               setControlsEnabled() for the gesture's duration, and
+               reports the final client-coordinate rectangle;
+    renderer   owns containment: PickingService.pickInRectangle()
+               projects every registered mesh's world position through
+               the camera and returns the brick/building/document ids
+               whose centers fall inside the NDC-mapped rectangle
+               (center test — full projected-bounds intersection is
+               future work);
+    session    owns semantics: WorldNavigationSession.marqueeSelect()
+               filters hits to the focused document (single-document
+               rule), unions or replaces per the additive flag, and
+               refreshes highlight/inspection/editing state;
+               EditorSession.marqueeSelect() does the same against the
+               single Editor world. Neither path executes a command.
+
+**Editor group surface.** GroupsPanel (ui/components/GroupsPanel.js)
+renders EditorSession.getGroups() and drives the SAME six group
+commands World View uses — create/delete/rename/duplicate/add-to/
+remove-from-group — plus resolved selectGroup(). It refreshes via
+documentManager.onStateChanged(): every group command dirties the
+document, so the existing event keeps the panel current after undo/
+redo too, not just after panel clicks. The panel never mutates a group
+by selecting it. World View gained the matching −Sel
+(removeFromGroupWithSelection) so both surfaces expose identical
+membership controls.
+
+**Camera gating.** CameraController.setEnabled() suspends/resumes
+OrbitControls; both render use cases expose setControlsEnabled on their
+handles. Views disable controls on Shift+pointerdown and re-enable on
+pointer-up, so a marquee never fights the orbit gesture.
+
+**Unchanged by design.** TransformSelectionUseCase and the unified
+transform path (0.1.44), clipboard machinery (0.1.42/43), undo/redo,
+replay, restoration, and all group command semantics. Deferred as
+planned: nested groups, group lock/visibility, persistent selection,
+whole-mesh marquee containment.
+
 Publication vs Document vs Location
 
 Three distinct abstractions, kept strictly separate:
