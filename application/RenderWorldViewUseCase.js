@@ -3,16 +3,25 @@ import { WorldRenderer } from '../renderer/WorldRenderer.js';
 import { PickingService } from '../renderer/PickingService.js';
 import { SpatialSelectionRenderer } from '../renderer/SpatialSelectionRenderer.js';
 import { SpatialPreviewRenderer } from '../renderer/SpatialPreviewRenderer.js';
+import { TransformGizmoRenderer } from '../renderer/TransformGizmoRenderer.js';
+import { TransformGizmoController } from '../renderer/TransformGizmoController.js';
+import { TransformMath } from './TransformMath.js';
 
+// World View's render wiring. As of 0.1.46 it exposes the same narrow
+// gizmo surface RenderWorldUseCase does — one shared
+// TransformGizmoController design, one shared gesture contract, no
+// second gizmo implementation. WorldNavigationSession passes its
+// SpatialEditingService as gestureService; TransformMath is injected so
+// the gizmo drag preview and the committed TransformSelectionCommand are
+// computed from identical definitions.
 export class RenderWorldViewUseCase {
-    execute(container, registry, eventBus = null) {
+    execute(container, registry, eventBus = null, { gestureService = null } = {}) {
         const renderer = new Renderer(container);
         const worldRenderer = new WorldRenderer(renderer, registry);
         if (eventBus) {
             worldRenderer.subscribe(eventBus);
         }
         renderer.start();
-
         const pickingService = new PickingService(
             renderer.camera,
             renderer.domElement,
@@ -22,15 +31,21 @@ export class RenderWorldViewUseCase {
             worldRenderer.meshRegistry
         );
         const spatialPreviewRenderer = new SpatialPreviewRenderer(renderer);
-
+        const transformGizmoRenderer = new TransformGizmoRenderer(renderer);
+        const transformGizmoController = new TransformGizmoController({
+            camera: renderer.camera,
+            domElement: renderer.domElement,
+            gizmoRenderer: transformGizmoRenderer,
+            gestureService,
+            controlsEnabler: renderer.cameraController,
+            transformMath: TransformMath
+        });
         return {
             pick: (screenX, screenY) => pickingService.pickRich(screenX, screenY),
             pickGround: (screenX, screenY) => {
                 const pos = pickingService.pickGroundPosition(screenX, screenY);
                 return pos ? { type: 'ground', position: pos } : null;
             },
-            pickRectangle: (x0, y0, x1, y1) => pickingService.pickInRectangle(x0, y0, x1, y1),
-            setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
             getCameraState: () => renderer.cameraController.getState(),
             setCameraState: (state) => renderer.cameraController.setState(state),
             addWorld: (world, documentId, layoutPosition) => worldRenderer.addWorld(world, documentId, layoutPosition),
@@ -42,7 +57,21 @@ export class RenderWorldViewUseCase {
             clearHover: () => spatialSelectionRenderer.clearHover(),
             showPreview: (definitionId, position, rotation) => spatialPreviewRenderer.show(definitionId, position, rotation),
             hidePreview: () => spatialPreviewRenderer.hide(),
+            showGizmo: (pivot, bounds) => transformGizmoController.show(pivot, bounds),
+            hideGizmo: () => transformGizmoController.hide(),
+            gizmoPointerDown: (screenX, screenY, selection) =>
+                transformGizmoController.onPointerDown(screenX, screenY, selection),
+            gizmoPointerMove: (screenX, screenY, selection) =>
+                transformGizmoController.onPointerMove(screenX, screenY, selection),
+            gizmoPointerUp: (screenX, screenY, selection) =>
+                transformGizmoController.onPointerUp(screenX, screenY, selection),
+            gizmoKeyDown: (keyEvent, selection) =>
+                transformGizmoController.onKeyDown(keyEvent, selection),
+            cancelGizmoGesture: () => transformGizmoController.cancelGesture(),
+            isGizmoDragging: () => transformGizmoController.isDragging,
             dispose() {
+                transformGizmoController.dispose();
+                transformGizmoRenderer.dispose();
                 spatialPreviewRenderer.dispose();
                 spatialSelectionRenderer.clear();
                 renderer.dispose();
