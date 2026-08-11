@@ -195,3 +195,33 @@ No new domain events were added in 0.1.46. The interactive gizmo
 reuses the existing BRICK_UPDATED path for its live preview and the
 existing command/history machinery for its commit — pointer interaction
 is an input concern, not a domain event.
+
+## Document Envelope Schema (0.2.0)
+
+As of 0.2.0, the serialized document envelope carries an explicit
+`schemaVersion` field at the top level:
+
+```json
+{
+    "schemaVersion": 1,
+    "world": { ... },
+    "metadata": { ... }
+}
+
+This is distinct from metadata.protocolVersion (the domain model
+version). Schema version tracks the JSON envelope structure; protocol
+version tracks the domain semantics.
+
+Migration between schema versions happens in
+serializer/DocumentSchemaMigrator.js, before the JSON enters the
+domain. Domain classes never see old-format envelopes.
+
+Published snapshots carry additional identity fields:
+
+* snapshotId — identifies this particular published state
+* contentHash — FNV-1a hash of the canonical JSON for integrity
+* schemaVersion — the envelope schema at publish time
+
+Snapshots are stored at snapshot:{snapshotId}, not at the document's
+own storage key. Editing and saving the source document cannot overwrite
+a published snapshot.
