@@ -1,33 +1,29 @@
 import { Brick } from '../../core/Brick.js';
+import { Group } from '../../core/Group.js';
 import { Position } from '../../core/Position.js';
 import { Command } from './Command.js';
 
-// Pastes a set of bricks as ONE atomic history entry (0.1.42).
+// Pastes a set of bricks as ONE atomic history entry (0.1.42), creating
+// any groups carried by the clipboard intent (0.1.43).
 //
-// Constructor fields (worldId, buildingId, items) are the command's
-// INTENT and never change: each item is { definitionId, position,
-// rotation } — pivot-relative geometry re-anchored by
-// PasteClipboardUseCase, dimensions/materials implied by definitionId
-// through BrickRegistry. No brick ids in the intent: the command
-// creates the pasted bricks' identities at execution time, the same
-// contract PlaceBrickCommand established — the clipboard that feeds
-// this command never carries an id either.
+// Constructor fields (worldId, buildingId, items, groups) are the
+// command's INTENT and never change: each item is { definitionId,
+// position, rotation }; each group is { name, memberIndices } pointing
+// into items. No brick ids and no group ids in the intent: identities
+// are created at execution time, the same contract PlaceBrickCommand
+// established.
 //
-// One narrow, deliberate crack in immutability — same shape as
-// PlaceBrickCommand: after execute() runs, the command remembers the
-// ids of the bricks it created (_executedBrickIds), and that record IS
-// serialized. That is what makes undo -> redo recreate the SAME pasted
-// bricks, and what lets history replay reconstruct byte-identical
-// documents (the 0.1.40 guarantee). A paste replayed into another
-// session without that record correctly creates fresh identities — a
-// different paste, not a resurrection of the original.
+// After execute() runs, the command remembers the ids it created
+// (_executedBrickIds, _executedGroupIds) and that record IS serialized —
+// what makes undo -> redo recreate the SAME pasted bricks/groups and
+// keeps history replay byte-identical (the 0.1.40 guarantee).
 //
-// execute() is transactional like CompositeCommand: if anything throws
-// mid-paste, already-added bricks are removed again before the error
-// propagates. Completely renderer-ignorant: its job ends at
-// World.addBrickToBuilding() / removeBrickFromBuilding().
+// Transactional: on failure, any groups and bricks already added are
+// removed again before the error propagates. Completely
+// renderer-ignorant: its job ends at World.addBrickToBuilding()/
+// removeBrickFromBuilding()/addGroup()/removeGroup().
 export class PasteBricksCommand extends Command {
-    constructor({ worldId, buildingId, items = [], description = null, id, timestamp } = {}) {
+    constructor({ worldId, buildingId, items = [], groups = [], description = null, id, timestamp } = {}) {
         super({ id, timestamp });
         this._worldId = worldId;
         this._buildingId = buildingId;
@@ -38,8 +34,13 @@ export class PasteBricksCommand extends Command {
                 : Position.fromJSON(item.position),
             rotation: item.rotation || 0
         }));
+        this._groups = groups.map((group) => ({
+            name: group.name || null,
+            memberIndices: [...group.memberIndices]
+        }));
         this._description = description;
         this._executedBrickIds = [];
+        this._executedGroupIds = [];
     }
 
     get worldId() { return this._worldId; }
@@ -51,7 +52,14 @@ export class PasteBricksCommand extends Command {
             rotation: item.rotation
         }));
     }
+    get groups() {
+        return this._groups.map((group) => ({
+            name: group.name,
+            memberIndices: [...group.memberIndices]
+        }));
+    }
     get executedBrickIds() { return [...this._executedBrickIds]; }
+    get executedGroupIds() { return [...this._executedGroupIds]; }
     get type() { return 'paste-bricks'; }
 
     execute(context) {
@@ -74,7 +82,32 @@ export class PasteBricksCommand extends Command {
                 added.push(brick.id);
                 this._executedBrickIds[i] = brick.id;
             }
+            // Group intent (0.1.43): create the carried groups over the
+            // freshly created bricks. Indices resolve against the ids
+            // THIS execution created — the clipboard never carried ids.
+            for (let i = 0; i < this._groups.length; i++) {
+                const groupIntent = this._groups[i];
+                const memberIds = groupIntent.memberIndices
+                    .map((index) => this._executedBrickIds[index])
+                    .filter((id) => id);
+                if (memberIds.length === 0) {
+                    continue;
+                }
+                const group = new Group({
+                    id: this._executedGroupIds[i] || undefined,
+                    name: groupIntent.name,
+                    brickIds: memberIds
+                });
+                context.world.addGroup(group);
+                this._executedGroupIds[i] = group.id;
+            }
         } catch (error) {
+            for (const groupId of this._executedGroupIds) {
+                if (groupId) {
+                    context.world.removeGroup(groupId);
+                }
+            }
+            this._executedGroupIds = [];
             for (const brickId of added) {
                 context.world.removeBrickFromBuilding(this._buildingId, brickId);
             }
@@ -88,6 +121,11 @@ export class PasteBricksCommand extends Command {
         this._assertWorldMatches(context);
         if (this._items.length === 0 || this._executedBrickIds.length !== this._items.length) {
             throw new Error('PasteBricksCommand: cannot undo before execute() has run');
+        }
+        for (const groupId of this._executedGroupIds) {
+            if (groupId) {
+                context.world.removeGroup(groupId);
+            }
         }
         for (const brickId of this._executedBrickIds) {
             context.world.removeBrickFromBuilding(this._buildingId, brickId);
@@ -118,9 +156,14 @@ export class PasteBricksCommand extends Command {
                 position: item.position.toJSON(),
                 rotation: item.rotation
             })),
-            executedBrickIds: this._items.length > 0 && this._executedBrickIds.length === this._items.length
+            groups: this._groups.map((group) => ({
+                name: group.name,
+                memberIndices: [...group.memberIndices]
+            })),
+            executedBrickIds: this._executedBrickIds.length === this._items.length && this._items.length > 0
                 ? [...this._executedBrickIds]
-                : null
+                : null,
+            executedGroupIds: this._executedGroupIds.length > 0 ? [...this._executedGroupIds] : null
         };
     }
 
@@ -129,12 +172,16 @@ export class PasteBricksCommand extends Command {
             worldId: json.worldId,
             buildingId: json.buildingId,
             items: json.items || [],
+            groups: json.groups || [],
             description: json.description || null,
             id: json.id,
             timestamp: new Date(json.timestamp)
         });
         cmd._executedBrickIds = Array.isArray(json.executedBrickIds)
             ? [...json.executedBrickIds]
+            : [];
+        cmd._executedGroupIds = Array.isArray(json.executedGroupIds)
+            ? [...json.executedGroupIds]
             : [];
         return cmd;
     }
