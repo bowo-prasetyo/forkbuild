@@ -8,27 +8,55 @@ import { TransformSelectionCommand } from './commands/TransformSelectionCommand.
 import { SelectionBoundsService } from './SelectionBoundsService.js';
 import { TransformGizmoState } from './spatial-state/TransformGizmoState.js';
 import { TransformMath } from './TransformMath.js';
+import { TransformSnap } from './TransformSnap.js';
+import { TransformSettings } from './TransformSettings.js';
 
 // Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
 //
-// As of 0.1.46 this class is also the concrete implementation of the
-// gesture contract the interactive viewport gizmo drives:
-// beginTransformGesture / previewTransformGesture /
-// commitTransformGesture / cancelTransformGesture. The pointer-driven
-// gizmo and the keyboard paths therefore share one gesture transaction
-// and one math source — every preview and every committed transform is
-// computed by TransformMath, and a completed gizmo drag still produces
-// exactly ONE TransformSelectionCommand, exactly as it did in 0.1.38.
+// Since 0.1.38 this class is the gesture transaction every transform
+// gesture runs through: beginTransformGesture / previewTransformGesture /
+// commitTransformGesture / cancelTransformGesture. Since 0.1.46 the
+// interactive pointer gizmo drives it alongside the keyboard paths.
+//
+// As of 0.1.47 this transaction is also the single home of transform
+// SNAPPING:
+//
+//   raw gesture (keyboard nudge or pointer drag)
+//       -> axis constraint (already resolved by the caller)
+//       -> TransformSnap (delta snapping, precision mode)
+//       -> TransformMath.calculateTransforms
+//       -> exactly ONE TransformSelectionCommand on commit
+//
+// Snapping lives here — not in the gizmo controller, not in the views —
+// because this is the one place every transform input converges. The
+// controller reports raw gesture values and forwards modifier state;
+// this service decides how the gesture is interpreted, using
+// TransformSettings (session preferences, never document state).
+// Keyboard selection transforms (moveSelection/rotateSelection) are now
+// routed through the very same transaction as instantaneous gestures,
+// so a keyboard nudge and an equivalently-snapped gizmo drag produce
+// byte-identical TransformSelectionCommand payloads.
 export class SpatialEditingService {
-    constructor(session, commandHistories, brickRegistry = null) {
+    constructor(session, commandHistories, brickRegistry = null, transformSettings = new TransformSettings()) {
         this._session = session;
         this._commandHistories = commandHistories;
         this._boundsService = new SelectionBoundsService(brickRegistry);
+        this._transformSettings = transformSettings;
         this._gizmoState = TransformGizmoState.idle();
+        this._gestureFeedback = null;
     }
 
     get transformGizmoState() { return this._gizmoState; }
+
+    get transformSettings() { return this._transformSettings; }
+
+    // Transient feedback about the gesture frame that was just applied:
+    // the SNAPPED transform plus the effective snap increments and the
+    // precision flag. Read by the gizmo controller after preview/commit
+    // and passed up to the views' transient overlay. Session state only —
+    // never serialized, never part of any command. Null while idle.
+    getGestureFeedback() { return this._gestureFeedback; }
 
     getSelectionBounds(selection) {
         const document = selection ? this._session.getDocument(selection.documentId) : null;
@@ -137,16 +165,33 @@ export class SpatialEditingService {
         return true;
     }
 
-    moveSelection(selection, delta) {
-        return this._executeForSelection(selection, (world, item) => new MoveBrickCommand({
-            worldId: world.id, buildingId: item.buildingId, brickId: item.brickId, delta
-        }), `Move ${selection.items.length} Bricks`);
+    // Keyboard selection translation, routed through the gesture
+    // transaction as an instantaneous gesture (begin + commit, no
+    // preview). Snapping, precision handling, no-op detection, pivot
+    // semantics, and the emitted command type are therefore IDENTICAL to
+    // an equivalently-snapped gizmo drag — that parity is the flagship
+    // acceptance criterion of 0.1.47. gestureOptions: { modifiers }.
+    moveSelection(selection, delta, gestureOptions = {}) {
+        if (!selection || selection.isEmpty || selection.type === 'ground') {
+            return false;
+        }
+        if (!this.beginTransformGesture(selection, { mode: 'translate', axis: null })) {
+            return false;
+        }
+        return this.commitTransformGesture(selection, { translation: delta }, gestureOptions);
     }
 
-    rotateSelection(selection, deltaRotation) {
-        return this._executeForSelection(selection, (world, item) => new RotateBrickCommand({
-            worldId: world.id, buildingId: item.buildingId, brickId: item.brickId, deltaRotation
-        }), `Rotate ${selection.items.length} Bricks`);
+    // Keyboard selection rotation around the selection pivot — same
+    // instantaneous-gesture routing, same snapping, same 0.1.44 pivot
+    // semantics as the gizmo's rotation ring.
+    rotateSelection(selection, deltaRotation, gestureOptions = {}) {
+        if (!selection || selection.isEmpty || selection.type === 'ground') {
+            return false;
+        }
+        if (!this.beginTransformGesture(selection, { mode: 'rotate', axis: 'y' })) {
+            return false;
+        }
+        return this.commitTransformGesture(selection, { rotation: deltaRotation }, gestureOptions);
     }
 
     deleteSelection(selection) {
@@ -170,37 +215,46 @@ export class SpatialEditingService {
             selectionBounds: bounds,
             initialTransforms
         });
+        this._gestureFeedback = null;
         return this._gizmoState;
     }
 
-    previewTransformGesture(selection, transform) {
+    // gestureOptions: { modifiers } — modifiers.shift selects precision
+    // increments for this frame. The raw transform arrives from the
+    // caller (controller or keyboard); snapping is applied here, once,
+    // against the gesture origin, before anything touches the World.
+    previewTransformGesture(selection, transform, gestureOptions = {}) {
         if (!this._gizmoState.active || !selection) return false;
         const document = this._session.getDocument(selection.documentId);
         if (!document) return false;
-        const nextTransforms = this._calculatePreviewTransforms(this._gizmoState.initialTransforms, this._gizmoState.pivot, transform);
+        const applied = this._snapGestureTransform(transform, gestureOptions);
+        const nextTransforms = this._calculatePreviewTransforms(this._gizmoState.initialTransforms, this._gizmoState.pivot, applied.transform);
         this._applyTransforms(document.world, nextTransforms);
+        this._gestureFeedback = applied.feedback;
         return true;
     }
 
-    commitTransformGesture(selection, transform) {
+    commitTransformGesture(selection, transform, gestureOptions = {}) {
         if (!this._gizmoState.active || !selection) return false;
         const document = this._session.getDocument(selection.documentId);
         if (!document) return false;
         const world = document.world;
         const history = this._commandHistories.get(world.id);
         if (!history) return false;
+        const applied = this._snapGestureTransform(transform, gestureOptions);
         const before = this._gizmoState.initialTransforms;
-        const after = this._calculatePreviewTransforms(before, this._gizmoState.pivot, transform);
+        const after = this._calculatePreviewTransforms(before, this._gizmoState.pivot, applied.transform);
         this._applyTransforms(world, before);
         this._gizmoState = TransformGizmoState.idle({
             selectionBounds: this._boundsService.calculate(selection, document),
             pivot: this.getGroupPivot(selection)
         });
+        this._gestureFeedback = null;
         if (this._transformsEqual(before, after)) return false;
         history.execute(new TransformSelectionCommand({
             worldId: world.id,
             transforms: after,
-            description: `${transform.rotation !== undefined ? 'Rotate' : 'Move'} ${after.length} ${after.length === 1 ? 'Brick' : 'Bricks'}`
+            description: `${applied.transform.rotation !== undefined ? 'Rotate' : 'Move'} ${after.length} ${after.length === 1 ? 'Brick' : 'Bricks'}`
         }));
         return true;
     }
@@ -210,8 +264,67 @@ export class SpatialEditingService {
         const document = selection ? this._session.getDocument(selection.documentId) : null;
         if (document) this._applyTransforms(document.world, this._gizmoState.initialTransforms);
         this._gizmoState = TransformGizmoState.idle();
+        this._gestureFeedback = null;
         return true;
     }
+
+    // ------------------------------------------------------------ snapping
+
+    // The 0.1.47 interpretation step. Pure with respect to the gesture:
+    // given the same raw transform, settings, and modifier state, this
+    // always returns the same snapped transform and feedback — which is
+    // what makes repeated previews stable and pointer motion reversible.
+    // With snapping disabled the raw transform passes through untouched.
+    _snapGestureTransform(transform, gestureOptions = {}) {
+        const settings = this._transformSettings;
+        const precise = !!(gestureOptions.modifiers && gestureOptions.modifiers.shift);
+        if (!settings.snappingEnabled) {
+            return {
+                transform,
+                feedback: this._buildFeedback(transform, null, null, precise)
+            };
+        }
+        let snapped = transform;
+        let translationIncrement = null;
+        let rotationIncrement = null;
+        if (transform && transform.translation) {
+            translationIncrement = settings.translationIncrement(precise);
+            snapped = {
+                ...snapped,
+                translation: TransformSnap.snapTranslation(transform.translation, translationIncrement)
+            };
+        }
+        if (transform && transform.rotation !== undefined) {
+            rotationIncrement = settings.rotationIncrement(precise);
+            snapped = {
+                ...snapped,
+                rotation: TransformMath.normalizeDegrees(
+                    TransformSnap.snapRotation(transform.rotation, rotationIncrement)
+                )
+            };
+        }
+        return {
+            transform: snapped,
+            feedback: this._buildFeedback(snapped, translationIncrement, rotationIncrement, precise)
+        };
+    }
+
+    _buildFeedback(transform, translationIncrement, rotationIncrement, precise) {
+        if (!transform) {
+            return null;
+        }
+        return {
+            mode: transform.rotation !== undefined ? 'rotate' : 'translate',
+            axis: this._gizmoState.axis,
+            translation: transform.translation ? { ...transform.translation } : null,
+            rotation: transform.rotation !== undefined ? transform.rotation : null,
+            translationSnap: translationIncrement,
+            rotationSnap: rotationIncrement,
+            precise
+        };
+    }
+
+    // ----------------------------------------------------------- internal
 
     _captureTransforms(world, items) {
         const transforms = [];
@@ -229,8 +342,9 @@ export class SpatialEditingService {
         return transforms;
     }
 
-    // Delegates to TransformMath — the single math definition shared
-    // with keyboard transforms and the gizmo's live drag preview.
+    // Delegates to TransformMath — the single math definition shared by
+    // keyboard transforms, the gizmo's live drag preview, and the
+    // committed command. Snapping wraps this; it never replaces it.
     _calculatePreviewTransforms(initialTransforms, pivot, gesture) {
         return TransformMath.calculateTransforms(initialTransforms, pivot, gesture);
     }
