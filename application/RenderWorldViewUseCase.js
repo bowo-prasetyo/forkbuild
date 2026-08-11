@@ -8,11 +8,9 @@ export class RenderWorldViewUseCase {
     execute(container, registry, eventBus = null) {
         const renderer = new Renderer(container);
         const worldRenderer = new WorldRenderer(renderer, registry);
-
         if (eventBus) {
             worldRenderer.subscribe(eventBus);
         }
-
         renderer.start();
 
         const pickingService = new PickingService(
@@ -20,11 +18,9 @@ export class RenderWorldViewUseCase {
             renderer.domElement,
             worldRenderer.meshRegistry
         );
-
         const spatialSelectionRenderer = new SpatialSelectionRenderer(
             worldRenderer.meshRegistry
         );
-
         const spatialPreviewRenderer = new SpatialPreviewRenderer(renderer);
 
         return {
@@ -33,6 +29,8 @@ export class RenderWorldViewUseCase {
                 const pos = pickingService.pickGroundPosition(screenX, screenY);
                 return pos ? { type: 'ground', position: pos } : null;
             },
+            pickRectangle: (x0, y0, x1, y1) => pickingService.pickInRectangle(x0, y0, x1, y1),
+            setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
             getCameraState: () => renderer.cameraController.getState(),
             setCameraState: (state) => renderer.cameraController.setState(state),
             addWorld: (world, documentId, layoutPosition) => worldRenderer.addWorld(world, documentId, layoutPosition),
