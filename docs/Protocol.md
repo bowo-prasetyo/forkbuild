@@ -238,3 +238,15 @@ As of 0.2.2, the serialized document envelope carries an explicit
     "world": { ... },
     "metadata": { ... }
 }
+
+This is distinct from metadata.protocolVersion (the domain model
+version). Schema version tracks the JSON envelope structure; protocol
+version tracks the domain semantics.
+
+Migration between schema versions happens in
+serializer/DocumentSchemaMigrator.js, before the JSON enters the
+domain. Domain classes never see old-format envelopes.
+
+Pre-0.2.0 documents have no schemaVersion field. The migrator treats
+them as schema 0 and adds the field. Pre-0.1.43 worlds have no groups
+field; World.fromJSON() defaults to an empty groups array.
