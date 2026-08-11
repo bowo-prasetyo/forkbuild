@@ -497,8 +497,6 @@ Next: 0.1.51 Stability / Performance / Large-Document Hardening, then
 Multiplayer. The editing kernel is complete and consolidated; the
 architecture has earned the hardening pass.
 
-**docs/Architecture.md** — add a section:
-
 Durable Documents & Publishing Boundary (0.2.0)
 
 The 0.2.0 milestone establishes the document as a durable, portable
