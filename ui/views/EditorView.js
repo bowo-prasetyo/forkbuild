@@ -14,35 +14,28 @@ import { ToolId } from '../../application/editor-state/ToolId.js';
 import { EditorEvent } from '../../core/events/EditorEvent.js';
 import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
+import TransformFeedback from '../components/TransformFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 
 // TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool.
-// No tool-switching UI exists yet — same lightweight, honest verification
-// mechanism used throughout this build. Ctrl/Cmd+S/Z/Y are different:
-// each is a companion to a real Toolbar action (Save, and — as of
-// 0.1.20C — Undo/Redo live entirely inside EditorSession.commandHistory),
-// standard expected shortcuts, not scaffolding. All of these stay here
-// rather than moving into EditorSession/InputDispatcher: they're global,
-// tool-independent decisions that don't go to a tool at all.
+// Ctrl/Cmd+S/Z/Y are companions to real Toolbar actions. All of these
+// stay here rather than moving into EditorSession/InputDispatcher:
+// they're global, tool-independent decisions that don't go to a tool.
 //
-// 0.1.46: while a gizmo gesture is active it owns the keyboard too — the
-// shortcut block below is skipped entirely and the event goes straight to
-// EditorSession, where only Escape (cancel) has any effect. pointerup is
-// now forwarded as well, on window so a release outside the viewport
-// still commits/cancels cleanly.
+// 0.1.46: while a gizmo gesture is active it owns the keyboard too;
+// pointerup is forwarded on window so a release outside the viewport
+// still commits cleanly.
+//
+// 0.1.47: the view hosts the transient TransformFeedback overlay. It
+// reads the gesture feedback blob off EditorSession.onPointerMove's
+// return value while a drag is in flight and clears it on pointer-up
+// and on Escape-cancel — the view never interprets the blob, it just
+// displays what the gesture transaction decided.
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
-// EditorView is intentionally dumb: it never imports core/, renderer/, or
-// storage/ directly, and — as of 0.1.20C — it doesn't even know a World,
-// Renderer, or ToolManager exists. It builds the collaborators
-// EditorSession needs once, then only ever calls start()/dispose() and
-// forwards raw DOM events. Loading a different document or starting a
-// new one both go through EditorSession too — EditorView has no idea
-// those operations tear down and rebuild an entire runtime graph
-// underneath it.
 export default {
     name: 'EditorView',
-    components: { Toolbar, Sidebar },
+    components: { Toolbar, Sidebar, TransformFeedback },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -70,7 +63,10 @@ export default {
                     </div>
                     <Sidebar :palette-use-case="paletteUseCase" />
                 </div>
-                <div ref="viewport" class="viewport"></div>
+                <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
+                    <div ref="viewport" class="viewport"></div>
+                    <TransformFeedback :feedback="transformFeedback" />
+                </div>
             </div>
         </div>
     `,
@@ -108,6 +104,7 @@ export default {
         });
 
         const activeTool = ref(editorContext.tool.activeTool);
+        const transformFeedback = ref(null);
         let unsubTool = null;
 
         function setTool(toolId) {
@@ -147,13 +144,23 @@ export default {
                 router.replace({ path: '/editor' });
             }
 
-            onPointerDown = (event) => editorSession.onPointerDown(event);
+            onPointerDown = (event) => {
+                editorSession.onPointerDown(event);
+            };
             viewport.value.addEventListener('pointerdown', onPointerDown);
-            onPointerMove = (event) => editorSession.onPointerMove(event);
+            onPointerMove = (event) => {
+                const result = editorSession.onPointerMove(event);
+                if (result && result.consumed) {
+                    transformFeedback.value = result.feedback || null;
+                }
+            };
             viewport.value.addEventListener('pointermove', onPointerMove);
             // Window-level so a gizmo drag released outside the viewport
             // still commits instead of leaving the gesture stuck.
-            onPointerUp = (event) => editorSession.onPointerUp(event);
+            onPointerUp = (event) => {
+                editorSession.onPointerUp(event);
+                transformFeedback.value = null;
+            };
             window.addEventListener('pointerup', onPointerUp);
 
             onKeyDown = (event) => {
@@ -162,6 +169,7 @@ export default {
                 // every global shortcut.
                 if (editorSession.isGestureActive()) {
                     editorSession.onKeyDown(event);
+                    transformFeedback.value = null;
                     return;
                 }
                 const shortcutTool = TOOL_SHORTCUTS[event.key];
@@ -212,6 +220,7 @@ export default {
             editorSession,
             publishDocumentUseCase,
             activeTool,
+            transformFeedback,
             setTool,
             ToolId
         };
