@@ -37,49 +37,25 @@ const COMMAND_HISTORY_SCHEMA_VERSION = 1;
 // persistence remain separate concerns (see 0.1.37).
 //
 // As of 0.1.40, CommandHistory is also the source of REPLAY — the history
-// itself, never a second recording mechanism. Two additions:
+// itself, never a second recording mechanism. Baseline snapshot
+// (baselineWorld in the envelope), replay(targetContext, { registry,
+// startCursor, endCursor }) — serialized reconstruction, history-suppressed,
+// transactional — and getTimeline() for the Operation Timeline. See the
+// 0.1.40 notes in the architecture documentation for the full invariants.
 //
-// 1. Baseline snapshot. The constructor captures context.world.toJSON() —
-//    the document state BEFORE the first command — and persists it as
-//    `baselineWorld` inside the envelope:
-//        { schemaVersion, cursor, commands, baselineWorld }
-//    A restored history is therefore self-sufficient for replay:
-//    baseline + commands reconstruct any intermediate state without
-//    touching the live document. fromJSON() prefers the persisted
-//    baseline over whatever world the caller passes as context — a
-//    restored world already has commands applied, so it is NOT the
-//    baseline. Envelopes written before 0.1.40 carry no baselineWorld and
-//    cannot be replayed; ReplayDocumentUseCase throws rather than
-//    guessing. The baseline is replay/session data riding inside the
-//    history envelope — canonical document persistence
-//    (SaveDocumentUseCase) is unchanged, and the rule "document
-//    persistence ≠ history persistence" still holds.
-//
-// 2. replay(targetContext, { registry, startCursor, endCursor }) —
-//    serializes this history's own envelope, reconstructs each command in
-//    range through CommandRegistry.fromJSON(), and executes the FRESH
-//    instances against targetContext. Two invariants:
-//      * Genuine replay: deserialized copies are executed, never the
-//        already-mutated live command objects. A replayed command gets
-//        its own execution bookkeeping, the same reasoning as
-//        PlaceBrickCommand excluding _executedBrickId from its intent.
-//      * History suppression: replay never calls this.execute(). The
-//        undo/redo stacks, cursor, and save point are untouched, so
-//        replay can NEVER pollute history with duplicate entries.
-//    Replay is transactional like CompositeCommand: if a command throws,
-//    everything replay already executed is undone in reverse order and
-//    the error is rethrown. startCursor > 0 is an advanced option — it
-//    assumes targetContext already reflects commands [0..startCursor);
-//    callers that reconstruct from the baseline (ReplayDocumentUseCase,
-//    the Operation Timeline) always start at 0.
-//
-// getTimeline() projects the linear envelope for the Operation Timeline
-// UI: { index, id, type, description, timestamp, childCount, applied }
-// per top-level command, in chronological order. CompositeCommand remains
-// ONE entry (its describe() already reads "Move 3 Bricks"); childCount
-// comes from Command.getChildCount(), so CommandHistory never imports a
-// concrete command class. Entries beyond the current cursor are marked
-// applied: false — undone-but-remembered, still replayable.
+// As of 0.1.41, the save point gains its mirror operation: markUnsaved().
+// Historical State Restoration rebases editing onto a reconstructed past
+// state — a fresh history whose cursor sits at 0. Without more, that
+// history would report CLEAN, but the storage still holds the pre-restore
+// document: no cursor in the new history corresponds to what is on disk.
+// markUnsaved() invalidates the save point without moving it, so
+// isDirty() stays true until an explicit Save calls markSaved() and
+// establishes the new save point. This must live in the history (not just
+// DocumentManager.markDirty()) because DocumentManager COMPUTES dirty
+// from history.isDirty() on every command event (0.1.39) — a manual
+// markDirty would be overwritten by the very next edit. Like the save
+// point itself, markUnsaved() is session-local bookkeeping and is never
+// serialized.
 export class CommandHistory {
     constructor(context, eventBus = new EventBus()) {
         this._context = context;
@@ -145,6 +121,15 @@ export class CommandHistory {
     markSaved() {
         this._savedCursor = this._undoStack.length;
         this._savePointValid = true;
+    }
+
+    // Mirror of markSaved(): declares that the current state differs from
+    // the persisted state and that NO cursor in this history corresponds
+    // to it. Used by Historical State Restoration (0.1.41) after rebasing
+    // a session onto a reconstructed past state. isDirty() reports true
+    // until the next markSaved().
+    markUnsaved() {
+        this._savePointValid = false;
     }
 
     isDirty() {
