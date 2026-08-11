@@ -4,6 +4,7 @@ import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistr
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import TransformFeedback from '../components/TransformFeedback.js';
+import AlignmentPanel from '../components/AlignmentPanel.js';
 
 const DRAG_THRESHOLD_PX = 6;
 const NUDGE = 1;
@@ -11,16 +12,16 @@ const NUDGE = 1;
 // 0.1.46: the viewport hosts the interactive transform gizmo; every
 // pointer/key event is offered to the session's gizmo FIRST.
 //
-// 0.1.47: while a gizmo drag is in flight, the gesture feedback blob
-// returned by session.gizmoPointerMove feeds the transient
-// TransformFeedback overlay (snapped delta + effective increment +
-// precision flag) and is cleared on release/cancel. Keyboard selection
-// transforms now forward the Shift modifier into the gesture
-// transaction, so arrow-key nudges and R rotations honor precision
-// snapping exactly like gizmo drags do.
+// 0.1.47: gesture feedback feeds the transient TransformFeedback
+// overlay; keyboard transforms forward the Shift modifier for precision.
+//
+// 0.1.48: the overlay gains an Alignment section (AlignmentPanel) shown
+// whenever 2+ bricks are selected in the Select tool. Clicks call
+// session.alignSelection(mode) / session.distributeSelection(axis) —
+// the view decides nothing about the geometry underneath.
 export default {
     name: 'WorldView',
-    components: { TransformFeedback },
+    components: { TransformFeedback, AlignmentPanel },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -131,6 +132,7 @@ export default {
                     buildingId: sel.buildingId,
                     brickId: sel.brickId,
                     position: sel.position,
+                    count: sel.items.length,
                     worldTitle: pub?.title || 'Untitled',
                     worldAuthor: pub?.author || 'anonymous'
                 };
@@ -204,6 +206,16 @@ export default {
 
         function focusSelection() {
             session.focusSelection();
+            refreshSpatialUI();
+        }
+
+        function alignSelection(mode) {
+            session.alignSelection(mode);
+            refreshSpatialUI();
+        }
+
+        function distributeSelection(axis) {
+            session.distributeSelection(axis);
             refreshSpatialUI();
         }
 
@@ -419,6 +431,8 @@ export default {
             onBrickSelectionChange,
             focusWorld,
             focusSelection,
+            alignSelection,
+            distributeSelection,
             moveSelectedBrick,
             deleteSelectedBrick
         };
@@ -567,6 +581,18 @@ export default {
                             Ground selected. Switch to Place tool to build.
                         </p>
                     </div>
+                </div>
+
+                <div
+                    v-if="spatialSelection && spatialSelection.count >= 2 && activeTool === 'select'"
+                    class="world-view-section"
+                >
+                    <h4>Alignment ({{ spatialSelection.count }} selected)</h4>
+                    <AlignmentPanel
+                        :selection-count="spatialSelection.count"
+                        :align="alignSelection"
+                        :distribute="distributeSelection"
+                    />
                 </div>
 
                 <div class="world-view-section">
