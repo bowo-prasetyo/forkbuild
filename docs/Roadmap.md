@@ -50,77 +50,86 @@
 0.1.47 Transform Precision, Snapping & Editing Polish  (done)
 0.1.48 Alignment & Distribution Tools  (done)
 0.1.49 Numeric Transform Input  (done)
-0.1.50 Editing UX Consolidation
+0.1.50 Editing UX Consolidation & Command Surface  (done)
+0.1.51 Stability / Performance / Large-Document Hardening
+0.1.52 Protocol & Persistence Hardening
 0.2    Blockchain publishing, multiplayer
 
-Nested Groups / Hierarchical Editing — remains OPTIONAL / post-0.2.
-Groups are useful without being hierarchical, and nothing in
-0.1.43–0.1.49 has produced evidence that nesting is worth the extra
-semantics.
+Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
+back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
+flat-group model is sufficient for the current editing architecture. If
+a real use case eventually demands nesting, it becomes its own
+architectural milestone — not an implicit next step.
 
-## 0.1.49 — What shipped
+## 0.1.50 — What shipped
 
-Exact numeric translation and Y-rotation as the fifth input source on
-the closed transform pipeline. No new command, no new entity, no
-transform model, no persistent editing mode.
+Discoverability and consistency for the accumulated 0.1.42–0.1.49
+feature set. No new domain entities, no new transform model, no new
+commands, no persistent editor modes — the milestone sits entirely
+above the kernel and invokes the existing sessions.
 
-- application/TransformInput.js — pure parser. Strict grammar (10,
-  10.5, -3.75, +2, .5, surrounding whitespace); rejects abc, 10foo,
-  1..5, Infinity, NaN, and all exponential notation. Structured
-  results ({ valid, value } / { valid: false, reason }) and a
-  parsePanelInput() helper where empty fields mean "unchanged", never
-  silent zero. No domain, renderer, or history dependencies; never
-  calculates a transformed position.
-- SpatialEditingService.applyNumericTransform(selection, intent,
-  { absolute }) — translates exact intent into the same gesture-shaped
-  transform every other input produces and commits it through the
-  existing transaction with snapping DISABLED (gestureOptions.snap ===
-  false): keyboard/gizmo → snapping applies; numeric/alignment/
-  distribution → exact values. Absolute translation targets the
-  selection PIVOT (every member receives the same delta, geometry
-  preserved); absolute rotation targets the PRIMARY brick's orientation
-  (every member receives the same delta, relative orientations
-  preserved). One Apply = at most one TransformSelectionCommand;
-  already-at-target input commits nothing.
-- ui/components/NumericTransformPanel.js — input surface, not a mode:
-  X/Y/Z + rotation fields, Absolute/Offset toggle, Apply/Clear, Enter
-  applies, Escape clears (stopped locally so it never clears the
-  selection), invalid fields marked and blocking, disabled with no
-  selection. Hosted by EditorView (sidebar) and WorldView (overlay).
-- EditorSession / WorldNavigationSession — route applyNumericTransform
-  to the shared gesture service; the executed command refreshes gizmo
-  presentation through the existing subscriptions.
-- tests/NumericTransform.test.js — 27 sections: full parser tables,
-  absolute/relative translation and rotation, partial fields, single/
-  multi/group-resolved pivots, exact float preservation, the flagship
-  snap-bypass test (pivot 4.37 → X=10 lands exactly 10 with snap=1,
-  undo restores 4.37 exactly), already-at-target no-ops, one-Apply-one-
-  command, exact undo/redo, serialization roundtrip, Editor/World
-  parity, numeric-vs-keyboard parity, numeric-vs-gizmo parity, the
-  three-way rotation trio (keyboard R === numeric 90 === gizmo 90,
-  byte-identical serialized transforms), rotation/translation
-  preservation, and membership invariance.
+- application/EditorActionRegistry.js — one registry of user-facing
+  operations: id, label, category, shortcut (display + machine keys),
+  description, enabled(context), disabledReason(context),
+  execute(invocation). createStandardActions() binds each surface's
+  session into shared definitions, so Editor and World View expose
+  identical action sets by construction. Actions that produce history
+  do so through existing commands; most don't — the registry never
+  touches CommandHistory or World.
+- application/EditorActionContext.js — pure snapshot of availability
+  state (selection count, clipboard, groups, undo/redo labels, gesture
+  activity, palette state, active tool), captured fresh on every
+  consumption, with defensive duck-typed fallbacks so no surface can
+  make the palette throw.
+- application/InputRouter.js — minimal input routing: the explicit
+  Escape priority chain (input > palette > gesture > marquee >
+  selection), text-input detection, and registry-driven shortcut
+  matching with Ctrl/Cmd parity and key-repeat suppression.
+- ui/components/CommandPalette.js — Ctrl/Cmd+K palette over the
+  registry: substring search across label/category/id, category
+  sections, arrow-key navigation, Enter executes only enabled actions,
+  Escape closes, disabled actions stay visible with their reasons.
+- ui/components/ActionFeedback.js — one-line transient messaging
+  ("Aligned Left", "Rotated +90°", "Copied selection"), aria-live, no
+  toast framework.
+- ui/components/EditingSidebar.js — consolidated Selection / Transform
+  / Groups / Clipboard sections composing the existing AlignmentPanel
+  and NumericTransformPanel unchanged, with empty states and disabled
+  reasons instead of dead buttons.
+- EditorSession / WorldNavigationSession — selectAll() and
+  getSelectionCount() join the session API (Editor additionally gets
+  clearSelection()/deleteSelection()); everything else is invoked, not
+  modified.
+- EditorView / WorldView — keyboard surfaces consolidated onto the
+  registry; Escape follows the priority chain; tool switching and
+  Ctrl+S remain view-local (they are not editing actions).
+- tests/EditorActions.test.js + tests/CommandPalette.test.js —
+  architectural tests: unique ids, unique shortcuts, shared
+  definitions across surfaces, disabled actions never executing,
+  correct session API invocation, selection-only actions leaving
+  mutation APIs untouched, graceful degradation on partial surfaces,
+  the Escape priority table, search/grouping/gating.
+- docs/user/ControlsReference.md — regenerated from the same action
+  metadata, eliminating documentation drift.
+- docs/Principles.md — "Actions are not commands" and "One operation,
+  one definition, every surface".
 
-Deliberately rejected in 0.1.49: TransformInputCommand/
-NumericTransformCommand, scale input, arbitrary Euler rotation,
-persistent transform modes, expression languages, unit conversion, an
-undo-transaction framework, transform presets, smart guides, nested
-groups, and camera-relative numeric transforms.
+Deliberately rejected in 0.1.50: CommandPaletteCommand or any mixing of
+UI actions with CommandHistory, a sophisticated fuzzy-search engine, a
+generalized toast/notification framework, a full accessibility
+framework, a UI redesign, nested groups, and any kernel-layer change —
+TransformSelectionCommand, CommandHistory, TransformMath/Snap/
+Alignment/Input, selection state, group commands, replay, restore, and
+the protocol are all untouched.
 
-## 0.1.50 — Editing UX Consolidation (next)
+## The progression this completes
 
-A genuine consolidation milestone, not another feature dump: command
-palette, shortcut discoverability, selection/transform feedback
-consistency, panel organization, empty/disabled states, accessibility,
-and cleanup of any API seams the 0.1.42–0.1.49 run exposed. The goal
-is a clean, stable editing surface before the 0.2 publishing/
-multiplayer architecture is seriously considered.
+0.1.42 Clipboard → 0.1.43 Selection + Groups → 0.1.44 Unified Transform
+Kernel → 0.1.45 Selection/Group Surface → 0.1.46 Pointer Gizmo →
+0.1.47 Precision + Snapping → 0.1.48 Alignment + Distribution →
+0.1.49 Numeric Intent → 0.1.50 Discoverability + UX.
 
-The kernel now has five fundamentally different input sources, all
-terminating in one command type:
-
-    keyboard ──┐
-    gizmo ─────┤
-    alignment ─┼──► TransformSelectionCommand
-    distribute ┤
-    numeric ───┘
+0.1.49 ended feature construction; 0.1.50 makes the accumulated feature
+set feel like one product. 0.1.51 (Stability / Performance /
+Large-Document Hardening) and 0.1.52 (Protocol & Persistence
+Hardening) follow before 0.2 Publishing & Multiplayer.
