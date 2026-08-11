@@ -1,4 +1,5 @@
 import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
+
 // Schema migration infrastructure for document envelopes.
 //
 // The cardinal rule: migration happens BEFORE the document enters the
@@ -10,19 +11,33 @@ import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
 // schema N to schema N+1. The migrator walks the chain from the
 // document's declared schemaVersion to DOCUMENT_SCHEMA_VERSION.
 //
-// As of 0.2.0 only schema 1 exists. The infrastructure is in place so
-// that adding schema 2 later means writing one migration function and
+// As of 0.2.2, two schema versions exist:
+//   0 (implicit) — pre-0.2.0 documents have no schemaVersion field.
+//                  Structure: { world, metadata }. No groups field in
+//                  world for pre-0.1.43 documents.
+//   1 (current)  — { schemaVersion: 1, world, metadata }. World may
+//                  have a groups field.
+//
+// The migration from 0 → 1 adds the schemaVersion field. Pre-0.1.43
+// worlds without a groups field are handled by World.fromJSON() which
+// already defaults to an empty groups array.
+//
+// Adding a future schema 2 means writing one migration function and
 // registering it — nothing else changes.
 const MIGRATIONS = new Map();
+
 // Register a migration from `fromVersion` to `fromVersion + 1`.
-// export function registerMigration(fromVersion, migrateFn) {
-//     MIGRATIONS.set(fromVersion, migrateFn);
-// }
-//
-// Pre-0.2.0 documents have no schemaVersion field. Treat them as
-// schema 1 (the format hasn't changed, we're just making the version
-// explicit). No structural transformation needed.
-// registerMigration(0, (json) => ({ ...json, schemaVersion: 1 }));
+export function registerMigration(fromVersion, migrateFn) {
+    MIGRATIONS.set(fromVersion, migrateFn);
+}
+
+// Schema 0 → 1: add the schemaVersion field. Pre-0.2.0 documents
+// have no schemaVersion; the structure is otherwise identical.
+registerMigration(0, (json) => ({
+    ...json,
+    schemaVersion: 1
+}));
+
 export const DocumentSchemaMigrator = Object.freeze({
     // Returns a new JSON object at DOCUMENT_SCHEMA_VERSION.
     // Never mutates the input.
@@ -34,17 +49,11 @@ export const DocumentSchemaMigrator = Object.freeze({
         let version = current.schemaVersion !== undefined
             ? current.schemaVersion
             : 0; // pre-0.2.0 documents have no schemaVersion
+
         // Walk the migration chain.
         while (version < DOCUMENT_SCHEMA_VERSION) {
             const migrateFn = MIGRATIONS.get(version);
             if (!migrateFn) {
-                // No registered migration — for schema 0 → 1, just add
-                // the field. Future gaps are hard errors.
-                if (version === 0) {
-                    current = { ...current, schemaVersion: 1 };
-                    version = 1;
-                    continue;
-                }
                 throw new Error(
                     `DocumentSchemaMigrator: no migration registered from schema ${version}`
                 );
@@ -54,6 +63,7 @@ export const DocumentSchemaMigrator = Object.freeze({
         }
         return current;
     },
+
     get currentVersion() {
         return DOCUMENT_SCHEMA_VERSION;
     }
