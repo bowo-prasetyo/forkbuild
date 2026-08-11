@@ -6,9 +6,9 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.43** — Advanced Selection, Grouping & Editing Surface Parity
+**Version 0.1.44** — Transform Parity & Group Gizmo Integration
 
-Groups are now first-class **document entities** (`core/Group`: id, name, brick references — flat, independent identity, no geometry). Every group mutation is a command, so groups inherit undo/redo, dirty tracking, persistence, replay, and restoration with zero special-casing. Copy/paste is group-aware (fully-selected groups travel as name + member indices — never ids), and the **Editor now has copy/paste parity** through the exact same use cases and `PasteBricksCommand` the World View uses — one clipboard implementation in the whole engine.
+The transformation architecture is now closed: every selection transform — single brick, multi-selection, or resolved group, from keyboard or gizmo gesture, in World View or Editor — flows through ONE path (`TransformSelectionUseCase` → exactly one `TransformSelectionCommand`). Groups never hold transforms: they define relationships, transforms modify members, and the transform layer never sees a `Group`. `MoveBrickCommand`/`RotateBrickCommand` are retired from production (kept registered to deserialize older histories).
 
 ## Features
 
@@ -30,6 +30,8 @@ Groups are now first-class **document entities** (`core/Group`: id, name, brick 
 - **Clipboard Copy/Paste** — Ctrl+C copies a multi-selection as pivot-relative intent (never ids); Ctrl+V pastes it as one atomic `Paste 3 Bricks` command with cascading offset, full undo/redo/replay/restore support, and automatic selection of the pasted bricks.
 - **Persistent Groups** — Flat named groups as document state, with create/delete/rename/add/remove/duplicate commands; full undo/replay/restore support and a World View group panel (group selection, select/add/rename/duplicate/delete).
 - **Editor Clipboard Parity** — Ctrl+C / Ctrl+V in the Editor reuse the World View clipboard machinery verbatim; group-aware copy/paste on both surfaces.
+- **Unified Transform Layer** — One transform path for every selection kind with pivot semantics (multi/group rotation orbits the selection bounds center), shared transform math, and no-op suppression across keyboard and gizmo gestures.
+- **Editor Transform Parity** — Arrow/Page-key nudges and R/Shift+R pivot rotation in the Editor through the exact same use case World View uses — no second transform implementation anywhere.
     
 ## Architecture
 
@@ -93,11 +95,12 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.40 Command Replay / Operation Timeline
 - [x] 0.1.41 Historical State Restoration
 - [x] 0.1.42 Document Duplication, Forking & Clipboard
-- [x] 0.1.43 Advanced Selection, Grouping & Editing Surface Parity
-- [ ] 0.1.44 Group Transforms & Gizmo Integration
-- [ ] 0.1.45 Nested Groups / Advanced Editing (optional)
-- [ ] 0.2 Blockchain publishing, multiplayer
-
+- [x] 0.1.43 Advanced Selection, Grouping & Editing Parity 
+- [x] 0.1.44 Transform Parity & Group Gizmo Integration 
+- [ ] 0.1.45 Advanced Selection / Editor Group Surface
+- [ ] 0.1.46 Nested Groups / Hierarchical Editing  (optional)
+- [ ] 0.2    Blockchain publishing, multiplayer
+      
 ## License
 
 Mozilla Public License Version 2.0
