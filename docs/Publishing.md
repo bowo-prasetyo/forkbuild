@@ -112,6 +112,26 @@ appends a new Publication record pointing at the same documentId —
 document identity stays stable, publication identity is fresh per
 publish.
 
+## Forking from World View (0.1.42)
+
+Fork is no longer Editor-only. WorldNavigationSession.forkDocument()
+forks the live loaded document through the same DocumentCloneService
+the storage-based ForkDocumentUseCase now delegates to: new document
+identity, fresh brick identities, "Fork of <title>", the current user
+as author, lineage via parentDocumentId — adopted as a fresh dirty
+session (rooted history, invalidated save point) that the user edits,
+saves, and eventually publishes as a NEW publication referencing the
+fork. The source document and its publications are never touched:
+
+    Document A ── Publication P1
+        │ fork
+        ▼
+    Document B ── (edit, save) ── Publication P2   (parentDocumentId → A)
+
+The three identity layers hold exactly as designed: document identity
+stable per creation, publication identity fresh per publish, blockchain
+identity (future) a third layer again.
+
 ## Future Directions
 
 - **SteemPublisherProvider**: posts document JSON as a Steem custom_json
