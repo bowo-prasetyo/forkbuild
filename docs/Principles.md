@@ -31,7 +31,7 @@ core/ — both its publisher and its only subscriber are already in
 application/. Same rule, different answer, because the question is
 always about who's actually listening, not a hardcoded default.
 
-A behavior with two surfaces needs one math source (0.1.46). When the
+A behavior with two surfaces needs one math source (0.1.47). When the
 keyboard and the pointer must produce identical results, they share one
 module — TransformMath — rather than each carrying its own copy. Parity
 should be a property of construction, not a bug class discovered later:
@@ -41,7 +41,7 @@ calculation, one pivot rule — every "where could this diverge?" gets
 answered by deleting the second copy, not by testing both harder.
 
 When a lower layer needs logic owned by a higher layer, inject it across
-the boundary — never import upward (0.1.46). renderer/ needed
+the boundary — never import upward (0.1.47). renderer/ needed
 TransformMath, which lives in application/; the use case that constructs
 the gizmo controller simply hands the module down as a collaborator. The
 renderer keeps its renderer -> core dependency direction, the math exists
@@ -50,17 +50,16 @@ that keeps "never import upward" livable — and if a second lower-layer
 consumer ever appears, the correct response is to lower the shared file
 into core/, still never to copy it.
 
-An active editing gesture owns the pointer (0.1.45 → 0.1.46). While a
-gesture is in flight — marquee selection, a gizmo drag, and any future
-begin/preview/commit gesture — camera controls, selection changes,
-hover updates, and tool shortcuts are suspended; only the gesture's own
-cancel (Escape) gets through. Input exclusivity is what keeps one
-pointer from driving two systems at once, and it generalizes to every
-future gesture without new machinery.
+Actions are not commands (0.1.50). An Editor Action describes an
+available user operation and may invoke session state changes, existing
+commands, or transient UI behavior. CommandHistory records only
+document/world mutations. The action layer must never become a second
+history or mutation system — some actions produce commands, most don't,
+and the registry itself touches neither CommandHistory nor the World.
 
-Session state never masquerades as document state (0.1.38 → 0.1.46).
-Preview transforms, gizmo hover/active handles, gesture pivots — all of
-it is session/render state. It may touch the live World transiently (a
-preview does), but it never enters CommandHistory and never serializes.
-The only thing a completed gesture leaves behind in history is exactly
-one command.
+One operation, one definition, every surface (0.1.50). If an operation
+exists in one editing surface, its definition — id, label, shortcut,
+availability rules — is shared by all of them through the
+EditorActionRegistry. Keyboard dispatch, the command palette, the
+sidebar, and the controls documentation all read the same metadata. A
+second shortcut table is a bug waiting to drift.
