@@ -1615,6 +1615,74 @@ it trivial. The Editor view does not host a timeline yet; the entire
 replay stack (kernel, use case, timeline projection) is view-agnostic and
 ready for it.
 
+Historical State Restoration (0.1.41)
+-------------------------------------
+0.1.41 completes the operation lifecycle — execute → persist → undo/redo
+→ replay → inspect → RESTORE. Restoration is the deliberately destructive
+sibling of the 0.1.40 preview: preview swaps visuals and never touches
+the document; restore replaces the document.
+
+**Restore is not undo.** Moving the old cursor backward would make
+restoration indistinguishable from ordinary undo and would keep the
+discarded future alive in the redo branch. Instead, restoration starts a
+NEW linear session: the restored state becomes baseline = B, commands = [],
+cursor = 0, save point INVALID. The linear history invariant stands —
+restoration never branches or reorders an existing line.
+
+**RestoreHistoryStateUseCase** (application/RestoreHistoryStateUseCase.js)
+performs the rebase. ReplayDocumentUseCase reconstructs the selected
+cursor into a standalone world — the replay system is the ONLY
+reconstruction path; nothing rewinds the live world. The use case then
+installs a new Document (reconstructed world + the original metadata)
+via DocumentManager.load() — which preserves loadedFrom — and calls
+markDirty(). The returned fresh CommandHistory is rooted at the restored
+world: the constructor baseline capture (0.1.40) makes "baseline =
+restored state" automatic. Replay runs first and is the only step that
+can fail before any mutation — an invalid cursor leaves everything
+untouched.
+
+**The save-point subtlety.** A rebased history with an empty command
+list would normally report CLEAN — but the storage still holds the
+pre-restore document; no cursor in the new history corresponds to what
+is on disk. CommandHistory therefore gained markUnsaved(), the mirror of
+markSaved(): it invalidates the save point without moving it, so
+isDirty() stays true until an explicit Save establishes the new save
+point at the rebased cursor. This must live in the history rather than
+being a manual DocumentManager.markDirty() alone because DocumentManager
+COMPUTES dirty from history.isDirty() on every command event (0.1.39) —
+a markDirty without a matching history state would be overwritten by the
+very next edit. Two free consequences: the restored document inherits
+dirty pinning against streaming unload (0.1.39), and Publish — which
+auto-saves when dirty (0.1.39) — publishes exactly the restored state.
+
+**WorldNavigationSession.restoreHistoryAt(cursor, documentId)**
+coordinates the boundary: run the use case; retire the old history to
+getRetiredHistories() (an inspectable session artifact — kept in memory,
+never persisted, never editable again); untrack the old history and
+track the new one on the per-document DocumentManager; rewire
+_loadedDocuments and _commandHistories (world id is unchanged — replay
+preserves identities — so map keys, the storage slot, and publication
+documentId references all stay valid); end any active preview for the
+document; swap the renderer from the old (or preview) world to the
+restored world under the REAL documentId; and clear
+selection/hover/inspection — they may reference bricks the restored
+state no longer contains. The renderer swap is safe despite shared brick
+ids between old and restored worlds: WorldRenderer.removeWorld() no-ops
+on brick ids with no registered meshes, and removal always precedes the
+restored world's addWorld().
+
+**UI discipline.** Preview stays non-destructive with Cancel unchanged.
+Restore is danger-styled ([Restore Here]) and always confirms — with an
+extra warning when unsaved changes would be replaced. Restoration cannot
+itself be undone; the retired history is the only record of the
+pre-restore session.
+
+**Deliberately not in 0.1.41.** Persisting retired histories (a
+"restoration ledger"), an Editor-view restore surface (the whole stack
+is view-agnostic and ready for it), and — still — any form of timeline
+editing. Operation Timeline remains observation, replay, and restoration;
+never history rewriting.
+
 Domain State vs Editor State
 
 Two kinds of state exist in ForkBuild, and they must never mix.
