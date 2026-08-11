@@ -5,6 +5,7 @@ import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import TransformFeedback from '../components/TransformFeedback.js';
 import AlignmentPanel from '../components/AlignmentPanel.js';
+import NumericTransformPanel from '../components/NumericTransformPanel.js';
 
 const DRAG_THRESHOLD_PX = 6;
 const NUDGE = 1;
@@ -19,9 +20,13 @@ const NUDGE = 1;
 // whenever 2+ bricks are selected in the Select tool. Clicks call
 // session.alignSelection(mode) / session.distributeSelection(axis) —
 // the view decides nothing about the geometry underneath.
+//
+// 0.1.49: the overlay gains a Transform section (NumericTransformPanel),
+// always visible, disabled when nothing is selected. One Apply forwards
+// one structured intent to session.applyNumericTransform.
 export default {
     name: 'WorldView',
-    components: { TransformFeedback, AlignmentPanel },
+    components: { TransformFeedback, AlignmentPanel, NumericTransformPanel },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -216,6 +221,11 @@ export default {
 
         function distributeSelection(axis) {
             session.distributeSelection(axis);
+            refreshSpatialUI();
+        }
+
+        function applyNumericTransform(intent, options) {
+            session.applyNumericTransform(intent, options);
             refreshSpatialUI();
         }
 
@@ -433,6 +443,7 @@ export default {
             focusSelection,
             alignSelection,
             distributeSelection,
+            applyNumericTransform,
             moveSelectedBrick,
             deleteSelectedBrick
         };
@@ -592,6 +603,14 @@ export default {
                         :selection-count="spatialSelection.count"
                         :align="alignSelection"
                         :distribute="distributeSelection"
+                    />
+                </div>
+
+                <div v-if="activeTool === 'select'" class="world-view-section">
+                    <h4>Transform</h4>
+                    <NumericTransformPanel
+                        :selection-count="spatialSelection ? spatialSelection.count : 0"
+                        :apply="applyNumericTransform"
                     />
                 </div>
 
