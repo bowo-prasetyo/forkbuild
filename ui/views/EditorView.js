@@ -112,7 +112,7 @@ export default {
 
         let onPointerDown = null;
         let onPointerMove = null;
-        let onKeyDown = null;
+        let  = null;
 
         onMounted(() => {
             // ALWAYS initialize the renderer first so _container is set.
@@ -160,6 +160,16 @@ export default {
                 if (modifierPressed && event.key.toLowerCase() === 's') {
                     event.preventDefault();
                     saveDocumentUseCase.execute(documentManager);
+                    return;
+                }
+                if (modifierPressed && event.key.toLowerCase() === 'c') {
+                    event.preventDefault();
+                    editorSession.copySelection();
+                    return;
+                }
+                if (modifierPressed && event.key.toLowerCase() === 'v') {
+                    event.preventDefault();
+                    editorSession.pasteClipboard();
                     return;
                 }
                 if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
