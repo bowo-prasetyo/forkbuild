@@ -496,3 +496,41 @@ Next: 0.1.51 Stability / Performance / Large-Document Hardening, then
 0.1.52 Protocol & Persistence Hardening, then 0.2 Publishing &
 Multiplayer. The editing kernel is complete and consolidated; the
 architecture has earned the hardening pass.
+
+**docs/Architecture.md** — add a section:
+
+Durable Documents & Publishing Boundary (0.2.0)
+
+The 0.2.0 milestone establishes the document as a durable, portable
+artifact that can safely cross the boundary from editor to outside world.
+
+Key components:
+- core/documentSchema.js — DOCUMENT_SCHEMA_VERSION constant
+- serializer/DocumentValidator.js — pure structural validation
+- serializer/DocumentSchemaMigrator.js — migration infrastructure
+- serializer/contentHash.js — deterministic content hash
+- publisher/PublishedSnapshot semantics — immutable, validated, versioned
+
+The serialization pipeline:
+    Document → toJSON() → schemaVersion + world + metadata
+    → DocumentSerializer.serialize()
+    → JSON string (canonical, deterministic)
+
+The deserialization pipeline:
+    JSON string → parse
+    → DocumentSchemaMigrator.migrate() (bring to current schema)
+    → DocumentValidator.validate() (structural check)
+    → DocumentSerializer.deserialize() → Document.fromJSON()
+
+The publishing pipeline:
+    Document → serialize → migrate → validate → hash
+    → store at snapshot:{snapshotId} (immutable)
+    → create Publication record with snapshotId, contentHash, schemaVersion
+
+Mutation isolation: published snapshots live at their own storage key,
+separate from the editable document. Editing and saving the source
+document cannot overwrite a published snapshot.
+
+Canonical serialization: serialize → deserialize → serialize produces
+byte-identical JSON. Property ordering is insertion-ordered (ES2015
+guarantee); array ordering follows Map insertion order.
