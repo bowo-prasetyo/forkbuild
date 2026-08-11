@@ -47,45 +47,76 @@
 0.1.44 Transform Parity & Group Gizmo Architecture  (done)
 0.1.45 Advanced Selection & Editor Group Surface  (done)
 0.1.46 Interactive Transform Gizmo & Viewport Editing Parity  (done)
-0.1.47 Editing UX / Alignment / Snapping
-0.1.48 Nested Groups / Hierarchical Editing  (optional)
+0.1.47 Transform Precision, Snapping & Editing Polish  (done)
+0.1.48 Alignment & Distribution Tools
+0.1.49 Numeric Transform Input / Precision Editing
+0.1.50 Editing UX Consolidation
 0.2    Blockchain publishing, multiplayer
 
-## 0.1.46 — What shipped
+Nested Groups / Hierarchical Editing — moved to OPTIONAL / post-0.2.
+The architecture has reached a very nice property: groups are useful
+without being hierarchical. There is no evidence yet that nesting is
+needed badly enough to justify the additional semantics, and the editing
+kernel should keep proving itself through precision and usability before
+any new structural axis is introduced.
 
-A renderer/UI milestone on top of the transform architecture completed in
-0.1.44 — no new domain entities, no new transform commands, no
-group-transform abstraction.
+## 0.1.47 — What shipped
 
-- renderer/TransformGizmoRenderer.js — purely visual: axis handles
-  (X/Y/Z), center free-move pad, Y-rotation ring, pivot marker, bounds
-  box, hover/active highlighting, camera-distance scaling.
-- renderer/TransformGizmoController.js — purely interactive: hit
-  testing, pointer down/move/up, active handle, gesture state, Escape
-  cancellation. Drives the existing gesture contract
-  (begin/preview/commit/cancelTransformGesture); never mutates World.
-- application/TransformMath.js — the single math source shared by
-  keyboard transforms, the gizmo's live preview, and the committed
-  command. Injected into the renderer controller by the render use
-  cases, so renderer/ never imports application/.
-- application/TransformGizmoUseCase.js — selection -> { pivot, bounds }
-  presentation decision, shared by Editor and World View.
-- Gizmo wiring in RenderWorldUseCase / RenderWorldViewUseCase,
-  EditorSession, WorldNavigationSession, EditorView, WorldView —
-  one shared gizmo design feeding one gesture contract in both views.
-- CameraController.setEnabled() — an active gesture freezes the camera.
-- tests/InteractiveGizmo.test.js — visibility, pivot, axis constraints,
-  shared-math rotation, preview-without-history, one-command commit,
-  Escape cancel, no-op discipline, membership invariance, undo/redo,
-  serialized replay, and Editor/World View parity.
+Precision and predictability for the existing transform system. No new
+entities, no new transform commands, no scale, no second gizmo —
+snapping is a pure application-layer interpretation of the gestures the
+0.1.38–0.1.46 architecture already runs.
 
-Deliberately deferred to 0.1.47+: snapping, alignment guides,
-distribution, drag-duplication, scale handles (scale has no settled
-domain semantics yet), and a generic GestureManager (the
-begin/preview/commit lifecycle is already shared; no abstraction was
-needed yet).
+- application/TransformSnap.js — pure snap math. Snaps the GESTURE
+  DELTA (never absolute positions), once per frame from the gesture
+  origin (never an already-snapped value), after axis-constraint
+  resolution, identically for every selection member. Floating-point
+  hygiene included so snapped values are stable in commands, replay
+  comparisons, and the feedback readout.
+- application/TransformSettings.js — session/application preferences:
+  snappingEnabled, translationSnap (1, matching the placement grid),
+  rotationSnap (15°), precisionMultiplier (0.1). NOT document state,
+  never serialized, protocol untouched.
+- SpatialEditingService — the gesture transaction is now the single
+  home of snapping: preview/commit snap the raw gesture against
+  TransformSettings, with modifier-driven precision (Shift) applied per
+  frame. Keyboard selection transforms (moveSelection/rotateSelection)
+  are routed through the same transaction as instantaneous gestures, so
+  keyboard and gizmo emit byte-identical transform-selection commands.
+  Transient gesture feedback (snapped transform + effective increments
+  + precision flag) exposed via getGestureFeedback().
+- TransformGizmoController — forwards raw gesture values AND modifier
+  state into the transaction; reads the feedback blob back out for the
+  overlay. The controller decides nothing about snapping — geometry
+  (axis planes) stays renderer-side, interpretation stays
+  application-side.
+- ui/components/TransformFeedback.js — transient overlay: mode/axis,
+  effective snap increment, precision tag, and the snapped Δ readout
+  ("Move X • Grid 1 / Δ +3", "Rotate Y • 15° (precision) / Δ +13.5°").
+  Self-contained inline styles; no persistent HUD system.
+- EditorSession / WorldNavigationSession / EditorView / WorldView —
+  modifier plumbing into the transaction, feedback plumbing up to the
+  overlay, keyboard nudges/rotations forwarding Shift for precision.
+- tests/TransformSnapping.test.js — snap tables (positive, negative,
+  rotation), precision increments, multi-selection preservation,
+  constraint-before-snap ordering, gesture-origin semantics, preview
+  stability / no cumulative rounding, disabled-snapping pass-through,
+  no-op discipline, one-command commits, undo/redo, byte-equivalent
+  replay, membership invariance, Editor/World parity, and the flagship
+  keyboard/gizmo parity (keyboard +3 === gizmo drag snapped to +3;
+  keyboard 90° === gizmo drag snapped to 90°).
+- tests/InteractiveGizmo.test.js — updated to snap-aligned drag end
+  points; all 0.1.46 semantics unchanged.
 
-Deliberately not next: nested groups. 0.1.47 is a polish/precision
-milestone; 0.1.48 (nested groups / hierarchical editing) remains
-optional until the interactive kernel proves it deserves that
-complexity.
+Deliberately rejected in 0.1.47: scale (still no domain semantics),
+nested groups, alignment commands (a new interaction family — that is
+0.1.48), persistent/grid settings in the document protocol, transform
+history redesign, new transform commands, a generic GestureManager,
+direct numeric entry (0.1.49, deliberately), and group-specific
+snapping (groups remain resolved selections).
+
+The milestone's property, stated plainly: at 0.1.46 the engine proved
+"the editing architecture works"; at 0.1.47 it proves "the editing
+architecture is precise enough to trust." 0.1.48 (Alignment &
+Distribution) will build higher-level operations on this same
+selection → transform architecture rather than inventing another one.
