@@ -1,38 +1,39 @@
 import * as THREE from 'three';
 
-// Interaction half of the interactive transform gizmo (0.1.46).
-// Hit testing, pointer down/move/up, the active handle, gesture state,
-// cancellation — nothing else. This class never mutates the World and
-// never creates a command. It drives the gesture contract:
+// Interaction half of the interactive transform gizmo (0.1.46; updated
+// 0.1.47). Hit testing, pointer down/move/up, the active handle, gesture
+// state, and cancellation — nothing else. This class never mutates the
+// World, never creates commands, and — as of 0.1.47 — never interprets
+// snapping either.
+//
+// The 0.1.47 division of labor, stated where the code lives:
+//
+//   TransformGizmoController  — "the user produced approximately 13.7
+//                                degrees of rotation, and Shift is held"
+//   SpatialEditingService     — "that gesture, under the current
+//                                TransformSettings, is a 15-degree
+//                                rotation" (or 1.5-degree precision, or
+//                                unsnapped — the controller neither knows
+//                                nor cares)
+//
+// Concretely, the controller forwards raw gesture transforms AND the
+// current modifier state through the gesture contract:
 //
 //   beginTransformGesture(selection, { mode, axis })
-//   previewTransformGesture(selection, transform)   x N, no history
-//   commitTransformGesture(selection, transform)    ONE command
-//   cancelTransformGesture(selection)               no command
+//   previewTransformGesture(selection, transform, { modifiers })  x N
+//   commitTransformGesture(selection, transform, { modifiers })
+//   cancelTransformGesture(selection)
 //
-// implemented by SpatialEditingService today (and by any future
-// TransformSelectionUseCase — the contract is the point). The lifecycle
-// therefore stays exactly the 0.1.38 discipline:
+// and reads the service's getGestureFeedback() after each frame, passing
+// that opaque blob straight back to the caller for the transient
+// overlay. Exactly one TransformSelectionCommand per completed gesture,
+// no commands during preview, Escape cancels, no-movement commits
+// nothing — all unchanged since 0.1.38/0.1.46, now with snapped deltas
+// computed centrally in the application layer.
 //
-//   pointer down -> begin gesture -> live preview x N -> pointer up
-//       -> restore original state -> ONE TransformSelectionCommand
-//
-// Escape mid-drag cancels; a drag with no effective movement commits
-// nothing (commitTransformGesture rejects transform-equal no-ops).
-//
-// All transform math comes from the injected transformMath module
-// (application/TransformMath) — the SAME definitions the keyboard path
-// and the final command use, so what you see while dragging is exactly
-// what gets committed. This file owns only the raycasting that turns
-// pointer positions into points on drag planes.
-//
-// Exclusivity (generalizing the 0.1.45 marquee rule — an active editing
-// gesture temporarily owns the pointer): on drag start the controller
-// disables the camera controls via controlsEnabler, so orbit/pan/zoom
-// are frozen; selection is frozen because the controller keeps the
-// selection object captured at pointer-down and ignores external
-// changes until the gesture ends; controls are re-enabled on commit or
-// cancel.
+// Exclusivity is unchanged: on drag start the controller disables the
+// camera controls via controlsEnabler, keeps the selection captured at
+// pointer-down, and restores everything on commit or cancel.
 const MINIMUM_TRANSLATION = 0.001;
 const MINIMUM_ROTATION_DEGREES = 0.1;
 const AXIS_VECTORS = {
@@ -79,9 +80,9 @@ export class TransformGizmoController {
     }
 
     // ------------------------------------------------------ pointer input
-    // All three return a consumed flag/shape so sessions can decide
-    // whether the rest of the input pipeline (tools, hover, camera)
-    // still gets the event.
+    // modifiers ({ ctrl, shift, alt, meta }) travel with move/up so the
+    // gesture transaction can apply precision mode per frame. The
+    // controller attaches no meaning to them beyond forwarding.
 
     onPointerDown(screenX, screenY, selection) {
         if (!this._gestureService || this._drag || !this._gizmoRenderer.visible) {
@@ -119,13 +120,18 @@ export class TransformGizmoController {
         return true;
     }
 
-    onPointerMove(screenX, screenY, selection) {
+    onPointerMove(screenX, screenY, selection, modifiers = null) {
         if (this._drag) {
             const transform = this._calculateDragTransform(screenX, screenY);
             if (transform) {
                 this._drag.moved = true;
-                this._gestureService.previewTransformGesture(this._selection, transform);
+                this._gestureService.previewTransformGesture(this._selection, transform, { modifiers });
                 if (transform.translation) {
+                    // The gizmo follows the RAW pointer delta; the bricks
+                    // follow the snapped delta. Watching the handle track
+                    // the pointer while bricks step between snap positions
+                    // is the standard affordance (Blender, Unity) and it
+                    // keeps the pivot honest.
                     this._gizmoRenderer.setPivot({
                         x: this._drag.pivot.x + transform.translation.x,
                         y: this._drag.pivot.y + transform.translation.y,
@@ -133,21 +139,21 @@ export class TransformGizmoController {
                     });
                 }
             }
-            return { consumed: true, hovered: false };
+            return { consumed: true, hovered: false, feedback: this._readGestureFeedback() };
         }
         if (!this._gestureService || !this._gizmoRenderer.visible || !selection || selection.isEmpty) {
-            return { consumed: false, hovered: false };
+            return { consumed: false, hovered: false, feedback: null };
         }
         const handleId = this._pickHandle(screenX, screenY);
         this._gizmoRenderer.setHover(handleId);
         this._setCursor(handleId ? 'grab' : '');
-        return { consumed: false, hovered: handleId !== null };
+        return { consumed: false, hovered: handleId !== null, feedback: null };
     }
 
     // Returns null when nothing was dragged (not consumed), otherwise
-    // { consumed: true, committed } — committed is whether the gesture
-    // produced a history entry (false for exact no-op drags).
-    onPointerUp(screenX, screenY, selection) {
+    // { consumed: true, committed, feedback: null } — feedback is null on
+    // purpose: the gesture is over, and the views clear their overlay.
+    onPointerUp(screenX, screenY, selection, modifiers = null) {
         if (!this._drag) {
             return null;
         }
@@ -155,9 +161,9 @@ export class TransformGizmoController {
             || (this._drag.mode === 'rotate'
                 ? { rotation: 0 }
                 : { translation: { x: 0, y: 0, z: 0 } });
-        const committed = this._gestureService.commitTransformGesture(this._selection, transform);
+        const committed = this._gestureService.commitTransformGesture(this._selection, transform, { modifiers });
         this._endDrag();
-        return { consumed: true, committed: committed === true };
+        return { consumed: true, committed: committed === true, feedback: null };
     }
 
     onKeyDown(keyEvent, selection) {
@@ -191,10 +197,11 @@ export class TransformGizmoController {
         this._setCursor('');
     }
 
-    // Turns the current pointer position into the gesture transform for
-    // the active handle. All math goes through transformMath — the same
-    // module the keyboard path uses. Sub-threshold jitter collapses to
-    // an exact zero delta so a click-release cannot produce a command.
+    // Raw drag transform — deliberately UNSNAPPED. Axis constraint
+    // happens here (it is geometry: which plane/line the handle drags
+    // in); snapping happens in the gesture transaction (it is gesture
+    // interpretation). Sub-threshold jitter collapses to an exact zero
+    // delta so a click-release cannot produce a command.
     _calculateDragTransform(screenX, screenY) {
         if (!this._drag) {
             return null;
@@ -221,6 +228,16 @@ export class TransformGizmoController {
         return { translation };
     }
 
+    // Opaque pass-through: the service builds the feedback blob (snapped
+    // transform, effective increments, precision flag); the controller
+    // merely hands it upward without reading its contents.
+    _readGestureFeedback() {
+        if (this._gestureService && typeof this._gestureService.getGestureFeedback === 'function') {
+            return this._gestureService.getGestureFeedback();
+        }
+        return null;
+    }
+
     _pickHandle(screenX, screenY) {
         this._raycaster.setFromCamera(this._toNdc(screenX, screenY), this._camera);
         const intersections = this._raycaster.intersectObjects(this._gizmoRenderer.getHandleMeshes(), false);
@@ -234,9 +251,6 @@ export class TransformGizmoController {
     //   axis handles  — the camera-facing plane containing that axis
     //   free handle   — the horizontal plane through the pivot
     //   rotate handle — the horizontal plane through the pivot
-    // For axis handles the returned point is then projected onto the
-    // axis by transformMath at the caller, which is what constrains the
-    // movement to the axis.
     _projectDragPoint(screenX, screenY, handleId, pivot) {
         this._raycaster.setFromCamera(this._toNdc(screenX, screenY), this._camera);
         const pivotVector = new THREE.Vector3(pivot.x, pivot.y, pivot.z);
@@ -247,8 +261,6 @@ export class TransformGizmoController {
             const viewDirection = this._raycaster.ray.direction;
             let normal = new THREE.Vector3().crossVectors(axis, viewDirection);
             if (normal.lengthSq() < DEGENERATE_EPSILON) {
-                // Camera looking along the drag axis — any perpendicular
-                // plane is as good as any other in this degenerate case.
                 normal = Math.abs(axis.y) < 0.9
                     ? new THREE.Vector3().crossVectors(axis, AXIS_VECTORS.y)
                     : new THREE.Vector3().crossVectors(axis, AXIS_VECTORS.x);
