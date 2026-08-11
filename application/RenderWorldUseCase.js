@@ -1,25 +1,34 @@
+=== FILE: ./application/RenderWorldUseCase.js ===
 import { Renderer } from '../renderer/Renderer.js';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
 import { PickingService } from '../renderer/PickingService.js';
 import { SelectionRenderer } from '../renderer/SelectionRenderer.js';
 import { PreviewRenderer } from '../renderer/PreviewRenderer.js';
+import { TransformGizmoRenderer } from '../renderer/TransformGizmoRenderer.js';
+import { TransformGizmoController } from '../renderer/TransformGizmoController.js';
+import { TransformMath } from './TransformMath.js';
 
 // Wires the rendering pipeline up to a container element, the domain
 // EventBus, and the editor EventBus, then starts it. Also wires up
-// PickingService, SelectionRenderer, and (as of 0.1.13) PreviewRenderer —
-// all against the same camera/canvas/MeshRegistry the renderer already
-// built. The caller gets pick(screenX, screenY),
-// pickGround(screenX, screenY), pickRectangle(...) (0.1.45 marquee
-// containment) and setControlsEnabled(...) (0.1.45 camera gating during
-// marquee gestures) on the returned handle and never needs to know
-// Renderer, WorldRenderer, or Three.js exist.
+// PickingService, SelectionRenderer, PreviewRenderer, and — as of 0.1.46
+// — the interactive transform gizmo, all against the same
+// camera/canvas/MeshRegistry the renderer already built. The caller gets
+// pick(screenX, screenY), pickGround(screenX, screenY), and a narrow
+// gizmo surface on the returned handle and never needs to know Renderer,
+// WorldRenderer, or Three.js exist.
+//
+// Gizmo wiring, 0.1.46: gestureService implements the gesture contract
+// (begin/preview/commit/cancelTransformGesture + getSelectionBounds) —
+// the EditorSession's SpatialEditingService today. TransformMath is
+// injected into the controller here so renderer/ never imports
+// application/ — the use case hands the shared math down, keeping the
+// renderer -> core dependency direction intact.
 export class RenderWorldUseCase {
-    execute(container, eventBus, registry, editorEventBus) {
+    execute(container, eventBus, registry, editorEventBus, { gestureService = null } = {}) {
         const renderer = new Renderer(container);
         const worldRenderer = new WorldRenderer(renderer, registry);
         worldRenderer.subscribe(eventBus);
         renderer.start();
-
         const pickingService = new PickingService(
             renderer.camera,
             renderer.domElement,
@@ -29,13 +38,33 @@ export class RenderWorldUseCase {
         selectionRenderer.subscribe(editorEventBus);
         const previewRenderer = new PreviewRenderer(renderer);
         previewRenderer.subscribe(editorEventBus);
-
+        const transformGizmoRenderer = new TransformGizmoRenderer(renderer);
+        const transformGizmoController = new TransformGizmoController({
+            camera: renderer.camera,
+            domElement: renderer.domElement,
+            gizmoRenderer: transformGizmoRenderer,
+            gestureService,
+            controlsEnabler: renderer.cameraController,
+            transformMath: TransformMath
+        });
         return {
             pick: (screenX, screenY) => pickingService.pick(screenX, screenY),
             pickGround: (screenX, screenY) => pickingService.pickGroundPosition(screenX, screenY),
-            pickRectangle: (x0, y0, x1, y1) => pickingService.pickInRectangle(x0, y0, x1, y1),
-            setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
+            showGizmo: (pivot, bounds) => transformGizmoController.show(pivot, bounds),
+            hideGizmo: () => transformGizmoController.hide(),
+            gizmoPointerDown: (screenX, screenY, selection) =>
+                transformGizmoController.onPointerDown(screenX, screenY, selection),
+            gizmoPointerMove: (screenX, screenY, selection) =>
+                transformGizmoController.onPointerMove(screenX, screenY, selection),
+            gizmoPointerUp: (screenX, screenY, selection) =>
+                transformGizmoController.onPointerUp(screenX, screenY, selection),
+            gizmoKeyDown: (keyEvent, selection) =>
+                transformGizmoController.onKeyDown(keyEvent, selection),
+            cancelGizmoGesture: () => transformGizmoController.cancelGesture(),
+            isGizmoDragging: () => transformGizmoController.isDragging,
             dispose() {
+                transformGizmoController.dispose();
+                transformGizmoRenderer.dispose();
                 previewRenderer.unsubscribe();
                 selectionRenderer.unsubscribe();
                 worldRenderer.unsubscribe();
