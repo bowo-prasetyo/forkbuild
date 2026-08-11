@@ -6,9 +6,9 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.40** — Command Replay & Operation Timeline
+**Version 0.1.41** — Historical State Restoration
 
-The persistent command history is now a genuine event/operation model. Every CommandHistory captures a **baseline snapshot** of the world it was created against, and `replay()` deterministically reconstructs any intermediate document state by re-executing **deserialized** commands through the CommandRegistry — never the live command objects, and never touching the history itself. World View gains an **Operation Timeline**: composites appear as single entries, clicking any operation previews the world exactly as it existed at that point, scrubbing back and forth is non-destructive, and Cancel returns to the untouched live document.
+The operation lifecycle is now complete: execute → persist → undo/redo → replay → inspect → **restore**. From the Operation Timeline, any historical state can be previewed non-destructively and then explicitly committed as the new live document. Restoration rebuilds the selected state through the replay system, rebases editing onto a fresh command history rooted there (dirty until explicitly saved), and retires the old history as an inspectable artifact — undo/redo never reach into the discarded future, and no command is ever duplicated.
 
 ## Features
 
@@ -25,6 +25,7 @@ The persistent command history is now a genuine event/operation model. Every Com
 - **Composite Commands** — Multi-brick operations execute, rollback on child failure, and undo/redo as a single atomic step.
 - **World View Save & Publish** — Save the active world (button or Ctrl/Cmd+S) and publish it with automatic save-first when dirty. Per-world dirty indicators; dirty worlds are never stream-unloaded.
 - **Command Replay & Operation Timeline** — Deterministic reconstruction of any historical world state from the persistent command history (baseline snapshot + serialized command re-execution, transactional and history-suppressed). Timeline panel in World View with click-to-preview, composite-aware entries, undone-state awareness, and non-destructive cancel.
+- **Historical State Restoration** — Commit any previewed timeline state as the current document via an explicit, confirmed destructive action: replay-based reconstruction, rebased history with save-point invalidation (dirty until saved), retired-history artifacts, and full save/publish compatibility.
 
 ## Architecture
 
@@ -86,10 +87,8 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.38 Transform Gizmo & Group Pivot
 - [x] 0.1.39 World View Persistence & Publication UI
 - [x] 0.1.40 Command Replay / Operation Timeline
-- [ ] 0.1.41 Advanced Selection & Grouping
-- [ ] 0.2 Blockchain publishing, multiplayer
-- [ ] 0.1.40 Command Replay / Operation Timeline
-- [ ] 0.1.41 Advanced Selection & Grouping
+- [x] 0.1.41 Historical State Restoration
+- [ ] 0.1.42 Advanced Selection & Grouping
 - [ ] 0.2 Blockchain publishing, multiplayer
 
 ## License
