@@ -6,20 +6,21 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.49** — Numeric Transform Input
+**Version 0.1.50** — Editing UX Consolidation & Command Surface
 
-Exact numeric translation and Y-rotation are now first-class inputs. Enter a value, choose Absolute (target for the selection pivot) or Offset (plain delta), press Apply — and the existing transform pipeline commits exactly one `TransformSelectionCommand`, indistinguishable from what an equivalent keyboard nudge or gizmo drag would produce. Numeric input bypasses gesture snapping: explicit intent is respected literally. The editing kernel now has five input sources — keyboard, gizmo, alignment, distribution, numeric — all terminating in the same command.
+The 0.1.42–0.1.49 editing kernel is now one coherent product surface. Every operation — selection, groups, clipboard, transform, alignment, distribution, numeric input, history — is defined once in the EditorActionRegistry and reachable three ways: keyboard shortcuts, the Ctrl/Cmd+K command palette, and the consolidated editing sidebar, identically in the Editor and the World View. Disabled operations explain why ("Select at least 2 bricks", "Clipboard is empty"), Escape follows one explicit priority chain, and transient feedback reports what just happened. No new commands, no new domain model — the action layer sits entirely above the kernel.
 
 ## Features
 
-- **Editor** — Place, select (single, multi, group), move, and rotate bricks with the keyboard, the interactive gizmo, or exact numeric input; full undo/redo.
-- **Numeric Transform Input (0.1.49)** — Enter exact translation and rotation values for the current selection, with absolute/relative positioning, exact undo/redo, and parity with keyboard and gizmo transforms.
-- **Alignment & Distribution (0.1.48)** — Align selected bricks by world-axis edges or centers and distribute three or more bricks evenly along X/Y/Z, using the unified transform command path with exact undo/redo.
-- **Transform Precision (0.1.47)** — Grid/increment snapping for translation and rotation, Shift-held precision mode, and identical snapping for keyboard and pointer in both views.
-- **Interactive Transform Gizmo (0.1.46)** — Axis handles, free-move pad, and rotation ring with live preview, commit-on-release, Escape-to-cancel, and one undo step per drag — identical in the Editor and the World View.
-- **Groups (0.1.43)** — Group selections resolve to member bricks; every transform (keyboard, gizmo, alignment, distribution, numeric) leaves membership untouched.
-- **Advanced Selection (0.1.40/0.1.45)** — Click, Ctrl/Cmd/Shift-click toggle, and marquee selection.
-- **Command Replay / Operation Timeline (0.1.39)** — Editing sessions persist as serialized command histories that replay exactly.
+- **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
+- **Numeric Transform Input (0.1.49)** — Exact translation and rotation values with absolute/relative modes, bypassing gesture snapping.
+- **Alignment & Distribution (0.1.48)** — Nine world-axis alignment operations and even center distribution along X/Y/Z, through the unified transform command path.
+- **Transform Precision (0.1.47)** — Grid/increment snapping with Shift precision mode, identical for keyboard and pointer.
+- **Interactive Transform Gizmo (0.1.46)** — Axis handles, free-move pad, rotation ring; one undo step per drag; identical in both views.
+- **Groups (0.1.43)** — Create, rename, duplicate, delete; selections resolve to member bricks and transforms never touch membership.
+- **Clipboard (0.1.42)** — Copy/paste selections through the command path.
+- **Editor** — Place, select (single/multi/marquee), move, rotate, delete, undo/redo, grid snapping, placement preview.
+- **Command Replay / Operation Timeline (0.1.39)** — Serialized command histories that replay exactly.
 - **Brick Palette** — Core library with dimension-aware definitions (cube, slope, plate, window).
 - **Persistence** — Save and load documents via localStorage with a document manifest.
 - **Identity** — Local username-based identity provider; author attribution on documents and publications.
@@ -32,26 +33,31 @@ Exact numeric translation and Y-rotation are now first-class inputs. Enter a val
 ForkBuild is layered as **core / application / renderer / ui**, with infrastructure adapters (storage, publisher, discovery, serializer, world-layout) surrounding them.
 
 - **core/** — Pure domain model: World, Building, Brick, events. No Three.js, no Vue.
-- **application/** — Use cases, editor state, commands, tool framework, the transform gesture transaction, shared transform math (TransformMath, TransformSnap, TransformAlignment, TransformInput), and the command subsystem (CommandHistory, CommandRegistry).
+- **application/** — Use cases, editor state, commands, the transform gesture transaction, shared transform math, and the command subsystem (CommandHistory, CommandRegistry). As of 0.1.50 also the EditorActionRegistry / EditorActionContext / InputRouter action layer — above the kernel, never inside it.
 - **renderer/** — Three.js incremental renderer, picking, camera, overlay layers, and the interactive transform gizmo.
 - **ui/** — Vue 3 Composition API views and components.
 
-The transform pipeline, end to end — five input sources, one command:
+The editing stack, end to end:
 
 ```
-Selection ── keyboard / gizmo / align / distribute / numeric
+Command Palette / Sidebar / Shortcuts
 │
 ▼
-gesture service (one transaction, one math source)
+EditorActionRegistry (actions — not commands)
 │
 ▼
-TransformSelectionCommand — exactly one per operation
+Existing Sessions
+│
+┌─────────────┼─────────────┐
+▼ ▼ ▼
+Selection Transform Groups/Clipboard
+│ │ │
+└─────────────┼─────────────┘
+▼
+Existing Commands
 │
 ▼
 CommandHistory
-│
-▼
-World
 ```
 
 See [docs/Architecture.md](docs/Architecture.md) for the full architectural overview and [docs/user/](docs/user/README.md) for how-to guides.
@@ -61,15 +67,16 @@ See [docs/Architecture.md](docs/Architecture.md) for the full architectural over
 - [docs/Architecture.md](docs/Architecture.md) — engine architecture, layer rules, milestone notes.
 - [docs/Roadmap.md](docs/Roadmap.md) — milestone roadmap.
 - [docs/Protocol.md](docs/Protocol.md) — the ForkBuild Protocol.
-- [docs/user/README.md](docs/user/README.md) — user guides, including the [Controls Reference](docs/user/ControlsReference.md) and the [Interactive Transform Gizmo guide](docs/user/InteractiveTransformGizmo.md).
+- [docs/Principles.md](docs/Principles.md) — engineering principles, including "Actions are not commands".
+- [docs/user/README.md](docs/user/README.md) — user guides, including the [Controls Reference](docs/user/ControlsReference.md) (generated from the action registry) and the [Interactive Transform Gizmo guide](docs/user/InteractiveTransformGizmo.md).
 
 ## Quick Start
 
-Open `index.html` in a modern browser. No build step is required.
+Open `index.html` in a modern browser. No build step is required. Press **Ctrl/Cmd+K** in the Editor or World View to open the command palette.
 
 ## Roadmap
 
-- [x] 0.1.1 – 0.1.38 — engine foundations through Transform Gizmo & Group Pivot (see docs/Roadmap.md for the full list)
+- [x] 0.1.1 – 0.1.38 — engine foundations through Transform Gizmo & Group Pivot (see docs/Roadmap.md)
 - [x] 0.1.39 Command Replay / Operation Timeline
 - [x] 0.1.40 Advanced Selection & Grouping
 - [x] 0.1.41 Unified Transform Architecture
@@ -81,10 +88,12 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.47 Transform Precision, Snapping & Editing Polish
 - [x] 0.1.48 Alignment & Distribution Tools
 - [x] 0.1.49 Numeric Transform Input
-- [ ] 0.1.50 Editing UX Consolidation
+- [x] 0.1.50 Editing UX Consolidation & Command Surface
+- [ ] 0.1.51 Stability / Performance / Large-Document Hardening
+- [ ] 0.1.52 Protocol & Persistence Hardening
 - [ ] 0.2 Blockchain publishing, multiplayer
 
-Nested Groups remains optional / post-0.2.
+Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
 ## License
 
