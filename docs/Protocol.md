@@ -251,3 +251,23 @@ domain. Domain classes never see old-format envelopes.
 Pre-0.2.0 documents have no schemaVersion field. The migrator treats
 them as schema 0 and adds the field. Pre-0.1.43 worlds have no groups
 field; World.fromJSON() defaults to an empty groups array.
+
+## Publication Lifecycle (0.2.3)
+
+A Publication is an immutable, validated, versioned snapshot of a
+Document. It carries:
+- id: the publication/snapshot identity
+- documentId: the editable document it was published from
+- contentHash: FNV-1a hash of the canonical JSON for integrity
+- schemaVersion: the document envelope schema at publish time
+- publishedAt, author, providerId: publication metadata
+
+The snapshot is stored separately from the editable document. Editing
+and saving the source document does not modify any existing publication.
+Publishing again creates a new publication with a new snapshot.
+
+Unpublishing removes the publication and its snapshot. The editable
+document remains intact.
+
+Publication is pure data. It has no editing capability, no commands,
+and no document mutation. It describes what was published and when.
