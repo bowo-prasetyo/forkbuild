@@ -6,11 +6,16 @@ import { RotateBrickCommand } from './commands/RotateBrickCommand.js';
 import { CompositeCommand } from './commands/CompositeCommand.js';
 import { TransformSelectionCommand } from './commands/TransformSelectionCommand.js';
 import { PasteBricksCommand } from './commands/PasteBricksCommand.js';
+import { CreateGroupCommand } from './commands/CreateGroupCommand.js';
+import { DeleteGroupCommand } from './commands/DeleteGroupCommand.js';
+import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
+import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
+import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
+import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
 // nothing about CommandHistory or serialization changes to pick them up.
-// Mirrors CreateBrickRegistryUseCase and CreateToolRegistryUseCase.
 export class CreateCommandRegistryUseCase {
     execute() {
         const registry = new CommandRegistry();
@@ -21,6 +26,14 @@ export class CreateCommandRegistryUseCase {
         registry.register('composite', CompositeCommand);
         registry.register('transform-selection', TransformSelectionCommand);
         registry.register('paste-bricks', PasteBricksCommand);
+        // 0.1.43 — group commands. Groups inherit undo/redo, persistence,
+        // replay, and restoration with no changes to those systems.
+        registry.register('create-group', CreateGroupCommand);
+        registry.register('delete-group', DeleteGroupCommand);
+        registry.register('rename-group', RenameGroupCommand);
+        registry.register('add-to-group', AddToGroupCommand);
+        registry.register('remove-from-group', RemoveFromGroupCommand);
+        registry.register('duplicate-group', DuplicateGroupCommand);
         return registry;
     }
 }
