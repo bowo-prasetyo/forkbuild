@@ -1896,6 +1896,69 @@ editing entry point; the overlay gains a Groups panel.
 marquee selection, Editor group UI, and cross-document group semantics
 beyond what the id-free clipboard already makes possible.
 
+Transform Parity & Group Gizmo Integration (0.1.44)
+---------------------------------------------------
+0.1.44 closes the transformation architecture: one path, one command,
+and no group-specific transform commands — ever.
+
+**One transform path.** Every selection transform routes through
+TransformSelectionUseCase (application/TransformSelectionUseCase.js):
+keyboard nudges, pivot rotations, gizmo gesture commits, single bricks,
+multi-selections, and resolved groups all become exactly ONE
+TransformSelectionCommand in history. The use case accepts a Document
+or a bare World (sessions hold documents; tools hold worlds), resolves
+the selection's member bricks, computes absolute post-transforms
+relative to the selection pivot (bounds center), suppresses no-ops
+(calculated == current executes nothing), and executes the command.
+
+**TransformSelectionCommand IS the generalized transform command** —
+the role a "TransformBricksCommand" would play: worldId + per-brick
+absolute transforms + a serialized before-snapshot, atomic at any
+selection size, replay- and restore-friendly. There is deliberately no
+MoveGroupCommand / RotateGroupCommand / ScaleGroupCommand: a group
+transform is just a transform of its resolved members. Consequently
+MoveBrickCommand and RotateBrickCommand are retired from PRODUCTION —
+no surface creates them anymore — but remain registered in
+CreateCommandRegistryUseCase so pre-0.1.44 persisted histories still
+deserialize.
+
+**Groups define relationships; transforms modify members.** The
+transform layer never sees a Group. Group selection is resolved into an
+ordinary SpatialSelectionState by WorldNavigationSession.selectGroup()
+(0.1.43) before any transform; the gizmo and keyboard operate on that
+selection only; membership is untouched by transforms (verified by
+test). The gizmo doesn't need to know groups exist — exactly the
+separation 0.1.43's flat model was designed to enable.
+
+**Shared math.** application/TransformMath.js holds the pure formulas
+(Y-axis rotation about a pivot + translation, rotation-then-
+translation order — the 0.1.38 order), used by both the use case and
+the gizmo's live preview, so no two paths can disagree about what a
+transform means.
+
+**SpatialEditingService rerouted.** moveSelection/rotateSelection and
+single-brick moveBrick/rotateBrick delegate to the use case; pivot
+semantics mean multi/group rotation now orbits the group pivot while
+single-brick rotation is unchanged (its pivot is its own center).
+Gizmo commit restores the pre-gesture state and then commits through
+the same use case — live preview between begin/commit still mutates
+the world directly without commands, exactly as since 0.1.38, and the
+0.1.38 gizmo tests pass unchanged. Deletion is not a transform:
+deleteSelection/deleteBrick remain composites of DeleteBrickCommand.
+
+**Editor parity.** SelectionTool gained arrow/Page-key nudges and
+R/Shift+R rotation, calling the same TransformSelectionUseCase World
+View uses (wired into toolContext by EditorSession) — the first Editor
+transform surface, built with zero second implementation. The
+pointer-driven gizmo OVERLAY (drag handles in the viewport) remains
+future renderer surface work (0.1.45); 0.1.44 closed the command/use-
+case layer beneath it.
+
+**Not in 0.1.44.** Nested groups, group locking/visibility, marquee
+selection, an Editor group panel, scale (the domain has no scale), and
+cross-document transform semantics — each a separate architectural
+decision, each building on this closed layer.
+
 Publication vs Document vs Location
 
 Three distinct abstractions, kept strictly separate:
