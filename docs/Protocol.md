@@ -238,6 +238,7 @@ As of 0.2.2, the serialized document envelope carries an explicit
     "world": { ... },
     "metadata": { ... }
 }
+```
 
 This is distinct from metadata.protocolVersion (the domain model
 version). Schema version tracks the JSON envelope structure; protocol
