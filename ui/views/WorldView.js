@@ -35,6 +35,8 @@ export default {
         const showTimeline = ref(false);
         const timeline = ref([]);
         const historyPreview = ref(null);
+        // 0.1.42 — clipboard indicator.
+        const clipboard = ref(null);
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const identityUseCase = inject('identityUseCase', null);
@@ -130,10 +132,6 @@ export default {
             refreshSpatialUI();
         }
 
-        // Explicit, confirmed, destructive: replaces the live document
-        // with the previewed historical state and restarts the editing
-        // history there. Never called without confirmation — the
-        // session itself makes no attempt to undo this.
         function restorePreviewedState() {
             const preview = session.getHistoryPreview();
             if (!preview || !preview.active) {
@@ -156,6 +154,46 @@ export default {
                 alert(`Restore failed: ${err.message}`);
             }
             refreshSpatialUI();
+        }
+
+        // -----------------------------------------------------------------
+        // Duplication, Forking & Clipboard (0.1.42)
+        // -----------------------------------------------------------------
+
+        function copySelectionToClipboard() {
+            session.copySelection();
+            refreshSpatialUI();
+        }
+
+        function pasteFromClipboard() {
+            session.pasteClipboard();
+            refreshSpatialUI();
+        }
+
+        function duplicateActiveDocument() {
+            if (!activeDocumentId.value) {
+                return;
+            }
+            try {
+                const cloneId = session.cloneDocument();
+                refreshSpatialUI();
+                focusWorld(cloneId);
+            } catch (err) {
+                alert(`Duplicate failed: ${err.message}`);
+            }
+        }
+
+        function forkActiveDocument() {
+            if (!activeDocumentId.value) {
+                return;
+            }
+            try {
+                const forkId = session.forkDocument();
+                refreshSpatialUI();
+                focusWorld(forkId);
+            } catch (err) {
+                alert(`Fork failed: ${err.message}`);
+            }
         }
 
         function formatTime(timestamp) {
@@ -212,6 +250,7 @@ export default {
 
             timeline.value = session.getTimeline();
             historyPreview.value = session.getHistoryPreview();
+            clipboard.value = session.getClipboard();
 
             const sel = session.getSpatialSelection();
             if (sel && !sel.isEmpty) {
@@ -346,6 +385,19 @@ export default {
             if (modifierPressed && event.key.toLowerCase() === 's') {
                 event.preventDefault();
                 saveActiveDocument();
+                return;
+            }
+
+            // Copy / Paste (0.1.42) — copy is observation (no history
+            // entry), paste is one command through the session.
+            if (modifierPressed && event.key.toLowerCase() === 'c') {
+                event.preventDefault();
+                copySelectionToClipboard();
+                return;
+            }
+            if (modifierPressed && event.key.toLowerCase() === 'v') {
+                event.preventDefault();
+                pasteFromClipboard();
                 return;
             }
 
@@ -487,6 +539,7 @@ export default {
             showTimeline,
             timeline,
             historyPreview,
+            clipboard,
             setTool,
             onBrickSelectionChange,
             focusWorld,
@@ -499,6 +552,10 @@ export default {
             previewAt,
             cancelPreview,
             restorePreviewedState,
+            copySelectionToClipboard,
+            pasteFromClipboard,
+            duplicateActiveDocument,
+            forkActiveDocument,
             formatTime
         };
     },
@@ -511,7 +568,8 @@ export default {
             Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
         </p>
         <p class="world-view-hint">
-            Drag to orbit • Scroll to zoom • Home to reset • Click to inspect / place • Ctrl+S to save
+            Drag to orbit • Scroll to zoom • Home to reset • Click to inspect / place •
+            Ctrl+S save • Ctrl+C/V copy/paste
         </p>
 
         <div class="world-view-actions">
@@ -528,6 +586,20 @@ export default {
                 @click="publishActiveDocument"
             >
                 Publish
+            </button>
+            <button
+                class="action-btn action-btn--secondary"
+                :disabled="!activeDocumentId"
+                @click="duplicateActiveDocument"
+            >
+                Duplicate
+            </button>
+            <button
+                class="action-btn action-btn--fork"
+                :disabled="!activeDocumentId"
+                @click="forkActiveDocument"
+            >
+                Fork
             </button>
             <button
                 class="action-btn action-btn--secondary"
@@ -580,6 +652,11 @@ export default {
                     <button class="action-btn action-btn--danger" @click="restorePreviewedState">Restore Here</button>
                 </div>
             </div>
+        </div>
+
+        <div v-if="clipboard && !clipboard.isEmpty" class="world-view-section">
+            <h4>Clipboard</h4>
+            <p class="clipboard-info">{{ clipboard.count }} brick(s) copied — Ctrl+V to paste</p>
         </div>
 
         <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
