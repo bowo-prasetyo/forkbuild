@@ -53,13 +53,14 @@
 0.1.50 Editing UX Consolidation & Command Surface  (done)
 0.1.51 Stability / Performance / Large-Document Hardening
 0.1.52 Protocol & Persistence Hardening
-0.2.0   Durable Documents & Publishing Boundary        (done)
-0.2.1   Schema Versioning & Migration
-0.2.2   Publish / Unpublish Lifecycle
-0.2.3   Read-only Published World
-0.2.4   Persistence, Recovery & Autosave
-0.2.5   Collaboration Protocol Foundation
-0.2.6   Multi-client Synchronization
+0.2.0   Durable Documents & Publishing Boundary       ✓
+0.2.1   Editor / World Editing Parity                 ✓
+0.2.2   Schema Versioning & Real Migration Fixtures
+0.2.3   Publish / Unpublish Lifecycle
+0.2.4   Read-only Published World
+0.2.5   Persistence, Recovery & Autosave
+0.2.6   Collaboration Protocol Foundation
+0.2.7   Multi-client Synchronization
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
