@@ -15,6 +15,7 @@ import { EditorEvent } from '../../core/events/EditorEvent.js';
 import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
 import TransformFeedback from '../components/TransformFeedback.js';
+import AlignmentPanel from '../components/AlignmentPanel.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 
 // TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool.
@@ -26,16 +27,18 @@ import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase
 // pointerup is forwarded on window so a release outside the viewport
 // still commits cleanly.
 //
-// 0.1.47: the view hosts the transient TransformFeedback overlay. It
-// reads the gesture feedback blob off EditorSession.onPointerMove's
-// return value while a drag is in flight and clears it on pointer-up
-// and on Escape-cancel — the view never interprets the blob, it just
-// displays what the gesture transaction decided.
+// 0.1.47: the view hosts the transient TransformFeedback overlay, fed
+// by the gesture feedback blob on EditorSession.onPointerMove's return.
+//
+// 0.1.48: the sidebar hosts the AlignmentPanel whenever 2+ bricks are
+// selected in the Select tool. The view tracks the selection count via
+// SELECTION_CHANGED and forwards align/distribute clicks to
+// EditorSession — it decides neither the geometry nor the commands.
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, Sidebar, TransformFeedback },
+    components: { Toolbar, Sidebar, TransformFeedback, AlignmentPanel },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -62,6 +65,12 @@ export default {
                         </button>
                     </div>
                     <Sidebar :palette-use-case="paletteUseCase" />
+                    <AlignmentPanel
+                        v-if="selectionCount >= 2 && activeTool === ToolId.SELECT"
+                        :selection-count="selectionCount"
+                        :align="alignSelection"
+                        :distribute="distributeSelection"
+                    />
                 </div>
                 <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
                     <div ref="viewport" class="viewport"></div>
@@ -105,10 +114,19 @@ export default {
 
         const activeTool = ref(editorContext.tool.activeTool);
         const transformFeedback = ref(null);
-        let unsubTool = null;
+        const selectionCount = ref(0);
+        const subscriptions = [];
 
         function setTool(toolId) {
             editorContext.setActiveTool(toolId);
+        }
+
+        function alignSelection(mode) {
+            editorSession.alignSelection(mode);
+        }
+
+        function distributeSelection(axis) {
+            editorSession.distributeSelection(axis);
         }
 
         let onPointerDown = null;
@@ -120,11 +138,19 @@ export default {
             // ALWAYS initialize the renderer first so _container is set.
             editorSession.start(viewport.value);
 
-            unsubTool = editorContext.eventBus.subscribe(
-                EditorEvent.TOOL_CHANGED,
-                ({ activeTool: t }) => {
-                    activeTool.value = t;
-                }
+            subscriptions.push(
+                editorContext.eventBus.subscribe(
+                    EditorEvent.TOOL_CHANGED,
+                    ({ activeTool: t }) => {
+                        activeTool.value = t;
+                    }
+                ),
+                editorContext.eventBus.subscribe(
+                    EditorEvent.SELECTION_CHANGED,
+                    ({ selection }) => {
+                        selectionCount.value = selection.items.length;
+                    }
+                )
             );
 
             if (route.query.fork) {
@@ -201,8 +227,8 @@ export default {
         });
 
         onBeforeUnmount(() => {
-            if (unsubTool) {
-                unsubTool.unsubscribe();
+            for (const subscription of subscriptions) {
+                subscription.unsubscribe();
             }
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('pointerup', onPointerUp);
@@ -221,7 +247,10 @@ export default {
             publishDocumentUseCase,
             activeTool,
             transformFeedback,
+            selectionCount,
             setTool,
+            alignSelection,
+            distributeSelection,
             ToolId
         };
     }
