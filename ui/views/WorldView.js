@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, onMounted, onBeforeUnmount, inject, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
@@ -38,6 +38,11 @@ export default {
         // 0.1.42 — clipboard indicator.
         const clipboard = ref(null);
         const groups = ref([]);
+        // 0.1.45 — marquee gesture state (view-owned).
+        const marquee = ref(null);
+        let marqueeStart = null;
+        let marqueeActive = false;
+        let controlsDisabled = false;
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const identityUseCase = inject('identityUseCase', null);
@@ -242,7 +247,11 @@ export default {
             session.addToGroupWithSelection(groupId);
             refreshSpatialUI();
         }
-
+        function removeSelectionFromGroup(groupId) {
+            session.removeFromGroupWithSelection(groupId);
+            refreshSpatialUI();
+        }
+        
         // -----------------------------------------------------------------
         // Spatial UI refresh
         // -----------------------------------------------------------------
@@ -283,6 +292,34 @@ export default {
                     author: pub?.author || 'anonymous'
                 };
             });
+            
+            const marqueeStyle = computed(() => {
+                if (!marquee.value) {
+                    return {};
+                }
+                return {
+                    left: `${marquee.value.left}px`,
+                    top: `${marquee.value.top}px`,
+                    width: `${marquee.value.width}px`,
+                    height: `${marquee.value.height}px`
+                };
+            });
+            
+            function updateMarquee(clientX, clientY) {
+                const rect = viewport.value.getBoundingClientRect();
+                marquee.value = {
+                    left: Math.min(marqueeStart.x, clientX) - rect.left,
+                    top: Math.min(marqueeStart.y, clientY) - rect.top,
+                    width: Math.abs(clientX - marqueeStart.x),
+                    height: Math.abs(clientY - marqueeStart.y)
+                };
+            }
+            
+            function endMarquee() {
+                marquee.value = null;
+                marqueeStart = null;
+                marqueeActive = false;
+            }            
 
             cameraPosition.value = state.cameraPosition;
 
@@ -388,8 +425,16 @@ export default {
         function onPointerDown(event) {
             isDragging = false;
             pointerStart = { x: event.clientX, y: event.clientY };
+            // Shift+drag in the Select tool starts a marquee; suspend camera
+            // controls for the duration of the gesture (re-enabled on up).
+            if (event.shiftKey && activeTool.value === 'select') {
+                marqueeStart = { x: event.clientX, y: event.clientY };
+                marqueeActive = false;
+                session.setControlsEnabled(false);
+                controlsDisabled = true;
+            }
         }
-
+        
         function onPointerMove(event) {
             if (pointerStart) {
                 const dx = event.clientX - pointerStart.x;
@@ -398,19 +443,51 @@ export default {
                     isDragging = true;
                 }
             }
+            if (marqueeStart && event.buttons > 0) {
+                if (isDragging) {
+                    marqueeActive = true;
+                }
+                if (marqueeActive) {
+                    updateMarquee(event.clientX, event.clientY);
+                    return;
+                }
+            }
             if (event.buttons === 0) {
                 session.hover(event.clientX, event.clientY);
                 refreshHoverUI();
             }
         }
-
+        
         function onPointerUp(event) {
+            if (controlsDisabled) {
+                session.setControlsEnabled(true);
+                controlsDisabled = false;
+            }
+            if (marqueeStart && marqueeActive) {
+                // Marquee -> replace selection; Ctrl/Cmd held -> add.
+                // Session state only: zero history entries.
+                session.marqueeSelect(
+                    { x0: marqueeStart.x, y0: marqueeStart.y, x1: event.clientX, y1: event.clientY },
+                    { additive: event.ctrlKey || event.metaKey }
+                );
+                endMarquee();
+                pointerStart = null;
+                isDragging = false;
+                refreshSpatialUI();
+                return;
+            }
+            endMarquee();
             if (!isDragging && pointerStart) {
                 if (activeTool.value === 'place') {
                     session.commitPlacement();
                     refreshSpatialUI();
                 } else {
-                    session.pick(event.clientX, event.clientY, { toggle: event.ctrlKey || event.metaKey || event.shiftKey });
+                    // 0.1.45 contract: click replaces, Ctrl/Cmd toggles,
+                    // Shift adds (union).
+                    session.pick(event.clientX, event.clientY, {
+                        toggle: event.ctrlKey || event.metaKey,
+                        additive: event.shiftKey
+                    });
                     refreshSpatialUI();
                 }
             }
@@ -444,7 +521,13 @@ export default {
                 pasteFromClipboard();
                 return;
             }
-
+            // Select all (0.1.45) — session state, zero history entries.
+            if (modifierPressed && event.key.toLowerCase() === 'a') {
+                event.preventDefault();
+                session.selectAll();
+                refreshSpatialUI();
+                return;
+            }
             // Escape: cancel placement if in Place mode, else clear selection
             if (event.key === 'Escape') {
                 if (activeTool.value === 'place') {
@@ -607,7 +690,10 @@ export default {
             renameGroupById, 
             duplicateGroupById, 
             deleteGroupById, 
-            addSelectionToGroup
+            addSelectionToGroup,
+            marquee, 
+            marqueeStyle, 
+            removeSelectionFromGroup
         };
     },
     template: `
@@ -729,6 +815,7 @@ export default {
                             class="group-action-btn"
                             @click="addSelectionToGroup(group.id)"
                         >+Sel</button>
+                        <button class="group-action-btn" @click="removeSelectionFromGroup(group.id)">−Sel</button>
                         <button class="group-action-btn" @click="renameGroupById(group.id)">Rename</button>
                         <button class="group-action-btn" @click="duplicateGroupById(group.id)">Duplicate</button>
                         <button class="group-action-btn group-action-btn--danger" @click="deleteGroupById(group.id)">Delete</button>
@@ -947,7 +1034,9 @@ export default {
             </ul>
         </div>
     </div>
-    <div ref="viewport" class="world-viewport"></div>
+    <div ref="viewport" class="world-viewport">
+        <div v-if="marquee" class="marquee-rect" :style="marqueeStyle"></div>
+    </div>    
 </div>
 `
 };
