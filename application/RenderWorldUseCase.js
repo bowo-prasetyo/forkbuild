@@ -9,19 +9,20 @@ import { TransformMath } from './TransformMath.js';
 
 // Wires the rendering pipeline up to a container element, the domain
 // EventBus, and the editor EventBus, then starts it. Also wires up
-// PickingService, SelectionRenderer, PreviewRenderer, and — as of 0.1.46
-// — the interactive transform gizmo, all against the same
-// camera/canvas/MeshRegistry the renderer already built. The caller gets
-// pick(screenX, screenY), pickGround(screenX, screenY), and a narrow
-// gizmo surface on the returned handle and never needs to know Renderer,
-// WorldRenderer, or Three.js exist.
+// PickingService, SelectionRenderer, PreviewRenderer, and the interactive
+// transform gizmo, all against the same camera/canvas/MeshRegistry the
+// renderer already built. The caller gets pick(screenX, screenY),
+// pickGround(screenX, screenY), and a narrow gizmo surface on the
+// returned handle and never needs to know Renderer, WorldRenderer, or
+// Three.js exist.
 //
-// Gizmo wiring, 0.1.46: gestureService implements the gesture contract
-// (begin/preview/commit/cancelTransformGesture + getSelectionBounds) —
-// the EditorSession's SpatialEditingService today. TransformMath is
-// injected into the controller here so renderer/ never imports
-// application/ — the use case hands the shared math down, keeping the
-// renderer -> core dependency direction intact.
+// Gizmo wiring: gestureService implements the gesture contract
+// (begin/preview/commit/cancelTransformGesture + getSelectionBounds +
+// getGestureFeedback) — the EditorSession's SpatialEditingService today.
+// TransformMath is injected into the controller here so renderer/ never
+// imports application/. As of 0.1.47 the pointer move/up functions also
+// carry modifier state down to the gesture transaction (precision mode)
+// and return the service's gesture feedback up to the views.
 export class RenderWorldUseCase {
     execute(container, eventBus, registry, editorEventBus, { gestureService = null } = {}) {
         const renderer = new Renderer(container);
@@ -53,10 +54,10 @@ export class RenderWorldUseCase {
             hideGizmo: () => transformGizmoController.hide(),
             gizmoPointerDown: (screenX, screenY, selection) =>
                 transformGizmoController.onPointerDown(screenX, screenY, selection),
-            gizmoPointerMove: (screenX, screenY, selection) =>
-                transformGizmoController.onPointerMove(screenX, screenY, selection),
-            gizmoPointerUp: (screenX, screenY, selection) =>
-                transformGizmoController.onPointerUp(screenX, screenY, selection),
+            gizmoPointerMove: (screenX, screenY, selection, modifiers = null) =>
+                transformGizmoController.onPointerMove(screenX, screenY, selection, modifiers),
+            gizmoPointerUp: (screenX, screenY, selection, modifiers = null) =>
+                transformGizmoController.onPointerUp(screenX, screenY, selection, modifiers),
             gizmoKeyDown: (keyEvent, selection) =>
                 transformGizmoController.onKeyDown(keyEvent, selection),
             cancelGizmoGesture: () => transformGizmoController.cancelGesture(),
