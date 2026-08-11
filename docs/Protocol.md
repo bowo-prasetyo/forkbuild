@@ -66,6 +66,11 @@ the current viewer knows about an object or selection, not the object
 itself, and therefore never appears in serialized Documents, Publications,
 or WorldLayout records.
 
+Marquee rectangles (added 0.1.45) are transient viewport gestures —
+screen-space session state used only to compute a selection. They are
+never serialized, transmitted, or persisted, like every other
+selection mechanism in this protocol.
+
 Spatial Editing Context (added 0.1.32) is explicitly excluded from
 the protocol. It describes what operations the current viewer is
 permitted to perform on a selected spatial object or multi-selection,
