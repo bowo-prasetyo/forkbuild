@@ -43,6 +43,7 @@ ForkBuild is layered as **core / application / renderer / ui**, with infrastruct
 
 The 0.1.46 transform pipeline, end to end:
 
+```
 Selection ── keyboard / gizmo drag / future input
 │
 ▼
@@ -59,7 +60,7 @@ CommandHistory
 │
 ▼
 World
-
+```
 
 See [docs/Architecture.md](docs/Architecture.md) for the full architectural overview and [docs/user/](docs/user/README.md) for how-to guides.
 
