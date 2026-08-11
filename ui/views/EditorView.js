@@ -1,11 +1,10 @@
-import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
 import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
 import { CreateDocumentManagerUseCase } from '../../application/CreateDocumentManagerUseCase.js';
 import { CreatePersistenceUseCase } from '../../application/CreatePersistenceUseCase.js';
-import { CreateIdentityProviderUseCase } from '../../application/CreateIdentityProviderUseCase.js';
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
@@ -14,69 +13,61 @@ import { ToolId } from '../../application/editor-state/ToolId.js';
 import { EditorEvent } from '../../core/events/EditorEvent.js';
 import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
+import GroupsPanel from '../components/GroupsPanel.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 
-
 // TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool.
-// No tool-switching UI exists yet — same lightweight, honest verification
-// mechanism used throughout this build. Ctrl/Cmd+S/Z/Y are different:
-// each is a companion to a real Toolbar action (Save, and — as of
-// 0.1.20C — Undo/Redo live entirely inside EditorSession.commandHistory),
-// standard expected shortcuts, not scaffolding. All of these stay here
-// rather than moving into EditorSession/InputDispatcher: they're global,
-// tool-independent decisions that don't go to a tool at all.
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
+const MARQUEE_THRESHOLD_PX = 6;
 
-// EditorView is intentionally dumb: it never imports core/, renderer/, or
-// storage/ directly, and — as of 0.1.20C — it doesn't even know a World,
-// Renderer, or ToolManager exists. It builds the collaborators
-// EditorSession needs once, then only ever calls start()/dispose() and
-// forwards raw DOM events. Loading a different document or starting a
-// new one both go through EditorSession too — EditorView has no idea
-// those operations tear down and rebuild an entire runtime graph
-// underneath it.
+// EditorView stays intentionally dumb about the engine: it builds the
+// collaborators EditorSession needs once, then only ever calls session
+// methods and forwards raw DOM events. As of 0.1.45 it additionally
+// owns the MARQUEE GESTURE — the Shift+drag rectangle and its overlay —
+// because gesture tracking and overlay drawing are view concerns; the
+// selection semantics themselves live in EditorSession.marqueeSelect(),
+// and containment lives in the renderer (PickingService.pickInRectangle).
 export default {
     name: 'EditorView',
-    components: { Toolbar, Sidebar },
+    components: { Toolbar, Sidebar, GroupsPanel },
     template: `
-        <div class="editor-view">
-            <Toolbar
-                :document-manager="documentManager"
-                :save-document-use-case="saveDocumentUseCase"
-                :load-document-use-case="loadDocumentUseCase"
-                :editor-session="editorSession"
-                :publish-document-use-case="publishDocumentUseCase"
-            />
-            <div class="editor-body">
-                <div class="sidebar">
-                    <div class="tool-switcher">
-                        <button
-                            :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.SELECT }]"
-                            @click="setTool(ToolId.SELECT)"
-                        >
-                            Select
-                        </button>
-                        <button
-                            :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.PLACE }]"
-                            @click="setTool(ToolId.PLACE)"
-                        >
-                            Place
-                        </button>
-                    </div>
-                    <Sidebar :palette-use-case="paletteUseCase" />
-                </div>
-                <div ref="viewport" class="viewport"></div>
-            </div>
-        </div>
-    `,
+<div class="editor-view">
+<Toolbar
+:document-manager="documentManager"
+:save-document-use-case="saveDocumentUseCase"
+:load-document-use-case="loadDocumentUseCase"
+:editor-session="editorSession"
+:publish-document-use-case="publishDocumentUseCase"
+/>
+<div class="editor-body">
+<div class="sidebar">
+<div class="tool-switcher">
+<button
+:class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.SELECT }]"
+@click="setTool(ToolId.SELECT)"
+>
+Select
+</button>
+<button
+:class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.PLACE }]"
+@click="setTool(ToolId.PLACE)"
+>
+Place
+</button>
+</div>
+<Sidebar :palette-use-case="paletteUseCase" />
+<GroupsPanel :editor-session="editorSession" :document-manager="documentManager" />
+</div>
+<div ref="viewport" class="viewport">
+<div v-if="marquee" class="marquee-rect" :style="marqueeStyle"></div>
+</div>
+</div>
+</div>
+`,
     setup() {
         const route = useRoute();
         const router = useRouter();
         const viewport = ref(null);
-
-        // Constructed here (before mount) rather than in onMounted(),
-        // since Sidebar/BrickPalette/Toolbar need these as required props
-        // for their very first render.
         const registry = new CreateBrickRegistryUseCase().execute();
         const editorContext = new CreateEditorContextUseCase().execute();
         const selectionUseCase = new SelectionUseCase(editorContext);
@@ -85,13 +76,9 @@ export default {
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
         const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase } = new CreatePersistenceUseCase().execute();
-
-        // Shared identity instance — same login state across all views
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
-
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
-
         const editorSession = new EditorSession({
             registry,
             editorContext,
@@ -102,29 +89,60 @@ export default {
             loadDocumentUseCase,
             identityProvider
         });
-
         const activeTool = ref(editorContext.tool.activeTool);
+        // 0.1.45 — marquee gesture state (view-owned).
+        const marquee = ref(null);
+        let marqueeStart = null;
+        let marqueeActive = false;
+        let controlsDisabled = false;
+
+        const marqueeStyle = computed(() => {
+            if (!marquee.value) {
+                return {};
+            }
+            return {
+                left: `${marquee.value.left}px`,
+                top: `${marquee.value.top}px`,
+                width: `${marquee.value.width}px`,
+                height: `${marquee.value.height}px`
+            };
+        });
+
         let unsubTool = null;
 
         function setTool(toolId) {
             editorContext.setActiveTool(toolId);
         }
 
+        function updateMarquee(clientX, clientY) {
+            const rect = viewport.value.getBoundingClientRect();
+            marquee.value = {
+                left: Math.min(marqueeStart.x, clientX) - rect.left,
+                top: Math.min(marqueeStart.y, clientY) - rect.top,
+                width: Math.abs(clientX - marqueeStart.x),
+                height: Math.abs(clientY - marqueeStart.y)
+            };
+        }
+
+        function endMarquee() {
+            marquee.value = null;
+            marqueeStart = null;
+            marqueeActive = false;
+        }
+
         let onPointerDown = null;
         let onPointerMove = null;
+        let onPointerUp = null;
         let onKeyDown = null;
 
         onMounted(() => {
-            // ALWAYS initialize the renderer first so _container is set.
             editorSession.start(viewport.value);
-
             unsubTool = editorContext.eventBus.subscribe(
                 EditorEvent.TOOL_CHANGED,
                 ({ activeTool: t }) => {
                     activeTool.value = t;
                 }
             );
-
             if (route.query.fork) {
                 try {
                     const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider);
@@ -142,11 +160,54 @@ export default {
                 router.replace({ path: '/editor' });
             }
 
-            onPointerDown = (event) => editorSession.onPointerDown(event);
+            onPointerDown = (event) => {
+                // Shift+drag in the Select tool starts a marquee instead
+                // of a click — don't forward it to the tool layer.
+                if (event.shiftKey && activeTool.value === ToolId.SELECT) {
+                    marqueeStart = { x: event.clientX, y: event.clientY };
+                    marqueeActive = false;
+                    editorSession.setControlsEnabled(false);
+                    controlsDisabled = true;
+                    return;
+                }
+                editorSession.onPointerDown(event);
+            };
             viewport.value.addEventListener('pointerdown', onPointerDown);
 
-            onPointerMove = (event) => editorSession.onPointerMove(event);
+            onPointerMove = (event) => {
+                if (marqueeStart) {
+                    const dx = event.clientX - marqueeStart.x;
+                    const dy = event.clientY - marqueeStart.y;
+                    if (Math.sqrt(dx * dx + dy * dy) > MARQUEE_THRESHOLD_PX) {
+                        marqueeActive = true;
+                    }
+                    if (marqueeActive) {
+                        updateMarquee(event.clientX, event.clientY);
+                        return;
+                    }
+                }
+                editorSession.onPointerMove(event);
+            };
             viewport.value.addEventListener('pointermove', onPointerMove);
+
+            onPointerUp = (event) => {
+                if (controlsDisabled) {
+                    editorSession.setControlsEnabled(true);
+                    controlsDisabled = false;
+                }
+                if (marqueeStart && marqueeActive) {
+                    // Marquee -> replace selection; Ctrl/Cmd held -> add.
+                    // Session state only: zero history entries.
+                    editorSession.marqueeSelect(
+                        { x0: marqueeStart.x, y0: marqueeStart.y, x1: event.clientX, y1: event.clientY },
+                        { additive: event.ctrlKey || event.metaKey }
+                    );
+                    endMarquee();
+                    return;
+                }
+                endMarquee();
+            };
+            viewport.value.addEventListener('pointerup', onPointerUp);
 
             onKeyDown = (event) => {
                 const shortcutTool = TOOL_SHORTCUTS[event.key];
@@ -154,14 +215,20 @@ export default {
                     editorContext.setActiveTool(shortcutTool);
                     return;
                 }
-
                 const modifierPressed = event.ctrlKey || event.metaKey;
-
                 if (modifierPressed && event.key.toLowerCase() === 's') {
                     event.preventDefault();
                     saveDocumentUseCase.execute(documentManager);
                     return;
                 }
+                // Select all (0.1.45) — session state, zero history entries.
+                if (modifierPressed && event.key.toLowerCase() === 'a') {
+                    event.preventDefault();
+                    editorSession.selectAll();
+                    return;
+                }
+                // Copy / Paste (0.1.43 parity) — copy is observation,
+                // paste is one command through the session.
                 if (modifierPressed && event.key.toLowerCase() === 'c') {
                     event.preventDefault();
                     editorSession.copySelection();
@@ -184,7 +251,6 @@ export default {
                     }
                     return;
                 }
-
                 editorSession.onKeyDown(event);
             };
             window.addEventListener('keydown', onKeyDown);
@@ -195,6 +261,7 @@ export default {
                 unsubTool.unsubscribe();
             }
             window.removeEventListener('keydown', onKeyDown);
+            viewport.value.removeEventListener('pointerup', onPointerUp);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
             editorSession.dispose();
@@ -209,6 +276,8 @@ export default {
             editorSession,
             publishDocumentUseCase,
             activeTool,
+            marquee,
+            marqueeStyle,
             setTool,
             ToolId
         };
