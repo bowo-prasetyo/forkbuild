@@ -1,31 +1,23 @@
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-// Loads a published snapshot by its snapshotId, completely independent
-// of the editing session. No DocumentManager, no CommandHistory, no
-// tools, no selection state — just a validated, deserialized Document
+
+// Loads a published snapshot by its publicationId, completely
+// independent of the editing session. No DocumentManager, no
+// CommandHistory, no tools — just a validated, deserialized Document
 // ready for viewing.
 //
-// This is the read-only loading path for published worlds. It uses the
-// same DocumentSerializer (with migration and validation) as the
-// editing load path, but the semantic contract is different: the
-// returned Document is a historical artifact, not a work-in-progress.
-//
-// The publisherProvider.loadSnapshot() method handles storage retrieval
-// and deserialization. This use case adds the session-agnostic wrapper
-// so ui/ never imports publisher/ directly.
+// The snapshot passes through the same DocumentSerializer pipeline
+// (migrate → validate → deserialize) as any other document load,
+// ensuring published snapshots are always valid and can be loaded
+// even after schema evolution.
 export class LoadPublishedSnapshotUseCase {
-    constructor(publisherProvider) {
+    constructor(publisherProvider, documentSerializer = new DocumentSerializer()) {
         this._publisherProvider = publisherProvider;
+        this._documentSerializer = documentSerializer;
     }
-    execute(snapshotId, eventBus = null) {
-        const document = this._publisherProvider.loadSnapshot(snapshotId);
-        // If an eventBus is provided, reconstruct the World with it so
-        // domain events flow to subscribers (e.g. the renderer).
-        if (eventBus) {
-            const { World } = document.world.constructor;
-            const json = document.toJSON();
-            const { Document } = document.constructor;
-            return Document.fromJSON(json, eventBus);
-        }
-        return document;
+
+    // Returns a Document reconstructed from the published snapshot.
+    execute(publicationId, eventBus = null) {
+        const json = this._publisherProvider.loadSnapshot(publicationId);
+        return this._documentSerializer.deserialize(json, eventBus);
     }
 }
