@@ -25,619 +25,89 @@ registry at startup — see docs/BrickLibrary.md.
 
 WorldPosition (core/WorldPosition.js), added 0.1.27, is a coordinate
 in shared world space — distinct from Position so brick-local and
-world-global concepts never merge accidentally. toJSON()/fromJSON()
-round-trip {x,y,z}; equals()/clone() exist for the same reasons as
-Position.
+world-global concepts never merge accidentally.
 
 Document (core/Document.js) is the publishable/persistable unit: a World
 plus DocumentMetadata (title, author, created, modified, protocolVersion,
-engineVersion — the latter two reusing core/protocolVersion.js and
-core/version.js rather than duplicating those numbers). A Document is
-not a World; it CONTAINS one, the same relationship as Building
-containing Bricks. This is what a future Serializer will read/write and
-what a Publisher eventually transmits — both toJSON()/fromJSON() exist
-now, before either consumer does, matching how every other core/ class
-has gotten this pair ahead of need. Deliberately excludes anything
-session-local (dirty, readOnly, "loaded from") — that's DocumentState,
-Editor State, in application/editor-state/. See "Domain State vs Editor
-State" below.
+engineVersion). A Document is not a World; it CONTAINS one. Deliberately
+excludes anything session-local (dirty, readOnly, "loaded from") —
+that's DocumentState, Editor State, in application/editor-state/.
 
 World is the aggregate root. addBuilding/removeBuilding and
 addBrickToBuilding/removeBrickFromBuilding publish BuildingAdded /
-BuildingRemoved / BrickAdded / BrickRemoved through an EventBus. The bus
-itself lives in core/events/ rather than application/events/ even though
-application/ is what constructs and wires it: World is the publisher, and
-core/ must never depend upward on application/, so the mechanism has to
-sit at or below the layer that uses it. This is a deliberate deviation
-from a "use cases live in application/" instinct — event *plumbing* is
-domain infrastructure, not a use case.
-
-As of 0.1.32, World.updateBrick(buildingId, brickId, changes) is the
-mutation path for transform edits: it applies position/rotation changes
-to the Brick and publishes BRICK_UPDATED. As of 0.1.46 this is also the
-exact path the interactive gizmo's live preview and committed
-TransformSelectionCommand flow through — the gizmo never touches a mesh
-to "move" anything; it changes domain state and lets the renderer react.
-As of 0.1.48 the same path carries alignment and distribution results,
-and as of 0.1.49 numeric transform input — more generators of absolute
-transforms, same event, same renderer reaction.
+BuildingRemoved / BrickAdded / BrickRemoved through an EventBus. As of
+0.1.32, World.updateBrick(buildingId, brickId, changes) is the mutation
+path for transform edits, publishing BRICK_UPDATED. Every transform
+surface built since — gizmo preview (0.1.46), snapping (0.1.47),
+alignment/distribution (0.1.48), numeric input (0.1.49) — flows through
+this one method via commands; nothing touches meshes directly.
 
 application/
 
-Use cases. Coordinates core/ and the infrastructure layers to do
-something (e.g. CreateEventBusUseCase, RenderWorldUseCase, and later
-PlaceBrickUseCase). Constructs the shared domain EventBus and wires it to
-both World and the renderer — core/ and renderer/ never reference each
-other directly, only the events between them.
+Use cases. Coordinates core/ and the infrastructure layers. Constructs
+the shared domain EventBus and wires it to both World and the renderer —
+core/ and renderer/ never reference each other directly, only the events
+between them.
 
 EditorContext (application/EditorContext.js) holds all transient editor
 state: selection, active tool, active brick, camera pose, preview,
-settings. This is Editor State, not Domain State — see the distinction
-below. It has its own EventBus (SelectionChanged, ToolChanged,
-ActiveBrickChanged, CameraStateChanged, PreviewChanged, SettingsChanged),
-kept separate from the domain EventBus on purpose: nothing about "what
-tool is active" should ever be reachable from a subscription meant for
-"what changed in the world." EditorContext itself correctly lives in
-application/, as originally proposed — nothing in core/ needs to publish
-or receive editor events. But the EditorEvent *constants*
-(core/events/EditorEvent.js) had to move to core/events/ once
-renderer/SelectionRenderer needed to subscribe to them: renderer/ must
-never depend on application/, so the shared vocabulary between
-EditorContext (publisher, application/) and SelectionRenderer/
-PreviewRenderer (subscribers, renderer/) needed a home both can reach
-without depending on each other — the same reasoning as the domain
-EventBus, just discovered one milestone later. Sub-state pieces
-(SelectionState, ToolState, ActiveBrickState, PreviewState,
-EditorSettings) live in application/editor-state/, each pure data with no
-Three.js/Vue/DOM.
+settings. Editor State, not Domain State. Its EditorEvent vocabulary
+lives in core/events/ because renderer/ subscribes to it and must never
+import application/.
 
-Tool Framework (application/tools/, application/ToolManager.js,
-application/CreateToolRegistryUseCase.js): Tool is the base class every
-tool extends (activate/deactivate, onPointerMove/Down/Up, onKeyDown/Up,
-onWheel — pointer terminology throughout, not mouse-specific, so touch/
-stylus/VR input can drive the same tools later without an API change).
-ToolRegistry maps a tool id to its Tool subclass — same shape as
-BrickRegistry, but deliberately in application/ rather than core/, since
-nothing in core/ ever needs to know which tools exist. ToolManager owns
-"what is the current tool" and dispatches input to it, reacting to
-EditorEvent.TOOL_CHANGED (published by EditorContext.setActiveTool(),
-unchanged since 0.1.9) to swap the live Tool instance via
-deactivate()/activate(). SelectionTool (application/tools/SelectionTool.js)
-is the first tool: pointer down -> pick -> select or clear, plus
-Escape-to-clear moved out of EditorView and into the tool's own
-onKeyDown() — a concrete demonstration of the framework's payoff, since
-that input handling used to live in ui/.
-
-ToolContext is a plain object, not a class — it has no behavior of its
-own, just references a tool is allowed to touch (world, editorContext,
-selectionUseCase, previewUseCase, commandHistory today; more as tools
-need them). Deliberately narrower than the { world, editorContext,
-renderer, picking, commands } originally proposed: no raw Renderer
-reference (would let any tool bypass PickingService/WorldRenderer and
-touch Three.js directly, undoing "the editor manipulates domain objects,
-not meshes"), and tools mutate editor state only through use cases like
-selectionUseCase/previewUseCase, never by calling editorContext.setX()
-directly — reading editorContext is fine, writing isn't, mirroring the
-discipline ui/ already follows. As of 0.1.18, pick/pickGround are gone
-from ToolContext entirely — see InputDispatcher below; tools receive
-picking results pre-computed on the event itself and never call
-PickingService.
-
-InputDispatcher (application/InputDispatcher.js) normalizes raw DOM
-PointerEvent/KeyboardEvent/WheelEvent into stable, platform-independent
-interaction events and performs picking ONCE per pointer event, before
-forwarding to ToolManager. Pointer event shape: { pointerType, buttons,
-modifiers: {ctrl,shift,alt,meta}, screenPosition: {x,y}, worldPosition,
-pickedBrick }. Both pickedBrick and worldPosition are always computed on
-every pointer event, regardless of which one a given tool ends up using —
-a conscious trade-off (two raycasts per move instead of one) in exchange
-for InputDispatcher never having to guess which half a tool cares about;
-SelectionTool and PlacementTool each just read the field they need.
-pointerType is always 'mouse' today (only DOM PointerEvent is wired in
-EditorView), but nothing about the shape assumes that — touch/pen/gamepad
-input could construct the identical event without ToolManager or any Tool
-changing. Key events: { key, modifiers }. Wheel events: { deltaY,
-modifiers }. Deliberately outside InputDispatcher's job: the temporary
-'1'/'2' tool-switch shortcuts and Ctrl/Cmd+S/Z/Y undo/redo, still wired
-directly in EditorView. These are global, tool-independent decisions —
-"normalize and forward to whichever tool is active" doesn't apply to
-them, since they don't go to a tool at all. As of 0.1.46, both
-EditorSession and WorldNavigationSession offer every event to the
-interactive gizmo BEFORE the normal input pipeline: an active gizmo
-gesture owns the pointer and keyboard exclusively (see "Interactive
-Transform Gizmo" below).
+Tool Framework (application/tools/, ToolManager, ToolRegistry): Tool is
+the base class every tool extends (pointer terminology throughout).
+ToolManager owns "what is the current tool" and dispatches input to it.
+As of 0.1.18, InputDispatcher normalizes raw DOM events and performs
+picking ONCE per pointer event; tools receive pre-picked results and
+never call PickingService themselves.
 
 EditorSession (application/EditorSession.js), added 0.1.20C, owns the
-entire live runtime graph — the render session (Renderer/WorldRenderer/
-PickingService/SelectionRenderer/PreviewRenderer, via
-RenderWorldUseCase), the domain EventBus, World, CommandHistory,
-ToolManager, and InputDispatcher — as one unit. start(container) builds
-it the first time; loadDocument(id) and newDocument() tear the whole
-thing down and rebuild it against a different World, sharing the exact
-same _rebuild() path start() uses — there is only one way the runtime
-graph gets built, whether it's the first time or the fifth.
-
-As of 0.1.46, EditorSession also owns the Editor's gesture service — a
-SpatialEditingService wired to the open document through a trivial
-getDocument() shim and a world-id -> CommandHistory map refreshed on
-every _rebuild() — plus a TransformGizmoUseCase for gizmo presentation.
-It passes the gesture service into RenderWorldUseCase so the Editor's
-gizmo is driven by exactly the same gesture contract and TransformMath
-as World View's. Input routing is exclusive: every pointer/key event is
-offered to the gizmo FIRST; while a gesture is active, nothing reaches
-the tools (only Escape cancels). As of 0.1.47 pointer move/up forward
-modifier state into the transaction and return gesture feedback upward
-for the transient overlay. As of 0.1.48 EditorSession exposes
-alignSelection(mode)/distributeSelection(axis); as of 0.1.49,
-applyNumericTransform(intent, options) — all routed to the same gesture
-service, all terminating in the same command.
-
-registry/editorContext/toolRegistry/documentManager/selectionUseCase/
-previewUseCase are constructed once, outside EditorSession, and are the
-SAME instances across every replacement — only the per-world runtime
-gets torn down and rebuilt. EditorContext.selection and the preview are
-explicitly cleared on every _rebuild(), since a brickId from the old
-world means nothing in the new one.
+entire live runtime graph as one unit — render session, EventBus, World,
+CommandHistory, ToolManager, InputDispatcher — rebuilt identically by
+start()/loadDocument()/newDocument()/openDocument(). Since 0.1.46 it
+also owns the Editor's gesture service (a SpatialEditingService wired to
+the open document), gizmo presentation refresh, and exclusive input
+routing; 0.1.47 added TransformSettings and modifier/feedback plumbing;
+0.1.48/0.1.49 added alignSelection/distributeSelection/
+applyNumericTransform; 0.1.50 added selectAll()/clearSelection()/
+deleteSelection()/getSelectionCount() so the action layer can drive the
+Editor exactly like the World View. Group and clipboard surface
+(0.1.42/0.1.43) lives wherever this session is extended in the deployed
+tree; the action layer degrades gracefully when those methods are absent.
 
 WorldNavigationSession (application/WorldNavigationSession.js), updated
-0.1.30, owns the live read-only runtime graph for World View. It
-coordinates camera positioning via SpatialCameraController, spatial
-discovery via WorldLayoutProvider, document loading via
-LoadPublicationDocumentUseCase, world load/unload reconciliation, spatial
-selection/hover state, and a shared EventBus that feeds a single
-WorldRenderer.
-
-As of 0.1.46, WorldNavigationSession also exposes the World View's gizmo
-surface: gizmoPointerDown/gizmoPointerMove/gizmoPointerUp/gizmoKeyDown
-forward raw DOM events to the render session's TransformGizmoController
-with the current SpatialSelectionState, and _refreshGizmo() resolves
-presentation in document-local coordinates then lifts it into shared
-world space with the layout offset — the same coordinate discipline
-placement uses. The gesture service is the SAME SpatialEditingService
-this session already owned; the gizmo simply drives its existing
-begin/preview/commit/cancel contract, so a pointer drag in World View
-and a pointer drag in the Editor produce identical
-TransformSelectionCommand semantics. As of 0.1.47 the same methods carry
-modifier state (precision mode) and gesture feedback; keyboard selection
-transforms route through the gesture transaction. As of 0.1.48 the
-session exposes alignSelection(mode)/distributeSelection(axis), and as
-of 0.1.49 applyNumericTransform(intent, options) — one gateway, one
-command type, byte-identical behavior to the Editor for the same
-selection.
-
-SpatialCameraController (application/SpatialCameraController.js) is the
-navigation abstraction: it translates spatial movement commands
-(moveCamera(delta), focusDocument(documentId)) into renderer
-CameraState changes, without WorldNavigationSession touching Three.js.
+0.1.30, owns the live read-only runtime graph for World View: camera
+positioning via SpatialCameraController, spatial discovery via
+WorldLayoutProvider, document loading, world load/unload
+reconciliation, spatial selection/hover state, and a shared EventBus
+feeding a single WorldRenderer. Since 0.1.46 it exposes the World View's
+gizmo surface through the SAME SpatialEditingService; 0.1.47–0.1.49
+mirror the Editor's transform additions; 0.1.50 added selectAll()/
+getSelectionCount().
 
 SpatialEditingService (application/SpatialEditingService.js) translates
-spatial editing intent into domain mutations via CommandHistory (see
-"Spatial Editing Context (0.1.32)" below). Since 0.1.38 it owns the
-transform gesture transaction — beginTransformGesture /
-previewTransformGesture / commitTransformGesture /
-cancelTransformGesture. Since 0.1.46 the interactive pointer gizmo
-drives it alongside the keyboard paths. Since 0.1.47 snapping is applied
-inside the transaction so keyboard and pointer stay byte-identical.
-Since 0.1.48 it owns alignment and distribution
-(alignSelection/distributeSelection). Since 0.1.49 it owns numeric
-transform input (applyNumericTransform). See "Transform Gesture
-Architecture", "Transform Precision & Snapping (0.1.47)", "Alignment &
-Distribution (0.1.48)", and "Numeric Transform Input (0.1.49)" below
-for the full invariants.
-
-TransformMath (application/TransformMath.js), added 0.1.46, is the
-single source of truth for every transform calculation in the engine:
-translation, Y-axis rotation around a pivot, angle measurement around
-the pivot, axis projection for constrained drags, rotation deltas from
-pointer angles, and the calculateTransforms()/transformsEqual() pair the
-gesture transaction uses for preview and commit. Keyboard transforms,
-the gizmo's live drag preview, alignment, distribution, numeric input,
-and the committed TransformSelectionCommand all resolve to these
-functions — parity is a construction-time property, not a bug class to
-test away later. TransformMath lives in application/, and renderer/
-needs it — resolved by INJECTION, not by importing upward:
-RenderWorldUseCase and RenderWorldViewUseCase import it and hand it to
-the gizmo controller they construct. If a second consumer below
-application/ ever needs it, the correct move is to lower it into core/,
-never to copy it.
-
-TransformGizmoUseCase (application/TransformGizmoUseCase.js), added
-0.1.46, is the gizmo's presentation decision: given a selection, should
-a gizmo be visible, and if so where? It answers { bounds, pivot } from
-the gesture service's bounds calculation — pivot is always the selection
-bounds center (a single brick's own center, or the union-bounds center
-of a multi-selection). Pure data in, pure data out — no Three.js, no
-mutation, and no opinion about dragging. Both EditorSession and
-WorldNavigationSession call it, so "where does the gizmo go" exists
-exactly once. Critical invariant restated where the code lives: it only
-ever sees a RESOLVED selection — items[], bounds, pivot — never a Group,
-a Group.id, or group membership.
-
-TransformSnap (application/TransformSnap.js), added 0.1.47, is the pure
-snapping math: snapValue/snapTranslation/snapRotation plus
-effectiveIncrement for precision mode. It snaps GESTURE DELTAS, never
-absolute positions, always measured from the gesture origin — so a brick
-at x = 2.37 nudged by +0.2 stays at 2.37, and crossing +0.7 moves it to
-3.37. Snapping once per frame from the origin (never re-snapping a
-snapped value) is what makes repeated previews stable and pointer motion
-reversible. Includes floating-point hygiene (toPrecision(12)) because
-snapped values flow into committed commands, replay comparisons, and the
-on-screen readout.
-
-TransformSettings (application/TransformSettings.js), added 0.1.47, is
-the session/application-level transform preferences: snappingEnabled,
-translationSnap (1 — deliberately matching the placement grid),
-rotationSnap (15°), precisionMultiplier (0.1). NOT document state:
-nothing here belongs to a World, Document, Building, Brick, or Group,
-and nothing here is serialized into the ForkBuild Protocol. Each session
-(EditorSession, WorldNavigationSession) owns one instance and hands it
-to its gesture service; precision changes gesture interpretation, never
-document state.
-
-TransformAlignment (application/TransformAlignment.js), added 0.1.48, is
-the pure alignment/distribution math — the entire geometry of that
-milestone. calculateAlignmentTransforms(entries, selectionBounds, mode)
-implements the nine world-axis operations ('x-min' … 'z-max');
-calculateDistributionTransforms(entries, axis) implements even center
-distribution with deterministic ordering (axis coordinate, then
-buildingId, then brickId) and pinned endpoints. Inputs and outputs are
-plain data — no World, Group, Brick, renderer, history, or UI — which is
-exactly what keeps groups invisible to this layer and makes it trivially
-testable.
-
-TransformInput (application/TransformInput.js), added 0.1.49, parses and
-interprets numeric transform input — it never transforms anything.
-parseNumericValue(text) applies a strict grammar (10, 10.5, -3.75, +2,
-.5, surrounding whitespace; no exponentials, no units, no expressions)
-and returns structured results ({ valid, value } / { valid: false,
-reason: 'empty' | 'invalid-number' | 'non-finite' }). parsePanelInput()
-turns the four panel fields into one structured intent where empty
-fields mean "unchanged", never silent zero. No domain, renderer, or
-history dependencies; no transformed position is ever calculated here —
-that remains the job of the existing transform machinery. Numeric input
-is an INPUT SURFACE, not a transform system.
-
-Spatial selection/hover/inspection/placement state classes live in
-application/spatial-state/ (SpatialSelectionState, SpatialHoverState,
-SpatialInspectionState, SpatialPlacementState, SpatialCameraState,
-SpatialEditingContext, TransformGizmoState) — all runtime-only, all
-pure data, none serialized. SpatialSelectionState can represent one
-brick, many bricks, ground, or nothing; brick selections store
-references only (documentId + items[] of { type, buildingId, brickId }).
-It is deliberately NOT the same as editor SelectionState — spatial
-selection is observation, not editing.
-
-renderer/
-
-Three.js. WorldRenderer subscribes to World's domain events and reacts
-incrementally — BrickAdded creates one mesh, BrickRemoved deletes one,
-BuildingAdded/BuildingRemoved handle a whole building at once (e.g. on
-initial load). There is no render(world) sweep. MeshRegistry maps brick
-id <-> mesh (bidirectional) plus brick id -> building id and brick id ->
-document id, so removal never has to search the scene graph and a raycast
-hit can be resolved straight back to a brick/building/document id.
-
-PickingService answers two questions from screen coordinates: what brick
-is under this position (pick/pickRich), and where would a ray hit the
-ground plane (pickGroundPosition). As of 0.1.33 it also returns the
-quantized face normal of a brick hit, which the placement system uses
-for stacking. It knows nothing about selection, preview, or any other UI
-state — Picking does not depend on them; they depend on it.
-
-CameraController owns orbit/pan/zoom (via Three.js's OrbitControls
-addon), resize, and reset (bound to the Home key). CameraState is a pure
-data snapshot (position, target, zoom — reusing core/Position) exchanged
-via getState()/setState(). As of 0.1.46, setEnabled() lets an active
-editing gesture freeze the camera: TransformGizmoController disables
-controls for the duration of a gizmo drag, and while disabled both
-OrbitControls pointer handling and the Home reset shortcut are ignored —
-nothing can move the camera underneath a live drag.
-
-SelectionRenderer, PreviewRenderer, and SpatialPreviewRenderer are the
-overlay renderers built before 0.1.46 (selection highlight, editor
-placement ghost, spatial placement ghost respectively).
-
-TransformGizmoRenderer (renderer/TransformGizmoRenderer.js), added
-0.1.46, is the purely visual half of the interactive transform gizmo:
-three translation axis handles (X red, Y green, Z blue), a center
-free-move pad, one Y-rotation ring, a pivot marker, and — for selections
-that span meaningful space — a subtle bounds box. It handles show/hide,
-hover and active highlighting, camera-distance scaling (the gizmo stays
-a usable screen size while orbiting), and positioning in world space.
-It never mutates the World, never creates commands, and never decides
-what a drag means — that is TransformGizmoController's job. It is
-anchored to { pivot, bounds } and nothing else: it has no knowledge of
-Groups by design, because a group selection arrives already flattened to
-its member bricks.
-
-TransformGizmoController (renderer/TransformGizmoController.js), added
-0.1.46, is the interaction half: hit testing against the handle meshes,
-pointer down/move/up, the active handle, gesture state, and Escape
-cancellation. It does not mutate the World either — it drives the
-gesture contract (beginTransformGesture / previewTransformGesture /
-commitTransformGesture / cancelTransformGesture) implemented by
-SpatialEditingService, so a completed pointer drag still produces
-exactly ONE TransformSelectionCommand, exactly as the 0.1.38 discipline
-requires. All drag math (axis projection, rotation-angle deltas) comes
-from the injected TransformMath module — the same definitions the final
-command uses — so what you see while dragging is exactly what gets
-committed. As of 0.1.47 the controller forwards modifier state with
-every move/up (precision mode is interpreted by the transaction, not
-here) and passes the transaction's gesture feedback blob upward
-opaquely. The controller also enforces gesture exclusivity: on drag
-start it disables the camera controls via controlsEnabler, keeps the
-selection captured at pointer-down (selection is frozen for the duration),
-and re-enables everything on commit or cancel.
-
-Render Layers (conceptual, not yet code)
-
-Think of the scene as three logical layers even though everything
-currently lives in one Three.js Scene: a World Layer (bricks, buildings,
-terrain — what WorldRenderer manages), an Overlay Layer (selection,
-hover, placement preview, measurements — purely visual, never modifies
-the World), and a Gizmo Layer (transform handles, axes, manipulators).
-As of 0.1.46 the Gizmo Layer is no longer conceptual:
-TransformGizmoRenderer and TransformGizmoController are its first real
-inhabitants, and the pattern they establish — separate from
-WorldRenderer, overlay semantics (depthTest off, high renderOrder),
-never mutating the World — is what future gizmos and manipulators should
-follow. SelectionRenderer and PreviewRenderer both conceptually belong
-to the Overlay Layer; a future pass could replace SelectionRenderer's
-emissive mutation with a true independent overlay mesh without changing
-either renderer's public shape.
-
-ui/
-
-Vue. The application shell, routes, views, and components. Talks only to
-application/, never directly to core/, renderer/, or storage/ — the rule
-isn't really "never touch core/ or renderer/," it's "never reach past
-application/ to any layer beneath it." Kept intentionally "dumb" so a
-future non-Vue client could reuse core/ and application/ unchanged.
-
-EditorView and WorldView (updated 0.1.46) route every pointer and key
-event through the session's gizmo surface FIRST: an active gizmo gesture
-owns the pointer exclusively — no camera drag, no selection changes, no
-hover updates, and no tool shortcuts until pointer-up or Escape. The
-gizmo's pointer-up listener sits on window (not the viewport) so a drag
-released outside the canvas still commits cleanly. Both views forward
-the same raw events; neither knows or cares which gesture service sits
-underneath — that parity is the session's job, not the UI's. As of
-0.1.48 both views host the AlignmentPanel; as of 0.1.49, the
-NumericTransformPanel — the same components, the same session APIs, the
-same commands in both surfaces.
-
-TransformFeedback (ui/components/TransformFeedback.js), added 0.1.47, is
-the transient gesture overlay: mode/axis, effective snap increment,
-precision tag, and the snapped Δ readout ("Move X • Grid 1 / Δ +3",
-"Rotate Y • 15° (precision) / Δ +13.5°"). Purely presentational, inline
-styles, no state of its own; it displays exactly what the transaction
-decided will commit.
-
-AlignmentPanel (ui/components/AlignmentPanel.js), added 0.1.48, is the
-compact alignment/distribution surface: nine alignment buttons
-(world-axis edges/centers, never camera directions) and three center-
-distribution buttons. It knows the operation identifiers ('x-min' …
-'z-max', 'x'/'y'/'z') and nothing about the geometry underneath — the
-application layer decides what they mean. Enable/disable mirrors the
-operation requirements (alignment needs 2+, distribution 3+). No
-keyboard shortcuts — a scoped command palette belongs to 0.1.50.
-
-NumericTransformPanel (ui/components/NumericTransformPanel.js), added
-0.1.49, is the numeric input surface — an input surface, NOT a mode.
-There is no "numeric mode" application state anywhere: the panel parses
-exact intent (via TransformInput) and hands one structured intent per
-Apply to the session's applyNumericTransform. X/Y/Z + rotation fields,
-Absolute/Offset toggle, Apply/Clear; Enter applies, Escape clears (both
-stopped locally so the global Escape-clears-selection handler never
-fires from panel typing); empty fields mean "unchanged"; invalid fields
-block the whole Apply and nothing reaches the transform layer. Disabled
-with no selection. Fields clear after a successful apply — the panel is
-a "next operation" surface, not a live property editor.
-
-world-layout/
-
-The spatial adapter family, added 0.1.27. Answers "Where do published
-worlds exist in a shared spatial coordinate system?" It does NOT load
-Documents — that is LoadPublicationDocumentUseCase's job.
-WorldLayoutProvider (world-layout/WorldLayoutProvider.js) is the base
-class: findVisibleDocuments(viewCenter, viewRadius) returns documentIds;
-getPosition(documentId) returns a core/WorldPosition.
-LocalWorldLayoutProvider is the first concrete implementation: a
-deterministic 2D grid layout computed from the discovery catalog.
-
-storage/
-
-Filled in at 0.1.20A. StorageProvider is the base class: save/load/
-remove/list, operating on plain string names and JSON-safe values.
-LocalStorageProvider is the first concrete implementation, namespacing
-every key under "forkbuild:". storage/ is the most decoupled layer in
-the engine — it doesn't know what a Document is; that pairing happens in
-application/SaveDocumentUseCase.js and LoadDocumentUseCase.js.
-
-serializer/
-
-World <-> JSON and Document <-> JSON, used by both storage/ and
-publisher/. Serializer (serializer/Serializer.js) is the shared base;
-WorldSerializer wraps World.toJSON()/fromJSON(); DocumentSerializer wraps
-Document.toJSON()/fromJSON() and validates metadata.protocolVersion on
-every deserialize. validate(json) is public on both, returning a
-ValidationResult. serializer/ depends on core/ only.
-
-publisher/
-
-Filled in at 0.1.22 — the Publisher Adapter stub. PublisherProvider is
-the base class: publish(document, identityProvider) returns a
-Publication. LocalPublisherProvider is the first concrete implementation:
-no blockchain, but exercises the exact same interface a future
-SteemPublisherProvider will use. Publication (publisher/Publication.js)
-is the pure-data bridge between Publisher and Discovery.
-
-discovery/
-
-Filled in at 0.1.23 — the Discovery Adapter stub. DiscoveryProvider is
-the base class: list(), findById(id), findByAuthor(author),
-findByParentId(parentDocumentId), findByDocumentId(documentId).
-LocalDiscoveryProvider reads the same localStorage key that
-LocalPublisherProvider writes to, returning Publication objects.
-
-identity/
-
-Filled in at 0.1.21. IdentityProvider is the base class: login()/
-logout()/currentUser()/sign(data). LocalIdentityProvider is the first
-concrete implementation (username + attribution stamp). IdentityUseCase
-(application/) wraps it with a subscription interface for the UI.
-
-Spatial Inspection (0.1.31)
-
-SpatialInspectionState is pure runtime data resolved from the loaded
-Document/World — never from the renderer. SpatialInspectionService
-resolves a SpatialSelectionState against the session's loaded documents.
-The four-layer boundary: PickingService (renderer/) -> SpatialSelectionState
-(application/) -> SpatialInspectionService (application/) -> World/Document
-(core/).
-
-Highlight Compositor (0.1.31)
-
-SpatialSelectionRenderer (renderer/SpatialSelectionRenderer.js) was
-rewritten as a composited state machine. As of 0.1.36 it tracks a Set of
-selected brick ids, a primary selected brick id, and the hovered brick id
-independently. A single private _applyHighlight(brickId) method decides
-the actual emissive color:
-
-selected + hovered → combined amber (#ffcc00)
-primary selected   → bright amber (#ffdd33)
-selected only      → orange (#ffaa00)
-hovered only       → blue (#44aaff)
-neither            → black (#000000)
-
-This fixes the 0.1.30 bug where hover could overwrite selection and
-clearHover could erase a selected brick's highlight. The architecture
-already said selection and hover were independent; the renderer now
-matches that promise.
-
-Spatial Focus Navigation (0.1.31)
-
-SpatialCameraController gained focusTarget(target, offset) alongside
-focusDocument(documentId, layoutPosition). This enables document/
-building/brick-level focus. WorldNavigationSession exposes
-focusSelection(), which reads the current SpatialInspectionState and, if
-it carries a position, calls focusTarget() with a tight offset.
-
-Multi-World Layout Offsets (0.1.31)
-
-WorldRenderer.addWorld(world, documentId, layoutPosition) now accepts
-an optional layoutPosition. When provided, every brick mesh in that
-world is translated by the layout offset before entering the scene.
-
-Spatial Editing Context (0.1.32)
-
-The spatial layer became bidirectional: 0.1.31 established reading the
-world; 0.1.32 establishes expressing changes to it without the UI or
-renderer mutating domain objects directly.
-
-SpatialEditingContext (application/spatial-state/SpatialEditingContext.js)
-is runtime-only state describing what is currently editable and what
-operations are permitted on it. It carries capability flags (move,
-rotate, delete, place) rather than assuming every object supports every
-operation.
-
-SpatialEditingService (application/SpatialEditingService.js) is the
-sole authority for translating editing intent into domain mutations.
-The editing flow is:
-
-UI input (keyboard nudge, delete key, gizmo drag, align button, numeric Apply)
-↓
-WorldNavigationSession / EditorSession
-↓
-SpatialEditingService
-↓
-gesture transaction / TransformSelectionCommand / CompositeCommand
-↓
-World.updateBrick / addBrickToBuilding / removeBrickFromBuilding
-↓
-DomainEvent.BRICK_UPDATED / BRICK_ADDED / BRICK_REMOVED
-↓
-WorldRenderer
-↓
-mesh refreshed from domain + layout offset
-
-This preserves the invariant: Domain -> Event -> Renderer, never the
-reverse.
-
-Spatial Placement & Stacking (0.1.33)
-
-The spatial editing loop is complete: Select → Position → Preview →
-Place → Domain Mutation → Event → Renderer. SpatialPlacementState is
-runtime-only state describing where a brick would be placed if
-committed. SpatialPlacementService translates world-space pick results
-into document-local placement positions. PlacementPositionService is
-shared between PlacementTool (EditorView) and SpatialPlacementService
-(WorldView) and is geometry-aware: it reads width/height/depth from
-BrickDefinition rather than hard-coding offsets.
-
-Brick Dimensions (0.1.33)
-
-BrickDefinition now carries width, height, and depth (default 1, 1, 1).
-These dimensions are pure metadata — no geometry — but they let the
-placement system calculate correct stacking positions. As of 0.1.38 they
-also drive SelectionBoundsService, and as of 0.1.48 they drive the
-per-brick bounds used by alignment/distribution.
-
-Coordinate Space Discipline (0.1.33)
-
-Placement maintains strict separation between three frames:
-
-Screen Space     — mouse coordinates (clientX/Y)
-↓
-Ray / Hit Space  — world-space intersection point from PickingService
-↓
-World Space      — hit point minus layout offset = document-local
-↓
-Domain Position  — stored in Brick.position
-
-Coordinate Spaces (0.1.32)
-
-A strict distinction exists between three coordinate frames:
-
-Local Position    — brick.position inside its own World/Document.
-Layout Position   — where the document lives in shared spatial space.
-World Position    — local + layout offset.
-
-BRICK_UPDATED (0.1.32)
-
-World.updateBrick(buildingId, brickId, changes) is the domain mutation.
-It applies changes to the Brick instance and publishes
-DomainEvent.BRICK_UPDATED with the payload { buildingId, brick }.
-The renderer subscribes to this event and updates the corresponding
-mesh position/rotation without touching the domain object.
-
-Spatial Identity Note (0.1.32)
-
-MeshRegistry keys meshes by brickId alone. In practice, brickIds are
-UUIDs generated by core/createId.js, and ForkDocumentUseCase strips
-and regenerates all instance IDs during a fork, making collisions
-astronomically unlikely. MeshRegistry.set() also stores documentId per
-entry, so a future migration to composite keys would be localized.
-
-Transform Gesture Architecture (0.1.38 foundation, 0.1.46 pointer surface)
-
-Since 0.1.38, every transform gesture — keyboard or pointer — runs
-through one transaction owned by SpatialEditingService:
+spatial editing intent into domain mutations via CommandHistory. Since
+0.1.38 it owns the transform gesture transaction:
 
     beginTransformGesture(selection, { mode, axis })
         capture initial transforms, compute bounds + pivot
-    previewTransformGesture(selection, transform)   x N
+    previewTransformGesture(selection, transform, gestureOptions)   x N
         apply to the live World directly — NO command, NO history
-    commitTransformGesture(selection, transform)
+    commitTransformGesture(selection, transform, gestureOptions)
         restore original state, then execute ONE
         TransformSelectionCommand; returns false (no command) when
         before == after — the no-op discipline
     cancelTransformGesture(selection)
         restore original state — NO command
 
-0.1.46 added the pointer surface on top of exactly this transaction,
-without adding a second one. As of 0.1.49, five fundamentally different
-input sources all terminate in the same command:
+Since 0.1.46 the interactive pointer gizmo drives it alongside the
+keyboard paths. Since 0.1.47 snapping is applied INSIDE the transaction
+(gestureOptions.snap === false bypasses it for explicit-intent inputs;
+modifiers.shift selects precision increments). Since 0.1.48 it owns
+alignment and distribution (alignSelection/distributeSelection); since
+0.1.49, numeric transform input (applyNumericTransform). One gateway,
+one command type — five input sources terminate here:
 
     keyboard ──┐
     gizmo ─────┤
@@ -645,269 +115,313 @@ input sources all terminate in the same command:
     distribute ┤
     numeric ───┘
 
+TransformMath (application/TransformMath.js, 0.1.46) is the single
+source of truth for every transform calculation: translation, Y-axis
+rotation around a pivot, angle measurement, axis projection, rotation
+deltas, calculateTransforms()/transformsEqual(). Keyboard, gizmo,
+alignment, distribution, numeric input, and the committed command all
+resolve to these functions. renderer/ needs it without importing
+application/ — resolved by INJECTION: the render use cases hand it to
+the gizmo controller they construct.
+
+TransformSnap (application/TransformSnap.js, 0.1.47) snaps GESTURE
+DELTAS, never absolute positions, always from the gesture origin —
+snapping once per frame from the origin makes previews stable and
+pointer motion reversible. TransformSettings (application/
+TransformSettings.js, 0.1.47) holds session preferences
+(snappingEnabled, translationSnap 1, rotationSnap 15°,
+precisionMultiplier 0.1) — never document state, never protocol.
+
+TransformAlignment (application/TransformAlignment.js, 0.1.48) is pure
+alignment/distribution math: nine world-axis alignment modes and even
+center distribution with deterministic ordering (axis coordinate, then
+buildingId, then brickId) and pinned endpoints. Inputs/outputs are plain
+data; no group is visible to this layer.
+
+TransformInput (application/TransformInput.js, 0.1.49) parses numeric
+intent with a strict grammar and structured results; empty fields mean
+"unchanged". It never calculates transformed positions — that remains
+the transform machinery's job.
+
+CommandHistory (application/CommandHistory.js): tools call
+commandHistory.execute(command); linear history invariant (execute after
+undo clears redo). Persistent-session shape { schemaVersion, cursor,
+commands } since 0.1.37, deserialized through CommandRegistry. History
+knows nothing about sessions, tools, or the renderer.
+
+Command Serialization & Registry (0.1.35): every command carries id,
+timestamp, and a stable type string; CommandRegistry maps type -> class
+for reconstruction. CompositeCommand is fully serializable and, since
+0.1.36, transactional: a failing child rolls back executed children in
+reverse before rethrowing.
+
+DocumentManager owns document lifecycle and DocumentState; publishes
+DocumentManagerEvent.STATE_CHANGED; trackCommandHistory() marks dirty on
+every executed/undone/redone command.
+
+EditorActionRegistry (application/EditorActionRegistry.js, 0.1.50) is
+the action layer: one registry of user-facing operations — id, label,
+category, shortcut (display string + machine key combinations),
+description, enabled(context), disabledReason(context),
+execute(invocation). createStandardActions({ session, feedback, ui })
+binds each surface's session into shared definitions; both views build
+their registry from the same factory, so ids/labels/shortcuts/
+availability rules are identical everywhere.
+
+ACTIONS ARE NOT COMMANDS — the load-bearing distinction of 0.1.50. Some
+actions produce history (delete -> DeleteBrickCommand, move ->
+TransformSelectionCommand); most don't (selectAll is session state,
+opening the palette is UI state, feedback is transient). The registry
+never touches CommandHistory or World; it invokes the existing sessions,
+which remain the single gateway to the kernel.
+
+EditorActionContext (application/EditorActionContext.js, 0.1.50) is the
+pure availability snapshot: selection count, clipboard count, groups,
+selected group, undo/redo flags and labels, gesture activity, palette
+state, active tool. Captured fresh on every consumption; capture() is
+defensive — surfaces expose what they have, missing capabilities fall
+back to inert defaults, so no surface can make the palette throw.
+
+InputRouter (application/InputRouter.js, 0.1.50) is minimal input
+routing, introduced where the fragmentation justified it and not before:
+(1) the explicit Escape priority chain — input > palette > gesture >
+marquee > selection — as a pure resolveEscapeTarget(state); (2)
+registry-driven shortcut matching with Ctrl/Cmd parity, lowercased
+keys, and key-repeat suppression; (3) text-input detection. Views
+orchestrate; the router answers.
+
+renderer/
+
+Three.js. WorldRenderer subscribes to World's domain events and reacts
+incrementally — BrickAdded creates one mesh, BrickRemoved deletes one,
+BuildingAdded/BuildingRemoved handle a whole building at once. There is
+no render(world) sweep. MeshRegistry maps brick id <-> mesh plus
+brick/building/document ids.
+
+PickingService answers "what brick is here" and "where does the ray hit
+the ground plane". CameraController owns orbit/pan/zoom (OrbitControls),
+resize, and the Home reset; CameraState is a pure data snapshot. As of
+0.1.46, setEnabled() lets an active gesture freeze the camera.
+
+SelectionRenderer, PreviewRenderer, SpatialPreviewRenderer are the
+pre-0.1.46 overlays. TransformGizmoRenderer (0.1.46) is the purely
+visual gizmo half: axis handles, free-move pad, rotation ring, pivot
+marker, bounds box, hover/active highlighting, camera-distance scaling —
+anchored to { pivot, bounds } and nothing else; it has no knowledge of
+Groups. TransformGizmoController (0.1.46) is the interaction half: hit
+testing, pointer down/move/up, gesture state, Escape cancellation; it
+drives the gesture contract with injected TransformMath and forwards
+modifier state (0.1.47); it enforces gesture exclusivity (controls
+disabled, selection frozen) during drags.
+
+Render Layers: World Layer (WorldRenderer), Overlay Layer (selection,
+hover, preview), Gizmo Layer — real since 0.1.46.
+
+ui/
+
+Vue. Talks only to application/, never directly to core/, renderer/, or
+storage/. EditorView and WorldView route every pointer/key event through
+the session's gizmo surface FIRST (0.1.46); as of 0.1.50 their keyboard
+surfaces are consolidated onto the EditorActionRegistry — editing
+shortcuts, the palette, the sidebar, and docs/user/ControlsReference.md
+all read the same action metadata. Tool switching (1/2) and Ctrl+S
+remain view-local: they are not editing actions.
+
+CommandPalette (ui/components/CommandPalette.js, 0.1.50): Ctrl/Cmd+K
+modal over the registry — substring search across label/category/id,
+category sections, arrow-key navigation, Enter executes only enabled
+actions, Escape closes, disabled actions stay visible with their
+disabledReason. All search/grouping logic lives on EditorActionRegistry
+itself; the component is the thin visual layer.
+
+ActionFeedback (ui/components/ActionFeedback.js, 0.1.50): one-line
+transient messaging with a consistent vocabulary ("Aligned Left",
+"Rotated +90°", "Copied selection", "Distributed Z") — aria-live, no
+queue, no toast framework.
+
+EditingSidebar (ui/components/EditingSidebar.js, 0.1.50): consolidated
+Selection / Transform / Groups / Clipboard sections composing the
+existing AlignmentPanel and NumericTransformPanel unchanged, with empty
+states ("No bricks selected — select bricks to transform, align,
+distribute, or edit numerically") and disabled reasons instead of dead
+buttons. Organization, not a new UI architecture.
+
+TransformFeedback (0.1.47) remains the in-gesture overlay: mode/axis,
+effective snap increment, precision tag, snapped Δ — what the
+transaction decided will commit.
+
+world-layout/ / storage/ / serializer/ / publisher/ / discovery/ /
+identity/
+
+Spatial adapter family (0.1.27): WorldLayoutProvider answers "where do
+published worlds exist"; LocalWorldLayoutProvider arranges publications
+on a deterministic grid. StorageProvider (0.1.20A) is the most decoupled
+layer — names and blobs only. Serializer (0.1.19) wraps World/Document
+toJSON/fromJSON with protocol-version validation. PublisherProvider
+(0.1.22) receives an IdentityProvider and may call sign() without
+knowing how. DiscoveryProvider (0.1.23) answers "what has been
+published"; the three views consume Publications without knowing the
+source. IdentityProvider (0.1.21): login/logout/currentUser/sign.
+
+Spatial Inspection (0.1.31) — SpatialInspectionState resolved from
+loaded Document/World, never the renderer. Highlight Compositor
+(0.1.31) — selection and hover composited independently. Spatial Focus
+Navigation (0.1.31) — focusDocument/focusTarget. Multi-World Layout
+Offsets (0.1.31) — addWorld applies layout offsets.
+
+Spatial Editing Context (0.1.32) — capability flags; SpatialEditingService
+is the sole mutation authority; Domain -> Event -> Renderer, never the
+reverse. Spatial Placement & Stacking (0.1.33) — the complete loop
+Select → Position → Preview → Place → Domain Mutation → Event →
+Renderer, reusing PlaceBrickCommand. Brick Dimensions (0.1.33) —
+width/height/depth metadata. Coordinate Space Discipline (0.1.33) —
+screen → ray/hit → world → domain-local. BRICK_UPDATED (0.1.32).
+
+Transform Gesture Architecture (0.1.38 foundation, 0.1.46 pointer
+surface, consolidated through 0.1.49)
+
 The invariants this architecture protects:
 
-- One command per operation. Pointer moves never create commands; the
-  preview mutates the live world directly, and only pointer-up produces
-  history. A drag with no effective movement commits nothing; an
-  already-aligned selection commits nothing; already-at-target numeric
-  input commits nothing — the transformsEqual discipline, unchanged
-  since 0.1.38.
-- One math source. Keyboard transforms, the gizmo's live preview,
-  alignment, distribution, numeric input, and the committed command all
-  resolve to TransformMath. A "the gizmo looked slightly different from
-  keyboard rotation" class of bug cannot exist by construction.
+- One command per operation. Pointer moves never create commands; only
+  commit produces history. No-op gestures, no-op alignments, and
+  already-at-target numeric input commit nothing — the transformsEqual
+  discipline, unchanged since 0.1.38.
+- One math source. Keyboard, gizmo, alignment, distribution, numeric,
+  and the committed command all resolve to TransformMath.
 - The gizmo never knows about groups. A group selection is flattened to
-  its member bricks before the gizmo ever sees it; the gizmo receives
-  Selection -> items[] + bounds + pivot and nothing group-shaped.
-  Transform operations change only brick transforms; group membership is
-  untouched, and one undo restores every member. Alignment,
-  distribution, and numeric input inherit the same invisibility.
-- Pivot semantics are the 0.1.44 semantics, made visible. Single brick:
-  the brick's own center. Multi-selection — manual or group-resolved:
-  the union-bounds center. Rotation happens around that pivot. No
-  special "group pivot" concept exists or is needed.
-- Session state stays out of history. TransformGizmoState, the
-  transient hover/active handle state, and gesture feedback are
-  session/render state. They never enter CommandHistory and never
-  serialize.
-- An active editing gesture temporarily owns the pointer. During a gizmo
-  drag: OrbitControls disabled (CameraController.setEnabled(false)),
-  selection frozen, hover/picking/marquee bypassed, keyboard swallowed
-  except Escape (cancel). Pointer-up commits and restores normal
-  interaction. This generalizes the exclusivity principle the 0.1.45
-  marquee established.
-- Parity is structural. EditorSession and WorldNavigationSession wire
-  the same gizmo renderer/controller design against the same gesture
-  contract and the same TransformMath. Same operation in either view ->
-  byte-identical committed transforms.
-
-Dependency-direction note: TransformMath lives in application/, but
-renderer/TransformGizmoController needs it — and renderer/ must never
-import application/. The resolution is injection, not duplication:
-RenderWorldUseCase and RenderWorldViewUseCase (both application/) import
-TransformMath and hand it to the controller they construct. The renderer
-keeps its renderer -> core discipline, the math exists exactly once, and
-the rule "never import upward" survives contact with a real cross-layer
-need.
-
-Interactive Transform Gizmo (0.1.46) — what was deliberately NOT built
-
-- No scale handles. The domain has position/rotation/definition but no
-  settled scale semantics. Translate + Rotate only — still true through
-  0.1.49.
-- No new commands. No MoveGizmoCommand, no RotateGizmoCommand, no
-  GroupTransformCommand — and 0.1.48/0.1.49 added no AlignCommand,
-  DistributeCommand, or NumericTransformCommand either.
-- No snapping in 0.1.46 — that arrived in 0.1.47, inside the
-  transaction, not in the gizmo.
-- No generic GestureManager — the lifecycle is already shared shape-wise;
-  the abstraction waits for a third true gesture to prove it.
+  member bricks before the gizmo sees it; transforms change only brick
+  transforms; membership is untouched; one undo restores every member.
+  Alignment, distribution, and numeric inherit the same invisibility.
+- Pivot semantics are the 0.1.44 semantics: single brick → own center;
+  multi-selection (manual or group-resolved) → union-bounds center.
+- Session state stays out of history. TransformGizmoState, hover/active
+  handle state, gesture feedback, and (0.1.50) action feedback and
+  palette state never enter CommandHistory and never serialize.
+- An active editing gesture temporarily owns the pointer. Generalized
+  in 0.1.50 to the full Escape priority chain: input > palette >
+  gesture > marquee > selection.
+- Parity is structural. Same operation in either view → byte-identical
+  committed transforms; since 0.1.50, identical action definitions too.
 
 Transform Precision & Snapping (0.1.47)
 
-Snapping lives INSIDE the gesture transaction — the one place every
-transform input converges — so keyboard and pointer are byte-identical
-by construction. The invariants:
-
-- Snap the gesture DELTA, never absolute positions, always measured from
-  the gesture origin.
-- Snap once per frame from the origin; never re-snap a snapped value.
-- One snapped delta for the whole selection — relative arrangement
-  preserved exactly.
-- Constraint first, then snap — axis handles resolve before snapping
-  touches anything.
-- Precision mode (Shift) scales increments down by the precision
-  multiplier (1 → 0.1 units, 15 → 1.5°) per gesture frame. Precision
-  changes gesture interpretation, not document state.
-- Keyboard selection transforms route through the transaction as
-  instantaneous gestures (begin + commit), so a keyboard nudge and an
-  equivalently-snapped gizmo drag produce byte-identical
-  TransformSelectionCommand payloads.
-- The no-op discipline survives: a gesture that never crosses a snap
-  boundary snaps to zero, transformsEqual rejects it, and zero history
-  entries are created.
-- Visual feedback: the transaction exposes getGestureFeedback() (snapped
-  transform + effective increments + precision flag), passed opaquely
-  through the gizmo controller to the views' TransformFeedback overlay.
-  The user always sees the transformation that will be committed — no
-  release-time jump.
+Snapping lives INSIDE the gesture transaction so keyboard and pointer
+are byte-identical by construction. Snap the gesture DELTA, never
+absolute positions, always from the gesture origin; once per frame.
+Precision mode (Shift) scales increments down per frame — interpretation,
+not document state. Numeric input and alignment/distribution bypass
+snapping (explicit intent / exact geometry); keyboard and gizmo snap.
 
 Alignment & Distribution (0.1.48)
 
-Alignment and distribution are transform-generation algorithms, not
-new domain operations or command types.
-
-Selection resolves to brick transforms. Selection bounds provide the
-alignment reference. The calculated absolute transforms are submitted
-through the existing TransformSelectionCommand.
-
-Alignment never passes through gesture snapping: it produces exact
-geometric targets rather than user-authored movement deltas.
-
-Alignment references the WHOLE selection bounds (min/center/max edge),
-never the first selected brick, so selection ordering is irrelevant.
-Nine operations, all WORLD axes (never camera directions):
-
-          X             Y             Z
-minimum   Left          Bottom        Front
-center    Center X      Center Y      Center Z
-maximum   Right         Top           Back
-
-Distribution sorts selected members deterministically along the
-requested world axis (axis coordinate, then buildingId, then brickId —
-replay-safe even for equal coordinates) and interpolates target center
-positions between the two endpoint members. Only interior members move;
-endpoints are pinned exactly. Centers only — edge-to-edge distribution
-is deliberately deferred.
-
-Degenerate rules: alignment with fewer than two bricks, distribution
-with fewer than three or a zero span, and already-satisfied arrangements
-all produce no history entry — the same transformsEqual discipline the
-gesture transaction has enforced since 0.1.38, not a special history
-rule.
-
-No group is visible to this layer. A selected group is already resolved
-to its member bricks before alignment/distribution begins; membership
-and group ids are untouched, and tests assert this byte-for-byte.
-
-No-op operations produce no history entry. One operation produces
-exactly one TransformSelectionCommand; undo, redo, serialization, and
-replay require no architectural changes whatsoever — that is the point
-of building on the closed transform architecture.
+Transform-generation algorithms, not new command types. Selection
+resolves to brick transforms; selection bounds provide the reference;
+calculated absolute transforms go through TransformSelectionCommand.
+Nine world-axis alignment operations; center distribution with
+deterministic ordering and pinned endpoints; no group visibility;
+no-ops create zero history.
 
 Numeric Transform Input (0.1.49)
 
-Numeric transform input is an input surface, not a transform system.
+An input surface, not a transform system. Parses exact intent
+(TransformInput), translates to the gesture-shaped transform, commits
+through the existing transaction with snapping disabled. Absolute
+translation targets the selection pivot (same delta to every member);
+absolute rotation targets the primary brick's orientation. One Apply =
+at most one TransformSelectionCommand.
 
-The panel parses exact translation and rotation intent and delegates
-the resulting transform to the existing selection transformation
-pipeline. No numeric-specific command exists.
+Editing UX Consolidation & Command Surface (0.1.50)
 
-Numeric values bypass gesture snapping because numeric entry represents
-explicit user intent rather than an imprecise pointer gesture. The
-snapping policy, stated once for the whole engine:
+The consolidation milestone: discoverability and consistency for the
+accumulated kernel, sitting entirely ABOVE it.
 
-    keyboard/gizmo          → snapping applies (0.1.47)
-    numeric input           → exact requested value (0.1.49)
-    alignment/distribution  → exact geometric result (0.1.48)
+    Command Palette / Sidebar / Shortcuts
+                     │
+                     ▼
+            EditorActionRegistry   (actions — not commands)
+                     │
+                     ▼
+              Existing Sessions
+                     │
+       ┌─────────────┼─────────────┐
+       ▼             ▼             ▼
+    Selection     Transform     Groups/Clipboard
+       │             │             │
+       └─────────────┼─────────────┘
+                     ▼
+             Existing Commands
+                     │
+                     ▼
+               CommandHistory
 
-Snapping interprets imprecise gestures; explicit intent is respected
-literally.
+The key properties:
 
-Absolute translation operates on the selection pivot, preserving the
-relative geometry of multi-selections and resolved groups: every member
-receives the same delta (target − pivot). Absolute rotation targets the
-PRIMARY brick's orientation; every member receives the same delta,
-preserving relative orientations. Relative (offset) input applies the
-requested delta to every selected member directly. Single brick,
-multi-selection, and resolved group all share these rules.
+- One registry, two surfaces. Both views construct
+  createStandardActions() with their own session bound in; ids, labels,
+  shortcuts, and availability rules are shared by construction. No
+  second shortcut table, no Editor-only behavior.
+- Actions are not commands. The action layer never touches
+  CommandHistory or World; it invokes sessions. Some actions produce
+  commands; most don't. This protects the architecture from the common
+  future failure mode of a "UI command history".
+- One shortcut source of truth. Keyboard dispatch, palette, sidebar,
+  and docs/user/ControlsReference.md all read the same metadata —
+  documentation drift is structurally impossible as long as the docs
+  are regenerated from the registry.
+- Explicit Escape routing. InputRouter.resolveEscapeTarget encodes the
+  priority chain; views implement the consequences. No scattered
+  if (Escape) handlers.
+- Feedback with reasons. Disabled actions explain why ("Select at least
+  2 bricks", "Select at least 3 bricks", "Clipboard is empty", "Select
+  a group"); empty states describe what the surface is for; transient
+  ActionFeedback reports what just happened in a consistent vocabulary.
+- Graceful degradation. Where a surface predates a capability (group or
+  clipboard API absent), the action shows friendly feedback instead of
+  throwing — the palette is inert, never broken.
+- Accessibility minimums. Visible focus, logical Tab order, Enter
+  activates, Escape closes transient UI, disabled actions expose
+  aria-disabled, the palette manages focus on open, numeric fields are
+  fully keyboard-operable, and no operation depends exclusively on
+  pointer hover.
 
-One Apply operation produces at most one TransformSelectionCommand, even
-when translation and rotation are combined. No-op input (already at
-target, zero delta, nothing entered, invalid fields) produces no history
-entry. Undo, redo, replay, serialization, and Editor/World parity all
-work unchanged — the flagship tests assert numeric parity with keyboard
-and gizmo byte-for-byte, including the three-way rotation trio
-(keyboard R === numeric 90 === gizmo drag 90 → identical serialized
-transforms).
-
-The parser (application/TransformInput.js) contains no domain or
-renderer dependencies and never calculates transformed positions. Empty
-fields mean "unchanged", never silent zero. There is no persistent
-"numeric mode" anywhere — input → intent → existing use case, never
-"application enters special mode → mode manages state → mode owns
-transforms." Seven milestones deliberately avoided that direction;
-0.1.49 didn't start it.
+Untouched by 0.1.50, by design: TransformSelectionCommand,
+CommandHistory, TransformMath/Snap/Alignment/Input, SelectionState,
+SpatialSelectionState, group commands, replay, restore, and the
+protocol. Those layers are mature; the milestone proved the kernel can
+be wrapped without being changed.
 
 View Modes
 
-ForkBuild's Document abstraction makes three distinct presentation
-modes possible without duplicating data:
-
-Repository View — the "GitHub" mode. A list of projects per author,
-searchable, forkable. Each entry is a Publication (or a local
-DocumentSummary). Implemented as of 0.1.23; enhanced in 0.1.26.
-
-Author View — the "profile" mode. Every Publication has an author
-field. Grouping by author produces a portfolio page: published works,
-fork counts, and recursive fork trees reconstructed client-side from
-parentDocumentId. Implemented as of 0.1.26.
-
-World View — the "Minecraft" mode. As of 0.1.30, World View is a free
-spatial navigation environment. As of 0.1.46 it is also a full editing
-surface: the same interactive gizmo available in the Editor works here
-against the spatial selection, with identical gesture semantics — and as
-of 0.1.48/0.1.49 the same alignment, distribution, and numeric
-transform operations.
-
-All three modes are views over the same underlying data graph. The three
-views consume the same DiscoveryProvider and Publication abstraction —
-no separate discovery systems.
-
-World Layout (0.1.27)
-
-Rather than hard-coding "The Global World," ForkBuild introduces a
-WorldLayoutProvider abstraction whose sole job is spatial placement.
-The renderer doesn't care. It asks the layout provider where to place
-the camera, then loads the corresponding Documents via
-LoadPublicationDocumentUseCase and renders them through
-RenderWorldViewUseCase.
-
-Forking (0.1.24)
-
-A fork is a new Document derived from an existing published document,
-not merely a copy of its JSON. The lineage is immutable from the
-parent's perspective; the complete ancestry graph can be reconstructed
-by querying DiscoveryProvider with findByParentId(). Fork is
-distinguished from View and Import.
+Repository View (technical exploration), Author View (social
+exploration), World View (spatial exploration — and, since 0.1.46, a
+full editing surface with identical gizmo/transform semantics, since
+0.1.48 alignment/distribution, since 0.1.49 numeric input, since 0.1.50
+the consolidated command surface). All three consume the same
+DiscoveryProvider and Publication abstraction.
 
 Domain State vs Editor State
 
-Two kinds of state exist in ForkBuild, and they must never mix.
-
-Domain State — World, Building, Brick, and Document/DocumentMetadata
-(core/). Publishable, serializable, shared, forkable.
-
-Editor State — everything in EditorContext (application/): selection,
-active tool, active brick, camera pose, placement preview, settings —
-plus DocumentState (dirty, readOnly, loadedFrom, lastSaved), owned by
-DocumentManager. Purely local to one editing session. Never part of a
-World or Document, never serialized into the Protocol, never sent to a
-publisher.
-
-TransformSettings (0.1.47) belongs firmly on this side of the line:
-snap increments and the precision multiplier are session preferences —
-they shape how gestures are interpreted, and nothing about them ever
-reaches a serialized Document or the protocol.
-
-Spatial State — as of 0.1.30, a third kind of runtime state exists for
-the World View: SpatialCameraState, SpatialSelectionState, and
-SpatialHoverState. As of 0.1.31, SpatialInspectionState joins this
-group. As of 0.1.32, SpatialEditingContext completes it. As of 0.1.36,
-SpatialSelectionState and SpatialEditingContext can carry
-multi-selection references through items[]. As of 0.1.46,
-TransformGizmoState and the transient gizmo hover/active handle state
-join this group; as of 0.1.47, gesture feedback does too. All spatial
-state is runtime-only and never serialized into the Protocol.
+Domain State — World, Building, Brick, Document/DocumentMetadata (core/).
+Publishable, serializable, shared, forkable. Editor State — everything
+in EditorContext plus DocumentState: purely local, never serialized.
+Spatial State — SpatialCameraState/SelectionState/HoverState/
+InspectionState/EditingContext/PlacementState, TransformGizmoState,
+gesture feedback: runtime-only, never protocol. As of 0.1.50, action
+availability (EditorActionContext), palette state, and action feedback
+join this side of the line — they describe the current session, never
+the construction.
 
 Spatial Selection Invariant
 
-A SpatialSelectionState may reference only a currently loaded document.
-When that document leaves the streaming radius, the selection is cleared
-before its meshes are removed. Enforced by
+A SpatialSelectionState may reference only a currently loaded document;
+unloading clears the selection first. Enforced by
 WorldNavigationSession._unloadWorld().
 
 Publication vs Document vs Location
 
-Three distinct abstractions, kept strictly separate:
-
-- Publication — describes that something was published. Metadata only.
-- Document/World — describes what exists. Geometry, bricks, buildings.
-- WorldLayout/WorldPosition — describes where it exists in a shared
-  spatial coordinate system.
-
-No abstraction leaks into another.
+Publication — the publishing fact (metadata only). Document/World — the
+creation itself. WorldLayout/WorldPosition — where it exists. No
+abstraction leaks into another.
 
 Dependency direction
 
@@ -915,15 +429,12 @@ ui -> application -> core
 application -> renderer
 application -> storage / publisher / identity / serializer / discovery / world-layout
 renderer -> core (reads domain events and data; never the reverse)
-core never depends on anything above it. renderer never owns data, only
-visualizes what it's given, and now only reacts to events rather than
-being handed a World directly.
+core never depends on anything above it.
 
-application -> renderer includes construction AND injection: use cases
-build renderer subsystems and hand them their collaborators. As of
-0.1.46 this includes injecting application/TransformMath into
-TransformGizmoController, so renderer/ never imports application/ even
-when it needs application-owned logic.
+application -> renderer includes construction AND injection (0.1.46):
+use cases build renderer subsystems and hand them collaborators —
+including TransformMath into TransformGizmoController — so renderer/
+never imports application/ even when it needs application-owned logic.
 
 Naming convention
 
@@ -940,39 +451,48 @@ Naming convention
 | Short-lived event payload          | Event     |
 | Engine capability                  | Service   |
 | Executable action (undoable later)| Command   |
+| User-facing operation (0.1.50)     | Action (registry entry, not a class suffix) |
 
-Refined as of 0.1.12: Service was originally going to be avoided entirely,
-but PickingService doesn't fit any other row — it's a capability the
-engine provides. CameraController is left as Controller rather than
-forced into Renderer: it directly drives interactive hardware-like input.
-As of 0.1.46, TransformGizmoController follows the same precedent — it
-drives interaction, while its sibling TransformGizmoRenderer does the
-actual visualizing.
+Refined as of 0.1.12 (Service), 0.1.46 (Controller for interaction
+drivers), and 0.1.50: an "action" is deliberately NOT a Command — see
+Principles. EditorActionRegistry entries are plain data + closures, not
+a class hierarchy, because they carry no lifecycle and must never grow
+one.
 
 Recognized, not implemented (future direction, not a commitment):
 
-Workspace — deliberately above DocumentManager, not a replacement for
-it. Not a Version 0.1 concern.
+Workspace — deliberately above DocumentManager, not a replacement.
 
-EditingGesture family — MarqueeGesture and TransformGizmoGesture already
-share one lifecycle shape; alignment/distribution (0.1.48) deliberately
-did NOT join it — they are not gestures (no preview, no pointer
-ownership), just transform generators that terminate in the same
-command. A common gesture abstraction waits for a third true gesture.
+EditingGesture family — MarqueeGesture and TransformGizmoGesture share
+one lifecycle shape; alignment/distribution deliberately did not join
+it (not gestures). A common abstraction waits for a third true gesture.
 
-Command palette & shortcut discoverability — the intended home for any
-keyboard surface behind alignment/distribution/numeric operations; part
-of 0.1.50 (Editing UX Consolidation), deliberately not a per-feature
-shortcut matrix.
+Command palette extensions — fuzzy search, recently-used ordering,
+per-surface filtering, nested command arguments. Substring matching is
+deliberately all 0.1.50 ships.
 
-Smart guides, magnetic snapping, edge-to-edge distribution, collision-
-aware distribution, camera-relative alignment, expression languages,
-unit conversion — all explicitly deferred; each would introduce a new
-interaction/presentation subsystem or a mini-language immediately after
-the transform kernel was proven. Scale semantics — no settled domain
-model yet; every transform surface stays Translate + Rotate until there
-is one. Numeric transform input shipped in 0.1.49 as an input surface,
-not a mode — the next numeric-adjacent candidate (live property display
-of the current selection) waits for 0.1.50's feedback-consistency pass.
-Nested groups — optional/post-0.2; groups remain useful without being
-hierarchical.
+Full accessibility framework — 0.1.50 established the minimums; ARIA
+live regions for gesture feedback, screen-reader announcements for
+selection changes, and focus-trap hardening are future passes.
+
+Smart guides, magnetic snapping, edge-to-edge distribution,
+collision-aware distribution, camera-relative alignment, expression
+languages, unit conversion — all deferred; each would introduce a new
+interaction/presentation subsystem or mini-language immediately after
+the kernel was proven.
+
+Scale semantics — no settled domain model yet; every transform surface
+stays Translate + Rotate until there is one.
+
+Numeric direct entry enhancements — live property display of the current
+selection, typed-in deltas with units — wait for real usage evidence.
+
+Nested groups — optional, deliberately off the roadmap through 0.1.52;
+the flat-group model has proven sufficient for every operation built so
+far. If nesting is ever needed, it becomes its own architectural
+milestone.
+
+Next: 0.1.51 Stability / Performance / Large-Document Hardening, then
+0.1.52 Protocol & Persistence Hardening, then 0.2 Publishing &
+Multiplayer. The editing kernel is complete and consolidated; the
+architecture has earned the hardening pass.
