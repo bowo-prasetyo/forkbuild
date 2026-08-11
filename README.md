@@ -6,9 +6,14 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.50** — Editing UX Consolidation & Command Surface
+**Version 0.2.0** — Durable Documents & Publishing Boundary
 
-The 0.1.42–0.1.49 editing kernel is now one coherent product surface. Every operation — selection, groups, clipboard, transform, alignment, distribution, numeric input, history — is defined once in the EditorActionRegistry and reachable three ways: keyboard shortcuts, the Ctrl/Cmd+K command palette, and the consolidated editing sidebar, identically in the Editor and the World View. Disabled operations explain why ("Select at least 2 bricks", "Clipboard is empty"), Escape follows one explicit priority chain, and transient feedback reports what just happened. No new commands, no new domain model — the action layer sits entirely above the kernel.
+The editing kernel (0.1.42–0.1.50) is complete. 0.2.0 establishes the
+document as a durable, portable artifact: schema-versioned envelope,
+independent validation, canonical serialization, content hashing, and
+immutable published snapshots with mutation isolation. The editing
+kernel is frozen; all changes are in the serialization, validation,
+and publishing layers.
 
 ## Features
 
