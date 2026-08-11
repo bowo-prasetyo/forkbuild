@@ -292,34 +292,6 @@ export default {
                     author: pub?.author || 'anonymous'
                 };
             });
-            
-            const marqueeStyle = computed(() => {
-                if (!marquee.value) {
-                    return {};
-                }
-                return {
-                    left: `${marquee.value.left}px`,
-                    top: `${marquee.value.top}px`,
-                    width: `${marquee.value.width}px`,
-                    height: `${marquee.value.height}px`
-                };
-            });
-            
-            function updateMarquee(clientX, clientY) {
-                const rect = viewport.value.getBoundingClientRect();
-                marquee.value = {
-                    left: Math.min(marqueeStart.x, clientX) - rect.left,
-                    top: Math.min(marqueeStart.y, clientY) - rect.top,
-                    width: Math.abs(clientX - marqueeStart.x),
-                    height: Math.abs(clientY - marqueeStart.y)
-                };
-            }
-            
-            function endMarquee() {
-                marquee.value = null;
-                marqueeStart = null;
-                marqueeActive = false;
-            }            
 
             cameraPosition.value = state.cameraPosition;
 
@@ -421,6 +393,34 @@ export default {
         // -----------------------------------------------------------------
         // Pointer interaction
         // -----------------------------------------------------------------
+                    
+        const marqueeStyle = computed(() => {
+            if (!marquee.value) {
+                return {};
+            }
+            return {
+                left: `${marquee.value.left}px`,
+                top: `${marquee.value.top}px`,
+                width: `${marquee.value.width}px`,
+                height: `${marquee.value.height}px`
+            };
+        });
+        
+        function updateMarquee(clientX, clientY) {
+            const rect = viewport.value.getBoundingClientRect();
+            marquee.value = {
+                left: Math.min(marqueeStart.x, clientX) - rect.left,
+                top: Math.min(marqueeStart.y, clientY) - rect.top,
+                width: Math.abs(clientX - marqueeStart.x),
+                height: Math.abs(clientY - marqueeStart.y)
+            };
+        }
+        
+        function endMarquee() {
+            marquee.value = null;
+            marqueeStart = null;
+            marqueeActive = false;
+        }            
 
         function onPointerDown(event) {
             isDragging = false;
