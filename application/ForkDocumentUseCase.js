@@ -1,17 +1,22 @@
-import { Document } from '../core/Document.js';
-import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { World } from '../core/World.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { DocumentCloneService } from './DocumentCloneService.js';
 
 // Creates a new Document derived from an existing one. The source is
 // loaded from storage by its world id (publication.documentId), then
-// deeply cloned with fresh instance identities. The result is an
-// ordinary editable Document with parentDocumentId set, ready to be
-// opened by EditorSession.
+// cloned via DocumentCloneService — the single cloning mechanism shared
+// with World View's Duplicate/Fork (0.1.42): fresh instance identities
+// throughout, "Fork of <title>", the current user as author, lineage via
+// parentDocumentId. The result is an ordinary editable Document, ready
+// to be opened by EditorSession.
 export class ForkDocumentUseCase {
-    constructor(storageProvider, documentSerializer = new DocumentSerializer()) {
+    constructor(
+        storageProvider,
+        documentSerializer = new DocumentSerializer(),
+        documentCloneService = new DocumentCloneService()
+    ) {
         this._storageProvider = storageProvider;
         this._documentSerializer = documentSerializer;
+        this._documentCloneService = documentCloneService;
     }
 
     execute(sourceDocumentId, identityProvider = null) {
@@ -19,37 +24,13 @@ export class ForkDocumentUseCase {
         if (json === null) {
             throw new Error(`ForkDocumentUseCase: no document found with id "${sourceDocumentId}"`);
         }
-
         const sourceDocument = this._documentSerializer.deserialize(json);
-        return this._createFork(sourceDocument, identityProvider);
-    }
-
-    _createFork(sourceDocument, identityProvider) {
-        const worldJson = sourceDocument.world.toJSON();
-
-        // Strip every instance ID so World, Building, and Brick all
-        // regenerate fresh UUIDs. A fork is a new document, not a
-        // resurrection of the old one.
-        delete worldJson.id;
-        for (const buildingJson of worldJson.buildings) {
-            delete buildingJson.id;
-            for (const brickJson of buildingJson.bricks) {
-                delete brickJson.id;
-            }
-        }
-
-        const forkedWorld = World.fromJSON(worldJson);
-
         const currentUser = identityProvider ? identityProvider.currentUser() : null;
         const sourceTitle = sourceDocument.metadata.title || 'Untitled';
-        const metadata = new DocumentMetadata({
+        return this._documentCloneService.execute(sourceDocument, {
             title: `Fork of ${sourceTitle}`,
             author: currentUser ? currentUser.username : null,
-            created: new Date(),
-            modified: new Date(),
             parentDocumentId: sourceDocument.world.id
         });
-
-        return new Document({ world: forkedWorld, metadata });
     }
 }
