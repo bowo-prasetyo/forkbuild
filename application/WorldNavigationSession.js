@@ -20,24 +20,18 @@ const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
 const RETRY_DELAYS = [2000, 5000, 10000];
 
-// 0.1.46 note: World View's interactive gizmo is wired here — the SAME
-// SpatialEditingService this session already owned drives it, so a
-// pointer drag in World View and a pointer drag in the Editor produce
-// identical TransformSelectionCommand semantics.
+// 0.1.46: gizmo wiring. 0.1.47: precision + modifier plumbing + gesture
+// feedback; keyboard transforms route through the gesture transaction.
+// 0.1.48: alignSelection/distributeSelection. 0.1.49:
+// applyNumericTransform. One gateway, one command type, byte-identical
+// behavior to the Editor for the same selection.
 //
-// 0.1.47 note: transform precision. This session owns the World View's
-// TransformSettings; snapping is applied INSIDE the gesture transaction,
-// keyboard selection transforms route through it as instantaneous
-// gestures, and gesture feedback travels up to the view's overlay.
-//
-// 0.1.48 note: alignment & distribution. alignSelection(mode) and
-// distributeSelection(axis) go through the same editing service as
-// every other transform input — one gateway, one command type, and
-// byte-identical behavior to the Editor for the same selection.
-//
-// 0.1.49 note: numeric transform input. applyNumericTransform(intent,
-// options) forwards exact user intent to the same editing service — the
-// fifth input source terminating in the same TransformSelectionCommand.
+// 0.1.50: the World View half of the consolidated editing surface —
+// selectAll()/getSelectionCount() join the session API so the shared
+// EditorActionRegistry can drive World View operations exactly as it
+// drives the Editor. Group and clipboard surface (0.1.42/0.1.43)
+// belongs wherever this session is extended in the deployed tree; the
+// action layer degrades gracefully when those methods are absent.
 export class WorldNavigationSession {
     constructor({ registry, loadPublicationDocumentUseCase, worldLayoutProvider }) {
         this._registry = registry;
@@ -72,8 +66,7 @@ export class WorldNavigationSession {
         this.dispose();
         this._container = container;
         this._eventBus = new EventBus();
-        // Constructed before the render session so the session can be
-        // handed the gesture service at wiring time.
+        this._transformSettings = new TransformSettings();
         this._editingService = new SpatialEditingService(
             this,
             this._commandHistories,
@@ -176,7 +169,8 @@ export class WorldNavigationSession {
         return this._session.gizmoPointerDown(
             rawEvent.clientX,
             rawEvent.clientY,
-            this._spatialSelection
+            this._spatialSelection,
+            this._toModifiers(rawEvent)
         ) === true;
     }
 
@@ -259,8 +253,6 @@ export class WorldNavigationSession {
         return this.updateSpatialView();
     }
 
-    // Reconcile the set of loaded worlds with whatever the layout
-    // provider says should be visible from the current camera position.
     updateSpatialView() {
         if (!this._session) {
             return { loaded: [], visible: [], failed: this._getFailedIds() };
@@ -392,11 +384,41 @@ export class WorldNavigationSession {
             this._session.clearSelection();
         }
         this._refreshGizmo();
+        return true;
     }
 
-    // Keyboard translation — routed through the gesture transaction
-    // (0.1.47), so snapping, precision mode, pivot semantics, and the
-    // emitted transform-selection command are identical to a gizmo drag.
+    // 0.1.50 — select every brick in the document the current selection
+    // belongs to (or the focused document when nothing is selected).
+    // Multi-document select-all is deliberately undefined: a spatial
+    // selection references exactly one document.
+    selectAll() {
+        const documentId = (!this._spatialSelection.isEmpty && this._spatialSelection.documentId)
+            || this._focusedDocumentId;
+        const document = documentId ? this._loadedDocuments.get(documentId) : null;
+        if (!document || !this._session) {
+            return false;
+        }
+        const items = [];
+        for (const building of document.world.getBuildings()) {
+            for (const brick of building.getBricks()) {
+                items.push({ type: 'brick', buildingId: building.id, brickId: brick.id });
+            }
+        }
+        if (items.length === 0) {
+            return false;
+        }
+        this._setSpatialSelection(SpatialSelectionState.bricks({ documentId, items }));
+        this._session.selectBricks(items.map((item) => item.brickId), items[items.length - 1].brickId);
+        this._refreshInspection();
+        this._refreshEditingContext();
+        this._refreshGizmo();
+        return true;
+    }
+
+    getSelectionCount() {
+        return this._spatialSelection.isEmpty ? 0 : this._spatialSelection.items.length;
+    }
+
     moveSelection(delta, modifiers = null) {
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
@@ -428,7 +450,6 @@ export class WorldNavigationSession {
         return success;
     }
 
-    // Keyboard rotation around the selection pivot — same routing.
     rotateSelection(deltaRotation, modifiers = null) {
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
@@ -445,10 +466,6 @@ export class WorldNavigationSession {
         return success;
     }
 
-    // Alignment & distribution (0.1.48) — same gateway as every other
-    // transform input. A selected group arrives at the editing service
-    // already resolved to its member bricks; this layer never sees group
-    // identity either.
     alignSelection(mode) {
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
@@ -473,11 +490,6 @@ export class WorldNavigationSession {
         return success;
     }
 
-    // Numeric transform input (0.1.49). intent:
-    //   { translation: { x, y, z } | null, rotation: number | null }
-    // options.absolute selects pivot/primary-target semantics vs. plain
-    // offsets. Snapping never applies to numeric input — explicit intent
-    // is respected literally.
     applyNumericTransform(intent, options = {}) {
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
@@ -580,7 +592,6 @@ export class WorldNavigationSession {
     // -----------------------------------------------------------------
 
     _getActiveCommandHistory() {
-        // Prefer the selected brick's world, then the focused world.
         if (this._spatialSelection && !this._spatialSelection.isEmpty) {
             const document = this._loadedDocuments.get(this._spatialSelection.documentId);
             if (document) {
@@ -654,10 +665,6 @@ export class WorldNavigationSession {
         this._spatialEditingContext = this._editingService.getEditingContext(this._spatialSelection);
     }
 
-    // Gizmo presentation, resolved in document-local coordinates and
-    // lifted into shared world space with the layout offset. During an
-    // active gesture the gesture owns presentation — never reposition
-    // the gizmo under a live drag.
     _refreshGizmo() {
         if (!this._session || !this._editingService || !this._gizmoUseCase) {
             return;
