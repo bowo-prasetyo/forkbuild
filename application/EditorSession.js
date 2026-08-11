@@ -36,7 +36,12 @@ import { ToolId } from './editor-state/ToolId.js';
 // distributeSelection(axis) route the current editor selection through
 // the same gesture service the Editor's keyboard and gizmo transforms
 // use — one gateway, one command type, identical semantics in both
-// views. The UI decides neither the geometry nor the command shape.
+// views.
+//
+// 0.1.49 — numeric transform input: applyNumericTransform(intent,
+// options) forwards exact user intent to the gesture service. The panel
+// parses; the service transforms; this session merely routes — no
+// numeric-specific command, no persistent transform mode.
 export class EditorSession {
     constructor({
         registry,
@@ -102,6 +107,19 @@ export class EditorSession {
             return false;
         }
         return this._gestureService.distributeSelection(this._editorContext.selection, axis);
+    }
+
+    // Numeric transform input (0.1.49). intent:
+    //   { translation: { x, y, z } | null, rotation: number | null }
+    // with null components meaning "unchanged". options.absolute selects
+    // pivot/primary-target semantics vs. plain offsets. One call = at
+    // most one TransformSelectionCommand; the executed command refreshes
+    // the gizmo through the existing subscriptions.
+    applyNumericTransform(intent, options = {}) {
+        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
+            return false;
+        }
+        return this._gestureService.applyNumericTransform(this._editorContext.selection, intent, options);
     }
 
     // Builds the initial runtime graph against the demo world. Called
