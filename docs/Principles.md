@@ -83,3 +83,18 @@ makes mutation isolation impossible.
 Publishing validates before storing (0.2.0). A corrupt document must not
 enter the published corpus. The DocumentValidator runs as part of the
 publish pipeline, and refusal is a hard error, not a warning.
+
+**docs/Principles.md** — append:
+
+```markdown
+Migration happens before domain entry (0.2.2). Old-format compatibility
+code lives in the schema migrator, never in Brick, Group, World, or any
+editing service. Domain classes only ever see current-schema JSON. This
+is the cardinal rule that keeps the domain clean as the protocol evolves.
+
+Validation is independent of the UI (0.2.2). DocumentValidator is pure:
+no Vue, no Three.js, no session, no browser APIs. Given only a plain
+object, it answers "is this structurally a valid ForkBuild document?"
+The same validator runs from file import, server receipt, published-world
+loading, and test suites. The validation result is the same regardless
+of context.
