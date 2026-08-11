@@ -40,7 +40,8 @@
 0.1.37 Persistent Command History  (done)
 0.1.38 Transform Gizmo & Group Pivot  (done)
 0.1.39 World View Persistence & Publication UI  (done)
-0.1.40 Command Replay / Operation Timeline  (done)
+0.1.40 Command Replay / Operation Timelin
 0.1.41 Historical State Restoration  (done)
-0.1.42 Advanced Selection & Grouping
+0.1.42 Document Duplication, Forking & Clipboard  (done)
+0.1.43 Advanced Selection & Grouping
 0.2    Blockchain publishing, multiplayer
