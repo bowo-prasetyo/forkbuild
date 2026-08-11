@@ -532,3 +532,31 @@ document cannot overwrite a published snapshot.
 Canonical serialization: serialize → deserialize → serialize produces
 byte-identical JSON. Property ordering is insertion-ordered (ES2015
 guarantee); array ordering follows Map insertion order.
+
+Editing Capability Parity (0.2.1)
+
+The 0.2.1 milestone establishes that both editing surfaces are clients
+of the same editing capabilities. The difference between Editor View
+and World View is presentation and navigation emphasis, not different
+meanings of operations.
+
+The capability matrix (see docs/CapabilityMatrix.md) is the normative
+reference. Every mutable document operation supported by Editor View is
+available through the same action/command pathway in World View, subject
+only to explicitly documented presentation or navigation constraints.
+
+The action registry (0.1.50) is the authoritative capability vocabulary.
+Both views construct createStandardActions() with their own session
+bound in. If an operation is missing from a session, the action degrades
+to friendly feedback — it never silently disappears.
+
+The parity test (tests/EditingParity.test.js) verifies:
+- Both sessions expose the same set of editing methods
+- The action registry produces identical action IDs for equivalent contexts
+- EditorActionContext.capture() works identically on both surfaces
+- The capability matrix is internally consistent
+- Surface-specific methods are documented and separated
+
+This is the foundation for collaboration: when multiplayer arrives,
+both surfaces will synchronize document mutations through the same
+command layer, not through surface-specific behavior.
