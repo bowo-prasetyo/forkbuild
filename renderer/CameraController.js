@@ -6,12 +6,10 @@ import { CameraState } from './CameraState.js';
 const DEFAULT_FOV = 60;
 const DEFAULT_NEAR = 0.1;
 const DEFAULT_FAR = 1000;
-
 const DEFAULT_MIN_DISTANCE = 2;
 const DEFAULT_MAX_DISTANCE = 150;
 // Just under 90 degrees so the camera can't orbit below the grid plane.
 const DEFAULT_MAX_POLAR_ANGLE = Math.PI / 2 - 0.01;
-
 const RESET_KEY = 'Home';
 
 // Owns the camera and everything needed to move it around by hand: orbit,
@@ -19,10 +17,13 @@ const RESET_KEY = 'Home';
 // and reset. This class only knows how to be *driven* — focus(), saved/
 // restored state, and smooth transitions are Camera Intelligence (0.1.8)
 // and deliberately live elsewhere once they exist.
+//
+// As of 0.1.45, setEnabled() lets a view temporarily suspend user-driven
+// camera interaction — used during marquee selection so a Shift+drag
+// draws a selection rectangle instead of orbiting the camera.
 export class CameraController {
     constructor(domElement, aspect) {
         this._camera = new THREE.PerspectiveCamera(DEFAULT_FOV, aspect, DEFAULT_NEAR, DEFAULT_FAR);
-
         this._defaultState = new CameraState();
         this._applyState(this._defaultState, this._camera);
 
@@ -50,6 +51,13 @@ export class CameraController {
     setAspect(aspect) {
         this._camera.aspect = aspect;
         this._camera.updateProjectionMatrix();
+    }
+
+    // Suspends/resumes user-driven orbit/pan/zoom (0.1.45). Views call
+    // this while a Shift+drag marquee is in progress, and re-enable on
+    // pointer-up. Programmatic camera control (setState) still works.
+    setEnabled(enabled) {
+        this._controls.enabled = enabled;
     }
 
     // Called once per frame by Renderer so OrbitControls damping/inertia
