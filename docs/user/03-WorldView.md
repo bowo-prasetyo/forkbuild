@@ -70,3 +70,35 @@ This is one of ForkBuild's most powerful features. Every change you make is
 recorded as an **operation**, and the timeline lets you travel through them.
 
 Click **Timeline** in the overlay to open it. You'll see a list like:
+
+`
+<pre>
+Place Brick
+Place Brick
+Move 3 Bricks
+Rotate 3 Bricks
+Paste 3 Bricks
+</pre>
+`
+
+### Preview any moment
+
+Click an operation to **preview** what the world looked like *right after* that
+step. Keep clicking to scrub backward and forward through your build history.
+
+> **Previews never change anything.** You're just looking. Click **Cancel
+> Preview** to return to where you are.
+
+### Restore an earlier state
+
+While previewing, click **Restore Here** to make that historical state your
+**current** one. ForkBuild will ask you to confirm, because this replaces your
+present edits.
+
+This is invaluable when an experiment goes wrong — just travel back to the last
+good moment and restore it.
+
+## What's next?
+
+Ready to share what you've made, or remix someone else's work? Continue to
+**[Publishing & Forking](04-PublishingAndForking.md)**.
