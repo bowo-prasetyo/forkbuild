@@ -23,19 +23,32 @@ import { TransformAlignment } from './TransformAlignment.js';
 // and pointer stay byte-identical.
 //
 // As of 0.1.48 this transaction is also the home of ALIGNMENT and
-// DISTRIBUTION (alignSelection/distributeSelection). These are
-// transform-generation algorithms, not new command types: they compute
-// exact absolute transforms for the resolved selection (pure math in
-// TransformAlignment) and submit them through the SAME
-// TransformSelectionCommand every other transform input uses. One
-// deliberate distinction: alignment/distribution BYPASS gesture snapping.
-// 0.1.47 snapping governs user-authored gesture deltas; alignment and
-// distribution produce geometric relationships and must land exactly on
-// their computed targets. No-op operations (fewer than two bricks for
-// alignment, fewer than three or a zero span for distribution, or an
-// already-satisfied arrangement) create zero history entries — the same
-// transformsEqual discipline commitTransformGesture has enforced since
-// 0.1.38, not a special history rule.
+// DISTRIBUTION (alignSelection/distributeSelection): transform-generation
+// algorithms that compute exact absolute targets and submit them through
+// the SAME TransformSelectionCommand, bypassing gesture snapping because
+// they produce geometric relationships, not user-authored deltas.
+//
+// As of 0.1.49 this transaction is also the home of NUMERIC TRANSFORM
+// INPUT (applyNumericTransform): exact user-entered translation/rotation
+// intent, translated into the same gesture-shaped transform every other
+// input produces and committed with snapping disabled. Five fundamentally
+// different input sources — keyboard, gizmo, alignment, distribution,
+// numeric — now all terminate in one command type:
+//
+//   keyboard ──┐
+//   gizmo ─────┤
+//   alignment ─┼──► TransformSelectionCommand
+//   distribute ┤
+//   numeric ───┘
+//
+// Snapping policy, stated once for the whole class:
+//   keyboard/gizmo          → snapping applies (0.1.47)
+//   numeric input           → exact requested value, never snapped
+//   alignment/distribution  → exact geometric result, never snapped
+// Snapping interprets imprecise gestures; explicit intent is respected
+// literally. No-op operations (already at target, zero delta, empty
+// input) create zero history entries — the transformsEqual discipline,
+// unchanged since 0.1.38.
 export class SpatialEditingService {
     constructor(session, commandHistories, brickRegistry = null, transformSettings = new TransformSettings()) {
         this._session = session;
@@ -206,7 +219,8 @@ export class SpatialEditingService {
     // order is irrelevant). mode: 'x-min' | 'x-center' | 'x-max' |
     // 'y-min' | ... | 'z-max'. Requires >= 2 bricks to do anything
     // useful; fewer collapses to a no-op through the transformsEqual
-    // check. Bypasses gesture snapping by design — see class header.
+    // check. Bypasses gesture snapping by design — alignment targets are
+    // exact geometric relationships, not user-authored deltas.
     alignSelection(selection, mode) {
         return this._executeLayoutOperation(
             selection,
@@ -255,6 +269,87 @@ export class SpatialEditingService {
             description: `${verb} ${after.length} ${after.length === 1 ? 'Brick' : 'Bricks'}`
         }));
         return true;
+    }
+
+    // ------------------------------------ numeric transform input (0.1.49)
+
+    // Numeric input is an input surface, not a transform system. This
+    // method translates exact user intent into the same gesture-shaped
+    // transform every other input produces and submits it through the
+    // existing transaction with snapping DISABLED — numeric entry is
+    // explicit intent, so it must never be reinterpreted by gesture
+    // snapping.
+    //
+    // intent: { translation: { x, y, z } | null, rotation: number | null }
+    //   null translation/rotation (and null components) mean "unchanged"
+    //   — never silently zero.
+    // options.absolute:
+    //   translation — values are TARGETS for the selection PIVOT; every
+    //     member receives the same delta (target − pivot), preserving the
+    //     selection's internal geometry. Single brick, multi-selection,
+    //     and resolved group all share this one rule.
+    //   rotation — the value is a TARGET for the PRIMARY brick's
+    //     orientation; every member receives the same delta, preserving
+    //     relative orientations. (Offset mode applies the value as a
+    //     delta directly.)
+    //
+    // One Apply == one commit == at most one TransformSelectionCommand,
+    // even when translation and rotation are combined. No-op input
+    // (already at target, zero delta, nothing entered) commits nothing.
+    // Returns true only when a command was actually committed.
+    applyNumericTransform(selection, intent, { absolute = false } = {}) {
+        if (!selection || selection.isEmpty || selection.type === 'ground') return false;
+        if (this._gizmoState.active) return false;
+        if (!intent || (intent.translation === null && (intent.rotation === null || intent.rotation === undefined))) {
+            return false;
+        }
+        const document = this._session.getDocument(selection.documentId);
+        if (!document) return false;
+        const gesture = {};
+        if (intent.translation) {
+            let pivot = null;
+            if (absolute) {
+                pivot = this.getGroupPivot(selection);
+                if (!pivot) return false;
+            }
+            gesture.translation = {
+                x: this._numericAxisDelta(intent.translation.x, absolute ? pivot.x : 0, absolute),
+                y: this._numericAxisDelta(intent.translation.y, absolute ? pivot.y : 0, absolute),
+                z: this._numericAxisDelta(intent.translation.z, absolute ? pivot.z : 0, absolute)
+            };
+        }
+        if (intent.rotation !== null && intent.rotation !== undefined) {
+            if (absolute) {
+                const primaryRotation = this._capturePrimaryRotation(document.world, selection);
+                if (primaryRotation === null) return false;
+                gesture.rotation = TransformMath.normalizeDegrees(intent.rotation - primaryRotation);
+            } else {
+                gesture.rotation = intent.rotation;
+            }
+        }
+        if (gesture.translation === undefined && gesture.rotation === undefined) return false;
+        if (!this.beginTransformGesture(selection, {
+            mode: gesture.translation ? 'translate' : 'rotate',
+            axis: null
+        })) {
+            return false;
+        }
+        return this.commitTransformGesture(selection, gesture, { snap: false });
+    }
+
+    _numericAxisDelta(value, reference, absolute) {
+        if (value === null || value === undefined) {
+            return 0;
+        }
+        return absolute ? value - reference : value;
+    }
+
+    _capturePrimaryRotation(world, selection) {
+        const primary = selection.primary;
+        if (!primary) return null;
+        const building = world.getBuilding(primary.buildingId);
+        const brick = building ? building.findBrick(primary.brickId) : null;
+        return brick ? brick.rotation : null;
     }
 
     // -------------------------------------------------- gesture contract
@@ -333,11 +428,16 @@ export class SpatialEditingService {
     // given the same raw transform, settings, and modifier state, this
     // always returns the same snapped transform and feedback — which is
     // what makes repeated previews stable and pointer motion reversible.
-    // With snapping disabled the raw transform passes through untouched.
+    //
+    // Bypasses (transform passes through untouched):
+    //   - snapping disabled in TransformSettings
+    //   - gestureOptions.snap === false — explicit-intent inputs:
+    //     numeric transform input (0.1.49) sets this; alignment and
+    //     distribution never enter this path at all.
     _snapGestureTransform(transform, gestureOptions = {}) {
         const settings = this._transformSettings;
         const precise = !!(gestureOptions.modifiers && gestureOptions.modifiers.shift);
-        if (!settings.snappingEnabled) {
+        if (gestureOptions.snap === false || !settings.snappingEnabled) {
             return {
                 transform,
                 feedback: this._buildFeedback(transform, null, null, precise)
