@@ -1,11 +1,26 @@
 // Pure data: which brick(s), if any, are currently selected, and which
 // building they belong to. The state stores application-level references,
 // never Brick objects, so it can grow toward collaboration/persistence.
+//
+// As of 0.1.45: toggle() implements Ctrl/Cmd-click, add() implements
+// Shift-click and additive marquee (union — adding an already-selected
+// brick changes nothing). Both are session state changes; neither is
+// ever a history entry.
 export class SelectionState {
     constructor({ brickId = null, buildingId = null, items = null } = {}) {
-        this._items = items
+        const rawItems = items
             ? items.map((item) => ({ ...item }))
             : (brickId && buildingId ? [{ type: 'brick', brickId, buildingId }] : []);
+        const seen = new Set();
+        this._items = [];
+        for (const item of rawItems) {
+            const key = `${item.buildingId}:${item.brickId}`;
+            if (seen.has(key)) {
+                continue;
+            }
+            seen.add(key);
+            this._items.push(item);
+        }
     }
 
     get brickId() { return this.primary ? this.primary.brickId : null; }
@@ -22,6 +37,16 @@ export class SelectionState {
             items: exists
                 ? this._items.filter((item) => !(item.brickId === brickId && item.buildingId === buildingId))
                 : [...this._items, { type: 'brick', brickId, buildingId }]
+        });
+    }
+
+    add(brickId, buildingId) {
+        const exists = this._items.some((item) => item.brickId === brickId && item.buildingId === buildingId);
+        if (exists) {
+            return this;
+        }
+        return new SelectionState({
+            items: [...this._items, { type: 'brick', brickId, buildingId }]
         });
     }
 
