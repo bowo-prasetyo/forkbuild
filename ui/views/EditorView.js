@@ -16,6 +16,7 @@ import Toolbar from '../components/Toolbar.js';
 import Sidebar from '../components/Sidebar.js';
 import TransformFeedback from '../components/TransformFeedback.js';
 import AlignmentPanel from '../components/AlignmentPanel.js';
+import NumericTransformPanel from '../components/NumericTransformPanel.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 
 // TEMPORARY: '1'/'2' switch tools directly via EditorContext.setActiveTool.
@@ -34,11 +35,16 @@ import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase
 // selected in the Select tool. The view tracks the selection count via
 // SELECTION_CHANGED and forwards align/distribute clicks to
 // EditorSession — it decides neither the geometry nor the commands.
+//
+// 0.1.49: the sidebar hosts the NumericTransformPanel. The panel parses;
+// this view forwards one structured intent per Apply to
+// EditorSession.applyNumericTransform — no numeric-specific command,
+// no transform mode.
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, Sidebar, TransformFeedback, AlignmentPanel },
+    components: { Toolbar, Sidebar, TransformFeedback, AlignmentPanel, NumericTransformPanel },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -70,6 +76,10 @@ export default {
                         :selection-count="selectionCount"
                         :align="alignSelection"
                         :distribute="distributeSelection"
+                    />
+                    <NumericTransformPanel
+                        :selection-count="selectionCount"
+                        :apply="applyNumericTransform"
                     />
                 </div>
                 <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
@@ -127,6 +137,10 @@ export default {
 
         function distributeSelection(axis) {
             editorSession.distributeSelection(axis);
+        }
+
+        function applyNumericTransform(intent, options) {
+            editorSession.applyNumericTransform(intent, options);
         }
 
         let onPointerDown = null;
@@ -251,6 +265,7 @@ export default {
             setTool,
             alignSelection,
             distributeSelection,
+            applyNumericTransform,
             ToolId
         };
     }
