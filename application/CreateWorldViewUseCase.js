@@ -7,19 +7,17 @@ import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
 import { CreateCommandRegistryUseCase } from './CreateCommandRegistryUseCase.js';
 import { ReplayDocumentUseCase } from './ReplayDocumentUseCase.js';
+import { RestoreHistoryStateUseCase } from './RestoreHistoryStateUseCase.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
 //
-// As of 0.1.39 this wires the persistence and publication pipelines
-// (0.1.20A / 0.1.22) into World View. As of 0.1.40 it also wires replay:
-// a CommandRegistry (all built-in command types) feeds a
-// ReplayDocumentUseCase that the session uses for the Operation Timeline
-// preview. ui/ still never imports any of it directly.
-//
-// identityProvider is optional: anonymous publishing works (author null),
-// exactly as in the Editor.
+// 0.1.39 wired persistence & publication; 0.1.40 wired replay and the
+// Operation Timeline; 0.1.41 adds restoration: a RestoreHistoryStateUseCase
+// built on the same ReplayDocumentUseCase the timeline preview uses — one
+// reconstruction path for both, differing only in where the result lands
+// (preview world vs live document). ui/ still never imports any of it.
 export class CreateWorldViewUseCase {
     execute(identityProvider = null) {
         const storageProvider = new LocalStorageProvider();
@@ -36,6 +34,9 @@ export class CreateWorldViewUseCase {
         const replayDocumentUseCase = new ReplayDocumentUseCase(
             new CreateCommandRegistryUseCase().execute()
         );
+        const restoreHistoryStateUseCase = new RestoreHistoryStateUseCase(
+            replayDocumentUseCase
+        );
         return {
             createSession(registry) {
                 return new WorldNavigationSession({
@@ -44,7 +45,8 @@ export class CreateWorldViewUseCase {
                     worldLayoutProvider,
                     saveDocumentUseCase,
                     publishDocumentUseCase,
-                    replayDocumentUseCase
+                    replayDocumentUseCase,
+                    restoreHistoryStateUseCase
                 });
             }
         };
