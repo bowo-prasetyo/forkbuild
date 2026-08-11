@@ -23,17 +23,20 @@ import { ToolId } from './editor-state/ToolId.js';
 // — it never touches a World, Renderer, or ToolManager directly, before
 // or after a document is replaced.
 //
-// 0.1.46 — interactive transform gizmo wiring (unchanged in 0.1.47):
-// EditorSession owns the Editor's gesture service, gizmo presentation
-// refresh, and exclusive input routing.
+// 0.1.46 — interactive transform gizmo wiring: EditorSession owns the
+// Editor's gesture service, gizmo presentation refresh, and exclusive
+// input routing.
 //
-// 0.1.47 — transform precision: the session constructs ONE
-// TransformSettings (session preferences, never document state) and
-// hands it to the gesture service, where snapping is applied inside the
-// gesture transaction. Pointer move/up forward the raw modifier state
-// into the transaction (Shift = precision mode) and return the
-// transaction's gesture feedback upward, so EditorView's transient
-// overlay can show exactly the snapped transform that will commit.
+// 0.1.47 — transform precision: ONE TransformSettings (session
+// preferences, never document state) handed to the gesture service,
+// where snapping is applied inside the gesture transaction; pointer
+// move/up forward modifier state down and gesture feedback up.
+//
+// 0.1.48 — alignment & distribution: alignSelection(mode) and
+// distributeSelection(axis) route the current editor selection through
+// the same gesture service the Editor's keyboard and gizmo transforms
+// use — one gateway, one command type, identical semantics in both
+// views. The UI decides neither the geometry nor the command shape.
 export class EditorSession {
     constructor({
         registry,
@@ -81,6 +84,24 @@ export class EditorSession {
 
     isGestureActive() {
         return this._gestureService.transformGizmoState.active;
+    }
+
+    // Alignment & distribution (0.1.48). Both delegate straight to the
+    // gesture service with the current editor selection; the executed
+    // command fires COMMAND_EXECUTED, which the existing gizmo-refresh
+    // subscriptions already react to — no extra wiring needed.
+    alignSelection(mode) {
+        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
+            return false;
+        }
+        return this._gestureService.alignSelection(this._editorContext.selection, mode);
+    }
+
+    distributeSelection(axis) {
+        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
+            return false;
+        }
+        return this._gestureService.distributeSelection(this._editorContext.selection, axis);
     }
 
     // Builds the initial runtime graph against the demo world. Called
