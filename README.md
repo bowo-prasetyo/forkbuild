@@ -6,9 +6,9 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.41** — Historical State Restoration
+**Version 0.1.42** — Document Duplication, Forking & Clipboard
 
-The operation lifecycle is now complete: execute → persist → undo/redo → replay → inspect → **restore**. From the Operation Timeline, any historical state can be previewed non-destructively and then explicitly committed as the new live document. Restoration rebuilds the selected state through the replay system, rebases editing onto a fresh command history rooted there (dirty until explicitly saved), and retires the old history as an inspectable artifact — undo/redo never reach into the discarded future, and no command is ever duplicated.
+Worlds are now safely cloneable, forkable, and copy/pasteable. One cloning mechanism (`DocumentCloneService`) powers both Duplicate and Fork — new document identity, fresh brick identities, lineage preserved, source never touched. Copy is pure observation (clipboard state carrying pivot-relative intent — brick ids are never copied); Paste is a single atomic `PasteBricksCommand` through `CommandHistory`, so it is undoable, replayable, and restorable like every other operation. Clones and forks start as fresh dirty sessions and become real publications when published.
 
 ## Features
 
@@ -26,7 +26,9 @@ The operation lifecycle is now complete: execute → persist → undo/redo → r
 - **World View Save & Publish** — Save the active world (button or Ctrl/Cmd+S) and publish it with automatic save-first when dirty. Per-world dirty indicators; dirty worlds are never stream-unloaded.
 - **Command Replay & Operation Timeline** — Deterministic reconstruction of any historical world state from the persistent command history (baseline snapshot + serialized command re-execution, transactional and history-suppressed). Timeline panel in World View with click-to-preview, composite-aware entries, undone-state awareness, and non-destructive cancel.
 - **Historical State Restoration** — Commit any previewed timeline state as the current document via an explicit, confirmed destructive action: replay-based reconstruction, rebased history with save-point invalidation (dirty until saved), retired-history artifacts, and full save/publish compatibility.
-
+- **Document Duplication & Forking** — Duplicate or fork any loaded world from World View: fresh identities throughout, lineage metadata (`parentDocumentId`), current-user attribution, and a fresh dirty editing session. The Repository/Author fork flow now delegates to the same cloning mechanism.
+- **Clipboard Copy/Paste** — Ctrl+C copies a multi-selection as pivot-relative intent (never ids); Ctrl+V pastes it as one atomic `Paste 3 Bricks` command with cascading offset, full undo/redo/replay/restore support, and automatic selection of the pasted bricks.
+  
 ## Architecture
 
 ForkBuild is layered as **core / application / renderer / ui**, with infrastructure adapters (storage, publisher, discovery, serializer, world-layout) surrounding them.
@@ -88,7 +90,8 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.39 World View Persistence & Publication UI
 - [x] 0.1.40 Command Replay / Operation Timeline
 - [x] 0.1.41 Historical State Restoration
-- [ ] 0.1.42 Advanced Selection & Grouping
+- [x] 0.1.42 Document Duplication, Forking & Clipboard
+- [ ] 0.1.43 Advanced Selection & Grouping
 - [ ] 0.2 Blockchain publishing, multiplayer
 
 ## License
