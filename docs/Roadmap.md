@@ -1,3 +1,4 @@
+=== FILE: ./docs/Roadmap.md ===
 0.1.1  Project Skeleton                     (done)
 0.1.2  Rendering Infrastructure             (done)
 0.1.3  Core Domain Model                    (done)
@@ -39,12 +40,14 @@
 0.1.36 Multi-Selection & Atomic Group Operations  (done)
 0.1.37 Persistent Command History  (done)
 0.1.38 Transform Gizmo & Group Pivot  (done)
-0.1.39 World View Persistence & Publication UI  (done)
-0.1.40 Command Replay / Operation Timelin
-0.1.41 Historical State Restoration  (done)
-0.1.42 Document Duplication, Forking & Clipboard  (done)
-0.1.43 Advanced Selection, Grouping & Editing Parity  (done)
+0.1.39 Command Replay / Operation Timeline  (done)
+0.1.40 Advanced Selection & Grouping  (done)
+0.1.41 Unified Transform Architecture  (done)
+0.1.42 Clipboard & Editing Kernel Consolidation  (done)
+0.1.43 Groups & Selection Separation  (done)
 0.1.44 Transform Parity & Group Gizmo Architecture  (done)
 0.1.45 Advanced Selection & Editor Group Surface  (done)
-0.1.46 Nested Groups / Hierarchical Editing  (optional)
+0.1.46 Interactive Transform Gizmo & Viewport Editing Parity  (done)
+0.1.47 Editing UX / Alignment / Snapping
+0.1.48 Nested Groups / Hierarchical Editing  (optional)
 0.2    Blockchain publishing, multiplayer
