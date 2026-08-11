@@ -11,6 +11,17 @@ logical bounds so placement calculations can be geometry-agnostic.
 
 Brick
 
+A Brick carries id (instance UUID), definitionId (type identifier),
+position (brick-local Position), and rotation (degrees around Y).
+As of 0.1.46 these are the ONLY transform fields the protocol
+recognizes. Interactive gizmo gestures may only produce new values for
+exactly these fields — the gizmo deliberately has no scale handle
+because scale has no settled protocol semantics yet (definition
+dimensions, collision, serialization, rotation + scale interaction,
+copy/paste, group duplication, and renderer geometry are all unsettled).
+Introducing Brick.scale is a protocol change, not a gizmo feature, and
+will be designed as such when it happens.
+
 World
 
 Library
@@ -66,11 +77,6 @@ the current viewer knows about an object or selection, not the object
 itself, and therefore never appears in serialized Documents, Publications,
 or WorldLayout records.
 
-Marquee rectangles (added 0.1.45) are transient viewport gestures —
-screen-space session state used only to compute a selection. They are
-never serialized, transmitted, or persisted, like every other
-selection mechanism in this protocol.
-
 Spatial Editing Context (added 0.1.32) is explicitly excluded from
 the protocol. It describes what operations the current viewer is
 permitted to perform on a selected spatial object or multi-selection,
@@ -82,6 +88,28 @@ the protocol. It describes where a brick would be placed in the
 current viewer's session, not a committed placement. The committed
 placement becomes part of the domain model (World/Brick) only after
 PlaceBrickCommand executes.
+
+Transform Gesture State (added 0.1.46) is explicitly excluded from the
+protocol. TransformGizmoState (gesture mode/axis, active flag, pivot,
+selection bounds, captured initial transforms) and the transient gizmo
+hover/active handle state describe an in-progress viewport gesture in
+the current viewer's session — they are never serialized, never
+transmitted, and never enter command history. The ONLY protocol-visible
+output of an interactive gizmo gesture is new position/rotation values
+on the affected Bricks, persisted (when session persistence is enabled)
+as exactly one `transform-selection` command inside the optional
+command-history envelope described in 0.1.37. A replayed history
+reproduces the gesture's RESULT — never its intermediate previews, and
+never the gesture itself. Two viewers performing "the same drag"
+produce the same command; the pointer path that got them there is not
+part of the protocol and does not need to be.
+
+Groups (0.1.43) and transform gestures: a transform gesture — keyboard
+or gizmo — changes only the transforms of the selected bricks. Group
+membership (whatever structure carries it) is never modified by a
+transform gesture, and the gizmo itself carries no group identity at
+all: it receives a resolved selection (items + bounds + pivot). Undoing
+a gesture restores every affected brick's prior transform in one step.
 
 WorldPosition
 
@@ -105,12 +133,6 @@ Document. It carries:
   from (null for original works). Added in 0.1.23 as the foundation
   for Forking.
 
-Publication is not Domain State in the same sense as World/Building/Brick,
-but it is part of the protocol layer that connects ForkBuild to external
-systems. A future Discovery layer will index Publications so that
-Repository View, World View, and Author View can query them without
-depending on any specific blockchain.
-
 Publication vs Document vs Location
 
 Three protocol layers, kept strictly separate:
@@ -121,98 +143,55 @@ Three protocol layers, kept strictly separate:
   exists in a shared coordinate system.
 
 Publication does not carry geometry or coordinates. Document does not
-carry layout data. WorldLayoutProvider does not load Documents. This
-separation means the same Document can appear in multiple exhibitions,
-layouts, or worlds without protocol changes.
+carry layout data. WorldLayoutProvider does not load Documents.
 
 Discovery
 
 As of 0.1.23, Discovery is a separate protocol concern from Publishing.
-While a PublisherProvider answers "how do I publish?", a DiscoveryProvider
-answers "how do I find what has been published?" The Discovery interface
-operates on Publications, not on raw blockchain posts or storage keys.
-
 DiscoveryProvider contract:
+
 - list() → Publication[]
 - findById(id) → Publication | null
 - findByAuthor(author) → Publication[]
 - findByParentId(parentDocumentId) → Publication[]
 - findByDocumentId(documentId) → Publication[]
 
-This separation ensures that Repository View, Author View, and World View
-can consume Publications without knowing whether the underlying source is
-LocalStorage, Steem, Hive, Ethereum, IPFS, or another ForkBuild node.
-
 Discovery Views (0.1.26–0.1.27)
 
 Three view modes consume the same DiscoveryProvider abstraction,
 augmented by WorldLayoutProvider for spatial navigation:
 
-1. **Repository View** — technical exploration. A flat or filtered list
-   of Publications with fork counts, lineage hints, and actions (Open,
-   Fork, Explore).
-
-2. **Author View** — social exploration. A portfolio page for a single
-   author, including their original works, forks, and recursive fork
-   trees reconstructed from parentDocumentId.
-
-3. **World View** — spatial exploration. A read-only 3D rendering of
-   a published Document's World, positioned in a shared coordinate system
-   by WorldLayoutProvider. Requires loading the full Document geometry;
-   metadata alone is insufficient. As of 0.1.27, the camera is placed at
-   the world's layout coordinate and spatial neighbors are surfaced.
-
-All three views navigate the same underlying creation graph through
-different edges: Repository explores "contains" (publication lists),
-Author explores "authored" (creator attribution), and World explores
-"spatial" (geometry and placement via WorldLayoutProvider). None require
-separate discovery systems; all consume Publication through
-DiscoveryProvider.
+1. **Repository View** — technical exploration.
+2. **Author View** — social exploration.
+3. **World View** — spatial exploration; as of 0.1.46 also an editing
+   surface (interactive gizmo), whose edits persist through the same
+   command-history mechanism as the Editor's.
 
 WorldLayoutProvider contract (0.1.27):
+
 - findVisibleDocuments(viewCenter, viewRadius) → string[] (documentIds)
 - getPosition(documentId) → WorldPosition
-
-Implementations may be deterministic grids, geographic coordinates,
-procedural islands, or curated exhibitions. The protocol does not
-prescribe the placement algorithm, only the query interface.
-
-Group (new in 0.1.43)
-A Group is document state: { id, name, brickIds[] } — a flat, named
-relationship between bricks, serialized inside World JSON. Group ids are
-independent UUIDs; membership references brick ids and is resolved
-against the live world (referential). Groups never carry geometry or
-transforms. Selection/clipboard state remains excluded from the
-protocol; group CREATION/MEMBERSHIP mutations travel as commands
-(create-group, delete-group, rename-group, add-to-group,
-remove-from-group, duplicate-group) through the command history like
-every other persistent mutation.
 
 Identity Layers
 
 ForkBuild distinguishes three kinds of identity, each at a different
 layer of the protocol:
 
-1. Document Identity — `world.id` (UUID). The canonical identifier for
-   a creation itself. One document may be published multiple times; its
-   `world.id` remains the stable pointer to that creation.
+1. Document Identity — `world.id` (UUID).
+2. Publication Identity — `publication.id` (UUID).
+3. Blockchain Identity — future.
 
-2. Publication Identity — `publication.id` (UUID). Identifies a specific
-   publish event, not the document. A document may have many publications
-   (republished to another provider, or published again after edits).
-   Publication carries `documentId` to reference the document it
-   published, but retains its own distinct identity.
-
-3. Blockchain Identity — future. A transaction hash, operation ID, or
-   on-chain content identifier. The publisher adapter maps between
-   Publication and blockchain-native identifiers without either concept
-   leaking into the other layers.
-
-Protocol 
+Protocol
 
 DomainEvent vocabulary (0.1.32):
+
 - BRICK_ADDED
 - BRICK_REMOVED
 - BRICK_UPDATED
 - BUILDING_ADDED
 - BUILDING_REMOVED
+
+No new domain events were added in 0.1.46. The interactive gizmo
+reuses the existing BRICK_UPDATED path for its live preview and the
+existing command/history machinery for its commit — pointer interaction
+is an input concern, not a domain event.
