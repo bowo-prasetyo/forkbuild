@@ -2,11 +2,18 @@ import * as THREE from 'three';
 import { Position } from '../core/Position.js';
 import { WorldPosition } from '../core/WorldPosition.js';
 
-// Answers two questions, both from screen coordinates: what brick (if
-// any) is under this position (pick), and where would a ray hit the
-// ground plane (pickGroundPosition)? Nothing about selection, preview
-// state, or UI — those are separate concerns built on top of this.
-// Picking does not depend on Selection or Preview; they depend on it.
+// Answers three questions, all from screen coordinates: what brick (if
+// any) is under this position (pick), where would a ray hit the ground
+// plane (pickGroundPosition), and which bricks' centers project inside a
+// screen rectangle (pickInRectangle, added 0.1.45 for marquee
+// selection)? Nothing about selection, preview state, or UI — those are
+// separate concerns built on top of this. Picking does not depend on
+// Selection or Preview; they depend on it.
+//
+// pickInRectangle is deliberately a CENTER test — a brick counts when
+// its mesh's world position projects inside the rectangle. Full
+// projected-bounds intersection is future work; center-in-rect is the
+// V0.1 simplification and matches how most editors feel at brick scale.
 export class PickingService {
     constructor(camera, domElement, meshRegistry) {
         this._camera = camera;
@@ -36,7 +43,6 @@ export class PickingService {
 
         const meshes = this._meshRegistry.getAllMeshes();
         const intersections = this._raycaster.intersectObjects(meshes, false);
-
         if (intersections.length === 0) {
             return null;
         }
@@ -82,8 +88,50 @@ export class PickingService {
         if (!hit) {
             return null;
         }
-
         return new WorldPosition(target.x, target.y, target.z);
+    }
+
+    // Marquee containment (0.1.45). Screen rectangle in CLIENT
+    // coordinates; returns one entry per registered mesh whose world
+    // position projects inside the rectangle:
+    //   [{ brickId, buildingId, documentId }]
+    // documentId is null for meshes loaded through the event-driven
+    // (single-world Editor) path — callers in that surface ignore it.
+    pickInRectangle(screenX0, screenY0, screenX1, screenY1) {
+        const rect = this._domElement.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+            return [];
+        }
+        const toNdcX = (clientX) => ((clientX - rect.left) / rect.width) * 2 - 1;
+        const toNdcY = (clientY) => -(((clientY - rect.top) / rect.height) * 2 - 1);
+
+        const ndcMinX = Math.min(toNdcX(screenX0), toNdcX(screenX1));
+        const ndcMaxX = Math.max(toNdcX(screenX0), toNdcX(screenX1));
+        const ndcMinY = Math.min(toNdcY(screenY0), toNdcY(screenY1));
+        const ndcMaxY = Math.max(toNdcY(screenY0), toNdcY(screenY1));
+
+        const hits = [];
+        const projected = new THREE.Vector3();
+        for (const mesh of this._meshRegistry.getAllMeshes()) {
+            projected.setFromMatrixPosition(mesh.matrixWorld).project(this._camera);
+            if (projected.z < -1 || projected.z > 1) {
+                continue; // behind the camera or beyond the frustum depth
+            }
+            if (projected.x < ndcMinX || projected.x > ndcMaxX
+                || projected.y < ndcMinY || projected.y > ndcMaxY) {
+                continue;
+            }
+            const brickId = this._meshRegistry.getBrickId(mesh.uuid);
+            if (!brickId) {
+                continue;
+            }
+            hits.push({
+                brickId,
+                buildingId: this._meshRegistry.getBuildingId(brickId),
+                documentId: this._meshRegistry.getDocumentId(brickId)
+            });
+        }
+        return hits;
     }
 
     _toNormalizedDeviceCoordinates(screenX, screenY) {
