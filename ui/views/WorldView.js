@@ -31,9 +31,7 @@ export default {
         // 0.1.39 — persistence/publication UI state.
         const activeDocumentId = ref(null);
         const activeDocumentDirty = ref(false);
-        // 0.1.40 — Operation Timeline state. Read from the session on
-        // every refresh; the preview itself is a visual swap inside the
-        // session, never a mutation of the live document.
+        // 0.1.40 — Operation Timeline state.
         const showTimeline = ref(false);
         const timeline = ref([]);
         const historyPreview = ref(null);
@@ -107,7 +105,7 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Operation Timeline (0.1.40)
+        // Operation Timeline (0.1.40) & Restoration (0.1.41)
         // -----------------------------------------------------------------
 
         function toggleTimeline() {
@@ -115,9 +113,6 @@ export default {
             refreshSpatialUI();
         }
 
-        // Reconstructs and shows the world after the first `cursor`
-        // operations (0 = initial state). Enters preview mode on first
-        // use. The live document is never modified.
         function previewAt(cursor) {
             try {
                 if (!session.getHistoryPreview()) {
@@ -132,6 +127,34 @@ export default {
 
         function cancelPreview() {
             session.cancelHistoryPreview();
+            refreshSpatialUI();
+        }
+
+        // Explicit, confirmed, destructive: replaces the live document
+        // with the previewed historical state and restarts the editing
+        // history there. Never called without confirmation — the
+        // session itself makes no attempt to undo this.
+        function restorePreviewedState() {
+            const preview = session.getHistoryPreview();
+            if (!preview || !preview.active) {
+                return;
+            }
+            const warning = activeDocumentDirty.value
+                ? 'Your current unsaved changes will be replaced.\n\n'
+                : '';
+            const confirmed = confirm(
+                `${warning}Restore this historical state?\n\n` +
+                'The document becomes the previewed state and editing history restarts from it.\n' +
+                'This cannot be undone.'
+            );
+            if (!confirmed) {
+                return;
+            }
+            try {
+                session.restoreHistoryAt(preview.cursor);
+            } catch (err) {
+                alert(`Restore failed: ${err.message}`);
+            }
             refreshSpatialUI();
         }
 
@@ -187,7 +210,6 @@ export default {
                 ? session.isDocumentDirty(activeDocumentId.value)
                 : false;
 
-            // 0.1.40 — timeline + preview state.
             timeline.value = session.getTimeline();
             historyPreview.value = session.getHistoryPreview();
 
@@ -476,6 +498,7 @@ export default {
             toggleTimeline,
             previewAt,
             cancelPreview,
+            restorePreviewedState,
             formatTime
         };
     },
@@ -552,7 +575,10 @@ export default {
             </ul>
             <div v-if="historyPreview && historyPreview.active" class="timeline-preview-bar">
                 <span>Previewing {{ historyPreview.cursor }} / {{ timeline.length }} operations</span>
-                <button class="action-btn action-btn--secondary" @click="cancelPreview">Cancel Preview</button>
+                <div class="timeline-preview-actions">
+                    <button class="action-btn action-btn--secondary" @click="cancelPreview">Cancel Preview</button>
+                    <button class="action-btn action-btn--danger" @click="restorePreviewedState">Restore Here</button>
+                </div>
             </div>
         </div>
 
