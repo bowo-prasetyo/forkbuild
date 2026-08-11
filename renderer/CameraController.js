@@ -18,15 +18,18 @@ const RESET_KEY = 'Home';
 // restored state, and smooth transitions are Camera Intelligence (0.1.8)
 // and deliberately live elsewhere once they exist.
 //
-// As of 0.1.45, setEnabled() lets a view temporarily suspend user-driven
-// camera interaction — used during marquee selection so a Shift+drag
-// draws a selection rectangle instead of orbiting the camera.
+// As of 0.1.46, setEnabled() lets an active editing gesture freeze the
+// camera: TransformGizmoController disables controls for the duration of
+// a gizmo drag (the same exclusivity principle the 0.1.45 marquee
+// established — an active editing gesture temporarily owns the pointer).
+// While disabled, OrbitControls ignores pointer movement AND the Home
+// reset shortcut is ignored here, so nothing can move the camera
+// underneath a live drag.
 export class CameraController {
     constructor(domElement, aspect) {
         this._camera = new THREE.PerspectiveCamera(DEFAULT_FOV, aspect, DEFAULT_NEAR, DEFAULT_FAR);
         this._defaultState = new CameraState();
         this._applyState(this._defaultState, this._camera);
-
         this._controls = new OrbitControls(this._camera, domElement);
         this._controls.target.set(
             this._defaultState.target.x,
@@ -39,7 +42,6 @@ export class CameraController {
         this._controls.maxDistance = DEFAULT_MAX_DISTANCE;
         this._controls.maxPolarAngle = DEFAULT_MAX_POLAR_ANGLE;
         this._controls.update();
-
         this._onKeyDown = this._onKeyDown.bind(this);
         window.addEventListener('keydown', this._onKeyDown);
     }
@@ -48,16 +50,17 @@ export class CameraController {
         return this._camera;
     }
 
+    get enabled() {
+        return this._controls.enabled;
+    }
+
+    setEnabled(enabled) {
+        this._controls.enabled = enabled;
+    }
+
     setAspect(aspect) {
         this._camera.aspect = aspect;
         this._camera.updateProjectionMatrix();
-    }
-
-    // Suspends/resumes user-driven orbit/pan/zoom (0.1.45). Views call
-    // this while a Shift+drag marquee is in progress, and re-enable on
-    // pointer-up. Programmatic camera control (setState) still works.
-    setEnabled(enabled) {
-        this._controls.enabled = enabled;
     }
 
     // Called once per frame by Renderer so OrbitControls damping/inertia
@@ -97,6 +100,10 @@ export class CameraController {
     }
 
     _onKeyDown(event) {
+        // An active editing gesture owns the camera: no reset mid-drag.
+        if (!this._controls.enabled) {
+            return;
+        }
         if (event.key === RESET_KEY) {
             this.resetView();
         }
