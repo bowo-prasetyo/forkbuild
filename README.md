@@ -6,17 +6,18 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.48** — Alignment & Distribution Tools
+**Version 0.1.49** — Numeric Transform Input
 
-The editing kernel (0.1.42–0.1.47) now supports precision layout operations. Selected bricks can be aligned by world-axis edges or centers — nine operations across X/Y/Z — and three or more bricks can be distributed evenly along any axis. Both are implemented as transform-generation algorithms over the existing selection → bounds → transform pipeline: they compute exact absolute targets and commit them through the same single `TransformSelectionCommand` every keyboard nudge and gizmo drag produces. No new commands, no new entities, exact undo/redo/replay for free.
+Exact numeric translation and Y-rotation are now first-class inputs. Enter a value, choose Absolute (target for the selection pivot) or Offset (plain delta), press Apply — and the existing transform pipeline commits exactly one `TransformSelectionCommand`, indistinguishable from what an equivalent keyboard nudge or gizmo drag would produce. Numeric input bypasses gesture snapping: explicit intent is respected literally. The editing kernel now has five input sources — keyboard, gizmo, alignment, distribution, numeric — all terminating in the same command.
 
 ## Features
 
-- **Editor** — Place, select (single, multi, group), move, and rotate bricks with the keyboard or the interactive gizmo; full undo/redo.
-- **Alignment & Distribution (0.1.48)** — Align selected bricks by world-axis edges or centers and distribute three or more bricks evenly along X/Y/Z, using the unified transform command path with exact undo/redo. Alignment lands on exact geometric targets — it never passes through gesture snapping.
+- **Editor** — Place, select (single, multi, group), move, and rotate bricks with the keyboard, the interactive gizmo, or exact numeric input; full undo/redo.
+- **Numeric Transform Input (0.1.49)** — Enter exact translation and rotation values for the current selection, with absolute/relative positioning, exact undo/redo, and parity with keyboard and gizmo transforms.
+- **Alignment & Distribution (0.1.48)** — Align selected bricks by world-axis edges or centers and distribute three or more bricks evenly along X/Y/Z, using the unified transform command path with exact undo/redo.
 - **Transform Precision (0.1.47)** — Grid/increment snapping for translation and rotation, Shift-held precision mode, and identical snapping for keyboard and pointer in both views.
 - **Interactive Transform Gizmo (0.1.46)** — Axis handles, free-move pad, and rotation ring with live preview, commit-on-release, Escape-to-cancel, and one undo step per drag — identical in the Editor and the World View.
-- **Groups (0.1.43)** — Group selections resolve to member bricks; every transform (keyboard, gizmo, alignment, distribution) leaves membership untouched.
+- **Groups (0.1.43)** — Group selections resolve to member bricks; every transform (keyboard, gizmo, alignment, distribution, numeric) leaves membership untouched.
 - **Advanced Selection (0.1.40/0.1.45)** — Click, Ctrl/Cmd/Shift-click toggle, and marquee selection.
 - **Command Replay / Operation Timeline (0.1.39)** — Editing sessions persist as serialized command histories that replay exactly.
 - **Brick Palette** — Core library with dimension-aware definitions (cube, slope, plate, window).
@@ -31,14 +32,14 @@ The editing kernel (0.1.42–0.1.47) now supports precision layout operations. S
 ForkBuild is layered as **core / application / renderer / ui**, with infrastructure adapters (storage, publisher, discovery, serializer, world-layout) surrounding them.
 
 - **core/** — Pure domain model: World, Building, Brick, events. No Three.js, no Vue.
-- **application/** — Use cases, editor state, commands, tool framework, the transform gesture transaction, shared transform math (TransformMath, TransformSnap, TransformAlignment), and the command subsystem (CommandHistory, CommandRegistry).
+- **application/** — Use cases, editor state, commands, tool framework, the transform gesture transaction, shared transform math (TransformMath, TransformSnap, TransformAlignment, TransformInput), and the command subsystem (CommandHistory, CommandRegistry).
 - **renderer/** — Three.js incremental renderer, picking, camera, overlay layers, and the interactive transform gizmo.
 - **ui/** — Vue 3 Composition API views and components.
 
-The transform pipeline, end to end — keyboard, gizmo, alignment, and distribution all terminate in the same place:
+The transform pipeline, end to end — five input sources, one command:
 
 ```
-Selection ── keyboard / gizmo drag / align / distribute
+Selection ── keyboard / gizmo / align / distribute / numeric
 │
 ▼
 gesture service (one transaction, one math source)
@@ -52,7 +53,6 @@ CommandHistory
 ▼
 World
 ```
-
 
 See [docs/Architecture.md](docs/Architecture.md) for the full architectural overview and [docs/user/](docs/user/README.md) for how-to guides.
 
@@ -80,7 +80,7 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.46 Interactive Transform Gizmo & Viewport Editing Parity
 - [x] 0.1.47 Transform Precision, Snapping & Editing Polish
 - [x] 0.1.48 Alignment & Distribution Tools
-- [ ] 0.1.49 Numeric Transform Input / Precision Editing
+- [x] 0.1.49 Numeric Transform Input
 - [ ] 0.1.50 Editing UX Consolidation
 - [ ] 0.2 Blockchain publishing, multiplayer
 
