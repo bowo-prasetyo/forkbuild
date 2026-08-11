@@ -1149,3 +1149,9 @@ html, body {
     font-size: 0.8rem;
     color: #d0d0d0;
 }
+/* Historical State Restoration (0.1.41) */
+.timeline-preview-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
