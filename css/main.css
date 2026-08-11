@@ -1155,3 +1155,9 @@ html, body {
     gap: 0.5rem;
     flex-shrink: 0;
 }
+/* Document Duplication, Forking & Clipboard (0.1.42) */
+.clipboard-info {
+    margin: 0;
+    color: #d0d0d0;
+    font-size: 0.85rem;
+}
