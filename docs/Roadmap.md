@@ -43,5 +43,7 @@
 0.1.40 Command Replay / Operation Timelin
 0.1.41 Historical State Restoration  (done)
 0.1.42 Document Duplication, Forking & Clipboard  (done)
-0.1.43 Advanced Selection & Grouping
+0.1.43 Advanced Selection, Grouping & Editing Surface Parity  (done)
+0.1.44 Group Transforms & Gizmo Integration
+0.1.45 Nested Groups / Advanced Editing  (optional)
 0.2    Blockchain publishing, multiplayer
