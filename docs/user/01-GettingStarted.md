@@ -10,7 +10,7 @@ URL), and you'll land on the **Home** screen.
 
 The bar at the top is always visible:
 
-ForkBuild Home Editor Repository About [Login]
+`ForkBuild Home Editor Repository About [Login]`
 
 
 - **Home** — the landing page
