@@ -37,6 +37,7 @@ export default {
         const historyPreview = ref(null);
         // 0.1.42 — clipboard indicator.
         const clipboard = ref(null);
+        const groups = ref([]);
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const identityUseCase = inject('identityUseCase', null);
@@ -200,6 +201,48 @@ export default {
             return timestamp ? new Date(timestamp).toLocaleTimeString() : '';
         }
 
+        function groupSelection() {
+            const name = prompt('Group name:', `Group ${groups.value.length + 1}`);
+            if (name === null) {
+                return;
+            }
+            session.createGroupFromSelection(name.trim() || null);
+            refreshSpatialUI();
+        }
+        
+        function selectGroupById(groupId) {
+            session.selectGroup(groupId);
+            refreshSpatialUI();
+        }
+        
+        function renameGroupById(groupId) {
+            const current = groups.value.find((g) => g.id === groupId);
+            const name = prompt('New group name:', current ? current.name : '');
+            if (name === null || !name.trim()) {
+                return;
+            }
+            session.renameGroup(groupId, name.trim());
+            refreshSpatialUI();
+        }
+        
+        function duplicateGroupById(groupId) {
+            session.duplicateGroup(groupId);
+            refreshSpatialUI();
+        }
+        
+        function deleteGroupById(groupId) {
+            if (!confirm('Delete this group? The bricks themselves are kept.')) {
+                return;
+            }
+            session.deleteGroup(groupId);
+            refreshSpatialUI();
+        }
+        
+        function addSelectionToGroup(groupId) {
+            session.addToGroupWithSelection(groupId);
+            refreshSpatialUI();
+        }
+
         // -----------------------------------------------------------------
         // Spatial UI refresh
         // -----------------------------------------------------------------
@@ -251,6 +294,7 @@ export default {
             timeline.value = session.getTimeline();
             historyPreview.value = session.getHistoryPreview();
             clipboard.value = session.getClipboard();
+            groups.value = session.getGroups();
 
             const sel = session.getSpatialSelection();
             if (sel && !sel.isEmpty) {
@@ -657,6 +701,33 @@ export default {
         <div v-if="clipboard && !clipboard.isEmpty" class="world-view-section">
             <h4>Clipboard</h4>
             <p class="clipboard-info">{{ clipboard.count }} brick(s) copied — Ctrl+V to paste</p>
+        </div>
+
+        <div v-if="groups.length > 0 || (spatialSelection && spatialSelection.type !== 'ground')" class="world-view-section">
+            <h4>Groups ({{ groups.length }})</h4>
+            <button
+                class="action-btn action-btn--secondary"
+                :disabled="!spatialSelection || spatialSelection.type === 'ground'"
+                @click="groupSelection"
+            >
+                Group Selection
+            </button>
+            <ul v-if="groups.length > 0" class="world-list">
+                <li v-for="group in groups" :key="group.id" class="world-item">
+                    <span class="world-item-title">{{ group.name }} ({{ group.memberCount }})</span>
+                    <span class="group-actions">
+                        <button class="group-action-btn" @click="selectGroupById(group.id)">Select</button>
+                        <button
+                            v-if="spatialSelection && spatialSelection.type !== 'ground'"
+                            class="group-action-btn"
+                            @click="addSelectionToGroup(group.id)"
+                        >+Sel</button>
+                        <button class="group-action-btn" @click="renameGroupById(group.id)">Rename</button>
+                        <button class="group-action-btn" @click="duplicateGroupById(group.id)">Duplicate</button>
+                        <button class="group-action-btn group-action-btn--danger" @click="deleteGroupById(group.id)">Delete</button>
+                    </span>
+                </li>
+            </ul>
         </div>
 
         <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
