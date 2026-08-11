@@ -30,6 +30,9 @@ export class CreateWorldViewUseCase {
         const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(
             storageProvider
         );
+        const loadPublishedSnapshotUseCase = new LoadPublishedSnapshotUseCase(
+            publisherProvider
+        );
         const saveDocumentUseCase = new SaveDocumentUseCase(storageProvider);
         const publishDocumentUseCase = new PublishDocumentUseCase(
             new LocalPublisherProvider(storageProvider),
@@ -47,6 +50,7 @@ export class CreateWorldViewUseCase {
                 return new WorldNavigationSession({
                     registry,
                     loadPublicationDocumentUseCase,
+                    loadPublishedSnapshotUseCase,
                     worldLayoutProvider,
                     saveDocumentUseCase,
                     publishDocumentUseCase,
