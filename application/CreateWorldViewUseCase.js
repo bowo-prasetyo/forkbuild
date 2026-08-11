@@ -3,6 +3,7 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LoadPublicationDocumentUseCase } from './LoadPublicationDocumentUseCase.js';
+import { LoadPublishedSnapshotUseCase } from './LoadPublishedSnapshotUseCase.js';
 import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
 import { CreateCommandRegistryUseCase } from './CreateCommandRegistryUseCase.js';
