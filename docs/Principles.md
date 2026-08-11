@@ -84,9 +84,6 @@ Publishing validates before storing (0.2.0). A corrupt document must not
 enter the published corpus. The DocumentValidator runs as part of the
 publish pipeline, and refusal is a hard error, not a warning.
 
-**docs/Principles.md** — append:
-
-```markdown
 Migration happens before domain entry (0.2.2). Old-format compatibility
 code lives in the schema migrator, never in Brick, Group, World, or any
 editing service. Domain classes only ever see current-schema JSON. This
