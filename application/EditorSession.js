@@ -17,6 +17,14 @@ import { SpatialEditingService } from './SpatialEditingService.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
 import { ToolId } from './editor-state/ToolId.js';
+import { CreateGroupCommand } from './commands/CreateGroupCommand.js';
+import { DeleteGroupCommand } from './commands/DeleteGroupCommand.js';
+import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
+import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
+import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
+import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
+import { CopySelectionUseCase } from './CopySelectionUseCase.js';
+import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 
 // Owns the live runtime graph — the render session, World, CommandHistory,
 // ToolManager, InputDispatcher — as one unit, so nothing else has to know
@@ -74,6 +82,10 @@ export class EditorSession {
         );
         this._gizmoUseCase = new TransformGizmoUseCase(this._gestureService);
         this._gizmoSubscriptions = [];
+        this._copySelectionUseCase = null;
+        this._pasteClipboardUseCase = null;
+        this._clipboardState = null;
+        this._selectedGroupId = null;
     }
 
     get commandHistory() {
