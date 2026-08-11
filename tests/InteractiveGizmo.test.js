@@ -15,20 +15,17 @@ import { TransformSelectionCommand } from '../application/commands/TransformSele
 
 // 0.1.46 — Interactive Transform Gizmo tests.
 //
-// The pointer-facing half of the gizmo (raycasting, handle picking) is
-// renderer-layer Three.js code; everything this suite can exercise
-// headlessly is exercised here: the presentation contract (visibility +
-// pivot), the axis/rotation drag math the controller feeds gestures
-// with, and — most importantly — the gesture TRANSACTION itself:
-// preview without history, exactly one transform-selection command on
-// commit, exact restore on cancel, zero history on no-op drags,
-// membership invariance, undo/redo, serialized replay, and
-// Editor/World View parity.
+// Updated for 0.1.47: snapping is now part of the gesture transaction,
+// so the simulated axis drags use integer-aligned end points (3, 2, -4)
+// instead of the previous fractional ones (2.5, 1.5, -3.5). The
+// semantics under test are unchanged — axis constraint, preview-without-
+// history, one-command commit, cancel, no-op, membership invariance,
+// undo/redo, replay, and Editor/World parity. Snapping-specific
+// behavior lives in tests/TransformSnapping.test.js.
 //
-// The simulated gestures below use TransformMath.projectDeltaOntoAxis /
+// The simulated gestures use TransformMath.projectDeltaOntoAxis /
 // rotationDeltaFromPoints — the exact functions the real
-// TransformGizmoController calls between its raycasts — so the gesture
-// shapes reaching the service are the ones a real pointer drag produces.
+// TransformGizmoController calls between its raycasts.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -48,8 +45,6 @@ function createWorldFixture(worldId = 'world-1') {
     return { world, building, document };
 }
 
-// World View style: selection carries a documentId; the session shim
-// resolves it.
 function createWorldViewEnvironment(fixture) {
     const session = { getDocument: (id) => (id === 'doc-1' ? fixture.document : null) };
     const histories = new Map([[fixture.world.id, new CommandHistory({ world: fixture.world })]]);
@@ -57,8 +52,6 @@ function createWorldViewEnvironment(fixture) {
     return { service, histories };
 }
 
-// Editor style: EditorSession's getDocument shim ignores the id and
-// returns the open document; selection is the editor's SelectionState.
 function createEditorEnvironment(fixture) {
     const session = { getDocument: () => fixture.document };
     const histories = new Map([[fixture.world.id, new CommandHistory({ world: fixture.world })]]);
@@ -81,8 +74,6 @@ const editorSelection = () => new SelectionState({
     ]
 });
 
-// Simulates what TransformGizmoController does for an axis drag: begin,
-// N preview steps built from projected pointer points, then one commit.
 function simulateAxisDrag(service, selection, axis, startPoint, endPoint, steps = 4) {
     service.beginTransformGesture(selection, { mode: 'translate', axis });
     for (let i = 1; i <= steps; i++) {
@@ -141,15 +132,13 @@ function brickPositions(world) {
     close(multiPresentation.pivot.y, 0, 'multi pivot is the bounds center y');
     close(multiPresentation.pivot.z, 0, 'multi pivot is the bounds center z');
 
-    // A group selection arrives already flattened to its members — the
-    // presentation carries bounds + pivot and nothing group-shaped.
     const keys = Object.keys(multiPresentation).sort().join(',');
     assert(keys === 'bounds,pivot', 'presentation exposes only bounds and pivot — no group concept');
     console.log('✓ gizmo visibility and pivot resolution');
 }
 
 // ---------------------------------------------------------------------
-// 3. Axis constraints
+// 3. Axis constraints (snap-aligned end points since 0.1.47)
 // ---------------------------------------------------------------------
 {
     const start = { x: 0, y: 0, z: 0 };
@@ -161,11 +150,13 @@ function brickPositions(world) {
     close(dy.y, 5, 'y handle takes y'); assert(dy.x === 0 && dy.z === 0, 'y handle constrains x and z');
     close(dz.z, 7, 'z handle takes z'); assert(dz.x === 0 && dz.y === 0, 'z handle constrains x and y');
 
+    const axisEnds = { x: 3, y: 2, z: -4 };
     for (const axis of ['x', 'y', 'z']) {
-        const fixture = createWorldFixture();
+        const fixture = createWorldFixture(`world-axis-${axis}`);
         const { service, histories } = createWorldViewEnvironment(fixture);
         const before = brickPositions(fixture.world);
-        const end = { x: axis === 'x' ? 2.5 : 0, y: axis === 'y' ? 1.5 : 0, z: axis === 'z' ? -3.5 : 0 };
+        const end = { x: 0, y: 0, z: 0 };
+        end[axis] = axisEnds[axis];
         const committed = simulateAxisDrag(service, worldViewSelection(), axis, { x: 0, y: 0, z: 0 }, end);
         assert(committed === true, `${axis} drag commits`);
         const after = brickPositions(fixture.world);
@@ -178,7 +169,7 @@ function brickPositions(world) {
                 }
             }
         }
-        assert(histories.get(fixture.world.id).getExecutedCommands().length === 1,
+        assert(histories.get(`world-axis-${axis}`).getExecutedCommands().length === 1,
             `${axis} drag is one history entry`);
     }
     console.log('✓ axis handles constrain translation');
@@ -188,8 +179,6 @@ function brickPositions(world) {
 // 4. Rotation uses the shared TransformMath
 // ---------------------------------------------------------------------
 {
-    // Pure parity: rotating a point through rotatePointAroundPivotY must
-    // equal the position calculateTransforms produces for the same input.
     const pivot = { x: 1, y: 0, z: -2 };
     const sample = { x: 4, y: 0.5, z: 3 };
     const viaPoint = TransformMath.rotatePointAroundPivotY(sample, pivot, 37);
@@ -201,8 +190,6 @@ function brickPositions(world) {
     close(viaPoint.x, viaTransforms.x, 'rotatePointAroundPivotY x matches calculateTransforms');
     close(viaPoint.z, viaTransforms.z, 'rotatePointAroundPivotY z matches calculateTransforms');
 
-    // Pointer-angle delta: dragging from +X to +Z around the pivot is a
-    // +90 degree delta in the convention calculateTransforms applies.
     const delta = TransformMath.rotationDeltaFromPoints(
         { x: 0, y: 0, z: 0 },
         { x: 2, y: 0, z: 0 },
@@ -210,10 +197,6 @@ function brickPositions(world) {
     );
     close(delta, 90, 'rotation delta from pointer angles');
 
-    // Flagship: A=(-2,0,0), B=(2,0,0), pivot (0,0,0), rotate 90 around Y.
-    // Sign convention follows the 0.1.38 formula (x' = cos dx - sin dz):
-    // the gizmo uses the identical convention, so drag direction and
-    // committed rotation always agree.
     const fixture = createWorldFixture('world-rot');
     fixture.building.removeBrick('a');
     fixture.building.removeBrick('b');
@@ -303,22 +286,17 @@ function brickPositions(world) {
     const { service, histories } = createWorldViewEnvironment(fixture);
     const selection = worldViewSelection();
     const startPoint = { x: 0, y: 0, z: 0 };
-    // Down, zero-movement previews, up at the same point.
     const committed = simulateAxisDrag(service, selection, 'x', startPoint, startPoint, 2);
     assert(committed === false, 'zero-movement gesture reports nothing committed');
     assert(histories.get(fixture.world.id).getExecutedCommands().length === 0,
         'zero-movement gesture creates no command');
-    console.log('✓ no-op drag preserves the 0.1.44 no-history discipline');
+    console.log('✓ no-op drag preserves the no-history discipline');
 }
 
 // ---------------------------------------------------------------------
 // 9. Membership invariance (the group guarantee)
 // ---------------------------------------------------------------------
 {
-    // Whether A/B/C were selected manually or because they belong to a
-    // Group, the gesture sees only items[] — so membership cannot
-    // change. Asserted here on the selection and the building's brick
-    // set; a Group entity would add nothing the gizmo could touch.
     const fixture = createWorldFixture();
     const { service } = createWorldViewEnvironment(fixture);
     const selection = worldViewSelection();
