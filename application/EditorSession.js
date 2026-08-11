@@ -1,5 +1,6 @@
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
+import { EditorEvent } from '../core/events/EditorEvent.js';
 import { CreateEventBusUseCase } from './CreateEventBusUseCase.js';
 import { CreateDemoWorldUseCase } from './CreateDemoWorldUseCase.js';
 import { CreateEmptyWorldUseCase } from './CreateEmptyWorldUseCase.js';
@@ -8,25 +9,18 @@ import { RenderWorldUseCase } from './RenderWorldUseCase.js';
 import { InputDispatcher } from './InputDispatcher.js';
 import { ToolManager } from './ToolManager.js';
 import { CommandHistory } from './CommandHistory.js';
-import { SelectionState } from './editor-state/SelectionState.js';
-import { SpatialClipboardState } from './spatial-state/SpatialClipboardState.js';
-import { CopySelectionUseCase } from './CopySelectionUseCase.js';
-import { PasteClipboardUseCase, PASTE_OFFSET } from './PasteClipboardUseCase.js';
-import { TransformSelectionUseCase } from './TransformSelectionUseCase.js';
-import { CreateGroupCommand } from './commands/CreateGroupCommand.js';
-import { DeleteGroupCommand } from './commands/DeleteGroupCommand.js';
-import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
-import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
-import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
-import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
+import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
+import { SpatialEditingService } from './SpatialEditingService.js';
+import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
+import { ToolId } from './editor-state/ToolId.js';
 
 // Owns the live runtime graph — the render session, World, CommandHistory,
 // ToolManager, InputDispatcher — as one unit, so nothing else has to know
 // how to tear it down and rebuild it correctly. EditorView only ever
 // calls start()/loadDocument()/newDocument()/dispose() and forwards raw
-// DOM events to onPointerDown()/onPointerMove()/onKeyDown() — it never
-// touches a World, Renderer, or ToolManager directly, before or after a
-// document is replaced.
+// DOM events to onPointerDown()/onPointerMove()/onPointerUp()/onKeyDown()
+// — it never touches a World, Renderer, or ToolManager directly, before
+// or after a document is replaced.
 //
 // registry/editorContext/toolRegistry/documentManager/selectionUseCase/
 // previewUseCase are constructed once, outside EditorSession, and are the
@@ -37,12 +31,26 @@ import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 // to be re-attached when the runtime underneath them changes — only the
 // instance fields those methods read get swapped.
 //
-// As of 0.1.43 EditorSession provides copySelection()/pasteClipboard()
-// through the SAME clipboard machinery World View uses. As of 0.1.44 it
-// exposes TransformSelectionUseCase through toolContext. As of 0.1.45 it
-// is the Editor's GROUP SURFACE: the same six group commands World View
-// uses, resolved group selection, select-all, and marquee selection —
-// completing surface parity without a second implementation of anything.
+// 0.1.46 — Interactive transform gizmo. EditorSession now owns the
+// Editor's gesture service and gizmo presentation:
+//   * The gesture service is a SpatialEditingService wired to the open
+//     document through a trivial getDocument() shim and a world-id ->
+//     CommandHistory map refreshed on every _rebuild(). It satisfies the
+//     exact gesture contract the gizmo drives (begin/preview/commit/
+//     cancelTransformGesture) — the same contract World View's editing
+//     service implements, which is the parity: one gesture transaction,
+//     one math source (TransformMath), one TransformSelectionCommand per
+//     completed drag, in BOTH views. If a dedicated
+//     TransformSelectionUseCase exists in the tree, it can be swapped in
+//     right here without the gizmo noticing — the contract is the point.
+//   * Input routing is exclusive: every pointer/key event is offered to
+//     the gizmo FIRST; while a gesture is active the gesture owns the
+//     pointer and the keyboard (only Escape cancels), OrbitControls is
+//     disabled by the controller, and nothing reaches the tools.
+//   * Gizmo presentation is refreshed from state, never from gesture
+//     internals: selection changes, tool changes, and every command
+//     executed/undone/redone re-resolve { pivot, bounds } through
+//     TransformGizmoUseCase and reposition (or hide) the gizmo.
 export class EditorSession {
     constructor({
         registry,
@@ -62,298 +70,29 @@ export class EditorSession {
         this._previewUseCase = previewUseCase;
         this._loadDocumentUseCase = loadDocumentUseCase;
         this._identityProvider = identityProvider;
-        this._transformSelectionUseCase = new TransformSelectionUseCase(registry);
-        this._copySelectionUseCase = new CopySelectionUseCase(registry);
-        this._pasteClipboardUseCase = new PasteClipboardUseCase();
-        this._clipboard = SpatialClipboardState.empty();
-        this._pasteCount = 0;
         this._container = null;
         this._session = null;
         this._commandHistory = null;
         this._toolManager = null;
         this._inputDispatcher = null;
         this._untrackDirtyState = null;
+        this._editorCommandHistories = new Map();
+        this._gestureService = new SpatialEditingService(
+            { getDocument: () => this._documentManager.document },
+            this._editorCommandHistories,
+            registry
+        );
+        this._gizmoUseCase = new TransformGizmoUseCase(this._gestureService);
+        this._gizmoSubscriptions = [];
     }
 
     get commandHistory() {
         return this._commandHistory;
     }
 
-    getClipboard() {
-        return this._clipboard;
+    isGestureActive() {
+        return this._gestureService.transformGizmoState.active;
     }
-
-    // -----------------------------------------------------------------
-    // Clipboard (0.1.43 — shared machinery, Editor parity)
-    // -----------------------------------------------------------------
-
-    copySelection() {
-        const selection = this._editorContext.selection;
-        if (!selection || selection.isEmpty) {
-            return SpatialClipboardState.empty();
-        }
-        const document = this._documentManager.document;
-        if (!document) {
-            return SpatialClipboardState.empty();
-        }
-        this._clipboard = this._copySelectionUseCase.execute(selection, document);
-        this._pasteCount = 0;
-        return this._clipboard;
-    }
-
-    pasteClipboard() {
-        if (!this._clipboard || this._clipboard.isEmpty || !this._clipboard.origin) {
-            return false;
-        }
-        if (!this._commandHistory) {
-            return false;
-        }
-        const document = this._documentManager.document;
-        if (!document) {
-            return false;
-        }
-        const buildings = document.world.getBuildings();
-        if (buildings.length === 0) {
-            return false;
-        }
-        this._pasteCount += 1;
-        const position = {
-            x: this._clipboard.origin.x + PASTE_OFFSET.x * this._pasteCount,
-            y: this._clipboard.origin.y + PASTE_OFFSET.y * this._pasteCount,
-            z: this._clipboard.origin.z + PASTE_OFFSET.z * this._pasteCount
-        };
-        const command = this._pasteClipboardUseCase.execute(this._clipboard, {
-            worldId: document.world.id,
-            buildingId: buildings[0].id,
-            position
-        });
-        if (!command) {
-            return false;
-        }
-        this._commandHistory.execute(command);
-        const buildingId = buildings[0].id;
-        const items = command.executedBrickIds.map((brickId) => ({
-            type: 'brick',
-            buildingId,
-            brickId
-        }));
-        if (items.length > 0) {
-            this._editorContext.setSelection(new SelectionState({ items }));
-        }
-        return true;
-    }
-
-    // -----------------------------------------------------------------
-    // Groups (0.1.45 — the Editor group surface; same commands as
-    // World View, no second implementation)
-    // -----------------------------------------------------------------
-
-    getGroups() {
-        const document = this._documentManager.document;
-        if (!document) {
-            return [];
-        }
-        return document.world.getGroups().map((group) => ({
-            id: group.id,
-            name: group.name || 'Unnamed Group',
-            memberCount: group.memberCount
-        }));
-    }
-
-    createGroupFromSelection(name = null) {
-        const document = this._documentManager.document;
-        if (!document || !this._commandHistory) {
-            return false;
-        }
-        const selection = this._editorContext.selection;
-        if (!selection || selection.isEmpty) {
-            return false;
-        }
-        const brickIds = selection.brickIds;
-        if (brickIds.length === 0) {
-            return false;
-        }
-        const command = new CreateGroupCommand({
-            worldId: document.world.id,
-            brickIds,
-            name: name || `Group ${document.world.getGroups().length + 1}`
-        });
-        this._commandHistory.execute(command);
-        return command.executedGroupId;
-    }
-
-    deleteGroup(groupId) {
-        const document = this._documentManager.document;
-        if (!document || !this._commandHistory || !document.world.getGroup(groupId)) {
-            return false;
-        }
-        this._commandHistory.execute(new DeleteGroupCommand({
-            worldId: document.world.id,
-            groupId
-        }));
-        return true;
-    }
-
-    renameGroup(groupId, name) {
-        const document = this._documentManager.document;
-        if (!document || !this._commandHistory || !document.world.getGroup(groupId)) {
-            return false;
-        }
-        this._commandHistory.execute(new RenameGroupCommand({
-            worldId: document.world.id,
-            groupId,
-            name
-        }));
-        return true;
-    }
-
-    duplicateGroup(groupId) {
-        const document = this._documentManager.document;
-        if (!document || !this._commandHistory || !document.world.getGroup(groupId)) {
-            return false;
-        }
-        const command = new DuplicateGroupCommand({
-            worldId: document.world.id,
-            groupId
-        });
-        this._commandHistory.execute(command);
-        return command.executedGroupId;
-    }
-
-    addToGroupWithSelection(groupId) {
-        const document = this._documentManager.document;
-        if (!document || !this._commandHistory || !document.world.getGroup(groupId)) {
-            return false;
-        }
-        const selection = this._editorContext.selection;
-        if (!selection || selection.isEmpty) {
-            return false;
-        }
-        const brickIds = selection.brickIds;
-        if (brickIds.length === 0) {
-            return false;
-        }
-        this._commandHistory.execute(new AddToGroupCommand({
-            worldId: document.world.id,
-            groupId,
-            brickIds
-        }));
-        return true;
-    }
-
-    removeFromGroupWithSelection(groupId) {
-        const document = this._documentManager.document;
-        if (!document || !this._commandHistory || !document.world.getGroup(groupId)) {
-            return false;
-        }
-        const selection = this._editorContext.selection;
-        if (!selection || selection.isEmpty) {
-            return false;
-        }
-        const brickIds = selection.brickIds;
-        if (brickIds.length === 0) {
-            return false;
-        }
-        this._commandHistory.execute(new RemoveFromGroupCommand({
-            worldId: document.world.id,
-            groupId,
-            brickIds
-        }));
-        return true;
-    }
-
-    // Selecting a group is a SESSION STATE change — it resolves the
-    // group's membership into a SelectionState and produces ZERO
-    // history entries. There is deliberately no GroupSelectionCommand.
-    selectGroup(groupId) {
-        const document = this._documentManager.document;
-        if (!document) {
-            return false;
-        }
-        const group = document.world.getGroup(groupId);
-        if (!group) {
-            return false;
-        }
-        const items = [];
-        for (const building of document.world.getBuildings()) {
-            for (const brick of building.getBricks()) {
-                if (group.hasMember(brick.id)) {
-                    items.push({ type: 'brick', buildingId: building.id, brickId: brick.id });
-                }
-            }
-        }
-        if (items.length === 0) {
-            return false;
-        }
-        this._editorContext.setSelection(new SelectionState({ items }));
-        return true;
-    }
-
-    // -----------------------------------------------------------------
-    // Advanced selection (0.1.45)
-    // -----------------------------------------------------------------
-
-    // Select every brick in the current document. Session state only —
-    // zero history entries.
-    selectAll() {
-        const document = this._documentManager.document;
-        if (!document) {
-            return false;
-        }
-        const items = [];
-        for (const building of document.world.getBuildings()) {
-            for (const brick of building.getBricks()) {
-                items.push({ type: 'brick', buildingId: building.id, brickId: brick.id });
-            }
-        }
-        if (items.length === 0) {
-            return false;
-        }
-        this._editorContext.setSelection(new SelectionState({ items }));
-        return true;
-    }
-
-    // Marquee selection: the VIEW owns the Shift+drag gesture and the
-    // rectangle overlay; the RENDERER answers containment
-    // (pickRectangle); this method owns the selection semantics.
-    // additive=true (Ctrl/Cmd held during the drag) unions the hits
-    // with the current selection; otherwise the marquee REPLACES it.
-    // Session state only — zero history entries.
-    marqueeSelect(rect, { additive = false } = {}) {
-        const document = this._documentManager.document;
-        if (!document || !this._session || !this._session.pickRectangle) {
-            return false;
-        }
-        const hits = this._session.pickRectangle(rect.x0, rect.y0, rect.x1, rect.y1);
-        const items = hits.map((hit) => ({
-            type: 'brick',
-            buildingId: hit.buildingId,
-            brickId: hit.brickId
-        }));
-        if (items.length === 0) {
-            if (!additive) {
-                this._editorContext.clearSelection();
-            }
-            return false;
-        }
-        const current = this._editorContext.selection;
-        const nextItems = additive && !current.isEmpty
-            ? [...current.items, ...items]
-            : items;
-        this._editorContext.setSelection(new SelectionState({ items: nextItems }));
-        return true;
-    }
-
-    // Suspends/resumes camera interaction during a marquee gesture.
-    setControlsEnabled(enabled) {
-        if (this._session && this._session.setControlsEnabled) {
-            this._session.setControlsEnabled(enabled);
-        }
-    }
-
-    // -----------------------------------------------------------------
-    // Lifecycle
-    // -----------------------------------------------------------------
 
     // Builds the initial runtime graph against the demo world. Called
     // once, from EditorView's onMounted().
@@ -366,6 +105,8 @@ export class EditorSession {
         });
     }
 
+    // Loads a previously-saved document, replacing the entire runtime
+    // graph with one built against it.
     loadDocument(id) {
         this._rebuild((eventBus) => {
             const document = this._loadDocumentUseCase.execute(this._documentManager, id, eventBus);
@@ -373,6 +114,8 @@ export class EditorSession {
         });
     }
 
+    // Starts a brand-new, empty document, replacing the runtime graph
+    // the same way loadDocument() does.
     newDocument() {
         this._rebuild((eventBus) => {
             const world = new CreateEmptyWorldUseCase().execute(eventBus);
@@ -381,6 +124,10 @@ export class EditorSession {
         });
     }
 
+    // Opens an already-constructed Document (e.g. from ForkDocumentUseCase)
+    // by re-hydrating its world against a fresh EventBus so the renderer
+    // subscribes correctly. Used when the document is already in memory
+    // rather than loaded from storage by id.
     openDocument(document) {
         this._rebuild((eventBus) => {
             const worldJson = document.world.toJSON();
@@ -392,18 +139,57 @@ export class EditorSession {
     }
 
     onPointerDown(event) {
+        // The gizmo gets first refusal — but only on the primary button;
+        // orbit/pan gestures keep their mouse buttons.
+        if (event.button === 0 && this._session
+            && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
+            return;
+        }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerDown(event);
         }
     }
 
     onPointerMove(event) {
+        if (this._session) {
+            const result = this._session.gizmoPointerMove(event.clientX, event.clientY, this._editorContext.selection);
+            if (result && result.consumed) {
+                return;
+            }
+        }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerMove(event);
         }
     }
 
+    onPointerUp(event) {
+        if (this._session) {
+            const result = this._session.gizmoPointerUp(event.clientX, event.clientY, this._editorContext.selection);
+            if (result && result.consumed) {
+                // Repositions the gizmo on the committed transforms (or
+                // snaps it back after an exact no-op drag).
+                this._refreshGizmo();
+                return;
+            }
+        }
+        if (this._inputDispatcher) {
+            this._inputDispatcher.dispatchPointerUp(event);
+        }
+    }
+
     onKeyDown(event) {
+        const keyEvent = this._toKeyEvent(event);
+        if (this._session
+            && this._session.gizmoKeyDown(keyEvent, this._editorContext.selection)) {
+            this._refreshGizmo();
+            return;
+        }
+        if (this.isGestureActive()) {
+            // An active gesture owns the keyboard: swallow everything
+            // that isn't the Escape handled above. No tool shortcuts,
+            // no deletes, no undo mid-drag.
+            return;
+        }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchKeyDown(event);
         }
@@ -413,6 +199,16 @@ export class EditorSession {
         this._teardown();
     }
 
+    // Shared by start()/loadDocument()/newDocument() — there is exactly
+    // one way the runtime graph gets built, whether it's the first time
+    // or the fifth. Tears down whatever currently exists, wires a fresh
+    // render session (subscribed BEFORE any world content exists — the
+    // same ordering constraint the engine has followed since the Event
+    // System milestone), then calls populateWorldFn(eventBus) to actually
+    // build/populate the World, whose events land on an
+    // already-listening renderer. Only after that does the rest of the
+    // per-world runtime (CommandHistory, ToolManager, InputDispatcher)
+    // get built against the real world.
     _rebuild(populateWorldFn) {
         this._teardown();
         this._editorContext.clearSelection();
@@ -422,10 +218,12 @@ export class EditorSession {
             this._container,
             eventBus,
             this._registry,
-            this._editorContext.eventBus
+            this._editorContext.eventBus,
+            { gestureService: this._gestureService }
         );
         const world = populateWorldFn(eventBus);
         this._commandHistory = new CommandHistory({ world });
+        this._editorCommandHistories.set(world.id, this._commandHistory);
         this._untrackDirtyState = this._documentManager.trackCommandHistory(this._commandHistory);
         const toolContext = {
             world,
@@ -433,9 +231,7 @@ export class EditorSession {
             editorContext: this._editorContext,
             selectionUseCase: this._selectionUseCase,
             previewUseCase: this._previewUseCase,
-            commandHistory: this._commandHistory,
-            // 0.1.44 — the same unified transform path World View uses.
-            transformSelectionUseCase: this._transformSelectionUseCase
+            commandHistory: this._commandHistory
         };
         this._toolManager = new ToolManager(this._toolRegistry, toolContext, this._editorContext);
         this._toolManager.start();
@@ -444,9 +240,23 @@ export class EditorSession {
             (screenX, screenY) => this._session.pick(screenX, screenY),
             (screenX, screenY) => this._session.pickGround(screenX, screenY)
         );
+        const refreshGizmo = () => this._refreshGizmo();
+        this._gizmoSubscriptions = [
+            this._editorContext.eventBus.subscribe(EditorEvent.SELECTION_CHANGED, refreshGizmo),
+            this._editorContext.eventBus.subscribe(EditorEvent.TOOL_CHANGED, refreshGizmo),
+            this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, refreshGizmo),
+            this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_UNDONE, refreshGizmo),
+            this._commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_REDONE, refreshGizmo)
+        ];
+        this._refreshGizmo();
     }
 
     _teardown() {
+        for (const subscription of this._gizmoSubscriptions) {
+            subscription.unsubscribe();
+        }
+        this._gizmoSubscriptions = [];
+        this._editorCommandHistories.clear();
         if (this._untrackDirtyState) {
             this._untrackDirtyState();
             this._untrackDirtyState = null;
@@ -461,5 +271,39 @@ export class EditorSession {
         }
         this._inputDispatcher = null;
         this._commandHistory = null;
+    }
+
+    // Selection changes reposition the gizmo; clearing it (or switching
+    // to the Place tool) hides it. During an active gesture the gesture
+    // owns presentation, so this is a no-op mid-drag.
+    _refreshGizmo() {
+        if (!this._session) {
+            return;
+        }
+        if (this._gestureService.transformGizmoState.active) {
+            return;
+        }
+        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
+            this._session.hideGizmo();
+            return;
+        }
+        const presentation = this._gizmoUseCase.resolvePresentation(this._editorContext.selection);
+        if (!presentation) {
+            this._session.hideGizmo();
+            return;
+        }
+        this._session.showGizmo(presentation.pivot, presentation.bounds);
+    }
+
+    _toKeyEvent(event) {
+        return {
+            key: event.key,
+            modifiers: {
+                ctrl: event.ctrlKey || false,
+                shift: event.shiftKey || false,
+                alt: event.altKey || false,
+                meta: event.metaKey || false
+            }
+        };
     }
 }
