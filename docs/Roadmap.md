@@ -48,75 +48,66 @@
 0.1.45 Advanced Selection & Editor Group Surface  (done)
 0.1.46 Interactive Transform Gizmo & Viewport Editing Parity  (done)
 0.1.47 Transform Precision, Snapping & Editing Polish  (done)
-0.1.48 Alignment & Distribution Tools
+0.1.48 Alignment & Distribution Tools  (done)
 0.1.49 Numeric Transform Input / Precision Editing
 0.1.50 Editing UX Consolidation
 0.2    Blockchain publishing, multiplayer
 
-Nested Groups / Hierarchical Editing — moved to OPTIONAL / post-0.2.
-The architecture has reached a very nice property: groups are useful
-without being hierarchical. There is no evidence yet that nesting is
-needed badly enough to justify the additional semantics, and the editing
-kernel should keep proving itself through precision and usability before
-any new structural axis is introduced.
+Nested Groups / Hierarchical Editing — remains OPTIONAL / post-0.2. The
+architecture has reached a very nice property: groups are useful without
+being hierarchical. 0.1.43–0.1.48 kept proving that resolved selections
+cover the real editing needs; nothing in alignment/distribution required
+a group-transform concept.
 
-## 0.1.47 — What shipped
+## 0.1.48 — What shipped
 
-Precision and predictability for the existing transform system. No new
-entities, no new transform commands, no scale, no second gizmo —
-snapping is a pure application-layer interpretation of the gestures the
-0.1.38–0.1.46 architecture already runs.
+Alignment and distribution as transform-generation algorithms on the
+existing selection → bounds → transform pipeline. No new entities, no
+new commands, no persistent alignment state, no second transform engine.
 
-- application/TransformSnap.js — pure snap math. Snaps the GESTURE
-  DELTA (never absolute positions), once per frame from the gesture
-  origin (never an already-snapped value), after axis-constraint
-  resolution, identically for every selection member. Floating-point
-  hygiene included so snapped values are stable in commands, replay
-  comparisons, and the feedback readout.
-- application/TransformSettings.js — session/application preferences:
-  snappingEnabled, translationSnap (1, matching the placement grid),
-  rotationSnap (15°), precisionMultiplier (0.1). NOT document state,
-  never serialized, protocol untouched.
-- SpatialEditingService — the gesture transaction is now the single
-  home of snapping: preview/commit snap the raw gesture against
-  TransformSettings, with modifier-driven precision (Shift) applied per
-  frame. Keyboard selection transforms (moveSelection/rotateSelection)
-  are routed through the same transaction as instantaneous gestures, so
-  keyboard and gizmo emit byte-identical transform-selection commands.
-  Transient gesture feedback (snapped transform + effective increments
-  + precision flag) exposed via getGestureFeedback().
-- TransformGizmoController — forwards raw gesture values AND modifier
-  state into the transaction; reads the feedback blob back out for the
-  overlay. The controller decides nothing about snapping — geometry
-  (axis planes) stays renderer-side, interpretation stays
-  application-side.
-- ui/components/TransformFeedback.js — transient overlay: mode/axis,
-  effective snap increment, precision tag, and the snapped Δ readout
-  ("Move X • Grid 1 / Δ +3", "Rotate Y • 15° (precision) / Δ +13.5°").
-  Self-contained inline styles; no persistent HUD system.
-- EditorSession / WorldNavigationSession / EditorView / WorldView —
-  modifier plumbing into the transaction, feedback plumbing up to the
-  overlay, keyboard nudges/rotations forwarding Shift for precision.
-- tests/TransformSnapping.test.js — snap tables (positive, negative,
-  rotation), precision increments, multi-selection preservation,
-  constraint-before-snap ordering, gesture-origin semantics, preview
-  stability / no cumulative rounding, disabled-snapping pass-through,
-  no-op discipline, one-command commits, undo/redo, byte-equivalent
-  replay, membership invariance, Editor/World parity, and the flagship
-  keyboard/gizmo parity (keyboard +3 === gizmo drag snapped to +3;
-  keyboard 90° === gizmo drag snapped to 90°).
-- tests/InteractiveGizmo.test.js — updated to snap-aligned drag end
-  points; all 0.1.46 semantics unchanged.
+- application/TransformAlignment.js — pure math. Nine alignment modes
+  (x/y/z × min/center/max, all WORLD axes, never camera directions) and
+  center distribution along x/y/z. Inputs: captured transforms +
+  per-brick bounds + selection bounds. Outputs: exact absolute
+  transforms or null for degenerate cases. No World, Group, Brick,
+  renderer, history, or UI.
+- SpatialEditingService.alignSelection(mode) / distributeSelection(axis)
+  — the shared transaction: resolve selection → capture transforms →
+  generate exact targets → transformsEqual no-op check → exactly one
+  TransformSelectionCommand. Deliberately bypasses 0.1.47 gesture
+  snapping: snapping governs user-authored deltas; alignment targets are
+  geometric relationships and must land exactly.
+- Distribution semantics: deterministic sort by axis coordinate, then
+  buildingId, then brickId; endpoints pinned exactly; only interior
+  members move; fewer than three bricks or a zero span is a no-op.
+- Alignment semantics: reference is the WHOLE selection bounds (never
+  the first brick), so selection order is irrelevant; requires two or
+  more bricks to do anything useful; one brick collapses to a no-op.
+- ui/components/AlignmentPanel.js — compact 9-align + 3-distribute
+  surface, hosted by both EditorView (sidebar) and WorldView (overlay),
+  enabled at 2+ selected bricks, distribution enabled at 3+. The UI
+  passes operation identifiers only; the application layer decides what
+  they mean. No keyboard shortcuts in this milestone — by design.
+- tests/TransformAlignment.test.js — pure math tables, all three axes
+  for both operations, selection-order independence, deterministic
+  ties, two-brick / already-aligned / zero-span no-ops with zero
+  history entries, exact floating-point behavior, multi-building
+  selections, membership invariance, one-command commits, exact
+  undo/redo, byte-equivalent replay, Editor/World parity, the flagship
+  snap-independence test (1.37 / 4.91 / 9.26 aligning exactly with
+  snapping enabled, undo restoring bit-exact), and rotation
+  preservation.
 
-Deliberately rejected in 0.1.47: scale (still no domain semantics),
-nested groups, alignment commands (a new interaction family — that is
-0.1.48), persistent/grid settings in the document protocol, transform
-history redesign, new transform commands, a generic GestureManager,
-direct numeric entry (0.1.49, deliberately), and group-specific
-snapping (groups remain resolved selections).
+Deliberately rejected in 0.1.48: scale, nested groups, AlignCommand/
+DistributeCommand/AlignGroupCommand, persistent alignment state, smart
+guides, magnetic snapping, collision-aware distribution, numeric input,
+a generic GestureManager, camera-relative alignment, arbitrary-angle
+alignment, and a keyboard shortcut matrix (a scoped command palette
+belongs to 0.1.50).
 
-The milestone's property, stated plainly: at 0.1.46 the engine proved
-"the editing architecture works"; at 0.1.47 it proves "the editing
-architecture is precise enough to trust." 0.1.48 (Alignment &
-Distribution) will build higher-level operations on this same
-selection → transform architecture rather than inventing another one.
+The milestone's payoff: 0.1.47 proved the transform kernel is precise;
+0.1.48 proves higher-level editing operations can be built entirely on
+that kernel. Alignment and distribution are just two more consumers of
+the closed transform architecture — selection determines participants,
+bounds determine reference geometry, and TransformSelectionCommand
+records the result. 0.1.49 (Numeric Transform Input) will be the third.
