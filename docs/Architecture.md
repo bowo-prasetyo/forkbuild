@@ -1683,6 +1683,90 @@ is view-agnostic and ready for it), and — still — any form of timeline
 editing. Operation Timeline remains observation, replay, and restoration;
 never history rewriting.
 
+Document Duplication, Forking & Clipboard (0.1.42)
+--------------------------------------------------
+0.1.42 establishes the formal cloning/duplication model the grouping
+milestones will build on: worlds become safely cloneable, forkable, and
+copy/pasteable while every command/replay/persistence invariant from
+0.1.35–0.1.41 holds.
+
+**One cloning mechanism.** DocumentCloneService
+(application/DocumentCloneService.js) is the single place cloning
+happens: strip every instance id (world, buildings, bricks) from the
+source's serialized world and rehydrate via World.fromJSON() — the
+id-stripping rehydration ForkDocumentUseCase introduced in 0.1.24, now
+extracted so clone and fork cannot drift apart. ForkDocumentUseCase
+keeps its storage-loading entry point (Repository/Author → Editor flow)
+and delegates the cloning itself. The identity model for both:
+    document identity   → NEW (new world.id = new storage slot)
+    brick identities    → NEW (independent documents never share brick ids)
+    structure/geometry  → preserved
+    lineage             → parentDocumentId → source world.id
+    source document     → never mutated, never force-saved
+Clone defaults: title "Copy of <title>", source author kept. Fork:
+"Fork of <title>", the CURRENT user as author (null when anonymous).
+Clone/fork capture the LIVE in-memory state, unsaved edits included —
+they never require or trigger a save of the source.
+
+**Adoption of created documents.** WorldNavigationSession.
+_adoptCreatedDocument() wires a clone/fork into the live session:
+loaded-documents map, renderer addWorld() at the layout position, a
+per-document DocumentManager, and a FRESH CommandHistory rooted at the
+new state — the same rebase shape restoration uses (0.1.41). The new
+history's save point starts INVALIDATED (markUnsaved): nothing exists
+on disk for the new document yet, so it reports dirty until an explicit
+Save establishes the save point at cursor 0. "The fork's save point is
+clean initially" reads as: the editing session starts fresh at its own
+origin with nothing inherited — while the persistence state honestly
+says "not on disk yet." Two free consequences: dirty pinning (0.1.39)
+protects unsaved clones/forks from streaming unload, and Publish's
+auto-save (0.1.39) makes "publish a fresh fork" do the right thing.
+
+**Copy is observation; paste is mutation.** copySelection() reads the
+selection through CopySelectionUseCase and produces a
+SpatialClipboardState (application/spatial-state/) — pure session
+state, never document state, never a history entry. The clipboard
+carries INTENT, not identity: definitionId, transform relative to the
+selection bounds center (the same pivot the transform gizmo uses),
+rotation, plus source metadata (sourceDocumentId, origin, copiedAt).
+No brick id ever enters the clipboard, so a paste can never collide
+with or resurrect the copied bricks; multi-selection geometry survives
+intact and re-anchors with a single paste offset.
+
+pasteClipboard() turns the clipboard into exactly ONE
+PasteBricksCommand (type 'paste-bricks', registered in
+CreateCommandRegistryUseCase) and routes it through CommandHistory — so
+paste is undoable, redoable, serializable, replayable, and restorable
+like every other operation, and the timeline shows "Paste 3 Bricks" as
+a single entry. A dedicated atomic command was chosen over a composite
+of placements: one serialized intent list instead of N place intents,
+one timeline entry either way, identical undo semantics. The command
+creates pasted identities at execution time and records them
+(executedBrickIds, serialized) — the exact PlaceBrickCommand contract:
+undo → redo recreates the SAME pasted bricks and replay reconstructs
+byte-identical documents (the 0.1.40 guarantee), while a paste replayed
+into another session without that record correctly creates fresh
+identities. execute() is transactional: a mid-paste failure removes
+every brick already added. Repeated pastes cascade by PASTE_OFFSET
+(2, 0, 2) × paste count (counter resets on every new copy), and the
+pasted bricks are selected automatically, ready to move.
+
+**Boundaries and simplifications.** Because clipboard geometry is
+pivot-relative and definition ids are registry-global, pasting into a
+different loaded document than the copy's source is structurally
+possible; the World View flow pastes into the active document. Known
+simplifications kept deliberately: paste does not run
+PlacementValidator (overlaps allowed — the same policy move has always
+had), and cloned/forked documents gain a layout position only once
+published (World View streams publications). Copy and paste are gated
+during history preview, like every other editing entry point.
+
+**Not in 0.1.42.** Persistent groups — hierarchy, ownership, group
+identity, nested groups — are 0.1.43 on purpose. They now build on
+settled duplication semantics: a future group duplication reuses
+exactly this intent-without-ids clipboard model and this
+identity-preserving command contract.
+
 Domain State vs Editor State
 
 Two kinds of state exist in ForkBuild, and they must never mix.
