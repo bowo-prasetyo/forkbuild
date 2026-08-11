@@ -112,7 +112,7 @@ export default {
 
         let onPointerDown = null;
         let onPointerMove = null;
-        let  = null;
+        let onKeyDown = null;
 
         onMounted(() => {
             // ALWAYS initialize the renderer first so _container is set.
