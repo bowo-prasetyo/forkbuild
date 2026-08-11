@@ -6,9 +6,9 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.1.44** — Transform Parity & Group Gizmo Integration
+**Version 0.1.45** — Advanced Selection & Editor Group Surface
 
-The transformation architecture is now closed: every selection transform — single brick, multi-selection, or resolved group, from keyboard or gizmo gesture, in World View or Editor — flows through ONE path (`TransformSelectionUseCase` → exactly one `TransformSelectionCommand`). Groups never hold transforms: they define relationships, transforms modify members, and the transform layer never sees a `Group`. `MoveBrickCommand`/`RotateBrickCommand` are retired from production (kept registered to deserialize older histories).
+The classic editing core is complete. Marquee selection (Shift+drag) works in both surfaces as a pure session-state gesture — renderer answers containment, session owns semantics, zero history entries. The selection modifier contract is explicit and identical everywhere: click replaces, Ctrl/Cmd toggles, Shift adds, Ctrl/Cmd+A selects all. The Editor gains the Groups panel — the same six group commands World View uses — closing the last major surface-parity gap. Selection, groups, copy/paste, transform, undo/redo, replay, and restore now form one coherent editing experience.
 
 ## Features
 
@@ -32,6 +32,8 @@ The transformation architecture is now closed: every selection transform — sin
 - **Editor Clipboard Parity** — Ctrl+C / Ctrl+V in the Editor reuse the World View clipboard machinery verbatim; group-aware copy/paste on both surfaces.
 - **Unified Transform Layer** — One transform path for every selection kind with pivot semantics (multi/group rotation orbits the selection bounds center), shared transform math, and no-op suppression across keyboard and gizmo gestures.
 - **Editor Transform Parity** — Arrow/Page-key nudges and R/Shift+R pivot rotation in the Editor through the exact same use case World View uses — no second transform implementation anywhere.
+- **Marquee Selection** — Shift+drag rectangular selection in both views (Ctrl/Cmd held to add); viewport overlay, camera controls suspended for the gesture, containment via projected brick centers. Selection operations never create history entries.
+- **Editor Groups Panel** — Create/select/rename/duplicate/delete groups and add/remove the current selection, all through the existing group commands; group selection resolves membership without mutating the document.
     
 ## Architecture
 
@@ -96,11 +98,11 @@ Open `index.html` in a modern browser. No build step is required.
 - [x] 0.1.41 Historical State Restoration
 - [x] 0.1.42 Document Duplication, Forking & Clipboard
 - [x] 0.1.43 Advanced Selection, Grouping & Editing Parity 
-- [x] 0.1.44 Transform Parity & Group Gizmo Integration 
-- [ ] 0.1.45 Advanced Selection / Editor Group Surface
+- [x] 0.1.44 Transform Parity & Group Gizmo Architecture 
+- [x] 0.1.45 Advanced Selection & Editor Group Surface 
 - [ ] 0.1.46 Nested Groups / Hierarchical Editing  (optional)
 - [ ] 0.2    Blockchain publishing, multiplayer
-      
+            
 ## License
 
 Mozilla Public License Version 2.0
