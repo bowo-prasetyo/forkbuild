@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount, inject, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
@@ -7,6 +7,11 @@ import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase
 const DRAG_THRESHOLD_PX = 6;
 const NUDGE = 1;
 
+// 0.1.46: the viewport now hosts the interactive transform gizmo. The
+// view stays dumb about gestures: every pointer/key event is offered to
+// the session's gizmo FIRST, and only events the gizmo does not consume
+// continue into hover/picking/camera handling. pointerup moved to window
+// so a drag released outside the viewport still commits.
 export default {
     name: 'WorldView',
     setup() {
@@ -14,6 +19,7 @@ export default {
         const router = useRouter();
         const viewport = ref(null);
         const initialDocumentId = route.params.documentId;
+
         const title = ref('Loading...');
         const author = ref(null);
         const loadedWorlds = ref([]);
@@ -28,26 +34,9 @@ export default {
         const availableDefinitions = ref([]);
         const selectedDefinitionId = ref(null);
         const activeTool = ref('select');
-        // 0.1.39 — persistence/publication UI state.
-        const activeDocumentId = ref(null);
-        const activeDocumentDirty = ref(false);
-        // 0.1.40 — Operation Timeline state.
-        const showTimeline = ref(false);
-        const timeline = ref([]);
-        const historyPreview = ref(null);
-        // 0.1.42 — clipboard indicator.
-        const clipboard = ref(null);
-        const groups = ref([]);
-        // 0.1.45 — marquee gesture state (view-owned).
-        const marquee = ref(null);
-        let marqueeStart = null;
-        let marqueeActive = false;
-        let controlsDisabled = false;
 
         const registry = new CreateBrickRegistryUseCase().execute();
-        const identityUseCase = inject('identityUseCase', null);
-        const identityProvider = identityUseCase ? identityUseCase.provider : null;
-        const worldViewFactory = new CreateWorldViewUseCase().execute(identityProvider);
+        const worldViewFactory = new CreateWorldViewUseCase().execute();
         const session = worldViewFactory.createSession(registry);
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
         const allPublications = ref([]);
@@ -62,7 +51,7 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Tool switching
+        // Tool switching (unified with Editor View)
         // -----------------------------------------------------------------
 
         function setTool(tool) {
@@ -84,175 +73,6 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Persistence & Publication (0.1.39)
-        // -----------------------------------------------------------------
-
-        function saveActiveDocument() {
-            if (!activeDocumentId.value) {
-                return;
-            }
-            try {
-                session.saveDocument();
-            } catch (err) {
-                alert(`Save failed: ${err.message}`);
-            }
-            refreshSpatialUI();
-        }
-
-        function publishActiveDocument() {
-            if (!activeDocumentId.value) {
-                return;
-            }
-            try {
-                const publication = session.publishDocument();
-                alert(`Published "${publication.title}"\nID: ${publication.id}\nProvider: ${publication.providerId}`);
-            } catch (err) {
-                alert(`Publish failed: ${err.message}`);
-            }
-            refreshSpatialUI();
-        }
-
-        // -----------------------------------------------------------------
-        // Operation Timeline (0.1.40) & Restoration (0.1.41)
-        // -----------------------------------------------------------------
-
-        function toggleTimeline() {
-            showTimeline.value = !showTimeline.value;
-            refreshSpatialUI();
-        }
-
-        function previewAt(cursor) {
-            try {
-                if (!session.getHistoryPreview()) {
-                    session.beginHistoryPreview();
-                }
-                session.previewHistoryAt(cursor);
-            } catch (err) {
-                alert(`Preview failed: ${err.message}`);
-            }
-            refreshSpatialUI();
-        }
-
-        function cancelPreview() {
-            session.cancelHistoryPreview();
-            refreshSpatialUI();
-        }
-
-        function restorePreviewedState() {
-            const preview = session.getHistoryPreview();
-            if (!preview || !preview.active) {
-                return;
-            }
-            const warning = activeDocumentDirty.value
-                ? 'Your current unsaved changes will be replaced.\n\n'
-                : '';
-            const confirmed = confirm(
-                `${warning}Restore this historical state?\n\n` +
-                'The document becomes the previewed state and editing history restarts from it.\n' +
-                'This cannot be undone.'
-            );
-            if (!confirmed) {
-                return;
-            }
-            try {
-                session.restoreHistoryAt(preview.cursor);
-            } catch (err) {
-                alert(`Restore failed: ${err.message}`);
-            }
-            refreshSpatialUI();
-        }
-
-        // -----------------------------------------------------------------
-        // Duplication, Forking & Clipboard (0.1.42)
-        // -----------------------------------------------------------------
-
-        function copySelectionToClipboard() {
-            session.copySelection();
-            refreshSpatialUI();
-        }
-
-        function pasteFromClipboard() {
-            session.pasteClipboard();
-            refreshSpatialUI();
-        }
-
-        function duplicateActiveDocument() {
-            if (!activeDocumentId.value) {
-                return;
-            }
-            try {
-                const cloneId = session.cloneDocument();
-                refreshSpatialUI();
-                focusWorld(cloneId);
-            } catch (err) {
-                alert(`Duplicate failed: ${err.message}`);
-            }
-        }
-
-        function forkActiveDocument() {
-            if (!activeDocumentId.value) {
-                return;
-            }
-            try {
-                const forkId = session.forkDocument();
-                refreshSpatialUI();
-                focusWorld(forkId);
-            } catch (err) {
-                alert(`Fork failed: ${err.message}`);
-            }
-        }
-
-        function formatTime(timestamp) {
-            return timestamp ? new Date(timestamp).toLocaleTimeString() : '';
-        }
-
-        function groupSelection() {
-            const name = prompt('Group name:', `Group ${groups.value.length + 1}`);
-            if (name === null) {
-                return;
-            }
-            session.createGroupFromSelection(name.trim() || null);
-            refreshSpatialUI();
-        }
-        
-        function selectGroupById(groupId) {
-            session.selectGroup(groupId);
-            refreshSpatialUI();
-        }
-        
-        function renameGroupById(groupId) {
-            const current = groups.value.find((g) => g.id === groupId);
-            const name = prompt('New group name:', current ? current.name : '');
-            if (name === null || !name.trim()) {
-                return;
-            }
-            session.renameGroup(groupId, name.trim());
-            refreshSpatialUI();
-        }
-        
-        function duplicateGroupById(groupId) {
-            session.duplicateGroup(groupId);
-            refreshSpatialUI();
-        }
-        
-        function deleteGroupById(groupId) {
-            if (!confirm('Delete this group? The bricks themselves are kept.')) {
-                return;
-            }
-            session.deleteGroup(groupId);
-            refreshSpatialUI();
-        }
-        
-        function addSelectionToGroup(groupId) {
-            session.addToGroupWithSelection(groupId);
-            refreshSpatialUI();
-        }
-        function removeSelectionFromGroup(groupId) {
-            session.removeFromGroupWithSelection(groupId);
-            refreshSpatialUI();
-        }
-        
-        // -----------------------------------------------------------------
         // Spatial UI refresh
         // -----------------------------------------------------------------
 
@@ -267,8 +87,7 @@ export default {
                 return {
                     documentId: id,
                     title: doc?.metadata?.title || pub?.title || 'Untitled',
-                    author: doc?.metadata?.author || pub?.author || 'anonymous',
-                    dirty: session.isDocumentDirty(id)
+                    author: doc?.metadata?.author || pub?.author || 'anonymous'
                 };
             });
 
@@ -294,16 +113,6 @@ export default {
             });
 
             cameraPosition.value = state.cameraPosition;
-
-            activeDocumentId.value = session.getActiveDocumentId();
-            activeDocumentDirty.value = activeDocumentId.value
-                ? session.isDocumentDirty(activeDocumentId.value)
-                : false;
-
-            timeline.value = session.getTimeline();
-            historyPreview.value = session.getHistoryPreview();
-            clipboard.value = session.getClipboard();
-            groups.value = session.getGroups();
 
             const sel = session.getSpatialSelection();
             if (sel && !sel.isEmpty) {
@@ -393,49 +202,23 @@ export default {
         // -----------------------------------------------------------------
         // Pointer interaction
         // -----------------------------------------------------------------
-                    
-        const marqueeStyle = computed(() => {
-            if (!marquee.value) {
-                return {};
-            }
-            return {
-                left: `${marquee.value.left}px`,
-                top: `${marquee.value.top}px`,
-                width: `${marquee.value.width}px`,
-                height: `${marquee.value.height}px`
-            };
-        });
-        
-        function updateMarquee(clientX, clientY) {
-            const rect = viewport.value.getBoundingClientRect();
-            marquee.value = {
-                left: Math.min(marqueeStart.x, clientX) - rect.left,
-                top: Math.min(marqueeStart.y, clientY) - rect.top,
-                width: Math.abs(clientX - marqueeStart.x),
-                height: Math.abs(clientY - marqueeStart.y)
-            };
-        }
-        
-        function endMarquee() {
-            marquee.value = null;
-            marqueeStart = null;
-            marqueeActive = false;
-        }            
 
         function onPointerDown(event) {
             isDragging = false;
             pointerStart = { x: event.clientX, y: event.clientY };
-            // Shift+drag in the Select tool starts a marquee; suspend camera
-            // controls for the duration of the gesture (re-enabled on up).
-            if (event.shiftKey && activeTool.value === 'select') {
-                marqueeStart = { x: event.clientX, y: event.clientY };
-                marqueeActive = false;
-                session.setControlsEnabled(false);
-                controlsDisabled = true;
+            // The gizmo gets first refusal. If it starts a gesture, the
+            // gesture owns the pointer: no camera drag, no selection,
+            // no hover, until pointer up.
+            if (session.gizmoPointerDown(event)) {
+                return;
             }
         }
-        
+
         function onPointerMove(event) {
+            const gizmoResult = session.gizmoPointerMove(event);
+            if (gizmoResult.consumed) {
+                return;
+            }
             if (pointerStart) {
                 const dx = event.clientX - pointerStart.x;
                 const dy = event.clientY - pointerStart.y;
@@ -443,51 +226,26 @@ export default {
                     isDragging = true;
                 }
             }
-            if (marqueeStart && event.buttons > 0) {
-                if (isDragging) {
-                    marqueeActive = true;
-                }
-                if (marqueeActive) {
-                    updateMarquee(event.clientX, event.clientY);
-                    return;
-                }
-            }
-            if (event.buttons === 0) {
+            if (event.buttons === 0 && !gizmoResult.hovered) {
                 session.hover(event.clientX, event.clientY);
                 refreshHoverUI();
             }
         }
-        
+
         function onPointerUp(event) {
-            if (controlsDisabled) {
-                session.setControlsEnabled(true);
-                controlsDisabled = false;
-            }
-            if (marqueeStart && marqueeActive) {
-                // Marquee -> replace selection; Ctrl/Cmd held -> add.
-                // Session state only: zero history entries.
-                session.marqueeSelect(
-                    { x0: marqueeStart.x, y0: marqueeStart.y, x1: event.clientX, y1: event.clientY },
-                    { additive: event.ctrlKey || event.metaKey }
-                );
-                endMarquee();
+            const gizmoResult = session.gizmoPointerUp(event);
+            if (gizmoResult.consumed) {
+                refreshSpatialUI();
                 pointerStart = null;
                 isDragging = false;
-                refreshSpatialUI();
                 return;
             }
-            endMarquee();
             if (!isDragging && pointerStart) {
                 if (activeTool.value === 'place') {
                     session.commitPlacement();
                     refreshSpatialUI();
                 } else {
-                    // 0.1.45 contract: click replaces, Ctrl/Cmd toggles,
-                    // Shift adds (union).
-                    session.pick(event.clientX, event.clientY, {
-                        toggle: event.ctrlKey || event.metaKey,
-                        additive: event.shiftKey
-                    });
+                    session.pick(event.clientX, event.clientY, { toggle: event.ctrlKey || event.metaKey || event.shiftKey });
                     refreshSpatialUI();
                 }
             }
@@ -496,38 +254,19 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Keyboard interaction
+        // Keyboard interaction (merged and deduplicated)
         // -----------------------------------------------------------------
 
         function onKeyDown(event) {
-            const modifierPressed = event.ctrlKey || event.metaKey;
-
-            // Save (global, 0.1.39)
-            if (modifierPressed && event.key.toLowerCase() === 's') {
-                event.preventDefault();
-                saveActiveDocument();
+            // An active gizmo gesture owns the keyboard: only Escape
+            // (cancel) does anything, everything else is swallowed.
+            if (session.isGestureActive()) {
+                if (session.gizmoKeyDown({ key: event.key })) {
+                    refreshSpatialUI();
+                }
                 return;
             }
 
-            // Copy / Paste (0.1.42) — copy is observation (no history
-            // entry), paste is one command through the session.
-            if (modifierPressed && event.key.toLowerCase() === 'c') {
-                event.preventDefault();
-                copySelectionToClipboard();
-                return;
-            }
-            if (modifierPressed && event.key.toLowerCase() === 'v') {
-                event.preventDefault();
-                pasteFromClipboard();
-                return;
-            }
-            // Select all (0.1.45) — session state, zero history entries.
-            if (modifierPressed && event.key.toLowerCase() === 'a') {
-                event.preventDefault();
-                session.selectAll();
-                refreshSpatialUI();
-                return;
-            }
             // Escape: cancel placement if in Place mode, else clear selection
             if (event.key === 'Escape') {
                 if (activeTool.value === 'place') {
@@ -539,7 +278,9 @@ export default {
                 return;
             }
 
-            // Undo / Redo (global; suspended by the session during preview)
+            const modifierPressed = event.ctrlKey || event.metaKey;
+
+            // Undo / Redo (global, works in both tools)
             if (modifierPressed && event.key.toLowerCase() === 'z' && !event.shiftKey) {
                 event.preventDefault();
                 session.undo();
@@ -556,7 +297,6 @@ export default {
             // Select-tool editing shortcuts
             if (activeTool.value === 'select' && spatialEditingContext.value) {
                 const ctx = spatialEditingContext.value;
-
                 if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.rotate) {
                     if (event.key.toLowerCase() === 'r') {
                         event.preventDefault();
@@ -566,7 +306,6 @@ export default {
                         return;
                     }
                 }
-
                 if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.move) {
                     switch (event.key) {
                         case 'ArrowUp':
@@ -595,7 +334,6 @@ export default {
                             break;
                     }
                 }
-
                 if ((ctx.type === 'brick' || ctx.type === 'bricks') && ctx.capabilities.delete) {
                     if (event.key === 'Delete' || event.key === 'Backspace') {
                         event.preventDefault();
@@ -627,7 +365,7 @@ export default {
 
             viewport.value.addEventListener('pointerdown', onPointerDown);
             viewport.value.addEventListener('pointermove', onPointerMove);
-            viewport.value.addEventListener('pointerup', onPointerUp);
+            window.addEventListener('pointerup', onPointerUp);
             window.addEventListener('keydown', onKeyDown);
 
             spatialInterval = setInterval(() => {
@@ -639,9 +377,9 @@ export default {
         onBeforeUnmount(() => {
             clearInterval(spatialInterval);
             window.removeEventListener('keydown', onKeyDown);
-            viewport.value.removeEventListener('pointerdown', onPointerDown);
+            window.removeEventListener('pointerup', onPointerUp);
             viewport.value.removeEventListener('pointermove', onPointerMove);
-            viewport.value.removeEventListener('pointerup', onPointerUp);
+            viewport.value.removeEventListener('pointerdown', onPointerDown);
             session.dispose();
         });
 
@@ -661,382 +399,236 @@ export default {
             availableDefinitions,
             selectedDefinitionId,
             activeTool,
-            activeDocumentId,
-            activeDocumentDirty,
-            showTimeline,
-            timeline,
-            historyPreview,
-            clipboard,
             setTool,
             onBrickSelectionChange,
             focusWorld,
             focusSelection,
             moveSelectedBrick,
-            deleteSelectedBrick,
-            saveActiveDocument,
-            publishActiveDocument,
-            toggleTimeline,
-            previewAt,
-            cancelPreview,
-            restorePreviewedState,
-            copySelectionToClipboard,
-            pasteFromClipboard,
-            duplicateActiveDocument,
-            forkActiveDocument,
-            formatTime, 
-            groups, 
-            groupSelection, 
-            selectGroupById, 
-            renameGroupById, 
-            duplicateGroupById, 
-            deleteGroupById, 
-            addSelectionToGroup,
-            marquee, 
-            marqueeStyle, 
-            removeSelectionFromGroup
+            deleteSelectedBrick
         };
     },
     template: `
-<div class="world-view">
-    <div class="world-view-overlay">
-        <h2>{{ title }}</h2>
-        <p v-if="author">by {{ author }}</p>
-        <p v-if="cameraPosition" class="world-view-coords">
-            Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
-        </p>
-        <p class="world-view-hint">
-            Drag to orbit • Scroll to zoom • Home to reset • Click to inspect / place •
-            Ctrl+S save • Ctrl+C/V copy/paste
-        </p>
+        <div class="world-view">
+            <div class="world-view-overlay">
+                <h2>{{ title }}</h2>
+                <p v-if="author">by {{ author }}</p>
+                <p v-if="cameraPosition" class="world-view-coords">
+                    Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
+                </p>
+                <p class="world-view-hint">
+                    Drag to orbit • Scroll to zoom • Home to reset • Drag gizmo handles to move/rotate • Esc cancels a drag
+                </p>
 
-        <div class="world-view-actions">
-            <button
-                class="action-btn action-btn--primary"
-                :disabled="!activeDocumentId"
-                @click="saveActiveDocument"
-            >
-                Save
-            </button>
-            <button
-                class="action-btn action-btn--publish"
-                :disabled="!activeDocumentId"
-                @click="publishActiveDocument"
-            >
-                Publish
-            </button>
-            <button
-                class="action-btn action-btn--secondary"
-                :disabled="!activeDocumentId"
-                @click="duplicateActiveDocument"
-            >
-                Duplicate
-            </button>
-            <button
-                class="action-btn action-btn--fork"
-                :disabled="!activeDocumentId"
-                @click="forkActiveDocument"
-            >
-                Fork
-            </button>
-            <button
-                class="action-btn action-btn--secondary"
-                :disabled="!activeDocumentId"
-                @click="toggleTimeline"
-            >
-                {{ showTimeline ? 'Hide Timeline' : 'Timeline' }}
-            </button>
-            <span
-                v-if="activeDocumentId"
-                class="world-view-dirty"
-                :class="{ 'world-view-dirty--clean': !activeDocumentDirty }"
-            >
-                {{ activeDocumentDirty ? '● Unsaved changes' : 'Saved' }}
-            </span>
-        </div>
-
-        <div v-if="showTimeline" class="world-view-section">
-            <h4>Operation Timeline ({{ timeline.length }})</h4>
-            <p class="timeline-hint">
-                Click an operation to preview the world as it existed at that point.
-            </p>
-            <ul class="timeline-list">
-                <li
-                    class="timeline-item timeline-item--initial"
-                    :class="{ 'timeline-item--previewing': historyPreview && historyPreview.cursor === 0 }"
-                    @click="previewAt(0)"
-                >
-                    <span class="timeline-desc">Initial state</span>
-                </li>
-                <li
-                    v-for="op in timeline"
-                    :key="op.id"
-                    class="timeline-item"
-                    :class="{
-                        'timeline-item--undone': !op.applied,
-                        'timeline-item--previewing': historyPreview && historyPreview.cursor === op.index + 1
-                    }"
-                    @click="previewAt(op.index + 1)"
-                >
-                    <span class="timeline-desc">{{ op.description }}</span>
-                    <span v-if="op.childCount > 0" class="timeline-children">└─ {{ op.childCount }} ops</span>
-                    <span class="timeline-time">{{ formatTime(op.timestamp) }}</span>
-                </li>
-            </ul>
-            <div v-if="historyPreview && historyPreview.active" class="timeline-preview-bar">
-                <span>Previewing {{ historyPreview.cursor }} / {{ timeline.length }} operations</span>
-                <div class="timeline-preview-actions">
-                    <button class="action-btn action-btn--secondary" @click="cancelPreview">Cancel Preview</button>
-                    <button class="action-btn action-btn--danger" @click="restorePreviewedState">Restore Here</button>
+                <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
+                    <h4>Hover</h4>
+                    <p class="spatial-type">{{ spatialHover.type }}</p>
+                    <p v-if="spatialHover.worldTitle" class="spatial-world">
+                        World: {{ spatialHover.worldTitle }}
+                        <span class="spatial-author">by {{ spatialHover.worldAuthor }}</span>
+                    </p>
+                    <p v-if="spatialHover.brickId" class="spatial-id">
+                        Brick: {{ spatialHover.brickId.slice(0, 8) }}…
+                    </p>
+                    <p v-if="spatialHover.position" class="spatial-pos">
+                        {{ spatialHover.position.x.toFixed(2) }},
+                        {{ spatialHover.position.y.toFixed(2) }},
+                        {{ spatialHover.position.z.toFixed(2) }}
+                    </p>
                 </div>
-            </div>
-        </div>
 
-        <div v-if="clipboard && !clipboard.isEmpty" class="world-view-section">
-            <h4>Clipboard</h4>
-            <p class="clipboard-info">{{ clipboard.count }} brick(s) copied — Ctrl+V to paste</p>
-        </div>
-
-        <div v-if="groups.length > 0 || (spatialSelection && spatialSelection.type !== 'ground')" class="world-view-section">
-            <h4>Groups ({{ groups.length }})</h4>
-            <button
-                class="action-btn action-btn--secondary"
-                :disabled="!spatialSelection || spatialSelection.type === 'ground'"
-                @click="groupSelection"
-            >
-                Group Selection
-            </button>
-            <ul v-if="groups.length > 0" class="world-list">
-                <li v-for="group in groups" :key="group.id" class="world-item">
-                    <span class="world-item-title">{{ group.name }} ({{ group.memberCount }})</span>
-                    <span class="group-actions">
-                        <button class="group-action-btn" @click="selectGroupById(group.id)">Select</button>
+                <div v-if="spatialInspection" class="spatial-panel spatial-panel--inspection">
+                    <h4>Inspection</h4>
+                    <p class="spatial-type">{{ spatialInspection.type }}</p>
+                    <div v-if="spatialInspection.type === 'brick'" class="inspection-fields">
+                        <div class="inspection-row">
+                            <span class="inspection-label">Type</span>
+                            <span class="inspection-value">{{ spatialInspection.brickType }}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">ID</span>
+                            <span class="inspection-value">{{ spatialInspection.brickId.slice(0, 8) }}…</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Local Pos</span>
+                            <span class="inspection-value">
+                                {{ spatialInspection.localPosition.x.toFixed(2) }},
+                                {{ spatialInspection.localPosition.y.toFixed(2) }},
+                                {{ spatialInspection.localPosition.z.toFixed(2) }}
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">World Pos</span>
+                            <span class="inspection-value">
+                                {{ spatialInspection.worldPosition.x.toFixed(2) }},
+                                {{ spatialInspection.worldPosition.y.toFixed(2) }},
+                                {{ spatialInspection.worldPosition.z.toFixed(2) }}
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Rotation</span>
+                            <span class="inspection-value">{{ spatialInspection.rotation }}°</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Building</span>
+                            <span class="inspection-value">{{ spatialInspection.buildingId.slice(0, 8) }}… ({{ spatialInspection.buildingBrickCount }} bricks)</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">World</span>
+                            <span class="inspection-value">{{ spatialInspection.worldTitle }}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Author</span>
+                            <span class="inspection-value">{{ spatialInspection.worldAuthor }}</span>
+                        </div>
+                    </div>
+                    <div v-if="spatialInspection.type === 'ground'" class="inspection-fields">
+                        <div class="inspection-row">
+                            <span class="inspection-label">Position</span>
+                            <span class="inspection-value">
+                                {{ spatialInspection.position.x.toFixed(2) }},
+                                {{ spatialInspection.position.y.toFixed(2) }},
+                                {{ spatialInspection.position.z.toFixed(2) }}
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">World</span>
+                            <span class="inspection-value">{{ spatialInspection.worldTitle }}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Author</span>
+                            <span class="inspection-value">{{ spatialInspection.worldAuthor }}</span>
+                        </div>
+                    </div>
+                    <div class="inspection-actions">
                         <button
-                            v-if="spatialSelection && spatialSelection.type !== 'ground'"
-                            class="group-action-btn"
-                            @click="addSelectionToGroup(group.id)"
-                        >+Sel</button>
-                        <button class="group-action-btn" @click="removeSelectionFromGroup(group.id)">−Sel</button>
-                        <button class="group-action-btn" @click="renameGroupById(group.id)">Rename</button>
-                        <button class="group-action-btn" @click="duplicateGroupById(group.id)">Duplicate</button>
-                        <button class="group-action-btn group-action-btn--danger" @click="deleteGroupById(group.id)">Delete</button>
-                    </span>
-                </li>
-            </ul>
-        </div>
+                            v-if="spatialInspection.documentId"
+                            class="action-btn action-btn--explore"
+                            @click="focusWorld(spatialInspection.documentId)"
+                        >
+                            Focus World
+                        </button>
+                        <button
+                            v-if="spatialInspection.type === 'brick'"
+                            class="action-btn action-btn--primary"
+                            @click="focusSelection"
+                        >
+                            Focus Brick
+                        </button>
+                    </div>
+                </div>
 
-        <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
-            <h4>Hover</h4>
-            <p class="spatial-type">{{ spatialHover.type }}</p>
-            <p v-if="spatialHover.worldTitle" class="spatial-world">
-                World: {{ spatialHover.worldTitle }}
-                <span class="spatial-author">by {{ spatialHover.worldAuthor }}</span>
-            </p>
-            <p v-if="spatialHover.brickId" class="spatial-id">
-                Brick: {{ spatialHover.brickId.slice(0, 8) }}…
-            </p>
-            <p v-if="spatialHover.position" class="spatial-pos">
-                {{ spatialHover.position.x.toFixed(2) }},
-                {{ spatialHover.position.y.toFixed(2) }},
-                {{ spatialHover.position.z.toFixed(2) }}
-            </p>
-        </div>
+                <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">
+                    <h4>Placement Preview</h4>
+                    <p class="spatial-type">{{ spatialPlacement.definitionId }}</p>
+                    <p class="spatial-pos">
+                        {{ spatialPlacement.position.x.toFixed(2) }},
+                        {{ spatialPlacement.position.y.toFixed(2) }},
+                        {{ spatialPlacement.position.z.toFixed(2) }}
+                    </p>
+                    <p class="editing-hint">Click to place • Escape to switch to Select</p>
+                </div>
 
-        <div v-if="spatialInspection" class="spatial-panel spatial-panel--inspection">
-            <h4>Inspection</h4>
-            <p class="spatial-type">{{ spatialInspection.type }}</p>
-            <div v-if="spatialInspection.type === 'brick'" class="inspection-fields">
-                <div class="inspection-row">
-                    <span class="inspection-label">Type</span>
-                    <span class="inspection-value">{{ spatialInspection.brickType }}</span>
+                <div v-if="spatialEditingContext && activeTool === 'select'" class="spatial-panel spatial-panel--editing">
+                    <h4>Editing</h4>
+                    <p class="spatial-type">{{ spatialEditingContext.type }}</p>
+                    <div v-if="spatialEditingContext.type === 'brick'" class="editing-actions">
+                        <p v-if="spatialEditingContext.capabilities.move" class="editing-hint">
+                            Arrow keys: move X/Z • Page Up/Down: move Y • or drag the gizmo
+                        </p>
+                        <p v-if="spatialEditingContext.capabilities.rotate" class="editing-hint">
+                            R: rotate 90° • Shift+R: rotate –90° • or drag the gizmo ring
+                        </p>
+                        <button
+                            v-if="spatialEditingContext.capabilities.delete"
+                            class="action-btn action-btn--danger"
+                            @click="deleteSelectedBrick"
+                        >
+                            Delete Brick
+                        </button>
+                    </div>
+                    <div v-if="spatialEditingContext.type === 'ground'" class="editing-actions">
+                        <p class="editing-hint">
+                            Ground selected. Switch to Place tool to build.
+                        </p>
+                    </div>
                 </div>
-                <div class="inspection-row">
-                    <span class="inspection-label">ID</span>
-                    <span class="inspection-value">{{ spatialInspection.brickId.slice(0, 8) }}…</span>
+
+                <div class="world-view-section">
+                    <h4>Tools</h4>
+                    <div class="tool-switcher tool-switcher--spatial">
+                        <button
+                            :class="['tool-btn', { 'tool-btn--active': activeTool === 'select' }]"
+                            @click="setTool('select')"
+                        >
+                            Select
+                        </button>
+                        <button
+                            :class="['tool-btn', { 'tool-btn--active': activeTool === 'place' }]"
+                            @click="setTool('place')"
+                        >
+                            Place
+                        </button>
+                    </div>
+                    <div v-if="activeTool === 'place'" class="placement-controls">
+                        <select
+                            v-model="selectedDefinitionId"
+                            class="placement-select"
+                            @change="onBrickSelectionChange"
+                        >
+                            <option
+                                v-for="def in availableDefinitions"
+                                :key="def.id"
+                                :value="def.id"
+                            >
+                                {{ def.name }}
+                            </option>
+                        </select>
+                        <p class="placement-hint">
+                            Hover over ground or a brick face, then click to place.
+                        </p>
+                    </div>
                 </div>
-                <div class="inspection-row">
-                    <span class="inspection-label">Local Pos</span>
-                    <span class="inspection-value">
-                        {{ spatialInspection.localPosition.x.toFixed(2) }},
-                        {{ spatialInspection.localPosition.y.toFixed(2) }},
-                        {{ spatialInspection.localPosition.z.toFixed(2) }}
-                    </span>
+
+                <div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
+                    <h4>Unavailable ({{ failedWorlds.length }})</h4>
+                    <ul class="world-list world-list--failed">
+                        <li v-for="w in failedWorlds" :key="w.documentId" class="world-item world-item--failed">
+                            <span class="world-item-title">{{ w.title }}</span>
+                            <span class="world-item-author">{{ w.author }}</span>
+                        </li>
+                    </ul>
                 </div>
-                <div class="inspection-row">
-                    <span class="inspection-label">World Pos</span>
-                    <span class="inspection-value">
-                        {{ spatialInspection.worldPosition.x.toFixed(2) }},
-                        {{ spatialInspection.worldPosition.y.toFixed(2) }},
-                        {{ spatialInspection.worldPosition.z.toFixed(2) }}
-                    </span>
+
+                <div v-if="loadedWorlds.length > 0" class="world-view-section">
+                    <h4>Worlds in View ({{ loadedWorlds.length }})</h4>
+                    <ul class="world-list world-list--loaded">
+                        <li
+                            v-for="w in loadedWorlds"
+                            :key="w.documentId"
+                            :class="['world-item', { 'world-item--current': w.documentId === $route.params.documentId }]"
+                        >
+                            <span class="world-item-title">{{ w.title }}</span>
+                            <span class="world-item-author">{{ w.author }}</span>
+                        </li>
+                    </ul>
                 </div>
-                <div class="inspection-row">
-                    <span class="inspection-label">Rotation</span>
-                    <span class="inspection-value">{{ spatialInspection.rotation }}°</span>
-                </div>
-                <div class="inspection-row">
-                    <span class="inspection-label">Building</span>
-                    <span class="inspection-value">{{ spatialInspection.buildingId.slice(0, 8) }}… ({{ spatialInspection.buildingBrickCount }} bricks)</span>
-                </div>
-                <div class="inspection-row">
-                    <span class="inspection-label">World</span>
-                    <span class="inspection-value">{{ spatialInspection.worldTitle }}</span>
-                </div>
-                <div class="inspection-row">
-                    <span class="inspection-label">Author</span>
-                    <span class="inspection-value">{{ spatialInspection.worldAuthor }}</span>
+
+                <div v-if="nearbyWorlds.length > 0" class="world-view-section">
+                    <h4>Nearby Worlds</h4>
+                    <ul class="world-list world-list--nearby">
+                        <li
+                            v-for="w in nearbyWorlds"
+                            :key="w.documentId"
+                            class="world-item world-item--clickable"
+                            @click="focusWorld(w.documentId)"
+                        >
+                            <span class="world-item-title">{{ w.title }}</span>
+                            <span class="world-item-author">{{ w.author }}</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
-            <div v-if="spatialInspection.type === 'ground'" class="inspection-fields">
-                <div class="inspection-row">
-                    <span class="inspection-label">Position</span>
-                    <span class="inspection-value">
-                        {{ spatialInspection.position.x.toFixed(2) }},
-                        {{ spatialInspection.position.y.toFixed(2) }},
-                        {{ spatialInspection.position.z.toFixed(2) }}
-                    </span>
-                </div>
-                <div class="inspection-row">
-                    <span class="inspection-label">World</span>
-                    <span class="inspection-value">{{ spatialInspection.worldTitle }}</span>
-                </div>
-                <div class="inspection-row">
-                    <span class="inspection-label">Author</span>
-                    <span class="inspection-value">{{ spatialInspection.worldAuthor }}</span>
-                </div>
-            </div>
-            <div class="inspection-actions">
-                <button
-                    v-if="spatialInspection.documentId"
-                    class="action-btn action-btn--explore"
-                    @click="focusWorld(spatialInspection.documentId)"
-                >
-                    Focus World
-                </button>
-                <button
-                    v-if="spatialInspection.type === 'brick'"
-                    class="action-btn action-btn--primary"
-                    @click="focusSelection"
-                >
-                    Focus Brick
-                </button>
-            </div>
+            <div ref="viewport" class="world-viewport"></div>
         </div>
-
-        <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">
-            <h4>Placement Preview</h4>
-            <p class="spatial-type">{{ spatialPlacement.definitionId }}</p>
-            <p class="spatial-pos">
-                {{ spatialPlacement.position.x.toFixed(2) }},
-                {{ spatialPlacement.position.y.toFixed(2) }},
-                {{ spatialPlacement.position.z.toFixed(2) }}
-            </p>
-            <p class="editing-hint">Click to place • Escape to switch to Select</p>
-        </div>
-
-        <div v-if="spatialEditingContext && activeTool === 'select'" class="spatial-panel spatial-panel--editing">
-            <h4>Editing</h4>
-            <p class="spatial-type">{{ spatialEditingContext.type }}</p>
-            <div v-if="spatialEditingContext.type === 'brick' || spatialEditingContext.type === 'bricks'" class="editing-actions">
-                <p v-if="spatialEditingContext.capabilities.move" class="editing-hint">
-                    Arrow keys: move X/Z • Page Up/Down: move Y
-                </p>
-                <p v-if="spatialEditingContext.capabilities.rotate" class="editing-hint">
-                    R: rotate 90° • Shift+R: rotate –90°
-                </p>
-                <button
-                    v-if="spatialEditingContext.capabilities.delete"
-                    class="action-btn action-btn--danger"
-                    @click="deleteSelectedBrick"
-                >
-                    Delete Brick
-                </button>
-            </div>
-            <div v-if="spatialEditingContext.type === 'ground'" class="editing-actions">
-                <p class="editing-hint">
-                    Ground selected. Switch to Place tool to build.
-                </p>
-            </div>
-        </div>
-
-        <div class="world-view-section">
-            <h4>Tools</h4>
-            <div class="tool-switcher tool-switcher--spatial">
-                <button
-                    :class="['tool-btn', { 'tool-btn--active': activeTool === 'select' }]"
-                    @click="setTool('select')"
-                >
-                    Select
-                </button>
-                <button
-                    :class="['tool-btn', { 'tool-btn--active': activeTool === 'place' }]"
-                    @click="setTool('place')"
-                >
-                    Place
-                </button>
-            </div>
-            <div v-if="activeTool === 'place'" class="placement-controls">
-                <select
-                    v-model="selectedDefinitionId"
-                    class="placement-select"
-                    @change="onBrickSelectionChange"
-                >
-                    <option
-                        v-for="def in availableDefinitions"
-                        :key="def.id"
-                        :value="def.id"
-                    >
-                        {{ def.name }}
-                    </option>
-                </select>
-                <p class="placement-hint">
-                    Hover over ground or a brick face, then click to place.
-                </p>
-            </div>
-        </div>
-
-        <div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
-            <h4>Unavailable ({{ failedWorlds.length }})</h4>
-            <ul class="world-list world-list--failed">
-                <li v-for="w in failedWorlds" :key="w.documentId" class="world-item world-item--failed">
-                    <span class="world-item-title">{{ w.title }}</span>
-                    <span class="world-item-author">{{ w.author }}</span>
-                </li>
-            </ul>
-        </div>
-
-        <div v-if="loadedWorlds.length > 0" class="world-view-section">
-            <h4>Worlds in View ({{ loadedWorlds.length }})</h4>
-            <ul class="world-list world-list--loaded">
-                <li
-                    v-for="w in loadedWorlds"
-                    :key="w.documentId"
-                    :class="['world-item', { 'world-item--current': w.documentId === $route.params.documentId }]"
-                >
-                    <span class="world-item-title">{{ w.title }}</span>
-                    <span v-if="w.dirty" class="world-item-dirty" title="Unsaved changes">●</span>
-                    <span class="world-item-author">{{ w.author }}</span>
-                </li>
-            </ul>
-        </div>
-
-        <div v-if="nearbyWorlds.length > 0" class="world-view-section">
-            <h4>Nearby Worlds</h4>
-            <ul class="world-list world-list--nearby">
-                <li
-                    v-for="w in nearbyWorlds"
-                    :key="w.documentId"
-                    class="world-item world-item--clickable"
-                    @click="focusWorld(w.documentId)"
-                >
-                    <span class="world-item-title">{{ w.title }}</span>
-                    <span class="world-item-author">{{ w.author }}</span>
-                </li>
-            </ul>
-        </div>
-    </div>
-    <div ref="viewport" class="world-viewport">
-        <div v-if="marquee" class="marquee-rect" :style="marqueeStyle"></div>
-    </div>    
-</div>
-`
+    `
 };
