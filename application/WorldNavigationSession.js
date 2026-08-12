@@ -15,6 +15,7 @@ import { PlacementValidator } from '../core/PlacementValidator.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
+import { License } from '../core/License.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -33,7 +34,7 @@ const RETRY_DELAYS = [2000, 5000, 10000];
 // belongs wherever this session is extended in the deployed tree; the
 // action layer degrades gracefully when those methods are absent.
 export class WorldNavigationSession {
-    constructor({ registry, loadPublicationDocumentUseCase, worldLayoutProvider }) {
+    constructor({ registry, loadPublicationDocumentUseCase, worldLayoutProvider, discoveryProvider = null }) {
         this._registry = registry;
         this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
         this._worldLayoutProvider = worldLayoutProvider;
@@ -56,6 +57,7 @@ export class WorldNavigationSession {
         this._activeDefinitionId = null;
         this._focusedDocumentId = null;
         this._eventBus = null;
+	    this._discoveryProvider = discoveryProvider;
     }
 
     get transformSettings() {
@@ -586,6 +588,46 @@ export class WorldNavigationSession {
     getDocumentPosition(documentId) {
         return this._worldLayoutProvider.getPosition(documentId);
     }
+
+	
+	forkDocument(documentId) {
+	    const document = documentId ? this._loadedDocuments.get(documentId) : this._getActiveDocument();
+	    if (!document) return null;
+	
+	    let sourcePublication = null;
+	    if (this._discoveryProvider) {
+	        const pubs = this._discoveryProvider.findByDocumentId(document.world.id);
+	        if (pubs.length > 0) sourcePublication = pubs[pubs.length - 1];
+	    }
+	
+	    if (sourcePublication && !sourcePublication.license.forkAllowed) {
+	        throw new Error(`Forking is not permitted under license ${sourcePublication.license.id}`);
+	    }
+	
+	    const currentUser = this._identityProvider ? this._identityProvider.currentUser() : null;
+	    const sourceTitle = document.metadata.title || 'Untitled';
+	
+	    let derivativeLicense = null;
+	    if (sourcePublication) {
+	        derivativeLicense = new License({
+	            id: sourcePublication.license.id,
+	            attribution: {
+	                author: sourcePublication.author || document.metadata.author,
+	                title: sourcePublication.title || sourceTitle,
+	                sourcePublicationId: sourcePublication.id,
+	                sourceDocumentId: document.world.id
+	            }
+	        });
+	    }
+	
+	    const cloned = this._documentCloneService.execute(document, {
+	        title: `Fork of ${sourceTitle}`,
+	        author: currentUser ? currentUser.username : null,
+	        parentDocumentId: document.world.id,
+	        license: derivativeLicense
+	    });
+	    
+	}
 
     // -----------------------------------------------------------------
     // Internal
