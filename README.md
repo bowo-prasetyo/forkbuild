@@ -6,9 +6,13 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.6** — Persistence, Recovery & Autosave
+**Version 0.2.7** — Collaboration Protocol Foundation
 
-0.2.6 addresses the most mundane but important failure: **the application crashes, the browser closes, or the machine loses power — and the user's work comes back.**
+0.2.7 establishes the protocol for multiple clients manipulating the
+same durable document: collaboration envelopes, operation identity,
+per-author sequencing, revision relationship, acknowledgement/rejection
+semantics, and idempotency rules — without implementing actual network
+synchronization.
 
 ## Features
 
