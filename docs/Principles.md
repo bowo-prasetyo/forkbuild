@@ -142,3 +142,14 @@ Document. The original Publication, its snapshot, and its WorldPlacement
 remain completely untouched. This separation is what makes the content
 lifecycle safe: nobody can accidentally overwrite someone else's
 published work by editing in the World View.
+
+Concurrent edits are resolved by authoritative ordering, not by
+transforming commands (0.2.9). A DocumentAuthority receives all
+operations, checks them against the current authoritative state, and
+either applies or rejects them. Non-conflicting operations (different
+bricks, different positions) are applied regardless of baseRevision.
+Conflicting operations (missing bricks, occupied positions) are rejected
+with a structured reason. This keeps the collaboration layer simple and
+correct without requiring full Operational Transform or CRDT — the
+common cases are handled by conflict detection, and the rare conflicting
+case is surfaced to the user rather than silently transformed.
