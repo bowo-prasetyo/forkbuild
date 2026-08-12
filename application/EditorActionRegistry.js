@@ -170,6 +170,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
     const editingAllowed = (ctx) => {
         if (ctx.capabilities && ctx.capabilities.canEdit === false) return false;
         return !ctx.placementMode && !ctx.gestureActive;
+    };
     const selectionRequired = (ctx) => (ctx.hasSelection ? null : 'No bricks selected');
 
     const surfaceCall = (methodName, unavailableMessage, run) => {
