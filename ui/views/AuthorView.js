@@ -34,7 +34,8 @@ export default {
         }
 
         function forkPublication(pub) {
-            router.push({ path: '/editor', query: { fork: pub.documentId } });
+		    // Pass both documentId (for loading) and publicationId (for license enforcement)
+		    router.push({ path: '/editor', query: { fork: pub.documentId, publication: pub.id } });
         }
 
         function viewWorld(pub) {
