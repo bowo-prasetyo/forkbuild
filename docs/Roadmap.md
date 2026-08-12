@@ -60,7 +60,7 @@
 0.2.4   Read-only Published World                     ✓
 0.2.5   World Placement & Spatial Discovery           ✓
 0.2.6   Persistence, Recovery & Autosave              ✓
-0.2.7   Collaboration Protocol Foundation
+0.2.7   Collaboration Protocol Foundation             ✓
 0.2.8   Multi-client Synchronization
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
