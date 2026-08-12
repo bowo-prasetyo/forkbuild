@@ -164,8 +164,12 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         ...partial
     });
 
-    // Editing shortcuts make no sense while placing bricks or mid-gesture.
-    const editingAllowed = (ctx) => !ctx.placementMode && !ctx.gestureActive;
+    // Editing shortcuts make no sense while placing bricks, mid-gesture,
+    // or when the session explicitly declared canEdit: false (e.g.
+    // PublishedWorldSession in 0.2.4).
+    const editingAllowed = (ctx) => {
+        if (ctx.capabilities && ctx.capabilities.canEdit === false) return false;
+        return !ctx.placementMode && !ctx.gestureActive;
     const selectionRequired = (ctx) => (ctx.hasSelection ? null : 'No bricks selected');
 
     const surfaceCall = (methodName, unavailableMessage, run) => {
