@@ -24,6 +24,15 @@ import { WorldNavigationSession } from './WorldNavigationSession.js';
 // injected into the session. identityProvider flows to the session so
 // forks/clones can attribute authorship to whoever is logged in.
 export class CreateWorldViewUseCase {
+    // Update the execute() method to wire the spatial index:
+    //
+    //   const { spatialIndexProvider } = new CreateWorldLayoutUseCase().execute();
+    //
+    // And pass it to the session if needed, or rely on the updated
+    // LocalWorldLayoutProvider which already wraps it.
+    // The key change is that CreateWorldLayoutUseCase now returns the
+    // spatialIndexProvider for use by PlacePublicationUseCase if the
+    // World View needs to place documents directly.    
     execute(identityProvider = null) {
     	const { spatialIndexProvider } = new CreateWorldLayoutUseCase().execute();
         const storageProvider = new LocalStorageProvider();
