@@ -1,9 +1,9 @@
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LoadPublicationDocumentUseCase } from './LoadPublicationDocumentUseCase.js';
-import { LoadPublishedSnapshotUseCase } from './LoadPublishedSnapshotUseCase.js';
 import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
 import { CreateCommandRegistryUseCase } from './CreateCommandRegistryUseCase.js';
@@ -17,33 +17,26 @@ import { WorldNavigationSession } from './WorldNavigationSession.js';
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
 //
-// 0.1.39 wired persistence & publication; 0.1.40 wired replay and the
-// Operation Timeline; 0.1.41 wired restoration; 0.1.42 wires cloning,
-// forking, and the clipboard: a DocumentCloneService plus
-// CopySelectionUseCase / PasteClipboardUseCase, all constructed here and
-// injected into the session. identityProvider flows to the session so
-// forks/clones can attribute authorship to whoever is logged in.
+// 0.2.5 Update: Wires the LocalSpatialIndexProvider and injects it into
+// the LocalWorldLayoutProvider. The spatial index is now the single
+// source of truth for where published worlds exist in shared space.
+// We also expose the spatialIndexProvider on the return object so the
+// UI layer can access spatial discovery/placement use cases without
+// bypassing the application layer.
 export class CreateWorldViewUseCase {
-    // Update the execute() method to wire the spatial index:
-    //
-    //   const { spatialIndexProvider } = new CreateWorldLayoutUseCase().execute();
-    //
-    // And pass it to the session if needed, or rely on the updated
-    // LocalWorldLayoutProvider which already wraps it.
-    // The key change is that CreateWorldLayoutUseCase now returns the
-    // spatialIndexProvider for use by PlacePublicationUseCase if the
-    // World View needs to place documents directly.    
     execute(identityProvider = null) {
-    	//const { spatialIndexProvider } = new CreateWorldLayoutUseCase().execute();
         const storageProvider = new LocalStorageProvider();
-        const publisherProvider = new LocalPublisherProvider();
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
-        const worldLayoutProvider = new LocalWorldLayoutProvider(discoveryProvider);
+        
+        // 0.2.5: Wire the spatial index
+        const spatialIndexProvider = new LocalSpatialIndexProvider(storageProvider);
+        const worldLayoutProvider = new LocalWorldLayoutProvider(
+            spatialIndexProvider, 
+            discoveryProvider
+        );
+        
         const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(
             storageProvider
-        );
-        const loadPublishedSnapshotUseCase = new LoadPublishedSnapshotUseCase(
-            publisherProvider
         );
         const saveDocumentUseCase = new SaveDocumentUseCase(storageProvider);
         const publishDocumentUseCase = new PublishDocumentUseCase(
@@ -57,12 +50,12 @@ export class CreateWorldViewUseCase {
             replayDocumentUseCase
         );
         const documentCloneService = new DocumentCloneService();
+        
         return {
             createSession(registry) {
                 return new WorldNavigationSession({
                     registry,
                     loadPublicationDocumentUseCase,
-                    loadPublishedSnapshotUseCase,
                     worldLayoutProvider,
                     saveDocumentUseCase,
                     publishDocumentUseCase,
@@ -73,7 +66,11 @@ export class CreateWorldViewUseCase {
                     copySelectionUseCase: new CopySelectionUseCase(registry),
                     pasteClipboardUseCase: new PasteClipboardUseCase()
                 });
-            }
+            },
+            // Expose the spatial index so the application layer can
+            // construct spatial use cases (like PlacePublicationUseCase)
+            // for the UI to consume.
+            spatialIndexProvider
         };
     }
 }
