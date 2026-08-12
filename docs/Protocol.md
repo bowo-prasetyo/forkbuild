@@ -437,18 +437,3 @@ Forking a publication cryptographically binds the derivative attribution
 to the new document's metadata, ensuring provenance is preserved across
 the decentralized ecosystem.
 
----
-
-## What this milestone proves
-
-| Property | How it's verified |
-|---|---|
-| License permissions mapping | Test 1 |
-| Publication serialization includes License | Test 2 |
-| Forking prohibited licenses throws | Test 3 |
-| Forking permitted licenses stamps attribution | Test 4 |
-| Unspecified legacy documents default to prohibited | Test 5 |
-| UI passes publicationId for enforcement | EditorView / RepositoryView updates |
-| Existing interfaces unchanged | CommandHistory, TransformMath, SpatialDiscovery untouched |
-
-The editing kernel, spatial discovery, and streaming runtime remain completely untouched. The licensing layer sits purely in the publication/forking boundary, establishing the legal and attribution framework required before moving to decentralized storage (0.2.14) and decentralized identity (0.2.16).
