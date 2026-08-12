@@ -6,14 +6,14 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.4** — Read-only Published World
+**Version 0.2.5** — World Placement & Spatial Discovery
 
-A Publication can now be loaded into a navigable, inspectable runtime
-world without exposing any mutation pathway back to the published
-snapshot. The PublishedWorldSession enforces read-only semantics via
-an explicit capability boundary that the action registry respects,
-and snapshot integrity is verified via content hashing before the
-document enters the domain.
+Published worlds now acquire positions in a shared spatial coordinate
+system via WorldPlacement, a strictly separated spatial layer.
+Coordinates never enter Document, World, or Publication. Moving a
+world is a placement operation that never requires republishing.
+SpatialIndexProvider performs bounds-aware discovery, and multiple
+placements can reference the same publication.
 
 ## Features
 
@@ -101,11 +101,11 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.2   Schema Versioning & Real Migration Fixtures   
 - [x] 0.2.3   Publish / Unpublish Lifecycle                 
 - [x] 0.2.4   Read-only Published World                     
-- [ ] 0.2.5   World Placement & Spatial Discovery
+- [x] 0.2.5   World Placement & Spatial Discovery
 - [ ] 0.2.6   Persistence, Recovery & Autosave
 - [ ] 0.2.7   Collaboration Protocol Foundation
 - [ ] 0.2.8   Multi-client Synchronization
-      
+           
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
 ## License
