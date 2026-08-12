@@ -828,3 +828,38 @@ index, so the existing DiscoverWorldsUseCase continues to work unchanged.
 The coordinate system is virtual, not geographic. Tokyo, London, and
 New York are labels for virtual positions, not latitude/longitude.
 A user's physical location does not determine a publication's location.
+
+Spatial Discovery & Content Resolution (0.2.11)
+
+The 0.2.11 milestone formalizes the placement-first discovery pipeline:
+the World View discovers spatial records first, determines which
+publications are relevant to the current viewport, and only then loads
+the corresponding snapshots.
+
+Key components:
+- discovery/SpatialDiscoveryProvider.js — "Where are things?" adapter
+- discovery/LocalSpatialDiscoveryProvider.js — V0.1 concrete
+- discovery/ContentResolver.js — "Where/how do I retrieve content?" adapter
+- discovery/LocalContentResolver.js — V0.1 concrete
+- application/DiscoverWorldAreaUseCase.js — spatial discovery orchestration
+- application/ResolvePublicationUseCase.js — content resolution
+- application/CreateSpatialDiscoveryUseCase.js — DI wiring
+
+The four adapter boundaries:
+- SpatialDiscoveryProvider — "Where are things?"
+- PlacementRegistry — "What placement records exist?"
+- ContentResolver — "Where/how do I retrieve this publication?"
+- Snapshot loader — "How do I turn content into a safe session?"
+
+Progressive loading: DiscoverWorldAreaUseCase.executeWithDistanceTiers()
+splits placements into "nearby" (load snapshot) and "distant" (metadata
+only), giving the World View the foundation for streaming an eventually
+enormous virtual world without downloading the entire universe.
+
+The pipeline:
+  SpatialDiscoveryProvider → PlacementRecord[] → publicationIds
+  → ContentResolver → Snapshot JSON → DocumentSerializer
+  → PublishedWorldSession
+
+Existing interfaces (WorldPlacement, SpatialIndexProvider,
+PlacementRegistry, DiscoverWorldsUseCase) are unchanged.
