@@ -104,3 +104,13 @@ publication without touching the source. This separation is what makes
 read-only published worlds, spatial placement, and collaboration
 possible without conflating "what is being edited" with "what has been
 released."
+
+Spatial location is a property of placement, not publication (0.2.5).
+A published world does not intrinsically exist at a global coordinate.
+Instead, a WorldPlacement references a Publication and assigns it a
+position in shared space. Moving a world never mutates the Publication
+or Document, never changes the content hash, and never requires
+republishing. Multiple placements can reference the same publication.
+This separation is what lets the same published world exist in multiple
+locations and be discovered by other clients without contaminating the
+document model with global coordinates.
