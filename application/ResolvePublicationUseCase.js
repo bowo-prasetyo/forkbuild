@@ -3,27 +3,24 @@ import { PublishedWorldSession } from './PublishedWorldSession.js';
 
 // Resolves a publication into a read-only PublishedWorldSession.
 //
-// The pipeline:
-//   1. Look up the Publication record (via DiscoveryProvider)
-//   2. Verify snapshot integrity (via ContentResolver)
-//   3. Resolve snapshot content (via ContentResolver)
-//   4. Deserialize (migrate → validate → deserialize via DocumentSerializer)
-//   5. Wrap in PublishedWorldSession (read-only, no mutation pathway)
-//
-// This is the content-resolution half of the placement-first pipeline.
-// DiscoverWorldAreaUseCase discovers placements; this use case resolves
-// the actual content for spatially relevant placements.
-//
-// The ContentResolver abstraction means this use case works identically
-// whether the content is in localStorage, IPFS, Arweave, or a CDN.
+// As of 0.2.12, accepts an optional PublicationContentCache. If present,
+// the use case caches the raw snapshot JSON after the first successful
+// verification and resolution. Subsequent resolutions for the same
+// publication (e.g. multiple placements of the same castle) bypass
+// the ContentResolver entirely, saving network/storage I/O.
 export class ResolvePublicationUseCase {
-    constructor(contentResolver, discoveryProvider, documentSerializer = new DocumentSerializer()) {
+    constructor(
+        contentResolver,
+        discoveryProvider,
+        documentSerializer = new DocumentSerializer(),
+        contentCache = null
+    ) {
         this._contentResolver = contentResolver;
         this._discoveryProvider = discoveryProvider;
         this._documentSerializer = documentSerializer;
+        this._contentCache = contentCache;
     }
 
-    // Resolve by publication ID.
     execute(publicationId) {
         const publication = this._discoveryProvider.findById(publicationId);
         if (!publication) {
@@ -32,33 +29,41 @@ export class ResolvePublicationUseCase {
         return this._resolve(publication);
     }
 
-    // Resolve from a PlacementRecord (the placement-first workflow).
     executeFromPlacement(placementRecord) {
         return this.execute(placementRecord.publicationId);
     }
 
     _resolve(publication) {
-        // 1. Verify integrity.
-        if (publication.contentHash) {
-            const isValid = this._contentResolver.verify(
-                publication.id,
-                publication.contentHash
-            );
-            if (!isValid) {
-                throw new Error(
-                    `ResolvePublicationUseCase: snapshot integrity check failed `
-                    + `for publication ${publication.id} (hash mismatch)`
+        let snapshotJson = this._contentCache ? this._contentCache.get(publication.id) : null;
+        let fromCache = snapshotJson !== null;
+
+        if (!fromCache) {
+            // 1. Verify integrity (only on cache miss)
+            if (publication.contentHash) {
+                const isValid = this._contentResolver.verify(
+                    publication.id,
+                    publication.contentHash
                 );
+                if (!isValid) {
+                    throw new Error(
+                        `ResolvePublicationUseCase: snapshot integrity check failed `
+                        + `for publication ${publication.id} (hash mismatch)`
+                    );
+                }
+            }
+
+            // 2. Resolve content
+            snapshotJson = this._contentResolver.resolve(publication.id);
+            
+            if (this._contentCache) {
+                this._contentCache.set(publication.id, snapshotJson);
             }
         }
 
-        // 2. Resolve content.
-        const snapshotJson = this._contentResolver.resolve(publication.id);
-
-        // 3. Deserialize (migrate → validate → deserialize).
+        // 3. Deserialize (always, to ensure independent World instances)
         const document = this._documentSerializer.deserialize(snapshotJson);
 
-        // 4. Wrap in read-only session.
+        // 4. Wrap in read-only session
         return new PublishedWorldSession({ document, publication });
     }
 }
