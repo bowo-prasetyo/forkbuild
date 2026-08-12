@@ -360,3 +360,26 @@ This is NOT full Operational Transform. The authority does not
 transform commands against each other. It simply detects and rejects
 conflicts. This is sufficient for the common cases and keeps the
 architecture simple.
+
+## Placement Record (0.2.10)
+
+A PlacementRecord is a publishable spatial record that wraps a
+WorldPlacement with:
+
+- placementId — unique identity
+- publicationId — reference to the Publication
+- owner — who placed it (separate from Publication author)
+- position, rotation, scale, bounds — spatial data
+- revision — monotonic counter for this placement
+- contentHash — integrity hash over the canonical placement data
+- createdAt, updatedAt — timestamps
+
+The contentHash covers all fields except itself, so any tampering
+with position, owner, revision, etc. will be detected.
+
+Placement records can be stored in IPFS, Arweave, a blockchain, or
+any content-addressed store. The PlacementRegistry adapter handles
+storage and discovery. The SpatialIndexProvider handles spatial queries.
+
+The coordinate system is virtual, not geographic. Positions are
+arbitrary virtual coordinates, not latitude/longitude.
