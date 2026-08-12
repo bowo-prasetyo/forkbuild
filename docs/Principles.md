@@ -135,3 +135,10 @@ the collaboration layer aligned with the command architecture: every
 mutation is already a serializable, replayable, undoable command.
 Adding collaboration means adding a transport for those commands, not
 inventing a second mutation system.
+
+A Publication is never edited (0.2.8). Editing a published world is an
+explicit fork operation that produces a new, independent, editable
+Document. The original Publication, its snapshot, and its WorldPlacement
+remain completely untouched. This separation is what makes the content
+lifecycle safe: nobody can accidentally overwrite someone else's
+published work by editing in the World View.
