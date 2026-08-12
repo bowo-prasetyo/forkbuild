@@ -410,3 +410,17 @@ The ContentResolver abstraction means the pipeline works identically
 whether content is in localStorage, IPFS, Arweave, or a CDN. Swapping
 to a decentralized backend means changing only the DI wiring
 (CreateSpatialDiscoveryUseCase), not the use cases or UI.
+
+## Licensing & Attribution (0.2.13)
+
+Publications carry a `license` object:
+```json
+{
+  "id": "CC-BY-4.0",
+  "attribution": {
+    "author": "Alice",
+    "title": "Medieval Castle",
+    "sourcePublicationId": "pub-123",
+    "sourceDocumentId": "doc-456"
+  }
+}
