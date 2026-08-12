@@ -291,3 +291,45 @@ Every message is wrapped in a CollaborationEnvelope:
     "timestamp": "ISO-8601",
     "payload": { ... }
 }
+
+Operation payloads
+
+```
+{
+    "operationId": "uuid",
+    "sequenceNumber": 1,
+    "baseRevision": 0,
+    "command": { "type": "place-brick", ... }
+}
+```
+
+Idempotency
+
+Each operation carries a unique operationId. Receiving the same
+operationId twice is a no-op. This makes the protocol safe against
+duplicate delivery.
+
+Ordering
+
+Each author maintains an independent monotonic sequenceNumber.
+Operations from the same author must be applied in sequence order.
+Cross-author ordering is 0.2.8 territory.
+
+Revision relationship
+
+Operations carry the baseRevision they were created against. This
+allows receivers to detect whether the operation was created against
+the current state or a stale one.
+
+Acknowledgement / Rejection
+
+Receivers send acknowledge (with the applied revision) or reject
+(with a reason) for each operation.
+
+What 0.2.7 does NOT define
+
+Conflict resolution (0.2.8)
+Undo/redo propagation (0.2.8)
+Operational transform or CRDT (future)
+Presence / awareness (future)
+Actual network transport (0.2.8)
