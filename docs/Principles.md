@@ -171,3 +171,10 @@ lightweight PlacementRecords; the caller decides which publications to
 actually load. This separation is what makes the architecture scalable:
 with 10 million publications and 500,000 placements near the user, the
 client queries 500,000 spatial records, not 10 million snapshots.
+
+Runtime state is distinct from decentralized truth (0.2.12).
+PlacementRecord is the durable, discoverable truth of where a publication
+exists. LoadedWorld is the ephemeral runtime state of that placement in
+a specific client's memory. The fact that a client currently has a
+castle loaded in memory must never become part of the protocol or
+travel over the network.
