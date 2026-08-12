@@ -863,3 +863,30 @@ The pipeline:
 
 Existing interfaces (WorldPlacement, SpatialIndexProvider,
 PlacementRegistry, DiscoverWorldsUseCase) are unchanged.
+
+World View Streaming & Runtime Integration (0.2.12)
+
+The 0.2.12 milestone bridges the spatial discovery pipeline with the
+live World View runtime. The WorldViewStreamingSession acts as a
+runtime coordinator, translating camera movement into spatial discovery,
+deduplication, content resolution, and placement lifecycle management.
+
+Key components:
+- world/WorldLoadState.js — lifecycle state machine (DISCOVERED, LOADED, FAILED, etc.)
+- world/LoadedWorld.js — ephemeral runtime state for a placement instance
+- world/PublicationContentCache.js — prevents redundant snapshot I/O
+- world/WorldViewStreamingSession.js — the runtime coordinator
+- application/CreateWorldViewStreamingUseCase.js — DI wiring
+
+Hysteresis: The session uses separate loadRadius and unloadRadius
+thresholds. Worlds crossing out of the load radius drop their heavy
+session to save memory (becoming metadata-only), but remain tracked
+until they cross the larger unload radius, preventing boundary flickering.
+
+Content Deduplication: Because a single Publication can have multiple
+PlacementRecord instances in the virtual world, the PublicationContentCache
+ensures that network/storage I/O and content verification happen exactly
+once per unique publication, regardless of how many placements reference it.
+
+Graceful Failure: A failed snapshot resolution marks the placement
+FAILED without crashing the entire streaming session.
