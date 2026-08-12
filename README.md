@@ -6,12 +6,12 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.11** — Spatial Discovery & Content Resolution
+**Version 0.2.12** — World View Streaming & Runtime Integration
 
-0.2.11 formalizes the placement-first discovery pipeline: the World View
-discovers spatial records first, determines which publications are
-relevant to the current viewport, and only then loads the corresponding
-snapshots. Content is never scanned wholesale.
+0.2.12 bridges the spatial discovery pipeline with the live World View
+runtime. The WorldViewStreamingSession manages the lifecycle of loaded
+worlds using hysteresis to prevent boundary flickering, caches publication
+content to avoid redundant I/O, and gracefully isolates failures.
 
 ## Features
 
@@ -106,7 +106,10 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.9   Multi-client Synchronization                
 - [x] 0.2.10  Decentralized Placement Registry
 - [x] 0.2.11  Spatial Discovery & Content Resolution
-                             
+- [x] 0.2.12  World View Streaming & Runtime Integration  ✓
+- [ ] 0.2.13  Decentralized Content Backend
+- [ ] 0.2.14  Decentralized Spatial Discovery
+      
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
 ## License
