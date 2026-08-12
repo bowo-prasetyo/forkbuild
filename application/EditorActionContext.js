@@ -20,7 +20,8 @@ export class EditorActionContext {
         redoLabel = null,
         gestureActive = false,
         paletteOpen = false,
-        activeTool = null
+        activeTool = null,
+        capabilities = null // NEW: explicit capability boundary (0.2.4)
     } = {}) {
         this._selectionCount = selectionCount;
         this._clipboardCount = clipboardCount;
@@ -33,6 +34,7 @@ export class EditorActionContext {
         this._gestureActive = gestureActive;
         this._paletteOpen = paletteOpen;
         this._activeTool = activeTool;
+        this._capabilities = capabilities;
     }
 
     get selectionCount() { return this._selectionCount; }
@@ -52,6 +54,7 @@ export class EditorActionContext {
     get hasSelectedGroup() { return this._selectedGroupId !== null; }
     get clipboardEmpty() { return this._clipboardCount === 0; }
     get placementMode() { return this._activeTool === 'place'; }
+    get capabilities() { return this._capabilities; }
 
     // session: EditorSession or WorldNavigationSession. selectionCount /
     // paletteOpen / activeTool come from the host view, which already
@@ -88,6 +91,7 @@ export class EditorActionContext {
             }
             return fallback;
         };
+        const capabilities = (session && session.capabilities) ? session.capabilities : null;
         return new EditorActionContext({
             selectionCount,
             paletteOpen,
@@ -99,7 +103,8 @@ export class EditorActionContext {
             canRedo: historyCall('canRedo', false),
             undoLabel: historyCall('getUndoLabel', null),
             redoLabel: historyCall('getRedoLabel', null),
-            gestureActive: call('isGestureActive', false)
+            gestureActive: call('isGestureActive', false),
+            capabilities // NEW
         });
     }
 }
