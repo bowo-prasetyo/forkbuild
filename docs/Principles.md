@@ -114,3 +114,15 @@ republishing. Multiple placements can reference the same publication.
 This separation is what lets the same published world exist in multiple
 locations and be discovered by other clients without contaminating the
 document model with global coordinates.
+
+Recovery protects work without redefining domain truth (0.2.6). Autosave
+checkpoints exist to protect unsaved work from application failure. They
+are not publications, do not alter publication state, and do not replace
+the user's explicitly saved document automatically. Recovery data enters
+the domain through the same migration and validation pipeline as every
+other persisted document.
+
+Save, autosave, and publish have different semantics (0.2.6). Save
+persists the user's deliberate editable state; autosave protects recent
+unsaved work; publish creates an immutable released snapshot. None of
+these operations is a substitute for another.
