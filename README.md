@@ -6,14 +6,14 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.3** — Publish / Unpublish Lifecycle
+**Version 0.2.4** — Read-only Published World
 
-Publishing now creates an immutable, validated, versioned snapshot of
-the document, stored separately from the editable source. Subsequent
-edits never modify existing publications. Unpublishing removes the
-publication without touching the document. Content hashing provides
-integrity verification. The full publish → edit → verify → unpublish →
-republish lifecycle is tested end-to-end.
+A Publication can now be loaded into a navigable, inspectable runtime
+world without exposing any mutation pathway back to the published
+snapshot. The PublishedWorldSession enforces read-only semantics via
+an explicit capability boundary that the action registry respects,
+and snapshot integrity is verified via content hashing before the
+document enters the domain.
 
 ## Features
 
@@ -94,10 +94,18 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.1.48 Alignment & Distribution Tools
 - [x] 0.1.49 Numeric Transform Input
 - [x] 0.1.50 Editing UX Consolidation & Command Surface
-- [ ] 0.1.51 Stability / Performance / Large-Document Hardening
-- [ ] 0.1.52 Protocol & Persistence Hardening
-- [ ] 0.2 Blockchain publishing, multiplayer
-
+- [x] 0.1.51 Stability / Performance / Large-Document Hardening
+- [x] 0.1.52 Protocol & Persistence Hardening
+- [x] 0.2.0   Durable Documents & Publishing Boundary       
+- [x] 0.2.1   Editor / World Editing Parity                 
+- [x] 0.2.2   Schema Versioning & Real Migration Fixtures   
+- [x] 0.2.3   Publish / Unpublish Lifecycle                 
+- [x] 0.2.4   Read-only Published World                     
+- [ ] 0.2.5   World Placement & Spatial Discovery
+- [ ] 0.2.6   Persistence, Recovery & Autosave
+- [ ] 0.2.7   Collaboration Protocol Foundation
+- [ ] 0.2.8   Multi-client Synchronization
+      
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
 ## License
