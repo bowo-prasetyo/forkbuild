@@ -271,3 +271,23 @@ document remains intact.
 
 Publication is pure data. It has no editing capability, no commands,
 and no document mutation. It describes what was published and when.
+
+## Collaboration Protocol (0.2.7)
+
+The collaboration protocol defines how multiple clients exchange document
+mutations. The fundamental unit of exchange is the **command**, not the
+entire document.
+
+### CollaborationEnvelope
+
+Every message is wrapped in a CollaborationEnvelope:
+
+```json
+{
+    "envelopeId": "uuid",
+    "type": "operation | acknowledge | reject | join | leave | sync-request | sync-response",
+    "documentId": "world-uuid",
+    "author": "username",
+    "timestamp": "ISO-8601",
+    "payload": { ... }
+}
