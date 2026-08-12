@@ -20,6 +20,7 @@ import EditingSidebar from '../components/EditingSidebar.js';
 import CommandPalette from '../components/CommandPalette.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
+import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
@@ -99,6 +100,7 @@ export default {
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
+        const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute();
 
         const editorSession = new EditorSession({
             registry,
@@ -193,7 +195,11 @@ export default {
 
             if (route.query.fork) {
                 try {
-                    const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider);
+			        let sourcePublication = null;
+			        if (route.query.publication) {
+			            sourcePublication = findPublicationUseCase.execute(route.query.publication);
+			        }
+			        const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);
                     editorSession.openDocument(forkedDocument);
                 } catch (err) {
                     alert(`Fork failed: ${err.message}`);
