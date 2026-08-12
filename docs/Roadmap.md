@@ -64,6 +64,7 @@
 0.2.8   Fork / Edit Published World                   ✓
 0.2.9   Multi-client Synchronization                  ✓
 0.2.10  Decentralized Placement Registry              ✓
+0.2.11  Spatial Discovery & Content Resolution      　✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
