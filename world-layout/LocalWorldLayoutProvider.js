@@ -1,51 +1,35 @@
 import { WorldLayoutProvider } from './WorldLayoutProvider.js';
 import { WorldPosition } from '../core/WorldPosition.js';
 
-const GRID_SPACING = 40;
-
-// Deterministic local layout: arranges every known publication on a
-// simple 2D grid in the XZ plane. No persistence, no blockchain, no
-// GPS — just a pure function of the discovery catalog so the spatial
-// boundary can be exercised before external complexity is introduced.
+// Refactored for 0.2.5: delegates to SpatialIndexProvider instead of
+// generating a deterministic grid. The spatial index is now the single
+// source of truth for where published worlds exist.
+//
+// WorldNavigationSession continues to call findVisibleDocuments() and
+// getPosition() unchanged, but the answers now come from explicit
+// placements rather than a computed layout.
 export class LocalWorldLayoutProvider extends WorldLayoutProvider {
-    constructor(discoveryProvider) {
+    constructor(spatialIndexProvider, discoveryProvider) {
         super();
+        this._spatialIndexProvider = spatialIndexProvider;
         this._discoveryProvider = discoveryProvider;
-        this._positions = new Map();
     }
 
     findVisibleDocuments(viewCenter, viewRadius = 100) {
-        this._rebuild();
-        const visible = [];
-        for (const [documentId, pos] of this._positions) {
-            const dx = pos.x - viewCenter.x;
-            const dy = pos.y - viewCenter.y;
-            const dz = pos.z - viewCenter.z;
-            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            if (dist <= viewRadius) {
-                visible.push(documentId);
-            }
-        }
-        return visible;
+        const placements = this._spatialIndexProvider.discover(viewCenter, viewRadius);
+        // Return publicationIds (documentIds) for backward compatibility
+        // with WorldNavigationSession's streaming logic.
+        return placements.map((p) => p.publicationId);
     }
 
     getPosition(documentId) {
-        this._rebuild();
-        return this._positions.get(documentId) || new WorldPosition(0, 0, 0);
-    }
-
-    _rebuild() {
-        this._positions.clear();
-        const publications = this._discoveryProvider.list();
-        for (let i = 0; i < publications.length; i++) {
-            const pub = publications[i];
-            const row = Math.floor(i / 4);
-            const col = i % 4;
-            this._positions.set(pub.documentId, new WorldPosition(
-                col * GRID_SPACING,
-                0,
-                row * GRID_SPACING
-            ));
+        const placements = this._spatialIndexProvider.findByPublicationId(documentId);
+        if (placements.length > 0) {
+            const p = placements[0];
+            return new WorldPosition(p.position.x, p.position.y, p.position.z);
         }
+        // Fallback for unplaced documents (e.g., newly published but
+        // not yet placed in the spatial index).
+        return new WorldPosition(0, 0, 0);
     }
 }
