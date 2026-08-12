@@ -30,6 +30,7 @@ export class LocalPublisherProvider extends PublisherProvider {
     }
 
     publish(document, identityProvider) {
+	    const license = document.metadata.license; // Already a License instance
         const user = identityProvider ? identityProvider.currentUser() : null;
 
         // 1. Serialize and migrate to current schema.
@@ -75,7 +76,8 @@ export class LocalPublisherProvider extends PublisherProvider {
             url: null,
             parentDocumentId: document.metadata.parentDocumentId,
             contentHash,
-            schemaVersion: migratedJson.schemaVersion
+		    schemaVersion: migratedJson.schemaVersion,
+		    license // Bound to the publication record
         });
 
         // 9. Persist the publication record.
