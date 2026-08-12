@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.5** — World Placement & Spatial Discovery
+**Version 0.2.6** — World Placement & Spatial Discovery
 
 Published worlds now acquire positions in a shared spatial coordinate
 system via WorldPlacement, a strictly separated spatial layer.
@@ -102,7 +102,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.3   Publish / Unpublish Lifecycle                 
 - [x] 0.2.4   Read-only Published World                     
 - [x] 0.2.5   World Placement & Spatial Discovery
-- [ ] 0.2.6   Persistence, Recovery & Autosave
+- [x] 0.2.6   Persistence, Recovery & Autosave
 - [ ] 0.2.7   Collaboration Protocol Foundation
 - [ ] 0.2.8   Multi-client Synchronization
            
