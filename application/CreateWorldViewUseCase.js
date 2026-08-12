@@ -34,7 +34,7 @@ export class CreateWorldViewUseCase {
     // spatialIndexProvider for use by PlacePublicationUseCase if the
     // World View needs to place documents directly.    
     execute(identityProvider = null) {
-    	const { spatialIndexProvider } = new CreateWorldLayoutUseCase().execute();
+    	//const { spatialIndexProvider } = new CreateWorldLayoutUseCase().execute();
         const storageProvider = new LocalStorageProvider();
         const publisherProvider = new LocalPublisherProvider();
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
