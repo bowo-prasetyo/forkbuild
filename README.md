@@ -6,13 +6,12 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.7** — Collaboration Protocol Foundation
+**Version 0.2.8** — Fork / Edit Published World
 
-0.2.7 establishes the protocol for multiple clients manipulating the
-same durable document: collaboration envelopes, operation identity,
-per-author sequencing, revision relationship, acknowledgement/rejection
-semantics, and idempotency rules — without implementing actual network
-synchronization.
+0.2.8 establishes that Publications are never edited. The World View's
+"Fork & Edit" operation is a deliberate application-level fork that
+produces an independent editable Document, while the source Publication,
+its snapshot, and its spatial placement remain completely untouched.
 
 ## Features
 
@@ -102,9 +101,10 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.4   Read-only Published World                     
 - [x] 0.2.5   World Placement & Spatial Discovery
 - [x] 0.2.6   Persistence, Recovery & Autosave
-- [ ] 0.2.7   Collaboration Protocol Foundation
-- [ ] 0.2.8   Multi-client Synchronization
-           
+- [x] 0.2.7   Collaboration Protocol Foundation           
+- [x] 0.2.8   Fork / Edit Published World                 
+- [ ] 0.2.9   Multi-client Synchronization
+                 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
 ## License
