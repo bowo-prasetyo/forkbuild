@@ -25,6 +25,7 @@ import { WorldNavigationSession } from './WorldNavigationSession.js';
 // forks/clones can attribute authorship to whoever is logged in.
 export class CreateWorldViewUseCase {
     execute(identityProvider = null) {
+    	const { spatialIndexProvider } = new CreateWorldLayoutUseCase().execute();
         const storageProvider = new LocalStorageProvider();
         const publisherProvider = new LocalPublisherProvider();
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
