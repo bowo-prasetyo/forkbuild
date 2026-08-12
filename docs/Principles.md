@@ -126,3 +126,12 @@ Save, autosave, and publish have different semantics (0.2.6). Save
 persists the user's deliberate editable state; autosave protects recent
 unsaved work; publish creates an immutable released snapshot. None of
 these operations is a substitute for another.
+
+Collaboration transmits commands, not documents (0.2.7). The unit of
+exchange between collaboration participants is the serialized command,
+wrapped in a protocol envelope. Entire document snapshots are for
+loading and publishing, not for real-time synchronization. This keeps
+the collaboration layer aligned with the command architecture: every
+mutation is already a serializable, replayable, undoable command.
+Adding collaboration means adding a transport for those commands, not
+inventing a second mutation system.
