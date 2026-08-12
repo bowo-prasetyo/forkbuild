@@ -767,3 +767,36 @@ Critical invariants:
 No new domain entity called "Fork" exists. A fork is an application
 operation that produces a new Document. The existing Document,
 Publication, and WorldPlacement concepts remain sufficient.
+
+Multi-client Synchronization (0.2.9)
+
+The 0.2.9 milestone solves the central collaboration problem: what
+happens when Alice and Bob both edit revision 10 concurrently?
+
+The answer: a DocumentAuthority that orders operations globally,
+detects conflicts against the current authoritative state, applies
+non-conflicting operations, and rejects conflicting ones.
+
+Key components:
+- collaboration/DocumentAuthority.js — central ordering service
+- collaboration/AuthorityCollaborationTransport.js — transport routing
+  through the authority
+- application/CreateCollaborationUseCase.js — updated with
+  executeAuthority() for authority mode
+
+Conflict detection is the heart of the milestone. Most ForkBuild
+operations are naturally non-conflicting because they reference
+specific brick/group IDs. Two operations on DIFFERENT entities can
+always be applied in any order. Conflicts arise only when:
+- A position is already occupied (PlaceBrickCommand)
+- A referenced brick no longer exists (Move/Rotate/Delete)
+- A referenced group no longer exists (group commands)
+- A composite contains any conflicting child
+
+This is NOT full Operational Transform. OT would transform command A
+against command B so both can be applied. Here, we reject conflicting
+operations. The client can then re-apply its edit against the updated
+state. This is correct, simple, and sufficient for the common cases.
+
+The CollaborationSession from 0.2.7 is completely unchanged. The
+authority is a transport-level concern, transparent to the session.
