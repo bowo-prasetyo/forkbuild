@@ -614,3 +614,26 @@ Storage model:
   - `{documentId}` — editable document (managed by SaveDocumentUseCase)
   - `snapshot:{publicationId}` — immutable published snapshot
   - `forkbuild-publications` — array of Publication metadata records
+
+Read-only Published World (0.2.4)
+
+A Published World is a runtime projection of a Publication, not a new
+domain entity. The domain model (Document, World, Brick) remains
+untouched; read-only-ness is enforced by the session's shape and an
+explicit capability boundary.
+
+PublishedWorldSession wraps a deserialized Document and its Publication
+record. It exposes selection and inspection methods (selectBrick,
+clearSelection, getSelectionCount) but deliberately omits every editing,
+history, and persistence method (moveSelection, deleteSelection, undo,
+saveDocument).
+
+The session exposes a frozen `capabilities` object (e.g. canEdit: false).
+EditorActionContext.capture() reads this object, and the
+EditorActionRegistry's `editingAllowed` rule checks it. If canEdit is
+false, all mutation actions are formally disabled in the UI and palette.
+
+LoadPublishedWorldSessionUseCase verifies the contentHash against the
+stored snapshot bytes before deserialization. If the hash mismatches
+(corruption or tampering), the load is rejected outright. A
+PublishedWorldSession can only be created from an intact snapshot.
