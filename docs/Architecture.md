@@ -667,3 +667,33 @@ Integration: LocalWorldLayoutProvider delegates to SpatialIndexProvider.
 WorldNavigationSession continues to call findVisibleDocuments() and
 getPosition() unchanged, but the answers now come from explicit
 placements rather than a deterministic grid.
+
+Persistence, Recovery & Autosave (0.2.6)
+
+State is separated into three layers with different persistence semantics:
+
+    Durable State    -> Documents, Publications, Snapshots, Placements
+    Recovery State   -> Autosave checkpoints, recovery metadata
+    Runtime State    -> Selection, camera, hover, UI panels (not persisted)
+
+Save, autosave, and publish are three distinct operations:
+
+    Save      -> canonical document key + manifest revision, clears checkpoint
+    Autosave  -> recovery:{documentId} checkpoint only; does not clean or publish
+    Publish   -> immutable snapshot:{publicationId}; unrelated to both
+
+Revision is a monotonic counter computed statelessly as
+max(savedRevision, recoveryRevision) + 1. It is persistence metadata —
+never part of Document.toJSON(), never part of a Publication — and is
+strictly separate from schemaVersion, protocolVersion, and publicationId.
+
+Recovery pipeline (never bypasses validation):
+    checkpoint -> verify contentHash -> DocumentSerializer.deserialize
+               -> migrate -> validate -> Document
+
+CommandHistory is NOT persisted in 0.2.6; after recovery the undo history
+starts empty. The durable truth is the Document, not the command log.
+
+AutosaveScheduler is application-level (depends on DocumentManager +
+AutosaveDocumentUseCase) and framework-agnostic; persistence/ must not
+import application/.
