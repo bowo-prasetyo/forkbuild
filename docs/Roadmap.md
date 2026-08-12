@@ -57,7 +57,7 @@
 0.2.1   Editor / World Editing Parity                 ✓
 0.2.2   Schema Versioning & Real Migration Fixtures   ✓
 0.2.3   Publish / Unpublish Lifecycle                 ✓
-0.2.4   Read-only Published World
+0.2.4   Read-only Published World                     ✓
 0.2.5   World Placement & Spatial Discovery
 0.2.6   Persistence, Recovery & Autosave
 0.2.7   Collaboration Protocol Foundation
