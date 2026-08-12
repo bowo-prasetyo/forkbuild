@@ -6,14 +6,9 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.6** — World Placement & Spatial Discovery
+**Version 0.2.6** — Persistence, Recovery & Autosave
 
-Published worlds now acquire positions in a shared spatial coordinate
-system via WorldPlacement, a strictly separated spatial layer.
-Coordinates never enter Document, World, or Publication. Moving a
-world is a placement operation that never requires republishing.
-SpatialIndexProvider performs bounds-aware discovery, and multiple
-placements can reference the same publication.
+0.2.6 addresses the most mundane but important failure: **the application crashes, the browser closes, or the machine loses power — and the user's work comes back.**
 
 ## Features
 
