@@ -6,13 +6,13 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.9** — Multi-client Synchronization
+**Version 0.2.10** — Decentralized Placement Registry
 
-0.2.9 solves the central collaboration problem: what happens when
-multiple clients edit the same document concurrently. A DocumentAuthority
-orders operations globally, detects conflicts against the current
-authoritative state, applies non-conflicting operations, and rejects
-conflicting ones — without requiring full Operational Transform or CRDT.
+0.2.10 establishes that placement is a separate, publishable spatial
+record with its own identity, ownership, revision history, and integrity
+— independent of the Publication it references. The World View becomes
+a virtual shared universe assembled from placement records, not a
+geographic map.
 
 ## Features
 
@@ -105,7 +105,8 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.7   Collaboration Protocol Foundation           
 - [x] 0.2.8   Fork / Edit Published World                 
 - [x] 0.2.9   Multi-client Synchronization                
-                       
+- [x] 0.2.10  Decentralized Placement Registry            
+                             
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
 ## License
