@@ -163,3 +163,11 @@ spatial queries. These are separate concerns. Moving a placement changes
 the PlacementRecord, not the Publication, not the Document. The three
 ownership layers (Document author, Publication author, Placement owner)
 are distinct and can be different people.
+
+The World View discovers placements first; publications and snapshots
+are resolved only for spatially relevant placements (0.2.11). Content
+is never scanned wholesale. The spatial discovery pipeline returns
+lightweight PlacementRecords; the caller decides which publications to
+actually load. This separation is what makes the architecture scalable:
+with 10 million publications and 500,000 placements near the user, the
+client queries 500,000 spatial records, not 10 million snapshots.
