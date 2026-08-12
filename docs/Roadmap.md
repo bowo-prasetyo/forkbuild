@@ -60,8 +60,9 @@
 0.2.4   Read-only Published World                     ✓
 0.2.5   World Placement & Spatial Discovery           ✓
 0.2.6   Persistence, Recovery & Autosave              ✓
-0.2.7   Collaboration Protocol Foundation             ✓
-0.2.8   Multi-client Synchronization
+0.2.7   Collaboration Protocol Foundation            ✓
+0.2.8   Fork / Edit Published World                  ✓
+0.2.9   Multi-client Synchronization
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
