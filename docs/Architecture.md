@@ -800,3 +800,31 @@ state. This is correct, simple, and sufficient for the common cases.
 
 The CollaborationSession from 0.2.7 is completely unchanged. The
 authority is a transport-level concern, transparent to the session.
+
+Decentralized Placement Registry (0.2.10)
+
+The 0.2.10 milestone establishes that placement is a separate,
+publishable spatial record with its own identity, ownership, revision
+history, and integrity — independent of the Publication it references.
+
+Key components:
+- core/PlacementRecord.js — publishable spatial record
+- placement/PlacementRegistry.js — adapter interface
+- placement/LocalPlacementRegistry.js — V0.1 concrete implementation
+- application/DiscoverPlacementsUseCase.js — richer discovery queries
+- application/CreatePlacementRegistryUseCase.js — DI wiring
+
+The three ownership layers:
+- Document author — who created the content
+- Publication author — who published it
+- Placement owner — who placed it in the virtual world
+
+These three can be different people. Moving a placement changes the
+PlacementRecord, not the Publication, not the Document.
+
+The LocalPlacementRegistry writes to BOTH the registry AND the spatial
+index, so the existing DiscoverWorldsUseCase continues to work unchanged.
+
+The coordinate system is virtual, not geographic. Tokyo, London, and
+New York are labels for virtual positions, not latitude/longitude.
+A user's physical location does not determine a publication's location.
