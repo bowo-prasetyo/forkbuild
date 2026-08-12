@@ -6,13 +6,12 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.10** — Decentralized Placement Registry
+**Version 0.2.11** — Spatial Discovery & Content Resolution
 
-0.2.10 establishes that placement is a separate, publishable spatial
-record with its own identity, ownership, revision history, and integrity
-— independent of the Publication it references. The World View becomes
-a virtual shared universe assembled from placement records, not a
-geographic map.
+0.2.11 formalizes the placement-first discovery pipeline: the World View
+discovers spatial records first, determines which publications are
+relevant to the current viewport, and only then loads the corresponding
+snapshots. Content is never scanned wholesale.
 
 ## Features
 
@@ -105,7 +104,8 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.7   Collaboration Protocol Foundation           
 - [x] 0.2.8   Fork / Edit Published World                 
 - [x] 0.2.9   Multi-client Synchronization                
-- [x] 0.2.10  Decentralized Placement Registry            
+- [x] 0.2.10  Decentralized Placement Registry
+- [x] 0.2.11  Spatial Discovery & Content Resolution
                              
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
