@@ -1,3 +1,5 @@
+import { License } from '../core/License.js';
+
 // Pure data: the result of publishing a Document. This is the bridge
 // between Publisher and a future Discovery layer — Repository View,
 // Author View, and (later) World View all consume Publications without
@@ -18,17 +20,9 @@
 // no document mutation. It describes what was published and when.
 export class Publication {
     constructor({
-        id,
-        documentId,
-        title,
-        author,
-        providerId,
-        publishedAt,
-        url = null,
-        parentDocumentId = null,
-        // 0.2.3 — snapshot identity and integrity
-        contentHash = null,
-        schemaVersion = null
+        id, documentId, title, author, providerId, publishedAt, url = null,
+        parentDocumentId = null, contentHash = null, schemaVersion = null,
+        license = null
     } = {}) {
         this._id = id;
         this._documentId = documentId;
@@ -40,6 +34,7 @@ export class Publication {
         this._parentDocumentId = parentDocumentId;
         this._contentHash = contentHash;
         this._schemaVersion = schemaVersion;
+        this._license = license instanceof License ? license : (license ? License.fromJSON(license) : new License());
     }
 
     get id() { return this._id; }
@@ -52,6 +47,7 @@ export class Publication {
     get parentDocumentId() { return this._parentDocumentId; }
     get contentHash() { return this._contentHash; }
     get schemaVersion() { return this._schemaVersion; }
+    get license() { return this._license; }
 
     toJSON() {
         return {
@@ -64,7 +60,8 @@ export class Publication {
             url: this._url,
             parentDocumentId: this._parentDocumentId,
             contentHash: this._contentHash,
-            schemaVersion: this._schemaVersion
+            schemaVersion: this._schemaVersion,
+            license: this._license.toJSON()
         };
     }
 
@@ -79,7 +76,8 @@ export class Publication {
             url: json.url,
             parentDocumentId: json.parentDocumentId || null,
             contentHash: json.contentHash || null,
-            schemaVersion: json.schemaVersion !== undefined ? json.schemaVersion : null
+            schemaVersion: json.schemaVersion !== undefined ? json.schemaVersion : null,
+            license: json.license ? License.fromJSON(json.license) : null
         });
     }
 }
