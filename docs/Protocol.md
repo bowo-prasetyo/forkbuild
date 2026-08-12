@@ -334,3 +334,29 @@ Undo/redo propagation (0.2.8)
 Operational transform or CRDT (future)
 Presence / awareness (future)
 Actual network transport (0.2.8)
+
+## Multi-client Synchronization (0.2.9)
+
+When multiple clients edit the same document, operations flow through
+a DocumentAuthority that maintains the authoritative world state.
+
+The authority assigns a global revision to each applied operation.
+Operations are checked for conflicts before application:
+
+- PlaceBrickCommand: position must not be occupied
+- MoveBrickCommand / RotateBrickCommand / DeleteBrickCommand: brick must exist
+- TransformSelectionCommand: all referenced bricks must exist
+- CompositeCommand: all children must be conflict-free
+- Group commands: referenced groups must exist
+
+Non-conflicting operations are applied regardless of baseRevision.
+Conflicting operations are rejected with a structured reason.
+
+The client receives either an acknowledgement (with the applied
+revision) or a rejection (with the conflict reason). The client can
+then re-apply its edit against the updated state.
+
+This is NOT full Operational Transform. The authority does not
+transform commands against each other. It simply detects and rejects
+conflicts. This is sufficient for the common cases and keeps the
+architecture simple.
