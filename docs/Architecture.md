@@ -637,3 +637,33 @@ LoadPublishedWorldSessionUseCase verifies the contentHash against the
 stored snapshot bytes before deserialization. If the hash mismatches
 (corruption or tampering), the load is rejected outright. A
 PublishedWorldSession can only be created from an intact snapshot.
+
+World Placement & Spatial Discovery (0.2.5)
+
+The 0.2.5 milestone establishes the spatial layer as a strictly
+separated concern from the document and publication models.
+
+Three concepts, one new persistent domain entity:
+- Document = WHAT the world contains (local coordinates)
+- Publication = WHICH immutable version was released (content hash)
+- Placement = WHERE that version exists (global coordinates)
+
+WorldPlacement is a lightweight spatial reference to a Publication.
+It holds a publicationId, global position/rotation/scale, and local
+SpatialBounds. It does not own the world content. Multiple placements
+can reference the same publication.
+
+Coordinates never enter Document, World, or Publication. Moving a
+world is a placement operation, not a document mutation, and never
+requires republishing. Local brick coordinates remain untouched.
+
+SpatialIndexProvider is the infrastructure abstraction. The V0.1
+implementation (LocalSpatialIndexProvider) uses StorageProvider with
+a placement:{id} key namespace. Discovery performs sphere-AABB
+intersection testing against global bounds, not merely origin-distance
+checks.
+
+Integration: LocalWorldLayoutProvider delegates to SpatialIndexProvider.
+WorldNavigationSession continues to call findVisibleDocuments() and
+getPosition() unchanged, but the answers now come from explicit
+placements rather than a deterministic grid.
