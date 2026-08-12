@@ -1,13 +1,9 @@
 import { VERSION } from './version.js';
 import { PROTOCOL_VERSION } from './protocolVersion.js';
+import { License } from './License.js';
 
 const DEFAULT_ENGINE_VERSION = `${VERSION.major}.${VERSION.minor}.${VERSION.patch}`;
 
-// Pure data that travels with a Document: title, author, timestamps, and
-// which protocol/engine versions produced it. No blockchain fields yet —
-// just metadata. Part of what gets serialized (see Document.toJSON()),
-// unlike DocumentState (Editor State — dirty/readOnly/lastSaved — which
-// never is).
 export class DocumentMetadata {
     constructor({
         title = 'Untitled ForkBuild World',
@@ -16,7 +12,8 @@ export class DocumentMetadata {
         modified = null,
         protocolVersion = PROTOCOL_VERSION,
         engineVersion = DEFAULT_ENGINE_VERSION,
-        parentDocumentId = null
+        parentDocumentId = null,
+        license = null
     } = {}) {
         this._title = title;
         this._author = author;
@@ -25,6 +22,7 @@ export class DocumentMetadata {
         this._protocolVersion = protocolVersion;
         this._engineVersion = engineVersion;
         this._parentDocumentId = parentDocumentId;
+        this._license = license instanceof License ? license : (license ? License.fromJSON(license) : new License());
     }
 
     get title() { return this._title; }
@@ -34,6 +32,9 @@ export class DocumentMetadata {
     get protocolVersion() { return this._protocolVersion; }
     get engineVersion() { return this._engineVersion; }
     get parentDocumentId() { return this._parentDocumentId; }
+    get license() { return this._license; }
+    
+    set license(l) { this._license = l instanceof License ? l : new License(); }
 
     toJSON() {
         return {
@@ -43,7 +44,8 @@ export class DocumentMetadata {
             modified: this._modified ? this._modified.toISOString() : null,
             protocolVersion: this._protocolVersion,
             engineVersion: this._engineVersion,
-            parentDocumentId: this._parentDocumentId
+            parentDocumentId: this._parentDocumentId,
+            license: this._license.toJSON()
         };
     }
 
@@ -55,7 +57,8 @@ export class DocumentMetadata {
             modified: json.modified ? new Date(json.modified) : null,
             protocolVersion: json.protocolVersion,
             engineVersion: json.engineVersion,
-            parentDocumentId: json.parentDocumentId || null
+            parentDocumentId: json.parentDocumentId || null,
+            license: json.license ? License.fromJSON(json.license) : null
         });
     }
 }
