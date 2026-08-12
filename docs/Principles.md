@@ -153,3 +153,13 @@ with a structured reason. This keeps the collaboration layer simple and
 correct without requiring full Operational Transform or CRDT — the
 common cases are handled by conflict detection, and the rare conflicting
 case is surfaced to the user rather than silently transformed.
+
+Placement is a separate, publishable spatial record (0.2.10). A
+PlacementRecord wraps a WorldPlacement with identity, ownership,
+revision, and integrity metadata. It can be stored in IPFS, Arweave,
+a blockchain, or any content-addressed store. The PlacementRegistry
+adapter handles storage and discovery; the SpatialIndexProvider handles
+spatial queries. These are separate concerns. Moving a placement changes
+the PlacementRecord, not the Publication, not the Document. The three
+ownership layers (Document author, Publication author, Placement owner)
+are distinct and can be different people.
