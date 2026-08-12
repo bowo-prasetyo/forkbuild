@@ -736,3 +736,34 @@ The CollaborationTransport adapter follows the same pattern as
 StorageProvider / DiscoveryProvider / PublisherProvider: a base class
 with a concrete local implementation, swappable for WebSocket/WebRTC
 in 0.2.8.
+
+Fork / Edit Published World (0.2.8)
+
+The 0.2.8 milestone establishes the complete content lifecycle:
+create → save → publish → place → inspect → fork → edit → save →
+publish → coexist.
+
+Key components:
+- application/ForkPublishedWorldUseCase.js — forks a Publication
+  snapshot into a new editable Document
+- application/CreateWorldViewUseCase.js — wires the fork use case
+
+The three operations on a Publication:
+- Inspect: Publication → PublishedWorldSession (read-only)
+- Fork: Publication → Document (new editable, independent)
+- Place: Publication → WorldPlacement (spatial reference)
+
+Critical invariants:
+- A Publication is never mutated.
+- A PublishedWorldSession never gains editing capabilities.
+- Forking creates fresh identities (documentId, buildingIds, brickIds).
+- Editing the fork never touches the source snapshot.
+- Saving the fork writes to its own storage key.
+- Publishing the fork creates a new Publication.
+- Forking does NOT auto-create a WorldPlacement.
+- The source placement remains unchanged.
+- The editing kernel is completely untouched.
+
+No new domain entity called "Fork" exists. A fork is an application
+operation that produces a new Document. The existing Document,
+Publication, and WorldPlacement concepts remain sufficient.
