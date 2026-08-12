@@ -697,3 +697,42 @@ starts empty. The durable truth is the Document, not the command log.
 AutosaveScheduler is application-level (depends on DocumentManager +
 AutosaveDocumentUseCase) and framework-agnostic; persistence/ must not
 import application/.
+
+
+### `docs/Architecture.md` — add section
+
+```markdown
+Collaboration Protocol Foundation (0.2.7)
+
+The 0.2.7 milestone establishes the protocol for multiple clients
+manipulating the same durable document, without implementing actual
+network synchronization.
+
+Key components:
+- core/CollaborationEnvelope.js — pure data protocol envelope
+- collaboration/CollaborationTransport.js — adapter base class
+- collaboration/LocalCollaborationTransport.js — in-memory broadcast
+- collaboration/CollaborationSession.js — local participant
+- application/CreateCollaborationUseCase.js — DI wiring
+
+The collaboration layer sits BESIDE CommandHistory, not inside it.
+CollaborationSession observes COMMAND_EXECUTED events and broadcasts
+them as envelopes. Remote operations are deserialized via
+CommandRegistry and executed through the SAME CommandHistory.
+
+Echo prevention is enforced at two levels:
+1. Transport level: the sender never receives its own envelope.
+2. Session level: the _isApplyingRemote flag suppresses re-broadcast
+   when applying a remote command.
+
+Idempotency: each operation carries a unique operationId. Duplicate
+operationIds are safely ignored via a seen-set.
+
+Undo/redo are deliberately NOT propagated in 0.2.7. They are
+local-only operations. Propagating undo requires inverse-command
+design, which is 0.2.8 territory.
+
+The CollaborationTransport adapter follows the same pattern as
+StorageProvider / DiscoveryProvider / PublisherProvider: a base class
+with a concrete local implementation, swappable for WebSocket/WebRTC
+in 0.2.8.
