@@ -6,12 +6,13 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.8** — Fork / Edit Published World
+**Version 0.2.9** — Multi-client Synchronization
 
-0.2.8 establishes that Publications are never edited. The World View's
-"Fork & Edit" operation is a deliberate application-level fork that
-produces an independent editable Document, while the source Publication,
-its snapshot, and its spatial placement remain completely untouched.
+0.2.9 solves the central collaboration problem: what happens when
+multiple clients edit the same document concurrently. A DocumentAuthority
+orders operations globally, detects conflicts against the current
+authoritative state, applies non-conflicting operations, and rejects
+conflicting ones — without requiring full Operational Transform or CRDT.
 
 ## Features
 
@@ -103,8 +104,8 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.6   Persistence, Recovery & Autosave
 - [x] 0.2.7   Collaboration Protocol Foundation           
 - [x] 0.2.8   Fork / Edit Published World                 
-- [ ] 0.2.9   Multi-client Synchronization
-                 
+- [x] 0.2.9   Multi-client Synchronization                
+                       
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
 ## License
