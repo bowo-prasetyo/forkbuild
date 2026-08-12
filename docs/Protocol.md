@@ -291,6 +291,7 @@ Every message is wrapped in a CollaborationEnvelope:
     "timestamp": "ISO-8601",
     "payload": { ... }
 }
+```
 
 Operation payloads
 
