@@ -890,3 +890,27 @@ once per unique publication, regardless of how many placements reference it.
 
 Graceful Failure: A failed snapshot resolution marks the placement
 FAILED without crashing the entire streaming session.
+
+Publication Licensing & Fork Policy (0.2.13)
+
+The 0.2.13 milestone establishes licensing as a first-class, cryptographically
+bound property of the publication model. It draws a hard architectural line
+between technical capability (can the bytes be copied?) and application
+enforcement (does the ForkBuild protocol permit this derivation?).
+
+Key components:
+- core/License.js — Standardized license identifiers and permission matrices
+- DocumentMetadata.license — Carries attribution and license terms
+- Publication.license — Immutable, hashed record of the release terms
+- ForkDocumentUseCase — Hard enforcement of forkAllowed permissions
+
+The Enforcement Invariant: Use cases evaluate the source publication's
+license before cloning. If forkAllowed is false (e.g., CC-BY-ND-4.0 or
+ALL-RIGHTS-RESERVED), the use case throws an error. Hiding the "Fork"
+button in the UI is insufficient; the application layer formally rejects
+the operation.
+
+Attribution travels with the publication metadata. When a permitted fork
+occurs, the derivative License object is stamped with the original author,
+title, and source publication ID. This becomes part of the new publication's
+immutable, hashed metadata, preventing silent stripping of required attribution.
