@@ -66,8 +66,9 @@
 0.2.10  Decentralized Placement Registry              ✓
 0.2.11  Spatial Discovery & Content Resolution      　✓
 0.2.12  World View Streaming & Runtime Integration  　✓
-0.2.13  Decentralized Content Backend
-0.2.14  Decentralized Spatial Discovery
+0.2.13  Publication Licensing & Fork Policy           ✓
+0.2.14  Decentralized Content Backend
+0.2.15  Decentralized Spatial Discovery
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
