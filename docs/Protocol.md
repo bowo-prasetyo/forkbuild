@@ -383,3 +383,30 @@ storage and discovery. The SpatialIndexProvider handles spatial queries.
 
 The coordinate system is virtual, not geographic. Positions are
 arbitrary virtual coordinates, not latitude/longitude.
+
+## Spatial Discovery & Content Resolution (0.2.11)
+
+The placement-first discovery pipeline:
+
+  World View coordinates
+      ↓
+  SpatialDiscoveryProvider (spatial query)
+      ↓
+  PlacementRecord[] (lightweight metadata)
+      ↓
+  publicationId references
+      ↓
+  ContentResolver (content retrieval)
+      ↓
+  Snapshot JSON (verify → migrate → validate → deserialize)
+      ↓
+  PublishedWorldSession (read-only)
+
+Two discovery workflows:
+1. World exploration: Spatial area → PlacementRecords → Publications → Snapshots
+2. Publication exploration: Publication → PlacementRecords → World locations
+
+The ContentResolver abstraction means the pipeline works identically
+whether content is in localStorage, IPFS, Arweave, or a CDN. Swapping
+to a decentralized backend means changing only the DI wiring
+(CreateSpatialDiscoveryUseCase), not the use cases or UI.
