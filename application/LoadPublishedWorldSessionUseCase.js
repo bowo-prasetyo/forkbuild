@@ -13,33 +13,47 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 // rejected outright — a PublishedWorldSession can only be created from
 // an intact publication snapshot.
 export class LoadPublishedWorldSessionUseCase {
-    constructor(publisherProvider, documentSerializer = new DocumentSerializer()) {
+    constructor(publisherProvider, documentSerializer = new DocumentSerializer(), contentStore = null) {
         this._publisherProvider = publisherProvider;
         this._documentSerializer = documentSerializer;
+        this._contentStore = contentStore;
     }
 
     execute(publication) {
-        if (!publication || !publication.id || !publication.contentHash) {
+        if (!publication || !publication.id) {
             throw new Error('LoadPublishedWorldSessionUseCase: a valid Publication is required');
         }
-
-        // 1. Integrity check
-        const isValid = this._publisherProvider.verifySnapshot(publication.id, publication.contentHash);
-        if (!isValid) {
-            throw new Error(
-                `LoadPublishedWorldSessionUseCase: snapshot integrity check failed `
-                + `for publication ${publication.id} (hash mismatch)`
-            );
+        
+        let snapshotJson;
+        
+        if (publication.contentReference && this._contentStore) {
+            const bytes = this._contentStore.get(publication.contentReference);
+            if (!bytes) {
+                throw new Error(`LoadPublishedWorldSessionUseCase: content not found for hash ${publication.contentReference.hash}`);
+            }
+            if (!publication.contentReference.verify(bytes)) {
+                throw new Error(
+                    `LoadPublishedWorldSessionUseCase: snapshot integrity check failed `
+                    + `for publication ${publication.id} (hash mismatch)`
+                );
+            }
+            snapshotJson = JSON.parse(bytes);
+        } else {
+            // Legacy fallback
+            if (!publication.contentHash) {
+                throw new Error('LoadPublishedWorldSessionUseCase: publication missing contentHash');
+            }
+            const isValid = this._publisherProvider.verifySnapshot(publication.id, publication.contentHash);
+            if (!isValid) {
+                throw new Error(
+                    `LoadPublishedWorldSessionUseCase: snapshot integrity check failed `
+                    + `for publication ${publication.id} (hash mismatch)`
+                );
+            }
+            snapshotJson = this._publisherProvider.loadSnapshot(publication.id);
         }
 
-        // 2. Load and deserialize
-        const snapshotJson = this._publisherProvider.loadSnapshot(publication.id);
         const document = this._documentSerializer.deserialize(snapshotJson);
-
-        // 3. Wrap in read-only session
-        return new PublishedWorldSession({
-            document,
-            publication
-        });
+        return new PublishedWorldSession({ document, publication });
     }
 }
