@@ -302,7 +302,10 @@ export default {
                     session.commitPlacement();
                     refreshSpatialUI();
                 } else {
-                    session.pick(event.clientX, event.clientY, { toggle: event.ctrlKey || event.metaKey || event.shiftKey });
+                    session.pick(event.clientX, event.clientY, { 
+                        toggle: event.ctrlKey || event.metaKey, 
+                        additive: event.shiftKey 
+                    });
                     refreshSpatialUI();
                 }
             }
