@@ -187,7 +187,7 @@ function createWorldWithBricks(specs) {
         { position: new Position(2, 0.5, 0) },
         { position: new Position(4, 0.5, 0) }
     ]);
-    const group = new Group({ name: 'Walls', brickIds: [a, b] });
+    let group = new Group({ name: 'Walls', brickIds: [a, b] });
     world.addGroup(group);
 
     // Delete restores the ORIGINAL identity and membership.
@@ -195,6 +195,7 @@ function createWorldWithBricks(specs) {
     del.execute({ world });
     assert(world.getGroups().length === 0, 'delete removes the group');
     del.undo({ world });
+    group = world.getGroup(group.id);
     assert(world.getGroup(group.id) !== null, 'undo restores the original group id');
     assert(world.getGroup(group.id).brickIds.join(',') === [a, b].join(','), 'membership restored');
 
