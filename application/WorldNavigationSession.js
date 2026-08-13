@@ -935,6 +935,7 @@ export class WorldNavigationSession {
 
 	// 2. Fix copySelection to reset paste count
 	copySelection() {
+		if (this._historyPreview && this._historyPreview.active) return SpatialClipboardState.empty(); // <--- ADD
 	    if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    this._pasteCount = 0; // Reset cascade count on new copy
@@ -944,6 +945,7 @@ export class WorldNavigationSession {
 	
 	// 3. Fix pasteClipboard to cascade offsets
 	pasteClipboard() {
+	    if (this._historyPreview && this._historyPreview.active) return false; // <--- ADD
 	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc) return false;
