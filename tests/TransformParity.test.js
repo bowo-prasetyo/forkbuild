@@ -58,7 +58,7 @@ function createWorldWithBricks(specs) {
     close(rotated.z, 2, 'rotation about pivot z');
     close(rotated.y, 0.5, 'rotation leaves y untouched');
 
-    const combined = transformPoint({ x: 2, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, {
+    const combined = TransformMath.transformPoint({ x: 2, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, { // <-- Fixed
         rotation: 90,
         translation: { x: 1, y: 2, z: 3 }
     });
