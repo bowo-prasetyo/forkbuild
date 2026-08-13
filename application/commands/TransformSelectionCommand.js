@@ -84,6 +84,12 @@ export class TransformSelectionCommand extends Command {
     }
 
     static _cloneTransform(transform) {
-        return { ...transform, position: transform.position ? { ...transform.position } : null };
+        let pos = transform.position;
+        if (pos && typeof pos.toJSON === 'function') {
+            pos = pos.toJSON();
+        } else if (pos) {
+            pos = { x: pos.x, y: pos.y, z: pos.z };
+        }
+        return { ...transform, position: pos };
     }
 }
