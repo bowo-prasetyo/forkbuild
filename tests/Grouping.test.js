@@ -445,6 +445,7 @@ function createWorldWithBricks(specs) {
     const editorContext = new EditorContext();
     const documentManager = new DocumentManager();
     documentManager.load(document, 'editor-doc');
+
     const editorSession = new EditorSession({
         registry: brickRegistry,
         editorContext,
@@ -469,7 +470,7 @@ function createWorldWithBricks(specs) {
     assert(clipboard.groups.length === 1 && clipboard.groups[0].name === 'Base', 'Editor copy is group-aware');
     assert(editorSession.commandHistory.getCursor() === 0, 'copy created no history entry');
 
-    assert(editorSession.pasteClipboard() === true, 'Editor paste succeeds');
+    assert(editorSession.paste() === true, 'Editor paste succeeds'); // Changed from pasteClipboard()
     assert(building.getBricks().length === 4, 'Editor paste added bricks');
     assert(world.getGroups().length === 2, 'Editor paste recreated the group');
     assert(editorSession.commandHistory.getCursor() === 1, 'paste is one history entry');
