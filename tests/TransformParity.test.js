@@ -277,9 +277,9 @@ function createWorldWithBricks(specs) {
     
     service.rotateSelection(selection, -90);
     assert(building.findBrick(a).rotation === 0, 'Editor Shift+R rotates back');
-    
     history.undo();
     history.undo();
+    history.undo(); // <--- ADD THIS: Undo the initial moveSelection
     assert(building.findBrick(a).position.x === 0 && building.findBrick(a).rotation === 0, 'Editor transforms undo cleanly');
     console.log('✓ Editor transform parity through the shared use case');
 }
