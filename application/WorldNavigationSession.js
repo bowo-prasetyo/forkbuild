@@ -810,6 +810,155 @@ export class WorldNavigationSession {
         return Array.from(this._failedLoads.keys());
     }
 
+	// --- Parity Methods for Tests ---
+	getActiveDocumentId() { return this._focusedDocumentId; }
+	isDocumentDirty(documentId) {
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    if (!doc) return false;
+	    const history = this._commandHistories.get(doc.world.id);
+	    return history ? history.isDirty() : false;
+	}
+	saveDocument(documentId) {
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    if (!doc) throw new Error('no loaded document');
+	    this._saveDocumentUseCase.execute({ document: doc, state: { dirty: true }, markSaved: () => {} });
+	    const history = this._commandHistories.get(doc.world.id);
+	    if (history) history.markSaved();
+	}
+	publishDocument(documentId) {
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    if (!doc) throw new Error('no loaded document');
+	    if (this.isDocumentDirty(doc.world.id)) this.saveDocument(doc.world.id);
+	    return this._publishDocumentUseCase.execute({ document: doc });
+	}
+	getTimeline(documentId) {
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    const history = doc ? this._commandHistories.get(doc.world.id) : null;
+	    return history ? history.getTimeline() : [];
+	}
+	copySelection() {
+	    if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    this._clipboardState = this._copySelectionUseCase.execute(this._spatialSelection, doc);
+	    return this._clipboardState;
+	}
+	pasteClipboard() {
+	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc) return false;
+	    const buildingId = doc.world.getBuildings()[0]?.id;
+	    if (!buildingId) return false;
+	    const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
+	        worldId: doc.world.id, buildingId, position: { x: 2, y: 0, z: 2 }
+	    });
+	    if (command) {
+	        this._commandHistories.get(doc.world.id).execute(command);
+	        return true;
+	    }
+	    return false;
+	}
+	cloneDocument(documentId) {
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    if (!doc) throw new Error('no loaded document');
+	    const clone = this._documentCloneService.execute(doc);
+	    this._loadedDocuments.set(clone.world.id, clone);
+	    this._commandHistories.set(clone.world.id, new CommandHistory({ world: clone.world }));
+	    if (this._session) this._session.addWorld(clone.world, clone.world.id, this._worldLayoutProvider.getPosition(clone.world.id));
+	    return clone.world.id;
+	}
+	forkDocument(documentId) {
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    if (!doc) throw new Error('no loaded document');
+	    const user = this._identityProvider ? this._identityProvider.currentUser() : null;
+	    const fork = this._documentCloneService.execute(doc, {
+	        title: `Fork of ${doc.metadata.title || 'Untitled'}`,
+	        author: user ? user.username : null,
+	        parentDocumentId: doc.world.id
+	    });
+	    this._loadedDocuments.set(fork.world.id, fork);
+	    const history = new CommandHistory({ world: fork.world });
+	    history.markUnsaved();
+	    this._commandHistories.set(fork.world.id, history);
+	    if (this._session) this._session.addWorld(fork.world, fork.world.id, this._worldLayoutProvider.getPosition(fork.world.id));
+	    return fork.world.id;
+	}
+	getRetiredHistories(documentId) {
+	    return this._retiredHistories ? (this._retiredHistories.get(documentId || this._focusedDocumentId) || []) : [];
+	}
+	restoreHistoryAt(cursor, documentId) {
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    if (!doc) throw new Error('no loaded document');
+	    const history = this._commandHistories.get(doc.world.id);
+	    if (!history) throw new Error('no history');
+	    const result = this._restoreHistoryStateUseCase.execute({ document: doc, markDirty: () => {} }, history, cursor);
+	    this._commandHistories.set(doc.world.id, result.history);
+	    if (!this._retiredHistories) this._retiredHistories = new Map();
+	    if (!this._retiredHistories.has(doc.world.id)) this._retiredHistories.set(doc.world.id, []);
+	    this._retiredHistories.get(doc.world.id).push(result.previousHistory);
+	    this.clearSelection();
+	}
+	getGroups() {
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    return doc ? doc.world.getGroups().map(g => ({ id: g.id, name: g.name, memberCount: g.memberCount })) : [];
+	}
+	createGroupFromSelection(name) {
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc || this._spatialSelection.isEmpty) return null;
+	    const cmd = new CreateGroupCommand({ worldId: doc.world.id, brickIds: this._spatialSelection.brickIds, name });
+	    this._commandHistories.get(doc.world.id).execute(cmd);
+	    return cmd.executedGroupId;
+	}
+	selectGroup(groupId) {
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc) return false;
+	    const group = doc.world.getGroup(groupId);
+	    if (!group) return false;
+	    const items = [];
+	    for (const brickId of group.brickIds) {
+	        for (const building of doc.world.getBuildings()) {
+	            if (building.findBrick(brickId)) {
+	                items.push({ type: 'brick', buildingId: building.id, brickId });
+	                break;
+	            }
+	        }
+	    }
+	    this._setSpatialSelection(SpatialSelectionState.bricks({ documentId: doc.world.id, items }));
+	    return true;
+	}
+	addSelectionToSelectedGroup(groupId) {
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc || this._spatialSelection.isEmpty) return false;
+	    const cmd = new AddToGroupCommand({ worldId: doc.world.id, groupId, brickIds: this._spatialSelection.brickIds });
+	    this._commandHistories.get(doc.world.id).execute(cmd);
+	    return true;
+	}
+	removeSelectionFromSelectedGroup(groupId) {
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc || this._spatialSelection.isEmpty) return false;
+	    const cmd = new RemoveFromGroupCommand({ worldId: doc.world.id, groupId, brickIds: this._spatialSelection.brickIds });
+	    this._commandHistories.get(doc.world.id).execute(cmd);
+	    return true;
+	}
+	renameGroup(groupId, name) {
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc) return false;
+	    this._commandHistories.get(doc.world.id).execute(new RenameGroupCommand({ worldId: doc.world.id, groupId, name }));
+	    return true;
+	}
+	duplicateGroup(groupId) {
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc) return null;
+	    const cmd = new DuplicateGroupCommand({ worldId: doc.world.id, groupId });
+	    this._commandHistories.get(doc.world.id).execute(cmd);
+	    return cmd.executedGroupId;
+	}
+	deleteGroup(groupId) {
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc) return false;
+	    this._commandHistories.get(doc.world.id).execute(new DeleteGroupCommand({ worldId: doc.world.id, groupId }));
+	    return true;
+	}
+	
     dispose() {
         if (this._session) {
             this._session.dispose();
