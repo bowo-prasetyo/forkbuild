@@ -59,28 +59,36 @@ export class SpatialSelectionState {
     }
 
     toggleBrick({ documentId, buildingId, brickId }) {
-        if (this._documentId && this._documentId !== documentId) {
-            return SpatialSelectionState.brick({ documentId, buildingId, brickId });
+        const targetDocId = documentId || this._documentId;
+        
+        if (this._documentId && targetDocId && this._documentId !== targetDocId) {
+            return SpatialSelectionState.brick({ documentId: targetDocId, buildingId, brickId });
         }
+        
         const exists = this.includesBrick(buildingId, brickId);
         const items = exists
             ? this._items.filter((item) => !(item.type === 'brick' && item.buildingId === buildingId && item.brickId === brickId))
             : [...this._items, { type: 'brick', buildingId, brickId }];
-        return SpatialSelectionState.bricks({ documentId, items });
+            
+        return SpatialSelectionState.bricks({ documentId: targetDocId, items });
     }
 
     // Union-add (0.1.45): Shift-click and additive marquee. Adding a
     // brick that is already selected changes nothing; crossing documents
     // restarts the selection in the new document (single-document rule).
     addBrick({ documentId, buildingId, brickId }) {
-        if (this._documentId && this._documentId !== documentId) {
-            return SpatialSelectionState.brick({ documentId, buildingId, brickId });
+        const targetDocId = documentId || this._documentId;
+        
+        if (this._documentId && targetDocId && this._documentId !== targetDocId) {
+            return SpatialSelectionState.brick({ documentId: targetDocId, buildingId, brickId });
         }
+        
         if (this.includesBrick(buildingId, brickId)) {
             return this;
         }
+        
         return SpatialSelectionState.bricks({
-            documentId,
+            documentId: targetDocId,
             items: [...this._items, { type: 'brick', buildingId, brickId }]
         });
     }
