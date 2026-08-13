@@ -24,6 +24,8 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
 import { DocumentManager } from '../application/DocumentManager.js';
+import { LocalContentStore } from '../content/LocalContentStore.js'; // Add import at top
+
 // ---------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------
@@ -163,8 +165,8 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const publisher = new LocalPublisherProvider(storage, new DocumentSerializer());
-    const publishUseCase = new PublishDocumentUseCase(publisher, stubIdentityProvider);
+    const contentStore = new LocalContentStore(storage);
+    const publisher = new LocalPublisherProvider(storage, contentStore);    const publishUseCase = new PublishDocumentUseCase(publisher, stubIdentityProvider);
     const doc = createTestDocument();
     const manager = new DocumentManager();
     manager.load(doc, 'test-doc');
