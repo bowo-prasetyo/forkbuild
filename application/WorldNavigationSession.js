@@ -889,6 +889,9 @@ export class WorldNavigationSession {
 	}		
 	
 	restoreHistoryAt(cursor, documentId) {
+	    if (!this._replayDocumentUseCase) {
+	        throw new Error('no restore configured'); // <--- ADD GUARD
+	    }
 	    const docId = documentId || this._focusedDocumentId;
 	    const doc = this.getDocument(docId);
 	    if (!doc) throw new Error('no loaded document');
