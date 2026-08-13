@@ -9,7 +9,7 @@
 export class SelectionState {
     constructor({ brickId = null, buildingId = null, items = null } = {}) {
         const rawItems = items
-            ? items.map((item) => ({ ...item }))
+            ? items.map((item) => ({ type: 'brick', ...item })) // Force type
             : (brickId && buildingId ? [{ type: 'brick', brickId, buildingId }] : []);
         const seen = new Set();
         this._items = [];
