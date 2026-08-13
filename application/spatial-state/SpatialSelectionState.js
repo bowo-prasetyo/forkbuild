@@ -103,7 +103,9 @@ export class SpatialSelectionState {
     }
 
     static bricks({ documentId, items }) {
-        const normalized = (items || []).filter((item) => item && item.type === 'brick');
+        // FIX: Force type instead of filtering, to match SelectionState behavior
+        const normalized = (items || []).filter(item => item).map(item => ({ type: 'brick', ...item }));
+        
         // Marquee/select-all/select-group paths can propose duplicates;
         // membership is a set, so dedupe here (keep first occurrence,
         // last item stays primary).
