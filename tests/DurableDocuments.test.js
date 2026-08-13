@@ -347,12 +347,15 @@ function createTestDocument(brickCount = 3) {
     const publication = publishUseCase.execute(manager);
     assert(publication.id !== null, 'flagship: snapshot created');
     assert(publication.contentHash !== null, 'flagship: content hash present');
+// tests/DurableDocuments.test.js
+// ... inside test 12 "FLAGSHIP: build → edit → serialize → publish ..."
+
     // Load the published snapshot into a fresh runtime.
-    const loadedSnapshot = new LoadPublishedSnapshotUseCase(publisher).execute(publication.id);
+    const loadedSnapshot = new LoadPublishedSnapshotUseCase(publisher, serializer).execute(publication.id);
     // Ensure we pass a Document instance to the serializer
     const docToSerialize = loadedSnapshot instanceof Document ? loadedSnapshot : Document.fromJSON(loadedSnapshot);
-    // In tests/DurableDocuments.test.js, inside Test 12 (FLAGSHIP)
-    const serializedAfterLoad = JSON.stringify(loadedSnapshot.toJSON ? serializer.serialize(loadedSnapshot) : loadedSnapshot);
+    // Serialize the loaded snapshot.
+    const serializedAfterLoad = JSON.stringify(serializer.serialize(loadedSnapshot));    
     // Byte-identical.
     assert(serializedBeforePublish === serializedAfterLoad,
         'FLAGSHIP: published snapshot serializes byte-identically');
