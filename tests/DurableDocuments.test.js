@@ -25,6 +25,7 @@ import { Publication } from '../publisher/Publication.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
 import { DocumentManager } from '../application/DocumentManager.js';
 import { LocalContentStore } from '../content/LocalContentStore.js'; // Add import at top
+import { LoadPublishedSnapshotUseCase } from '../application/LoadPublishedSnapshotUseCase.js';
 
 // ---------------------------------------------------------------------
 // Helpers
