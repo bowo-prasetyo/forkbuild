@@ -997,6 +997,48 @@ export class WorldNavigationSession {
 	    this._selectedGroupId = groupId;
 	    return this.removeSelectionFromSelectedGroup();
 	}
+	
+	// --- History Preview & Restore (0.1.39 / 0.1.41) ---
+	beginHistoryPreview() {
+	    this._historyPreview = { active: true, cursor: null, world: null };
+	    return true;
+	}
+	previewHistoryAt(cursor) {
+	    if (!this._historyPreview || !this._historyPreview.active) {
+	        throw new Error('no active history preview');
+	    }
+	    const history = this._getActiveCommandHistory();
+	    if (!history) throw new Error('no history');
+	    const replayWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
+	    this._historyPreview.cursor = cursor;
+	    this._historyPreview.world = replayWorld;
+	    return true;
+	}
+	cancelHistoryPreview() {
+	    if (!this._historyPreview || !this._historyPreview.active) return false;
+	    this._historyPreview = null;
+	    return true;
+	}
+	getHistoryPreview() {
+	    if (!this._historyPreview || !this._historyPreview.active) return null;
+	    return { cursor: this._historyPreview.cursor, world: this._historyPreview.world };
+	}
+	getRetiredHistories(documentId) {
+	    return this._retiredHistories ? (this._retiredHistories.get(documentId || this._focusedDocumentId) || []) : [];
+	}
+	restoreHistoryAt(cursor, documentId) {
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    if (!doc) throw new Error('no loaded document');
+	    const history = this._commandHistories.get(doc.world.id);
+	    if (!history) throw new Error('no history');
+	    const result = this._restoreHistoryStateUseCase.execute({ document: doc, markDirty: () => {} }, history, cursor);
+	    this._commandHistories.set(doc.world.id, result.history);
+	    if (!this._retiredHistories) this._retiredHistories = new Map();
+	    if (!this._retiredHistories.has(doc.world.id)) this._retiredHistories.set(doc.world.id, []);
+	    this._retiredHistories.get(doc.world.id).push(result.previousHistory);
+	    this.clearSelection();
+	    if (this._historyPreview) this.cancelHistoryPreview();
+	}
 		
     dispose() {
         if (this._session) {
