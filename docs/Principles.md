@@ -178,3 +178,9 @@ exists. LoadedWorld is the ephemeral runtime state of that placement in
 a specific client's memory. The fact that a client currently has a
 castle loaded in memory must never become part of the protocol or
 travel over the network.
+
+Published content is identified by its content hash, not its storage location (0.2.14).
+A Publication references immutable content through a cryptographic ContentReference.
+IPFS, Arweave, HTTP gateways, local storage, and future backends are retrieval
+mechanisms rather than content identities. Retrieved bytes must always be verified
+against the publication's expected content hash before deserialization.
