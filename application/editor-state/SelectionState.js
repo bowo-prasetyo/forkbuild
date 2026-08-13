@@ -43,7 +43,7 @@ export class SelectionState {
     add(brickId, buildingId) {
         const exists = this._items.some((item) => item.brickId === brickId && item.buildingId === buildingId);
         if (exists) {
-            return this;
+            return this; // Return same instance, do not grow
         }
         return new SelectionState({
             items: [...this._items, { type: 'brick', brickId, buildingId }]
