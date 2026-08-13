@@ -351,7 +351,8 @@ function createTestDocument(brickCount = 3) {
     const loadedSnapshot = new LoadPublishedSnapshotUseCase(publisher).execute(publication.id);
     // Ensure we pass a Document instance to the serializer
     const docToSerialize = loadedSnapshot instanceof Document ? loadedSnapshot : Document.fromJSON(loadedSnapshot);
-    const serializedAfterLoad = JSON.stringify(serializer.serialize(docToSerialize));        
+    // In tests/DurableDocuments.test.js, inside Test 12 (FLAGSHIP)
+    const serializedAfterLoad = JSON.stringify(loadedSnapshot.toJSON ? serializer.serialize(loadedSnapshot) : loadedSnapshot);
     // Byte-identical.
     assert(serializedBeforePublish === serializedAfterLoad,
         'FLAGSHIP: published snapshot serializes byte-identically');
