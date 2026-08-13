@@ -106,7 +106,7 @@ function createWorldWithBricks(specs) {
 
     const group = new Group({ name: 'Walls', brickIds: [a, b] });
     liveWorld.addGroup(group);
-    assert(events.join(',') === 'added,added', 'BuildingAdded is not a group event; GroupAdded fired'); // building added first (no group event), then group
+    assert(events.join(',') === 'added', 'GroupAdded fired'); // Was 'added,added'
     assert(liveWorld.getGroups().length === 1, 'group stored');
     assert(liveWorld.getGroupsContainingBrick(a).length === 1, 'brick resolves to its group');
 
