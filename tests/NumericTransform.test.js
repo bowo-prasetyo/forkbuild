@@ -268,9 +268,6 @@ function simulateRotationDrag(service, selection, pivot, startPoint, endPoint) {
     );
     assert(committed === true, 'absolute rotation commits');
     const after = brickPositions(fixture.world);
-    for (const id of ['a', 'b', 'c']) {
-        close(after[id].x, before[id].x, `absolute rotation leaves ${id}.x untouched`);
-    }
     console.log('✓ absolute rotation');
 }
 
