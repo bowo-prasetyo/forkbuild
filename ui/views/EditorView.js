@@ -21,6 +21,8 @@ import CommandPalette from '../components/CommandPalette.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
+import { CopySelectionUseCase } from '../../application/CopySelectionUseCase.js';
+import { PasteClipboardUseCase } from '../../application/PasteClipboardUseCase.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
@@ -102,16 +104,22 @@ export default {
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
         const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute();
 
-        const editorSession = new EditorSession({
-            registry,
-            editorContext,
-            toolRegistry,
-            documentManager,
-            selectionUseCase,
-            previewUseCase,
-            loadDocumentUseCase,
-            identityProvider
-        });
+		const previewUseCase = new PreviewUseCase(editorContext);
+		const copySelectionUseCase = new CopySelectionUseCase(registry);
+		const pasteClipboardUseCase = new PasteClipboardUseCase();
+		
+		const editorSession = new EditorSession({
+		    registry,
+		    editorContext,
+		    toolRegistry,
+		    documentManager,
+		    selectionUseCase,
+		    previewUseCase,
+		    loadDocumentUseCase,
+		    identityProvider,
+		    copySelectionUseCase,  // Pass use case
+		    pasteClipboardUseCase  // Pass use case
+		});
 
         const activeTool = ref(editorContext.tool.activeTool);
         const selectionCount = ref(0);
