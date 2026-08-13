@@ -452,8 +452,10 @@ function createWorldWithBricks(specs) {
         documentManager,
         selectionUseCase: new SelectionUseCase(editorContext),
         previewUseCase: new PreviewUseCase(editorContext),
-        loadDocumentUseCase: null
-    });
+        loadDocumentUseCase: null,
+        copySelectionUseCase: new CopySelectionUseCase(brickRegistry),  // <--- ADD
+        pasteClipboardUseCase: new PasteClipboardUseCase()              // <--- ADD
+    });    
     // Simulate the post-start state EditorView would have.
     editorSession._commandHistory = new CommandHistory({ world });
 
