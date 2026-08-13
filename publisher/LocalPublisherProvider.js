@@ -54,6 +54,9 @@ export class LocalPublisherProvider extends PublisherProvider {
         // Store immutable content
         const contentReference = this._contentStore.put(canonicalString);
         const contentHash = contentReference.hash;
+		
+		// 4. Create the publication identity.
+		const publicationId = createId(); // <-- Ensure this line exists!
 
         // 5. Store the snapshot immutably at its own key.
         this._storageProvider.save(SNAPSHOT_KEY_PREFIX + publicationId, migratedJson);
