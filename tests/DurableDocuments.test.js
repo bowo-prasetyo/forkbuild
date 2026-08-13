@@ -229,7 +229,7 @@ function createTestDocument(brickCount = 3) {
     manager.load(doc, 'test-doc');
     const publication = publishUseCase.execute(manager);
     // Load the snapshot independently.
-    const loadedDoc = publisher.loadSnapshot(publication.id);
+    const loadedDoc = serializer.deserialize(publisher.loadSnapshot(publication.id)); // <-- Fixed
     assert(loadedDoc.world.id === doc.world.id, 'loaded snapshot has same world id');
     assert(loadedDoc.world.getBuildings()[0].getBricks().length === 4, 'loaded snapshot has all bricks');
     assert(loadedDoc.metadata.title === 'Durable Test', 'loaded snapshot has metadata');
