@@ -171,17 +171,17 @@ function createTestDocument(brickCount = 3) {
     const manager = new DocumentManager();
     manager.load(doc, 'test-doc');
     const publication = publishUseCase.execute(manager);
-    assert(publication.snapshotId !== null, 'snapshot has an id');
+    assert(publication.id !== null, 'snapshot has an id');
     assert(publication.documentId === doc.world.id, 'snapshot references the document');
     assert(publication.contentHash !== null, 'snapshot has a content hash');
     assert(publication.schemaVersion === DOCUMENT_SCHEMA_VERSION, 'snapshot records schema version');
     assert(publication.author === 'alice', 'snapshot attributed via identity provider');
     // Verify the snapshot is stored at its own key.
-    const snapshotJson = storage.load(`snapshot:${publication.snapshotId}`);
+    const snapshotJson = storage.load(`snapshot:${publication.id}`);
     assert(snapshotJson !== null, 'snapshot stored at snapshot key');
     assert(snapshotJson.schemaVersion === DOCUMENT_SCHEMA_VERSION, 'stored snapshot has schemaVersion');
     // Verify integrity.
-    assert(publisher.verifySnapshot(publication.snapshotId, publication.contentHash) === true,
+    assert(publisher.verifySnapshot(publication.id, publication.contentHash) === true,
         'snapshot integrity verified');
     console.log('✓ publish creates immutable snapshot with hash');
 }
@@ -199,7 +199,7 @@ function createTestDocument(brickCount = 3) {
     manager.trackCommandHistory(history);
     // Publish the initial state.
     const publication = publishUseCase.execute(manager);
-    const snapshotBefore = JSON.stringify(storage.load(`snapshot:${publication.snapshotId}`));
+    const snapshotBefore = JSON.stringify(storage.load(`snapshot:${publication.id}`));
     // Now edit the document.
     const buildingId = doc.world.getBuildings()[0].id;
     const brickId = doc.world.getBuildings()[0].getBricks()[0].id;
@@ -208,10 +208,10 @@ function createTestDocument(brickCount = 3) {
     }));
     manager.markSaved(); // simulate a save
     // The published snapshot must be unchanged.
-    const snapshotAfter = JSON.stringify(storage.load(`snapshot:${publication.snapshotId}`));
+    const snapshotAfter = JSON.stringify(storage.load(`snapshot:${publication.id}`));
     assert(snapshotBefore === snapshotAfter, 'published snapshot unchanged after editing');
     // Verify integrity still holds.
-    assert(publisher.verifySnapshot(publication.snapshotId, publication.contentHash) === true,
+    assert(publisher.verifySnapshot(publication.id, publication.contentHash) === true,
         'snapshot integrity still valid after editing');
     console.log('✓ mutation isolation: editing does not affect published snapshot');
 }
@@ -228,7 +228,7 @@ function createTestDocument(brickCount = 3) {
     manager.load(doc, 'test-doc');
     const publication = publishUseCase.execute(manager);
     // Load the snapshot independently.
-    const loadedDoc = publisher.loadSnapshot(publication.snapshotId);
+    const loadedDoc = publisher.loadSnapshot(publication.id);
     assert(loadedDoc.world.id === doc.world.id, 'loaded snapshot has same world id');
     assert(loadedDoc.world.getBuildings()[0].getBricks().length === 4, 'loaded snapshot has all bricks');
     assert(loadedDoc.metadata.title === 'Durable Test', 'loaded snapshot has metadata');
@@ -336,17 +336,17 @@ function createTestDocument(brickCount = 3) {
     const serializedBeforePublish = JSON.stringify(serializer.serialize(doc));
     // Publish.
     const publication = publishUseCase.execute(manager);
-    assert(publication.snapshotId !== null, 'flagship: snapshot created');
+    assert(publication.id !== null, 'flagship: snapshot created');
     assert(publication.contentHash !== null, 'flagship: content hash present');
     // Load the published snapshot into a fresh runtime.
-    const loadedSnapshot = publisher.loadSnapshot(publication.snapshotId);
+    const loadedSnapshot = publisher.loadSnapshot(publication.id);
     // Serialize the loaded snapshot.
     const serializedAfterLoad = JSON.stringify(serializer.serialize(loadedSnapshot));
     // Byte-identical.
     assert(serializedBeforePublish === serializedAfterLoad,
         'FLAGSHIP: published snapshot serializes byte-identically');
     // Verify integrity.
-    assert(publisher.verifySnapshot(publication.snapshotId, publication.contentHash) === true,
+    assert(publisher.verifySnapshot(publication.id, publication.contentHash) === true,
         'FLAGSHIP: snapshot integrity verified');
     // Now edit the original document.
     history.execute(new MoveBrickCommand({
@@ -357,12 +357,12 @@ function createTestDocument(brickCount = 3) {
         worldId: doc.world.id, buildingId, brickId: brickIds[3]
     }));
     // The published snapshot must be unchanged.
-    const snapshotAfterEdit = JSON.stringify(storage.load(`snapshot:${publication.snapshotId}`));
+    const snapshotAfterEdit = JSON.stringify(storage.load(`snapshot:${publication.id}`));
     const snapshotBeforeEdit = serializedBeforePublish;
     assert(snapshotAfterEdit === snapshotBeforeEdit,
         'FLAGSHIP: published snapshot unchanged after editing');
     // The loaded snapshot still matches.
-    const reloadedSnapshot = publisher.loadSnapshot(publication.snapshotId);
+    const reloadedSnapshot = publisher.loadSnapshot(publication.id);
     const reserializedSnapshot = JSON.stringify(serializer.serialize(reloadedSnapshot));
     assert(reserializedSnapshot === serializedBeforePublish,
         'FLAGSHIP: reloaded snapshot still byte-identical');
@@ -405,8 +405,8 @@ function createTestDocument(brickCount = 3) {
     manager.load(doc, 'parity-doc');
     const publication = publishUseCase.execute(manager);
     // Load the same snapshot twice (simulating Editor and World View).
-    const loaded1 = publisher.loadSnapshot(publication.snapshotId);
-    const loaded2 = publisher.loadSnapshot(publication.snapshotId);
+    const loaded1 = publisher.loadSnapshot(publication.id);
+    const loaded2 = publisher.loadSnapshot(publication.id);
     // Both should produce identical world state.
     const json1 = JSON.stringify(loaded1.world.toJSON());
     const json2 = JSON.stringify(loaded2.world.toJSON());
