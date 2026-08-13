@@ -420,16 +420,21 @@ function createTestDocument(brickCount = 3) {
     const publication = publishUseCase.execute(manager);
     
     // Load the same snapshot twice (simulating Editor and World View).
-    // In Test 14 (Editor / World parity: same snapshot → same state)
     const loadSnapshotUseCase = new LoadPublishedSnapshotUseCase(publisher, serializer);
-    const loaded1 = loadSnapshotUseCase.execute(publication.id);
-    const loaded2 = loadSnapshotUseCase.execute(publication.id);
-        
-    const d1 = loaded1 instanceof Document ? loaded1 : new Document({ world: loaded1.world, metadata: loaded1.metadata });
-    const d2 = loaded2 instanceof Document ? loaded2 : new Document({ world: loaded2.world, metadata: loaded2.metadata });
+    let loaded1 = loadSnapshotUseCase.execute(publication.id);
+    let loaded2 = loadSnapshotUseCase.execute(publication.id);
     
-    const json1 = JSON.stringify(d1.world.toJSON());
-    const json2 = JSON.stringify(d2.world.toJSON());
+    // FIX: Ensure loaded snapshots are Document instances
+    if (!(loaded1 instanceof Document)) {
+        loaded1 = new Document({ world: loaded1.world, metadata: loaded1.metadata });
+    }
+    if (!(loaded2 instanceof Document)) {
+        loaded2 = new Document({ world: loaded2.world, metadata: loaded2.metadata });
+    }
+    
+    // Both should produce identical world state.
+    const json1 = JSON.stringify(loaded1.world.toJSON());
+    const json2 = JSON.stringify(loaded2.world.toJSON());
     assert(json1 === json2, 'same snapshot produces identical world state in both loads');
     
     // And identical document state.
