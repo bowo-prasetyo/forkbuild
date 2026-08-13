@@ -13,7 +13,17 @@
     <h1>🧪 ForkBuild Test Runner</h1>
     <p>Open your browser's <strong>Developer Console</strong> (<code>F12</code> or <code>Cmd+Option+I</code>) to see the test results.</p>
     <p><em>Tests will execute sequentially. Red errors in the console mean a test failed.</em></p>
-
+    <script type="importmap">
+    {
+        "imports": {
+            "vue": "https://cdn.jsdelivr.net/npm/vue@3.4.31/dist/vue.esm-browser.js",
+            "vue-router": "https://cdn.jsdelivr.net/npm/vue-router@4.4.5/dist/vue-router.esm-browser.js",
+            "@vue/devtools-api": "https://cdn.jsdelivr.net/npm/@vue/devtools-api@8.2.1/+esm",
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
     <script type="module">
         const testFiles = [
             './tests/CommandHistory.test.js',
