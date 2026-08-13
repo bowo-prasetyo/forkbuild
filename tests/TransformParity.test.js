@@ -14,7 +14,7 @@ import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { EditorContext } from '../application/EditorContext.js';
 import { SelectionUseCase } from '../application/SelectionUseCase.js';
 import { SelectionTool } from '../application/tools/SelectionTool.js';
-import { transformPoint, calculateTransforms, transformsEqual } from '../application/TransformMath.js';
+import { TransformMath } from '../application/TransformMath.js';
 
 // ---------------------------------------------------------------------
 // Helpers
