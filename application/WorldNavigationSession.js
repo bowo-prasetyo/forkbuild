@@ -1016,13 +1016,39 @@ export class WorldNavigationSession {
 	    }
 	    const history = this._getActiveCommandHistory();
 	    if (!history) throw new Error('no history');
+	    
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc) return false;
+	    
+	    if (this._historyPreview.world && this._session) {
+	        this._session.removeWorld(this._historyPreview.world, `replay:${doc.world.id}`);
+	    }
+	    
 	    const replayWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
+	    
+	    if (this._session) {
+	        this._session.removeWorld(doc.world, doc.world.id);
+	        const layoutPos = this._worldLayoutProvider.getPosition(doc.world.id);
+	        this._session.addWorld(replayWorld, `replay:${doc.world.id}`, layoutPos);
+	    }
+	    
 	    this._historyPreview.cursor = cursor;
 	    this._historyPreview.world = replayWorld;
 	    return true;
 	}
+	
 	cancelHistoryPreview() {
 	    if (!this._historyPreview || !this._historyPreview.active) return false;
+	    
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (doc && this._session) {
+	        if (this._historyPreview.world) {
+	            this._session.removeWorld(this._historyPreview.world, `replay:${doc.world.id}`);
+	        }
+	        const layoutPos = this._worldLayoutProvider.getPosition(doc.world.id);
+	        this._session.addWorld(doc.world, doc.world.id, layoutPos);
+	    }
+	    
 	    this._historyPreview = null;
 	    return true;
 	}
