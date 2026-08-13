@@ -1,6 +1,7 @@
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
+import { LocalContentStore } from '../content/LocalContentStore.js';
 
 // Wires the concrete publishing backend and returns the use case, so ui/
 // never imports publisher/ or storage/ directly. Same shape as
@@ -10,9 +11,11 @@ import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
 export class CreatePublisherUseCase {
     execute(identityProvider) {
         const storageProvider = new LocalStorageProvider();
-        const publisherProvider = new LocalPublisherProvider(storageProvider);
+        const contentStore = new LocalContentStore(storageProvider);
+        const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);
         return {
-            publishDocumentUseCase: new PublishDocumentUseCase(publisherProvider, identityProvider)
+            publishDocumentUseCase: new PublishDocumentUseCase(publisherProvider, identityProvider),
+            contentStore
         };
     }
 }
