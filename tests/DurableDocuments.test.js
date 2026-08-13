@@ -191,12 +191,7 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const mockContentStore = {
-        put: (key, val) => storage.save(key, val),
-        get: (key) => storage.load(key),
-        remove: (key) => storage.remove(key)
-    };
-    const publisher = new LocalPublisherProvider(storage, mockContentStore);
+    const publisher = new LocalPublisherProvider(storage, new LocalContentStore(storage));
     const publishUseCase = new PublishDocumentUseCase(publisher, stubIdentityProvider);
     const doc = createTestDocument();
     const manager = new DocumentManager();
@@ -227,12 +222,7 @@ function createTestDocument(brickCount = 3) {
 {
     const storage = new InMemoryStorageProvider();
     const serializer = new DocumentSerializer();
-    const mockContentStore = {
-        put: (key, val) => storage.save(key, val),
-        get: (key) => storage.load(key),
-        remove: (key) => storage.remove(key)
-    };
-    const publisher = new LocalPublisherProvider(storage, mockContentStore);
+    const publisher = new LocalPublisherProvider(storage, new LocalContentStore(storage));
     const publishUseCase = new PublishDocumentUseCase(publisher, stubIdentityProvider);
     const doc = createTestDocument(4);
     const manager = new DocumentManager();
@@ -254,12 +244,7 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const mockContentStore = {
-        put: (key, val) => storage.save(key, val),
-        get: (key) => storage.load(key),
-        remove: (key) => storage.remove(key)
-    };
-    const publisher = new LocalPublisherProvider(storage, mockContentStore);
+    const publisher = new LocalPublisherProvider(storage, new LocalContentStore(storage));
     // Create a document with invalid structure by manually corrupting it.
     const doc = createTestDocument();
     const json = doc.toJSON();
@@ -283,12 +268,7 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
-    const mockContentStore = {
-        put: (key, val) => storage.save(key, val),
-        get: (key) => storage.load(key),
-        remove: (key) => storage.remove(key)
-    };
-    const publisher = new LocalPublisherProvider(storage, mockContentStore);
+    const publisher = new LocalPublisherProvider(storage, new LocalContentStore(storage));
     const publishUseCase = new PublishDocumentUseCase(publisher, stubIdentityProvider);
     const doc = createTestDocument();
     const manager = new DocumentManager();
@@ -322,12 +302,7 @@ function createTestDocument(brickCount = 3) {
 {
     const storage = new InMemoryStorageProvider();
     const serializer = new DocumentSerializer();
-    const mockContentStore = {
-        put: (key, val) => storage.save(key, val),
-        get: (key) => storage.load(key),
-        remove: (key) => storage.remove(key)
-    };
-    const publisher = new LocalPublisherProvider(storage, mockContentStore);
+    const publisher = new LocalPublisherProvider(storage, new LocalContentStore(storage));
     const publishUseCase = new PublishDocumentUseCase(publisher, stubIdentityProvider);
     // Build a document with multiple operations.
     const doc = createTestDocument(0); // start empty
@@ -424,12 +399,7 @@ function createTestDocument(brickCount = 3) {
 {
     const storage = new InMemoryStorageProvider();
     const serializer = new DocumentSerializer();
-    const mockContentStore = {
-        put: (key, val) => storage.save(key, val),
-        get: (key) => storage.load(key),
-        remove: (key) => storage.remove(key)
-    };
-    const publisher = new LocalPublisherProvider(storage, mockContentStore);
+    const publisher = new LocalPublisherProvider(storage, new LocalContentStore(storage));
     const publishUseCase = new PublishDocumentUseCase(publisher, stubIdentityProvider);
     const doc = createTestDocument(3);
     const manager = new DocumentManager();
