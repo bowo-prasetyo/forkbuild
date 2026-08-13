@@ -912,9 +912,10 @@ export class WorldNavigationSession {
 	
 	    this.clearSelection();
 	}
-
+	
 	copySelection() {
-	    if (!this._copySelectionUseCase) return SpatialClipboardState.empty();
+	    if (this._historyPreview && this._historyPreview.active) return SpatialClipboardState.empty(); // <-- ADD THIS
+	    if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
 	    
 	    // FIX: Prefer the document ID from the selection, fall back to focused
 	    const docId = (this._spatialSelection && this._spatialSelection.documentId) || this._focusedDocumentId;
@@ -930,7 +931,7 @@ export class WorldNavigationSession {
 	
 	// 3. Fix pasteClipboard to use the selection's document ID
 	pasteClipboard() {
-	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
+	    if (this._historyPreview && this._historyPreview.active) return false; // <-- ADD THIS
 	    
 	    // FIX: Prefer the document ID from the selection, fall back to focused
 	    const docId = (this._spatialSelection && this._spatialSelection.documentId) || this._focusedDocumentId;
