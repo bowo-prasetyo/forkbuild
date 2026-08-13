@@ -383,7 +383,7 @@ function selectionBoundsOf(entries) {
     assert(alignCommand.describe() === 'Align 3 Bricks', 'alignment description');
     // Change 'z' to 'x'
     service.distributeSelection(worldViewSelection(), 'x');
-    assert(history.getCursor() === 2, 'distribution cursor +1');    
+    assert(history.getCursor() === 2, 'distribution cursor +1');
     assert(history.getExecutedCommands()[1].type === 'transform-selection', 'distribution emits transform-selection');
     console.log('✓ exactly one transform-selection command per operation');
 }
