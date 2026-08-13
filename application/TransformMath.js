@@ -99,11 +99,16 @@ export const TransformMath = Object.freeze({
             return { ...transform, position: { x, y, z }, rotation: transform.rotation + (rotation || 0) };
         });
     },
-
-    transformPoint(initialTransforms, pivot, { translation = null, rotation = undefined } = {}) {
-        return calculateTransforms(initialTransforms, pivot, { translation, rotation });
-    },
     
+    transformPoint(point, pivot, gesture = {}) {
+        const res = TransformMath.calculateTransforms(
+            [{ buildingId: 'b', brickId: 'x', position: point, rotation: 0 }],
+            pivot,
+            gesture
+        );
+        return res[0].position;
+    }, 
+        
     transformsEqual(a, b) {
         return JSON.stringify(a) === JSON.stringify(b);
     }
