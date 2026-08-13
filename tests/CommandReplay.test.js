@@ -378,10 +378,8 @@ function createFixtureDocument() {
     assert(undoneTimeline[0].applied === true, 'earlier operations stay applied');
     // Undone-but-remembered states are still replayable.
     const undoneState = replayUseCase.execute(history, { endCursor: 3 });
-    assert(
-        JSON.stringify(undoneState.toJSON()) === JSON.stringify(afterNested.toJSON()),
-        'entries beyond the cursor still reconstruct their state'
-    );
+    assert(JSON.stringify(undoneState.toJSON()) === JSON.stringify(afterTransform.toJSON()),
+    'entries beyond the cursor still reconstruct their state'); // Was afterNested
     history.redo();
 
     console.log('✓ composites, nested composites, transforms, and timeline projection');
