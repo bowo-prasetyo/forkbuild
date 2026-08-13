@@ -102,7 +102,7 @@ export const TransformMath = Object.freeze({
 
     transformPoint(initialTransforms, pivot, { translation = null, rotation = undefined } = {}) {
         return calculateTransforms(initialTransforms, pivot, { translation, rotation });
-    }
+    },
     
     transformsEqual(a, b) {
         return JSON.stringify(a) === JSON.stringify(b);
