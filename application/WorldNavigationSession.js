@@ -301,9 +301,12 @@ export class WorldNavigationSession {
             STREAMING_RADIUS
         );
         const currentlyLoaded = new Set(this._loadedDocuments.keys());
-        const toUnload = Array.from(currentlyLoaded).filter(
-            (id) => !visibleIds.includes(id)
-        );
+		const toUnload = Array.from(currentlyLoaded).filter((id) => {
+		    if (visibleIds.includes(id)) return false;
+		    // Pin dirty documents against streaming unload
+		    if (this.isDocumentDirty(id)) return false; 
+		    return true;
+		});
         const now = Date.now();
         const toLoad = visibleIds.filter((id) => {
             if (currentlyLoaded.has(id)) {
