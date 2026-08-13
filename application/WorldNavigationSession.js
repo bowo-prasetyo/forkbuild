@@ -671,9 +671,12 @@ export class WorldNavigationSession {
         return null;
     }
 
-    _loadWorld(documentId) {
-        const document = this._loadPublicationDocumentUseCase.execute(documentId, this._eventBus);
-        this._loadedDocuments.set(documentId, document);
+	_loadWorld(documentId) {
+	    const document = this._loadPublicationDocumentUseCase.execute(documentId, this._eventBus);
+	    this._loadedDocuments.set(documentId, document);
+	    if (!this._focusedDocumentId) {
+	        this._focusedDocumentId = documentId; // Set focus on first load
+	    }
         const layoutPos = this._worldLayoutProvider.getPosition(documentId);
         this._session.addWorld(document.world, documentId, layoutPos);
         if (!this._commandHistories.has(document.world.id)) {
