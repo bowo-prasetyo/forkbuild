@@ -53,7 +53,7 @@ function createWorldWithBricks(specs) {
 // ---------------------------------------------------------------------
 
 {
-    const rotated = transformPoint({ x: 2, y: 0.5, z: 0 }, { x: 0, y: 0, z: 0 }, { rotation: 90 });
+    const rotated = TransformMath.rotatePointAroundPivotY({ x: 2, y: 0.5, z: 0 }, { x: 0, y: 0, z: 0 }, 90);
     close(rotated.x, 0, 'rotation about pivot x');
     close(rotated.z, 2, 'rotation about pivot z');
     close(rotated.y, 0.5, 'rotation leaves y untouched');
@@ -66,14 +66,14 @@ function createWorldWithBricks(specs) {
     close(combined.y, 2, 'rotation-then-translation y');
     close(combined.z, 5, 'rotation-then-translation z');
 
-    const mapped = calculateTransforms(
+    const mapped = TransformMath.calculateTransforms(
         [{ buildingId: 'b', brickId: 'x', position: { x: 2, y: 0, z: 0 }, rotation: 10 }],
         { x: 0, y: 0, z: 0 },
         { rotation: 90 }
     );
     close(mapped[0].position.z, 2, 'calculateTransforms maps positions');
     assert(mapped[0].rotation === 100, 'calculateTransforms accumulates rotation');
-    assert(transformsEqual(mapped, mapped), 'transformsEqual agrees with itself');
+    assert(TransformMath.transformsEqual(mapped, mapped), 'transformsEqual agrees with itself');
     console.log('✓ TransformMath shared formulas');
 }
 
