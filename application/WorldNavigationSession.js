@@ -958,7 +958,21 @@ export class WorldNavigationSession {
 	    this._commandHistories.get(doc.world.id).execute(new DeleteGroupCommand({ worldId: doc.world.id, groupId }));
 	    return true;
 	}
+
+	// Add these to EditorSession.js and WorldNavigationSession.js
+	// They bridge the gap between the UI/Tests (which pass a groupId) 
+	// and the Action Registry (which relies on the internal selected state).
 	
+	addToGroupWithSelection(groupId) {
+	    this._selectedGroupId = groupId;
+	    return this.addSelectionToSelectedGroup();
+	}
+	
+	removeFromGroupWithSelection(groupId) {
+	    this._selectedGroupId = groupId;
+	    return this.removeSelectionFromSelectedGroup();
+	}
+		
     dispose() {
         if (this._session) {
             this._session.dispose();
