@@ -22,7 +22,6 @@ export class SpatialSelectionState {
         this._buildingId = buildingId;
         this._brickId = brickId;
         this._position = position;
-        
         if (items) {
             const seen = new Set();
             const deduped = [];
@@ -30,7 +29,8 @@ export class SpatialSelectionState {
                 const key = `${item.buildingId}:${item.brickId}`;
                 if (!seen.has(key)) {
                     seen.add(key);
-                    deduped.push({ ...item });
+                    // FIX: Force the type property to match SelectionState behavior
+                    deduped.push({ type: 'brick', ...item }); 
                 }
             }
             this._items = deduped;
