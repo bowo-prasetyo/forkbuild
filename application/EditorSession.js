@@ -496,7 +496,21 @@ export class EditorSession {
             this._inputDispatcher.dispatchKeyDown(event);
         }
     }
-
+    
+    // Add these to EditorSession.js and WorldNavigationSession.js
+    // They bridge the gap between the UI/Tests (which pass a groupId) 
+    // and the Action Registry (which relies on the internal selected state).
+    
+    addToGroupWithSelection(groupId) {
+        this._selectedGroupId = groupId;
+        return this.addSelectionToSelectedGroup();
+    }
+    
+    removeFromGroupWithSelection(groupId) {
+        this._selectedGroupId = groupId;
+        return this.removeSelectionFromSelectedGroup();
+    }
+    
     dispose() {
         this._teardown();
     }
