@@ -77,14 +77,15 @@ export class SpatialSelectionState {
     // brick that is already selected changes nothing; crossing documents
     // restarts the selection in the new document (single-document rule).
     addBrick({ documentId, buildingId, brickId }) {
-        if (this._documentId && this._documentId !== documentId) {
-            return SpatialSelectionState.brick({ documentId, buildingId, brickId });
+        const targetDocId = documentId || this._documentId; // <--- FIX: Fallback to current document
+        if (this._documentId && targetDocId && this._documentId !== targetDocId) {
+            return SpatialSelectionState.brick({ documentId: targetDocId, buildingId, brickId });
         }
         if (this.includesBrick(buildingId, brickId)) {
             return this; // Return same instance, do not grow
         }
         return SpatialSelectionState.bricks({
-            documentId,
+            documentId: targetDocId, // <--- FIX: Use targetDocId
             items: [...this._items, { type: 'brick', buildingId, brickId }]
         });
     }
