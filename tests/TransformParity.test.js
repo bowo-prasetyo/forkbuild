@@ -257,39 +257,31 @@ function createWorldWithBricks(specs) {
 // ---------------------------------------------------------------------
 // 7. Editor parity: SelectionTool through the same use case
 // ---------------------------------------------------------------------
-
-// 7. Editor parity: SelectionTool through the same use case
-// ---------------------------------------------------------------------
 {
-const brickRegistry = new CreateBrickRegistryUseCase().execute();
-const { world, building, ids: [a] } = createWorldWithBricks([
-{ position: new Position(0, 0.5, 0) }
-]);
-const editorContext = new EditorContext();
-const selectionUseCase = new SelectionUseCase(editorContext);
-const history = new CommandHistory({ world });
-const useCase = new TransformSelectionUseCase(brickRegistry);
-const document = new Document({ world });
-const selection = SpatialSelectionState.brick({ documentId: 'doc', buildingId: building.id, brickId: a });
-
-selectionUseCase.select(a, building.id);
-
-// FIX: Use the use case directly instead of tool.onKeyDown
-useCase.execute(history, document, selection, { translation: { x: 1, y: 0, z: 0 } });
-assert(building.findBrick(a).position.x === 1, 'Editor arrow nudge moves the brick');
-assert(history.getExecutedCommands().length === 1, 'nudge is one entry');
-assert(history.getExecutedCommands()[0].type === 'transform-selection', 'Editor uses the unified command');
-
-useCase.execute(history, document, selection, { rotation: 90 });
-assert(building.findBrick(a).rotation === 90, 'Editor R rotates about the pivot');
-
-useCase.execute(history, document, selection, { rotation: -90 });
-assert(building.findBrick(a).rotation === 0, 'Editor Shift+R rotates back');
-
-history.undo();
-history.undo();
-assert(building.findBrick(a).position.x === 0 && building.findBrick(a).rotation === 0, 'Editor transforms undo cleanly');
-console.log('✓ Editor transform parity through the shared use case');
+    const brickRegistry = new CreateBrickRegistryUseCase().execute();
+    const { world, building, ids: [a] } = createWorldWithBricks([
+        { position: new Position(0, 0.5, 0) }
+    ]);
+    const document = new Document({ world });
+    const history = new CommandHistory({ world });
+    const service = new SpatialEditingService({ getDocument: () => document }, new Map([[world.id, history]]), brickRegistry);
+    const selection = SpatialSelectionState.brick({ documentId: 'doc', buildingId: building.id, brickId: a });
+    
+    service.moveSelection(selection, { x: 1, y: 0, z: 0 });
+    assert(building.findBrick(a).position.x === 1, 'Editor arrow nudge moves the brick');
+    assert(history.getExecutedCommands().length === 1, 'nudge is one entry');
+    assert(history.getExecutedCommands()[0].type === 'transform-selection', 'Editor uses the unified command');
+    
+    service.rotateSelection(selection, 90);
+    assert(building.findBrick(a).rotation === 90, 'Editor R rotates about the pivot');
+    
+    service.rotateSelection(selection, -90);
+    assert(building.findBrick(a).rotation === 0, 'Editor Shift+R rotates back');
+    
+    history.undo();
+    history.undo();
+    assert(building.findBrick(a).position.x === 0 && building.findBrick(a).rotation === 0, 'Editor transforms undo cleanly');
+    console.log('✓ Editor transform parity through the shared use case');
 }
 
 // ---------------------------------------------------------------------
