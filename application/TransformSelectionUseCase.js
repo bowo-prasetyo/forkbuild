@@ -1,6 +1,7 @@
 import { SelectionBoundsService } from './SelectionBoundsService.js';
 import { TransformSelectionCommand } from './commands/TransformSelectionCommand.js';
-import { calculateTransforms, transformsEqual } from './TransformMath.js';
+import { TransformMath } from './TransformMath.js';
+const { calculateTransforms, transformsEqual } = TransformMath;
 
 // The single entry point for transforming selections (0.1.44). Every
 // transform — keyboard nudge, pivot rotation, gizmo gesture commit, in
