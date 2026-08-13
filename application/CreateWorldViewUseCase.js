@@ -14,6 +14,7 @@ import { DocumentCloneService } from './DocumentCloneService.js';
 import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
+import { LocalContentStore } from '../content/LocalContentStore.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -24,6 +25,8 @@ import { WorldNavigationSession } from './WorldNavigationSession.js';
 export class CreateWorldViewUseCase {
     execute(identityProvider = null) {
         const storageProvider = new LocalStorageProvider();
+        const contentStore = new LocalContentStore(storageProvider);
+        const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);        
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
         const spatialIndexProvider = new LocalSpatialIndexProvider(storageProvider);
         const worldLayoutProvider = new LocalWorldLayoutProvider(
@@ -58,7 +61,7 @@ export class CreateWorldViewUseCase {
                     loadPublicationDocumentUseCase,
                     worldLayoutProvider,
                     saveDocumentUseCase,
-                    publishDocumentUseCase,
+                    publishDocumentUseCase: new PublishDocumentUseCase(publisherProvider, identityProvider),
                     forkPublishedWorldUseCase,
                     replayDocumentUseCase,
                     restoreHistoryStateUseCase,
