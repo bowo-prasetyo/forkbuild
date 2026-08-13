@@ -31,27 +31,40 @@ export class SelectionState {
     get isSingle() { return this._items.length === 1; }
     get brickIds() { return this._items.filter((item) => item.type === 'brick').map((item) => item.brickId); }
 
-    toggle(brickId, buildingId) {
-        const exists = this._items.some((item) => item.brickId === brickId && item.buildingId === buildingId);
+    toggle(brickIdOrObj, buildingId) {
+        let bId, bldId;
+        if (typeof brickIdOrObj === 'object' && brickIdOrObj !== null) {
+            bId = brickIdOrObj.brickId;
+            bldId = brickIdOrObj.buildingId;
+        } else {
+            bId = brickIdOrObj;
+            bldId = buildingId;
+        }
+        const exists = this._items.some((item) => item.brickId === bId && item.buildingId === bldId);
         return new SelectionState({
             items: exists
-                ? this._items.filter((item) => !(item.brickId === brickId && item.buildingId === buildingId))
-                : [...this._items, { type: 'brick', brickId, buildingId }]
+                ? this._items.filter((item) => !(item.brickId === bId && item.buildingId === bldId))
+                : [...this._items, { type: 'brick', brickId: bId, buildingId: bldId }]
+        });
+    }    
+
+    add(brickIdOrObj, buildingId) {
+        let bId, bldId;
+        if (typeof brickIdOrObj === 'object' && brickIdOrObj !== null) {
+            bId = brickIdOrObj.brickId;
+            bldId = brickIdOrObj.buildingId;
+        } else {
+            bId = brickIdOrObj;
+            bldId = buildingId;
+        }
+        const exists = this._items.some((item) => item.brickId === bId && item.buildingId === bldId);
+        if (exists) {
+            return this; // Return same instance, do not grow
+        }
+        return new SelectionState({
+            items: [...this._items, { type: 'brick', brickId: bId, buildingId: bldId }]
         });
     }
-
-// Update the add method to force deduplication through the constructor
-add(brickId, buildingId) {
-    // Let the constructor handle deduplication to guarantee no growth
-    const nextItems = [...this._items, { type: 'brick', brickId, buildingId }];
-    const nextState = new SelectionState({ items: nextItems });
-    
-    // If the length didn't change, return the same instance to preserve reference equality
-    if (nextState._items.length === this._items.length) {
-        return this;
-    }
-    return nextState;
-}
     
     equals(other) {
         return other instanceof SelectionState
