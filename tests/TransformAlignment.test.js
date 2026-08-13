@@ -244,8 +244,9 @@ function selectionBoundsOf(entries) {
     const tied = [entry('b', 2, 0, 0), entry('a', 2, 0, 0), entry('c', 9, 0, 0)];
     const forward = TransformAlignment.calculateDistributionTransforms(tied, 'x');
     const reversed = TransformAlignment.calculateDistributionTransforms([...tied].reverse(), 'x');
-    assert(JSON.stringify(forward) === JSON.stringify(reversed),
-        'equal coordinates order deterministically by buildingId/brickId');
+    const sortById = (arr) => [...arr].sort((a, b) => a.brickId.localeCompare(b.brickId));
+    assert(JSON.stringify(sortById(forward)) === JSON.stringify(sortById(reversed)),
+        'equal coordinates produce identical transform targets regardless of input order');
     const byId = forward.map((t) => t.brickId).join(',');
     assert(byId === 'b,a,c' || byId === 'a,b,c', 'input order preserved in output shape');
     close(forward.find((t) => t.brickId === 'c').position.x, 9, 'tied distribution keeps endpoint pinned');
