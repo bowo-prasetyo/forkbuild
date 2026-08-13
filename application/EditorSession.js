@@ -86,6 +86,8 @@ export class EditorSession {
         this._pasteClipboardUseCase = null;
         this._clipboardState = null;
         this._selectedGroupId = null;
+
+        this._pasteCount = 0;
     }
 
     get commandHistory() {
@@ -209,10 +211,9 @@ export class EditorSession {
         if (!this._copySelectionUseCase || !this._documentManager.document) {
             return null;
         }
-        return this._copySelectionUseCase.execute(
-            this._editorContext.selection,
-            this._documentManager.document
-        );
+        const result = this._copySelectionUseCase.execute(this._editorContext.selection, this._documentManager.document);
+        this._pasteCount = 0; // Reset on copy
+        return result;
     }
     
     paste() {
@@ -228,12 +229,13 @@ export class EditorSession {
             return false;
         }
         const buildingId = buildings[0].id;
+        this._pasteCount += 1;
         const command = this._pasteClipboardUseCase.execute(
             this._clipboardState,
             {
                 worldId: world.id,
                 buildingId,
-                position: { x: 2, y: 0, z: 2 }
+                position: { x: 2 * this._pasteCount, y: 0, z: 2 * this._pasteCount }
             }
         );
         if (!command) {
