@@ -965,16 +965,21 @@ export class WorldNavigationSession {
 	    }
 	    return false;
 	}
-
+	
 	cloneDocument(documentId) {
 	    const doc = this.getDocument(documentId || this._focusedDocumentId);
 	    if (!doc) throw new Error('no loaded document');
 	    const clone = this._documentCloneService.execute(doc);
 	    this._loadedDocuments.set(clone.world.id, clone);
-	    this._commandHistories.set(clone.world.id, new CommandHistory({ world: clone.world }));
+	    
+	    const history = new CommandHistory({ world: clone.world });
+	    history.markUnsaved(); // <--- ADD THIS LINE (matches forkDocument behavior)
+	    
+	    this._commandHistories.set(clone.world.id, history);
 	    if (this._session) this._session.addWorld(clone.world, clone.world.id, this._worldLayoutProvider.getPosition(clone.world.id));
 	    return clone.world.id;
 	}
+	
 	forkDocument(documentId) {
 	    const doc = this.getDocument(documentId || this._focusedDocumentId);
 	    if (!doc) throw new Error('no loaded document');
