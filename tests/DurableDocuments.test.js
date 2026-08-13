@@ -396,6 +396,8 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 // 14. Editor / World parity: same snapshot → same state
 // ---------------------------------------------------------------------
+// 14. Editor / World parity: same snapshot → same state
+// ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
     const serializer = new DocumentSerializer();
@@ -405,13 +407,17 @@ function createTestDocument(brickCount = 3) {
     const manager = new DocumentManager();
     manager.load(doc, 'parity-doc');
     const publication = publishUseCase.execute(manager);
+    
     // Load the same snapshot twice (simulating Editor and World View).
-    const loaded1 = publisher.loadSnapshot(publication.id);
-    const loaded2 = publisher.loadSnapshot(publication.id);
+    // FIX: Deserialize the raw JSON snapshot into a Document instance
+    const loaded1 = serializer.deserialize(publisher.loadSnapshot(publication.id));
+    const loaded2 = serializer.deserialize(publisher.loadSnapshot(publication.id));
+    
     // Both should produce identical world state.
     const json1 = JSON.stringify(loaded1.world.toJSON());
     const json2 = JSON.stringify(loaded2.world.toJSON());
     assert(json1 === json2, 'same snapshot produces identical world state in both loads');
+    
     // And identical document state.
     const docJson1 = JSON.stringify(serializer.serialize(loaded1));
     const docJson2 = JSON.stringify(serializer.serialize(loaded2));
