@@ -376,8 +376,8 @@ function createTestDocument(brickCount = 3) {
     assert(snapshotAfterEdit === snapshotBeforeEdit,
         'FLAGSHIP: published snapshot unchanged after editing');
     // The loaded snapshot still matches.
-    const reloadedSnapshot = publisher.loadSnapshot(publication.id);
-    const reserializedSnapshot = JSON.stringify(serializer.serialize(reloadedSnapshot));
+    const reloadedSnapshotDoc = serializer.deserialize(publisher.loadSnapshot(publication.id));
+    const reserializedSnapshot = JSON.stringify(serializer.serialize(reloadedSnapshotDoc));
     assert(reserializedSnapshot === serializedBeforePublish,
         'FLAGSHIP: reloaded snapshot still byte-identical');
     console.log('✓ FLAGSHIP: build → edit → publish → load → byte-identical → edit → snapshot unchanged');
