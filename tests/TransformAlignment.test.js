@@ -468,8 +468,8 @@ function selectionBoundsOf(entries) {
     const editorDistFixture = createWorldFixture('world-parity-dist');
     const worldDistEnv = createWorldViewEnvironment(worldDistFixture);
     const editorDistEnv = createEditorEnvironment(editorDistFixture);
-    worldDistEnv.service.distributeSelection(worldViewSelection(), 'z');
-    editorDistEnv.service.distributeSelection(editorSelection(), 'z');
+    worldDistEnv.service.distributeSelection(worldViewSelection(), 'x');
+    editorDistEnv.service.distributeSelection(editorSelection(), 'x');
     const worldDistCommand = worldDistEnv.histories.get('world-parity-dist').getExecutedCommands()[0].toJSON();
     const editorDistCommand = editorDistEnv.histories.get('world-parity-dist').getExecutedCommands()[0].toJSON();
     assert(JSON.stringify(worldDistCommand.transforms) === JSON.stringify(editorDistCommand.transforms),
