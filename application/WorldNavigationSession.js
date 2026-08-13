@@ -882,33 +882,35 @@ export class WorldNavigationSession {
 	    return history ? history.getTimeline() : [];
 	}
 	
+	// 2. Fix copySelection to reset paste count
 	copySelection() {
-		// FIX: Gate clipboard operations during history preview
-		if (this._historyPreview && this._historyPreview.active) return SpatialClipboardState.empty();
-		if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
-		const doc = this.getDocument(this._focusedDocumentId);
-		this._clipboardState = this._copySelectionUseCase.execute(this._spatialSelection, doc);
-		return this._clipboardState;
+	    if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    this._clipboardState = this._copySelectionUseCase.execute(this._spatialSelection, doc);
+	    this._pasteCount = 0; // Reset cascade counter on new copy
+	    return this._clipboardState;
 	}
-
 	
+	// 3. Fix pasteClipboard to cascade offsets
 	pasteClipboard() {
-		// FIX: Gate clipboard operations during history preview
-		if (this._historyPreview && this._historyPreview.active) return false;
-		if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
-		const doc = this.getDocument(this._focusedDocumentId);
-		if (!doc) return false;
-		const buildingId = doc.world.getBuildings()[0]?.id;
-		if (!buildingId) return false;
-		const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
-		worldId: doc.world.id, buildingId, position: { x: 2, y: 0, z: 2 }
-		});
-		if (command) {
-		this._commandHistories.get(doc.world.id).execute(command);
-		return true;
-		}
-		return false;
-	}
+	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
+	    const doc = this.getDocument(this._focusedDocumentId);
+	    if (!doc) return false;
+	    const buildingId = doc.world.getBuildings()[0]?.id;
+	    if (!buildingId) return false;
+	    
+	    this._pasteCount = (this._pasteCount || 0) + 1;
+	    const offset = { x: 2 * this._pasteCount, y: 0, z: 2 * this._pasteCount };
+	    
+	    const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
+	        worldId: doc.world.id, buildingId, position: offset
+	    });
+	    if (command) {
+	        this._commandHistories.get(doc.world.id).execute(command);
+	        return true;
+	    }
+	    return false;
+	}	
 
 	cloneDocument(documentId) {
 	    const doc = this.getDocument(documentId || this._focusedDocumentId);
@@ -938,35 +940,26 @@ export class WorldNavigationSession {
 	getRetiredHistories(documentId) {
 	    return this._retiredHistories ? (this._retiredHistories.get(documentId || this._focusedDocumentId) || []) : [];
 	}
+	// 1. Fix restoreHistoryAt (Update the fake documentManager to include load/state)
 	restoreHistoryAt(cursor, documentId) {
-		const docId = documentId || this._focusedDocumentId;
-		const doc = this.getDocument(docId);
-		if (!doc) throw new Error('no loaded document');
-		const history = this._commandHistories.get(doc.world.id);
-		if (!history) throw new Error('no history');
-		
-		// FIX: Create a proper fake manager that captures the loaded document
-		let restoredDoc = null;
-		const fakeManager = {
-		document: doc,
-		state: { loadedFrom: null },
-		load: (d) => { restoredDoc = d; },
-		markDirty: () => {}
-		};
-		
-		const result = this._restoreHistoryStateUseCase.execute(fakeManager, history, cursor);
-		const newDoc = restoredDoc || result.document;
-		
-		// FIX: Update the internal maps with the newly restored document and history
-		this._loadedDocuments.set(newDoc.world.id, newDoc);
-		this._commandHistories.set(newDoc.world.id, result.history);
-		
-		if (!this._retiredHistories) this._retiredHistories = new Map();
-		if (!this._retiredHistories.has(newDoc.world.id)) this._retiredHistories.set(newDoc.world.id, []);
-		this._retiredHistories.get(newDoc.world.id).push(result.previousHistory);
-		
-		this.clearSelection();
-		if (this._historyPreview) this.cancelHistoryPreview();
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    if (!doc) throw new Error('no loaded document');
+	    const history = this._commandHistories.get(doc.world.id);
+	    if (!history) throw new Error('no history');
+	    
+	    const result = this._restoreHistoryStateUseCase.execute({
+	        document: doc,
+	        state: { loadedFrom: null },
+	        load: (newDoc) => { this._loadedDocuments.set(newDoc.world.id, newDoc); }, // CRITICAL: Update loaded documents
+	        markDirty: () => {}
+	    }, history, cursor);
+	    
+	    this._commandHistories.set(doc.world.id, result.history);
+	    if (!this._retiredHistories) this._retiredHistories = new Map();
+	    if (!this._retiredHistories.has(doc.world.id)) this._retiredHistories.set(doc.world.id, []);
+	    this._retiredHistories.get(doc.world.id).push(result.previousHistory);
+	    this.clearSelection();
+	    if (this._historyPreview) this.cancelHistoryPreview();
 	}
 	getGroups() {
 	    const doc = this.getDocument(this._focusedDocumentId);
