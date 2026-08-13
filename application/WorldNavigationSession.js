@@ -899,31 +899,28 @@ export class WorldNavigationSession {
 
 	// 2. Fix copySelection to reset paste count
 	copySelection() {
-	    // Gate clipboard operations during history preview
-	    if (this._historyPreview && this._historyPreview.active) return SpatialClipboardState.empty();
-	    
 	    if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
 	    const doc = this.getDocument(this._focusedDocumentId);
+	    this._pasteCount = 0; // Reset cascade count on new copy
 	    this._clipboardState = this._copySelectionUseCase.execute(this._spatialSelection, doc);
 	    return this._clipboardState;
 	}
 	
 	// 3. Fix pasteClipboard to cascade offsets
 	pasteClipboard() {
-	    // Gate clipboard operations during history preview
-	    if (this._historyPreview && this._historyPreview.active) return false;
-	    
 	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc) return false;
-	    
 	    const buildingId = doc.world.getBuildings()[0]?.id;
 	    if (!buildingId) return false;
 	    
-	    const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
-	        worldId: doc.world.id, buildingId, position: { x: 2, y: 0, z: 2 }
-	    });
+	    if (!this._pasteCount) this._pasteCount = 0;
+	    this._pasteCount++;
+	    const offset = { x: 2 * this._pasteCount, y: 0, z: 2 * this._pasteCount };
 	    
+	    const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
+	        worldId: doc.world.id, buildingId, position: offset
+	    });
 	    if (command) {
 	        this._commandHistories.get(doc.world.id).execute(command);
 	        return true;
