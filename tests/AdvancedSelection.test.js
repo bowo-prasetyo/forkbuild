@@ -176,7 +176,7 @@ function createEditorSession(document) {
     const smallGroupId = session.createGroupFromSelection('Pair');
     assert(session.getGroups().length === 2, 'second group created');
     selectionUseCase.select(ids[2], building.id);
-    assert(session.addToGroupWithSelection(smallGroupId) === true, 'add to group succeeds');
+    assert(session.addSelectionToSelectedGroup(smallGroupId) === true, 'add to group succeeds');
     assert(document.world.getGroup(smallGroupId).memberCount === 3, 'membership grew');
     history.undo();
     assert(document.world.getGroup(smallGroupId).memberCount === 2, 'undo removes the added member');
@@ -184,7 +184,7 @@ function createEditorSession(document) {
     assert(document.world.getGroup(smallGroupId).memberCount === 3, 'redo re-adds it');
 
     selectionUseCase.select(ids[2], building.id);
-    assert(session.removeFromGroupWithSelection(smallGroupId) === true, 'remove from group succeeds');
+    assert(session.removeSelectionFromSelectedGroup(smallGroupId) === true, 'remove from group succeeds');
     assert(document.world.getGroup(smallGroupId).memberCount === 2, 'membership shrunk');
     history.undo();
     assert(document.world.getGroup(smallGroupId).memberCount === 3, 'undo restores removed member');
