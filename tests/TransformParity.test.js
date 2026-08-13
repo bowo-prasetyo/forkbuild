@@ -303,10 +303,13 @@ function createWorldWithBricks(specs) {
     const restored = registry.fromJSON(command.toJSON());
     assert(restored.type === 'transform-selection', 'unified command deserializes');
     // Replay-style: a second world with the same brick identity.
-    const second = createWorldWithBricks([{ id: 'brick-a', position: new Position(0, 0.5, 0) }]);
-    restored.execute({ world: second.world });
-    assert(second.building.findBrick('brick-a').position.x === 5, 'restored command reproduces the transform');
-    assert(second.building.findBrick('brick-a').rotation === 45, 'restored command reproduces rotation');
+    const secondWorld = new World({ id: document.world.id });
+    const secondBuilding = new Building({ id: building.id, creator: 'tester' });
+    secondBuilding.addBrick(new Brick({ id: 'brick-a', definitionId: 'core:cube', position: new Position(0, 0.5, 0), rotation: 0 }));
+    secondWorld.addBuilding(secondBuilding);
+    restored.execute({ world: secondWorld });
+    assert(secondBuilding.findBrick('brick-a').position.x === 5, 'restored command reproduces the transform');
+    assert(secondBuilding.findBrick('brick-a').rotation === 45, 'restored command reproduces rotation');
     console.log('✓ unified transform command serialization roundtrip');
 }
 
