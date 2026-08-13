@@ -56,7 +56,9 @@ export class EditorSession {
         selectionUseCase,
         previewUseCase,
         loadDocumentUseCase,
-        identityProvider = null
+        identityProvider = null,
+        copySelectionUseCase = null,    // <--- ADD
+        pasteClipboardUseCase = null    // <--- ADD
     }) {
         this._registry = registry;
         this._editorContext = editorContext;
@@ -66,6 +68,9 @@ export class EditorSession {
         this._previewUseCase = previewUseCase;
         this._loadDocumentUseCase = loadDocumentUseCase;
         this._identityProvider = identityProvider;
+        this._copySelectionUseCase = copySelectionUseCase;
+        this._pasteClipboardUseCase = pasteClipboardUseCase;
+    
         this._container = null;
         this._session = null;
         this._commandHistory = null;
