@@ -40,16 +40,19 @@ export class SelectionState {
         });
     }
 
-    add(brickId, buildingId) {
-        const exists = this._items.some((item) => item.brickId === brickId && item.buildingId === buildingId);
-        if (exists) {
-            return this; // Return same instance, do not grow
-        }
-        return new SelectionState({
-            items: [...this._items, { type: 'brick', brickId, buildingId }]
-        });
+// Update the add method to force deduplication through the constructor
+add(brickId, buildingId) {
+    // Let the constructor handle deduplication to guarantee no growth
+    const nextItems = [...this._items, { type: 'brick', brickId, buildingId }];
+    const nextState = new SelectionState({ items: nextItems });
+    
+    // If the length didn't change, return the same instance to preserve reference equality
+    if (nextState._items.length === this._items.length) {
+        return this;
     }
-
+    return nextState;
+}
+    
     equals(other) {
         return other instanceof SelectionState
             && JSON.stringify(this._items) === JSON.stringify(other.items);
