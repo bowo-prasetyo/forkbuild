@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ForkBuild Test Runner</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 2rem; background: #121212; color: #e0e0e0; }
+        h1 { color: #4caf7d; }
+        code { background: #2a2a2a; padding: 2px 6px; border-radius: 4px; color: #fff; }
+    </style>
+</head>
+<body>
+    <h1>🧪 ForkBuild Test Runner</h1>
+    <p>Open your browser's <strong>Developer Console</strong> (<code>F12</code> or <code>Cmd+Option+I</code>) to see the test results.</p>
+    <p><em>Tests will execute sequentially. Red errors in the console mean a test failed.</em></p>
+
+    <script type="module">
+        const testFiles = [
+            './tests/CommandHistory.test.js',
+            './tests/SchemaMigration.test.js',
+            './tests/DurableDocuments.test.js',
+            './tests/PublicationLifecycle.test.js',
+            './tests/PublishedWorld.test.js',
+            './tests/WorldPlacement.test.js',
+            './tests/PersistenceRecovery.test.js',
+            './tests/EditingParity.test.js',
+            './tests/EditorActions.test.js',
+            './tests/CommandPalette.test.js',
+            './tests/TransformAlignment.test.js',
+            './tests/TransformSnapping.test.js',
+            './tests/NumericTransform.test.js',
+            './tests/InteractiveGizmo.test.js',
+            './tests/TransformParity.test.js',
+            './tests/TransformGizmo.test.js',
+            './tests/Grouping.test.js',
+            './tests/AdvancedSelection.test.js',
+            './tests/CommandReplay.test.js',
+            './tests/HistoryRestore.test.js',
+            './tests/DocumentCloning.test.js',
+            './tests/WorldViewPersistence.test.js'
+        ];
+
+        async function runTests() {
+            console.log('%c🚀 Starting ForkBuild Test Suite...', 'color: #4caf7d; font-size: 16px; font-weight: bold;');
+            let passed = 0;
+            let failed = 0;
+
+            for (const file of testFiles) {
+                console.group(`📄 ${file}`);
+                try {
+                    // Dynamic import fetches and executes the module
+                    await import(file);
+                    console.log('%c✅ Passed', 'color: #4caf7d; font-weight: bold;');
+                    passed++;
+                } catch (err) {
+                    console.error('%c❌ FAILED', 'color: #e74c3c; font-weight: bold;', err);
+                    failed++;
+                }
+                console.groupEnd();
+            }
+
+            console.log('%c🏁 Test Suite Complete', 'color: #9b59b6; font-size: 16px; font-weight: bold;');
+            console.log(`%cPassed: ${passed} | Failed: ${failed}`, 'font-size: 14px; color: #fff;');
+        }
+
+        runTests();
+    </script>
+</body>
+</html>
