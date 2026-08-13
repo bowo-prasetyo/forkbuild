@@ -46,8 +46,13 @@ export class RestoreHistoryStateUseCase {
         const restoredHistory = new CommandHistory({ world: restoredWorld });
         restoredHistory.markUnsaved();
 
-        documentManager.load(restoredDocument, documentManager.state.loadedFrom);
-        documentManager.markDirty();
+        // Replace the documentManager.load / markDirty calls with:
+        if (typeof documentManager.load === 'function' && documentManager.state) {
+            documentManager.load(restoredDocument, documentManager.state.loadedFrom);
+        }
+        if (typeof documentManager.markDirty === 'function') {
+            documentManager.markDirty();
+        }
 
         return {
             document: restoredDocument,
