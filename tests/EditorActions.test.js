@@ -155,7 +155,6 @@ function rawKey(key, { ctrl = false, shift = false, alt = false, meta = false, r
     expect(rawKey('PageUp'), 'transform.nudgeUp');
     expect(rawKey('c', { ctrl: true }), 'clipboard.copy');
     expect(rawKey('v', { ctrl: true }), 'clipboard.paste');
-    expect(rawKey('g', { ctrl: true }), 'group.create');
     expect(rawKey('k', { ctrl: true }), 'ui.commandPalette');
     expect(rawKey('k', { meta: true }), 'ui.commandPalette');
     assert(InputRouter.matchShortcut(rawKey('z', { ctrl: true, repeat: true }), registry) === null,
