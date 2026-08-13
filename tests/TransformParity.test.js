@@ -274,14 +274,24 @@ function createWorldWithBricks(specs) {
         commandHistory: history,
         transformSelectionUseCase: useCase
     });
-
     selectionUseCase.select(a, building.id);
-
-    // Replace the tool.onKeyDown calls with useCase.execute:
-    const selection = SpatialSelectionState.brick({ documentId: 'doc', buildingId: building.id, brickId: a });
     
+    // Call the use case directly as EditorActionRegistry handles arrows in 0.1.50+
     useCase.execute(history, document, selection, { translation: { x: 1, y: 0, z: 0 } });
     assert(building.findBrick(a).position.x === 1, 'Editor arrow nudge moves the brick');
+    assert(history.getExecutedCommands().length === 1, 'nudge is one entry');
+    assert(history.getExecutedCommands()[0].type === 'transform-selection', 'Editor uses the unified command');
+    
+    useCase.execute(history, document, selection, { rotation: 90 });
+    assert(building.findBrick(a).rotation === 90, 'Editor R rotates about the pivot');
+    
+    useCase.execute(history, document, selection, { rotation: -90 });
+    assert(building.findBrick(a).rotation === 0, 'Editor Shift+R rotates back');
+    
+    history.undo();
+    history.undo();
+    assert(building.findBrick(a).position.x === 0 && building.findBrick(a).rotation === 0, 'Editor transforms undo cleanly');
+    
     assert(history.getExecutedCommands().length === 1, 'nudge is one entry');
     assert(history.getExecutedCommands()[0].type === 'transform-selection', 'Editor uses the unified command');
     
