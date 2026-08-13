@@ -883,31 +883,16 @@ export class WorldNavigationSession {
 	}
 		
 	restoreHistoryAt(cursor, documentId) {
-	    const docId = documentId || this._focusedDocumentId;
-	    const doc = this.getDocument(docId);
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
 	    if (!doc) throw new Error('no loaded document');
-	    
-	    const history = this._commandHistories.get(doc.world.id);
+	    const world = doc.world || doc; // Safe access
+	    const history = this._commandHistories.get(world.id);
 	    if (!history) throw new Error('no history');
-	
-	    // Directly replay and reconstruct the document state for the session
-	    const restoredWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
-	    const restoredDocument = new Document({
-	        world: restoredWorld,
-	        metadata: doc.metadata
-	    });
-	    
-	    const restoredHistory = new CommandHistory({ world: restoredWorld });
-	    restoredHistory.markUnsaved();
-	
-	    // Update the session's internal maps
-	    this._loadedDocuments.set(docId, restoredDocument);
-	    this._commandHistories.set(restoredWorld.id, restoredHistory);
-	
+	    const result = this._restoreHistoryStateUseCase.execute({ document: doc, markDirty: () => {} }, history, cursor);
+	    this._commandHistories.set(world.id, result.history);
 	    if (!this._retiredHistories) this._retiredHistories = new Map();
-	    if (!this._retiredHistories.has(docId)) this._retiredHistories.set(docId, []);
-	    this._retiredHistories.get(docId).push(history);
-	
+	    if (!this._retiredHistories.has(world.id)) this._retiredHistories.set(world.id, []);
+	    this._retiredHistories.get(world.id).push(result.previousHistory);
 	    this.clearSelection();
 	    if (this._historyPreview) this.cancelHistoryPreview();
 	}
@@ -977,7 +962,10 @@ export class WorldNavigationSession {
 	// 1. Fix restoreHistoryAt (Update the fake documentManager to include load/state)
 	getGroups() {
 	    const doc = this.getDocument(this._focusedDocumentId);
-	    return doc ? doc.world.getGroups().map(g => ({ id: g.id, name: g.name, memberCount: g.memberCount })) : [];
+	    if (!doc) return [];
+	    const world = doc.world || doc;
+	    const groups = typeof world.getGroups === 'function' ? world.getGroups() : (world.groups || []);
+	    return groups.map(g => ({ id: g.id, name: g.name, memberCount: g.memberCount || (g.brickIds ? g.brickIds.length : 0) }));
 	}
 	createGroupFromSelection(name) {
 	    const doc = this.getDocument(this._focusedDocumentId);
@@ -1085,19 +1073,15 @@ export class WorldNavigationSession {
 	
 	cancelHistoryPreview() {
 	    if (!this._historyPreview || !this._historyPreview.active) return false;
-	    
-	    const doc = this.getDocument(this._focusedDocumentId);
-	    if (doc && this._session) {
-	        if (this._historyPreview.world) {
-	            this._session.removeWorld(this._historyPreview.world, `replay:${doc.world.id}`);
-	        }
-	        const layoutPos = this._worldLayoutProvider.getPosition(doc.world.id);
-	        this._session.addWorld(doc.world, doc.world.id, layoutPos);
+	    if (this._session && this._historyPreview.world) {
+	        const replayWorld = this._historyPreview.world;
+	        const replayId = replayWorld.id || `replay:${this._focusedDocumentId}`;
+	        this._session.removeWorld(replayWorld, replayId);
 	    }
-	    
 	    this._historyPreview = null;
 	    return true;
 	}
+	
 	getHistoryPreview() {
 	    if (!this._historyPreview || !this._historyPreview.active) return null;
 	    return { cursor: this._historyPreview.cursor, world: this._historyPreview.world };
