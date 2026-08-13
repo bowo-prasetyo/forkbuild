@@ -208,39 +208,27 @@ export class EditorSession {
     // Clipboard operations (delegate to shared use cases)
     // ---------------------------------------------------------------
     copySelection() {
-        if (!this._copySelectionUseCase || !this._documentManager.document) {
-            return null;
-        }
+        if (!this._copySelectionUseCase || !this._documentManager.document) return null;
         const result = this._copySelectionUseCase.execute(this._editorContext.selection, this._documentManager.document);
-        this._pasteCount = 0; // Reset on copy
+        this._pasteCount = 0; // Reset cascade counter
         return result;
     }
     
     paste() {
-        if (!this._pasteClipboardUseCase || !this._clipboardState
-            || this._clipboardState.isEmpty || !this._documentManager.document
-            || !this._commandHistory) {
-            return false;
-        }
+        if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty || !this._documentManager.document || !this._commandHistory) return false;
         const document = this._documentManager.document;
         const world = document.world;
         const buildings = world.getBuildings();
-        if (buildings.length === 0) {
-            return false;
-        }
+        if (buildings.length === 0) return false;
         const buildingId = buildings[0].id;
-        this._pasteCount += 1;
-        const command = this._pasteClipboardUseCase.execute(
-            this._clipboardState,
-            {
-                worldId: world.id,
-                buildingId,
-                position: { x: 2 * this._pasteCount, y: 0, z: 2 * this._pasteCount }
-            }
-        );
-        if (!command) {
-            return false;
-        }
+        
+        this._pasteCount = (this._pasteCount || 0) + 1;
+        const offset = { x: 2 * this._pasteCount, y: 0, z: 2 * this._pasteCount };
+        
+        const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
+            worldId: world.id, buildingId, position: offset
+        });
+        if (!command) return false;
         this._commandHistory.execute(command);
         return true;
     }
