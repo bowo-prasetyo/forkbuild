@@ -637,45 +637,25 @@ export class WorldNavigationSession {
         return this._worldLayoutProvider.getPosition(documentId);
     }
 
-	
 	forkDocument(documentId) {
-	    const document = documentId ? this._loadedDocuments.get(documentId) : this._getActiveDocument();
-	    if (!document) return null;
-	
-	    let sourcePublication = null;
-	    if (this._discoveryProvider) {
-	        const pubs = this._discoveryProvider.findByDocumentId(document.world.id);
-	        if (pubs.length > 0) sourcePublication = pubs[pubs.length - 1];
-	    }
-	
-	    if (sourcePublication && !sourcePublication.license.forkAllowed) {
-	        throw new Error(`Forking is not permitted under license ${sourcePublication.license.id}`);
-	    }
-	
-	    const currentUser = this._identityProvider ? this._identityProvider.currentUser() : null;
-	    const sourceTitle = document.metadata.title || 'Untitled';
-	
-	    let derivativeLicense = null;
-	    if (sourcePublication) {
-	        derivativeLicense = new License({
-	            id: sourcePublication.license.id,
-	            attribution: {
-	                author: sourcePublication.author || document.metadata.author,
-	                title: sourcePublication.title || sourceTitle,
-	                sourcePublicationId: sourcePublication.id,
-	                sourceDocumentId: document.world.id
-	            }
-	        });
-	    }
-	
-	    const cloned = this._documentCloneService.execute(document, {
-	        title: `Fork of ${sourceTitle}`,
-	        author: currentUser ? currentUser.username : null,
-	        parentDocumentId: document.world.id,
-	        license: derivativeLicense
+	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    if (!doc) throw new Error('no loaded document');
+	    const user = this._identityProvider ? this._identityProvider.currentUser() : null;
+	    const fork = this._documentCloneService.execute(doc, {
+	        title: `Fork of ${doc.metadata.title || 'Untitled'}`,
+	        author: user ? user.username : null,
+	        parentDocumentId: doc.world.id
 	    });
+	    this._loadedDocuments.set(fork.world.id, fork);
+	    const history = new CommandHistory({ world: fork.world });
+	    history.markUnsaved();
+	    this._commandHistories.set(fork.world.id, history);
+	    if (this._session) this._session.addWorld(fork.world, fork.world.id, this._worldLayoutProvider.getPosition(fork.world.id));
 	    
-	}
+	    this._focusedDocumentId = fork.world.id; // Add this line to focus on the new fork
+	    
+	    return fork.world.id;
+	}	
 
     // -----------------------------------------------------------------
     // Internal
