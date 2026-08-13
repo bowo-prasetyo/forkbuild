@@ -16,6 +16,7 @@ import { EventBus } from '../core/events/EventBus.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
 import { License } from '../core/License.js';
+import { SpatialClipboardState } from './spatial-state/SpatialClipboardState.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
