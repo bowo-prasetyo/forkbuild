@@ -46,7 +46,8 @@ export class WorldNavigationSession {
 	    identityProvider = null,
 	    documentCloneService = null,
 	    copySelectionUseCase = null,
-	    pasteClipboardUseCase = null
+	    pasteClipboardUseCase = null,
+    	discoveryProvider = null // <-- Fixed: Added missing parameter
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
