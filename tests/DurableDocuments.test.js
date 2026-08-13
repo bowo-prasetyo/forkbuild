@@ -288,8 +288,8 @@ function createTestDocument(brickCount = 3) {
     assert(pub1.id !== pub2.id, 'each publish creates a new snapshot');
     assert(pub1.contentHash !== pub2.contentHash, 'different content produces different hash');
     // Both snapshots are independently loadable.
-    const loaded1 = publisher.loadSnapshot(pub1.snapshotId);
-    const loaded2 = publisher.loadSnapshot(pub2.snapshotId);
+    const loaded1 = publisher.loadSnapshot(pub1.id); // Changed from pub1.snapshotId
+    const loaded2 = publisher.loadSnapshot(pub2.id); // Changed from pub2.snapshotId
     const pos1 = loaded1.world.getBuildings()[0].getBricks()[0].position.x;
     const pos2 = loaded2.world.getBuildings()[0].getBricks()[0].position.x;
     assert(pos1 !== pos2, 'snapshots capture different states');
