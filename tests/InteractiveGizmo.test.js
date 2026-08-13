@@ -345,13 +345,12 @@ function brickPositions(world) {
     const fixture = createWorldFixture();
     const { service, histories } = createWorldViewEnvironment(fixture);
     const history = histories.get(fixture.world.id);
-    const preJson = fixture.world.toJSON();
+    const preJson = fixture.world.toJSON(); // Capture BEFORE drag
     simulateAxisDrag(service, worldViewSelection(), 'x', { x: 0, y: 0, z: 0 }, { x: 3, y: 0, z: 0 });
     const postPositions = brickPositions(fixture.world);
     const sessionJson = history.toJSON();
-
     const registry = new CreateCommandRegistryUseCase().execute();
-    const freshWorld = World.fromJSON(fixture.world.toJSON());
+    const freshWorld = World.fromJSON(preJson); // Use preJson here!
     const restored = CommandHistory.fromJSON(sessionJson, { world: freshWorld }, registry);
 
     restored.undo();
