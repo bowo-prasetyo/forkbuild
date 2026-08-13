@@ -38,10 +38,14 @@ export class TransformSelectionUseCase {
         if (!world || !selection || selection.isEmpty || selection.type === 'ground') {
             return null;
         }
-        const bounds = this._boundsService.calculate(selection, { world });
+        
+        // Pass a document-like object that SelectionBoundsService expects
+        const docLike = documentOrWorld && documentOrWorld.world ? documentOrWorld : { world };
+        const bounds = this._boundsService.calculate(selection, docLike);
+        
         if (!bounds) {
             return null;
-        }
+        }    
         const before = [];
         for (const item of selection.items) {
             const building = world.getBuilding(item.buildingId);
