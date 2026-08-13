@@ -87,14 +87,12 @@ export class EditorSession {
         );
         this._gizmoUseCase = new TransformGizmoUseCase(this._gestureService);
         this._gizmoSubscriptions = [];
-        this._copySelectionUseCase = null;
-        this._pasteClipboardUseCase = null;
         this._clipboardState = null;
         this._selectedGroupId = null;
 
         this._pasteCount = 0;
     }
-
+    
     get commandHistory() {
         return this._commandHistory;
     }
