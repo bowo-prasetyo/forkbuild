@@ -23,6 +23,7 @@ import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
 import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
 import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
+import { Document } from '../core/Document.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -348,18 +349,23 @@ export class WorldNavigationSession {
     // -----------------------------------------------------------------
     // Interaction
     // -----------------------------------------------------------------
-
-    pick(screenX, screenY, { toggle = false } = {}) {
-        if (!this._session) {
-            return null;
-        }
-        const brickHit = this._session.pick(screenX, screenY);
-        if (brickHit) {
-            const nextSelection = toggle
-                ? this._spatialSelection.toggleBrick(brickHit)
-                : SpatialSelectionState.brick(brickHit);
-            this._setSpatialSelection(nextSelection);
-            this._session.selectBricks(nextSelection.brickIds, nextSelection.brickId);
+	
+	pick(screenX, screenY, { toggle = false, additive = false } = {}) {
+	    if (!this._session) {
+	        return null;
+	    }
+	    const brickHit = this._session.pick(screenX, screenY);
+	    if (brickHit) {
+	        let nextSelection;
+	        if (additive) {
+	            nextSelection = this._spatialSelection.addBrick(brickHit);
+	        } else if (toggle) {
+	            nextSelection = this._spatialSelection.toggleBrick(brickHit);
+	        } else {
+	            nextSelection = SpatialSelectionState.brick(brickHit);
+	        }
+	        this._setSpatialSelection(nextSelection);
+			this._session.selectBricks(nextSelection.brickIds, nextSelection.brickId);
             this._session.clearHover();
             this._refreshInspection();
             this._refreshEditingContext();
@@ -880,21 +886,48 @@ export class WorldNavigationSession {
 	    const doc = this.getDocument(documentId || this._focusedDocumentId);
 	    const history = doc ? this._commandHistories.get(doc.world.id) : null;
 	    return history ? history.getTimeline() : [];
-	}
-		
+	}		
+	
 	restoreHistoryAt(cursor, documentId) {
-	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    const docId = documentId || this._focusedDocumentId;
+	    const doc = this.getDocument(docId);
 	    if (!doc) throw new Error('no loaded document');
-	    const world = doc.world || doc; // Safe access
-	    const history = this._commandHistories.get(world.id);
+	    
+	    const history = this._commandHistories.get(doc.world.id);
 	    if (!history) throw new Error('no history');
-	    const result = this._restoreHistoryStateUseCase.execute({ document: doc, markDirty: () => {} }, history, cursor);
-	    this._commandHistories.set(world.id, result.history);
+	
+	    // 1. Rebuild the world and document
+	    const restoredWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
+	    const restoredDocument = new Document({
+	        world: restoredWorld,
+	        metadata: doc.metadata
+	    });
+	    
+	    // 2. Rebuild the history
+	    const restoredHistory = new CommandHistory({ world: restoredWorld });
+	    restoredHistory.markUnsaved();
+	
+	    // 3. Update session state
+	    this._loadedDocuments.set(docId, restoredDocument);
+	    this._commandHistories.set(restoredWorld.id, restoredHistory);
+	
+	    // 4. Retire the old history
 	    if (!this._retiredHistories) this._retiredHistories = new Map();
-	    if (!this._retiredHistories.has(world.id)) this._retiredHistories.set(world.id, []);
-	    this._retiredHistories.get(world.id).push(result.previousHistory);
+	    if (!this._retiredHistories.has(doc.world.id)) this._retiredHistories.set(doc.world.id, []);
+	    this._retiredHistories.get(doc.world.id).push(history);
+	
+	    // 5. Update Renderer
+	    if (this._session) {
+	        if (this._historyPreview && this._historyPreview.active) {
+	            this._session.removeWorld(this._historyPreview.world, `replay:${docId}`);
+	            this._historyPreview = null;
+	        } else {
+	            this._session.removeWorld(doc.world, docId);
+	        }
+	        this._session.addWorld(restoredWorld, docId, this._worldLayoutProvider.getPosition(docId));
+	    }
+	
 	    this.clearSelection();
-	    if (this._historyPreview) this.cancelHistoryPreview();
 	}
 
 	// 2. Fix copySelection to reset paste count
@@ -1041,6 +1074,7 @@ export class WorldNavigationSession {
 	    this._historyPreview = { active: true, cursor: null, world: null };
 	    return true;
 	}
+	
 	previewHistoryAt(cursor) {
 	    if (!this._historyPreview || !this._historyPreview.active) {
 	        throw new Error('no active history preview');
@@ -1048,32 +1082,32 @@ export class WorldNavigationSession {
 	    const history = this._getActiveCommandHistory();
 	    if (!history) throw new Error('no history');
 	    
-	    const doc = this.getDocument(this._focusedDocumentId);
-	    if (!doc) return false;
-	    
-	    if (this._historyPreview.world && this._session) {
-	        this._session.removeWorld(this._historyPreview.world, `replay:${doc.world.id}`);
-	    }
-	    
 	    const replayWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
-	    
-	    if (this._session) {
-	        this._session.removeWorld(doc.world, doc.world.id);
-	        const layoutPos = this._worldLayoutProvider.getPosition(doc.world.id);
-	        this._session.addWorld(replayWorld, `replay:${doc.world.id}`, layoutPos);
-	    }
-	    
 	    this._historyPreview.cursor = cursor;
 	    this._historyPreview.world = replayWorld;
+	
+	    // Renderer integration: hide live world, show replay world
+	    const docId = this._focusedDocumentId;
+	    if (this._session && docId) {
+	        const doc = this.getDocument(docId);
+	        if (doc) {
+	            this._session.removeWorld(doc.world, docId);
+	            this._session.addWorld(replayWorld, `replay:${docId}`, this._worldLayoutProvider.getPosition(docId));
+	        }
+	    }
 	    return true;
 	}
 	
 	cancelHistoryPreview() {
 	    if (!this._historyPreview || !this._historyPreview.active) return false;
-	    if (this._session && this._historyPreview.world) {
-	        const replayWorld = this._historyPreview.world;
-	        const replayId = replayWorld.id || `replay:${this._focusedDocumentId}`;
-	        this._session.removeWorld(replayWorld, replayId);
+	    
+	    const docId = this._focusedDocumentId;
+	    if (this._session && docId) {
+	        const doc = this.getDocument(docId);
+	        if (doc) {
+	            this._session.removeWorld(this._historyPreview.world, `replay:${docId}`);
+	            this._session.addWorld(doc.world, docId, this._worldLayoutProvider.getPosition(docId));
+	        }
 	    }
 	    this._historyPreview = null;
 	    return true;
