@@ -881,32 +881,35 @@ export class WorldNavigationSession {
 	    const history = doc ? this._commandHistories.get(doc.world.id) : null;
 	    return history ? history.getTimeline() : [];
 	}
+	
 	copySelection() {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-	    if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
-	    const doc = this.getDocument(this._focusedDocumentId);
+		// FIX: Gate clipboard operations during history preview
+		if (this._historyPreview && this._historyPreview.active) return SpatialClipboardState.empty();
+		if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
+		const doc = this.getDocument(this._focusedDocumentId);
 		this._clipboardState = this._copySelectionUseCase.execute(this._spatialSelection, doc);
-		this._pasteCount = 0; // Reset on copy
 		return this._clipboardState;
 	}
+
+	
 	pasteClipboard() {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
-	    const doc = this.getDocument(this._focusedDocumentId);
-	    if (!doc) return false;
-	    const buildingId = doc.world.getBuildings()[0]?.id;
-	    if (!buildingId) return false;
-		this._pasteCount += 1;
+		// FIX: Gate clipboard operations during history preview
+		if (this._historyPreview && this._historyPreview.active) return false;
+		if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
+		const doc = this.getDocument(this._focusedDocumentId);
+		if (!doc) return false;
+		const buildingId = doc.world.getBuildings()[0]?.id;
+		if (!buildingId) return false;
 		const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
-		    worldId: doc.world.id, buildingId, 
-		    position: { x: 2 * this._pasteCount, y: 0, z: 2 * this._pasteCount }
+		worldId: doc.world.id, buildingId, position: { x: 2, y: 0, z: 2 }
 		});
-	    if (command) {
-	        this._commandHistories.get(doc.world.id).execute(command);
-	        return true;
-	    }
-	    return false;
+		if (command) {
+		this._commandHistories.get(doc.world.id).execute(command);
+		return true;
+		}
+		return false;
 	}
+
 	cloneDocument(documentId) {
 	    const doc = this.getDocument(documentId || this._focusedDocumentId);
 	    if (!doc) throw new Error('no loaded document');
@@ -935,37 +938,35 @@ export class WorldNavigationSession {
 	getRetiredHistories(documentId) {
 	    return this._retiredHistories ? (this._retiredHistories.get(documentId || this._focusedDocumentId) || []) : [];
 	}
-	// Rewrite restoreHistoryAt to manage session state directly instead of 
-	// passing a fake DocumentManager to RestoreHistoryStateUseCase
 	restoreHistoryAt(cursor, documentId) {
-	    const doc = this.getDocument(documentId || this._focusedDocumentId);
-	    if (!doc) throw new Error('no loaded document');
-	    const history = this._commandHistories.get(doc.world.id);
-	    if (!history) throw new Error('no history');
-	    
-	    // 1. Replay to get the restored world
-	    const restoredWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
-	    const restoredDocument = new Document({
-	        world: restoredWorld,
-	        metadata: doc.metadata
-	    });
-	    
-	    // 2. Replace document in session
-	    this._loadedDocuments.set(doc.world.id, restoredDocument);
-	    
-	    // 3. Create new history and mark unsaved
-	    const newHistory = new CommandHistory({ world: restoredWorld });
-	    newHistory.markUnsaved();
-	    this._commandHistories.set(doc.world.id, newHistory);
-	    
-	    // 4. Retire old history
-	    if (!this._retiredHistories) this._retiredHistories = new Map();
-	    if (!this._retiredHistories.has(doc.world.id)) this._retiredHistories.set(doc.world.id, []);
-	    this._retiredHistories.get(doc.world.id).push(history);
-	    
-	    // 5. Cleanup UI state
-	    this.clearSelection();
-	    if (this._historyPreview) this.cancelHistoryPreview();
+		const docId = documentId || this._focusedDocumentId;
+		const doc = this.getDocument(docId);
+		if (!doc) throw new Error('no loaded document');
+		const history = this._commandHistories.get(doc.world.id);
+		if (!history) throw new Error('no history');
+		
+		// FIX: Create a proper fake manager that captures the loaded document
+		let restoredDoc = null;
+		const fakeManager = {
+		document: doc,
+		state: { loadedFrom: null },
+		load: (d) => { restoredDoc = d; },
+		markDirty: () => {}
+		};
+		
+		const result = this._restoreHistoryStateUseCase.execute(fakeManager, history, cursor);
+		const newDoc = restoredDoc || result.document;
+		
+		// FIX: Update the internal maps with the newly restored document and history
+		this._loadedDocuments.set(newDoc.world.id, newDoc);
+		this._commandHistories.set(newDoc.world.id, result.history);
+		
+		if (!this._retiredHistories) this._retiredHistories = new Map();
+		if (!this._retiredHistories.has(newDoc.world.id)) this._retiredHistories.set(newDoc.world.id, []);
+		this._retiredHistories.get(newDoc.world.id).push(result.previousHistory);
+		
+		this.clearSelection();
+		if (this._historyPreview) this.cancelHistoryPreview();
 	}
 	getGroups() {
 	    const doc = this.getDocument(this._focusedDocumentId);
