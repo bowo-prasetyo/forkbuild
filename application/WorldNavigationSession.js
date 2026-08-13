@@ -456,6 +456,7 @@ export class WorldNavigationSession {
     }
 
     moveSelection(delta, modifiers = null) {
+	    if (this._historyPreview && this._historyPreview.active) return false;
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -472,6 +473,7 @@ export class WorldNavigationSession {
     }
 
     deleteSelection() {
+	    if (this._historyPreview && this._historyPreview.active) return false;
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -487,6 +489,7 @@ export class WorldNavigationSession {
     }
 
     rotateSelection(deltaRotation, modifiers = null) {
+	    if (this._historyPreview && this._historyPreview.active) return false;
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -503,6 +506,7 @@ export class WorldNavigationSession {
     }
 
     alignSelection(mode) {
+	    if (this._historyPreview && this._historyPreview.active) return false;
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -515,6 +519,7 @@ export class WorldNavigationSession {
     }
 
     distributeSelection(axis) {
+	    if (this._historyPreview && this._historyPreview.active) return false;
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -527,6 +532,7 @@ export class WorldNavigationSession {
     }
 
     applyNumericTransform(intent, options = {}) {
+	    if (this._historyPreview && this._historyPreview.active) return false;
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -539,6 +545,7 @@ export class WorldNavigationSession {
     }
 
     undo() {
+	    if (this._historyPreview && this._historyPreview.active) return false;
         const history = this._getActiveCommandHistory();
         if (history && history.canUndo()) {
             history.undo();
@@ -551,6 +558,7 @@ export class WorldNavigationSession {
     }
 
     redo() {
+	    if (this._historyPreview && this._historyPreview.active) return false;
         const history = this._getActiveCommandHistory();
         if (history && history.canRedo()) {
             history.redo();
@@ -874,6 +882,7 @@ export class WorldNavigationSession {
 	    return history ? history.getTimeline() : [];
 	}
 	copySelection() {
+	    if (this._historyPreview && this._historyPreview.active) return false;
 	    if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
 	    const doc = this.getDocument(this._focusedDocumentId);
 		this._clipboardState = this._copySelectionUseCase.execute(this._spatialSelection, doc);
@@ -881,6 +890,7 @@ export class WorldNavigationSession {
 		return this._clipboardState;
 	}
 	pasteClipboard() {
+	    if (this._historyPreview && this._historyPreview.active) return false;
 	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc) return false;
@@ -925,17 +935,37 @@ export class WorldNavigationSession {
 	getRetiredHistories(documentId) {
 	    return this._retiredHistories ? (this._retiredHistories.get(documentId || this._focusedDocumentId) || []) : [];
 	}
+	// Rewrite restoreHistoryAt to manage session state directly instead of 
+	// passing a fake DocumentManager to RestoreHistoryStateUseCase
 	restoreHistoryAt(cursor, documentId) {
 	    const doc = this.getDocument(documentId || this._focusedDocumentId);
 	    if (!doc) throw new Error('no loaded document');
 	    const history = this._commandHistories.get(doc.world.id);
 	    if (!history) throw new Error('no history');
-	    const result = this._restoreHistoryStateUseCase.execute({ document: doc, markDirty: () => {} }, history, cursor);
-	    this._commandHistories.set(doc.world.id, result.history);
+	    
+	    // 1. Replay to get the restored world
+	    const restoredWorld = this._replayDocumentUseCase.execute(history, { endCursor: cursor });
+	    const restoredDocument = new Document({
+	        world: restoredWorld,
+	        metadata: doc.metadata
+	    });
+	    
+	    // 2. Replace document in session
+	    this._loadedDocuments.set(doc.world.id, restoredDocument);
+	    
+	    // 3. Create new history and mark unsaved
+	    const newHistory = new CommandHistory({ world: restoredWorld });
+	    newHistory.markUnsaved();
+	    this._commandHistories.set(doc.world.id, newHistory);
+	    
+	    // 4. Retire old history
 	    if (!this._retiredHistories) this._retiredHistories = new Map();
 	    if (!this._retiredHistories.has(doc.world.id)) this._retiredHistories.set(doc.world.id, []);
-	    this._retiredHistories.get(doc.world.id).push(result.previousHistory);
+	    this._retiredHistories.get(doc.world.id).push(history);
+	    
+	    // 5. Cleanup UI state
 	    this.clearSelection();
+	    if (this._historyPreview) this.cancelHistoryPreview();
 	}
 	getGroups() {
 	    const doc = this.getDocument(this._focusedDocumentId);
@@ -1080,7 +1110,12 @@ export class WorldNavigationSession {
 	    this.clearSelection();
 	    if (this._historyPreview) this.cancelHistoryPreview();
 	}
-		
+	
+	// Add getDocumentManager alias for WorldViewPersistence tests
+	getDocumentManager(documentId) {
+	    return this.getDocument(documentId);
+	}
+	
     dispose() {
         if (this._session) {
             this._session.dispose();
