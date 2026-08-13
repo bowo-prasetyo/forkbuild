@@ -35,12 +35,33 @@ const RETRY_DELAYS = [2000, 5000, 10000];
 // belongs wherever this session is extended in the deployed tree; the
 // action layer degrades gracefully when those methods are absent.
 export class WorldNavigationSession {
-    constructor({ registry, loadPublicationDocumentUseCase, worldLayoutProvider, discoveryProvider = null }) {
-        this._registry = registry;
-        this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
-        this._worldLayoutProvider = worldLayoutProvider;
-        this._container = null;
-        this._session = null;
+	constructor({
+	    registry,
+	    loadPublicationDocumentUseCase,
+	    worldLayoutProvider,
+	    saveDocumentUseCase = null,
+	    publishDocumentUseCase = null,
+	    replayDocumentUseCase = null,
+	    restoreHistoryStateUseCase = null,
+	    identityProvider = null,
+	    documentCloneService = null,
+	    copySelectionUseCase = null,
+	    pasteClipboardUseCase = null
+	}) {
+	    this._registry = registry;
+	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
+	    this._worldLayoutProvider = worldLayoutProvider;
+	    this._saveDocumentUseCase = saveDocumentUseCase;
+	    this._publishDocumentUseCase = publishDocumentUseCase;
+	    this._replayDocumentUseCase = replayDocumentUseCase;
+	    this._restoreHistoryStateUseCase = restoreHistoryStateUseCase;
+	    this._identityProvider = identityProvider;
+	    this._documentCloneService = documentCloneService;
+	    this._copySelectionUseCase = copySelectionUseCase;
+	    this._pasteClipboardUseCase = pasteClipboardUseCase;
+	    
+	    this._container = null;
+	    this._session = null;
         this._spatialCameraController = null;
         this._inspectionService = null;
         this._editingService = null;
