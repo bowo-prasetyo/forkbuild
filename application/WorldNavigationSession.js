@@ -87,6 +87,8 @@ export class WorldNavigationSession {
         this._focusedDocumentId = null;
         this._eventBus = null;
 	    this._discoveryProvider = discoveryProvider;
+
+		this._pasteCount = 0;
     }
 
     get transformSettings() {
@@ -871,8 +873,9 @@ export class WorldNavigationSession {
 	copySelection() {
 	    if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
 	    const doc = this.getDocument(this._focusedDocumentId);
-	    this._clipboardState = this._copySelectionUseCase.execute(this._spatialSelection, doc);
-	    return this._clipboardState;
+		this._clipboardState = this._copySelectionUseCase.execute(this._spatialSelection, doc);
+		this._pasteCount = 0; // Reset on copy
+		return this._clipboardState;
 	}
 	pasteClipboard() {
 	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
@@ -880,9 +883,11 @@ export class WorldNavigationSession {
 	    if (!doc) return false;
 	    const buildingId = doc.world.getBuildings()[0]?.id;
 	    if (!buildingId) return false;
-	    const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
-	        worldId: doc.world.id, buildingId, position: { x: 2, y: 0, z: 2 }
-	    });
+		this._pasteCount += 1;
+		const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
+		    worldId: doc.world.id, buildingId, 
+		    position: { x: 2 * this._pasteCount, y: 0, z: 2 * this._pasteCount }
+		});
 	    if (command) {
 	        this._commandHistories.get(doc.world.id).execute(command);
 	        return true;
