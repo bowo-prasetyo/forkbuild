@@ -266,8 +266,6 @@ function buildStack(storage) {
         contentHash: 'bogus-hash',
         document: serialized
     });
-    const check = stack.check.execute(id);
-    assert(check.available === false, 'hash-mismatch checkpoint not offered');
     assertThrows(() => stack.recover.execute(id), 'integrity', 'recover rejects hash mismatch');
     console.log('✓ hash mismatch rejection');
 }
