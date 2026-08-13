@@ -914,3 +914,20 @@ Attribution travels with the publication metadata. When a permitted fork
 occurs, the derivative License object is stamped with the original author,
 title, and source publication ID. This becomes part of the new publication's
 immutable, hashed metadata, preventing silent stripping of required attribution.
+
+Decentralized Content Backend (0.2.14)
+
+The 0.2.14 milestone separates content identity from storage location. The
+Publication no longer contains the snapshot bytes; it contains a verifiable
+reference to immutable content (ContentReference).
+
+Three independent decentralized information systems emerge:
+1. Publications (Registry) — "What exists?"
+2. Placements (Spatial Index) — "Where is it?"
+3. Content (ContentStore) — "What are the bytes?"
+
+The application remains unaware of the actual storage backend. The
+ContentStore abstraction allows seamless migration from LocalContentStore
+to IPFSContentStore or ArweaveContentStore without altering the publication
+pipeline. Trust is anchored to the content hash: resolvers retrieve by
+location but verify by content identity.
