@@ -104,7 +104,6 @@ export default {
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
         const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute();
 
-		const previewUseCase = new PreviewUseCase(editorContext);
 		const copySelectionUseCase = new CopySelectionUseCase(registry);
 		const pasteClipboardUseCase = new PasteClipboardUseCase();
 		
