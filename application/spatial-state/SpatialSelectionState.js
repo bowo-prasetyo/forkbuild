@@ -22,7 +22,21 @@ export class SpatialSelectionState {
         this._buildingId = buildingId;
         this._brickId = brickId;
         this._position = position;
-        this._items = items ? items.map((item) => ({ ...item })) : this._itemsFromLegacy({ type, buildingId, brickId });
+        
+        if (items) {
+            const seen = new Set();
+            const deduped = [];
+            for (const item of items) {
+                const key = `${item.buildingId}:${item.brickId}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    deduped.push({ ...item });
+                }
+            }
+            this._items = deduped;
+        } else {
+            this._items = this._itemsFromLegacy({ type, buildingId, brickId });
+        }
     }
 
     get type() {
