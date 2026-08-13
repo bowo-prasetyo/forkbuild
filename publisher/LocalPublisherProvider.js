@@ -4,6 +4,7 @@ import { createId } from '../core/createId.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
+import { LocalContentStore } from '../content/LocalContentStore.js';
 
 const PUBLICATIONS_KEY = 'forkbuild-publications';
 const SNAPSHOT_KEY_PREFIX = 'snapshot:';
@@ -24,9 +25,10 @@ const SNAPSHOT_KEY_PREFIX = 'snapshot:';
 // Unpublishing removes the publication record and its snapshot. The
 // editable document at `{documentId}` is never touched.
 export class LocalPublisherProvider extends PublisherProvider {
-    constructor(storageProvider) {
+    constructor(storageProvider, contentStore = null) {
         super();
         this._storageProvider = storageProvider;
+        this._contentStore = contentStore || new LocalContentStore(storageProvider);
     }
 
     publish(document, identityProvider) {
@@ -48,10 +50,10 @@ export class LocalPublisherProvider extends PublisherProvider {
 
         // 3. Compute content hash over the canonical JSON.
         const canonicalString = JSON.stringify(migratedJson);
-        const contentHash = computeContentHash(canonicalString);
 
-        // 4. Create the publication identity.
-        const publicationId = createId();
+        // Store immutable content
+        const contentReference = this._contentStore.put(canonicalString);
+        const contentHash = contentReference.hash;
 
         // 5. Store the snapshot immutably at its own key.
         this._storageProvider.save(SNAPSHOT_KEY_PREFIX + publicationId, migratedJson);
@@ -77,7 +79,8 @@ export class LocalPublisherProvider extends PublisherProvider {
             parentDocumentId: document.metadata.parentDocumentId,
             contentHash,
 		    schemaVersion: migratedJson.schemaVersion,
-		    license // Bound to the publication record
+            license: document.metadata.license,
+            contentReference
         });
 
         // 9. Persist the publication record.
