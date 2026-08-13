@@ -1,4 +1,5 @@
 import { License } from '../core/License.js';
+import { ContentReference } from '../core/ContentReference.js';
 
 // Pure data: the result of publishing a Document. This is the bridge
 // between Publisher and a future Discovery layer — Repository View,
@@ -22,7 +23,7 @@ export class Publication {
     constructor({
         id, documentId, title, author, providerId, publishedAt, url = null,
         parentDocumentId = null, contentHash = null, schemaVersion = null,
-        license = null
+        license = null, contentReference = null
     } = {}) {
         this._id = id;
         this._documentId = documentId;
@@ -32,9 +33,14 @@ export class Publication {
         this._publishedAt = publishedAt;
         this._url = url;
         this._parentDocumentId = parentDocumentId;
-        this._contentHash = contentHash;
         this._schemaVersion = schemaVersion;
         this._license = license instanceof License ? license : (license ? License.fromJSON(license) : new License());
+        this._contentReference = contentReference instanceof ContentReference 
+            ? contentReference 
+            : (contentReference ? ContentReference.fromJSON(contentReference) : null);
+            
+        // Backward compatibility: derive contentHash from contentReference if missing
+        this._contentHash = contentHash || (this._contentReference ? this._contentReference.hash : null);
     }
 
     get id() { return this._id; }
@@ -48,6 +54,7 @@ export class Publication {
     get contentHash() { return this._contentHash; }
     get schemaVersion() { return this._schemaVersion; }
     get license() { return this._license; }
+    get contentReference() { return this._contentReference; }
 
     toJSON() {
         return {
@@ -61,7 +68,8 @@ export class Publication {
             parentDocumentId: this._parentDocumentId,
             contentHash: this._contentHash,
             schemaVersion: this._schemaVersion,
-            license: this._license.toJSON()
+            license: this._license.toJSON(),
+            contentReference: this._contentReference ? this._contentReference.toJSON() : null
         };
     }
 
@@ -77,7 +85,8 @@ export class Publication {
             parentDocumentId: json.parentDocumentId || null,
             contentHash: json.contentHash || null,
             schemaVersion: json.schemaVersion !== undefined ? json.schemaVersion : null,
-            license: json.license ? License.fromJSON(json.license) : null
+            license: json.license ? License.fromJSON(json.license) : null,
+            contentReference: json.contentReference ? ContentReference.fromJSON(json.contentReference) : null
         });
     }
 }
