@@ -269,6 +269,7 @@ function createTestDocument(brickCount = 3) {
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
+    const serializer = new DocumentSerializer(); // <--- ADD THIS LINE
     const publisher = new LocalPublisherProvider(storage, new LocalContentStore(storage));
     const publishUseCase = new PublishDocumentUseCase(publisher, stubIdentityProvider);
     const doc = createTestDocument();
