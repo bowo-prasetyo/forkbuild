@@ -289,7 +289,7 @@ function createTestDocument(brickCount = 3) {
     assert(pubAfter.contentHash === originalHash, 'FLAGSHIP: content hash unchanged after move');
     
     // 7. Load published world and verify document unchanged
-    const loadedDoc = loadDoc.execute(publication.id);
+    const loadedDoc = loadDoc.execute(publication.documentId);
     assert(loadedDoc.world.getBuildings()[0].getBricks().length === 5, 'FLAGSHIP: document content intact');
     assert(loadedDoc.world.getBuildings()[0].getBricks()[0].position.x === 0, 'FLAGSHIP: local coordinates untouched');
     
