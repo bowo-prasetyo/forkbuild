@@ -76,8 +76,11 @@ export class SpatialSelectionState {
     // Union-add (0.1.45): Shift-click and additive marquee. Adding a
     // brick that is already selected changes nothing; crossing documents
     // restarts the selection in the new document (single-document rule).
+    // Union-add (0.1.45): Shift-click and additive marquee.
     addBrick({ documentId, buildingId, brickId }) {
-        const targetDocId = documentId || this._documentId; // <--- FIX: Fallback to current document
+        // FIX: Fall back to current document ID if omitted, just like toggleBrick
+        const targetDocId = documentId || this._documentId;
+        
         if (this._documentId && targetDocId && this._documentId !== targetDocId) {
             return SpatialSelectionState.brick({ documentId: targetDocId, buildingId, brickId });
         }
@@ -85,7 +88,7 @@ export class SpatialSelectionState {
             return this; // Return same instance, do not grow
         }
         return SpatialSelectionState.bricks({
-            documentId: targetDocId, // <--- FIX: Use targetDocId
+            documentId: targetDocId,
             items: [...this._items, { type: 'brick', buildingId, brickId }]
         });
     }
