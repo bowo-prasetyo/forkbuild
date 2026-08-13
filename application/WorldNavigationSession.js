@@ -17,6 +17,12 @@ import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
 import { License } from '../core/License.js';
 import { SpatialClipboardState } from './spatial-state/SpatialClipboardState.js';
+import { CreateGroupCommand } from './commands/CreateGroupCommand.js';
+import { DeleteGroupCommand } from './commands/DeleteGroupCommand.js';
+import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
+import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
+import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
+import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
