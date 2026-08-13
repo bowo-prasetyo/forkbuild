@@ -376,7 +376,7 @@ function selectionBoundsOf(entries) {
     const fixture = createWorldFixture();
     const { service, histories } = createWorldViewEnvironment(fixture);
     const history = histories.get(fixture.world.id);
-    service.alignSelection(worldViewSelection(), 'x-center');
+    service.alignSelection(worldViewSelection(), 'y-center'); // <-- Fixed: Changed from 'x-center'
     assert(history.getCursor() === 1, 'alignment cursor +1');
     const alignCommand = history.getExecutedCommands()[0];
     assert(alignCommand.type === 'transform-selection', 'alignment emits transform-selection');
