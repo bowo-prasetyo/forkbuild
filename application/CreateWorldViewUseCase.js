@@ -6,7 +6,6 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LoadPublicationDocumentUseCase } from './LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
-import { ForkPublishedWorldUseCase } from './ForkPublishedWorldUseCase.js';
 import { CreateCommandRegistryUseCase } from './CreateCommandRegistryUseCase.js';
 import { ReplayDocumentUseCase } from './ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from './RestoreHistoryStateUseCase.js';
@@ -19,21 +18,25 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
 //
-// 0.2.8: Wires ForkPublishedWorldUseCase so the World View can fork a
-// published snapshot into a new editable Document without ever mutating
-// the source Publication, its snapshot, or its WorldPlacement.
+// 0.2.14 Update: Wires the LocalContentStore into the LocalPublisherProvider
+// so that published snapshots are stored and retrieved via content-addressed
+// storage rather than simple local storage keys.
 export class CreateWorldViewUseCase {
     execute(identityProvider = null) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
-        const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);        
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
+        
+        // 0.2.5: Wire the spatial index
         const spatialIndexProvider = new LocalSpatialIndexProvider(storageProvider);
         const worldLayoutProvider = new LocalWorldLayoutProvider(
             spatialIndexProvider,
             discoveryProvider
         );
-        const publisherProvider = new LocalPublisherProvider(storageProvider);
+        
+        // 0.2.14: Inject the contentStore into the publisher
+        const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);
+        
         const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(
             storageProvider
         );
@@ -42,11 +45,7 @@ export class CreateWorldViewUseCase {
             publisherProvider,
             identityProvider
         );
-        const forkPublishedWorldUseCase = new ForkPublishedWorldUseCase(
-            publisherProvider,
-            undefined,
-            new DocumentCloneService()
-        );
+        
         const replayDocumentUseCase = new ReplayDocumentUseCase(
             new CreateCommandRegistryUseCase().execute()
         );
@@ -54,6 +53,7 @@ export class CreateWorldViewUseCase {
             replayDocumentUseCase
         );
         const documentCloneService = new DocumentCloneService();
+        
         return {
             createSession(registry) {
                 return new WorldNavigationSession({
@@ -61,8 +61,7 @@ export class CreateWorldViewUseCase {
                     loadPublicationDocumentUseCase,
                     worldLayoutProvider,
                     saveDocumentUseCase,
-                    publishDocumentUseCase: new PublishDocumentUseCase(publisherProvider, identityProvider),
-                    forkPublishedWorldUseCase,
+                    publishDocumentUseCase,
                     replayDocumentUseCase,
                     restoreHistoryStateUseCase,
                     identityProvider,
@@ -71,8 +70,10 @@ export class CreateWorldViewUseCase {
                     pasteClipboardUseCase: new PasteClipboardUseCase()
                 });
             },
+            // Expose the spatial index and content store so the application 
+            // layer can construct spatial use cases for the UI to consume.
             spatialIndexProvider,
-            forkPublishedWorldUseCase
+            contentStore
         };
     }
 }
