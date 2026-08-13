@@ -285,7 +285,7 @@ function createTestDocument(brickCount = 3) {
     }));
     // Second publish.
     const pub2 = publishUseCase.execute(manager);
-    assert(pub1.snapshotId !== pub2.snapshotId, 'each publish creates a new snapshot');
+    assert(pub1.id !== pub2.id, 'each publish creates a new snapshot');
     assert(pub1.contentHash !== pub2.contentHash, 'different content produces different hash');
     // Both snapshots are independently loadable.
     const loaded1 = publisher.loadSnapshot(pub1.snapshotId);
