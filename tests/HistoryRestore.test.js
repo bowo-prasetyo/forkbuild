@@ -389,16 +389,17 @@ function createEmptyBuildingDocument() {
     const serializer = new DocumentSerializer();
     const doc = createFixtureDocument();
     storage.save(doc.world.id, serializer.serialize(doc));
-
+    
     const nav = new WorldNavigationSession({
         registry: new CreateBrickRegistryUseCase().execute(),
         loadPublicationDocumentUseCase: new LoadPublicationDocumentUseCase(storage),
-        worldLayoutProvider: stubLayoutProvider,
-        replayDocumentUseCase: new ReplayDocumentUseCase(new CreateCommandRegistryUseCase().execute())
+        worldLayoutProvider: stubLayoutProvider
+        // REMOVED: replayDocumentUseCase
     });
     nav._eventBus = new EventBus();
-    nav._session = { addWorld() {}, removeWorld() {} };
+    nav._session = { addWorld() {}, removeWorld() {}, clearSelection() {}, hidePreview() {} }; // <--- ADD clearSelection
     nav._loadWorld(doc.world.id);
+        
     assertThrows(() => nav.restoreHistoryAt(0), 'no restore configured', 'restore without the use case rejected');
     console.log('✓ session guard without restore configured');
 }
