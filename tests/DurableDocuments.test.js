@@ -349,8 +349,9 @@ function createTestDocument(brickCount = 3) {
     assert(publication.contentHash !== null, 'flagship: content hash present');
     // Load the published snapshot into a fresh runtime.
     const loadedSnapshot = new LoadPublishedSnapshotUseCase(publisher).execute(publication.id);
-    // Serialize the loaded snapshot.
-    const serializedAfterLoad = JSON.stringify(serializer.serialize(loadedSnapshot));
+    // Ensure we pass a Document instance to the serializer
+    const docToSerialize = loadedSnapshot instanceof Document ? loadedSnapshot : Document.fromJSON(loadedSnapshot);
+    const serializedAfterLoad = JSON.stringify(serializer.serialize(docToSerialize));        
     // Byte-identical.
     assert(serializedBeforePublish === serializedAfterLoad,
         'FLAGSHIP: published snapshot serializes byte-identically');
@@ -419,7 +420,7 @@ function createTestDocument(brickCount = 3) {
     const loadSnapshotUseCase = new LoadPublishedSnapshotUseCase(publisher, serializer);
     const loaded1 = loadSnapshotUseCase.execute(publication.id);
     const loaded2 = loadSnapshotUseCase.execute(publication.id);
-    
+        
     const d1 = loaded1 instanceof Document ? loaded1 : new Document({ world: loaded1.world, metadata: loaded1.metadata });
     const d2 = loaded2 instanceof Document ? loaded2 : new Document({ world: loaded2.world, metadata: loaded2.metadata });
     
@@ -428,8 +429,13 @@ function createTestDocument(brickCount = 3) {
     assert(json1 === json2, 'same snapshot produces identical world state in both loads');
     
     // And identical document state.
-    const docJson1 = JSON.stringify(serializer.serialize(d1));
-    const docJson2 = JSON.stringify(serializer.serialize(d2));
+
+    // Ensure we pass Document instances to the serializer
+    const doc1 = loaded1 instanceof Document ? loaded1 : Document.fromJSON(loaded1);
+    const doc2 = loaded2 instanceof Document ? loaded2 : Document.fromJSON(loaded2);
+    
+    const docJson1 = JSON.stringify(serializer.serialize(doc1));
+    const docJson2 = JSON.stringify(serializer.serialize(doc2));
     assert(docJson1 === docJson2, 'same snapshot produces identical document state');
     console.log('✓ Editor/World parity with published snapshots');
 }
