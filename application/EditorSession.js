@@ -213,6 +213,7 @@ export class EditorSession {
     copySelection() {
         if (!this._copySelectionUseCase || !this._documentManager.document) return null;
         const result = this._copySelectionUseCase.execute(this._editorContext.selection, this._documentManager.document);
+        this._clipboardState = result; // Add this line to update internal state
         this._pasteCount = 0; // Reset cascade counter
         return result;
     }
