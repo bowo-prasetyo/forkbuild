@@ -289,7 +289,7 @@ function createTestDocument(brickCount = 3) {
     assert(pub1.id !== pub2.id, 'each publish creates a new snapshot');
     assert(pub1.contentHash !== pub2.contentHash, 'different content produces different hash');
     // Both snapshots are independently loadable.
-    const loadSnapshotUseCase = new LoadPublishedSnapshotUseCase(publisher);
+    const loadSnapshotUseCase = new LoadPublishedSnapshotUseCase(publisher, serializer);
     const loaded1 = loadSnapshotUseCase.execute(pub1.id); // Use pub1.id, not snapshotId!
     const loaded2 = loadSnapshotUseCase.execute(pub2.id);
     const pos1 = loaded1.world.getBuildings()[0].getBricks()[0].position.x;
@@ -410,7 +410,7 @@ function createTestDocument(brickCount = 3) {
     
     // Load the same snapshot twice (simulating Editor and World View).
     // FIX: Deserialize the raw JSON snapshot into a Document instance
-    const loadSnapshotUseCase = new LoadPublishedSnapshotUseCase(publisher);
+    const loadSnapshotUseCase = new LoadPublishedSnapshotUseCase(publisher, serializer);
     const loaded1 = loadSnapshotUseCase.execute(publication.id);
     const loaded2 = loadSnapshotUseCase.execute(publication.id);
     
