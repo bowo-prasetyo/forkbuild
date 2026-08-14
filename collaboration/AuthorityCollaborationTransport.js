@@ -73,16 +73,6 @@ export class AuthorityCollaborationTransport extends CollaborationTransport {
         }
     }
 
-    // Called by the authority when it has an operation to broadcast.
-    _onAuthorityBroadcast(senderAuthor, envelope) {
-        // Deliver to all clients except the sender.
-        for (const [author, callback] of this._callbacks) {
-            if (author !== senderAuthor) {
-                callback(envelope);
-            }
-        }
-    }
-
     // Direct broadcast for non-operation envelopes.
     _broadcastDirect(senderAuthor, envelope) {
         for (const [author, callback] of this._callbacks) {
