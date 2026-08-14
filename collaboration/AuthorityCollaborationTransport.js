@@ -30,9 +30,12 @@ export class AuthorityCollaborationTransport extends CollaborationTransport {
 
     connect(documentId, author) {
         // Register with the authority. The authority will call our
-        // _onAuthorityBroadcast when it has an operation to broadcast.
+    // callback when it has an operation to broadcast to THIS specific author.
         this._authority.connect(author, (envelope) => {
-            this._onAuthorityBroadcast(author, envelope);
+        const callback = this._callbacks.get(author);
+        if (callback) {
+            callback(envelope);
+        }
         });
     }
 
