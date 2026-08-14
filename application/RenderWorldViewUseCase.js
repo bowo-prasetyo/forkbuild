@@ -49,7 +49,7 @@ export class RenderWorldViewUseCase {
             },
             getCameraState: () => renderer.cameraController.getState(),
             setCameraState: (state) => renderer.cameraController.setState(state),
-+            setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
+            setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
             addWorld: (world, documentId, layoutPosition) => worldRenderer.addWorld(world, documentId, layoutPosition),
             removeWorld: (world, documentId) => worldRenderer.removeWorld(world, documentId),
             selectBrick: (brickId) => spatialSelectionRenderer.select(brickId),
