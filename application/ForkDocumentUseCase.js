@@ -39,16 +39,14 @@ export class ForkDocumentUseCase {
 
         // 2. ATTRIBUTION: Stamp derivative license if source is known.
         let derivativeLicense = null;
+        // 1. ENFORCEMENT: Hard reject if the publication license prohibits forking.
         if (sourcePublication) {
-            derivativeLicense = new License({
-                id: sourcePublication.license.id, // Inherit license type (ShareAlike enforcement is future work)
-                attribution: {
-                    author: sourcePublication.author || sourceDocument.metadata.author,
-                    title: sourcePublication.title || sourceTitle,
-                    sourcePublicationId: sourcePublication.id,
-                    sourceDocumentId: sourceDocument.world.id
-                }
-            });
+            const license = sourcePublication.license || new License(); // Defaults to UNSPECIFIED
+            if (!license.forkAllowed) {
+                throw new Error(
+                    `ForkDocumentUseCase: forking is not permitted under license ${license.id}`
+                );
+            }
         } else if (sourceDocument.metadata.license && sourceDocument.metadata.license.id !== 'UNSPECIFIED') {
             derivativeLicense = new License({
                 id: sourceDocument.metadata.license.id,
