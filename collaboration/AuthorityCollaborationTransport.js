@@ -27,19 +27,21 @@ export class AuthorityCollaborationTransport extends CollaborationTransport {
         this._authority = authority;
         this._callbacks = new Map(); // author -> callback
     }
-
-// ./collaboration/AuthorityCollaborationTransport.js
-
+    
     connect(documentId, author) {
         // Register with the authority. The authority will call our
-        // callback when it has an operation to broadcast TO THIS SPECIFIC CLIENT.
+        // callback when it has an operation to broadcast to THIS client.
         this._authority.connect(author, (envelope) => {
+            // Deliver directly to this client's session callback.
+            // The authority has already filtered out the original sender,
+            // so we do NOT fan out again (which would cause echo-prevention
+            // to drop the message for the intended recipient).
             const callback = this._callbacks.get(author);
             if (callback) {
                 callback(envelope);
             }
         });
-    }    
+    }
 
     disconnect(author) {
         this._authority.disconnect(author);
