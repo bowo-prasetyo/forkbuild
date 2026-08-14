@@ -19,6 +19,7 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -396,7 +397,6 @@ function createTestDocument(brickCount = 3, title = 'Alice Castle') {
     }).execute(manager);
 
     // Load as PublishedWorldSession.
-    const { LoadPublishedWorldSessionUseCase } = await import('../application/LoadPublishedWorldSessionUseCase.js');
     const loadUseCase = new LoadPublishedWorldSessionUseCase(publisher);
     const session = loadUseCase.execute(publication);
 
@@ -456,7 +456,6 @@ function createTestDocument(brickCount = 3, title = 'Alice Castle') {
     const tokyoBefore = JSON.stringify(spatialIndex.get(tokyoPlacement.id).toJSON());
 
     // 3. Bob discovers and inspects P1.
-    const { LoadPublishedWorldSessionUseCase } = await import('../application/LoadPublishedWorldSessionUseCase.js');
     const inspectUseCase = new LoadPublishedWorldSessionUseCase(publisher);
     const inspectedSession = inspectUseCase.execute(P1);
     assert(inspectedSession.capabilities.canEdit === false, 'inspect is read-only');
