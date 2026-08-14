@@ -145,9 +145,9 @@ function createTestDocument(title = 'Test') {
     
     // Tamper with the content in the store
     const contentKey = `content:${pub.contentReference.hash}`;
-    const tamperedJson = storage.load(contentKey);
+    const tamperedJson = JSON.parse(storage.load(contentKey));
     tamperedJson.metadata.title = 'Tampered';
-    storage.save(contentKey, tamperedJson);
+    storage.save(contentKey, JSON.stringify(tamperedJson));
     
     const loadUseCase = new LoadPublishedWorldSessionUseCase(publisher, new DocumentSerializer(), contentStore);
     let threw = false;
