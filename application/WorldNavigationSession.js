@@ -989,6 +989,7 @@ export class WorldNavigationSession {
 	    history.markUnsaved();
 	    this._commandHistories.set(fork.world.id, history);
 	    if (this._session) this._session.addWorld(fork.world, fork.world.id, this._worldLayoutProvider.getPosition(fork.world.id));
+	    this._focusedDocumentId = fork.world.id;
 	    return fork.world.id;
 	}
 	getRetiredHistories(documentId) {
@@ -1066,12 +1067,12 @@ export class WorldNavigationSession {
 	
 	addToGroupWithSelection(groupId) {
 	    this._selectedGroupId = groupId;
-	    return this.addSelectionToSelectedGroup();
+	    return this.addSelectionToSelectedGroup(groupId);
 	}
 	
 	removeFromGroupWithSelection(groupId) {
 	    this._selectedGroupId = groupId;
-	    return this.removeSelectionFromSelectedGroup();
+	    return this.removeSelectionFromSelectedGroup(groupId);
 	}
 	
 	// --- History Preview & Restore (0.1.39 / 0.1.41) ---
