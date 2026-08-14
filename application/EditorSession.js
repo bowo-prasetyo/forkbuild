@@ -298,8 +298,8 @@ export class EditorSession {
         return true;
     }
     
-    addSelectionToSelectedGroup() {
-        const groupId = this._selectedGroupId;
+    addSelectionToSelectedGroup(groupId = null) {
+        groupId = groupId || this._selectedGroupId;
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
         if (!groupId || selection.isEmpty || !document || !this._commandHistory) {
@@ -313,8 +313,8 @@ export class EditorSession {
         return true;
     }
     
-    removeSelectionFromSelectedGroup() {
-        const groupId = this._selectedGroupId;
+    removeSelectionFromSelectedGroup(groupId = null) {
+        groupId = groupId || this._selectedGroupId;
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
         if (!groupId || selection.isEmpty || !document || !this._commandHistory) {
@@ -497,12 +497,12 @@ export class EditorSession {
     
     addToGroupWithSelection(groupId) {
         this._selectedGroupId = groupId;
-        return this.addSelectionToSelectedGroup();
+        return this.addSelectionToSelectedGroup(groupId);
     }
     
     removeFromGroupWithSelection(groupId) {
         this._selectedGroupId = groupId;
-        return this.removeSelectionFromSelectedGroup();
+        return this.removeSelectionFromSelectedGroup(groupId);
     }
     
     dispose() {
