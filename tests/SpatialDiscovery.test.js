@@ -337,7 +337,7 @@ function buildStack(storage) {
     assert(pubAfter.contentHash === originalHash, 'publication hash unchanged');
 
     // Verify document unchanged.
-    const loadedDoc = stack.loadDoc.execute(pub.id);
+    const loadedDoc = stack.loadDoc.execute(pub.documentId); // was pub.id
     assert(JSON.stringify(stack.serializer.serialize(loadedDoc)) === originalDocJson,
         'document unchanged after discovery and resolution');
 
