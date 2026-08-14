@@ -134,6 +134,32 @@ export class EditorSession {
         return true;
     }
 
+    marqueeSelect({ x0, y0, x1, y1 } = {}, { additive = false } = {}) {
+        if (!this._session || typeof this._session.pickRectangle !== 'function') {
+            return false;
+        }
+        const hits = this._session.pickRectangle(x0, y0, x1, y1) || [];
+        const items = hits
+            .filter((hit) => hit && hit.buildingId && hit.brickId)
+            .map((hit) => ({
+                type: 'brick',
+                buildingId: hit.buildingId,
+                brickId: hit.brickId
+            }));
+        const nextSelection = additive
+            ? items.reduce(
+                (selection, item) => selection.add(item.brickId, item.buildingId),
+                this._editorContext.selection
+            )
+            : new SelectionState({ items });
+
+        this._editorContext.setSelection(nextSelection);
+        if (typeof this._session.selectBricks === 'function') {
+            this._session.selectBricks(nextSelection.brickIds, nextSelection.brickId);
+        }
+        return true;
+    }
+
     // Mirrors SelectionTool's delete path exactly: one DeleteBrickCommand
     // per brick, wrapped in a CompositeCommand, one undo step, selection
     // cleared afterwards. Session state + existing commands only — the
