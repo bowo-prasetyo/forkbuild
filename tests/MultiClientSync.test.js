@@ -307,13 +307,19 @@ const building = new Building({ id: 'shared-building', creator: 'tester' });
 // 7. AuthorityCollaborationTransport: end-to-end with sessions
 // ---------------------------------------------------------------------
 {
-    const { createSession, authority } = new CreateCollaborationUseCase()
-        .executeAuthority('shared-doc', createWorld());
+    // 1. Create a canonical world and fix its ID
+    const canonicalWorld = createWorld();
+    canonicalWorld._id = 'shared-doc';
+    const buildingId = canonicalWorld.getBuildings()[0].id;
 
-    // Create three clients with their own worlds and histories.
-    const worldA = createWorld(); worldA._id = 'shared-doc';
-    const worldB = createWorld(); worldB._id = 'shared-doc';
-    const worldC = createWorld(); worldC._id = 'shared-doc';
+    // 2. Clone the exact same world (preserving IDs) for the authority and all clients
+    const authorityWorld = World.fromJSON(canonicalWorld.toJSON());
+    const { createSession, authority } = new CreateCollaborationUseCase()
+        .executeAuthority('shared-doc', authorityWorld);
+
+    const worldA = World.fromJSON(canonicalWorld.toJSON());
+    const worldB = World.fromJSON(canonicalWorld.toJSON());
+    const worldC = World.fromJSON(canonicalWorld.toJSON());
 
     const historyA = new CommandHistory({ world: worldA });
     const historyB = new CommandHistory({ world: worldB });
@@ -367,12 +373,17 @@ const building = new Building({ id: 'shared-building', creator: 'tester' });
 // 8. FLAGSHIP: 3 clients, concurrent edits, conflict resolution
 // ---------------------------------------------------------------------
 {
-    const { createSession, authority } = new CreateCollaborationUseCase()
-        .executeAuthority('flagship-doc', createWorld());
+    const canonicalWorld = createWorld();
+    canonicalWorld._id = 'flagship-doc';
+    const buildingId = canonicalWorld.getBuildings()[0].id;
 
-    const worldA = createWorld(); worldA._id = 'flagship-doc';
-    const worldB = createWorld(); worldB._id = 'flagship-doc';
-    const worldC = createWorld(); worldC._id = 'flagship-doc';
+    const authorityWorld = World.fromJSON(canonicalWorld.toJSON());
+    const { createSession, authority } = new CreateCollaborationUseCase()
+        .executeAuthority('flagship-doc', authorityWorld);
+
+    const worldA = World.fromJSON(canonicalWorld.toJSON());
+    const worldB = World.fromJSON(canonicalWorld.toJSON());
+    const worldC = World.fromJSON(canonicalWorld.toJSON());
 
     const historyA = new CommandHistory({ world: worldA });
     const historyB = new CommandHistory({ world: worldB });
