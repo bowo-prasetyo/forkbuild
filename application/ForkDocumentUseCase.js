@@ -22,11 +22,18 @@ export class ForkDocumentUseCase {
 
     execute(sourceDocumentId, identityProvider = null, sourcePublication = null) {
         // 1. ENFORCEMENT: Hard reject if the publication license prohibits forking.
-        if (sourcePublication && !sourcePublication.license.forkAllowed) {
+    if (sourcePublication) {
+        const pubLicense = sourcePublication.license instanceof License 
+            ? sourcePublication.license 
+            : new License(sourcePublication.license || {});
+            
+        if (!pubLicense.forkAllowed) {
             throw new Error(
-                `ForkDocumentUseCase: forking is not permitted under license ${sourcePublication.license.id}`
+                `ForkDocumentUseCase: forking is not permitted under license ${pubLicense.id}`
             );
         }
+    }
+
 
         const json = this._storageProvider.load(sourceDocumentId);
         if (json === null) {
@@ -40,13 +47,20 @@ export class ForkDocumentUseCase {
         // 2. ATTRIBUTION: Stamp derivative license if source is known.
         let derivativeLicense = null;
         // 1. ENFORCEMENT: Hard reject if the publication license prohibits forking.
-        if (sourcePublication) {
-            const license = sourcePublication.license || new License(); // Defaults to UNSPECIFIED
-            if (!license.forkAllowed) {
-                throw new Error(
-                    `ForkDocumentUseCase: forking is not permitted under license ${license.id}`
-                );
+    if (sourcePublication) {
+        const pubLicense = sourcePublication.license instanceof License 
+            ? sourcePublication.license 
+            : new License(sourcePublication.license || {});
+            
+        derivativeLicense = new License({
+            id: pubLicense.id, // Inherit license type
+            attribution: {
+                author: sourcePublication.author || sourceDocument.metadata.author,
+                title: sourcePublication.title || sourceTitle,
+                sourcePublicationId: sourcePublication.id,
+                sourceDocumentId: sourceDocument.world.id
             }
+        });
         } else if (sourceDocument.metadata.license && sourceDocument.metadata.license.id !== 'UNSPECIFIED') {
             derivativeLicense = new License({
                 id: sourceDocument.metadata.license.id,
