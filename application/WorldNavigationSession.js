@@ -71,13 +71,18 @@ export class WorldNavigationSession {
 	    this._container = null;
 	    this._session = null;
         this._spatialCameraController = null;
-        this._inspectionService = null;
-        this._editingService = null;
-        this._gizmoUseCase = null;
         this._transformSettings = new TransformSettings();
         this._placementService = new SpatialPlacementService(registry);
         this._loadedDocuments = new Map();
         this._commandHistories = new Map();
+        this._inspectionService = new SpatialInspectionService(this);
+        this._editingService = new SpatialEditingService(
+            this,
+            this._commandHistories,
+            this._registry,
+            this._transformSettings
+        );
+        this._gizmoUseCase = new TransformGizmoUseCase(this._editingService);
         this._failedLoads = new Map();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
@@ -305,7 +310,7 @@ export class WorldNavigationSession {
 		const toUnload = Array.from(currentlyLoaded).filter((id) => {
 		    if (visibleIds.includes(id)) return false;
 		    // Pin dirty documents against streaming unload
-		    if (this.isDocumentDirty(id)) return false; 
+		    if (this.isDocumentDirty(id)) return false;
 		    return true;
 		});
         const now = Date.now();
@@ -1062,7 +1067,7 @@ export class WorldNavigationSession {
 	}
 
 	// Add these to EditorSession.js and WorldNavigationSession.js
-	// They bridge the gap between the UI/Tests (which pass a groupId) 
+	// They bridge the gap between the UI/Tests (which pass a groupId)
 	// and the Action Registry (which relies on the internal selected state).
 	
 	addToGroupWithSelection(groupId) {
