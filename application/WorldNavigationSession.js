@@ -498,6 +498,14 @@ export class WorldNavigationSession {
         return this._spatialSelection.isEmpty ? 0 : this._spatialSelection.items.length;
     }
 
+    setControlsEnabled(enabled) {
+        if (!this._session || typeof this._session.setControlsEnabled !== 'function') {
+            return false;
+        }
+        this._session.setControlsEnabled(enabled);
+        return true;
+    }
+
     moveSelection(delta, modifiers = null) {
 	    if (this._historyPreview && this._historyPreview.active) return false;
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
