@@ -47,25 +47,16 @@ export class SelectionState {
                 : [...this._items, { type: 'brick', brickId: bId, buildingId: bldId }]
         });
     }    
-
-    add(brickIdOrObj, buildingId) {
-        let bId, bldId;
-        if (typeof brickIdOrObj === 'object' && brickIdOrObj !== null) {
-            bId = brickIdOrObj.brickId;
-            bldId = brickIdOrObj.buildingId;
-        } else {
-            bId = brickIdOrObj;
-            bldId = buildingId;
-        }
-        const exists = this._items.some((item) => item.brickId === bId && item.buildingId === bldId);
+    
+    add(brickId, buildingId) {
+        const exists = this._items.some((item) => item.brickId === brickId && item.buildingId === buildingId);
         if (exists) {
             return this; // Return same instance, do not grow
         }
         return new SelectionState({
-            items: [...this._items, { type: 'brick', brickId: bId, buildingId: bldId }]
+            items: [...this._items, { type: 'brick', brickId, buildingId }]
         });
-    }
-    
+    }    
     equals(other) {
         return other instanceof SelectionState
             && JSON.stringify(this._items) === JSON.stringify(other.items);
