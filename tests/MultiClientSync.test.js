@@ -17,6 +17,9 @@ import { CollaborationSession } from '../collaboration/CollaborationSession.js';
 import { CreateCollaborationUseCase } from '../application/CreateCollaborationUseCase.js';
 import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
 import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
+import { TransformSelectionCommand } from '../application/commands/TransformSelectionCommand.js';
+import { DeleteGroupCommand } from '../application/commands/DeleteGroupCommand.js';
+import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -535,7 +538,6 @@ brickIds: [brickId9],
     const groupId = world.getGroups()[0].id;
 
     // Delete the group.
-    const { DeleteGroupCommand } = await import('../application/commands/DeleteGroupCommand.js');
     authority.receiveOperation(CollaborationEnvelope.operation({
         documentId: world.id, author: 'alice',
         operationId: 'op-2', sequenceNumber: 2, baseRevision: 1,
@@ -545,7 +547,6 @@ brickIds: [brickId9],
     }));
 
     // Try to rename the deleted group.
-    const { RenameGroupCommand } = await import('../application/commands/RenameGroupCommand.js');
     const conflictResponse = authority.receiveOperation(CollaborationEnvelope.operation({
         documentId: world.id, author: 'bob',
         operationId: 'op-3', sequenceNumber: 1, baseRevision: 1,
@@ -585,7 +586,6 @@ worldId: world.id, buildingId10, brickId10
     }));
 
     // Try to transform the deleted brick.
-    const { TransformSelectionCommand } = await import('../application/commands/TransformSelectionCommand.js');
     const conflictResponse = authority.receiveOperation(CollaborationEnvelope.operation({
         documentId: world.id, author: 'bob',
         operationId: 'op-2', sequenceNumber: 1, baseRevision: 0,
