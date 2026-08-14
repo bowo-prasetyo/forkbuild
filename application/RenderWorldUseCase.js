@@ -50,6 +50,7 @@ export class RenderWorldUseCase {
         return {
             pick: (screenX, screenY) => pickingService.pick(screenX, screenY),
             pickGround: (screenX, screenY) => pickingService.pickGroundPosition(screenX, screenY),
+            setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
             showGizmo: (pivot, bounds) => transformGizmoController.show(pivot, bounds),
             hideGizmo: () => transformGizmoController.hide(),
             gizmoPointerDown: (screenX, screenY, selection) =>
