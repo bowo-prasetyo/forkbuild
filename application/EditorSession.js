@@ -25,7 +25,7 @@ import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
-
+import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 // Owns the live runtime graph — the render session, World, CommandHistory,
 // ToolManager, InputDispatcher — as one unit, so nothing else has to know
 // how to tear it down and rebuild it correctly. EditorView only ever
@@ -70,7 +70,7 @@ export class EditorSession {
         this._identityProvider = identityProvider;
         this._copySelectionUseCase = copySelectionUseCase;
         this._pasteClipboardUseCase = pasteClipboardUseCase;
-    
+
         this._container = null;
         this._session = null;
         this._commandHistory = null;
@@ -92,7 +92,7 @@ export class EditorSession {
 
         this._pasteCount = 0;
     }
-    
+
     get commandHistory() {
         return this._commandHistory;
     }
@@ -184,7 +184,7 @@ export class EditorSession {
 
     // They close the method-surface gap so the action registry and
     // EditorActionContext.capture() work identically on both surfaces.
-    
+
     // ---------------------------------------------------------------
     // Transform operations (delegate to the gesture service, exactly
     // as WorldNavigationSession does)
@@ -197,7 +197,7 @@ export class EditorSession {
             this._editorContext.selection, delta, gestureOptions
         );
     }
-    
+
     rotateSelection(deltaRotation, gestureOptions = {}) {
         if (this._editorContext.tool.activeTool === ToolId.PLACE) {
             return false;
@@ -206,7 +206,7 @@ export class EditorSession {
             this._editorContext.selection, deltaRotation, gestureOptions
         );
     }
-    
+
     // ---------------------------------------------------------------
     // Clipboard operations (delegate to shared use cases)
     // ---------------------------------------------------------------
@@ -217,7 +217,7 @@ export class EditorSession {
         this._pasteCount = 0; // Reset cascade counter
         return result;
     }
-    
+
     paste() {
         if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty || !this._documentManager.document || !this._commandHistory) return false;
         const document = this._documentManager.document;
@@ -225,10 +225,10 @@ export class EditorSession {
         const buildings = world.getBuildings();
         if (buildings.length === 0) return false;
         const buildingId = buildings[0].id;
-        
+
         this._pasteCount = (this._pasteCount || 0) + 1;
         const offset = { x: 2 * this._pasteCount, y: 0, z: 2 * this._pasteCount };
-        
+
         const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
             worldId: world.id, buildingId, position: offset
         });
@@ -236,7 +236,7 @@ export class EditorSession {
         this._commandHistory.execute(command);
         return true;
     }
-    
+
     // ---------------------------------------------------------------
     // Group operations (delegate to existing group commands)
     // ---------------------------------------------------------------
@@ -255,7 +255,7 @@ export class EditorSession {
         this._commandHistory.execute(command);
         return command.executedGroupId;
     }
-    
+
     renameSelectedGroup(name) {
         const groupId = this._selectedGroupId;
         const document = this._documentManager.document;
@@ -269,7 +269,15 @@ export class EditorSession {
         }));
         return true;
     }
-    
+
+    renameGroup(groupId, name) {
+        if (!groupId) {
+            return false;
+        }
+        this._selectedGroupId = groupId;
+        return this.renameSelectedGroup(name);
+    }
+
     duplicateSelectedGroup() {
         const groupId = this._selectedGroupId;
         const document = this._documentManager.document;
@@ -283,7 +291,15 @@ export class EditorSession {
         this._commandHistory.execute(command);
         return command.executedGroupId;
     }
-    
+
+    duplicateGroup(groupId) {
+        if (!groupId) {
+            return null;
+        }
+        this._selectedGroupId = groupId;
+        return this.duplicateSelectedGroup();
+    }
+
     deleteSelectedGroup() {
         const groupId = this._selectedGroupId;
         const document = this._documentManager.document;
@@ -297,7 +313,15 @@ export class EditorSession {
         this._selectedGroupId = null;
         return true;
     }
-    
+
+    deleteGroup(groupId) {
+        if (!groupId) {
+            return false;
+        }
+        this._selectedGroupId = groupId;
+        return this.deleteSelectedGroup();
+    }
+
     addSelectionToSelectedGroup(groupId = null) {
         groupId = groupId || this._selectedGroupId;
         const selection = this._editorContext.selection;
@@ -312,7 +336,7 @@ export class EditorSession {
         }));
         return true;
     }
-    
+
     removeSelectionFromSelectedGroup(groupId = null) {
         groupId = groupId || this._selectedGroupId;
         const selection = this._editorContext.selection;
@@ -327,7 +351,7 @@ export class EditorSession {
         }));
         return true;
     }
-    
+
     selectGroup(groupId) {
         const document = this._documentManager.document;
         if (!document) {
@@ -352,7 +376,7 @@ export class EditorSession {
         }
         return true;
     }
-    
+
     // ---------------------------------------------------------------
     // Context-query methods (used by EditorActionContext.capture())
     // ---------------------------------------------------------------
@@ -367,31 +391,31 @@ export class EditorSession {
             memberCount: group.memberCount
         }));
     }
-    
+
     getSelectedGroupId() {
         return this._selectedGroupId || null;
     }
-    
+
     getClipboardCount() {
         return this._clipboardState ? this._clipboardState.count : 0;
     }
-    
+
     canUndo() {
         return this._commandHistory ? this._commandHistory.canUndo() : false;
     }
-    
+
     canRedo() {
         return this._commandHistory ? this._commandHistory.canRedo() : false;
     }
-    
+
     getUndoLabel() {
         return this._commandHistory ? this._commandHistory.getUndoLabel() : null;
     }
-    
+
     getRedoLabel() {
         return this._commandHistory ? this._commandHistory.getRedoLabel() : null;
     }
-        
+
     // ------------------------------------------------------ lifecycle
 
     start(container) {
@@ -490,21 +514,21 @@ export class EditorSession {
             this._inputDispatcher.dispatchKeyDown(event);
         }
     }
-    
+
     // Add these to EditorSession.js and WorldNavigationSession.js
-    // They bridge the gap between the UI/Tests (which pass a groupId) 
+    // They bridge the gap between the UI/Tests (which pass a groupId)
     // and the Action Registry (which relies on the internal selected state).
-    
+
     addToGroupWithSelection(groupId) {
         this._selectedGroupId = groupId;
         return this.addSelectionToSelectedGroup(groupId);
     }
-    
+
     removeFromGroupWithSelection(groupId) {
         this._selectedGroupId = groupId;
         return this.removeSelectionFromSelectedGroup(groupId);
     }
-    
+
     dispose() {
         this._teardown();
     }
