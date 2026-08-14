@@ -277,7 +277,7 @@ addPlacement(stack, 'p1', 'pubA', 0, 0, 0); // Changed from 400 to 0
 // 11. FLAGSHIP: discover -> load -> move -> load new -> unload old
 // ---------------------------------------------------------------------
 {
-    const stack = buildStack(100, 150);
+    const stack = buildStack(100, 250);
     
     // Setup three worlds along the X axis
     addPlacement(stack, 'pA', 'pubA', 0, 0, 0);
