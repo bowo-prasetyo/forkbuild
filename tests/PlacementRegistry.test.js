@@ -474,7 +474,7 @@ function createTestDocument(brickCount = 3) {
     assert(pubAfterPlace.contentHash === originalHash, 'publication hash unchanged after place');
 
     // 5. Verify Document unchanged.
-    const loadedDoc = loadDoc.execute(publication.id);
+    const loadedDoc = loadDoc.execute(publication.documentId); // was publication.id
     assert(JSON.stringify(serializer.serialize(loadedDoc)) === originalDocJson,
         'document unchanged after place');
 
@@ -494,7 +494,7 @@ function createTestDocument(brickCount = 3) {
     assert(pubAfterMove.contentHash === originalHash, 'publication hash unchanged after move');
 
     // 9. Verify Document still unchanged.
-    const loadedDocAfterMove = loadDoc.execute(publication.id);
+    const loadedDocAfterMove = loadDoc.execute(publication.documentId); // was publication.id
     assert(JSON.stringify(serializer.serialize(loadedDocAfterMove)) === originalDocJson,
         'document unchanged after move');
 
@@ -513,7 +513,7 @@ function createTestDocument(brickCount = 3) {
     assert(pubAfterRemove.contentHash === originalHash, 'publication hash unchanged after removal');
 
     // 13. Verify Document still exists and unchanged.
-    const loadedDocAfterRemove = loadDoc.execute(publication.id);
+    const loadedDocAfterRemove = loadDoc.execute(publication.documentId); // was publication.id
     assert(JSON.stringify(serializer.serialize(loadedDocAfterRemove)) === originalDocJson,
         'document unchanged after placement removal');
 
