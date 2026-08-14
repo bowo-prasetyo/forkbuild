@@ -57,6 +57,7 @@ export class PlacementRecord {
         this._contentHash = contentHash;
         this._createdAt = createdAt instanceof Date ? createdAt : new Date(createdAt);
         this._updatedAt = updatedAt instanceof Date ? updatedAt : new Date(updatedAt);
+        this._bounds = bounds instanceof SpatialBounds ? bounds : (bounds ? SpatialBounds.fromJSON(bounds) : null);
     }
 
     get placementId() { return this._placementId; }
