@@ -753,12 +753,12 @@ export class WorldNavigationSession {
             return;
         }
         if (this.isPlacementMode()) {
-            this._session.hideGizmo();
+            this._hideGizmo();
             return;
         }
         const presentation = this._gizmoUseCase.resolvePresentation(this._spatialSelection);
         if (!presentation) {
-            this._session.hideGizmo();
+            this._hideGizmo();
             return;
         }
         const offset = this._worldLayoutProvider.getPosition(this._spatialSelection.documentId);
@@ -781,7 +781,19 @@ export class WorldNavigationSession {
             center: worldPivot,
             size: presentation.bounds.size
         };
-        this._session.showGizmo(worldPivot, worldBounds);
+        this._showGizmo(worldPivot, worldBounds);
+    }
+
+    _hideGizmo() {
+        if (typeof this._session?.hideGizmo === 'function') {
+            this._session.hideGizmo();
+        }
+    }
+
+    _showGizmo(pivot, bounds) {
+        if (typeof this._session?.showGizmo === 'function') {
+            this._session.showGizmo(pivot, bounds);
+        }
     }
 
     _updatePlacementPreview(hitResult) {
