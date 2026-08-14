@@ -27,7 +27,10 @@ function assert(condition, message) {
 
 function createWorld() {
     const world = new World();
-    const building = new Building({ creator: 'tester' });
+// FIX: Use a deterministic building ID so that independently created
+// client worlds can collaborate on the same building without throwing
+// "Unknown building" when applying remote commands.
+const building = new Building({ id: 'shared-building', creator: 'tester' });
     building.addBrick(new Brick({
         definitionId: 'core:cube',
         position: new Position(0, 0.5, 0)
