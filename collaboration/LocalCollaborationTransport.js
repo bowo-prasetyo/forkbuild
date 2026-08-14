@@ -69,9 +69,22 @@ export class LocalCollaborationTransport extends CollaborationTransport {
         if (!room) {
             return;
         }
+
+        // Acknowledgments and rejections should only go back to the sender
+        if (json.type === 'acknowledge' || json.type === 'reject') {
+            for (const entry of room) {
+                if (entry.author === senderAuthor && entry.callback) {
+                    entry.callback(CollaborationEnvelope.fromJSON(json));
+                    break; // Only send to the sender
+                }
+            }
+            return;
+        }
+
+        // Operations, joins, leaves, etc. are broadcast to OTHER participants
         for (const entry of room) {
             if (entry.author === senderAuthor) {
-                continue; // echo prevention
+                continue; // echo prevention for broadcasts
             }
             if (entry.callback) {
                 entry.callback(CollaborationEnvelope.fromJSON(json));
