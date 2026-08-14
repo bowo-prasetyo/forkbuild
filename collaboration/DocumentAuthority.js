@@ -238,7 +238,14 @@ export class DocumentAuthority {
         if (command.worldId !== this._world.id) {
             return `World ID mismatch`;
         }
-        for (const transform of command.transforms) {
+        
+        // Ensure the command actually has transforms to check
+        const transforms = command.transforms || [];
+        if (transforms.length === 0) {
+            return null; // Empty transform is technically valid (no-op)
+        }
+
+        for (const transform of transforms) {
             const building = this._world.getBuilding(transform.buildingId);
             if (!building) {
                 return `Building ${transform.buildingId} not found`;
