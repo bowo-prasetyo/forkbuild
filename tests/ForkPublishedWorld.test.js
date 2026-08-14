@@ -240,7 +240,7 @@ function createTestDocument(brickCount = 3, title = 'Alice Castle') {
 
     // Fork, edit, and publish.
     const forkUseCase = new ForkPublishedWorldUseCase(publisher, serializer);
-    const forked = forkUseCase.execute(publication, stubIdentityProvider);
+    const forked = forkUseCase.execute(pub1, stubIdentityProvider); // Changed from 'publication' to 'pub1'    
 
     const forkManager = new DocumentManager();
     forkManager.load(forked, forked.world.id);
