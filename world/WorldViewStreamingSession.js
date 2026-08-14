@@ -51,7 +51,6 @@ export class WorldViewStreamingSession {
             const inLoadRadius = dist2 <= this._loadRadius * this._loadRadius;
             
             let existing = this._runtimeWorlds.get(id);
-            
             if (!existing) {
                 // New placement discovered
                 existing = new LoadedWorld({
@@ -59,7 +58,7 @@ export class WorldViewStreamingSession {
                     publicationId: placement.publicationId,
                     placementRevision: placement.revision,
                     position: placement.position,
-                    state: inLoadRadius ? WorldLoadState.LOADING : WorldLoadState.DISCOVERED
+                    state: WorldLoadState.DISCOVERED // Always start as DISCOVERED so the transition logic below triggers _loadWorld
                 });
                 this._runtimeWorlds.set(id, existing);
             } else {
