@@ -462,6 +462,38 @@ export class WorldNavigationSession {
         return true;
     }
 
+    marqueeSelect({ x0, y0, x1, y1 } = {}, { additive = false } = {}) {
+        if (!this._session || typeof this._session.pickRectangle !== 'function') {
+            return false;
+        }
+        const hits = this._session.pickRectangle(x0, y0, x1, y1) || [];
+        const documentId = this._resolveMarqueeDocumentId(hits);
+        if (!documentId) {
+            if (!additive) {
+                this.clearSelection();
+            }
+            return true;
+        }
+
+        let nextSelection = additive && this._spatialSelection.documentId === documentId
+            ? this._spatialSelection
+            : SpatialSelectionState.empty();
+        for (const hit of hits) {
+            if (!hit || hit.documentId !== documentId || !hit.buildingId || !hit.brickId) {
+                continue;
+            }
+            nextSelection = nextSelection.addBrick(hit);
+        }
+
+        this._setSpatialSelection(nextSelection);
+        this._session.selectBricks(nextSelection.brickIds, nextSelection.brickId);
+        this._session.clearHover();
+        this._refreshInspection();
+        this._refreshEditingContext();
+        this._refreshGizmo();
+        return true;
+    }
+
     getSelectionCount() {
         return this._spatialSelection.isEmpty ? 0 : this._spatialSelection.items.length;
     }
@@ -724,6 +756,17 @@ export class WorldNavigationSession {
 	    this._refreshEditingContext();
 	    this._refreshInspection();
 	}
+
+    _resolveMarqueeDocumentId(hits) {
+        const firstHit = (hits || []).find((hit) => hit && hit.documentId);
+        if (firstHit) {
+            return firstHit.documentId;
+        }
+        if (!this._spatialSelection.isEmpty && this._spatialSelection.documentId) {
+            return this._spatialSelection.documentId;
+        }
+        return this._focusedDocumentId;
+    }
 	
 	_setSpatialHover(hover) {
         this._spatialHover = hover;
