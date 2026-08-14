@@ -21,8 +21,12 @@ function assert(condition, message) {
 }
 
 function createWorld() {
-    const world = new World();
-const building = new Building({ id: 'shared-building', creator: 'tester' }); // <-- ADD id
+    // FIX: Use a deterministic world ID so independently created client 
+    // worlds can collaborate without throwing "worldId mismatch" when 
+    // applying remote commands.
+    const world = new World({ id: 'shared-world' }); 
+    const building = new Building({ id: 'shared-building', creator: 'tester' }); 
+    
     building.addBrick(new Brick({
         definitionId: 'core:cube',
         position: new Position(0, 0.5, 0)
