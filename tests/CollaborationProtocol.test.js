@@ -22,7 +22,7 @@ function assert(condition, message) {
 
 function createWorld() {
     const world = new World();
-    const building = new Building({ creator: 'tester' });
+const building = new Building({ id: 'shared-building', creator: 'tester' }); // <-- ADD id
     building.addBrick(new Brick({
         definitionId: 'core:cube',
         position: new Position(0, 0.5, 0)
