@@ -500,9 +500,9 @@ const building = new Building({ id: 'shared-building', creator: 'tester' });
         world,
         commandRegistry
     });
-
-    const buildingId = world.getBuildings()[0].id;
-    const brickId = world.getBuildings()[0].getBricks()[0].id;
+// FIX: Renamed to avoid block-scope parser issues with await import()
+const buildingId9 = world.getBuildings()[0].id;
+const brickId9 = world.getBuildings()[0].getBricks()[0].id;
 
     // Create a group.
     const r1 = authority.receiveOperation(CollaborationEnvelope.operation({
@@ -510,7 +510,7 @@ const building = new Building({ id: 'shared-building', creator: 'tester' });
         operationId: 'op-1', sequenceNumber: 1, baseRevision: 0,
         command: new CreateGroupCommand({
             worldId: world.id,
-            brickIds: [brickId],
+brickIds: [brickId9],
             name: 'TestGroup'
         }).toJSON()
     }));
@@ -555,16 +555,16 @@ const building = new Building({ id: 'shared-building', creator: 'tester' });
         world,
         commandRegistry
     });
-
-    const buildingId = world.getBuildings()[0].id;
-    const brickId = world.getBuildings()[0].getBricks()[0].id;
+// FIX: Renamed to avoid block-scope parser issues with await import()
+const buildingId10 = world.getBuildings()[0].id;
+const brickId10 = world.getBuildings()[0].getBricks()[0].id;
 
     // Delete the brick.
     authority.receiveOperation(CollaborationEnvelope.operation({
         documentId: world.id, author: 'alice',
         operationId: 'op-1', sequenceNumber: 1, baseRevision: 0,
         command: new DeleteBrickCommand({
-            worldId: world.id, buildingId, brickId
+worldId: world.id, buildingId10, brickId10
         }).toJSON()
     }));
 
@@ -576,7 +576,7 @@ const building = new Building({ id: 'shared-building', creator: 'tester' });
         command: new TransformSelectionCommand({
             worldId: world.id,
             transforms: [{
-                buildingId, brickId,
+buildingId: buildingId10, brickId: brickId10,
                 position: { x: 10, y: 0, z: 0 },
                 rotation: 0
             }]
