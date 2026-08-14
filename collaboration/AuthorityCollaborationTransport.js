@@ -69,6 +69,12 @@ export class AuthorityCollaborationTransport extends CollaborationTransport {
             if (callback) {
                 callback(response);
             }
+        } else if (envelope.type === 'acknowledge' || envelope.type === 'reject') {
+            // In authority mode, the authority is the sole source of truth
+            // for acknowledgements and rejections. Client-generated acks/rejects
+            // are redundant and must be dropped to prevent the original sender
+            // from receiving multiple conflicting acks.
+            return;
         } else {
             // Non-operation envelopes (join, leave, sync-request,
             // sync-response) are broadcast directly without authority
