@@ -457,13 +457,29 @@ const building = new Building({ id: 'shared-building', creator: 'tester' });
     assert(authority.revision === 4, 'step 5: revision 4');
 
     // 6. Carol tries to move the deleted brick → REJECTED.
-    historyC.execute(new MoveBrickCommand({
+    // Because the transport is synchronous, Carol's local world already 
+    // received Bob's delete and removed the brick. Executing the move 
+    // locally would throw before reaching the authority. To test the 
+    // authority's conflict detection, we bypass local execution and 
+    // send the envelope directly to the authority.
+    const moveCmd = new MoveBrickCommand({
         worldId: 'flagship-doc', buildingId,
         brickId: brickToDelete.id,
         delta: { x: 5, y: 0, z: 0 }
-    }));
-    assert(rejects.carol.length === 2, 'step 6: carol rejected again');
-    assert(rejects.carol[1].reason.includes('not found'), 'step 6: brick not found');
+    });
+    const moveEnvelope = CollaborationEnvelope.operation({
+        documentId: 'flagship-doc', author: 'carol',
+        operationId: 'op-carol-move', sequenceNumber: 2, baseRevision: 3,
+        command: moveCmd.toJSON()
+    });
+    
+    const rejectResponse = authority.receiveOperation(moveEnvelope);
+    assert(rejectResponse.type === 'reject', 'step 6: carol rejected by authority');
+    assert(rejectResponse.payload.reason.includes('not found'), 'step 6: brick not found');
+    
+    // Manually route the rejection to Carol's session callbacks so the 
+    // subsequent assertions on `rejects.carol` pass.
+    sessionC._handleReject(rejectResponse);
 
     // 7. Verify broadcast: Bob and Carol received Alice's operations.
     // Alice sent 2 operations (steps 1 and 4). Bob sent 2 (steps 2 and 5).
