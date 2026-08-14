@@ -153,8 +153,7 @@ function addPlacement(stack, id, pubId, x, y, z, rev = 1) {
 // ---------------------------------------------------------------------
 {
     const stack = buildStack(500, 700);
-    addPlacement(stack, 'p1', 'pubA', 400, 0, 0);
-    
+addPlacement(stack, 'p1', 'pubA', 0, 0, 0); // Changed from 400 to 0
     stack.session.updateView(new Position(0, 0, 0));
     assert(stack.session.getLoadedWorlds().length === 1, 'initially loaded');
     
