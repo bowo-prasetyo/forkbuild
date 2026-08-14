@@ -637,5 +637,4 @@ function createTestDocument(brickCount = 3) {
     console.log('✓ Ownership hierarchy: Document ≠ Publication ≠ Placement');
 }
 
-console.log('
-All placement registry tests passed.');
+console.log('\nAll placement registry tests passed.');
