@@ -64,18 +64,11 @@ export class AuthorityCollaborationTransport extends CollaborationTransport {
         if (envelope.type === 'operation') {
             // Route through the authority.
             const response = this._authority.receiveOperation(envelope);
-            
             // Deliver the response (acknowledge or reject) to the sender.
             const callback = this._callbacks.get(senderAuthor);
             if (callback) {
                 callback(response);
             }
-        } else if (envelope.type === 'acknowledge' || envelope.type === 'reject') {
-            // In authority mode, the authority is the sole arbiter of
-            // operation success. Client-generated acks/rejects are
-            // redundant and would cause duplicate acknowledgements at
-            // the sender. Drop them.
-            return;
         } else {
             // Non-operation envelopes (join, leave, sync-request,
             // sync-response) are broadcast directly without authority
