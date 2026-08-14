@@ -375,7 +375,7 @@ const building = new Building({ id: 'shared-building', creator: 'tester' });
 {
     const canonicalWorld = createWorld();
     canonicalWorld._id = 'flagship-doc';
-    const buildingId = canonicalWorld.getBuildings()[0].id;
+    //const buildingId = canonicalWorld.getBuildings()[0].id;
 
     const authorityWorld = World.fromJSON(canonicalWorld.toJSON());
     const { createSession, authority } = new CreateCollaborationUseCase()
