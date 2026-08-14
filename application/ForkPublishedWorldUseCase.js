@@ -34,6 +34,7 @@ export class ForkPublishedWorldUseCase {
         documentSerializer = new DocumentSerializer(),
         documentCloneService = new DocumentCloneService()
     ) {
+        this._publisherProvider = publisherProvider; // Save provider for verification
         this._loadPublishedSnapshotUseCase = new LoadPublishedSnapshotUseCase(
             publisherProvider, documentSerializer
         );
@@ -52,15 +53,26 @@ export class ForkPublishedWorldUseCase {
             throw new Error('ForkPublishedWorldUseCase: a valid Publication is required');
         }
 
-        // 1. Load and verify the snapshot (rejects if hash mismatches).
+        // 1. Verify the snapshot integrity BEFORE loading.
+        const isValid = this._publisherProvider.verifySnapshot(
+            publication.id,
+            publication.contentHash
+        );
+        if (!isValid) {
+            throw new Error(
+                `ForkPublishedWorldUseCase: snapshot integrity check failed `
+                + `for publication ${publication.id} (hash mismatch)`
+            );
+        }
+
+        // 2. Load the verified snapshot.
         const sourceDocument = this._loadPublishedSnapshotUseCase.execute(
             publication.id
         );
 
-        // 2. Clone with fresh identities, preserving lineage.
+        // 3. Clone with fresh identities, preserving lineage.
         const currentUser = identityProvider ? identityProvider.currentUser() : null;
         const sourceTitle = sourceDocument.metadata.title || 'Untitled';
-
         return this._documentCloneService.execute(sourceDocument, {
             title: `Fork of ${sourceTitle}`,
             author: currentUser ? currentUser.username : null,
