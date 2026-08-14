@@ -931,8 +931,9 @@ export class WorldNavigationSession {
 	    return this._clipboardState;
 	}
 	
-	// 3. Fix pasteClipboard to use the selection's document ID
+	// 3. Fix pasteClipboard to cascade offsets
 	pasteClipboard() {
+	    if (this._historyPreview && this._historyPreview.active) return false; // ADD THIS LINE
 	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc) return false;
