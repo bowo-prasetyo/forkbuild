@@ -26,6 +26,11 @@ export class LocalPlacementRegistry extends PlacementRegistry {
     }
 
     add(record) {
+	    let recordToStore = record;
+	    if (!recordToStore.contentHash) {
+	        const hash = recordToStore.computeContentHash();
+	        recordToStore = new PlacementRecord({ ...recordToStore.toJSON(), contentHash: hash });
+	    }
         const historyKey = `placement-history:${record.placementId}`;
         const history = this._storageProvider.load(historyKey) || [];
         const exists = history.some(h => h.hash === record.contentHash);
@@ -35,9 +40,10 @@ export class LocalPlacementRegistry extends PlacementRegistry {
                 revision: record.revision, 
                 hash: record.contentHash, 
                 timestamp: record.updatedAt.toISOString() 
-        });
+	        });
             this._storageProvider.save(historyKey, history);
         }
+	    return recordToStore; // <--- FIX: Must return the record
     }
 
     get(placementId) {
