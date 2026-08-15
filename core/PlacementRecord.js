@@ -2,7 +2,7 @@ import { createId } from './createId.js';
 import { Position } from './Position.js';
 import { SpatialBounds } from './SpatialBounds.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { SigningIdentity } from './SigningIdentity.js';
+import { SigningIdentity } from '../identity/SigningIdentity.js';
 import { SignatureType } from './Signature.js';
 import { CausalStamp } from './CausalStamp.js';
 import { RevisionReference } from './RevisionReference.js';
@@ -169,7 +169,7 @@ owner: this._owner,
             scale: this._scale,
             bounds: this._bounds,
             revision: this._revision + 1,
-            contentHash: this._contentHash,
+            contentHash: null,
             createdAt: this._createdAt,
             updatedAt: new Date(),
             causalStamp: this._causalStamp, // Preserved; application layer advances it
@@ -191,7 +191,7 @@ owner: this._owner,
             scale: this._scale,
             bounds: this._bounds,
             revision: this._revision + 1,
-            contentHash: this._contentHash,
+            contentHash: null,
             createdAt: this._createdAt,
             updatedAt: new Date(),
             causalStamp,
@@ -264,9 +264,9 @@ owner: this._owner,
             placementId: this._placementId,
             publicationId: this._publicationId,
 owner: this._owner,
-            ownerIdentity: this._ownerIdentity ? this._ownerIdentity.toJSON() : null,
+            ownerIdentity: PlacementRecord._identityJSON(this._ownerIdentity),
             authorizedBy: this._authorizedBy ? {
-                identity: this._authorizedBy.identity.toJSON(),
+                identity: PlacementRecord._identityJSON(this._authorizedBy.identity),
                 delegationId: this._authorizedBy.delegationId
             } : null,
             signature: this._signature,
