@@ -1,4 +1,4 @@
-import { CreateIdentityProviderUseCase } from './CreateIdentityProviderUseCase.js';
+import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 // Wires the 0.2.16 trust surface in one call. The provider itself comes
@@ -12,7 +12,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 export class CreateIdentityUseCase {
     execute(options = {}) {
         return {
-            identityProvider: new CreateIdentityProviderUseCase().execute(),
+            identityProvider: new LocalIdentityProvider(),
             authorizationVerifier: new LocalAuthorizationVerifier(options)
         };
     }
