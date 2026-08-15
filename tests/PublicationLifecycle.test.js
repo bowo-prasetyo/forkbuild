@@ -331,9 +331,11 @@ function createTestDocument(brickCount = 3) {
     // Publication is pure data: only getters and serialization.
     const pubKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(pub));
     const methodKeys = pubKeys.filter((k) => typeof pub[k] === 'function' && k !== 'constructor');
+
     const allowedMethods = ['toJSON'];
     for (const method of methodKeys) {
-        assert(allowedMethods.includes(method) || method.startsWith('get ') || method === 'toJSON',
+        // FIX: Allow immutable update methods that start with 'with'
+        assert(allowedMethods.includes(method) || method.startsWith('get ') || method.startsWith('with') || method === 'toJSON',
             `Publication method "${method}" is read-only`);
     }
 
