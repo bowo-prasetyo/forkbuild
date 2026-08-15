@@ -182,11 +182,12 @@ owner: this._owner,
         return new PlacementRecord({
             placementId: this._placementId,
             publicationId: this._publicationId,
-owner: this._owner,
+			owner: this._owner,
             ownerIdentity: this._ownerIdentity,
             authorizedBy: this._authorizedBy, // Preserved, but signature must be recalculated by caller
             signature: null, 
-            position: newPosition,
+	        position: this._position, // FIX: Use this._position instead of undefined newPosition
+	        causalHistory: causalHistory,
             rotation: this._rotation,
             scale: this._scale,
             bounds: this._bounds,
