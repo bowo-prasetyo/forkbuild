@@ -54,4 +54,8 @@ export class PlacementRegistry {
     verifyIntegrity(placementId) {
         throw new Error('PlacementRegistry.verifyIntegrity() must be implemented by a subclass');
     }
+    setLatest(placementId, record) { throw new Error('Not implemented'); }
+    getHistory(placementId) { throw new Error('Not implemented'); }
+    setConflictSet(placementId, conflictSet) { throw new Error('Not implemented'); }
+    getConflictSet(placementId) { throw new Error('Not implemented'); }
 }
