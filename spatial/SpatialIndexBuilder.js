@@ -4,36 +4,20 @@ import { SpatialIndexRoot } from '../core/SpatialIndexRoot.js';
 import { ContentReference } from '../core/ContentReference.js';
 
 // Turns authoritative PlacementRecords into immutable decentralized
-// index content (0.2.15):
+// index content (0.2.15).
 //
-//   PlacementRecords
-//          |
-//          v
-//   SpatialIndexBuilder
-//          |
-//          +-- immutable revision records  (one per placement)
-//          +-- immutable cell manifests    (one per occupied cell)
-//          +-- immutable root              (cell key -> manifest ref)
-//          +-- mutable root pointer        (set on the store)
-//
-// Two maintenance shapes:
-//
-//   build(records) — full deterministic rebuild. Idempotent: the same
-//   records always produce the same content hashes, so a rebuild over
-//   an unchanged registry changes nothing and re-points the root
-//   pointer at an identical root.
-//
-//   addOrUpdatePlacement(record) — incremental revision publishing,
-//   used by MoveWorldPlacementUseCase. Stores the new immutable
-//   revision and advances only the manifests of the cells the new
-//   position occupies. Cells of the OLD position keep their old
-//   revision reference — the intended eventual-consistency story:
-//   the index is an accelerator, not truth, and stale entries are
-//   resolved away by the discovery provider.
+// As of 0.2.16 the builder also signs every root it publishes when an
+// IdentityProvider is wired: the root signature is the index
+// authority's statement "I published this index snapshot". Manifests
+// stay content-hashed only (their integrity is protected by the hash
+// plus the root's reference to them); the trust chain terminates at
+// the signed PlacementRecords themselves — the index never becomes
+// truth.
 export class SpatialIndexBuilder {
-    constructor(spatialIndexStore, { cellSize = DEFAULT_CELL_SIZE } = {}) {
+    constructor(spatialIndexStore, { cellSize = DEFAULT_CELL_SIZE, identityProvider = null } = {}) {
         this._store = spatialIndexStore;
         this._cellSize = cellSize;
+        this._identityProvider = identityProvider;
     }
 
     get cellSize() {
@@ -72,6 +56,7 @@ export class SpatialIndexBuilder {
             root = root.withManifestReference(key, this._store.put(manifest.toJSON()).toJSON());
         }
 
+        root = this._signRoot(root);
         const rootReference = this._store.put(root.toJSON());
         this._store.setRootReference(rootReference);
 
@@ -83,8 +68,6 @@ export class SpatialIndexBuilder {
         };
     }
 
-    // Publishes ONE new immutable placement revision and advances the
-    // affected cell manifests. Returns the new root reference.
     addOrUpdatePlacement(record) {
         const currentRootReference = this._store.getRootReference();
         let root;
@@ -123,13 +106,26 @@ export class SpatialIndexBuilder {
             root = root.withManifestReference(cell.key, this._store.put(manifest.toJSON()).toJSON());
         }
 
+        root = this._signRoot(root);
         const newRootReference = this._store.put(root.toJSON());
         this._store.setRootReference(newRootReference);
         return newRootReference;
     }
 
-    // The cells a record occupies: every cell its GLOBAL bounds
-    // intersect, or the single origin cell when no bounds exist.
+    // 0.2.16: sign the root when a signing identity is available.
+    // withManifestReference clears any prior signature, so every new
+    // root is signed fresh — a signature never covers stale content.
+    _signRoot(root) {
+        if (this._identityProvider
+            && typeof this._identityProvider.signCanonical === 'function'
+            && this._identityProvider.currentUser()) {
+            return root.withSignature(
+                this._identityProvider.signCanonical(root.getSigningDescriptor())
+            );
+        }
+        return root;
+    }
+
     static cellsForRecord(record, cellSize) {
         const bounds = record.bounds
             ? record.bounds.getGlobalBounds(record.position)
