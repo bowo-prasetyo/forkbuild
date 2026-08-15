@@ -931,3 +931,82 @@ ContentStore abstraction allows seamless migration from LocalContentStore
 to IPFSContentStore or ArweaveContentStore without altering the publication
 pipeline. Trust is anchored to the content hash: resolvers retrieve by
 location but verify by content identity.
+
+<!-- === FILE: ./docs/Architecture.md === (append after the 0.2.14 section) -->
+
+### Decentralized Spatial Discovery (0.2.15)
+
+The 0.2.15 milestone brings the decentralized implementation behind
+the SpatialDiscoveryProvider interface established in 0.2.11, and
+draws the most important line of the milestone:
+
+> **PlacementRecord is authoritative spatial truth; the spatial index
+> is a discoverability accelerator.**
+
+Like a database index, a spatial index may be stale, partial, or
+replicated. An index entry pointing at an outdated revision is not
+corruption — the client resolves the referenced record, compares
+revisions, and the newer revision wins. Missing or tampered cell
+manifests are isolated and counted; only a tampered index ROOT is a
+hard failure.
+
+Key components:
+
+- core/SpatialCell.js — deterministic uniform 3D grid partitioning of
+  virtual space (floor division, negative-safe, no geography).
+- core/SpatialIndexManifest.js — immutable per-cell manifest:
+  placement references { placementId, revision, recordReference }.
+  No timestamps: a pure function of its placements, so rebuilds are
+  byte-identical.
+- core/SpatialIndexRoot.js — immutable directory mapping cell keys to
+  manifest references.
+- spatial/SpatialIndexStore.js — content-addressed adapter for
+  immutable index content plus the single mutable root pointer.
+- spatial/LocalSpatialIndexStore.js — V0.1 concrete implementation.
+- spatial/SpatialIndexBuilder.js — PlacementRecords -> immutable
+  revision records + cell manifests + root. Deterministic and
+  idempotent.
+- spatial/DecentralizedSpatialDiscoveryProvider.js — viewport ->
+  cells -> manifests -> record resolution -> spatial filter. Never
+  loads publication content.
+- application/RebuildSpatialIndexUseCase.js — full rebuild from the
+  authoritative PlacementRegistry.
+- application/CreateDecentralizedSpatialDiscoveryUseCase.js — DI
+  wiring, counterpart of CreateSpatialDiscoveryUseCase.
+
+Immutable revisions, mutable pointers:
+
+    placement-123 / revision-1    immutable content
+    placement-123 / revision-2    immutable content
+    registry latest pointer       -> revision-2
+    index root pointer            -> current SpatialIndexRoot
+
+Two index maintenance shapes:
+
+- Full rebuild — deterministic snapshot of the registry's current
+  records; idempotent (same records -> identical content hashes).
+- Incremental revision publishing — SpatialIndexBuilder
+  .addOrUpdatePlacement(), wired into MoveWorldPlacementUseCase
+  (optional third argument): the new immutable revision is stored and
+  only the affected cells' manifests advance. Cells of the old
+  position keep the old revision reference until a rebuild — the
+  intended eventual-consistency story, resolved away at discovery
+  time by the newer-revision-wins rule plus the spatial filter.
+
+Query pipeline:
+
+    camera/viewport -> intersecting SpatialCells -> cell manifests
+    (only the ones the root actually has) -> placement references
+    -> PlacementRecord resolution -> sphere filter -> PlacementRecord[]
+    -> ContentResolver (unchanged from 0.2.11)
+
+Existing interfaces are untouched: SpatialDiscoveryProvider,
+DiscoverWorldAreaUseCase, ResolvePublicationUseCase, and
+WorldViewStreamingSession consume the decentralized provider without
+modification. LocalSpatialDiscoveryProvider remains the local
+implementation.
+
+Deliberately not in 0.2.15: cryptographic ownership proofs (0.2.16),
+consensus between competing indexes, peer-to-peer replication,
+geographic coordinates, publication content retrieval, renderer or
+editing-kernel changes.
