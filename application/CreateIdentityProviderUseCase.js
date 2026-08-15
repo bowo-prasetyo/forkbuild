@@ -1,5 +1,6 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 
 // Wires the 0.2.16 trust surface in one call. The provider itself comes
 // from CreateIdentityProviderUseCase — the single source of truth for
@@ -12,7 +13,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 export class CreateIdentityProviderUseCase {
     execute(options = {}) {
         return {
-            identityProvider: new LocalIdentityProvider(),
+            identityProvider: new LocalIdentityProvider(new LocalStorageProvider()),
             authorizationVerifier: new LocalAuthorizationVerifier(options)
         };
     }
