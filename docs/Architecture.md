@@ -1010,3 +1010,98 @@ Deliberately not in 0.2.15: cryptographic ownership proofs (0.2.16),
 consensus between competing indexes, peer-to-peer replication,
 geographic coordinates, publication content retrieval, renderer or
 editing-kernel changes.
+
+<!-- === FILE: ./docs/Architecture.md === (append after the 0.2.15 section) -->
+
+### Decentralized Identity & Signatures (0.2.16)
+
+The four decentralized planes (publications, placements, spatial
+index, content) can now each answer the question they previously
+could not: **who authorized this object?**
+
+> **Hashes establish what an object is. Signatures establish who
+> authorized it.**
+
+| Mechanism      | Question                                        |
+| -------------- | ----------------------------------------------- |
+| Content hash   | "What exactly is this?"                         |
+| Revision       | "Which version is this?"                        |
+| Signature      | "Who authorized it?"                            |
+| Identity       | "Which public key represents that authority?"   |
+
+The trust invariant:
+
+    Hash valid + Signature valid + Signer authorized = Trusted object
+    Hash valid + Signature invalid                   = Untrusted
+    Hash valid + Signature valid + wrong signer      = Untrusted
+
+Key components:
+
+- identity/Ed25519.js — self-contained Ed25519 + SHA-512 (pure
+  BigInt; synchronous like the rest of the engine; proven against
+  FIPS 180-4 and RFC 8032 vectors before any other test runs).
+- identity/SigningIdentity.js — the public-key identity
+  (did:key id, algorithm, publicKey). Deliberately distinct from
+  identity/Identity.js (0.1.21), the LOGIN identity: Identity is
+  "which account is using the app", SigningIdentity is "which key
+  authorized the object". LocalIdentityProvider links the two —
+  every logged-in user gets a persisted Ed25519 keypair.
+- core/Signature.js — explicit signature data (algorithm, signer,
+  signature, signedHash, domain) plus the canonical signing envelope
+  { domain: 'forkbuild', type, id, revision, payload }. Domain
+  separation is structural: a placement-record signature can never be
+  replayed as a publication signature.
+- identity/AuthorizationVerifier.js / LocalAuthorizationVerifier.js —
+  the three trust questions (authentic? signer known? signer
+  authorized?) with deliberately simple 0.2.16 rules: publisher signs
+  publications, owner signs placement revisions, builder signs index
+  roots (optional pinned index authority).
+- application/VerifyPublicationUseCase.js, VerifyPlacementUseCase.js,
+  CreateIdentityUseCase.js.
+
+Signed objects (no parallel Signed* entities — the signature field
+lives directly on each object):
+
+- Publication gains publisherIdentity + signature. The signed
+  publication is the authoritative statement: "this identity
+  authorized this exact publication metadata and content reference" —
+  completing the chain Identity -> Publication -> ContentReference ->
+  bytes.
+- PlacementRecord gains ownerIdentity + signature. contentHash keeps
+  its exact 0.2.10 definition (stored records stay verifiable); the
+  signature is an attestation layered on top, covering a canonical
+  envelope that INCLUDES the contentHash — binding
+  identity -> revision -> exact record content. withPosition() clears
+  the signature: a new revision is a new immutable object that must
+  be re-signed; signatures never move between revisions.
+- SpatialIndexRoot gains signature. Meaning: "this index root was
+  published by the index authority" — NOT "every listed placement is
+  true". The index remains an accelerator; discovery still resolves
+  and verifies every underlying placement. Manifests stay
+  content-hashed only.
+
+The resolution rule evolved from "newer revision wins" to:
+
+> **Newer VALID revision wins.**
+
+DecentralizedSpatialDiscoveryProvider now filters candidates through
+integrity + signature authorization BEFORE comparing revisions. A
+forged revision 5 never displaces an authentic revision 4.
+
+Failure isolation:
+
+    Invalid placement signature -> record rejected + counted, others go on
+    Tampered/missing manifest   -> skipped + counted, other cells go on
+    Invalid root signature      -> THROW (mirrors "tampered root is fatal")
+
+Backward compatibility: unsigned pre-0.2.16 objects are tolerated and
+reported as signed: false — the deployed corpus keeps working.
+Non-cryptographic identity providers keep the legacy attribution-stamp
+publishing path untouched.
+
+Deliberately not in 0.2.16: DID resolution networks, blockchain
+wallets, DAO authorization, key rotation, multisig, delegated
+placement rights, revocation registries, social recovery, hardware
+wallets. Those are identity INFRASTRUCTURE — adapters around the
+abstraction this milestone establishes. 0.2.17 answers "was that
+identity ALLOWED to do this?" (delegation and authorization policy).
