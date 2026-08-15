@@ -203,3 +203,32 @@ mutable pointer (the registry's latest record, the index root
 reference), never the content. This is what makes history, caching,
 replication, and eventual consistency tractable once storage is
 genuinely decentralized.
+
+<!-- === FILE: ./docs/Principles.md === (append) -->
+
+Hashes establish what an object is; signatures establish who
+authorized it (0.2.16). A content hash can prove a PlacementRecord has
+not changed — it cannot prove Alice created it. An immutable object is
+authoritative only when its content hash AND its authorization
+signature are both valid AND the signer was authorized for that
+operation. Each condition is checked independently, and each failure
+has a named reason.
+
+Newer VALID revision wins — never merely "newer revision wins"
+(0.2.16). A revision may only displace another after passing integrity
+and signature authorization. This single rule is what keeps forged
+revisions from hijacking placements once more than one node can
+publish index entries.
+
+Sign canonical data, with domain separation (0.2.16). ForkBuild never
+signs arbitrary serialized JSON. Every signature covers the canonical
+envelope { domain, type, id, revision, payload } constructed in fixed
+property order — so the same semantic object can never produce two
+different signatures, and a signature for one object type can never be
+replayed as another. The signature itself carries no unsigned claims.
+
+Cryptographic semantics precede infrastructure (0.2.16). Establish WHO
+SIGNED with a local, vector-verified primitive first; wallets, DID
+networks, key rotation, and revocation are later adapters around the
+same IdentityProvider/AuthorizationVerifier seam — not a prerequisite
+for the trust model.
