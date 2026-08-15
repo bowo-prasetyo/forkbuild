@@ -9,21 +9,15 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 const PUBLICATIONS_KEY = 'forkbuild-publications';
 const SNAPSHOT_KEY_PREFIX = 'snapshot:';
 
-// The V0.1 concrete publisher, updated for 0.2.3.
+// The V0.1 concrete publisher.
 //
-// Publishing stores the snapshot at `snapshot:{publicationId}`, NOT at
-// the document's own storage key. This is the mutation-isolation
-// guarantee: editing and saving the source document afterwards cannot
-// overwrite the published snapshot. The editable document lives at
-// `{documentId}`; the published snapshot lives at
-// `snapshot:{publicationId}`.
+// As of 0.2.16, publishing a document also signs the publication when
+// the IdentityProvider exposes the cryptographic surface
+// (getSigningIdentity / signCanonical): the publisher identity and a
+// real Ed25519 Signature become part of the Publication itself.
 //
-// Before storing, the document is serialized, migrated to the current
-// schema, validated, and hashed. If validation fails, publishing is
-// refused — a corrupt document cannot enter the published corpus.
-//
-// Unpublishing removes the publication record and its snapshot. The
-// editable document at `{documentId}` is never touched.
+// Providers without the crypto surface (stubs, pre-0.2.16 providers)
+// keep the legacy attribution-stamp path — nothing deployed breaks.
 export class LocalPublisherProvider extends PublisherProvider {
     constructor(storageProvider, contentStore = null) {
         super();
@@ -32,7 +26,6 @@ export class LocalPublisherProvider extends PublisherProvider {
     }
 
     publish(document, identityProvider) {
-	    const license = document.metadata.license; // Already a License instance
         const user = identityProvider ? identityProvider.currentUser() : null;
 
         // 1. Serialize and migrate to current schema.
@@ -48,30 +41,27 @@ export class LocalPublisherProvider extends PublisherProvider {
             );
         }
 
-        // 3. Compute content hash over the canonical JSON.
+        // 3. Store immutable content.
         const canonicalString = JSON.stringify(migratedJson);
-
-        // Store immutable content
         const contentReference = this._contentStore.put(canonicalString);
         const contentHash = contentReference.hash;
-		
-		// 4. Create the publication identity.
-		const publicationId = createId(); // <-- Ensure this line exists!
 
-        // 5. Store the snapshot immutably at its own key.
+        // 4. Create the publication identity.
+        const publicationId = createId();
+
+        // 5. Store the snapshot immutably at its own key, and at the
+        //    document key for existing loading paths.
         this._storageProvider.save(SNAPSHOT_KEY_PREFIX + publicationId, migratedJson);
-
-        // 6. Also store at the document key for backward compatibility
-        //    with existing loading paths (LoadPublicationDocumentUseCase).
         this._storageProvider.save(document.world.id, migratedJson);
 
-        // 7. Attestation.
-        const signature = (identityProvider && user)
-            ? identityProvider.sign(migratedJson)
+        // 6. 0.2.16 — cryptographic publication signature.
+        const canSign = !!(identityProvider && user
+            && typeof identityProvider.signCanonical === 'function'
+            && typeof identityProvider.getSigningIdentity === 'function');
+        const publisherIdentity = canSign
+            ? identityProvider.getSigningIdentity().toJSON()
             : null;
-
-        // 8. Create the publication record.
-        const publication = new Publication({
+        let publication = new Publication({
             id: publicationId,
             documentId: document.world.id,
             title: document.metadata.title,
@@ -81,40 +71,47 @@ export class LocalPublisherProvider extends PublisherProvider {
             url: null,
             parentDocumentId: document.metadata.parentDocumentId,
             contentHash,
-		    schemaVersion: migratedJson.schemaVersion,
+            schemaVersion: migratedJson.schemaVersion,
             license: document.metadata.license,
-            contentReference
+            contentReference,
+            publisherIdentity,
+            signature: null
         });
+        if (canSign) {
+            publication = publication.withSignature(
+                identityProvider.signCanonical(publication.getSigningDescriptor())
+            );
+        }
 
-        // 9. Persist the publication record.
-        const record = { ...publication.toJSON(), signature };
+        // 7. Persist the publication record.
+        const record = { ...publication.toJSON() };
+        if (!canSign) {
+            // Legacy attribution stamp for non-cryptographic providers.
+            const legacySignature = (identityProvider && user)
+                ? identityProvider.sign(migratedJson)
+                : null;
+            if (legacySignature) {
+                record.signature = legacySignature;
+            }
+        }
         const existing = this._storageProvider.load(PUBLICATIONS_KEY) || [];
         existing.push(record);
         this._storageProvider.save(PUBLICATIONS_KEY, existing);
-
         return publication;
     }
 
-    // Removes a publication and its snapshot. The editable document
-    // at {documentId} is NOT touched.
     unpublish(publicationId) {
         const existing = this._storageProvider.load(PUBLICATIONS_KEY) || [];
         const index = existing.findIndex((record) => record.id === publicationId);
         if (index === -1) {
             return false;
         }
-
-        // Remove the publication record.
         existing.splice(index, 1);
         this._storageProvider.save(PUBLICATIONS_KEY, existing);
-
-        // Remove the snapshot.
         this._storageProvider.remove(SNAPSHOT_KEY_PREFIX + publicationId);
-
         return true;
     }
 
-    // Load a published snapshot by its publicationId.
     loadSnapshot(publicationId) {
         const json = this._storageProvider.load(SNAPSHOT_KEY_PREFIX + publicationId);
         if (json === null) {
@@ -125,7 +122,6 @@ export class LocalPublisherProvider extends PublisherProvider {
         return json;
     }
 
-    // Verify the integrity of a stored snapshot against its recorded hash.
     verifySnapshot(publicationId, expectedHash) {
         const json = this._storageProvider.load(SNAPSHOT_KEY_PREFIX + publicationId);
         if (json === null) {
