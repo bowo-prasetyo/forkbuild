@@ -1,13 +1,14 @@
 // Base class every identity provider extends. login()/logout()/
-// currentUser()/sign(data) — the same shape every future concrete
-// provider (Steem Keychain, Hive Keychain, a wallet) will need,
-// regardless of how authentication actually works underneath. The
-// application only ever calls these four methods; it never knows or
-// cares whether the answer came from Steem Keychain, MetaMask,
-// WalletConnect, a desktop wallet, or something not invented yet. All
-// four throw by default — same discipline as Command/Serializer/
-// StorageProvider: a provider must explicitly implement what it
-// supports, nothing is assumed.
+// currentUser()/sign(data) — the 0.1.21 login surface, unchanged.
+//
+// New in 0.2.16 — the cryptographic signing surface:
+//
+//   getSigningIdentity()  -> "Which key represents me?"
+//   signCanonical(descriptor) -> "Authorize this canonical object."
+//
+// Providers that do not implement the crypto surface simply don't —
+// every flow falls back to the legacy attribution stamp, so
+// pre-0.2.16 providers and test stubs keep working untouched.
 export class IdentityProvider {
     login(credentials) {
         throw new Error('IdentityProvider.login() must be implemented by a subclass');
@@ -21,7 +22,19 @@ export class IdentityProvider {
         throw new Error('IdentityProvider.currentUser() must be implemented by a subclass');
     }
 
+    // Legacy attribution stamp (0.1.21). NOT a cryptographic proof.
     sign(data) {
         throw new Error('IdentityProvider.sign() must be implemented by a subclass');
+    }
+
+    // --- 0.2.16: cryptographic signing surface ---------------------
+    getSigningIdentity() {
+        throw new Error('IdentityProvider.getSigningIdentity() must be implemented by a subclass');
+    }
+
+    // descriptor: { type, id, revision, payload } — the object's own
+    // canonical signing descriptor. Returns a core/Signature.
+    signCanonical(descriptor) {
+        throw new Error('IdentityProvider.signCanonical() must be implemented by a subclass');
     }
 }
