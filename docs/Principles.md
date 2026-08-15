@@ -262,3 +262,20 @@ which replica happened to process an object first.
 
 Integrity, signature, and authorization are evaluated before a revision
 participates in conflict resolution.
+
+Equal causal position with different content is still a conflict
+(0.2.18). Two revisions can carry identical causal stamps — most
+commonly two edits from the same signer's two disconnected devices,
+each simply advancing that signer's own vector-clock component from
+the same parent — and still disagree on content. That carries exactly
+as little ordering information as a genuine concurrent edit, so it is
+resolved identically: a ConflictSet, never a silent drop. The same
+rule is what keeps two legacy (pre-0.2.18, uncausaled) revisions with
+different content safe rather than one silently vanishing.
+
+A conflict set only ever grows (0.2.18). When a third revision arrives
+concurrent with an already-recorded conflict, its members are widened
+— read back from the registry and unioned with the new arrival — never
+replaced by a fresh two-member set. No competing valid history is ever
+dropped from a placement's conflict set merely because another
+revision showed up later.

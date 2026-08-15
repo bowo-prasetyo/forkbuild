@@ -537,3 +537,92 @@ Discovery rule: newer VALID revision wins. Failure isolation: invalid
 placement signatures reject one record; tampered manifests skip one
 cell; an invalid root signature rejects the whole index snapshot.
 Unsigned pre-0.2.16 objects are tolerated (`signed: false`).
+
+## Delegated Authorization (0.2.17)
+
+Delegation shape (immutable, independently signed by the issuer):
+
+    {
+        "id": "<delegation id>",
+        "issuerIdentity": { ...SigningIdentity... },
+        "delegateIdentity": { ...SigningIdentity... },
+        "action": "PLACE" | "MOVE" | "PUBLISH",
+        "subject": { "type": "publication" | "placement", "id": "<id>" },
+        "constraints": { "region": { "min": {x,y,z}, "max": {x,y,z} } } | null,
+        "expiresAt": "<ISO timestamp>" | null,
+        "signature": { ...issuer's signature over the canonical payload... },
+        "issuedAt": "<ISO timestamp>"
+    }
+
+Authorization decision (identity/DelegationVerifier.verify): a
+signature is DIRECT when the signer IS the resource owner and no
+delegationId is presented. Otherwise it is DELEGATED only when every
+one of these holds: the delegation resolves, its own signature
+verifies, it has not expired, its issuer is the resource owner, its
+delegate is the signer, its action matches the requested action, its
+subject matches, and — when constrained — the requested position lies
+inside the delegation's region. Any mismatch produces a named
+rejection reason (e.g. `DELEGATION_ACTION_MISMATCH`,
+`DELEGATION_SUBJECT_MISMATCH`, `DELEGATION_CONSTRAINT_VIOLATION`).
+PlacementRecord carries the result as `authorizedBy: { identity,
+delegationId }` when a delegate, not the owner, produced the revision.
+
+## Decentralized Replication & Conflict Handling (0.2.18)
+
+Every replicated object is an **immutable revision**:
+
+    {
+        "contentHash":  "<what>",       // 0.2.10, unchanged shape
+        "signature":    { ... },        // 0.2.16, "who"
+        "authorizedBy": { ... } | null, // 0.2.17, "were they allowed"
+        "causalStamp":  { "version": 1, "clock": { "<did:key>": <int>, ... } },
+        "parents":      [ { "placementId", "revision", "contentReference": { "hash" } } ]
+    }
+
+`causalStamp`/`parents` ride INSIDE the signed envelope whenever
+either is present (see the 0.2.16 canonical envelope above) — a
+revision's causal position is authorized data. A record with neither
+is a pre-0.2.18 (or otherwise uncausaled) revision and remains valid;
+its signature covers exactly the 0.2.16/0.2.17 fields, unchanged.
+
+CausalStamp comparison (replication/ConflictResolver.js):
+
+    A happens-before B   iff every clock[k] in A <= clock[k] in B,
+                          and at least one is strictly smaller
+    A concurrent with B  iff neither happens-before the other
+    (no clock component for an actor is treated as 0)
+
+Replica synchronization is transport-independent and pull-only:
+
+    Replica A -- advertise references (getReferences) --> Replica B
+                                       determine missing references
+    Replica A <-- request missing objects (get) --------------------
+                                       verify -> merge -> converged state
+
+"Advertise" and "request" only ever exchange `ReplicationStore`
+primitives (`getReferences(scope)`, `get(hash, scope)`, `put`, `has`)
+— a remote may be a real network peer that exposes nothing else. A
+replica's presented state only ever changes through its OWN merge
+pipeline; nothing writes into another replica's registry directly.
+Two replicas converge by each running synchronization once against the
+other as "remote".
+
+Merge outcome for an incoming revision, once integrity and
+authorization both pass (docs/Principles.md, 0.2.18):
+
+    current causalStamp compared to incoming causalStamp
+        BEFORE      -> incoming is causally newer  -> becomes presented
+        AFTER       -> incoming is causally older   -> retained, not presented
+        EQUAL/CONCURRENT, same contentHash -> duplicate, no-op
+        EQUAL/CONCURRENT, different contentHash -> ConflictSet;
+            presentation winner = lexicographically smallest contentHash
+            among every known member (existing conflict set members are
+            widened, never replaced, by a later concurrent arrival)
+
+Arrival order is not consensus: the same set of valid immutable
+revisions produces the same ConflictSet and the same deterministic
+winner on every replica, regardless of which one arrived first, which
+replica processed it first, or wall-clock time. Integrity, signature,
+and authorization are evaluated before a revision participates in
+this comparison at all — an attacker cannot use a forged high revision
+number, nor an invalid/absent signature, to influence convergence.
