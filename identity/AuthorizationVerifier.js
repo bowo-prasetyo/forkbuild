@@ -14,7 +14,9 @@
 //
 // This is the seam where 0.2.17 (delegation) and later DAO/policy
 // authorization plug in without touching the objects or the pipeline.
-export class AuthorizationVerifier {
+import { DelegationVerifier } from './DelegationVerifier.js';
+
+export class AuthorizationVerifier extends DelegationVerifier {
     // Each returns { valid, signed, reason }:
     //   valid  — the object may be trusted
     //   signed — false for legacy unsigned objects (tolerated in 0.2.16)
