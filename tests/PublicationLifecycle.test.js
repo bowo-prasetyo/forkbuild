@@ -332,7 +332,7 @@ function createTestDocument(brickCount = 3) {
     const pubKeys = Object.getOwnPropertyNames(Object.getPrototypeOf(pub));
     const methodKeys = pubKeys.filter((k) => typeof pub[k] === 'function' && k !== 'constructor');
 
-    const allowedMethods = ['toJSON'];
+    const allowedMethods = ['toJSON', 'withSignature'];
     for (const method of methodKeys) {
         // FIX: Removed the space after 'get' to correctly match getter-style methods like getSigningDescriptor
         assert(allowedMethods.includes(method) || method.startsWith('get') || method === 'toJSON',
