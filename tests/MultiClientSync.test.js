@@ -572,18 +572,19 @@ brickIds: [brickId9],
         world,
         commandRegistry
     });
-// FIX: Renamed to avoid block-scope parser issues with await import()
-const buildingId10 = world.getBuildings()[0].id;
-const brickId10 = world.getBuildings()[0].getBricks()[0].id;
-
+    // FIX: Renamed to avoid block-scope parser issues with await import()
+    const buildingId10 = world.getBuildings()[0].id;
+    const brickId10 = world.getBuildings()[0].getBricks()[0].id;
+    
     // Delete the brick.
     authority.receiveOperation(CollaborationEnvelope.operation({
         documentId: world.id, author: 'alice',
         operationId: 'op-1', sequenceNumber: 1, baseRevision: 0,
         command: new DeleteBrickCommand({
-worldId: world.id, buildingId10, brickId10
+            // FIX: Map the renamed variables back to the expected property names
+            worldId: world.id, buildingId: buildingId10, brickId: brickId10 
         }).toJSON()
-    }));
+    }));    
 
     // Try to transform the deleted brick.
     const conflictResponse = authority.receiveOperation(CollaborationEnvelope.operation({
