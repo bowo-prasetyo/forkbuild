@@ -1106,22 +1106,165 @@ wallets. Those are identity INFRASTRUCTURE — adapters around the
 abstraction this milestone establishes. 0.2.17 answers "was that
 identity ALLOWED to do this?" (delegation and authorization policy).
 
-### Decentralized Replication & Conflict Handling (0.2.18)
-The 0.2.18 milestone transitions ForkBuild from single-writer versioning
-to multi-replica causal reconciliation.
+### Delegated Ownership & Authorization (0.2.17)
+
+0.2.16 answers "who signed this?" with one direct rule: the resource
+owner signs. 0.2.17 answers the next question — "was the signer
+ALLOWED to do this, even when they are not the owner?" — by
+introducing a narrowly-scoped capability, not a second ownership
+model.
 
 Key components:
-- core/CausalStamp.js — Vector-clock semantics for causal ordering.
-- core/RevisionReference.js — Immutable identity of a revision.
-- core/ConflictSet.js — Describes competing valid revisions.
-- replication/ConflictResolver.js — Pure causal comparison (BEFORE, AFTER, CONCURRENT).
-- replication/ConflictPolicy.js — Deterministic winner selection (lexicographical hash).
-- replication/ReplicaMergeService.js — Central merge engine.
+- core/Delegation.js — an immutable, signed capability: issuer grants
+  delegate the right to perform one `action` (`PLACE` | `MOVE`) on one
+  `subject`, optionally constrained (e.g. to a spatial region) and
+  optionally time-limited. Revocation is deliberately excluded.
+- identity/DelegationVerifier.js — the general authorization oracle:
+  given a signature and an optional delegationId, decides DIRECT
+  (signer === owner) or DELEGATED (a resolvable, unexpired,
+  matching-action/subject/constraint Delegation from owner to signer),
+  or a named rejection reason.
+- identity/LocalDelegationResolver.js, application/
+  CreateDelegationUseCase.js, VerifyDelegationUseCase.js.
+- PlacementRecord gains `authorizedBy` — `{ identity, delegationId }`
+  — recording that a delegate, not the owner, produced this revision.
 
-The architectural transition:
-0.2.16: "Newer valid revision wins."
-0.2.18: "Causally newer valid revision wins. Concurrent valid revisions
-coexist and are deterministically reconciled without destroying either history."
+`PLACE` and `MOVE` are separate capabilities: possessing permission to
+place a publication does not implicitly grant permission to move an
+existing placement. Direct ownership remains the simplest path;
+delegation adds authority without transferring it.
 
-Replication state is authoritative; the spatial index is rebuilt/updated
-from the reconciled placement state.
+Deliberately not in 0.2.17: revocation, delegation chaining
+(sub-delegation), multi-party/DAO policy consensus, and wiring
+DelegationVerifier into the record-level trust check every replicated
+revision passes through (identity/LocalAuthorizationVerifier.
+verifyPlacement) — that verifier still checks direct ownership only.
+0.2.17 establishes the delegation PRIMITIVE and proves it end-to-end
+against its own authorization decisions; folding it into the
+replicated-object trust path is future integration work, not a gap in
+this milestone's own guarantees.
+
+### Decentralized Replication & Conflict Handling (0.2.18)
+
+0.2.16 and 0.2.17 answer "is this revision authentic, and was its
+signer allowed to produce it?" — questions a SINGLE authoritative
+copy can answer alone. 0.2.18 answers the question that only exists
+once more than one node can legitimately write: **when two
+independently authorized replicas each produce a revision from the
+same parent, how do they converge without either replica destroying
+the other's history?**
+
+    CONTENT      -> What is it?             (0.2.10/14)
+    SIGNATURE    -> Who authorized it?      (0.2.16)
+    AUTHORITY    -> Was the signer allowed? (0.2.17)
+    CAUSALITY    -> What did this revision know about? (0.2.18)
+
+The architectural rule: **replication never overwrites immutable
+objects. It exchanges immutable revisions and deterministically
+reconciles competing valid histories.** A revision's place in that
+history is now itself authorized data:
+
+    Newer VALID revision wins                          (0.2.16)
+                    |
+                    v
+    Causally newer VALID revision wins. Concurrent valid
+    revisions coexist and are deterministically reconciled
+    without destroying either history.                  (0.2.18)
+
+Key components:
+- core/CausalStamp.js — a vector clock (`{ version, clock: { did:key
+  -> integer } }`). `A happens-before B` iff every component of A is
+  `<=` the matching component of B and at least one is strictly
+  smaller; otherwise, if neither dominates, they are CONCURRENT. No
+  timestamps, no arrival order — purely which revisions an actor had
+  observed when it created this one.
+- core/RevisionReference.js — the immutable identity of one revision
+  (`placementId`, `revision`, `contentReference`), letting replicas
+  exchange "I have revision 5A" without transferring the full record.
+- PlacementRecord gains `causalStamp` and `parents`. Both live INSIDE
+  the signed envelope (see getSigningDescriptor) when present — a
+  revision's causal position is authorized data, not metadata an
+  attacker can rewrite after the fact without invalidating the
+  signature. contentHash's 0.2.10 shape is untouched: causality is a
+  signature-layer concern, exactly like ownerIdentity was in 0.2.16.
+- replication/ConflictResolver.js — pure comparison of two
+  CausalStamps: EQUAL, BEFORE, AFTER, or CONCURRENT.
+- replication/ConflictPolicy.js — the deterministic tie-break for
+  presentation: among concurrent-or-indistinguishable valid revisions,
+  the lexicographically smallest content hash wins. No timestamps, no
+  "whichever replica answered first" — every replica computes the
+  identical winner from the identical inputs.
+- core/ConflictSet.js — the immutable record of competing revisions
+  for a placement and which one currently wins presentation. A
+  conflict is not an error; it is multiple independently authorized
+  histories that existed without knowledge of each other. No member is
+  ever deleted.
+- replication/ReplicaMergeService.js — the only place an incoming
+  replicated revision can change what a replica presents. Fixed
+  pipeline: integrity -> signature + authorization -> (only then) the
+  revision enters the content-addressed replication store -> causal
+  comparison -> dominated (retained, not presented) | dominates
+  (becomes the new presented revision) | concurrent (ConflictSet,
+  deterministic winner). A revision that fails integrity or
+  authorization never reaches causal comparison at all — 0.2.16's
+  "newer VALID revision wins" is unchanged; 0.2.18 only adds what
+  happens once two revisions are BOTH valid.
+- replication/ReplicationStore.js / LocalReplicationStore.js — the
+  minimal transport-independent seam (`getReferences(scope)`, `get`,
+  `put`, `has`) that exchanges immutable objects, namespaced by scope
+  (`placement-revision` today). It never interprets or merges anything.
+- application/ReplicatePlacementUseCase.js — accepts a single incoming
+  revision through ReplicaMergeService.
+- application/SynchronizeReplicaUseCase.js — the batch flow: advertise
+  references, diff against what this replica already has, pull and
+  merge exactly what's missing. Deliberately pull-only: a replica's
+  registry only ever changes through ITS OWN merge pipeline, never by
+  another replica writing into it directly — "remote" may be a real
+  network peer that exposes nothing but those four store methods. Two
+  replicas converge by each running this once against the other.
+- placement/LocalPlacementRegistry.js gains `setLatest` (moves the
+  presentation pointer without touching history — what lets a
+  CONCURRENT merge's winner be the pre-existing `current` record
+  rather than the incoming one), `getHistory`, `getConflictSet` /
+  `setConflictSet`. The mutable pointer still moves; immutable history
+  — including every losing revision — is retained alongside it.
+
+Two correctness properties worth naming explicitly:
+
+- **Equal-but-different is still a conflict.** Two revisions can have
+  identical causal stamps (e.g. two edits from the SAME signer's two
+  disconnected devices, each simply advancing that signer's own vector
+  component from the same parent) yet different content. Causally
+  that's EQUAL, not CONCURRENT — but it carries exactly as little
+  ordering information, so ReplicaMergeService treats it identically:
+  a ConflictSet, never a silent drop. This is also what keeps
+  pre-0.2.18 (uncausaled) revisions safe: two legacy records with no
+  causal stamp at all compare EQUAL and, if their content differs, get
+  the same treatment.
+- **A conflict set can grow past two.** A third concurrent revision of
+  the same placement widens the existing ConflictSet (its members are
+  read back from the registry and unioned in) rather than replacing a
+  two-member conflict with a new one — no competing valid history is
+  ever dropped merely because another revision arrived later.
+
+Spatial index interaction: the index must never manufacture or resolve
+a conflict itself. ReplicaMergeService optionally rebuilds the
+decentralized spatial index (SpatialIndexBuilder) from the reconciled
+winner after every merge that changes it — replication state is
+authoritative, the index is rebuilt/updated FROM it, never the other
+way around (carrying forward 0.2.15's "the spatial index is a
+discoverability accelerator, not truth"). A stale index entry pointing
+at a losing revision is resolved the same way a stale index has always
+been resolved: DecentralizedSpatialDiscoveryProvider prefers the live
+registry record on a tie, so a lagging index cache cannot resurrect a
+revision the registry has already superseded.
+
+Deliberately not in 0.2.18: blockchain consensus, CRDTs, DAO voting,
+or any global consensus protocol — those solve a larger problem than
+ForkBuild has today. Also not here: folding 0.2.17 delegation into the
+replicated trust check (LocalAuthorizationVerifier.verifyPlacement
+still checks direct ownership only — see the 0.2.17 section above),
+malicious/equivocating replicas, replay attacks, and discovery
+poisoning. Those are 0.2.19's question: "what happens when the network
+itself is hostile?" — 0.2.18 answers "how do HONEST replicas
+converge?"
