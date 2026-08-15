@@ -67,7 +67,9 @@ export class CreateSpatialDiscoveryUseCase {
             ),
             moveWorldPlacementUseCase: new MoveWorldPlacementUseCase(
                 spatialIndexProvider,
-                placementRegistry
+                placementRegistry,
+                null,
+                identityProvider
             ),
             removeWorldPlacementUseCase: new RemoveWorldPlacementUseCase(
                 spatialIndexProvider,
