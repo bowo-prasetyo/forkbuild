@@ -112,9 +112,11 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.10  Decentralized Placement Registry
 - [x] 0.2.11  Spatial Discovery & Content Resolution
 - [x] 0.2.12  World View Streaming & Runtime Integration  ✓
-- [ ] 0.2.13  Decentralized Content Backend
-- [ ] 0.2.14  Decentralized Spatial Discovery
-      
+- [x] 0.2.13  Publication Licensing & Fork Policy
+- [x] 0.2.14  Decentralized Content Backend
+- [x] 0.2.15  Decentralized Spatial Discovery
+- [ ] 0.2.16  Decentralized Identity & Signatures
+    
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
 ## License
