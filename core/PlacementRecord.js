@@ -3,6 +3,7 @@ import { Position } from './Position.js';
 import { SpatialBounds } from './SpatialBounds.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { SigningIdentity } from './SigningIdentity.js';
+import { SignatureType } from './Signature.js';
 
 // A publishable spatial record (0.2.10).
 //
@@ -20,6 +21,7 @@ export class PlacementRecord {
     constructor({
         placementId = createId(),
         publicationId,
+owner = null,             // Legacy string owner (backward compat)
         ownerIdentity = null,      // NEW: The resource authority (Alice)
         authorizedBy = null,       // NEW: { identity: Bob, delegationId: '...' }
         signature = null,          // NEW: Bob's signature
@@ -35,6 +37,12 @@ export class PlacementRecord {
         if (!publicationId) throw new Error('PlacementRecord requires a publicationId');
         this._placementId = placementId;
         this._publicationId = publicationId;
+    
+// Resolve owner string from legacy param or new identity object
+this._owner = owner !== undefined && owner !== null 
+    ? owner 
+    : (ownerIdentity ? (ownerIdentity.username || ownerIdentity.id) : null);
+    
         this._ownerIdentity = ownerIdentity;
         this._authorizedBy = authorizedBy;
         this._signature = signature;
@@ -115,6 +123,7 @@ export class PlacementRecord {
         return new PlacementRecord({
             placementId: this._placementId,
             publicationId: this._publicationId,
+owner: this._owner,
             ownerIdentity: this._ownerIdentity,
             authorizedBy: this._authorizedBy, // Preserved, but signature must be recalculated by caller
             signature: null, 
@@ -192,6 +201,7 @@ export class PlacementRecord {
         return {
             placementId: this._placementId,
             publicationId: this._publicationId,
+owner: this._owner,
             ownerIdentity: this._ownerIdentity ? this._ownerIdentity.toJSON() : null,
             authorizedBy: this._authorizedBy ? {
                 identity: this._authorizedBy.identity.toJSON(),
@@ -213,6 +223,7 @@ export class PlacementRecord {
         return new PlacementRecord({
             placementId: json.placementId,
             publicationId: json.publicationId,
+owner: json.owner || null,
             ownerIdentity: json.ownerIdentity ? SigningIdentity.fromJSON(json.ownerIdentity) : null,
             authorizedBy: json.authorizedBy ? {
                 identity: SigningIdentity.fromJSON(json.authorizedBy.identity),
