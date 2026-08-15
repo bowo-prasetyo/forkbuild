@@ -68,7 +68,7 @@
 0.2.12  World View Streaming & Runtime Integration    ✓
 0.2.13  Publication Licensing & Fork Policy           ✓
 0.2.14  Decentralized Content Backend                 ✓
-0.2.15  Decentralized Spatial Discovery
+0.2.15  Decentralized Spatial Discovery               ✓
 0.2.16  Decentralized Identity & Signatures
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
