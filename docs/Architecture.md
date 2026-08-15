@@ -1105,3 +1105,23 @@ placement rights, revocation registries, social recovery, hardware
 wallets. Those are identity INFRASTRUCTURE — adapters around the
 abstraction this milestone establishes. 0.2.17 answers "was that
 identity ALLOWED to do this?" (delegation and authorization policy).
+
+### Decentralized Replication & Conflict Handling (0.2.18)
+The 0.2.18 milestone transitions ForkBuild from single-writer versioning
+to multi-replica causal reconciliation.
+
+Key components:
+- core/CausalStamp.js — Vector-clock semantics for causal ordering.
+- core/RevisionReference.js — Immutable identity of a revision.
+- core/ConflictSet.js — Describes competing valid revisions.
+- replication/ConflictResolver.js — Pure causal comparison (BEFORE, AFTER, CONCURRENT).
+- replication/ConflictPolicy.js — Deterministic winner selection (lexicographical hash).
+- replication/ReplicaMergeService.js — Central merge engine.
+
+The architectural transition:
+0.2.16: "Newer valid revision wins."
+0.2.18: "Causally newer valid revision wins. Concurrent valid revisions
+coexist and are deterministically reconciled without destroying either history."
+
+Replication state is authoritative; the spatial index is rebuilt/updated
+from the reconciled placement state.
