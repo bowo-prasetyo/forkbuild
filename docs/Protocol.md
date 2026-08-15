@@ -437,3 +437,53 @@ Forking a publication cryptographically binds the derivative attribution
 to the new document's metadata, ensuring provenance is preserved across
 the decentralized ecosystem.
 
+<!-- === FILE: ./docs/Protocol.md === (append) -->
+
+## Spatial Index (0.2.15)
+
+The decentralized spatial index is a separate information plane from
+publications, placements, and content. It is an INDEX — a
+discoverability accelerator — never authoritative spatial truth. That
+remains the PlacementRecord.
+
+SpatialCell partitions virtual space into a deterministic uniform
+grid (floor division, negative-safe):
+
+    (x, y, z), cell size 100   ->   cell key "1/0/-1"
+
+Coordinates are virtual (0.2.10), never geographic.
+
+A SpatialIndexManifest is the immutable content object for one cell:
+
+    {
+        "version": 1,
+        "cell": "12/-4/7",
+        "cellSize": 100,
+        "placements": [
+            {
+                "placementId": "placement-abc",
+                "revision": 4,
+                "recordReference": { "hash": "...", "algorithm": "fnv1a-32" }
+            }
+        ]
+    }
+
+A SpatialIndexRoot is the immutable directory of cell manifests:
+
+    {
+        "version": 1,
+        "cellSize": 100,
+        "cells": {
+            "12/-4/7": { "hash": "...", "algorithm": "fnv1a-32" }
+        }
+    }
+
+Index objects deliberately carry no timestamps: they are pure
+functions of their placements, so rebuilding over unchanged records
+reproduces byte-identical manifests with identical content
+identities.
+
+Revision rule: when an index entry and the resolved PlacementRecord
+disagree about the revision, the NEWER revision wins. The stale entry
+is an accelerator lag, not an integrity violation. Proving WHO was
+authorized to create a revision is 0.2.16 territory.
