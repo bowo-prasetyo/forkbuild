@@ -34,7 +34,8 @@ rule.
 - **Publishing & Discovery** — Publish documents to a local discovery catalog; browse Repository View and Author View.
 - **Forking** — Derive new documents from existing ones with fresh instance IDs and preserved lineage.
 - **Spatial World View** — Free camera navigation through a shared coordinate system where multiple worlds stream in and out based on camera position.
-
+- **Decentralized Spatial Discovery (0.2.15)** — cell-based immutable spatial index manifests; viewport queries fetch only intersecting cells; stale-index-tolerant resolution.
+  
 ## Architecture
 
 ForkBuild is layered as **core / application / renderer / ui**, with infrastructure adapters (storage, publisher, discovery, serializer, world-layout) surrounding them.
