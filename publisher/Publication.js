@@ -1,25 +1,26 @@
 import { createId } from '../core/createId.js';
 import { License } from '../core/License.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { Signature, SignatureType } from '../core/Signature.js';
 
-// Pure data: the result of publishing a Document. This is the bridge
-// between Publisher and a future Discovery layer — Repository View,
-// Author View, and (later) World View all consume Publications without
-// knowing how they were created.
+// Pure data: the result of publishing a Document.
 //
-// As of 0.2.3, a Publication is a PUBLISHED SNAPSHOT: an immutable,
-// validated, versioned artifact. The publication id identifies this
-// particular published state (distinct from documentId, which identifies
-// the editable work). contentHash provides integrity verification.
-// schemaVersion records the document envelope schema at publish time.
+// As of 0.2.14 a Publication references immutable content through a
+// ContentReference instead of containing bytes. As of 0.2.16 it gains
+// the trust layer that completes the chain:
 //
-// The actual snapshot content is stored separately at
-// `snapshot:{publicationId}` in storage — NOT embedded in this record.
-// This keeps the publications list lightweight while the snapshot
-// remains independently loadable.
+//   Identity -> signs -> Publication metadata
+//                          -> references -> content hash
+//                                            -> identifies -> bytes
 //
-// Publication is PURE DATA. It has no editing capability, no commands,
-// no document mutation. It describes what was published and when.
+// publisherIdentity — the SigningIdentity that published this work
+// signature         — that identity's signature over the canonical
+//                     envelope of this publication (everything except
+//                     the signature itself)
+//
+// The signed publication is the authoritative statement: "this
+// identity authorized this exact publication metadata and content
+// reference." Both fields are optional for pre-0.2.16 compatibility.
 export class Publication {
     constructor({
         id = createId(),
@@ -34,7 +35,9 @@ export class Publication {
         contentHash = null,
         schemaVersion = 1,
         license = null,
-        contentReference = null
+        contentReference = null,
+        publisherIdentity = null,
+        signature = null
     } = {}) {
         this._id = id;
         this._documentId = documentId;
@@ -48,7 +51,11 @@ export class Publication {
         this._contentHash = contentHash;
         this._schemaVersion = schemaVersion;
         this._license = license instanceof License ? license : (license ? License.fromJSON(license) : null);
-        this._contentReference = contentReference instanceof ContentReference ? contentReference : (contentReference ? ContentReference.fromJSON(contentReference) : null);
+        this._contentReference = contentReference instanceof ContentReference
+            ? contentReference
+            : (contentReference ? ContentReference.fromJSON(contentReference) : null);
+        this._publisherIdentity = publisherIdentity ? { ...publisherIdentity } : null;
+        this._signature = signature instanceof Signature ? signature : Signature.fromJSON(signature);
     }
 
     get id() { return this._id; }
@@ -64,6 +71,56 @@ export class Publication {
     get schemaVersion() { return this._schemaVersion; }
     get license() { return this._license; }
     get contentReference() { return this._contentReference; }
+    get publisherIdentity() { return this._publisherIdentity ? { ...this._publisherIdentity } : null; }
+    get signature() { return this._signature; }
+
+    withSignature(signature) {
+        return new Publication({
+            id: this._id,
+            documentId: this._documentId,
+            title: this._title,
+            author: this._author,
+            providerId: this._providerId,
+            publishedAt: this._publishedAt,
+            url: this._url,
+            parentDocumentId: this._parentDocumentId,
+            snapshotId: this._snapshotId,
+            contentHash: this._contentHash,
+            schemaVersion: this._schemaVersion,
+            license: this._license,
+            contentReference: this._contentReference,
+            publisherIdentity: this._publisherIdentity,
+            signature
+        });
+    }
+
+    // Canonical signing descriptor. The payload mirrors toJSON() minus
+    // the signature itself — a signature can never cover itself.
+    // Republishing creates a NEW publication (new id, new signature);
+    // a publication is its own first and only revision.
+    getSigningDescriptor() {
+        return {
+            type: SignatureType.PUBLICATION,
+            id: this._id,
+            revision: 1,
+            payload: {
+                id: this._id,
+                documentId: this._documentId,
+                title: this._title,
+                author: this._author,
+                providerId: this._providerId,
+                publishedAt: this._publishedAt.toISOString(),
+                url: this._url,
+                parentDocumentId: this._parentDocumentId,
+                snapshotId: this._snapshotId,
+                contentHash: this._contentHash,
+                schemaVersion: this._schemaVersion,
+                license: this._license ? this._license.toJSON() : null,
+                contentReference: this._contentReference ? this._contentReference.toJSON() : null,
+                publisherIdentity: this._publisherIdentity
+            }
+        };
+    }
 
     toJSON() {
         return {
@@ -79,7 +136,9 @@ export class Publication {
             contentHash: this._contentHash,
             schemaVersion: this._schemaVersion,
             license: this._license ? this._license.toJSON() : null,
-            contentReference: this._contentReference ? this._contentReference.toJSON() : null
+            contentReference: this._contentReference ? this._contentReference.toJSON() : null,
+            publisherIdentity: this._publisherIdentity ? { ...this._publisherIdentity } : null,
+            signature: this._signature ? this._signature.toJSON() : null
         };
     }
 
@@ -98,7 +157,9 @@ export class Publication {
             contentHash: json.contentHash,
             schemaVersion: json.schemaVersion,
             license: json.license,
-            contentReference: json.contentReference
+            contentReference: json.contentReference,
+            publisherIdentity: json.publisherIdentity || null,
+            signature: json.signature || null
         });
     }
 }
