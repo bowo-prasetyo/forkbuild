@@ -119,6 +119,30 @@ export class LocalPlacementRegistry extends PlacementRegistry {
         return recordToStore;
     }
 
+    // Marks `record` as the canonical/current record for `placementId`
+    // without touching history (the caller — typically ReplicaMergeService
+    // — has already recorded every revision via add()/update()). This is
+    // what lets a CONCURRENT merge pick the deterministic winner (which
+    // may be the existing `current` record rather than the incoming one)
+    // as the record `get()` returns, and keeps the spatial index in sync
+    // with that winner.
+    setLatest(placementId, record) {
+        if (!(record instanceof PlacementRecord)) {
+            throw new Error('LocalPlacementRegistry: invalid record');
+        }
+
+        let recordToStore = record;
+        if (!recordToStore.contentHash) {
+            const hash = recordToStore.computeContentHash();
+            recordToStore = new PlacementRecord({ ...recordToStore.toJSON(), contentHash: hash });
+        }
+
+        this._storageProvider.save(RECORD_KEY_PREFIX + placementId, recordToStore.toJSON());
+        this._updateSpatialIndex(recordToStore);
+
+        return recordToStore;
+    }
+
     remove(placementId) {
         this._storageProvider.remove(RECORD_KEY_PREFIX + placementId);
         this._storageProvider.remove(HISTORY_KEY_PREFIX + placementId);
