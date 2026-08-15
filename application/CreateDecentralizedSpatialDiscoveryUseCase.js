@@ -19,6 +19,9 @@ import { VerifyPublicationUseCase } from './VerifyPublicationUseCase.js';
 import { LoadPublicationDocumentUseCase } from './LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from './CreateBrickRegistryUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { TrustPolicy } from '../identity/TrustPolicy.js';
+import { EquivocationDetector } from '../core/IndexEquivocation.js';
+import { ReplayGuard } from '../replication/ReplayGuard.js';
 
 // Wires the DECENTRALIZED spatial discovery stack (0.2.15) with the
 // 0.2.16 trust layer:
@@ -29,7 +32,12 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 //   - place/move sign every placement revision they create
 //
 // Pass options.indexAuthorityIdentity to pin which authority's index
-// roots are accepted (multi-node hardening arrives in 0.2.17/0.2.18).
+// roots are accepted — as of 0.2.19 this also configures the wired
+// TrustPolicy's PINNED authority mode, unless options.trustPolicy is
+// supplied explicitly. Pass options.trustPolicy directly for full
+// control (e.g. TrustPolicy.hardened()); the default reproduces
+// pre-0.2.19 behavior exactly (legacy content tolerated, any validly
+// signed authority accepted unless pinned).
 export class CreateDecentralizedSpatialDiscoveryUseCase {
     execute(discoveryProvider = null, identityProvider = null, options = {}) {
         const storageProvider = new LocalStorageProvider();
@@ -52,13 +60,22 @@ export class CreateDecentralizedSpatialDiscoveryUseCase {
         const authorizationVerifier = new LocalAuthorizationVerifier({
             indexAuthorityIdentity: options.indexAuthorityIdentity || null
         });
+        const trustPolicy = options.trustPolicy || new TrustPolicy({
+            pinnedAuthorityIdentity: options.indexAuthorityIdentity || null
+        });
+        const replayGuard = options.replayGuard !== undefined ? options.replayGuard : new ReplayGuard();
         const spatialDiscoveryProvider = new DecentralizedSpatialDiscoveryProvider({
             spatialIndexStore,
             placementRegistry,
-            authorizationVerifier
+            authorizationVerifier,
+            trustPolicy,
+            equivocationDetector: options.equivocationDetector || new EquivocationDetector(),
+            replayGuard
         });
 
         return {
+            trustPolicy,
+            replayGuard,
             spatialDiscoveryProvider,
             contentResolver,
             placementRegistry,

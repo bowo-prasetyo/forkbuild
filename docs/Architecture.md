@@ -1268,3 +1268,135 @@ malicious/equivocating replicas, replay attacks, and discovery
 poisoning. Those are 0.2.19's question: "what happens when the network
 itself is hostile?" — 0.2.18 answers "how do HONEST replicas
 converge?"
+
+### Trust & Discovery Hardening (0.2.19)
+
+0.2.14 through 0.2.18 built a pipeline where cryptographic validity
+answers every question that pipeline was designed to ask:
+
+    content hash -> WHAT      signature  -> WHO
+    authorization -> ALLOWED?  causality  -> HISTORY
+    conflict resolution        -> CONVERGENCE
+
+But a decentralized environment can attack the INFORMATION FLOW around
+that pipeline without breaking Ed25519 at all: replay an old valid
+object, advertise something valid-but-irrelevant, hand different
+replicas different index roots, hide a valid revision, return stale
+manifests, present two competing signed roots, flood discovery with
+references, or replay a delegation. 0.2.19's premise:
+
+> **Cryptographic validity is necessary, but the system must also
+> reason about freshness, provenance, replay, completeness, and
+> equivocation.**
+
+None of this changes the pipeline above — 0.2.19 adds a layer AROUND
+it, and changes nothing about how content hashes, signatures,
+authorization, or causal comparison individually work.
+
+Key components:
+
+- core/TrustObservation.js — the shared vocabulary ("bad signature",
+  "stale", "missing" used to be scattered strings; now a fixed
+  TrustStatus enum) for what a verification step found. Purely
+  descriptive — it never decides what should happen next.
+- identity/TrustPolicy.js — the decision layer: is this authority
+  trusted (PINNED/DISCOVERED/UNTRUSTED), is legacy unsigned content
+  tolerated, is a detected equivocation rejected outright. Two
+  different policies can look at the identical TrustObservation and
+  decide differently. Defaults reproduce pre-0.2.19 behavior exactly
+  — see "Defaults never silently harden" below.
+  did:key identifies a public key; TrustPolicy decides whether that
+  key is trusted. Identity is not trust.
+- core/FreshnessProof.js — evidence of an observation's causal
+  position, never a wall-clock timestamp (a malicious node can lie
+  about a timestamp trivially; it cannot forge a signed CausalStamp
+  relationship). Reuses core/CausalStamp.js's vector-clock machinery
+  rather than inventing a second notion of "newer".
+- core/IndexEquivocation.js + EquivocationDetector — catches an
+  authority signing two DIFFERENT roots at the SAME causal sequence.
+  A valid signature proves the authority signed something; it does not
+  prove the authority signed only one thing. Reuses the exact
+  same-causal-position-different-content pattern 0.2.18 already
+  established for placement conflicts (ConflictResolver), applied here
+  to roots instead of placements — one mechanism, two surfaces.
+- SpatialIndexRoot gains revision, previousRootReference, and
+  causalStamp — a verifiable, hash-linked, causally-ordered history
+  instead of each rebuild being an unrelated signed snapshot.
+  SpatialIndexBuilder chains every new root onto the previous one and
+  advances the authority's own CausalStamp component, whether the
+  rebuild was a full build() or an incremental
+  addOrUpdatePlacement() — a full rebuild is just another revision in
+  the SAME history, not a new lineage. All three fields live inside
+  the signed envelope only once the root actually carries history —
+  see "Backward compatibility" below.
+- replication/ReplayGuard.js — answers exactly one question, "have I
+  already accepted this exact immutable object?", kept strictly
+  separate from "is it eligible to affect current state?" (causal
+  comparison, unchanged from 0.2.18). Conflating the two is how a
+  replayed-but-historically-valid object would end up masquerading as
+  new information. A hit only ever skips redundant re-verification of
+  bytes already proven authentic — it never changes a merge or
+  discovery outcome.
+- spatial/DiscoveryDiagnostics.js — the parallel diagnostic surface
+  discover() was missing: cellsQueried, manifestsLoaded/Missing/
+  Invalid, recordsChecked/Rejected, conflicts, staleEntries,
+  equivocations, and the raw TrustObservation list. discover()'s
+  return type is untouched — PlacementRecord[], exactly as it has been
+  since 0.2.11 — this is an ADDITIONAL surface
+  (provider.getLastDiagnostics()), not a replacement.
+- DecentralizedSpatialDiscoveryProvider's root layer gains three
+  checks before a single manifest is read: authenticity (unchanged
+  from 0.2.16), authority trust (TrustPolicy.acceptsAuthority — a
+  validly-signed root from a non-pinned signer is exactly as unusable
+  as a forged one), and equivocation. Missing/tampered manifests keep
+  being isolated and counted, never fatal; a root that fails any of
+  its three checks IS fatal (throws) — the existing "tampered root is
+  fatal" symmetry, extended, not replaced.
+- core/Delegation.js gains issuedFor (the delegate's did:key, flat),
+  nonce (an anti-replay/anti-duplication token distinct from the
+  already-existing stable `id`), scope/scopeHash (the canonical,
+  normalized capability — action + subject + optional spatial region —
+  independent of incidental JSON shape, so two replicas that
+  independently serialized "the same capability" can compare it by
+  hash), and parentDelegationId. identity/DelegationVerifier.js
+  rejects any delegation carrying a parentDelegationId with
+  UNSUPPORTED_DELEGATION_CHAIN — a delegate re-delegating under
+  authority they only hold via another delegation is EXPLICITLY
+  refused, not silently mis-authorized as direct ownership and not
+  partially/accidentally supported.
+
+Backward compatibility — deliberately asymmetric, and intentionally
+so: PlacementRecord's 0.2.18 pattern repeats exactly for
+SpatialIndexRoot. The new history fields (like PlacementRecord's
+causalStamp/parents) are included in the signed envelope ONLY when the
+root actually carries history; a genesis root — revision 1, no
+previous root, no causal stamp — signs and verifies under EXACTLY the
+pre-0.2.19 shape, so every already-deployed root keeps verifying
+unchanged. Delegation is the one exception: its new fields
+(issuedFor/nonce/parentDelegationId) are always part of the signed
+payload, a real shape change from 0.2.17. This is deliberate, not an
+oversight — Delegation is not wired into any live application flow
+(PlacePublicationUseCase/MoveWorldPlacementUseCase never consult it;
+it is exercised only by its own test suite), so there is no deployed
+signed-delegation corpus this could break, unlike PlacementRecord and
+SpatialIndexRoot which real users' data already depends on.
+
+Defaults never silently harden: TrustPolicy's bare constructor
+defaults (requireSignedRoot: false, requireAuthorizedPlacements:
+false, allowLegacyUnsigned: true) reproduce pre-0.2.19 behavior
+exactly, and every provider/use case that does not receive an explicit
+trustPolicy constructs one with those same defaults. TrustPolicy.
+hardened() is the fully strict configuration this milestone's design
+describes as the target — no legacy content, an authority must be
+pinned, equivocation rejected outright — available to any caller ready
+to opt in, but never forced on existing callers or existing data.
+
+Deliberately not in 0.2.19: blockchain consensus, proof-of-stake, DAO
+voting, economic incentives, Byzantine consensus protocols, automatic
+or social key recovery, hardware wallets, a global identity discovery
+network, CRDT conversion of the document model, and automatic merging
+of arbitrary document content. Also not here: full delegation chaining
+(0.2.19 only detects and rejects chain attempts — see
+core/Delegation.js above), and delegation revocation (still deferred
+from 0.2.17). This milestone hardens the trust and discovery layer
+already built; it does not turn ForkBuild into a consensus system.

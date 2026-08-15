@@ -279,3 +279,57 @@ concurrent with an already-recorded conflict, its members are widened
 replaced by a fresh two-member set. No competing valid history is ever
 dropped from a placement's conflict set merely because another
 revision showed up later.
+
+### Trust Is Separate From Cryptographic Validity (0.2.19)
+
+A valid signature proves that a private key authorized an object. It
+does not prove that the key is trusted, that the object is current, or
+that the object was the only object signed at that causal position.
+
+Trust policy therefore remains separate from cryptographic verification.
+
+No untrusted observation may mutate authoritative replicated state.
+Untrusted objects may be retained for diagnostics, but they cannot
+become current state merely because they are correctly signed.
+
+Historical validity and current eligibility are separate properties.
+An old immutable revision remains verifiable forever without becoming
+the current revision when replayed.
+
+### Arrival Order Is Never Trust (0.2.19)
+
+Network arrival order is an observation of transport, not evidence of
+authority, freshness, or causality.
+
+Two replicas receiving the same authenticated objects in different
+orders must produce the same authoritative state and the same trust
+observations.
+
+### Identity Is Not Trust (0.2.19)
+
+did:key identifies a public key. Trust policy decides whether that key
+is trusted. A perfectly valid Ed25519 key can belong to an attacker —
+verifying WHO signed something is a prerequisite for trust, never a
+substitute for deciding whether that signer is trusted at all
+(identity/TrustPolicy.js).
+
+### A Discovery Provider Must Never Say Only "Not Found" (0.2.19)
+
+NOT_FOUND, index-stale, unavailable, invalid, unauthorized, and
+conflicted are different situations with different remedies. Collapsing
+them into a single failure mode — or a scattered set of ad hoc strings
+— makes a decentralized environment's failures illegible. Every check
+in the trust pipeline produces a core/TrustObservation.js with a named
+TrustStatus; discover()'s return type never changes, but
+getLastDiagnostics() always has a structured account of what was
+checked and what happened.
+
+### A Valid Signature Proves Authorship, Not Exclusivity (0.2.19)
+
+An authority can sign two different objects at the same causal
+position and both signatures verify — that is equivocation
+(core/IndexEquivocation.js), not a forgery. Equivocation is detected
+and reported, never silently resolved by picking one side and
+discarding the evidence; whether a detected equivocation is tolerated
+or rejected is a TrustPolicy decision, made explicitly, not a side
+effect of whichever root a replica happened to load first.

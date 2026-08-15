@@ -31,6 +31,20 @@ export class DelegationVerifier {
         const delSigValid = await delegation.issuerIdentity.verify(delegation.getCanonicalPayload(), delegation.signature);
         if (!delSigValid) return { authorized: false, reason: 'INVALID_DELEGATION_SIGNATURE' };
 
+        // 0.2.19: delegation chains (a delegate re-delegating under the
+        // authority of a delegation THEY hold, rather than direct
+        // ownership) are explicitly unsupported. Without this check, a
+        // delegation issued by a non-owner would simply fail
+        // DELEGATION_ISSUER_MISMATCH below and read like a plain
+        // authorization failure — this reports the actual shape of
+        // what was attempted instead, rather than silently
+        // misclassifying (or, worse, a future change to this method
+        // accidentally treating it as valid). Full chaining is
+        // deliberately deferred, not partially/accidentally implemented.
+        if (delegation.parentDelegationId) {
+            return { authorized: false, reason: 'UNSUPPORTED_DELEGATION_CHAIN' };
+        }
+
         if (delegation.expiresAt && delegation.expiresAt < currentDate) {
             return { authorized: false, reason: 'DELEGATION_EXPIRED' };
         }
