@@ -2,24 +2,18 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 
 // Moves a placement to a new global position.
 //
-// As of 0.2.10, this creates a new revision of the PlacementRecord.
-// The publication content hash remains unchanged. Local brick
-// coordinates are never rewritten.
-//
-// As of 0.2.15, revisions are immutable. The registry remains the
-// "latest pointer" for the placement; when an optional
-// SpatialIndexBuilder is wired, the new revision is additionally
-// published as immutable content and only the affected cell manifests
-// advance to new immutable manifest versions. Cells of the OLD
-// position keep their reference to the old revision until a rebuild —
-// the intended eventual-consistency story: the index is a
-// discoverability accelerator, not truth, and discovery resolves the
-// stale entry away (newer revision wins + spatial filter).
+// As of 0.2.10 this creates a new revision of the PlacementRecord.
+// As of 0.2.15 the revision is published as immutable index content.
+// As of 0.2.16 the new revision is SIGNED: moving a placement is an
+// act of authorization, and the new immutable revision carries the
+// signer's signature. The previous revision's signature stays valid
+// for the previous revision — signatures never move between revisions.
 export class MoveWorldPlacementUseCase {
-    constructor(spatialIndexProvider, placementRegistry = null, spatialIndexBuilder = null) {
+    constructor(spatialIndexProvider, placementRegistry = null, spatialIndexBuilder = null, identityProvider = null) {
         this._spatialIndexProvider = spatialIndexProvider;
         this._placementRegistry = placementRegistry;
         this._spatialIndexBuilder = spatialIndexBuilder;
+        this._identityProvider = identityProvider;
     }
 
     execute(placementId, newPosition) {
@@ -32,21 +26,39 @@ export class MoveWorldPlacementUseCase {
         const updated = placement.withPosition(newPosition);
         this._spatialIndexProvider.update(updated);
 
-        // Create a new revision of the PlacementRecord (new in 0.2.10).
+        // Create a new revision of the PlacementRecord (0.2.10).
         if (this._placementRegistry) {
             const existingRecord = this._placementRegistry.get(placementId);
             if (existingRecord) {
                 const newRecord = existingRecord.withPosition(newPosition);
-                const updatedRecord = this._placementRegistry.update(newRecord);
+                const hash = newRecord.computeContentHash();
+                let prepared = new PlacementRecord({ ...newRecord.toJSON(), contentHash: hash });
 
-                // 0.2.15: publish the new immutable revision into the
-                // decentralized spatial index, when wired.
+                // 0.2.16: sign the new revision. Ownership stays with
+                // the original ownerIdentity when one exists; a record
+                // signed by anyone else fails authorization later —
+                // exactly the invariant this milestone establishes.
+                if (this._identityProvider
+                    && typeof this._identityProvider.signCanonical === 'function'
+                    && this._identityProvider.currentUser()) {
+                    if (!prepared.ownerIdentity) {
+                        prepared = prepared.withOwnerIdentity(
+                            this._identityProvider.getSigningIdentity().toJSON()
+                        );
+                    }
+                    prepared = prepared.withSignature(
+                        this._identityProvider.signCanonical(prepared.getSigningDescriptor())
+                    );
+                }
+
+                const updatedRecord = this._placementRegistry.update(prepared);
+
+                // 0.2.15: publish the new immutable revision.
                 if (this._spatialIndexBuilder) {
                     this._spatialIndexBuilder.addOrUpdatePlacement(updatedRecord);
                 }
             }
         }
-
         return updated;
     }
 }
