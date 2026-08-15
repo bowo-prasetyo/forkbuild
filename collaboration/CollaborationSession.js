@@ -172,6 +172,15 @@ export class CollaborationSession {
         });
 
         this._send(envelope);
+        
+	    // FIX: In direct/local mode, simulate a local acknowledge so the UI/tests know it was applied
+	    if (this._onAcknowledge) {
+	        this._onAcknowledge({
+	            operationId,
+	            acknowledgedBy: this._author, // self-acknowledge
+	            appliedRevision: this._commandHistory.getCursor()
+	        });
+	    }
     }
 
     // ---------------------------------------------------------
