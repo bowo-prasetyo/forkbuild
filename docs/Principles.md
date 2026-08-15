@@ -240,3 +240,25 @@ to place a publication does not automatically grant permission to move an existi
 
 Delegations are immutable and independently verifiable. Revocation, delegation chaining, and 
 distributed policy consensus are deliberately outside 0.2.17.
+
+### Replication and Conflict Handling (0.2.18)
+
+Decentralized replication never overwrites immutable history.
+Replicas exchange immutable revisions and reconcile them using causal
+ordering.
+
+A causally newer valid revision supersedes the revision it follows.
+Concurrent valid revisions are not corruption: they represent
+independently authorized histories created without knowledge of one
+another.
+
+Concurrent revisions are retained in a ConflictSet and a deterministic
+conflict policy selects a presentation winner. The losing revision is
+never deleted and remains independently verifiable.
+
+Replica convergence must depend only on the set of valid immutable
+objects, never on arrival order, wall-clock time, network topology, or
+which replica happened to process an object first.
+
+Integrity, signature, and authorization are evaluated before a revision
+participates in conflict resolution.
