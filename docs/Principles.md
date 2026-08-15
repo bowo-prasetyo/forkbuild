@@ -184,3 +184,22 @@ A Publication references immutable content through a cryptographic ContentRefere
 IPFS, Arweave, HTTP gateways, local storage, and future backends are retrieval
 mechanisms rather than content identities. Retrieved bytes must always be verified
 against the publication's expected content hash before deserialization.
+
+<!-- === FILE: ./docs/Principles.md === (append) -->
+
+The spatial index is a discoverability accelerator, not truth (0.2.15).
+The PlacementRecord is the authoritative spatial record; a spatial
+index — local, IPFS, Arweave, or otherwise — exists so placements can
+be FOUND without scanning the entire world. An index entry pointing
+at an old revision is not an error: resolve the referenced record,
+compare revisions, and let the newer revision win. Treat a stale or
+disagreeing index the way you would treat a stale database index —
+never as the row itself.
+
+Decentralized records are immutable; pointers move (0.2.15). A new
+placement revision is a new immutable object with a new content
+identity — never a rewrite of the previous revision. What moves is a
+mutable pointer (the registry's latest record, the index root
+reference), never the content. This is what makes history, caching,
+replication, and eventual consistency tractable once storage is
+genuinely decentralized.
