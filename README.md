@@ -6,14 +6,18 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.16** — Decentralized Identity & Signatures
+**Version 0.2.19** — Trust & Discovery Hardening
 
-0.2.16 gives every immutable object an answer to "who authorized
-this?": Ed25519 signing identities (did:key), canonical domain-
-separated signing envelopes, signed publications / placement
-revisions / spatial-index roots, and the "newer *valid* revision
-wins" discovery rule — with graceful failure isolation and full
-backward compatibility for unsigned legacy data.
+0.2.16 gave every immutable object an answer to "who authorized
+this?" (Ed25519 signing identities, signed publications / placement
+revisions / spatial-index roots). 0.2.17 through 0.2.19 build on that
+foundation: delegated authorization without transferring ownership,
+causal replication so independently authorized replicas converge
+without destroying either side's history, and a trust/discovery layer
+that reasons about authority, freshness, replay, and equivocation —
+not just cryptographic validity — before anything is treated as
+current state. See [docs/Architecture.md](docs/Architecture.md) for
+the full write-up of each milestone.
 
 ## Features
 
@@ -34,6 +38,9 @@ backward compatibility for unsigned legacy data.
 - **Spatial World View** — Free camera navigation through a shared coordinate system where multiple worlds stream in and out based on camera position.
 - **Decentralized Spatial Discovery (0.2.15)** — cell-based immutable spatial index manifests; viewport queries fetch only intersecting cells; stale-index-tolerant resolution.
 - **Decentralized Identity & Signatures (0.2.16)** — Ed25519 signing identities, canonical signing envelopes with domain separation, signed publications/placements/index roots, and authorization verification in decentralized discovery.
+- **Delegated Ownership & Authorization (0.2.17)** — signed, narrowly-scoped delegations (e.g. "place this publication," optionally region-constrained) that let someone other than the resource owner act with explicit, verifiable authority, without transferring ownership.
+- **Decentralized Replication & Conflict Handling (0.2.18)** — causal (vector-clock) history on every placement revision; independently authorized replicas that edit the same placement while disconnected converge deterministically on reconciliation, with every competing revision retained and verifiable rather than one silently overwriting the other.
+- **Trust & Discovery Hardening (0.2.19)** — a trust-policy layer (pinned/discovered/untrusted authorities, legacy-content tolerance) and equivocation detection (an authority signing two different index roots at the same causal position) sit around the discovery pipeline, plus a structured diagnostics surface explaining exactly why a query returned what it did.
   
 ## Architecture
 
@@ -115,9 +122,9 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.14  Decentralized Content Backend
 - [x] 0.2.15  Decentralized Spatial Discovery
 - [x] 0.2.16  Decentralized Identity & Signatures
-- [ ] 0.2.17  Delegated Ownership & Authorization
-- [ ] 0.2.18  Decentralized Replication & Conflict Handling
-- [ ] 0.2.19  Trust / Discovery Hardening
+- [x] 0.2.17  Delegated Ownership & Authorization
+- [x] 0.2.18  Decentralized Replication & Conflict Handling
+- [x] 0.2.19  Trust / Discovery Hardening
     
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
