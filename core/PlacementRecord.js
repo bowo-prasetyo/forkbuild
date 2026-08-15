@@ -1,8 +1,8 @@
 import { createId } from './createId.js';
 import { Position } from './Position.js';
 import { SpatialBounds } from './SpatialBounds.js';
-import { Signature, SignatureType } from './Signature.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { SigningIdentity } from './SigningIdentity.js';
 
 // A publishable spatial record (0.2.10).
 //
@@ -20,7 +20,9 @@ export class PlacementRecord {
     constructor({
         placementId = createId(),
         publicationId,
-        owner = null,
+        ownerIdentity = null,      // NEW: The resource authority (Alice)
+        authorizedBy = null,       // NEW: { identity: Bob, delegationId: '...' }
+        signature = null,          // NEW: Bob's signature
         position = new Position(),
         rotation = { x: 0, y: 0, z: 0 },
         scale = { x: 1, y: 1, z: 1 },
@@ -28,32 +30,22 @@ export class PlacementRecord {
         revision = 1,
         contentHash = null,
         createdAt = new Date(),
-        updatedAt = new Date(),
-        ownerIdentity = null,
-        signature = null
-    } = {}) {
-        if (!publicationId) {
-            throw new Error('PlacementRecord requires a publicationId');
-        }
+        updatedAt = new Date()
+    }) {
+        if (!publicationId) throw new Error('PlacementRecord requires a publicationId');
         this._placementId = placementId;
         this._publicationId = publicationId;
-        this._owner = owner;
-        this._position = position instanceof Position
-            ? position
-            : new Position(position.x || 0, position.y || 0, position.z || 0);
+        this._ownerIdentity = ownerIdentity;
+        this._authorizedBy = authorizedBy;
+        this._signature = signature;
+        this._position = position instanceof Position ? position : new Position(position.x || 0, position.y || 0, position.z || 0);
         this._rotation = { ...rotation };
         this._scale = { ...scale };
+        this._bounds = bounds instanceof SpatialBounds ? bounds : (bounds ? SpatialBounds.fromJSON(bounds) : null);
         this._revision = revision;
         this._contentHash = contentHash;
         this._createdAt = createdAt instanceof Date ? createdAt : new Date(createdAt);
         this._updatedAt = updatedAt instanceof Date ? updatedAt : new Date(updatedAt);
-        this._bounds = bounds instanceof SpatialBounds
-            ? bounds
-            : (bounds ? SpatialBounds.fromJSON(bounds) : null);
-        this._ownerIdentity = ownerIdentity;
-        this._signature = signature
-            ? (signature instanceof Signature ? signature : Signature.fromJSON(signature))
-            : null;
     }
 
     get placementId() { return this._placementId; }
@@ -68,7 +60,27 @@ export class PlacementRecord {
     get createdAt() { return this._createdAt; }
     get updatedAt() { return this._updatedAt; }
     get ownerIdentity() { return this._ownerIdentity; }
+    get authorizedBy() { return this._authorizedBy; }
     get signature() { return this._signature; }
+
+    // Binds the spatial data, content hash, and authorization chain into a single signable payload
+    getCanonicalPayload() {
+        return JSON.stringify({
+            placementId: this._placementId,
+            publicationId: this._publicationId,
+            contentHash: this._contentHash,
+            ownerIdentityId: this._ownerIdentity ? this._ownerIdentity.id : null,
+            authorizedById: this._authorizedBy ? this._authorizedBy.identity.id : null,
+            delegationId: this._authorizedBy ? this._authorizedBy.delegationId : null,
+            position: this._position.toJSON(),
+            rotation: this._rotation,
+            scale: this._scale,
+            bounds: this._bounds ? this._bounds.toJSON() : null,
+            revision: this._revision,
+            createdAt: this._createdAt.toISOString(),
+            updatedAt: this._updatedAt.toISOString()
+        });
+    }
 
     // UNCHANGED since 0.2.10 — same fields, same order. Deliberately does
     // NOT include ownerIdentity/signature, so already-stored records keep
@@ -103,17 +115,17 @@ export class PlacementRecord {
         return new PlacementRecord({
             placementId: this._placementId,
             publicationId: this._publicationId,
-            owner: this._owner,
             ownerIdentity: this._ownerIdentity,
+            authorizedBy: this._authorizedBy, // Preserved, but signature must be recalculated by caller
+            signature: null, 
             position: newPosition,
             rotation: this._rotation,
             scale: this._scale,
             bounds: this._bounds,
             revision: this._revision + 1,
-            contentHash: null,
+            contentHash: this._contentHash,
             createdAt: this._createdAt,
-            updatedAt: new Date(),
-            signature: null
+            updatedAt: new Date()
         });
     }
 
@@ -180,8 +192,12 @@ export class PlacementRecord {
         return {
             placementId: this._placementId,
             publicationId: this._publicationId,
-            owner: this._owner,
-            ownerIdentity: PlacementRecord._identityJSON(this._ownerIdentity),
+            ownerIdentity: this._ownerIdentity ? this._ownerIdentity.toJSON() : null,
+            authorizedBy: this._authorizedBy ? {
+                identity: this._authorizedBy.identity.toJSON(),
+                delegationId: this._authorizedBy.delegationId
+            } : null,
+            signature: this._signature,
             position: this._position.toJSON(),
             rotation: { ...this._rotation },
             scale: { ...this._scale },
@@ -189,8 +205,7 @@ export class PlacementRecord {
             revision: this._revision,
             contentHash: this._contentHash,
             createdAt: this._createdAt.toISOString(),
-            updatedAt: this._updatedAt.toISOString(),
-            signature: this._signature ? this._signature.toJSON() : null
+            updatedAt: this._updatedAt.toISOString()
         };
     }
 
@@ -198,8 +213,12 @@ export class PlacementRecord {
         return new PlacementRecord({
             placementId: json.placementId,
             publicationId: json.publicationId,
-            owner: json.owner,
-            ownerIdentity: json.ownerIdentity || null,
+            ownerIdentity: json.ownerIdentity ? SigningIdentity.fromJSON(json.ownerIdentity) : null,
+            authorizedBy: json.authorizedBy ? {
+                identity: SigningIdentity.fromJSON(json.authorizedBy.identity),
+                delegationId: json.authorizedBy.delegationId
+            } : null,
+            signature: json.signature,
             position: Position.fromJSON(json.position),
             rotation: json.rotation,
             scale: json.scale,
@@ -207,8 +226,7 @@ export class PlacementRecord {
             revision: json.revision,
             contentHash: json.contentHash,
             createdAt: new Date(json.createdAt),
-            updatedAt: new Date(json.updatedAt),
-            signature: json.signature || null
+            updatedAt: new Date(json.updatedAt)
         });
     }
 
