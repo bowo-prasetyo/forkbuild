@@ -487,3 +487,53 @@ Revision rule: when an index entry and the resolved PlacementRecord
 disagree about the revision, the NEWER revision wins. The stale entry
 is an accelerator lag, not an integrity violation. Proving WHO was
 authorized to create a revision is 0.2.16 territory.
+
+<!-- === FILE: ./docs/Protocol.md === (append) -->
+
+## Identity & Signatures (0.2.16)
+
+The trust layer of the decentralized planes. Every signable object
+(Publication, PlacementRecord, SpatialIndexRoot) carries an optional
+`signature` plus the SigningIdentity that produced it.
+
+Canonical signing envelope (property order is protocol):
+
+    {
+        "domain": "forkbuild",
+        "type": "publication" | "placement-record" | "spatial-index-root",
+        "id": "<object id>",
+        "revision": <integer>,
+        "payload": { ...canonical object fields... }
+    }
+
+Signature shape:
+
+    {
+        "algorithm": "Ed25519",
+        "signer": "did:key:z...",
+        "signature": "<hex>",
+        "signedHash": "<hash of the canonical bytes>",
+        "domain": "forkbuild/<type>",
+        "signedAt": "<ISO timestamp>"
+    }
+
+Verification reconstructs the envelope from the object's own signing
+descriptor, checks the signedHash, then verifies the Ed25519 signature
+against the claimed identity's public key. Authorization rules:
+
+- Publication — the publisher must sign (signature verifies against
+  publisherIdentity; signer must BE that identity).
+- PlacementRecord — the placement owner must sign (ownerIdentity).
+  Publication ownership and placement authorization are distinct
+  authorities; delegation is 0.2.17.
+- SpatialIndexRoot — signer recovered from the did:key itself;
+  optional pinned index authority.
+
+Identity encoding: Ed25519 public keys use did:key (multicodec
+ed25519-pub 0xed01 + base58btc), so the identifier embeds the key —
+a bare signature can be verified without any external identity store.
+
+Discovery rule: newer VALID revision wins. Failure isolation: invalid
+placement signatures reject one record; tampered manifests skip one
+cell; an invalid root signature rejects the whole index snapshot.
+Unsigned pre-0.2.16 objects are tolerated (`signed: false`).
