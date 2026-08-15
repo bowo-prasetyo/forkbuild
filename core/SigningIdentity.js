@@ -34,7 +34,7 @@ export class SigningIdentity {
         return {
             signerId: this._id,
             payloadHash: hash,
-            signature: `mock-sig-${this._privateKey}-${hash}`
+			signature: `mock-sig-${this._publicKey}-${hash}` // FIX: Use publicKey instead of privateKey
         };
     }
 
@@ -42,6 +42,6 @@ export class SigningIdentity {
         const hash = computeContentHash(payload);
         return signature.signerId === this._id && 
                signature.payloadHash === hash &&
-               signature.signature === `mock-sig-${this._privateKey}-${hash}`;
+				signature.signature === `mock-sig-${this._publicKey}-${hash}`; // FIX: Use publicKey
     }
 }
