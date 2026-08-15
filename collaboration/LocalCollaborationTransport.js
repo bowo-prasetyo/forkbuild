@@ -69,18 +69,18 @@ export class LocalCollaborationTransport extends CollaborationTransport {
         if (!room) {
             return;
         }
-    
-        // FIX: Removed the broken special-case for acknowledge/reject.
-        // In a local broadcast bus, simply broadcasting to everyone except 
-        // the sender correctly routes the ack back to the original author.
-        for (const entry of room) {
-            if (entry.author === senderAuthor) {
-                continue; // echo prevention for all broadcasts
+        // Acknowledgments and rejections should only go back to the sender
+        if (json.type === 'acknowledge' || json.type === 'reject') {
+            // In a local broadcast bus, simply broadcasting to everyone except 
+            // the sender correctly routes the ack back to the original author.
+            for (const entry of room) {
+                // FIX: Changed === to !== so it routes to the OTHER peers (the original sender)
+                if (entry.author !== senderAuthor && entry.callback) {
+                    entry.callback(CollaborationEnvelope.fromJSON(json));
+                }
             }
-            if (entry.callback) {
-                entry.callback(CollaborationEnvelope.fromJSON(json));
-            }
-        }
+            return;
+        }        
     }
 
     // Returns the number of connected participants for a document.
