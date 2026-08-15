@@ -6,47 +6,42 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-// The decentralized implementation of the 0.2.11 discovery interface
-// (0.2.15). Same contract as LocalSpatialDiscoveryProvider —
-// discover(center, radius) and findByPublicationId(publicationId)
-// return PlacementRecord[] and never load publication content — but
-// backed by immutable cell manifests instead of a local scan.
+// The decentralized implementation of the 0.2.11 discovery interface.
 //
-// Query pipeline:
+// The 0.2.16 verification pipeline — every layer answers a different
+// trust question:
 //
-//   viewport sphere
-//        -> intersecting SpatialCells
-//        -> root lookup: which cells have manifests at all
-//        -> retrieve ONLY those manifests (never the other cells)
-//        -> placement references per manifest
-//        -> record resolution: registry live record + immutable
-//           referenced record, NEWER REVISION WINS
-//        -> integrity check
-//        -> sphere filter on the resolved record's actual bounds
-//        -> PlacementRecord[]
+//   viewport -> cells -> SIGNED index root -> manifests
+//            -> placement references -> immutable revisions
+//            -> integrity check -> SIGNATURE check -> revision check
+//            -> spatial filter -> PlacementRecord[]
 //
-// THE INDEX IS NOT TRUTH. A manifest entry pointing at an outdated
-// revision is not corruption — it is a stale accelerator entry. The
-// resolved PlacementRecord is authoritative; a missing manifest is
-// skipped and counted, a tampered manifest is rejected and counted,
-// and discovery of every other cell proceeds untouched. Only a
-// tampered ROOT is a hard failure: without a trustworthy root there
-// is nothing to query against.
+// The resolution rule changed in 0.2.16 from
+//
+//   "newer revision wins"
+//
+// to
+//
+//   "newer VALID revision wins":
+//
+// a candidate must pass content integrity AND signature authorization
+// before it may even compete on revision number. A forged or
+// unauthorized revision 5 never displaces an authentic revision 4.
+//
+// Failure isolation (mirrors 0.2.15, extended):
+//   invalid placement signature -> record rejected + counted, others go on
+//   missing/tampered manifest   -> skipped + counted, other cells go on
+//   invalid root signature      -> THROW — without a trusted root there
+//                                  is nothing to query against
 export class DecentralizedSpatialDiscoveryProvider extends SpatialDiscoveryProvider {
-    constructor({ spatialIndexStore, placementRegistry = null }) {
+    constructor({ spatialIndexStore, placementRegistry = null, authorizationVerifier = null }) {
         super();
         this._store = spatialIndexStore;
         this._placementRegistry = placementRegistry;
+        this._authorizationVerifier = authorizationVerifier;
         this._lastQueryStats = null;
     }
 
-    // Observability for the last discover() call:
-    //   cellsConsidered    query cells that had a manifest reference
-    //   manifestsRetrieved manifests successfully fetched + verified
-    //   manifestsRejected  missing or tampered manifests (skipped)
-    //   entriesSeen        placement references examined
-    //   recordsRejected    unretrievable/tampered records, or
-    //                      integrity failures
     get lastQueryStats() {
         return this._lastQueryStats ? { ...this._lastQueryStats } : null;
     }
@@ -57,7 +52,8 @@ export class DecentralizedSpatialDiscoveryProvider extends SpatialDiscoveryProvi
             manifestsRetrieved: 0,
             manifestsRejected: 0,
             entriesSeen: 0,
-            recordsRejected: 0
+            recordsRejected: 0,
+            signaturesInvalid: 0
         };
         this._lastQueryStats = stats;
 
@@ -76,18 +72,30 @@ export class DecentralizedSpatialDiscoveryProvider extends SpatialDiscoveryProvi
         }
         const root = SpatialIndexRoot.fromJSON(rootJson);
 
+        // 0.2.16: a signed root must verify. An invalid or unauthorized
+        // root signature rejects the whole index snapshot — the same
+        // fatality as a tampered root. Unsigned roots (legacy) pass.
+        if (root.signature && this._authorizationVerifier) {
+            const rootCheck = this._authorizationVerifier.verifyIndexRoot(root);
+            if (!rootCheck.valid) {
+                throw new Error(
+                    'DecentralizedSpatialDiscoveryProvider: spatial index root signature rejected ('
+                    + (rootCheck.reason || 'invalid') + ')'
+                );
+            }
+        }
+
         const results = new Map();
         for (const cell of SpatialCell.cellsForSphere(center, radius, root.cellSize)) {
             const referenceJson = root.getManifestReference(cell.key);
             if (!referenceJson) {
-                continue; // this cell has no indexed placements
+                continue;
             }
             stats.cellsConsidered += 1;
 
             const manifestReference = ContentReference.fromJSON(referenceJson);
             const manifestJson = this._store.get(manifestReference);
             if (manifestJson === null || !this._verifyHash(manifestJson, manifestReference)) {
-                // Stale or corrupted manifest: isolate, never crash.
                 stats.manifestsRejected += 1;
                 continue;
             }
@@ -112,14 +120,12 @@ export class DecentralizedSpatialDiscoveryProvider extends SpatialDiscoveryProvi
     }
 
     findByPublicationId(publicationId) {
-        // The registry is the authoritative live source when present.
         if (this._placementRegistry) {
             const records = this._placementRegistry.findByPublicationId(publicationId);
             if (records.length > 0) {
                 return records;
             }
         }
-        // Decentralized fallback: scan the root's manifests.
         const rootReference = this._store.getRootReference();
         if (!rootReference) {
             return [];
@@ -134,7 +140,8 @@ export class DecentralizedSpatialDiscoveryProvider extends SpatialDiscoveryProvi
             manifestsRetrieved: 0,
             manifestsRejected: 0,
             entriesSeen: 0,
-            recordsRejected: 0
+            recordsRejected: 0,
+            signaturesInvalid: 0
         };
         const results = new Map();
         for (const cellKey of root.cellKeys) {
@@ -161,11 +168,9 @@ export class DecentralizedSpatialDiscoveryProvider extends SpatialDiscoveryProvi
         return [...results.values()];
     }
 
-    // Index-is-not-truth resolution:
-    //   live record (registry)  — the authoritative latest pointer
-    //   stored record (content) — the immutable referenced revision
-    // The NEWER revision wins; a tie prefers the live record. The
-    // winner must pass verifyIntegrity() or it is rejected.
+    // 0.2.16 resolution: gather candidates, filter by trust, THEN
+    // compare revisions. Newer VALID revision wins; ties prefer the
+    // live registry record.
     _resolveEntry(entry, stats) {
         const live = this._placementRegistry
             ? this._placementRegistry.get(entry.placementId)
@@ -182,20 +187,44 @@ export class DecentralizedSpatialDiscoveryProvider extends SpatialDiscoveryProvi
             }
         }
 
-        let candidate = null;
-        if (live && stored) {
-            candidate = stored.revision > live.revision ? stored : live;
-        } else {
-            candidate = live || stored;
+        const trusted = [];
+        if (live && this._isRecordTrusted(live, stats)) {
+            trusted.push(live);
         }
-        if (!candidate) {
+        if (stored && this._isRecordTrusted(stored, stats)) {
+            trusted.push(stored);
+        }
+        if (trusted.length === 0) {
             return null;
         }
-        if (!candidate.verifyIntegrity()) {
+
+        let best = trusted[0];
+        for (const candidate of trusted.slice(1)) {
+            if (candidate.revision > best.revision) {
+                best = candidate;
+            } else if (candidate.revision === best.revision && candidate === live) {
+                best = candidate;
+            }
+        }
+        return best;
+    }
+
+    // Trust = content integrity + authorization signature (when one
+    // exists). Unsigned legacy records remain accepted — the deployed
+    // pre-0.2.16 corpus must keep working.
+    _isRecordTrusted(record, stats) {
+        if (!record.verifyIntegrity()) {
             stats.recordsRejected += 1;
-            return null;
+            return false;
         }
-        return candidate;
+        if (record.signature && this._authorizationVerifier) {
+            const check = this._authorizationVerifier.verifyPlacement(record);
+            if (!check.valid) {
+                stats.signaturesInvalid += 1;
+                return false;
+            }
+        }
+        return true;
     }
 
     _verifyHash(json, reference) {
@@ -203,9 +232,6 @@ export class DecentralizedSpatialDiscoveryProvider extends SpatialDiscoveryProvi
         return computeContentHash(JSON.stringify(json)) === expected;
     }
 
-    // Sphere vs the record's GLOBAL bounds (translated local AABB),
-    // falling back to origin distance — identical test to
-    // LocalSpatialIndexProvider.discover.
     static intersectsSphere(record, center, radius) {
         const r2 = radius * radius;
         const bounds = record.bounds
