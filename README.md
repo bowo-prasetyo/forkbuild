@@ -6,12 +6,16 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.12** — World View Streaming & Runtime Integration
+**Version 0.2.15** — Decentralized Spatial Discovery
 
-0.2.12 bridges the spatial discovery pipeline with the live World View
-runtime. The WorldViewStreamingSession manages the lifecycle of loaded
-worlds using hysteresis to prevent boundary flickering, caches publication
-content to avoid redundant I/O, and gracefully isolates failures.
+0.2.15 adds the decentralized implementation behind the 0.2.11
+SpatialDiscoveryProvider interface: deterministic spatial cells,
+immutable cell manifests, a content-addressed spatial index store,
+and a discovery provider that retrieves only the cell manifests a
+viewport actually intersects. The PlacementRecord remains
+authoritative spatial truth; the index is a discoverability
+accelerator whose staleness is resolved by the newer-revision-wins
+rule.
 
 ## Features
 
