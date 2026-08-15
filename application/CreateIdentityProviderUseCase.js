@@ -9,7 +9,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //
 // options.indexAuthorityIdentity — optional SigningIdentity pinning
 // which authority's spatial-index root signatures are accepted.
-export class CreateIdentityUseCase {
+export class CreateIdentityProviderUseCase {
     execute(options = {}) {
         return {
             identityProvider: new LocalIdentityProvider(),
