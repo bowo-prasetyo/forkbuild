@@ -1,20 +1,14 @@
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
+import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
-// Wires the 0.2.16 trust surface in one call. The provider itself comes
-// from CreateIdentityProviderUseCase — the single source of truth for
-// provider construction; this use case adds the authorization verifier
-// so callers receive the complete identity + verification pair without
-// importing identity/ directly.
-//
-// options.indexAuthorityIdentity — optional SigningIdentity pinning
-// which authority's spatial-index root signatures are accepted.
+// Builds the concrete identity backend, so ui/ never imports identity/
+// or storage/ directly — same reasoning as CreatePersistenceUseCase.
+// LocalIdentityProvider is the only concrete provider today; a future
+// Steem Keychain / Hive Keychain / wallet provider slots in here without
+// application/ or ui/ changing at all — everything above this only ever
+// calls login()/logout()/currentUser()/sign().
 export class CreateIdentityProviderUseCase {
-    execute(options = {}) {
-        return {
-            identityProvider: new LocalIdentityProvider(new LocalStorageProvider()),
-            authorizationVerifier: new LocalAuthorizationVerifier(options)
-        };
+    execute() {
+        return new LocalIdentityProvider(new LocalStorageProvider());
     }
 }
