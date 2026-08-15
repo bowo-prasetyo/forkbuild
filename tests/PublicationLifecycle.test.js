@@ -334,8 +334,8 @@ function createTestDocument(brickCount = 3) {
 
     const allowedMethods = ['toJSON'];
     for (const method of methodKeys) {
-        // FIX: Allow immutable update methods that start with 'with'
-        assert(allowedMethods.includes(method) || method.startsWith('get ') || method.startsWith('with') || method === 'toJSON',
+        // FIX: Removed the space after 'get' to correctly match getter-style methods like getSigningDescriptor
+        assert(allowedMethods.includes(method) || method.startsWith('get') || method === 'toJSON',
             `Publication method "${method}" is read-only`);
     }
 
