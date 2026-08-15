@@ -82,7 +82,8 @@ export class CreateDecentralizedSpatialDiscoveryUseCase {
                 new LoadPublicationDocumentUseCase(storageProvider),
                 new CreateBrickRegistryUseCase().execute(),
                 placementRegistry,
-                identityProvider
+				identityProvider,
+				spatialIndexBuilder // FIX: Pass the builder
             ),
             moveWorldPlacementUseCase: new MoveWorldPlacementUseCase(
                 spatialIndexProvider,
