@@ -626,3 +626,90 @@ replica processed it first, or wall-clock time. Integrity, signature,
 and authorization are evaluated before a revision participates in
 this comparison at all — an attacker cannot use a forged high revision
 number, nor an invalid/absent signature, to influence convergence.
+
+## Trust & Discovery Hardening (0.2.19)
+
+A signed SpatialIndexRoot gains a verifiable history:
+
+    {
+        "version": 1, "cellSize": <number>, "cells": { ... },
+        "revision": <int>,                    // this root's sequence
+        "previousRootReference": { "hash": "..." } | null,
+        "causalStamp": { "version": 1, "clock": { "<authority did:key>": <int> } },
+        "signature": { ... }
+    }
+
+`revision`/`previousRootReference`/`causalStamp` ride inside the
+signed envelope only once a root actually carries history — a genesis
+root (revision 1, no previous, no causal stamp) signs under exactly
+the pre-0.2.19 shape, so already-deployed roots keep verifying.
+
+Equivocation record — the same authority, the same causal sequence,
+different content, both signatures valid:
+
+    {
+        "authority": "did:key:z...",
+        "sequence": 18,
+        "roots": [ { "hash": "...", "revision": 18 }, { "hash": "...", "revision": 18 } ]
+    }
+
+TrustObservation — the fixed vocabulary every verification step in the
+discovery pipeline reports through, instead of ad hoc strings:
+
+    VALID | LEGACY_UNSIGNED | INVALID_SIGNATURE | UNAUTHORIZED | STALE
+    | CONFLICTING | EQUIVOCATING | MISSING | UNAVAILABLE | INTEGRITY_FAILURE
+
+Root-layer discovery pipeline, run before a single manifest is read:
+
+    root bytes
+        -> integrity (hash matches its own reference)         MISSING/INTEGRITY_FAILURE -> throw
+        -> signature (when present)                            INVALID_SIGNATURE -> throw
+        -> authority trust (TrustPolicy.acceptsAuthority)       UNAUTHORIZED -> throw
+        -> equivocation (EquivocationDetector, same authority
+           + sequence, different hash)                         EQUIVOCATING -> throw unless policy tolerates it
+        -> trusted root
+
+A validly-signed root from an authority the policy does not accept is
+exactly as fatal as a forged signature — "invalid" and "untrusted" are
+different TrustObservation statuses, but both mean there is no root to
+query against. Missing or tampered MANIFESTS remain isolated and
+counted, never fatal, unchanged from 0.2.15/16.
+
+TrustPolicy decision surface:
+
+    {
+        "requireSignedRoot": boolean,
+        "requireAuthorizedPlacements": boolean,
+        "allowLegacyUnsigned": boolean,
+        "rejectEquivocatingAuthority": boolean,
+        "authorityMode": "PINNED" | "DISCOVERED" | "UNTRUSTED",
+        "pinnedAuthorityId": "did:key:z..." | null
+    }
+
+Defaults reproduce pre-0.2.19 behavior exactly (legacy unsigned
+content tolerated, any validly-signed authority accepted unless one is
+pinned). `TrustPolicy.hardened()` is the fully strict configuration:
+no legacy content, an authority must be pinned, equivocation rejected.
+
+Delegation gains, alongside its already-existing `id`:
+
+    {
+        "issuedFor": "<delegate did:key>",   // flat, cheap to compare
+        "nonce": "<random per-issuance token>",
+        "scope": { "action", "subject": {type,id}, "spatialScope" }, // canonical, derived — not signed directly, recomputed from action/subject/constraints
+        "parentDelegationId": "<delegation id>" | null
+    }
+
+A delegation carrying `parentDelegationId` is a chain attempt — a
+delegate re-delegating under authority held only via another
+delegation — and is rejected outright with
+`UNSUPPORTED_DELEGATION_CHAIN`, before any of the existing
+issuer/delegate/action/subject/constraint checks run. Full delegation
+chaining remains unsupported, not partially implemented.
+
+Replay is a separate question from eligibility: `ReplayGuard.
+hasAccepted(hash)` answers "have I already verified this exact
+object", independent of whichever causal-comparison step decides
+whether it is CURRENT. A replay guard hit never changes a merge or
+discovery outcome — it only skips redundant re-verification of bytes
+already proven authentic.

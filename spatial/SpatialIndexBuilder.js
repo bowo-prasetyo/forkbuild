@@ -2,6 +2,7 @@ import { SpatialCell, DEFAULT_CELL_SIZE } from '../core/SpatialCell.js';
 import { SpatialIndexManifest } from '../core/SpatialIndexManifest.js';
 import { SpatialIndexRoot } from '../core/SpatialIndexRoot.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { CausalStamp } from '../core/CausalStamp.js';
 
 // Turns authoritative PlacementRecords into immutable decentralized
 // index content (0.2.15).
@@ -13,6 +14,15 @@ import { ContentReference } from '../core/ContentReference.js';
 // plus the root's reference to them); the trust chain terminates at
 // the signed PlacementRecords themselves — the index never becomes
 // truth.
+//
+// As of 0.2.19 every signed rebuild also CHAINS onto the previous root
+// (previousRootReference) and advances the authority's own CausalStamp
+// — a verifiable history a consumer can walk backwards and a basis for
+// detecting equivocation (core/IndexEquivocation.js) — instead of each
+// root being an unrelated, independently-signed snapshot. A full
+// build() and an incremental addOrUpdatePlacement() both continue the
+// SAME chain: a full rebuild is just another revision in an
+// authority's history, not a new unrelated lineage.
 export class SpatialIndexBuilder {
     constructor(spatialIndexStore, { cellSize = DEFAULT_CELL_SIZE, identityProvider = null } = {}) {
         this._store = spatialIndexStore;
@@ -25,6 +35,7 @@ export class SpatialIndexBuilder {
     }
 
     build(placementRecords) {
+        const previousRootReference = this._store.getRootReference();
         const records = [...(placementRecords || [])].sort((a, b) =>
             (a.placementId < b.placementId ? -1 : a.placementId > b.placementId ? 1 : 0));
 
@@ -56,6 +67,7 @@ export class SpatialIndexBuilder {
             root = root.withManifestReference(key, this._store.put(manifest.toJSON()).toJSON());
         }
 
+        root = this._applyHistory(root, previousRootReference);
         root = this._signRoot(root);
         const rootReference = this._store.put(root.toJSON());
         this._store.setRootReference(rootReference);
@@ -106,15 +118,46 @@ export class SpatialIndexBuilder {
             root = root.withManifestReference(cell.key, this._store.put(manifest.toJSON()).toJSON());
         }
 
+        root = this._applyHistory(root, currentRootReference);
         root = this._signRoot(root);
         const newRootReference = this._store.put(root.toJSON());
         this._store.setRootReference(newRootReference);
         return newRootReference;
     }
 
+    // 0.2.19: chain this root onto `previousRootReference` and advance
+    // the signing authority's CausalStamp. Only meaningful for a root
+    // that will actually be signed — an unsigned/local-dev build has no
+    // authority whose sequence to advance, so it stays history-free
+    // (SpatialIndexRoot.hasHistory === false), exactly the pre-0.2.19
+    // shape.
+    _applyHistory(root, previousRootReference) {
+        if (!this._identityProvider
+            || typeof this._identityProvider.signCanonical !== 'function'
+            || !this._identityProvider.currentUser()) {
+            return root;
+        }
+        const authorityId = this._identityProvider.getSigningIdentity().id;
+
+        let previousRoot = null;
+        if (previousRootReference) {
+            const previousJson = this._store.get(previousRootReference);
+            previousRoot = previousJson !== null ? SpatialIndexRoot.fromJSON(previousJson) : null;
+        }
+        const previousStamp = (previousRoot && previousRoot.causalStamp) || new CausalStamp();
+        const revision = previousRoot ? previousRoot.revision + 1 : 1;
+
+        return root.withHistory({
+            revision,
+            previousRootReference: previousRoot ? previousRootReference.toJSON() : null,
+            causalStamp: previousStamp.advance(authorityId)
+        });
+    }
+
     // 0.2.16: sign the root when a signing identity is available.
-    // withManifestReference clears any prior signature, so every new
-    // root is signed fresh — a signature never covers stale content.
+    // withManifestReference/withHistory clear any prior signature, so
+    // every new root is signed fresh — a signature never covers stale
+    // content.
     _signRoot(root) {
         if (this._identityProvider
             && typeof this._identityProvider.signCanonical === 'function'

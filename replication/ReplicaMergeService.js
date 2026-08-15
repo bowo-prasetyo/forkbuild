@@ -28,13 +28,17 @@ export const MergeResult = Object.freeze({
 // VALID revision wins" carried forward unchanged; 0.2.18 only adds
 // what happens once two revisions are BOTH valid).
 export class ReplicaMergeService {
-    constructor({ resolver, policy, verifier = null, registry, replicationStore, spatialIndexBuilder = null }) {
+    constructor({
+        resolver, policy, verifier = null, registry, replicationStore, spatialIndexBuilder = null,
+        replayGuard = null
+    }) {
         this._resolver = resolver;
         this._policy = policy;
         this._verifier = verifier;
         this._registry = registry;
         this._replicationStore = replicationStore;
         this._spatialIndexBuilder = spatialIndexBuilder;
+        this._replayGuard = replayGuard;
     }
 
     async merge(incomingJson) {
@@ -47,13 +51,22 @@ export class ReplicaMergeService {
             return { result: MergeResult.REJECTED, reason: 'INTEGRITY' };
         }
 
+        // 0.2.19: "have I already verified this EXACT object" is a
+        // separate, cheaper question from "is it eligible to be
+        // current" (replication/ReplayGuard.js) — a hit here only ever
+        // skips re-running signature/authorization on bytes already
+        // proven authentic; it never changes the causal-eligibility
+        // decision below.
+        const alreadyAccepted = !!this._replayGuard
+            && this._replayGuard.hasAccepted(incomingRecord.contentHash, 'placement-record');
+
         // 2. Signature + authorization — was the signer allowed to
         // produce this revision? (identity/LocalAuthorizationVerifier,
         // 0.2.16). A verifier is required for real replication; tests
         // that intentionally exercise the pipeline without one accept
         // every integrity-valid record — never do this against an
         // untrusted transport.
-        if (this._verifier) {
+        if (!alreadyAccepted && this._verifier) {
             const authResult = await this._verifier.verifyPlacement(incomingRecord);
             if (!authResult.valid) {
                 return { result: MergeResult.REJECTED, reason: 'AUTHORIZATION', detail: authResult.reason };
@@ -63,6 +76,9 @@ export class ReplicaMergeService {
         // 3. Only integrity-valid, authorized revisions enter the
         // content-addressed replication store.
         this._replicationStore.put(incomingRecord);
+        if (this._replayGuard) {
+            this._replayGuard.recordAccepted(incomingRecord.contentHash, 'placement-record');
+        }
 
         // 4. Causal comparison against whatever this replica currently
         // presents for the placement.
