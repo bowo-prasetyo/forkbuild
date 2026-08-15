@@ -6,16 +6,14 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.15** — Decentralized Spatial Discovery
+**Version 0.2.16** — Decentralized Identity & Signatures
 
-0.2.15 adds the decentralized implementation behind the 0.2.11
-SpatialDiscoveryProvider interface: deterministic spatial cells,
-immutable cell manifests, a content-addressed spatial index store,
-and a discovery provider that retrieves only the cell manifests a
-viewport actually intersects. The PlacementRecord remains
-authoritative spatial truth; the index is a discoverability
-accelerator whose staleness is resolved by the newer-revision-wins
-rule.
+0.2.16 gives every immutable object an answer to "who authorized
+this?": Ed25519 signing identities (did:key), canonical domain-
+separated signing envelopes, signed publications / placement
+revisions / spatial-index roots, and the "newer *valid* revision
+wins" discovery rule — with graceful failure isolation and full
+backward compatibility for unsigned legacy data.
 
 ## Features
 
@@ -35,6 +33,7 @@ rule.
 - **Forking** — Derive new documents from existing ones with fresh instance IDs and preserved lineage.
 - **Spatial World View** — Free camera navigation through a shared coordinate system where multiple worlds stream in and out based on camera position.
 - **Decentralized Spatial Discovery (0.2.15)** — cell-based immutable spatial index manifests; viewport queries fetch only intersecting cells; stale-index-tolerant resolution.
+- **Decentralized Identity & Signatures (0.2.16)** — Ed25519 signing identities, canonical signing envelopes with domain separation, signed publications/placements/index roots, and authorization verification in decentralized discovery.
   
 ## Architecture
 
@@ -115,7 +114,10 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.13  Publication Licensing & Fork Policy
 - [x] 0.2.14  Decentralized Content Backend
 - [x] 0.2.15  Decentralized Spatial Discovery
-- [ ] 0.2.16  Decentralized Identity & Signatures
+- [x] 0.2.16  Decentralized Identity & Signatures
+- [ ] 0.2.17  Delegated Ownership & Authorization
+- [ ] 0.2.18  Decentralized Replication & Conflict Handling
+- [ ] 0.2.19  Trust / Discovery Hardening
     
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
