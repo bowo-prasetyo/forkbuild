@@ -63,24 +63,21 @@ export class LocalCollaborationTransport extends CollaborationTransport {
     // The sender never receives its own envelope back (echo prevention
     // at the transport level, in addition to the session-level check).
     send(senderAuthor, envelope) {
-        const json = envelope.toJSON();
-        const documentId = json.documentId;
-        const room = this._rooms.get(documentId);
-        if (!room) {
-            return;
+      const json = envelope.toJSON();
+      const documentId = json.documentId;
+      const room = this._rooms.get(documentId);
+      if (!room) return;
+    
+      // FIX: Broadcast ALL envelope types (including acknowledge/reject) to OTHER participants.
+      // The session layer handles echo prevention and routing.
+      for (const entry of room) {
+        if (entry.author === senderAuthor) {
+          continue; // echo prevention for broadcasts
         }
-        // Acknowledgments and rejections should only go back to the sender
-        if (json.type === 'acknowledge' || json.type === 'reject') {
-            // In a local broadcast bus, simply broadcasting to everyone except 
-            // the sender correctly routes the ack back to the original author.
-            for (const entry of room) {
-                // FIX: Changed === to !== so it routes to the OTHER peers (the original sender)
-                if (entry.author !== senderAuthor && entry.callback) {
-                    entry.callback(CollaborationEnvelope.fromJSON(json));
-                }
-            }
-            return;
-        }        
+        if (entry.callback) {
+          entry.callback(CollaborationEnvelope.fromJSON(json));
+        }
+      }
     }
 
     // Returns the number of connected participants for a document.
