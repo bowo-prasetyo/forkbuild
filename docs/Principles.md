@@ -185,8 +185,6 @@ IPFS, Arweave, HTTP gateways, local storage, and future backends are retrieval
 mechanisms rather than content identities. Retrieved bytes must always be verified
 against the publication's expected content hash before deserialization.
 
-<!-- === FILE: ./docs/Principles.md === (append) -->
-
 The spatial index is a discoverability accelerator, not truth (0.2.15).
 The PlacementRecord is the authoritative spatial record; a spatial
 index — local, IPFS, Arweave, or otherwise — exists so placements can
@@ -203,8 +201,6 @@ mutable pointer (the registry's latest record, the index root
 reference), never the content. This is what makes history, caching,
 replication, and eventual consistency tractable once storage is
 genuinely decentralized.
-
-<!-- === FILE: ./docs/Principles.md === (append) -->
 
 Hashes establish what an object is; signatures establish who
 authorized it (0.2.16). A content hash can prove a PlacementRecord has
@@ -232,3 +228,15 @@ SIGNED with a local, vector-verified primitive first; wallets, DID
 networks, key rotation, and revocation are later adapters around the
 same IdentityProvider/AuthorizationVerifier seam — not a prerequisite
 for the trust model.
+
+### Signatures vs. Authorization (0.2.17)
+Signatures establish *who acted*; authorization establishes *whether they were allowed to act*. 
+A valid signature alone is insufficient for delegated operations. When an actor is not the resource 
+owner, the actor must present a valid delegation signed by the authority that owns the resource.
+
+Direct ownership remains the simplest authorization path. Delegation adds narrowly scoped authority 
+without transferring ownership. `PLACE` and `MOVE` are separate capabilities. Possessing permission 
+to place a publication does not automatically grant permission to move an existing placement.
+
+Delegations are immutable and independently verifiable. Revocation, delegation chaining, and 
+distributed policy consensus are deliberately outside 0.2.17.
