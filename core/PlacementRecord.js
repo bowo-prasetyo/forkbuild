@@ -4,6 +4,8 @@ import { SpatialBounds } from './SpatialBounds.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { SigningIdentity } from './SigningIdentity.js';
 import { SignatureType } from './Signature.js';
+import { CausalStamp } from './CausalStamp.js';
+import { RevisionReference } from './RevisionReference.js';
 
 // A publishable spatial record (0.2.10).
 //
@@ -21,7 +23,7 @@ export class PlacementRecord {
     constructor({
         placementId = createId(),
         publicationId,
-owner = null,             // Legacy string owner (backward compat)
+		owner = null,             // Legacy string owner (backward compat)
         ownerIdentity = null,      // NEW: The resource authority (Alice)
         authorizedBy = null,       // NEW: { identity: Bob, delegationId: '...' }
         signature = null,          // NEW: Bob's signature
@@ -32,28 +34,37 @@ owner = null,             // Legacy string owner (backward compat)
         revision = 1,
         contentHash = null,
         createdAt = new Date(),
-        updatedAt = new Date()
+        updatedAt = new Date(),
+        causalStamp = null,
+        parents = []
     }) {
         if (!publicationId) throw new Error('PlacementRecord requires a publicationId');
         this._placementId = placementId;
         this._publicationId = publicationId;
     
-// Resolve owner string from legacy param or new identity object
-this._owner = owner !== undefined && owner !== null 
-    ? owner 
-    : (ownerIdentity ? (ownerIdentity.username || ownerIdentity.id) : null);
-    
-        this._ownerIdentity = ownerIdentity;
-        this._authorizedBy = authorizedBy;
-        this._signature = signature;
-        this._position = position instanceof Position ? position : new Position(position.x || 0, position.y || 0, position.z || 0);
-        this._rotation = { ...rotation };
-        this._scale = { ...scale };
-        this._bounds = bounds instanceof SpatialBounds ? bounds : (bounds ? SpatialBounds.fromJSON(bounds) : null);
-        this._revision = revision;
-        this._contentHash = contentHash;
-        this._createdAt = createdAt instanceof Date ? createdAt : new Date(createdAt);
-        this._updatedAt = updatedAt instanceof Date ? updatedAt : new Date(updatedAt);
+		// Resolve owner string from legacy param or new identity object
+		this._owner = owner !== undefined && owner !== null 
+		    ? owner 
+		    : (ownerIdentity ? (ownerIdentity.username || ownerIdentity.id) : null);
+		    
+		        this._ownerIdentity = ownerIdentity;
+		        this._authorizedBy = authorizedBy;
+		        this._signature = signature;
+		        this._position = position instanceof Position ? position : new Position(position.x || 0, position.y || 0, position.z || 0);
+		        this._rotation = { ...rotation };
+		        this._scale = { ...scale };
+		        this._bounds = bounds instanceof SpatialBounds ? bounds : (bounds ? SpatialBounds.fromJSON(bounds) : null);
+		        this._revision = revision;
+		        this._contentHash = contentHash;
+		        this._createdAt = createdAt instanceof Date ? createdAt : new Date(createdAt);
+		        this._updatedAt = updatedAt instanceof Date ? updatedAt : new Date(updatedAt);
+        this._causalStamp = causalStamp instanceof CausalStamp 
+            ? causalStamp 
+            : (causalStamp ? CausalStamp.fromJSON(causalStamp) : null);
+            
+        this._parents = parents 
+            ? parents.map(p => p instanceof RevisionReference ? p : RevisionReference.fromJSON(p)) 
+            : [];
     }
 
     get placementId() { return this._placementId; }
@@ -89,6 +100,8 @@ this._owner = owner !== undefined && owner !== null
             updatedAt: this._updatedAt.toISOString()
         });
     }
+    get causalStamp() { return this._causalStamp; }
+    get parents() { return this._parents.map(p => p); }
 
     // UNCHANGED since 0.2.10 — same fields, same order. Deliberately does
     // NOT include ownerIdentity/signature, so already-stored records keep
@@ -104,9 +117,33 @@ this._owner = owner !== undefined && owner !== null
             bounds: this._bounds ? this._bounds.toJSON() : null,
             revision: this._revision,
             createdAt: this._createdAt.toISOString(),
-            updatedAt: this._updatedAt.toISOString()
+            updatedAt: this._updatedAt.toISOString(),
+            causalStamp: this._causalStamp ? this._causalStamp.toJSON() : null,
+            parents: this._parents.map(p => p.toJSON())
         });
         return computeContentHash(canonical);
+    }
+
+    getSigningDescriptor() {
+        return {
+            type: SignatureType.PLACEMENT_RECORD,
+            id: this._placementId,
+            revision: this._revision,
+            payload: {
+	            placementId: this._placementId,
+	            publicationId: this._publicationId,
+	            owner: this._owner,
+	            position: this._position.toJSON(),
+	            rotation: this._rotation,
+	            scale: this._scale,
+	            bounds: this._bounds ? this._bounds.toJSON() : null,
+	            revision: this._revision,
+	            createdAt: this._createdAt.toISOString(),
+	            updatedAt: this._updatedAt.toISOString(),
+                causalStamp: this._causalStamp ? this._causalStamp.toJSON() : null,
+                parents: this._parents.map(p => p.toJSON())
+            }
+        };
     }
 
     verifyIntegrity() {
@@ -134,7 +171,32 @@ owner: this._owner,
             revision: this._revision + 1,
             contentHash: this._contentHash,
             createdAt: this._createdAt,
-            updatedAt: new Date()
+            updatedAt: new Date(),
+            causalStamp: this._causalStamp, // Preserved; application layer advances it
+            parents: this._parents,
+            signature: null // Must be re-signed
+        });
+    }
+    
+    withCausalHistory(causalStamp, parents) {
+        return new PlacementRecord({
+            placementId: this._placementId,
+            publicationId: this._publicationId,
+owner: this._owner,
+            ownerIdentity: this._ownerIdentity,
+            authorizedBy: this._authorizedBy, // Preserved, but signature must be recalculated by caller
+            signature: null, 
+            position: newPosition,
+            rotation: this._rotation,
+            scale: this._scale,
+            bounds: this._bounds,
+            revision: this._revision + 1,
+            contentHash: this._contentHash,
+            createdAt: this._createdAt,
+            updatedAt: new Date(),
+            causalStamp,
+            parents,
+            signature: null // Must be re-signed
         });
     }
 
@@ -215,7 +277,9 @@ owner: this._owner,
             revision: this._revision,
             contentHash: this._contentHash,
             createdAt: this._createdAt.toISOString(),
-            updatedAt: this._updatedAt.toISOString()
+            updatedAt: this._updatedAt.toISOString(),
+            causalStamp: this._causalStamp ? this._causalStamp.toJSON() : null,
+            parents: this._parents.map(p => p.toJSON())
         };
     }
 
@@ -237,7 +301,9 @@ owner: json.owner || null,
             revision: json.revision,
             contentHash: json.contentHash,
             createdAt: new Date(json.createdAt),
-            updatedAt: new Date(json.updatedAt)
+            updatedAt: new Date(json.updatedAt),
+            causalStamp: json.causalStamp,
+            parents: json.parents || []
         });
     }
 
