@@ -157,11 +157,18 @@ async function runTests() {
     const moveDel = await createDelegation.execute({
         issuerIdentity: alice, delegateIdentity: bob, action: 'MOVE', subject: placementSubject
     });
-    
+
+    const moveRecord = new PlacementRecord({
+        publicationId: 'pub-123', ownerIdentity: alice,
+        authorizedBy: { identity: bob, delegationId: moveDel.id },
+        position: new Position(30, 0, 0)
+    });
+    moveRecord._signature = await bob.sign(moveRecord.getCanonicalPayload());
+
     const moveAuthResult = await verifier.verify({
         signerIdentity: bob, ownerIdentity: alice, requiredAction: 'MOVE',
-        subject: placementSubject, signature: directRecord.signature,
-        payload: directRecord.getCanonicalPayload(), delegationId: moveDel.id, delegationResolver: resolver
+        subject: placementSubject, signature: moveRecord.signature,
+        payload: moveRecord.getCanonicalPayload(), delegationId: moveDel.id, delegationResolver: resolver
     });
     assert(moveAuthResult.authorized, '15. Valid MOVE delegation permits movement');
     

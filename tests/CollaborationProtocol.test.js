@@ -284,22 +284,34 @@ function createCollaborationFixture() {
     const commandRegistry = new CreateCommandRegistryUseCase().execute();
 
     const world = createWorld();
-    const history = new CommandHistory({ world });
-    const session = new CollaborationSession({
+    const bobHistory = new CommandHistory({ world });
+    const bobSession = new CollaborationSession({
         documentId: world.id,
         author: 'bob',
-        commandHistory: history,
+        commandHistory: bobHistory,
+        commandRegistry,
+        transport
+    });
+
+    const aliceWorld = createWorld();
+    const aliceHistory = new CommandHistory({ world: aliceWorld });
+    const aliceSession = new CollaborationSession({
+        documentId: world.id,
+        author: 'alice',
+        commandHistory: aliceHistory,
         commandRegistry,
         transport
     });
 
     transport.connect(world.id, 'bob');
-    transport.subscribe('bob', (env) => session._onEnvelopeReceived(env));
+    transport.subscribe('bob', (env) => bobSession._onEnvelopeReceived(env));
+    transport.connect(world.id, 'alice');
+    transport.subscribe('alice', (env) => aliceSession._onEnvelopeReceived(env));
 
     const acks = [];
     const rejects = [];
-    session.onAcknowledge = (info) => acks.push(info);
-    session.onReject = (info) => rejects.push(info);
+    aliceSession.onAcknowledge = (info) => acks.push(info);
+    aliceSession.onReject = (info) => rejects.push(info);
 
     // Valid command → should acknowledge.
     const validCommand = new PlaceBrickCommand({
@@ -309,7 +321,10 @@ function createCollaborationFixture() {
         position: new Position(7, 0.5, 0)
     }).toJSON();
 
-    session._onEnvelopeReceived(CollaborationEnvelope.operation({
+    // Alice broadcasts the operation; bob receives it, applies it, and
+    // sends the acknowledge envelope back — which alice, now actually
+    // connected, receives.
+    transport.send('alice', CollaborationEnvelope.operation({
         documentId: world.id, author: 'alice',
         operationId: 'op-valid', sequenceNumber: 1,
         baseRevision: 0, command: validCommand
@@ -319,7 +334,7 @@ function createCollaborationFixture() {
     assert(acks[0].operationId === 'op-valid', 'correct operation acknowledged');
 
     // Invalid command → should reject.
-    session._onEnvelopeReceived(CollaborationEnvelope.operation({
+    transport.send('alice', CollaborationEnvelope.operation({
         documentId: world.id, author: 'alice',
         operationId: 'op-invalid', sequenceNumber: 2,
         baseRevision: 0, command: { type: 'nonexistent-command-type' }

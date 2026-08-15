@@ -132,13 +132,11 @@ function buildSignedStack(ownerProvider, { authorityIdentity = null } = {}) {
     // RFC 8032 TEST 1 (empty message).
     const seed1 = Ed25519.hexToBytes('9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60');
     const kp1 = Ed25519.seedToKeyPair(seed1);
-    //assert(Ed25519.bytesToHex(kp1.publicKey) === 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a',
-    assert(Ed25519.bytesToHex(kp1.publicKey) === 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa3f4a18446b0b8d183f8e3',
+    assert(Ed25519.bytesToHex(kp1.publicKey) === 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a',
         'RFC 8032 test 1 public key');
     const sig1 = Ed25519.sign(seed1, new Uint8Array(0));
-    //assert(Ed25519.bytesToHex(sig1) === 'e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e06522490155'
-    //    + '5fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b',
-    assert(Ed25519.bytesToHex(sig1) === 'e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b',
+    assert(Ed25519.bytesToHex(sig1) === 'e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e06522490155'
+        + '5fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b',
         'RFC 8032 test 1 signature');
     assert(Ed25519.verify(kp1.publicKey, new Uint8Array(0), sig1) === true, 'RFC 8032 test 1 verifies');
 
@@ -340,8 +338,14 @@ const signedRecord = signRecord(aliceProvider, makeRecord({ placementId: 'p-1', 
     }));
     stack.placementRegistry.add(rev4); // live, valid revision 4
 
-    // Bob publishes a forged revision 5 into the index.
-    const forged5 = rev4.withPosition(new Position(15, 0, 0));
+    // Bob publishes a forged revision 5 into the index. Bob can compute
+    // a correct content hash (hashes are public), so the record's
+    // integrity checks out — but he cannot sign as Alice.
+    const forged5Unsigned = rev4.withPosition(new Position(15, 0, 0));
+    const forged5 = new PlacementRecord({
+        ...forged5Unsigned.toJSON(),
+        contentHash: forged5Unsigned.computeContentHash()
+    });
     const forged5Signed = forged5.withSignature(bobProvider.signCanonical(forged5.getSigningDescriptor()));
     stack.builder.build([forged5Signed]);
 
