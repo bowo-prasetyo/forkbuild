@@ -4,16 +4,13 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 
 // Creates a WorldPlacement and a PlacementRecord for a published document.
 //
-// As of 0.2.10, this creates BOTH:
-//   1. A WorldPlacement in the SpatialIndexProvider (for spatial queries)
-//   2. A PlacementRecord in the PlacementRegistry (for decentralized discovery)
-//
-// The PlacementRecord carries the owner's identity (from the
-// IdentityProvider), a revision counter, and a content hash for
-// integrity verification.
-//
-// The publication itself is never mutated. Placement is a spatial
-// operation, not a content operation.
+// As of 0.2.16 the placement revision is also SIGNED: the current
+// user's SigningIdentity becomes the record's ownerIdentity, and the
+// canonical signing envelope receives a real Ed25519 signature before
+// the record enters the registry. "Publication ownership" and
+// "placement authorization" remain distinct authorities — this
+// milestone's rule is simply: the placement creator signs the
+// placement revision. Delegation is 0.2.17.
 export class PlacePublicationUseCase {
     constructor(
         spatialIndexProvider,
@@ -60,14 +57,13 @@ export class PlacePublicationUseCase {
         });
         this._spatialIndexProvider.add(placement);
 
-        // Create the PlacementRecord (new in 0.2.10).
+        // Create the PlacementRecord.
         if (this._placementRegistry) {
             const currentUser = this._identityProvider
                 ? this._identityProvider.currentUser()
                 : null;
             const owner = currentUser ? currentUser.username : null;
-
-            const record = new PlacementRecord({
+            let record = new PlacementRecord({
                 placementId: placement.id,
                 publicationId,
                 owner,
@@ -77,9 +73,19 @@ export class PlacePublicationUseCase {
                 bounds,
                 revision: 1
             });
+            const hash = record.computeContentHash();
+            record = new PlacementRecord({ ...record.toJSON(), contentHash: hash });
+
+            // 0.2.16: owner identity + signature before registration.
+            if (currentUser && this._identityProvider
+                && typeof this._identityProvider.signCanonical === 'function') {
+                record = record.withOwnerIdentity(this._identityProvider.getSigningIdentity().toJSON());
+                record = record.withSignature(
+                    this._identityProvider.signCanonical(record.getSigningDescriptor())
+                );
+            }
             this._placementRegistry.add(record);
         }
-
         return placement;
     }
 }
