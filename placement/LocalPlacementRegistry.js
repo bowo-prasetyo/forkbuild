@@ -5,15 +5,17 @@ import { WorldPlacement } from '../core/WorldPlacement.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 const RECORD_KEY_PREFIX = 'placement-record:';
-const REGISTRY_INDEX_KEY = 'placement-registry-index';
+const HISTORY_KEY_PREFIX = 'placement-history:';
+const CONFLICT_KEY_PREFIX = 'placement-conflict:';
 
 // The V0.1 concrete placement registry: stores PlacementRecords via an
 // injected StorageProvider. Also writes to the SpatialIndexProvider for
 // backward compatibility with the existing DiscoverWorldsUseCase.
 //
 // Storage model:
-//   placement-record:{placementId}  — the full PlacementRecord JSON
-//   placement-registry-index        — array of all placement IDs
+//   placement-record:{placementId}   — the full PlacementRecord JSON
+//   placement-history:{placementId}  — array of revision history
+//   placement-conflict:{placementId} — conflict set JSON
 //
 // The SpatialIndexProvider continues to store WorldPlacement objects
 // at placement:{id} for spatial queries. The LocalPlacementRegistry
@@ -26,78 +28,61 @@ export class LocalPlacementRegistry extends PlacementRegistry {
     }
 
     add(record) {
-	    let recordToStore = record;
-	    if (!recordToStore.contentHash) {
-	        const hash = recordToStore.computeContentHash();
-	        recordToStore = new PlacementRecord({ ...recordToStore.toJSON(), contentHash: hash });
-	    }
-        const historyKey = `placement-history:${record.placementId}`;
+        if (!(record instanceof PlacementRecord)) {
+            throw new Error('LocalPlacementRegistry: invalid record');
+        }
+
+        let recordToStore = record;
+        if (!recordToStore.contentHash) {
+            const hash = recordToStore.computeContentHash();
+            recordToStore = new PlacementRecord({ ...recordToStore.toJSON(), contentHash: hash });
+        }
+
+        // Save the latest record
+        this._storageProvider.save(RECORD_KEY_PREFIX + record.placementId, recordToStore.toJSON());
+        
+        // Update history
+        const historyKey = HISTORY_KEY_PREFIX + record.placementId;
         const history = this._storageProvider.load(historyKey) || [];
-        const exists = history.some(h => h.hash === record.contentHash);
+        const exists = history.some(h => h.hash === recordToStore.contentHash);
         
         if (!exists) {
             history.push({ 
-                revision: record.revision, 
-                hash: record.contentHash, 
-                timestamp: record.updatedAt.toISOString() 
-	        });
+                revision: recordToStore.revision, 
+                hash: recordToStore.contentHash, 
+                timestamp: recordToStore.updatedAt.toISOString() 
+            });
             this._storageProvider.save(historyKey, history);
         }
-	    return recordToStore; // <--- FIX: Must return the record
+
+        // Update spatial index
+        this._updateSpatialIndex(recordToStore);
+
+        return recordToStore;
     }
 
     get(placementId) {
-        const json = this._storageProvider.load(`placement-latest:${placementId}`);
+        const json = this._storageProvider.load(RECORD_KEY_PREFIX + placementId);
         return json ? PlacementRecord.fromJSON(json) : null;
     }
 
     list() {
         const keys = this._storageProvider.list();
-        const latestKeys = keys.filter(k => k.startsWith('placement-latest:'));
-        return latestKeys.map(k => PlacementRecord.fromJSON(this._storageProvider.load(k)));
-    }
-    
-    setLatest(placementId, record) {
-        this._storageProvider.save(`placement-latest:${placementId}`, record.toJSON());
-        this._updateSpatialIndex(record);
+        const recordKeys = keys.filter(k => k.startsWith(RECORD_KEY_PREFIX));
+        return recordKeys.map(k => PlacementRecord.fromJSON(this._storageProvider.load(k)));
     }
     
     getHistory(placementId) {
-        return this._storageProvider.load(`placement-history:${placementId}`) || [];
+        return this._storageProvider.load(HISTORY_KEY_PREFIX + placementId) || [];
     }
     
     setConflictSet(placementId, conflictSet) {
-        this._storageProvider.save(`placement-conflict:${placementId}`, conflictSet.toJSON());
+        this._storageProvider.save(CONFLICT_KEY_PREFIX + placementId, conflictSet.toJSON());
     }
     
     getConflictSet(placementId) {
-        const json = this._storageProvider.load(`placement-conflict:${placementId}`);
+        const json = this._storageProvider.load(CONFLICT_KEY_PREFIX + placementId);
         return json ? ConflictSet.fromJSON(json) : null;
-    }
-    
-    remove(placementId) {
-        this._storageProvider.remove(`placement-latest:${placementId}`);
-        this._storageProvider.remove(`placement-history:${placementId}`);
-        this._storageProvider.remove(`placement-conflict:${placementId}`);
-        const existing = this._spatialIndexProvider.get(placementId);
-        if (existing) this._spatialIndexProvider.remove(placementId);
-    }
-    
-    _updateSpatialIndex(record) {
-        const placement = new WorldPlacement({
-            id: record.placementId,
-            publicationId: record.publicationId,
-            position: record.position,
-            rotation: record.rotation,
-            scale: record.scale,
-            bounds: record.bounds
-        });
-        const existing = this._spatialIndexProvider.get(record.placementId);
-        if (existing) {
-            this._spatialIndexProvider.update(placement);
-        } else {
-            this._spatialIndexProvider.add(placement);
-        }
     }
     
     update(record) {
@@ -105,43 +90,45 @@ export class LocalPlacementRegistry extends PlacementRegistry {
             throw new Error('LocalPlacementRegistry: invalid record');
         }
 
-        // Compute and set the content hash.
-        const hash = record.computeContentHash();
-        const recordWithHash = new PlacementRecord({
-            ...record.toJSON(),
-            contentHash: hash
-        });
-
-        // Overwrite the record.
-        this._storageProvider.save(
-            RECORD_KEY_PREFIX + record.placementId,
-            recordWithHash.toJSON()
-        );
-
-        // Update the SpatialIndexProvider.
-        if (this._spatialIndexProvider) {
-            const worldPlacement = new WorldPlacement({
-                id: record.placementId,
-                publicationId: record.publicationId,
-                position: record.position,
-                rotation: record.rotation,
-                scale: record.scale,
-                bounds: record.bounds
-            });
-            this._spatialIndexProvider.update(worldPlacement);
+        let recordToStore = record;
+        if (!recordToStore.contentHash) {
+            const hash = recordToStore.computeContentHash();
+            recordToStore = new PlacementRecord({ ...recordToStore.toJSON(), contentHash: hash });
         }
 
-        return recordWithHash;
+        // Overwrite the record
+        this._storageProvider.save(RECORD_KEY_PREFIX + record.placementId, recordToStore.toJSON());
+
+        // Update history
+        const historyKey = HISTORY_KEY_PREFIX + record.placementId;
+        const history = this._storageProvider.load(historyKey) || [];
+        const exists = history.some(h => h.hash === recordToStore.contentHash);
+        
+        if (!exists) {
+            history.push({ 
+                revision: recordToStore.revision, 
+                hash: recordToStore.contentHash, 
+                timestamp: recordToStore.updatedAt.toISOString() 
+            });
+            this._storageProvider.save(historyKey, history);
+        }
+
+        // Update the SpatialIndexProvider
+        this._updateSpatialIndex(recordToStore);
+
+        return recordToStore;
     }
 
     remove(placementId) {
         this._storageProvider.remove(RECORD_KEY_PREFIX + placementId);
-        const index = this._loadIndex().filter((id) => id !== placementId);
-        this._saveIndex(index);
-
-        // Also remove from the SpatialIndexProvider.
+        this._storageProvider.remove(HISTORY_KEY_PREFIX + placementId);
+        this._storageProvider.remove(CONFLICT_KEY_PREFIX + placementId);
+        
         if (this._spatialIndexProvider) {
-            this._spatialIndexProvider.remove(placementId);
+            const existing = this._spatialIndexProvider.get(placementId);
+            if (existing) {
+                this._spatialIndexProvider.remove(placementId);
+            }
         }
     }
 
@@ -156,8 +143,13 @@ export class LocalPlacementRegistry extends PlacementRegistry {
     discover(center, radius) {
         // Delegate to the SpatialIndexProvider for spatial queries.
         if (this._spatialIndexProvider) {
-            return this._spatialIndexProvider.discover(center, radius);
+            const placements = this._spatialIndexProvider.discover(center, radius);
+            // Map WorldPlacements back to PlacementRecords to maintain a consistent return type
+            return placements
+                .map(p => this.get(p.id))
+                .filter(r => r !== null);
         }
+        
         // Fallback: brute-force distance check.
         const r2 = radius * radius;
         return this.list().filter((record) => {
@@ -176,11 +168,23 @@ export class LocalPlacementRegistry extends PlacementRegistry {
         return record.verifyIntegrity();
     }
 
-    _loadIndex() {
-        return this._storageProvider.load(REGISTRY_INDEX_KEY) || [];
-    }
+    _updateSpatialIndex(record) {
+        if (!this._spatialIndexProvider) return;
 
-    _saveIndex(index) {
-        this._storageProvider.save(REGISTRY_INDEX_KEY, index);
+        const placement = new WorldPlacement({
+            id: record.placementId,
+            publicationId: record.publicationId,
+            position: record.position,
+            rotation: record.rotation,
+            scale: record.scale,
+            bounds: record.bounds
+        });
+        
+        const existing = this._spatialIndexProvider.get(record.placementId);
+        if (existing) {
+            this._spatialIndexProvider.update(placement);
+        } else {
+            this._spatialIndexProvider.add(placement);
+        }
     }
 }
