@@ -70,7 +70,7 @@
 0.2.14  Decentralized Content Backend                 ✓
 0.2.15  Decentralized Spatial Discovery               ✓
 0.2.16  Decentralized Identity & Signatures           ✓
-0.2.17  Delegated Ownership & Authorization
+0.2.17  Delegated Ownership & Authorization           ✓
 0.2.18  Decentralized Replication & Conflict Handling
 0.2.19  Trust / Discovery Hardening
 
