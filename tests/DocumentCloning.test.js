@@ -335,6 +335,7 @@ function createSession(storage, { replay = true } = {}) {
     const { nav } = createSession(storage);
     nav._loadWorld(doc.world.id);
     nav._focusedDocumentId = doc.world.id;
+    nav._activeDocumentId = doc.world.id;
 
     assert(nav.copySelection().isEmpty, 'copy without selection is empty');
 
@@ -388,6 +389,7 @@ function createSession(storage, { replay = true } = {}) {
     const { nav, rendererCalls } = createSession(storage);
     nav._loadWorld(doc.world.id);
     nav._focusedDocumentId = doc.world.id;
+    nav._activeDocumentId = doc.world.id;
 
     const cloneId = nav.cloneDocument();
     assert(cloneId !== doc.world.id, 'clone has a new document identity');
@@ -413,7 +415,13 @@ function createSession(storage, { replay = true } = {}) {
     // The adopted session behaves like any other: save, edit, undo.
     nav.saveDocument(cloneId);
     assert(!nav.isDocumentDirty(cloneId), 'save clears dirty');
+    // Simulates the user navigating back to (and continuing to edit)
+    // the clone after forking a DIFFERENT document — forkDocument()
+    // above just moved both focused AND active onto the fork, so both
+    // need to move back onto the clone here (0.2.27: undo/redo below
+    // resolves against _activeDocumentId, not _focusedDocumentId).
     nav._focusedDocumentId = cloneId;
+    nav._activeDocumentId = cloneId;
     const cloneHistory = nav._commandHistories.get(cloneDoc.world.id);
     cloneHistory.execute(new PlaceBrickCommand({
         worldId: cloneDoc.world.id,
@@ -447,6 +455,7 @@ function createSession(storage, { replay = true } = {}) {
     const { nav } = createSession(storage);
     nav._loadWorld(docA.world.id);
     nav._focusedDocumentId = docA.world.id;
+    nav._activeDocumentId = docA.world.id;
 
     // Create A: place 3 bricks, save, publish.
     const worldA = nav.getDocument(docA.world.id).world;

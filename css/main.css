@@ -688,6 +688,18 @@ html, body {
     color: #909090 !important;
 }
 
+/* 0.2.27: camera focus vs. active (editing) document — deliberately
+   subtler than .world-view-status, since it's context, not a state
+   that gates what actions are available. See
+   docs/Principles.md, "Camera Focus, Active Document, and Selection
+   Are Three Different Things." */
+.world-view-context {
+    margin: 0.2rem 0 0 !important;
+    font-size: 0.72rem !important;
+    color: #707070 !important;
+    letter-spacing: 0.01em;
+}
+
 /* Hardening: World View had no Save/Publish surface at all — the
    Editor's Toolbar equivalent, scoped to the active document (see
    WorldView.js's saveActiveDocument/publishActiveDocument). */

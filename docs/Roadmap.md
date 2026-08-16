@@ -80,6 +80,7 @@
 0.2.24  World Coordinate Semantics & Placement UX       ✓
 0.2.25  Spatial Allocation & Placement Collision Policy ✓
 0.2.26  World Navigation & Spatial Discovery UX         ✓
+0.2.27  World View Context & Selection Model            ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -118,11 +119,21 @@ own dedicated design when a real requirement demands it rather than
 being folded into whichever navigation/placement milestone happens to
 be in flight when someone thinks of it.
 
-Full camera-focus / active-document / selection separation, and wiring
-`DecentralizedSpatialDiscoveryProvider`'s richer diagnostics
-(manifest/equivocation/staleness) into the live World View, similarly
-remain OPTIONAL and unscheduled — see docs/Architecture.md, 0.2.26,
-"Deliberately not in 0.2.26," for what each would actually require.
+Wiring `DecentralizedSpatialDiscoveryProvider`'s richer diagnostics
+(manifest/equivocation/staleness) into the live World View remains
+OPTIONAL and unscheduled — see docs/Architecture.md, 0.2.26,
+"Deliberately not in 0.2.26," for what it would actually require.
+Camera-focus / active-document / selection separation, previously
+listed here as deferred, shipped in 0.2.27 — see docs/Architecture.md,
+0.2.27.
+
+A UI affordance for setting the active document WITHOUT moving the
+camera (0.2.27 added the session-layer capability —
+`setActiveDocument` — but search results, Nearby Worlds, and Documents
+Here still only offer "Focus," which moves both) remains OPTIONAL and
+unscheduled. It becomes worth building once browsing several
+co-located documents without constantly re-centering the camera is a
+demonstrated, not merely theoretical, need.
 
 ## 0.1.50 — What shipped
 

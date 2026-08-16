@@ -118,7 +118,19 @@ export class WorldNavigationSession {
         this._spatialEditingContext = SpatialEditingContext.empty();
         this._spatialPlacement = SpatialPlacementState.empty();
         this._activeDefinitionId = null;
+        // 0.2.27: two independent concepts that used to be one field —
+        // see docs/Principles.md, "Camera Focus, Active Document, and
+        // Selection Are Three Different Things."
+        //   _focusedDocumentId — where the CAMERA is navigated to.
+        //   _activeDocumentId  — which document receives document-level
+        //                        actions and mutation fallbacks.
+        // They usually change together (focusDocument() sets both, by
+        // default) but are never assumed to be equal — every mutation
+        // path in this file reads _activeDocumentId, never
+        // _focusedDocumentId, so "where the camera happens to be
+        // pointed" can never silently decide what gets edited.
         this._focusedDocumentId = null;
+        this._activeDocumentId = null;
         this._eventBus = null;
 	    this._discoveryProvider = discoveryProvider;
 
@@ -229,7 +241,7 @@ export class WorldNavigationSession {
             return false;
         }
         const placement = this._spatialPlacement;
-        let targetDocumentId = placement.targetDocumentId || this._focusedDocumentId;
+        let targetDocumentId = placement.targetDocumentId || this._activeDocumentId;
         let targetBuildingId = placement.targetBuildingId || null;
         // 0.2.20: placing a brick is a mutation — fork first if the
         // target is still a published, unforked snapshot. The target
@@ -363,11 +375,47 @@ export class WorldNavigationSession {
     // Navigation
     // -----------------------------------------------------------------
 
-    focusDocument(documentId) {
+    // 0.2.27: moves the camera AND, by default, makes `documentId` the
+    // active (editing) document too — the common case (search/Nearby
+    // Worlds/Documents-Here "Focus") really does mean both at once,
+    // and every pre-0.2.27 caller of focusDocument already expected
+    // that combined behavior. Pass `{ setActive: false }` for a pure
+    // camera move that must not change what mutations target — see
+    // docs/Principles.md, "Navigation Never Implies Editing."
+    focusDocument(documentId, { setActive = true } = {}) {
         this._focusedDocumentId = documentId;
+        if (setActive) {
+            this.setActiveDocument(documentId);
+        }
         const layoutPos = this._getWorldPosition(documentId);
         this._spatialCameraController.focusDocument(documentId, layoutPos);
         return this.updateSpatialView();
+    }
+
+    // 0.2.27: makes `documentId` the active document WITHOUT touching
+    // the camera — the missing half of "Editing: Bob" while "Camera:
+    // Alice" stays put (e.g. two publications sharing a coordinate;
+    // switching which one is the editing target never needs to move
+    // anything). A selection that belongs to a DIFFERENT document is
+    // cleared — carrying it forward would mean the next transform
+    // silently forks a document that isn't the one this call just
+    // said should be active (see docs/Principles.md, "Only The Active
+    // Document Is An Editing Target"). A selection already inside
+    // `documentId` (or no selection at all) is left exactly as it was.
+    setActiveDocument(documentId) {
+        if (this._spatialSelection && !this._spatialSelection.isEmpty
+            && this._spatialSelection.documentId !== documentId) {
+            this.clearSelection();
+        }
+        this._activeDocumentId = documentId;
+        return this._activeDocumentId;
+    }
+
+    // Where the camera is currently navigated to — see getActiveDocumentId()
+    // for "which document would an edit land on," a genuinely different
+    // question as of 0.2.27.
+    getFocusedDocumentId() {
+        return this._focusedDocumentId;
     }
 
     focusSelection() {
@@ -546,12 +594,13 @@ export class WorldNavigationSession {
     }
 
     // 0.1.50 — select every brick in the document the current selection
-    // belongs to (or the focused document when nothing is selected).
+    // belongs to (or the ACTIVE document when nothing is selected —
+    // 0.2.27: never the camera-focused one, see docs/Principles.md).
     // Multi-document select-all is deliberately undefined: a spatial
     // selection references exactly one document.
     selectAll() {
         const documentId = (!this._spatialSelection.isEmpty && this._spatialSelection.documentId)
-            || this._focusedDocumentId;
+            || this._activeDocumentId;
         const document = documentId ? this._loadedDocuments.get(documentId) : null;
         if (!document || !this._session) {
             return false;
@@ -854,7 +903,7 @@ export class WorldNavigationSession {
     // id, if one was just created) so the caller can re-focus/re-select
     // it.
     updateDocumentMetadata(documentId, { title, description, license } = {}) {
-        const id = this._ensureEditableDocumentId(documentId || this._focusedDocumentId);
+        const id = this._ensureEditableDocumentId(documentId || this._activeDocumentId);
         const doc = this.getDocument(id);
         if (!doc) {
             throw new Error(`WorldNavigationSession: no loaded document "${id}"`);
@@ -881,7 +930,7 @@ export class WorldNavigationSession {
     // always calls history.markUnsaved()), so a clean history reliably
     // means an explicit saveDocument() happened since.
     getDocumentInfo(documentId) {
-        const id = documentId || this._focusedDocumentId;
+        const id = documentId || this._activeDocumentId;
         const doc = this.getDocument(id);
         if (!doc) return null;
         const isPublished = this.isDocumentPublished(id);
@@ -942,7 +991,7 @@ export class WorldNavigationSession {
     // placementRegistry isn't wired) rather than a placement-shaped
     // object full of nulls.
     getPlacementInfo(documentId) {
-        const id = documentId || this._focusedDocumentId;
+        const id = documentId || this._activeDocumentId;
         const record = this._resolvePlacementRecord(id);
         if (!record) return null;
         const currentUser = this._identityProvider ? this._identityProvider.currentUser() : null;
@@ -1001,7 +1050,7 @@ export class WorldNavigationSession {
     // defaults — the same "null when the question doesn't apply" rule
     // getPlacementInfo already follows.
     checkPlacementOverlap(documentId, newPosition) {
-        const id = documentId || this._focusedDocumentId;
+        const id = documentId || this._activeDocumentId;
         if (!this._placementRegistry) return null;
         const record = this._resolvePlacementRecord(id);
         if (!record) return null;
@@ -1101,7 +1150,7 @@ export class WorldNavigationSession {
     // WHICH placement "the document currently showing as documentId"
     // means.
     movePlacement(documentId, newPosition) {
-        const id = documentId || this._focusedDocumentId;
+        const id = documentId || this._activeDocumentId;
         if (!this._moveWorldPlacementUseCase) {
             throw new Error('WorldNavigationSession: placement cannot be moved — no MoveWorldPlacementUseCase wired');
         }
@@ -1289,16 +1338,27 @@ export class WorldNavigationSession {
         return { allowed: license.forkAllowed, license };
     }
 
-    // Remaps this session's live references — selection, focus, hover —
-    // from the just-superseded source document onto its fork. Bricks
-    // get fresh ids on clone (DocumentCloneService), so brick
-    // references are remapped POSITIONALLY (same building index, same
-    // brick index within it) rather than by id; the clone preserves
-    // structure and order exactly, so position is a stable identity
-    // across the fork boundary.
+    // Remaps this session's live references — selection, focus, active
+    // document, hover — from the just-superseded source document onto
+    // its fork. Bricks get fresh ids on clone (DocumentCloneService),
+    // so brick references are remapped POSITIONALLY (same building
+    // index, same brick index within it) rather than by id; the clone
+    // preserves structure and order exactly, so position is a stable
+    // identity across the fork boundary.
     _remapReferencesAfterFork(sourceDocumentId, sourceDoc, forkId, forkDoc) {
         if (this._focusedDocumentId === sourceDocumentId) {
             this._focusedDocumentId = forkId;
+        }
+        // 0.2.27: a fork only ever happens because a mutation targeted
+        // sourceDocumentId — and every mutation path resolves its
+        // target from _activeDocumentId (or a selection that itself
+        // gets remapped below). Whichever one caused this fork, if it
+        // was the active document, the fork must become the new active
+        // document too — otherwise the very next mutation would
+        // silently target a document that no longer exists in this
+        // session's view (it was just superseded and unloaded).
+        if (this._activeDocumentId === sourceDocumentId) {
+            this._activeDocumentId = forkId;
         }
         if (this._spatialSelection && this._spatialSelection.documentId === sourceDocumentId) {
             if (this._spatialSelection.type === 'ground') {
@@ -1356,20 +1416,29 @@ export class WorldNavigationSession {
     // Internal
     // -----------------------------------------------------------------
 
+    // 0.2.27: "which document would the next mutation land on" —
+    // shared by _getActiveCommandHistory (undo/redo) and the history-
+    // replay preview below, so both agree with every other mutation
+    // path in this file instead of each independently guessing (the
+    // group-ops methods above had exactly this kind of drift before
+    // this milestone: two call sites resolving "the" document
+    // differently, and disagreeing whenever selection and active
+    // diverged). A non-empty selection wins — it's the more specific
+    // answer — falling back to the active document, never the
+    // camera-focused one.
+    _resolveMutationTargetId() {
+        if (this._spatialSelection && !this._spatialSelection.isEmpty && this._spatialSelection.documentId) {
+            return this._spatialSelection.documentId;
+        }
+        return this._activeDocumentId;
+    }
+
     _getActiveCommandHistory() {
-        if (this._spatialSelection && !this._spatialSelection.isEmpty) {
-            const document = this._loadedDocuments.get(this._spatialSelection.documentId);
-            if (document) {
-                return this._commandHistories.get(document.world.id) || null;
-            }
-        }
-        if (this._focusedDocumentId) {
-            const document = this._loadedDocuments.get(this._focusedDocumentId);
-            if (document) {
-                return this._commandHistories.get(document.world.id) || null;
-            }
-        }
-        return null;
+        const id = this._resolveMutationTargetId();
+        if (!id) return null;
+        const document = this._loadedDocuments.get(id);
+        if (!document) return null;
+        return this._commandHistories.get(document.world.id) || null;
     }
 
 	_loadWorld(documentId) {
@@ -1393,6 +1462,11 @@ export class WorldNavigationSession {
 	    if (!this._focusedDocumentId) {
 	        this._focusedDocumentId = documentId; // Set focus on first load
 	    }
+	    // 0.2.27: bootstrap the active document the same way — the very
+	    // first thing streamed in has nothing else to be "instead of."
+	    if (!this._activeDocumentId) {
+	        this._activeDocumentId = documentId;
+	    }
         const layoutPos = this._worldLayoutProvider.getPosition(documentId);
         this._session.addWorld(document.world, documentId, layoutPos);
         if (!this._commandHistories.has(document.world.id)) {
@@ -1403,6 +1477,12 @@ export class WorldNavigationSession {
     _unloadWorld(documentId) {
         if (this._focusedDocumentId === documentId) {
             this._focusedDocumentId = null;
+        }
+        // 0.2.27: a document that just left this session's view can't
+        // remain the active (editing) document either — nothing would
+        // be there for a mutation to land on.
+        if (this._activeDocumentId === documentId) {
+            this._activeDocumentId = null;
         }
         if (this._spatialSelection.documentId === documentId) {
             this.clearSelection();
@@ -1424,8 +1504,21 @@ export class WorldNavigationSession {
         this._refreshGizmo();
     }
 
+	// 0.2.27: whenever a real (non-ground, non-empty) selection is set,
+	// the document it belongs to BECOMES the active document — see
+	// docs/Principles.md, "Camera Focus, Active Document, and Selection
+	// Are Three Different Things." This is what makes "select a brick
+	// in a different loaded document" and "editing always targets the
+	// active document" the same guarantee instead of two separate
+	// invariants that could drift apart: picking, marquee-select,
+	// select-all, and selecting a group all funnel through this one
+	// setter, so there is exactly one place this sync can happen, not
+	// one per call site to keep in sync by hand.
 	_setSpatialSelection(selection) {
 	    this._spatialSelection = selection;
+	    if (selection && !selection.isEmpty && selection.documentId) {
+	        this._activeDocumentId = selection.documentId;
+	    }
 	    this._refreshEditingContext();
 	    this._refreshInspection();
 	}
@@ -1438,7 +1531,7 @@ export class WorldNavigationSession {
         if (!this._spatialSelection.isEmpty && this._spatialSelection.documentId) {
             return this._spatialSelection.documentId;
         }
-        return this._focusedDocumentId;
+        return this._activeDocumentId;
     }
 	
 	_setSpatialHover(hover) {
@@ -1518,7 +1611,11 @@ export class WorldNavigationSession {
         }
         let existingBrick = null;
         let layoutOffset = null;
-        let targetDocumentId = this._focusedDocumentId;
+        // 0.2.27: ground-hover preview targets the ACTIVE document —
+        // must agree with commitPlacement's own fallback, or the
+        // preview would show a brick landing in one document while the
+        // actual commit lands in another.
+        let targetDocumentId = this._activeDocumentId;
         if (hitResult.type === 'brick') {
             targetDocumentId = hitResult.documentId;
             const document = this._loadedDocuments.get(targetDocumentId);
@@ -1577,15 +1674,15 @@ export class WorldNavigationSession {
     }
 
 	// --- Parity Methods for Tests ---
-	getActiveDocumentId() { return this._focusedDocumentId; }
+	getActiveDocumentId() { return this._activeDocumentId; }
 	isDocumentDirty(documentId) {
-	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    const doc = this.getDocument(documentId || this._activeDocumentId);
 	    if (!doc) return false;
 	    const history = this._commandHistories.get(doc.world.id);
 	    return history ? history.isDirty() : false;
 	}
 	saveDocument(documentId) {
-	    const id = documentId || this._focusedDocumentId;
+	    const id = documentId || this._activeDocumentId;
 	    // 0.2.20: defense in depth — every guarded mutation already forks
 	    // before marking a document dirty, so a still-published document
 	    // should never reach here with anything to save. Refuse rather
@@ -1602,7 +1699,7 @@ export class WorldNavigationSession {
 	    if (history) history.markSaved();
 	}
 	publishDocument(documentId) {
-	    const id = documentId || this._focusedDocumentId;
+	    const id = documentId || this._activeDocumentId;
 	    if (this._publishedDocumentIds.has(id)) {
 	        throw new Error(`WorldNavigationSession: "${id}" is already a published snapshot — fork it to publish an edited copy`);
 	    }
@@ -1612,7 +1709,7 @@ export class WorldNavigationSession {
 	    return this._publishDocumentUseCase.execute({ document: doc });
 	}
 	getTimeline(documentId) {
-	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    const doc = this.getDocument(documentId || this._activeDocumentId);
 	    const history = doc ? this._commandHistories.get(doc.world.id) : null;
 	    return history ? history.getTimeline() : [];
 	}		
@@ -1621,7 +1718,7 @@ export class WorldNavigationSession {
 	    if (!this._replayDocumentUseCase) {
 	        throw new Error('no restore configured'); // <--- ADD GUARD
 	    }
-	    const docId = documentId || this._focusedDocumentId;
+	    const docId = documentId || this._activeDocumentId;
 	    const doc = this.getDocument(docId);
 	    if (!doc) throw new Error('no loaded document');
 	    
@@ -1664,10 +1761,11 @@ export class WorldNavigationSession {
 	
 	copySelection() {
 	    if (this._historyPreview && this._historyPreview.active) return SpatialClipboardState.empty(); // <-- ADD THIS
-	    if (!this._copySelectionUseCase || !this._focusedDocumentId) return SpatialClipboardState.empty();
-	    
-	    // FIX: Prefer the document ID from the selection, fall back to focused
-	    const docId = (this._spatialSelection && this._spatialSelection.documentId) || this._focusedDocumentId;
+	    if (!this._copySelectionUseCase || !this._activeDocumentId) return SpatialClipboardState.empty();
+
+	    // Prefer the document ID from the selection, fall back to the
+	    // active document (0.2.27: never the camera-focused one).
+	    const docId = (this._spatialSelection && this._spatialSelection.documentId) || this._activeDocumentId;
 	    if (!docId) return SpatialClipboardState.empty();
 	    
 	    const doc = this.getDocument(docId);
@@ -1682,8 +1780,8 @@ export class WorldNavigationSession {
 	pasteClipboard() {
 	    if (this._historyPreview && this._historyPreview.active) return false; // ADD THIS LINE
 	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
-	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
-	    const doc = this.getDocument(this._focusedDocumentId);
+	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
+	    const doc = this.getDocument(this._activeDocumentId);
 	    if (!doc) return false;
 	    const buildingId = doc.world.getBuildings()[0]?.id;
 	    if (!buildingId) return false;
@@ -1710,7 +1808,7 @@ export class WorldNavigationSession {
 	}
 	
 	cloneDocument(documentId) {
-	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    const doc = this.getDocument(documentId || this._activeDocumentId);
 	    if (!doc) throw new Error('no loaded document');
 	    const clone = this._documentCloneService.execute(doc, { eventBus: this._eventBus });
 	    this._loadedDocuments.set(clone.world.id, clone);
@@ -1724,7 +1822,7 @@ export class WorldNavigationSession {
 	}
 	
 	forkDocument(documentId) {
-	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    const doc = this.getDocument(documentId || this._activeDocumentId);
 	    if (!doc) throw new Error('no loaded document');
 	    const user = this._identityProvider ? this._identityProvider.currentUser() : null;
 	    const fork = this._documentCloneService.execute(doc, {
@@ -1738,28 +1836,43 @@ export class WorldNavigationSession {
 	    history.markUnsaved();
 	    this._commandHistories.set(fork.world.id, history);
 	    if (this._session) this._session.addWorld(fork.world, fork.world.id, this._worldLayoutProvider.getPosition(fork.world.id));
+	    // An explicit "Fork" action means the person wants to work on
+	    // the fork next — camera AND active document both move to it,
+	    // same combined behavior focusDocument()'s default gives.
 	    this._focusedDocumentId = fork.world.id;
+	    this._activeDocumentId = fork.world.id;
 	    return fork.world.id;
 	}
 	// 1. Fix restoreHistoryAt (Update the fake documentManager to include load/state)
 	getGroups() {
-	    const doc = this.getDocument(this._focusedDocumentId);
+	    const doc = this.getDocument(this._activeDocumentId);
 	    if (!doc) return [];
 	    const world = doc.world || doc;
 	    const groups = typeof world.getGroups === 'function' ? world.getGroups() : (world.groups || []);
 	    return groups.map(g => ({ id: g.id, name: g.name, memberCount: g.memberCount || (g.brickIds ? g.brickIds.length : 0) }));
 	}
+	// 0.2.27: resolves the target document from the SELECTION itself
+	// (already forked/remapped by _ensureEditableSelection above, if
+	// it needed to be), never from a separately, independently forked
+	// _activeDocumentId. Before this milestone these could be two
+	// DIFFERENT documents — a selection in Bob's world while Alice's
+	// happened to be active — and this method would fork BOTH
+	// (needlessly forking Alice's) and then build the group command
+	// from Alice's worldId with Bob's brick ids: a real, silent
+	// cross-document corruption bug. Group membership is a selection-
+	// scoped operation exactly like move/rotate/delete; it must use
+	// the same source of truth they do.
 	createGroupFromSelection(name) {
 	    this._ensureEditableSelection();
-	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
-	    const doc = this.getDocument(this._focusedDocumentId);
-	    if (!doc || this._spatialSelection.isEmpty) return null;
+	    if (this._spatialSelection.isEmpty) return null;
+	    const doc = this.getDocument(this._spatialSelection.documentId);
+	    if (!doc) return null;
 	    const cmd = new CreateGroupCommand({ worldId: doc.world.id, brickIds: this._spatialSelection.brickIds, name });
 	    this._commandHistories.get(doc.world.id).execute(cmd);
 	    return cmd.executedGroupId;
 	}
 	selectGroup(groupId) {
-	    const doc = this.getDocument(this._focusedDocumentId);
+	    const doc = this.getDocument(this._activeDocumentId);
 	    if (!doc) return false;
 	    const group = doc.world.getGroup(groupId);
 	    if (!group) return false;
@@ -1777,40 +1890,43 @@ export class WorldNavigationSession {
 	}
 	addSelectionToSelectedGroup(groupId) {
 	    this._ensureEditableSelection();
-	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
-	    const doc = this.getDocument(this._focusedDocumentId);
-	    if (!doc || this._spatialSelection.isEmpty) return false;
+	    if (this._spatialSelection.isEmpty) return false;
+	    const doc = this.getDocument(this._spatialSelection.documentId);
+	    if (!doc) return false;
 	    const cmd = new AddToGroupCommand({ worldId: doc.world.id, groupId, brickIds: this._spatialSelection.brickIds });
 	    this._commandHistories.get(doc.world.id).execute(cmd);
 	    return true;
 	}
 	removeSelectionFromSelectedGroup(groupId) {
 	    this._ensureEditableSelection();
-	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
-	    const doc = this.getDocument(this._focusedDocumentId);
-	    if (!doc || this._spatialSelection.isEmpty) return false;
+	    if (this._spatialSelection.isEmpty) return false;
+	    const doc = this.getDocument(this._spatialSelection.documentId);
+	    if (!doc) return false;
 	    const cmd = new RemoveFromGroupCommand({ worldId: doc.world.id, groupId, brickIds: this._spatialSelection.brickIds });
 	    this._commandHistories.get(doc.world.id).execute(cmd);
 	    return true;
 	}
+	// groupId-targeted operations below have no selection of their own
+	// to resolve a document from — they operate on the ACTIVE document
+	// (0.2.27: never the camera-focused one).
 	renameGroup(groupId, name) {
-	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
-	    const doc = this.getDocument(this._focusedDocumentId);
+	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
+	    const doc = this.getDocument(this._activeDocumentId);
 	    if (!doc) return false;
 	    this._commandHistories.get(doc.world.id).execute(new RenameGroupCommand({ worldId: doc.world.id, groupId, name }));
 	    return true;
 	}
 	duplicateGroup(groupId) {
-	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
-	    const doc = this.getDocument(this._focusedDocumentId);
+	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
+	    const doc = this.getDocument(this._activeDocumentId);
 	    if (!doc) return null;
 	    const cmd = new DuplicateGroupCommand({ worldId: doc.world.id, groupId });
 	    this._commandHistories.get(doc.world.id).execute(cmd);
 	    return cmd.executedGroupId;
 	}
 	deleteGroup(groupId) {
-	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
-	    const doc = this.getDocument(this._focusedDocumentId);
+	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
+	    const doc = this.getDocument(this._activeDocumentId);
 	    if (!doc) return false;
 	    this._commandHistories.get(doc.world.id).execute(new DeleteGroupCommand({ worldId: doc.world.id, groupId }));
 	    return true;
@@ -1847,8 +1963,17 @@ export class WorldNavigationSession {
 	    this._historyPreview.cursor = cursor;
 	    this._historyPreview.world = replayWorld;
 	
-	    // Renderer integration: hide live world, show replay world
-	    const docId = this._focusedDocumentId;
+	    // Renderer integration: hide live world, show replay world.
+	    // Must resolve the SAME document _getActiveCommandHistory() just
+	    // built `history` from above — otherwise the replay could swap
+	    // out one document's live world while showing a different
+	    // document's history.
+	    // Remembered on _historyPreview itself (not re-resolved at cancel
+	    // time) so a selection/active-document change WHILE the preview
+	    // is open can never make cancelHistoryPreview restore the wrong
+	    // document.
+	    const docId = this._resolveMutationTargetId();
+	    this._historyPreview.documentId = docId;
 	    if (this._session && docId) {
 	        const doc = this.getDocument(docId);
 	        if (doc) {
@@ -1862,7 +1987,7 @@ export class WorldNavigationSession {
 	cancelHistoryPreview() {
 	    if (!this._historyPreview || !this._historyPreview.active) return false;
 	    
-	    const docId = this._focusedDocumentId;
+	    const docId = this._historyPreview.documentId;
 	    if (this._session && docId) {
 	        const doc = this.getDocument(docId);
 	        if (doc) {
@@ -1879,7 +2004,7 @@ export class WorldNavigationSession {
 	    return { cursor: this._historyPreview.cursor, world: this._historyPreview.world };
 	}
 	getRetiredHistories(documentId) {
-	    return this._retiredHistories ? (this._retiredHistories.get(documentId || this._focusedDocumentId) || []) : [];
+	    return this._retiredHistories ? (this._retiredHistories.get(documentId || this._activeDocumentId) || []) : [];
 	}
 	
 	// Add getDocumentManager alias for WorldViewPersistence tests
@@ -1908,6 +2033,7 @@ export class WorldNavigationSession {
         this._spatialPlacement = SpatialPlacementState.empty();
         this._activeDefinitionId = null;
         this._focusedDocumentId = null;
+        this._activeDocumentId = null;
         this._eventBus = null;
     }
 }

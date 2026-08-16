@@ -1102,3 +1102,28 @@ View — that diagnostic surface belongs to
 yet wire in (see docs/Architecture.md) — so this milestone does not
 extend the protocol to carry diagnostic detail the running system
 cannot yet produce.
+
+## World View Context & Selection Model (0.2.27)
+
+No wire format touched — nothing here is signed, persisted, or
+replicated. Camera focus, the active document, and brick selection are
+all purely local, in-memory session state (`WorldNavigationSession`'s
+`_focusedDocumentId`/`_activeDocumentId`/`_spatialSelection`), the same
+category `SpatialCameraState`/`SpatialSelectionState` already occupied
+before this milestone split one field into two. A replica's choice of
+which document its own user happens to be looking at, or editing next,
+has no meaning to any other replica and is never transmitted.
+
+What changed is internal correctness, not protocol surface: every
+mutation path that used to resolve its target as `documentId ||
+this._focusedDocumentId` now resolves it as `documentId ||
+this._activeDocumentId` (or, when a selection exists, the selection's
+own document). The eventual PUBLISHED result of a mutation —
+`PlacementRecord`, `Publication`, a saved `Document` snapshot — is
+byte-for-byte the same shape it was in 0.2.26; what 0.2.27 guarantees
+is that it lands on the CORRECT document rather than whichever one the
+camera happened to be pointed at when two documents were loaded at
+once. This is the same boundary 0.2.25 drew between spatial policy and
+cryptographic trust, applied one layer up: which local UI state
+decides a mutation's target is a session-layer correctness question,
+never a protocol-layer one.
