@@ -19,6 +19,9 @@ import { Position } from '../core/Position.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { License, LicenseId } from '../core/License.js';
+import { SpatialCameraController } from '../application/SpatialCameraController.js';
+import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
+import { EditorActionContext } from '../application/EditorActionContext.js';
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -55,12 +58,19 @@ function stubRenderer(extra = {}) {
         addWorld() {}, removeWorld() {}, dispose() {},
         clearSelection() {}, clearHover() {}, selectBricks() {}, hoverBrick() {},
         showPreview() {}, hidePreview() {}, showGizmo() {}, hideGizmo() {},
+        // Real renderer: a hit test never arms anything, so it's safe
+        // to run on every pointer-down. Default true keeps the
+        // existing gizmo-drag tests (which don't care about the gate)
+        // working unchanged; section 18 below overrides it to false.
+        gizmoHitTest() { return true; },
         gizmoPointerDown() { return false; },
         gizmoPointerMove() { return { consumed: false, hovered: false, feedback: null }; },
         gizmoPointerUp() { return { consumed: false, committed: false, feedback: null }; },
         gizmoKeyDown() { return false; },
         pick() { return null; }, pickGround() { return null; }, pickRectangle() { return []; },
         setControlsEnabled() {},
+        getCameraState() { return { position: { x: 0, y: 0, z: 0 }, target: { x: 0, y: 0, z: 0 } }; },
+        setCameraState() {},
         ...extra
     };
 }
@@ -310,6 +320,172 @@ async function runTests() {
         const forkBricks = session.getDocument(forkId).world.getBuildings()[0].getBricks();
         assert(forkBricks.length === 2 && forkBricks.every((b) => b.position.y === 1.5),
             '17. every selected brick was remapped to the fork and received the mutation');
+    }
+
+    // -------------------------------------------------------------
+    // 18. gizmoPointerDown runs on EVERY pointer-down while something
+    //     is selected (gizmo-first: try the gizmo, fall back to a
+    //     plain click otherwise) — that alone must never fork. Only
+    //     an actual handle hit may cross the boundary; a pointer-down
+    //     that misses (e.g. clicking a different brick to reselect)
+    //     is not a mutation and must leave the snapshot untouched.
+    // -------------------------------------------------------------
+    {
+        let hitTestCalls = 0;
+        const publication = publisher.publish(makeDocument('No Eager Fork'), alice);
+        const session = buildSession({
+            gizmoHitTest() { hitTestCalls++; return false; },
+            gizmoPointerDown() { throw new Error('must not arm a drag when the hit test misses'); }
+        });
+        session._loadWorld(publication.documentId);
+        selectFirstBrick(session, publication.documentId);
+
+        const consumed = session.gizmoPointerDown({ button: 0, clientX: 5, clientY: 5 });
+        assert(consumed === false, '18. a pointer-down that misses the gizmo is not consumed');
+        assert(hitTestCalls === 1, '18b. the hit test ran before any fork decision was made');
+        assert(session.isDocumentPublished(publication.documentId),
+            '18c. no fork was created merely by a pointer-down elsewhere — lazy means on the actual mutation, not on every click');
+    }
+
+    // -------------------------------------------------------------
+    // 19. A fork inherits the EXACT position of the snapshot it
+    //     replaces. The layout/discovery providers can never resolve
+    //     a position for a fork's id on their own (it is never
+    //     published), so every position lookup after the fork must
+    //     come from what was remembered at fork time, not a fresh
+    //     (and silently wrong) query.
+    // -------------------------------------------------------------
+    {
+        // A couple of decoys push this publication off index 0, so a
+        // coincidental (0,0,0) grid slot can't hide a broken lookup.
+        publisher.publish(makeDocument('Decoy A'), alice);
+        publisher.publish(makeDocument('Decoy B'), alice);
+        const publication = publisher.publish(makeDocument('Positioned'), alice);
+        const session = buildSession();
+        session._loadWorld(publication.documentId);
+        const sourcePos = session.getDocumentPosition(publication.documentId);
+        assert(sourcePos.x !== 0 || sourcePos.z !== 0,
+            '19. precondition: the source resolves to a real, non-origin deterministic position');
+
+        selectFirstBrick(session, publication.documentId);
+        session.moveSelection({ x: 1, y: 0, z: 0 });
+        const forkId = session.getActiveDocumentId();
+        const forkPos = session.getDocumentPosition(forkId);
+        assert(forkPos.x === sourcePos.x && forkPos.y === sourcePos.y && forkPos.z === sourcePos.z,
+            '19b. the fork inherits the source position exactly, instead of a fresh lookup falling back to (0,0,0)');
+    }
+
+    // -------------------------------------------------------------
+    // 20. A saved (no-longer-dirty) fork survives spatial streaming.
+    //     A fork can never appear in findVisibleDocuments() (it was
+    //     never published), so it must stay pinned unconditionally —
+    //     the pre-existing dirty-only pin clears on save, and the very
+    //     next camera-driven updateSpatialView() would otherwise
+    //     stream the fork's bricks (and its whole in-memory state)
+    //     out, with no way to stream them back in.
+    // -------------------------------------------------------------
+    {
+        const pinStorage = new InMemoryStorageProvider();
+        const carol = new LocalIdentityProvider(pinStorage);
+        carol.login('carol');
+        const pinContentStore = new LocalContentStore(pinStorage);
+        const pinPublisher = new LocalPublisherProvider(pinStorage, pinContentStore);
+        const pinDiscovery = new LocalDiscoveryProvider(pinStorage);
+        const pinSpatialIndex = new LocalSpatialIndexProvider(pinStorage);
+        const pinLayout = new LocalWorldLayoutProvider(pinSpatialIndex, pinDiscovery);
+
+        const publication = pinPublisher.publish(makeDocument('Streaming Pin'), carol);
+        const session = new WorldNavigationSession({
+            registry,
+            loadPublicationDocumentUseCase: new LoadPublicationDocumentUseCase(pinStorage),
+            worldLayoutProvider: pinLayout,
+            saveDocumentUseCase: new SaveDocumentUseCase(pinStorage),
+            publishDocumentUseCase: new PublishDocumentUseCase(pinPublisher, carol),
+            identityProvider: carol,
+            documentCloneService,
+            discoveryProvider: pinDiscovery
+        });
+        // Camera parked far from the source's (index-0, origin) grid
+        // slot: findVisibleDocuments() legitimately excludes the
+        // original publication too, so the only thing this update can
+        // possibly stream in/out is whether the fork gets dropped —
+        // that isolation is the point of the test, not a re-fetch of
+        // the original publication as a second, overlapping world.
+        session._session = stubRenderer({
+            getCameraState() {
+                return { position: { x: 1000, y: 0, z: 1000 }, target: { x: 1000, y: 0, z: 1000 } };
+            }
+        });
+        session._spatialCameraController = new SpatialCameraController(session._session);
+
+        session._loadWorld(publication.documentId);
+        selectFirstBrick(session, publication.documentId);
+        session.moveSelection({ x: 2, y: 0, z: 0 });
+        const forkId = session.getActiveDocumentId();
+
+        session.saveDocument(forkId);
+        assert(!session.isDocumentDirty(forkId), '20. precondition: the fork is clean after saving');
+
+        session.updateSpatialView();
+        assert(session.getDocument(forkId) !== null,
+            '20b. a saved, undiscoverable fork is NOT streamed out just because it can never appear in visibleIds');
+        assert(session.getLoadedDocuments().length === 1,
+            '20c. still loaded — the fork\'s bricks were not torn down by the streaming pass');
+    }
+
+    // -------------------------------------------------------------
+    // 21. getEditabilityNotice: the proactive "why" query the UI uses
+    //     to explain fork-on-edit BEFORE the user hits a blocked
+    //     action, not just after.
+    // -------------------------------------------------------------
+    {
+        const forkablePub = publisher.publish(makeDocument('Notice Forkable'), alice);
+        const blockedPub = publisher.publish(makeDocument('Notice Blocked', LicenseId.ALL_RIGHTS_RESERVED), alice);
+        const session = buildSession();
+        session._loadWorld(forkablePub.documentId);
+        session._loadWorld(blockedPub.documentId);
+
+        const forkableNotice = session.getEditabilityNotice(forkablePub.documentId);
+        assert(forkableNotice && forkableNotice.blocked === false,
+            '21. a forkable published snapshot reports blocked:false with an explanatory message');
+
+        const blockedNotice = session.getEditabilityNotice(blockedPub.documentId);
+        assert(blockedNotice && blockedNotice.blocked === true && /ALL-RIGHTS-RESERVED/.test(blockedNotice.message),
+            '21b. a fork-forbidden published snapshot reports blocked:true naming the license');
+
+        assert(session.getEditabilityNotice(null) === null && session.getEditabilityNotice('nonexistent') === null,
+            '21c. nothing to say about a non-tracked document');
+    }
+
+    // -------------------------------------------------------------
+    // 22. UX: a mutation the fork policy refuses surfaces as
+    //     transient feedback through the EditorActionRegistry (0.1.50's
+    //     existing "degrade to feedback instead of throwing" contract,
+    //     extended to a REFUSED capability, not just a missing one) —
+    //     never as an uncaught exception reaching the UI raw.
+    // -------------------------------------------------------------
+    {
+        const publication = publisher.publish(makeDocument('Feedback On Denial', LicenseId.ALL_RIGHTS_RESERVED), alice);
+        const session = buildSession();
+        session._loadWorld(publication.documentId);
+        selectFirstBrick(session, publication.documentId);
+
+        const messages = [];
+        const feedback = { show(message) { messages.push(message); } };
+        const registry = new EditorActionRegistry(createStandardActions({ session, feedback, ui: {} }));
+        const context = EditorActionContext.capture({ session, selectionCount: 1 });
+
+        let threw = false;
+        try {
+            registry.execute('transform.nudgeRight', context);
+        } catch (e) {
+            threw = true;
+        }
+        assert(!threw, '22. a policy-denied action never throws out of the registry');
+        assert(messages.length === 1 && /forking/i.test(messages[0]),
+            '22b. the denial reason reaches the user as feedback instead of silently failing');
+        assert(session.isDocumentPublished(publication.documentId),
+            '22c. the source is still untouched — the caught error does not paper over a partial mutation');
     }
 
     console.log('✅ All Fork-on-Edit & Immutable Snapshot Lineage tests passed.');

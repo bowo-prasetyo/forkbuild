@@ -53,6 +53,8 @@ export class RenderWorldUseCase {
             setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
             showGizmo: (pivot, bounds) => transformGizmoController.show(pivot, bounds),
             hideGizmo: () => transformGizmoController.hide(),
+            gizmoHitTest: (screenX, screenY) =>
+                transformGizmoController.hitTest(screenX, screenY),
             gizmoPointerDown: (screenX, screenY, selection) =>
                 transformGizmoController.onPointerDown(screenX, screenY, selection),
             gizmoPointerMove: (screenX, screenY, selection, modifiers = null) =>

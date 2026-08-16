@@ -35,6 +35,7 @@ export default {
         const spatialSelection = ref(null);
         const spatialHover = ref(null);
         const spatialInspection = ref(null);
+        const editabilityNotice = ref(null);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
         const cameraPosition = ref(null);
@@ -94,18 +95,34 @@ export default {
             paletteOpen.value = false;
         }
 
+        // Guards every direct session call this view makes outside the
+        // EditorActionRegistry (which already catches and surfaces
+        // errors itself in surfaceCall — see EditorActionRegistry.js).
+        // A rejected mutation (e.g. 0.2.20 fork-on-edit refusing to
+        // fork a fork-forbidden published snapshot) becomes a message,
+        // not an uncaught exception breaking the pointer/keyboard
+        // handler it came from.
+        function guarded(fn) {
+            try {
+                return fn();
+            } catch (err) {
+                feedback.show(err.message);
+                return undefined;
+            }
+        }
+
         function alignSelection(mode) {
-            session.alignSelection(mode);
+            guarded(() => session.alignSelection(mode));
             refreshSpatialUI();
         }
 
         function distributeSelection(axis) {
-            session.distributeSelection(axis);
+            guarded(() => session.distributeSelection(axis));
             refreshSpatialUI();
         }
 
         function applyNumericTransform(intent, options) {
-            session.applyNumericTransform(intent, options);
+            guarded(() => session.applyNumericTransform(intent, options));
             refreshSpatialUI();
         }
 
@@ -200,6 +217,14 @@ export default {
                 spatialInspection.value = null;
             }
 
+            // 0.2.20: explain fork-on-edit BEFORE the user hits a
+            // blocked action, not just after — see
+            // WorldNavigationSession.getEditabilityNotice.
+            editabilityNotice.value = (spatialInspection.value && spatialInspection.value.documentId
+                && typeof session.getEditabilityNotice === 'function')
+                ? session.getEditabilityNotice(spatialInspection.value.documentId)
+                : null;
+
             const editingCtx = session.getSpatialEditingContext();
             if (editingCtx && !editingCtx.isEmpty) {
                 spatialEditingContext.value = {
@@ -266,7 +291,7 @@ export default {
         function onPointerDown(event) {
             isDragging = false;
             pointerStart = { x: event.clientX, y: event.clientY };
-            if (session.gizmoPointerDown(event)) {
+            if (guarded(() => session.gizmoPointerDown(event))) {
                 return;
             }
         }
@@ -299,7 +324,7 @@ export default {
             }
             if (!isDragging && pointerStart) {
                 if (activeTool.value === 'place') {
-                    session.commitPlacement();
+                    guarded(() => session.commitPlacement());
                     refreshSpatialUI();
                 } else {
                     session.pick(event.clientX, event.clientY, { 
@@ -402,6 +427,7 @@ export default {
             spatialSelection,
             spatialHover,
             spatialInspection,
+            editabilityNotice,
             spatialEditingContext,
             spatialPlacement,
             cameraPosition,
@@ -532,6 +558,12 @@ export default {
                             Focus Brick
                         </button>
                     </div>
+                    <p
+                        v-if="editabilityNotice"
+                        :class="['editability-notice', { 'editability-notice--blocked': editabilityNotice.blocked }]"
+                    >
+                        {{ editabilityNotice.blocked ? '🔒' : 'ℹ️' }} {{ editabilityNotice.message }}
+                    </p>
                 </div>
 
                 <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">
