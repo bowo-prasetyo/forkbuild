@@ -2890,3 +2890,144 @@ numbers and positions are already shown via the existing Placement
 Info fields; showing raw causal stamps or root hashes in the UI was
 judged more detail than the design doc's own "the user doesn't
 necessarily need the cryptographic details" scope called for).
+
+### Publication Catalog & Repository UX (0.2.31)
+
+Repository/Author View were still a small demo catalog — a flat,
+unpaginated list rendered in full every time, with no sort, no
+pagination, and search limited to whatever `SearchWorldUseCase`
+happened to already do. 0.2.31 establishes a real CATALOG MODEL first,
+then builds the UI on top of it, and unifies the two views onto one
+shared implementation rather than letting them slowly diverge.
+
+    RepositoryView.js          AuthorView.js
+      <PublicationCatalog />     <PublicationCatalog :author="username" />
+              │                           │
+              └─────────────┬─────────────┘
+                             ▼
+              ui/components/PublicationCatalog.js
+                (owns query/page state, resolves per-page
+                 enrichment, wires the toolbar/card/list/
+                 pagination components)
+                             │
+                             ▼
+            SearchPublicationsUseCase.execute(PublicationQuery)
+                             │
+                             ▼
+                       PublicationPage
+              { items, page, pageSize, totalCount,
+                totalPages, hasNext, hasPrevious }
+
+Core/application:
+
+- `core/PublicationQuery.js` — `{ text, author, sort, page, pageSize,
+  includeDescriptions }`, a plain immutable value, application-level
+  and NOT tied to how any discovery provider stores or fetches
+  publications (see docs/Principles.md, "A Catalog Query Is Answered
+  By The Application Layer, Not Assumed Efficient By The UI"). `author`
+  is the ONLY field that differs between a Repository query (`null`)
+  and an Author query (a username) — see below.
+- `core/PublicationPage.js` — `{ items, page, pageSize, totalCount,
+  totalPages, hasNext, hasPrevious }`. `totalCount`/`totalPages` are a
+  small, deliberate addition beyond the design doc's own minimal
+  shape — the mockup's own "1,248 publications" / "1 2 3 4 5 ... 125"
+  pagination controls need them to render at all.
+- `core/PublicationSort.js` — `PublicationSort` enum (RECENTLY_PUBLISHED/
+  OLDEST_PUBLISHED/TITLE_ASC/TITLE_DESC/AUTHOR_ASC) and
+  `comparePublications(a, b, sort)`, the pure comparator every sort
+  order shares. See docs/Principles.md, "Ordering Must Be Deterministic
+  Across Replicas," for why every branch falls back to an ordinal
+  `publicationId` tiebreak and never uses locale-aware collation.
+- `application/SearchPublicationsUseCase.js` — the Repository/Author
+  catalog's own search: filters `discoveryProvider.list()` by author
+  scope and text (title/author always; description only when
+  `includeDescriptions` is set — see docs/Principles.md, "Description
+  Search Is Opt-In, Not Silent, Because It Has A Real Cost"), sorts via
+  `comparePublications`, and paginates — all inside this one use case,
+  so the UI never computes an offset itself. A description match loads
+  the candidate's full Document via the wired
+  `LoadPublicationDocumentUseCase`, wrapped in try/catch (a single
+  corrupt/missing document never breaks search for every other
+  publication — the same failure-isolation posture 0.2.15/0.2.16/0.2.19
+  already established) and memoized in an instance-lifetime Map so the
+  same publication's description is never loaded twice. Deliberately a
+  SEPARATE use case from `SearchWorldUseCase` — see docs/Principles.md,
+  "Repository Search Is Not World Search."
+- `core/DocumentPreview.js` — `PreviewType` (NONE/PLACEHOLDER/THUMBNAIL)
+  and `derivePlaceholderPreview(publication)`, a pure function deriving
+  a deterministic hue + initial from a publication's own `id`/`title`.
+  No new field on `Publication` — see docs/Principles.md, "A Preview Is
+  Either Signed Or It Isn't," for why a real, immutable, content-addressed
+  preview is deliberately deferred rather than added to the signed
+  schema in passing.
+- `core/PublicationGrouping.js` — `groupPublications(items, mode)`
+  (NONE/AUTHOR/DATE/LICENSE), a pure, presentation-only bucketing of
+  the CURRENT PAGE's items — see docs/Principles.md. Scoped to one page
+  deliberately: grouping the whole catalog independent of pagination
+  would mean a group could legitimately span multiple pages, a real UX
+  question this milestone doesn't attempt to answer.
+- `application/CreateDiscoveryUseCase.js` — gains
+  `loadPublicationDocumentUseCase` and `searchPublicationsUseCase`
+  alongside the existing `listPublicationsUseCase`/`findPublicationUseCase`.
+
+UI:
+
+- `ui/components/PublicationCatalog.js` (new) — the ONE implementation
+  both RepositoryView and AuthorView mount, differing only by an
+  `author` prop (`null` for Repository, a username for Author — see
+  the proposed milestone structure's own "PublicationCatalog ...
+  RepositoryView: query = all publications ... AuthorView: query =
+  current user's publications"). Owns query/page/view/group state,
+  calls `SearchPublicationsUseCase` on search submit / sort change /
+  page navigation, and resolves per-page enrichment (description
+  snippet, fork's parent title, fork count) bounded by `pageSize` —
+  never the whole catalog, which is what keeps this affordable even
+  against 10,000 publications.
+- `ui/components/PublicationCard.js` / `PublicationList.js` — the two
+  view modes the design doc asked for (cards for visual discovery,
+  a compact table for scanning hundreds/thousands quickly), both pure
+  presentation components reading already-resolved props, the same
+  "host resolves, component renders" convention `WorldLocationBrowser`
+  (0.2.29/0.2.30) established. Each card/row shows a `PublicationPreview`,
+  a truncated description (when resolved), a "🔒 Published" badge plus
+  the existing "↳ Fork of X" lineage line (see docs/Principles.md,
+  0.2.21's "Forked stays lineage metadata, never a lifecycle state" —
+  0.2.31 doesn't add Draft/Saved states to a catalog that, by
+  definition, only ever contains published Publications), author/date/
+  license, and the unchanged Open/Fork/Explore actions.
+- `ui/components/PublicationPreview.js` — renders whichever
+  `DocumentPreview` it's given; today that's always PLACEHOLDER.
+- `ui/components/PublicationCatalogToolbar.js` — search (submit-driven,
+  not live — same convention `WorldSearchPanel` 0.2.26 established,
+  doubly important here since a submitted description search may load
+  every visible result's document), the "Include descriptions"
+  checkbox, a Sort dropdown, a Group dropdown, and the Cards/List
+  toggle. Sort/View/Group take effect immediately (Sort re-queries;
+  View/Group are pure re-presentation of the already-loaded page).
+- `ui/components/PublicationPagination.js` — explicit Previous/Next
+  plus a windowed page-number list with `…` gaps (e.g. "1 … 48 49 50
+  51 52 … 125"), never infinite scroll — see docs/Principles.md,
+  "Explicit Pagination Is A Decentralized Honesty Feature."
+- `ui/views/RepositoryView.js` / `ui/views/AuthorView.js` — both now
+  thin wrappers mounting `PublicationCatalog`. AuthorView keeps its
+  "Original Works & Forks" `ForkTree` section as a SEPARATE, still
+  fully unpaginated `listPublicationsUseCase.execute({author})` call —
+  a lineage graph needs an author's WHOLE publication set to render
+  correctly (a root on page 1 could have a fork only reachable on page
+  4), so pagination applies to the browsable catalog list, not to the
+  tree visualization below it.
+
+Deliberately not in 0.2.31: infinite scroll (see docs/Principles.md);
+a real, immutable, content-addressed preview (see the same doc, "A
+Preview Is Either Signed Or It Isn't" — this requires its own
+Publication schema-evolution design, not something to decide inside a
+catalog-UI milestone); license/tag/status filters beyond the search box
+(the design doc listed these as "eventually perhaps," not this pass);
+cross-page grouping; and an indexed metadata representation that would
+make description search cheap at unbounded scale (today's description
+search is a real, opt-in, per-query cost against however many
+publications match title/author-independent criteria — acceptable for
+"local pagination over the currently discoverable collection," the
+design doc's own explicit scope for a first implementation, but a real
+future scaling question once a genuinely large decentralized catalog
+exists).

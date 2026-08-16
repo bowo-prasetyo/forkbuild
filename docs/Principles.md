@@ -1000,3 +1000,139 @@ with `diagnostics.available: false`), which is different again from
 "there are documents here, but some could not be trusted"
 (a non-empty `documents` array with `diagnostics.warnings` naming
 specifically what could not be verified).
+
+### Repository Search Is Not World Search (0.2.31)
+
+`application/SearchWorldUseCase.js` answers "where is this publication
+in the world?" — text plus an optional spatial radius, enriched with a
+resolved position, because that is what navigating a 3D scene needs.
+`application/SearchPublicationsUseCase.js` answers a different
+question — "which publications match this description?" — with no
+position, no camera, no placement concept anywhere in it, but with
+pagination, deterministic ordering, and (opt-in) a publication's full
+description as a match target, none of which World Search needs. These
+stay two separate use cases rather than one bent to answer both
+questions, the same reasoning 0.2.28 used to give spatial discovery
+its own query instead of overloading text search with coordinates:
+when two callers want genuinely different things from "search," giving
+them one shared implementation doesn't reduce complexity, it just
+hides two different sets of assumptions inside one function that has
+to keep satisfying both.
+
+### A Catalog Query Is Answered By The Application Layer, Not Assumed Efficient By The UI (0.2.31)
+
+`SearchPublicationsUseCase.execute(query)` receives a `PublicationQuery`
+and returns a `PublicationPage` — the UI never computes an offset,
+never assumes `discoveryProvider.list()` can be asked for "rows 5000
+to 5020" efficiently, and never touches pagination math itself. This
+is the same "contract vs. implementation" honesty 0.2.28 established
+for `searchWorldByLocation`: today's concrete answer is a full local
+scan, sort, and slice (`LocalDiscoveryProvider` has nothing better to
+offer), but the CONTRACT — page-number in, a page of results plus
+enough metadata to render pagination controls out — has room for a
+future decentralized provider to answer the exact same call shape via
+cursor-based continuation without a single caller changing. Whether
+that swap ever needs to happen is a separate, later decision (see
+docs/Roadmap.md); what has to be right immediately is that no caller
+today baked in an assumption that would make the swap harder later.
+
+### Ordering Must Be Deterministic Across Replicas (0.2.31)
+
+If two replicas hold the same set of publications, sorting them must
+produce the exact same sequence on both — otherwise "page 5" doesn't
+name a stable thing two people could even discuss, which defeats the
+entire point of paginating explicitly rather than scrolling infinitely
+(see below). Two disciplines make this actually true, not just
+plausible, in `core/PublicationSort.js`:
+  1. Every sort order falls back to a deterministic SECONDARY key
+     (`publicationId`, itself globally unique) whenever the primary
+     key ties — `publishedAt` alone is not unique, and two publications
+     sharing a timestamp is not a hypothetical (0.2.31's own 10,000-item
+     test fixture deliberately produces many).
+  2. Every string comparison is ORDINAL (`<`/`>` on raw code points),
+     never `String.prototype.localeCompare`. Locale-aware collation
+     reads more "correct" for a human sorting titles, but its result
+     depends on the calling browser/OS's configured locale — meaning
+     the SAME two titles could sort differently on two replicas simply
+     because their users have different language settings. Ordinal
+     comparison is less pretty and exactly as correct everywhere,
+     which is the property that actually matters here.
+
+### Grouping Is Presentation, Never A Storage Concept (0.2.31)
+
+`core/PublicationGrouping.js`'s `groupPublications` takes whatever page
+of already-sorted, already-paginated items the catalog is showing and
+buckets them for display (by author, by date, by license) — nothing it
+produces is persisted, replicated, or expected to agree across two
+people looking at the same catalog with different grouping modes
+selected. This is the same distinction 0.2.19 drew between a
+`TrustObservation` (a fact) and a `TrustPolicy` decision (what to do
+about it), and the same one 0.2.25 drew between overlap (a fact) and
+collision policy (a decision) — applied here to a purely visual
+concern: which bucket a card renders under carries no meaning outside
+this one person's current view of this one page.
+
+### A Preview Is Either Signed Or It Isn't — 0.2.31 Doesn't Pretend Otherwise
+
+A publication's preview COULD be immutable, content-addressed, and
+part of the signed publication — exactly like its content and
+placement history already are. But `Publication.getSigningDescriptor()`
+already covers every field the class has, and verification works by
+recomputing that descriptor from an object's CURRENT shape and
+comparing it against what was actually signed at publish time. Adding
+a `preview` field to that payload would mean every ALREADY-published,
+already-signed Publication recomputes a descriptor that no longer
+matches its original signature the moment this shipped — silently
+breaking verification for the entire existing corpus. That is a real
+schema-evolution question deserving its own deliberate design (a
+Publication-level schema version, or a preview that lives outside the
+signed envelope on purpose), not something to decide in passing inside
+a catalog-UI milestone. So `core/DocumentPreview.js`'s PLACEHOLDER
+preview is COMPUTED, not stored — the same "computed, not stored"
+posture lifecycle status (0.2.6), `SpatialOverlap` (0.2.25), and
+`distance` (0.2.28) already established — a pure function of fields a
+Publication already safely has (id, title). THUMBNAIL/`reference` stay
+reserved for the real mechanism this paragraph describes, whenever it
+gets its own milestone.
+
+### Description Search Is Opt-In, Not Silent, Because It Has A Real Cost (0.2.31)
+
+A publication's description lives on `DocumentMetadata`, not on the
+lightweight `Publication` record `discoveryProvider.list()` returns —
+matching a search term against it means loading that publication's
+full Document. For the small handful of items on the CURRENT page,
+that cost is trivial and paid unconditionally so every card/row can
+show a description snippet (see the Repository UI). For a SEARCH that
+might need to check every publication in the whole catalog, that same
+cost is not trivial — at real catalog scale it means loading
+potentially thousands of documents just to answer one query. Rather
+than pay that cost unconditionally and silently slow every search
+down, or skip description search entirely, `SearchPublicationsUseCase`
+makes it an explicit, visible choice: the "Include descriptions"
+checkbox in the catalog toolbar. Checking it is the user saying "I
+know this may take longer, and I want it anyway" — the same honesty
+this codebase has applied to every other real cost/limitation rather
+than hiding it behind a control that looks unconditional (see
+docs/Principles.md, "A Discovery Provider Must Never Say Only 'Not
+Found,'" 0.2.19, for the same instinct applied to a different kind of
+honesty). A resolved description is memoized for the life of the
+`SearchPublicationsUseCase` instance, so this cost is paid at most
+once per publication per session, never once per keystroke or once
+per repeated search.
+
+### Explicit Pagination Is A Decentralized Honesty Feature, Not Just A Layout Choice (0.2.31)
+
+Infinite scroll was deliberately NOT implemented. A decentralized
+catalog eventually has to answer questions like "am I looking at page
+5 of the complete repository, or page 5 of what THIS replica currently
+knows about?" — a question that is much easier to ask and answer with
+explicit page numbers (see `PublicationPage.totalPages`/`page`) than
+with a list that just keeps loading more as you scroll, which has no
+natural place to expose that distinction at all. This is the exact
+same posture 0.2.26/0.2.28/0.2.30 already took toward search/discovery
+completeness, applied to the repository catalog: once the discovery
+protocol can provide stronger completeness semantics, revisiting
+infinite scroll or virtualized lists is a reasonable future
+conversation — but it should be a deliberate choice made with that
+semantic question already answered, not a default reached for because
+it "looks modern."

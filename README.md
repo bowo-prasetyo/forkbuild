@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.30** — Trust-Aware Spatial Discovery & Diagnostics
+**Version 0.2.31** — Publication Catalog & Repository UX
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -136,7 +136,32 @@ specific document's own discovery status alongside its Document/Placement
 Info. Nothing here is invented by the UI: every field traces back to a
 real `TrustObservation` the 0.2.19 verification pipeline actually
 produced when a real `DecentralizedSpatialDiscoveryProvider` was
-wired and run (see tests/DiscoveryDiagnosticsSummary.test.js). See
+wired and run (see tests/DiscoveryDiagnosticsSummary.test.js).
+
+0.2.31 turns Repository/Author View from a small demo catalog into a
+real, repository-scale browsing surface — a proper catalog model
+first, then the UI on top of it. `SearchPublicationsUseCase` answers a
+genuinely different question than World Search does ("which
+publications match this description?" vs. "where is this in the
+world?"), returning a `PublicationPage` — items plus enough metadata
+to render explicit pagination (deliberately not infinite scroll — see
+docs/Architecture.md). Ordering is one of a small set of meaningful
+sorts (Recently/Oldest Published, Title A–Z/Z–A, Author A–Z) and is
+provably deterministic across replicas: identical timestamps always
+break their tie the same way, via an ordinal (not locale-dependent)
+comparison. Every card/row now shows a truncated description and a
+deterministic placeholder preview (a color + initial derived from the
+publication itself — a real, signed, content-addressed preview is
+deliberately deferred, since adding one to `Publication`'s already-signed
+schema would retroactively break every existing publication's
+signature; see docs/Principles.md). Description SEARCH is opt-in via
+an explicit checkbox, since matching it means loading full documents —
+a real cost this milestone is honest about rather than hiding.
+Repository and Author View now share ONE `PublicationCatalog`
+component rather than two slowly-diverging implementations, differing
+only by an author scope. Tested against a 10,000-publication synthetic
+catalog, not a handful of fixtures — pagination walks every page with
+zero gaps or duplicates, in exact sorted order. See
 [docs/Architecture.md](docs/Architecture.md) for the full write-up of
 each milestone.
 
@@ -173,6 +198,7 @@ each milestone.
 - **Spatial Query & Location Discovery (0.2.28)** — World Search gains a spatial half, composable with the existing text search: "find everything within a radius (in World Units) of a coordinate," backed by the same decentralized discovery contract as text search rather than a local-cache-only scan; results carry a derived `distance` (never persisted) and sort nearest-first, and a publication resolved only through 0.2.24's deterministic fallback position still honestly reports no explicit placement rather than presenting a fallback as an authored location.
 - **World Location Browser & Spatial Exploration (0.2.29)** — "Explore Here" and "What's Here?" turn the camera's own world position into a spatial-query center, reusing 0.2.28's query rather than building a second one; each result supports strictly read-only Focus / Select / Inspect actions (moving the camera, changing the active document without moving the camera, and an inline Document/Placement Info expansion that never loads or navigates, respectively); the result count reads "Showing N of N discoverable documents" to keep the same decentralized honesty text/spatial search already established.
 - **Trust-Aware Spatial Discovery & Diagnostics (0.2.30)** — `exploreLocation` returns `{ documents, diagnostics }`: the document list is never filtered or reordered by trust, while `diagnostics` (available/fatal/complete/warnings, derived from real 0.2.19 `TrustObservation`s via an optional `spatialDiscoveryProvider`) honestly reports what a trust-capable provider could verify about that region — shown as a banner in the Location Browser and a per-document "Discovery status" in Inspect; the live app's own document resolution is completely unchanged.
+- **Publication Catalog & Repository UX (0.2.31)** — Repository/Author View share one `PublicationCatalog` component with real pagination, deterministic sort (5 orders, ordinal comparison, guaranteed-consistent tiebreaks), Cards/List views, presentation-only grouping (author/date/license), a deterministic placeholder preview per publication, and search that opt-in extends to full document descriptions; `SearchPublicationsUseCase` is a deliberately separate query from World Search, answering "which publications match this?" rather than "where is this in the world?"; tested against a 10,000-publication synthetic catalog.
   
 ## Architecture
 
@@ -268,8 +294,9 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.28  Spatial Query & Location Discovery
 - [x] 0.2.29  World Location Browser & Spatial Exploration
 - [x] 0.2.30  Trust-Aware Spatial Discovery & Diagnostics
+- [x] 0.2.31  Publication Catalog & Repository UX
 
-Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, and fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md.
+Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), a real immutable content-addressed publication preview (0.2.31 ships a computed placeholder only — see docs/Principles.md), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md.
 
 ## License
 
