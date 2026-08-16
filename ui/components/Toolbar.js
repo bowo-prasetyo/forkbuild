@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 
 // Save/New/dirty indicator/Recent Documents — all driven by
 // DocumentManager, LoadDocumentUseCase, and (as of 0.1.20C) EditorSession
@@ -13,6 +13,17 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 // (attachWorld -> newDocument, or LoadDocumentUseCase -> load), so the
 // SAME subscription that updates the dirty indicator after a save also
 // picks up New/Load automatically — no separate wiring needed for either.
+//
+// Hardening: Recent Documents used to render one inline button per
+// saved document directly in the toolbar row, with `overflow: hidden`
+// as the only answer to what happens once there are more of them than
+// fit — they just got clipped, with no way to reach the rest. It's now
+// a single "Recent" toggle opening a scrollable dropdown (sorted
+// newest-first; DocumentManifest.list() carries no ordering guarantee
+// of its own), with a search box once there are enough documents that
+// scrolling alone stops being the fastest way to find one.
+const SEARCH_THRESHOLD = 8;
+
 export default {
     name: 'Toolbar',
     props: {
@@ -50,6 +61,8 @@ export default {
     setup(props) {
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
+        const recentOpen = ref(false);
+        const recentQuery = ref('');
         let unsubscribe = null;
 
         function report(message) {
@@ -71,6 +84,8 @@ export default {
 
         function load(id) {
             props.editorSession.loadDocument(id);
+            recentOpen.value = false;
+            recentQuery.value = '';
         }
 
         function refresh() {
@@ -86,7 +101,30 @@ export default {
                 report(`Publish failed: ${err.message}`);
             }
         }
-                
+
+        function toggleRecent() {
+            recentOpen.value = !recentOpen.value;
+            if (!recentOpen.value) {
+                recentQuery.value = '';
+            }
+        }
+
+        function formatModified(modified) {
+            const date = new Date(modified);
+            return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+        }
+
+        const sortedRecentDocuments = computed(() => {
+            return [...recentDocuments.value].sort((a, b) => new Date(b.modified) - new Date(a.modified));
+        });
+
+        const filteredRecentDocuments = computed(() => {
+            const query = recentQuery.value.trim().toLowerCase();
+            if (!query) return sortedRecentDocuments.value;
+            return sortedRecentDocuments.value.filter((doc) =>
+                (doc.title || '').toLowerCase().includes(query));
+        });
+
         onMounted(() => {
             unsubscribe = props.documentManager.onStateChanged(refresh);
         });
@@ -97,7 +135,12 @@ export default {
             }
         });
 
-        return { dirty, recentDocuments, save, createNew, load, publish };
+        return {
+            dirty, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
+            recentOpen, recentQuery, toggleRecent, formatModified,
+            searchThreshold: SEARCH_THRESHOLD,
+            save, createNew, load, publish
+        };
     },
     template: `
         <div class="toolbar">
@@ -108,18 +151,45 @@ export default {
             <button class="toolbar-new" @click="createNew">New</button>
 
             <span class="toolbar-dirty" :class="{ 'toolbar-dirty--clean': !dirty }">
-                {{ dirty ? '\u25CF Unsaved changes' : 'Saved' }}
+                {{ dirty ? '● Unsaved changes' : 'Saved' }}
             </span>
 
             <div class="toolbar-recent" v-if="recentDocuments.length">
-                <span class="toolbar-recent-label">Recent:</span>
                 <button
-                    v-for="doc in recentDocuments"
-                    :key="doc.id"
-                    class="toolbar-recent-item"
-                    :title="doc.modified"
-                    @click="load(doc.id)"
-                >{{ doc.title }}</button>
+                    class="toolbar-recent-toggle"
+                    :class="{ 'toolbar-recent-toggle--open': recentOpen }"
+                    @click="toggleRecent"
+                >
+                    Recent <span class="toolbar-recent-count">{{ recentDocuments.length }}</span>
+                    <span class="toolbar-recent-caret">▾</span>
+                </button>
+                <template v-if="recentOpen">
+                    <div class="dropdown-backdrop" @click="recentOpen = false"></div>
+                    <div class="toolbar-recent-dropdown">
+                        <input
+                            v-if="recentDocuments.length > searchThreshold"
+                            v-model="recentQuery"
+                            type="text"
+                            class="toolbar-recent-search"
+                            placeholder="Filter documents…"
+                            autofocus
+                        />
+                        <div class="toolbar-recent-dropdown-list">
+                            <button
+                                v-for="doc in filteredRecentDocuments"
+                                :key="doc.id"
+                                class="toolbar-recent-dropdown-item"
+                                @click="load(doc.id)"
+                            >
+                                <span class="toolbar-recent-dropdown-title">{{ doc.title }}</span>
+                                <span class="toolbar-recent-dropdown-date">{{ formatModified(doc.modified) }}</span>
+                            </button>
+                            <p v-if="filteredRecentDocuments.length === 0" class="toolbar-recent-dropdown-empty">
+                                No documents match "{{ recentQuery }}"
+                            </p>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
     `

@@ -25,33 +25,46 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.75rem 1.25rem;
+    padding: 0.75rem 1.5rem;
     background: #1a1a1a;
     border-bottom: 1px solid #2a2a2a;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
 .app-title {
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1.05rem;
     letter-spacing: 0.02em;
 }
 
 .app-nav {
     display: flex;
-    gap: 1rem;
+    gap: 0.25rem;
 }
 
 .app-nav-link {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
     color: #b0b0b0;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
 .app-nav-link:hover {
+    background: #232323;
     color: #ffffff;
 }
 
 .router-link-active {
+    background: #234433;
     color: #4caf7d;
+    font-weight: 600;
+}
+
+.router-link-active:hover {
+    background: #285039;
+    color: #5fc490;
 }
 
 .app-content {
@@ -143,38 +156,133 @@ html, body {
     color: #707070;
 }
 
+/* Hardening: Recent Documents — a dropdown instead of an
+   unbounded inline row of buttons (which just silently clipped once
+   there were more saved documents than fit — see Toolbar.js). */
 .toolbar-recent {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    position: relative;
     margin-left: auto;
-    font-size: 0.8rem;
-    color: #909090;
-    overflow: hidden;
-}
-
-.toolbar-recent-label {
-    color: #707070;
     flex-shrink: 0;
 }
 
-.toolbar-recent-item {
-    padding: 0.15rem 0.5rem;
-    background: #1f1f1f;
-    border: none;
+.toolbar-recent-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    background: transparent;
     color: #b0b0b0;
-    border-radius: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 140px;
-    cursor: pointer;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
     font-size: 0.8rem;
+    cursor: pointer;
 }
 
-.toolbar-recent-item:hover {
-    background: #2a2a2a;
+.toolbar-recent-toggle:hover,
+.toolbar-recent-toggle--open {
+    background: #262626;
     color: #ffffff;
+}
+
+.toolbar-recent-count {
+    padding: 0.05rem 0.4rem;
+    background: #2a2a2a;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    color: #909090;
+}
+
+.toolbar-recent-caret {
+    font-size: 0.7rem;
+    color: #707070;
+}
+
+.dropdown-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+}
+
+.toolbar-recent-dropdown {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 56;
+    width: 300px;
+    max-width: 80vw;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.toolbar-recent-search {
+    box-sizing: border-box;
+    width: 100%;
+    background: #121212;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 0.4rem 0.6rem;
+    color: #e0e0e0;
+    font-family: inherit;
+    font-size: 0.82rem;
+}
+
+.toolbar-recent-search:focus {
+    outline: none;
+    border-color: #4caf7d;
+}
+
+.toolbar-recent-dropdown-list {
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.toolbar-recent-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.45rem 0.6rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #d0d0d0;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.toolbar-recent-dropdown-item:hover {
+    background: #262626;
+    color: #ffffff;
+}
+
+.toolbar-recent-dropdown-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.toolbar-recent-dropdown-date {
+    flex-shrink: 0;
+    color: #707070;
+    font-size: 0.75rem;
+}
+
+.toolbar-recent-dropdown-empty {
+    margin: 0.5rem 0.25rem;
+    color: #707070;
+    font-size: 0.82rem;
+    font-style: italic;
 }
 
 .editor-body {
@@ -261,32 +369,56 @@ html, body {
 
 /* Repository View */
 
-.repository-view {
-    padding: 2rem;
-    max-width: 800px;
+/* Hardening: Repository/Author publication lists were a single
+   narrow (800px), centered, vertical column — a wall of blank space
+   either side on anything wider than a laptop. .publication-list is
+   now a responsive card grid, shared unchanged by both views (and
+   ForkTree's root list styling); wide screens fill with more
+   columns, narrow ones collapse toward one, without either view
+   needing its own layout logic. */
+.repository-view,
+.author-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 1400px;
     margin: 0 auto;
+    width: 100%;
+}
+
+.repository-view h1,
+.author-view h1 {
+    margin: 0 0 1.5rem;
 }
 
 .publication-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 1.25rem;
 }
 
 .publication-card {
-    padding: 1rem;
-    background: #1f1f1f;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    background: #1a1a1a;
     border: 1px solid #2a2a2a;
-    border-radius: 4px;
+    border-radius: 8px;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.publication-card:hover {
+    transform: translateY(-3px);
+    border-color: #3a6ea5;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
 }
 
 .publication-card h3 {
     margin: 0 0 0.5rem;
     color: #e0e0e0;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    overflow-wrap: break-word;
 }
 
 .publication-meta {
@@ -304,12 +436,15 @@ html, body {
 .empty-state {
     color: #707070;
     font-style: italic;
+    padding: 3rem 0;
+    text-align: center;
 }
 
 .publication-actions {
     display: flex;
     gap: 0.5rem;
-    margin-top: 0.75rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
 }
 
 .action-btn {
@@ -562,14 +697,9 @@ html, body {
     margin-top: 0.5rem;
 }
 
-/* Author View */
-.author-view {
-    padding: 2rem;
-    max-width: 800px;
-    margin: 0 auto;
-    width: 100%;
-}
-
+/* Author View — .author-view's shared padding/max-width/grid lives
+   with .repository-view above; only what's unique to this view stays
+   here. */
 .author-stats {
     color: #909090;
     margin: 0.5rem 0 1.5rem;
