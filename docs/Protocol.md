@@ -713,3 +713,44 @@ object", independent of whichever causal-comparison step decides
 whether it is CURRENT. A replay guard hit never changes a merge or
 discovery outcome — it only skips redundant re-verification of bytes
 already proven authentic.
+
+## Fork-on-Edit & Immutable Snapshot Lineage (0.2.20)
+
+No new wire format: a fork is an ordinary Document, and fork lineage
+uses the field the Document Envelope Schema has carried since 0.1.24 —
+`metadata.parentDocumentId`, pointing at the SOURCE DOCUMENT's
+world.id (the same field the Editor's explicit Fork and World View's
+Duplicate already populate via DocumentCloneService). 0.2.20 adds no
+"forkOf" or similar second lineage field — a session-level RUNTIME
+rule for WHEN a fork happens automatically, not a protocol change.
+
+Runtime state machine (session-local; never serialized):
+
+    documentId loaded via streaming (WorldNavigationSession._loadWorld)
+            |
+            v
+    published? (a Publication resolves for this documentId)
+       /                              \
+      no                              yes
+      |                                |
+    ordinary loaded document      immutable in this session
+    (mutation guards are no-ops)  until the first mutation
+                                        |
+                                        v
+                              fork policy check (0.2.13 License)
+                                   /            \
+                                deny            allow
+                                 |                |
+                              reject          fork via DocumentCloneService
+                            (throw, no                |
+                             mutation,                v
+                             no fork)          new documentId, parentDocumentId
+                                               = source documentId; source
+                                               unloaded from this session;
+                                               mutation applies to the fork
+
+Publishing the fork runs the existing publish pipeline unchanged
+(PublishDocumentUseCase -> DocumentSchemaMigrator -> DocumentValidator
+-> content hash -> ContentReference -> Publication) — 0.2.20 does not
+touch what publishing means, only what precedes it when the source of
+an edit was a published snapshot rather than the user's own document.
