@@ -72,6 +72,12 @@ export default {
         const activePlacementInfo = ref(null);
         const showPlacementEditor = ref(false);
         const placementEditTarget = ref(null);
+        // 0.2.25: set only after checkPlacementOverlap() has found an
+        // occupied destination under a policy that requires
+        // confirmation (WARN) — see onMovePlacement(). null the rest of
+        // the time, including while the dialog is open but the user
+        // hasn't attempted a move yet.
+        const placementOverlapWarning = ref(null);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
         const cameraPosition = ref(null);
@@ -249,18 +255,59 @@ export default {
         function openPlacementEditor(info) {
             if (!info) return;
             placementEditTarget.value = info;
+            placementOverlapWarning.value = null;
             showPlacementEditor.value = true;
         }
 
+        function closePlacementEditor() {
+            showPlacementEditor.value = false;
+            placementEditTarget.value = null;
+            placementOverlapWarning.value = null;
+        }
+
+        // 0.2.25: two-step for an occupied destination — check first,
+        // only actually move once either the position is clear or the
+        // warning already shown has been acknowledged by a second
+        // click (see PlacementEditorDialog's `warningIsCurrent`, which
+        // is what makes that second click mean "confirm" rather than
+        // "check again"). checkPlacementOverlap never mutates anything
+        // — see docs/Principles.md, "Overlap Is A Fact; Collision Is A
+        // Policy Decision" — so a REJECT-policy decision surfaces here
+        // as a plain guarded() error, the same as any other refused
+        // mutation.
         function onMovePlacement(position) {
             const info = placementEditTarget.value;
             if (!info) return;
+
+            // The pending warning only counts as "already confirmed" for
+            // the EXACT position it was computed for — if the user
+            // edited/nudged the fields since seeing it (dialog's own
+            // `warningIsCurrent` would already be false in that case,
+            // reverting its button to plain "Move"), this click means
+            // "check this new position," not "proceed anyway."
+            const pending = placementOverlapWarning.value;
+            const pendingPosition = pending && pending.overlap ? pending.overlap.position : null;
+            const warningMatchesRequest = !!pendingPosition
+                && pendingPosition.x === position.x && pendingPosition.y === position.y && pendingPosition.z === position.z;
+
+            if (!warningMatchesRequest) {
+                const check = guarded(() => session.checkPlacementOverlap(info.documentId, position));
+                if (check && check.requiresConfirmation) {
+                    placementOverlapWarning.value = check;
+                    return;
+                }
+                placementOverlapWarning.value = null;
+                if (check && !check.allowed) {
+                    feedback.show('This position is not available.');
+                    return;
+                }
+            }
+
             guarded(() => {
                 session.movePlacement(info.documentId, position);
                 feedback.show('Placement moved');
             });
-            showPlacementEditor.value = false;
-            placementEditTarget.value = null;
+            closePlacementEditor();
             refreshSpatialUI();
         }
 
@@ -626,7 +673,9 @@ export default {
             activePlacementInfo,
             showPlacementEditor,
             placementEditTarget,
+            placementOverlapWarning,
             openPlacementEditor,
+            closePlacementEditor,
             onMovePlacement,
             spatialEditingContext,
             spatialPlacement,
@@ -917,8 +966,9 @@ export default {
             <PlacementEditorDialog
                 v-if="showPlacementEditor"
                 :info="placementEditTarget"
+                :overlap-warning="placementOverlapWarning"
                 @move="onMovePlacement"
-                @cancel="showPlacementEditor = false; placementEditTarget = null"
+                @cancel="closePlacementEditor"
             />
         </div>
     `

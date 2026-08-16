@@ -2203,3 +2203,113 @@ and submits an absolute position, nothing relational is stored;
 physical-unit conversion (meters, etc.) for World Units; and touching
 `renderer/WorldRenderer.js`, which already performed the local+
 placement composition correctly and needed no change.
+
+### Spatial Allocation & Placement Collision Policy (0.2.25)
+
+0.2.24 made `position` deterministic; it deliberately left `position`
+NOT unique — two placements can legitimately share a coordinate (an
+interior view, a historical version, deliberately layered exhibits).
+0.2.25 answers what happens when that occurs, split into two
+genuinely separate concerns that the design deliberately keeps from
+blurring together: detecting an overlap (a geometric fact) and
+deciding what to do about it (a policy choice).
+
+    core/SpatialOverlap.js               core/SpatialAllocationPolicy.js
+       "is this occupied?"                  "so what happens now?"
+              │                                       │
+              ▼                                       ▼
+      SpatialOverlap (derived,               ALLOW / WARN / REJECT /
+      never persisted)                       AUTO_OFFSET (unimplemented)
+              └───────────────┬───────────────────────┘
+                               ▼
+                    evaluateSpatialAllocation(policy, overlap)
+                               ▼
+                { allowed, requiresConfirmation, overlap }
+
+- `core/SpatialOverlap.js` — `SpatialOverlap` (position + occupants,
+  a plain derived observation with no persistence of its own — see
+  docs/Principles.md, "Overlap Is A Fact; Collision Is A Policy
+  Decision") and `detectSpatialOverlap(position, existingRecords,
+  { excludePlacementId })`, a pure function over any array of
+  `{placementId, publicationId, position}`-shaped values —
+  `PlacementRecord` and `WorldPlacement` both qualify without
+  conversion. Deliberately origin-only: two positions overlap here
+  when they are the exact same coordinate, not when their (future)
+  spatial bounds intersect — see "Geometric Collision Is A Later
+  Question" in Principles.md for why that's not attempted yet.
+- `core/SpatialAllocationPolicy.js` — the four-name vocabulary the
+  design doc asked for (`ALLOW`/`WARN`/`REJECT`/`AUTO_OFFSET`) and
+  `evaluateSpatialAllocation(policy, overlap)`, a pure decision
+  function. Only `ALLOW`/`WARN`/`REJECT` are actually reachable from
+  any wired caller in this milestone; `AUTO_OFFSET` is named but
+  throws if ever invoked — see docs/Principles.md, "Automatic
+  Collision Resolution Is Deferred, Not Solved," for why silently
+  relocating a placement needs a globally-reproducible allocation
+  algorithm this milestone does not attempt to build.
+- `WorldNavigationSession` gains a `spatialAllocationPolicy`
+  constructor parameter (default `WARN`) and
+  `checkPlacementOverlap(documentId, newPosition)` — a pure PRE-FLIGHT
+  query: it resolves the document's current placement (so moving a
+  placement back onto its own current position never counts as
+  overlapping itself), gathers every other current placement via
+  `placementRegistry.list()`, and returns a decision plus each
+  occupant resolved to a `{publicationId, title, owner}` shape a UI
+  can render directly (`_describeOverlapOccupant`, using
+  `discoveryProvider.findById` the same best-effort way `movable`
+  already resolves owner names). Crucially, `checkPlacementOverlap`
+  and `movePlacement` are entirely independent methods —
+  `movePlacement` never calls it, has no idea it exists, and still
+  succeeds unconditionally onto an occupied position exactly as it did
+  before this milestone. The UI is what sequences "check, maybe
+  confirm, then move" — the domain layer never enforces that sequence,
+  because `MoveWorldPlacementUseCase` remains, as the design doc
+  insisted, the sole authority for actually creating a revision.
+  Automatic initial placement (`PlacePublicationUseCase`, called from
+  `PublishDocumentUseCase._placeInitially`) is untouched and still
+  never checks overlap at all — it stays effectively `ALLOW` by simply
+  not asking, consistent with 0.2.23's "placement is best-effort,
+  never blocks a publish."
+- `getPlacementInfo` gains `overlapCount` — the same
+  `detectSpatialOverlap` call, run passively against whatever position
+  the placement is CURRENTLY at (not a requested one), so overlap
+  visibility applies uniformly whether a placement got there
+  automatically or through an explicit, confirmed move.
+
+UI — a two-step confirm inside the SAME dialog, not a second modal:
+
+- `ui/components/PlacementEditorDialog.js` — gains an `overlapWarning`
+  prop. The component itself never calls `checkPlacementOverlap`; it
+  stays pure presentation and still emits the identical `move({x,y,z})`
+  on every click of its primary button. The HOST (`WorldView`)
+  distinguishes "first click, run the check" from "second click,
+  proceed" by tracking whether a pending warning's position still
+  matches what's currently in the form (`warningIsCurrent`) — editing
+  or nudging the fields after seeing a warning invalidates it and
+  reverts the button to plain "Move," so a confirmation can never
+  silently apply to a position the person changed their mind about.
+- `ui/views/WorldView.js` — `onMovePlacement` now runs
+  `session.checkPlacementOverlap` first (unless the pending warning
+  already matches the exact position being submitted), shows the
+  warning and returns without moving anything if confirmation is
+  required, and only calls `session.movePlacement` once the position
+  is clear or already confirmed. `placementOverlapWarning` resets on
+  open, cancel, and successful move.
+- `ui/components/PlacementInfoPanel.js` — a passive "⚠ N other
+  documents share this location" notice from `info.overlapCount`,
+  visible any time a placement's info is shown, independent of the
+  Move Placement flow — this is what satisfies "the World View should
+  make overlaps visible" for automatically-placed publications, which
+  never go through the confirm dialog at all.
+
+Deliberately not in 0.2.25: any implementation of `AUTO_OFFSET`
+(silent, algorithmic relocation onto a different position than
+requested — see docs/Principles.md); geometric/bounds-based collision
+detection (only origin equality is checked); a full "click any world
+location to browse everyone there" spatial inspector (the design doc's
+own mockup) — overlap visibility for 0.2.25 is scoped to the currently
+inspected/active placement's info panel and the Move Placement dialog,
+not an arbitrary-location browser; wiring `REJECT` into any default
+flow (the vocabulary exists and is tested, but nothing constructs a
+session with it); and touching `PlacePublicationUseCase`/
+`GridPlacementStrategy` at all — automatic placement's behavior is
+byte-identical to 0.2.24.

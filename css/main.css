@@ -1304,6 +1304,45 @@ html, body {
     text-align: center;
 }
 
+/* 0.2.25: overlap is a fact, not an error — amber (the same tone
+   .form-hint already uses for validation hints), never the red
+   .editability-notice--blocked reserves for an actually-blocked
+   mutation. Shown inline in the Move Placement dialog only once a
+   requested position is confirmed occupied under the WARN policy
+   (see ui/components/PlacementEditorDialog.js). */
+.placement-overlap-warning {
+    margin: 0.75rem 0 0.25rem;
+    padding: 0.6rem 0.7rem;
+    background: rgba(201, 162, 74, 0.1);
+    border: 1px solid rgba(201, 162, 74, 0.4);
+    border-radius: 4px;
+}
+
+.placement-overlap-warning-text {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #d9b968;
+}
+
+.placement-overlap-warning-list {
+    margin: 0.4rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.78rem;
+    color: #c0c0c0;
+}
+
+.placement-overlap-warning-list li {
+    margin: 0.15rem 0;
+}
+
+/* Passive equivalent shown in PlacementInfoPanel — same tone, no list,
+   just a count (see ui/components/PlacementInfoPanel.js). */
+.placement-overlap-notice {
+    margin: 0.5rem 0 0;
+    font-size: 0.78rem;
+    color: #d9b968;
+}
+
 .spatial-panel--editing {
     border-color: #4caf7d;
 }
