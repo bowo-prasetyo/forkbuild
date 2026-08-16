@@ -1,99 +1,60 @@
 import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
+import PublicationCatalog from '../components/PublicationCatalog.js';
 import ForkTree from '../components/ForkTree.js';
 
+// As of 0.2.31, the paginated "Publications" listing above is
+// ui/components/PublicationCatalog.js scoped to this author — the
+// SAME component RepositoryView mounts, see its own comment for why.
+//
+// The "Original Works & Forks" lineage graph below stays a SEPARATE,
+// deliberately UNPAGINATED query: a fork tree needs this author's
+// WHOLE publication set to render correctly (a root published on page
+// 1 could have a fork that only exists on page 4) — pagination is a
+// property of the browsable list, not of a lineage visualization, and
+// conflating the two would either break the tree or force the catalog
+// to always load everything, defeating the point of paginating it.
 export default {
     name: 'AuthorView',
-    components: { ForkTree },
+    components: { PublicationCatalog, ForkTree },
     setup() {
         const route = useRoute();
-        const router = useRouter();
         const author = route.params.username;
-        const publications = ref([]);
+        const allPublications = ref([]);
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
 
         onMounted(() => {
-            publications.value = listPublicationsUseCase.execute({ author });
-        });
-
-        const publicationByDocumentId = computed(() => {
-            const map = new Map();
-            for (const pub of publications.value) {
-                map.set(pub.documentId, pub);
-            }
-            return map;
+            allPublications.value = listPublicationsUseCase.execute({ author });
         });
 
         const forkTreeRoots = computed(() => {
-            return publications.value.filter((p) => !p.parentDocumentId);
+            return allPublications.value.filter((p) => !p.parentDocumentId);
         });
-
-        function openPublication(pub) {
-            router.push({ path: '/editor', query: { load: pub.documentId } });
-        }
-
-        function forkPublication(pub) {
-		    // Pass both documentId (for loading) and publicationId (for license enforcement)
-		    router.push({ path: '/editor', query: { fork: pub.documentId, publication: pub.id } });
-        }
-
-        function viewWorld(pub) {
-            router.push({ path: `/world/${pub.documentId}` });
-        }
 
         return {
             author,
-            publications,
-            forkTreeRoots,
-            openPublication,
-            forkPublication,
-            viewWorld,
-            publicationByDocumentId
+            allPublications,
+            forkTreeRoots
         };
     },
     template: `
         <section class="author-view">
             <h1>{{ author || 'Anonymous' }}</h1>
-            <p class="author-stats">{{ publications.length }} publication(s)</p>
+            <p class="author-stats">{{ allPublications.length }} publication(s)</p>
 
-            <div v-if="publications.length === 0" class="empty-state">
-                No publications found for this author.
-            </div>
+            <PublicationCatalog :author="author" />
 
-            <div v-else>
-                <h2>Publications</h2>
-                <ul class="publication-list">
-                    <li v-for="pub in publications" :key="pub.id" class="publication-card">
-                        <h3>{{ pub.title }}</h3>
-                        <p v-if="pub.parentDocumentId" class="publication-fork-of">
-                            ↳ Fork of {{ publicationByDocumentId.get(pub.parentDocumentId)?.title || 'Unknown' }}
-                        </p>
-                        <p class="publication-meta">
-                            via {{ pub.providerId }}
-                        </p>
-                        <p class="publication-date" v-if="pub.publishedAt">
-                            {{ new Date(pub.publishedAt).toLocaleDateString() }}
-                        </p>
-                        <div class="publication-actions">
-                            <button class="action-btn action-btn--open" @click="openPublication(pub)">Open</button>
-                            <button class="action-btn action-btn--fork" @click="forkPublication(pub)">Fork</button>
-                            <button class="action-btn action-btn--explore" @click="viewWorld(pub)">Explore</button>
-                        </div>
-                    </li>
-                </ul>
-
-                <div v-if="forkTreeRoots.length > 0" class="fork-graph-section">
-                    <h2>Original Works & Forks</h2>
-                    <div v-for="root in forkTreeRoots" :key="root.id" class="fork-tree">
-                        <div class="fork-node fork-node--root">
-                            <strong>{{ root.title }}</strong>
-                            <span class="fork-node-date" v-if="root.publishedAt">
-                                {{ new Date(root.publishedAt).toLocaleDateString() }}
-                            </span>
-                        </div>
-                        <ForkTree :publications="publications" :root-document-id="root.documentId" />
+            <div v-if="forkTreeRoots.length > 0" class="fork-graph-section">
+                <h2>Original Works & Forks</h2>
+                <div v-for="root in forkTreeRoots" :key="root.id" class="fork-tree">
+                    <div class="fork-node fork-node--root">
+                        <strong>{{ root.title }}</strong>
+                        <span class="fork-node-date" v-if="root.publishedAt">
+                            {{ new Date(root.publishedAt).toLocaleDateString() }}
+                        </span>
                     </div>
+                    <ForkTree :publications="allPublications" :root-document-id="root.documentId" />
                 </div>
             </div>
         </section>

@@ -84,6 +84,7 @@
 0.2.28  Spatial Query & Location Discovery               ✓
 0.2.29  World Location Browser & Spatial Exploration     ✓
 0.2.30  Trust-Aware Spatial Discovery & Diagnostics       ✓
+0.2.31  Publication Catalog & Repository UX               ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -189,6 +190,41 @@ job of connecting the trust/replication/index architecture built in
 architecture existing mostly in the backend and test suite. Not
 committed to the roadmap as a numbered milestone until its own design
 pass happens.
+
+Repository/Author View established a real catalog model
+(`PublicationQuery`/`PublicationPage`/deterministic
+`PublicationSort`/`SearchPublicationsUseCase`) and unified both views
+onto one shared `PublicationCatalog` component, tested against a
+10,000-publication synthetic catalog rather than a handful of fixtures
+— see docs/Architecture.md, 0.2.31.
+
+Deliberately deferred from 0.2.31, remaining OPTIONAL and unscheduled:
+
+- **A real, immutable, content-addressed preview.** `core/DocumentPreview.js`
+  ships a computed PLACEHOLDER mechanism only — attaching a real
+  preview to `Publication` itself requires its own schema-evolution
+  design (see docs/Principles.md, "A Preview Is Either Signed Or It
+  Isn't") to avoid retroactively breaking every already-signed
+  publication's verification. Worth a dedicated milestone once that
+  design question is deliberately answered, not folded into a future
+  catalog tweak.
+- **An indexed metadata representation for description search at
+  scale.** 0.2.31's description search is a real, working, opt-in
+  feature — but it is a per-query cost against however many
+  publications match title/author-independent criteria, acceptable for
+  "local pagination over the currently discoverable collection" (the
+  design doc's own explicit first-implementation scope), not for an
+  unbounded decentralized catalog.
+- **License/tag/status filters** beyond the search box, and
+  **cross-page grouping** (today's `groupPublications` is deliberately
+  scoped to one page at a time — see docs/Principles.md).
+- **Infinite scroll / virtualized lists** — deliberately not
+  implemented; see docs/Principles.md, "Explicit Pagination Is A
+  Decentralized Honesty Feature, Not Just A Layout Choice." Worth
+  revisiting once the discovery protocol can provide stronger
+  completeness semantics (the same open question "spatial streaming/
+  index integration," above, would also need to answer for spatial
+  discovery).
 
 ## 0.1.50 — What shipped
 

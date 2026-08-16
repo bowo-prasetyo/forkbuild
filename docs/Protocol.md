@@ -1241,3 +1241,38 @@ question) is a local, per-replica fact — exactly like 0.2.19's own
 extended from a binary found/not-found into the fuller
 available/fatal/complete/warnings vocabulary this milestone's UI
 actually renders.
+
+## Publication Catalog & Repository UX (0.2.31)
+
+No wire format touched, and no new field on `Publication` — the one
+addition that might have needed one (a real, immutable preview) was
+deliberately NOT made this milestone precisely because it would have
+required one (see docs/Principles.md, "A Preview Is Either Signed Or
+It Isn't"). `PublicationQuery`/`PublicationPage`/sort order/grouping
+are all purely local, in-memory, per-query values — nothing here is
+signed, persisted, or replicated, and none of it needs to agree across
+two replicas except in the one place that actually matters:
+
+`core/PublicationSort.js`'s ordering is the one piece of this
+milestone with a genuine cross-replica correctness requirement, even
+though it never touches the wire — see docs/Principles.md, "Ordering
+Must Be Deterministic Across Replicas." Two replicas holding the same
+publications must sort them identically, or "page 5" stops naming a
+stable, shareable thing. This is achieved entirely through PURE
+computation (an ordinal comparator with a deterministic
+`publicationId` tiebreak) rather than through any new protocol-level
+agreement — the same property 0.2.24's deterministic placement grid
+achieves for initial position, and for the same reason: a fact two
+replicas need to agree on is more reliably delivered by a pure
+function every replica computes identically than by transmitting a
+pre-computed answer.
+
+`SearchPublicationsUseCase`'s opt-in description search reads an
+already-locally-stored Document (via `LoadPublicationDocumentUseCase`)
+— no network/discovery request beyond what publishing that document
+already required. The CONTRACT it's written against — "search over
+whatever the configured discoveryProvider can list" — is the same
+honest, currently-local-only scoping 0.2.26's text search and 0.2.28's
+spatial search already established; a future decentralized discovery
+provider changes what `discoveryProvider.list()` can see, not the
+shape of the query or the page it returns.
