@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.20** — Fork-on-Edit & Immutable Snapshot Lineage
+**Version 0.2.21** — Document Lifecycle & Metadata UI
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -16,13 +16,18 @@ causal replication so independently authorized replicas converge
 without destroying either side's history, and a trust/discovery layer
 that reasons about authority, freshness, replay, and equivocation —
 not just cryptographic validity — before anything is treated as
-current state. 0.2.20 closes a gap that fell out of that same
+current state. 0.2.20 closed a gap that fell out of that same
 boundary: the World View can now be fully edited in place while a
 published snapshot itself remains absolutely immutable, because
 editing one is semantically "fork, then edit the fork" — done lazily,
 on the first mutation, subject to the same fork policy as an explicit
-Fork. See [docs/Architecture.md](docs/Architecture.md) for the full
-write-up of each milestone.
+Fork. 0.2.21 puts a face on that enforcement: a Document Properties
+editor for title/description/license, a Document Info panel showing
+lifecycle status (Draft/Saved/Published) and fork lineage, publish-time
+validation, and plain-language explanations — proactive and reactive —
+for why an edit is or isn't possible, instead of a silent default or
+an uncaught error. See [docs/Architecture.md](docs/Architecture.md)
+for the full write-up of each milestone.
 
 ## Features
 
@@ -47,6 +52,7 @@ write-up of each milestone.
 - **Decentralized Replication & Conflict Handling (0.2.18)** — causal (vector-clock) history on every placement revision; independently authorized replicas that edit the same placement while disconnected converge deterministically on reconciliation, with every competing revision retained and verifiable rather than one silently overwriting the other.
 - **Trust & Discovery Hardening (0.2.19)** — a trust-policy layer (pinned/discovered/untrusted authorities, legacy-content tolerance) and equivocation detection (an authority signing two different index roots at the same causal position) sit around the discovery pipeline, plus a structured diagnostics surface explaining exactly why a query returned what it did.
 - **Fork-on-Edit & Immutable Snapshot Lineage (0.2.20)** — the World View lazily forks a published snapshot on its first mutation instead of ever mutating it in place; viewing never forks, exactly one fork is created per editing session, the fork carries `parentDocumentId` provenance through the existing forking mechanism, and fork policy (0.2.13 licensing) still governs whether the fork may happen at all.
+- **Document Lifecycle & Metadata UI (0.2.21)** — a Document Properties editor (title/description/license) and a shared Document Info panel across the Editor and World View, showing computed lifecycle status (Draft/Saved/Published) and fork lineage; publishing now validates a title and non-empty content before creating anything immutable; a blocked or about-to-fork edit is explained in plain language, proactively and reactively, instead of failing silently.
   
 ## Architecture
 
@@ -132,6 +138,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.18  Decentralized Replication & Conflict Handling
 - [x] 0.2.19  Trust / Discovery Hardening
 - [x] 0.2.20  Fork-on-Edit & Immutable Snapshot Lineage
+- [x] 0.2.21  Document Lifecycle & Metadata UI
     
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 

@@ -23,6 +23,10 @@ import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { CopySelectionUseCase } from '../../application/CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from '../../application/PasteClipboardUseCase.js';
+import { UpdateDocumentMetadataUseCase } from '../../application/UpdateDocumentMetadataUseCase.js';
+import { computeLifecycleStatus, describeLifecycleStatus } from '../../application/DocumentLifecycleStatus.js';
+import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
+import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
@@ -35,7 +39,7 @@ const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, Sidebar, EditingSidebar, CommandPalette, ActionFeedback },
+    components: { Toolbar, Sidebar, EditingSidebar, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -44,6 +48,7 @@ export default {
                 :load-document-use-case="loadDocumentUseCase"
                 :editor-session="editorSession"
                 :publish-document-use-case="publishDocumentUseCase"
+                :feedback="feedback"
             />
             <div class="editor-body">
                 <div class="sidebar">
@@ -61,6 +66,7 @@ export default {
                             Place
                         </button>
                     </div>
+                    <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
                     <Sidebar :palette-use-case="paletteUseCase" />
                     <EditingSidebar
                         :registry="actionRegistry"
@@ -83,6 +89,12 @@ export default {
                 @close="closePalette"
             />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
+            <MetadataEditorDialog
+                v-if="showMetadataEditor"
+                :info="documentInfo"
+                @save="onSaveMetadata"
+                @cancel="showMetadataEditor = false"
+            />
         </div>
     `,
     setup() {
@@ -159,6 +171,45 @@ export default {
             }
         };
 
+        // ------------------------- 0.2.21 document lifecycle ------------
+        // Document Info panel + Document Properties editor. The Editor's
+        // document is always mutable/editable (there is no fork-on-edit
+        // gate here — that is a World View concern, 0.2.20) so `editable`
+        // stays true; status only ever distinguishes Draft/Saved.
+
+        const updateDocumentMetadataUseCase = new UpdateDocumentMetadataUseCase();
+        const documentInfo = ref(null);
+        const showMetadataEditor = ref(false);
+        let unsubDocumentState = null;
+
+        function refreshDocumentInfo() {
+            const document = documentManager.document;
+            if (!document) {
+                documentInfo.value = null;
+                return;
+            }
+            const state = documentManager.state;
+            const status = computeLifecycleStatus({ hasBeenSaved: !!state.lastSaved, isPublished: false });
+            documentInfo.value = {
+                title: document.metadata.title || 'Untitled',
+                description: document.metadata.description || '',
+                author: document.metadata.author,
+                license: document.metadata.license,
+                parentDocumentId: document.metadata.parentDocumentId,
+                status,
+                statusLabel: describeLifecycleStatus(status, { dirty: state.dirty }),
+                dirty: state.dirty,
+                editable: true,
+                editabilityNotice: null
+            };
+        }
+
+        function onSaveMetadata({ title, description, license }) {
+            updateDocumentMetadataUseCase.execute(documentManager, { title, description, license });
+            showMetadataEditor.value = false;
+            feedback.show('Updated document properties');
+        }
+
         const paletteOpen = ref(false);
         const actionUi = {
             togglePalette() {
@@ -200,6 +251,9 @@ export default {
                 }
             );
 
+            refreshDocumentInfo();
+            unsubDocumentState = documentManager.onStateChanged(refreshDocumentInfo);
+
             if (route.query.fork) {
                 try {
 			        let sourcePublication = null;
@@ -208,15 +262,19 @@ export default {
 			        }
 			        const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);
                     editorSession.openDocument(forkedDocument);
+                    // 0.2.21: the document id silently changing (0.1.24's
+                    // fork mechanism) is exactly what the milestone design
+                    // asked not to leave unexplained.
+                    feedback.show(`Created your editable fork of "${forkedDocument.metadata.title}"`);
                 } catch (err) {
-                    alert(`Fork failed: ${err.message}`);
+                    feedback.show(`Fork failed: ${err.message}`);
                 }
                 router.replace({ path: '/editor' });
             } else if (route.query.load) {
                 try {
                     editorSession.loadDocument(route.query.load);
                 } catch (err) {
-                    alert(`Load failed: ${err.message}`);
+                    feedback.show(`Load failed: ${err.message}`);
                 }
                 router.replace({ path: '/editor' });
             }
@@ -291,6 +349,9 @@ export default {
             if (unsubSelection) {
                 unsubSelection.unsubscribe();
             }
+            if (unsubDocumentState) {
+                unsubDocumentState();
+            }
             if (feedbackTimer) {
                 clearTimeout(feedbackTimer);
             }
@@ -316,8 +377,12 @@ export default {
             actionUi,
             paletteOpen,
             closePalette,
+            feedback,
             feedbackMessage,
             feedbackVisible,
+            documentInfo,
+            showMetadataEditor,
+            onSaveMetadata,
             setTool,
             alignSelection,
             distributeSelection,

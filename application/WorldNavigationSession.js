@@ -24,6 +24,7 @@ import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
 import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { Document } from '../core/Document.js';
+import { computeLifecycleStatus, describeLifecycleStatus } from './DocumentLifecycleStatus.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -130,6 +131,14 @@ export class WorldNavigationSession {
         // the document stops being "dirty".
         this._localOnlyDocumentIds = new Set();
         this._localPositions = new Map();
+
+        // 0.2.21: set by _forkForEdit right before it returns, cleared
+        // by the next consumeForkNotice() call. A drain, not an event
+        // subscription — the UI already polls session state once per
+        // interaction (refreshSpatialUI), so a flag it can check right
+        // after a guarded call is simpler than wiring a new EventBus
+        // topic for something that fires at most once per interaction.
+        this._pendingForkNotice = null;
     }
 
     get transformSettings() {
@@ -808,6 +817,64 @@ export class WorldNavigationSession {
         };
     }
 
+    // 0.2.21: the World View entry point for the Document Properties
+    // editor. Editing metadata is a mutation exactly like moving a
+    // brick — it must not land on a published snapshot — so it goes
+    // through the SAME fork-on-first-mutation gate
+    // (_ensureEditableDocumentId) every other guard in this file uses,
+    // rather than a bespoke "throw if published" check of its own.
+    // Returns the documentId the edit actually landed on (the fork's
+    // id, if one was just created) so the caller can re-focus/re-select
+    // it.
+    updateDocumentMetadata(documentId, { title, description, license } = {}) {
+        const id = this._ensureEditableDocumentId(documentId || this._focusedDocumentId);
+        const doc = this.getDocument(id);
+        if (!doc) {
+            throw new Error(`WorldNavigationSession: no loaded document "${id}"`);
+        }
+        const metadata = doc.metadata;
+        if (title !== undefined) metadata.title = title;
+        if (description !== undefined) metadata.description = description;
+        if (license !== undefined) metadata.license = license;
+        metadata.touch();
+        let history = this._commandHistories.get(id);
+        if (!history) {
+            history = new CommandHistory({ world: doc.world });
+            this._commandHistories.set(id, history);
+        }
+        history.markUnsaved();
+        return id;
+    }
+
+    // Normalized data for the Document Info panel — the same shape
+    // for a published snapshot, a fork, or an ordinary loaded
+    // document, so the UI component doesn't need to know which one
+    // it's looking at. `hasBeenSaved` is approximated as "not dirty":
+    // every fork starts dirty the instant it's created (_forkForEdit
+    // always calls history.markUnsaved()), so a clean history reliably
+    // means an explicit saveDocument() happened since.
+    getDocumentInfo(documentId) {
+        const id = documentId || this._focusedDocumentId;
+        const doc = this.getDocument(id);
+        if (!doc) return null;
+        const isPublished = this.isDocumentPublished(id);
+        const dirty = this.isDocumentDirty(id);
+        const status = computeLifecycleStatus({ hasBeenSaved: !dirty, isPublished });
+        return {
+            documentId: id,
+            title: doc.metadata.title || 'Untitled',
+            description: doc.metadata.description || '',
+            author: doc.metadata.author,
+            license: doc.metadata.license,
+            parentDocumentId: doc.metadata.parentDocumentId,
+            status,
+            statusLabel: describeLifecycleStatus(status, { dirty }),
+            dirty,
+            editable: !isPublished,
+            editabilityNotice: this.getEditabilityNotice(id)
+        };
+    }
+
     // Guard for selection-driven mutations (move/rotate/delete/align/
     // distribute/numeric transform/gizmo drags). Forks the CURRENT
     // selection's document in place when it is still published, and
@@ -900,7 +967,26 @@ export class WorldNavigationSession {
 
         this._remapReferencesAfterFork(sourceDocumentId, sourceDoc, forkId, fork);
 
+        // 0.2.21: so the UI can say what just happened instead of the
+        // document id silently changing underneath the user — see
+        // consumeForkNotice() / WorldView's guarded().
+        this._pendingForkNotice = {
+            sourceDocumentId,
+            sourceTitle: sourceDoc.metadata.title || 'Untitled',
+            forkId,
+            forkTitle: fork.metadata.title
+        };
+
         return forkId;
+    }
+
+    // Drains the notice _forkForEdit leaves behind, if any. Returns
+    // null (not just falsy) when nothing forked since the last call —
+    // callers can `if (notice) ...` without worrying about undefined.
+    consumeForkNotice() {
+        const notice = this._pendingForkNotice;
+        this._pendingForkNotice = null;
+        return notice;
     }
 
     // The world position to render/pivot `documentId` at. Prefers a

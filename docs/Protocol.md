@@ -754,3 +754,45 @@ Publishing the fork runs the existing publish pipeline unchanged
 -> content hash -> ContentReference -> Publication) — 0.2.20 does not
 touch what publishing means, only what precedes it when the source of
 an edit was a published snapshot rather than the user's own document.
+
+## Document Lifecycle & Metadata UI (0.2.21)
+
+No envelope schema change — `metadata.description` is an additive
+field, the same tolerant-default pattern `license` and
+`parentDocumentId` were introduced under:
+
+```json
+{
+    "schemaVersion": 1,
+    "world": { ... },
+    "metadata": {
+        "title": "My Castle",
+        "description": "A small village on a hill.",
+        "author": "alice",
+        "license": { "id": "CC-BY-4.0", "attribution": null },
+        "parentDocumentId": null,
+        ...
+    }
+}
+```
+
+A document saved before 0.2.21 has no `description` key at all.
+`DocumentMetadata.fromJSON` reads `json.description || ''` — the field
+defaults to an empty string, never `null`, on load. No entry was added
+to `serializer/DocumentSchemaMigrator.js`'s migration chain and neither
+`DOCUMENT_SCHEMA_VERSION` nor `metadata.protocolVersion` changed: the
+envelope's *structure* is unchanged, only a metadata field's presence,
+exactly like `license`/`parentDocumentId` before it.
+
+`publisher/Publication.js`'s wire shape is unchanged — `description`
+was deliberately not added there in 0.2.21 (see docs/Architecture.md,
+"Deliberately not in 0.2.21").
+
+Publishing now validates before creating anything immutable
+(`PublishDocumentUseCase._validate`): a non-empty (post-trim) title and
+at least one Building. A request that fails validation never reaches
+the publisher provider — no partial/invalid Publication is ever
+constructed. License is not part of this validation; an
+UNSPECIFIED or ALL_RIGHTS_RESERVED license publishes exactly as
+successfully as any other (0.2.13 already governs what that license
+then permits downstream).

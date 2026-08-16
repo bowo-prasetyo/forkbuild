@@ -1588,3 +1588,165 @@ document that isn't a publication:
   BEFORE an edit is attempted — "your first edit forks it" for a
   forkable one, the specific license and why for a blocked one —
   rendered next to the inspection panel.
+
+### Document Lifecycle & Metadata UI (0.2.21)
+
+0.2.20 made fork-on-edit *enforceable* — a published snapshot cannot
+be mutated, a fork-forbidding license rejects the edit outright. It
+did not give the user any way to see or change the metadata that
+enforcement depends on: title, description, and — decisively —
+license. A document sitting at "Untitled ForkBuild World" with
+`license: UNSPECIFIED` (the constructor defaults) is not a bug; it is
+correct behavior with no UI for the user to notice or fix it. 0.2.21
+is the UI layer that closes that gap: Document Properties editing,
+a Document Info panel, and lifecycle status made visible, built
+entirely on top of 0.2.20's enforcement — it puts a face on the
+existing security semantics rather than changing them.
+
+    Create Document
+          |
+          v
+    Draft / Local Document        <- DocumentLifecycleStatus.DRAFT
+          |
+          | Save
+          v
+    Persisted Document             <- SAVED
+          |
+          | Publish (validates title + non-empty world)
+          v
+    Immutable Publication          <- PUBLISHED
+
+"Forked" is deliberately not a fourth tier in that diagram — a fork is
+an ordinary Draft or Saved document that happens to carry a
+`parentDocumentId`. Status and lineage are shown side by side in the
+Document Info panel, not blended into one field.
+
+Core additions:
+
+- `core/DocumentMetadata.js` gains `description` (defaults to `''`,
+  never `null` — see docs/Principles.md, "A default value is not an
+  absent one") alongside the existing `title`/`license`, plus direct
+  `title`/`description` setters (license already had one) and a single
+  `touch()` that stamps `modified` — callers apply a batch of field
+  changes, then call `touch()` once, rather than every setter stamping
+  a timestamp itself. `toJSON`/`fromJSON` carry the new field with a
+  tolerant default (`json.description || ''`) for pre-0.2.21 documents
+  — no `DOCUMENT_SCHEMA_VERSION`/`PROTOCOL_VERSION` bump, the same
+  backward-compatible pattern `license` and `parentDocumentId` were
+  added under.
+- `application/DocumentLifecycleStatus.js` — `computeLifecycleStatus`
+  and `describeLifecycleStatus`, the one place status is computed
+  (from facts that already exist: has this been saved, is a
+  Publication known for it) rather than a fourth piece of state to
+  keep in sync. Shared by the Editor's and World View's Document Info
+  panels.
+- `application/LicenseLabels.js` — human-readable labels for every
+  `LicenseId` (`describeLicense`) and the ordered option list the
+  license selector renders (`LICENSE_OPTIONS`), so the read view and
+  the edit form can never show a different label for the same license.
+- `application/UpdateDocumentMetadataUseCase.js` — the Editor's entry
+  point: applies whichever of title/description/license the caller
+  passed to `documentManager.document.metadata`, calls `touch()`,
+  marks the document dirty. Thin by design — DocumentMetadata's
+  setters do the actual mutation.
+- `WorldNavigationSession.updateDocumentMetadata(documentId, {...})` —
+  the World View's equivalent, and the one place metadata editing had
+  to be more than "call the setters": it routes through
+  `_ensureEditableDocumentId` first, the SAME fork-on-first-mutation
+  gate every other guarded method uses (docs/Principles.md, "A
+  published snapshot is never mutated in place"). Editing a published
+  snapshot's title is a mutation exactly like moving a brick — it must
+  fork, it must respect fork policy, and it must reject outright (not
+  silently fork or silently drop the edit) when the license forbids
+  it. Returns the documentId the edit actually landed on, so the UI
+  can re-select/re-focus the fork it didn't ask for by name.
+- `WorldNavigationSession.getDocumentInfo(documentId)` — normalizes a
+  published snapshot, a fork, or an ordinary loaded document into one
+  shape (`title`, `description`, `author`, `license`,
+  `parentDocumentId`, `status`, `statusLabel`, `dirty`, `editable`,
+  `editabilityNotice`) so `ui/components/DocumentInfoPanel.js` never
+  needs to know which kind of document it's looking at.
+  `hasBeenSaved` is approximated as "not dirty": every fork starts
+  dirty the instant `_forkForEdit` creates it
+  (`history.markUnsaved()`), so a clean history reliably means an
+  explicit `saveDocument()` happened since.
+- `WorldNavigationSession.consumeForkNotice()` — a drain, not an
+  event subscription: `_forkForEdit` leaves a one-shot
+  `{ sourceDocumentId, sourceTitle, forkId, forkTitle }` record behind
+  right before it returns; the next `consumeForkNotice()` call
+  retrieves and clears it. World View's `guarded()` wrapper (0.2.20
+  hardening) drains it after every successful call and, if present,
+  shows "Created your own editable copy — the original is unchanged"
+  — so a fork happening no longer just silently changes which
+  documentId subsequent actions target. A flag-and-drain was chosen
+  over a new EventBus topic because the UI already re-polls session
+  state once per interaction (`refreshSpatialUI`); a fork fires at
+  most once per interaction, so there's nothing a subscription would
+  buy that the existing poll doesn't already give for free.
+- `PublishDocumentUseCase._validate(document)` — a title (trimmed,
+  non-empty) and at least one building, checked before anything
+  immutable is created. Deliberately does NOT validate license choice:
+  UNSPECIFIED and ALL_RIGHTS_RESERVED are legitimate, maximally-
+  restrictive choices an author is entitled to make (0.2.13) — this
+  guards against publishing something meaningless, not against
+  publishing something restrictive. Shared by both surfaces: World
+  Navigation­Session.publishDocument calls this same class with a
+  duck-typed `{ document }` stand-in for `documentManager` (unchanged
+  from 0.2.3), so a fork published from World View is validated
+  identically to a document published from the Editor.
+- `DocumentCloneService` now carries `description` through a clone —
+  added in 0.2.21 alongside `description` itself; without this, every
+  fork/duplicate would have silently dropped the source's description,
+  the same class of gap `title`/`author`/`license`/`parentDocumentId`
+  already avoid.
+
+UI additions — one shared vocabulary, two hosts:
+
+- `ui/components/DocumentInfoPanel.js` — pure presentation, no
+  session/use-case imports; renders whatever `getDocumentInfo()`-shaped
+  object it's given and emits `edit-metadata`. Used identically in
+  `EditorView`'s sidebar (sourced from `documentManager.document.
+  metadata` + `documentManager.state`) and `WorldView`'s inspection
+  column (sourced from `session.getDocumentInfo(...)`) — the same "one
+  operation, one definition, every surface" reasoning 0.1.50 drew for
+  EditorActionRegistry, one level further: this component isn't even
+  in that registry, it's presentation only.
+- `ui/components/MetadataEditorDialog.js` — the Document Properties
+  editor: title/description/license fields, Save/Cancel, modal overlay
+  following CommandPalette's existing convention (fixed inset,
+  click-outside/Escape to cancel) rather than a second dialog pattern.
+  Emits `save({ title, description, license })` with a real `License`
+  instance (not a bare id) so it passes straight through to
+  `UpdateDocumentMetadataUseCase`/`updateDocumentMetadata` unchanged.
+  Preserves the license's existing `attribution` (fork provenance
+  stamped by `ForkDocumentUseCase`) only when the user leaves the
+  license id unchanged — picking a genuinely different license starts
+  clean rather than carrying stale provenance.
+- `ui/components/Toolbar.js` — Save/Publish report through the same
+  `ActionFeedback` toast every other action already uses
+  (`feedback.show(...)`, an optional prop) instead of a blocking
+  `alert()`; falls back to `alert()` only if no `feedback` prop is
+  supplied, so this is additive, not a breaking prop change.
+  `EditorView` now always supplies one. `PublishDocumentUseCase`'s new
+  validation surfaces through the same toast rather than a browser
+  dialog, and `EditorView`'s fork-on-open flow (`route.query.fork`)
+  reports "Created your editable fork of …" the same way, addressing
+  the design's "avoid silently making the user wonder why the document
+  ID changed" for the Editor's own fork entry point, not just World
+  View's lazy one.
+
+Deliberately not in 0.2.21: a distinct "Forked" lifecycle tier (see
+above — it's orthogonal metadata, not a status); license CHOICE
+validation at publish time (0.2.13's restrictive choices remain
+legitimate); a blocking confirmation dialog before a lazy fork happens
+(the existing proactive `editabilityNotice` plus the new reactive
+`consumeForkNotice` toast were judged sufficient — a modal in the
+middle of a drag gesture would be worse UX, not better); extending
+`publisher/Publication.js` with a `description` field (Publication's
+wire shape is a protocol-adjacent surface spanning 0.2.3/0.2.13/0.2.16
+— a cosmetic field there is a separate, deliberate decision, not a
+side effect of this milestone); and a separate "New Document" creation wizard (a fresh Document already
+has sensible metadata defaults the instant it exists — see "A default
+value is not an absent one" — so 0.2.21 lets the user open the SAME
+Document Properties editor immediately afterward rather than building
+a second, near-identical form just for the moment of creation).

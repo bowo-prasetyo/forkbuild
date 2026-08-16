@@ -17,9 +17,9 @@ import { World } from '../core/World.js';
 // place. Lineage is recorded via parentDocumentId by default; pass
 // parentDocumentId: null explicitly to create an unlinked copy.
 export class DocumentCloneService {
-    execute(sourceDocument, { title = null, author = undefined, parentDocumentId = undefined, license = undefined } = {}) {
+    execute(sourceDocument, { title = null, description = undefined, author = undefined, parentDocumentId = undefined, license = undefined } = {}) {
         if (!sourceDocument) throw new Error('DocumentCloneService: no source document');
-        
+
         const worldJson = sourceDocument.world.toJSON();
         delete worldJson.id;
         for (const buildingJson of worldJson.buildings) {
@@ -30,12 +30,16 @@ export class DocumentCloneService {
         }
         const clonedWorld = World.fromJSON(worldJson);
         const sourceTitle = sourceDocument.metadata.title || 'Untitled';
-        
+
         // Determine license: explicit option > source license > default
         const nextLicense = license !== undefined ? license : sourceDocument.metadata.license;
 
         const metadata = new DocumentMetadata({
             title: title !== null ? title : `Copy of ${sourceTitle}`,
+            // 0.2.21: a description is part of what "the same content,
+            // fresh identity" means — carried through exactly like
+            // license, not reset to empty just because the ids are new.
+            description: description === undefined ? sourceDocument.metadata.description : description,
             author: author === undefined ? sourceDocument.metadata.author : author,
             created: new Date(),
             modified: new Date(),
