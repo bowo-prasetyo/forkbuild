@@ -1929,3 +1929,29 @@ application-layer code: this exposes already-correct, already-tested
 session methods that had no caller in this surface, the same class of
 gap as the render-sync fix above, just one layer higher (persistence
 instead of rendering).
+
+#### Further hardening: Edit Metadata was only reachable by accident
+
+0.2.21 gave World View a Document Properties editor — but it was
+wired to `documentInfo`, the SELECTION-scoped info object the
+inspection panel populates only once a specific brick is selected.
+Save/Publish, just added next to the header's status badge, are bound
+to `activeDocumentInfo` and always visible whenever the active
+document is editable — no selection required. The mismatch meant a
+user who forked by moving a brick, saved, and then went looking for a
+way to rename their fork before publishing had no obvious path to it:
+the metadata editor existed, but only behind "select a brick in that
+world first," a prerequisite Save/Publish never needed.
+
+Fixed by adding an "Edit Metadata" button to the SAME header actions
+row as Save/Publish, bound to `activeDocumentInfo` exactly like they
+are. Both entry points now open the same `MetadataEditorDialog`; a new
+`metadataEditTarget` ref records which info object (`activeDocumentInfo`
+from the header, or `documentInfo` from the inspection panel — still
+useful on its own for inspecting/editing a DIFFERENT nearby world's
+metadata while only browsing it, not editing the active one) actually
+opened it, so `onSaveMetadata` edits the right document regardless of
+which button was clicked. `updateDocumentMetadata` (0.2.21) was
+already correct and already routes metadata edits through the same
+fork-on-first-mutation gate as every other mutation — this is again
+pure UI wiring, not new application-layer behavior.

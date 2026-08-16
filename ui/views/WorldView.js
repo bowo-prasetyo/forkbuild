@@ -50,6 +50,10 @@ export default {
         // panel now carries what this used to render standalone.
         const documentInfo = ref(null);
         const showMetadataEditor = ref(false);
+        // Which info object (activeDocumentInfo or documentInfo) the
+        // open MetadataEditorDialog is actually editing — see
+        // openMetadataEditor().
+        const metadataEditTarget = ref(null);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
         const cameraPosition = ref(null);
@@ -159,11 +163,27 @@ export default {
         // routes through the same guard every other mutation does — so
         // this goes through guarded() exactly like alignSelection etc.,
         // and a fork-policy denial surfaces the same way.
+        //
+        // Hardening: openable from two places — the selection-scoped
+        // DocumentInfoPanel in the inspection column (whatever brick's
+        // world you're currently looking at) and, so editing the
+        // document you're ACTUALLY working on never requires selecting
+        // a specific brick first, a header button next to Save/Publish
+        // bound to activeDocumentInfo. Both funnel through the same
+        // dialog; metadataEditTarget records which info object opened
+        // it so onSaveMetadata edits the right one.
+        function openMetadataEditor(info) {
+            if (!info) return;
+            metadataEditTarget.value = info;
+            showMetadataEditor.value = true;
+        }
+
         function onSaveMetadata({ title, description, license }) {
-            const info = documentInfo.value;
+            const info = metadataEditTarget.value;
             if (!info) return;
             guarded(() => session.updateDocumentMetadata(info.documentId, { title, description, license }));
             showMetadataEditor.value = false;
+            metadataEditTarget.value = null;
             refreshSpatialUI();
         }
 
@@ -541,6 +561,8 @@ export default {
             activeDocumentInfo,
             parentTitle,
             showMetadataEditor,
+            metadataEditTarget,
+            openMetadataEditor,
             spatialEditingContext,
             spatialPlacement,
             cameraPosition,
@@ -587,6 +609,7 @@ export default {
                         @click="saveActiveDocument"
                     >Save</button>
                     <button class="action-btn action-btn--primary" @click="publishActiveDocument">Publish</button>
+                    <button class="action-btn" @click="openMetadataEditor(activeDocumentInfo)">Edit Metadata</button>
                 </div>
                 <p v-if="author">by {{ author }}</p>
                 <p v-if="cameraPosition" class="world-view-coords">
@@ -697,7 +720,7 @@ export default {
                 <DocumentInfoPanel
                     v-if="documentInfo"
                     :info="documentInfo"
-                    @edit-metadata="showMetadataEditor = true"
+                    @edit-metadata="openMetadataEditor(documentInfo)"
                 />
 
                 <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">
@@ -809,9 +832,9 @@ export default {
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
-                :info="documentInfo"
+                :info="metadataEditTarget"
                 @save="onSaveMetadata"
-                @cancel="showMetadataEditor = false"
+                @cancel="showMetadataEditor = false; metadataEditTarget = null"
             />
         </div>
     `
