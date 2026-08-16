@@ -2761,3 +2761,132 @@ diagnostics) as the actual backend for World View discovery — explore/
 search/streaming all still read the plain `LocalWorldLayoutProvider`.
 That swap — "spatial streaming/index integration" — is a proposed
 future milestone (see docs/Roadmap.md), not this one's.
+
+### Trust-Aware Spatial Discovery & Diagnostics (0.2.30)
+
+0.2.19 built a full trust/diagnostics layer for decentralized spatial
+discovery — `TrustObservation`, `DiscoveryDiagnostics`,
+`DecentralizedSpatialDiscoveryProvider` — but it was never connected to
+the live World View, which has run on the plain `LocalWorldLayoutProvider`/
+`LocalDiscoveryProvider` scan throughout 0.2.26–0.2.29. 0.2.30 connects
+the two, WITHOUT changing which provider the live app resolves
+documents from — see "What stays unchanged" below for why that
+restraint is deliberate, not an oversight.
+
+    WorldNavigationSession.exploreLocation({ center, radius })
+              │
+              ├──► searchWorldByLocation({ center, radius })   (0.2.28, UNCHANGED)
+              │        │
+              │        ▼
+              │    documents[]   (position, hasPlacement, distance)
+              │
+              └──► _runSpatialDiscoveryDiagnostics(center, radius)
+                       │
+                       │  spatialDiscoveryProvider (OPTIONAL) —
+                       │  DecentralizedSpatialDiscoveryProvider.discover()
+                       │  consulted PURELY for its diagnostics; its own
+                       │  PlacementRecord[] result is discarded
+                       │
+                       ▼
+              summarizeDiscoveryDiagnostics(rawDiagnostics | null, { fatal? })
+                       │
+                       ▼
+              { available, fatal, complete, warnings[] }
+              │
+              ▼
+      { documents, diagnostics }   ◄── exploreLocation's return shape
+
+- `core/DiscoveryDiagnosticsSummary.js` (new) — `summarizeDiscoveryDiagnostics(diagnostics, { fatal })`,
+  a pure function turning `spatial/DiscoveryDiagnostics.js`'s raw
+  counters into the compact shape above. Duck-typed (accepts a plain
+  object with the same fields, not necessarily a `DiscoveryDiagnostics`
+  instance) and dependency-free, matching `core/SpatialQuery.js`/
+  `core/SpatialOverlap.js`'s own posture. See docs/Principles.md,
+  "Diagnostics Are Received From The Discovery Layer, Never Invented
+  By The UI," for the four states it can produce and why each is
+  distinguishable.
+- `application/WorldNavigationSession.js`:
+  - Constructor gains an OPTIONAL `spatialDiscoveryProvider` — anything
+    exposing `discover(center, radius)` + `getLastDiagnostics()` (i.e.
+    a real `DecentralizedSpatialDiscoveryProvider`, or a test double
+    with the same shape). Absent by default; the live app's
+    `CreateWorldViewUseCase` does not pass one (see below).
+  - `exploreLocation`/`exploreHere`/`whatsHere` now return
+    `{ documents, diagnostics }` instead of a bare array — this is a
+    breaking change to those three methods specifically, judged
+    acceptable because they are 0.2.29's own, one milestone old, with
+    exactly one caller in this codebase (`WorldLocationBrowser`), all
+    updated in the same commit. `searchWorld`/`searchWorldByLocation`
+    (0.2.26/0.2.28, the more established API `WorldSearchPanel`
+    depends on) are UNCHANGED — still plain arrays. This keeps the
+    envelope scoped to exactly the surface the design doc's mockups
+    were about, rather than propagating a shape change through the
+    older, more depended-upon text/spatial search path.
+  - `_runSpatialDiscoveryDiagnostics(center, radius)` — calls the
+    optional provider's `discover()` purely to populate its
+    diagnostics; the PlacementRecord[] it returns is discarded (the
+    session's own `documents` already came from the independent local
+    path). A thrown `discover()` (untrusted/equivocating root — see
+    `DecentralizedSpatialDiscoveryProvider`'s own documented fatal
+    cases) is caught and turned into `diagnostics.fatal` rather than
+    propagating out of what is supposed to be a read-only exploration
+    call.
+  - `inspectDocument` gains a `trust` field: the specific
+    `TrustObservation` (by `placementId`) recorded during the MOST
+    RECENT `exploreLocation` call, or `null` when there is nothing to
+    report (no diagnostics-capable provider wired, this document's
+    cell wasn't part of the last query, or no observation exists for
+    it). This is a lookup against what the last exploration already
+    observed — Inspect still never triggers a fresh query of its own.
+- `ui/components/WorldLocationBrowser.js` — `results` prop renamed to
+  `documents`; new `diagnostics` prop drives a banner above the result
+  list with exactly the four states above (unavailable: neutral;
+  fatal: red; complete: green "✓ Discovery complete"; warnings:
+  itemized amber lines, e.g. "⚠ 1 stale entry in the spatial index
+  accelerator"). The result list itself is UNCHANGED by any of this —
+  a stale or unverifiable document still appears, exactly as
+  discoverable as before; diagnostics annotate, they never filter (see
+  docs/Principles.md). The Inspect expansion gains a "Discovery
+  status" row from `inspected.trust.status` when present.
+- `ui/views/WorldView.js` — `exploreHere`/`whatsHere`/
+  `reExploreLocationBrowser` now destructure the `{ documents,
+  diagnostics }` envelope; `locationBrowserResults` renamed to
+  `locationBrowserDocuments`, new `locationBrowserDiagnostics` ref
+  passed through to the dialog.
+
+**What stays unchanged, deliberately:** the live `CreateWorldViewUseCase`
+wiring does NOT pass a `spatialDiscoveryProvider`. `DecentralizedSpatialDiscoveryProvider`
+answers queries against a `SpatialIndexRoot`/`SpatialIndexManifest`
+chain that only exists once something has actually built and signed
+one (`SpatialIndexBuilder`) — and nothing in the live app's placement
+flow does that today; `CreateWorldViewUseCase`'s `PlacePublicationUseCase`
+is wired directly against the plain `LocalSpatialIndexProvider`, with
+no builder in the loop. Wiring the decentralized provider as the live
+diagnostics source right now would not produce real diagnostics — it
+would find an empty, never-published index root and report every
+query as unable to resolve anything, a strictly WORSE and actively
+misleading result compared to today's honest `available: false`. This
+is the same restraint 0.2.26/0.2.28/0.2.29 already exercised for
+`searchWorldByLocation`'s own backend, applied consistently here: the
+CONTRACT (an optional, pluggable trust source) is real and exercised
+by real trust code in tests
+(`tests/DiscoveryDiagnosticsSummary.test.js`, against an actual
+`DecentralizedSpatialDiscoveryProvider` built via the same
+`buildReplica`-style pattern `tests/TrustDiscoveryHardening.test.js`
+already established) — but flipping the LIVE wiring to a provider with
+nothing behind it yet would trade an honest "unavailable" for a
+dishonest "nothing here." That remains future work, alongside actually
+building `SpatialIndexBuilder` into the live publish/place flow.
+
+Deliberately not in 0.2.30: changing `searchWorld`/`searchWorldByLocation`'s
+return shape (see above); any new UI for configuring or choosing a
+`TrustPolicy` (the existing default/pinned/untrusted modes from 0.2.19
+are exercised exactly as they were, just now visible through
+diagnostics when a provider is wired); filtering or hiding results
+based on trust status (see docs/Principles.md — a stale/conflicting/
+unverifiable document is still shown, always); and per-document
+cryptographic detail beyond `status`/`reason`/`freshness` (revision
+numbers and positions are already shown via the existing Placement
+Info fields; showing raw causal stamps or root hashes in the UI was
+judged more detail than the design doc's own "the user doesn't
+necessarily need the cryptographic details" scope called for).

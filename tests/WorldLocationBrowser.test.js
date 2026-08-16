@@ -33,6 +33,16 @@ import { SpatialCameraController } from '../application/SpatialCameraController.
 // discovery path), and strictly read-only: Focus/Select/Inspect must
 // never fork, load-and-mutate, or otherwise touch a document. See
 // WorldNavigationSession's "World Location Browser (0.2.29)" section.
+//
+// 0.2.30: exploreLocation/exploreHere/whatsHere now return
+// { documents, diagnostics } rather than a bare array (see
+// core/DiscoveryDiagnosticsSummary.js) — every assertion below reads
+// `.documents` for the result list. No test in this file wires a
+// spatialDiscoveryProvider, so diagnostics.available is false
+// throughout; the trust-aware scenarios (available/complete/warnings/
+// fatal, with a REAL DecentralizedSpatialDiscoveryProvider) live in
+// tests/DiscoveryDiagnosticsSummary.test.js instead, alongside this
+// file's own no-provider-wired baseline assertions (1b, 5f, 11).
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
@@ -136,13 +146,20 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // 1. Explore an empty location — nowhere near anything fixtures
-    //    placed.
+    //    placed. 0.2.30: exploreLocation now returns an envelope
+    //    { documents, diagnostics } rather than a bare array — see
+    //    core/DiscoveryDiagnosticsSummary.js. No spatialDiscoveryProvider
+    //    is wired anywhere in this file, so diagnostics.available is
+    //    false throughout — the honest "no trust layer consulted"
+    //    default this milestone establishes for the plain local path.
     // -------------------------------------------------------------
     {
         const session = buildSession();
-        const results = session.exploreLocation({ center: { x: -9999, y: -9999, z: -9999 }, radius: 5 });
-        assert(Array.isArray(results) && results.length === 0,
+        const envelope = session.exploreLocation({ center: { x: -9999, y: -9999, z: -9999 }, radius: 5 });
+        assert(Array.isArray(envelope.documents) && envelope.documents.length === 0,
             '1. exploring an empty location returns an empty result, not an error');
+        assert(envelope.diagnostics.available === false && envelope.diagnostics.fatal === null,
+            '1b. no spatialDiscoveryProvider wired -> diagnostics honestly report unavailable, not a fabricated "complete"');
     }
 
     // -------------------------------------------------------------
@@ -150,7 +167,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const session = buildSession();
-        const results = session.exploreLocation({ center: { x: 100, y: 0, z: 100 }, radius: 1 });
+        const { documents: results } = session.exploreLocation({ center: { x: 100, y: 0, z: 100 }, radius: 1 });
         assert(results.length === 2, '2. both towers sharing the exact coordinate are found');
         assert(results.every((r) => r.distance === 0),
             '2b. both report distance 0 from a center exactly at their shared position');
@@ -166,8 +183,8 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const session = buildSession();
-        const fromTowers = session.exploreLocation({ center: { x: 100, y: 0, z: 100 }, radius: 25 });
-        const fromShed = session.exploreLocation({ center: { x: 120, y: 0, z: 100 }, radius: 25 });
+        const fromTowers = session.exploreLocation({ center: { x: 100, y: 0, z: 100 }, radius: 25 }).documents;
+        const fromShed = session.exploreLocation({ center: { x: 120, y: 0, z: 100 }, radius: 25 }).documents;
 
         assert(fromTowers.length === 3 && fromShed.length === 3,
             '3. both queries find all three nearby documents (towers + shed) — 20 World Units is within a radius of 25 either way');
@@ -185,7 +202,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const session = buildSession();
-        const results = session.exploreLocation({ center: { x: 120, y: 0, z: 100 }, radius: 1 });
+        const results = session.exploreLocation({ center: { x: 120, y: 0, z: 100 }, radius: 1 }).documents;
         assert(results.length === 1 && results[0].documentId === carolsShed.documentId,
             '4. precondition: found Carol\'s Shed');
 
@@ -216,6 +233,8 @@ async function runTests() {
             '5d. the active document is completely untouched by Inspect — still Alice\'s Tower');
         assert(session.getDocument(carolsShed.documentId) === null,
             '5e. Carol\'s Shed was never loaded as a side effect of inspecting it');
+        assert(inspected.trust === null,
+            '5f. no diagnostics-capable provider was ever consulted -> trust is honestly null, not a fabricated status');
     }
 
     // -------------------------------------------------------------
@@ -260,9 +279,9 @@ async function runTests() {
         // Active Document, and Selection Are Three Different Things").
         assert(session.getActiveDocumentId() === null, '7. precondition: nothing is active');
 
-        const fromExploreHere = session.exploreHere(1).map((r) => r.documentId).sort();
+        const fromExploreHere = session.exploreHere(1).documents.map((r) => r.documentId).sort();
         const fromManualQuery = session.exploreLocation({ center: { x: 100, y: 0, z: 100 }, radius: 1 })
-            .map((r) => r.documentId).sort();
+            .documents.map((r) => r.documentId).sort();
         assert(fromExploreHere.length === 2 && JSON.stringify(fromExploreHere) === JSON.stringify(fromManualQuery),
             '7b. exploreHere(1) from the camera position finds exactly what the equivalent manual query would');
     }
@@ -283,11 +302,11 @@ async function runTests() {
             zoom: 1
         });
 
-        const nearby = session.whatsHere();
+        const nearby = session.whatsHere().documents;
         assert(nearby.length === 2 && nearby.every((r) => r.documentId !== carolsShed.documentId),
             '8. whatsHere() finds only the exact-coordinate towers, not Carol\'s Shed 20 World Units away');
 
-        const wider = session.exploreHere(25);
+        const wider = session.exploreHere(25).documents;
         assert(wider.length === 3 && wider.some((r) => r.documentId === carolsShed.documentId),
             '8b. exploreHere with a larger radius from the same camera position finds Carol\'s Shed too');
     }
@@ -300,7 +319,7 @@ async function runTests() {
     {
         const session = buildSession();
         const fallbackPos = worldLayoutProvider.getPosition(unplacedCabin.documentId);
-        const results = session.exploreLocation({ center: fallbackPos, radius: 0.01 });
+        const results = session.exploreLocation({ center: fallbackPos, radius: 0.01 }).documents;
         assert(results.length === 1 && results[0].documentId === unplacedCabin.documentId,
             '9. the unplaced cabin is found via its deterministic fallback position');
         assert(results[0].hasPlacement === false,
@@ -347,11 +366,12 @@ async function runTests() {
             documentCloneService, discoveryProvider
             // no searchWorldUseCase, no _session/_spatialCameraController wired
         });
-        assert(bareSession.exploreLocation({ center: { x: 0, y: 0, z: 0 }, radius: 100 }).length === 0,
-            '11. no SearchWorldUseCase wired -> exploreLocation degrades to [], not a throw');
-        assert(bareSession.exploreHere(25).length === 0,
-            '11b. no camera state yet -> exploreHere degrades to [], not a throw');
-        assert(bareSession.whatsHere().length === 0,
+        const noSearchUseCase = bareSession.exploreLocation({ center: { x: 0, y: 0, z: 0 }, radius: 100 });
+        assert(noSearchUseCase.documents.length === 0 && noSearchUseCase.diagnostics.available === false,
+            '11. no SearchWorldUseCase wired -> exploreLocation degrades to an empty envelope, not a throw');
+        assert(bareSession.exploreHere(25).documents.length === 0,
+            '11b. no camera state yet -> exploreHere degrades to an empty envelope, not a throw');
+        assert(bareSession.whatsHere().documents.length === 0,
             '11c. same for whatsHere()');
     }
 

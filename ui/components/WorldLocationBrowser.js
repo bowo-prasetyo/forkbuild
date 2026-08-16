@@ -8,7 +8,7 @@
 // open used, at a new radius around the same center — there is
 // exactly one discovery path here (see WorldNavigationSession's
 // "World Location Browser" section), this dialog is a camera-driven
-// front end for it, not a second search implementation. `results` is
+// front end for it, not a second search implementation. `documents` is
 // the same enriched shape 0.2.28's spatial query established
 // (position, hasPlacement, distance) — see docs/Principles.md,
 // "Publication Found Is Not The Same As Placement Found," for why
@@ -40,12 +40,27 @@
 // honesty 0.2.26/0.2.28 already established: this is what the
 // currently configured discovery provider can find within the
 // requested region, not a claim that this node has omniscient
-// knowledge of the whole world. The two numbers are equal today
-// because the local discovery provider always returns everything it
-// can see in one pass — a future streaming/paginated provider (see
-// the 0.2.29 design doc's preview of "spatial streaming/index
-// integration") could legitimately show fewer than it knows about,
-// and this phrasing already has room for that without changing again.
+// knowledge of the whole world.
+//
+// 0.2.30: `diagnostics` — the WorldNavigationSession.exploreLocation
+// envelope's other half (core/DiscoveryDiagnosticsSummary.js), shown
+// as a banner above the result list. Four states, and this component
+// renders exactly what it is given, nothing more:
+//   unavailable (diagnostics.available === false) — no trust-capable
+//     discovery provider was consulted for this query. Neutral, NOT a
+//     warning — this is today's default (see docs/Principles.md).
+//   fatal (diagnostics.fatal) — a provider WAS consulted but its root/
+//     authority could not be trusted at all this pass.
+//   complete (diagnostics.available && diagnostics.complete) — the
+//     trust layer ran and found nothing to flag.
+//   warnings (diagnostics.available && !diagnostics.complete) —
+//     itemized real issues (stale/missing/rejected/conflicting/
+//     equivocating), each with its own real count.
+// The result list itself is UNAFFECTED by any of this — a stale or
+// conflicting document still appears, exactly as findable as before;
+// diagnostics annotate, they never filter. See docs/Principles.md,
+// "Discovery And Trust Are Related, But They Are Not The Same
+// Operation (0.2.30)."
 export default {
     name: 'WorldLocationBrowser',
     props: {
@@ -57,16 +72,27 @@ export default {
             type: Number,
             default: 0
         },
-        results: {
+        documents: {
             type: Array,
             default: () => []
         },
+        // { available, fatal, complete, warnings[] } — see
+        // core/DiscoveryDiagnosticsSummary.js. Defaults to the
+        // "unavailable" shape so a host that hasn't been updated to
+        // pass one yet degrades to the neutral banner rather than a
+        // crash.
+        diagnostics: {
+            type: Object,
+            default: () => ({ available: false, fatal: null, complete: false, warnings: [] })
+        },
         // The single result currently expanded via Inspect, in the
         // shape WorldNavigationSession.inspectDocument returns
-        // ({ documentId, documentInfo, placementInfo }), or null when
-        // nothing is expanded. documentInfo/placementInfo may
-        // themselves be null — see inspectDocument's own comment for
-        // why (an unloaded document has no Document Info to show).
+        // ({ documentId, documentInfo, placementInfo, trust }), or null
+        // when nothing is expanded. documentInfo/placementInfo/trust
+        // may themselves be null — see inspectDocument's own comment
+        // for why (an unloaded document has no Document Info to show;
+        // trust is only ever populated from the last exploration's own
+        // observations).
         inspected: {
             type: Object,
             default: null
@@ -149,13 +175,37 @@ export default {
                     <button type="submit" class="action-btn">Explore</button>
                 </form>
 
-                <p v-if="results.length === 0" class="world-location-browser-empty">{{ emptyMessage }}</p>
+                <div
+                    class="world-location-browser-diagnostics"
+                    :class="{
+                        'world-location-browser-diagnostics--fatal': diagnostics.fatal,
+                        'world-location-browser-diagnostics--complete': diagnostics.available && !diagnostics.fatal && diagnostics.complete,
+                        'world-location-browser-diagnostics--warning': diagnostics.available && !diagnostics.fatal && !diagnostics.complete
+                    }"
+                >
+                    <p v-if="diagnostics.fatal" class="world-location-browser-diagnostics-line">
+                        ⚠ Could not verify this region's spatial index ({{ diagnostics.fatal }}). Showing locally known documents only.
+                    </p>
+                    <template v-else-if="diagnostics.available">
+                        <p v-if="diagnostics.complete" class="world-location-browser-diagnostics-line">
+                            ✓ Discovery complete
+                        </p>
+                        <p v-else v-for="w in diagnostics.warnings" :key="w.status" class="world-location-browser-diagnostics-line">
+                            ⚠ {{ w.message }}
+                        </p>
+                    </template>
+                    <p v-else class="world-location-browser-diagnostics-line world-location-browser-diagnostics-line--neutral">
+                        Discovery diagnostics unavailable — showing locally known documents only.
+                    </p>
+                </div>
+
+                <p v-if="documents.length === 0" class="world-location-browser-empty">{{ emptyMessage }}</p>
                 <template v-else>
                     <p class="world-location-browser-count">
-                        Showing {{ results.length }} of {{ results.length }} discoverable documents
+                        Showing {{ documents.length }} of {{ documents.length }} discoverable documents
                     </p>
                     <ul class="world-location-browser-list">
-                        <li v-for="r in results" :key="r.documentId" class="world-location-browser-item">
+                        <li v-for="r in documents" :key="r.documentId" class="world-location-browser-item">
                             <div class="world-location-browser-item-row">
                                 <div class="world-location-browser-item-info">
                                     <span class="world-location-browser-item-title">📍 {{ r.title }}</span>
@@ -216,6 +266,13 @@ export default {
                                 <p v-else-if="r.position" class="world-location-browser-inspect-note">
                                     Position shown above is
                                     {{ r.hasPlacement ? 'from the recorded placement.' : 'a default fallback — no placement recorded.' }}
+                                </p>
+                                <div v-if="inspected.trust" class="inspection-row">
+                                    <span class="inspection-label">Discovery status</span>
+                                    <span class="inspection-value">{{ inspected.trust.status }}</span>
+                                </div>
+                                <p v-if="inspected.trust && inspected.trust.reason" class="world-location-browser-inspect-note">
+                                    {{ inspected.trust.reason }}
                                 </p>
                             </div>
                         </li>

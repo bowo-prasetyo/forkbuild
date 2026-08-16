@@ -1152,6 +1152,44 @@ html, body {
     flex: 1;
 }
 
+/* 0.2.30: trust-aware discovery diagnostics banner — see
+   core/DiscoveryDiagnosticsSummary.js. Neutral (no trust layer
+   consulted, today's default) reads as informational, not alarming;
+   complete reuses the same green .action-btn--primary/.spatial-type
+   already means "good" throughout this UI; fatal/warning reuse the
+   same amber/red tokens .editability-notice--blocked and
+   .world-search-item-note already established, so a person doesn't
+   have to learn a new color language for this milestone. */
+.world-location-browser-diagnostics {
+    margin: 0 0 0.85rem;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.world-location-browser-diagnostics-line {
+    margin: 0 0 0.2rem;
+}
+
+.world-location-browser-diagnostics-line:last-child {
+    margin-bottom: 0;
+}
+
+.world-location-browser-diagnostics-line--neutral {
+    color: #808080;
+}
+
+.world-location-browser-diagnostics--complete .world-location-browser-diagnostics-line {
+    color: #4caf7d;
+}
+
+.world-location-browser-diagnostics--warning .world-location-browser-diagnostics-line {
+    color: #c9a24a;
+}
+
+.world-location-browser-diagnostics--fatal .world-location-browser-diagnostics-line {
+    color: #e0a0a0;
+}
+
 .world-location-browser-empty {
     color: #808080;
     font-size: 0.82rem;
