@@ -1400,3 +1400,122 @@ of arbitrary document content. Also not here: full delegation chaining
 core/Delegation.js above), and delegation revocation (still deferred
 from 0.2.17). This milestone hardens the trust and discovery layer
 already built; it does not turn ForkBuild into a consensus system.
+
+### Fork-on-Edit & Immutable Snapshot Lineage (0.2.20)
+
+0.2.8 established the rule for the Editor: "A Publication is never
+edited — editing a published world is an explicit fork operation."
+That rule was never actually enforced inside the shared spatial World
+View. WorldNavigationSession streams published worlds in and out of
+one live session and — unlike the read-only PublishedWorldSession —
+exposes the full editing surface (move/rotate/delete/align/distribute/
+numeric transform/groups/paste/placement) directly against whatever is
+loaded, with no check for whether "whatever is loaded" was a published
+snapshot. A user (including the original author) could move a brick
+in a streamed-in published world and hit Save, silently overwriting
+the storage slot `SaveDocumentUseCase` and `LoadPublicationDocumentUseCase`
+both key by `document.world.id` — the published source's own storage.
+
+> **A published World View is immutable; a World View SESSION is
+> editable.**
+
+0.2.20 closes that gap with lazy Copy-on-Write:
+
+    Published World (immutable)
+             |
+             | open / view — navigate, select, hover, inspect: no fork
+             v
+    World View Session
+             |
+             | FIRST mutation
+             v
+    Fork Document (new id, new owner, parentDocumentId lineage)
+             |
+             | continue editing — same fork, no re-fork
+             v
+    Publish (optional) -> new Publication, new ContentReference
+             |
+             v
+    Original Publication — untouched, still resolves identically
+
+Key components:
+
+- WorldNavigationSession tracks which of its currently-loaded
+  documentIds are still straight, unforked views of a published
+  snapshot (`_publishedDocumentIds` — populated in `_loadWorld` only
+  when a real Publication can be resolved for the id via
+  `discoveryProvider.findByDocumentId`; see "Enforce only when the
+  session can tell" below). `isDocumentPublished(documentId)` exposes
+  this.
+- `_ensureEditableSelection()` / `_ensureEditableDocumentId(documentId)`
+  are the guards every mutation entry point calls first:
+  moveSelection, deleteSelection, rotateSelection, alignSelection,
+  distributeSelection, applyNumericTransform, commitPlacement, every
+  group command, pasteClipboard, and gizmoPointerDown (armed before
+  the drag reaches the renderer, so a gizmo-driven mutation crosses the
+  boundary exactly like a keyboard-driven one — see "The gizmo path"
+  below). A no-op when the target is already editable.
+- `_forkForEdit(sourceDocumentId)` is the actual Copy-on-Write: checks
+  fork policy (0.2.13 — a forbidding license throws, the mutation is
+  rejected outright, never silently forked or silently dropped), forks
+  via the existing DocumentCloneService (the SAME cloning mechanism
+  Duplicate/explicit-Fork have used since 0.1.42/0.1.24 — no second
+  clone path), registers the fork's own CommandHistory, and swaps the
+  renderer's view of the source for the fork. The published source is
+  unloaded from THIS session (never mutated — a fresh load of the same
+  publication elsewhere is byte-for-byte unchanged) so the pending
+  mutation cannot land anywhere but the fork.
+- Selection/focus/hover referencing the source are remapped onto the
+  fork POSITIONALLY (same building index, same brick index within it)
+  rather than by id — DocumentCloneService gives every brick a fresh
+  id but preserves structure and order exactly, so position is a
+  stable identity across the fork boundary. A multi-brick selection
+  remaps every member, not just the primary.
+- `saveDocument`/`publishDocument` refuse outright (rather than
+  silently persisting) if ever called against a documentId still
+  tracked as published — defense in depth behind the guards above,
+  for exactly the storage-slot collision described above.
+
+The gizmo path: a gizmo drag is armed via `gizmoPointerDown`, which
+receives `this._spatialSelection` and hands it to the renderer, which
+drives `SpatialEditingService.beginTransformGesture/commitTransformGesture`
+directly — bypassing WorldNavigationSession's own moveSelection/
+rotateSelection wrappers entirely. Forking one command later (inside
+SpatialEditingService, which knows nothing about publications or
+forks) would be too late and too coupled; forking at
+`gizmoPointerDown`, before the selection reference is ever handed to
+the renderer, means every subsequent gizmo callback for that drag
+already sees the fork. `SpatialEditingService` — shared with
+EditorSession, whose documents are never published snapshots — stays
+completely unaware that forking exists.
+
+Enforce only when the session can tell: `isDocumentPublished` and fork
+policy are both gated on actually resolving a Publication via
+`discoveryProvider.findByDocumentId` — a session with no
+discoveryProvider wired (many existing unit tests construct
+WorldNavigationSession this way, exercising paste/group/replay
+mechanics against an arbitrary loaded document, not published content)
+has no way to tell a published world from any other loaded document
+and does not claim to, exactly the same "enforce only when the
+information is actually available" rule 0.2.13's fork-policy check
+already followed. In real streaming usage this is not a loophole: a
+documentId only becomes visible/loadable via `updateSpatialView` in
+the first place because WorldLayoutProvider/discoveryProvider already
+know it as published, and CreateWorldViewUseCase always wires a real
+discoveryProvider into the live session.
+
+Deliberately not in 0.2.20: eager forking (forking the instant a
+published world is opened, before any edit — this milestone is
+specifically lazy, on first mutation), a new provenance data model
+(fork lineage reuses parentDocumentId, the mechanism 0.1.24/0.2.8
+already established — not a second "forkOf" field), automatic
+re-placement of a fork at its source's spatial coordinates (a fork
+gets its own independent Placement when placed — 0.2.10's "a fork is a
+different placement, even at the same coordinates" boundary, untouched
+here since this milestone only reaches the Document/Publication layer,
+not placement), and fixing DocumentCloneService's pre-existing
+limitation that cloned Groups keep their own id but lose valid
+membership (their brickIds still reference the source's pre-clone
+brick ids) — a real, separate bug in the 0.1.42 cloning mechanism
+every fork already inherits, not something 0.2.20 introduces or
+scopes to fix.

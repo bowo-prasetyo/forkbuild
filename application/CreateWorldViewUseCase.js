@@ -67,7 +67,11 @@ export class CreateWorldViewUseCase {
                     identityProvider,
                     documentCloneService,
                     copySelectionUseCase: new CopySelectionUseCase(registry),
-                    pasteClipboardUseCase: new PasteClipboardUseCase()
+                    pasteClipboardUseCase: new PasteClipboardUseCase(),
+                    // 0.2.20: fork-on-write needs to resolve a loaded
+                    // world's Publication to check its fork policy
+                    // before lazily forking it.
+                    discoveryProvider
                 });
             },
             // Expose the spatial index and content store so the application 

@@ -95,6 +95,17 @@ export class WorldNavigationSession {
 	    this._discoveryProvider = discoveryProvider;
 
 		this._pasteCount = 0;
+
+        // 0.2.20: documentIds currently loaded straight from a
+        // publication — immutable as far as this session is concerned,
+        // exactly like PublishedWorldSession's canEdit:false, except
+        // enforced here by intercepting mutation entry points rather
+        // than by omitting them. A documentId leaves this set the
+        // moment it is superseded by a fork (_forkForEdit) or created
+        // fresh by forkDocument()/cloneDocument(). See
+        // docs/Principles.md, "A published snapshot is never mutated
+        // in place (0.2.20)".
+        this._publishedDocumentIds = new Set();
     }
 
     get transformSettings() {
@@ -158,7 +169,23 @@ export class WorldNavigationSession {
             return false;
         }
         const placement = this._spatialPlacement;
-        const targetDocumentId = placement.targetDocumentId || this._focusedDocumentId;
+        let targetDocumentId = placement.targetDocumentId || this._focusedDocumentId;
+        let targetBuildingId = placement.targetBuildingId || null;
+        // 0.2.20: placing a brick is a mutation — fork first if the
+        // target is still a published, unforked snapshot. The target
+        // building (if any was resolved before the fork) is remapped
+        // positionally, same as a selection would be.
+        if (this._publishedDocumentIds.has(targetDocumentId)) {
+            const sourceDoc = this._loadedDocuments.get(targetDocumentId);
+            const buildingIndex = (targetBuildingId && sourceDoc)
+                ? sourceDoc.world.getBuildings().findIndex((b) => b.id === targetBuildingId)
+                : -1;
+            targetDocumentId = this._ensureEditableDocumentId(targetDocumentId);
+            const forkedDoc = this._loadedDocuments.get(targetDocumentId);
+            targetBuildingId = (buildingIndex !== -1 && forkedDoc)
+                ? (forkedDoc.world.getBuildings()[buildingIndex]?.id || null)
+                : null;
+        }
         const document = this._loadedDocuments.get(targetDocumentId);
         if (!document) {
             return false;
@@ -168,7 +195,7 @@ export class WorldNavigationSession {
         if (buildings.length === 0) {
             return false;
         }
-        const buildingId = placement.targetBuildingId || buildings[0].id;
+        const buildingId = targetBuildingId || buildings[0].id;
         const validator = new PlacementValidator();
         if (!validator.canPlace(world, buildingId, placement.position)) {
             return false;
@@ -205,6 +232,11 @@ export class WorldNavigationSession {
         if (this.isPlacementMode() || this._spatialSelection.isEmpty) {
             return false;
         }
+        // 0.2.20: a gizmo drag is a mutation the moment it commits.
+        // Fork now, before the renderer arms the drag against
+        // `this._spatialSelection` — every subsequent gizmo callback
+        // (move/up) reads that same (now-forked) selection reference.
+        this._ensureEditableSelection();
         return this._session.gizmoPointerDown(
             rawEvent.clientX,
             rawEvent.clientY,
@@ -508,6 +540,7 @@ export class WorldNavigationSession {
 
     moveSelection(delta, modifiers = null) {
 	    if (this._historyPreview && this._historyPreview.active) return false;
+        this._ensureEditableSelection();
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -525,6 +558,7 @@ export class WorldNavigationSession {
 
     deleteSelection() {
 	    if (this._historyPreview && this._historyPreview.active) return false;
+        this._ensureEditableSelection();
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -541,6 +575,7 @@ export class WorldNavigationSession {
 
     rotateSelection(deltaRotation, modifiers = null) {
 	    if (this._historyPreview && this._historyPreview.active) return false;
+        this._ensureEditableSelection();
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -558,6 +593,7 @@ export class WorldNavigationSession {
 
     alignSelection(mode) {
 	    if (this._historyPreview && this._historyPreview.active) return false;
+        this._ensureEditableSelection();
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -571,6 +607,7 @@ export class WorldNavigationSession {
 
     distributeSelection(axis) {
 	    if (this._historyPreview && this._historyPreview.active) return false;
+        this._ensureEditableSelection();
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -584,6 +621,7 @@ export class WorldNavigationSession {
 
     applyNumericTransform(intent, options = {}) {
 	    if (this._historyPreview && this._historyPreview.active) return false;
+        this._ensureEditableSelection();
         if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
             return false;
         }
@@ -682,25 +720,204 @@ export class WorldNavigationSession {
         return this._worldLayoutProvider.getPosition(documentId);
     }
 
-	forkDocument(documentId) {
-	    const doc = this.getDocument(documentId || this._focusedDocumentId);
-	    if (!doc) throw new Error('no loaded document');
-	    const user = this._identityProvider ? this._identityProvider.currentUser() : null;
-	    const fork = this._documentCloneService.execute(doc, {
-	        title: `Fork of ${doc.metadata.title || 'Untitled'}`,
-	        author: user ? user.username : null,
-	        parentDocumentId: doc.world.id
-	    });
-	    this._loadedDocuments.set(fork.world.id, fork);
-	    const history = new CommandHistory({ world: fork.world });
-	    history.markUnsaved();
-	    this._commandHistories.set(fork.world.id, history);
-	    if (this._session) this._session.addWorld(fork.world, fork.world.id, this._worldLayoutProvider.getPosition(fork.world.id));
-	    
-	    this._focusedDocumentId = fork.world.id; // Add this line to focus on the new fork
-	    
-	    return fork.world.id;
-	}	
+    // -----------------------------------------------------------------
+    // Fork-on-write (0.2.20)
+    //
+    // A published World View is immutable; a World View SESSION is
+    // editable. Opening a published snapshot never makes the snapshot
+    // itself editable — the first mutation crosses the publication
+    // boundary and creates a new Document derived from it (Copy-on-
+    // Write / Fork-on-Edit). Navigation, camera, selection, hover, and
+    // inspection never call any of this; only an actual document
+    // mutation does. See docs/Principles.md, 0.2.20.
+    // -----------------------------------------------------------------
+
+    // True while `documentId` is still a straight, unforked view of a
+    // published snapshot — i.e. still immutable as far as this session
+    // is concerned.
+    isDocumentPublished(documentId) {
+        return this._publishedDocumentIds.has(documentId);
+    }
+
+    // Guard for selection-driven mutations (move/rotate/delete/align/
+    // distribute/numeric transform/gizmo drags). Forks the CURRENT
+    // selection's document in place when it is still published, and
+    // updates `this._spatialSelection` (by reference, so every caller
+    // already holding it — including a renderer gizmo drag armed via
+    // gizmoPointerDown — sees the forked selection) to the equivalent
+    // selection in the fork. A no-op when there is no selection or the
+    // selection's document is already editable.
+    _ensureEditableSelection() {
+        if (!this._spatialSelection || this._spatialSelection.isEmpty) {
+            return;
+        }
+        const sourceId = this._spatialSelection.documentId;
+        if (!sourceId || !this._publishedDocumentIds.has(sourceId)) {
+            return;
+        }
+        this._forkForEdit(sourceId);
+    }
+
+    // Guard for document-scoped mutations that are not selection-driven
+    // (placement, groups, paste). Returns the documentId to actually
+    // operate against — unchanged when already editable, the new
+    // fork's id otherwise.
+    _ensureEditableDocumentId(documentId) {
+        if (!documentId || !this._publishedDocumentIds.has(documentId)) {
+            return documentId;
+        }
+        return this._forkForEdit(documentId);
+    }
+
+    // The actual Copy-on-Write: forks `sourceDocumentId`, swaps this
+    // session's view of it for the fork (the published source is
+    // unloaded from this session — the mutation the caller is about to
+    // perform must land on the fork, never on the source), and remaps
+    // any live references (selection, focus, hover) that pointed at
+    // the source. Returns the fork's documentId.
+    //
+    // Throws if the publication's fork policy forbids forking — the
+    // mutation the caller is attempting is rejected, exactly like
+    // ForkDocumentUseCase's existing enforcement (0.2.13), rather than
+    // silently allowed or silently dropped.
+    _forkForEdit(sourceDocumentId) {
+        const sourceDoc = this._loadedDocuments.get(sourceDocumentId);
+        if (!sourceDoc) {
+            throw new Error(`WorldNavigationSession: no loaded document "${sourceDocumentId}" to fork`);
+        }
+
+        const policy = this._checkForkPolicy(sourceDocumentId);
+        if (!policy.allowed) {
+            throw new Error(
+                `WorldNavigationSession: forking is not permitted under license `
+                + `${policy.license ? policy.license.id : 'UNSPECIFIED'} for document "${sourceDocumentId}"`
+            );
+        }
+
+        const user = this._identityProvider ? this._identityProvider.currentUser() : null;
+        const fork = this._documentCloneService.execute(sourceDoc, {
+            title: `Fork of ${sourceDoc.metadata.title || 'Untitled'}`,
+            author: user ? user.username : null,
+            parentDocumentId: sourceDoc.world.id
+        });
+        const forkId = fork.world.id;
+
+        this._loadedDocuments.set(forkId, fork);
+        const history = new CommandHistory({ world: fork.world });
+        history.markUnsaved();
+        this._commandHistories.set(forkId, history);
+
+        if (this._session) {
+            const pos = this._worldLayoutProvider.getPosition(sourceDocumentId);
+            this._session.removeWorld(sourceDoc.world, sourceDocumentId);
+            this._session.addWorld(fork.world, forkId, pos);
+        }
+
+        // The published source is superseded in THIS session's view —
+        // it was never mutated (a fresh reload of the same publication
+        // elsewhere still resolves it byte-for-byte unchanged), but
+        // this session now works against the fork exclusively.
+        this._loadedDocuments.delete(sourceDocumentId);
+        this._commandHistories.delete(sourceDocumentId);
+        this._publishedDocumentIds.delete(sourceDocumentId);
+
+        this._remapReferencesAfterFork(sourceDocumentId, sourceDoc, forkId, fork);
+
+        return forkId;
+    }
+
+    // Every Publication on record for `documentId`, or [] when there is
+    // no discoveryProvider wired to ask at all. The one lookup shared by
+    // _isKnownPublication (is this world published at all?) and
+    // _checkForkPolicy (may it be forked?).
+    _findPublications(documentId) {
+        if (!this._discoveryProvider || typeof this._discoveryProvider.findByDocumentId !== 'function') {
+            return [];
+        }
+        return this._discoveryProvider.findByDocumentId(documentId) || [];
+    }
+
+    // Is `documentId` a real, published world — the actual condition
+    // fork-on-write exists to protect? A session with no
+    // discoveryProvider wired cannot tell, and does not claim to (see
+    // _loadWorld).
+    _isKnownPublication(documentId) {
+        return this._findPublications(documentId).length > 0;
+    }
+
+    // fork policy (0.2.13): does the license governing `documentId`
+    // permit forking at all? Enforced only when a Publication can
+    // actually be resolved for it — no matching publication allows the
+    // fork rather than introducing a new capability regression where
+    // none existed before (matches ForkDocumentUseCase's own "only
+    // enforce when a sourcePublication is known" behavior). In
+    // practice this is only ever reached for documentIds
+    // _isKnownPublication already confirmed, so the "no publication"
+    // branch is defensive, not a live path.
+    _checkForkPolicy(documentId) {
+        const publications = this._findPublications(documentId);
+        if (publications.length === 0) {
+            return { allowed: true, license: null };
+        }
+        // Most recent publication of this document governs.
+        const publication = publications.reduce((latest, p) =>
+            (!latest || p.publishedAt > latest.publishedAt) ? p : latest, null);
+        const license = publication.license instanceof License
+            ? publication.license
+            : new License(publication.license || {});
+        return { allowed: license.forkAllowed, license };
+    }
+
+    // Remaps this session's live references — selection, focus, hover —
+    // from the just-superseded source document onto its fork. Bricks
+    // get fresh ids on clone (DocumentCloneService), so brick
+    // references are remapped POSITIONALLY (same building index, same
+    // brick index within it) rather than by id; the clone preserves
+    // structure and order exactly, so position is a stable identity
+    // across the fork boundary.
+    _remapReferencesAfterFork(sourceDocumentId, sourceDoc, forkId, forkDoc) {
+        if (this._focusedDocumentId === sourceDocumentId) {
+            this._focusedDocumentId = forkId;
+        }
+        if (this._spatialSelection && this._spatialSelection.documentId === sourceDocumentId) {
+            if (this._spatialSelection.type === 'ground') {
+                this._spatialSelection = SpatialSelectionState.ground(this._spatialSelection.position);
+            } else {
+                const items = this._spatialSelection.items
+                    .map((item) => item.type === 'brick'
+                        ? this._remapBrickReference(sourceDoc, forkDoc, item.buildingId, item.brickId)
+                        : null)
+                    .filter((item) => item !== null);
+                this._spatialSelection = items.length > 0
+                    ? SpatialSelectionState.bricks({ documentId: forkId, items })
+                    : SpatialSelectionState.empty();
+            }
+            this._refreshEditingContext();
+            this._refreshInspection();
+        }
+        if (this._spatialHover && this._spatialHover.documentId === sourceDocumentId) {
+            this._setSpatialHover(SpatialHoverState.empty());
+        }
+    }
+
+    // Positional remap: same building index, same brick index within
+    // it. Returns null if the source reference cannot be resolved
+    // (defensive — should not happen for a fresh, unedited clone).
+    _remapBrickReference(sourceDoc, forkDoc, buildingId, brickId) {
+        const sourceBuildings = sourceDoc.world.getBuildings();
+        const buildingIndex = sourceBuildings.findIndex((b) => b.id === buildingId);
+        if (buildingIndex === -1) return null;
+        const sourceBricks = sourceBuildings[buildingIndex].getBricks();
+        const brickIndex = sourceBricks.findIndex((b) => b.id === brickId);
+        if (brickIndex === -1) return null;
+
+        const forkBuildings = forkDoc.world.getBuildings();
+        const forkBuilding = forkBuildings[buildingIndex];
+        if (!forkBuilding) return null;
+        const forkBrick = forkBuilding.getBricks()[brickIndex];
+        if (!forkBrick) return null;
+        return { type: 'brick', buildingId: forkBuilding.id, brickId: forkBrick.id };
+    }
 
     // -----------------------------------------------------------------
     // Internal
@@ -725,6 +942,21 @@ export class WorldNavigationSession {
 	_loadWorld(documentId) {
 	    const document = this._loadPublicationDocumentUseCase.execute(documentId, this._eventBus);
 	    this._loadedDocuments.set(documentId, document);
+	    // 0.2.20: a world streamed in this way is a published snapshot,
+	    // immutable until (and unless) an edit forks it — see
+	    // _ensureEditableSelection/_ensureEditableDocumentId — but only
+	    // when a real Publication can be resolved for it. In real
+	    // streaming usage (updateSpatialView) that is always true: a
+	    // documentId only becomes visible/loadable in the first place
+	    // because WorldLayoutProvider/discoveryProvider already know it
+	    // as published. Without a discoveryProvider wired at all, this
+	    // session has no way to tell a published world from any other
+	    // loaded document, so it does not claim to — exactly the same
+	    // "enforce only when we can" rule _checkForkPolicy already
+	    // follows for license checks.
+	    if (this._isKnownPublication(documentId)) {
+	        this._publishedDocumentIds.add(documentId);
+	    }
 	    if (!this._focusedDocumentId) {
 	        this._focusedDocumentId = documentId; // Set focus on first load
 	    }
@@ -920,14 +1152,28 @@ export class WorldNavigationSession {
 	    return history ? history.isDirty() : false;
 	}
 	saveDocument(documentId) {
-	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    const id = documentId || this._focusedDocumentId;
+	    // 0.2.20: defense in depth — every guarded mutation already forks
+	    // before marking a document dirty, so a still-published document
+	    // should never reach here with anything to save. Refuse rather
+	    // than silently persisting over the published source's storage
+	    // slot (see docs/Principles.md, "A published snapshot is never
+	    // mutated in place").
+	    if (this._publishedDocumentIds.has(id)) {
+	        throw new Error(`WorldNavigationSession: "${id}" is a published snapshot and cannot be saved directly — edit it to fork first`);
+	    }
+	    const doc = this.getDocument(id);
 	    if (!doc) throw new Error('no loaded document');
 	    this._saveDocumentUseCase.execute({ document: doc, state: { dirty: true }, markSaved: () => {} });
 	    const history = this._commandHistories.get(doc.world.id);
 	    if (history) history.markSaved();
 	}
 	publishDocument(documentId) {
-	    const doc = this.getDocument(documentId || this._focusedDocumentId);
+	    const id = documentId || this._focusedDocumentId;
+	    if (this._publishedDocumentIds.has(id)) {
+	        throw new Error(`WorldNavigationSession: "${id}" is already a published snapshot — fork it to publish an edited copy`);
+	    }
+	    const doc = this.getDocument(id);
 	    if (!doc) throw new Error('no loaded document');
 	    if (this.isDocumentDirty(doc.world.id)) this.saveDocument(doc.world.id);
 	    return this._publishDocumentUseCase.execute({ document: doc });
@@ -1003,6 +1249,7 @@ export class WorldNavigationSession {
 	pasteClipboard() {
 	    if (this._historyPreview && this._historyPreview.active) return false; // ADD THIS LINE
 	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
+	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc) return false;
 	    const buildingId = doc.world.getBuildings()[0]?.id;
@@ -1060,9 +1307,6 @@ export class WorldNavigationSession {
 	    this._focusedDocumentId = fork.world.id;
 	    return fork.world.id;
 	}
-	getRetiredHistories(documentId) {
-	    return this._retiredHistories ? (this._retiredHistories.get(documentId || this._focusedDocumentId) || []) : [];
-	}
 	// 1. Fix restoreHistoryAt (Update the fake documentManager to include load/state)
 	getGroups() {
 	    const doc = this.getDocument(this._focusedDocumentId);
@@ -1072,6 +1316,8 @@ export class WorldNavigationSession {
 	    return groups.map(g => ({ id: g.id, name: g.name, memberCount: g.memberCount || (g.brickIds ? g.brickIds.length : 0) }));
 	}
 	createGroupFromSelection(name) {
+	    this._ensureEditableSelection();
+	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc || this._spatialSelection.isEmpty) return null;
 	    const cmd = new CreateGroupCommand({ worldId: doc.world.id, brickIds: this._spatialSelection.brickIds, name });
@@ -1096,6 +1342,8 @@ export class WorldNavigationSession {
 	    return true;
 	}
 	addSelectionToSelectedGroup(groupId) {
+	    this._ensureEditableSelection();
+	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc || this._spatialSelection.isEmpty) return false;
 	    const cmd = new AddToGroupCommand({ worldId: doc.world.id, groupId, brickIds: this._spatialSelection.brickIds });
@@ -1103,6 +1351,8 @@ export class WorldNavigationSession {
 	    return true;
 	}
 	removeSelectionFromSelectedGroup(groupId) {
+	    this._ensureEditableSelection();
+	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc || this._spatialSelection.isEmpty) return false;
 	    const cmd = new RemoveFromGroupCommand({ worldId: doc.world.id, groupId, brickIds: this._spatialSelection.brickIds });
@@ -1110,12 +1360,14 @@ export class WorldNavigationSession {
 	    return true;
 	}
 	renameGroup(groupId, name) {
+	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc) return false;
 	    this._commandHistories.get(doc.world.id).execute(new RenameGroupCommand({ worldId: doc.world.id, groupId, name }));
 	    return true;
 	}
 	duplicateGroup(groupId) {
+	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc) return null;
 	    const cmd = new DuplicateGroupCommand({ worldId: doc.world.id, groupId });
@@ -1123,6 +1375,7 @@ export class WorldNavigationSession {
 	    return cmd.executedGroupId;
 	}
 	deleteGroup(groupId) {
+	    this._focusedDocumentId = this._ensureEditableDocumentId(this._focusedDocumentId);
 	    const doc = this.getDocument(this._focusedDocumentId);
 	    if (!doc) return false;
 	    this._commandHistories.get(doc.world.id).execute(new DeleteGroupCommand({ worldId: doc.world.id, groupId }));

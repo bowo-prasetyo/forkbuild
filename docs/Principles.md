@@ -333,3 +333,42 @@ and reported, never silently resolved by picking one side and
 discarding the evidence; whether a detected equivocation is tolerated
 or rejected is a TrustPolicy decision, made explicitly, not a side
 effect of whichever root a replica happened to load first.
+
+### A Published Snapshot Is Never Mutated In Place (0.2.20)
+
+A published World View is immutable; a World View SESSION is editable.
+Opening a published snapshot never makes the snapshot itself editable
+— the first mutation crosses the publication boundary and creates a
+new Document derived from that snapshot (Copy-on-Write / Fork-on-Edit).
+The mutation is applied only to the derived fork, lazily, on the first
+command that actually changes state — never on navigation, camera
+movement, selection, hover, or inspection, and never eagerly the
+moment a published world is opened.
+
+This is the same rule 0.2.8 already established for the Editor
+("A Publication is never edited") — extended to hold structurally, not
+merely by convention, inside the shared spatial World View, where a
+single session streams many worlds in and out and previously had no
+mechanism distinguishing "a world I may edit in place" from "a world I
+am only viewing."
+
+### Forking Creates Provenance, Not Publication (0.2.20)
+
+Forking a published world produces a new, independently-owned,
+editable Document — never a new Publication. A Publication is only
+created when that fork is explicitly published, exactly like every
+other editable Document in ForkBuild. Fork provenance (which document
+this one was derived from) and publication lineage (which publication
+that document's own later publish created) are recorded the same way
+0.1.24/0.2.8 already record them — parentDocumentId — not a second,
+parallel mechanism invented for this milestone.
+
+Ownership never bypasses this boundary: the original author editing
+their own already-published world is not a special case. A Publication
+represents a specific point in time; even its own author must fork to
+move past it, exactly as forking a Git commit does not rewrite it.
+
+Fork policy still governs whether the fork may happen at all (0.2.13):
+a license that forbids forking rejects the mutation outright, the same
+way the explicit "Fork" action already does — lazy fork-on-edit is not
+a second, laxer path around that policy.
