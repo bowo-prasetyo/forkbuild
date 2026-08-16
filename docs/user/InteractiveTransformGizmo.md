@@ -114,11 +114,23 @@ identical result (and an identical history entry) in both surfaces, and
 keyboard transforms (`R`, arrow keys) agree exactly with what a drag
 does: what you see while dragging is precisely what gets committed.
 
+## Snapping
+
+Drags snap by default — 1 World Unit for movement, 15° for rotation — the
+same increments keyboard nudging (`R`, arrow keys) uses, so a drag and a
+keyboard move land in exactly the same place. Hold **Shift** while dragging
+(or nudging) for **precision mode**: 0.1× the normal increment, for fine
+adjustments the default grid is too coarse for.
+
+The **numeric transform panel** and **alignment/distribution** are the
+exception on purpose — they always apply the exact value or exact geometric
+result you asked for, never snapped, since you already typed (or asked for)
+something precise.
+
 ## Not in there yet
 
 Deliberately — these are planned for upcoming milestones:
 
-- **Snapping & alignment guides** (0.1.47) — drags are free-form today.
 - **Scale handles** — the engine has no scale semantics yet; the gizmo
   will not pretend otherwise.
 - **Drag-duplicate** — hold a modifier and drag to copy, coming later.

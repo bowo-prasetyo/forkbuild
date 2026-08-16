@@ -24,6 +24,20 @@ every operation below by name.
 |---|---|
 | `Ctrl/Cmd+K` | Command Palette |
 
+## Discovery (World View)
+
+Not keyboard shortcuts, but the World View's own way of finding things — see
+[World View](03-WorldView.md#finding-worlds) for the full explanation.
+
+| Control | Action |
+|---|---|
+| Search panel, **Find** | Search publications by title/author, optionally within a radius of a coordinate |
+| **Explore Here** | Open the Explore Location dialog centered on the camera's current position |
+| **What's Here?** | Same, with a small fixed radius — "what's essentially right here" |
+| A result's **Focus** | Fly the camera there and make it the active (editing) document |
+| A result's **Select** | Make it the active document, without moving the camera |
+| A result's **Inspect** | Expand a read-only summary in place |
+
 ## Selection
 
 | Input | Action | Notes |
