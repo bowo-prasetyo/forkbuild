@@ -1057,3 +1057,48 @@ Automatic initial placement (`PlacePublicationUseCase` via
 places at the deterministic position 0.2.24 already specifies,
 overlapping or not, exactly as before. Only the EXPLICIT,
 interactively-confirmed move path gained a policy step.
+
+## World Navigation & Spatial Discovery UX (0.2.26)
+
+No new wire format — `Publication`, `PlacementRecord`, and
+`WorldPlacement` are all unchanged. Everything in this milestone is a
+READ-SIDE query over data 0.2.0–0.2.25 already define; nothing new is
+signed, persisted, or replicated.
+
+`SearchWorldUseCase` and `WorldNavigationSession.getDocumentsAtPosition`
+both produce a "World Directory" in the sense the design doc asked
+for — but only as a VIEW, computed fresh on every call from
+`discoveryProvider.list()` / `placementRegistry.list()`. There is no
+`WorldDirectory` type, no new storage key, and no synchronization
+concern, because there is nothing to keep in sync — the view is
+recomputed, not cached or maintained. This mirrors `SpatialOverlap`
+(0.2.25): a derived fact stays a derived fact; it does not graduate
+into a stored entity just because a UI wants to show it conveniently.
+
+Search matches on `Publication.title`/`Publication.author` — both
+already part of the 0.2.0/0.2.3 Publication schema, no field added.
+A result additionally reports whether a `PlacementRecord` exists for
+that publication (`hasPlacement`) — a read of existing 0.2.10 data,
+not a new signal. `getDocumentsAtPosition` is a plain, unfiltered
+`detectSpatialOverlap` (0.2.25) query — every current `PlacementRecord`
+at an exact position, resolved to its owning `Publication` for display.
+Neither method's result is ever written back anywhere; both are
+call-and-discard, like `checkPlacementOverlap` before them.
+
+Focus (`WorldNavigationSession.focusDocument`, unchanged since
+0.1.28/0.2.22) moves the camera and changes which document is locally
+active — pure client-side navigation state, never transmitted,
+signed, or replicated. A replica's choice of what its own user is
+currently looking at has no protocol-level meaning to any other
+replica, and this milestone does not give it one.
+
+Deliberately not addressed at the protocol level: any wire-visible
+"search index" or "directory manifest" (search is a local filter over
+already-replicated discovery data, not a new query protocol between
+replicas); and richer discovery diagnostics
+(`spatial/DiscoveryDiagnostics.js`, 0.2.19) reaching the live World
+View — that diagnostic surface belongs to
+`DecentralizedSpatialDiscoveryProvider`, which the live app does not
+yet wire in (see docs/Architecture.md) — so this milestone does not
+extend the protocol to carry diagnostic detail the running system
+cannot yet produce.

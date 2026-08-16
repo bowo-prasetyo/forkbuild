@@ -2313,3 +2313,122 @@ flow (the vocabulary exists and is tested, but nothing constructs a
 session with it); and touching `PlacePublicationUseCase`/
 `GridPlacementStrategy` at all — automatic placement's behavior is
 byte-identical to 0.2.24.
+
+### World Navigation & Spatial Discovery UX (0.2.26)
+
+0.2.23–0.2.25 made the World View correctly place, coordinate, and
+report overlap for publications. None of that was reachable except by
+already knowing where to look: the only way to find a document you
+didn't already have loaded or streamed nearby was the pre-existing
+"Nearby Worlds" list, which only shows what's within
+`STREAMING_RADIUS` of the camera right now. 0.2.26 adds the two things
+that were actually missing — search over the full discovery catalog,
+regardless of camera position, and a way to act on 0.2.25's overlap
+count instead of just seeing it — without touching the placement
+protocol, adding a new wire format, or building a directory as a
+second source of truth.
+
+    application/SearchWorldUseCase.js          WorldNavigationSession
+       "which publications match?"          .searchWorld/getDocumentsAtPosition
+              │                                    "enrich for the UI:
+              ▼                                     position, hasPlacement,
+      discoveryProvider.list()                      resolve documentId/title"
+      (same source every other                           │
+       discovery surface reads)                           ▼
+                                                    ui/components/
+                                              WorldSearchPanel.js
+                                              LocationDocumentsDialog.js
+
+- `application/SearchWorldUseCase.js` (new) — a case-insensitive
+  substring match against `title`/`author`, both already on every
+  `Publication`. `description` is deliberately NOT searched — it lives
+  on `DocumentMetadata`, only available once a candidate's full
+  snapshot is loaded, not on the lightweight `Publication` record
+  discovery deals in; searching it would mean loading every
+  candidate's content just to filter. No index is built or persisted —
+  every call re-filters `discoveryProvider.list()` fresh, the same
+  "computed, not stored" posture `SpatialOverlap` (0.2.25) already
+  established for derived facts (see docs/Principles.md, "Discovery Is
+  One Path, Not Two").
+- `WorldNavigationSession.searchWorld(query)` — wraps the use case
+  (optional collaborator, same "enforce/offer only when wired" rule
+  every other collaborator here follows) and enriches each match with
+  what a UI actually needs to act on it: `hasPlacement` (a real
+  `PlacementRecord` exists) and `position` (resolved either way — via
+  the explicit record, or `worldLayoutProvider.getPosition`'s
+  deterministic fallback, 0.2.24 — so Focus always has somewhere to
+  go). See docs/Principles.md, "Publication Found Is Not The Same As
+  Placement Found."
+- `WorldNavigationSession.getDocumentsAtPosition(position)` — the
+  actionable half of 0.2.25's passive `overlapCount`. Reuses
+  `detectSpatialOverlap` with NO `excludePlacementId` (unlike
+  `checkPlacementOverlap`, which excludes the placement being moved
+  because it's asking "would I collide with something else") — this
+  answers "what's actually here," the currently-inspected placement
+  included. Both methods now share `_describeSpatialOccupant`
+  (renamed from 0.2.25's `_describeOverlapOccupant`, and extended with
+  `documentId` so a result is directly focusable, not just
+  displayable).
+- Both are pure, read-only queries: neither loads a document, neither
+  touches `MoveWorldPlacementUseCase` or any fork-on-write guard.
+  `focusDocument` (pre-existing since 0.1.28/0.2.22) is what turns a
+  result into an actual camera move + active-document switch — 0.2.26
+  reuses it completely unchanged. See docs/Principles.md, "Focus Is
+  Navigation, Not Discovery — And Never Editing."
+
+UI:
+
+- `ui/components/WorldSearchPanel.js` (new) — a search box with an
+  explicit Find button (not live-as-you-type; matches the design doc's
+  own mockup and avoids debouncing complexity this milestone doesn't
+  need) and a results list in the same `.world-item` card language as
+  the pre-existing Nearby/Loaded Worlds lists, so search results read
+  as one family with them rather than a visually separate feature.
+  A result with `hasPlacement: false` shows a small note rather than
+  presenting a fallback position as if it were authored.
+- `ui/components/LocationDocumentsDialog.js` (new) — opened from
+  `PlacementInfoPanel`'s overlap notice (which gained a `view-here`
+  emit), lists every publication `getDocumentsAtPosition` found with a
+  Focus button each. An editing fork never appears in this list — see
+  `getDocumentsAtPosition`'s own comment for why that's a deliberate
+  boundary, not an oversight.
+- `ui/views/WorldView.js` — wires both: a new "Search" section in the
+  existing sidebar section stack (above "Unavailable"/"Worlds in
+  View"/"Nearby Worlds"), and `openLocationDocuments`/
+  `closeLocationDocuments`/`focusLocationDocument` alongside the
+  existing dialog-management functions. `catalogEmpty` (from
+  `allPublications`, already loaded for the Nearby/Loaded lists) lets
+  the search panel distinguish "nothing published at all" from "this
+  query matched nothing" without a new session method.
+
+Deliberately not in 0.2.26:
+
+- **Full camera/active-document/selection separation.** The design
+  doc's `_focusedDocumentId` is still exactly what it was before this
+  milestone: BOTH the camera's navigation target AND the "active
+  document" `getActiveDocumentId()` returns. Splitting these into
+  three independently-tracked concepts (camera focus, active document,
+  selection) touches roughly thirty call sites across this file and is
+  a genuine architectural change, not a navigation-UX addition — it is
+  real future work, not attempted here. What 0.2.26 DOES establish is
+  that Focus never implies edit, which is the behavioral guarantee
+  that actually mattered for this milestone's goal.
+- **Wiring `DecentralizedSpatialDiscoveryProvider`/`DiscoveryDiagnostics`
+  into the live World View.** `CreateWorldViewUseCase` still wires the
+  plain `LocalWorldLayoutProvider`/`LocalSpatialIndexProvider` pair;
+  the richer decentralized provider (0.2.15/0.2.19, with manifest/
+  equivocation/staleness diagnostics) remains built, tested, and used
+  only by other surfaces (see docs/Principles.md, "Diagnostics Should
+  Say What Is Actually True, Not What Would Be Convenient," for why
+  0.2.26 does not fabricate that diagnostic detail for a stack that
+  cannot actually produce it).
+- **A "click anywhere in the world to see what's there" location
+  browser.** `LocationDocumentsDialog` is reachable from
+  `PlacementInfoPanel`'s overlap notice — a real, already-selected
+  position — not from picking an arbitrary point in empty space, which
+  would need new raycast/picking wiring this milestone doesn't need to
+  build to deliver its actual goal.
+- **Description search, live-as-you-type search, and any new wire
+  format.** None of `PlacementRecord`/`WorldPlacement`/`Publication`
+  changed shape; search and "documents here" are both purely additive,
+  read-side queries over what 0.2.10–0.2.25 already persist.

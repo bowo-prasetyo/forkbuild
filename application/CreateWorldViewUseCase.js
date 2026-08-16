@@ -19,6 +19,7 @@ import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
+import { SearchWorldUseCase } from './SearchWorldUseCase.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -91,6 +92,11 @@ export class CreateWorldViewUseCase {
             replayDocumentUseCase
         );
         const documentCloneService = new DocumentCloneService();
+        // 0.2.26: search runs over the SAME discoveryProvider every
+        // other discovery-driven surface (Repository/Author views,
+        // fork-policy checks) already reads — see
+        // docs/Principles.md, "Discovery Is One Path, Not Two."
+        const searchWorldUseCase = new SearchWorldUseCase(discoveryProvider);
 
         return {
             createSession(registry) {
@@ -115,7 +121,10 @@ export class CreateWorldViewUseCase {
                     // the document itself; see getPlacementInfo/
                     // movePlacement.
                     placementRegistry,
-                    moveWorldPlacementUseCase
+                    moveWorldPlacementUseCase,
+                    // 0.2.26: search/navigation — see searchWorld/
+                    // getDocumentsAtPosition.
+                    searchWorldUseCase
                 });
             },
             // Expose the spatial index and content store so the application
