@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.23** — World Placement & Spatial Positioning
+**Version 0.2.24** — World Coordinate Semantics & Placement UX
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -32,9 +32,17 @@ every subsequent edit is silently landing on the fork underneath it.
 architecture: publishing now creates an explicit, ownable, revisioned
 Placement — separate from the document's title/description/license —
 and the World View can show and move it without ever forking or
-editing the document it points to. See
-[docs/Architecture.md](docs/Architecture.md) for the full write-up of
-each milestone.
+editing the document it points to. 0.2.24 formalizes the coordinate
+system that placement runs on: a document's own content and a
+placement's position are two coordinate systems that compose by
+addition, never one; positions the system stores are always absolute,
+even when chosen or nudged relatively; and initial placement is now a
+pure function of a publication's own id instead of how many other
+publications the local node happened to already know about — the
+difference between "the same publication lands at the same coordinate
+on every replica" actually holding and merely looking like it did in
+single-node testing. See [docs/Architecture.md](docs/Architecture.md)
+for the full write-up of each milestone.
 
 ## Features
 
@@ -62,6 +70,7 @@ each milestone.
 - **Document Lifecycle & Metadata UI (0.2.21)** — a Document Properties editor (title/description/license) and a shared Document Info panel across the Editor and World View, showing computed lifecycle status (Draft/Saved/Published) and fork lineage; publishing now validates a title and non-empty content before creating anything immutable; a blocked or about-to-fork edit is explained in plain language, proactively and reactively, instead of failing silently.
 - **Fork Transition & World View Document Switching (0.2.22)** — the moment fork-on-edit creates a fork, the World View's title, status badge ("🔒 Published" / "✎ Editing fork — forked from …"), and browser route atomically switch to it, re-derived from the session's active document on every interaction rather than a value frozen at page load; camera and scene position are untouched, only document identity changes; a denied fork leaves everything pointed at the source.
 - **World Placement & Spatial Positioning (0.2.23)** — publishing now creates an explicit, signed, revisioned Placement (position/rotation/scale) kept entirely separate from the document's title/description/license; a Placement panel shows position/revision/owner with Focus/Move controls, and moving a placement never edits or forks the document it points to — a still-published, un-forked world can be repositioned exactly as freely as a fork can.
+- **World Coordinate Semantics & Placement UX (0.2.24)** — a document's own content and a placement's position are now an explicit, documented contract (canonical origin, right-handed axes, a named "World Unit" that deliberately does not claim to be a meter); initial placement is a pure, deterministic function of a publication's own id instead of a locally-observed publication count, so the same publication lands at the same coordinate on every replica; the Move Placement dialog gains relative nudge buttons as a convenience over the same absolute, persisted position.
   
 ## Architecture
 
@@ -150,8 +159,9 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.21  Document Lifecycle & Metadata UI
 - [x] 0.2.22  Fork Transition & World View Document Switching
 - [x] 0.2.23  World Placement & Spatial Positioning
+- [x] 0.2.24  World Coordinate Semantics & Placement UX
     
-Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
+Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Spatial allocation/collision policy (deterministic but not yet collision-free placement) is similarly deferred until real usage shows it's actually needed — see docs/Roadmap.md.
 
 ## License
 

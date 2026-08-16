@@ -77,12 +77,23 @@
 0.2.21  Document Lifecycle & Metadata UI               ✓
 0.2.22  Fork Transition & World View Document Switching ✓
 0.2.23  World Placement & Spatial Positioning           ✓
+0.2.24  World Coordinate Semantics & Placement UX       ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
 flat-group model is sufficient for the current editing architecture. If
 a real use case eventually demands nesting, it becomes its own
 architectural milestone — not an implicit next step.
+
+Spatial allocation / collision policy — how multiple publications
+should occupy shared world space without deterministic placement
+collisions — remains OPTIONAL and is not put back on the roadmap yet.
+0.2.24 deliberately made initial placement deterministic (same
+publication -> same coordinate, everywhere) without making it
+collision-free (two different publications can still hash to the same
+grid cell). If real usage shows that colliding is actually a problem
+worth solving, it becomes its own milestone with its own design —
+not an incremental patch onto GridPlacementStrategy.
 
 ## 0.1.50 — What shipped
 

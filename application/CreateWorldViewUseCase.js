@@ -68,7 +68,7 @@ export class CreateWorldViewUseCase {
             null,
             identityProvider
         );
-        const initialPlacementStrategy = new GridPlacementStrategy(discoveryProvider);
+        const initialPlacementStrategy = new GridPlacementStrategy();
 
         // 0.2.14: Inject the contentStore into the publisher
         const publisherProvider = new LocalPublisherProvider(storageProvider, contentStore);

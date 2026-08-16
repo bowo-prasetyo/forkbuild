@@ -28,6 +28,16 @@ export class Position {
         return new Position(this._x, this._y, this._z);
     }
 
+    // 0.2.24: componentwise addition — the primitive behind "document-
+    // local position + WorldPlacement position = effective world
+    // position" (see core/WorldPlacement.js#effectiveWorldPosition).
+    // Accepts any {x,y,z}-shaped value, not just a Position instance,
+    // so it composes with WorldPosition/plain JSON without a
+    // conversion step at every call site.
+    add(other) {
+        return new Position(this._x + other.x, this._y + other.y, this._z + other.z);
+    }
+
     toJSON() {
         return { x: this._x, y: this._y, z: this._z };
     }
