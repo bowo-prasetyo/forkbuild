@@ -934,7 +934,15 @@ export class WorldNavigationSession {
         const fork = this._documentCloneService.execute(sourceDoc, {
             title: `Fork of ${sourceDoc.metadata.title || 'Untitled'}`,
             author: user ? user.username : null,
-            parentDocumentId: sourceDoc.world.id
+            parentDocumentId: sourceDoc.world.id,
+            // Hardening (post-0.2.22): without this, the fork's bricks have no wired
+            // eventBus, so every mutation after this one updates the
+            // domain model correctly but never tells the renderer —
+            // the mesh freezes wherever addWorld first placed it. Same
+            // bus _loadWorld already passes to loadPublicationDocumentUseCase
+            // for the source, and the one the active WorldRenderer
+            // subscribed to in start().
+            eventBus: this._eventBus
         });
         const forkId = fork.world.id;
 
@@ -1467,7 +1475,7 @@ export class WorldNavigationSession {
 	cloneDocument(documentId) {
 	    const doc = this.getDocument(documentId || this._focusedDocumentId);
 	    if (!doc) throw new Error('no loaded document');
-	    const clone = this._documentCloneService.execute(doc);
+	    const clone = this._documentCloneService.execute(doc, { eventBus: this._eventBus });
 	    this._loadedDocuments.set(clone.world.id, clone);
 	    
 	    const history = new CommandHistory({ world: clone.world });
@@ -1485,7 +1493,8 @@ export class WorldNavigationSession {
 	    const fork = this._documentCloneService.execute(doc, {
 	        title: `Fork of ${doc.metadata.title || 'Untitled'}`,
 	        author: user ? user.username : null,
-	        parentDocumentId: doc.world.id
+	        parentDocumentId: doc.world.id,
+	        eventBus: this._eventBus
 	    });
 	    this._loadedDocuments.set(fork.world.id, fork);
 	    const history = new CommandHistory({ world: fork.world });
