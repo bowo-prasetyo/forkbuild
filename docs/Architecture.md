@@ -1895,3 +1895,37 @@ minimal `{ add, remove }` low-level renderer (real Three.js meshes, no
 WebGL/browser needed) — so a mesh's actual position can be asserted
 after a fork, a second mutation on the same fork, and a brick add/
 remove, the same way the deployed viewport would show them.
+
+#### Further hardening: World View had a fork it could edit but never persist
+
+`WorldNavigationSession.saveDocument`/`publishDocument` have existed
+since 0.2.20 (defense in depth against saving/publishing a
+still-published id; `publishDocument` already auto-saves a dirty
+document before publishing) and are already exercised end-to-end by
+`tests/ForkOnEdit.test.js`'s flagship scenario. Nothing in
+`ui/views/WorldView.js` ever called them — the Editor has always had
+`ui/components/Toolbar.js` for Save/Publish/New; World View never
+received an equivalent, because before 0.2.20 there was nothing in
+World View TO save (published worlds were read-only, full stop). Once
+fork-on-edit made real, persistent editing possible, the missing
+button became a dead end: a user could fork, move bricks, place new
+ones, rotate — and every bit of it lived only in
+`WorldNavigationSession._loadedDocuments`, gone on the next reload,
+with no way to ever get it into storage or publish it.
+
+Fixed with two buttons next to the header's status badge (`world-view-
+actions`) — Save and Publish, shown whenever `activeDocumentInfo.
+editable` is true (i.e. never on a still-published snapshot, where
+both would just throw the existing defense-in-depth error) — calling
+`session.saveDocument(activeDocumentInfo.documentId)` /
+`session.publishDocument(...)` through the same `guarded()` wrapper
+and `ActionFeedback` toast every other World View action already
+uses. Deliberately bound to `activeDocumentInfo` (the header's
+document), not the selection-scoped `documentInfo` the inspection
+panel and Document Properties editor use — "save the document I'm
+editing" means the ACTIVE document specifically, and the two states,
+while normally in agreement, are not the same field. No new
+application-layer code: this exposes already-correct, already-tested
+session methods that had no caller in this surface, the same class of
+gap as the render-sync fix above, just one layer higher (persistence
+instead of rendering).
