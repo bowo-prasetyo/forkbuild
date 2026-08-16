@@ -16,7 +16,7 @@ export default {
                 publishing systems.
             </p>
             <p>
-                <a href="README.md" target="_blank" rel="noopener">Project README</a>
+                <a href="https://github.com/bowo-prasetyo/forkbuild/blob/main/README.md" target="_blank" rel="noopener">Project README</a>
                 — architecture, milestone history, and what's shipped so far.
             </p>
             <p>
