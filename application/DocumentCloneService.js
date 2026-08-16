@@ -17,7 +17,23 @@ import { World } from '../core/World.js';
 // place. Lineage is recorded via parentDocumentId by default; pass
 // parentDocumentId: null explicitly to create an unlinked copy.
 export class DocumentCloneService {
-    execute(sourceDocument, { title = null, description = undefined, author = undefined, parentDocumentId = undefined, license = undefined } = {}) {
+    // Hardening (post-0.2.22): `eventBus` — pass the LIVE session's event bus (the same
+    // one the active WorldRenderer/EditorSession already subscribed
+    // to) so the clone's bricks stay wired for live rendering. Without
+    // it, World.fromJSON builds bricks with no eventBus at all, so any
+    // later mutation (moveSelection, rotate, ...) never publishes a
+    // BRICK_UPDATED event — the domain model updates correctly, but no
+    // renderer ever hears about it, and the mesh freezes at wherever
+    // addWorld first placed it. EditorSession's own openDocument() has
+    // always re-hydrated a fork/duplicate with a fresh eventBus before
+    // handing it to the renderer for exactly this reason; World View's
+    // fork-on-edit (WorldNavigationSession._forkForEdit) hands this
+    // method's result straight to the renderer with no such rebuild
+    // step, so it — not the caller — has to be the one that wires it
+    // correctly. Defaults to null (no live updates) so callers that
+    // genuinely don't have a session-level bus yet (e.g. a document
+    // about to be serialized straight back to storage) are unaffected.
+    execute(sourceDocument, { title = null, description = undefined, author = undefined, parentDocumentId = undefined, license = undefined, eventBus = null } = {}) {
         if (!sourceDocument) throw new Error('DocumentCloneService: no source document');
 
         const worldJson = sourceDocument.world.toJSON();
@@ -28,7 +44,7 @@ export class DocumentCloneService {
                 delete brickJson.id;
             }
         }
-        const clonedWorld = World.fromJSON(worldJson);
+        const clonedWorld = World.fromJSON(worldJson, eventBus);
         const sourceTitle = sourceDocument.metadata.title || 'Untitled';
 
         // Determine license: explicit option > source license > default

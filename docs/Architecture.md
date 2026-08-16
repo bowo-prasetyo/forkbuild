@@ -1848,3 +1848,50 @@ change to the fork MECHANISM itself (positional remap, fork policy,
 streaming pin, gizmo hit-test gating) — all of that was already
 correct as of the 0.2.20 hardening pass; 0.2.22 is purely about making
 an already-correct internal state visible.
+
+#### Further hardening: a fork must render live, not just once
+
+0.2.22's title/route fix made it possible to actually SEE which
+document was active — which is what surfaced a real, independent bug
+the 0.2.20 hardening pass had missed: a fork's brick MESH froze at
+wherever it was placed the instant the fork was created, and never
+updated again for the rest of the session, however many further edits
+were applied to it. The domain model was correct the whole time (the
+brick's stored position genuinely advanced); nothing ever told the
+renderer.
+
+The cause: `DocumentCloneService.execute()` rebuilds the cloned World
+via `World.fromJSON(worldJson)` with no `eventBus` argument. A Brick
+with no eventBus never publishes `BRICK_UPDATED`/`BRICK_ADDED`/
+`BRICK_REMOVED` when mutated, so `WorldRenderer` — subscribed to the
+session's OWN eventBus in `start()` — never hears about it.
+`WorldNavigationSession._loadWorld` already passes `this._eventBus`
+into `loadPublicationDocumentUseCase.execute(documentId, this._eventBus)`
+for the SOURCE document (so a published world's rendering wiring was
+always correct — moot, since it's never mutated in place); `_forkForEdit`
+never made the equivalent connection for the fork it hands the renderer
+straight to. `EditorSession.openDocument()` had always avoided this
+same trap by rebuilding the world with a fresh eventBus itself before
+handing it to the renderer (`ui/views/EditorView.js`'s explicit-fork
+flow, `route.query.fork`) — World View's lazy fork-on-edit had no
+equivalent rebuild step, so the gap that method's caller papered over
+was exposed here.
+
+Fixed at the source: `DocumentCloneService.execute()` now accepts an
+`eventBus` option and threads it into `World.fromJSON(worldJson,
+eventBus)`; `_forkForEdit` (and, for consistency, the pre-existing
+`forkDocument`/`cloneDocument` methods) pass `this._eventBus` — the
+exact bus `_loadWorld` already uses and the active `WorldRenderer`
+already subscribed to. One clone mechanism, one place a caller that
+needs live rendering asks for it, rather than every caller
+individually remembering to rebuild the world afterward.
+
+`tests/ForkOnEdit.test.js` and `tests/ForkTransition.test.js` could not
+have caught this: both use a duck-typed stub renderer with no mesh and
+no event subscription, correct for testing session/document logic but
+structurally blind to a rendering-wiring gap. `tests/ForkRenderSync.test.js`
+adds a third kind of test double — a REAL `WorldRenderer` backed by a
+minimal `{ add, remove }` low-level renderer (real Three.js meshes, no
+WebGL/browser needed) — so a mesh's actual position can be asserted
+after a fork, a second mutation on the same fork, and a brick add/
+remove, the same way the deployed viewport would show them.
