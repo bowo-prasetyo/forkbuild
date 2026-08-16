@@ -15,8 +15,22 @@ import PlacementInfoPanel from '../components/PlacementInfoPanel.js';
 import PlacementEditorDialog from '../components/PlacementEditorDialog.js';
 import WorldSearchPanel from '../components/WorldSearchPanel.js';
 import LocationDocumentsDialog from '../components/LocationDocumentsDialog.js';
+import WorldLocationBrowser from '../components/WorldLocationBrowser.js';
 
 const DRAG_THRESHOLD_PX = 6;
+
+// 0.2.29 — UI-only display defaults for the World Location Browser's
+// initial radius, purely so "Explore Here"/"What's Here?" have a
+// number to show before the user picks their own. These intentionally
+// mirror application/WorldNavigationSession.js's own
+// DEFAULT_EXPLORE_RADIUS/NEARBY_RADIUS constants, but the mirroring is
+// cosmetic, not load-bearing: the actual radius used for every query
+// is whatever session.exploreHere()/whatsHere() decide (or, after a
+// re-query, whatever the browser dialog's own field holds) — this
+// file never computes a distance or decides what counts as "nearby"
+// itself.
+const DEFAULT_EXPLORE_RADIUS = 25;
+const NEARBY_RADIUS = 5;
 
 // 0.1.50: the World View joins the consolidated command surface.
 // Editing shortcuts now come from the SAME EditorActionRegistry the
@@ -30,7 +44,7 @@ export default {
         EditingSidebar, CommandPalette, ActionFeedback,
         DocumentInfoPanel, MetadataEditorDialog,
         PlacementInfoPanel, PlacementEditorDialog,
-        WorldSearchPanel, LocationDocumentsDialog
+        WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser
     },
     setup() {
         const route = useRoute();
@@ -97,6 +111,19 @@ export default {
         const showLocationDocuments = ref(false);
         const locationDocumentsPosition = ref(null);
         const locationDocumentsOccupants = ref([]);
+        // 0.2.29: World Location Browser — camera-driven exploration,
+        // built on top of the SAME searchWorld/exploreLocation results
+        // as the Search panel (see WorldNavigationSession's "World
+        // Location Browser" section). `locationBrowserInspected` mirrors
+        // the shape session.inspectDocument() returns and is cleared on
+        // every open/re-query, since an expansion from a previous query
+        // has nothing guaranteed to still correspond to a row in a new
+        // result set.
+        const showLocationBrowser = ref(false);
+        const locationBrowserCenter = ref(null);
+        const locationBrowserRadius = ref(DEFAULT_EXPLORE_RADIUS);
+        const locationBrowserResults = ref([]);
+        const locationBrowserInspected = ref(null);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
         const cameraPosition = ref(null);
@@ -610,6 +637,104 @@ export default {
         }
 
         // -----------------------------------------------------------------
+        // 0.2.29: World Location Browser — "Explore Here" / "What's Here?"
+        // -----------------------------------------------------------------
+
+        // Shared open logic: both entry points differ only in which
+        // session method resolves the initial results (and thus the
+        // radius they imply) — everything else about opening the
+        // dialog is identical.
+        function openLocationBrowser(radius, results) {
+            locationBrowserCenter.value = cameraPosition.value;
+            locationBrowserRadius.value = radius;
+            locationBrowserResults.value = results || [];
+            locationBrowserInspected.value = null;
+            showLocationBrowser.value = true;
+        }
+
+        // "Explore Here" — center is the CAMERA's current world
+        // position, deliberately NOT the active document's placement
+        // (see docs/Principles.md, "Camera Focus, Active Document, and
+        // Selection Are Three Different Things," 0.2.27): the camera
+        // can be looking at empty space between two documents, with no
+        // active document at all, and exploring there should still
+        // work. session.exploreHere() reads the camera position itself
+        // — cameraPosition.value here is only for the dialog's own
+        // display, already kept in sync by refreshSpatialUI.
+        function exploreHere() {
+            if (!cameraPosition.value) return;
+            const results = guarded(() => session.exploreHere(DEFAULT_EXPLORE_RADIUS)) || [];
+            openLocationBrowser(DEFAULT_EXPLORE_RADIUS, results);
+        }
+
+        // "What's Here?" — same camera-position center, a small
+        // tolerance radius instead of a chosen one. See
+        // WorldNavigationSession.whatsHere's own comment for why this
+        // is a small-radius query rather than getDocumentsAtPosition's
+        // exact-match test: camera coordinates are continuous and
+        // essentially never land exactly on a recorded placement.
+        function whatsHere() {
+            if (!cameraPosition.value) return;
+            const results = guarded(() => session.whatsHere()) || [];
+            openLocationBrowser(NEARBY_RADIUS, results);
+        }
+
+        // The dialog's own "Explore" button — re-query the SAME center
+        // at a newly chosen radius. Any previously expanded Inspect
+        // panel is cleared (openLocationBrowser already does this) —
+        // it belonged to the old result set, not necessarily the new
+        // one.
+        function reExploreLocationBrowser(radius) {
+            if (!locationBrowserCenter.value) return;
+            const results = guarded(() => session.exploreLocation({
+                center: locationBrowserCenter.value,
+                radius
+            })) || [];
+            openLocationBrowser(radius, results);
+        }
+
+        function closeLocationBrowser() {
+            showLocationBrowser.value = false;
+            locationBrowserCenter.value = null;
+            locationBrowserResults.value = [];
+            locationBrowserInspected.value = null;
+        }
+
+        // Focus — existing focusDocument default behavior (moves the
+        // camera, and by default makes the document active too). Closes
+        // the browser: the camera is about to move away from the
+        // location it was showing, same as LocationDocumentsDialog's
+        // own focus-then-close.
+        function focusLocationBrowserResult(documentId) {
+            focusWorld(documentId);
+            closeLocationBrowser();
+        }
+
+        // Select — WorldNavigationSession.setActiveDocument: makes the
+        // result the active/editing-target document per 0.2.27's rules,
+        // WITHOUT moving the camera. The dialog stays open — unlike
+        // Focus, nothing about the current view changes, so there's no
+        // reason to stop browsing the same location.
+        function selectLocationBrowserResult(documentId) {
+            guarded(() => session.setActiveDocument(documentId));
+            refreshSpatialUI();
+        }
+
+        // Inspect — toggle: clicking the currently-expanded result's
+        // Inspect/Hide button again collapses it instead of re-fetching.
+        // Never navigates, never loads the document — see
+        // WorldNavigationSession.inspectDocument's own comment for why
+        // documentInfo may come back null here.
+        function inspectLocationBrowserResult(documentId) {
+            if (locationBrowserInspected.value && locationBrowserInspected.value.documentId === documentId) {
+                locationBrowserInspected.value = null;
+                return;
+            }
+            locationBrowserInspected.value = guarded(() => session.inspectDocument(documentId))
+                || { documentId, documentInfo: null, placementInfo: null };
+        }
+
+        // -----------------------------------------------------------------
         // Pointer interaction (gizmo-first, unchanged since 0.1.46)
         // -----------------------------------------------------------------
 
@@ -777,6 +902,18 @@ export default {
             openLocationDocuments,
             closeLocationDocuments,
             focusLocationDocument,
+            showLocationBrowser,
+            locationBrowserCenter,
+            locationBrowserRadius,
+            locationBrowserResults,
+            locationBrowserInspected,
+            exploreHere,
+            whatsHere,
+            reExploreLocationBrowser,
+            closeLocationBrowser,
+            focusLocationBrowserResult,
+            selectLocationBrowserResult,
+            inspectLocationBrowserResult,
             spatialEditingContext,
             spatialPlacement,
             cameraPosition,
@@ -846,6 +983,16 @@ export default {
                 <p v-if="cameraPosition" class="world-view-coords">
                     Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
+                <!-- 0.2.29: browse the world by camera position, without
+                     already knowing a document's name or typing raw
+                     coordinates — see docs/Principles.md, "Exploring A
+                     Location Is Not A Second Search." Explore Here uses
+                     a configurable neighborhood; What's Here? uses a
+                     small fixed tolerance for "essentially right here." -->
+                <div v-if="cameraPosition" class="world-view-actions world-view-actions--explore">
+                    <button class="action-btn" @click="exploreHere">Explore Here</button>
+                    <button class="action-btn" @click="whatsHere">What's Here?</button>
+                </div>
                 <p class="world-view-hint">
                     Drag to orbit • Scroll to zoom • Home to reset • Ctrl/Cmd+K command palette • Click to inspect / place
                 </p>
@@ -1097,6 +1244,19 @@ export default {
                 :occupants="locationDocumentsOccupants"
                 @focus="focusLocationDocument"
                 @cancel="closeLocationDocuments"
+            />
+            <WorldLocationBrowser
+                v-if="showLocationBrowser"
+                :center="locationBrowserCenter"
+                :radius="locationBrowserRadius"
+                :results="locationBrowserResults"
+                :inspected="locationBrowserInspected"
+                :catalog-empty="catalogEmpty"
+                @explore="reExploreLocationBrowser"
+                @focus="focusLocationBrowserResult"
+                @select="selectLocationBrowserResult"
+                @inspect="inspectLocationBrowserResult"
+                @cancel="closeLocationBrowser"
             />
         </div>
     `

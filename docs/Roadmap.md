@@ -82,6 +82,7 @@
 0.2.26  World Navigation & Spatial Discovery UX         ✓
 0.2.27  World View Context & Selection Model            ✓
 0.2.28  Spatial Query & Location Discovery               ✓
+0.2.29  World Location Browser & Spatial Exploration     ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -129,12 +130,12 @@ listed here as deferred, shipped in 0.2.27 — see docs/Architecture.md,
 0.2.27.
 
 A UI affordance for setting the active document WITHOUT moving the
-camera (0.2.27 added the session-layer capability —
-`setActiveDocument` — but search results, Nearby Worlds, and Documents
-Here still only offer "Focus," which moves both) remains OPTIONAL and
-unscheduled. It becomes worth building once browsing several
-co-located documents without constantly re-centering the camera is a
-demonstrated, not merely theoretical, need.
+camera, previously listed here as deferred, shipped in 0.2.29: the
+World Location Browser's "Select" action calls `setActiveDocument`
+directly. Search results, Nearby Worlds, and Documents Here still only
+offer "Focus" (moves both) — extending Select to those surfaces too
+remains OPTIONAL and unscheduled, worth doing once it's a demonstrated
+rather than theoretical need.
 
 Wiring a decentralized backend (spatial cells → `SpatialIndexRoot` →
 `SpatialIndexManifest` → `PlacementRecord`s) underneath
@@ -148,13 +149,28 @@ Geometric (bounding-box/polygon) spatial queries and nearest-neighbor
 indexing similarly remain OPTIONAL — 0.2.28 is a plain Euclidean
 sphere, exactly what was asked for, on purpose.
 
-**0.2.29 — World Location Browser & Spatial Exploration** (proposed,
-not started): clicking or browsing a region of the world, seeing every
-publication occupying or intersecting it, sorting by distance, and
-combining spatial + textual filters interactively — the natural next
-step once coordinate + radius search (0.2.28) and the Camera/Active-
-document separation (0.2.27) are both in place. Not committed to the
-roadmap as a numbered milestone until its own design pass happens.
+Box selection in world space, sphere visualization with collision
+geometry, polygon regions, "all documents intersecting this building,"
+and spatial clustering — all considered and explicitly deferred during
+0.2.29's design — remain OPTIONAL and unscheduled. The World Location
+Browser (0.2.29) is a distance-ordered list of discoverable documents,
+nothing more; any of these would be a real, separate geometry feature
+built on top of it, not an extension of the list itself.
+
+**Spatial streaming/index integration** (proposed, not started):
+replacing the local-cache-based discovery path every World View
+surface currently reads from — text search (0.2.26), spatial query
+(0.2.28), and the location browser (0.2.29) all still wire the plain
+`LocalWorldLayoutProvider`/`LocalDiscoveryProvider` — with the
+already-designed decentralized spatial index
+(`SpatialIndexRoot`/`SpatialIndexManifest`), including 0.2.19's trust
+diagnostics (equivocation/staleness/manifest-availability). This is a
+substantially bigger step than any single 0.2.2x World View milestone:
+it finally connects the sophisticated trust/replication/index
+architecture built in 0.2.15–0.2.19 to the everyday World View
+experience, rather than that architecture existing mostly in the
+backend and test suite. Not committed to the roadmap as a numbered
+milestone until its own design pass happens.
 
 ## 0.1.50 — What shipped
 

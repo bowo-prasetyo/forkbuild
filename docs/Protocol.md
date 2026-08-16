@@ -1174,3 +1174,34 @@ lookup already had. Swapping the concrete provider later changes
 nothing about `searchWorld`'s call shape or its result shape — only
 how thoroughly, and from how many replicas' knowledge, the answer was
 actually assembled.
+
+## World Location Browser & Spatial Exploration (0.2.29)
+
+No wire format touched. `exploreLocation`/`exploreHere`/`whatsHere`
+are thin, purely local wrappers over `searchWorldByLocation` (0.2.28,
+itself unchanged this milestone) — nothing new is signed, persisted,
+or replicated. The camera position `exploreHere`/`whatsHere` read from
+is the same purely local, in-memory `SpatialCameraState` 0.2.27 already
+established as never transmitted; a location-browser query center is
+exactly as local as the "Camera:" line in the World View header.
+
+`inspectDocument` reads `getDocumentInfo`/`getPlacementInfo` as-is —
+neither gains a new field, and inspecting a result never issues a
+network/discovery request beyond what those two methods already do
+(getPlacementInfo consults the local `PlacementRegistry`;
+getDocumentInfo consults only documents already loaded in this
+session). Focus and Select act through `focusDocument`/
+`setActiveDocument`, both pre-existing local session operations
+(0.2.20/0.2.27) — browsing a location and then acting on a result
+produces no protocol traffic of its own; only an actual subsequent
+edit, save, or publish would, exactly as before this milestone.
+
+0.2.28's contract — a coordinate+radius query means "everything
+discoverable within that region via the configured discovery
+provider," not merely a local cache scan — is inherited unchanged: the
+location browser is a new way to ASK that same question, not a
+different question with looser semantics. The decentralized spatial
+index (`SpatialIndexRoot`/`SpatialIndexManifest`, 0.2.19's trust
+diagnostics) remains the eventual backend for this same contract and
+is still not wired up — see docs/Roadmap.md for "spatial streaming/
+index integration" as a proposed future milestone.

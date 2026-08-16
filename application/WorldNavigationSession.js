@@ -33,6 +33,21 @@ const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
 const RETRY_DELAYS = [2000, 5000, 10000];
 
+// 0.2.29 — defaults for the two location-browser entry points.
+// DEFAULT_EXPLORE_RADIUS matches the design doc's own example ("radius
+// 25 of (100, 50, 250)") — a reasonable starting neighborhood to look
+// around the camera without the caller having to pick a number first.
+// NEARBY_RADIUS is deliberately much smaller: "What's Here?" reads as
+// an exact-location query, but the camera's world position is
+// continuous and essentially never lands exactly on a recorded
+// PlacementRecord's position — not even immediately after Focus, whose
+// orbit-style framing (SpatialCameraController) parks the camera a
+// fixed offset away from the target, never on top of it. A small
+// tolerance radius is what makes "What's here?" answerable at all from
+// camera position; see exploreHere/whatsHere below.
+const DEFAULT_EXPLORE_RADIUS = 25;
+const NEARBY_RADIUS = 5;
+
 // 0.1.46: gizmo wiring. 0.1.47: precision + modifier plumbing + gesture
 // feedback; keyboard transforms route through the gesture transaction.
 // 0.1.48: alignSelection/distributeSelection. 0.1.49:
@@ -1178,6 +1193,91 @@ export class WorldNavigationSession {
             hasPlacement: !!explicit,
             position,
             distance: (center && position) ? distanceBetween(position, center) : null
+        };
+    }
+
+    // -----------------------------------------------------------------
+    // World Location Browser (0.2.29)
+    //
+    // Lets a person explore a region of the world directly — by camera
+    // position — instead of requiring they already know a document's
+    // name or manually type coordinates into the Search panel. This is
+    // deliberately NOT a second discovery mechanism: every method here
+    // is a thin wrapper over searchWorldByLocation/searchWorld (0.2.28),
+    // so there remains exactly one path — text/spatial query ->
+    // discoveryProvider -> position enrichment -> distance/radius test
+    // — and the location browser just gives it a camera-driven entry
+    // point and a couple of read-only conveniences on top. Nothing in
+    // this section moves a placement, edits a document, forks anything,
+    // or publishes — it only ever looks (see docs/Principles.md,
+    // "Navigation Never Implies Editing," 0.2.27, which this section
+    // extends to exploration as well as to focus/select).
+    // -----------------------------------------------------------------
+
+    // Explicit center/radius exploration — the same enriched spatial
+    // result shape 0.2.28 established (position, hasPlacement,
+    // distance), just under a name that reads as "look around this
+    // location" rather than "search." `searchWorldByLocation` already
+    // is this; `exploreLocation` exists so the World Location Browser's
+    // call sites say what they mean without re-implementing anything.
+    exploreLocation({ center, radius }) {
+        return this.searchWorldByLocation({ center, radius });
+    }
+
+    // "Explore Here" — the query center is the CAMERA's current world
+    // position, not the active document's placement. Per 0.2.27, camera
+    // focus and active document are independent: the user may be
+    // looking at empty space between two documents, with no active
+    // document at all (or one that has nothing to do with where the
+    // camera happens to be pointed), and still want to explore right
+    // there. Returns [] if the session has no camera state yet (nothing
+    // loaded) rather than falling back to some other position — there
+    // is no "camera position" to explore from before a world session
+    // exists.
+    exploreHere(radius = DEFAULT_EXPLORE_RADIUS) {
+        const center = this.getSpatialState().cameraPosition;
+        if (!center) return [];
+        return this.exploreLocation({ center, radius });
+    }
+
+    // "What's Here?" — a small-tolerance version of exploreHere, for
+    // "what, if anything, is essentially at the camera's current
+    // position" rather than "what's in the neighborhood." The design
+    // doc suggested reusing getDocumentsAtPosition()'s exact-match
+    // semantics directly; that method tests literal position equality
+    // (via detectSpatialOverlap), which works for "what else occupies
+    // this placement's exact spot" but never matches a continuous
+    // camera coordinate — so this adapts the same intent to a radius
+    // query with a deliberately small radius (NEARBY_RADIUS) instead of
+    // reusing getDocumentsAtPosition() verbatim. It still shares
+    // exploreHere/exploreLocation's single code path, so the adaptation
+    // costs nothing in duplicated logic.
+    whatsHere() {
+        return this.exploreHere(NEARBY_RADIUS);
+    }
+
+    // Read-only bundle for the Location Browser's "Inspect" action:
+    // Document Info + Placement Info for `documentId`, exactly as
+    // getDocumentInfo/getPlacementInfo already compute them — inspect
+    // never forces a load. A location-browser result is, by definition,
+    // usually a document this session hasn't loaded (that's the point
+    // of finding it via search/explore rather than already having it
+    // open), and getDocumentInfo only has data for a document current
+    // loaded in this session (`getDocument(id)` must resolve) — loading
+    // it just to inspect it would be a real side effect (renderer work,
+    // network/storage reads) that a strictly read-only action should
+    // not trigger on its own. So documentInfo may legitimately be null
+    // here; the caller (WorldLocationBrowser) falls back to the
+    // search/explore result's own already-known fields (title, author,
+    // position, hasPlacement) when that happens. placementInfo is
+    // independent of whether the document is loaded — it comes from
+    // the placement registry — so it is often available even when
+    // documentInfo is not.
+    inspectDocument(documentId) {
+        return {
+            documentId,
+            documentInfo: this.getDocumentInfo(documentId),
+            placementInfo: this.getPlacementInfo(documentId)
         };
     }
 
