@@ -16,6 +16,20 @@
 // absolute position (see docs/Principles.md, "World Coordinates Are
 // Absolute; Documents Are Local").
 //
+// 0.2.25: `overlapWarning` — when set, the host has already run
+// WorldNavigationSession.checkPlacementOverlap() against the position
+// currently in the form and found it occupied under a policy that
+// requires confirmation (WARN). This is still a pure presentation
+// component: it does not call checkPlacementOverlap itself, does not
+// decide policy, and emits the exact same move({x,y,z}) either way —
+// the host (WorldView) is what distinguishes "first click, run the
+// check" from "second click, the warning was shown, proceed." If the
+// form's numbers no longer match the position the warning was computed
+// for (the user edited/nudged after seeing it), the warning is treated
+// as stale and hidden — see `warningIsCurrent` — so a confirmation
+// never silently applies to a different position than the one it was
+// shown for.
+//
 // Emits move({ x, y, z }) — plain numbers, not a Position instance,
 // since the caller (WorldNavigationSession.movePlacement) constructs
 // whatever position type MoveWorldPlacementUseCase expects.
@@ -25,6 +39,10 @@ export default {
     name: 'PlacementEditorDialog',
     props: {
         info: {
+            type: Object,
+            default: null
+        },
+        overlapWarning: {
             type: Object,
             default: null
         }
@@ -38,6 +56,14 @@ export default {
             step: STEP_PRESETS[1],
             stepPresets: STEP_PRESETS
         };
+    },
+    computed: {
+        warningIsCurrent() {
+            const warning = this.overlapWarning;
+            const position = warning && warning.overlap ? warning.overlap.position : null;
+            if (!position) return false;
+            return Number(this.x) === position.x && Number(this.y) === position.y && Number(this.z) === position.z;
+        }
     },
     methods: {
         nudge(axis, sign) {
@@ -113,9 +139,22 @@ export default {
                     </div>
                 </div>
 
+                <div v-if="warningIsCurrent" class="placement-overlap-warning" role="alert">
+                    <p class="placement-overlap-warning-text">
+                        ⚠ {{ overlapWarning.occupants.length }}
+                        {{ overlapWarning.occupants.length === 1 ? 'other document is' : 'other documents are' }}
+                        already located here.
+                    </p>
+                    <ul class="placement-overlap-warning-list">
+                        <li v-for="occupant in overlapWarning.occupants" :key="occupant.publicationId">
+                            {{ occupant.title }}<span v-if="occupant.owner"> — {{ occupant.owner }}</span>
+                        </li>
+                    </ul>
+                </div>
+
                 <div class="modal-actions">
                     <button class="action-btn" @click="$emit('cancel')">Cancel</button>
-                    <button class="action-btn action-btn--primary" @click="onMove">Move</button>
+                    <button class="action-btn action-btn--primary" @click="onMove">{{ warningIsCurrent ? 'Place Anyway' : 'Move' }}</button>
                 </div>
             </div>
         </div>

@@ -78,6 +78,7 @@
 0.2.22  Fork Transition & World View Document Switching ✓
 0.2.23  World Placement & Spatial Positioning           ✓
 0.2.24  World Coordinate Semantics & Placement UX       ✓
+0.2.25  Spatial Allocation & Placement Collision Policy ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -85,15 +86,25 @@ flat-group model is sufficient for the current editing architecture. If
 a real use case eventually demands nesting, it becomes its own
 architectural milestone — not an implicit next step.
 
-Spatial allocation / collision policy — how multiple publications
-should occupy shared world space without deterministic placement
-collisions — remains OPTIONAL and is not put back on the roadmap yet.
-0.2.24 deliberately made initial placement deterministic (same
-publication -> same coordinate, everywhere) without making it
-collision-free (two different publications can still hash to the same
-grid cell). If real usage shows that colliding is actually a problem
-worth solving, it becomes its own milestone with its own design —
-not an incremental patch onto GridPlacementStrategy.
+Automatic collision resolution (SpatialAllocationPolicy.AUTO_OFFSET) —
+silently choosing a different position than requested when the
+deterministic slot GridPlacementStrategy computes is already occupied
+— remains OPTIONAL and is not put back on the roadmap yet. 0.2.25
+established that overlap is a policy decision, not an error, and gave
+explicit, interactive placement a WARN default; it deliberately did
+NOT attempt automatic resolution, because "is this cell occupied?" can
+only be answered from local knowledge, and any resolution built on
+that answer would reintroduce the exact non-determinism 0.2.24 spent a
+full milestone eliminating. If a real requirement for this emerges, it
+needs its own globally-reproducible allocation design, not an
+incremental patch onto GridPlacementStrategy.
+
+Geometric (bounds-based) collision detection — whether two
+publications' spatial extents intersect despite sitting at different
+origins, rather than only whether their origins coincide — similarly
+remains OPTIONAL. 0.2.25 deliberately scoped overlap detection to
+origin equality only; see docs/Principles.md, "Geometric Collision Is
+A Later Question."
 
 ## 0.1.50 — What shipped
 

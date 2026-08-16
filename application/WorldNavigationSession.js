@@ -25,6 +25,8 @@ import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { Document } from '../core/Document.js';
 import { computeLifecycleStatus, describeLifecycleStatus } from './DocumentLifecycleStatus.js';
+import { detectSpatialOverlap } from '../core/SpatialOverlap.js';
+import { SpatialAllocationPolicy, evaluateSpatialAllocation } from '../core/SpatialAllocationPolicy.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -57,7 +59,8 @@ export class WorldNavigationSession {
 	    pasteClipboardUseCase = null,
     	discoveryProvider = null, // <-- Fixed: Added missing parameter
 	    placementRegistry = null,
-	    moveWorldPlacementUseCase = null
+	    moveWorldPlacementUseCase = null,
+	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -79,6 +82,13 @@ export class WorldNavigationSession {
 	    // actually wired" pattern discoveryProvider already follows.
 	    this._placementRegistry = placementRegistry;
 	    this._moveWorldPlacementUseCase = moveWorldPlacementUseCase;
+	    // 0.2.25: the policy applied to EXPLICIT, interactive placement
+	    // (checkPlacementOverlap/movePlacement) — see
+	    // core/SpatialAllocationPolicy.js. Automatic initial placement
+	    // (PlacePublicationUseCase, via GridPlacementStrategy) is
+	    // deliberately NOT routed through this — it always behaves as
+	    // ALLOW, matching 0.2.23's "placement never blocks a publish."
+	    this._spatialAllocationPolicy = spatialAllocationPolicy;
 
 	    this._container = null;
 	    this._session = null;
@@ -945,6 +955,15 @@ export class WorldNavigationSession {
         // rule).
         const ownerName = record.owner || (record.ownerIdentity ? (record.ownerIdentity.username || record.ownerIdentity.id) : null);
         const ownedByCurrentUser = !ownerName || (currentUsername !== null && ownerName === currentUsername);
+        // 0.2.25: passive overlap visibility — how many OTHER placements
+        // (local knowledge only, same "best-effort" posture as `movable`
+        // above) currently sit at this exact position. Shown regardless
+        // of how this placement got here (automatic or explicit) — see
+        // docs/Principles.md, "Overlap Is A Fact; Collision Is A Policy
+        // Decision." Never blocks or alters anything by itself.
+        const overlap = this._placementRegistry
+            ? detectSpatialOverlap(record.position, this._placementRegistry.list(), { excludePlacementId: record.placementId })
+            : null;
         return {
             documentId: id,
             placementId: record.placementId,
@@ -953,7 +972,53 @@ export class WorldNavigationSession {
             rotation: record.rotation,
             revision: record.revision,
             owner: ownerName,
-            movable: ownedByCurrentUser
+            movable: ownedByCurrentUser,
+            overlapCount: overlap ? overlap.count : 0
+        };
+    }
+
+    // Pre-flight query for an EXPLICIT placement request — "if I moved
+    // this placement to newPosition right now, what would I find
+    // there, and does my configured policy require confirming first?"
+    // Purely a query: it never mutates anything, and movePlacement()
+    // below does not call it — the caller (the UI) is expected to call
+    // this FIRST, get a decision, and only invoke movePlacement() once
+    // that decision is satisfied (allowed, and confirmed if required).
+    // See docs/Principles.md, "Overlap Is A Fact; Collision Is A Policy
+    // Decision" — MoveWorldPlacementUseCase remains the sole authority
+    // for actually creating a new placement revision; this method never
+    // touches it.
+    //
+    // Returns null when there is nothing to check against (no
+    // placementRegistry wired, or the document has no placement of its
+    // own to move) rather than a decision-shaped object full of
+    // defaults — the same "null when the question doesn't apply" rule
+    // getPlacementInfo already follows.
+    checkPlacementOverlap(documentId, newPosition) {
+        const id = documentId || this._focusedDocumentId;
+        if (!this._placementRegistry) return null;
+        const record = this._resolvePlacementRecord(id);
+        if (!record) return null;
+        const overlap = detectSpatialOverlap(newPosition, this._placementRegistry.list(), { excludePlacementId: record.placementId });
+        const decision = evaluateSpatialAllocation(this._spatialAllocationPolicy, overlap);
+        return {
+            ...decision,
+            occupants: overlap.occupants.map((occupant) => this._describeOverlapOccupant(occupant))
+        };
+    }
+
+    // Resolves a placement record occupying a checked position into
+    // the shape a UI actually wants to show a person: a title, not a
+    // raw publicationId. Best-effort — falls back to the id itself
+    // when discovery can't resolve it (no discoveryProvider wired, or
+    // the publication isn't locally known), matching how every other
+    // best-effort local lookup in this file degrades.
+    _describeOverlapOccupant(record) {
+        const publication = this._discoveryProvider ? this._discoveryProvider.findById(record.publicationId) : null;
+        return {
+            publicationId: record.publicationId,
+            title: publication ? publication.title : record.publicationId,
+            owner: record.owner || null
         };
     }
 

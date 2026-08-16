@@ -566,3 +566,84 @@ system cannot back up. A later milestone can layer a physical-unit
 interpretation (meters, or something else entirely) on top of World
 Units without changing a single stored coordinate — the position data
 itself never encodes a unit, only a number.
+
+### Overlap Is A Fact; Collision Is A Policy Decision (0.2.25)
+
+Two placements sharing the exact same world position is not, by
+itself, invalid. A shared world can legitimately hold more than one
+publication at one coordinate — an interior view, a historical
+version, deliberately layered exhibits — so `position` is deliberately
+NOT globally unique, and detecting that two placements occupy the same
+coordinate (`core/SpatialOverlap.js`) is kept strictly separate from
+deciding whether that's acceptable (`core/SpatialAllocationPolicy.js`).
+An overlap is a derived OBSERVATION — computed on demand from whatever
+placements are locally known, never stored as its own entity — exactly
+the same "computed, not stored" posture status/lifecycle already
+follows elsewhere in this codebase. Two independently authorized,
+validly signed PlacementRecords that happen to share a position are
+both still valid: overlap is a spatial policy/UX question, never a
+cryptographic trust question, and must never cause either record to
+fail verification or be treated as conflicting the way 0.2.18's causal
+conflict machinery treats two DIFFERENT revisions of the SAME
+placement. Sharing a coordinate is not the same claim as disputing one.
+
+### The Default Policy Is WARN, Not Silent Correction (0.2.25)
+
+When a person explicitly requests a world position that turns out to
+be occupied, the system asks before it acts — it never silently
+substitutes a different coordinate than the one requested. Someone who
+typed `(500, 0, 300)` and reasonably expects their world to end up at
+`(500, 0, 300)`, not some nearby cell chosen on their behalf, would be
+right to ask "why didn't you put it where I told you?" if it moved
+without warning. WARN keeps that promise: the requested position is
+still what gets placed, exactly as entered, only after the person
+sees what else is there and chooses to proceed anyway. This is
+deliberately different from automatic initial placement
+(GridPlacementStrategy via PlacePublicationUseCase), which stays ALLOW
+— there is no person present at publish time to ask, and 0.2.23
+already established that placement must never block a publish that
+otherwise succeeded. The same overlap fact gets a different policy
+depending on who — or what — is making the request, not a different
+detection mechanism.
+
+### Automatic Collision Resolution Is Deferred, Not Solved (0.2.25)
+
+It would be convenient for automatic placement to probe nearby cells
+and silently choose an empty one when its first choice is occupied.
+This is deliberately NOT built. "Is this cell occupied?" can only be
+answered from whatever a replica has locally discovered so far — and
+two replicas that haven't converged (the normal, ongoing condition in
+a decentralized system, not a rare edge case) can see different
+answers to that question, at different times, for the same cell. An
+algorithm that resolves collisions by consulting local occupancy would
+reintroduce exactly the bug 0.2.24 spent an entire milestone
+eliminating from GridPlacementStrategy: two replicas independently
+"resolving" the same collision to two different final positions.
+Recomputing a stable global ordering (e.g. sorting known publication
+ids and assigning neighboring slots) doesn't avoid this either — a
+later-arriving publication that sorts before an earlier one would
+shift where already-published, already-signed placements are
+"supposed" to sit, contradicting "a position, once assigned, is a
+fact, not a projection" (0.2.23). `SpatialAllocationPolicy.AUTO_OFFSET`
+is named, in the enum, for exactly this idea — and deliberately throws
+rather than pretending to implement it. If a real requirement for
+automatic collision avoidance ever emerges, it needs a genuinely
+reproducible global allocation algorithm as its own milestone, not an
+incremental patch that only looks deterministic in single-node
+testing.
+
+### Geometric Collision Is A Later Question (0.2.25)
+
+0.2.25 only detects ORIGIN collision — two placements at the exact
+same coordinate. It does not detect GEOMETRIC collision — two
+publications whose spatial bounds (`core/SpatialBounds.js`) intersect
+despite sitting at different origins (e.g. one placed at `(0,0,0)`
+spanning `X 0..100`, another at `(50,0,0)` spanning `X 50..150`).
+Bounds-aware intersection is a strictly harder problem — it needs
+rotation and scale accounted for (SpatialBounds' AABB is translation-
+only through V1, see its own comment), and a meaningful answer to "how
+much overlap counts" that origin equality doesn't need to answer at
+all. Establishing origin-collision semantics first, and only later
+deciding whether/how geometric collision needs its own detection, is
+the same incremental discipline 0.2.23 applied to placement itself
+before this milestone extended it to overlap.

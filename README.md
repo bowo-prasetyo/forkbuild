@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.24** — World Coordinate Semantics & Placement UX
+**Version 0.2.25** — Spatial Allocation & Placement Collision Policy
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -41,8 +41,17 @@ pure function of a publication's own id instead of how many other
 publications the local node happened to already know about — the
 difference between "the same publication lands at the same coordinate
 on every replica" actually holding and merely looking like it did in
-single-node testing. See [docs/Architecture.md](docs/Architecture.md)
-for the full write-up of each milestone.
+single-node testing. 0.2.25 answers the question 0.2.24 deliberately
+left open: `position` was never made globally unique, so what happens
+when two placements share one? Sharing a coordinate is now an explicit,
+derived observation (an overlap), never an error by itself; deciding
+what to do about it is a separate policy (ALLOW/WARN/REJECT), defaulting
+to WARN for an explicit move — the requested position is still what
+gets placed, only after the person sees what else is already there and
+chooses to proceed — while automatic initial placement stays
+frictionless, exactly as 0.2.23 established. See
+[docs/Architecture.md](docs/Architecture.md) for the full write-up of
+each milestone.
 
 ## Features
 
@@ -71,6 +80,7 @@ for the full write-up of each milestone.
 - **Fork Transition & World View Document Switching (0.2.22)** — the moment fork-on-edit creates a fork, the World View's title, status badge ("🔒 Published" / "✎ Editing fork — forked from …"), and browser route atomically switch to it, re-derived from the session's active document on every interaction rather than a value frozen at page load; camera and scene position are untouched, only document identity changes; a denied fork leaves everything pointed at the source.
 - **World Placement & Spatial Positioning (0.2.23)** — publishing now creates an explicit, signed, revisioned Placement (position/rotation/scale) kept entirely separate from the document's title/description/license; a Placement panel shows position/revision/owner with Focus/Move controls, and moving a placement never edits or forks the document it points to — a still-published, un-forked world can be repositioned exactly as freely as a fork can.
 - **World Coordinate Semantics & Placement UX (0.2.24)** — a document's own content and a placement's position are now an explicit, documented contract (canonical origin, right-handed axes, a named "World Unit" that deliberately does not claim to be a meter); initial placement is a pure, deterministic function of a publication's own id instead of a locally-observed publication count, so the same publication lands at the same coordinate on every replica; the Move Placement dialog gains relative nudge buttons as a convenience over the same absolute, persisted position.
+- **Spatial Allocation & Placement Collision Policy (0.2.25)** — two placements sharing a world position is now an explicit, derived observation (an overlap), never an error by itself and never persisted as its own entity; a configurable policy (ALLOW/WARN/REJECT) decides what happens next, defaulting to WARN for an explicit Move Placement request — the requested position is still what gets placed, only after the person sees who else is already there and confirms — while automatic initial placement stays frictionless; the Placement panel passively shows "N other documents share this location" regardless of how a placement got there.
   
 ## Architecture
 
@@ -160,8 +170,9 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.22  Fork Transition & World View Document Switching
 - [x] 0.2.23  World Placement & Spatial Positioning
 - [x] 0.2.24  World Coordinate Semantics & Placement UX
+- [x] 0.2.25  Spatial Allocation & Placement Collision Policy
     
-Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Spatial allocation/collision policy (deterministic but not yet collision-free placement) is similarly deferred until real usage shows it's actually needed — see docs/Roadmap.md.
+Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell) and geometric/bounds-based collision detection are similarly deferred until real usage shows either is actually needed — see docs/Roadmap.md.
 
 ## License
 

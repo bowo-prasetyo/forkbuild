@@ -22,6 +22,7 @@ import { License, LicenseId } from '../core/License.js';
 import { SpatialCameraController } from '../application/SpatialCameraController.js';
 import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/EditorActionContext.js';
+import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -405,15 +406,29 @@ async function runTests() {
             documentCloneService,
             discoveryProvider: pinDiscovery
         });
-        // Camera parked far from the source's (index-0, origin) grid
-        // slot: findVisibleDocuments() legitimately excludes the
-        // original publication too, so the only thing this update can
-        // possibly stream in/out is whether the fork gets dropped —
-        // that isolation is the point of the test, not a re-fetch of
-        // the original publication as a second, overlapping world.
+        // Camera parked far from the source's grid slot: findVisibleDocuments()
+        // legitimately excludes the original publication too, so the only
+        // thing this update can possibly stream in/out is whether the fork
+        // gets dropped — that isolation is the point of the test, not a
+        // re-fetch of the original publication as a second, overlapping
+        // world. This publication was never explicitly placed (a 2-arg
+        // PublishDocumentUseCase, same as 16 above), so it resolves through
+        // LocalWorldLayoutProvider's 0.2.24 deterministic-grid fallback —
+        // a pure function of its (randomly generated) publicationId, not a
+        // fixed index-0/origin slot. A hardcoded camera position could
+        // therefore land near it purely by chance of which id this run
+        // happened to generate; computing the actual fallback position and
+        // offsetting far beyond both the grid's bounded extent and the
+        // streaming radius keeps this test's isolation deterministic too.
+        const sourceGridPosition = computeDeterministicGridPosition(publication.id);
+        const cameraPosition = {
+            x: sourceGridPosition.x + 10000,
+            y: 0,
+            z: sourceGridPosition.z + 10000
+        };
         session._session = stubRenderer({
             getCameraState() {
-                return { position: { x: 1000, y: 0, z: 1000 }, target: { x: 1000, y: 0, z: 1000 } };
+                return { position: cameraPosition, target: cameraPosition };
             }
         });
         session._spatialCameraController = new SpatialCameraController(session._session);

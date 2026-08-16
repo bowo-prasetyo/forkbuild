@@ -976,3 +976,84 @@ units north of Alice's Castle" persisted AS a relationship, not a
 computed absolute) ever becomes a real requirement, it is a new,
 additive field on top of the existing absolute `position` — not a
 replacement for it.
+
+## Spatial Allocation & Placement Collision Policy (0.2.25)
+
+No new wire format — `PlacementRecord`/`WorldPlacement` are unchanged.
+0.2.25 does not add a persisted entity for "two placements share a
+position" at all: `SpatialOverlap` (`core/SpatialOverlap.js`) is a
+DERIVED observation, computed on demand from whatever placements are
+locally known, and is never signed, never replicated, never stored.
+This is a deliberate protocol decision, not an oversight — an overlap
+is true or false purely as a function of two already-authoritative
+`position` fields; recording it separately would just be a cache that
+could go stale, with no integrity property a signature could usefully
+attach to.
+
+`position` was never declared globally unique by this protocol (see
+"Placement Record (0.2.10)" above — nothing in that section, or any
+later one, claims exclusivity), and 0.2.25 makes that explicit rather
+than changing it: a shared world can legitimately hold more than one
+publication at one coordinate. Two independently authorized, validly
+signed `PlacementRecord`s that happen to share a position are BOTH
+still valid placements — sharing a coordinate is a spatial fact, not a
+conflict in the 0.2.18 causal sense (which governs two DIFFERENT
+revisions of the SAME `placementId` diverging, not two DIFFERENT
+`placementId`s agreeing on a coordinate). Nothing about signature
+verification, causal-history validation, or replica convergence
+changes when an overlap exists.
+
+`core/SpatialAllocationPolicy.js` defines the vocabulary a caller uses
+to decide what an overlap should mean for THEIR request — `ALLOW`,
+`WARN`, `REJECT`, `AUTO_OFFSET` — and `evaluateSpatialAllocation
+(policy, overlap)`, a pure function with no side effects and no
+knowledge of where the overlap came from. This is application-layer
+policy, not protocol: different implementations, or the same
+implementation configured differently, can legitimately choose
+different policies without becoming wire-incompatible, because the
+policy never changes what gets written to a `PlacementRecord` — only
+whether/when a caller decides to write one at all.
+
+    WorldNavigationSession.checkPlacementOverlap(documentId, newPosition)
+              │
+              ▼
+      resolve current PlacementRecord for documentId (if any)
+              │
+              ▼
+      detectSpatialOverlap(newPosition, placementRegistry.list(),
+                            { excludePlacementId: <this placement's own id> })
+              │
+              ▼
+      evaluateSpatialAllocation(spatialAllocationPolicy, overlap)
+              │
+              ▼
+      { policy, overlap, allowed, requiresConfirmation, occupants }
+
+This is a PRE-FLIGHT query only — it never calls
+`MoveWorldPlacementUseCase` and never mutates anything. A caller
+(the World View UI) is expected to call it BEFORE
+`WorldNavigationSession.movePlacement`, and only proceed to the actual
+move once the decision is satisfied (immediately if `allowed &&
+!requiresConfirmation`, after obtaining confirmation otherwise).
+`movePlacement` itself is completely unaware `checkPlacementOverlap`
+exists — it still creates a new signed, causally-stamped revision
+(0.2.10/0.2.16/0.2.18, unchanged) unconditionally, at whatever position
+it's given, overlapping or not. The existence of an overlap can never
+invalidate an otherwise authentic and authorized placement operation —
+that boundary (spatial policy is a UX concern; signature/causal
+validity is a trust concern) is deliberately preserved, not merged.
+
+`AUTO_OFFSET` — silently choosing a different position than requested
+— is named in the policy vocabulary but throws if invoked; no
+protocol-level allocation algorithm is specified, because none is
+implemented. See docs/Principles.md, "Automatic Collision Resolution
+Is Deferred, Not Solved," for why a reproducible-across-replicas
+version of that algorithm is a real, unsolved design problem, not a
+missing implementation detail.
+
+Automatic initial placement (`PlacePublicationUseCase` via
+`GridPlacementStrategy`, 0.2.23/0.2.24) is untouched: it does not call
+`checkPlacementOverlap` and does not consult any policy — it simply
+places at the deterministic position 0.2.24 already specifies,
+overlapping or not, exactly as before. Only the EXPLICIT,
+interactively-confirmed move path gained a policy step.
