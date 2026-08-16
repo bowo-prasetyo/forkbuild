@@ -826,3 +826,74 @@ No new fields travel over any wire, no Document/Publication shape
 changed, and no new endpoint or query exists — see
 docs/Architecture.md, "Fork Transition & World View Document
 Switching (0.2.22)" for the full mechanism.
+
+## World Placement & Spatial Positioning (0.2.23)
+
+No new wire format — `WorldPlacement` (0.2.5) and `PlacementRecord`
+(0.2.10, extended 0.2.16/0.2.18) are unchanged. This milestone connects
+existing, already-specified machinery, and fixes a lookup bug that
+kept it from ever being reachable.
+
+`WorldPlacement.publicationId` / `PlacementRecord.publicationId` refer
+to `Publication.id` (see "Publication Lifecycle (0.2.3)" below) — the
+publication's own identity, generated independently
+(`publicationId = createId()`) from `Publication.documentId` (the
+underlying World's id). A placement can never be looked up correctly
+by `documentId`; every placement query must resolve
+`documentId -> Publication.id` first via discovery
+(`discoveryProvider.findByDocumentId`), then query the spatial index/
+placement registry with the resolved `publicationId`. Prior to 0.2.23,
+`world-layout/LocalWorldLayoutProvider.js` skipped this resolution
+entirely, so no explicit placement could ever be found by position
+lookup or spatial-proximity streaming — every publication silently
+fell through to the deterministic-grid fallback, indefinitely.
+
+Publishing now creates an explicit initial placement as part of the
+publish flow:
+
+    PublishDocumentUseCase.execute(documentManager)
+              │
+              ▼
+      publisherProvider.publish(document, identityProvider)
+              │
+              ▼
+         Publication (immutable)
+              │
+              ▼ (best-effort, never blocks a successful publish)
+      InitialPlacementStrategy.computePosition({ publicationId })
+              │
+              ▼
+      PlacePublicationUseCase.execute(publication.id, position)
+              │
+              ├── WorldPlacement  → spatial index (position/rotation/
+              │                     scale/bounds, unsigned, fast query)
+              └── PlacementRecord → placement registry (revision 1,
+                                     signed, causally stamped — same
+                                     shape MoveWorldPlacementUseCase's
+                                     later revisions use)
+
+Moving a placement (`WorldNavigationSession.movePlacement` ->
+`MoveWorldPlacementUseCase`) is unchanged from its 0.2.10/0.2.16/0.2.18
+specification — a new signed, causally-stamped revision, the previous
+revision retained in history, never touching the Document or
+Publication it points to:
+
+    documentId
+        │
+        ▼
+    resolve Publication (discoveryProvider.findByDocumentId)
+        │
+        ▼
+    resolve latest PlacementRecord (placementRegistry.findByPublicationId)
+        │
+        ▼
+    MoveWorldPlacementUseCase.execute(placementId, newPosition)
+        │
+        ├── WorldPlacement.withPosition(newPosition)      → spatial index
+        └── PlacementRecord.withPosition(newPosition)
+                .withCausalHistory(advanced stamp, [parent])
+                .withSignature(...)                        → revision N+1
+
+Document/Publication content, hash, and lineage are untouched by any
+of the above — a placement move produces no Document event, no
+CommandHistory entry, no fork.

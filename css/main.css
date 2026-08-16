@@ -1073,6 +1073,30 @@ html, body {
     color: #c9a24a;
 }
 
+.form-hint--neutral {
+    margin: 0 0 0.85rem;
+    color: #909090;
+}
+
+/* 0.2.23: Placement Info panel — same card language as
+   .document-info-panel (WHAT the document is), a deliberately
+   separate panel for WHERE it is. */
+.placement-info-panel {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.placement-info-panel h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;

@@ -55,7 +55,9 @@ export class WorldNavigationSession {
 	    documentCloneService = null,
 	    copySelectionUseCase = null,
 	    pasteClipboardUseCase = null,
-    	discoveryProvider = null // <-- Fixed: Added missing parameter
+    	discoveryProvider = null, // <-- Fixed: Added missing parameter
+	    placementRegistry = null,
+	    moveWorldPlacementUseCase = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -68,7 +70,16 @@ export class WorldNavigationSession {
 	    this._documentCloneService = documentCloneService;
 	    this._copySelectionUseCase = copySelectionUseCase;
 	    this._pasteClipboardUseCase = pasteClipboardUseCase;
-	    
+	    // 0.2.23: WHERE a published world sits in shared space — a
+	    // separate concern from the document/publication itself (see
+	    // docs/Principles.md, "A Publication Is What; A Placement Is
+	    // Where"). Both optional: a session built without them (most
+	    // existing tests) simply can't resolve/move a placement,
+	    // exactly the same "enforce/offer only when the collaborator is
+	    // actually wired" pattern discoveryProvider already follows.
+	    this._placementRegistry = placementRegistry;
+	    this._moveWorldPlacementUseCase = moveWorldPlacementUseCase;
+
 	    this._container = null;
 	    this._session = null;
         this._spatialCameraController = null;
@@ -873,6 +884,98 @@ export class WorldNavigationSession {
             editable: !isPublished,
             editabilityNotice: this.getEditabilityNotice(id)
         };
+    }
+
+    // 0.2.23: the Publication a loaded document's placement(s) belong
+    // to — a document only HAS a placement once it (or a document
+    // sharing its documentId, for a document that hasn't been
+    // published itself) has been published; a fork you haven't
+    // published yet has none. Separate from _isKnownPublication/
+    // _findPublications (0.2.20), which answer "is this a published
+    // snapshot" for the fork-on-edit boundary — this answers "which
+    // Publication row does the spatial layer key placements under",
+    // used regardless of whether the document is currently the
+    // read-only source or an already-forked, still-editable copy that
+    // happens to share history with one.
+    _resolvePublicationForPlacement(documentId) {
+        const publications = this._findPublications(documentId);
+        if (publications.length === 0) return null;
+        return publications.reduce((latest, p) => (!latest || p.publishedAt > latest.publishedAt) ? p : latest, null);
+    }
+
+    // A document can have more than one placement (the same
+    // publication exhibited in several places — see docs/Principles.md,
+    // "A Publication Is What; A Placement Is Where"). Picking the most
+    // recently updated one is a deliberate simplification for this
+    // milestone, matching WorldLayoutProvider.getPosition's same
+    // choice; browsing/choosing among several is future scope, not
+    // something the current data model prevents.
+    _resolvePlacementRecord(documentId) {
+        if (!this._placementRegistry) return null;
+        const publication = this._resolvePublicationForPlacement(documentId);
+        if (!publication) return null;
+        const records = this._placementRegistry.findByPublicationId(publication.id);
+        if (records.length === 0) return null;
+        return records.reduce((latest, r) => (!latest || r.updatedAt > latest.updatedAt) ? r : latest, null);
+    }
+
+    // Normalized data for a Placement Info panel — position, revision,
+    // owner, and whether THIS identity is (as far as this session can
+    // tell, locally) the one who may move it. Returns null when the
+    // document has no known placement yet (never published, or
+    // placementRegistry isn't wired) rather than a placement-shaped
+    // object full of nulls.
+    getPlacementInfo(documentId) {
+        const id = documentId || this._focusedDocumentId;
+        const record = this._resolvePlacementRecord(id);
+        if (!record) return null;
+        const currentUser = this._identityProvider ? this._identityProvider.currentUser() : null;
+        const currentUsername = currentUser ? (currentUser.username || currentUser.id) : null;
+        // Best-effort, LOCAL ownership signal for the UI only — never
+        // the actual authorization boundary. A move this session
+        // allows still gets signed as the CURRENT user (0.2.16); if
+        // that doesn't match the placement's real owner (or a valid
+        // 0.2.17 delegation), the revision fails verification wherever
+        // it's actually checked, the same "the writer doesn't gate
+        // itself, the reader verifies" decentralized posture 0.2.19's
+        // trust layer already established. No owner recorded at all
+        // (a legacy/never-signed placement) is treated as movable,
+        // matching "enforce only when the information is actually
+        // available" (0.2.13/0.2.20's fork policy checks use the same
+        // rule).
+        const ownerName = record.owner || (record.ownerIdentity ? (record.ownerIdentity.username || record.ownerIdentity.id) : null);
+        const ownedByCurrentUser = !ownerName || (currentUsername !== null && ownerName === currentUsername);
+        return {
+            documentId: id,
+            placementId: record.placementId,
+            publicationId: record.publicationId,
+            position: { x: record.position.x, y: record.position.y, z: record.position.z },
+            rotation: record.rotation,
+            revision: record.revision,
+            owner: ownerName,
+            movable: ownedByCurrentUser
+        };
+    }
+
+    // Moves a placement to a new position — this is NOT a document
+    // mutation: it never touches the Document/Publication, never
+    // forks anything (see docs/Principles.md, "Moving A Placement Is
+    // Not Editing A Document"), and applies even to a still-published,
+    // un-forked snapshot's placement. Delegates the actual revision
+    // (signed, causally-stamped — 0.2.10/0.2.16/0.2.18) to
+    // MoveWorldPlacementUseCase; this method's job is purely resolving
+    // WHICH placement "the document currently showing as documentId"
+    // means.
+    movePlacement(documentId, newPosition) {
+        const id = documentId || this._focusedDocumentId;
+        if (!this._moveWorldPlacementUseCase) {
+            throw new Error('WorldNavigationSession: placement cannot be moved — no MoveWorldPlacementUseCase wired');
+        }
+        const record = this._resolvePlacementRecord(id);
+        if (!record) {
+            throw new Error(`WorldNavigationSession: "${id}" has no known placement to move`);
+        }
+        return this._moveWorldPlacementUseCase.execute(record.placementId, newPosition);
     }
 
     // Guard for selection-driven mutations (move/rotate/delete/align/

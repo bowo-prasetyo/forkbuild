@@ -439,3 +439,50 @@ fork — forked from …") — but never a blocking prompt in the middle of
 a gesture already in motion. Denial is the one case that DOES interrupt
 outright, because there the alternative isn't "explain after the
 fact," it's "let the user think something happened that didn't."
+
+### A Publication Is What; A Placement Is Where (0.2.23)
+
+Title, description, license, and content answer "what is this world" —
+they live on the Document/Publication and change only by editing and
+republishing it. Position answers "where does this world sit in
+shared space right now" — it lives on a PlacementRecord, entirely
+separate from the Publication it points to (core/WorldPlacement.js:
+"a WorldPlacement does NOT own a world. It points to one via
+publicationId"). Neither the World View UI nor the domain model may
+blur that line: coordinates never become a document metadata field,
+and a Document Properties edit never touches where anything is
+standing. The distinction is what makes a single published work
+placeable in more than one location — an exhibition copy here, a
+personal copy of the same publication there — without meaning two
+different documents, or one document pretending it has two locations
+at once.
+
+### Moving A Placement Is Not Editing A Document (0.2.23)
+
+Repositioning a published world in shared space is not a document
+mutation: it never forks the Publication, never requires the fork
+policy (0.2.13) that governs actually editing one, and works
+identically whether the underlying document has ever been forked or
+not. This is a deliberate consequence of keeping placement and
+publication separate (see above) — a mutation that only ever touches
+a PlacementRecord has nothing to fork, because a PlacementRecord was
+never immutable-until-forked to begin with; it is versioned by
+revision (0.2.10), signed per revision (0.2.16), and causally stamped
+per revision (0.2.18) — its own, independent lifecycle, unrelated to
+the World View's fork-on-edit boundary (0.2.20) a document goes
+through. The two mechanisms happening to be exercised by adjacent
+buttons in the same header does not make them the same operation.
+
+### A Position, Once Assigned, Is A Fact — Not A Projection (0.2.23)
+
+Before 0.2.23, "where is this world" was answered by recomputing a
+deterministic grid slot from an unplaced publication's position in a
+list, every single time the question was asked — a real position no
+document ever actually held, reconstructed fresh on demand. Publishing
+now assigns a REAL initial placement (InitialPlacementStrategy,
+recorded as a PlacementRecord) the moment a Publication is created,
+and every later placement query reads that recorded fact rather than
+re-deriving one. The deterministic-grid computation still exists, but
+now strictly as a fallback for content that predates this milestone
+and therefore has no recorded placement at all — not as the
+system's normal, ongoing answer to where a world is.

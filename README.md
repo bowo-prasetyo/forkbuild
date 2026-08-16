@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.22** — Fork Transition & World View Document Switching
+**Version 0.2.23** — World Placement & Spatial Positioning
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -23,13 +23,18 @@ editing one is semantically "fork, then edit the fork" — done lazily,
 on the first mutation, subject to the same fork policy as an explicit
 Fork. 0.2.21 put a face on that enforcement: a Document Properties
 editor, a Document Info panel, lifecycle status, and plain-language
-explanations for why an edit is or isn't possible. 0.2.22 closes the
+explanations for why an edit is or isn't possible. 0.2.22 closed the
 remaining gap between the two: the moment a fork is created, the World
 View's title, status line, and browser route now atomically switch to
 it — the screen never keeps displaying the published source while
 every subsequent edit is silently landing on the fork underneath it.
-See [docs/Architecture.md](docs/Architecture.md) for the full write-up
-of each milestone.
+0.2.23 connects a mature but previously unreachable part of the
+architecture: publishing now creates an explicit, ownable, revisioned
+Placement — separate from the document's title/description/license —
+and the World View can show and move it without ever forking or
+editing the document it points to. See
+[docs/Architecture.md](docs/Architecture.md) for the full write-up of
+each milestone.
 
 ## Features
 
@@ -56,6 +61,7 @@ of each milestone.
 - **Fork-on-Edit & Immutable Snapshot Lineage (0.2.20)** — the World View lazily forks a published snapshot on its first mutation instead of ever mutating it in place; viewing never forks, exactly one fork is created per editing session, the fork carries `parentDocumentId` provenance through the existing forking mechanism, and fork policy (0.2.13 licensing) still governs whether the fork may happen at all.
 - **Document Lifecycle & Metadata UI (0.2.21)** — a Document Properties editor (title/description/license) and a shared Document Info panel across the Editor and World View, showing computed lifecycle status (Draft/Saved/Published) and fork lineage; publishing now validates a title and non-empty content before creating anything immutable; a blocked or about-to-fork edit is explained in plain language, proactively and reactively, instead of failing silently.
 - **Fork Transition & World View Document Switching (0.2.22)** — the moment fork-on-edit creates a fork, the World View's title, status badge ("🔒 Published" / "✎ Editing fork — forked from …"), and browser route atomically switch to it, re-derived from the session's active document on every interaction rather than a value frozen at page load; camera and scene position are untouched, only document identity changes; a denied fork leaves everything pointed at the source.
+- **World Placement & Spatial Positioning (0.2.23)** — publishing now creates an explicit, signed, revisioned Placement (position/rotation/scale) kept entirely separate from the document's title/description/license; a Placement panel shows position/revision/owner with Focus/Move controls, and moving a placement never edits or forks the document it points to — a still-published, un-forked world can be repositioned exactly as freely as a fork can.
   
 ## Architecture
 
@@ -143,6 +149,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.20  Fork-on-Edit & Immutable Snapshot Lineage
 - [x] 0.2.21  Document Lifecycle & Metadata UI
 - [x] 0.2.22  Fork Transition & World View Document Switching
+- [x] 0.2.23  World Placement & Spatial Positioning
     
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
