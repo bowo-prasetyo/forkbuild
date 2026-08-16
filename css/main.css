@@ -933,6 +933,159 @@ html, body {
     color: #707070;
     text-decoration: line-through;
 }
+
+/* 0.2.26: World Navigation & Spatial Discovery UX —
+   ui/components/WorldSearchPanel.js. Same section language as
+   .world-view-section above; results reuse .world-item's card look so
+   search results, Nearby Worlds, and Worlds in View all read as one
+   family of lists. Deliberately the FIRST section under the header
+   hint (not tucked below Tools/Editing/Groups) — search over the
+   entire world is a navigation entry point, not a per-document tool,
+   and needed to be reachable without scrolling past unrelated panels. */
+.world-view-section--search {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+}
+
+.world-search-form {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.world-search-input {
+    flex: 1;
+}
+
+.world-search-results {
+    margin-top: 0.6rem;
+}
+
+.world-search-empty {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #808080;
+}
+
+.world-search-count {
+    margin: 0 0 0.4rem;
+    font-size: 0.75rem;
+    color: #909090;
+}
+
+.world-search-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.world-search-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.world-search-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.world-search-item-title {
+    color: #d0d0d0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.world-search-item-author {
+    color: #707070;
+    font-size: 0.75rem;
+}
+
+.world-search-item-note {
+    color: #c9a24a;
+    font-size: 0.72rem;
+    margin-top: 0.15rem;
+}
+
+/* 0.2.26: ui/components/LocationDocumentsDialog.js — modal follows the
+   same convention as PlacementEditorDialog/MetadataEditorDialog. */
+.location-documents-list {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.location-documents-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.5rem 0.65rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.location-documents-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.location-documents-item-title {
+    color: #d0d0d0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.location-documents-item-owner {
+    color: #707070;
+    font-size: 0.75rem;
+}
+
+.location-documents-empty {
+    color: #808080;
+    font-size: 0.82rem;
+    padding: 0.5rem 0;
+}
+
+/* A text-only "button" for a small secondary action inline with text
+   (e.g. PlacementInfoPanel's overlap notice) — not a full .action-btn,
+   which reads as too heavy sitting inside a sentence. */
+.inline-link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 0.3rem;
+    color: #4caf7d;
+    font-size: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.inline-link-btn:hover {
+    color: #5fc490;
+}
+
 /* Spatial Interaction Panel */
 
 .spatial-panel {

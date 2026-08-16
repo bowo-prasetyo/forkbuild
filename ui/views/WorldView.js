@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
@@ -13,6 +13,8 @@ import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 import PlacementInfoPanel from '../components/PlacementInfoPanel.js';
 import PlacementEditorDialog from '../components/PlacementEditorDialog.js';
+import WorldSearchPanel from '../components/WorldSearchPanel.js';
+import LocationDocumentsDialog from '../components/LocationDocumentsDialog.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -27,7 +29,8 @@ export default {
     components: {
         EditingSidebar, CommandPalette, ActionFeedback,
         DocumentInfoPanel, MetadataEditorDialog,
-        PlacementInfoPanel, PlacementEditorDialog
+        PlacementInfoPanel, PlacementEditorDialog,
+        WorldSearchPanel, LocationDocumentsDialog
     },
     setup() {
         const route = useRoute();
@@ -78,6 +81,14 @@ export default {
         // the time, including while the dialog is open but the user
         // hasn't attempted a move yet.
         const placementOverlapWarning = ref(null);
+        // 0.2.26: World Navigation & Spatial Discovery UX — search
+        // results (populated on submit, not live-as-you-type; see
+        // WorldSearchPanel), and the "Documents Here" dialog opened
+        // from PlacementInfoPanel's overlap notice.
+        const searchResults = ref([]);
+        const showLocationDocuments = ref(false);
+        const locationDocumentsPosition = ref(null);
+        const locationDocumentsOccupants = ref([]);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
         const cameraPosition = ref(null);
@@ -521,6 +532,54 @@ export default {
         }
 
         // -----------------------------------------------------------------
+        // 0.2.26: World Navigation & Spatial Discovery UX
+        // -----------------------------------------------------------------
+
+        // Search never mutates or loads anything by itself — only
+        // resolves results for the panel to show. Whether the catalog
+        // is empty at all (vs. just this query matching nothing) comes
+        // from allPublications, already loaded for the Nearby/Loaded
+        // Worlds lists — no separate diagnostic call needed for that
+        // distinction.
+        const catalogEmpty = computed(() => allPublications.value.length === 0);
+
+        function performSearch(query) {
+            searchResults.value = guarded(() => session.searchWorld(query)) || [];
+        }
+
+        // Search's own Focus action is exactly focusWorld — searching
+        // for a document and finding it in "Nearby Worlds" both end at
+        // the same operation, by design (see docs/Principles.md,
+        // "Focus Is Navigation, Not Discovery").
+        function focusSearchResult(documentId) {
+            focusWorld(documentId);
+        }
+
+        // Opened from PlacementInfoPanel's overlap "View" link — turns
+        // 0.2.25's passive "N other documents share this location"
+        // count into an actual, choosable list (docs/Principles.md,
+        // "Overlap Is A Fact; Collision Is A Policy Decision" — this is
+        // the navigation half of making that fact useful, not a new
+        // policy decision).
+        function openLocationDocuments(position) {
+            if (!position) return;
+            locationDocumentsPosition.value = position;
+            locationDocumentsOccupants.value = guarded(() => session.getDocumentsAtPosition(position)) || [];
+            showLocationDocuments.value = true;
+        }
+
+        function closeLocationDocuments() {
+            showLocationDocuments.value = false;
+            locationDocumentsPosition.value = null;
+            locationDocumentsOccupants.value = [];
+        }
+
+        function focusLocationDocument(documentId) {
+            focusWorld(documentId);
+            closeLocationDocuments();
+        }
+
+        // -----------------------------------------------------------------
         // Pointer interaction (gizmo-first, unchanged since 0.1.46)
         // -----------------------------------------------------------------
 
@@ -677,6 +736,16 @@ export default {
             openPlacementEditor,
             closePlacementEditor,
             onMovePlacement,
+            searchResults,
+            catalogEmpty,
+            performSearch,
+            focusSearchResult,
+            showLocationDocuments,
+            locationDocumentsPosition,
+            locationDocumentsOccupants,
+            openLocationDocuments,
+            closeLocationDocuments,
+            focusLocationDocument,
             spatialEditingContext,
             spatialPlacement,
             cameraPosition,
@@ -739,6 +808,16 @@ export default {
                 <p class="world-view-hint">
                     Drag to orbit • Scroll to zoom • Home to reset • Ctrl/Cmd+K command palette • Click to inspect / place
                 </p>
+
+                <div class="world-view-section world-view-section--search">
+                    <h4>Search</h4>
+                    <WorldSearchPanel
+                        :results="searchResults"
+                        :catalog-empty="catalogEmpty"
+                        @search="performSearch"
+                        @focus="focusSearchResult"
+                    />
+                </div>
 
                 <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
                     <h4>Hover</h4>
@@ -848,6 +927,7 @@ export default {
                     :info="placementInfo"
                     @focus="focusWorld(placementInfo.documentId)"
                     @move="openPlacementEditor(placementInfo)"
+                    @view-here="openLocationDocuments(placementInfo.position)"
                 />
 
                 <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">
@@ -969,6 +1049,13 @@ export default {
                 :overlap-warning="placementOverlapWarning"
                 @move="onMovePlacement"
                 @cancel="closePlacementEditor"
+            />
+            <LocationDocumentsDialog
+                v-if="showLocationDocuments"
+                :position="locationDocumentsPosition"
+                :occupants="locationDocumentsOccupants"
+                @focus="focusLocationDocument"
+                @cancel="closeLocationDocuments"
             />
         </div>
     `

@@ -647,3 +647,74 @@ all. Establishing origin-collision semantics first, and only later
 deciding whether/how geometric collision needs its own detection, is
 the same incremental discipline 0.2.23 applied to placement itself
 before this milestone extended it to overlap.
+
+### Discovery Is One Path, Not Two (0.2.26)
+
+Search does not introduce a second, UI-maintained catalog of what
+exists in the world. `SearchWorldUseCase` filters exactly what
+`discoveryProvider.list()` already returns — the same source every
+other discovery-driven surface (Repository View, Author View, fork-
+policy checks) already reads. This keeps
+
+    Discovery -> Publication -> Placement -> World View
+
+as one coherent path. A UI-only search index would need its own
+consistency story — when does it refresh, what happens when it drifts
+from what discovery actually knows — that a filter over the live
+discovery result never needs, because it has nothing of its own to go
+stale. The same reasoning that kept `SpatialOverlap` a derived
+observation instead of a stored entity (0.2.25) applies here: a
+"World Directory" is a VIEW over decentralized state, computed on
+demand, not a second mutable database that must be kept in sync with
+the first.
+
+### Publication Found Is Not The Same As Placement Found (0.2.26)
+
+A search result can be in exactly one of two meaningfully different
+states, and the UI says which: a publication with an explicit,
+recorded `PlacementRecord` (`hasPlacement: true`, a position someone —
+or `GridPlacementStrategy` — actually chose), or a publication known to
+discovery that has never been placed (`hasPlacement: false`, resolved
+only through 0.2.24's deterministic fallback grid so Focus still has
+somewhere to send the camera). Neither is an error. Collapsing them
+into one undifferentiated "found it" would hide a real fact — that the
+position about to be focused might be a placeholder, not a chosen
+location — behind a search result that looks identical either way.
+
+### Focus Is Navigation, Not Discovery — And Never Editing (0.2.26)
+
+Focusing a document — from search results, from "Documents Here," from
+the pre-existing Nearby Worlds list, all three now converge on the
+exact same `WorldNavigationSession.focusDocument` — moves the camera
+and changes which document is active. It does not load a NEW kind of
+state, does not create anything, and above all does not mutate the
+document it points to. A focused, published document remains exactly
+`🔒 Published`; only an actual content mutation (moving a brick,
+editing metadata) crosses into fork-on-edit (0.2.20) territory. This
+is what makes Focus safe to offer everywhere a document can be named —
+a search result, an overlap list, a nearby-worlds entry — without ever
+having to ask "but will this fork it?" The answer is always no, by
+construction: `focusDocument` never touches
+`_ensureEditableDocumentId`/`_forkForEdit` at all.
+
+### Diagnostics Should Say What Is Actually True, Not What Would Be Convenient (0.2.26)
+
+0.2.19's `DiscoveryDiagnostics` (manifest-load failures, equivocation,
+staleness) is real, tested infrastructure — but it belongs to
+`DecentralizedSpatialDiscoveryProvider`, which is not the discovery
+backend `CreateWorldViewUseCase` actually wires into the live World
+View today (`LocalWorldLayoutProvider`/`LocalSpatialIndexProvider`
+are — see docs/Architecture.md, 0.2.26). A synchronous, fully-local
+`localStorage` read cannot genuinely be "temporarily unavailable" the
+way a fetched index manifest can; presenting a manifest-unavailable
+message the live stack could never actually produce would be
+inventing a state, not reporting one. So 0.2.26 distinguishes only
+the categories that are REAL in the currently-wired stack today: no
+publications exist at all, a search matched nothing, a publication
+exists but has no recorded placement (see above), and a known,
+positioned publication simply isn't within streaming range yet
+(actionable — Focus). Wiring the richer decentralized diagnostics
+into the live UI is real future work, tracked, not done here — see
+docs/Roadmap.md — and when it happens it should replace this
+messaging with the genuine thing, not sit alongside a parallel set of
+messages that were never backed by what's actually running.

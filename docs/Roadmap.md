@@ -79,6 +79,7 @@
 0.2.23  World Placement & Spatial Positioning           ✓
 0.2.24  World Coordinate Semantics & Placement UX       ✓
 0.2.25  Spatial Allocation & Placement Collision Policy ✓
+0.2.26  World Navigation & Spatial Discovery UX         ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -105,6 +106,23 @@ origins, rather than only whether their origins coincide — similarly
 remains OPTIONAL. 0.2.25 deliberately scoped overlap detection to
 origin equality only; see docs/Principles.md, "Geometric Collision Is
 A Later Question."
+
+Deterministic Spatial Allocation — resolving GridPlacementStrategy hash
+collisions (AUTO_OFFSET) with a genuinely reproducible-across-replicas
+algorithm, rather than the "no automatic resolution at all" 0.2.25/
+0.2.26 ship with — remains OPTIONAL and unscheduled. It is a real
+decentralized-systems problem (independently and concurrently chosen
+positions converging identically on every replica without silently
+moving anything already published), not a UI feature, and deserves its
+own dedicated design when a real requirement demands it rather than
+being folded into whichever navigation/placement milestone happens to
+be in flight when someone thinks of it.
+
+Full camera-focus / active-document / selection separation, and wiring
+`DecentralizedSpatialDiscoveryProvider`'s richer diagnostics
+(manifest/equivocation/staleness) into the live World View, similarly
+remain OPTIONAL and unscheduled — see docs/Architecture.md, 0.2.26,
+"Deliberately not in 0.2.26," for what each would actually require.
 
 ## 0.1.50 — What shipped
 

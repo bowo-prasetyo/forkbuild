@@ -13,6 +13,12 @@
 // choosing a position) — just visibility, matching "the World View
 // should make overlaps visible" (docs/Principles.md, "Overlap Is A
 // Fact; Collision Is A Policy Decision").
+//
+// 0.2.26: that passive notice is now actionable — "View" emits
+// 'view-here' so the host can open LocationDocumentsDialog
+// (WorldNavigationSession.getDocumentsAtPosition), turning "3
+// documents overlap at this location" into an actual list a person can
+// pick from and focus.
 export default {
     name: 'PlacementInfoPanel',
     props: {
@@ -21,7 +27,7 @@ export default {
             default: null
         }
     },
-    emits: ['focus', 'move'],
+    emits: ['focus', 'move', 'view-here'],
     template: `
         <div v-if="info" class="placement-info-panel">
             <h4>Placement</h4>
@@ -44,6 +50,7 @@ export default {
             </p>
             <p v-if="info.overlapCount > 0" class="placement-overlap-notice">
                 ⚠ {{ info.overlapCount }} other {{ info.overlapCount === 1 ? 'document shares' : 'documents share' }} this location.
+                <button type="button" class="inline-link-btn" @click="$emit('view-here')">View</button>
             </p>
             <div class="info-actions">
                 <button class="action-btn" @click="$emit('focus')">Focus</button>

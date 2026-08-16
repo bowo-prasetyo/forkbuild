@@ -60,7 +60,8 @@ export class WorldNavigationSession {
     	discoveryProvider = null, // <-- Fixed: Added missing parameter
 	    placementRegistry = null,
 	    moveWorldPlacementUseCase = null,
-	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN
+	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN,
+	    searchWorldUseCase = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -89,6 +90,11 @@ export class WorldNavigationSession {
 	    // deliberately NOT routed through this — it always behaves as
 	    // ALLOW, matching 0.2.23's "placement never blocks a publish."
 	    this._spatialAllocationPolicy = spatialAllocationPolicy;
+	    // 0.2.26: optional, same "enforce/offer only when the
+	    // collaborator is actually wired" rule everything else in this
+	    // constructor follows — a session built without it (most
+	    // existing tests) simply can't search.
+	    this._searchWorldUseCase = searchWorldUseCase;
 
 	    this._container = null;
 	    this._session = null;
@@ -1003,22 +1009,85 @@ export class WorldNavigationSession {
         const decision = evaluateSpatialAllocation(this._spatialAllocationPolicy, overlap);
         return {
             ...decision,
-            occupants: overlap.occupants.map((occupant) => this._describeOverlapOccupant(occupant))
+            occupants: overlap.occupants.map((occupant) => this._describeSpatialOccupant(occupant))
         };
     }
 
-    // Resolves a placement record occupying a checked position into
-    // the shape a UI actually wants to show a person: a title, not a
-    // raw publicationId. Best-effort — falls back to the id itself
-    // when discovery can't resolve it (no discoveryProvider wired, or
-    // the publication isn't locally known), matching how every other
-    // best-effort local lookup in this file degrades.
-    _describeOverlapOccupant(record) {
+    // 0.2.26 — "what's actually here?", independent of any move in
+    // progress. Unlike checkPlacementOverlap (which excludes the
+    // placement being moved, because it's asking "would I collide with
+    // something ELSE"), this includes every placement at the position,
+    // the currently-inspected one included — it answers the World
+    // Navigation design's "Documents at this location" list, not a
+    // move's pre-flight check. Read-only: never touches
+    // MoveWorldPlacementUseCase, never mutates anything.
+    //
+    // Only PUBLISHED placements (backed by a PlacementRecord) can ever
+    // appear here — an editing fork has no placement of its own (it
+    // inherits its source's position locally and non-authoritatively,
+    // see _localPositions below), so it deliberately never shows up in
+    // a "documents at this position" query. Making forks independently
+    // placeable would mean giving something that BY DESIGN has no
+    // publication yet a position anyway — a bigger question this
+    // milestone does not attempt to answer.
+    getDocumentsAtPosition(position) {
+        if (!this._placementRegistry) return [];
+        const overlap = detectSpatialOverlap(position, this._placementRegistry.list());
+        return overlap.occupants.map((occupant) => this._describeSpatialOccupant(occupant));
+    }
+
+    // Resolves a placement record into the shape a UI actually wants
+    // to show a person: a title and a documentId to focus, not a raw
+    // publicationId. Best-effort — falls back to the publicationId
+    // itself when discovery can't resolve it (no discoveryProvider
+    // wired, or the publication isn't locally known), matching how
+    // every other best-effort local lookup in this file degrades.
+    // Shared by checkPlacementOverlap (0.2.25) and getDocumentsAtPosition
+    // (0.2.26) — both are "who else is at this position," just with
+    // different self-inclusion rules upstream.
+    _describeSpatialOccupant(record) {
         const publication = this._discoveryProvider ? this._discoveryProvider.findById(record.publicationId) : null;
         return {
+            documentId: publication ? publication.documentId : null,
             publicationId: record.publicationId,
             title: publication ? publication.title : record.publicationId,
             owner: record.owner || null
+        };
+    }
+
+    // 0.2.26 — search over the SAME discovery machinery everything
+    // else reads from (see application/SearchWorldUseCase.js), enriched
+    // with what the World View actually needs to show a result and
+    // act on it: a resolved position (Focus needs somewhere to send
+    // the camera) and whether that position came from a real,
+    // recorded PlacementRecord or the deterministic fallback grid
+    // (0.2.24) — a real, meaningful distinction (see docs/Principles.md,
+    // "Publication Found Is Not The Same As Placement Found"), not an
+    // error state. Read-only, like every other navigation method here:
+    // searching never loads, forks, or mutates anything by itself.
+    searchWorld(query) {
+        if (!this._searchWorldUseCase) return [];
+        const results = this._searchWorldUseCase.execute(query);
+        return results.map((publication) => this._describeSearchResult(publication));
+    }
+
+    _describeSearchResult(publication) {
+        const explicit = this._placementRegistry
+            ? this._placementRegistry.findByPublicationId(publication.id)
+                .reduce((latest, r) => (!latest || r.revision > latest.revision) ? r : latest, null)
+            : null;
+        const resolved = this._worldLayoutProvider
+            ? this._worldLayoutProvider.getPosition(publication.documentId)
+            : null;
+        return {
+            documentId: publication.documentId,
+            publicationId: publication.id,
+            title: publication.title,
+            author: publication.author,
+            hasPlacement: !!explicit,
+            position: explicit
+                ? { x: explicit.position.x, y: explicit.position.y, z: explicit.position.z }
+                : (resolved ? { x: resolved.x, y: resolved.y, z: resolved.z } : null)
         };
     }
 
