@@ -20,7 +20,7 @@ export default {
                 — architecture, milestone history, and what's shipped so far.
             </p>
             <p>
-                <a href="docs/user/README.md" target="_blank" rel="noopener">User Guide</a>
+                <a href="https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/user/README.md" target="_blank" rel="noopener">User Guide</a>
                 — how to build, publish, fork, and explore in ForkBuild.
             </p>
         </section>
