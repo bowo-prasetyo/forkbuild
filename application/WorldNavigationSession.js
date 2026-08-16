@@ -106,6 +106,30 @@ export class WorldNavigationSession {
         // docs/Principles.md, "A published snapshot is never mutated
         // in place (0.2.20)".
         this._publishedDocumentIds = new Set();
+
+        // 0.2.20 follow-up: a lazily-created fork is, by definition, a
+        // document the discovery/layout providers have never heard of
+        // (it has not been published). Two things break if that's not
+        // accounted for:
+        //   1. updateSpatialView()'s streaming unload only protects
+        //      "dirty" documents; once a fork is saved (dirty clears)
+        //      it silently vanishes from the view on the next camera
+        //      move, because it can never appear in
+        //      findVisibleDocuments()'s results again.
+        //   2. worldLayoutProvider.getPosition(forkId) has nothing to
+        //      look up and falls back to (0,0,0)/a wrong grid slot —
+        //      fine for the bricks themselves (addWorld was called
+        //      with the correct inherited position once, at fork
+        //      time), but every *subsequent* position lookup (the
+        //      transform gizmo's pivot, chiefly) recomputes from
+        //      scratch and drifts away from where the bricks actually
+        //      are, so the gizmo can no longer be grabbed.
+        // _localOnlyDocumentIds pins a fork against streaming unload
+        // unconditionally; _localPositions remembers the position it
+        // inherited from its source so lookups stay correct even after
+        // the document stops being "dirty".
+        this._localOnlyDocumentIds = new Set();
+        this._localPositions = new Map();
     }
 
     get transformSettings() {
@@ -232,10 +256,22 @@ export class WorldNavigationSession {
         if (this.isPlacementMode() || this._spatialSelection.isEmpty) {
             return false;
         }
-        // 0.2.20: a gizmo drag is a mutation the moment it commits.
-        // Fork now, before the renderer arms the drag against
-        // `this._spatialSelection` — every subsequent gizmo callback
-        // (move/up) reads that same (now-forked) selection reference.
+        // gizmoPointerDown runs on EVERY pointer-down while something
+        // is selected — that's the "gizmo-first" pattern (try the
+        // gizmo, fall back to a plain click-select on pointer-up), not
+        // a signal that this particular click is a drag. A fork must
+        // stay lazy on the actual first mutation, so hit-test BEFORE
+        // forking: a click that lands anywhere but a handle (e.g.
+        // re-selecting a different brick) must never fork on its own.
+        if (typeof this._session.gizmoHitTest === 'function'
+            && !this._session.gizmoHitTest(rawEvent.clientX, rawEvent.clientY)) {
+            return false;
+        }
+        // This IS a genuine grab: it commits to a mutation the moment
+        // the drag ends. Fork now, before the renderer arms the drag
+        // against `this._spatialSelection` — every subsequent gizmo
+        // callback (move/up) reads that same (now-forked) selection
+        // reference.
         this._ensureEditableSelection();
         return this._session.gizmoPointerDown(
             rawEvent.clientX,
@@ -293,7 +329,7 @@ export class WorldNavigationSession {
 
     focusDocument(documentId) {
         this._focusedDocumentId = documentId;
-        const layoutPos = this._worldLayoutProvider.getPosition(documentId);
+        const layoutPos = this._getWorldPosition(documentId);
         this._spatialCameraController.focusDocument(documentId, layoutPos);
         return this.updateSpatialView();
     }
@@ -343,6 +379,13 @@ export class WorldNavigationSession {
 		    if (visibleIds.includes(id)) return false;
 		    // Pin dirty documents against streaming unload
 		    if (this.isDocumentDirty(id)) return false;
+		    // 0.2.20: a lazily-forked document is never a publication,
+		    // so it can never re-enter `visibleIds` on its own — unlike
+		    // a dirty flag, this pin does not clear on save. Without it,
+		    // saving a fork (which clears dirty) would make the very
+		    // next camera move stream it out permanently: unloadable
+		    // and undiscoverable in the same breath.
+		    if (this._localOnlyDocumentIds.has(id)) return false;
 		    return true;
 		});
         const now = Date.now();
@@ -717,7 +760,7 @@ export class WorldNavigationSession {
     }
 
     getDocumentPosition(documentId) {
-        return this._worldLayoutProvider.getPosition(documentId);
+        return this._getWorldPosition(documentId);
     }
 
     // -----------------------------------------------------------------
@@ -737,6 +780,32 @@ export class WorldNavigationSession {
     // is concerned.
     isDocumentPublished(documentId) {
         return this._publishedDocumentIds.has(documentId);
+    }
+
+    // Proactive counterpart to the guards below: tells the UI what
+    // WOULD happen on the first edit of `documentId`, before the user
+    // attempts one, so it can explain itself instead of only reacting
+    // after a blocked action throws. Returns null for anything that
+    // isn't a still-published snapshot (already editable — nothing to
+    // say). Otherwise:
+    //   { blocked: false, message } — editable; first edit forks silently
+    //   { blocked: true,  message } — fork policy (0.2.13) forbids it
+    getEditabilityNotice(documentId) {
+        if (!documentId || !this._publishedDocumentIds.has(documentId)) {
+            return null;
+        }
+        const { allowed, license } = this._checkForkPolicy(documentId);
+        if (!allowed) {
+            const licenseLabel = license ? license.id : 'UNSPECIFIED';
+            return {
+                blocked: true,
+                message: `Published under "${licenseLabel}" — the author has not allowed forking, so this world can be viewed but not edited.`
+            };
+        }
+        return {
+            blocked: false,
+            message: 'Published snapshot — your first edit creates your own editable fork; the original is never changed.'
+        };
     }
 
     // Guard for selection-driven mutations (move/rotate/delete/align/
@@ -807,8 +876,16 @@ export class WorldNavigationSession {
         history.markUnsaved();
         this._commandHistories.set(forkId, history);
 
+        // The fork inherits the source's position permanently: it is
+        // not discoverable (never published), so the layout/discovery
+        // providers can never resolve a position for `forkId` on their
+        // own — every later lookup must come back here, not fall
+        // through to their "unknown document" default.
+        const pos = this._getWorldPosition(sourceDocumentId);
+        this._localPositions.set(forkId, pos);
+        this._localOnlyDocumentIds.add(forkId);
+
         if (this._session) {
-            const pos = this._worldLayoutProvider.getPosition(sourceDocumentId);
             this._session.removeWorld(sourceDoc.world, sourceDocumentId);
             this._session.addWorld(fork.world, forkId, pos);
         }
@@ -824,6 +901,19 @@ export class WorldNavigationSession {
         this._remapReferencesAfterFork(sourceDocumentId, sourceDoc, forkId, fork);
 
         return forkId;
+    }
+
+    // The world position to render/pivot `documentId` at. Prefers a
+    // remembered local position (set at fork time — see _forkForEdit)
+    // over the layout provider, because the provider can only resolve
+    // positions for documents it can discover, and a fork never is
+    // one. Used everywhere a position is needed for a document that
+    // might be a fork, not just inside _forkForEdit itself.
+    _getWorldPosition(documentId) {
+        if (this._localPositions.has(documentId)) {
+            return this._localPositions.get(documentId);
+        }
+        return this._worldLayoutProvider.getPosition(documentId);
     }
 
     // Every Publication on record for `documentId`, or [] when there is
@@ -892,8 +982,20 @@ export class WorldNavigationSession {
                     ? SpatialSelectionState.bricks({ documentId: forkId, items })
                     : SpatialSelectionState.empty();
             }
+            // The renderer's own selection highlight and the transform
+            // gizmo were both set up against the source document's
+            // (now-removed) brick meshes. Without this, the visuals
+            // stay pinned to whatever was on screen before the fork —
+            // typically nothing, since removeWorld just tore those
+            // meshes down — and the gizmo can no longer be grabbed even
+            // though the (correct, forked) selection state says
+            // something is selected.
+            if (this._session) {
+                this._session.selectBricks(this._spatialSelection.brickIds, this._spatialSelection.brickId);
+            }
             this._refreshEditingContext();
             this._refreshInspection();
+            this._refreshGizmo();
         }
         if (this._spatialHover && this._spatialHover.documentId === sourceDocumentId) {
             this._setSpatialHover(SpatialHoverState.empty());
@@ -1044,7 +1146,7 @@ export class WorldNavigationSession {
             this._hideGizmo();
             return;
         }
-        const offset = this._worldLayoutProvider.getPosition(this._spatialSelection.documentId);
+        const offset = this._getWorldPosition(this._spatialSelection.documentId);
         const worldPivot = {
             x: presentation.pivot.x + offset.x,
             y: presentation.pivot.y + offset.y,
@@ -1092,11 +1194,11 @@ export class WorldNavigationSession {
             if (document) {
                 const building = document.world.getBuilding(hitResult.buildingId);
                 existingBrick = building?.findBrick(hitResult.brickId);
-                layoutOffset = this._worldLayoutProvider.getPosition(targetDocumentId);
+                layoutOffset = this._getWorldPosition(targetDocumentId);
             }
         } else if (hitResult.type === 'ground') {
             if (targetDocumentId) {
-                layoutOffset = this._worldLayoutProvider.getPosition(targetDocumentId);
+                layoutOffset = this._getWorldPosition(targetDocumentId);
             }
         }
         if (!targetDocumentId || !layoutOffset) {

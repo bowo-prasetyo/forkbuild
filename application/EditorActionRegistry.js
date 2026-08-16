@@ -178,7 +178,18 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             feedback.show(unavailableMessage);
             return;
         }
-        run(session[methodName].bind(session));
+        try {
+            run(session[methodName].bind(session));
+        } catch (err) {
+            // A session method rejecting the mutation outright (e.g.
+            // 0.2.20 fork-on-edit refusing to fork a published
+            // snapshot whose license forbids it) is exactly the "the
+            // action degrades to transient feedback instead of
+            // throwing" contract this registry already promises for
+            // an unavailable capability — extend it to a *refused*
+            // one instead of letting the error reach the UI raw.
+            feedback.show(err.message);
+        }
     };
 
     const nudge = (suffix, label, shortcut, keyName, delta, axis) => define({

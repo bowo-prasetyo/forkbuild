@@ -1519,3 +1519,72 @@ membership (their brickIds still reference the source's pre-clone
 brick ids) — a real, separate bug in the 0.1.42 cloning mechanism
 every fork already inherits, not something 0.2.20 introduces or
 scopes to fix.
+
+#### Hardening follow-up: lazy in practice, not just in intent
+
+The first pass above shipped a real gap in how `gizmoPointerDown`
+decides to fork, and missed that a fork is, by construction, invisible
+to two systems that had never before had to deal with a loaded
+document that isn't a publication:
+
+- **Eager forking on the gizmo path.** `gizmoPointerDown` runs on
+  every pointer-down while something is selected — that's the
+  pre-existing "gizmo-first" pattern (try the gizmo, fall back to a
+  plain click-select on pointer-up), unrelated to 0.2.20. The first
+  pass called `_ensureEditableSelection()` unconditionally before the
+  renderer's own hit-test, so ANY click while a published brick was
+  selected forked — including a click that only meant to select a
+  *different* brick. Fixed by hit-testing first: the renderer now
+  exposes a side-effect-free `gizmoHitTest(x, y)` (backed by
+  `TransformGizmoController.hitTest`, the same `_pickHandle` the real
+  `onPointerDown` already used, just without arming a drag), and
+  `gizmoPointerDown` only forks when that hit-test actually finds a
+  handle under the pointer. A click anywhere else returns `false`,
+  same as it always did before there was anything to fork.
+- **Position drift after forking.** A fork is never itself
+  discoverable (it hasn't been published), so
+  `WorldLayoutProvider.getPosition(forkId)` has nothing to resolve and
+  falls back to its "unknown document" default — fine for `addWorld`
+  at fork time (called with the SOURCE's position, computed before the
+  swap), but wrong for every position lookup afterward:
+  `_refreshGizmo()`'s pivot/bounds, placement-preview offsets,
+  `focusDocument`, `getDocumentPosition`. The gizmo in particular would
+  silently detach from the bricks it was supposed to control — visibly
+  "selected but ungrabbable." Fixed with `_localPositions`, a session-
+  local map from documentId to the position it inherited at fork time;
+  `_getWorldPosition(documentId)` checks this before falling through
+  to the layout provider, and every lookup above now goes through it.
+- **Streaming silently drops a saved fork.** `updateSpatialView`'s
+  unload pass only pins documents that are *dirty*. A fork starts
+  dirty (`history.markUnsaved()` at fork time) but `saveDocument`
+  clears that — and a fork can never re-enter `findVisibleDocuments`'s
+  results on its own, so the very next camera-driven streaming pass
+  would unload it: bricks torn down, CommandHistory discarded, with no
+  way to stream it back in. Fixed with `_localOnlyDocumentIds`, set
+  alongside `_localPositions` at fork time; `updateSpatialView`'s
+  unload filter now also excludes anything in that set, independent of
+  dirty state.
+- **Stale renderer selection/gizmo after the swap.**
+  `_remapReferencesAfterFork` updated `_spatialSelection` but never
+  told the renderer: `selectBricks` was never re-called with the
+  fork's (fresh) brick ids, and `_refreshGizmo()` was never re-run.
+  Both are now called at the end of `_remapReferencesAfterFork`.
+- **Denials reaching the UI as raw exceptions.** A fork-policy denial
+  (or any guard rejection) is meant to be rejected outright — see
+  above — but "rejected outright" was implemented as a thrown `Error`
+  with nothing downstream to catch it, so it surfaced as an uncaught
+  exception in whatever pointer/keyboard handler triggered it, with no
+  on-screen explanation. `EditorActionRegistry`'s `surfaceCall` — the
+  single choke point every registry-driven mutating action already
+  goes through — now catches and routes the message to the existing
+  `ActionFeedback` toast; the World View's own direct call sites
+  (`gizmoPointerDown`, `commitPlacement`, align/distribute/numeric
+  transform, which predate the registry and call the session directly)
+  go through an equivalent local `guarded()` wrapper. This is the same
+  contract 0.1.50 already documented for a *missing* capability
+  ("the action degrades to transient feedback instead of throwing"),
+  extended to a *refused* one. Proactively, `getEditabilityNotice
+  (documentId)` lets the World View explain a published snapshot
+  BEFORE an edit is attempted — "your first edit forks it" for a
+  forkable one, the specific license and why for a blocked one —
+  rendered next to the inspection panel.

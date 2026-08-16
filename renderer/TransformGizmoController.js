@@ -84,6 +84,19 @@ export class TransformGizmoController {
     // gesture transaction can apply precision mode per frame. The
     // controller attaches no meaning to them beyond forwarding.
 
+    // Side-effect-free: would onPointerDown grab a handle right now?
+    // Callers that need to do something (like fork-on-edit's lazy
+    // Copy-on-Write) BEFORE a drag is actually armed use this to tell
+    // a genuine grab apart from an incidental pointer-down elsewhere
+    // (e.g. clicking a different brick to reselect it) — onPointerDown
+    // alone can't answer that without already arming the drag.
+    hitTest(screenX, screenY) {
+        if (!this._gestureService || this._drag || !this._gizmoRenderer.visible) {
+            return false;
+        }
+        return this._pickHandle(screenX, screenY) !== null;
+    }
+
     onPointerDown(screenX, screenY, selection) {
         if (!this._gestureService || this._drag || !this._gizmoRenderer.visible) {
             return false;

@@ -889,6 +889,23 @@ html, body {
     margin-top: 0.75rem;
 }
 
+.editability-notice {
+    margin: 0.75rem 0 0;
+    padding: 0.5rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    background: rgba(76, 175, 125, 0.12);
+    border: 1px solid rgba(76, 175, 125, 0.35);
+    color: #a8e0c2;
+}
+
+.editability-notice--blocked {
+    background: rgba(224, 108, 108, 0.12);
+    border-color: rgba(224, 108, 108, 0.4);
+    color: #e0a0a0;
+}
+
 .action-btn--primary {
     background: #4caf7d;
     color: #121212;
