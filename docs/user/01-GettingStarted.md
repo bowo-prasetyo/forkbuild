@@ -35,9 +35,9 @@ ForkBuild has four main areas:
 | Area | What it's for |
 |---|---|
 | **Editor** | Build and edit your own creations |
-| **Repository** | Browse, open, fork, and explore published creations |
+| **Repository** | Search, browse, open, fork, and explore published creations |
 | **Author view** | See everything one person has made (open by clicking any author's name) |
-| **World View** | Fly through the shared world where all creations live in 3D space |
+| **World View** | Fly through the shared world where all creations live in 3D space, and search or explore to find things |
 
 ## Placing your first brick
 

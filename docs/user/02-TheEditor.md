@@ -28,6 +28,9 @@ transform bricks, and how to organize your build with groups.
 - **Brick Palette** — the bricks you can build with.
 - **Groups** — organize bricks into named collections.
 
+> **Tip:** Press `Ctrl/Cmd+K` anywhere to open the **Command Palette** — a
+> searchable list of every action in this guide, by name.
+
 ## The two tools
 
 ### Place tool (`2`)
@@ -121,13 +124,24 @@ Groups let you name and reuse collections of bricks — like "Roof" or "Windows"
 > changes the group. And deleting a group only removes the *label*, not the
 > bricks inside it.
 
+## Document Properties
+
+Every creation has a **title**, an optional **description**, and a
+**license** — set them by clicking **Edit Metadata** (in World View) or the
+first time you save a brand-new document. The description shows up as a
+snippet on its Repository card and is searchable there too; the license
+controls whether — and how — other people are allowed to fork it. See
+[Publishing & Forking](04-PublishingAndForking.md) for what each license
+means.
+
 ## Saving, publishing, starting over
 
 - **Save** (`Ctrl+S`) — keep your work on this device.
 - **Publish** — share it with everyone (see
   [Publishing & Forking](04-PublishingAndForking.md)).
 - **New** — start a fresh, empty creation.
-- **Recent** — reopen something you saved before.
+- **Recent** — reopen something you saved before. Once you've saved enough
+  documents, a filter box appears so you can jump straight to one by name.
 
 ## Camera controls
 

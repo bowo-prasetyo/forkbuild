@@ -15,6 +15,14 @@ export default {
                 can be built, forked, shared, and preserved across decentralized
                 publishing systems.
             </p>
+            <p>
+                <a href="README.md" target="_blank" rel="noopener">Project README</a>
+                — architecture, milestone history, and what's shipped so far.
+            </p>
+            <p>
+                <a href="docs/user/README.md" target="_blank" rel="noopener">User Guide</a>
+                — how to build, publish, fork, and explore in ForkBuild.
+            </p>
         </section>
     `
 };
