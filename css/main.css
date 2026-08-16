@@ -1122,6 +1122,130 @@ html, body {
     padding: 0.5rem 0;
 }
 
+/* 0.2.29: "Explore Here" / "What's Here?" — sits directly under the
+   camera coordinate readout they both read from, so the buttons read
+   as acting on "where the camera is right now," not on the world in
+   general. */
+.world-view-actions--explore {
+    margin-top: 0.4rem;
+}
+
+/* 0.2.29: ui/components/WorldLocationBrowser.js — same modal
+   convention as LocationDocumentsDialog, extended with a re-query
+   radius form and a result list that (unlike LocationDocumentsDialog's
+   exact-position occupants) carries the 0.2.28 spatial-query shape:
+   distance, and the hasPlacement/fallback distinction, per result. */
+.world-location-browser-context {
+    margin: 0 0 0.85rem;
+    font-size: 0.85rem;
+    color: #b0b0b0;
+    line-height: 1.5;
+}
+
+.world-location-browser-radius-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.world-location-browser-radius-input {
+    flex: 1;
+}
+
+.world-location-browser-empty {
+    color: #808080;
+    font-size: 0.82rem;
+    padding: 0.5rem 0;
+}
+
+.world-location-browser-count {
+    margin: 0 0 0.5rem;
+    font-size: 0.78rem;
+    color: #909090;
+}
+
+.world-location-browser-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.world-location-browser-item {
+    padding: 0.5rem 0.65rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.world-location-browser-item-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 0.6rem;
+}
+
+.world-location-browser-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.world-location-browser-item-title {
+    color: #d0d0d0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.world-location-browser-item-author {
+    color: #707070;
+    font-size: 0.75rem;
+}
+
+.world-location-browser-item-distance {
+    color: #808080;
+    font-size: 0.72rem;
+    margin-top: 0.1rem;
+}
+
+.world-location-browser-item-note {
+    color: #c9a24a;
+    font-size: 0.72rem;
+    margin-top: 0.15rem;
+}
+
+.world-location-browser-item-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.world-location-browser-inspect {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.world-location-browser-inspect-note {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #909090;
+    line-height: 1.4;
+}
+
 /* A text-only "button" for a small secondary action inline with text
    (e.g. PlacementInfoPanel's overlap notice) — not a full .action-btn,
    which reads as too heavy sitting inside a sentence. */

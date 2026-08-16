@@ -859,3 +859,80 @@ plain text search therefore carries `distance: null` rather than a
 number left over from some other query — there is no meaningful
 distance without a center to measure from, and a stale or invented one
 would be worse than none.
+
+### Exploring A Location Is Not A Second Search (0.2.29)
+
+The World Location Browser lets a person browse the world by CAMERA
+POSITION instead of by already knowing a document's name or typing raw
+coordinates — but "exploring" a location and "searching" for one are
+the same underlying question asked from a different starting point,
+not two mechanisms that happen to look similar. `exploreLocation`,
+`exploreHere`, and `whatsHere` are thin wrappers over
+`searchWorldByLocation` (0.2.28); none of them re-implement position
+resolution, the distance test, or the nearest-first sort. This matters
+for the same reason 0.2.26 insisted discovery stay one path rather
+than a UI-maintained catalog that could drift from what discovery
+actually knows (see "Discovery Is One Path, Not Two," above): a second
+implementation of "what's near this point" would eventually answer a
+slightly different question than the first one, and nobody would
+notice until the two disagreed. There is exactly one spatial query in
+this codebase. Exploration is a camera-driven front end for it.
+
+### "Explore Here" Queries The Camera, Never The Active Document (0.2.29)
+
+`exploreHere`'s query center is the CAMERA's current world position —
+`getSpatialState().cameraPosition` — never the active document's
+placement. This is 0.2.27's camera/active separation applied to a new
+operation rather than relaxed for one: a person can be looking at
+empty space between two documents, with no active document at all (or
+an active document that has nothing to do with where the camera
+happens to be pointed), and still reasonably want to explore right
+there. Reaching for "the active document's position" as a shortcut
+would silently break exactly that case — the most natural one for
+"explore here" to begin with — so the query center comes from the
+camera, unconditionally, the same way focus and active-document
+changes have been independently tracked since 0.2.27.
+
+### A Tolerance Radius Is What Makes "What's Here?" Answerable From A Camera (0.2.29)
+
+`getDocumentsAtPosition` (0.2.26) answers "what's recorded at this
+EXACT position" via literal coordinate equality, which is the right
+question when the position in hand is itself exact — a placement's own
+recorded position, for instance. A camera's world position is not that
+kind of number: it is continuous, it changes on every orbit/pan/zoom,
+and it essentially never lands exactly on a recorded `PlacementRecord`
+— not even immediately after focusing one, since
+`SpatialCameraController.focusDocument`'s orbit-style framing parks
+the camera a fixed offset away from its target, never on top of it.
+"What's Here?" (`whatsHere` = `exploreHere(NEARBY_RADIUS)`) answers the
+same intent — "what's essentially right here" — with a small-radius
+spatial query instead of an exact-match one, because an exact-match
+query against a continuous coordinate would almost always report
+nothing, correctly but uselessly. The tolerance is deliberately much
+smaller than "Explore Here"'s own configurable radius: "What's Here?"
+should read as "basically at this spot," not "in this neighborhood."
+
+### The Location Browser's Three Actions Are Existing Operations, Not New Ones (0.2.29)
+
+Focus, Select, and Inspect on a location-browser result are not new
+capabilities invented for this milestone — they are the same
+operations 0.2.27 already established, reached from a new entry point.
+Focus is `focusDocument`'s existing default behavior (moves the
+camera, and by default makes the document active too). Select is
+`setActiveDocument` (makes the result the active/editing-target
+document WITHOUT moving the camera). Neither forks, edits, or
+publishes anything — see "Navigation Never Implies Editing" (0.2.27),
+which this milestone extends to exploration rather than carving out an
+exception for it. Inspect goes one step further than either: it never
+navigates and never loads the document into the session at all.
+`inspectDocument` bundles `getDocumentInfo` and `getPlacementInfo`
+exactly as they already behave — and `getDocumentInfo` only has an
+answer for a document actually loaded in the session. A location- or
+search-result document is, by definition, usually one this session
+hasn't loaded (that is the point of finding it by exploring rather
+than already having it open), so `documentInfo` may legitimately come
+back `null`. Forcing a load just to inspect a result would be a real
+side effect — renderer work, storage/network reads — that a strictly
+read-only action must not trigger on its own; the UI falls back to
+what the search/explore result already knows (title, author, position,
+`hasPlacement`) when that happens.

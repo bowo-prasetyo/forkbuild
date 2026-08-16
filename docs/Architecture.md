@@ -2654,3 +2654,110 @@ UI — see docs/Principles.md, "A World Unit Is Not (Yet) A Meter",
 0.2.24); and a combined spatial-query location BROWSER (clicking/
 exploring a region, sorting, filtering interactively) — that is
 0.2.29's proposed scope, not this one's.
+
+### World Location Browser & Spatial Exploration (0.2.29)
+
+0.2.28 gave the World View a spatial query: "what's within `radius`
+World Units of `center`." 0.2.29 gives it a way to REACH that query
+from where a person actually is — the camera — instead of requiring
+they already know a document's name or type coordinates by hand. Built
+entirely on top of 0.2.28's machinery; there is still exactly one
+spatial query in this codebase.
+
+    "Explore Here" / "What's Here?" (WorldView.js, header)
+              │
+              ▼
+      WorldNavigationSession.exploreHere(radius) / whatsHere()
+        (center = getSpatialState().cameraPosition — NEVER the
+         active document's placement; see docs/Principles.md,
+         "'Explore Here' Queries The Camera, Never The Active
+         Document")
+              │
+              ▼
+      WorldNavigationSession.exploreLocation({ center, radius })
+        = searchWorldByLocation({ center, radius })   (0.2.28, unchanged)
+              │
+              ▼
+          enriched, nearest-first results
+          { documentId, title, author, hasPlacement, position, distance }
+              │
+              ▼
+      WorldLocationBrowser.js (modal)
+        Focus  → focusDocument (default: moves camera, sets active)
+        Select → setActiveDocument (active only, camera untouched)
+        Inspect → inspectDocument (read-only, never loads/navigates)
+
+- `application/WorldNavigationSession.js`:
+  - `DEFAULT_EXPLORE_RADIUS = 25` / `NEARBY_RADIUS = 5` — the two
+    radii "Explore Here" and "What's Here?" default to, respectively a
+    reasonable starting neighborhood and a small tolerance for
+    "essentially right here" (see docs/Principles.md, "A Tolerance
+    Radius Is What Makes 'What's Here?' Answerable From A Camera," for
+    why this is a small-radius query rather than `getDocumentsAtPosition`'s
+    exact-match test — a continuous camera coordinate essentially never
+    lands exactly on a recorded placement).
+  - `exploreLocation({ center, radius })` — thin delegate to
+    `searchWorldByLocation`; exists purely so location-browser call
+    sites read as "explore," not "search," without duplicating any
+    logic.
+  - `exploreHere(radius = DEFAULT_EXPLORE_RADIUS)` — reads
+    `getSpatialState().cameraPosition` as the center; returns `[]`
+    (not a throw) when there is no camera state yet (nothing loaded).
+  - `whatsHere()` — `exploreHere(NEARBY_RADIUS)`.
+  - `inspectDocument(documentId)` — `{ documentId, documentInfo,
+    placementInfo }`, each exactly what `getDocumentInfo`/
+    `getPlacementInfo` already return; never forces a load.
+    `documentInfo` is legitimately `null` for a result this session
+    hasn't loaded — see docs/Principles.md, "The Location Browser's
+    Three Actions Are Existing Operations, Not New Ones."
+  - None of the above are new mutation surfaces — `exploreLocation`/
+    `exploreHere`/`whatsHere` are read-only queries, and `Select`
+    (`setActiveDocument`) and `Focus` (`focusDocument`) were both
+    already part of the public API before this milestone (0.2.27).
+
+UI:
+
+- `ui/components/WorldLocationBrowser.js` (new) — a modal dialog
+  following the same convention as `LocationDocumentsDialog`/
+  `PlacementEditorDialog`. Shows "📍 Center: x, y, z" and "⭕ Radius: N
+  World Units," a re-query radius field ("Explore" re-runs
+  `exploreLocation` at the same center with a new radius), and a
+  result list with each result's 📍 title, 📏 distance, and (when
+  `hasPlacement` is false) the same "No placement recorded — using a
+  default position" note `WorldSearchPanel` already shows. Each result
+  has Focus/Select/Inspect buttons; Inspect toggles an inline,
+  read-only expansion of Document Info + Placement Info in place
+  (falling back to the result's own already-known fields when
+  `documentInfo` is `null`). The result count reads "Showing N of N
+  discoverable documents" — deliberately not "N documents in the
+  world" — the same decentralized honesty 0.2.26/0.2.28 established:
+  what the currently configured discovery provider can find within the
+  requested region, not a claim of omniscient knowledge (see
+  docs/Principles.md, "Diagnostics Should Say What Is Actually True,
+  Not What Would Be Convenient," 0.2.26). This component does not
+  reuse `DocumentInfoPanel`/`PlacementInfoPanel` — both render live
+  mutation affordances (an "Edit Metadata" button in particular) that
+  have no place in a strictly read-only browsing surface; its inline
+  expansion renders its own read-only-only fields instead.
+- `ui/views/WorldView.js` — "Explore Here" / "What's Here?" buttons
+  sit directly under the camera coordinate readout they both act on.
+  `exploreHere()`/`whatsHere()` call the matching session methods and
+  open the dialog; `reExploreLocationBrowser(radius)` handles the
+  dialog's own re-query; `focusLocationBrowserResult` (closes the
+  dialog, like `LocationDocumentsDialog`'s own Focus), 
+  `selectLocationBrowserResult` (stays open — nothing about the
+  current view changed), and `inspectLocationBrowserResult` (toggles
+  the host-owned `inspected` state passed back down as a prop) wire
+  the three result actions to the session.
+
+Deliberately not in 0.2.29: box selection in world space; sphere
+visualization with collision geometry; polygon regions; "all documents
+intersecting this building"; spatial clustering. All of these are
+about geometry the location browser doesn't reason about at all — it
+is a list of discoverable documents ordered by distance, nothing more.
+Also not attempted here: wiring the decentralized spatial index
+(`SpatialIndexRoot`/`SpatialIndexManifest`, with 0.2.19's trust
+diagnostics) as the actual backend for World View discovery — explore/
+search/streaming all still read the plain `LocalWorldLayoutProvider`.
+That swap — "spatial streaming/index integration" — is a proposed
+future milestone (see docs/Roadmap.md), not this one's.
