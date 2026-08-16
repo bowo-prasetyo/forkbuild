@@ -39,7 +39,7 @@ export class CreatePublisherUseCase {
             placementRegistry,
             identityProvider
         );
-        const initialPlacementStrategy = new GridPlacementStrategy(discoveryProvider);
+        const initialPlacementStrategy = new GridPlacementStrategy();
 
         return {
             publishDocumentUseCase: new PublishDocumentUseCase(

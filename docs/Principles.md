@@ -486,3 +486,83 @@ re-deriving one. The deterministic-grid computation still exists, but
 now strictly as a fallback for content that predates this milestone
 and therefore has no recorded placement at all — not as the
 system's normal, ongoing answer to where a world is.
+
+### World Coordinates Are Absolute; Documents Are Local (0.2.24)
+
+A brick's own position is meaningful only inside its own document — it
+is chosen, stored, and edited with no awareness that the document
+might ever be published, let alone where a placement might put it. A
+WorldPlacement's position is meaningful only in shared world space —
+it is chosen, stored, and moved with no awareness of what the
+publication it points to actually contains. Neither ever needs to know
+about the other to be valid on its own; they compose, by simple
+addition, only at the moment something actually needs an effective
+world position (rendering, spatial queries) — see
+core/WorldPlacement.js `effectiveWorldPosition()`. This is what lets
+the SAME document appear, unmodified, at more than one place in the
+world at once, and what lets a placement move without the document
+ever being touched (see "Moving A Placement Is Not Editing A Document"
+above).
+
+Positions the system STORES — a placement's position, whether chosen
+automatically or by a person — are always absolute world coordinates.
+A relative instruction ("50 units north of Alice's Castle", a nudge
+button, "move by ΔX") is a convenience for CALCULATING the next
+absolute position, never a thing that gets persisted as a relationship
+between two placements. This is a deliberate, current-milestone
+boundary, not an oversight: a `relativeTo`/`offset` primitive would
+mean a placement's actual position depends on resolving another
+placement's position first, transitively, on every read, on every
+replica — real complexity (chains, cycles, a moved or deleted
+reference) that nothing today actually needs solved. If relational
+placement ever becomes a real requirement, it is additive on top of
+the existing absolute position field, not a replacement for it.
+
+### Deterministic Placement Is Not Optional (0.2.24)
+
+An algorithm that assigns a publication's initial position must be a
+pure function of the publication's own identity — nothing else. Before
+this milestone, GridPlacementStrategy computed a position from how
+many publications the LOCAL node happened to already know about
+(`discoveryProvider.list().length`) — locally-observed state that two
+not-yet-converged replicas (the normal, ongoing condition in a
+decentralized system, not a rare edge case) can each see differently.
+The required property —
+
+    same publication -> same placement algorithm -> same absolute coordinate
+
+on every replica — did not hold: two nodes could independently place
+different publications at the identical grid slot, or the same
+publication at two different ones, purely as an artifact of what each
+node happened to have discovered first. `computePosition` now depends
+on nothing but `publicationId` (core/DeterministicGridPlacement.js), a
+pure hash-based mapping with no collaborator to observe local state
+through even by accident. `LocalWorldLayoutProvider`'s legacy fallback
+— for publications that predate 0.2.23 and so carry no PlacementRecord
+at all — goes through the identical function, for the identical
+reason: a fallback with the same non-determinism bug as the thing it
+falls back from is not actually a fix.
+
+This does not mean placements never collide — a bounded, hash-based
+grid can and will map two different ids to the same cell. Resolving
+that is explicitly out of scope here (see docs/Roadmap.md, "spatial
+allocation / collision policy"); determinism, not collision avoidance,
+is the property this milestone establishes.
+
+### A World Unit Is Not (Yet) A Meter
+
+The World View's coordinate system has a canonical origin `(0, 0, 0)`
+— every replica's `(0, 0, 0)` is the same point in shared space by
+definition — and a fixed, right-handed axis convention (`+X` right,
+`+Y` up, `+Z` toward the viewer, ground plane at `Y = 0`), matching the
+renderer's underlying Three.js default, now stated as protocol rather
+than left implicit in a rendering library's convention that happens to
+currently be Three.js. One coordinate unit is one **World Unit** — a
+name, not a physical quantity. This milestone deliberately does NOT
+claim a World Unit equals one real-world meter, or any other physical
+unit: nothing in the existing brick/document geometry was built
+against that assumption, and asserting it now would be a claim the
+system cannot back up. A later milestone can layer a physical-unit
+interpretation (meters, or something else entirely) on top of World
+Units without changing a single stored coordinate — the position data
+itself never encodes a unit, only a number.

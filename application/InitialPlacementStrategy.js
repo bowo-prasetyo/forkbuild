@@ -1,6 +1,4 @@
-import { Position } from '../core/Position.js';
-
-const GRID_SPACING = 40;
+import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
 
 // 0.2.23: where does a freshly published world land, before anyone
 // has chosen to move it? Before this milestone that question had an
@@ -16,29 +14,23 @@ const GRID_SPACING = 40;
 // initial position somewhere to slot in without touching
 // PlacementRecord itself.
 //
-// Only Grid is implemented — it reproduces WorldLayoutProvider's
-// pre-existing fallback math exactly (same spacing, same 4-column
-// wrap), so publications placed under this strategy land where the
-// old fallback would already have shown them, and are now backed by a
-// real, explicit, ownable PlacementRecord instead of a value
-// recomputed from scratch on every lookup. NextAvailable/Origin/
-// UserSpecified are deliberately NOT built speculatively — an
-// interface any of them could implement (computePosition(context)),
-// added only when a real requirement asks for one.
+// 0.2.24: computePosition is now a PURE function of
+// context.publicationId — see core/DeterministicGridPlacement.js for
+// why. It no longer takes a discoveryProvider (nothing it does
+// depends on what else this node has published or discovered), which
+// is itself the point: the previous, count-based version was exactly
+// the kind of locally-observed state a decentralized placement
+// algorithm cannot depend on and still guarantee the same publication
+// lands at the same coordinate on every replica.
+//
+// Only Grid is implemented. NextAvailable/Origin/UserSpecified are
+// deliberately NOT built speculatively — an interface any of them
+// could implement (computePosition(context)), added only when a real
+// requirement asks for one.
 export class GridPlacementStrategy {
-    constructor(discoveryProvider) {
-        this._discoveryProvider = discoveryProvider;
-    }
-
     // `context.publicationId` is the just-created publication the
-    // position is being chosen FOR — included in the count so the
-    // very first publication lands at the grid origin (index 0), not
-    // one slot late.
+    // position is being chosen FOR.
     computePosition(context = {}) {
-        const count = this._discoveryProvider ? this._discoveryProvider.list().length : 1;
-        const index = Math.max(0, count - 1);
-        const row = Math.floor(index / 4);
-        const col = index % 4;
-        return new Position(col * GRID_SPACING, 0, row * GRID_SPACING);
+        return computeDeterministicGridPosition(context.publicationId);
     }
 }

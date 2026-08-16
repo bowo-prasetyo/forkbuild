@@ -897,3 +897,82 @@ Publication it points to:
 Document/Publication content, hash, and lineage are untouched by any
 of the above — a placement move produces no Document event, no
 CommandHistory entry, no fork.
+
+## World Coordinate Semantics & Placement UX (0.2.24)
+
+No new wire format — `Position`/`WorldPosition`/`WorldPlacement`/
+`PlacementRecord` are all byte-identical to 0.2.23. This milestone
+makes the coordinate system those types already carried EXPLICIT, and
+fixes the one place the old initial-placement algorithm violated it.
+
+**Two coordinate systems, not one:**
+
+- Document-local coordinates — a brick's `position` (core/Brick.js).
+  Meaningful only within its own World; a document never knows or
+  cares whether it has been published, let alone where it is placed.
+- World (global) coordinates — a `WorldPlacement`/`PlacementRecord`'s
+  `position`. Meaningful only in shared world space; a placement never
+  knows or cares what content the publication it points to contains.
+
+They compose by simple addition — `documentLocalPosition +
+worldPlacementPosition = effectiveWorldPosition`
+(`WorldPlacement.effectiveWorldPosition`, `Position.add`) — which is
+exactly what `renderer/WorldRenderer.js` was already doing per-mesh
+via `_documentOffsets`; this milestone just names the operation and
+makes it independently constructible/testable outside the renderer.
+
+**The coordinate system itself, formalized:**
+
+- Canonical origin: `(0, 0, 0)`. It is a coordinate-system anchor, not
+  a claim about what (if anything) exists there — every replica's
+  `(0, 0, 0)` is the same point by definition, nothing more.
+- Axis convention: right-handed, `+X` right, `+Y` up, `+Z` toward the
+  viewer — the renderer's underlying Three.js default, now stated as
+  protocol, not left implicit in a rendering library's convention that
+  happens to currently be Three.js. The ground plane is `Y = 0`.
+- Unit: one coordinate unit is one **World Unit**. This milestone
+  deliberately does NOT claim a World Unit is one meter, or any other
+  physical unit — see docs/Principles.md, "A World Unit Is Not (Yet) A
+  Meter." A future milestone can layer a physical-unit interpretation
+  on top without changing any stored coordinate.
+
+**Deterministic initial placement (the one behavioral fix):**
+
+`InitialPlacementStrategy`'s `GridPlacementStrategy` (0.2.23) computed
+a position from `discoveryProvider.list().length` — how many
+publications the LOCAL node happened to already know about at that
+moment. Two replicas that have not yet converged (the normal, ongoing
+condition in a decentralized system) can each see a different count
+when independently placing different publications, or the same count
+when placing different publications — either way, the required
+protocol property
+
+    same publication -> same placement algorithm -> same absolute coordinate
+
+did not hold. `computePosition` is now a pure function of
+`context.publicationId` alone (`core/DeterministicGridPlacement.js`):
+a stable hash of the id, bounded into a fixed-size grid. It takes no
+collaborator and reads no local state, so the property above holds by
+construction rather than by convention. `LocalWorldLayoutProvider`'s
+legacy fallback (for publications published before 0.2.23, which
+therefore carry no PlacementRecord at all) now goes through the exact
+same function, for the same reason.
+
+This does NOT solve position collisions — two different publication
+ids can still hash into the same grid cell, and nothing here detects
+or resolves that. Collision-free spatial allocation among concurrently
+and independently placed publications is explicitly deferred (see
+docs/Roadmap.md) — determinism (same input, same output, everywhere)
+is the only property this milestone establishes.
+
+**User-facing relative placement remains a UI convenience, not a
+protocol primitive:** the Move Placement dialog's nudge buttons
+(`ui/components/PlacementEditorDialog.js`) compute a new absolute
+X/Y/Z locally and submit it through the unchanged
+`MoveWorldPlacementUseCase.execute(placementId, newPosition)` path
+above — no `relativeTo`/`offset` shape is introduced into
+`PlacementRecord` or the wire format. If relational placement (e.g. "50
+units north of Alice's Castle" persisted AS a relationship, not a
+computed absolute) ever becomes a real requirement, it is a new,
+additive field on top of the existing absolute `position` — not a
+replacement for it.

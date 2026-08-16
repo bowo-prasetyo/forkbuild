@@ -2099,3 +2099,107 @@ authorization into the ownership check (a real, natural extension —
 "Bob is authorized to place/move Alice's castle without owning it" —
 deliberately deferred, not built speculatively); and any additional
 `InitialPlacementStrategy` beyond Grid.
+
+### World Coordinate Semantics & Placement UX (0.2.24)
+
+0.2.23 connected placement to the UI but left one implicit assumption
+in place: `GridPlacementStrategy.computePosition` read
+`discoveryProvider.list().length` — how many publications THIS LOCAL
+NODE happened to already know about — to pick a position. That is
+locally-observed state, not a fact about the publication being placed,
+and it broke the one property a shared, decentralized world coordinate
+system actually needs: the same publication must resolve to the same
+absolute coordinate on every replica, regardless of what else that
+replica has or hasn't discovered yet. Two nodes independently placing
+different publications before either has heard of the other's could
+land both at slot 0; the same node placing the same publication after
+discovering a different number of others first could produce a
+different slot depending purely on timing. This milestone's core fix
+is small in code and large in consequence: make `computePosition` a
+pure function of `publicationId` alone.
+
+- `core/DeterministicGridPlacement.js` (new) —
+  `computeDeterministicGridPosition(id)`: hashes `id` via
+  `serializer/contentHash.js`'s existing FNV-1a `computeContentHash`
+  (reused purely as a stable string→integer function, no cryptographic
+  property needed) and maps it into a bounded grid (`GRID_EXTENT = 64`
+  cells per axis, `GRID_SPACING = 40`, both centralizing values that
+  used to be duplicated between `InitialPlacementStrategy.js` and
+  `LocalWorldLayoutProvider.js`). Bounded so placements land in an
+  explorable region rather than scattered across the entire hash
+  range — at the cost of accepting that two different ids CAN land on
+  the same cell. Resolving that is explicitly out of scope (see
+  docs/Roadmap.md); determinism is the only property established here.
+- `application/InitialPlacementStrategy.js` — `GridPlacementStrategy`
+  now just calls the function above with `context.publicationId` and
+  drops its `discoveryProvider` constructor parameter entirely, since
+  nothing it does depends on local discovery state anymore.
+  `CreateWorldViewUseCase.js`/`CreatePublisherUseCase.js` updated to
+  `new GridPlacementStrategy()` accordingly.
+- `world-layout/LocalWorldLayoutProvider.js` — its own fallback grid
+  (for publications that predate 0.2.23 and so carry no
+  PlacementRecord at all) had the identical non-determinism, keyed off
+  each publication's index in `discoveryProvider.list()`. Both
+  `getPosition` and `findVisibleDocuments` now call the same
+  `computeDeterministicGridPosition` GridPlacementStrategy uses — a
+  legacy publication now resolves to the exact same fallback position
+  on every replica, matching the guarantee an explicitly-placed one
+  already gets from its PlacementRecord.
+
+The second half of the milestone makes explicit something the code
+already did correctly but never stated: a brick's position and a
+placement's position are two different coordinate systems that
+compose by addition, not one coordinate system with two writers.
+
+    document-local position  +  WorldPlacement position  =  effective world position
+       (core/Brick.js)          (core/WorldPlacement.js)      (what actually renders)
+
+- `core/Position.js` gains `add(other)` — plain componentwise
+  addition, accepting any `{x,y,z}`-shaped value.
+- `core/WorldPlacement.js` gains `effectiveWorldPosition(localPosition)`
+  — `localPosition.add(this.position)` — giving the composition a
+  name and making it independently testable
+  (`tests/CoordinateSemantics.test.js`) outside
+  `renderer/WorldRenderer.js`, which was already performing the exact
+  same addition per-mesh via its `_documentOffsets` map and is
+  unchanged by this milestone.
+
+The coordinate system itself — origin, axes, unit — is now stated as
+an explicit contract rather than left implicit in whatever Three.js
+happens to default to (see docs/Principles.md, "A World Unit Is Not
+(Yet) A Meter," and docs/Protocol.md's new section for the full
+statement): canonical origin `(0, 0, 0)`, right-handed `+X`/`+Y`/`+Z`
+axes with the ground plane at `Y = 0`, and one coordinate unit named a
+**World Unit** — explicitly not claimed to equal one meter or any
+other physical unit, so a later milestone can add that claim without
+touching a single stored coordinate. No code enforces this beyond what
+already existed; it is a documentation contract two independent
+implementations need to agree on to interoperate, which is exactly
+what belongs in docs/Protocol.md.
+
+UI — the Move Placement dialog gains a relative convenience over the
+same absolute fields, not a new persisted primitive:
+
+- `ui/components/PlacementEditorDialog.js` — a step-size selector
+  (1/10/100 World Units) and ±X/±Y/±Z nudge buttons that adjust the
+  dialog's own local X/Y/Z numbers, exactly as if they'd been typed.
+  "Move" still submits the resulting absolute position through the
+  unchanged `WorldNavigationSession.movePlacement` →
+  `MoveWorldPlacementUseCase` path — nothing relative is ever
+  constructed, signed, or persisted (see docs/Principles.md, "World
+  Coordinates Are Absolute; Documents Are Local").
+- `ui/components/PlacementInfoPanel.js`/`PlacementEditorDialog.js` —
+  position fields now labeled "World Units," so the unit convention
+  above is visible where a person actually reads or enters a
+  coordinate, not just in the docs.
+
+Deliberately not in 0.2.24: any collision-avoidance or "next available
+slot" logic for `GridPlacementStrategy` (determinism was the ask; two
+ids landing on the same cell is a known, accepted limitation — see
+docs/Roadmap.md); a `relativeTo`/offset field on `PlacementRecord`
+("50 units north of Alice's Castle" persisted as a relationship rather
+than computed once into an absolute position) — the nudge UI computes
+and submits an absolute position, nothing relational is stored;
+physical-unit conversion (meters, etc.) for World Units; and touching
+`renderer/WorldRenderer.js`, which already performed the local+
+placement composition correctly and needed no change.

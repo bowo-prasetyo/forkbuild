@@ -18,7 +18,7 @@ export default {
         <div v-if="info" class="placement-info-panel">
             <h4>Placement</h4>
             <div class="info-row">
-                <span class="info-label">Position</span>
+                <span class="info-label">Position (World Units)</span>
                 <span class="info-value">
                     {{ info.position.x.toFixed(1) }}, {{ info.position.y.toFixed(1) }}, {{ info.position.z.toFixed(1) }}
                 </span>
