@@ -968,6 +968,39 @@ html, body {
     flex: 1;
 }
 
+/* 0.2.28: the spatial half of World Search — X/Y/Z + Radius,
+   deliberately styled as a lightweight, secondary row under the text
+   field rather than a separate panel, since the two compose into one
+   query (see ui/components/WorldSearchPanel.js). */
+.world-search-location {
+    margin-top: 0.5rem;
+}
+
+.world-search-location .form-label {
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+.world-search-location-fields {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.world-search-coord,
+.world-search-radius {
+    width: 0;
+    padding-left: 0.4rem;
+    padding-right: 0.3rem;
+}
+
+.world-search-coord {
+    flex: 1;
+}
+
+.world-search-radius {
+    flex: 1.6;
+}
+
 .world-search-results {
     margin-top: 0.6rem;
 }
@@ -1022,6 +1055,15 @@ html, body {
 .world-search-item-author {
     color: #707070;
     font-size: 0.75rem;
+}
+
+/* 0.2.28: position/distance — 📍/📏 give every result a concrete
+   place in the World Unit coordinate system 0.2.24 established,
+   rather than that system staying a purely internal convention. */
+.world-search-item-position {
+    color: #808080;
+    font-size: 0.72rem;
+    margin-top: 0.1rem;
 }
 
 .world-search-item-note {
