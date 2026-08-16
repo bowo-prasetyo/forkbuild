@@ -372,3 +372,40 @@ Fork policy still governs whether the fork may happen at all (0.2.13):
 a license that forbids forking rejects the mutation outright, the same
 way the explicit "Fork" action already does — lazy fork-on-edit is not
 a second, laxer path around that policy.
+
+### A Default Value Is Not An Absent One (0.2.21)
+
+A new document's title reading "Untitled" is a choice the system made
+on the user's behalf, not evidence the user hasn't set one — those are
+different facts, and only one of them has authorization consequences.
+License already drew this line the same way: UNSPECIFIED is a real,
+explicit value distinguishable from "no license object at all," never
+`null`. 0.2.21 extends it to the rest of a document's metadata —
+description defaults to `''`, never `null`, and every field a user can
+edit has a real value from the moment a Document exists, so "what did
+the user actually set" is never answered by string-matching a
+placeholder.
+
+### Status Is Computed, Not Stored (0.2.21)
+
+A document's lifecycle status — Draft, Saved, or Published — is never
+its own field, checkbox, or enum written to storage. It is computed
+fresh, every time, from facts that are already tracked for other
+reasons: whether a save has happened (DocumentState/CommandHistory),
+and whether a Publication exists for this document (the same
+discovery lookup 0.2.20's fork-on-edit guard already performs). Two
+sources of truth for the same fact is how they drift; one function
+(application/DocumentLifecycleStatus.js) computing status from state
+that would already have to exist anyway is how they can't.
+
+### Explaining A Decision Is Not Optional Once The System Can Make One (0.2.21)
+
+0.2.13 gave the system the ability to refuse an edit (fork policy);
+0.2.20 made that refusal load-bearing (fork-on-edit actually enforces
+it). Once a system can say no, telling the user why is not a UI nicety
+layered on afterward — it is the other half of the same feature. Every
+surface that can reject a mutation exposes a structured reason
+(WorldNavigationSession.getEditabilityNotice /
+getDocumentInfo().editabilityNotice) the UI renders in plain language,
+proactively, before the user hits the rejection — not only reactively,
+after an uncaught error already broke whatever they were doing.

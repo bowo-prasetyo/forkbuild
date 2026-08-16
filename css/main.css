@@ -914,7 +914,147 @@ html, body {
 .action-btn--primary:hover {
     background: #5fc490;
 }
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 /* ... existing styles ... */
+
+/* 0.2.21: Document Info panel — shared by EditorView's sidebar and
+   WorldView's inspection column (ui/components/DocumentInfoPanel.js).
+   Reuses the .spatial-panel palette (dark card, green accent) so it
+   reads as one family of panels rather than a second visual system. */
+.document-info-panel {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.document-info-panel h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+    font-size: 0.82rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.info-row:last-of-type {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #909090;
+    flex-shrink: 0;
+}
+
+.info-value {
+    color: #d0d0d0;
+    text-align: right;
+    word-break: break-word;
+}
+
+.info-value--wrap {
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+.info-actions {
+    margin-top: 0.75rem;
+}
+
+/* Document Properties modal (ui/components/MetadataEditorDialog.js) —
+   overlay/panel shape follows CommandPalette's existing convention. */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-panel {
+    width: 420px;
+    max-width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    padding: 1.25rem;
+}
+
+.modal-panel h3 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    color: #e0e0e0;
+}
+
+.form-field {
+    display: block;
+    margin-bottom: 0.85rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.78rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    box-sizing: border-box;
+    background: #121212;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 0.5rem 0.6rem;
+    color: #e0e0e0;
+    font-family: inherit;
+    font-size: 0.88rem;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: #4caf7d;
+}
+
+.form-textarea {
+    resize: vertical;
+}
+
+.form-hint {
+    margin: -0.4rem 0 0.85rem;
+    font-size: 0.78rem;
+    color: #c9a24a;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
 
 .spatial-panel--editing {
     border-color: #4caf7d;

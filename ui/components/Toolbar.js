@@ -35,6 +35,16 @@ export default {
         publishDocumentUseCase: {
             type: Object,
             required: true
+        },
+        // 0.2.21: optional so existing/ad-hoc usages of Toolbar
+        // without a feedback channel keep working (falls back to
+        // alert() below) — but EditorView always provides one now, so
+        // Save/Publish report through the same transient-toast
+        // mechanism every other action already uses instead of a
+        // blocking browser dialog.
+        feedback: {
+            type: Object,
+            default: null
         }
     },
     setup(props) {
@@ -42,8 +52,17 @@ export default {
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
         let unsubscribe = null;
 
+        function report(message) {
+            if (props.feedback) {
+                props.feedback.show(message);
+            } else {
+                alert(message);
+            }
+        }
+
         function save() {
             props.saveDocumentUseCase.execute(props.documentManager);
+            report('Saved');
         }
 
         function createNew() {
@@ -62,9 +81,9 @@ export default {
         function publish() {
             try {
                 const publication = props.publishDocumentUseCase.execute(props.documentManager);
-                alert(`Published "${publication.title}"\nID: ${publication.id}\nProvider: ${publication.providerId}`);
+                report(`Published "${publication.title}"`);
             } catch (err) {
-                alert(`Publish failed: ${err.message}`);
+                report(`Publish failed: ${err.message}`);
             }
         }
                 

@@ -9,6 +9,8 @@ import { InputRouter } from '../../application/InputRouter.js';
 import EditingSidebar from '../components/EditingSidebar.js';
 import CommandPalette from '../components/CommandPalette.js';
 import ActionFeedback from '../components/ActionFeedback.js';
+import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
+import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -20,7 +22,7 @@ const DRAG_THRESHOLD_PX = 6;
 // panels are unchanged.
 export default {
     name: 'WorldView',
-    components: { EditingSidebar, CommandPalette, ActionFeedback },
+    components: { EditingSidebar, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -35,7 +37,11 @@ export default {
         const spatialSelection = ref(null);
         const spatialHover = ref(null);
         const spatialInspection = ref(null);
-        const editabilityNotice = ref(null);
+        // 0.2.21: superseded by documentInfo (getDocumentInfo already
+        // includes editabilityNotice — see below) — the Document Info
+        // panel now carries what this used to render standalone.
+        const documentInfo = ref(null);
+        const showMetadataEditor = ref(false);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
         const cameraPosition = ref(null);
@@ -102,9 +108,23 @@ export default {
         // fork a fork-forbidden published snapshot) becomes a message,
         // not an uncaught exception breaking the pointer/keyboard
         // handler it came from.
+        //
+        // 0.2.21: also drains session.consumeForkNotice() after a
+        // successful call — so the moment a mutation crosses the
+        // publication boundary and creates a fork, the user is told
+        // what just happened instead of the document id silently
+        // changing underneath them (the milestone's "avoid silently
+        // making the user wonder why the document ID changed").
         function guarded(fn) {
             try {
-                return fn();
+                const result = fn();
+                if (typeof session.consumeForkNotice === 'function') {
+                    const notice = session.consumeForkNotice();
+                    if (notice) {
+                        feedback.show(`Created your own editable copy — "${notice.sourceTitle}" is unchanged`);
+                    }
+                }
+                return result;
             } catch (err) {
                 feedback.show(err.message);
                 return undefined;
@@ -123,6 +143,19 @@ export default {
 
         function applyNumericTransform(intent, options) {
             guarded(() => session.applyNumericTransform(intent, options));
+            refreshSpatialUI();
+        }
+
+        // 0.2.21: Document Properties editor. Editing metadata on a
+        // published snapshot forks it first — updateDocumentMetadata
+        // routes through the same guard every other mutation does — so
+        // this goes through guarded() exactly like alignSelection etc.,
+        // and a fork-policy denial surfaces the same way.
+        function onSaveMetadata({ title, description, license }) {
+            const info = documentInfo.value;
+            if (!info) return;
+            guarded(() => session.updateDocumentMetadata(info.documentId, { title, description, license }));
+            showMetadataEditor.value = false;
             refreshSpatialUI();
         }
 
@@ -217,12 +250,14 @@ export default {
                 spatialInspection.value = null;
             }
 
-            // 0.2.20: explain fork-on-edit BEFORE the user hits a
-            // blocked action, not just after — see
-            // WorldNavigationSession.getEditabilityNotice.
-            editabilityNotice.value = (spatialInspection.value && spatialInspection.value.documentId
-                && typeof session.getEditabilityNotice === 'function')
-                ? session.getEditabilityNotice(spatialInspection.value.documentId)
+            // 0.2.21: the Document Info panel for whatever the
+            // inspection panel is currently showing — same documentId
+            // 0.2.20's editability notice used, now folded into the
+            // richer shape (title/description/license/status/
+            // editabilityNotice together) getDocumentInfo returns.
+            documentInfo.value = (spatialInspection.value && spatialInspection.value.documentId
+                && typeof session.getDocumentInfo === 'function')
+                ? session.getDocumentInfo(spatialInspection.value.documentId)
                 : null;
 
             const editingCtx = session.getSpatialEditingContext();
@@ -427,7 +462,8 @@ export default {
             spatialSelection,
             spatialHover,
             spatialInspection,
-            editabilityNotice,
+            documentInfo,
+            showMetadataEditor,
             spatialEditingContext,
             spatialPlacement,
             cameraPosition,
@@ -447,7 +483,8 @@ export default {
             focusSelection,
             alignSelection,
             distributeSelection,
-            applyNumericTransform
+            applyNumericTransform,
+            onSaveMetadata
         };
     },
     template: `
@@ -558,13 +595,13 @@ export default {
                             Focus Brick
                         </button>
                     </div>
-                    <p
-                        v-if="editabilityNotice"
-                        :class="['editability-notice', { 'editability-notice--blocked': editabilityNotice.blocked }]"
-                    >
-                        {{ editabilityNotice.blocked ? '🔒' : 'ℹ️' }} {{ editabilityNotice.message }}
-                    </p>
                 </div>
+
+                <DocumentInfoPanel
+                    v-if="documentInfo"
+                    :info="documentInfo"
+                    @edit-metadata="showMetadataEditor = true"
+                />
 
                 <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">
                     <h4>Placement Preview</h4>
@@ -673,6 +710,12 @@ export default {
                 @close="closePalette"
             />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
+            <MetadataEditorDialog
+                v-if="showMetadataEditor"
+                :info="documentInfo"
+                @save="onSaveMetadata"
+                @cancel="showMetadataEditor = false"
+            />
         </div>
     `
 };
