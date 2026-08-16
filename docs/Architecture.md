@@ -2432,3 +2432,117 @@ Deliberately not in 0.2.26:
   format.** None of `PlacementRecord`/`WorldPlacement`/`Publication`
   changed shape; search and "documents here" are both purely additive,
   read-side queries over what 0.2.10–0.2.25 already persist.
+
+### World View Context & Selection Model (0.2.27)
+
+0.2.26 made two publications sharing an exact world coordinate a real,
+reachable situation (Search, Documents Here). That immediately exposed
+a pre-existing simplification: `_focusedDocumentId` had always meant
+both "where the camera is" and "which document receives a mutation."
+Those questions have the same answer right up until a person can
+switch which of two co-located documents they mean without moving
+anything — at which point conflating them stops being a convenience
+and starts being a way to silently edit the wrong document. 0.2.27
+splits the concept in two and, in doing so, finds and fixes a real
+latent bug the split makes newly reachable.
+
+    WorldNavigationSession
+            │
+            ├── _focusedDocumentId ── getFocusedDocumentId() ── "where is the camera?"
+            │        (set by focusDocument/moveCamera; never read by any mutation)
+            │
+            ├── _activeDocumentId ─── getActiveDocumentId() ─── "what does an edit target?"
+            │        (set by focusDocument (default), setActiveDocument, or synced
+            │         from a non-empty selection's document — see below)
+            │
+            └── _spatialSelection ─── getSpatialSelection() ─── "what's picked right now?"
+                     (kept in sync WITH _activeDocumentId, in one direction: selecting
+                      something makes its document active; it is never the reverse)
+
+- `focusDocument(documentId, { setActive = true } = {})` — unchanged
+  default behavior (moves the camera AND makes `documentId` active),
+  so every pre-0.2.27 caller (search results, Nearby Worlds, Documents
+  Here, all still just calling `focusDocument`) keeps working exactly
+  as before. `{ setActive: false }` is the new, explicit opt-out for a
+  pure camera move.
+- `setActiveDocument(documentId)` (new) — changes the active document
+  without touching the camera at all. Clears the current selection
+  when (and only when) it belongs to a DIFFERENT document — carrying
+  a stale cross-document selection forward would let the very next
+  transform silently fork the wrong thing again.
+- `_setSpatialSelection` (the single choke point every selection
+  change in this file already flowed through — picking, marquee-
+  select, select-all, selecting a group, a paste's auto-selection) now
+  syncs `_activeDocumentId` to the selection's own document whenever a
+  real (non-ground) selection is set. Combined with `setActiveDocument`
+  clearing cross-document selections, this makes "a non-empty
+  selection and the active document always agree" an invariant
+  enforced at one location, not a convention every call site has to
+  remember to uphold.
+- Every mutation fallback in the file (`commitPlacement`, the ground-
+  hover placement preview, `selectAll`, marquee-select's document
+  resolution, clipboard, groups, save/publish, metadata edits,
+  `movePlacement`/`checkPlacementOverlap`, undo/redo's active command
+  history, history replay/restore) was reading `documentId ||
+  this._focusedDocumentId`. All of them now read `_activeDocumentId`
+  instead — camera position no longer has any path into deciding what
+  gets edited. `_remapReferencesAfterFork` remaps `_activeDocumentId`
+  the same way it already remapped `_focusedDocumentId`, so forking
+  the active document keeps `_activeDocumentId` pointing at something
+  that still exists in the session.
+- **The bug this exposed and fixed:** `createGroupFromSelection`,
+  `addSelectionToSelectedGroup`, and `removeSelectionFromSelectedGroup`
+  used to call `_ensureEditableSelection()` (forking the SELECTION's
+  document if needed) and then SEPARATELY fork and read
+  `_focusedDocumentId` — building the group command from whichever
+  document was focused, using the SELECTION's brick ids. Whenever focus
+  and the selection's document differed, this forked a document that
+  didn't need forking and built a command mixing one document's
+  `worldId` with another's `brickIds` — a real cross-document
+  corruption path, latent because nothing before 0.2.26 gave the World
+  View a practical reason to have two documents both loaded and
+  independently selectable. All three now resolve their target
+  directly from `this._spatialSelection.documentId` (already correctly
+  forked by `_ensureEditableSelection`), never from a second,
+  independently-forked id. `renameGroup`/`duplicateGroup`/`deleteGroup`
+  (which take a `groupId`, not a selection) simply moved from
+  `_focusedDocumentId` to `_activeDocumentId` — no selection to
+  reconcile against.
+- `previewHistoryAt`/`cancelHistoryPreview` had a matching, smaller
+  version of the same class of bug: the document swapped in as a
+  replay preview was resolved once at preview-start time but
+  re-resolved from `_focusedDocumentId` again at cancel time — if focus
+  changed while a preview was open, cancel could restore the wrong
+  document's live world. The resolved id is now saved on
+  `_historyPreview.documentId` at start and reused, unconditionally, at
+  cancel.
+- `_loadWorld`/`_unloadWorld` bootstrap and tear down `_activeDocumentId`
+  the same way they already did for `_focusedDocumentId`: the first
+  document ever streamed in becomes active (nothing else to be
+  "instead of"), and a document leaving the session's view can't
+  remain the active target either.
+
+UI:
+
+- `ui/views/WorldView.js` — a new, always-visible context line under
+  the title: "Camera: {focused title} · Editing: {active title}" (via
+  the new `getFocusedDocumentId()`), following 0.2.22's own reasoning
+  for binding the header unconditionally rather than only on a
+  divergence — see docs/Principles.md, "The World View Header Shows
+  What It's Actually Doing." The title, status badge, route, and every
+  document-scoped action (Save/Publish/Edit Metadata/Move Placement)
+  are unchanged in behavior: they already read `getActiveDocumentId()`,
+  which now means exactly what 0.2.22 intended it to mean, more
+  precisely than it did before this milestone.
+
+Deliberately not in 0.2.27: new UI for setting the active document
+independently of Focus (search results, Nearby Worlds, and Documents
+Here all still only offer "Focus," which moves both — a separate
+"make active without moving the camera" affordance is real future
+scope, not something this milestone's session-layer correctness fix
+requires); wiring `pick()`'s screen-space brick selection through
+`setActiveDocument` explicitly (it doesn't need to — `_setSpatialSelection`
+already covers it, since every selection path in this file flows
+through that one method); and any change to the fork-on-write
+mechanism itself (0.2.20's guards are untouched — only WHICH document
+id they receive as input changed).

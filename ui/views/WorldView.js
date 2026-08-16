@@ -48,6 +48,14 @@ export default {
         // world entirely. Drives the header's Published/Editing-fork
         // badge.
         const activeDocumentInfo = ref(null);
+        // 0.2.27: the CAMERA's target — session.getFocusedDocumentId()
+        // — kept as its own field precisely so it can differ from
+        // `title`/`activeDocumentInfo` (the active/editing document).
+        // See docs/Principles.md, "Camera Focus, Active Document, and
+        // Selection Are Three Different Things." Only a title is
+        // needed here (the header context line), not a full
+        // DocumentInfo shape.
+        const focusedDocumentTitle = ref(null);
         const loadedWorlds = ref([]);
         const nearbyWorlds = ref([]);
         const failedWorlds = ref([]);
@@ -488,6 +496,24 @@ export default {
             if (activeId && activeId !== route.params.documentId) {
                 router.replace({ path: `/world/${activeId}` });
             }
+
+            // 0.2.27: the camera's own target, kept and shown
+            // separately from the active document above — see
+            // docs/Principles.md, "Camera Focus, Active Document, and
+            // Selection Are Three Different Things." Two publications
+            // can share a coordinate; focusing one, then the other,
+            // moves the camera nowhere the second time, but Editing
+            // still needs to say which one is now the mutation target.
+            const focusedId = typeof session.getFocusedDocumentId === 'function'
+                ? session.getFocusedDocumentId()
+                : activeId;
+            if (!focusedId) {
+                focusedDocumentTitle.value = null;
+            } else {
+                const focusedDoc = docs.find((d) => d.world.id === focusedId);
+                const focusedPub = pubMap.get(focusedId);
+                focusedDocumentTitle.value = focusedDoc?.metadata?.title || focusedPub?.title || 'Untitled';
+            }
         }
 
         // Best-effort title for a parentDocumentId shown in the
@@ -724,6 +750,7 @@ export default {
             spatialInspection,
             documentInfo,
             activeDocumentInfo,
+            focusedDocumentTitle,
             parentTitle,
             showMetadataEditor,
             metadataEditTarget,
@@ -784,6 +811,16 @@ export default {
                         ✎ Editing fork<template v-if="parentTitle(activeDocumentInfo.parentDocumentId)"> — forked from {{ parentTitle(activeDocumentInfo.parentDocumentId) }}</template>
                     </span>
                     <span v-else>✎ {{ activeDocumentInfo.statusLabel }}</span>
+                </p>
+                <!-- 0.2.27: camera focus and the active (editing) document
+                     are independently tracked — two publications can share
+                     a coordinate, so focusing one after the other never
+                     moves the camera, but Editing still needs to say which
+                     one is now the mutation target. See
+                     docs/Principles.md, "Camera Focus, Active Document,
+                     and Selection Are Three Different Things." -->
+                <p class="world-view-context">
+                    Camera: {{ focusedDocumentTitle || 'World' }} · Editing: {{ activeDocumentInfo ? title : 'None' }}
                 </p>
                 <div v-if="activeDocumentInfo && activeDocumentInfo.editable" class="world-view-actions">
                     <button

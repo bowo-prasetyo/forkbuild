@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.26** — World Navigation & Spatial Discovery UX
+**Version 0.2.27** — World View Context & Selection Model
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -56,9 +56,26 @@ every other surface reads from (never a second, UI-only index), a
 "Documents Here" list that makes 0.2.25's overlap count something you
 can act on instead of just see, and Focus formalized as pure
 navigation — it moves the camera and switches the active document, and
-never, under any circumstance, forks or edits anything. See
-[docs/Architecture.md](docs/Architecture.md) for the full write-up of
-each milestone.
+never, under any circumstance, forks or edits anything.
+
+0.2.26 also exposed a simplification 0.2.27 closes: "where the camera
+is" and "which document an edit lands on" had always been the same
+field, which was harmless right up until two publications could share
+a coordinate and switching between them stopped requiring the camera
+to move at all. WorldNavigationSession now tracks camera focus and the
+active (editing) document independently — `focusDocument()` still
+moves both together by default, but a document can now become active
+without the camera moving, and the camera can move without changing
+what an edit would target. Making the split explicit surfaced a real,
+previously-latent bug: group operations could independently fork
+whatever the camera happened to be pointed at, separately from the
+document a selection actually belonged to, mixing one document's
+`worldId` with another's `brickIds` whenever the two diverged — fixed
+by having every mutation path resolve its target from the selection or
+the active document, never from camera position. The World View header
+now shows "Camera: X · Editing: Y" so this is visible, not just
+correct. See [docs/Architecture.md](docs/Architecture.md) for the full
+write-up of each milestone.
 
 ## Features
 
@@ -89,6 +106,7 @@ each milestone.
 - **World Coordinate Semantics & Placement UX (0.2.24)** — a document's own content and a placement's position are now an explicit, documented contract (canonical origin, right-handed axes, a named "World Unit" that deliberately does not claim to be a meter); initial placement is a pure, deterministic function of a publication's own id instead of a locally-observed publication count, so the same publication lands at the same coordinate on every replica; the Move Placement dialog gains relative nudge buttons as a convenience over the same absolute, persisted position.
 - **Spatial Allocation & Placement Collision Policy (0.2.25)** — two placements sharing a world position is now an explicit, derived observation (an overlap), never an error by itself and never persisted as its own entity; a configurable policy (ALLOW/WARN/REJECT) decides what happens next, defaulting to WARN for an explicit Move Placement request — the requested position is still what gets placed, only after the person sees who else is already there and confirms — while automatic initial placement stays frictionless; the Placement panel passively shows "N other documents share this location" regardless of how a placement got there.
 - **World Navigation & Spatial Discovery UX (0.2.26)** — a World Search panel finds any published document by title or author over the same decentralized discovery catalog every other surface reads from, regardless of camera position, and reports whether it resolved a real recorded placement or a deterministic fallback position; a "Documents Here" dialog turns 0.2.25's passive overlap count into an actual, choosable list; Focus is formalized as pure navigation — camera + active document only, never a mutation, never a fork.
+- **World View Context & Selection Model (0.2.27)** — camera focus and the active (editing) document are now tracked independently rather than as one field: focusing a document still moves both by default, but the active document can now change (e.g. by selecting a brick) without moving the camera, and the camera can move without changing what an edit targets; every mutation path resolves its target from the selection or the active document, never from camera position, closing a real latent bug where group operations could mix one document's `worldId` with another's `brickIds` whenever the two had diverged; the header now shows "Camera: X · Editing: Y" whenever they might differ.
   
 ## Architecture
 
@@ -180,8 +198,9 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.24  World Coordinate Semantics & Placement UX
 - [x] 0.2.25  Spatial Allocation & Placement Collision Policy
 - [x] 0.2.26  World Navigation & Spatial Discovery UX
+- [x] 0.2.27  World View Context & Selection Model
     
-Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, full camera/active-document/selection separation, and wiring the richer decentralized discovery diagnostics into the live World View are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md.
+Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, a UI affordance for setting the active document without moving the camera, and wiring the richer decentralized discovery diagnostics into the live World View are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md.
 
 ## License
 

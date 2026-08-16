@@ -718,3 +718,95 @@ into the live UI is real future work, tracked, not done here — see
 docs/Roadmap.md — and when it happens it should replace this
 messaging with the genuine thing, not sit alongside a parallel set of
 messages that were never backed by what's actually running.
+
+### Camera Focus, Active Document, and Selection Are Three Different Things (0.2.27)
+
+`_focusedDocumentId` used to answer two genuinely different questions
+at once: "where is the camera looking?" and "which document does a
+mutation land on?" That worked while the two always changed together
+— every pre-0.2.27 way of moving around the World View also happened
+to be the only way to change what you were editing. 0.2.26 broke that
+coincidence: two publications can share an exact world coordinate, so
+switching which one you mean to work with no longer has to move the
+camera at all. WorldNavigationSession now tracks camera focus
+(`_focusedDocumentId`, read via `getFocusedDocumentId()`) and the
+active document (`_activeDocumentId`, read via `getActiveDocumentId()`)
+independently. `focusDocument()` still moves both together by
+default — the common case (search/Nearby Worlds/Documents-Here
+"Focus") really does mean both at once, and every caller written
+before this milestone already expected that combined behavior — but
+`focusDocument(id, { setActive: false })` moves the camera alone, and
+the new `setActiveDocument(id)` changes the editing target alone,
+touching nothing about where the camera is pointed.
+
+Selection is a third, still-separate concept, and it is kept
+consistent with the active document by construction, not by
+convention: `_setSpatialSelection` — the one place every selection
+change in this file actually flows through (picking, marquee-select,
+select-all, selecting a group, a paste's auto-selected bricks) —
+makes the selection's own document the active document the moment a
+real (non-ground) selection is set. `setActiveDocument` closes the
+loop the other way: switching the active document clears a selection
+that belongs to a DIFFERENT document, so a document explicitly made
+active is never left carrying a stale selection pointing somewhere
+else. The result is an invariant, not a hope: **whenever a non-empty
+brick selection exists, it and the active document always agree on
+which document that is.** Camera focus is the only one of the three
+that can legitimately point somewhere else entirely.
+
+### Only The Active Document Is An Editing Target (0.2.27)
+
+Every mutation entry point in `WorldNavigationSession` — brick
+placement, move/rotate/delete/align/distribute/numeric-transform,
+groups, clipboard, save/publish, metadata edits, undo/redo, history
+replay — resolves its target from the active document (or, when one
+exists, the current selection's document — see above), and NONE of
+them read `_focusedDocumentId` any more. This closes a real,
+previously-latent bug class, not just a hypothetical one: group
+operations (`createGroupFromSelection` and friends) used to fork the
+selection's document to make it editable, and THEN independently fork
+whatever `_focusedDocumentId` happened to be and build the group
+command from ITS worldId — using Document A's `worldId` with Document
+B's `brickIds` whenever the camera and the selection pointed at two
+different documents. Before 0.2.26 gave the World View a reason to
+have two documents loaded and interactively selectable at once, this
+could not actually be reached; it is exactly the kind of bug that a
+milestone adding real multi-document interaction is obligated to go
+looking for, not just avoid introducing fresh copies of. The fix is
+structural, not a patched condition: every group/clipboard method
+either resolves from the selection's (already correctly forked)
+document directly, or — when there is no selection to resolve from —
+from `_activeDocumentId`, and camera position is never consulted by
+any of them, anywhere.
+
+### Navigation Never Implies Editing (0.2.27)
+
+Moving the camera — `focusDocument`, `moveCamera`, streaming a
+document into view — never mutates anything and never forks a
+published snapshot, regardless of which document ends up focused.
+This was already true before 0.2.27 (0.2.20's fork-on-write guards
+only ever ran from an actual mutation call), but it is now a checked
+architectural boundary rather than an incidental consequence of
+`_focusedDocumentId` and `_activeDocumentId` being the same field: the
+camera-only field is never read by `_ensureEditableSelection`,
+`_ensureEditableDocumentId`, or any command construction anywhere in
+this file. Focusing a published document — from search results, from
+"Documents Here," from Nearby Worlds — leaves it exactly as published
+as it was before, every time, by construction.
+
+### The World View Header Shows What It's Actually Doing (0.2.27)
+
+"Camera: Alice's Castle · Editing: Bob's Castle" is not a debugging
+aid bolted on for this milestone — it is the direct, user-facing
+consequence of camera focus and the active document being real,
+independently-inspectable state rather than one field wearing two
+hats. Showing it plainly, always, rather than only when the two
+happen to differ, is a deliberate choice: a UI that only speaks up
+when something is unusual trains a person to stop checking, right up
+until the one time it matters (this is the same reasoning that made
+0.2.22 bind the header to the active document unconditionally, not
+just after a fork). The header's Published/Editing-fork status badge
+and Save/Publish/Edit Metadata actions all read the ACTIVE document
+(unchanged in spirit from 0.2.22, correctly scoped now that active and
+focused can genuinely differ) — camera position has never determined,
+and still does not determine, what those controls act on.
