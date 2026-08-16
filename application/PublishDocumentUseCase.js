@@ -21,10 +21,25 @@
 // { document } stand-in for documentManager, so a fork published from
 // World View is validated identically to a document published from
 // the Editor.
+//
+// 0.2.23: publishing now also creates the publication's INITIAL
+// placement (placePublicationUseCase + initialPlacementStrategy, both
+// optional so existing callers/tests that construct this class with
+// just the first two arguments are unaffected). Placement is a
+// separate concern from the document/publication itself (see
+// docs/Principles.md, "A Publication Is What; A Placement Is Where")
+// — it is deliberately best-effort here: a placement failure is
+// logged, never thrown, so a spatial-index hiccup can never prevent a
+// publish that otherwise fully succeeded. Every publish this use case
+// handles — Editor or World View, a fresh document or a fork — gets
+// exactly one initial placement this same way; nothing needs to
+// remember to call PlacePublicationUseCase separately.
 export class PublishDocumentUseCase {
-    constructor(publisherProvider, identityProvider) {
+    constructor(publisherProvider, identityProvider, placePublicationUseCase = null, initialPlacementStrategy = null) {
         this._publisherProvider = publisherProvider;
         this._identityProvider = identityProvider;
+        this._placePublicationUseCase = placePublicationUseCase;
+        this._initialPlacementStrategy = initialPlacementStrategy;
     }
 
     execute(documentManager) {
@@ -33,7 +48,25 @@ export class PublishDocumentUseCase {
             throw new Error('PublishDocumentUseCase: no document is currently open');
         }
         this._validate(document);
-        return this._publisherProvider.publish(document, this._identityProvider);
+        const publication = this._publisherProvider.publish(document, this._identityProvider);
+        this._placeInitially(publication);
+        return publication;
+    }
+
+    _placeInitially(publication) {
+        if (!this._placePublicationUseCase || !this._initialPlacementStrategy) {
+            return;
+        }
+        try {
+            const position = this._initialPlacementStrategy.computePosition({ publicationId: publication.id });
+            this._placePublicationUseCase.execute(publication.id, position);
+        } catch (err) {
+            // Best-effort: WorldLayoutProvider's deterministic-grid
+            // fallback still resolves a position for an unplaced
+            // publication, so failing to place it here degrades to
+            // exactly the pre-0.2.23 behavior, not a broken publish.
+            console.warn(`PublishDocumentUseCase: initial placement failed for "${publication.id}" — ${err.message}`);
+        }
     }
 
     _validate(document) {

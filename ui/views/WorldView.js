@@ -11,6 +11,8 @@ import CommandPalette from '../components/CommandPalette.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
+import PlacementInfoPanel from '../components/PlacementInfoPanel.js';
+import PlacementEditorDialog from '../components/PlacementEditorDialog.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -22,7 +24,11 @@ const DRAG_THRESHOLD_PX = 6;
 // panels are unchanged.
 export default {
     name: 'WorldView',
-    components: { EditingSidebar, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog },
+    components: {
+        EditingSidebar, CommandPalette, ActionFeedback,
+        DocumentInfoPanel, MetadataEditorDialog,
+        PlacementInfoPanel, PlacementEditorDialog
+    },
     setup() {
         const route = useRoute();
         const router = useRouter();
@@ -54,6 +60,18 @@ export default {
         // open MetadataEditorDialog is actually editing — see
         // openMetadataEditor().
         const metadataEditTarget = ref(null);
+        // 0.2.23: WHERE the active/inspected world sits in shared
+        // space — see WorldNavigationSession.getPlacementInfo. Named
+        // "placementInfo"/"activePlacementInfo" to mirror documentInfo/
+        // activeDocumentInfo exactly; unrelated to `spatialPlacement`
+        // below, which is BRICK placement-preview state (0.1.33) — an
+        // unfortunate but pre-existing name collision in the domain
+        // ("placement" means two different things at two different
+        // layers), not a naming choice made for this milestone.
+        const placementInfo = ref(null);
+        const activePlacementInfo = ref(null);
+        const showPlacementEditor = ref(false);
+        const placementEditTarget = ref(null);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
         const cameraPosition = ref(null);
@@ -219,6 +237,33 @@ export default {
             refreshSpatialUI();
         }
 
+        // 0.2.23: Move Placement — deliberately NOT routed through
+        // updateDocumentMetadata/saveDocument/publishDocument's
+        // fork-on-write guard: moving a placement is not a document
+        // mutation (see docs/Principles.md, "Moving A Placement Is
+        // Not Editing A Document") and must work on a still-published,
+        // un-forked world exactly as well as on a fork. guarded() is
+        // still used for its own sake — a denied/failed move (no
+        // placement known, no ownership) becomes a toast, not an
+        // uncaught exception.
+        function openPlacementEditor(info) {
+            if (!info) return;
+            placementEditTarget.value = info;
+            showPlacementEditor.value = true;
+        }
+
+        function onMovePlacement(position) {
+            const info = placementEditTarget.value;
+            if (!info) return;
+            guarded(() => {
+                session.movePlacement(info.documentId, position);
+                feedback.show('Placement moved');
+            });
+            showPlacementEditor.value = false;
+            placementEditTarget.value = null;
+            refreshSpatialUI();
+        }
+
         // -----------------------------------------------------------------
         // Tool switching
         // -----------------------------------------------------------------
@@ -320,6 +365,17 @@ export default {
                 ? session.getDocumentInfo(spatialInspection.value.documentId)
                 : null;
 
+            // 0.2.23: the placement (WHERE) for the same world
+            // documentInfo (WHAT) just described — kept as a sibling
+            // lookup, not folded into getDocumentInfo's shape, exactly
+            // the "don't blur the concepts" separation the milestone
+            // design asked for. null (not a placement-shaped object
+            // full of nulls) when the world has no known placement yet.
+            placementInfo.value = (spatialInspection.value && spatialInspection.value.documentId
+                && typeof session.getPlacementInfo === 'function')
+                ? session.getPlacementInfo(spatialInspection.value.documentId)
+                : null;
+
             const editingCtx = session.getSpatialEditingContext();
             if (editingCtx && !editingCtx.isEmpty) {
                 spatialEditingContext.value = {
@@ -367,6 +423,9 @@ export default {
             }
             activeDocumentInfo.value = (activeId && typeof session.getDocumentInfo === 'function')
                 ? session.getDocumentInfo(activeId)
+                : null;
+            activePlacementInfo.value = (activeId && typeof session.getPlacementInfo === 'function')
+                ? session.getPlacementInfo(activeId)
                 : null;
             if (activeId && activeId !== route.params.documentId) {
                 router.replace({ path: `/world/${activeId}` });
@@ -563,6 +622,12 @@ export default {
             showMetadataEditor,
             metadataEditTarget,
             openMetadataEditor,
+            placementInfo,
+            activePlacementInfo,
+            showPlacementEditor,
+            placementEditTarget,
+            openPlacementEditor,
+            onMovePlacement,
             spatialEditingContext,
             spatialPlacement,
             cameraPosition,
@@ -610,6 +675,13 @@ export default {
                     >Save</button>
                     <button class="action-btn action-btn--primary" @click="publishActiveDocument">Publish</button>
                     <button class="action-btn" @click="openMetadataEditor(activeDocumentInfo)">Edit Metadata</button>
+                </div>
+                <div v-if="activePlacementInfo" class="world-view-actions">
+                    <button
+                        class="action-btn"
+                        :disabled="!activePlacementInfo.movable"
+                        @click="openPlacementEditor(activePlacementInfo)"
+                    >Move Placement</button>
                 </div>
                 <p v-if="author">by {{ author }}</p>
                 <p v-if="cameraPosition" class="world-view-coords">
@@ -721,6 +793,12 @@ export default {
                     v-if="documentInfo"
                     :info="documentInfo"
                     @edit-metadata="openMetadataEditor(documentInfo)"
+                />
+                <PlacementInfoPanel
+                    v-if="placementInfo"
+                    :info="placementInfo"
+                    @focus="focusWorld(placementInfo.documentId)"
+                    @move="openPlacementEditor(placementInfo)"
                 />
 
                 <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">
@@ -835,6 +913,12 @@ export default {
                 :info="metadataEditTarget"
                 @save="onSaveMetadata"
                 @cancel="showMetadataEditor = false; metadataEditTarget = null"
+            />
+            <PlacementEditorDialog
+                v-if="showPlacementEditor"
+                :info="placementEditTarget"
+                @move="onMovePlacement"
+                @cancel="showPlacementEditor = false; placementEditTarget = null"
             />
         </div>
     `

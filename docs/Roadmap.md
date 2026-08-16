@@ -76,6 +76,7 @@
 0.2.20  Fork-on-Edit & Immutable Snapshot Lineage      ✓
 0.2.21  Document Lifecycle & Metadata UI               ✓
 0.2.22  Fork Transition & World View Document Switching ✓
+0.2.23  World Placement & Spatial Positioning           ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the

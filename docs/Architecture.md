@@ -1955,3 +1955,147 @@ which button was clicked. `updateDocumentMetadata` (0.2.21) was
 already correct and already routes metadata edits through the same
 fork-on-first-mutation gate as every other mutation — this is again
 pure UI wiring, not new application-layer behavior.
+
+### World Placement & Spatial Positioning (0.2.23)
+
+Unlike every prior milestone in this stretch, 0.2.23's gap was not
+that a feature had never been built — it was that a genuinely mature
+feature (`core/WorldPlacement.js`, `core/PlacementRecord.js`,
+`placement/LocalPlacementRegistry.js`, `application/
+PlacePublicationUseCase.js`, `application/MoveWorldPlacementUseCase.js`
+— revisioned, signed per-revision (0.2.16), causally stamped per-
+revision (0.2.18), fully covered by `tests/PlacementRegistry.test.js`
+and `tests/WorldPlacement.test.js`) had never been connected to
+anything a user could reach. `CreateWorldViewUseCase.js` wired only
+the plain `LocalSpatialIndexProvider` directly; nothing ever called
+`PlacePublicationUseCase`, so no publication ever had an explicit
+placement, and `LocalWorldLayoutProvider`'s deterministic-grid
+fallback silently stood in for "no placement exists" — indefinitely,
+for every publication, since nothing was ever wired to create one.
+
+Two real bugs sat underneath that gap, both a confusion between
+`Publication.id` (the publication's own identity) and
+`Publication.documentId` (the World's identity — two independently
+generated ids; see `publisher/LocalPublisherProvider.js`:
+`publicationId = createId()`, `documentId: document.world.id`).
+`WorldPlacement`/`PlacementRecord` are keyed by `publicationId`
+throughout, but `LocalWorldLayoutProvider.getPosition`/
+`findVisibleDocuments` queried the spatial index directly with a
+`documentId` — a key an explicit placement can never match — and
+`findVisibleDocuments`'s explicit-placement branch added the
+placement's `publicationId` into its visible-set instead of the
+`documentId` every caller of the method actually expects. Together
+these meant an explicit placement, even if one had existed, could
+neither be found by position lookup nor stream in by spatial
+proximity. Both are fixed by resolving `documentId ->
+discoveryProvider.findByDocumentId -> Publication.id` before ever
+touching the spatial index (`_resolvePublicationId`, and the
+equivalent resolve-then-lookup in `findVisibleDocuments`).
+
+    DOCUMENT                                 PUBLICATION
+        |                                          |
+        | metadata: title/description/license      | id (publicationId)
+        | (what it is)                             | documentId ------.
+        v                                          v                  |
+    Editor/World View                        WorldPlacement /         |
+    Save / Publish                           PlacementRecord          |
+                                              (where it is)            |
+                                                   ^                   |
+                                                   `-- keyed by -------'
+                                                       publicationId, not
+                                                       documentId
+
+Making placement explicit and reachable:
+
+- `application/InitialPlacementStrategy.js` — `GridPlacementStrategy`,
+  the ONE strategy implemented (reproducing the pre-existing
+  fallback's exact grid math, so a freshly published world still
+  lands where it always visually appeared to). `NextAvailable`/
+  `Origin`/`UserSpecified` are deliberately not built speculatively —
+  `computePosition(context)` is the interface any of them would
+  implement, added only when a real requirement asks for one (see
+  docs/Principles.md, "A position, once assigned, is a fact — not a
+  projection").
+- `PublishDocumentUseCase` now accepts optional `placePublicationUseCase`/
+  `initialPlacementStrategy` and calls them right after a successful
+  publish, so EVERY publish — Editor or World View, a fresh document
+  or a published fork — gets exactly one initial placement, one
+  guarantee at the one place publishing happens rather than something
+  every caller has to remember. Best-effort: a placement failure is
+  logged and swallowed, never thrown — the fallback grid math still
+  answers "where is this" for an unplaced publication, so a
+  spatial-index hiccup degrades to pre-0.2.23 behavior, never a failed
+  publish (see docs/Principles.md, "A Publication Is What; A
+  Placement Is Where" — publishing succeeding is a document-level
+  fact placement failure has no business vetoing).
+- `CreateWorldViewUseCase.js`/`CreatePublisherUseCase.js` both now wire
+  a real `LocalPlacementRegistry` (which already writes through to the
+  same `LocalSpatialIndexProvider` `WorldLayoutProvider` reads, so a
+  placement created/moved here needs no separate sync step) and pass
+  `PlacePublicationUseCase`/`GridPlacementStrategy` into
+  `PublishDocumentUseCase`, and `placementRegistry`/
+  `MoveWorldPlacementUseCase` into `WorldNavigationSession` — the same
+  DI-per-factory convention every other adapter in this codebase
+  already follows.
+- `WorldNavigationSession.getPlacementInfo(documentId)` — resolves the
+  document's Publication, then its most-recently-updated
+  PlacementRecord (a document CAN have more than one placement — the
+  same publication exhibited in several places — picking the latest
+  is a deliberate simplification, matching `getPosition`'s own choice;
+  browsing/choosing among several is future scope, not something the
+  data model prevents), and returns a UI-shaped
+  `{ documentId, placementId, publicationId, position, rotation,
+  revision, owner, movable }`. `movable` is a LOCAL, best-effort
+  ownership signal for the UI only (current user's username matches
+  the recorded owner, or no owner is recorded at all) — never the
+  actual authorization boundary. A move this session allows still
+  gets signed as whoever is currently logged in; if that doesn't
+  match the placement's real owner (or a valid 0.2.17 delegation —
+  not wired into this check), the revision fails verification
+  wherever it's actually checked. This is the same "the writer
+  doesn't gate itself, the reader verifies" decentralized posture
+  0.2.19's trust layer already established, applied to placement
+  instead of discovery.
+- `WorldNavigationSession.movePlacement(documentId, newPosition)` —
+  resolves which placement "the document currently showing as
+  documentId" means, then delegates the actual revision to
+  `MoveWorldPlacementUseCase` (signed, causally-stamped — already
+  correct, already tested). Deliberately does NOT route through
+  `_ensureEditableDocumentId`/any fork-on-write guard: moving a
+  placement is not a document mutation (see docs/Principles.md,
+  "Moving a placement is not editing a document") and must work on a
+  still-published, un-forked snapshot exactly as well as on a fork.
+
+UI — a placement panel deliberately separate from the document one:
+
+- `ui/components/PlacementInfoPanel.js` — position/revision/owner,
+  Focus/Move buttons, disabled Move when `!info.movable`. Pure
+  presentation, same shape as `DocumentInfoPanel`, rendered as a
+  sibling of it (never merged into it) wherever a world's info is
+  shown — the inspection column (selection-scoped, `placementInfo`)
+  and the header (active-document-scoped, `activePlacementInfo`,
+  alongside Save/Publish/Edit Metadata) — mirroring the exact
+  dual-scope pattern `documentInfo`/`activeDocumentInfo` and
+  `metadataEditTarget` already established in 0.2.21/0.2.22's
+  hardening. The header's "Move Placement" button is gated only on a
+  placement existing, NOT on `activeDocumentInfo.editable` — a
+  still-published snapshot has no editable document but can still
+  have a movable placement, and the button must reflect that.
+- `ui/components/PlacementEditorDialog.js` — plain X/Y/Z number
+  inputs, not a gizmo-drag interaction. Moving a placement is a
+  distinct, much rarer operation than moving a brick (the transform
+  gizmo already owns that), and the design explicitly favored an
+  explicit model over a sophisticated positioning interaction before
+  one is actually needed.
+
+Deliberately not in 0.2.23: rotation/scale editing UI (WorldPlacement/
+PlacementRecord already carry both — untouched, just not exposed in
+the editor yet); a placement browser for a document with multiple
+placements (shows/edits only the most recently updated one, as noted
+above); hard, session-level enforcement of placement ownership (the
+`movable` UI signal, not a rejection — matching the decentralized
+"writer doesn't gate itself" posture); wiring 0.2.17 delegated
+authorization into the ownership check (a real, natural extension —
+"Bob is authorized to place/move Alice's castle without owning it" —
+deliberately deferred, not built speculatively); and any additional
+`InitialPlacementStrategy` beyond Grid.
