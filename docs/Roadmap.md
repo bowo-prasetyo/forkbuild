@@ -83,6 +83,7 @@
 0.2.27  World View Context & Selection Model            ✓
 0.2.28  Spatial Query & Location Discovery               ✓
 0.2.29  World Location Browser & Spatial Exploration     ✓
+0.2.30  Trust-Aware Spatial Discovery & Diagnostics       ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -157,20 +158,37 @@ Browser (0.2.29) is a distance-ordered list of discoverable documents,
 nothing more; any of these would be a real, separate geometry feature
 built on top of it, not an extension of the list itself.
 
-**Spatial streaming/index integration** (proposed, not started):
-replacing the local-cache-based discovery path every World View
-surface currently reads from — text search (0.2.26), spatial query
-(0.2.28), and the location browser (0.2.29) all still wire the plain
-`LocalWorldLayoutProvider`/`LocalDiscoveryProvider` — with the
-already-designed decentralized spatial index
-(`SpatialIndexRoot`/`SpatialIndexManifest`), including 0.2.19's trust
-diagnostics (equivocation/staleness/manifest-availability). This is a
-substantially bigger step than any single 0.2.2x World View milestone:
-it finally connects the sophisticated trust/replication/index
-architecture built in 0.2.15–0.2.19 to the everyday World View
-experience, rather than that architecture existing mostly in the
-backend and test suite. Not committed to the roadmap as a numbered
-milestone until its own design pass happens.
+0.2.30 connected 0.2.19's trust/diagnostics VOCABULARY to the World
+View (`core/DiscoveryDiagnosticsSummary.js`, `WorldNavigationSession`'s
+optional `spatialDiscoveryProvider`, the Location Browser's diagnostics
+banner) WITHOUT changing which provider actually resolves documents —
+see docs/Architecture.md, 0.2.30, "What stays unchanged," for why
+flipping the live wiring now would trade an honest "unavailable" for a
+dishonest "nothing here" (the live app has never built a populated
+`SpatialIndexRoot`; `CreateWorldViewUseCase`'s placement flow bypasses
+`SpatialIndexBuilder` entirely). That remaining gap is now narrower and
+more precisely scoped than before:
+
+**Spatial streaming/index integration** (proposed, not started): (1)
+wire `SpatialIndexBuilder` into the live publish/place/move flow so a
+real, signed `SpatialIndexRoot`/`SpatialIndexManifest` chain actually
+exists for the local node's own published content; (2) pass a real
+`DecentralizedSpatialDiscoveryProvider` as `WorldNavigationSession`'s
+`spatialDiscoveryProvider` (the plumbing 0.2.30 already built and
+tested against real trust code — see
+tests/DiscoveryDiagnosticsSummary.test.js — needs only a populated
+index to become live-meaningful); (3) decide whether `searchWorldByLocation`
+itself should eventually resolve documents THROUGH the decentralized
+provider rather than `LocalWorldLayoutProvider`, which is the larger,
+still-undecided architectural question — replacing the resolution path
+every World View surface reads from (text search 0.2.26, spatial query
+0.2.28, the location browser 0.2.29) is a materially bigger step than
+adding an optional diagnostics source alongside it, and finishes the
+job of connecting the trust/replication/index architecture built in
+0.2.15–0.2.19 to the everyday World View experience rather than that
+architecture existing mostly in the backend and test suite. Not
+committed to the roadmap as a numbered milestone until its own design
+pass happens.
 
 ## 0.1.50 — What shipped
 

@@ -936,3 +936,67 @@ side effect — renderer work, storage/network reads — that a strictly
 read-only action must not trigger on its own; the UI falls back to
 what the search/explore result already knows (title, author, position,
 `hasPlacement`) when that happens.
+
+### Discovery And Trust Are Related, But They Are Not The Same Operation (0.2.30)
+
+"Did I find it?" and "should I trust what I found?" are two different
+questions, answered by two different layers, and 0.2.30 keeps them
+that way rather than collapsing one into the other. `exploreLocation`'s
+`documents` still come entirely from the ordinary local resolution path
+(`searchWorldByLocation`, unchanged since 0.2.28) — a document a
+session can find is never hidden, filtered, or reordered because of
+what a trust layer says about it. `diagnostics` is a strictly
+ADDITIONAL, parallel observation, computed by consulting an OPTIONAL
+trust-capable provider over the very same region — see
+`WorldNavigationSession`'s "World Location Browser" section for why
+the two are deliberately decoupled rather than merged into one
+resolution path. A stale, conflicting, or even entirely unverifiable
+region still shows its documents; the UI's job is to say what it knows
+about their trustworthiness alongside them, not to make that decision
+for the person looking. This is the same posture 0.2.25 established
+for overlap ("Overlap Is A Fact; Collision Is A Policy Decision") and
+0.2.19 established for trust generally (a `TrustObservation` is purely
+descriptive; deciding what to DO about a status is a separate policy
+question) — 0.2.30 is that same posture, applied to what a spatial
+exploration surface shows a person.
+
+### Diagnostics Are Received From The Discovery Layer, Never Invented By The UI (0.2.30)
+
+`core/DiscoveryDiagnosticsSummary.js` is a pure function over real
+counters — `spatial/DiscoveryDiagnostics.js`'s accumulated
+`manifestsMissing`/`manifestsInvalid`/`recordsRejected`/`staleEntries`/
+`conflicts`/`equivocations`, themselves built from real
+`TrustObservation`s recorded while `DecentralizedSpatialDiscoveryProvider`
+actually ran. There is no branch anywhere in this pipeline that
+assumes, defaults to, or fabricates a "valid" or "complete" claim the
+underlying query didn't actually establish. This produces a specific,
+deliberate four-way state a UI can render honestly instead of
+collapsing into a single true/false "is this trustworthy":
+  - `available: false` — no trust-capable provider was even
+    consulted. This is NOT "everything found is untrustworthy" and
+    NOT "the world is empty" — it is the honest absence of an
+    opinion, and it is TODAY'S DEFAULT: the live World View still
+    wires the plain `LocalWorldLayoutProvider`/`LocalDiscoveryProvider`
+    scan established in 0.2.26/0.2.28/0.2.29, which has no manifest,
+    root, or signature concept to report on at all (see
+    docs/Architecture.md, 0.2.30, for why this milestone does not
+    change that wiring).
+  - `available: true, fatal: <reason>` — a provider WAS consulted, but
+    the index root/authority itself could not be trusted this pass
+    (`DecentralizedSpatialDiscoveryProvider.discover()` throws for
+    exactly this case). Nothing about this region's index could be
+    verified — a strictly worse epistemic state than "some entries
+    have issues," and shown as such.
+  - `available: true, complete: true` — the trust layer ran and found
+    nothing to flag.
+  - `available: true, complete: false, warnings: [...]` — the trust
+    layer ran and found real, itemized issues, each carrying its own
+    real count.
+This is the direct answer to the distinction the milestone set out to
+make possible: "There are no documents here" (an empty `documents`
+array with `diagnostics.complete: true`) is a different statement from
+"I currently know of no documents here" (an empty `documents` array
+with `diagnostics.available: false`), which is different again from
+"there are documents here, but some could not be trusted"
+(a non-empty `documents` array with `diagnostics.warnings` naming
+specifically what could not be verified).

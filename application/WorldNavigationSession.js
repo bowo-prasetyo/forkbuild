@@ -28,6 +28,7 @@ import { computeLifecycleStatus, describeLifecycleStatus } from './DocumentLifec
 import { detectSpatialOverlap } from '../core/SpatialOverlap.js';
 import { SpatialAllocationPolicy, evaluateSpatialAllocation } from '../core/SpatialAllocationPolicy.js';
 import { distanceBetween, isWithinRadius } from '../core/SpatialQuery.js';
+import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSummary.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -77,7 +78,8 @@ export class WorldNavigationSession {
 	    placementRegistry = null,
 	    moveWorldPlacementUseCase = null,
 	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN,
-	    searchWorldUseCase = null
+	    searchWorldUseCase = null,
+	    spatialDiscoveryProvider = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -111,6 +113,32 @@ export class WorldNavigationSession {
 	    // constructor follows — a session built without it (most
 	    // existing tests) simply can't search.
 	    this._searchWorldUseCase = searchWorldUseCase;
+	    // 0.2.30: OPTIONAL trust-capable discovery provider, consulted
+	    // ONLY to obtain diagnostics for exploreLocation/exploreHere/
+	    // whatsHere — never to resolve which documents/positions those
+	    // methods return (that still goes through searchWorldByLocation,
+	    // exactly as 0.2.28/0.2.29 established). Deliberately decoupled
+	    // from document resolution: the live World View's placement data
+	    // comes from LocalPlacementRegistry/LocalWorldLayoutProvider, and
+	    // as of this milestone no live deployment has ever built a
+	    // populated SpatialIndexRoot/Manifest for
+	    // DecentralizedSpatialDiscoveryProvider to query — wiring it as
+	    // the SOURCE of documents would silently return zero results
+	    // everywhere. Wiring it as an diagnostics-only ADDITION means a
+	    // replica that DOES have a real decentralized index populated
+	    // can honestly report on it, while every other replica honestly
+	    // reports "no trust layer available" instead of fabricating
+	    // either a false "all clear" or a false "nothing found." See
+	    // docs/Principles.md, "Diagnostics Are Received From The
+	    // Discovery Layer, Never Invented By The UI (0.2.30)."
+	    this._spatialDiscoveryProvider = spatialDiscoveryProvider;
+	    // Raw DiscoveryDiagnostics from the most recent
+	    // exploreLocation/exploreHere/whatsHere call — kept alongside
+	    // the summarized version so inspectDocument can look up a
+	    // specific document's own TrustObservation (summarizing throws
+	    // away per-record detail on purpose; the raw copy is what makes
+	    // that detail available again, on demand, without re-querying).
+	    this._lastDiscoveryDiagnosticsRaw = null;
 
 	    this._container = null;
 	    this._session = null;
@@ -1217,11 +1245,29 @@ export class WorldNavigationSession {
     // Explicit center/radius exploration — the same enriched spatial
     // result shape 0.2.28 established (position, hasPlacement,
     // distance), just under a name that reads as "look around this
-    // location" rather than "search." `searchWorldByLocation` already
-    // is this; `exploreLocation` exists so the World Location Browser's
-    // call sites say what they mean without re-implementing anything.
+    // location" rather than "search." `searchWorldByLocation` still
+    // resolves WHICH documents come back — that resolution path is
+    // completely unchanged from 0.2.29. What's new in 0.2.30 is the
+    // return shape: `{ documents, diagnostics }` rather than a bare
+    // array, so a caller can show what was found AND what the trust
+    // layer (if any is wired) has to say about how it was found,
+    // without the two ever being confused for one thing. See
+    // docs/Principles.md, "Discovery And Trust Are Related, But They
+    // Are Not The Same Operation (0.2.30)."
+    //
+    // This is a deliberately narrower change than it might look: only
+    // exploreLocation/exploreHere/whatsHere (all three brand new in
+    // 0.2.29, with exactly one caller — WorldLocationBrowser — fully
+    // owned by this codebase) gain the envelope. searchWorld/
+    // searchWorldByLocation (0.2.26/0.2.28, the more established API
+    // WorldSearchPanel depends on) keep returning a plain array,
+    // unchanged — see docs/Architecture.md, 0.2.30, for why the two
+    // were kept independent rather than unifying both under one
+    // envelope shape in this pass.
     exploreLocation({ center, radius }) {
-        return this.searchWorldByLocation({ center, radius });
+        const documents = this.searchWorldByLocation({ center, radius });
+        const diagnostics = this._runSpatialDiscoveryDiagnostics(center, radius);
+        return { documents, diagnostics };
     }
 
     // "Explore Here" — the query center is the CAMERA's current world
@@ -1230,13 +1276,14 @@ export class WorldNavigationSession {
     // looking at empty space between two documents, with no active
     // document at all (or one that has nothing to do with where the
     // camera happens to be pointed), and still want to explore right
-    // there. Returns [] if the session has no camera state yet (nothing
-    // loaded) rather than falling back to some other position — there
-    // is no "camera position" to explore from before a world session
-    // exists.
+    // there. Returns an empty envelope if the session has no camera
+    // state yet (nothing loaded) rather than falling back to some other
+    // position — there is no "camera position" to explore from before
+    // a world session exists, and no discovery query was even attempted
+    // (diagnostics.available stays false, honestly — nothing ran).
     exploreHere(radius = DEFAULT_EXPLORE_RADIUS) {
         const center = this.getSpatialState().cameraPosition;
-        if (!center) return [];
+        if (!center) return { documents: [], diagnostics: summarizeDiscoveryDiagnostics(null) };
         return this.exploreLocation({ center, radius });
     }
 
@@ -1256,6 +1303,41 @@ export class WorldNavigationSession {
         return this.exploreHere(NEARBY_RADIUS);
     }
 
+    // 0.2.30: runs the OPTIONAL trust-capable spatialDiscoveryProvider
+    // (if one is wired) over the same center/radius, purely to obtain
+    // diagnostics — its own result (a PlacementRecord[]) is discarded;
+    // exploreLocation's documents already came from
+    // searchWorldByLocation and are not replaced or filtered by
+    // anything this method finds. See the constructor's own comment
+    // for why the two are kept decoupled.
+    //
+    // DecentralizedSpatialDiscoveryProvider.discover() THROWS for a
+    // root/authority it cannot trust at all (untrusted signer,
+    // equivocation under the default policy) — the correct behavior
+    // for a caller that's about to treat the index as authoritative,
+    // but exploreLocation is a read-only exploration call, not a
+    // mutation gate, so that throw is caught here and turned into
+    // `diagnostics.fatal` instead of propagating out of a UI action
+    // that never expected to throw.
+    _runSpatialDiscoveryDiagnostics(center, radius) {
+        if (!this._spatialDiscoveryProvider || typeof this._spatialDiscoveryProvider.discover !== 'function') {
+            this._lastDiscoveryDiagnosticsRaw = null;
+            return summarizeDiscoveryDiagnostics(null);
+        }
+        let raw = null;
+        try {
+            this._spatialDiscoveryProvider.discover(center, radius);
+            raw = typeof this._spatialDiscoveryProvider.getLastDiagnostics === 'function'
+                ? this._spatialDiscoveryProvider.getLastDiagnostics()
+                : null;
+            this._lastDiscoveryDiagnosticsRaw = raw;
+            return summarizeDiscoveryDiagnostics(raw);
+        } catch (err) {
+            this._lastDiscoveryDiagnosticsRaw = null;
+            return summarizeDiscoveryDiagnostics(null, { fatal: err.message });
+        }
+    }
+
     // Read-only bundle for the Location Browser's "Inspect" action:
     // Document Info + Placement Info for `documentId`, exactly as
     // getDocumentInfo/getPlacementInfo already compute them — inspect
@@ -1273,11 +1355,42 @@ export class WorldNavigationSession {
     // independent of whether the document is loaded — it comes from
     // the placement registry — so it is often available even when
     // documentInfo is not.
+    //
+    // 0.2.30: `trust` — the specific TrustObservation (if any) recorded
+    // for this document's placement during the MOST RECENT
+    // exploreLocation/exploreHere/whatsHere call, looked up from the
+    // raw diagnostics cached by _runSpatialDiscoveryDiagnostics above.
+    // null whenever there is nothing to report: no diagnostics-capable
+    // provider wired, this document's cell wasn't part of the last
+    // query, or the document has no known placement at all. This is
+    // deliberately NOT a fresh query — Inspect stays a read-only lookup
+    // against what the last exploration already observed, not a reason
+    // to run a whole new discovery pass.
     inspectDocument(documentId) {
+        const placementInfo = this.getPlacementInfo(documentId);
         return {
             documentId,
             documentInfo: this.getDocumentInfo(documentId),
-            placementInfo: this.getPlacementInfo(documentId)
+            placementInfo,
+            trust: this._lookupTrustObservation(placementInfo)
+        };
+    }
+
+    _lookupTrustObservation(placementInfo) {
+        if (!placementInfo || !this._lastDiscoveryDiagnosticsRaw) {
+            return null;
+        }
+        const match = this._lastDiscoveryDiagnosticsRaw.observations.find((o) =>
+            o.subjectType === 'placement-record' && o.subjectId === placementInfo.placementId);
+        if (!match) {
+            return null;
+        }
+        return {
+            status: match.status,
+            reason: match.reason,
+            freshness: match.freshness && typeof match.freshness.toJSON === 'function'
+                ? match.freshness.toJSON()
+                : match.freshness
         };
     }
 

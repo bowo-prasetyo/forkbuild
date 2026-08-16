@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.29** — World Location Browser & Spatial Exploration
+**Version 0.2.30** — Trust-Aware Spatial Discovery & Diagnostics
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -113,8 +113,32 @@ publishes; those remain separate, deliberate actions elsewhere. The
 result count reads "Showing N of N discoverable documents," the same
 decentralized honesty 0.2.26/0.2.28 already established: what the
 configured discovery provider can currently find, not a claim of
-omniscient knowledge. See [docs/Architecture.md](docs/Architecture.md)
-for the full write-up of each milestone.
+omniscient knowledge.
+
+0.2.30 answers the question those milestones left open: how does a
+decentralized World View know that what it found is trustworthy,
+current, and complete enough to present? `exploreLocation` now returns
+`{ documents, diagnostics }` — the document list is completely
+unaffected by trust (a stale, conflicting, or unverifiable document is
+still shown, never hidden), while `diagnostics` reports, honestly and
+separately, what an OPTIONAL trust-capable provider observed about
+that same region: `available: false` when no such provider was even
+consulted (today's live default — the app still resolves documents
+through the plain `LocalWorldLayoutProvider`, unchanged); `fatal` when
+a provider was consulted but its index root/authority couldn't be
+trusted at all; `complete: true` when the trust layer ran and found
+nothing to flag; or itemized `warnings` (a stale accelerator entry, an
+unavailable manifest, a rejected record, an unresolved conflict) when
+it found something real. The Location Browser shows this as a banner
+above its results — "✓ Discovery complete," "⚠ 1 stale entry," or a
+neutral "diagnostics unavailable" note — and Inspect can now show a
+specific document's own discovery status alongside its Document/Placement
+Info. Nothing here is invented by the UI: every field traces back to a
+real `TrustObservation` the 0.2.19 verification pipeline actually
+produced when a real `DecentralizedSpatialDiscoveryProvider` was
+wired and run (see tests/DiscoveryDiagnosticsSummary.test.js). See
+[docs/Architecture.md](docs/Architecture.md) for the full write-up of
+each milestone.
 
 ## Features
 
@@ -148,6 +172,7 @@ for the full write-up of each milestone.
 - **World View Context & Selection Model (0.2.27)** — camera focus and the active (editing) document are now tracked independently rather than as one field: focusing a document still moves both by default, but the active document can now change (e.g. by selecting a brick) without moving the camera, and the camera can move without changing what an edit targets; every mutation path resolves its target from the selection or the active document, never from camera position, closing a real latent bug where group operations could mix one document's `worldId` with another's `brickIds` whenever the two had diverged; the header now shows "Camera: X · Editing: Y" whenever they might differ.
 - **Spatial Query & Location Discovery (0.2.28)** — World Search gains a spatial half, composable with the existing text search: "find everything within a radius (in World Units) of a coordinate," backed by the same decentralized discovery contract as text search rather than a local-cache-only scan; results carry a derived `distance` (never persisted) and sort nearest-first, and a publication resolved only through 0.2.24's deterministic fallback position still honestly reports no explicit placement rather than presenting a fallback as an authored location.
 - **World Location Browser & Spatial Exploration (0.2.29)** — "Explore Here" and "What's Here?" turn the camera's own world position into a spatial-query center, reusing 0.2.28's query rather than building a second one; each result supports strictly read-only Focus / Select / Inspect actions (moving the camera, changing the active document without moving the camera, and an inline Document/Placement Info expansion that never loads or navigates, respectively); the result count reads "Showing N of N discoverable documents" to keep the same decentralized honesty text/spatial search already established.
+- **Trust-Aware Spatial Discovery & Diagnostics (0.2.30)** — `exploreLocation` returns `{ documents, diagnostics }`: the document list is never filtered or reordered by trust, while `diagnostics` (available/fatal/complete/warnings, derived from real 0.2.19 `TrustObservation`s via an optional `spatialDiscoveryProvider`) honestly reports what a trust-capable provider could verify about that region — shown as a banner in the Location Browser and a per-document "Discovery status" in Inspect; the live app's own document resolution is completely unchanged.
   
 ## Architecture
 
@@ -242,8 +267,9 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.27  World View Context & Selection Model
 - [x] 0.2.28  Spatial Query & Location Discovery
 - [x] 0.2.29  World Location Browser & Spatial Exploration
+- [x] 0.2.30  Trust-Aware Spatial Discovery & Diagnostics
 
-Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, and wiring the decentralized spatial index underneath World View discovery generally ("spatial streaming/index integration," proposed, not started) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md.
+Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, and fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md.
 
 ## License
 

@@ -1205,3 +1205,39 @@ index (`SpatialIndexRoot`/`SpatialIndexManifest`, 0.2.19's trust
 diagnostics) remains the eventual backend for this same contract and
 is still not wired up — see docs/Roadmap.md for "spatial streaming/
 index integration" as a proposed future milestone.
+
+## Trust-Aware Spatial Discovery & Diagnostics (0.2.30)
+
+No wire format touched. `core/DiscoveryDiagnosticsSummary.js` is a
+pure, local derivation over `spatial/DiscoveryDiagnostics.js`'s
+already-existing counters (0.2.19) — nothing it produces is signed,
+persisted, or replicated, the same "computed, not stored" posture
+`distance` (0.2.28) and `SpatialOverlap` (0.2.25) already established.
+A diagnostics summary describes what THIS replica observed during
+THIS query; it is never transmitted to another replica and carries no
+meaning if it were.
+
+`WorldNavigationSession`'s new OPTIONAL `spatialDiscoveryProvider`
+does issue real protocol-relevant reads when one is wired and actually
+consulted — `DecentralizedSpatialDiscoveryProvider.discover()` reads a
+`SpatialIndexRoot`, its manifests, and the `PlacementRecord`s they
+reference, exactly the same reads 0.2.15/0.2.16/0.2.19 already defined
+and verify exactly the same way (signature validity, authority trust,
+equivocation, replay). 0.2.30 adds no new verification rule and no new
+wire-visible object; it only exposes, through a UI-facing summary, the
+TrustObservations that verification pipeline already produces on every
+call. The live World View does not wire this provider today (see
+docs/Architecture.md, 0.2.30, "What stays unchanged") — so in
+practice, the default deployed behavior issues no additional reads at
+all, and `diagnostics.available` stays `false`.
+
+The CONTRACT this milestone reinforces: discovery and trust are
+answered by the SAME underlying verification pipeline regardless of
+which replica asks, but a replica's willingness or ability to actually
+run that pipeline (whether it has a `spatialDiscoveryProvider` wired,
+whether a `SpatialIndexRoot` has ever been published for the region in
+question) is a local, per-replica fact — exactly like 0.2.19's own
+"a discovery provider must never say only 'not found'" principle,
+extended from a binary found/not-found into the fuller
+available/fatal/complete/warnings vocabulary this milestone's UI
+actually renders.

@@ -122,7 +122,14 @@ export default {
         const showLocationBrowser = ref(false);
         const locationBrowserCenter = ref(null);
         const locationBrowserRadius = ref(DEFAULT_EXPLORE_RADIUS);
-        const locationBrowserResults = ref([]);
+        const locationBrowserDocuments = ref([]);
+        // 0.2.30: the diagnostics half of WorldNavigationSession.
+        // exploreLocation's { documents, diagnostics } envelope — see
+        // core/DiscoveryDiagnosticsSummary.js. Defaults to the
+        // "unavailable" shape (no trust-capable provider consulted)
+        // rather than null, so WorldLocationBrowser's banner always has
+        // something well-formed to render.
+        const locationBrowserDiagnostics = ref({ available: false, fatal: null, complete: false, warnings: [] });
         const locationBrowserInspected = ref(null);
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
@@ -640,14 +647,21 @@ export default {
         // 0.2.29: World Location Browser — "Explore Here" / "What's Here?"
         // -----------------------------------------------------------------
 
+        // Fallback envelope for a failed/guarded call — same shape
+        // exploreLocation always returns, so callers never have to
+        // special-case "the call didn't happen" from "it happened and
+        // found nothing with no diagnostics available."
+        const EMPTY_DISCOVERY_ENVELOPE = { documents: [], diagnostics: { available: false, fatal: null, complete: false, warnings: [] } };
+
         // Shared open logic: both entry points differ only in which
-        // session method resolves the initial results (and thus the
+        // session method resolves the initial envelope (and thus the
         // radius they imply) — everything else about opening the
         // dialog is identical.
-        function openLocationBrowser(radius, results) {
+        function openLocationBrowser(radius, envelope) {
             locationBrowserCenter.value = cameraPosition.value;
             locationBrowserRadius.value = radius;
-            locationBrowserResults.value = results || [];
+            locationBrowserDocuments.value = envelope.documents || [];
+            locationBrowserDiagnostics.value = envelope.diagnostics || EMPTY_DISCOVERY_ENVELOPE.diagnostics;
             locationBrowserInspected.value = null;
             showLocationBrowser.value = true;
         }
@@ -663,8 +677,8 @@ export default {
         // display, already kept in sync by refreshSpatialUI.
         function exploreHere() {
             if (!cameraPosition.value) return;
-            const results = guarded(() => session.exploreHere(DEFAULT_EXPLORE_RADIUS)) || [];
-            openLocationBrowser(DEFAULT_EXPLORE_RADIUS, results);
+            const envelope = guarded(() => session.exploreHere(DEFAULT_EXPLORE_RADIUS)) || EMPTY_DISCOVERY_ENVELOPE;
+            openLocationBrowser(DEFAULT_EXPLORE_RADIUS, envelope);
         }
 
         // "What's Here?" — same camera-position center, a small
@@ -675,8 +689,8 @@ export default {
         // essentially never land exactly on a recorded placement.
         function whatsHere() {
             if (!cameraPosition.value) return;
-            const results = guarded(() => session.whatsHere()) || [];
-            openLocationBrowser(NEARBY_RADIUS, results);
+            const envelope = guarded(() => session.whatsHere()) || EMPTY_DISCOVERY_ENVELOPE;
+            openLocationBrowser(NEARBY_RADIUS, envelope);
         }
 
         // The dialog's own "Explore" button — re-query the SAME center
@@ -686,17 +700,18 @@ export default {
         // one.
         function reExploreLocationBrowser(radius) {
             if (!locationBrowserCenter.value) return;
-            const results = guarded(() => session.exploreLocation({
+            const envelope = guarded(() => session.exploreLocation({
                 center: locationBrowserCenter.value,
                 radius
-            })) || [];
-            openLocationBrowser(radius, results);
+            })) || EMPTY_DISCOVERY_ENVELOPE;
+            openLocationBrowser(radius, envelope);
         }
 
         function closeLocationBrowser() {
             showLocationBrowser.value = false;
             locationBrowserCenter.value = null;
-            locationBrowserResults.value = [];
+            locationBrowserDocuments.value = [];
+            locationBrowserDiagnostics.value = EMPTY_DISCOVERY_ENVELOPE.diagnostics;
             locationBrowserInspected.value = null;
         }
 
@@ -731,7 +746,7 @@ export default {
                 return;
             }
             locationBrowserInspected.value = guarded(() => session.inspectDocument(documentId))
-                || { documentId, documentInfo: null, placementInfo: null };
+                || { documentId, documentInfo: null, placementInfo: null, trust: null };
         }
 
         // -----------------------------------------------------------------
@@ -905,7 +920,8 @@ export default {
             showLocationBrowser,
             locationBrowserCenter,
             locationBrowserRadius,
-            locationBrowserResults,
+            locationBrowserDocuments,
+            locationBrowserDiagnostics,
             locationBrowserInspected,
             exploreHere,
             whatsHere,
@@ -1249,7 +1265,8 @@ export default {
                 v-if="showLocationBrowser"
                 :center="locationBrowserCenter"
                 :radius="locationBrowserRadius"
-                :results="locationBrowserResults"
+                :documents="locationBrowserDocuments"
+                :diagnostics="locationBrowserDiagnostics"
                 :inspected="locationBrowserInspected"
                 :catalog-empty="catalogEmpty"
                 @explore="reExploreLocationBrowser"
