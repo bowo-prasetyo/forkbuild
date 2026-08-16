@@ -2546,3 +2546,111 @@ already covers it, since every selection path in this file flows
 through that one method); and any change to the fork-on-write
 mechanism itself (0.2.20's guards are untouched — only WHICH document
 id they receive as input changed).
+
+### Spatial Query & Location Discovery (0.2.28)
+
+0.2.26 gave the World View text search over the full discovery
+catalog. 0.2.28 gives it a spatial counterpart — "what's within
+`radius` World Units of `center`" — composable with text search rather
+than a second, unrelated mechanism: both are just criteria narrowing
+the same `searchWorld` call.
+
+    WorldNavigationSession.searchWorld({ text, center, radius })
+              │
+              ▼
+      SearchWorldUseCase.execute({ text, center })
+        (decides: apply the text filter, or — no text but a spatial
+         filter is coming — return the WHOLE catalog unfiltered)
+              │
+              ▼
+      _describeSearchResult(publication, center)
+        (resolves position — explicit PlacementRecord, or 0.2.24's
+         deterministic fallback — and, only when `center` was given,
+         a `distance` via core/SpatialQuery.js)
+              │
+              ▼
+      [center && radius] → filter to isWithinRadius(...), sort nearest-first
+              │
+              ▼
+          enriched, ordered results
+
+- `core/SpatialQuery.js` (new) — `distanceBetween(a, b)` and
+  `isWithinRadius(position, center, radius)`, plain Euclidean geometry
+  with no dependencies. Deliberately NOT the same test
+  `LocalSpatialIndexProvider.discover()` already performs for camera
+  streaming (spatial/LocalSpatialIndexProvider.js) — that one is
+  sphere/AABB intersection against a placement's bounds, correct for
+  "does this world's geometry reach into view" but wrong for a
+  `distance` a person reads as "how far away is this," which only
+  makes sense as a straight point-to-point number. Reusing the
+  bounds-aware test here would silently produce a `distance` that
+  disagreed with the requested radius.
+- `application/SearchWorldUseCase.js` — `execute()` now accepts either
+  the original plain string (byte-identical 0.2.26 behavior, so every
+  existing caller — including this milestone's own new test file —
+  is unaffected) or `{ text, center, radius }`. The class still does
+  ONLY text filtering; it has no placementRegistry and performs no
+  geometry. What it decides is narrower: whether a spatial filter is
+  coming, because that changes what "no text" should mean — blank
+  text with no spatial filter still returns `[]` (0.2.26, unchanged);
+  blank text WITH a spatial filter returns the unfiltered catalog,
+  since a pure "what's near this point" query has no text criterion to
+  apply and the caller's radius test is what actually narrows it.
+- `WorldNavigationSession.searchWorld` performs the actual distance/
+  radius test and nearest-first sort, AFTER `_describeSearchResult` has
+  resolved each candidate's position — kept here rather than pushed
+  into `SearchWorldUseCase` because position resolution already lived
+  in this method (0.2.26), and a pure discovery-layer use case has no
+  business knowing about placements. `searchWorldByLocation({ center,
+  radius })` is a thin convenience wrapper for the pure-spatial case —
+  equivalent to `searchWorld({ center, radius })`, reads more clearly
+  as "find what's near this point" than a text search with the text
+  left out.
+- `_describeSearchResult(publication, center)` gains a `distance`
+  field, computed only when `center` was actually passed — a text-only
+  search's results carry `distance: null`, never a stale or invented
+  number (see docs/Principles.md, "Distance Is Derived, Never
+  Persisted"). `hasPlacement`/fallback-position semantics (0.2.26) are
+  completely unchanged and apply identically to spatial results — a
+  publication found only through its deterministic fallback position
+  still reports `hasPlacement: false`, so a radius search can never
+  present a fallback as an authored location (see docs/Principles.md,
+  extending "Publication Found Is Not The Same As Placement Found").
+
+UI:
+
+- `ui/components/WorldSearchPanel.js` — gains a Location section (X/Y/Z
+  + Radius, all labeled World Units) under the existing text field.
+  Submitting composes both into one `{ text, center?, radius? }`
+  event — `center`/`radius` are present only when Radius actually has
+  a value, so leaving Location blank is exactly the pre-0.2.28 text
+  search, unchanged. A submit with neither text nor a radius is a
+  no-op (nothing to search for) rather than emitting a query that
+  would just report "no matches" for no reason. Results show a
+  resolved 📍 position (now shown for every result, not only spatial
+  ones — position was already being resolved regardless, this just
+  makes it visible) and, only when a spatial query actually ran, a 📏
+  distance — this is what finally makes the 0.2.24 coordinate system
+  something a person reads and uses, not merely an internal
+  convention.
+- `ui/views/WorldView.js` — `performSearch` is unchanged beyond a
+  rename for clarity; it already passed whatever `WorldSearchPanel`
+  emitted straight through to `session.searchWorld`, which accepts
+  both shapes.
+
+Deliberately not in 0.2.28: wiring `DecentralizedSpatialDiscoveryProvider`
+or `SpatialIndexRoot`/`SpatialIndexManifest` as the actual backend for
+`searchWorldByLocation` — the CONTRACT (docs/Principles.md, "A Spatial
+Query Is Authoritative Over Placement, Not A Local-Cache Scan") is
+written to support that swap later without changing any caller, but
+the live World View still wires the plain `LocalWorldLayoutProvider`
+(same honesty rule 0.2.26 already applied to text search and
+diagnostics — this milestone does not claim a decentralized guarantee
+the running system cannot yet back up); bounding-box, polygon, or
+nearest-neighbor-indexed spatial queries (a plain Euclidean sphere,
+exactly as requested, is the whole of it); any geographic unit
+conversion (World Units stays the only unit named anywhere in this
+UI — see docs/Principles.md, "A World Unit Is Not (Yet) A Meter",
+0.2.24); and a combined spatial-query location BROWSER (clicking/
+exploring a region, sorting, filtering interactively) — that is
+0.2.29's proposed scope, not this one's.

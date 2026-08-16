@@ -1127,3 +1127,50 @@ once. This is the same boundary 0.2.25 drew between spatial policy and
 cryptographic trust, applied one layer up: which local UI state
 decides a mutation's target is a session-layer correctness question,
 never a protocol-layer one.
+
+## Spatial Query & Location Discovery (0.2.28)
+
+No wire format touched — `PlacementRecord`/`WorldPlacement`/
+`Publication` are unchanged, and a spatial query result's `distance`
+field is computed at query time and never persisted or transmitted
+(see docs/Principles.md, "Distance Is Derived, Never Persisted").
+
+The CONTRACT this milestone establishes, though, is protocol-relevant
+even though nothing here changes bytes on the wire: a coordinate +
+radius query must mean the same thing on every replica — everything
+discoverable within that region via the configured discovery
+provider, not merely what one node's local cache already holds. This
+is 0.2.24's single-coordinate determinism guarantee ("the same
+publication resolves to the same position everywhere") extended to a
+region query, and it is a statement about what the API promises, not
+about today's implementation of it. The live World View currently
+answers `searchWorldByLocation` with `LocalWorldLayoutProvider`
+scanning a local list — same honest scoping 0.2.26 already applied to
+text search — but the eventual decentralized path is:
+
+    coordinate + radius
+            │
+            ▼
+    relevant spatial cells (bounding region)
+            │
+            ▼
+    SpatialIndexRoot → SpatialIndexManifest
+            │
+            ▼
+    PlacementRecords (the AUTHORITATIVE source)
+            │
+            ▼
+    exact distance test (core/SpatialQuery.js — unchanged either way)
+            │
+            ▼
+    matching publications
+
+The spatial index/manifest layer is an ACCELERATOR for narrowing which
+cells are worth fetching — never the source of truth a match is
+verified against. That distinction already exists for placement
+lookups generally (0.2.15/0.2.19); 0.2.28 doesn't add a new one, it
+just gives a coordinate+radius query the same property a single-point
+lookup already had. Swapping the concrete provider later changes
+nothing about `searchWorld`'s call shape or its result shape — only
+how thoroughly, and from how many replicas' knowledge, the answer was
+actually assembled.

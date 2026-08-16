@@ -27,6 +27,7 @@ import { Document } from '../core/Document.js';
 import { computeLifecycleStatus, describeLifecycleStatus } from './DocumentLifecycleStatus.js';
 import { detectSpatialOverlap } from '../core/SpatialOverlap.js';
 import { SpatialAllocationPolicy, evaluateSpatialAllocation } from '../core/SpatialAllocationPolicy.js';
+import { distanceBetween, isWithinRadius } from '../core/SpatialQuery.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -1114,13 +1115,51 @@ export class WorldNavigationSession {
     // "Publication Found Is Not The Same As Placement Found"), not an
     // error state. Read-only, like every other navigation method here:
     // searching never loads, forks, or mutates anything by itself.
-    searchWorld(query) {
+    //
+    // 0.2.28: accepts either the original plain string (text-only,
+    // unchanged) or an options object `{ text, center, radius }` —
+    // `searchWorldByLocation` below is a thin convenience wrapper for
+    // the center/radius-only case. The spatial filter runs HERE, after
+    // enrichment, not inside SearchWorldUseCase: position resolution
+    // already lives in this method (see _describeSearchResult), and a
+    // pure discovery-layer use case has no reason to know about
+    // placements at all — see docs/Principles.md, "A Spatial Query Is
+    // Authoritative Over Placement, Not A Local-Cache Scan," for why
+    // this still returns a real answer over whatever this node can
+    // discover rather than merely "whatever happens to be nearby the
+    // camera." Results are sorted nearest-first when a spatial filter
+    // ran — the natural reading of a radius query — and left in
+    // whatever order discovery returned them for a text-only one
+    // (matching 0.2.26 — no ordering guarantee of its own).
+    searchWorld(queryOrOptions) {
         if (!this._searchWorldUseCase) return [];
-        const results = this._searchWorldUseCase.execute(query);
-        return results.map((publication) => this._describeSearchResult(publication));
+        const options = typeof queryOrOptions === 'string' ? { text: queryOrOptions } : (queryOrOptions || {});
+        const candidates = this._searchWorldUseCase.execute(options);
+        let results = candidates.map((publication) => this._describeSearchResult(publication, options.center));
+        if (options.center && Number.isFinite(options.radius)) {
+            results = results
+                .filter((r) => r.position && isWithinRadius(r.position, options.center, options.radius))
+                .sort((a, b) => a.distance - b.distance);
+        }
+        return results;
     }
 
-    _describeSearchResult(publication) {
+    // Convenience for a PURE spatial query — "what's within `radius`
+    // World Units of `center`," no text criterion at all. Equivalent
+    // to `searchWorld({ center, radius })`; exists because "find
+    // everything near this point" reads more clearly as its own named
+    // operation than as a text search with the text left out (see
+    // docs/Principles.md — spatial and text discovery are two kinds of
+    // the same underlying query, not one shoehorned into the other).
+    searchWorldByLocation({ center, radius }) {
+        return this.searchWorld({ center, radius });
+    }
+
+    // `center` is optional — only passed when a spatial query is in
+    // progress, so `distance` is computed (and included) ONLY when it
+    // actually means something; a plain text search never carries a
+    // `distance` field implying a query that was never made.
+    _describeSearchResult(publication, center = null) {
         const explicit = this._placementRegistry
             ? this._placementRegistry.findByPublicationId(publication.id)
                 .reduce((latest, r) => (!latest || r.revision > latest.revision) ? r : latest, null)
@@ -1128,15 +1167,17 @@ export class WorldNavigationSession {
         const resolved = this._worldLayoutProvider
             ? this._worldLayoutProvider.getPosition(publication.documentId)
             : null;
+        const position = explicit
+            ? { x: explicit.position.x, y: explicit.position.y, z: explicit.position.z }
+            : (resolved ? { x: resolved.x, y: resolved.y, z: resolved.z } : null);
         return {
             documentId: publication.documentId,
             publicationId: publication.id,
             title: publication.title,
             author: publication.author,
             hasPlacement: !!explicit,
-            position: explicit
-                ? { x: explicit.position.x, y: explicit.position.y, z: explicit.position.z }
-                : (resolved ? { x: resolved.x, y: resolved.y, z: resolved.z } : null)
+            position,
+            distance: (center && position) ? distanceBetween(position, center) : null
         };
     }
 

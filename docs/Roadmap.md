@@ -81,6 +81,7 @@
 0.2.25  Spatial Allocation & Placement Collision Policy ✓
 0.2.26  World Navigation & Spatial Discovery UX         ✓
 0.2.27  World View Context & Selection Model            ✓
+0.2.28  Spatial Query & Location Discovery               ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -134,6 +135,26 @@ Here still only offer "Focus," which moves both) remains OPTIONAL and
 unscheduled. It becomes worth building once browsing several
 co-located documents without constantly re-centering the camera is a
 demonstrated, not merely theoretical, need.
+
+Wiring a decentralized backend (spatial cells → `SpatialIndexRoot` →
+`SpatialIndexManifest` → `PlacementRecord`s) underneath
+`searchWorldByLocation` remains OPTIONAL and unscheduled. 0.2.28
+deliberately wrote the spatial-query CONTRACT to support that swap
+later without changing any caller (see docs/Principles.md, "A Spatial
+Query Is Authoritative Over Placement, Not A Local-Cache Scan") while
+the live implementation stays the plain, honest
+`LocalWorldLayoutProvider` scan it already was for text search.
+Geometric (bounding-box/polygon) spatial queries and nearest-neighbor
+indexing similarly remain OPTIONAL — 0.2.28 is a plain Euclidean
+sphere, exactly what was asked for, on purpose.
+
+**0.2.29 — World Location Browser & Spatial Exploration** (proposed,
+not started): clicking or browsing a region of the world, seeing every
+publication occupying or intersecting it, sorting by distance, and
+combining spatial + textual filters interactively — the natural next
+step once coordinate + radius search (0.2.28) and the Camera/Active-
+document separation (0.2.27) are both in place. Not committed to the
+roadmap as a numbered milestone until its own design pass happens.
 
 ## 0.1.50 — What shipped
 

@@ -681,6 +681,17 @@ into one undifferentiated "found it" would hide a real fact — that the
 position about to be focused might be a placeholder, not a chosen
 location — behind a search result that looks identical either way.
 
+0.2.28 extends this rather than introducing a competing rule: a
+publication found by a SPATIAL query (coordinate + radius) still
+carries `hasPlacement: false` when the position that put it inside the
+radius was only ever the deterministic fallback, never an authored
+placement. A radius search that quietly treated a fallback position as
+equally authoritative as a recorded one would let a person read
+"found within 25 units of (100, 50, 250)" as a claim about where the
+publication was actually placed, when the honest claim is narrower:
+this is merely where it resolves to today, absent any real placement
+decision.
+
 ### Focus Is Navigation, Not Discovery — And Never Editing (0.2.26)
 
 Focusing a document — from search results, from "Documents Here," from
@@ -810,3 +821,41 @@ and Save/Publish/Edit Metadata actions all read the ACTIVE document
 (unchanged in spirit from 0.2.22, correctly scoped now that active and
 focused can genuinely differ) — camera position has never determined,
 and still does not determine, what those controls act on.
+
+### A Spatial Query Is Authoritative Over Placement, Not A Local-Cache Scan (0.2.28)
+
+"Find everything within 25 World Units of (100, 50, 250)" has to mean
+the same thing regardless of which replica answers it — everything
+discoverable within that region, not merely whatever this particular
+browser's local cache happens to already know about. This is the same
+requirement 0.2.24 established for a single coordinate (the same
+publication resolves to the same position everywhere) extended to a
+region: the CONTRACT a spatial query promises does not shrink just
+because the concrete implementation answering it today is
+`LocalWorldLayoutProvider` scanning a local list. `WorldNavigationSession.
+searchWorldByLocation` is written against that contract, not against
+today's implementation — a future decentralized backend (spatial
+cells → `SpatialIndexRoot` → `SpatialIndexManifest` →
+`PlacementRecord`s, exact distance test) answers the exact same
+question, with the spatial index as an accelerator and the placement
+records themselves remaining the authoritative source, never the
+reverse. See docs/Architecture.md, 0.2.28, for why that swap is
+future work and not attempted here — the promise the API makes is
+what has to be right immediately; which concrete provider fulfills it
+can improve later without changing a single caller.
+
+### Distance Is Derived, Never Persisted (0.2.28)
+
+A spatial query result's `distance` field is computed once, at query
+time, from the requested center and the result's resolved position —
+it is never stored on a `PlacementRecord`, never replicated, and never
+treated as a fact about the publication itself. This is the same
+"computed, not stored" posture `SpatialOverlap` (0.2.25) and lifecycle
+`status` (0.2.6) already established for every other derived fact in
+this codebase: `distance` describes the relationship between a
+publication's position and a QUESTION someone just asked, not a
+property the publication has on its own. A result found through a
+plain text search therefore carries `distance: null` rather than a
+number left over from some other query — there is no meaningful
+distance without a center to measure from, and a stale or invented one
+would be worse than none.

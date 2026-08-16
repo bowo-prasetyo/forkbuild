@@ -569,8 +569,12 @@ export default {
         // distinction.
         const catalogEmpty = computed(() => allPublications.value.length === 0);
 
-        function performSearch(query) {
-            searchResults.value = guarded(() => session.searchWorld(query)) || [];
+        // 0.2.28: `options` is WorldSearchPanel's emitted
+        // { text, center?, radius? } — passed straight through, since
+        // session.searchWorld already accepts that shape (and the
+        // plain string every pre-0.2.28 caller used).
+        function performSearch(options) {
+            searchResults.value = guarded(() => session.searchWorld(options)) || [];
         }
 
         // Search's own Focus action is exactly focusWorld — searching
