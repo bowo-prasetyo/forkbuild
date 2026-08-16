@@ -167,6 +167,38 @@ export default {
             refreshSpatialUI();
         }
 
+        // Save/Publish for the World View: there was no equivalent of
+        // the Editor's Toolbar until now, even though 0.2.20/0.2.21
+        // gave World View the same edit + fork-on-write + metadata
+        // capability the Editor has always had — WorldNavigationSession.
+        // saveDocument/publishDocument already existed and already
+        // refuse a still-published id, this just gives the UI a way to
+        // call them. Bound to activeDocumentInfo (not the
+        // selection-scoped documentInfo the inspection panel uses),
+        // because "save/publish the document I'm editing" means the
+        // ACTIVE document specifically — the two usually agree, but
+        // aren't the same field, and this is the one that should never
+        // be ambiguous about which document it acts on.
+        function saveActiveDocument() {
+            const info = activeDocumentInfo.value;
+            if (!info) return;
+            guarded(() => {
+                session.saveDocument(info.documentId);
+                feedback.show('Saved');
+            });
+            refreshSpatialUI();
+        }
+
+        function publishActiveDocument() {
+            const info = activeDocumentInfo.value;
+            if (!info) return;
+            guarded(() => {
+                const publication = session.publishDocument(info.documentId);
+                feedback.show(`Published "${publication.title}"`);
+            });
+            refreshSpatialUI();
+        }
+
         // -----------------------------------------------------------------
         // Tool switching
         // -----------------------------------------------------------------
@@ -529,7 +561,9 @@ export default {
             alignSelection,
             distributeSelection,
             applyNumericTransform,
-            onSaveMetadata
+            onSaveMetadata,
+            saveActiveDocument,
+            publishActiveDocument
         };
     },
     template: `
@@ -546,6 +580,14 @@ export default {
                     </span>
                     <span v-else>✎ {{ activeDocumentInfo.statusLabel }}</span>
                 </p>
+                <div v-if="activeDocumentInfo && activeDocumentInfo.editable" class="world-view-actions">
+                    <button
+                        class="action-btn"
+                        :disabled="!activeDocumentInfo.dirty"
+                        @click="saveActiveDocument"
+                    >Save</button>
+                    <button class="action-btn action-btn--primary" @click="publishActiveDocument">Publish</button>
+                </div>
                 <p v-if="author">by {{ author }}</p>
                 <p v-if="cameraPosition" class="world-view-coords">
                     Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
