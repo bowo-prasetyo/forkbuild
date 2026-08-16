@@ -1745,8 +1745,106 @@ middle of a drag gesture would be worse UX, not better); extending
 `publisher/Publication.js` with a `description` field (Publication's
 wire shape is a protocol-adjacent surface spanning 0.2.3/0.2.13/0.2.16
 — a cosmetic field there is a separate, deliberate decision, not a
-side effect of this milestone); and a separate "New Document" creation wizard (a fresh Document already
-has sensible metadata defaults the instant it exists — see "A default
-value is not an absent one" — so 0.2.21 lets the user open the SAME
-Document Properties editor immediately afterward rather than building
-a second, near-identical form just for the moment of creation).
+side effect of this milestone); and a separate "New Document" creation
+wizard (a fresh Document already has sensible metadata defaults the
+instant it exists — see "A default value is not an absent one" — so
+0.2.21 lets the user open the SAME Document Properties editor
+immediately afterward rather than building a second, near-identical
+form just for the moment of creation).
+
+### Fork Transition & World View Document Switching (0.2.22)
+
+0.2.20 made fork-on-edit correct: a mutation on a published snapshot
+forks it, and every subsequent mutation lands on the fork. What it did
+not do is make that switch visible. `WorldNavigationSession` had
+tracked which document is "active" (`getActiveDocumentId()`,
+pre-existing since well before 0.2.20) correctly the whole time — the
+gap was entirely in `ui/views/WorldView.js`, which bound its header
+title to a value captured ONCE at mount (`const initialDocumentId =
+route.params.documentId`) and never revisited it. The result: after a
+fork, the session's internal state was exactly right — selection,
+gizmo, mutation target all correctly pointed at the fork — while the
+screen kept displaying the source's title and the URL kept naming the
+source's documentId. A user watching the title bar had no way to tell
+that "Alice's World" had, mutation by mutation, become something they
+now silently owned.
+
+    Before the fork:
+        title/route/mutation-target  ──┐
+                                        ├──►  source documentId (A)
+        selection/gizmo               ──┘
+
+    After the fork (0.2.20, pre-0.2.22):
+        selection/gizmo/mutation-target ──►  fork documentId (B)
+        title/route                     ──►  STILL A  (stale)
+
+    After the fork (0.2.22):
+        title/route/selection/gizmo/mutation-target ──►  ALL B
+
+The fix is deliberately small and structural, not a new event system:
+`getActiveDocumentId()` is already the single source of truth every
+guarded mutation updates (via `_remapReferencesAfterFork`'s
+`this._focusedDocumentId = forkId`); `WorldView.js`'s
+`refreshSpatialUI()` — already called after literally every pointer
+interaction, every registry-driven keyboard/palette action, and the
+periodic streaming poll (`setInterval`) — now re-derives title,
+author, and a `Document Info` snapshot (`activeDocumentInfo`) from
+`session.getActiveDocumentId()` on every one of those refreshes,
+instead of a value frozen at mount. When the active id has changed
+since the last refresh, `router.replace({ path: '/world/' +
+activeId })` follows it — the exact same
+`session.focusDocument(id); router.replace(...)` pairing
+`focusWorld()` already used for an explicit "Focus World" click,
+just applied automatically instead of only on request. Vue Router
+reuses the `WorldView` component instance across a `:documentId`
+param change on the same matched route (no `:key`, no
+`beforeRouteUpdate` — confirmed by `focusWorld()` already relying on
+exactly this), so this never remounts the view, never reconstructs
+`session`, and never touches the camera: only the identity POINTED at
+changes, not the scene or the viewpoint.
+
+    Rendered scene    ─┐
+    Selection         ─┤
+    Gizmo             ─┼──►  session.getActiveDocumentId()
+    Mutation target   ─┤        (single source of truth,
+    Document metadata ─┤         re-read every refresh —
+    Route             ─┘         not cached anywhere)
+
+The reverse case needed no new code: `_ensureEditableSelection`/
+`_forkForEdit` already throw BEFORE mutating `_focusedDocumentId` or
+`_loadedDocuments` when fork policy denies the edit (0.2.20), so a
+denied fork leaves `getActiveDocumentId()` unchanged — `WorldView`'s
+refresh sees the same id it saw before, makes no route change, and the
+screen simply never moves. There is no third state where the active
+document is ambiguous: every refresh either confirms the source or
+confirms the fork, never something in between.
+
+A visible status line accompanies the title
+(`world-view-status`/`world-view-status--published`): "🔒 Published"
+for an unforked snapshot, "✎ Editing fork — forked from …" once the
+active document has a `parentDocumentId`, sourced from
+`getDocumentInfo(activeId)` (0.2.21) plus a best-effort title lookup
+against the publications list already loaded for the hover/inspection
+panels (the parent itself is no longer loaded in this session, but it
+is still a real Publication, so its title is resolvable from the same
+list). `consumeForkNotice()` (0.2.21) still fires the transient toast
+— "Created your own editable copy — … is unchanged" — but per the
+design's own framing, that notice is now backward-compatible plumbing
+for the transient announcement, not the mechanism the UI relies on to
+know which document is active: `getActiveDocumentId()` /
+`getDocumentInfo()` are the durable, always-queryable state; the
+notice is a one-shot drain layered on top for the toast, exactly as
+0.2.21 introduced it.
+
+Deliberately not in 0.2.22: a blocking confirmation dialog before a
+lazy fork (see docs/Principles.md, "A fork is not a modal
+interruption" — it would defeat the point of lazy fork-on-edit); a new
+"Document Transition" domain entity or event log (the design floated
+one, but `getActiveDocumentId()`/`getDocumentInfo()` already ARE
+first-class, always-queryable state — a parallel event-shaped
+structure would be a second source of the same fact, exactly what
+"Status is computed, not stored" (0.2.21) argues against); and any
+change to the fork MECHANISM itself (positional remap, fork policy,
+streaming pin, gizmo hit-test gating) — all of that was already
+correct as of the 0.2.20 hardening pass; 0.2.22 is purely about making
+an already-correct internal state visible.

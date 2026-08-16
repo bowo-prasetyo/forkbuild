@@ -796,3 +796,33 @@ constructed. License is not part of this validation; an
 UNSPECIFIED or ALL_RIGHTS_RESERVED license publishes exactly as
 successfully as any other (0.2.13 already governs what that license
 then permits downstream).
+
+## Fork Transition & World View Document Switching (0.2.22)
+
+No protocol or wire-format change. This milestone is entirely a
+runtime/UI-state concern: which document a live World View session
+currently treats as "active." That was already correct at the session
+level as of 0.2.20/0.2.21 (`WorldNavigationSession.
+getActiveDocumentId()` already updated the instant a fork-on-edit
+mutation created one); 0.2.22 makes the World View's own displayed
+title, status line, and browser route re-derive from that same
+session-level fact on every refresh, instead of a value captured once
+at mount:
+
+    every refresh (pointer / keyboard / palette action / streaming poll)
+              │
+              ▼
+    activeId = session.getActiveDocumentId()
+              │
+       ┌──────┴──────┐
+       │              │
+    unchanged      changed since last refresh
+       │              │
+       ▼              ▼
+    no route      router.replace(/world/{activeId})
+    change        title/status re-derived from activeId
+
+No new fields travel over any wire, no Document/Publication shape
+changed, and no new endpoint or query exists — see
+docs/Architecture.md, "Fork Transition & World View Document
+Switching (0.2.22)" for the full mechanism.

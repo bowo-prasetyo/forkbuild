@@ -31,6 +31,14 @@ export default {
 
         const title = ref('Loading...');
         const author = ref(null);
+        // 0.2.22: the Document Info shape (see WorldNavigationSession.
+        // getDocumentInfo) for whichever document is CURRENTLY ACTIVE
+        // (session.getActiveDocumentId()), not the selected brick's
+        // document — distinct from `documentInfo` below, which tracks
+        // the inspection panel's selection and can be a different
+        // world entirely. Drives the header's Published/Editing-fork
+        // badge.
+        const activeDocumentInfo = ref(null);
         const loadedWorlds = ref([]);
         const nearbyWorlds = ref([]);
         const failedWorlds = ref([]);
@@ -282,11 +290,46 @@ export default {
                 spatialPlacement.value = null;
             }
 
-            const initialDoc = docs.find((d) => d.world.id === initialDocumentId);
-            if (initialDoc) {
-                title.value = initialDoc.metadata.title || 'Untitled';
-                author.value = initialDoc.metadata.author;
+            // 0.2.22: the header (title/author/status) and the route
+            // always track the ACTIVE document — session.
+            // getActiveDocumentId() — never a route param frozen at
+            // mount time. Before this, forking (0.2.20) changed which
+            // document mutations landed on without the visible title,
+            // URL, or "current world" highlight ever following: the
+            // screen kept saying "Alice's World" while every
+            // subsequent edit was silently going to Bob's fork. This
+            // runs on every refresh — every pointer/keyboard
+            // interaction and the periodic streaming poll both call
+            // refreshSpatialUI() already — so the transition is never
+            // more than one interaction late, and is the SAME
+            // documentId->route mechanism focusWorld() already used
+            // for an explicit "Focus World" click, just applied
+            // automatically instead of only on request.
+            const activeId = typeof session.getActiveDocumentId === 'function'
+                ? session.getActiveDocumentId()
+                : initialDocumentId;
+            const activeDoc = docs.find((d) => d.world.id === activeId);
+            if (activeDoc) {
+                title.value = activeDoc.metadata.title || 'Untitled';
+                author.value = activeDoc.metadata.author;
             }
+            activeDocumentInfo.value = (activeId && typeof session.getDocumentInfo === 'function')
+                ? session.getDocumentInfo(activeId)
+                : null;
+            if (activeId && activeId !== route.params.documentId) {
+                router.replace({ path: `/world/${activeId}` });
+            }
+        }
+
+        // Best-effort title for a parentDocumentId shown in the
+        // header's "Forked from" line — the parent is a real
+        // Publication (fork provenance always points at one), so its
+        // title is available from the same publications list the
+        // hover/inspection panels already resolve titles from, even
+        // though the parent itself is no longer loaded in this session.
+        function parentTitle(parentDocumentId) {
+            const pub = allPublications.value.find((p) => p.documentId === parentDocumentId);
+            return pub ? (pub.title || 'Untitled') : null;
         }
 
         function refreshHoverUI() {
@@ -463,6 +506,8 @@ export default {
             spatialHover,
             spatialInspection,
             documentInfo,
+            activeDocumentInfo,
+            parentTitle,
             showMetadataEditor,
             spatialEditingContext,
             spatialPlacement,
@@ -491,6 +536,16 @@ export default {
         <div class="world-view">
             <div class="world-view-overlay">
                 <h2>{{ title }}</h2>
+                <p
+                    v-if="activeDocumentInfo"
+                    :class="['world-view-status', { 'world-view-status--published': activeDocumentInfo.status === 'published' }]"
+                >
+                    <span v-if="activeDocumentInfo.status === 'published'">🔒 Published</span>
+                    <span v-else-if="activeDocumentInfo.parentDocumentId">
+                        ✎ Editing fork<template v-if="parentTitle(activeDocumentInfo.parentDocumentId)"> — forked from {{ parentTitle(activeDocumentInfo.parentDocumentId) }}</template>
+                    </span>
+                    <span v-else>✎ {{ activeDocumentInfo.statusLabel }}</span>
+                </p>
                 <p v-if="author">by {{ author }}</p>
                 <p v-if="cameraPosition" class="world-view-coords">
                     Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}

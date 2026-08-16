@@ -538,6 +538,21 @@ html, body {
     font-style: italic;
 }
 
+/* 0.2.22: Published vs Editing-fork badge, directly under the World
+   View title — the active document's status must be at least as
+   visible as its name, since which one you're looking at is exactly
+   what fork-on-edit can silently change without this. */
+.world-view-status {
+    margin-top: 0.15rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    color: #4caf7d !important;
+}
+
+.world-view-status--published {
+    color: #909090 !important;
+}
+
 /* Author View */
 .author-view {
     padding: 2rem;

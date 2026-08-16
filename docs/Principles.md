@@ -409,3 +409,33 @@ surface that can reject a mutation exposes a structured reason
 getDocumentInfo().editabilityNotice) the UI renders in plain language,
 proactively, before the user hits the rejection — not only reactively,
 after an uncaught error already broke whatever they were doing.
+
+### The Displayed Document Is The Active Document (0.2.22)
+
+There is exactly one active document for a World View session at any
+moment, and every observable thing — the title shown, the browser
+route, which document the inspection panel describes, which document
+the NEXT mutation lands on — reads from that single fact
+(`getActiveDocumentId()`), never a value captured once and left to go
+stale. 0.2.20 made fork-on-edit switch the session's INTERNAL notion
+of which document is being edited; it did not follow that a UI bound
+to something captured at mount time (a route param, an initial title
+lookup) would keep displaying the document that was just superseded
+— correct enforcement with a visibly wrong screen is not a solved
+problem, it's a hidden one. Whatever a session considers "active" must
+be re-derived on every observation, not cached at the moment a session
+began, or the two will disagree the first time the active document
+changes without the component remounting.
+
+### A Fork Is Not A Modal Interruption (0.2.22)
+
+Lazy fork-on-first-mutation (0.2.20) exists specifically so that
+editing a published world feels like editing, not like requesting
+permission first. A confirmation dialog on the first drag would defeat
+that. The system still tells the user what happened — a transient
+notice after the fact ("Created your own editable copy"), a persistent
+status line for as long as they're looking at the fork ("Editing
+fork — forked from …") — but never a blocking prompt in the middle of
+a gesture already in motion. Denial is the one case that DOES interrupt
+outright, because there the alternative isn't "explain after the
+fact," it's "let the user think something happened that didn't."

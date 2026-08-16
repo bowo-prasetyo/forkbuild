@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.21** — Document Lifecycle & Metadata UI
+**Version 0.2.22** — Fork Transition & World View Document Switching
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -21,13 +21,15 @@ boundary: the World View can now be fully edited in place while a
 published snapshot itself remains absolutely immutable, because
 editing one is semantically "fork, then edit the fork" — done lazily,
 on the first mutation, subject to the same fork policy as an explicit
-Fork. 0.2.21 puts a face on that enforcement: a Document Properties
-editor for title/description/license, a Document Info panel showing
-lifecycle status (Draft/Saved/Published) and fork lineage, publish-time
-validation, and plain-language explanations — proactive and reactive —
-for why an edit is or isn't possible, instead of a silent default or
-an uncaught error. See [docs/Architecture.md](docs/Architecture.md)
-for the full write-up of each milestone.
+Fork. 0.2.21 put a face on that enforcement: a Document Properties
+editor, a Document Info panel, lifecycle status, and plain-language
+explanations for why an edit is or isn't possible. 0.2.22 closes the
+remaining gap between the two: the moment a fork is created, the World
+View's title, status line, and browser route now atomically switch to
+it — the screen never keeps displaying the published source while
+every subsequent edit is silently landing on the fork underneath it.
+See [docs/Architecture.md](docs/Architecture.md) for the full write-up
+of each milestone.
 
 ## Features
 
@@ -53,6 +55,7 @@ for the full write-up of each milestone.
 - **Trust & Discovery Hardening (0.2.19)** — a trust-policy layer (pinned/discovered/untrusted authorities, legacy-content tolerance) and equivocation detection (an authority signing two different index roots at the same causal position) sit around the discovery pipeline, plus a structured diagnostics surface explaining exactly why a query returned what it did.
 - **Fork-on-Edit & Immutable Snapshot Lineage (0.2.20)** — the World View lazily forks a published snapshot on its first mutation instead of ever mutating it in place; viewing never forks, exactly one fork is created per editing session, the fork carries `parentDocumentId` provenance through the existing forking mechanism, and fork policy (0.2.13 licensing) still governs whether the fork may happen at all.
 - **Document Lifecycle & Metadata UI (0.2.21)** — a Document Properties editor (title/description/license) and a shared Document Info panel across the Editor and World View, showing computed lifecycle status (Draft/Saved/Published) and fork lineage; publishing now validates a title and non-empty content before creating anything immutable; a blocked or about-to-fork edit is explained in plain language, proactively and reactively, instead of failing silently.
+- **Fork Transition & World View Document Switching (0.2.22)** — the moment fork-on-edit creates a fork, the World View's title, status badge ("🔒 Published" / "✎ Editing fork — forked from …"), and browser route atomically switch to it, re-derived from the session's active document on every interaction rather than a value frozen at page load; camera and scene position are untouched, only document identity changes; a denied fork leaves everything pointed at the source.
   
 ## Architecture
 
@@ -139,6 +142,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.19  Trust / Discovery Hardening
 - [x] 0.2.20  Fork-on-Edit & Immutable Snapshot Lineage
 - [x] 0.2.21  Document Lifecycle & Metadata UI
+- [x] 0.2.22  Fork Transition & World View Document Switching
     
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50.
 
