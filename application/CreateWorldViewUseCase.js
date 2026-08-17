@@ -145,6 +145,16 @@ export class CreateWorldViewUseCase {
         // never to render the local avatar (that stays
         // avatarProfileUseCase's job).
         const presenceBroadcastProvider = new LocalAvatarPresenceBroadcastProvider();
+        // 0.2.41 — a SEPARATE channel from presence's own, so a
+        // torrent of movement updates never competes with (or gets
+        // confused for) the rare profile updates on this one — see
+        // application/AvatarProfileSyncService.js's own header.
+        // LocalAvatarPresenceBroadcastProvider is reused directly
+        // (it's already a generic named-BroadcastChannel wrapper with
+        // nothing presence-specific baked into its actual logic — see
+        // its own header) rather than duplicated into a
+        // presence-flavored-in-name-only sibling class.
+        const avatarProfileBroadcastProvider = new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile');
         const avatarTemplateRegistry = new CreateAvatarTemplateRegistryUseCase().execute();
 
         return {
@@ -183,7 +193,9 @@ export class CreateWorldViewUseCase {
                     presenceVisibilityUseCase,
                     // 0.2.37: remote avatar presence — see above.
                     presenceBroadcastProvider,
-                    avatarTemplateRegistry
+                    avatarTemplateRegistry,
+                    // 0.2.41: remote avatar appearance — see above.
+                    avatarProfileBroadcastProvider
                 });
             },
             // Expose the spatial index and content store so the application

@@ -1397,6 +1397,22 @@ CONSUME already-stored data have to be lenient, because by the time
 you're reading, refusing to render is a worse failure mode than
 rendering something slightly wrong.
 
+0.2.41 update: `application/RemoteAvatarAppearanceRegistry.js`'s own
+`resolve()` applies the exact same READ posture to a REMOTE peer's
+`templateId` — a stranger's advertisement can honestly claim any
+`templateId` string at all (structural validity only requires it be a
+non-empty string; see `core/AvatarProfileAdvertisement.js`), and one
+this replica's own `AvatarTemplateRegistry` has never heard of is not
+an error, just an unresolvable lookup. It degrades to the same fixed
+placeholder appearance an unwired appearance resolver already used
+before 0.2.41 existed — never a thrown error, never a blank/invisible
+avatar, never a guess at what the unknown template might look like.
+The WRITE side stays exactly as strict as ever: `AvatarProfileUseCase.
+updateProfile()` still rejects an unknown `templateId` outright for
+the LOCAL profile it's asked to persist — this principle's asymmetry
+was always about which BOUNDARY you're standing at, not about who
+authored the data.
+
 ### Switching An Avatar's Template Resets Its Appearance (0.2.34)
 
 `AvatarProfileUseCase.updateProfile({ templateId })`, when called
@@ -2071,3 +2087,107 @@ never leaks into authoritative state" boundary
 `renderer/AvatarVisual.js`'s own gait clock (0.2.36) already draws for
 local animation, applied here to remote position instead of local
 pose.
+
+### Appearance And Position Are Different Lifecycles, Never One Message (0.2.41)
+
+Presence says WHERE an avatar is; the avatar profile says WHAT it
+looks like — and 0.2.41 keeps that split all the way down to the
+wire, not just in the local `AvatarProfileUseCase`/`AvatarPresenceSession`
+data model 0.2.35 already established:
+
+```text
+AvatarPresenceAdvertisement  — WHERE  — high-frequency  — bounded replay window   — presence/LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-presence')
+AvatarProfileAdvertisement   — WHAT   — low-frequency   — unbounded replay guard  — presence/LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile')
+```
+
+Two separate wire shapes, two separate `BroadcastChannel` names, two
+separate sync services (`application/PresenceSyncService.js` and
+`application/AvatarProfileSyncService.js`), two separate trust
+boundaries (`application/PresenceTrustBoundary.js` and `application/
+AvatarProfileTrustBoundary.js`), and two separate stores (`application/
+LocalPresenceStore.js`, which prunes on a wall-clock timer, and
+`application/LocalAvatarProfileStore.js`, which never does — see the
+next principle for why that difference is not an oversight). A single
+combined "here's everything about avatar X" message was explicitly
+rejected: it would force every WASD step to re-transmit an appearance
+that changes maybe once a session, and it would force a mid-session
+customization to wait for the next movement tick to have anywhere to
+ride. `application/RemoteAvatarRegistry.js` and `application/
+RemoteAvatarAppearanceRegistry.js` mirror the split exactly one layer
+up — the render facade only ever sees the two combined, at the very
+last step, in `application/RenderWorldViewUseCase.js`'s
+`setRemoteAvatar`/`updateRemoteAvatarAppearance` calls.
+
+Because the two transports are genuinely independent, they race:
+either advertisement can arrive first for a brand-new remote avatarId.
+`RemoteAvatarRegistry.sync()`'s new-avatar branch always asks its
+injected `appearanceResolver` for the CURRENT best-known appearance
+before creating a visual, and `WorldNavigationSession`'s own per-frame
+callback deliberately drains the PROFILE inbox before the PRESENCE
+one — so a profile that already arrived is on hand the moment a
+brand-new visual is first created, rather than being wasted on a
+placeholder that then never gets corrected until the profile's own
+revision changes again. See `tests/AvatarAppearanceSync.test.js`'s
+flagship for this race exercised for real, over real
+`BroadcastChannel`s, with the profile message sent (and delivered)
+before the presence message that first makes the avatar visible.
+
+### Appearance Is Durable; Presence Is Ephemeral — Neither Store Prunes Like The Other (0.2.41)
+
+`application/LocalPresenceStore.js` prunes ABSENT avatars on a
+wall-clock timer (`staleAfterMs`/`absentAfterMs`) because a stopped
+movement stream really does mean "I no longer know where this replica
+currently is." `application/LocalAvatarProfileStore.js` has no such
+timer at all, and that is deliberate, not an oversight: Alice's last
+known outfit remains the right thing for Bob to keep rendering even
+while she is temporarily STALE or fully ABSENT in presence terms — an
+avatar's LOOK does not expire just because its owner stopped moving
+for a while. A profile record is only ever removed explicitly, driven
+by `WorldNavigationSession` calling `RemoteAvatarAppearanceRegistry.
+forget()` the moment `RemoteAvatarRegistry.sync()` decides a remote
+avatar's PRESENCE has disappeared for good — appearance bookkeeping
+follows presence lifecycle's lead, never the other way around, and
+never on its own clock. `tests/AvatarAppearanceSync.test.js`'s
+flagship proves this directly: it fast-forwards a replica's clock far
+enough to prune a peer's presence to ABSENT, confirms the profile
+store still answers with her real appearance, and confirms that
+appearance is reapplied immediately — not rebuilt from a placeholder —
+the moment her presence reappears.
+
+### Presence And Profile Share One Publication Gate (0.2.41)
+
+`PresenceVisibilityPolicy` (0.2.40) was built as "who may receive my
+PRESENCE," but `WorldNavigationSession._publishLocalAvatarProfile()`
+reuses the exact same `shouldAdvertise()` check before a profile
+advertisement is ever handed to its own transport. This is a
+deliberate reuse, not a naming coincidence: HIDDEN (or FRIENDS with an
+empty allow-list) meaning "nobody sees me move" but "everybody still
+sees what I look like" would be a genuinely confusing, half-kept
+privacy promise — a viewer who can't see you at all has no business
+learning your customized appearance either. There is still no second,
+independently-configured privacy system for profiles, exactly as
+`core/AvatarProfileAdvertisement.js`'s own header states — one policy,
+consulted at two publish call sites (an explicit profile edit, and the
+periodic republish tick below), both gated the same way presence
+publishing already was in 0.2.40.
+
+### A Fire-And-Forget Transport Needs Its Own "Catch Me Up," Deliberately Rare (0.2.41)
+
+Movement republishes presence on every accepted update, so a replica
+that joins mid-session naturally sees a peer's position within one
+WASD step of them existing at all. A profile has no equivalent natural
+trigger — someone who customized their avatar and then never touches
+Avatar Creator again would otherwise be invisible-in-appearance to any
+replica that joined after their one-and-only edit, forever, on a
+transport (`BroadcastChannel`) with no request/response "send me your
+current state" primitive. `PROFILE_REPUBLISH_INTERVAL_MS` (15 seconds,
+`application/WorldNavigationSession.js`) exists ONLY to close that gap
+— `_lastProfilePublishAt` starts at `0`, which reads as "never yet
+published," so the very first real animation frame after a local
+avatar exists publishes immediately, and every 15 seconds after that
+whether or not anything actually changed. This is deliberately much
+less frequent than presence (published on every accepted movement, not
+on a timer at all) — see `core/AvatarProfileAdvertisement.js`'s own
+header: appearance is low-frequency, persistent state, and re-sending
+it every frame the way presence does would be pure waste for data that
+essentially never changes.

@@ -256,6 +256,20 @@ export class RenderWorldViewUseCase {
                 visual.setPose(presenceLike.position, presenceLike.rotation);
                 visual.setAnimation(presenceLike.animation);
             },
+            // 0.2.41 — the remote-avatar counterpart to
+            // updateLocalAvatarAppearance: called only by
+            // application/RemoteAvatarAppearanceRegistry.js, only when
+            // a profile update actually arrives (rare — never once per
+            // frame like updateRemoteAvatarPresence above). A no-op if
+            // the avatar has no presence-driven visual yet — appearance
+            // never creates a remote avatar on its own.
+            updateRemoteAvatarAppearance: (avatarId, template, appearance) => {
+                const visual = remoteAvatarVisuals.get(avatarId);
+                if (!visual) {
+                    return;
+                }
+                visual.setAppearance(template, appearance);
+            },
             removeRemoteAvatar: (avatarId) => {
                 const visual = remoteAvatarVisuals.get(avatarId);
                 if (!visual) {

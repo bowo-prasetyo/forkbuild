@@ -94,6 +94,7 @@
 0.2.38  Presence Trust, Replay & Conflict Handling            ✓
 0.2.39  World Entity Interaction & Selection                  ✓
 0.2.40  Avatar Presence Visibility & Privacy                   ✓
+0.2.41  Remote Avatar Appearance Synchronization                ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -483,9 +484,61 @@ voice/chat, emotes, avatar trading, persistent remote-avatar storage,
 decentralized avatar-template distribution, encrypted/private
 presence, precise location privacy, and cryptographic anonymity.
 
-The avatar roadmap remains paused after 0.2.40 — nothing in this
-codebase assumes the next milestone resumes it rather than opening an
-entirely different arc.
+0.2.41 resumes the avatar arc for exactly one narrowly-scoped gap
+0.2.37 explicitly deferred: appearance itself. Every remote avatar
+had, until now, rendered with the same fixed placeholder forever —
+presence (0.2.37/0.2.38/0.2.40) makes an avatar move correctly and
+trustworthily, but says nothing about what it looks like. 0.2.41 gives
+Bob Alice's REAL customized appearance, reusing the trust vocabulary
+0.2.38 established without duplicating the entire presence protocol —
+`core/AvatarProfileAdvertisement.js`'s new wire shape
+(`avatarId`, `ownerIdentity`, `profileRevision`, `templateId`,
+`appearance`, `displayName`, optional signature) travels on its own
+`BroadcastChannel` (`'forkbuild:avatar-profile'`), through its own
+sync service, trust boundary, and store
+(`application/AvatarProfileSyncService.js`/`AvatarProfileTrustBoundary.js`/
+`LocalAvatarProfileStore.js`), ordered by a `profileRevision` — never
+a timestamp, exactly presence's own "arrival order does not determine
+state" discipline. Two deliberate reuse decisions: `core/
+PresenceAuthority.js`'s TOFU authority registry is reused for the
+identical underlying question ("who may speak for this avatarId"), but
+with its OWN separate instance, so winning the race to claim an
+avatarId's presence never also hijacks its profile authority; and
+`replication/ReplayGuard.js` (the UNBOUNDED guard) is reused as-is,
+because profile updates are genuinely the rare, low-frequency workload
+that class was built for, unlike presence's own bounded
+`core/PresenceReplayWindow.js`. An unrecognized `templateId` — the
+realistic case of a peer whose customization uses a template this
+replica's registry doesn't carry — degrades gracefully to the same
+fixed placeholder rather than crashing or guessing, per
+docs/Principles.md, "Validate Strictly On Write; Degrade Gracefully On
+Read." `application/LocalAvatarProfileStore.js` deliberately never
+time-prunes (unlike presence's own store): appearance is a durable
+fact, not a live one, and outlives a peer's presence going STALE or
+even ABSENT. Profile publishing reuses `PresenceVisibilityPolicy`'s
+`shouldAdvertise()` gate verbatim — no second, independently-
+configured privacy system — and a 15-second periodic republish
+(`PROFILE_REPUBLISH_INTERVAL_MS`) is the one new piece of "eventual"
+in this eventually-consistent presentation state, letting a replica
+that joins mid-session, or missed the one edit, eventually catch up on
+a fire-and-forget transport with no request/response mechanism. See
+docs/Architecture.md and docs/Principles.md, "Appearance And Position
+Are Different Lifecycles, Never One Message," "Appearance Is Durable;
+Presence Is Ephemeral," "Presence And Profile Share One Publication
+Gate," and "A Fire-And-Forget Transport Needs Its Own 'Catch Me Up.'"
+Deliberately scoped narrow, matching the design doc's own instruction:
+no touch to movement, collision, chat, or the world-document model —
+`tests/AvatarAppearanceSync.test.js`'s flagship proves Bob renders
+Alice's actual customized avatar, with proper revision ordering,
+template fallback, and the same trust/visibility boundaries 0.2.38/
+0.2.40 already established, over two real `WorldNavigationSession`s
+and two real `BroadcastChannel`s.
+
+The avatar roadmap's own suggested next steps — 0.2.42 (avatar/world
+collision & movement constraints), 0.2.43 (emotes), 0.2.44 (chat), and
+eventually voice — remain exactly that: suggestions, not commitments.
+Nothing in this codebase assumes the next milestone resumes the avatar
+arc rather than opening an entirely different one.
 
 ## 0.1.50 — What shipped
 

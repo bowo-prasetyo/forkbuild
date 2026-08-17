@@ -37,10 +37,23 @@ import { DEFAULT_AVATAR_TEMPLATE_ID } from '../core/AvatarProfile.js';
 import { signAvatarPresenceAdvertisement } from './PresenceSigning.js';
 import { summarizePresenceDiagnostics } from '../core/PresenceDiagnosticsSummary.js';
 import { AvatarInteractionState } from './spatial-state/AvatarInteractionState.js';
+import { AvatarProfileSyncService } from './AvatarProfileSyncService.js';
+import { RemoteAvatarAppearanceRegistry } from './RemoteAvatarAppearanceRegistry.js';
+import { toAvatarProfileAdvertisement } from '../core/AvatarProfileAdvertisement.js';
+import { signAvatarProfileAdvertisement } from './AvatarProfileSigning.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
 const RETRY_DELAYS = [2000, 5000, 10000];
+// 0.2.41 — how often the local avatar's PROFILE re-advertises even
+// when nothing changed. Deliberately much less frequent than presence
+// (published on every accepted movement) — see
+// core/AvatarProfileAdvertisement.js's own header: appearance is
+// low-frequency, persistent state. This exists ONLY to let a replica
+// that joins (or missed the one message) mid-session eventually catch
+// up on a fire-and-forget transport with no request/response — the
+// same "eventual" half of "eventually consistent presentation state."
+const PROFILE_REPUBLISH_INTERVAL_MS = 15000;
 
 // 0.2.29 — defaults for the two location-browser entry points.
 // DEFAULT_EXPLORE_RADIUS matches the design doc's own example ("radius
@@ -103,7 +116,8 @@ export class WorldNavigationSession {
 	    avatarPresenceSession = null,
 	    presenceBroadcastProvider = null,
 	    avatarTemplateRegistry = null,
-	    presenceVisibilityUseCase = null
+	    presenceVisibilityUseCase = null,
+	    avatarProfileBroadcastProvider = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -199,6 +213,22 @@ export class WorldNavigationSession {
 	    this._presencePublishSubscription = null;
 	    this._remoteAvatarFrameSubscription = null;
 	    this._remoteAvatarsVisible = true;
+	    // 0.2.41 — Remote Avatar Appearance Synchronization. OPTIONAL,
+	    // same posture as presenceBroadcastProvider — a session built
+	    // without one simply never publishes or receives PROFILE data
+	    // (every remote avatar still renders, using the placeholder
+	    // appearance exactly like 0.2.37 always did). See the "Remote
+	    // Avatar Appearance" section below for the full wiring.
+	    this._avatarProfileBroadcastProvider = avatarProfileBroadcastProvider;
+	    this._avatarProfileSyncService = null;
+	    this._remoteAvatarAppearanceRegistry = null;
+	    // Reused by BOTH the profile-changed subscription (resets this
+	    // on every explicit edit) and the periodic republish check in
+	    // the avatar movement frame subscription — see
+	    // _setupLocalAvatar() below. 0 means "never yet published,"
+	    // which deliberately makes the very FIRST frame tick publish
+	    // immediately — no separate bootstrap call needed.
+	    this._lastProfilePublishAt = 0;
 	    // 0.2.39 — World Entity Interaction & Selection. See the
 	    // "Avatar Interaction" section below for the full picture.
 	    // `_avatarInteraction` is deliberately its OWN state slice,
@@ -357,9 +387,13 @@ export class WorldNavigationSession {
         this._session.setLocalAvatar(template, appearance, this._avatarPresenceSession.current);
         this._session.setLocalAvatarVisible(this._localAvatarVisible);
 
-        this._avatarProfileSubscription = this._avatarProfileUseCase.onProfileChanged(() => {
+        this._avatarProfileSubscription = this._avatarProfileUseCase.onProfileChanged((profile) => {
             const effective = this._avatarProfileUseCase.getEffectiveAvatar();
             this._session.updateLocalAvatarAppearance(effective.template, effective.appearance);
+            // 0.2.41 — ADVERTISE: an explicit edit publishes
+            // immediately, never waiting for the periodic republish
+            // tick below.
+            this._publishLocalAvatarProfile(profile, Date.now());
         });
         this._avatarPresenceSubscription = this._avatarPresenceSession.onPresenceChanged((presence) => {
             this._session.updateLocalAvatarPresence(presence);
@@ -413,6 +447,18 @@ export class WorldNavigationSession {
         if (typeof this._session.onAnimationFrame === 'function') {
             this._avatarFrameSubscription = this._session.onAnimationFrame((deltaSeconds) => {
                 this._avatarMovementController.tick(deltaSeconds);
+                // 0.2.41 — periodic profile republish, rides the SAME
+                // frame loop as movement — see
+                // PROFILE_REPUBLISH_INTERVAL_MS's own comment for why
+                // this exists at all (a fire-and-forget transport has
+                // no "catch me up" mechanism; this is the ONLY thing
+                // that lets a replica joining mid-session eventually
+                // see current appearance without an explicit edit ever
+                // happening).
+                const now = Date.now();
+                if (this._avatarProfileSyncService && now - this._lastProfilePublishAt >= PROFILE_REPUBLISH_INTERVAL_MS) {
+                    this._publishLocalAvatarProfile(this._avatarProfileUseCase.getProfile(), now);
+                }
             });
         }
     }
@@ -457,7 +503,25 @@ export class WorldNavigationSession {
             defaultTemplate = this._avatarTemplateRegistry.get(DEFAULT_AVATAR_TEMPLATE_ID);
             defaultAppearance = defaultTemplate ? defaultTemplate.defaultAppearance : null;
         }
-        this._remoteAvatarRegistry = new RemoteAvatarRegistry(this._session, { defaultTemplate, defaultAppearance });
+
+        // 0.2.41 — OPTIONAL: a session without a profile broadcast
+        // provider still renders every remote avatar exactly as 0.2.37
+        // always did (the same fixed placeholder), it just never
+        // upgrades to anyone's real appearance. See docs/Principles.md,
+        // "Appearance And Position Are Different Lifecycles, Never One
+        // Message."
+        if (this._avatarProfileBroadcastProvider) {
+            this._avatarProfileSyncService = new AvatarProfileSyncService(this._avatarProfileBroadcastProvider, { localAvatarId });
+            this._remoteAvatarAppearanceRegistry = new RemoteAvatarAppearanceRegistry(
+                this._session, this._avatarProfileSyncService, this._avatarTemplateRegistry,
+                { defaultTemplate, defaultAppearance }
+            );
+        }
+
+        this._remoteAvatarRegistry = new RemoteAvatarRegistry(this._session, {
+            defaultTemplate, defaultAppearance,
+            appearanceResolver: this._remoteAvatarAppearanceRegistry
+        });
         if (typeof this._session.setRemoteAvatarsVisible === 'function') {
             this._session.setRemoteAvatarsVisible(this._remoteAvatarsVisible);
         }
@@ -465,6 +529,22 @@ export class WorldNavigationSession {
         if (typeof this._session.onAnimationFrame === 'function') {
             this._remoteAvatarFrameSubscription = this._session.onAnimationFrame(() => {
                 const now = Date.now();
+                // 0.2.41 — profile inbox is drained FIRST, before
+                // presence sync creates any brand-new avatar visual.
+                // Presence and profile are two independent, racing
+                // transports (see core/AvatarProfileAdvertisement.js's
+                // own header) — a profile that already arrived this
+                // frame must be sitting in LocalAvatarProfileStore
+                // BEFORE RemoteAvatarRegistry.sync() below ever
+                // consults the appearanceResolver for a stranger it's
+                // seeing for the first time, or that first visual
+                // wastefully renders the placeholder even though the
+                // real appearance was already known. pull() itself is
+                // cheap (an empty inbox almost every frame — profile
+                // updates are rare).
+                if (this._avatarProfileSyncService) {
+                    this._avatarProfileSyncService.pull();
+                }
                 const knownPresences = this._presenceSyncService.pull(now);
                 this._remoteAvatarRegistry.sync(knownPresences, now);
                 this._remoteAvatarRegistry.tick(now);
@@ -472,6 +552,13 @@ export class WorldNavigationSession {
                 // this frame already computed; neither adds a query.
                 this._pruneAvatarInteractionIfGone(knownPresences);
                 this._followRemoteAvatarIfEnabled(now);
+                // 0.2.41 — now that sync() above has settled which
+                // avatarIds exist, apply any profileRevision that
+                // changed for an avatar that ALREADY had a visual
+                // (sync() above already handled a brand-new one).
+                if (this._avatarProfileSyncService) {
+                    this._remoteAvatarAppearanceRegistry.sync(this._remoteAvatarRegistry.knownAvatarIds());
+                }
             });
         }
     }
@@ -512,6 +599,31 @@ export class WorldNavigationSession {
         if (this._session && typeof this._session.setRemoteAvatarsVisible === 'function') {
             this._session.setRemoteAvatarsVisible(this._remoteAvatarsVisible);
         }
+    }
+
+    // 0.2.41 — the ONE place a local profile advertisement is signed
+    // and handed to the transport, called from two sites: an explicit
+    // profile edit (immediate) and the periodic republish tick in
+    // _setupLocalAvatar() above (eventual, for a replica that joins
+    // mid-session). Reuses the EXACT same visibility gate presence
+    // publishing already established — see docs/Principles.md,
+    // "Presence And Profile Share One Publication Gate": HIDDEN/empty-
+    // FRIENDS means neither a movement NOR a profile edit ever reaches
+    // the transport, one single policy, never two independently-
+    // configured privacy systems.
+    _publishLocalAvatarProfile(profile, now) {
+        this._lastProfilePublishAt = now;
+        if (!this._avatarProfileSyncService) {
+            return;
+        }
+        const canAdvertise = this._presenceVisibilityUseCase
+            ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise()
+            : true;
+        if (!canAdvertise) {
+            return;
+        }
+        const advertisement = toAvatarProfileAdvertisement(profile);
+        this._avatarProfileSyncService.publish(signAvatarProfileAdvertisement(advertisement, this._identityProvider));
     }
 
     // Shifts the camera by exactly the avatar's own movement delta —
@@ -2938,6 +3050,12 @@ export class WorldNavigationSession {
             this._presenceSyncService.dispose();
             this._presenceSyncService = null;
         }
+        if (this._avatarProfileSyncService) {
+            this._avatarProfileSyncService.dispose();
+            this._avatarProfileSyncService = null;
+        }
+        this._remoteAvatarAppearanceRegistry = null;
+        this._lastProfilePublishAt = 0;
         if (this._remoteAvatarRegistry) {
             this._remoteAvatarRegistry.dispose();
             this._remoteAvatarRegistry = null;

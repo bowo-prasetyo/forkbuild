@@ -1,6 +1,7 @@
 import { AuthorizationVerifier } from './AuthorizationVerifier.js';
 import { Signature, SIGNING_DOMAIN } from '../core/Signature.js';
 import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
+import { getAvatarProfileSigningDescriptor } from '../core/AvatarProfileAdvertisement.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -122,6 +123,34 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getAvatarPresenceSigningDescriptor(advertisement), advertisement.signature, identity);
+    }
+
+    // 0.2.41 — the same shape verifyPresenceAdvertisement() above
+    // already established, one layer up: an AvatarProfileAdvertisement
+    // carries no identity payload of its own, so the did:key signer of
+    // a valid signature IS the public key. Unsigned is tolerated at
+    // THIS layer (structural verification only) — 0.2.41 introduces no
+    // policy knob equivalent to core/PresenceTrustPolicy.js, so
+    // application/AvatarProfileTrustBoundary.js always tolerates an
+    // unsigned profile claim, exactly like presence's own permissive
+    // default.
+    verifyAvatarProfileAdvertisement(advertisement) {
+        if (!advertisement) {
+            return { valid: false, signed: false, reason: 'no advertisement' };
+        }
+        if (!advertisement.signature) {
+            return { valid: true, signed: false, reason: 'unsigned profile advertisement' };
+        }
+        const sig = Signature.fromJSON(advertisement.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getAvatarProfileSigningDescriptor(advertisement), advertisement.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).
