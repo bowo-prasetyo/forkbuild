@@ -23,14 +23,31 @@ import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 // AvatarPresence is the RESULT of simulation, never the simulation
 // itself; a future network peer receiving presence updates has no
 // reason to know or care about the sender's mid-air vertical speed).
+//
+// 0.2.42 — `movementConstraint` (optional — see docs/Principles.md,
+// the same "enforce/offer only when wired" posture every other
+// optional collaborator in this codebase already follows) sits
+// between the pure simulation step and the presence update: given
+// where the avatar IS and where the simulation says it WOULD go, it
+// returns where it's actually ALLOWED to go plus whether that was
+// altered by collision — see application/AvatarMovementConstraint.js.
+// This class still owns "when do we simulate a tick and publish
+// presence"; it never touches a Brick, a Document, or a WorldPlacement
+// itself.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
-    constructor(avatarPresenceSession) {
+    constructor(avatarPresenceSession, movementConstraint = null) {
         this._avatarPresenceSession = avatarPresenceSession;
+        this._movementConstraint = movementConstraint;
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
+        // Transient, per-tick bookkeeping only — exactly like
+        // _verticalVelocity/_grounded above, never part of
+        // AvatarPresence itself (see docs/Principles.md, "Collided Is
+        // Movement Information, Not An Animation Vocabulary").
+        this._collided = false;
     }
 
     // Returns true when `key` is one this controller understands (so
@@ -76,9 +93,10 @@ export class AvatarMovementController {
         const movementState = this._currentMovementState();
         const current = this._avatarPresenceSession.current;
         const currentRotationY = current.rotation.y || 0;
+        const currentPosition = { x: current.position.x, y: current.position.y, z: current.position.z };
 
         const result = simulateAvatarMovement({
-            position: { x: current.position.x, y: current.position.y, z: current.position.z },
+            position: currentPosition,
             rotationY: currentRotationY,
             verticalVelocity: this._verticalVelocity,
             grounded: this._grounded,
@@ -88,7 +106,19 @@ export class AvatarMovementController {
         this._verticalVelocity = result.verticalVelocity;
         this._grounded = result.grounded;
 
-        const positionChanged = !samePosition(result.position, current.position);
+        // 0.2.42 — the pure simulation result is only ever a PROPOSED
+        // position; the movement constraint (when wired) is the one
+        // place that can still adjust X/Z before anything reaches
+        // AvatarPresence. See application/AvatarMovementConstraint.js.
+        let finalPosition = result.position;
+        this._collided = false;
+        if (this._movementConstraint) {
+            const constrained = this._movementConstraint.apply(currentPosition, result.position);
+            finalPosition = constrained.position;
+            this._collided = constrained.collided;
+        }
+
+        const positionChanged = !samePosition(finalPosition, current.position);
         const rotationChanged = Math.abs(result.rotationY - currentRotationY) > EPSILON;
         const animationChanged = result.animation !== current.animation;
         if (!positionChanged && !rotationChanged && !animationChanged) {
@@ -96,10 +126,19 @@ export class AvatarMovementController {
         }
 
         return this._avatarPresenceSession.update({
-            position: result.position,
+            position: finalPosition,
             rotation: { y: result.rotationY },
             animation: result.animation
         });
+    }
+
+    // 0.2.42 — whether the MOST RECENT tick's desired movement was
+    // altered by world collision geometry. Transient — recomputed
+    // fresh every tick, never persisted, never part of AvatarPresence
+    // (see docs/Principles.md). A debug/UI surface, not something any
+    // other internal logic reads.
+    isCollided() {
+        return this._collided;
     }
 
     _currentMovementState() {

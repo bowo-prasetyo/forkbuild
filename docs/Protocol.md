@@ -1726,3 +1726,54 @@ privacy system — profile publishing reuses `core/
 PresenceVisibilityPolicy.js` and its `shouldAdvertise()` gate
 verbatim, the same single decision presence publishing already
 consulted (0.2.40).
+
+## Avatar-World Collision & Movement Constraints (0.2.42)
+
+Adds NOTHING to the wire. `AvatarPresenceAdvertisement`'s shape
+(0.2.37, extended with an optional `signature` in 0.2.38) is
+byte-for-byte unchanged — `tests/AvatarCollision.test.js` checks this
+directly, asserting `AvatarPresence.toJSON()`'s own key set is exactly
+`avatarId`/`ownerIdentity`/`position`/`rotation`/`animation`/
+`sequence`/`timestamp`, with no `collided` or `grounded` ever joining
+it. Collision is resolved ENTIRELY on the sending replica, before
+`AvatarPresenceSession.update()` is ever called — a receiver has no
+way to tell, and no reason to care, whether a given position update
+was ever adjusted by collision on the sender's side. It just receives
+a position, exactly as it always has.
+
+**This is deliberate, not an oversight the design doc's own
+"avatar↔avatar collision should wait" concern already anticipates.**
+Collision as implemented in 0.2.42 is a purely LOCAL movement
+constraint — one replica's own understanding of its own currently-
+loaded world geometry, applied to its own avatar's own proposed
+movement. It carries no claim whatsoever about how any OTHER replica's
+avatar should move, and introduces no new multiplayer authority
+question. Avatar-avatar collision — should Alice collide with Bob's
+DISPLAYED (interpolated, potentially stale) position or his CLAIMED
+one? — is exactly the kind of authority question this protocol
+explicitly does not attempt to answer yet, left for a dedicated future
+avatar-interaction milestone.
+
+**"Currently available" is a protocol-relevant claim, even though
+nothing about it appears on the wire.** Two replicas that have
+streamed in different subsets of a published world (an entirely normal
+decentralized condition — see docs/Principles.md, "The Local Avatar Is
+Constrained By Collision Geometry Currently Available To This
+Replica") will, correctly, compute DIFFERENT collision outcomes for
+the exact same avatar approaching the exact same geometry — one may
+stream the wall in and get blocked, another may not have streamed it
+in yet and walk straight through. This is not a bug or a
+consistency violation to eventually fix: nothing in this protocol has
+ever promised that two replicas share an identical view of the world
+at every instant (see 0.2.15/0.2.19's own trust/discovery honesty),
+and collision inherits that same honestly-partial view rather than
+pretending to a global truth no replica actually has access to.
+
+**Explicitly not part of this protocol**: any shared/authoritative
+notion of "did a collision happen" (collision is never a claim two
+replicas negotiate or agree on — it's a purely local rendering-of-
+intent decision, same category as interpolation); collision against
+another avatar's position, displayed or claimed; and collision replay,
+trust, or equivocation handling of any kind — there is nothing to
+replay, trust, or dispute, because nothing about collision ever
+crosses a `BroadcastChannel` in the first place.
