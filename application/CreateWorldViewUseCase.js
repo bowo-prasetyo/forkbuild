@@ -20,6 +20,7 @@ import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { SearchWorldUseCase } from './SearchWorldUseCase.js';
+import { CreateAvatarPresenceSessionUseCase } from './CreateAvatarPresenceSessionUseCase.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -98,6 +99,30 @@ export class CreateWorldViewUseCase {
         // docs/Principles.md, "Discovery Is One Path, Not Two."
         const searchWorldUseCase = new SearchWorldUseCase(discoveryProvider);
 
+        // 0.2.35 — the local user's own AvatarProfile/AvatarPresence
+        // stack, built ONLY when someone is actually logged in.
+        // CreateAvatarPresenceSessionUseCase already wires BOTH
+        // avatarProfileUseCase and presenceSession from the SAME
+        // AvatarProfileUseCase instance (see its own comment) — using
+        // it here, rather than wiring AvatarProfileUseCase separately,
+        // means WorldNavigationSession's onProfileChanged subscription
+        // and the presence session's initial avatarId/ownerIdentity
+        // are guaranteed to agree, not two independently-constructed
+        // views of the same identity's storage.
+        //
+        // Absent (both null) when nobody is logged in — the exact same
+        // "an optional collaborator that simply isn't wired" shape
+        // spatialDiscoveryProvider (0.2.30) already established. World
+        // View works completely normally with no local avatar; see
+        // docs/Principles.md.
+        let avatarProfileUseCase = null;
+        let avatarPresenceSession = null;
+        if (identityProvider && typeof identityProvider.currentUser === 'function' && identityProvider.currentUser()) {
+            const avatarWiring = new CreateAvatarPresenceSessionUseCase().execute(identityProvider);
+            avatarProfileUseCase = avatarWiring.avatarProfileUseCase;
+            avatarPresenceSession = avatarWiring.presenceSession;
+        }
+
         return {
             createSession(registry) {
                 return new WorldNavigationSession({
@@ -124,7 +149,10 @@ export class CreateWorldViewUseCase {
                     moveWorldPlacementUseCase,
                     // 0.2.26: search/navigation — see searchWorld/
                     // getDocumentsAtPosition.
-                    searchWorldUseCase
+                    searchWorldUseCase,
+                    // 0.2.35: the local avatar — see above.
+                    avatarProfileUseCase,
+                    avatarPresenceSession
                 });
             },
             // Expose the spatial index and content store so the application

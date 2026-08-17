@@ -88,6 +88,7 @@
 0.2.32  Client-Side Publication Preview & Lazy Rendering  ✓
 0.2.33  Avatar Identity & Presence Model                  ✓
 0.2.34  Avatar Templates & Customization                  ✓
+0.2.35  Avatar Rendering & World Presence                  ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -265,10 +266,24 @@ marketplace of assets, and decentralized avatar-asset distribution —
 every one of these was ruled out specifically because appearance stays
 a closed, built-in vocabulary, not because of scheduling.
 
-- **0.2.35 — Avatar Rendering in World View.** Avatars appear in the
-  actual Three.js scene, rendered on top of a World's content —
-  never inserted into the Document/World/Building model a published
-  snapshot is made of.
+0.2.35 puts the avatar physically into the Three.js scene — the local
+user's own avatar only, rendering only, no movement input yet. The
+renderer combines two independent inputs it never modifies: 0.2.34's
+resolved appearance (`AvatarProfileUseCase.getEffectiveAvatar()`) and
+0.2.33's `AvatarPresence`; a "Show My Avatar" checkbox is a pure
+client rendering preference, never a new piece of avatar state; and a
+document's `WorldPlacement` is completely untouched by any avatar
+activity — verified directly (byte-identical placement JSON
+before/after) in the flagship test. See docs/Architecture.md, 0.2.35,
+and docs/Principles.md, "An Avatar's Location Comes From Presence,
+Never From The Avatar Itself." Deliberately deferred, matching the
+design doc's own list: WASD/controller movement, collision detection,
+inverse kinematics/skeletal animation, multiplayer, remote avatars,
+presence broadcasting, signed movement, replay protection, avatar
+asset downloading, and user-uploaded 3D models — plus avatar
+selection/inspection (a distinct presence-selection concept, not
+document selection, deliberately not built alongside rendering).
+
 - **0.2.36 — Local Avatar Movement.** WASD/controller movement,
   turning, head direction, walking/running/jumping, idle animation,
   collision/navigation constraints, and the camera/avatar

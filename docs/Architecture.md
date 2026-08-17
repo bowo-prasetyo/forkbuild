@@ -3350,3 +3350,134 @@ Loader," for why deferring all of these is a safety property, not
 merely a scheduling one. Also not in 0.2.34: per-option human-readable
 labels (the Avatar Creator shows raw option ids like `hair-07`) — a
 presentation-only polish item, not a modeling one.
+
+### Avatar Rendering & World Presence (0.2.35)
+
+Makes the avatar physically exist in the Three.js scene, combining
+0.2.33's persistent profile with 0.2.34's validated appearance and
+0.2.33's ephemeral presence — rendering only, no movement input, no
+multiplayer. The renderer consumes two independent inputs
+(`AvatarProfileUseCase.getEffectiveAvatar()` and
+`AvatarPresenceSession.current`) and never modifies either — see
+docs/Principles.md, "An Avatar's Location Comes From Presence, Never
+From The Avatar Itself."
+
+    AvatarProfile ──┐
+                     ▼
+         getEffectiveAvatar() → { template, appearance }
+                     │
+                     ▼
+         renderer/AvatarRenderer.js (build/applyPose)
+                     │
+                     ▼
+         renderer/AvatarVisual.js (root + poseGroup,
+                                    diff/rebuild lifecycle)
+                     │
+                     ▼            ▲
+    application/RenderWorldViewUseCase.js facade
+    (setLocalAvatar / updateLocalAvatarAppearance /
+     updateLocalAvatarPresence / setLocalAvatarVisible /
+     removeLocalAvatar)
+                     ▲
+                     │
+         WorldNavigationSession._setupLocalAvatar()
+                     ▲
+                     │
+         AvatarPresence.position/rotation/animation ──┘
+
+Core:
+
+- `core/AvatarPoseOffsets.js` (new) — `getAvatarPoseOffsets(animation)`,
+  a pure, Three.js-free function mapping an `AvatarAnimationState` to a
+  static pose (`legSplayDegrees`/`armSwingDegrees`/`bodyTiltDegrees`/
+  `headTiltDegrees`/`hopHeight`). Same "pure geometry, independently
+  testable" split `core/PreviewCameraFraming.js` (0.2.32) established.
+  Falls back to the neutral (IDLE) pose for an unrecognized value
+  rather than throwing. "Static pose for each state is sufficient for
+  0.2.35" per the design doc — real animation blending/timing is
+  0.2.36.
+
+Renderer:
+
+- `renderer/AvatarRenderer.js` (new) — the "dumb executor": converts a
+  `template`+`appearance` pair into a real `THREE.Group` (`build()`),
+  and applies `core/AvatarPoseOffsets.js`'s numeric offsets to an
+  existing pose group (`applyPose()`) without rebuilding geometry.
+  Component -> geometry mapping (head=sphere, hair=hemisphere,
+  shirt=box "torso", pants=box "legs", one small box marker per
+  selected accessory) is a deliberate, renderer-owned decision — see
+  docs/Principles.md, "A Template Is A Closed Vocabulary, Not An Asset
+  Loader" (0.2.34) for why this mapping could never live in template
+  data itself. `build()` returns `{ root, poseGroup }`: `root` is what
+  a caller adds to the scene and is the ONLY thing `AvatarVisual` ever
+  moves; `poseGroup`, nested inside `root`, is the ONLY thing pose
+  transforms ever touch — see docs/Principles.md for why this split is
+  load-bearing, not stylistic. Skin-option-id -> color is a
+  presentation-only lookup local to this file (a separate, smaller
+  copy of the same idea `ui/views/AvatarSettingsView.js`'s SVG preview
+  already uses — the two intentionally don't share a table).
+- `renderer/AvatarVisual.js` (new) — one avatar's live Three.js state:
+  `setAppearance()` diffs by content (a cheap string-key comparison)
+  and only rebuilds when the appearance actually changed — "if the
+  first implementation simply rebuilds the avatar when its appearance
+  changes, that's perfectly acceptable" per the design doc, so no
+  finer-grained per-component diffing was attempted. `setPose()`/
+  `setAnimation()` are pure transform writes, never geometry rebuilds.
+
+Application:
+
+- `application/RenderWorldViewUseCase.js` — gains a local-avatar
+  facade (`setLocalAvatar`/`updateLocalAvatarAppearance`/
+  `updateLocalAvatarPresence`/`setLocalAvatarVisible`/
+  `removeLocalAvatar`), backed by exactly ONE `AvatarVisual` — 0.2.35
+  renders only the local user's own avatar; a registry of others is
+  0.2.37. The `AvatarVisual` is constructed lazily (on the first
+  `setLocalAvatar` call), so a viewport with nobody logged in never
+  builds one.
+- `application/WorldNavigationSession.js` — gains optional
+  `avatarProfileUseCase`/`avatarPresenceSession` constructor
+  dependencies (absent when nobody is logged in, the same
+  "enforce/offer only when the collaborator is actually wired" pattern
+  `spatialDiscoveryProvider` — 0.2.30 — already established) and
+  `_setupLocalAvatar()`, called from `start()`: sets the avatar's
+  initial appearance/pose, then subscribes to
+  `avatarProfileUseCase.onProfileChanged` (→ `updateLocalAvatarAppearance`)
+  and `avatarPresenceSession.onPresenceChanged` (→
+  `updateLocalAvatarPresence`) so either input changing propagates
+  automatically. `dispose()` unsubscribes both before tearing down the
+  render facade. `setLocalAvatarVisible(visible)`/
+  `isLocalAvatarVisible()`/`hasLocalAvatar()` round out the public
+  surface the UI drives.
+- `application/CreateWorldViewUseCase.js` — wires
+  `CreateAvatarPresenceSessionUseCase` (reusing the SAME
+  `avatarProfileUseCase` instance it already builds internally for
+  `avatarPresenceSession`, so the two never drift into independently-
+  constructed views of the same identity's storage) ONLY when
+  `identityProvider.currentUser()` is truthy; both stay `null`
+  otherwise.
+
+UI:
+
+- `ui/views/WorldView.js` — now `inject`s `identityUseCase` (it never
+  needed identity before this milestone) and passes
+  `identityUseCase.provider` into `CreateWorldViewUseCase().execute(...)`.
+  Gains a "Show My Avatar" checkbox (bound to a local `showMyAvatar`
+  ref, disabled when `session.hasLocalAvatar()` is false) and a
+  disabled, checked "Show Other Avatars" checkbox reserved for 0.2.37
+  — see docs/Principles.md, "Avatar Visibility Is A Client Rendering
+  Preference, Not Avatar State." Deliberately NO avatar selection/click
+  handling — see the design doc's own "Looking at or selecting an
+  avatar must never make its owner the active document"; clicking an
+  avatar mesh does nothing in 0.2.35 (it isn't registered with
+  `PickingService`/`MeshRegistry` at all).
+
+Deliberately not in 0.2.35: WASD/controller movement, collision
+detection, inverse kinematics or skeletal animation, multiplayer,
+remote avatars, presence broadcasting, signed movement, replay
+protection, avatar asset downloading, and user-uploaded 3D models —
+see docs/Roadmap.md for 0.2.36-0.2.38. Also not in 0.2.35: avatar
+selection/inspection (deliberately deferred as a distinct
+presence-selection concept, not document selection — see the design
+doc), and any change to how a document's own `WorldPlacement` is
+resolved or rendered — `WorldRenderer`/`addWorld`/`removeWorld` are
+completely untouched by this milestone.

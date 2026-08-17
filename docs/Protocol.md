@@ -1363,3 +1363,24 @@ template library. It says nothing about, and doesn't need to say
 anything about, "did an authority actually authorize this specific
 appearance" — that question stays deferred, exactly where 0.2.33 left
 it.
+
+## Avatar Rendering & World Presence (0.2.35)
+
+Nothing crosses any wire — there is still no networking anywhere in
+the avatar arc (that's 0.2.37). Rendering is entirely local: a Three.js
+object graph built from data the client already has (its own
+`AvatarProfile`, resolved through the same `AvatarTemplateRegistry`
+every replica ships identically) and its own `AvatarPresence`, held
+only in `AvatarPresenceSession`'s memory exactly as 0.2.33 established.
+No message format, no request/response shape, no serialization concern
+is introduced by this milestone — a `THREE.Group` never needs a wire
+representation, because nothing about it ever leaves the process that
+built it.
+
+Worth stating plainly since 0.2.37 is next: this milestone doesn't
+speculatively design that protocol. It builds the one thing 0.2.37
+will actually need to exist first — a correct LOCAL renderer that
+already cleanly separates "what does this avatar look like" from
+"where is it," so that turning presence updates into network messages
+later is a transport problem layered on top of an already-correct
+local model, not a redesign of the model itself.
