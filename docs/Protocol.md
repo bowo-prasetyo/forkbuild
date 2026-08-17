@@ -1306,3 +1306,36 @@ depends on GPU/driver/Three.js version/antialiasing/device pixel ratio
 Its Pixels Are Not." A preview is therefore a derived visualization,
 not a cryptographic artifact, and the protocol correctly has nothing
 to say about it.
+
+## Avatar Identity & Presence Model (0.2.33)
+
+Nothing crosses any wire in this milestone either — there is no
+networking yet at all (that's 0.2.37). Nothing here is signed: neither
+`core/AvatarProfile.js` nor `core/AvatarPresence.js` has a
+`getSigningDescriptor()`, and neither should gain one as a byproduct
+of a later milestone without a deliberate decision to do so — see
+docs/Principles.md, "Presence Is Never Signed, Never Persisted, Never
+Placed" and "An Avatar Profile Can Gain A Signature Layer Later
+Without A Rewrite."
+
+Two different futures are already visible from here, and it's worth
+being explicit that this milestone commits to neither yet:
+
+- **AvatarProfile**, once 0.2.37 needs to distribute one to another
+  replica, most plausibly gains a signature the same way Publication
+  and PlacementRecord did in 0.2.16 — a new `signature` field over a
+  canonical envelope, added without touching `avatarId`/
+  `ownerIdentity`/`templateId`/`appearance`/`displayName`. It is a
+  candidate for the SAME durable, signed, verifiable category
+  Publication and PlacementRecord already occupy, because "what does
+  Alice's avatar look like" is exactly the kind of fact worth
+  believing indefinitely.
+- **AvatarPresence** is not a candidate for that category at all, at
+  any future milestone — see docs/Principles.md. Its future protocol
+  (0.2.37) is closer in shape to the ephemeral message envelope the
+  design doc for this milestone sketched (`{ identity,
+  avatarProfileReference, position, rotation, animation, sequence }`)
+  than to anything this codebase currently signs: a rate-limited,
+  replay-resistant, but NOT cryptographically-authorized-per-message
+  stream, deliberately distinct from every "signed envelope" this
+  protocol has built so far.

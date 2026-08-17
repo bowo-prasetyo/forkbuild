@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.32** — Client-Side Publication Preview & Lazy Rendering
+**Version 0.2.33** — Avatar Identity & Presence Model
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -186,6 +186,25 @@ placeholder. Nothing about a preview is signed, persisted, or
 replicated: see docs/Principles.md, "Previews Are Derived Client
 State."
 
+0.2.33 opens a new arc — humans as participants inside the world, not
+just consumers of persistent content — and starts by drawing a line
+before writing any rendering or movement code: `core/AvatarProfile.js`
+(persistent — what does this user look like?) and
+`core/AvatarPresence.js` (ephemeral — where is the user right now?)
+are neither a Document, a Publication, nor a WorldPlacement. A
+Profile persists per identity, one per user, immutable and
+update-by-replacement like Publication/PlacementRecord already are.
+A Presence lives only in `application/AvatarPresenceSession.js`'s
+memory — that class has no `StorageProvider` dependency at all, a
+structural guarantee rather than a convention — and is never signed:
+signing answers "did an authority authorize this DURABLE fact," the
+wrong question for something that changes many times a second. See
+docs/Principles.md, "Identity, Avatar Profile, and Presence Are Three
+Different Questions" and "Presence Is Never Signed, Never Persisted,
+Never Placed." This milestone ships no rendering, movement, or
+networking — those are 0.2.34 through 0.2.38, tracked in
+docs/Roadmap.md.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -221,6 +240,7 @@ State."
 - **Trust-Aware Spatial Discovery & Diagnostics (0.2.30)** — `exploreLocation` returns `{ documents, diagnostics }`: the document list is never filtered or reordered by trust, while `diagnostics` (available/fatal/complete/warnings, derived from real 0.2.19 `TrustObservation`s via an optional `spatialDiscoveryProvider`) honestly reports what a trust-capable provider could verify about that region — shown as a banner in the Location Browser and a per-document "Discovery status" in Inspect; the live app's own document resolution is completely unchanged.
 - **Publication Catalog & Repository UX (0.2.31)** — Repository/Author View share one `PublicationCatalog` component with real pagination, deterministic sort (5 orders, ordinal comparison, guaranteed-consistent tiebreaks), Cards/List views, presentation-only grouping (author/date/license), a deterministic placeholder preview per publication, and search that opt-in extends to full document descriptions; `SearchPublicationsUseCase` is a deliberately separate query from World Search, answering "which publications match this?" rather than "where is this in the world?"; tested against a 10,000-publication synthetic catalog.
 - **Client-Side Publication Preview & Lazy Rendering (0.2.32)** — Repository/Author View cards render a real thumbnail generated locally from a publication's actual document content, never from user-supplied metadata; a deterministic camera framing (fixed isometric angle, bounding-sphere distance) means the same content always gets the same intended shot; generation is lazy (only for cards actually scrolled into view), off the main thread, cancellable when a page or search changes, and cached in memory only, keyed by content identity — nothing about a preview is signed, persisted, or replicated, and a preview failure never hides the publication it belongs to.
+- **Avatar Identity & Presence Model (0.2.33)** — the first milestone of a multi-part avatar arc, establishing the model boundary before any rendering or movement code: a persistent `AvatarProfile` (avatarId/ownerIdentity/templateId/appearance/displayName), immutable and one per identity, is neither a Document, a Publication, nor a WorldPlacement; an ephemeral `AvatarPresence` (position/rotation/animation/sequence) lives only in an in-memory session with no storage dependency at all, and is deliberately never signed — a movement update is the wrong kind of fact for the durable-and-authorized trust model Publications and Placements use. No rendering, movement, or networking ships yet; see docs/Roadmap.md for 0.2.34 through 0.2.38.
   
 ## Architecture
 
@@ -318,6 +338,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.30  Trust-Aware Spatial Discovery & Diagnostics
 - [x] 0.2.31  Publication Catalog & Repository UX
 - [x] 0.2.32  Client-Side Publication Preview & Lazy Rendering
+- [x] 0.2.33  Avatar Identity & Presence Model
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 
