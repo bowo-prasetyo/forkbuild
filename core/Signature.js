@@ -36,7 +36,13 @@ export const SignatureType = Object.freeze({
     // AvatarPresence itself (core/AvatarPresence.js stays permanently
     // unsigned — see its own header). See
     // core/AvatarPresenceAdvertisement.js's getAvatarPresenceSigningDescriptor().
-    AVATAR_PRESENCE: 'avatar-presence'
+    AVATAR_PRESENCE: 'avatar-presence',
+    // 0.2.41 — the same, one layer up: an OPTIONAL signature over an
+    // AvatarProfileAdvertisement (core/AvatarProfileAdvertisement.js's
+    // wire shape), never over AvatarProfile itself. See
+    // core/AvatarProfileAdvertisement.js's
+    // getAvatarProfileSigningDescriptor().
+    AVATAR_PROFILE: 'avatar-profile'
 });
 
 export class Signature {

@@ -4226,3 +4226,178 @@ session, its `PresenceTrustBoundary`, and its `RemoteAvatarRegistry`
 are never touched at all — Bob simply never receives anything while
 Alice is HIDDEN, and starts receiving normally the moment she switches
 to PUBLIC, with no special-casing on his side whatsoever.
+
+### Remote Avatar Appearance Synchronization (0.2.41)
+
+Closes the other boundary 0.2.37 explicitly left open: presence
+(0.2.37/0.2.38/0.2.40) makes a remote avatar move correctly and
+trustworthily, but every remote avatar still rendered with the same
+fixed placeholder appearance, forever. 0.2.41 gives Bob Alice's REAL
+customized appearance — a second, fully independent
+advertise/trust/store/render pipeline that mirrors presence's own
+shape exactly, on its own transport, at its own (much lower)
+frequency:
+
+    LOCAL avatar                                    REMOTE avatar (Bob's view)
+
+    AvatarProfileUseCase          AvatarPresenceSession
+            |  (WHAT)                    |  (WHERE)
+            v                            v
+    toAvatarProfileAdvertisement   toAvatarPresenceAdvertisement
+            |                            |
+    signAvatarProfileAdvertisement  signAvatarPresenceAdvertisement
+            |                            |
+            v                            v
+    'forkbuild:avatar-profile'     'forkbuild:avatar-presence'   (separate BroadcastChannels)
+            |                            |
+            v                            v
+    AvatarProfileSyncService        PresenceSyncService
+    -> AvatarProfileTrustBoundary   -> PresenceTrustBoundary
+    -> LocalAvatarProfileStore      -> LocalPresenceStore
+    (never time-pruned)             (ABSENT-pruned on a timer)
+            |                            |
+            +-------------+--------------+
+                          v
+          RemoteAvatarAppearanceRegistry <-- consulted by --  RemoteAvatarRegistry.sync()
+                (WHAT to render)                                  (WHICH avatars exist, WHERE)
+                          |                            |
+                          v                            v
+           updateRemoteAvatarAppearance()      setRemoteAvatar() / updateRemoteAvatarPresence()
+                          +-------------+--------------+
+                                        v
+                             renderer/AvatarRenderer.js (unmodified --
+                             a remote avatar is just another avatar)
+
+Core:
+
+- `core/AvatarProfile.js` — gains a `revision` field (starts at `0`,
+  incremented by every `withTemplateId`/`withAppearance`/
+  `withDisplayName` call), the profile counterpart to presence's own
+  `sequence` — "newer accepted state wins; arrival order does not
+  determine state," per the design doc. Round-trips through
+  `toJSON`/`fromJSON`, degrading to `0` for a pre-0.2.41 stored
+  profile that predates the field.
+- `core/AvatarProfileAdvertisement.js` (new) — mirrors
+  `core/AvatarPresenceAdvertisement.js` exactly:
+  `toAvatarProfileAdvertisement()` (profile → wire shape:
+  `avatarId`, `ownerIdentity`, `profileRevision`, `templateId`,
+  `appearance`, `displayName`), `isValidAvatarProfileAdvertisement()`
+  (structural check only — a `templateId` this replica doesn't
+  recognize is still a VALID advertisement, just one that resolves to
+  a placeholder later — see docs/Principles.md, "Validate Strictly On
+  Write; Degrade Gracefully On Read"), `getAvatarProfileSigningDescriptor()`.
+  Deliberately NOT the complete avatar profile crammed into
+  `AvatarPresenceAdvertisement` — see docs/Principles.md, "Appearance
+  And Position Are Different Lifecycles, Never One Message."
+- `core/Signature.js` — gains `SignatureType.AVATAR_PROFILE`.
+- `core/AvatarProfileIngestion.js` (new) — `resolveIncomingProfile()`,
+  the `profileRevision` counterpart to `core/PresenceIngestion.js`'s
+  `sequence` comparison. A deliberate small duplicate, not a reuse of
+  `resolveIncomingPresence` — the field name genuinely differs and the
+  two will keep diverging (presence's freshness/staleness derivation
+  has no profile equivalent at all).
+- `core/AvatarProfileEquivocation.js` (new) — `detectAvatarProfileEquivocation()`,
+  "equal-but-different is still a conflict" (0.2.18/0.2.38) applied to
+  a `profileRevision`. Returns a plain descriptive object rather than
+  a full class, since — unlike `PresenceEquivocation` — no consumer
+  needs the class shape.
+
+Identity:
+
+- `identity/LocalAuthorizationVerifier.js` — gains
+  `verifyAvatarProfileAdvertisement()`, structurally identical to
+  `verifyPresenceAdvertisement()` (did:key signer recovery, unsigned
+  tolerated as "structurally fine, just unauthenticated" — the policy
+  question of whether to ACT on that lives entirely in the trust
+  boundary, same split 0.2.38 already established for presence).
+
+Application — the profile pipeline, deliberately NOT sharing state
+with presence's own equivalents even where a class is reused:
+
+- `application/AvatarProfileSigning.js` (new) — mirrors
+  `application/PresenceSigning.js`.
+- `application/AvatarProfileTrustBoundary.js` (new) — the profile
+  counterpart to `application/PresenceTrustBoundary.js`, same six-step
+  decision (structural validity → signature → authority → replay →
+  equivocation → freshness). REUSES `core/PresenceAuthority.js`'s
+  `PresenceAuthorityRegistry` directly, but with its OWN separate
+  instance — presence-authority and profile-authority are
+  independently TOFU-bound, so winning the race to claim an avatarId's
+  PRESENCE never also hijacks its PROFILE authority. REUSES
+  `replication/ReplayGuard.js` (the unbounded guard) AS-IS rather than
+  presence's own bounded `core/PresenceReplayWindow.js` — profile
+  updates are rare, deliberate edits, exactly the workload
+  `ReplayGuard` was actually built for. No policy knob equivalent to
+  `core/PresenceTrustPolicy.js` exists yet — unsigned profile claims
+  are always tolerated, the same permissive default presence itself
+  ships with.
+- `application/LocalAvatarProfileStore.js` (new) — `avatarId →`
+  latest accepted `AvatarProfileAdvertisement`, judged by an injected
+  `AvatarProfileTrustBoundary` on every `ingest()`. Deliberately NEVER
+  time-prunes, unlike `LocalPresenceStore` — see docs/Principles.md,
+  "Appearance Is Durable; Presence Is Ephemeral."
+- `application/AvatarProfileSyncService.js` (new) — the advertise/pull
+  round trip, one layer up, mirroring `application/
+  PresenceSyncService.js`'s shape as its own small class (not a direct
+  reuse — `listKnownPresences()` reads oddly applied to profiles, and
+  profile callers need an `O(1)` `getKnownProfile(avatarId)` lookup
+  presence callers don't).
+- `application/RemoteAvatarAppearanceRegistry.js` (new) — the
+  appearance counterpart to `RemoteAvatarRegistry`: `resolve()` (pure
+  read — no known profile, or an unrecognized `templateId`, both
+  degrade to the same fixed placeholder), `resolveAndTrack()` (resolve
+  + remember the applied `profileRevision`, called both at first-visual
+  creation and by `sync()`), `sync(knownAvatarIds)` (per-frame, only
+  pushes `updateRemoteAvatarAppearance` for an avatarId whose
+  `profileRevision` actually changed), `forget()`/`clear()`.
+- `application/RemoteAvatarRegistry.js` — gains an OPTIONAL
+  `appearanceResolver` constructor dependency, consulted the moment a
+  brand-new remote avatar's visual is first created (instead of always
+  falling back to the fixed placeholder — full backward compatibility
+  when unwired), and `knownAvatarIds()` for
+  `RemoteAvatarAppearanceRegistry.sync()` to iterate.
+- `application/RenderWorldViewUseCase.js` — gains
+  `updateRemoteAvatarAppearance(avatarId, template, appearance)`, a
+  no-op if the avatar's visual doesn't exist yet (mirrors
+  `updateLocalAvatarAppearance`'s own shape).
+- `application/WorldNavigationSession.js` — the integration point.
+  `_setupRemoteAvatars()` conditionally builds `AvatarProfileSyncService`
+  + `RemoteAvatarAppearanceRegistry` when an `avatarProfileBroadcastProvider`
+  is wired; its per-frame callback drains the PROFILE inbox BEFORE
+  pulling/syncing PRESENCE (see docs/Principles.md — a profile that
+  already arrived must be on hand before a brand-new visual is
+  created), then applies any profile-revision change for an avatar
+  that already has one. `_setupLocalAvatar()`'s `onProfileChanged`
+  subscription now calls the new `_publishLocalAvatarProfile()`
+  immediately on every explicit edit; its existing movement frame
+  callback ALSO checks a 15-second `PROFILE_REPUBLISH_INTERVAL_MS`
+  timer (`_lastProfilePublishAt` starts at `0`, so the very first real
+  frame publishes immediately) — see docs/Principles.md, "A
+  Fire-And-Forget Transport Needs Its Own 'Catch Me Up.'"
+  `_publishLocalAvatarProfile()` consults the SAME
+  `presenceVisibilityUseCase.getPolicy().shouldAdvertise()` gate
+  presence publishing already used (0.2.40) — see docs/Principles.md,
+  "Presence And Profile Share One Publication Gate."
+- `application/CreateWorldViewUseCase.js` — constructs a SECOND
+  `LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile')`
+  (the class reused directly — it has nothing presence-specific baked
+  into its actual logic, just a channel name), threaded through
+  alongside the existing presence provider.
+
+Deliberately not in 0.2.41: any change to movement, collision, chat,
+emotes, or the world-document model; a second privacy system for
+profiles (visibility is entirely reused, never duplicated); persisted
+remote-avatar appearance (a page reload starts with zero known remote
+profiles, exactly like presence); decentralized avatar-template
+distribution (an unrecognized `templateId` degrades gracefully — it is
+never fetched, downloaded, or synthesized); and any placement/document
+mutation or spatial-index update — remote avatar appearance is
+eventually-consistent PRESENTATION state, never authoritative world
+state. `tests/AvatarAppearanceSync.test.js`'s flagship verifies the
+full round trip over two real `WorldNavigationSession`s and two real
+`BroadcastChannel`s: Bob renders Alice's actual customized appearance
+from her visual's very first frame (her profile having arrived, and
+been ingested, before her presence made the avatar visible at all), a
+second stranger avatar advertising an unrecognized template degrades
+to the placeholder without ever crashing, and Alice's appearance
+survives a presence ABSENT-prune-and-reappear cycle untouched.

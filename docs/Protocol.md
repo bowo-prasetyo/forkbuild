@@ -1622,3 +1622,107 @@ per-recipient transport addressing, and precise location privacy
 and `PresenceVisibility.PUBLIC` remain observationally identical under
 this protocol as it stands today, for the same reason: only one
 transport scope exists.
+
+## Remote Avatar Appearance Synchronization (0.2.41)
+
+A genuinely NEW wire shape and a NEW transport — the 0.2.37 section
+above explicitly deferred appearance synchronization; this is that
+milestone. `core/AvatarProfileAdvertisement.js`'s
+`AvatarProfileAdvertisement`:
+
+```
+{
+  avatarId: string,
+  ownerIdentity: string | null,
+  profileRevision: integer,
+  templateId: string,
+  appearance: object,
+  displayName: string | null,
+  signature?: {                      // OPTIONAL — core/Signature.js
+    algorithm: 'Ed25519',
+    signer: string,                  // did:key
+    signature: string,               // hex
+    signedHash: string,              // hex
+    domain: 'forkbuild/avatar-profile',
+    signedAt: string | null
+  }
+}
+```
+
+Deliberately NOT the complete `AvatarProfile` on the wire (no
+`updatedAt`, no local-only bookkeeping) and deliberately NOT folded
+into `AvatarPresenceAdvertisement` — see docs/Principles.md,
+"Appearance And Position Are Different Lifecycles, Never One Message."
+Follows 0.2.38's signing shape exactly: unsigned is structurally
+valid (no policy knob like `core/PresenceTrustPolicy.js` exists yet
+for profiles — unsigned is always tolerated), and when present,
+`signature` covers a canonical envelope over every other field
+(`getAvatarProfileSigningDescriptor()`) — never a narrower subset,
+for the same reason 0.2.38 signs presence's full content: a signature
+over only `avatarId`+`profileRevision` would let an attacker swap in
+a different appearance while keeping a valid signature.
+
+**`profileRevision`, not a timestamp.** Same reasoning as presence's
+own `sequence` (0.2.37): a sender's claimed clock has no role in this
+protocol, and ordering is entirely revision-number-based, entirely on
+the RECEIVER's own accepted state — "newer accepted state wins;
+arrival order does not determine state." `core/AvatarProfileIngestion.js`'s
+`resolveIncomingProfile()` is the direct `profileRevision` analogue of
+`core/PresenceIngestion.js`'s `sequence` comparison.
+
+**Transport**: a SEPARATE `BroadcastChannel`
+(`'forkbuild:avatar-profile'`, vs. presence's own
+`'forkbuild:avatar-presence'`) — same `presence/
+LocalAvatarPresenceBroadcastProvider.js` class, a second instance.
+Fire-and-forget, unordered, lossy, exactly like presence's own
+transport — but at a genuinely different traffic profile: presence
+publishes on every accepted movement; profile publishes only on an
+explicit edit, plus one republish every 15 seconds
+(`PROFILE_REPUBLISH_INTERVAL_MS`) purely so a replica that joins
+mid-session, or missed the one edit, eventually catches up on a
+transport with no request/response "send me your current state"
+primitive.
+
+**Trust**: `application/AvatarProfileTrustBoundary.js` mirrors
+0.2.38's six-question structure exactly (structural validity →
+signature → authority → replay → equivocation → freshness), with
+identity binding again trust-on-first-use
+(`core/PresenceAuthority.js`'s `PresenceAuthorityRegistry`, reused —
+but its own SEPARATE instance, so presence-authority and
+profile-authority for the same `avatarId` are bound independently;
+winning the race to claim one never hijacks the other). Replay
+protection reuses `replication/ReplayGuard.js` — the UNBOUNDED guard,
+not presence's bounded `core/PresenceReplayWindow.js`, because profile
+updates are low-frequency enough that remembering every claim ever
+accepted is the actually-appropriate cost, not a shortcut. Equivocation
+(`core/AvatarProfileEquivocation.js`) is the same "equal-but-different
+is still a conflict" rule (0.2.18/0.2.38) applied to a `profileRevision`
+instead of a `sequence`.
+
+**`templateId` validity is a RENDERING concern, not a WIRE concern.**
+`isValidAvatarProfileAdvertisement()` only requires `templateId` be a
+non-empty string — an advertisement naming a template this replica's
+own registry has never heard of is still a perfectly valid, acceptable
+claim. What happens to an unrecognized `templateId` is entirely a
+render-time decision (`application/RemoteAvatarAppearanceRegistry.js`
+degrades to a fixed placeholder) — see docs/Principles.md, "Validate
+Strictly On Write; Degrade Gracefully On Read." This protocol
+deliberately does not require, or even define, a mechanism for
+distributing template DEFINITIONS between replicas — an unrecognized
+`templateId` is expected, ordinary, decentralized behavior, not an
+error condition.
+
+**Explicitly not part of this protocol**: any encoding of WHERE an
+avatar is (that stays entirely `AvatarPresenceAdvertisement`'s job);
+decentralized distribution of the template definitions themselves
+(`core/library/CoreAvatarTemplateLibrary.js` remains a fixed, locally-
+shipped vocabulary — see docs/Principles.md, "A Template Is A Closed
+Vocabulary, Not An Asset Loader"); persistence of a REMOTE peer's
+profile beyond the current session (`application/
+LocalAvatarProfileStore.js` is in-memory only, exactly like
+`LocalPresenceStore` — a page reload starts with zero known remote
+profiles of either kind); and any second, independently-configured
+privacy system — profile publishing reuses `core/
+PresenceVisibilityPolicy.js` and its `shouldAdvertise()` gate
+verbatim, the same single decision presence publishing already
+consulted (0.2.40).

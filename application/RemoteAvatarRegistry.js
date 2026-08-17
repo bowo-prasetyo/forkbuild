@@ -18,19 +18,23 @@ import { RemoteAvatarInterpolator } from './RemoteAvatarInterpolator.js';
 //                                 keeps a gait cycle moving between
 //                                 presence updates.
 //
-// Appearance is deliberately NOT part of what this class manages —
-// 0.2.37 does not synchronize AvatarProfile/appearance at all (see
-// the design doc's own scope list), so every remote avatar renders
-// with the SAME fixed placeholder template+appearance, resolved once
-// by WorldNavigationSession and handed in here unchanged. Rendering
-// itself reuses 0.2.35/0.2.36's AvatarRenderer/AvatarVisual
-// completely unmodified — a remote avatar is, to the renderer, just
-// another avatar.
+// Appearance is deliberately NOT owned by this class — see
+// application/RemoteAvatarAppearanceRegistry.js (0.2.41), the exact
+// counterpart split AvatarProfileUseCase/AvatarPresenceSession already
+// draw for the LOCAL avatar. This class stays scoped to presence/pose;
+// the only appearance-related thing it does is ask an injected
+// `appearanceResolver` for the CURRENT best-known appearance the
+// moment a brand-new remote avatar is first created (falling back to
+// a fixed placeholder when none is wired, exactly 0.2.37's own
+// behavior — full backward compatibility). Rendering itself reuses
+// 0.2.35/0.2.36's AvatarRenderer/AvatarVisual completely unmodified —
+// a remote avatar is, to the renderer, just another avatar.
 export class RemoteAvatarRegistry {
-    constructor(renderFacade, { defaultTemplate = null, defaultAppearance = null } = {}) {
+    constructor(renderFacade, { defaultTemplate = null, defaultAppearance = null, appearanceResolver = null } = {}) {
         this._renderFacade = renderFacade;
         this._defaultTemplate = defaultTemplate;
         this._defaultAppearance = defaultAppearance;
+        this._appearanceResolver = appearanceResolver;
         this._interpolators = new Map(); // avatarId -> RemoteAvatarInterpolator
     }
 
@@ -42,8 +46,11 @@ export class RemoteAvatarRegistry {
             if (!existing) {
                 const interpolator = new RemoteAvatarInterpolator(advertisement, now);
                 this._interpolators.set(advertisement.avatarId, interpolator);
-                if (this._defaultTemplate) {
-                    this._renderFacade.setRemoteAvatar(advertisement.avatarId, this._defaultTemplate, this._defaultAppearance, advertisement);
+                const { template, appearance } = this._appearanceResolver
+                    ? this._appearanceResolver.resolveAndTrack(advertisement.avatarId)
+                    : { template: this._defaultTemplate, appearance: this._defaultAppearance };
+                if (template) {
+                    this._renderFacade.setRemoteAvatar(advertisement.avatarId, template, appearance, advertisement);
                 }
                 continue;
             }
@@ -53,8 +60,20 @@ export class RemoteAvatarRegistry {
             if (!seenIds.has(avatarId)) {
                 this._interpolators.delete(avatarId);
                 this._renderFacade.removeRemoteAvatar(avatarId);
+                if (this._appearanceResolver) {
+                    this._appearanceResolver.forget(avatarId);
+                }
             }
         }
+    }
+
+    // 0.2.41 — every currently-known remote avatarId (presence-driven,
+    // i.e. actually has a visual), for
+    // RemoteAvatarAppearanceRegistry.sync() to iterate — a profile
+    // update is only ever APPLIED to an avatar that already exists;
+    // see that class's own header.
+    knownAvatarIds() {
+        return Array.from(this._interpolators.keys());
     }
 
     tick(now = Date.now()) {

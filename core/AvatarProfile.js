@@ -34,6 +34,14 @@ import { createId } from './createId.js';
 // reference can arrive later as a new field alongside it, exactly as
 // Publication.publisherIdentity did.
 //
+// 0.2.41 update: distribution finally happened — see
+// core/AvatarProfileAdvertisement.js. This class ITSELF still never
+// carries a signature (the additive `revision` field below is all it
+// gained); signing happens on the ADVERTISEMENT, the wire shape
+// produced FROM a profile, exactly the same split 0.2.38 drew between
+// core/AvatarPresence.js (never signed) and
+// core/AvatarPresenceAdvertisement.js (optionally signed).
+//
 // Immutable, like Publication/PlacementRecord/DocumentPreview — never
 // like DocumentMetadata's in-place setters. An avatar's look changes
 // rarely and deliberately (the Avatar Creator, 0.2.34), and an
@@ -52,6 +60,17 @@ export class AvatarProfile {
         // the model boundary, not the customization schema.
         appearance = {},
         displayName = '',
+        // 0.2.41 — a plain, monotonically-increasing integer, the
+        // SAME "flat counter, not a CausalStamp" reasoning
+        // core/AvatarPresence.js's own `sequence` already established:
+        // one writer (this profile's owner, editing through
+        // AvatarProfileUseCase.updateProfile — see its own header),
+        // no offline-merge story, so a flat integer is the simplest
+        // thing that lets a future receiver detect "this claim is
+        // older than one I already have." Bumped on every with*() call
+        // below, never left for a caller to set directly — exactly
+        // like PlacementRecord's own `revision`.
+        revision = 0,
         createdAt = new Date(),
         updatedAt = new Date()
     } = {}) {
@@ -63,6 +82,7 @@ export class AvatarProfile {
         this._templateId = templateId;
         this._appearance = { ...appearance };
         this._displayName = displayName;
+        this._revision = revision;
         this._createdAt = createdAt instanceof Date ? createdAt : new Date(createdAt);
         this._updatedAt = updatedAt instanceof Date ? updatedAt : new Date(updatedAt);
     }
@@ -72,19 +92,20 @@ export class AvatarProfile {
     get templateId() { return this._templateId; }
     get appearance() { return { ...this._appearance }; }
     get displayName() { return this._displayName; }
+    get revision() { return this._revision; }
     get createdAt() { return this._createdAt; }
     get updatedAt() { return this._updatedAt; }
 
     withTemplateId(templateId) {
-        return new AvatarProfile({ ...this._fields(), templateId, updatedAt: new Date() });
+        return new AvatarProfile({ ...this._fields(), templateId, revision: this._revision + 1, updatedAt: new Date() });
     }
 
     withAppearance(appearance) {
-        return new AvatarProfile({ ...this._fields(), appearance: { ...appearance }, updatedAt: new Date() });
+        return new AvatarProfile({ ...this._fields(), appearance: { ...appearance }, revision: this._revision + 1, updatedAt: new Date() });
     }
 
     withDisplayName(displayName) {
-        return new AvatarProfile({ ...this._fields(), displayName, updatedAt: new Date() });
+        return new AvatarProfile({ ...this._fields(), displayName, revision: this._revision + 1, updatedAt: new Date() });
     }
 
     _fields() {
@@ -94,6 +115,7 @@ export class AvatarProfile {
             templateId: this._templateId,
             appearance: this._appearance,
             displayName: this._displayName,
+            revision: this._revision,
             createdAt: this._createdAt
         };
     }
@@ -105,6 +127,7 @@ export class AvatarProfile {
             templateId: this._templateId,
             appearance: { ...this._appearance },
             displayName: this._displayName,
+            revision: this._revision,
             createdAt: this._createdAt.toISOString(),
             updatedAt: this._updatedAt.toISOString()
         };
@@ -117,6 +140,7 @@ export class AvatarProfile {
             templateId: json.templateId,
             appearance: json.appearance || {},
             displayName: json.displayName || '',
+            revision: Number.isFinite(json.revision) ? json.revision : 0,
             createdAt: json.createdAt,
             updatedAt: json.updatedAt
         });
