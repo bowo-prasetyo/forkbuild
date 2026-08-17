@@ -21,6 +21,8 @@ import { WorldNavigationSession } from './WorldNavigationSession.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { SearchWorldUseCase } from './SearchWorldUseCase.js';
 import { CreateAvatarPresenceSessionUseCase } from './CreateAvatarPresenceSessionUseCase.js';
+import { CreateAvatarTemplateRegistryUseCase } from './CreateAvatarTemplateRegistryUseCase.js';
+import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -123,6 +125,20 @@ export class CreateWorldViewUseCase {
             avatarPresenceSession = avatarWiring.presenceSession;
         }
 
+        // 0.2.37 — Decentralized Avatar Presence Synchronization.
+        // Both built UNCONDITIONALLY, regardless of login state — see
+        // docs/Principles.md, "Watching Presence Never Requires Having
+        // One": a logged-out viewer can still see other replicas'
+        // avatars move even though they have none of their own to
+        // publish. `avatarTemplateRegistry` is the SAME shape
+        // CreateAvatarTemplateRegistryUseCase already builds for the
+        // Avatar Creator (0.2.34) — reused here only to resolve a
+        // fixed placeholder appearance for an unknown remote avatar,
+        // never to render the local avatar (that stays
+        // avatarProfileUseCase's job).
+        const presenceBroadcastProvider = new LocalAvatarPresenceBroadcastProvider();
+        const avatarTemplateRegistry = new CreateAvatarTemplateRegistryUseCase().execute();
+
         return {
             createSession(registry) {
                 return new WorldNavigationSession({
@@ -152,7 +168,10 @@ export class CreateWorldViewUseCase {
                     searchWorldUseCase,
                     // 0.2.35: the local avatar — see above.
                     avatarProfileUseCase,
-                    avatarPresenceSession
+                    avatarPresenceSession,
+                    // 0.2.37: remote avatar presence — see above.
+                    presenceBroadcastProvider,
+                    avatarTemplateRegistry
                 });
             },
             // Expose the spatial index and content store so the application

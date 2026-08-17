@@ -1409,3 +1409,77 @@ script) is part of the wire shape at all — the simulation that
 produces a position is exclusively this client's business, and the
 protocol only ever needs to agree on what a position update looks
 like once it exists.
+
+## Decentralized Avatar Presence Synchronization (0.2.37)
+
+The first thing in the entire avatar arc to actually cross a wire.
+The wire shape (`core/AvatarPresenceAdvertisement.js`'s
+`AvatarPresenceAdvertisement`) is:
+
+```
+{
+  avatarId: string,
+  ownerIdentity: string | null,
+  position: { x: number, y: number, z: number },
+  rotation: { x: number, y: number, z: number },
+  animation: 'idle' | 'walking' | 'running' | 'jumping',
+  sequence: integer
+}
+```
+
+Deliberately a STRICT SUBSET of `AvatarPresence.toJSON()` — no
+`timestamp`, and (unlike `Publication`/`PlacementRecord`) no signature
+envelope at all. Both omissions are protocol decisions, not missing
+features:
+
+- **No timestamp.** A sender's claimed clock has no role in this
+  protocol. Freshness (PRESENT/STALE/ABSENT — `core/
+  PresenceFreshness.js`) is derived entirely from the RECEIVER's own
+  clock, at the moment a message actually arrives. A future malicious
+  or clock-skewed sender gains nothing by lying about `timestamp`,
+  because nothing on the wire even carries one.
+- **No signature.** `AvatarPresence` stays exactly what 0.2.33
+  established: never signed, never persisted. This milestone
+  transmits it further than 0.2.33 imagined, but doesn't change what
+  kind of fact it is — see docs/Principles.md, "0.2.37 Establishes
+  Transport Semantics; 0.2.38 Establishes Trust Semantics." A future
+  signature layer, if one is ever added, is 0.2.38's decision to make,
+  not a retrofit onto this shape.
+
+**Transport**: `BroadcastChannel`, a same-origin, non-persistent,
+fire-and-forget browser primitive — not WebRTC, not a relay server,
+not anything requiring network infrastructure beyond what a single
+browser origin already provides. This is the FIRST "Local" adapter in
+this codebase's decentralized-shaped-interface pattern
+(`LocalDiscoveryProvider`, `LocalSpatialIndexProvider`, ...) that is
+not backed by `localStorage` — presence's ephemerality genuinely needs
+a non-persistent transport, and `BroadcastChannel` is the browser's
+own answer to that. `presence/AvatarPresenceBroadcastProvider.js` is
+the abstract interface a future WebRTC-based or relay-based transport
+would implement instead, with nothing above it (`PresenceSyncService`,
+`RemoteAvatarRegistry`, `WorldNavigationSession`) needing to change.
+
+**Delivery semantics**: fire-and-forget, unordered, lossy — no
+acknowledgment, no retry, no guaranteed delivery. `core/
+PresenceIngestion.js`'s monotonic-sequence acceptance is what makes
+this tolerable: reordered, duplicate, and gapped delivery are all
+handled correctly by "does this sequence number exceed the one I
+already have," with no protocol-level retransmission or ordering
+guarantee required. This is a deliberately weaker delivery contract
+than `Publication`/`PlacementRecord`'s replication
+semantics (0.2.14/0.2.15/0.2.18) ever needed to provide, because
+presence is a live stream where a missed update is superseded by the
+next one, not a durable fact that must eventually converge.
+
+**Explicitly not yet part of this protocol** (0.2.38's job): who is
+allowed to claim a given `avatarId`, whether a claimed position is
+even physically plausible relative to the previous one, replay
+protection beyond plain sequence comparison, and equivocation
+detection (the same avatarId advertising two different, ordering-
+inconsistent streams — the presence analogue of 0.2.19's root-history
+equivocation detection for discovery). A malicious or buggy peer can,
+today, advertise any `avatarId` it wants with an arbitrarily high
+`sequence` and be believed — 0.2.37 establishes the transport and
+lifecycle machinery 0.2.38 will harden, exactly the same way 0.2.14's
+decentralized content backend existed before 0.2.16/0.2.19 hardened
+its trust model.
