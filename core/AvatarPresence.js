@@ -20,17 +20,33 @@ import { AvatarAnimationState, isValidAnimationState } from './AvatarAnimationSt
 //     avatars walking across a published castle leave that castle's
 //     immutable snapshot exactly as it was.
 //
-// Why never signed: signing exists in this codebase to let a replica
-// answer "did this authority really authorize this durable fact?" —
-// meaningful for a Publication or a PlacementRecord because both are
-// meant to be believed and relied on indefinitely. A presence update
-// is stale before the signature would even finish verifying; treating
-// it as a durable, authorized fact is the wrong trust question to ask
-// of it in the first place. The right question — "is this movement
-// claim even plausible, and is it being replayed or spoofed?" — is
-// 0.2.38's "Presence Trust, Replay & Conflict Handling," and it will
-// be answered with `sequence` (below) and per-session channel trust,
-// not with Ed25519 signatures over a canonical envelope.
+// Why AvatarPresence ITSELF never carries a signature: signing exists
+// in this codebase to let a replica answer "did this authority really
+// authorize this durable fact?" — meaningful for a Publication or a
+// PlacementRecord because both are meant to be believed and relied on
+// indefinitely. AvatarPresence is not that kind of fact, and adding a
+// signature field HERE would suggest it was — see
+// core/AvatarPresenceAdvertisement.js's own header for where a
+// signature actually lives instead.
+//
+// 0.2.38 update: "is this movement claim even plausible, and is it
+// being replayed or spoofed?" turned out to need MORE than `sequence`
+// alone — replay protection, an identity binding so an avatarId can't
+// simply be claimed by whoever speaks loudest
+// (core/PresenceAuthority.js), and equivocation detection
+// (core/PresenceEquivocation.js) all build on `sequence` but aren't
+// answered by it alone. And "per-session channel trust" turned out to
+// undersell what was actually needed: 0.2.38 DOES use real Ed25519
+// signatures — over a canonical envelope, exactly like every other
+// signed object in this codebase — but the signature lives on
+// core/AvatarPresenceAdvertisement.js's wire shape, produced fresh
+// from an AvatarPresence every time (application/PresenceSigning.js),
+// never on AvatarPresence itself. AvatarPresence stays exactly what
+// it always was: the ephemeral, unsigned, unpersisted LOCAL fact of
+// where this avatar is right now. What changed is that a RECEIVER can
+// now optionally demand cryptographic proof of who is asserting that
+// fact before believing it — a property of the transport/trust layer,
+// never of this class.
 //
 // `sequence` is a plain, per-avatar-session monotonic counter — NOT a
 // CausalStamp (core/CausalStamp.js). A CausalStamp exists to let

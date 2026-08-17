@@ -23,7 +23,16 @@ export const TrustStatus = Object.freeze({
     EQUIVOCATING: 'EQUIVOCATING',         // same authority, same causal position, different content
     MISSING: 'MISSING',                   // referenced but not found in the store queried
     UNAVAILABLE: 'UNAVAILABLE',           // found but unreadable/malformed
-    INTEGRITY_FAILURE: 'INTEGRITY_FAILURE' // content hash does not match the object's own claim
+    INTEGRITY_FAILURE: 'INTEGRITY_FAILURE', // content hash does not match the object's own claim
+    // 0.2.38 — a claim structurally identical to one THIS replica has
+    // already accepted. Deliberately distinct from STALE: STALE means
+    // "superseded by something fresher I now hold"; REPLAYED means
+    // "I recognize this exact claim, including a claim older than
+    // what I currently hold, because I remember accepting it before"
+    // — see core/PresenceReplayWindow.js. A replay is not necessarily
+    // hostile (a lossy/duplicating transport redelivers plenty of
+    // these honestly) — it is simply never new information.
+    REPLAYED: 'REPLAYED'
 });
 
 // A status counts as "acceptable by default" only for the two statuses

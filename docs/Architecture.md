@@ -3853,3 +3853,155 @@ sender's actual customized appearance), and any change to
 `WorldPlacement`/`Publication`/spatial index is resolved, rendered, or
 persisted — verified directly (byte-identical placement JSON, unchanged
 document/spatial-index counts) in the flagship test.
+
+### Presence Trust, Replay & Conflict Handling (0.2.38)
+
+Hardens the ingestion boundary 0.2.37 built — never redesigns
+presence synchronization itself. `core/PresenceIngestion.js`,
+`core/PresenceFreshness.js`, `core/PresenceInterpolation.js`,
+`application/PresenceSyncService.js`, `application/RemoteAvatarInterpolator.js`,
+`application/RemoteAvatarRegistry.js`, and the `presence/` transport are
+all UNCHANGED. One new gate sits between "an advertisement arrived"
+and "this replica's state changed":
+
+    PresenceSyncService.pull()
+                  │
+                  ▼
+    PresenceTrustBoundary.evaluate(incoming, current)
+                  │  1. structurally valid?           (core/AvatarPresenceAdvertisement.js)
+                  │  2. signature verifies, or unsigned
+                  │     tolerated by policy?           (identity/LocalAuthorizationVerifier.js,
+                  │                                     core/PresenceTrustPolicy.js)
+                  │  3. claimant authorized for this
+                  │     avatarId?                      (core/PresenceAuthority.js)
+                  │  4. already accepted before?        (core/PresenceReplayWindow.js)
+                  │  5. conflicts with what's held at
+                  │     the same sequence?              (core/PresenceEquivocation.js)
+                  │  6. actually newer?                 (core/PresenceIngestion.js — UNCHANGED)
+                  ▼
+    LocalPresenceStore.ingest()  ── accept: replaces the stored record
+                  │                 reject: record UNCHANGED, but the
+                  │                 TrustObservation is still kept
+                  ▼
+    LocalPresenceStore.list()  ── { advertisement, lifecycleState,
+                                     trustObservation } per avatarId
+                  ▼
+    RemoteAvatarRegistry.sync()/.tick()   (reads .advertisement/.lifecycleState
+                  │                        ONLY — trustObservation never
+                  │                        reaches rendering)
+                  ▼
+            render facade  ──────────────────  core/PresenceDiagnosticsSummary.js
+                                                        │
+                                                        ▼
+                                                 WorldView "Other Avatars: N
+                                                 (trusted/stale/conflicting/
+                                                  unavailable)"
+
+Core (all new, all pure/stateless-or-boundedly-stateful, no I/O):
+
+- `core/PresenceAuthority.js` — `PresenceAuthorityRegistry`: a
+  trust-on-first-use `avatarId -> { ownerIdentity, signerId }` binding.
+  The FIRST accepted claim for an avatarId establishes who may speak
+  for it; a signed binding can never be replaced by a different signer
+  or downgraded to unsigned, though an unsigned binding upgrades
+  gracefully the first time a real signer claims it. Never cleared on
+  ABSENT-prune — see docs/Principles.md, "An Avatar ID Identifies An
+  Avatar; It Does Not Prove Who Currently Controls It."
+- `core/PresenceEquivocation.js` — `detectPresenceEquivocation(current,
+  incoming)`: pure, stateless comparison (not an accumulating detector
+  like `core/IndexEquivocation.js` — a presence record has exactly one
+  "current" slot to compare against, so no accumulator is needed).
+  Returns a `PresenceEquivocation` the moment two claims share an
+  avatarId and sequence but disagree on content; reuses
+  `core/TrustObservation.js`'s existing `EQUIVOCATING` status.
+- `core/PresenceReplayWindow.js` — bounded (default 64 entries per
+  avatarId) "have I already accepted this exact claim" memory.
+  Deliberately NOT `replication/ReplayGuard.js` — that class remembers
+  every hash forever, appropriate for rare durable-record events, a
+  leak for a 60Hz-capable ephemeral stream. See docs/Principles.md,
+  "Replay Detection And Freshness Are Different Questions."
+- `core/PresenceTrustPolicy.js` — the one real policy axis:
+  `requireSignedPresence`. `.permissive()` (default) tolerates unsigned
+  presence exactly like 0.2.37; `.hardened()` requires a valid
+  signature on everything. Mirrors `identity/TrustPolicy.js`'s
+  permissive/hardened shape without inheriting its unrelated
+  spatial-index-specific options.
+- `core/PresenceDiagnosticsSummary.js` — `summarizePresenceDiagnostics(knownPresences)`:
+  pure bucketing into trusted/stale/conflicting/unavailable counts for
+  World View's diagnostic line.
+- `core/TrustObservation.js` gains one new status, `REPLAYED` — every
+  other status this milestone needs (`VALID`, `UNAUTHORIZED`, `STALE`,
+  `EQUIVOCATING`, `MISSING`, `UNAVAILABLE`, `INVALID_SIGNATURE`)
+  already existed from 0.2.19.
+- `core/Signature.js` gains `SignatureType.AVATAR_PRESENCE`.
+- `core/AvatarPresenceAdvertisement.js` gains
+  `getAvatarPresenceSigningDescriptor(advertisement)` — the canonical
+  signing envelope covering EVERY field (avatarId, ownerIdentity,
+  position, rotation, animation, sequence). Never a narrower subset —
+  signing only avatarId+sequence would let an attacker keep a valid
+  signature while swapping in a different position, recreating 0.2.18's
+  causal-history signing bug one level up.
+
+Identity:
+
+- `identity/LocalAuthorizationVerifier.js` gains
+  `verifyPresenceAdvertisement(advertisement)` — same shape as
+  `verifyIndexRoot()`: an advertisement carries no identity payload of
+  its own, so the did:key signer of a valid signature IS the public
+  key. Unsigned is reported, not rejected, at this layer — policy
+  decides whether that is tolerated.
+
+Application:
+
+- `application/PresenceSigning.js` (new) — `signAvatarPresenceAdvertisement(advertisement,
+  identityProvider)`: attaches a real Ed25519 signature when the
+  identityProvider can produce one, otherwise returns the advertisement
+  completely unchanged. Never throws — a not-logged-in or
+  signing-incapable identityProvider degrades to unsigned rather than
+  breaking presence publishing.
+- `application/PresenceTrustBoundary.js` (new) — the orchestrator
+  described in the diagram above. Composes `LocalAuthorizationVerifier`,
+  `PresenceAuthorityRegistry`, `PresenceReplayWindow`,
+  `PresenceTrustPolicy`, `detectPresenceEquivocation`, and the
+  UNCHANGED `resolveIncomingPresence`, in that order, into one
+  `evaluate(incoming, current)` call returning `{ accepted, observation }`.
+- `application/LocalPresenceStore.js` — `ingest()` now delegates its
+  entire accept/reject decision to an injected `PresenceTrustBoundary`
+  (defaulting to a permissive one, so a store built without one behaves
+  EXACTLY as 0.2.37 left it). Every avatarId's most recent
+  `TrustObservation` is remembered even when the claim that produced it
+  was rejected, and `list()` now returns it alongside
+  `advertisement`/`lifecycleState` — diagnostics-only, never consumed
+  by `RemoteAvatarRegistry`.
+- `application/WorldNavigationSession.js` — `_setupLocalAvatar()`'s
+  publish call now runs the outgoing advertisement through
+  `signAvatarPresenceAdvertisement()` before handing it to
+  `PresenceSyncService.publish()`. New public surface:
+  `getRemoteAvatarDiagnostics()`, reading
+  `PresenceSyncService.listKnownPresences()` (never `pull()` — no side
+  effects on the real per-frame ingestion loop) through
+  `summarizePresenceDiagnostics()`.
+
+UI:
+
+- `ui/views/WorldView.js` — an unobtrusive diagnostic line under "Show
+  Other Avatars": "Other Avatars: N (X trusted, Y stale, Z conflicting,
+  W unavailable)", refreshed on the same 3-second cadence as the rest
+  of World View's spatial UI, hidden entirely when there are no known
+  remote avatars. Never rendered ON an avatar itself — see
+  docs/Principles.md, "Rendering Presence And Trusting Presence Remain
+  Separate."
+
+Deliberately not in 0.2.38: physical-plausibility checks (is a claimed
+position actually reachable from the previous one — see
+docs/Principles.md's 0.2.38 update to "0.2.37 Establishes Transport
+Semantics..."), rate limiting, mandatory signing (permissive stays the
+default), `CausalStamp`, persistent presence, an `AvatarProfile`
+signature/distribution layer, avatar collision, avatar-to-avatar
+interaction, voice/chat, and any redesign of 0.2.37's transport or
+advertise/pull round trip — every one of those files is untouched.
+Also not in 0.2.38: any change to how a document's own
+`WorldPlacement`/`Publication`/spatial index is resolved, rendered, or
+persisted — verified directly (byte-identical placement JSON, unchanged
+document/spatial-index counts) in the flagship test, exactly as 0.2.37's
+own flagship verified.

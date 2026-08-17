@@ -174,6 +174,14 @@ export default {
         // docs/Principles.md, "Watching Presence Never Requires Having
         // One."
         const showOtherAvatars = ref(true);
+        // 0.2.38 — the unobtrusive presence diagnostic surface (see
+        // docs/Principles.md, "Rendering Presence And Trusting
+        // Presence Remain Separate"): trusted/stale/conflicting/
+        // unavailable counts over the SAME known-remote-avatars this
+        // view already renders, refreshed on the same cadence as
+        // everything else in refreshSpatialUI() — never per-frame,
+        // trust diagnostics don't need to be that fresh.
+        const remoteAvatarDiagnostics = ref({ total: 0, trusted: 0, stale: 0, conflicting: 0, unavailable: 0 });
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
         const allPublications = ref([]);
 
@@ -457,6 +465,11 @@ export default {
             });
 
             cameraPosition.value = state.cameraPosition;
+
+            // 0.2.38 — see the ref's own comment above.
+            if (typeof session.getRemoteAvatarDiagnostics === 'function') {
+                remoteAvatarDiagnostics.value = session.getRemoteAvatarDiagnostics();
+            }
 
             const sel = session.getSpatialSelection();
             if (sel && !sel.isEmpty) {
@@ -1024,6 +1037,7 @@ export default {
             avatarControlMode,
             followAvatar,
             showOtherAvatars,
+            remoteAvatarDiagnostics,
             toggleAvatarControlMode,
             toggleFollowAvatar,
             toggleShowOtherAvatars,
@@ -1187,6 +1201,16 @@ export default {
                         />
                         Show Other Avatars
                     </label>
+                    <!-- 0.2.38: unobtrusive presence diagnostics —
+                         never rendered ON an avatar itself, only here,
+                         as a summary. Rendering presence and trusting
+                         presence stay visibly separate surfaces. -->
+                    <p v-if="showOtherAvatars && remoteAvatarDiagnostics.total > 0" class="world-view-avatar-diagnostics">
+                        Other Avatars: {{ remoteAvatarDiagnostics.total }}
+                        <span class="world-view-avatar-diagnostics-detail">
+                            (<template v-if="remoteAvatarDiagnostics.trusted">{{ remoteAvatarDiagnostics.trusted }} trusted</template><template v-if="remoteAvatarDiagnostics.stale">{{ remoteAvatarDiagnostics.trusted ? ', ' : '' }}{{ remoteAvatarDiagnostics.stale }} stale</template><template v-if="remoteAvatarDiagnostics.conflicting">{{ (remoteAvatarDiagnostics.trusted || remoteAvatarDiagnostics.stale) ? ', ' : '' }}{{ remoteAvatarDiagnostics.conflicting }} conflicting</template><template v-if="remoteAvatarDiagnostics.unavailable">{{ (remoteAvatarDiagnostics.trusted || remoteAvatarDiagnostics.stale || remoteAvatarDiagnostics.conflicting) ? ', ' : '' }}{{ remoteAvatarDiagnostics.unavailable }} unavailable</template>)
+                        </span>
+                    </p>
                     <label class="world-view-avatar-toggle">
                         <input
                             type="checkbox"

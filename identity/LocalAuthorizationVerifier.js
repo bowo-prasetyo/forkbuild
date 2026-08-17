@@ -1,5 +1,6 @@
 import { AuthorizationVerifier } from './AuthorizationVerifier.js';
 import { Signature, SIGNING_DOMAIN } from '../core/Signature.js';
+import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -92,6 +93,35 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
             return { valid: false, signed: true, reason: 'signer is not the index authority' };
         }
         return result;
+    }
+
+    // 0.2.38 — an AvatarPresenceAdvertisement (core/
+    // AvatarPresenceAdvertisement.js) carries no identity payload of
+    // its own, exactly like a SpatialIndexRoot above: the did:key
+    // signer of a valid signature IS the public key. Unsigned is
+    // tolerated at THIS layer (structural verification only) — see
+    // core/PresenceTrustPolicy.js for whether a receiver's policy
+    // actually accepts an unsigned claim, and
+    // application/PresenceTrustBoundary.js for the identity-binding
+    // check ("is this signer allowed to speak for this avatarId at
+    // all") that a merely-VALID signature does not by itself answer.
+    verifyPresenceAdvertisement(advertisement) {
+        if (!advertisement) {
+            return { valid: false, signed: false, reason: 'no advertisement' };
+        }
+        if (!advertisement.signature) {
+            return { valid: true, signed: false, reason: 'unsigned presence advertisement' };
+        }
+        const sig = Signature.fromJSON(advertisement.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getAvatarPresenceSigningDescriptor(advertisement), advertisement.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).

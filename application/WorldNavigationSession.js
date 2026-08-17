@@ -34,6 +34,8 @@ import { PresenceSyncService } from './PresenceSyncService.js';
 import { RemoteAvatarRegistry } from './RemoteAvatarRegistry.js';
 import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
 import { DEFAULT_AVATAR_TEMPLATE_ID } from '../core/AvatarProfile.js';
+import { signAvatarPresenceAdvertisement } from './PresenceSigning.js';
+import { summarizePresenceDiagnostics } from '../core/PresenceDiagnosticsSummary.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -349,8 +351,19 @@ export class WorldNavigationSession {
             // all, so it publishes nothing. See
             // docs/Principles.md, "No Movement, No Sequence
             // Advancement, No Network Traffic."
+            //
+            // 0.2.38 — signed whenever this session's identityProvider
+            // is actually able to (see application/PresenceSigning.js);
+            // falls back to an unsigned advertisement otherwise, which
+            // is exactly what always happened before this milestone.
+            // In real deployment `_identityProvider` and
+            // `_avatarPresenceSession` are always wired together (see
+            // CreateWorldViewUseCase — both come from being logged in),
+            // so the local avatar's own presence is signed whenever it
+            // exists at all.
             if (this._presenceSyncService) {
-                this._presenceSyncService.publish(toAvatarPresenceAdvertisement(presence));
+                const advertisement = toAvatarPresenceAdvertisement(presence);
+                this._presenceSyncService.publish(signAvatarPresenceAdvertisement(advertisement, this._identityProvider));
             }
         });
 
@@ -433,6 +446,21 @@ export class WorldNavigationSession {
     // surface, not something anything internal reads.
     getKnownRemoteAvatarCount() {
         return this._remoteAvatarRegistry ? this._remoteAvatarRegistry.size : 0;
+    }
+
+    // 0.2.38 — the unobtrusive World View diagnostic surface the
+    // design doc asked for: trusted/stale/conflicting/unavailable
+    // counts over exactly the same known-presences list
+    // getKnownRemoteAvatarCount() already summarizes as one number.
+    // Reads from PresenceSyncService.listKnownPresences() (never
+    // pull()) so calling this from the UI has no side effects and
+    // never drains the inbox out from under the real per-frame
+    // pull()/sync()/tick() loop above.
+    getRemoteAvatarDiagnostics() {
+        if (!this._presenceSyncService) {
+            return summarizePresenceDiagnostics([]);
+        }
+        return summarizePresenceDiagnostics(this._presenceSyncService.listKnownPresences(Date.now()));
     }
 
     // A pure client rendering preference, exactly like

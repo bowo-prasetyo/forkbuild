@@ -2367,3 +2367,17 @@ html, body {
 .world-view-avatar-toggle--disabled {
     color: #707070;
 }
+
+/* World View presence trust diagnostics (0.2.38) — an unobtrusive
+   summary line, deliberately styled like world-view-hint (a quiet
+   caption), never like an alert — a questionable presence is
+   diagnostic information, not a warning demanding attention. */
+.world-view-avatar-diagnostics {
+    font-size: 0.78rem;
+    color: #909090;
+    margin: 0 0 0.5rem 0;
+}
+
+.world-view-avatar-diagnostics-detail {
+    color: #707070;
+}
