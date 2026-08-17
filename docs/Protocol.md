@@ -1471,15 +1471,90 @@ semantics (0.2.14/0.2.15/0.2.18) ever needed to provide, because
 presence is a live stream where a missed update is superseded by the
 next one, not a durable fact that must eventually converge.
 
-**Explicitly not yet part of this protocol** (0.2.38's job): who is
-allowed to claim a given `avatarId`, whether a claimed position is
-even physically plausible relative to the previous one, replay
-protection beyond plain sequence comparison, and equivocation
-detection (the same avatarId advertising two different, ordering-
-inconsistent streams — the presence analogue of 0.2.19's root-history
-equivocation detection for discovery). A malicious or buggy peer can,
-today, advertise any `avatarId` it wants with an arbitrarily high
-`sequence` and be believed — 0.2.37 establishes the transport and
-lifecycle machinery 0.2.38 will harden, exactly the same way 0.2.14's
-decentralized content backend existed before 0.2.16/0.2.19 hardened
-its trust model.
+**Explicitly not yet part of this protocol as of 0.2.37** (0.2.38's
+job): who is allowed to claim a given `avatarId`, replay protection
+beyond plain sequence comparison, and equivocation detection (the same
+avatarId advertising two different, ordering-inconsistent streams —
+the presence analogue of 0.2.19's root-history equivocation detection
+for discovery). A malicious or buggy peer could, as of 0.2.37,
+advertise any `avatarId` it wanted with an arbitrarily high `sequence`
+and be believed — 0.2.37 established the transport and lifecycle
+machinery 0.2.38 hardens, exactly the same way 0.2.14's decentralized
+content backend existed before 0.2.16/0.2.19 hardened its trust model.
+
+## Presence Trust, Replay & Conflict Handling (0.2.38)
+
+Extends the 0.2.37 wire shape with exactly one new, OPTIONAL field:
+
+```
+{
+  avatarId: string,
+  ownerIdentity: string | null,
+  position: { x: number, y: number, z: number },
+  rotation: { x: number, y: number, z: number },
+  animation: 'idle' | 'walking' | 'running' | 'jumping',
+  sequence: integer,
+  signature?: {                      // NEW, OPTIONAL — core/Signature.js
+    algorithm: 'Ed25519',
+    signer: string,                  // did:key
+    signature: string,               // hex
+    signedHash: string,              // hex
+    domain: 'forkbuild/avatar-presence',
+    signedAt: string | null
+  }
+}
+```
+
+Still no `timestamp` — that omission is permanent, not milestone-
+specific (see the 0.2.37 section above). When present, `signature`
+covers a canonical envelope over EVERY other field —
+`core/AvatarPresenceAdvertisement.js`'s `getAvatarPresenceSigningDescriptor()` —
+never a narrower subset such as just `avatarId`+`sequence`: signing
+only those two would let an attacker keep a valid signature while
+swapping in a different position/rotation/animation, recreating
+0.2.18's causal-history signing bug one level up. The did:key `signer`
+IS the public key — an advertisement carries no separate identity
+payload, exactly like a `SpatialIndexRoot` (0.2.19).
+
+**Signing is optional at the wire level, by design.** A receiver's
+`core/PresenceTrustPolicy.js` decides whether an unsigned advertisement
+is tolerated at all (`.permissive()`, the default — identical to
+0.2.37's own behavior) or rejected outright (`.hardened()`). This is
+the ONE genuine policy axis; every other rejection
+`application/PresenceTrustBoundary.js` can produce — wrong authority,
+replay, conflicting content — applies unconditionally, regardless of
+policy.
+
+**Identity binding** is trust-on-first-use
+(`core/PresenceAuthority.js`), not a lookup against a distributed
+`AvatarProfile` directory — no such directory exists in this protocol,
+and building one was explicitly out of this milestone's scope. The
+first claim a replica accepts for a given `avatarId` establishes who
+may speak for it (the signer's did:key, if signed; the `ownerIdentity`
+string otherwise); every later claim must match, or it is rejected as
+`UNAUTHORIZED` regardless of how high its `sequence` is.
+
+**Replay protection** (`core/PresenceReplayWindow.js`) and
+**freshness** (`core/PresenceIngestion.js`, entirely UNCHANGED) are
+two different questions: replay asks "have I already accepted this
+exact claim," freshness asks "is it newer than what I hold now." A
+sequence that is both OLDER than current AND something this replica
+already accepted once before is a REPLAY, not merely STALE — see
+docs/Principles.md.
+
+**Equivocation** (`core/PresenceEquivocation.js`): the SAME `avatarId`,
+at the SAME `sequence`, carrying DIFFERENT content — reuses
+`core/TrustObservation.js`'s pre-existing `EQUIVOCATING` status
+verbatim. Detected only between claims sharing the SAME bound
+authority (a forged claim from a different signer is rejected earlier,
+as `UNAUTHORIZED`/`INVALID_SIGNATURE` — a stronger outcome). Whichever
+claim was accepted FIRST for a sequence remains the receiver's
+authoritative state; a later conflicting claim at that sequence is
+recorded, never silently swapped in — arrival order never decides.
+
+**Explicitly still not part of this protocol** (left for a future
+milestone, if ever taken up): whether a claimed position is physically
+plausible relative to the previous one, rate limiting, mandatory
+signing, and any authenticated cross-replica `AvatarProfile`
+distribution (appearance still is not synchronized at all — see the
+0.2.37 section above, unchanged).

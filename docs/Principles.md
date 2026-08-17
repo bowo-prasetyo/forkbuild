@@ -1663,6 +1663,21 @@ is deliberately written to tolerate exactly the disorder a real,
 UNTRUSTED network produces (reordering, duplicates, gaps) without yet
 asking whether the network is being honest about it.
 
+0.2.38 update: it answered all three. "Is this replica ALLOWED to
+claim this avatarId" is `core/PresenceAuthority.js`; "has this avatar
+been seen equivocating" is `core/PresenceEquivocation.js`. "Is this
+movement even physically plausible" is the one question 0.2.38
+deliberately still leaves open — see docs/Roadmap.md; nothing in this
+milestone inspects a claimed position against the previous one for
+plausibility, only for authorization and internal consistency.
+Notably, `core/PresenceIngestion.js` ITSELF is unchanged, byte-for-byte,
+by 0.2.38 — its one rule remains exactly "a higher sequence number
+wins," now reached only AFTER `application/PresenceTrustBoundary.js`
+has already confirmed the claim is authorized, non-replayed, and
+non-conflicting. Hardening the ingestion boundary meant building
+NEW layers around this rule, never rewriting it — see the four
+principles immediately below.
+
 ### Watching Presence Never Requires Having One (0.2.37)
 
 `WorldNavigationSession._setupRemoteAvatars()` is wired independently
@@ -1730,6 +1745,140 @@ replay defenses at EXACTLY this boundary, and it can only do that
 cleanly because 0.2.37 already drew the boundary in one place rather
 than letting "a message arrived" and "this replica believes it" be the
 same event.
+
+### An Avatar ID Identifies An Avatar; It Does Not Prove Who Currently Controls It (0.2.38)
+
+`core/PresenceAuthority.js`'s `PresenceAuthorityRegistry` is the direct
+answer to 0.2.37's own header: "a higher sequence number from ANYONE
+currently wins." An `avatarId` is just a string — nothing about
+possessing it proves who is allowed to move it. The FIRST claim a
+replica accepts for a given `avatarId` establishes who may speak for
+it from then on: if that claim was signed, the did:key that produced
+it becomes the permanent bound authority; if not, the plain
+`ownerIdentity` string is the best available (weaker, spoofable)
+check. This is trust-on-first-use, the same property SSH host keys
+and every other TOFU scheme accept — deliberately NOT a lookup against
+a distributed `AvatarProfile` directory, because building that
+directory was never this milestone's job (see "0.2.37 Establishes
+Transport Semantics; 0.2.38 Establishes Trust Semantics" above — the
+brief was to harden the ingestion boundary already built, not to
+invent AvatarProfile distribution as a side effect). The binding is
+never cleared when an avatar goes ABSENT and gets pruned from
+`application/LocalPresenceStore.js` — a returning participant must
+still only be believed as the SAME authority that left.
+
+### Presence Trust Has One Real Policy Axis (0.2.38)
+
+`core/PresenceTrustPolicy.js` has exactly one knob:
+`requireSignedPresence`. Every other rejection
+`application/PresenceTrustBoundary.js` can produce — a wrong-authority
+claim, a replayed claim, an equal-sequence-but-different-content
+claim — is never negotiable by policy; only whether the ABSENCE of a
+signature is disqualifying is a matter of operator choice. This is
+deliberately narrower than `identity/TrustPolicy.js` (0.2.19), which
+has several independent knobs (`requireSignedRoot`,
+`requireAuthorizedPlacements`, `pinnedAuthorityIdentity`,
+`rejectEquivocatingAuthority`...) because a spatial index authority is
+a genuinely richer trust relationship than a live avatar's own
+presence stream. Reusing that class's SHAPE for
+`PresenceTrustPolicy.permissive()`/`.hardened()` was right; reusing
+the class ITSELF would have dragged five irrelevant options into a
+domain that only ever needed one.
+
+### Replay Detection And Freshness Are Different Questions, Answered By Different Code (0.2.38)
+
+"Have I already accepted this exact claim?" (`core/PresenceReplayWindow.js`)
+and "is this claim newer than what I currently hold?"
+(`core/PresenceIngestion.js`, unchanged since 0.2.37) sound similar but
+diverge exactly at the case that matters: the design doc's own
+example, sequence 100 accepted, then 101 accepted, then 100 arrives
+again. It is **older** than what's currently held (so "is it newer?"
+says no) but it is **also** something this replica already
+legitimately accepted once (so "have I seen this exact claim before?"
+also says yes) — and the correct classification is REPLAY, not STALE,
+specifically because the replica has independent, positive memory of
+already having processed it. Conflating the two questions into one
+"reject if not newer" rule (0.2.37's original scope, by design) cannot
+distinguish "this is old and I've never seen it" from "this is old
+because I've ALREADY seen it" — and that distinction is exactly what
+tells a diagnostic surface (`core/PresenceDiagnosticsSummary.js`)
+whether it's looking at ordinary network disorder or a genuine replay
+attempt.
+
+`core/PresenceReplayWindow.js` deliberately does NOT reuse
+`replication/ReplayGuard.js` even though both answer the same
+question, for a bounded-memory reason specific to presence: ReplayGuard
+remembers every hash it has ever seen, forever — correct for the rare,
+deliberate events (a `PlacementRecord` revision, a `Delegation`) it was
+built for, and a genuine leak for a stream where every accepted WASD
+step adds one more permanent entry for as long as a tab stays open.
+Real replay detection at this update rate only ever needs to catch
+RECENT redelivery, so the replay window remembers a bounded number of
+the most recent accepted hashes per avatarId and evicts the oldest —
+the same bounded-recency posture a TLS/TCP anti-replay window uses,
+never an unbounded "remember forever" set.
+
+### Equal-But-Different Is Still A Conflict, Even At 60Hz (0.2.38)
+
+0.2.18 established this for revision history: two objects that both
+claim the same causal position but disagree on content are never
+resolved by picking whichever arrived last. `core/PresenceEquivocation.js`'s
+`detectPresenceEquivocation()` applies the identical rule to live
+avatar presence — the SAME avatarId, at the SAME `sequence`, carrying
+DIFFERENT position/rotation/animation — reusing `core/TrustObservation.js`'s
+pre-existing `EQUIVOCATING` status verbatim rather than inventing a
+parallel vocabulary, because "same authority, same causal position,
+different content" was already exactly the right words for this. The
+one place this milestone deliberately diverges from a literal reading
+of the design doc's own illustrative script: equivocation is only ever
+checked AFTER `core/PresenceAuthority.js` has confirmed the incoming
+claim shares the SAME bound authority as what's currently held. A
+forged claim from an outsider without the real signing key is caught
+earlier, as UNAUTHORIZED or INVALID_SIGNATURE — a STRONGER rejection
+than "conflict," not a weaker one. Equivocation specifically models
+the bound authority ITSELF producing two different claims — a buggy or
+compromised client, or two devices racing on one account — never an
+attacker who was never authorized to begin with. And exactly like
+0.2.18: the currently-held state is never silently replaced by a
+losing/competing claim just because it arrived later — see the next
+principle.
+
+### Do Not Let Arrival Order Choose A Winner (0.2.38)
+
+For a genuine equivocation (`sequence 42 -> position A` then
+`sequence 42 -> position B`), `application/PresenceTrustBoundary.js`
+does NOT keep whichever one arrived last — that would make "network
+arrival order = reality," exactly the posture 0.2.18-0.2.30 spent this
+codebase's whole decentralization arc rejecting. Instead, whichever
+claim was accepted FIRST for a given sequence stays the displayed,
+authoritative state; every later claim at that same sequence is
+rejected and recorded as a `TrustObservation`
+(`core/PresenceDiagnosticsSummary.js` surfaces it as "conflicting" in
+World View), never silently swapped in. The renderer keeps showing the
+last legitimately accepted position throughout — see the next
+principle for why the renderer never even has to know a conflict
+happened at all.
+
+### Rendering Presence And Trusting Presence Remain Separate (0.2.38)
+
+`application/RemoteAvatarRegistry.js` and `renderer/AvatarRenderer.js`
+are UNCHANGED by this milestone — they still only ever read
+`{ advertisement, lifecycleState }` off whatever
+`PresenceSyncService.pull()` returns and draw exactly that. The new
+`trustObservation` field `application/LocalPresenceStore.js` now
+attaches to every entry is diagnostics-only: it flows to World View's
+unobtrusive summary line (`core/PresenceDiagnosticsSummary.js`,
+"Other Avatars: 7 — 3 trusted, 2 stale, 1 conflicting, 1 unavailable"),
+never onto the avatar itself, and never into anything the renderer
+touches. A questionable presence — unauthorized, replayed, conflicting —
+never crashes or even visibly alters the render facade; the WORST case
+is that an avatar's position simply stops updating (because the
+rejecting claim never reached `LocalPresenceStore.ingest()`'s accepted
+path) while its last legitimate pose keeps being displayed exactly as
+before. This is the same "presentation state never leaks into
+authoritative state, and authoritative state never leaks a raw trust
+verdict into presentation" split 0.2.37's interpolation principle
+already drew one layer down.
 
 ### The Authoritative Position Is Always The Latest Presence; Interpolation Is Only Ever A Presentation Detail (0.2.37)
 

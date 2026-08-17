@@ -30,7 +30,13 @@ export const SIGNING_DOMAIN = 'forkbuild';
 export const SignatureType = Object.freeze({
     PUBLICATION: 'publication',
     PLACEMENT_RECORD: 'placement-record',
-    SPATIAL_INDEX_ROOT: 'spatial-index-root'
+    SPATIAL_INDEX_ROOT: 'spatial-index-root',
+    // 0.2.38 — an OPTIONAL signature over an AvatarPresenceAdvertisement
+    // (core/AvatarPresenceAdvertisement.js's wire shape), never over
+    // AvatarPresence itself (core/AvatarPresence.js stays permanently
+    // unsigned — see its own header). See
+    // core/AvatarPresenceAdvertisement.js's getAvatarPresenceSigningDescriptor().
+    AVATAR_PRESENCE: 'avatar-presence'
 });
 
 export class Signature {

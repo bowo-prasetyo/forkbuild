@@ -91,6 +91,7 @@
 0.2.35  Avatar Rendering & World Presence                  ✓
 0.2.36  Local Avatar Movement & Animation                   ✓
 0.2.37  Decentralized Avatar Presence Synchronization        ✓
+0.2.38  Presence Trust, Replay & Conflict Handling            ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -341,12 +342,63 @@ avatar-to-avatar interaction, voice/chat, remote avatar editing,
 avatar ownership transfer, and decentralized avatar-template
 distribution.
 
-- **0.2.38 — Presence Trust, Replay & Conflict Handling.** Distinguishes
-  identity authenticity ("this claim came from Alice"), movement
-  authority ("Alice may currently appear/move here"), and world
-  physics ("Alice's claimed position is plausible") — sequence
-  numbers, replay protection, and rate limits building on
-  `AvatarPresence.sequence` (0.2.33).
+0.2.38 hardens the ingestion boundary 0.2.37 built, without redesigning
+presence synchronization itself — every 0.2.37 file
+(`PresenceSyncService`, `RemoteAvatarInterpolator`, `RemoteAvatarRegistry`,
+the `presence/` transport, `core/PresenceIngestion.js` itself) stays
+completely unchanged. One new gate,
+`application/PresenceTrustBoundary.js`, sits between "an advertisement
+arrived" and "this replica's state changed," answering five questions
+in order: does the signature verify (or does policy tolerate it being
+unsigned — `core/PresenceTrustPolicy.js`, the one real policy axis);
+is the claimant authorized to speak for this avatarId at all
+(`core/PresenceAuthority.js`, a trust-on-first-use binding — "an
+avatarId identifies an avatar, it does not prove who currently
+controls it"); has this exact claim already been accepted before
+(`core/PresenceReplayWindow.js`, deliberately BOUNDED rather than
+reusing `replication/ReplayGuard.js`'s unbounded memory — a live
+presence stream is nothing like the rare durable events that class was
+built for); does it conflict with what's currently held at the same
+sequence (`core/PresenceEquivocation.js`, reusing 0.2.19's own
+`EQUIVOCATING` vocabulary and 0.2.18's "equal-but-different is still a
+conflict" principle, applied to `sequence` the way `CausalStamp`
+applies to index roots); and only then, is it actually newer
+(0.2.37's own `core/PresenceIngestion.js`, untouched). Signing is real
+Ed25519 (`application/PresenceSigning.js`,
+`identity/LocalAuthorizationVerifier.verifyPresenceAdvertisement()`)
+over a canonical envelope covering EVERY field, never just
+avatarId+sequence — but stays OPTIONAL at the wire level by design; a
+receiver's policy, not the sender, decides whether an unsigned claim
+is tolerated. A rejected claim never overwrites what a replica
+currently displays — arrival order never picks a winner — but IS
+remembered as a `TrustObservation`, surfaced through
+`core/PresenceDiagnosticsSummary.js` as an unobtrusive World View line
+("Other Avatars: 7 — 3 trusted, 2 stale, 1 conflicting, 1
+unavailable") that never touches the avatar's own rendering. The
+flagship test scripts a genuinely hostile scenario end-to-end over a
+real `BroadcastChannel`: a captured genuine packet replayed verbatim,
+a tampered position with a now-invalid signature, Alice's own real key
+producing a conflicting claim at her current sequence (true
+equivocation), and a different real signing identity impersonating her
+avatarId at a new sequence — every one rejected, Alice's own further
+movement unaffected throughout, and Document/Publication/
+WorldPlacement/SpatialIndex/AvatarProfile byte-identical from start to
+finish. See docs/Architecture.md and docs/Principles.md, "An Avatar ID
+Identifies An Avatar; It Does Not Prove Who Currently Controls It" and
+its neighboring 0.2.38 principles. Deliberately deferred, matching the
+design doc's own list: physical-plausibility checks on a claimed
+position, rate limiting, mandatory signing, `CausalStamp`, persistent
+presence, an `AvatarProfile` signature/distribution layer, avatar
+collision, avatar-to-avatar interaction, and voice/chat.
+
+**0.2.33 through 0.2.38 complete a full vertical slice of the avatar
+arc**: create an avatar, customize it, see it, move it, see others move,
+and handle hostile/stale/conflicting presence. The avatar roadmap is
+deliberately PAUSED here rather than immediately continuing into chat,
+collision, emotes, voice, or avatar trading — this is a stability/
+architecture checkpoint, not a stopping point. The next design doc may
+resume the avatar arc, or open an entirely different one; nothing in
+this codebase assumes which.
 
 ## 0.1.50 — What shipped
 
