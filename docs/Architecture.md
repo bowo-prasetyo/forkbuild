@@ -3447,7 +3447,16 @@ Application:
   automatically. `dispose()` unsubscribes both before tearing down the
   render facade. `setLocalAvatarVisible(visible)`/
   `isLocalAvatarVisible()`/`hasLocalAvatar()` round out the public
-  surface the UI drives.
+  surface the UI drives. `focusDocument()` (called by
+  `navigateToDocument()`) also calls `_spawnAvatarNear(layoutPos)`,
+  which repositions a still-untouched (`sequence === 0`) avatar to
+  spawn a small offset from whichever document is first focused,
+  instead of leaving it at literal world origin — see
+  docs/Principles.md, "A Fresh Avatar Spawns Near What You're Looking
+  At, Not At A Fixed Point" (a 0.2.35 follow-up fix; a document's own
+  placement, per 0.2.24's deterministic grid strategy, is essentially
+  never near the origin, so the avatar was rendering correctly but was
+  effectively always out of frame until this shipped).
 - `application/CreateWorldViewUseCase.js` — wires
   `CreateAvatarPresenceSessionUseCase` (reusing the SAME
   `avatarProfileUseCase` instance it already builds internally for

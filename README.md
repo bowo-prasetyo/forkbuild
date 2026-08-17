@@ -241,9 +241,16 @@ My Avatar" checkbox in World View is a pure client rendering
 preference — never persisted, never a new field on `AvatarProfile` or
 `AvatarPresence`. Moving the avatar (or changing its appearance) never
 touches a document's `WorldPlacement`, verified directly (byte-identical
-placement JSON before/after) in the flagship test. See
-docs/Principles.md, "An Avatar's Location Comes From Presence, Never
-From The Avatar Itself."
+placement JSON before/after) in the flagship test. A follow-up fix
+makes a brand-new avatar spawn a short offset from whichever document
+World View first opens on, rather than always at literal world origin
+— a real document's own placement (0.2.24's deterministic grid
+strategy) is essentially never near the origin, so the avatar was
+rendering correctly but effectively always out of frame until this
+shipped; only an avatar that has never moved is ever repositioned this
+way. See docs/Principles.md, "An Avatar's Location Comes From
+Presence, Never From The Avatar Itself" and "A Fresh Avatar Spawns
+Near What You're Looking At, Not At A Fixed Point."
 
 ## Features
 

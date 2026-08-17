@@ -48,6 +48,17 @@ const RETRY_DELAYS = [2000, 5000, 10000];
 // camera position; see exploreHere/whatsHere below.
 const DEFAULT_EXPLORE_RADIUS = 25;
 const NEARBY_RADIUS = 5;
+// 0.2.35 follow-up: a fresh AvatarPresence otherwise always spawns at
+// literal world origin regardless of which document a session opens
+// on — and a document's own placement (0.2.24's deterministic grid
+// strategy) is essentially never near the origin, so the avatar would
+// render far outside whatever the camera is actually looking at. A
+// small, fixed diagonal offset from the first-focused document's own
+// position — not exactly on top of it, to avoid spawning inside the
+// document's own geometry — gives a sensible "you arrive where you're
+// looking" default without pretending to know anything about that
+// document's actual size/shape.
+const AVATAR_SPAWN_OFFSET = { x: 3, y: 0, z: 3 };
 
 // 0.1.46: gizmo wiring. 0.1.47: precision + modifier plumbing + gesture
 // feedback; keyboard transforms route through the gesture transaction.
@@ -307,6 +318,31 @@ export class WorldNavigationSession {
         return this._localAvatarVisible;
     }
 
+    // Repositions a still-untouched (sequence 0, i.e. never explicitly
+    // moved) local avatar to spawn near wherever the camera is about
+    // to focus, instead of leaving it at literal world origin — see
+    // AVATAR_SPAWN_OFFSET above and docs/Principles.md. Deliberately
+    // gated on sequence === 0: this only ever fires once per session,
+    // on whichever focusDocument() call happens first (in practice
+    // the initial navigateToDocument() on World View mount). Once the
+    // avatar has moved even once — by this spawn repositioning itself,
+    // or later by real movement (0.2.36) — every subsequent
+    // focusDocument() call (searching, Explore Here, Nearby Worlds)
+    // leaves it exactly where it is; navigating the CAMERA elsewhere
+    // must never silently teleport a participant.
+    _spawnAvatarNear(position) {
+        if (!this._avatarPresenceSession || this._avatarPresenceSession.current.sequence !== 0) {
+            return;
+        }
+        this._avatarPresenceSession.update({
+            position: {
+                x: position.x + AVATAR_SPAWN_OFFSET.x,
+                y: position.y + AVATAR_SPAWN_OFFSET.y,
+                z: position.z + AVATAR_SPAWN_OFFSET.z
+            }
+        });
+    }
+
     // A pure client rendering preference — see docs/Principles.md.
     // Never touches AvatarProfile or AvatarPresence; toggling it
     // twice in a row is a no-op exactly like every other purely
@@ -499,6 +535,7 @@ export class WorldNavigationSession {
             this.setActiveDocument(documentId);
         }
         const layoutPos = this._getWorldPosition(documentId);
+        this._spawnAvatarNear(layoutPos);
         this._spatialCameraController.focusDocument(documentId, layoutPos);
         return this.updateSpatialView();
     }

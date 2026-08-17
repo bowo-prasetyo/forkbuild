@@ -9,6 +9,7 @@ import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLib
 import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { SpatialCameraController } from '../application/SpatialCameraController.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -35,6 +36,7 @@ import { License, LicenseId } from '../core/License.js';
 //   Section B: renderer/AvatarVisual.js    — diff/rebuild lifecycle
 //   Section C: WorldNavigationSession integration (spy facade)
 //   Section D: FLAGSHIP — the design doc's own scripted scenario
+//   Section E: avatar spawn-near-document (0.2.35 follow-up)
 //
 // No real WebGL/<canvas> anywhere — AvatarRenderer/AvatarVisual build
 // real THREE.Group/Mesh/Material objects (three's CPU-side scene
@@ -64,6 +66,7 @@ function buildRegistry() {
 
 function spyFacade() {
     const calls = { setLocalAvatar: [], updateLocalAvatarAppearance: [], updateLocalAvatarPresence: [], setLocalAvatarVisible: [], removeLocalAvatar: 0 };
+    let cameraState = { position: { x: 10, y: 10, z: 10 }, target: { x: 0, y: 0, z: 0 }, zoom: 1 };
     return {
         calls,
         setLocalAvatar: (template, appearance, presence) => calls.setLocalAvatar.push({ template, appearance, presence }),
@@ -71,6 +74,24 @@ function spyFacade() {
         updateLocalAvatarPresence: (presence) => calls.updateLocalAvatarPresence.push({ presence }),
         setLocalAvatarVisible: (visible) => calls.setLocalAvatarVisible.push(visible),
         removeLocalAvatar: () => { calls.removeLocalAvatar++; },
+        // Minimal stand-ins so WorldNavigationSession.focusDocument()
+        // (the method under test in the spawn-near-document section
+        // below) can run its full body — including
+        // SpatialCameraController and updateSpatialView()'s streaming
+        // load/unload — without a real Renderer/WebGL. Mirrors the
+        // stub shape tests/ForkRenderSync.test.js already established
+        // for exactly this "poke session._session directly" pattern.
+        getCameraState: () => cameraState,
+        setCameraState: (state) => { cameraState = state; },
+        addWorld() {}, removeWorld() {}, clearSelection() {}, clearHover() {},
+        selectBricks() {}, hoverBrick() {}, showPreview() {}, hidePreview() {},
+        showGizmo() {}, hideGizmo() {},
+        gizmoHitTest() { return true; }, gizmoPointerDown() { return false; },
+        gizmoPointerMove() { return { consumed: false, hovered: false, feedback: null }; },
+        gizmoPointerUp() { return { consumed: false, committed: false, feedback: null }; },
+        gizmoKeyDown() { return false; },
+        pick() { return null; }, pickGround() { return null; }, pickRectangle() { return []; },
+        setControlsEnabled() {},
         dispose() {}
     };
 }
@@ -347,6 +368,75 @@ async function runTests() {
         visual.setPose({ x: 1, y: 0, z: 1 }, { x: 0, y: 0, z: 0 });
         visual.setPose({ x: 1, y: 0, z: 1 }, { x: 0, y: 0, z: 0 });
         assert(visual._poseGroup === poseGroupRef, '40. repeated identical pose/appearance updates never tear down and rebuild the visual');
+    }
+
+    // -------------------------------------------------------------
+    // Section E — 0.2.35 follow-up: a fresh avatar spawns near the
+    // document a World View session first navigates to, instead of
+    // always at literal world origin regardless of what's on screen.
+    // -------------------------------------------------------------
+    {
+        const storage = new InMemoryStorageProvider();
+        const alice = new LocalIdentityProvider(storage);
+        alice.login('alice');
+        const avatarProfileUseCase = new AvatarProfileUseCase(storage, alice, registry);
+        const profile = avatarProfileUseCase.getProfile();
+        const avatarPresenceSession = new AvatarPresenceSession(profile); // NOT pre-seeded — starts at the origin, sequence 0
+
+        const brickRegistry = new CreateBrickRegistryUseCase().execute();
+        const contentStore = new LocalContentStore(storage);
+        const publisher = new LocalPublisherProvider(storage, contentStore);
+        const discoveryProvider = new LocalDiscoveryProvider(storage);
+        const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
+        const placementRegistry = new LocalPlacementRegistry(storage, spatialIndexProvider);
+        const worldLayoutProvider = new LocalWorldLayoutProvider(spatialIndexProvider, discoveryProvider);
+        const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(storage);
+        const placePublicationUseCase = new PlacePublicationUseCase(
+            spatialIndexProvider, discoveryProvider, loadPublicationDocumentUseCase, brickRegistry, placementRegistry, alice
+        );
+        const publishDocumentUseCase = new PublishDocumentUseCase(publisher, alice, placePublicationUseCase, new GridPlacementStrategy());
+
+        const world = new World();
+        const building = new Building({ creator: 'alice' });
+        building.addBrick(new Brick({ definitionId: 'core:cube' }));
+        world.addBuilding(building);
+        const document = new Document({ world, metadata: new DocumentMetadata({ title: 'Lighthouse', author: 'alice', license: new License({ id: LicenseId.CC0_1_0 }) }) });
+        const publication = publishDocumentUseCase.execute({ document });
+        const documentPos = worldLayoutProvider.getPosition(publication.documentId);
+
+        const session = new WorldNavigationSession({
+            registry: brickRegistry, loadPublicationDocumentUseCase, worldLayoutProvider,
+            identityProvider: alice, discoveryProvider, placementRegistry,
+            avatarProfileUseCase, avatarPresenceSession
+        });
+        // Bypasses session.start() (needs a real Renderer/WebGL) —
+        // wires exactly what start() would have, against the spy
+        // facade, matching Section C's own established pattern.
+        session._session = spyFacade();
+        session._spatialCameraController = new SpatialCameraController(session._session);
+        session._setupLocalAvatar();
+
+        assert(avatarPresenceSession.current.position.x === 0 && avatarPresenceSession.current.position.z === 0,
+            "41. before any navigation, a fresh avatar is still at the origin");
+
+        session.focusDocument(publication.documentId); // the same call navigateToDocument() makes
+
+        assert(avatarPresenceSession.current.sequence === 1, '42. the first focusDocument() call repositions the (still-untouched) avatar exactly once');
+        assert(
+            avatarPresenceSession.current.position.x === documentPos.x + 3
+            && avatarPresenceSession.current.position.z === documentPos.z + 3,
+            '43. the avatar spawns at the focused document\'s own position, offset so it doesn\'t sit inside the document\'s geometry'
+        );
+        const presenceCallsAfterFirstFocus = session._session.calls.updateLocalAvatarPresence.length;
+        assert(presenceCallsAfterFirstFocus >= 1, '44. the reposition actually propagated to the render facade');
+
+        // A second focusDocument() call (e.g. a later search result, or
+        // simply re-focusing the same document) must NOT move the
+        // avatar again — only the FIRST ever focus repositions it.
+        session.focusDocument(publication.documentId);
+        assert(avatarPresenceSession.current.sequence === 1, '45. a second focusDocument() call does not move an already-spawned avatar');
+        assert(session._session.calls.updateLocalAvatarPresence.length === presenceCallsAfterFirstFocus,
+            '46. ...and does not send a redundant presence update to the facade either');
     }
 
     console.log('✅ All Avatar Rendering tests passed.');
