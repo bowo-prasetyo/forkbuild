@@ -3031,3 +3031,118 @@ publications match title/author-independent criteria — acceptable for
 design doc's own explicit scope for a first implementation, but a real
 future scaling question once a genuinely large decentralized catalog
 exists).
+
+### Client-Side Publication Preview & Lazy Rendering (0.2.32)
+
+0.2.31 shipped `core/DocumentPreview.js` with only a PLACEHOLDER
+implementation and left the real preview question open: should an
+immutable, content-addressed thumbnail travel with the Publication?
+0.2.32 answers it — no — and builds the alternative: a THUMBNAIL
+rendered locally, on demand, from the document's actual content, kept
+entirely in a disposable client-side cache.
+
+    Decentralized Repository → Publication → Immutable Document
+                                                     │
+                                    (client loads content on demand)
+                                                     ▼
+    ui/components/PublicationPreview.js  →  application/PreviewService.js
+       (visible? IntersectionObserver)          (queue, dedupe, cache,
+                                                   cancellation, priority)
+                                                     │
+                                                     ▼
+                                    renderer/DocumentThumbnailRenderer.js
+                                    (reused offscreen WebGLRenderer +
+                                     core/PreviewCameraFraming.js)
+                                                     │
+                                                     ▼
+                                     data URL, cached by contentHash
+                                     (never signed, never replicated)
+
+Core:
+
+- `core/DocumentPreview.js` — extended, not replaced. Adds `image` (a
+  local data URL) to the existing `{ type, reference }` shape and a
+  new `thumbnailPreview(dataUrl)` factory alongside 0.2.31's
+  `derivePlaceholderPreview`. `reference` stays exactly as 0.2.31 left
+  it: reserved, unused, and now explicitly documented as such — see
+  docs/Principles.md, "A Preview Is Either Signed Or It Isn't
+  (0.2.31, resolved 0.2.32)." No field is added to `Publication`
+  itself, and `getSigningDescriptor()` is untouched.
+- `core/PreviewCameraFraming.js` (new) — `computeThumbnailCamera(bounds,
+  options)`, a pure function taking a `SpatialBounds` and returning a
+  deterministic `{ position, target, fovDegrees, distance }`. Frames
+  the document's bounding SPHERE (radius = half the AABB diagonal, so
+  the whole object fits regardless of orientation) at a fixed
+  isometric angle (45° azimuth, `atan(1/√2)` elevation) — see
+  docs/Principles.md, "A Preview's Camera Framing Is Deterministic;
+  Its Pixels Are Not." All camera-framing decisions live here, as pure
+  geometry, so they're testable without Three.js or a GPU.
+
+Infrastructure/application:
+
+- `renderer/DocumentThumbnailRenderer.js` (new) — a "dumb executor":
+  applies whatever `computeThumbnailCamera` decided
+  (`this._camera.fov = framing.fovDegrees`, position, lookAt) rather
+  than deriving framing itself. Named to avoid colliding with the
+  pre-existing `renderer/PreviewRenderer.js` (ghost-placement mesh
+  preview, unrelated). Holds ONE reusable offscreen `WebGLRenderer`
+  (`preserveDrawingBuffer: true`, never appended to the DOM) for its
+  entire lifetime — created lazily, on the first real request, not
+  merely because the app booted — specifically to avoid exhausting the
+  browser's shared ~16-context WebGL limit across a catalog of dozens
+  of thumbnails (which would break OTHER WebGL surfaces on the page,
+  e.g. a live World View open in another view). Only the per-render
+  MESH content (geometry/material) is disposed between renders.
+- `application/PreviewService.js` (new) — the queue/cache/scheduling
+  brain. `getCached(contentHash)` for a synchronous cache check;
+  `request(publication, { priority })` returns `{ promise, cancel }`.
+  Concurrent requests for the same `contentHash` share one job with
+  multiple waiters; cancelling a waiter that isn't the job's last one
+  leaves the job running for the others still waiting on it — only
+  cancelling the LAST waiter actually cancels the job. Jobs drain one
+  per `requestIdleCallback` tick (falling back to `setTimeout` where
+  unavailable) so generation never blocks the main thread or catalog
+  scrolling. Cache is a `Map` keyed by `contentHash` with LRU eviction
+  via insertion-order semantics (`maxCacheEntries`, default 100) — see
+  docs/Principles.md, "Previews Are Derived Client State." A failed
+  document load or renderer construction resolves the job with `null`
+  and moves on to the next job — it never throws, and never stops the
+  queue, matching the failure-isolation posture 0.2.15/0.2.16/0.2.19
+  already established.
+- `application/CreatePreviewUseCase.js` (new) — wires
+  `LoadPublicationDocumentUseCase` (0.2.31), a `CreateBrickRegistryUseCase`
+  registry, and a lazy `() => new DocumentThumbnailRenderer(registry)`
+  thunk into one `PreviewService`.
+
+UI:
+
+- `ui/App.js` — gains a `setup()` that constructs ONE `PreviewService`
+  via `CreatePreviewUseCase` and `provide()`s it at the root, so the
+  cache and queue survive navigation between Repository and Author
+  views (matching the existing `provide`/`inject` convention
+  `LoginModal`'s `identityUseCase` already established).
+- `ui/components/PublicationPreview.js` — rewritten. `inject`s the
+  shared `previewService`; on mount, checks the cache synchronously
+  and, if empty, sets up an `IntersectionObserver` (`rootMargin:
+  '200px'`) so a request is only ever made once the card is visible or
+  about to be — see docs/Principles.md, "Preview Generation Is Bounded
+  By What's Actually Visible." `beforeUnmount` disconnects the
+  observer and calls `cancel()` — Vue's own unmount lifecycle, firing
+  automatically whenever `PublicationCatalog.js` replaces
+  `pageResult.items` (a new search, sort, or page), is what makes
+  "stop rendering the old page's previews the moment the query
+  changes" require zero explicit cancellation plumbing anywhere else
+  in the codebase. Renders the PLACEHOLDER (unchanged from 0.2.31)
+  while pending, then the resolved thumbnail `<img>`; a `--pending`
+  CSS class pulses the placeholder so "still generating" is visible,
+  not silent.
+
+Deliberately not in 0.2.32: any wire-format or `Publication` schema
+change (see docs/Protocol.md); a service-worker or persistent-disk
+preview cache (the cache is explicitly memory-only and disposable —
+see docs/Principles.md); a priority-tier system beyond "visible now"
+vs. "not yet" (`IntersectionObserver` already gives that distinction
+for free, so the milestone doesn't build a separate near-viewport
+tier); and downloading/rendering every publication in a catalog merely
+because the Repository was opened — a preview is generated only for a
+publication a client has actually scrolled to.

@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.31** — Publication Catalog & Repository UX
+**Version 0.2.32** — Client-Side Publication Preview & Lazy Rendering
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -165,6 +165,27 @@ zero gaps or duplicates, in exact sorted order. See
 [docs/Architecture.md](docs/Architecture.md) for the full write-up of
 each milestone.
 
+0.2.32 answers the preview question 0.2.31 deliberately left open —
+and reverses its own earlier lean toward a signed, content-addressed
+preview. A THUMBNAIL is rendered client-side, on demand, from a
+publication's actual immutable document content (never from
+user-supplied metadata, so a beautiful thumbnail can never advertise a
+trivial document), using a deterministic camera framing (fixed
+isometric angle, bounding-sphere distance so the whole object always
+fits) computed as pure geometry in `core/PreviewCameraFraming.js` —
+the same content always gets the same intended shot, though not
+byte-identical pixels across GPUs, since a preview is a derived
+visualization, not a cryptographic artifact. Generation is lazy
+(`IntersectionObserver`-gated — a card off-screen never renders),
+queued off the main thread (`requestIdleCallback`), cancellable (an
+old page's or an old search's in-flight previews simply stop when
+their cards unmount), and cached in memory only, keyed by content
+identity, with LRU eviction. A preview failure never hides the
+publication it belongs to — it just falls back to 0.2.31's existing
+placeholder. Nothing about a preview is signed, persisted, or
+replicated: see docs/Principles.md, "Previews Are Derived Client
+State."
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -199,6 +220,7 @@ each milestone.
 - **World Location Browser & Spatial Exploration (0.2.29)** — "Explore Here" and "What's Here?" turn the camera's own world position into a spatial-query center, reusing 0.2.28's query rather than building a second one; each result supports strictly read-only Focus / Select / Inspect actions (moving the camera, changing the active document without moving the camera, and an inline Document/Placement Info expansion that never loads or navigates, respectively); the result count reads "Showing N of N discoverable documents" to keep the same decentralized honesty text/spatial search already established.
 - **Trust-Aware Spatial Discovery & Diagnostics (0.2.30)** — `exploreLocation` returns `{ documents, diagnostics }`: the document list is never filtered or reordered by trust, while `diagnostics` (available/fatal/complete/warnings, derived from real 0.2.19 `TrustObservation`s via an optional `spatialDiscoveryProvider`) honestly reports what a trust-capable provider could verify about that region — shown as a banner in the Location Browser and a per-document "Discovery status" in Inspect; the live app's own document resolution is completely unchanged.
 - **Publication Catalog & Repository UX (0.2.31)** — Repository/Author View share one `PublicationCatalog` component with real pagination, deterministic sort (5 orders, ordinal comparison, guaranteed-consistent tiebreaks), Cards/List views, presentation-only grouping (author/date/license), a deterministic placeholder preview per publication, and search that opt-in extends to full document descriptions; `SearchPublicationsUseCase` is a deliberately separate query from World Search, answering "which publications match this?" rather than "where is this in the world?"; tested against a 10,000-publication synthetic catalog.
+- **Client-Side Publication Preview & Lazy Rendering (0.2.32)** — Repository/Author View cards render a real thumbnail generated locally from a publication's actual document content, never from user-supplied metadata; a deterministic camera framing (fixed isometric angle, bounding-sphere distance) means the same content always gets the same intended shot; generation is lazy (only for cards actually scrolled into view), off the main thread, cancellable when a page or search changes, and cached in memory only, keyed by content identity — nothing about a preview is signed, persisted, or replicated, and a preview failure never hides the publication it belongs to.
   
 ## Architecture
 
@@ -295,8 +317,9 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.29  World Location Browser & Spatial Exploration
 - [x] 0.2.30  Trust-Aware Spatial Discovery & Diagnostics
 - [x] 0.2.31  Publication Catalog & Repository UX
+- [x] 0.2.32  Client-Side Publication Preview & Lazy Rendering
 
-Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), a real immutable content-addressed publication preview (0.2.31 ships a computed placeholder only — see docs/Principles.md), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md.
+Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 
 ## License
 

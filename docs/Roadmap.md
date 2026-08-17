@@ -85,6 +85,7 @@
 0.2.29  World Location Browser & Spatial Exploration     ✓
 0.2.30  Trust-Aware Spatial Discovery & Diagnostics       ✓
 0.2.31  Publication Catalog & Repository UX               ✓
+0.2.32  Client-Side Publication Preview & Lazy Rendering  ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -200,14 +201,13 @@ onto one shared `PublicationCatalog` component, tested against a
 
 Deliberately deferred from 0.2.31, remaining OPTIONAL and unscheduled:
 
-- **A real, immutable, content-addressed preview.** `core/DocumentPreview.js`
-  ships a computed PLACEHOLDER mechanism only — attaching a real
-  preview to `Publication` itself requires its own schema-evolution
-  design (see docs/Principles.md, "A Preview Is Either Signed Or It
-  Isn't") to avoid retroactively breaking every already-signed
-  publication's verification. Worth a dedicated milestone once that
-  design question is deliberately answered, not folded into a future
-  catalog tweak.
+- ~~A real, immutable, content-addressed preview.~~ **RETIRED, not
+  merely postponed again — see 0.2.32, below.** 0.2.31 framed this as
+  a schema-evolution question to answer eventually; 0.2.32 answers it
+  by concluding a signed, replicated preview was never the right
+  design, and ships a client-local, derived-and-cached THUMBNAIL
+  instead. `core/DocumentPreview.js`'s `reference` field stays
+  reserved and unused, but no future milestone is expected to fill it.
 - **An indexed metadata representation for description search at
   scale.** 0.2.31's description search is a real, working, opt-in
   feature — but it is a per-query cost against however many
@@ -225,6 +225,15 @@ Deliberately deferred from 0.2.31, remaining OPTIONAL and unscheduled:
   completeness semantics (the same open question "spatial streaming/
   index integration," above, would also need to answer for spatial
   discovery).
+
+0.2.32 gives Repository/Author View real thumbnails: a
+`PreviewService` lazily renders each visible publication's actual
+document content (never its metadata) into a deterministically-framed
+image, cached in memory and never persisted, signed, or replicated —
+see docs/Architecture.md, 0.2.32. Deliberately not in 0.2.32: a
+persistent/disk preview cache, and generating previews for publications
+that haven't scrolled into view — see docs/Principles.md, "Preview
+Generation Is Bounded By What's Actually Visible."
 
 ## 0.1.50 — What shipped
 

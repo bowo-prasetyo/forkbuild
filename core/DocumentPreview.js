@@ -1,41 +1,40 @@
-// 0.2.31 — the preview a catalog card/row shows for a publication.
+// 0.2.31/0.2.32 — the preview a catalog card/row shows for a
+// publication.
 //
-// The design question this milestone had to answer wasn't "what does
-// a thumbnail look like" — it was "is the preview part of the
-// immutable publication, or merely a local UI cache?" The honest
-// answer for THIS milestone is neither yet: `DocumentPreview` is
-// architecture without a real image behind it — a deliberately small
-// first step, not the finished thing.
+// 0.2.31 left one question deliberately open: "is the preview part of
+// the immutable publication, or merely a local UI cache?" — and shipped
+// only the PLACEHOLDER half (a computed color + initial) while that
+// question stayed unanswered. 0.2.32 answers it: a preview is NEVER
+// part of the immutable publication. It is a local rendering cache,
+// generated client-side from the document's own actual content — see
+// docs/Principles.md, "Previews Are Derived Client State."
 //
-// A real, content-addressed, immutable preview (Alice publishes X
-// with a preview; the preview belongs to that immutable publication
-// exactly like its content/placement history do) would mean adding a
-// `preview` field to `publisher/Publication.js` — but Publication's
-// `getSigningDescriptor()` payload already covers every one of its
-// own fields, and a signature is verified by recomputing that
-// descriptor from the object's CURRENT shape and comparing it against
-// what was actually signed at publish time. Adding a new field to
-// that payload would make every ALREADY-published, already-signed
-// Publication recompute a descriptor that never matches its original
-// signature — silently breaking verification for the entire existing
-// corpus the moment this shipped. That is a real schema-evolution
-// question (a Publication-level schema version, or a migration path
-// analogous to DocumentSchemaMigrator's, or a preview that lives
-// OUTSIDE the signed envelope by design) that deserves its own
-// deliberate design pass, not a field added in passing by a catalog
-// UI milestone. See docs/Principles.md, "A Preview Is Either Signed
-// Or It Isn't — 0.2.31 Doesn't Pretend Otherwise."
+// This wasn't just a matter of avoiding a signing-schema hazard
+// (though that hazard is real — Publication.getSigningDescriptor()'s
+// payload covers every one of its own fields, and adding a new one
+// would make every already-signed Publication recompute a descriptor
+// that no longer matches its original signature). It's also the more
+// principled answer: a preview a PUBLISHER supplies is a claim about
+// their own content ("here's what this looks like") with no guarantee
+// it corresponds to what's actually inside — the exact "beautiful
+// castle thumbnail, one-brick document" clickbait problem a signed,
+// author-supplied preview would not prevent. A preview rendered
+// client-side, straight from the actual loaded Document, carries a
+// real guarantee instead: this image is a visualization of the content
+// you are actually about to open. It doesn't promise the content is
+// good — only that it's honest.
 //
-// So for now: PLACEHOLDER previews are COMPUTED, not stored — the
-// same "computed, not stored" posture lifecycle status (0.2.6),
-// SpatialOverlap (0.2.25), and distance (0.2.28) already established
-// for every other derived fact in this codebase. Nothing about a
-// publication's signed identity changes; `derivePlaceholderPreview`
-// is a pure function of fields a Publication already has (id, title),
-// so it is automatically stable across every replica and every
-// re-render without needing to be transmitted, cached, or agreed upon
-// at all. THUMBNAIL/`reference` are reserved for the real, later
-// mechanism this comment describes.
+// THUMBNAIL previews therefore carry an `image` — a local data: URL
+// produced by renderer/DocumentThumbnailRenderer.js from the real
+// Document, cached by application/PreviewService.js keyed on the
+// publication's own `contentHash` (same immutable content -> same
+// cached image; a genuinely different revision gets a different
+// key) — never anything transmitted, signed, or agreed upon between
+// replicas. `reference` stays reserved, unused, exactly as 0.2.31 left
+// it: if a REAL immutable, content-addressed preview mechanism is ever
+// deliberately designed later (its own schema-evolution question, not
+// resolved by this milestone), that is what it would carry — 0.2.32
+// answers "should previews work that way," not "could they, someday."
 export const PreviewType = Object.freeze({
     NONE: 'NONE',
     PLACEHOLDER: 'PLACEHOLDER',
@@ -43,12 +42,9 @@ export const PreviewType = Object.freeze({
 });
 
 export class DocumentPreview {
-    constructor({ type = PreviewType.NONE, reference = null, seed = null, label = null } = {}) {
+    constructor({ type = PreviewType.NONE, reference = null, seed = null, label = null, image = null } = {}) {
         this.type = type;
-        // Reserved for a future immutable, content-addressed preview
-        // (a ContentReference, exactly like Publication.contentReference
-        // already points at immutable document content) — always null
-        // today; nothing in this codebase ever sets it yet.
+        // Reserved, unused — see the module comment above.
         this.reference = reference;
         // PLACEHOLDER-only: a deterministic 0-359 hue and a single
         // display character, both derived from the publication itself
@@ -57,7 +53,18 @@ export class DocumentPreview {
         // exact same placeholder everywhere.
         this.seed = seed;
         this.label = label;
+        // THUMBNAIL-only: a local data: URL — see the module comment.
+        // Never persisted, never transmitted; disposable at any time
+        // (the cache holding it can be cleared and simply regenerated).
+        this.image = image;
     }
+}
+
+// A rendered thumbnail — see renderer/DocumentThumbnailRenderer.js
+// (the only place that actually produces `dataUrl`) and
+// application/PreviewService.js (the only place that calls this).
+export function thumbnailPreview(dataUrl) {
+    return new DocumentPreview({ type: PreviewType.THUMBNAIL, image: dataUrl });
 }
 
 // A small, dependency-free string hash — deliberately NOT

@@ -658,6 +658,20 @@ html, body {
     object-fit: cover;
 }
 
+/* 0.2.32 — a subtle pulse while a real thumbnail is actively being
+   generated (see ui/components/PublicationPreview.js's `pending`
+   state). Deliberately subtle: the placeholder underneath is already
+   a complete, legible card — this is a hint that something more is on
+   its way, not a loading spinner blocking anything. */
+.publication-preview--pending {
+    animation: publication-preview-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes publication-preview-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
 .publication-badge {
     color: #4caf7d;
     font-weight: 600;

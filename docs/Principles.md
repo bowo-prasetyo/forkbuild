@@ -1072,7 +1072,7 @@ collision policy (a decision) — applied here to a purely visual
 concern: which bucket a card renders under carries no meaning outside
 this one person's current view of this one page.
 
-### A Preview Is Either Signed Or It Isn't — 0.2.31 Doesn't Pretend Otherwise
+### A Preview Is Either Signed Or It Isn't (0.2.31, resolved 0.2.32)
 
 A publication's preview COULD be immutable, content-addressed, and
 part of the signed publication — exactly like its content and
@@ -1083,17 +1083,14 @@ comparing it against what was actually signed at publish time. Adding
 a `preview` field to that payload would mean every ALREADY-published,
 already-signed Publication recomputes a descriptor that no longer
 matches its original signature the moment this shipped — silently
-breaking verification for the entire existing corpus. That is a real
-schema-evolution question deserving its own deliberate design (a
-Publication-level schema version, or a preview that lives outside the
-signed envelope on purpose), not something to decide in passing inside
-a catalog-UI milestone. So `core/DocumentPreview.js`'s PLACEHOLDER
-preview is COMPUTED, not stored — the same "computed, not stored"
-posture lifecycle status (0.2.6), `SpatialOverlap` (0.2.25), and
-`distance` (0.2.28) already established — a pure function of fields a
-Publication already safely has (id, title). THUMBNAIL/`reference` stay
-reserved for the real mechanism this paragraph describes, whenever it
-gets its own milestone.
+breaking verification for the entire existing corpus. 0.2.31 left this
+as an open schema-evolution question and shipped only a computed
+PLACEHOLDER while it stayed unanswered.
+0.2.32 answers it — not with a migration, but by deciding a signed
+preview was never the right design in the first place: see "Previews
+Are Derived Client State," below, for why a LOCAL render is not merely
+the schema-safe choice but the more honest one. `reference` stays
+reserved and unused; nothing in this codebase produces one.
 
 ### Description Search Is Opt-In, Not Silent, Because It Has A Real Cost (0.2.31)
 
@@ -1136,3 +1133,93 @@ infinite scroll or virtualized lists is a reasonable future
 conversation — but it should be a deliberate choice made with that
 semantic question already answered, not a default reached for because
 it "looks modern."
+
+### Previews Are Derived Client State (0.2.32)
+
+A preview is not authoritative publication data. It is a locally
+generated visualization of immutable content — computed from the
+actual, real Document a publication points to, never from anything a
+publisher merely claims about it. It may be cached, discarded,
+regenerated, or simply unavailable, without affecting a publication's
+validity, identity, authorization, replication, or discoverability in
+any way. This is the organizing principle behind every other decision
+in this section, so it's worth stating as its own rule rather than
+leaving it implicit across `application/PreviewService.js`'s and
+`renderer/DocumentThumbnailRenderer.js`'s individual comments.
+
+Two consequences follow directly. First, the trust story a preview
+offers is real, not decorative: because the image comes from actually
+loading and rendering the document — never from a title, a
+description, or an author-supplied field — a publisher cannot make a
+one-brick document look like an elaborate castle by simply attaching a
+prettier picture. The preview shows what you would actually see if you
+opened the thing. It does not promise the content is any good, only
+that it's honest — the same distinction 0.2.19's trust layer draws
+between cryptographic validity and any claim about the CONTENT being
+correct or worthwhile. Second, since nothing here is authoritative,
+nothing here needs the ceremony authoritative data requires: no
+signing, no replication, no schema version, no migration path. A
+`PreviewService` cache can be dropped entirely — a page refresh, a
+`maxCacheEntries` eviction, a browser tab closing — and the only
+consequence is that the next visit regenerates whatever it needs, from
+the same real document, arriving at the same picture.
+
+### A Preview's Camera Framing Is Deterministic; Its Pixels Are Not (0.2.32)
+
+`core/PreviewCameraFraming.js` guarantees exactly one thing: the SAME
+document bounds always produce the SAME intended camera position,
+target, and field of view — pure geometry, no Three.js, no randomness,
+no wall-clock time, testable exactly like `core/SpatialQuery.js`'s
+distance math. That is a real, useful, and honest guarantee: two
+people opening the same publication on two different machines will see
+the SAME SHOT of the SAME CONTENT, not an arbitrary angle each time.
+
+What it deliberately does NOT guarantee is byte-identical output. GPU,
+driver, antialiasing implementation, device pixel ratio, and even the
+installed Three.js version can all still make the actual rendered
+pixels differ between two renders of the exact same framing. This is
+the correct amount of determinism for what a preview actually is (see
+"Previews Are Derived Client State," above) — it was never signed, and
+nothing anywhere depends on two renders matching byte-for-byte, only
+on them showing the same thing from the same angle. Reaching for
+cryptographic, byte-exact determinism here would be solving a problem
+this system doesn't have, at a cost (locking the rendering pipeline to
+a specific GPU/driver/library version forever) this system shouldn't
+pay.
+
+### A Preview Failure Is Not A Publication Failure (0.2.32)
+
+Generating a preview means loading and rendering a document — a real
+operation that can fail for reasons that have nothing to do with
+whether the publication itself is valid: a corrupted local snapshot, a
+renderer that couldn't construct (no WebGL available), a document too
+unusual for the current mesh factory to handle. None of these are
+reasons to hide the publication, disable its actions, or otherwise
+treat it as broken — the same failure-isolation posture 0.2.15/0.2.16/
+0.2.19's discovery/verification pipelines already apply to a single
+bad manifest or record. `PreviewService.request()` therefore never
+throws and never rejects; a failure resolves exactly like "not
+generated yet" (`null`), and the UI's response to both is identical —
+keep showing the deterministic placeholder (see 0.2.31's
+`derivePlaceholderPreview`), which is a complete, legible card on its
+own, not an error state bolted onto one.
+
+### Preview Generation Is Bounded By What's Actually Visible (0.2.32)
+
+Opening the Repository must never mean "download and render every
+publication in it" — that would turn browsing a catalog of thousands
+into loading thousands of documents whether or not anyone ever looks
+at them, exactly the scaling trap 0.2.31's opt-in description search
+was already careful to avoid for a narrower case. `PublicationPreview.js`
+requests a render only once its own card is actually visible or about
+to be (via `IntersectionObserver`, one standard browser mechanism doing
+the work of "visible cards first, near-viewport next, off-screen don't
+generate at all" in one line, rather than a bespoke priority-tier
+system) — a card that's never scrolled into view never costs anything.
+The same discipline applies going the other direction: a page or
+search-query change that removes a card from view cancels its
+in-flight or queued generation outright (see
+`application/PreviewService.js`'s cancellation, which removes an
+abandoned job from the queue entirely, not merely its promise) — work
+already in flight for a page nobody is looking at anymore is waste,
+not progress.
