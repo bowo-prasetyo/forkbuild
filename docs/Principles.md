@@ -1223,3 +1223,111 @@ in-flight or queued generation outright (see
 abandoned job from the queue entirely, not merely its promise) — work
 already in flight for a page nobody is looking at anymore is waste,
 not progress.
+
+### Identity, Avatar Profile, and Presence Are Three Different Questions (0.2.33)
+
+Avatars introduce a new kind of state, and it would have been easy to
+reach for the nearest existing box — Document, Publication, or
+WorldPlacement — and force it in. 0.2.33 instead starts by drawing the
+distinction explicitly, before writing a single line of rendering or
+movement code:
+
+    Identity        -> Who is this?
+    Avatar Profile   -> What does this user look like?    (persistent)
+    Presence         -> Where is the user right now?      (ephemeral)
+    Document         -> What world content exists?
+    World Placement  -> Where is that document located?
+
+An `AvatarProfile` (`core/AvatarProfile.js`) is not a Document — it
+never enters the World/Building/Brick model, has no schema migration
+story, and is never rendered as world content itself. It is not a
+Publication — it never goes through `PublishDocumentUseCase`, is never
+content-addressed, and carries no license. And it is not a
+WorldPlacement — nothing about "where does Alice's AVATAR look like it
+should be" is a persistent, revisioned, spatially-indexed fact the way
+"where does Alice's PUBLISHED CASTLE sit in shared space" is.
+
+An `AvatarPresence` (`core/AvatarPresence.js`) is not a WorldPlacement
+either, despite both superficially being "a position." A WorldPlacement
+answers a question with exactly one durable answer until someone
+deliberately moves it, is signed, is spatially indexed, and is
+discoverable by every replica. A Presence answers a question with a
+new answer many times a second, is never signed (see the next
+principle), is never spatially indexed, and is meaningful only to
+whoever is currently looking at it. Collapsing the two — say, by
+recording every avatar step as a WorldPlacement revision — would not
+just be wasteful, it would be a category error: it would make a
+transient fact about a PARTICIPANT masquerade as a durable fact about
+a PUBLICATION's location, corrupting exactly the "what is signed and
+durable vs. what is derived and disposable" distinction 0.2.16 through
+0.2.32 spent this project's entire second arc establishing.
+
+Concretely: if Alice walks across a published castle, the castle's
+immutable snapshot and its WorldPlacement are untouched by her
+presence — see "Presence Is Never Signed, Never Persisted, Never
+Placed," below, for the mechanism that makes that guarantee real
+rather than aspirational.
+
+### Presence Is Never Signed, Never Persisted, Never Placed (0.2.33)
+
+`core/AvatarPresence.js` deliberately has no `getSigningDescriptor()`,
+and `application/AvatarPresenceSession.js` deliberately has no
+`StorageProvider` dependency at all — not a dependency that happens to
+go unused, but one that structurally cannot exist because the
+constructor never accepts one (see `tests/AvatarPresence.test.js`,
+assertion 22, which checks this directly against the constructor's
+own arity rather than trusting a comment).
+
+Both omissions are load-bearing, not oversights:
+
+- **Never signed.** Signing exists in this codebase to let a replica
+  answer "did an authority really authorize this DURABLE fact?" —
+  meaningful for a Publication (0.2.16) or a PlacementRecord (0.2.16)
+  because both are meant to be relied on indefinitely. A presence
+  update is stale before a signature over it would even finish being
+  verified; treating it as an authorized, durable fact would be
+  answering the wrong question. The right question — "is this
+  movement claim even plausible, and is it being replayed or
+  spoofed?" — is 0.2.38's "Presence Trust, Replay & Conflict
+  Handling," to be answered with `AvatarPresence.sequence` and
+  per-session channel trust, not with an Ed25519 signature over a
+  canonical envelope.
+- **Never persisted.** Writing a presence update to durable storage
+  every time an avatar moves would turn an ephemeral, real-time
+  problem into a permanent-data problem — the exact mistake 0.2.32
+  ruled out for a preview image is ruled out here for something that
+  changes orders of magnitude more often. `AvatarPresenceSession`
+  holds exactly one current `AvatarPresence` in memory and replaces it
+  wholesale on every `update()` call; nothing about it survives a page
+  reload, and nothing needs to.
+- **Never a WorldPlacement.** See the previous principle. Presence
+  updates never touch `LocalPlacementRegistry`, never advance a
+  `PlacementRecord` revision, and never appear in spatial-index
+  results — a hundred avatars walking through a world leave zero
+  marks on it.
+
+`AvatarPresence.sequence` is a plain, per-avatar-session monotonic
+integer — deliberately NOT a `CausalStamp` (0.2.18). A `CausalStamp`
+exists to let independently-authorized REPLICAS of a durable,
+multi-writer record converge after being offline; a presence stream
+has exactly one writer (the avatar's own client) and no offline-merge
+story, so the simplest thing that lets a future receiver detect a
+stale or replayed update — a flat, always-increasing counter — is the
+right amount of machinery, not the vector-clock machinery a durable
+record needs.
+
+### An Avatar Profile Can Gain A Signature Layer Later Without A Rewrite (0.2.33)
+
+`AvatarProfile.ownerIdentity` is a plain string today — deliberately,
+the same choice `Publication.author` made through 0.2.15 and
+`PlacementRecord.owner` made alongside it. Both later gained a real
+cryptographic trust layer (`publisherIdentity`/`signature` on
+Publication, `ownerIdentity`/`signature` on PlacementRecord, both
+0.2.16) as new, additive, optional fields — not as a rewrite of what
+already existed. `AvatarProfile` has no cross-replica distribution yet
+to make signing meaningful (that arrives with 0.2.37's "Decentralized
+Presence Synchronization," when another replica first needs to ask
+"is this really what Alice's avatar looks like?"), so 0.2.33
+deliberately doesn't build a signing envelope it can't yet justify.
+When that need arrives, it can be answered exactly the way Publication
+and PlacementRecord answered it: a new field, not a migration.

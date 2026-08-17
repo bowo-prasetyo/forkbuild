@@ -86,6 +86,7 @@
 0.2.30  Trust-Aware Spatial Discovery & Diagnostics       ✓
 0.2.31  Publication Catalog & Repository UX               ✓
 0.2.32  Client-Side Publication Preview & Lazy Rendering  ✓
+0.2.33  Avatar Identity & Presence Model                  ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -234,6 +235,42 @@ see docs/Architecture.md, 0.2.32. Deliberately not in 0.2.32: a
 persistent/disk preview cache, and generating previews for publications
 that haven't scrolled into view — see docs/Principles.md, "Preview
 Generation Is Bounded By What's Actually Visible."
+
+0.2.33 opens a new arc: humans as participants inside the world, not
+just consumers of persistent content. It establishes the model
+boundary only — `core/AvatarProfile.js` (persistent, one per identity)
+and `core/AvatarPresence.js` (ephemeral, never signed, never
+persisted, never a WorldPlacement) — with no rendering, no movement,
+and no networking yet. See docs/Architecture.md, 0.2.33, and
+docs/Principles.md, "Identity, Avatar Profile, and Presence Are Three
+Different Questions." The rest of the avatar arc is tracked below as
+its own set of upcoming milestones, each scoped narrowly on purpose:
+
+- **0.2.34 — Avatar Templates & Customization.** A constrained avatar
+  creator (base template, body/skin/hair/clothing/color parameters,
+  live preview) writing into `AvatarProfile.appearance`. Customization
+  describes the avatar; it does not contain arbitrary executable or
+  remotely-loaded assets.
+- **0.2.35 — Avatar Rendering in World View.** Avatars appear in the
+  actual Three.js scene, rendered on top of a World's content —
+  never inserted into the Document/World/Building model a published
+  snapshot is made of.
+- **0.2.36 — Local Avatar Movement.** WASD/controller movement,
+  turning, head direction, walking/running/jumping, idle animation,
+  collision/navigation constraints, and the camera/avatar
+  relationship — a complete local simulation before any network
+  complexity is introduced.
+- **0.2.37 — Decentralized Presence Synchronization.** Other users'
+  avatars appear via a presence stream, deliberately NOT modeled as
+  immutable/replicated storage — an ephemeral real-time problem, not a
+  permanent-data one. This is also where `AvatarProfile` most plausibly
+  gains a signature layer (see docs/Protocol.md, 0.2.33).
+- **0.2.38 — Presence Trust, Replay & Conflict Handling.** Distinguishes
+  identity authenticity ("this claim came from Alice"), movement
+  authority ("Alice may currently appear/move here"), and world
+  physics ("Alice's claimed position is plausible") — sequence
+  numbers, replay protection, and rate limits building on
+  `AvatarPresence.sequence` (0.2.33).
 
 ## 0.1.50 — What shipped
 

@@ -3146,3 +3146,100 @@ for free, so the milestone doesn't build a separate near-viewport
 tier); and downloading/rendering every publication in a catalog merely
 because the Repository was opened — a preview is generated only for a
 publication a client has actually scrolled to.
+
+### Avatar Identity & Presence Model (0.2.33)
+
+The first of a multi-milestone avatar arc (0.2.33 through at least
+0.2.38 — see docs/Roadmap.md). This milestone builds no rendering, no
+movement input, and no networking; it establishes the MODEL boundary
+those later milestones will build on top of, exactly the way 0.2.31
+established `PublicationQuery`/`PublicationPage` before any catalog UI
+existed. See docs/Principles.md, "Identity, Avatar Profile, and
+Presence Are Three Different Questions," for the full reasoning; this
+section covers the concrete files.
+
+    Identity (existing)
+         │
+         ▼
+    application/CreateAvatarProfileUseCase.js
+         │
+         ▼
+    application/AvatarProfileUseCase.js  ---persists via--->  StorageProvider
+         │  getProfile() / updateProfile()                  (avatar-profile:<username>)
+         ▼
+    core/AvatarProfile.js
+    { avatarId, ownerIdentity, templateId, appearance, displayName }
+         │
+         │ (constructs)
+         ▼
+    application/CreateAvatarPresenceSessionUseCase.js
+         │
+         ▼
+    application/AvatarPresenceSession.js   (NO StorageProvider dependency)
+         │  current / update() / onPresenceChanged()
+         ▼
+    core/AvatarPresence.js
+    { avatarId, ownerIdentity, position, rotation, animation, sequence, timestamp }
+
+Core:
+
+- `core/AvatarProfile.js` (new) — the persistent value object: `avatarId`,
+  `ownerIdentity` (a plain string, same evolutionary choice
+  `Publication.author` and `PlacementRecord.owner` made — see
+  docs/Principles.md, "An Avatar Profile Can Gain A Signature Layer
+  Later Without A Rewrite"), `templateId` (defaults to
+  `DEFAULT_AVATAR_TEMPLATE_ID = 'humanoid-01'`; 0.2.34 defines the real
+  template registry), an opaque `appearance` bag (0.2.34 defines its
+  shape — 0.2.33 deliberately doesn't), and `displayName`. Immutable,
+  like Publication/PlacementRecord/DocumentPreview: `withTemplateId`/
+  `withAppearance`/`withDisplayName` each return a new instance with
+  `updatedAt` advanced, never mutate in place.
+- `core/AvatarPresence.js` (new) — the ephemeral value object:
+  `avatarId`, `ownerIdentity`, `position` (`core/Position.js`),
+  `rotation`, `animation` (`core/AvatarAnimationState.js`), `sequence`
+  (a flat per-avatar-session counter, not a `CausalStamp` — see
+  docs/Principles.md), and `timestamp`. `next({position, rotation,
+  animation})` is the one way it changes: a brand new snapshot with
+  `sequence` advanced by exactly 1, never a mutation of the previous
+  one. No `getSigningDescriptor()` exists on this class, and none
+  should ever be added — see docs/Principles.md, "Presence Is Never
+  Signed, Never Persisted, Never Placed."
+- `core/AvatarAnimationState.js` (new) — a small closed vocabulary
+  (`IDLE`/`WALKING`/`RUNNING`/`JUMPING`) so `AvatarPresence.animation`
+  is never an arbitrary, typo-prone free string. Which animation is
+  actually playing and how transitions blend is 0.2.36's concern; this
+  milestone only needs the shared names.
+
+Application:
+
+- `application/AvatarProfileUseCase.js` (new) — `getProfile()` loads
+  the current identity's profile, lazily creating and persisting a
+  default one on first access so the same `avatarId` survives a reload
+  (the exact "load-or-create-once" shape
+  `LocalIdentityProvider._loadOrCreateKeyPair` already established for
+  signing keys); `updateProfile({templateId, appearance, displayName})`
+  applies a partial edit and persists it; `onProfileChanged` mirrors
+  `IdentityUseCase.onUserChanged`'s subscription shape. One profile per
+  identity, keyed `avatar-profile:<username>` in the injected
+  `StorageProvider`.
+- `application/AvatarPresenceSession.js` (new) — tracks ONE user's own
+  live presence for a World View session. Constructed from an
+  `AvatarProfile` (never a `StorageProvider` — that dependency does
+  not exist on this class at all, a structural guarantee, not a
+  convention); `current` / `update(...)` / `onPresenceChanged(...)`.
+  Deliberately scoped to the LOCAL avatar only — a registry of other
+  participants' presences is 0.2.37's job, not this one's.
+- `application/CreateAvatarProfileUseCase.js` /
+  `CreateAvatarPresenceSessionUseCase.js` (new) — the usual DI wiring,
+  so `ui/` never imports `storage/` directly, matching
+  `CreateIdentityProviderUseCase`/`CreatePublisherUseCase`.
+
+Deliberately not in 0.2.33: any rendering of an avatar in the Three.js
+scene (0.2.35); any keyboard/controller input, camera-follow, or
+collision (0.2.36); any network transport for presence updates, or a
+registry of remote avatars (0.2.37); replay protection, rate limiting,
+or movement-plausibility checks beyond the bare `sequence` counter
+(0.2.38); and the avatar creator UI or an appearance schema (0.2.34).
+No UI at all ships in this milestone — it is core/application only,
+verified by `tests/AvatarProfile.test.js` and
+`tests/AvatarPresence.test.js`.
