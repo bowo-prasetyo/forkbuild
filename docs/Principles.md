@@ -1431,15 +1431,49 @@ appearance.
 `WorldNavigationSession._setupLocalAvatar()` is the one place these
 two inputs are actually combined, and it only ever COMBINES them — it
 resolves an effective appearance and reads a current presence, then
-hands both, unmodified, to the render facade. It never computes a
-position, never invents an appearance, and never writes back to
-either `AvatarProfileUseCase` or `AvatarPresenceSession`. This is what
-makes the milestone's own architectural test concrete rather than
+hands both, unmodified, to the render facade. It never invents an
+appearance, and never writes back to `AvatarProfileUseCase`. This is
+what makes the milestone's own architectural test concrete rather than
 aspirational: an avatar standing on a published castle and a castle's
 `WorldPlacement` are updated by entirely different code paths that
 happen to share a scene — moving one can never move the other, not
 because a check forbids it, but because no line of code exists that
-could.
+could. (See the next principle for the one deliberate, narrowly-scoped
+exception to "never writes back to `AvatarPresenceSession`" — choosing
+where a brand-new avatar spawns.)
+
+### A Fresh Avatar Spawns Near What You're Looking At, Not At A Fixed Point (0.2.35 follow-up)
+
+A real gap surfaced immediately after shipping the first version of
+this milestone: a brand-new `AvatarPresence` always starts at literal
+world origin `(0, 0, 0)`, but a published document's own position
+(0.2.24's deterministic grid strategy) is essentially never near the
+origin — so the avatar was rendering correctly, exactly where
+`AvatarPresence.position` said, and was invisible in practice on every
+single World View session, because the camera was always looking at
+the document you actually opened, not at the origin.
+
+`WorldNavigationSession._spawnAvatarNear(position)` fixes this with
+one narrow, explicit exception to "never writes back to
+`AvatarPresenceSession`": the FIRST time `focusDocument()` runs in a
+session (in practice, the initial `navigateToDocument()` call on World
+View mount) and the avatar is still at its untouched default
+(`AvatarPresence.sequence === 0`), it repositions the avatar a small
+fixed offset from the document being focused — close enough to be in
+frame, offset enough not to spawn inside the document's own geometry.
+Every subsequent `focusDocument()` call in that same session — a
+search result, Explore Here, Nearby Worlds — leaves the avatar exactly
+where it is; only the untouched, "nobody has looked at this avatar's
+position yet" state is eligible to be repositioned at all. Once real
+movement exists (0.2.36), a moved avatar is `sequence > 0` and this
+exception can never re-fire for it, by the same guard.
+
+This is a UX default, not a location authority: it decides "where does
+an avatar reasonably start," never "where is Alice's avatar right
+now" — that answer is still, and will only ever be, whatever
+`AvatarPresenceSession.current` says. A future decentralized presence
+peer (0.2.37) has no reason to know or care that this client happened
+to seed its own local avatar's spawn point this way.
 
 ### A Preview And An Avatar Solve The Same Shape Of Problem Differently (0.2.35)
 
