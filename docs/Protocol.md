@@ -1777,3 +1777,43 @@ another avatar's position, displayed or claimed; and collision replay,
 trust, or equivocation handling of any kind — there is nothing to
 replay, trust, or dispute, because nothing about collision ever
 crosses a `BroadcastChannel` in the first place.
+
+## Avatar-Avatar Proximity & Interaction Targets (0.2.43)
+
+Adds NOTHING to the wire. There is no "I am near you" message, no new
+field on `AvatarPresenceAdvertisement`, no new envelope type, and no
+protocol version bump. `core/AvatarProximity.js#computeNearbyAvatars()`
+is a pure, purely LOCAL computation over data already sitting in
+`application/LocalPresenceStore.js` — see docs/Principles.md,
+"Proximity Is Derived, Never Announced." Two replicas independently
+computing "who is near me" are never required, and never expected, to
+agree: Alice's own notion of who is nearby is entirely a function of
+HER OWN position and HER OWN currently-trusted remote-presence state;
+Bob's is entirely a function of his. A momentary disagreement (Alice
+sees Bob as "nearby," Bob's own list hasn't caught up to Alice's most
+recent movement yet, or vice versa) is not a consistency bug to fix —
+it is the expected, honest behavior of two independent local
+computations over independently-arriving, potentially out-of-sync
+presence data, exactly the same tolerance this protocol already
+extends to remote avatar rendering itself (0.2.37).
+
+**Nearness carries no authority.** Nothing about appearing in another
+replica's proximity computation grants, implies, or is checked before
+any capability — there is no protocol-level or application-level gate
+of the form "you may only inspect/follow/interact-with an avatarId if
+it is currently near you." `WorldNavigationSession.targetAvatar()` and
+`getAvatarInfo()` work identically for an avatarId a replica has never
+been "near" at all (e.g. targeted through some future different
+surface) as for one currently sitting at the top of the Nearby
+Avatars list. Proximity is a CONVENIENCE for discovering which
+avatarId might be worth reaching, never a permission system.
+
+**Explicitly not part of this protocol**: any notion of "in range for
+interaction" as a shared, agreed-upon fact (each replica's own
+proximity computation is authoritative only for that replica, and
+claims nothing about any other replica's); avatar-avatar collision
+(see the 0.2.42 section above — this remains a genuinely separate,
+harder problem); and any mutation capability whatsoever that proximity
+unlocks — see docs/Principles.md, "Nearness Never Authorizes
+Mutation." `AvatarPresenceAdvertisement`'s shape remains exactly what
+0.2.37/0.2.38 established, unsigned-tolerant, byte-for-byte unchanged.

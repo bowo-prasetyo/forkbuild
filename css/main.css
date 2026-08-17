@@ -2445,3 +2445,74 @@ html, body {
 .world-view-avatar-diagnostics-detail {
     color: #707070;
 }
+
+/* Nearby Avatars (0.2.43) — same list-of-cards shape
+   .world-search-list/.world-search-item already established (0.2.26),
+   applied to avatarIds instead of documentIds; the same
+   .avatar-info-status-dot (0.2.39) carries lifecycle/trust meaning
+   here too, so one visual vocabulary covers both surfaces. */
+.nearby-avatars-panel {
+    margin: 0 0 0.6rem 0;
+}
+
+.nearby-avatars-panel h4 {
+    margin: 0 0 0.35rem 0;
+    font-size: 0.8rem;
+    color: #a0a0a0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.nearby-avatars-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 12rem;
+    overflow-y: auto;
+}
+
+.nearby-avatars-item {
+    display: flex;
+    padding: 0.4rem 0.55rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.nearby-avatars-item:hover {
+    border-color: #3a3a3a;
+}
+
+.nearby-avatars-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 0.1rem;
+}
+
+.nearby-avatars-item-name {
+    color: #d0d0d0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nearby-avatars-item-name .avatar-info-status-dot {
+    margin-right: 0.35rem;
+}
+
+.nearby-avatars-item-distance {
+    color: #909090;
+    font-size: 0.75rem;
+}
+
+.nearby-avatars-item-detail {
+    color: #707070;
+    font-size: 0.72rem;
+}

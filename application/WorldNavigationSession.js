@@ -42,6 +42,7 @@ import { AvatarProfileSyncService } from './AvatarProfileSyncService.js';
 import { RemoteAvatarAppearanceRegistry } from './RemoteAvatarAppearanceRegistry.js';
 import { toAvatarProfileAdvertisement } from '../core/AvatarProfileAdvertisement.js';
 import { signAvatarProfileAdvertisement } from './AvatarProfileSigning.js';
+import { computeNearbyAvatars } from '../core/AvatarProximity.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -70,6 +71,15 @@ const PROFILE_REPUBLISH_INTERVAL_MS = 15000;
 // camera position; see exploreHere/whatsHere below.
 const DEFAULT_EXPLORE_RADIUS = 25;
 const NEARBY_RADIUS = 5;
+// 0.2.43 — the default radius getNearbyAvatars() searches within when
+// no radius is given. Deliberately its OWN constant, not a reuse of
+// NEARBY_RADIUS above: that one answers "is a document essentially at
+// this exact camera position" (0.2.29's tight tolerance for "What's
+// Here?"); this one answers "who is close enough to plausibly
+// interact with," a genuinely different, avatar-scaled question — a
+// person walking at WALK_SPEED (core/AvatarMovementSimulation.js)
+// covers this whole radius in well under ten seconds.
+const DEFAULT_NEARBY_AVATAR_RADIUS = 15;
 // 0.2.35 follow-up: a fresh AvatarPresence otherwise always spawns at
 // literal world origin regardless of which document a session opens
 // on — and a document's own placement (0.2.24's deterministic grid
@@ -611,6 +621,80 @@ export class WorldNavigationSession {
             return summarizePresenceDiagnostics([]);
         }
         return summarizePresenceDiagnostics(this._presenceSyncService.listKnownPresences(Date.now()));
+    }
+
+    // 0.2.43 — "who is near me?" as a derived, local, geometric fact —
+    // see docs/Principles.md, "Proximity Is Derived, Never Announced."
+    // Reads from PresenceSyncService.listKnownPresences() (never
+    // pull()), the EXACT SAME trusted remote-presence list that
+    // already drives rendering (RemoteAvatarRegistry.sync()) and the
+    // diagnostics summary above — proximity is a new VIEW over
+    // already-trusted state, never a second, independently-verified
+    // copy of it. Requires a local avatar (there is no "near ME"
+    // without a me); returns [] gracefully otherwise, the same
+    // graceful-absence posture every other optional avatar surface in
+    // this file already follows.
+    getNearbyAvatars(radius = DEFAULT_NEARBY_AVATAR_RADIUS) {
+        if (!this._avatarPresenceSession || !this._presenceSyncService) {
+            return [];
+        }
+        const localPosition = this._avatarPresenceSession.current.position;
+        const knownPresences = this._presenceSyncService.listKnownPresences(Date.now());
+        return computeNearbyAvatars({ localPosition, knownPresences, radius });
+    }
+
+    // 0.2.43 — the one, shared place a friendly name is resolved for
+    // ANY avatarId, local or remote — used by getNearbyAvatars()
+    // consumers (the "Nearby Avatars" panel doesn't want to show raw
+    // avatarIds) and by _inspectRemoteAvatar() below, replacing what
+    // used to be a hard "never distributed" fallback to ownerIdentity.
+    // That was true when 0.2.39 wrote it; it stopped being true the
+    // moment 0.2.41 started distributing AvatarProfile.displayName
+    // over its own channel — this is that catch-up. Degrades in the
+    // same order either way: real displayName, then ownerIdentity,
+    // then the avatarId itself, then (local avatar only) "You" — never
+    // throws, never returns an empty string.
+    getAvatarDisplayName(avatarId) {
+        if (this.isLocalAvatarId(avatarId)) {
+            const profile = this._avatarProfileUseCase ? this._avatarProfileUseCase.getProfile() : null;
+            return (profile && (profile.displayName || profile.ownerIdentity)) || 'You';
+        }
+        const knownProfile = this._avatarProfileSyncService ? this._avatarProfileSyncService.getKnownProfile(avatarId) : null;
+        if (knownProfile && knownProfile.displayName) {
+            return knownProfile.displayName;
+        }
+        const known = this._presenceSyncService ? this._presenceSyncService.listKnownPresences(Date.now()) : [];
+        const entry = known.find((k) => k.advertisement.avatarId === avatarId);
+        return (entry && entry.advertisement.ownerIdentity) || avatarId;
+    }
+
+    // 0.2.43 — targets `avatarId` as the avatar interaction target
+    // WITHOUT a screen-space pick: the "Nearby Avatars" panel's own
+    // row click needs exactly the outcome pick()'s avatar branch
+    // already produces (see docs/Principles.md, "Avatars Are Never
+    // Document Selection" — clears any brick/ground selection the same
+    // way), just triggered from a UI list entry instead of a raycast.
+    // Validates `avatarId` is actually KNOWN first (the local avatar,
+    // or a remote one whose presence hasn't expired) — unlike pick(),
+    // which can trust a raycast hit because it only ever hits a
+    // currently-rendered avatar, a UI-supplied id could be stale.
+    // Returns the new AvatarInteractionState on success, null
+    // (no-op) otherwise — the same "not currently known" contract
+    // followAvatarId() already established.
+    targetAvatar(avatarId) {
+        const known = this.isLocalAvatarId(avatarId)
+            || Boolean(this._remoteAvatarRegistry && this._remoteAvatarRegistry.has(avatarId));
+        if (!known) {
+            return null;
+        }
+        this._setAvatarInteraction(AvatarInteractionState.avatar(avatarId));
+        this._setSpatialSelection(SpatialSelectionState.empty());
+        if (this._session) {
+            this._session.clearSelection();
+            this._session.clearHover();
+        }
+        this._refreshGizmo();
+        return this._avatarInteraction;
     }
 
     // A pure client rendering preference, exactly like
@@ -1602,11 +1686,11 @@ export class WorldNavigationSession {
         return {
             avatarId,
             isLocal: false,
-            // ownerIdentity is the best synced identity signal
-            // available — a remote AvatarProfile's displayName is
-            // never distributed (see 0.2.37's own scope list), so it
-            // is never claimed here.
-            displayName: entry.advertisement.ownerIdentity || avatarId,
+            // 0.2.41 onward, a remote AvatarProfile's displayName IS
+            // distributed (see core/AvatarProfileAdvertisement.js) —
+            // getAvatarDisplayName() resolves it when known, falling
+            // back to ownerIdentity, then the avatarId itself.
+            displayName: this.getAvatarDisplayName(avatarId),
             ownerIdentity: entry.advertisement.ownerIdentity,
             templateLabel: defaultTemplate ? defaultTemplate.displayLabel : null,
             templatePlaceholder: true,
