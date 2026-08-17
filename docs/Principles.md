@@ -1542,3 +1542,103 @@ Avatars" is deliberately shipped disabled rather than omitted — its
 control exists in the UI now precisely because it's the kind of
 preference this principle already covers, but it has nothing to
 connect to until a multi-avatar registry exists.
+
+### Input Changes Presence; Presence Changes The Renderer (0.2.36)
+
+The central rule of Local Avatar Movement, stated as literally as
+possible: a keystroke is never allowed to reach a Three.js object
+directly. The only path from "W is held" to "the avatar visibly moved"
+runs through exactly one narrow waist —
+`application/AvatarMovementController.js` turns held keys into an
+`AvatarMovementState`, `core/AvatarMovementSimulation.js` turns that
+into a new position/rotation/animation, and
+`AvatarPresenceSession.update()` is the ONLY thing that ever actually
+publishes it. `renderer/AvatarVisual.js` reads presence; it has no
+method that accepts a key, an axis, or an intent, and no code path in
+this codebase lets one reach it. This is the same shape 0.2.35 already
+enforced for appearance vs. position (see "An Avatar's Location Comes
+From Presence, Never From The Avatar Itself") — 0.2.36 just adds a
+second producer of presence updates (movement, alongside 0.2.33's
+initial spawn) without ever creating a second way to reach the
+renderer. The payoff arrives in 0.2.37: `AvatarPresence` is ALREADY the
+exact stream a network layer needs to broadcast — nothing about
+movement had to be re-modeled to make that true, because presence was
+never treated as a rendering detail to begin with.
+
+### AvatarPresence Is The Result Of Simulation, Not The Simulation Itself (0.2.36)
+
+`core/AvatarMovementState.js` (an input snapshot: which axes are held,
+is Shift down, is Space down) and the small physics bookkeeping
+`AvatarMovementController` keeps between ticks (`_verticalVelocity`,
+`_grounded`) are both deliberately absent from `AvatarPresence`.
+Neither is a fact about where the avatar IS — they are working state
+the SIMULATION needs to compute where the avatar is next, and once
+that computation is done, they're worthless to anyone else. A future
+network peer (0.2.37) receiving a presence update needs to know
+Alice's position, rotation, and animation; it has no use for, and
+should never have to reason about, whether her mid-air vertical speed
+happened to be 3.2 or 4.1 units/second when the packet was sent. This
+mirrors `core/AvatarPresence.js`'s own header ("Keyboard -> Movement
+simulation -> new Position + Rotation + Animation -> AvatarPresence,"
+per the design doc): the arrow only ever points one way, and nothing
+upstream of that final arrow is ever preserved past the tick that
+produced it.
+
+### Movement Is Kinematic, Not Physically Simulated (0.2.36)
+
+`core/AvatarMovementSimulation.js` knows nothing about bricks,
+buildings, or documents — the World View's entire published content is
+invisible to it. An avatar can walk straight through a castle wall in
+0.2.36, and that is a stated, accepted limitation, not an oversight:
+deciding whether a humanoid can walk through a particular brick
+structure is a substantially larger problem (is walkability derived
+from bricks directly? simplified spatial bounds? streamed locally like
+0.2.29's discovery radius?) with its own architectural questions this
+milestone does not attempt to answer. What 0.2.36 DOES guarantee,
+deliberately, is that movement can never produce an INVALID state
+regardless of what's simulated against: `simulateAvatarMovement()`
+sanitizes NaN/Infinity on every numeric input, clamps `deltaSeconds`
+(so a backgrounded tab resuming can't produce a teleport-sized single
+tick), clamps the distance a single tick can cover, and clamps Y to a
+reasonable range. "Kinematic, not physical" is a scope boundary on
+WHAT the avatar reacts to, never an excuse to skip validating the
+numbers that come out the other side.
+
+### Animation Is Driven By Elapsed Time, Never By Frame Count (0.2.36)
+
+`renderer/AnimationLoop.js` now hands every consumer real
+`deltaSeconds` (computed from the `requestAnimationFrame` timestamp),
+and everything downstream — `AvatarMovementController.tick()`,
+`AvatarVisual.tick()`'s gait clock, `core/AvatarPoseOffsets.js`'s
+`animationTimeSeconds` parameter — is written in terms of elapsed
+seconds, never "one unit per frame." This is not a style preference:
+0.2.32 already established that visual state should not accidentally
+become platform-dependent (see its own preview-rendering principles),
+and a walk cycle is exactly the kind of state where frame-counting
+would make it: a 30fps machine and a 144fps machine must cover the
+same ground per second and swing through the same gait cycle per
+second, which is only possible if speed and animation phase are both
+functions of TIME, never of how many frames happened to render. The
+test suite checks this directly — ten small ticks and one big tick
+covering the same total elapsed time produce identical movement,
+regardless of how many ticks it took to get there.
+
+### Following The Avatar Never Redefines What The Camera Is Looking At (0.2.36)
+
+"Follow Avatar" shifts the camera by exactly the avatar's own movement
+delta (`SpatialCameraController.moveCamera(delta)` — the same method
+that already moves position and target together) and calls NOTHING
+else. It never calls `focusDocument()`, never calls
+`setActiveDocument()`, and never touches `_focusedDocumentId` or
+`_activeDocumentId`. This deliberately keeps 0.2.27's "Camera Focus,
+Active Document, and Selection Are Three Different Things" intact by
+adding a FOURTH independent concept rather than overloading one of the
+first three: the camera can now be anchored to "wherever World View
+last focused" (0.2.27's model, unchanged) OR to "the local avatar's own
+movement" (0.2.36's addition), and switching between them is a pure
+camera-behavior toggle that never touches what document an edit would
+land on. A user walking their avatar around while a completely
+different document stays the active editing target — the design doc's
+own example — is not a special case this needs to guard against; it's
+just what happens automatically when two independent things are
+actually independent.

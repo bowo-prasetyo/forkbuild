@@ -197,11 +197,13 @@ export class AvatarRenderer {
         return { root, poseGroup };
     }
 
-    // Applies a STATIC pose to an already-built poseGroup — never
-    // rebuilds geometry, never touches root's own position/rotation
-    // (that stays exclusively AvatarPresence's to decide).
-    applyPose(poseGroup, animation) {
-        const offsets = getAvatarPoseOffsets(animation);
+    // Applies a pose to an already-built poseGroup — never rebuilds
+    // geometry, never touches root's own position/rotation (that
+    // stays exclusively AvatarPresence's to decide). `animationTimeSeconds`
+    // (0.2.36) lets WALKING/RUNNING read as an actual gait cycle
+    // rather than one frozen frame — see core/AvatarPoseOffsets.js.
+    applyPose(poseGroup, animation, animationTimeSeconds = 0) {
+        const offsets = getAvatarPoseOffsets(animation, animationTimeSeconds);
         const parts = poseGroup.userData.avatarParts || {};
         if (parts.legs) {
             parts.legs.rotation.x = THREE.MathUtils.degToRad(offsets.legSplayDegrees);

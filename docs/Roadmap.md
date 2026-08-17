@@ -89,6 +89,7 @@
 0.2.33  Avatar Identity & Presence Model                  ✓
 0.2.34  Avatar Templates & Customization                  ✓
 0.2.35  Avatar Rendering & World Presence                  ✓
+0.2.36  Local Avatar Movement & Animation                   ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -284,11 +285,27 @@ asset downloading, and user-uploaded 3D models — plus avatar
 selection/inspection (a distinct presence-selection concept, not
 document selection, deliberately not built alongside rendering).
 
-- **0.2.36 — Local Avatar Movement.** WASD/controller movement,
-  turning, head direction, walking/running/jumping, idle animation,
-  collision/navigation constraints, and the camera/avatar
-  relationship — a complete local simulation before any network
-  complexity is introduced.
+0.2.36 makes the avatar an embodied local participant: W/S move it
+along its own facing, A/D turn that facing, Shift runs, Space jumps —
+entirely local, no network, no collision against world geometry (an
+avatar can walk through a published building; that's an accepted,
+explicit limitation, not an oversight). The pipeline stays exactly the
+one the design doc asked for — `keyboard -> AvatarMovementController ->
+core/AvatarMovementSimulation.js (pure kinematics) -> AvatarPresence
+(sequence advances by exactly one per accepted update) ->
+AvatarVisual/renderer` — never the reverse: no code path anywhere lets
+a keystroke or a Three.js object touch position directly. WALKING/
+RUNNING gained a real, continuous gait cycle driven by elapsed time
+(never a frame count), and a "Follow Avatar" camera mode shifts the
+camera by exactly the avatar's own movement delta without ever
+redefining what document is focused or active. See
+docs/Architecture.md, 0.2.36, and docs/Principles.md, "Input Changes
+Presence; Presence Changes The Renderer" and "Movement Is Kinematic,
+Not Physically Simulated." Deliberately deferred, matching the design
+doc's own list: collision/navigation constraints against world
+geometry, inverse kinematics/skeletal animation, multiplayer, remote
+avatars, presence broadcasting, signed movement, and replay protection.
+
 - **0.2.37 — Decentralized Presence Synchronization.** Other users'
   avatars appear via a presence stream, deliberately NOT modeled as
   immutable/replicated storage — an ephemeral real-time problem, not a

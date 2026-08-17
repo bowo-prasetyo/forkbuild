@@ -3497,3 +3497,175 @@ presence-selection concept, not document selection — see the design
 doc), and any change to how a document's own `WorldPlacement` is
 resolved or rendered — `WorldRenderer`/`addWorld`/`removeWorld` are
 completely untouched by this milestone.
+
+### Local Avatar Movement & Animation (0.2.36)
+
+Turns the avatar from a rendered object into an embodied local
+participant — WASD movement, Shift to run, Space to jump, a real
+elapsed-time gait cycle, and an optional "Follow Avatar" camera mode.
+Entirely local: no network, no multiplayer, no remote avatars. The
+central rule, restated from the design doc and enforced by
+construction, not convention: **input changes Presence; Presence
+changes the renderer — input never directly touches a Three.js
+object.**
+
+    Keyboard (WASD/Shift/Space)
+              │  session.avatarKeyDown/avatarKeyUp
+              │  (only while Avatar Control Mode is on)
+              ▼
+    application/AvatarMovementController.js
+              │  tick(deltaSeconds), once per render frame
+              ▼
+    core/AvatarMovementSimulation.js (PURE kinematics)
+              │  { position, rotationY, animation, ... }
+              ▼
+    AvatarPresenceSession.update(...)
+              │  sequence advances by exactly 1 per accepted update
+              ├──────────────────────────────┐
+              ▼                               ▼
+    renderer/AvatarVisual.js          WorldNavigationSession
+    (setPose/setAnimation)            ._followAvatarIfEnabled()
+              │                               │
+              ▼                               ▼
+        Three.js scene                 SpatialCameraController
+                                        .moveCamera(delta)
+
+Core:
+
+- `core/AvatarMovementState.js` (new) — a pure snapshot of INPUT
+  INTENT (`forwardAxis`/`turnAxis`/`running`/`jumpRequested`, each
+  axis clamped to -1/0/1), built fresh every tick from whatever keys
+  are currently held. Deliberately NOT keyboard state itself and never
+  written to `AvatarPresence` — see docs/Principles.md, "AvatarPresence
+  Is The Result Of Simulation, Not The Simulation Itself."
+- `core/AvatarMovementSimulation.js` (new) — `simulateAvatarMovement()`,
+  a pure, Three.js-free function: given a position/rotationY/
+  verticalVelocity/grounded snapshot and an `AvatarMovementState`, plus
+  `deltaSeconds`, returns the next tick's snapshot and the animation
+  state that follows from it. Same "pure geometry, independently
+  testable" split `core/PreviewCameraFraming.js`/`AvatarPoseOffsets.js`
+  already established. Sanitizes NaN/Infinity, clamps `deltaSeconds`
+  and per-tick step distance, and clamps Y to a reasonable range — see
+  docs/Principles.md, "Movement Is Kinematic, Not Physically
+  Simulated." No brick, building, or document is ever consulted —
+  the avatar can walk through a published structure; that limitation
+  is explicit, not an oversight.
+- `core/AvatarPoseOffsets.js` — `getAvatarPoseOffsets(animation,
+  animationTimeSeconds = 0)` gains its second parameter: WALKING/
+  RUNNING now layer a real sine-wave gait cycle (leg swing + a bounce)
+  on top of 0.2.35's static base pose, using elapsed time (never a
+  frame count) — see docs/Principles.md, "Animation Is Driven By
+  Elapsed Time, Never By Frame Count." `animationTimeSeconds = 0`
+  reproduces 0.2.35's original static values exactly, so nothing about
+  the 0.2.35 pose table changed, only what happens as time advances.
+  IDLE/JUMPING are untouched by time on purpose — jumping's real
+  vertical motion now comes from `AvatarMovementSimulation`'s own Y,
+  not a second, competing local oscillation.
+
+Renderer:
+
+- `renderer/AvatarRenderer.js` — `applyPose(poseGroup, animation,
+  animationTimeSeconds = 0)` passes the new parameter straight through
+  to `getAvatarPoseOffsets`.
+- `renderer/AvatarVisual.js` — gains `tick(deltaSeconds)`: advances a
+  LOCAL gait-clock (`_animationTime`, reset to 0 on every animation
+  STATE change so a fresh cycle never pops mid-stride) and re-applies
+  the pose every render frame, independent of how often a new
+  `AvatarPresence` actually arrives. This clock is a pure rendering-
+  smoothness concern — never written back anywhere, never part of
+  `AvatarPresence` (a future network peer has no reason to know or
+  care about the sender's local animation clock).
+- `renderer/AnimationLoop.js` — `onFrame` now receives real
+  `deltaSeconds` (computed from the `requestAnimationFrame` timestamp,
+  clamped to 0.25s to absorb a backgrounded-tab resume) instead of
+  nothing. This is the ONE clock every time-based consumer in the
+  renderer ultimately reads from.
+- `renderer/Renderer.js` — gains a generic `addFrameListener(callback)`
+  registry (deliberately NOT avatar-specific — this class "owns the
+  visualization pipeline only," per its own header) that `_renderFrame`
+  invokes with `deltaSeconds` every frame, before rendering.
+
+Application:
+
+- `application/AvatarMovementController.js` (new) — the one place raw
+  input becomes a presence update. `keyDown`/`keyUp` recognize only
+  W/A/S/D/Shift/Space (case-insensitive) and deliberately do NOT alias
+  the arrow keys, which already mean "nudge the selection" (see
+  `application/EditorActionRegistry.js`) — Avatar Control Mode must
+  never silently steal that binding. `tick(deltaSeconds)` runs
+  `simulateAvatarMovement()` and publishes a new `AvatarPresence` via
+  `avatarPresenceSession.update()` ONLY when the result actually
+  differs from the current presence (position/rotation/animation) — an
+  avatar standing still, already grounded, with nothing held is an
+  EXACT no-op, so `sequence` only ever advances on a change a viewer
+  would actually notice, never once per render frame regardless of
+  motion. `_verticalVelocity`/`_grounded` are this controller's own
+  small bit of physics bookkeeping between ticks, deliberately never
+  part of `AvatarPresence` itself. `releaseAll()` clears every held key
+  — called whenever Avatar Control Mode is turned off, so a keyup the
+  browser never delivered (alt-tab mid-stride) can never leave the
+  avatar walking forever.
+- `application/RenderWorldViewUseCase.js` — registers a frame listener
+  that ticks the local `AvatarVisual`'s gait clock every frame
+  (harmless no-op before any avatar exists), and exposes
+  `onAnimationFrame(callback)` as a thin pass-through to
+  `Renderer.addFrameListener` so `WorldNavigationSession` can tick its
+  own movement controller through the same loop.
+- `application/WorldNavigationSession.js` — `_setupLocalAvatar()`
+  additionally constructs an `AvatarMovementController` and, when the
+  render facade supports `onAnimationFrame`, subscribes to it to drive
+  `controller.tick(deltaSeconds)` every frame. New public surface:
+  `isAvatarControlModeActive()`/`setAvatarControlMode(active)` (turning
+  it off calls `releaseAll()` immediately), `avatarKeyDown(key)`
+  (forwards only while control mode is active, returns whether the key
+  was consumed) / `avatarKeyUp(key)` (always forwarded, regardless of
+  mode, so a key held before the mode was toggled off still cleanly
+  releases), and `isFollowingAvatar()`/`setFollowAvatar(enabled)`.
+  `_followAvatarIfEnabled(presence)`, invoked from the existing
+  `avatarPresenceSession.onPresenceChanged` subscription, shifts the
+  camera by EXACTLY the avatar's own movement delta via
+  `SpatialCameraController.moveCamera(delta)` — the same method that
+  already moves position and target together, preserving whatever
+  orbit offset the user last set — and calls nothing else: never
+  `focusDocument()`, never `setActiveDocument()`. See
+  docs/Principles.md, "Following The Avatar Never Redefines What The
+  Camera Is Looking At." The avatar's own last-known position is
+  tracked unconditionally (even while follow is off) so re-enabling it
+  never yanks the camera through movement that happened while
+  unobserved. `dispose()` unsubscribes the frame listener and clears
+  the movement controller alongside the existing avatar subscriptions.
+
+UI:
+
+- `ui/views/WorldView.js` — two new checkboxes in the Avatar panel,
+  "Control My Avatar (WASD, Shift, Space)" and "Follow Avatar," both
+  off by default and disabled when `hasLocalAvatar` is false, mirroring
+  `showMyAvatar`'s existing pattern. A new `keyup` listener and a
+  `window blur` listener (which forces control mode off — an
+  alt-tab/DevTools-breakpoint can swallow a keyup entirely) sit
+  alongside the existing `keydown` listener. `onKeyDown`'s existing,
+  ordered guard chain (text input > palette > gizmo gesture > ...)
+  gains ONE new tier, immediately after the gizmo-gesture guard: avatar
+  movement keys are consumed only while Control Mode is on, and only
+  when the event target isn't a text input — everything else falls
+  through exactly as if the tier didn't exist. Checking any of the
+  three Avatar-panel checkboxes calls a shared `blurCheckbox(event)`
+  helper afterward — a `<input type="checkbox">` is, structurally, still
+  an `<input>`, and `InputRouter.isTextInputTarget()` correctly treats
+  every `<input>` as "owns its own keys"; without giving focus back
+  immediately, the very next WASD press after checking a box would be
+  silently swallowed by that same, correct rule instead of reaching
+  the avatar.
+
+Deliberately not in 0.2.36: collision or navigation constraints against
+world geometry (the avatar can walk through a building), inverse
+kinematics or skeletal animation, multiplayer, remote avatars, presence
+broadcasting, signed movement, and replay protection — see
+docs/Roadmap.md for 0.2.37/0.2.38. Also not in 0.2.36: any change to
+`AvatarPresence`'s own shape (still exactly `position`/`rotation`/
+`animation`/`sequence`/`timestamp`) — movement produces the same kind
+of presence update 0.2.35's spawn-repositioning already did, just far
+more often, and any change to how a document's own `WorldPlacement` is
+resolved, rendered, or persisted — verified directly (byte-identical
+placement JSON before/after two seconds of walking) in the flagship
+test.

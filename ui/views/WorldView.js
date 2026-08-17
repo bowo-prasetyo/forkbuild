@@ -159,6 +159,14 @@ export default {
         // exist at all if nobody is logged in — see hasLocalAvatar).
         const showMyAvatar = ref(true);
         const hasLocalAvatar = ref(false);
+        // 0.2.36 — Local Avatar Movement & Animation. Both are pure
+        // client controls, mirrored from session.isAvatarControlModeActive()/
+        // isFollowingAvatar() the same way showMyAvatar mirrors
+        // isLocalAvatarVisible() above: this view never decides
+        // movement/camera-follow behavior itself, it only reflects and
+        // toggles what the session already owns.
+        const avatarControlMode = ref(false);
+        const followAvatar = ref(false);
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
         const allPublications = ref([]);
 
@@ -848,6 +856,13 @@ export default {
                 }
                 return;
             }
+            // 3.5. Avatar Control Mode (0.2.36) — only ever consumes
+            // W/A/S/D/Shift/Space, and only while explicitly on (see
+            // onAvatarKeyDown above); anything else falls through to
+            // the tiers below exactly as if control mode were off.
+            if (onAvatarKeyDown(event)) {
+                return;
+            }
             // 4. Placement mode keeps its own Escape (exit placement).
             if (activeTool.value === 'place' && event.key === 'Escape') {
                 setTool('select');
@@ -868,9 +883,88 @@ export default {
         // Lifecycle
         // -----------------------------------------------------------------
 
-        function toggleShowMyAvatar() {
+        // The checkbox itself is an <input> — InputRouter.
+        // isTextInputTarget() (correctly) treats every <input> as
+        // "owns its own keys," so a focused text FIELD can never lose
+        // a keystroke to a shortcut. A checkbox has no text to type,
+        // so it has nothing to lose by giving focus back immediately —
+        // shared by every checkbox in the Avatar panel so checking ANY
+        // of them (in any order) never leaves stray focus that would
+        // silently swallow the very next WASD press.
+        function blurCheckbox(event) {
+            if (event && event.target && typeof event.target.blur === 'function') {
+                event.target.blur();
+            }
+        }
+
+        function toggleShowMyAvatar(event) {
             showMyAvatar.value = !showMyAvatar.value;
             session.setLocalAvatarVisible(showMyAvatar.value);
+            blurCheckbox(event);
+        }
+
+        // 0.2.36 — an explicit toggle, never implied by clicking into
+        // the viewport or by focus: see the design doc's own concern
+        // ("typing/searching accidentally makes the avatar walk
+        // away") and docs/Principles.md. Turning it off releases any
+        // held movement keys immediately (session.setAvatarControlMode
+        // does this) — exiting always returns keyboard control to the
+        // rest of World View at once.
+        function toggleAvatarControlMode(event) {
+            avatarControlMode.value = !avatarControlMode.value;
+            session.setAvatarControlMode(avatarControlMode.value);
+            blurCheckbox(event);
+        }
+
+        function toggleFollowAvatar(event) {
+            followAvatar.value = !followAvatar.value;
+            session.setFollowAvatar(followAvatar.value);
+            blurCheckbox(event);
+        }
+
+        // -----------------------------------------------------------------
+        // Avatar movement keyboard interaction (0.2.36)
+        // -----------------------------------------------------------------
+        //
+        // Deliberately separate from onKeyDown's registry-driven
+        // shortcut dispatch below: W/A/S/D/Shift/Space are never
+        // EditorActionRegistry actions, they only ever mean anything
+        // while Avatar Control Mode is explicitly on. Both handlers
+        // still respect the same "text inputs own their keys" rule
+        // onKeyDown already follows, so search/metadata fields never
+        // fight the avatar for keystrokes.
+        function onAvatarKeyDown(event) {
+            if (!avatarControlMode.value || InputRouter.isTextInputTarget(event.target)) {
+                return false;
+            }
+            if (session.avatarKeyDown(event.key)) {
+                event.preventDefault();
+                return true;
+            }
+            return false;
+        }
+
+        function onAvatarKeyUp(event) {
+            // Always forwarded (not gated on avatarControlMode/text-input)
+            // so a key that WAS captured while control mode was on
+            // still cleanly releases even if the mode was toggled off,
+            // or focus moved to a text input, before the keyup arrived
+            // — see WorldNavigationSession.avatarKeyUp's own comment.
+            if (session.avatarKeyUp(event.key)) {
+                event.preventDefault();
+            }
+        }
+
+        // A window-blur (alt-tab, DevTools breakpoint, another app
+        // stealing focus) can swallow a keyup entirely — releasing
+        // every held key here is what stops that from leaving the
+        // avatar "stuck" walking forever, exactly the scenario the
+        // design doc calls out.
+        function onWindowBlur() {
+            if (avatarControlMode.value) {
+                session.setAvatarControlMode(false);
+                avatarControlMode.value = false;
+            }
         }
 
         onMounted(() => {
@@ -884,6 +978,8 @@ export default {
             viewport.value.addEventListener('pointermove', onPointerMove);
             viewport.value.addEventListener('pointerup', onPointerUp);
             window.addEventListener('keydown', onKeyDown);
+            window.addEventListener('keyup', onAvatarKeyUp);
+            window.addEventListener('blur', onWindowBlur);
 
             spatialInterval = setInterval(() => {
                 session.updateSpatialView();
@@ -897,6 +993,8 @@ export default {
                 clearTimeout(feedbackTimer);
             }
             window.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('keyup', onAvatarKeyUp);
+            window.removeEventListener('blur', onWindowBlur);
             viewport.value.removeEventListener('pointerup', onPointerUp);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
@@ -910,6 +1008,10 @@ export default {
             showMyAvatar,
             hasLocalAvatar,
             toggleShowMyAvatar,
+            avatarControlMode,
+            followAvatar,
+            toggleAvatarControlMode,
+            toggleFollowAvatar,
             loadedWorlds,
             nearbyWorlds,
             failedWorlds,
@@ -1034,7 +1136,7 @@ export default {
                     <button class="action-btn" @click="whatsHere">What's Here?</button>
                 </div>
                 <p class="world-view-hint">
-                    Drag to orbit • Scroll to zoom • Home to reset • Ctrl/Cmd+K command palette • Click to inspect / place
+                    Drag to orbit • Scroll to zoom • Home to reset • Ctrl/Cmd+K command palette • Click to inspect / place<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
                 </p>
 
                 <!-- 0.2.35: a pure client rendering preference — see
@@ -1042,7 +1144,13 @@ export default {
                      reserved for 0.2.37 (no other-avatar registry
                      exists yet), so it stays checked and disabled
                      rather than offering a control with nothing to
-                     control. -->
+                     control.
+
+                     0.2.36 adds Control My Avatar / Follow Avatar —
+                     both explicit, off-by-default toggles (never
+                     implied by focus or hovering the viewport), so
+                     nothing here can accidentally hijack keyboard
+                     input the rest of World View still needs. -->
                 <div class="world-view-section world-view-section--avatar">
                     <h4>Avatar</h4>
                     <label class="world-view-avatar-toggle">
@@ -1050,13 +1158,31 @@ export default {
                             type="checkbox"
                             :checked="showMyAvatar"
                             :disabled="!hasLocalAvatar"
-                            @change="toggleShowMyAvatar"
+                            @change="toggleShowMyAvatar($event)"
                         />
                         Show My Avatar
                     </label>
                     <label class="world-view-avatar-toggle world-view-avatar-toggle--disabled">
                         <input type="checkbox" checked disabled />
                         Show Other Avatars <span class="form-hint form-hint--neutral">(coming soon)</span>
+                    </label>
+                    <label class="world-view-avatar-toggle">
+                        <input
+                            type="checkbox"
+                            :checked="avatarControlMode"
+                            :disabled="!hasLocalAvatar"
+                            @change="toggleAvatarControlMode($event)"
+                        />
+                        Control My Avatar (WASD, Shift, Space)
+                    </label>
+                    <label class="world-view-avatar-toggle">
+                        <input
+                            type="checkbox"
+                            :checked="followAvatar"
+                            :disabled="!hasLocalAvatar"
+                            @change="toggleFollowAvatar($event)"
+                        />
+                        Follow Avatar
                     </label>
                     <p v-if="!hasLocalAvatar" class="form-hint form-hint--neutral">
                         Log in and create an avatar (My Avatar) to appear here.

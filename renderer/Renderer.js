@@ -31,7 +31,15 @@ export class Renderer {
         this._lights = new Lights(this._sceneManager);
         this._grid = new GridHelper(this._sceneManager);
 
-        this._animationLoop = new AnimationLoop(() => this._renderFrame());
+        // 0.2.36 — a generic per-frame hook, deliberately NOT
+        // avatar-specific (Renderer "owns the visualization pipeline
+        // only" per this file's own header): any collaborator that
+        // needs real elapsed time each frame (today: AvatarVisual's
+        // gait clock, AvatarMovementController's simulation tick)
+        // registers here instead of Renderer knowing anything about
+        // avatars, movement, or presence.
+        this._frameListeners = new Set();
+        this._animationLoop = new AnimationLoop((deltaSeconds) => this._renderFrame(deltaSeconds));
 
         this._onResize = this._onResize.bind(this);
         window.addEventListener('resize', this._onResize);
@@ -65,6 +73,15 @@ export class Renderer {
         this._cameraController.resetView();
     }
 
+    // Registers `callback(deltaSeconds)` to run once per render frame,
+    // real elapsed seconds since the previous frame. Returns an
+    // unsubscribe function, the same shape every EventBus subscription
+    // in this codebase already returns.
+    addFrameListener(callback) {
+        this._frameListeners.add(callback);
+        return () => this._frameListeners.delete(callback);
+    }
+
     start() {
         this._animationLoop.start();
     }
@@ -75,14 +92,18 @@ export class Renderer {
 
     dispose() {
         this.stop();
+        this._frameListeners.clear();
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
         this._webglRenderer.dispose();
     }
 
-    _renderFrame() {
+    _renderFrame(deltaSeconds) {
         this._cameraController.update();
+        for (const listener of this._frameListeners) {
+            listener(deltaSeconds);
+        }
         this._webglRenderer.render(this._sceneManager.scene, this._cameraController.camera);
     }
 

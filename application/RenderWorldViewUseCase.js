@@ -61,6 +61,16 @@ export class RenderWorldViewUseCase {
             return localAvatarVisual;
         }
 
+        // 0.2.36 — keeps WALKING/RUNNING swinging every render frame,
+        // independent of how often a new AvatarPresence actually
+        // arrives (see renderer/AvatarVisual.js's own header). A cheap
+        // no-op whenever no avatar has been built yet.
+        renderer.addFrameListener((deltaSeconds) => {
+            if (localAvatarVisual) {
+                localAvatarVisual.tick(deltaSeconds);
+            }
+        });
+
         return {
             pick: (screenX, screenY) => pickingService.pickRich(screenX, screenY),
             pickGround: (screenX, screenY) => {
@@ -147,6 +157,15 @@ export class RenderWorldViewUseCase {
                 localAvatarVisual.dispose();
                 localAvatarVisual = null;
             },
+            // 0.2.36 — lets application/AvatarMovementController.js
+            // (via WorldNavigationSession) tick its own kinematics
+            // simulation once per render frame, real elapsed seconds,
+            // through the SAME frame loop the avatar's own gait clock
+            // above already uses. Just a pass-through to Renderer's
+            // generic listener registry — see its own header for why
+            // this stays deliberately generic rather than
+            // avatar-specific.
+            onAnimationFrame: (callback) => renderer.addFrameListener(callback),
             dispose() {
                 transformGizmoController.dispose();
                 transformGizmoRenderer.dispose();
