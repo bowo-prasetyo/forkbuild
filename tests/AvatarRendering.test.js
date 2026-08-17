@@ -133,9 +133,41 @@ async function runTests() {
 
     {
         const renderer = new AvatarRenderer();
-        const { poseGroup } = renderer.build(humanoid01, { ...humanoid01.defaultAppearance, accessories: ['glasses-01', 'hat-01'] });
+        const { poseGroup } = renderer.build(humanoid01, {
+            ...humanoid01.defaultAppearance,
+            accessories: ['glasses-01', 'hat-01', 'scarf-01', 'backpack-01']
+        });
         const parts = poseGroup.userData.avatarParts;
-        assert(parts['accessory:glasses-01'] && parts['accessory:hat-01'], '7. one marker per selected accessory, keyed by its own id');
+        assert(parts['accessory:glasses-01'] && parts['accessory:hat-01'] && parts['accessory:scarf-01'] && parts['accessory:backpack-01'],
+            '7. one mesh per selected accessory, keyed by its own id');
+
+        // 0.2.35 follow-up: each accessory type gets its OWN geometry
+        // and position — glasses on the face, a hat on the head, a
+        // scarf at the neck, a backpack on the back — not the same
+        // generic marker repeated for every selection.
+        const glasses = parts['accessory:glasses-01'];
+        const hat = parts['accessory:hat-01'];
+        const scarf = parts['accessory:scarf-01'];
+        const backpack = parts['accessory:backpack-01'];
+        const geometryTypes = new Set([glasses, hat, scarf, backpack].map((mesh) => mesh.geometry.type));
+        assert(geometryTypes.size === 4, '7a. each accessory type renders as its own distinct geometry, not a shared generic marker');
+        assert(glasses.position.z > 0, '7b. glasses sit at the front of the face');
+        assert(hat.position.y > glasses.position.y, '7c. a hat sits above the head, higher than the glasses');
+        assert(Math.abs(scarf.position.y - glasses.position.y) < 0.4 && scarf.position.y < hat.position.y,
+            '7d. a scarf sits around the neck, between the head and the torso');
+        assert(backpack.position.z < 0, '7e. a backpack sits against the back, opposite the glasses');
+    }
+
+    {
+        // A template could in principle declare an accessory option id
+        // this renderer has no bespoke shape for yet (e.g. a future
+        // core/ addition landing before its geometry does) — that must
+        // degrade to SOME visible marker, never throw or render
+        // nothing.
+        const renderer = new AvatarRenderer();
+        const { poseGroup } = renderer.build(humanoid01, { ...humanoid01.defaultAppearance, accessories: ['mystery-99'] });
+        const unknown = poseGroup.userData.avatarParts['accessory:mystery-99'];
+        assert(unknown && unknown.geometry, '7f. an unrecognized accessory id still renders a fallback marker instead of throwing');
     }
 
     {
