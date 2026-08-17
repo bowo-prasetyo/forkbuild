@@ -3404,11 +3404,18 @@ Renderer:
   and applies `core/AvatarPoseOffsets.js`'s numeric offsets to an
   existing pose group (`applyPose()`) without rebuilding geometry.
   Component -> geometry mapping (head=sphere, hair=hemisphere,
-  shirt=box "torso", pants=box "legs", one small box marker per
-  selected accessory) is a deliberate, renderer-owned decision — see
-  docs/Principles.md, "A Template Is A Closed Vocabulary, Not An Asset
-  Loader" (0.2.34) for why this mapping could never live in template
-  data itself. `build()` returns `{ root, poseGroup }`: `root` is what
+  shirt=box "torso", pants=box "legs") is a deliberate, renderer-owned
+  decision — see docs/Principles.md, "A Template Is A Closed
+  Vocabulary, Not An Asset Loader" (0.2.34) for why this mapping could
+  never live in template data itself. Accessories go one level
+  further: each known option id (`glasses-01`, `hat-01`, `backpack-01`,
+  `scarf-01`) has its OWN builder function and its own position (face,
+  head, back, neck respectively) via an `ACCESSORY_BUILDERS` lookup,
+  with a single explicit fallback marker for any id not yet given a
+  bespoke shape — see docs/Principles.md, "An Accessory Option Id Is
+  Still Just An Id" (0.2.35 follow-up) for why the first pass's shared
+  generic marker was a bug, not a simplification. `build()` returns
+  `{ root, poseGroup }`: `root` is what
   a caller adds to the scene and is the ONLY thing `AvatarVisual` ever
   moves; `poseGroup`, nested inside `root`, is the ONLY thing pose
   transforms ever touch — see docs/Principles.md for why this split is

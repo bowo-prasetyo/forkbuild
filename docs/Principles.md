@@ -1475,6 +1475,35 @@ now" — that answer is still, and will only ever be, whatever
 peer (0.2.37) has no reason to know or care that this client happened
 to seed its own local avatar's spawn point this way.
 
+### An Accessory Option Id Is Still Just An Id — Its Shape Is A Renderer Decision (0.2.35 follow-up)
+
+A second gap surfaced right after the spawn-location fix: every
+accessory a player selected — glasses, a hat, a backpack, a scarf —
+rendered as the exact same small yellow box, just stacked at a
+different height. The appearance data was correct end to end
+(`AvatarProfile.appearance.accessories` held the right option ids,
+`AvatarTemplate` validated them against the right closed vocabulary),
+but nothing downstream of that data ever asked "and what does
+`'scarf-01'` actually look like" — the renderer treated all four ids
+as interchangeable.
+
+This is the same lesson "A Template Is A Closed Vocabulary, Not An
+Asset Loader" already states for skin/hair/shirt/pants — component
+id → geometry is deliberately a renderer decision, never template
+data — just applied one level deeper than the first pass at
+`renderer/AvatarRenderer.js` actually applied it: having a component
+called "accessories" was treated as enough, without giving each
+accessory OPTION its own mapping the way skin tones and hair colors
+already got one. `AvatarRenderer` now keeps one small builder function
+per known accessory id (`glasses-01` sits at the face, `hat-01` sits
+atop the head, `scarf-01` wraps the neck, `backpack-01` sits against
+the back) plus a single explicit fallback — the original generic
+marker — for any accessory id a template might declare that this
+renderer doesn't have a bespoke shape for yet. Nothing about
+`AvatarTemplate` or `AvatarProfile` changed; this was purely a
+"the dumb executor wasn't dumb-executing every id, just the component
+name" bug in the one file whose whole job is turning ids into meshes.
+
 ### A Preview And An Avatar Solve The Same Shape Of Problem Differently (0.2.35)
 
 0.2.32's `PreviewService` and 0.2.35's avatar renderer both convert

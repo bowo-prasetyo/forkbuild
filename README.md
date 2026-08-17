@@ -232,8 +232,10 @@ or multiplayer yet. The renderer combines two independent inputs it
 never modifies: 0.2.34's resolved appearance and 0.2.33's
 `AvatarPresence` (position/rotation/animation) — `renderer/
 AvatarRenderer.js` converts template+appearance into a real
-`THREE.Group` (head/hair/torso/legs/accessories, one small box marker
-per selected accessory), and `renderer/AvatarVisual.js` keeps that
+`THREE.Group` (head/hair/torso/legs, plus one distinctly-shaped,
+distinctly-placed mesh per selected accessory — glasses on the face, a
+hat on the head, a scarf at the neck, a backpack on the back), and
+`renderer/AvatarVisual.js` keeps that
 object graph alive across updates: appearance changes rebuild only
 when content actually changed, while position/rotation/animation
 changes are cheap transform writes that never touch geometry. A "Show
@@ -248,9 +250,12 @@ World View first opens on, rather than always at literal world origin
 strategy) is essentially never near the origin, so the avatar was
 rendering correctly but effectively always out of frame until this
 shipped; only an avatar that has never moved is ever repositioned this
-way. See docs/Principles.md, "An Avatar's Location Comes From
-Presence, Never From The Avatar Itself" and "A Fresh Avatar Spawns
-Near What You're Looking At, Not At A Fixed Point."
+way. A second follow-up fix gives each accessory option its own shape
+and position instead of the generic marker every accessory originally
+shared. See docs/Principles.md, "An Avatar's Location Comes From
+Presence, Never From The Avatar Itself," "A Fresh Avatar Spawns
+Near What You're Looking At, Not At A Fixed Point," and "An Accessory
+Option Id Is Still Just An Id."
 
 ## Features
 

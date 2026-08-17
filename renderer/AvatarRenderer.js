@@ -38,13 +38,92 @@ const DEFAULT_SKIN_COLOR = 0xe0ac69;
 const DEFAULT_HAIR_COLOR = 0x3b2416;
 const DEFAULT_SHIRT_COLOR = 0x3366cc;
 const DEFAULT_PANTS_COLOR = 0x222222;
-const ACCESSORY_MARKER_COLOR = 0xffd54f;
+const UNKNOWN_ACCESSORY_MARKER_COLOR = 0xffd54f;
 
 function hexColor(value, fallback) {
     return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)
         ? new THREE.Color(value)
         : new THREE.Color(fallback);
 }
+
+// Component -> geometry is this renderer's job (see the file header),
+// and that applies to EACH accessory option individually, not just to
+// "accessories" as a whole: an option id like "glasses-01" is a closed
+// vocabulary entry (core/library/CoreAvatarTemplateLibrary.js), never
+// a mesh reference, so something in code has to decide glasses sit on
+// the face, a hat sits on the head, a scarf wraps the neck, and a
+// backpack sits against the back. One builder per known accessory id,
+// each returning an already-positioned mesh sized/placed relative to
+// the head/torso built above — this is presentation detail local to
+// this file, exactly like SKIN_TONE_COLORS above it.
+const ACCESSORY_COLORS = {
+    'glasses-01': 0x1a1a1a,
+    'hat-01': 0x8b3a3a,
+    'backpack-01': 0x5b3a29,
+    'scarf-01': 0xb33939
+};
+
+function buildGlassesAccessory() {
+    const glasses = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, 0.06, 0.04),
+        new THREE.MeshStandardMaterial({ color: ACCESSORY_COLORS['glasses-01'] })
+    );
+    // Flat against the front of the face, at eye height.
+    glasses.position.set(0, 1.58, 0.26);
+    return glasses;
+}
+
+function buildHatAccessory() {
+    const hat = new THREE.Mesh(
+        new THREE.ConeGeometry(0.24, 0.26, 12),
+        new THREE.MeshStandardMaterial({ color: ACCESSORY_COLORS['hat-01'] })
+    );
+    // Resting on top of the hair hemisphere built above.
+    hat.position.y = 2.1;
+    return hat;
+}
+
+function buildScarfAccessory() {
+    const scarf = new THREE.Mesh(
+        new THREE.TorusGeometry(0.22, 0.05, 8, 16),
+        new THREE.MeshStandardMaterial({ color: ACCESSORY_COLORS['scarf-01'] })
+    );
+    // Wraps the neck, in the gap between the head and the torso.
+    scarf.position.y = 1.32;
+    scarf.rotation.x = Math.PI / 2;
+    return scarf;
+}
+
+function buildBackpackAccessory() {
+    const backpack = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.16, 0.2, 0.45, 8),
+        new THREE.MeshStandardMaterial({ color: ACCESSORY_COLORS['backpack-01'] })
+    );
+    // Against the back of the torso, standing upright.
+    backpack.position.set(0, 1.05, -0.27);
+    return backpack;
+}
+
+// Falls back to the original generic marker for any accessory id a
+// template declares but this renderer doesn't yet have a real shape
+// for — forward-compatible with a future accessory option shipping in
+// core/ data before its geometry lands here, same "degrade instead of
+// throw" spirit as the skin/hair/shirt/pants color fallbacks above.
+function buildUnknownAccessory() {
+    const marker = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 0.1, 0.1),
+        new THREE.MeshStandardMaterial({ color: UNKNOWN_ACCESSORY_MARKER_COLOR })
+    );
+    marker.position.set(0.35, 1.4, 0);
+    return marker;
+}
+
+const ACCESSORY_BUILDERS = {
+    'glasses-01': buildGlassesAccessory,
+    'hat-01': buildHatAccessory,
+    'backpack-01': buildBackpackAccessory,
+    'scarf-01': buildScarfAccessory
+};
 
 export class AvatarRenderer {
     // Builds a fresh avatar object graph. Returns:
@@ -106,14 +185,11 @@ export class AvatarRenderer {
         }
 
         if (template.hasComponent('accessories') && Array.isArray(appearance.accessories)) {
-            appearance.accessories.forEach((accessoryId, index) => {
-                const marker = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.1, 0.1, 0.1),
-                    new THREE.MeshStandardMaterial({ color: ACCESSORY_MARKER_COLOR })
-                );
-                marker.position.set(0.35, 1.4 - index * 0.15, 0);
-                poseGroup.add(marker);
-                parts[`accessory:${accessoryId}`] = marker;
+            appearance.accessories.forEach((accessoryId) => {
+                const build = ACCESSORY_BUILDERS[accessoryId] || buildUnknownAccessory;
+                const accessory = build();
+                poseGroup.add(accessory);
+                parts[`accessory:${accessoryId}`] = accessory;
             });
         }
 
