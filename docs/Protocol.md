@@ -1276,3 +1276,33 @@ honest, currently-local-only scoping 0.2.26's text search and 0.2.28's
 spatial search already established; a future decentralized discovery
 provider changes what `discoveryProvider.list()` can see, not the
 shape of the query or the page it returns.
+
+## Client-Side Publication Preview & Lazy Rendering (0.2.32)
+
+Nothing crosses any wire. No new field on `Publication`, no change to
+`getSigningDescriptor()`, and no new message type — this milestone is
+entirely client-local behavior sitting on top of a Document a peer has
+already fetched and verified through the existing publication/discovery
+protocol. The `image` field 0.2.32 adds to `core/DocumentPreview.js` is
+a local data URL held only in an in-memory `PreviewService` cache; it
+is never attached to a Publication, never included in any signed
+payload, and never sent to another replica.
+
+This closes the schema-evolution question 0.2.31 left open (see
+docs/Principles.md, "A Preview Is Either Signed Or It Isn't") not by
+finding a safe way to add a preview field to the signed envelope, but
+by concluding no such field should exist: a THUMBNAIL is a derived
+visualization of already-authoritative content (the immutable
+Document), computable identically by any replica that has that
+Document, and therefore no more in need of being signed or replicated
+than any other client-side rendering decision — the same category as
+which pixels a `WorldView` camera happens to render on screen. Two
+replicas holding the same Document are guaranteed to compute the same
+*camera framing* for its preview (a pure function of the Document's
+own geometry — see `core/PreviewCameraFraming.js`), but are explicitly
+NOT expected to produce byte-identical PNGs, since actual pixel output
+depends on GPU/driver/Three.js version/antialiasing/device pixel ratio
+— see docs/Principles.md, "A Preview's Camera Framing Is Deterministic;
+Its Pixels Are Not." A preview is therefore a derived visualization,
+not a cryptographic artifact, and the protocol correctly has nothing
+to say about it.

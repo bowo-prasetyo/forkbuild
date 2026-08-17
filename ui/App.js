@@ -1,8 +1,19 @@
+import { provide } from 'vue';
 import UserWidget from './components/UserWidget.js';
+import { CreatePreviewUseCase } from '../application/CreatePreviewUseCase.js';
 
 export default {
     name: 'App',
     components: { UserWidget },
+    // 0.2.32: one app-wide PreviewService, provided here (same
+    // provide/inject convention LoginModal's identityUseCase already
+    // uses) so its cache and generation queue survive navigating
+    // between Repository, Author, and back — see
+    // application/CreatePreviewUseCase.js.
+    setup() {
+        const { previewService } = new CreatePreviewUseCase().execute();
+        provide('previewService', previewService);
+    },
     template: `
         <div class="app-shell">
             <header class="app-header">
