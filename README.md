@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.42** — Avatar-World Collision & Movement Constraints
+**Version 0.2.43** — Avatar-Avatar Proximity & Interaction Targets
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -478,9 +478,42 @@ penetrating, Document/Publication/Placement remain byte-identical
 throughout, and a real remote replica sees Alice's already-constrained
 movement through completely ordinary presence sync — collision is a
 local movement constraint, never a new network authority mechanism.
-The avatar roadmap's own suggested next steps — avatar-avatar
-interaction foundations, emotes, chat, eventually voice — remain
-suggestions, not commitments.
+
+0.2.43 answers the one capability question still missing from the
+avatar stack: "who is near me?" `core/AvatarProximity.js`'s
+`computeNearbyAvatars()` computes that as a DERIVED, purely local fact
+— nothing written to a Document, Publication, WorldPlacement, or
+AvatarProfile, nothing sent over the wire — over the exact same
+trusted remote-presence list that already drives rendering. Two
+replicas computing "who is near me" independently are never required
+to agree, the same way `core/SpatialQuery.js`'s own `distanceBetween()`
+was already understood as purely local math, never a claim one side
+declares to the other. `getNearbyAvatars(radius)` distinguishes
+PRESENT (usable) from STALE (still listed, visibly marked) — and an
+ABSENT avatar is simply never reachable at all, not through new
+filtering, but because `LocalPresenceStore` already deletes an ABSENT
+record the moment it's asked for. A small, genuinely useful catch-up
+rides along: `getAvatarDisplayName()` fixes a stale 0.2.39 comment
+claiming a remote avatar's name "is never distributed" — true when
+written, false since 0.2.41. The new "Nearby Avatars" panel reaches an
+avatarId without a screen-space pick, but reuses every existing
+mechanism once it does — the same `getAvatarInfo()`, the same
+`followAvatarId()`, the same status-dot vocabulary; no new camera
+mechanism, no new inspection surface. Per the design doc's own
+explicit contract: nearness never authorizes mutation.
+`targetAvatar()`'s entire effect is on the CALLER's own local UI-focus
+state — there is no method, before or after 0.2.43, that lets one
+replica write to another avatar's own presence or profile. The
+flagship test proves this directly: after an entire scripted scenario
+of querying, targeting, and following, Alice's own AvatarProfile and
+AvatarPresence — read from her own session — stay byte-identical
+throughout. Deliberately not in 0.2.43: avatar-avatar collision or
+pushing, a genuinely harder, multiplayer-authority-laden problem left
+for a dedicated later milestone.
+
+The avatar roadmap's own suggested next steps — emotes/social actions,
+avatar-avatar interaction mechanics, text chat, eventually voice —
+remain suggestions, not commitments.
 
 ## Features
 
@@ -527,6 +560,7 @@ suggestions, not commitments.
 - **Avatar Presence Visibility & Privacy (0.2.40)** — closes the boundary 0.2.39 left open, without touching how avatars move, render, trust, or interact. A sender-side `PresenceVisibilityPolicy` (`core/PresenceVisibilityPolicy.js`) — `PUBLIC`/`FRIENDS`/`LOCAL`/`HIDDEN` — is consulted BEFORE `PresenceSyncService.publish()` is ever called, never as a receiver-side filter and never by sending an obscured/encrypted advertisement anyway: `HIDDEN` means `publish()` is simply never invoked. Deliberately honest about its limits — today's only transport (a same-origin `BroadcastChannel`) has no per-recipient addressing, so `FRIENDS` (a plain, manually-entered allow-list, never a friend-request system) currently controls WHETHER a replica advertises at all (an empty list behaves like `HIDDEN`), not WHO among the transport's listeners can decode what does get sent; `LOCAL` and `PUBLIC` are honestly documented as observationally identical today, for the same single-transport-scope reason. `AvatarProfile`/`AvatarPresence`/`PresenceVisibilityPolicy` stay three genuinely independent, separately-persisted concerns, reflected in `ui/views/AvatarSettingsView.js`'s new "Presence Visibility" section as two fully independent forms. The flagship test proves the sender/receiver symmetry with 0.2.38's trust boundary end to end: Alice, `HIDDEN`, moves twice — Bob receives nothing, doesn't even know her avatar exists — then Alice switches to `PUBLIC` and her very next movement reaches Bob normally, with zero special-casing anywhere in Bob's own session.
 - **Remote Avatar Appearance Synchronization (0.2.41)** — resumes the avatar arc for one narrowly-scoped gap 0.2.37 explicitly deferred: every remote avatar rendered with the same fixed placeholder until now. `core/AvatarProfileAdvertisement.js`'s new wire shape (`avatarId`, `ownerIdentity`, `profileRevision`, `templateId`, `appearance`, `displayName`, optional signature) travels on its own `BroadcastChannel` (`'forkbuild:avatar-profile'`, separate from presence's own), through its own sync service, trust boundary, and store, ordered by a `profileRevision` — never a timestamp. Reuses 0.2.38's trust vocabulary without duplicating the entire presence protocol: `core/PresenceAuthority.js`'s TOFU registry is reused for identity binding but with its OWN separate instance (winning the race for an avatarId's presence never hijacks its profile authority), and `replication/ReplayGuard.js` (the unbounded guard) is reused as-is since profile edits are genuinely rare. An unrecognized `templateId` degrades gracefully to the fixed placeholder rather than crashing. `application/LocalAvatarProfileStore.js` deliberately never time-prunes — appearance is durable, presence is ephemeral, and a peer's last-known outfit survives their presence going stale or absent. Profile publishing reuses `PresenceVisibilityPolicy`'s `shouldAdvertise()` gate verbatim, and a 15-second periodic republish lets a replica that joins mid-session eventually catch up on a fire-and-forget transport. The flagship test proves the whole round trip over two real `WorldNavigationSession`s and two real `BroadcastChannel`s: Bob renders Alice's actual customized appearance from her visual's very first frame, a stranger advertising an unrecognized template degrades to placeholder without crashing, and Alice's appearance survives a presence absent-prune-and-reappear cycle untouched.
 - **Avatar-World Collision & Movement Constraints (0.2.42)** — closes the one conspicuous limitation the movement model carried since 0.2.36: avatars could walk straight through published geometry. `core/AvatarMovementSimulation.js`'s pure kinematics (completely untouched) produce a PROPOSED position; `application/AvatarMovementConstraint.js`, backed by pure geometry in `core/AvatarCollision.js`, resolves it against whatever collision geometry this replica currently has streamed in, before the result ever reaches `AvatarPresence`. Deliberately "start simple" — an upright bounding-box avatar, axis-aligned per-brick bounds (ignoring rotation, the same simplification `application/SelectionBoundsService.js` already makes), and an axis-separated SWEPT slide: a diagonal approach into a corner blocks the axis that actually hits something while the other keeps moving (a true slide, not a dead stop), and every axis is tested against its full step range so a single large tick can never tunnel through a thin obstacle. Honestly scoped to what this replica actually knows: collision geometry comes entirely from `WorldNavigationSession`'s own currently-loaded documents — the exact same wall blocks movement when streamed in and never obstructs anything when it isn't. Derived, never persisted: no collision record, no `Avatar → Document` relationship, just `Document + WorldPlacement` math recomputed fresh every tick. `AvatarAnimationState` gains nothing — a collided step is movement information (`isCollided()`, transient, never part of `AvatarPresence`), never a `BLOCKED` animation state. Deliberately deferred: avatar-avatar collision (Bob's displayed vs. claimed position is a real multiplayer-authority question left for later), standing on raised geometry, and any change to presence's own wire shape or trust handling. The flagship test runs the design doc's own scripted scenario end to end — publish a wall, load it, walk into it and stop at the boundary, turn and slide along it, jump against it without penetrating, Document/Publication/Placement remain byte-identical throughout, and a real remote replica sees Alice's already-constrained movement through completely ordinary presence sync, with zero collision-aware special-casing on his side.
+- **Avatar-Avatar Proximity & Interaction Targets (0.2.43)** — answers "who is near me?" as a DERIVED, purely local fact — nothing written to a Document, Publication, WorldPlacement, or AvatarProfile, nothing sent over the wire. `core/AvatarProximity.js`'s `computeNearbyAvatars()` computes it over the exact same trusted remote-presence list that already drives rendering, reusing `core/SpatialQuery.js`'s `distanceBetween()` verbatim. Two replicas computing "who is near me" independently are never required to agree — the same tolerance already extended to remote avatar rendering itself. `getNearbyAvatars(radius)` distinguishes PRESENT from STALE; an ABSENT avatar is simply never reachable, because `LocalPresenceStore` already deletes an ABSENT record the moment it's asked for — no new filtering needed. A small catch-up rides along: `getAvatarDisplayName()` fixes a stale 0.2.39 comment claiming a remote avatar's name "is never distributed" — true when written, false since 0.2.41. The new "Nearby Avatars" panel reaches an avatarId without a screen-space pick, but reuses every existing mechanism once it does — the same `getAvatarInfo()`, the same `followAvatarId()`, the same status-dot vocabulary; no new camera mechanism. Per the design doc's own explicit contract, nearness never authorizes mutation: `targetAvatar()`'s entire effect is on the caller's own local UI-focus state, and there is no method anywhere that lets one replica write to another avatar's own presence or profile. The flagship test proves it directly: after an entire scripted scenario of querying, targeting, and following, Alice's own AvatarProfile and AvatarPresence stay byte-identical throughout. Avatar-avatar collision remains deliberately deferred — a genuinely harder, multiplayer-authority-laden problem.
   
 ## Architecture
 
@@ -634,6 +668,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.40  Avatar Presence Visibility & Privacy
 - [x] 0.2.41  Remote Avatar Appearance Synchronization
 - [x] 0.2.42  Avatar-World Collision & Movement Constraints
+- [x] 0.2.43  Avatar-Avatar Proximity & Interaction Targets
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

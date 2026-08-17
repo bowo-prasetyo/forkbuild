@@ -2300,3 +2300,91 @@ colliding as if it weren't, or a corner brick's diagonal edge being
 slightly more permissive than its true silhouette, are honestly
 accepted simplifications, not oversights — exactly the same posture
 `application/SelectionBoundsService.js`'s own header already takes.
+
+### Proximity Is Derived, Never Announced (0.2.43)
+
+```text
+Alice's position   ─┐
+                     ├──►  local geometric calculation  ──►  "Bob is 4.7 World Units away"
+Bob's known presence ┘
+```
+
+`core/AvatarProximity.js#computeNearbyAvatars()` is a pure function
+over data Alice's own replica ALREADY holds — her own current
+position, and the SAME trusted remote-presence list
+`application/RemoteAvatarRegistry.js` already renders from. There is
+no message anywhere in this protocol that means "I am near you," and
+there never will be one — see docs/Protocol.md. This isn't a missing
+feature; it's the correct design. A proximity CLAIM sent over the wire
+would be exactly the kind of fact 0.2.18's replication work already
+taught this codebase to be suspicious of: it could be stale, it could
+be wrong, and worse, it could disagree — Alice announcing "Bob is 2
+units away" while Bob's own replica computes "Alice is 5 units away"
+from his own position is not a bug to reconcile, it's two independent,
+equally valid local computations that were NEVER supposed to have to
+agree with each other, because neither one is a claim about the
+other's world state. Compare `core/SpatialQuery.js`'s own
+`distanceBetween()` (0.2.28), reused here verbatim: "how far away is
+that document" was already understood to be a purely local
+computation over already-known coordinates, never something a
+publication itself needed to declare about its own position relative
+to a viewer. Proximity between two avatars is the identical shape of
+fact, one layer up.
+
+### Nearness Never Authorizes Mutation (0.2.43)
+
+```text
+Near Alice
+   │
+   ├── Can inspect Alice        (getAvatarInfo(), reused unmodified)
+   ├── Can follow Alice          (followAvatarId(), reused unmodified)
+   ├── Can target Alice          (targetAvatar(), new — but writes ONLY
+   │                              the caller's own _avatarInteraction)
+   │
+   ╳ Cannot modify Alice
+   ╳ Cannot move Alice
+   ╳ Cannot modify Alice's profile
+```
+
+This is true by construction, not by a permission check anywhere:
+`application/WorldNavigationSession.js` has never had, and 0.2.43 adds
+no method that would give it, any way to write to a REMOTE avatar's
+own `AvatarPresence` or `AvatarProfile`. `targetAvatar(avatarId)`
+mutates exactly one thing — `this._avatarInteraction`, the CALLER's
+own local UI-focus state — the identical scope `pick()`'s avatar
+branch already had since 0.2.39; being close enough to appear in
+`getNearbyAvatars()` changes nothing about what operations are even
+reachable. `tests/AvatarProximity.test.js`'s flagship proves this
+directly rather than just by absence: after an entire scripted
+scenario of proximity queries, display-name resolution, targeting, and
+following, Alice's own `AvatarProfile`/`AvatarPresence` — read from
+HER OWN session, never Bob's — are asserted byte-for-byte identical to
+their values before Bob ever looked at her. This is the explicit
+boundary the design doc asked for, and it's also exactly why
+avatar-avatar COLLISION (a later milestone, if ever taken up) is a
+genuinely different and harder problem than proximity: collision would
+require one replica's movement decision to depend on another
+replica's remote, interpolated, potentially-stale position — a real
+multiplayer-authority question proximity, by design, never raises,
+because proximity never decides anything about what happens next, it
+only reports a distance.
+
+### A New Way To Reach An Avatar Is Not A New Way To Inspect One (0.2.43)
+
+`ui/components/NearbyAvatarsPanel.js` and
+`WorldNavigationSession.targetAvatar()` add a SECOND path to an
+avatarId — a "Nearby Avatars" list row instead of a 3D-viewport
+raycast — but deliberately not a second inspection surface, a second
+follow mechanism, or a second status vocabulary. Clicking a row calls
+`targetAvatar()`, which sets `_avatarInteraction` exactly the way
+`pick()`'s avatar branch already does; the SAME `getAvatarInfo()` the
+Avatar Info panel already reads answers immediately, and the SAME
+"Follow" button, wired to the SAME `followAvatarId()`, already works —
+see the design doc's own instruction, "no new camera mechanism is
+necessary." `ui/components/NearbyAvatarsPanel.js` even reuses
+`application/AvatarPresenceLabels.js` and `.avatar-info-status-dot`'s
+own CSS verbatim, the identical lifecycle/trust vocabulary
+`AvatarInfoPanel` already established — one status dot means one thing
+everywhere in this UI. The only genuinely new code is the ONE thing
+that's actually new: knowing an avatarId is worth reaching at all
+because it's nearby.

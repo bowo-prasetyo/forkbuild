@@ -4515,3 +4515,111 @@ ALREADY-CONSTRAINED movement through completely ordinary presence
 sync, with zero collision-aware special-casing anywhere in his own
 session — collision is a local movement constraint, never a new
 network authority mechanism.
+
+### Avatar-Avatar Proximity & Interaction Targets (0.2.43)
+
+Answers "who is near me?" as a DERIVED, purely local fact — never a
+message on the wire, never a persisted relationship — computed over
+the exact same trusted remote-presence state that already drives
+rendering:
+
+    Alice's own position          RemoteAvatarRegistry's known presences
+            │                                    │
+            └────────────────┬───────────────────┘
+                              ▼
+              core/AvatarProximity.js#computeNearbyAvatars()
+                    (pure: sort by distance, filter by radius)
+                              │
+                              ▼
+              WorldNavigationSession.getNearbyAvatars(radius)
+                              │
+                              ▼
+              ui/components/NearbyAvatarsPanel.js
+                    (click → targetAvatar() → getAvatarInfo() /
+                     followAvatarId(), both REUSED unmodified)
+
+Core:
+
+- `core/AvatarProximity.js` (new) — `computeNearbyAvatars({ localPosition,
+  knownPresences, radius })`, a pure function over exactly the shape
+  `application/PresenceSyncService.js#listKnownPresences()` already
+  returns (`{ advertisement, lifecycleState, trustObservation }`).
+  Reuses `core/SpatialQuery.js`'s `distanceBetween()`/`isWithinRadius()`
+  verbatim rather than reimplementing 3D distance math — see
+  docs/Principles.md, "Proximity Is Derived, Never Announced." Sorts
+  nearest-first, degrades gracefully (skips, never throws) on a
+  malformed entry. Never filters ABSENT presences itself — see the
+  next paragraph for why it structurally can't even see one.
+
+Application:
+
+- `application/WorldNavigationSession.js` gains three methods:
+  - `getNearbyAvatars(radius = 15)` — reads
+    `PresenceSyncService.listKnownPresences()` (never `pull()`, the
+    same read-only posture `getRemoteAvatarDiagnostics()` already
+    established) and calls `computeNearbyAvatars()`. `[]` gracefully
+    when there is no local avatar or no presence sync wired.
+    ABSENT-pruning happens entirely upstream: `application/
+    LocalPresenceStore.js#list()` already DELETES an ABSENT record
+    the moment it's asked for, so `computeNearbyAvatars()` — and this
+    method — can never even receive one to filter.
+  - `getAvatarDisplayName(avatarId)` — the ONE shared place a friendly
+    name is resolved for any avatarId. Fixes a genuinely stale
+    0.2.39 assumption: `_inspectRemoteAvatar()` used to hard-fall-back
+    to `ownerIdentity`, with a comment saying a remote `displayName`
+    "is never distributed" — true when written, false since 0.2.41
+    started distributing `AvatarProfile.displayName` over its own
+    channel. Both `getNearbyAvatars()`'s consumers and
+    `_inspectRemoteAvatar()` now resolve through this one method.
+  - `targetAvatar(avatarId)` — lets a UI list row reach the exact
+    outcome `pick()`'s avatar branch already produces, without a
+    screen-space raycast: validates `avatarId` is actually known first
+    (the local avatar, or a remote one `RemoteAvatarRegistry.has()`
+    still confirms), then sets `_avatarInteraction` and clears any
+    document/ground selection the same way `pick()` already does. Its
+    ENTIRE effect is on the caller's own local UI-focus state — see
+    docs/Principles.md, "Nearness Never Authorizes Mutation."
+
+UI:
+
+- `ui/components/NearbyAvatarsPanel.js` (new) — the design doc's own
+  mockup: a small list of nearby avatars (display name, distance,
+  animation, a lifecycle/trust status dot) inside World View's
+  existing AVATAR sidebar section, shown alongside "Show Other
+  Avatars." Reuses `application/AvatarPresenceLabels.js` and
+  `AvatarInfoPanel`'s own `.avatar-info-status-dot` CSS verbatim — one
+  visual vocabulary for lifecycle/trust across both surfaces. Emits
+  `select`; `ui/views/WorldView.js` handles it by calling
+  `session.targetAvatar()` and refreshing — the SAME `AvatarInfoPanel`
+  that already renders for a 3D-viewport click opens, with its
+  existing "Follow" button already wired to `followAvatarId()`. No new
+  camera mechanism, no new inspection surface — see docs/Principles.md,
+  "A New Way To Reach An Avatar Is Not A New Way To Inspect One."
+  `nearbyAvatars` refreshes on the SAME cadence
+  `remoteAvatarDiagnostics` already does (every `refreshSpatialUI()` —
+  pick/hover/session mutations, plus the existing 3-second periodic
+  poll), each entry enriched with a UI-layer-resolved `displayName` the
+  same way `loadedWorlds` already enriches a bare `documentId` with its
+  publication's title/author.
+
+Deliberately not in 0.2.43, matching the design doc's own scope:
+avatar-avatar collision or pushing (a genuinely harder, multiplayer-
+authority-laden problem — Alice's local state vs. Bob's remote,
+interpolated, potentially-stale state — left for a dedicated later
+milestone, if ever taken up); any change to `AvatarInteractionState`'s
+shape (already exactly `{ avatarId }` since 0.2.39 — this milestone
+needed nothing more); emotes, gestures, chat, or any other social
+action (0.2.44+); and any persisted "friends" or relationship graph —
+proximity is recomputed fresh on every call, from nothing but current
+position and already-trusted presence, never cached or stored anywhere.
+`tests/AvatarProximity.test.js`'s flagship runs the full arc over two
+real `WorldNavigationSession`s and two real `BroadcastChannel`s: Bob's
+Nearby list shows Alice with her real distance and real synced
+displayName while PRESENT, she drops off the list (but not the
+known-avatar registry) once she walks outside the query radius, she's
+still listed but visibly STALE after real elapsed time with no
+movement, she's pruned entirely once ABSENT with zero special-casing
+in the proximity code itself, and — throughout every step, including
+Bob targeting and following her from the Nearby list — Alice's own
+`AvatarProfile`/`AvatarPresence`, read from her own session, never
+change.

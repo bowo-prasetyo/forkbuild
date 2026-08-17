@@ -96,6 +96,7 @@
 0.2.40  Avatar Presence Visibility & Privacy                   ✓
 0.2.41  Remote Avatar Appearance Synchronization                ✓
 0.2.42  Avatar-World Collision & Movement Constraints            ✓
+0.2.43  Avatar-Avatar Proximity & Interaction Targets             ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -583,12 +584,63 @@ collision-aware special-casing anywhere in his own session — collision
 is a local movement constraint, never a new network authority
 mechanism.
 
-The avatar roadmap's own suggested next steps — 0.2.43 (avatar-avatar
-interaction foundations), 0.2.44 (emotes/gestures/social actions),
-0.2.45 (text chat), and eventually voice/a richer social model —
-remain exactly that: suggestions, not commitments. Nothing in this
-codebase assumes the next milestone resumes the avatar arc rather than
-opening an entirely different one.
+0.2.43 keeps the movement-model stopping point 0.2.42 reached and
+answers the one capability question still missing from the avatar
+stack: "who is near me?" `core/AvatarProximity.js#computeNearbyAvatars()`
+is a pure function computing that as a DERIVED, purely local fact —
+nothing gets written to a Document, Publication, WorldPlacement, or
+AvatarProfile, and nothing crosses the wire — over exactly the same
+trusted remote-presence list that already drives rendering
+(`application/RemoteAvatarRegistry.js`), never a second,
+independently-verified copy of it. See docs/Principles.md, "Proximity
+Is Derived, Never Announced": two replicas computing "who is near me"
+independently are never required to agree, the same way `core/
+SpatialQuery.js`'s own `distanceBetween()` (0.2.28) was already
+understood as a purely local computation, never a claim one side
+declares to the other. `WorldNavigationSession.getNearbyAvatars(radius)`
+distinguishes PRESENT (a usable, fresh claim) from STALE (still
+listed, visibly marked, per the design doc: "potentially unsuitable
+for interaction") — and ABSENT avatars are simply never reachable at
+all, not through any filtering this milestone added, but because
+`application/LocalPresenceStore.js` already deletes an ABSENT record
+the moment it's asked for; "removed, therefore not an interaction
+target" was already true before 0.2.43 existed. A small, genuinely
+useful catch-up rides along: `getAvatarDisplayName()` fixes a stale
+0.2.39 comment that claimed a remote avatar's displayName "is never
+distributed" — true when written, false since 0.2.41's profile sync
+existed. `AvatarInteractionState` needed no changes at all — it was
+already exactly `{ avatarId }` since 0.2.39, precisely the shape the
+design doc asked for. The one new capability,
+`WorldNavigationSession.targetAvatar(avatarId)`, lets the new "Nearby
+Avatars" panel (`ui/components/NearbyAvatarsPanel.js`) reach an
+avatarId without a screen-space pick, but reuses EVERY existing
+mechanism once it does — the same `getAvatarInfo()`, the same
+`followAvatarId()`, the same status-dot vocabulary — see
+docs/Principles.md, "A New Way To Reach An Avatar Is Not A New Way To
+Inspect One." Crucially, per the design doc's own explicit interaction
+contract: nearness never authorizes mutation. `targetAvatar()`'s
+entire effect is on the CALLER's own local UI-focus state; there is no
+method anywhere, before or after 0.2.43, that lets one replica write
+to another avatar's own presence or profile — see docs/Principles.md,
+"Nearness Never Authorizes Mutation," proven directly in
+`tests/AvatarProximity.test.js`'s flagship by asserting Alice's own
+`AvatarProfile`/`AvatarPresence` stay byte-identical throughout an
+entire scripted scenario of Bob querying, targeting, and following
+her. Deliberately, explicitly NOT in 0.2.43, matching the design doc's
+own instruction: avatar-avatar collision or pushing — a genuinely
+harder, multiplayer-authority-laden problem (Alice's local state vs.
+Bob's remote, interpolated, potentially-stale state — which one
+decides?) — left for a dedicated later milestone, if one is ever taken
+up at all.
+
+The avatar roadmap's own suggested next steps — 0.2.44 (emotes,
+gestures, and social actions, treated as presence-adjacent ephemeral
+events rather than persistent profile changes), 0.2.45 (avatar-avatar
+interaction mechanics), 0.2.46 (text chat as its own communication
+channel), and eventually voice/a richer social model — remain exactly
+that: suggestions, not commitments. Nothing in this codebase assumes
+the next milestone resumes the avatar arc rather than opening an
+entirely different one.
 
 ## 0.1.50 — What shipped
 

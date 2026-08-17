@@ -17,6 +17,7 @@ import WorldSearchPanel from '../components/WorldSearchPanel.js';
 import LocationDocumentsDialog from '../components/LocationDocumentsDialog.js';
 import WorldLocationBrowser from '../components/WorldLocationBrowser.js';
 import AvatarInfoPanel from '../components/AvatarInfoPanel.js';
+import NearbyAvatarsPanel from '../components/NearbyAvatarsPanel.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -46,7 +47,7 @@ export default {
         DocumentInfoPanel, MetadataEditorDialog,
         PlacementInfoPanel, PlacementEditorDialog,
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
-        AvatarInfoPanel
+        AvatarInfoPanel, NearbyAvatarsPanel
     },
     setup() {
         const route = useRoute();
@@ -106,6 +107,15 @@ export default {
         // whether to show "Follow" or "Stop Following".
         const avatarInfo = ref(null);
         const followedRemoteAvatarId = ref(null);
+        // 0.2.43 — "who is near me," read fresh from
+        // session.getNearbyAvatars() every refreshSpatialUI(), each
+        // entry enriched with a resolved displayName (session.
+        // getAvatarDisplayName()) the way loadedWorlds below already
+        // enriches a bare documentId with its own publication's
+        // title/author — a UI-layer presentation concern, not
+        // something the session's own minimal, spec-shaped return
+        // value carries itself.
+        const nearbyAvatars = ref([]);
         const showPlacementEditor = ref(false);
         const placementEditTarget = ref(null);
         // 0.2.25: set only after checkPlacementOverlap() has found an
@@ -543,6 +553,17 @@ export default {
             followedRemoteAvatarId.value = typeof session.getFollowedRemoteAvatarId === 'function'
                 ? session.getFollowedRemoteAvatarId()
                 : null;
+
+            // 0.2.43 — independent of avatarInfo/spatialSelection above:
+            // "who is near me" is a standing fact about the local
+            // avatar's own position, not tied to whatever is currently
+            // selected or targeted.
+            nearbyAvatars.value = typeof session.getNearbyAvatars === 'function'
+                ? session.getNearbyAvatars().map((entry) => ({
+                    ...entry,
+                    displayName: session.getAvatarDisplayName(entry.avatarId)
+                }))
+                : [];
 
             const editingCtx = session.getSpatialEditingContext();
             if (editingCtx && !editingCtx.isEmpty) {
@@ -994,6 +1015,16 @@ export default {
             followedRemoteAvatarId.value = null;
         }
 
+        // 0.2.43 — clicking a "Nearby Avatars" row reaches the SAME
+        // avatarId a 3D-viewport click would, through
+        // WorldNavigationSession.targetAvatar() — opens the identical
+        // Avatar Info panel (already wired to followAvatarFromPanel
+        // above), never a second inspection surface.
+        function selectNearbyAvatar(avatarId) {
+            session.targetAvatar(avatarId);
+            refreshSpatialUI();
+        }
+
         function toggleShowOtherAvatars(event) {
             showOtherAvatars.value = !showOtherAvatars.value;
             session.setRemoteAvatarsVisible(showOtherAvatars.value);
@@ -1097,6 +1128,8 @@ export default {
             followedRemoteAvatarId,
             followAvatarFromPanel,
             stopFollowingAvatarFromPanel,
+            nearbyAvatars,
+            selectNearbyAvatar,
             loadedWorlds,
             nearbyWorlds,
             failedWorlds,
@@ -1267,6 +1300,17 @@ export default {
                             (<template v-if="remoteAvatarDiagnostics.trusted">{{ remoteAvatarDiagnostics.trusted }} trusted</template><template v-if="remoteAvatarDiagnostics.stale">{{ remoteAvatarDiagnostics.trusted ? ', ' : '' }}{{ remoteAvatarDiagnostics.stale }} stale</template><template v-if="remoteAvatarDiagnostics.conflicting">{{ (remoteAvatarDiagnostics.trusted || remoteAvatarDiagnostics.stale) ? ', ' : '' }}{{ remoteAvatarDiagnostics.conflicting }} conflicting</template><template v-if="remoteAvatarDiagnostics.unavailable">{{ (remoteAvatarDiagnostics.trusted || remoteAvatarDiagnostics.stale || remoteAvatarDiagnostics.conflicting) ? ', ' : '' }}{{ remoteAvatarDiagnostics.unavailable }} unavailable</template>)
                         </span>
                     </p>
+                    <!-- 0.2.43: "who is near me" — a derived, local,
+                         geometric fact, never announced. Shown only
+                         alongside Show Other Avatars, the same gate
+                         the diagnostics summary above already uses —
+                         proximity is a view over the same trusted
+                         remote-presence state, not a separate feed. -->
+                    <NearbyAvatarsPanel
+                        v-if="showOtherAvatars"
+                        :entries="nearbyAvatars"
+                        @select="selectNearbyAvatar"
+                    />
                     <label class="world-view-avatar-toggle">
                         <input
                             type="checkbox"
