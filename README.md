@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.36** — Local Avatar Movement & Animation
+**Version 0.2.37** — Decentralized Avatar Presence Synchronization
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -279,6 +279,37 @@ docs/Principles.md, "Input Changes Presence; Presence Changes The
 Renderer," "Movement Is Kinematic, Not Physically Simulated," and
 "Following The Avatar Never Redefines What The Camera Is Looking At."
 
+0.2.37 makes the local avatar's presence observable by OTHER
+replicas, while keeping it exactly as ephemeral and non-authoritative
+as 0.2.33 established — no signatures, no persistence, still no
+CausalStamp. The transport is a real, working simulation of
+decentralization: `presence/LocalAvatarPresenceBroadcastProvider.js`
+wraps the browser's own `BroadcastChannel` API, so two same-origin
+tabs genuinely see each other's avatars move — no server, no mocking.
+An advertise/pull round trip (`application/PresenceSyncService.js`)
+keeps "a message arrived" and "this replica believes it" as two
+separate steps: a broadcast handler only ever queues what came in, and
+`pull()` — called once per render frame, this replica's own schedule —
+is the one place a raw message becomes accepted state, via
+`core/PresenceIngestion.js`'s monotonic-sequence rule (reordered,
+duplicate, and gapped delivery are all tolerated by one "does this
+sequence exceed what I have" check, no special-casing needed).
+Presence lifecycle — PRESENT/STALE/ABSENT — is derived purely from
+elapsed time on the RECEIVER's own clock, never a stored fact or a
+sender's claim, so an avatar can go stale and eventually disappear
+with zero new messages ever arriving. A remote avatar's position is
+visually interpolated so bursty updates read as continuous movement,
+while the latest received advertisement stays the sole authoritative
+value throughout. "Show Other Avatars" (shipped disabled since 0.2.35)
+is now real, and deliberately works even for a logged-out viewer — see
+docs/Principles.md, "Watching Presence Never Requires Having One."
+Appearance is NOT synchronized in this milestone: every remote avatar
+renders with a fixed placeholder look, never the sender's actual
+customized outfit. See docs/Principles.md, "0.2.37 Establishes
+Transport Semantics; 0.2.38 Establishes Trust Semantics," and "The
+Authoritative Position Is Always The Latest Presence; Interpolation Is
+Only Ever A Presentation Detail."
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -318,6 +349,7 @@ Renderer," "Movement Is Kinematic, Not Physically Simulated," and
 - **Avatar Templates & Customization (0.2.34)** — a small built-in template registry gives `AvatarProfile.appearance` a real, validated, declarative schema (skin/hair/shirt/pants/accessories, each with a closed set of options and optional colors) — never executable code or a pointer to a remote asset; `updateProfile()` strictly rejects anything outside a template's bounds, while `getEffectiveAvatar()` never throws, always resolving a complete appearance with graceful per-field fallback so a broken or unrecognized profile can never block World View access. Ships the first visible avatar feature, the Avatar Creator (`/avatar`), with every control driven by the selected template's own data and a lightweight SVG preview.
 - **Avatar Rendering & World Presence (0.2.35)** — the local user's own avatar now physically renders in the World View's Three.js scene, combining 0.2.34's resolved appearance and 0.2.33's `AvatarPresence` — two independent inputs the renderer only ever combines, never modifies; appearance changes rebuild the mesh graph only when content actually changed, while position/rotation/animation updates are cheap transform writes; a "Show My Avatar" checkbox is a pure client rendering preference, never persisted avatar state; moving or restyling an avatar never touches a document's `WorldPlacement`. No movement input or multiplayer yet.
 - **Local Avatar Movement & Animation (0.2.36)** — W/S move the avatar along its own facing, A/D turn it, Shift runs, Space jumps; a pure `core/AvatarMovementSimulation.js` turns held keys into a new position/rotation/animation with no Three.js dependency, sanitized against NaN/Infinity and clamped against extreme per-tick deltas; `AvatarPresence.sequence` advances by exactly one per accepted update, never once per render frame regardless of motion; WALKING/RUNNING play a real elapsed-time gait cycle (never frame-count-based); an explicit "Control My Avatar" toggle captures WASD only while on, and "Follow Avatar" shifts the camera by the avatar's own movement delta without ever redefining the focused/active document. Entirely local — no network, no collision against world geometry, no multiplayer yet.
+- **Decentralized Avatar Presence Synchronization (0.2.37)** — the local avatar's presence becomes observable by other replicas via a real, working `BroadcastChannel`-based transport (two same-origin tabs genuinely see each other's avatars move) — still never signed, never persisted; an advertise/pull round trip keeps message receipt and state acceptance as two separate steps, with `core/PresenceIngestion.js`'s monotonic-sequence rule tolerating reordered, duplicate, and gapped delivery with one simple check; presence lifecycle (PRESENT/STALE/ABSENT) is derived purely from elapsed time on the receiver's own clock, never a stored fact; remote avatar positions are visually interpolated for smoothness while the latest received presence stays sole authoritative state; "Show Other Avatars" works even for a logged-out viewer. Appearance is not synchronized yet — every remote avatar renders with a fixed placeholder look. No signatures, replay protection, or conflict resolution yet.
   
 ## Architecture
 
@@ -419,6 +451,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.34  Avatar Templates & Customization
 - [x] 0.2.35  Avatar Rendering & World Presence
 - [x] 0.2.36  Local Avatar Movement & Animation
+- [x] 0.2.37  Decentralized Avatar Presence Synchronization
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

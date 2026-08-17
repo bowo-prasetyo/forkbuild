@@ -44,12 +44,10 @@ export class RenderWorldViewUseCase {
             transformMath: TransformMath
         });
 
-        // 0.2.35 — the local user's own avatar. Deliberately just ONE
-        // AvatarVisual: rendering other participants' avatars is
-        // 0.2.37's job, once a presence registry actually exists.
-        // Built lazily (on the first setLocalAvatar call) rather than
-        // unconditionally here, so a viewport with nobody logged in
-        // never even constructs the object graph.
+        // 0.2.35 — the local user's own avatar. Built lazily (on the
+        // first setLocalAvatar call) rather than unconditionally here,
+        // so a viewport with nobody logged in never even constructs
+        // the object graph.
         const avatarRenderer = new AvatarRenderer();
         let localAvatarVisual = null;
         let localAvatarVisible = true;
@@ -61,13 +59,26 @@ export class RenderWorldViewUseCase {
             return localAvatarVisual;
         }
 
+        // 0.2.37 — every OTHER participant's avatar, keyed by
+        // avatarId. Reuses the exact same AvatarRenderer/AvatarVisual
+        // classes 0.2.35/0.2.36 already built for the local avatar —
+        // to this facade, a remote avatar is just another AvatarVisual
+        // that happens to be driven by application/
+        // RemoteAvatarRegistry.js instead of local movement input.
+        const remoteAvatarVisuals = new Map(); // avatarId -> AvatarVisual
+        let remoteAvatarsVisible = true;
+
         // 0.2.36 — keeps WALKING/RUNNING swinging every render frame,
         // independent of how often a new AvatarPresence actually
-        // arrives (see renderer/AvatarVisual.js's own header). A cheap
-        // no-op whenever no avatar has been built yet.
+        // arrives (see renderer/AvatarVisual.js's own header). Covers
+        // the local avatar and every known remote one; a cheap no-op
+        // whenever none exist yet.
         renderer.addFrameListener((deltaSeconds) => {
             if (localAvatarVisual) {
                 localAvatarVisual.tick(deltaSeconds);
+            }
+            for (const visual of remoteAvatarVisuals.values()) {
+                visual.tick(deltaSeconds);
             }
         });
 
@@ -166,6 +177,65 @@ export class RenderWorldViewUseCase {
             // this stays deliberately generic rather than
             // avatar-specific.
             onAnimationFrame: (callback) => renderer.addFrameListener(callback),
+
+            // 0.2.37 — the remote-avatar counterpart to setLocalAvatar/
+            // updateLocalAvatarPresence/removeLocalAvatar. Called only
+            // by application/RemoteAvatarRegistry.js, never directly by
+            // a broadcast transport — see docs/Principles.md, "Never
+            // Let A Transport Callback Write Directly Into Session
+            // State." `presenceLike` is a plain
+            // { position, rotation, animation } shape (an
+            // AvatarPresenceAdvertisement, or RemoteAvatarInterpolator's
+            // interpolated output) — this facade has no opinion about
+            // where it came from.
+            setRemoteAvatar: (avatarId, template, appearance, presenceLike) => {
+                let visual = remoteAvatarVisuals.get(avatarId);
+                if (!visual) {
+                    visual = new AvatarVisual(avatarRenderer);
+                    remoteAvatarVisuals.set(avatarId, visual);
+                    if (remoteAvatarsVisible) {
+                        renderer.add(visual.root);
+                    }
+                }
+                visual.setAppearance(template, appearance);
+                visual.setPose(presenceLike.position, presenceLike.rotation);
+                visual.setAnimation(presenceLike.animation);
+            },
+            // The cheap per-frame path — pose/animation only, never
+            // touches appearance. Called every interpolation tick, so
+            // it must stay as cheap as updateLocalAvatarPresence
+            // already is.
+            updateRemoteAvatarPresence: (avatarId, presenceLike) => {
+                const visual = remoteAvatarVisuals.get(avatarId);
+                if (!visual) {
+                    return;
+                }
+                visual.setPose(presenceLike.position, presenceLike.rotation);
+                visual.setAnimation(presenceLike.animation);
+            },
+            removeRemoteAvatar: (avatarId) => {
+                const visual = remoteAvatarVisuals.get(avatarId);
+                if (!visual) {
+                    return;
+                }
+                renderer.remove(visual.root);
+                visual.dispose();
+                remoteAvatarVisuals.delete(avatarId);
+            },
+            // A pure client rendering preference, exactly like
+            // setLocalAvatarVisible — never touches presence sync or
+            // the known-remote-avatar set, only which already-built
+            // Object3Ds are actually in the scene.
+            setRemoteAvatarsVisible: (visible) => {
+                remoteAvatarsVisible = visible;
+                for (const visual of remoteAvatarVisuals.values()) {
+                    if (visible) {
+                        renderer.add(visual.root);
+                    } else {
+                        renderer.remove(visual.root);
+                    }
+                }
+            },
             dispose() {
                 transformGizmoController.dispose();
                 transformGizmoRenderer.dispose();
@@ -175,6 +245,10 @@ export class RenderWorldViewUseCase {
                     localAvatarVisual.dispose();
                     localAvatarVisual = null;
                 }
+                for (const visual of remoteAvatarVisuals.values()) {
+                    visual.dispose();
+                }
+                remoteAvatarVisuals.clear();
                 renderer.dispose();
             }
         };

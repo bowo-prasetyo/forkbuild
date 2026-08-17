@@ -30,6 +30,10 @@ import { SpatialAllocationPolicy, evaluateSpatialAllocation } from '../core/Spat
 import { distanceBetween, isWithinRadius } from '../core/SpatialQuery.js';
 import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSummary.js';
 import { AvatarMovementController } from './AvatarMovementController.js';
+import { PresenceSyncService } from './PresenceSyncService.js';
+import { RemoteAvatarRegistry } from './RemoteAvatarRegistry.js';
+import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
+import { DEFAULT_AVATAR_TEMPLATE_ID } from '../core/AvatarProfile.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -93,7 +97,9 @@ export class WorldNavigationSession {
 	    searchWorldUseCase = null,
 	    spatialDiscoveryProvider = null,
 	    avatarProfileUseCase = null,
-	    avatarPresenceSession = null
+	    avatarPresenceSession = null,
+	    presenceBroadcastProvider = null,
+	    avatarTemplateRegistry = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -168,6 +174,22 @@ export class WorldNavigationSession {
 	    this._avatarControlModeActive = false;
 	    this._followAvatarEnabled = false;
 	    this._lastAvatarFollowPosition = null;
+	    // 0.2.37 — Decentralized Avatar Presence Synchronization.
+	    // `presenceBroadcastProvider` and `avatarTemplateRegistry` are
+	    // both OPTIONAL, same posture as everything else avatar-related
+	    // above: a session built without a broadcast provider simply
+	    // never publishes or receives presence at all; one built
+	    // without a template registry can still receive presence but
+	    // has no way to resolve what an unknown remote avatar should
+	    // even look like, so it never creates a visual for one. See the
+	    // "Remote Avatar Presence" section below for the full wiring.
+	    this._presenceBroadcastProvider = presenceBroadcastProvider;
+	    this._avatarTemplateRegistry = avatarTemplateRegistry;
+	    this._presenceSyncService = null;
+	    this._remoteAvatarRegistry = null;
+	    this._presencePublishSubscription = null;
+	    this._remoteAvatarFrameSubscription = null;
+	    this._remoteAvatarsVisible = true;
 	    // Raw DiscoveryDiagnostics from the most recent
 	    // exploreLocation/exploreHere/whatsHere call — kept alongside
 	    // the summarized version so inspectDocument can look up a
@@ -285,6 +307,10 @@ export class WorldNavigationSession {
         this._spatialCameraController = new SpatialCameraController(this._session);
         this._inspectionService = new SpatialInspectionService(this);
         this._placementService = new SpatialPlacementService(this._registry);
+        // Remote avatars first: _setupLocalAvatar()'s presence
+        // subscription publishes THROUGH _presenceSyncService, so it
+        // must already exist by the time that subscription is wired.
+        this._setupRemoteAvatars();
         this._setupLocalAvatar();
     }
 
@@ -316,6 +342,16 @@ export class WorldNavigationSession {
         this._avatarPresenceSubscription = this._avatarPresenceSession.onPresenceChanged((presence) => {
             this._session.updateLocalAvatarPresence(presence);
             this._followAvatarIfEnabled(presence);
+            // 0.2.37 — ADVERTISE: publish only when
+            // AvatarPresenceSession actually accepted a new update
+            // (the same event this subscription is already reacting
+            // to) — an idle local avatar never reaches this line at
+            // all, so it publishes nothing. See
+            // docs/Principles.md, "No Movement, No Sequence
+            // Advancement, No Network Traffic."
+            if (this._presenceSyncService) {
+                this._presenceSyncService.publish(toAvatarPresenceAdvertisement(presence));
+            }
         });
 
         // 0.2.36 — Local Avatar Movement. The controller owns raw key
@@ -334,6 +370,84 @@ export class WorldNavigationSession {
             this._avatarFrameSubscription = this._session.onAnimationFrame((deltaSeconds) => {
                 this._avatarMovementController.tick(deltaSeconds);
             });
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // Remote Avatar Presence (0.2.37)
+    // -----------------------------------------------------------------
+    //
+    // Deliberately independent of hasLocalAvatar(): a logged-out
+    // viewer can still SEE other participants' avatars even though
+    // they have none of their own to publish — see
+    // docs/Principles.md, "Watching Presence Never Requires Having
+    // One." Wires the ADVERTISE/PULL round trip the design doc calls
+    // for: PresenceSyncService owns the transport + ingestion
+    // boundary (application/LocalPresenceStore.js's sequence-based
+    // acceptance), RemoteAvatarRegistry owns reconciling which avatars
+    // exist and their visual interpolation — this method only ever
+    // decides WHEN pull()/sync()/tick() run (once per render frame,
+    // the same frame loop every other time-based avatar concern in
+    // this file already uses) and never touches the render facade
+    // directly itself.
+    _setupRemoteAvatars() {
+        if (!this._presenceBroadcastProvider) {
+            return;
+        }
+        const localAvatarId = this._avatarPresenceSession ? this._avatarPresenceSession.current.avatarId : null;
+        this._presenceSyncService = new PresenceSyncService(this._presenceBroadcastProvider, { localAvatarId });
+
+        // A remote avatar's APPEARANCE is not synchronized at all in
+        // 0.2.37 (see the design doc's own scope list) — every remote
+        // avatar renders with the same fixed, resolved-once
+        // placeholder template+appearance. Resolved here (application
+        // layer), never inside the renderer — see docs/Principles.md,
+        // "A Template Is A Closed Vocabulary, Not An Asset Loader."
+        // Absent entirely when no registry was wired: remote presence
+        // is still tracked and synced, it just never produces a
+        // visual, the same graceful-absence posture every optional
+        // collaborator in this file already follows.
+        let defaultTemplate = null;
+        let defaultAppearance = null;
+        if (this._avatarTemplateRegistry) {
+            defaultTemplate = this._avatarTemplateRegistry.get(DEFAULT_AVATAR_TEMPLATE_ID);
+            defaultAppearance = defaultTemplate ? defaultTemplate.defaultAppearance : null;
+        }
+        this._remoteAvatarRegistry = new RemoteAvatarRegistry(this._session, { defaultTemplate, defaultAppearance });
+        if (typeof this._session.setRemoteAvatarsVisible === 'function') {
+            this._session.setRemoteAvatarsVisible(this._remoteAvatarsVisible);
+        }
+
+        if (typeof this._session.onAnimationFrame === 'function') {
+            this._remoteAvatarFrameSubscription = this._session.onAnimationFrame(() => {
+                const now = Date.now();
+                const knownPresences = this._presenceSyncService.pull(now);
+                this._remoteAvatarRegistry.sync(knownPresences, now);
+                this._remoteAvatarRegistry.tick(now);
+            });
+        }
+    }
+
+    // How many OTHER avatars this replica currently believes are
+    // present/stale (never counts the local avatar) — a debug/UI
+    // surface, not something anything internal reads.
+    getKnownRemoteAvatarCount() {
+        return this._remoteAvatarRegistry ? this._remoteAvatarRegistry.size : 0;
+    }
+
+    // A pure client rendering preference, exactly like
+    // isLocalAvatarVisible/setLocalAvatarVisible — never touches
+    // presence sync, the known-remote-avatar set, or anything
+    // persisted; only which already-built visuals are actually in the
+    // scene.
+    isRemoteAvatarsVisible() {
+        return this._remoteAvatarsVisible;
+    }
+
+    setRemoteAvatarsVisible(visible) {
+        this._remoteAvatarsVisible = Boolean(visible);
+        if (this._session && typeof this._session.setRemoteAvatarsVisible === 'function') {
+            this._session.setRemoteAvatarsVisible(this._remoteAvatarsVisible);
         }
     }
 
@@ -2510,6 +2624,18 @@ export class WorldNavigationSession {
         this._avatarControlModeActive = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
+        if (this._remoteAvatarFrameSubscription) {
+            this._remoteAvatarFrameSubscription();
+            this._remoteAvatarFrameSubscription = null;
+        }
+        if (this._presenceSyncService) {
+            this._presenceSyncService.dispose();
+            this._presenceSyncService = null;
+        }
+        if (this._remoteAvatarRegistry) {
+            this._remoteAvatarRegistry.dispose();
+            this._remoteAvatarRegistry = null;
+        }
         if (this._session) {
             this._session.dispose();
             this._session = null;

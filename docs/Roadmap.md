@@ -90,6 +90,7 @@
 0.2.34  Avatar Templates & Customization                  ✓
 0.2.35  Avatar Rendering & World Presence                  ✓
 0.2.36  Local Avatar Movement & Animation                   ✓
+0.2.37  Decentralized Avatar Presence Synchronization        ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -306,11 +307,40 @@ doc's own list: collision/navigation constraints against world
 geometry, inverse kinematics/skeletal animation, multiplayer, remote
 avatars, presence broadcasting, signed movement, and replay protection.
 
-- **0.2.37 — Decentralized Presence Synchronization.** Other users'
-  avatars appear via a presence stream, deliberately NOT modeled as
-  immutable/replicated storage — an ephemeral real-time problem, not a
-  permanent-data one. This is also where `AvatarProfile` most plausibly
-  gains a signature layer (see docs/Protocol.md, 0.2.33).
+0.2.37 makes the local avatar's presence observable by other
+replicas, while keeping it exactly as ephemeral and non-authoritative
+as 0.2.33 already established — no signatures, no persistence, no
+CausalStamp. The transport is a real, working `BroadcastChannel`-based
+simulation of decentralization (`presence/LocalAvatarPresenceBroadcastProvider.js`,
+same shape as `LocalDiscoveryProvider`/`LocalSpatialIndexProvider`):
+two same-origin browser tabs genuinely see each other's avatars move.
+An advertise/pull round trip (`application/PresenceSyncService.js`)
+keeps the two concerns separate: a broadcast handler only ever queues
+what arrived, and a receiver's own "pull" step is the one and only
+place incoming data gets ingested into that replica's OWN state
+(`application/LocalPresenceStore.js`), sequence-tolerant of exactly
+the disorder a real network produces (out-of-order, duplicate, and
+gapped sequence numbers are all handled by one monotonic-acceptance
+rule — see `core/PresenceIngestion.js`). Presence lifecycle
+(PRESENT/STALE/ABSENT) is a derived observation on the RECEIVER's own
+clock, never a stored fact or a sender's claim
+(`core/PresenceFreshness.js`). A remote avatar's position is visually
+interpolated (`core/PresenceInterpolation.js`,
+`application/RemoteAvatarInterpolator.js`) so bursty network updates
+read as continuous movement, while the latest received advertisement
+remains the sole authoritative value throughout. Appearance is
+deliberately NOT synchronized — every remote avatar renders with a
+fixed placeholder appearance; that's real appearance sync (and any
+`AvatarProfile` signature layer) is left for later. See
+docs/Architecture.md, 0.2.37, and docs/Principles.md, "0.2.37
+Establishes Transport Semantics; 0.2.38 Establishes Trust Semantics."
+Deliberately deferred, matching the design doc's own list: signatures
+on presence, CausalStamp, conflict resolution, equivocation
+detection, replay protection, persistent presence, avatar collision,
+avatar-to-avatar interaction, voice/chat, remote avatar editing,
+avatar ownership transfer, and decentralized avatar-template
+distribution.
+
 - **0.2.38 — Presence Trust, Replay & Conflict Handling.** Distinguishes
   identity authenticity ("this claim came from Alice"), movement
   authority ("Alice may currently appear/move here"), and world

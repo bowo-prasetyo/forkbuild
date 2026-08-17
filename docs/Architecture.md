@@ -3669,3 +3669,187 @@ more often, and any change to how a document's own `WorldPlacement` is
 resolved, rendered, or persisted — verified directly (byte-identical
 placement JSON before/after two seconds of walking) in the flagship
 test.
+
+### Decentralized Avatar Presence Synchronization (0.2.37)
+
+Makes the local avatar's presence observable by OTHER replicas, while
+keeping it exactly as ephemeral and non-authoritative as 0.2.33
+established — no signatures, no persistence, no CausalStamp. This is
+transport and lifecycle only: sequence-tolerant acceptance of
+disordered/duplicate/gapped updates, and derived (never stored)
+PRESENT/STALE/ABSENT observation. Trust — is a claim even believable,
+replay protection, conflict resolution — is explicitly 0.2.38's job;
+see docs/Principles.md, "0.2.37 Establishes Transport Semantics; 0.2.38
+Establishes Trust Semantics."
+
+    Local:  AvatarPresenceSession.onPresenceChanged
+                          │  (only on an ACCEPTED update — an idle
+                          │   avatar publishes nothing)
+                          ▼
+            toAvatarPresenceAdvertisement()
+                          │
+                          ▼
+            PresenceSyncService.publish()
+                          │
+                          ▼
+            AvatarPresenceBroadcastProvider.advertise()
+                          │
+              (BroadcastChannel — same-origin, cross-tab)
+                          ▼
+    Remote: AvatarPresenceBroadcastProvider.onAdvertisement()
+                          │  (queues into an inbox — never writes
+                          │   directly into session state)
+                          ▼
+            PresenceSyncService.pull()  ◄── called once per render
+                          │                  frame, THIS replica's
+                          │                  own schedule
+                          ▼
+            LocalPresenceStore.ingest()
+                          │  (core/PresenceIngestion.js: newer
+                          │   sequence always wins)
+                          ▼
+            LocalPresenceStore.list()
+                          │  (derives PRESENT/STALE/ABSENT from
+                          │   elapsed time on THIS replica's clock;
+                          │   prunes ABSENT records as a side effect)
+                          ▼
+            RemoteAvatarRegistry.sync() / .tick()
+                          │  (reconcile which avatars exist;
+                          │   RemoteAvatarInterpolator smooths
+                          │   toward the latest AUTHORITATIVE value)
+                          ▼
+            render facade (setRemoteAvatar / updateRemoteAvatarPresence
+                            / removeRemoteAvatar)
+                          ▼
+                    Three.js scene
+
+Core:
+
+- `core/AvatarPresenceAdvertisement.js` (new) — `toAvatarPresenceAdvertisement(presence)`,
+  a pure function producing the WIRE shape: `avatarId`/`ownerIdentity`/
+  `position`/`rotation`/`animation`/`sequence` — deliberately a STRICT
+  SUBSET of `AvatarPresence.toJSON()`, omitting `timestamp` on purpose
+  — see docs/Principles.md, "A Presence Advertisement Is A Transport
+  Shape, Not A Second Presence Model." `isValidAvatarPresenceAdvertisement()`
+  is the defensive shape check applied at the ingestion boundary —
+  nothing arriving over a broadcast transport is trusted structurally.
+- `core/PresenceLifecycleState.js` (new) — the closed vocabulary
+  `PRESENT`/`STALE`/`ABSENT`, same `Object.freeze` + `isValid*`
+  pattern `AvatarAnimationState` already established.
+- `core/PresenceFreshness.js` (new) — `derivePresenceLifecycleState({
+  receivedAt, now, staleAfterMs, absentAfterMs })`, a pure function of
+  elapsed time on the RECEIVER's own clock — see docs/Principles.md,
+  "Presence Lifecycle State Is A Derived Observation, Not A Stored
+  Fact."
+- `core/PresenceIngestion.js` (new) — `resolveIncomingPresence(current,
+  incoming)`: accept if and only if `incoming.sequence >
+  current.sequence` (or nothing is stored yet). The one rule that
+  makes disordered/duplicate/gapped delivery a non-issue — see
+  docs/Principles.md, "0.2.37 Establishes Transport Semantics; 0.2.38
+  Establishes Trust Semantics."
+- `core/PresenceInterpolation.js` (new) — `interpolatePresence(from,
+  to, t)`: pure linear position blending plus shortest-arc rotation
+  blending; `animation` is never blended, it snaps to `to`'s value.
+  See docs/Principles.md, "The Authoritative Position Is Always The
+  Latest Presence; Interpolation Is Only Ever A Presentation Detail."
+
+Transport (new top-level `presence/` directory, mirroring `discovery/`'s
+abstract-base + `Local*` shape):
+
+- `presence/AvatarPresenceBroadcastProvider.js` (new) — base class:
+  `advertise(advertisement)` / `onAdvertisement(callback)` /
+  `dispose()`. No `save()`/`load()` — presence is never persisted, so
+  this is deliberately not modeled after `StorageProvider`.
+- `presence/LocalAvatarPresenceBroadcastProvider.js` (new) — the
+  concrete, WORKING transport: the browser's own `BroadcastChannel`
+  API, scoped to one same-origin channel name. Two browser tabs on the
+  same origin genuinely see each other's avatars move — a real,
+  demonstrable decentralized simulation, not a mock, the same "Local"
+  pattern `LocalDiscoveryProvider`/`LocalSpatialIndexProvider` already
+  established, just built on a non-persistent transport primitive
+  instead of localStorage. Degrades to a silent no-op in an
+  environment without `BroadcastChannel` rather than throwing.
+
+Application:
+
+- `application/LocalPresenceStore.js` (new) — `avatarId -> { advertisement,
+  receivedAt }`, the ingestion boundary: `ingest()` runs every incoming
+  advertisement through `core/PresenceIngestion.js` before accepting
+  it; `list(now)` derives each record's lifecycle state and PRUNES any
+  that have aged into ABSENT as a side effect of being asked. Never
+  StorageProvider-backed — nothing here survives a reload.
+- `application/PresenceSyncService.js` (new) — the advertise/pull round
+  trip: `publish(advertisement)` hands a local update to the transport;
+  `pull(now)` drains whatever arrived since the last pull through
+  `LocalPresenceStore.ingest()` and returns the current known-presences
+  list. The broadcast provider's own callback only ever appends to an
+  inbox — `pull()` is the ONE place a raw network message becomes this
+  replica's own accepted state; see docs/Principles.md, "Never Let A
+  Transport Callback Write Directly Into Session State." Filters out
+  the local avatar's own id defensively (a channel never delivers its
+  own message, but this stays as defense in depth for a future
+  transport that might not offer that guarantee for free).
+- `application/RemoteAvatarInterpolator.js` (new) — ONE remote avatar's
+  interpolation state (`_from`/`_to`/`_startedAt`). `retarget()` only
+  fires on a genuinely new sequence, snapshotting the CURRENT
+  interpolated position as the new `_from` so a rapid string of
+  updates blends smoothly instead of jerking; `sequence` always reads
+  `_to`, never the interpolated value.
+- `application/RemoteAvatarRegistry.js` (new) — reconciles which
+  remote avatars exist against `PresenceSyncService`'s known-presences
+  list (`sync()`) and drives every known avatar's interpolated pose to
+  the render facade every frame (`tick()`) — the same
+  presence-driven-update vs. time-driven-tick split
+  `renderer/AvatarVisual.js` already draws for the local avatar.
+  Appearance is NOT part of what this class manages: every remote
+  avatar renders with a single, fixed placeholder template+appearance
+  resolved once by `WorldNavigationSession` and handed in unchanged —
+  0.2.37 does not synchronize real appearance at all.
+- `application/RenderWorldViewUseCase.js` — gains the remote-avatar
+  counterpart to the local-avatar facade: `setRemoteAvatar`/
+  `updateRemoteAvatarPresence`/`removeRemoteAvatar`/
+  `setRemoteAvatarsVisible`, backed by a `Map<avatarId, AvatarVisual>`.
+  Reuses `AvatarRenderer`/`AvatarVisual` completely unmodified — to
+  this facade, a remote avatar is just another `AvatarVisual` driven
+  by `RemoteAvatarRegistry` instead of local movement input. The
+  existing per-frame gait-clock tick now covers every known remote
+  avatar too.
+- `application/WorldNavigationSession.js` — gains optional
+  `presenceBroadcastProvider`/`avatarTemplateRegistry` constructor
+  dependencies and `_setupRemoteAvatars()`, called from `start()`
+  BEFORE `_setupLocalAvatar()` (whose presence-changed subscription
+  now also calls `presenceSyncService.publish()` on every ACCEPTED
+  local update — an idle avatar publishes nothing, extending 0.2.36's
+  "no movement, no sequence advancement" rule one hop further: no
+  sequence advancement, no network traffic). `_setupRemoteAvatars()`
+  is deliberately independent of `hasLocalAvatar()` — see
+  docs/Principles.md, "Watching Presence Never Requires Having One."
+  New public surface: `isRemoteAvatarsVisible()`/
+  `setRemoteAvatarsVisible()` (a pure client rendering preference,
+  exactly like `setLocalAvatarVisible`) and
+  `getKnownRemoteAvatarCount()` (debug/UI surface).
+- `application/CreateWorldViewUseCase.js` — constructs
+  `LocalAvatarPresenceBroadcastProvider` and the avatar template
+  registry (via the existing `CreateAvatarTemplateRegistryUseCase`)
+  UNCONDITIONALLY, never gated on login state — matching "Watching
+  Presence Never Requires Having One."
+
+UI:
+
+- `ui/views/WorldView.js` — "Show Other Avatars" (shipped disabled
+  since 0.2.35) becomes a real, functional toggle — deliberately NOT
+  disabled by `hasLocalAvatar`, since seeing other replicas' avatars
+  never requires having your own.
+
+Deliberately not in 0.2.37: signatures on presence, `CausalStamp`,
+conflict resolution, equivocation detection, replay protection,
+persistent presence, avatar collision, avatar-to-avatar interaction,
+voice/chat, remote avatar editing, avatar ownership transfer, and
+decentralized avatar-template distribution — see docs/Roadmap.md for
+0.2.38. Also not in 0.2.37: real appearance synchronization (every
+remote avatar renders with a fixed placeholder look, never the
+sender's actual customized appearance), and any change to
+`AvatarPresence`'s own shape or to how a document's own
+`WorldPlacement`/`Publication`/spatial index is resolved, rendered, or
+persisted — verified directly (byte-identical placement JSON, unchanged
+document/spatial-index counts) in the flagship test.

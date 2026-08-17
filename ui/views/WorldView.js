@@ -167,6 +167,13 @@ export default {
         // toggles what the session already owns.
         const avatarControlMode = ref(false);
         const followAvatar = ref(false);
+        // 0.2.37 — a pure client rendering preference, exactly like
+        // showMyAvatar, but deliberately NOT gated on hasLocalAvatar:
+        // a logged-out viewer can still see other participants' avatars
+        // even though they have none of their own — see
+        // docs/Principles.md, "Watching Presence Never Requires Having
+        // One."
+        const showOtherAvatars = ref(true);
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
         const allPublications = ref([]);
 
@@ -922,6 +929,12 @@ export default {
             blurCheckbox(event);
         }
 
+        function toggleShowOtherAvatars(event) {
+            showOtherAvatars.value = !showOtherAvatars.value;
+            session.setRemoteAvatarsVisible(showOtherAvatars.value);
+            blurCheckbox(event);
+        }
+
         // -----------------------------------------------------------------
         // Avatar movement keyboard interaction (0.2.36)
         // -----------------------------------------------------------------
@@ -1010,8 +1023,10 @@ export default {
             toggleShowMyAvatar,
             avatarControlMode,
             followAvatar,
+            showOtherAvatars,
             toggleAvatarControlMode,
             toggleFollowAvatar,
+            toggleShowOtherAvatars,
             loadedWorlds,
             nearbyWorlds,
             failedWorlds,
@@ -1140,17 +1155,19 @@ export default {
                 </p>
 
                 <!-- 0.2.35: a pure client rendering preference — see
-                     docs/Principles.md. "Show Other Avatars" is
-                     reserved for 0.2.37 (no other-avatar registry
-                     exists yet), so it stays checked and disabled
-                     rather than offering a control with nothing to
-                     control.
+                     docs/Principles.md.
 
                      0.2.36 adds Control My Avatar / Follow Avatar —
                      both explicit, off-by-default toggles (never
                      implied by focus or hovering the viewport), so
                      nothing here can accidentally hijack keyboard
-                     input the rest of World View still needs. -->
+                     input the rest of World View still needs.
+
+                     0.2.37 makes "Show Other Avatars" real — a pure
+                     rendering preference exactly like "Show My
+                     Avatar," deliberately NOT disabled by
+                     hasLocalAvatar: seeing other replicas' avatars
+                     never requires having your own. -->
                 <div class="world-view-section world-view-section--avatar">
                     <h4>Avatar</h4>
                     <label class="world-view-avatar-toggle">
@@ -1162,9 +1179,13 @@ export default {
                         />
                         Show My Avatar
                     </label>
-                    <label class="world-view-avatar-toggle world-view-avatar-toggle--disabled">
-                        <input type="checkbox" checked disabled />
-                        Show Other Avatars <span class="form-hint form-hint--neutral">(coming soon)</span>
+                    <label class="world-view-avatar-toggle">
+                        <input
+                            type="checkbox"
+                            :checked="showOtherAvatars"
+                            @change="toggleShowOtherAvatars($event)"
+                        />
+                        Show Other Avatars
                     </label>
                     <label class="world-view-avatar-toggle">
                         <input

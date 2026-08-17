@@ -1642,3 +1642,110 @@ different document stays the active editing target — the design doc's
 own example — is not a special case this needs to guard against; it's
 just what happens automatically when two independent things are
 actually independent.
+
+### 0.2.37 Establishes Transport Semantics; 0.2.38 Establishes Trust Semantics
+
+`core/PresenceIngestion.js`'s entire rule is "a higher sequence number
+wins" — full stop. It does not ask, and 0.2.37 does not attempt to
+answer, "is this replica ALLOWED to claim this avatarId," "is this
+movement even physically plausible," or "has this avatar been seen
+equivocating." Those are exactly 0.2.38's job ("Presence Trust, Replay
+& Conflict Handling"), and keeping them out of 0.2.37 on purpose is
+what makes 0.2.37 tractable as a first networking milestone: transport
+and lifecycle (how does a presence update get from one replica to
+another, and how does a replica know when to stop believing one) are
+solvable with nothing more than a monotonic counter and a clock. Trust
+(should a replica believe what it received) is a genuinely harder,
+separable question — the same split 0.2.16's signing layer drew from
+0.2.17-0.2.19's delegation/replication/hardening work, applied here to
+a live stream instead of a durable record. `core/PresenceIngestion.js`
+is deliberately written to tolerate exactly the disorder a real,
+UNTRUSTED network produces (reordering, duplicates, gaps) without yet
+asking whether the network is being honest about it.
+
+### Watching Presence Never Requires Having One (0.2.37)
+
+`WorldNavigationSession._setupRemoteAvatars()` is wired independently
+of `hasLocalAvatar()` — a session with no `avatarProfileUseCase`/
+`avatarPresenceSession` at all (nobody logged in) still fully
+participates in receiving and rendering OTHER replicas' avatars, as
+long as a `presenceBroadcastProvider` exists. `CreateWorldViewUseCase`
+reflects this by constructing the broadcast provider and avatar
+template registry unconditionally, never gated on
+`identityProvider.currentUser()` the way the LOCAL avatar stack is.
+Seeing who's around is not a privilege of having your own avatar — a
+logged-out visitor to World View sees exactly the same moving avatars
+a logged-in one does; only PUBLISHING a presence of your own requires
+being logged in, which is a completely separate question this
+principle deliberately does not conflate with watching.
+
+### A Presence Advertisement Is A Transport Shape, Not A Second Presence Model (0.2.37)
+
+`core/AvatarPresenceAdvertisement.js`'s `toAvatarPresenceAdvertisement()`
+produces a plain object with `avatarId`/`ownerIdentity`/`position`/
+`rotation`/`animation`/`sequence` — a strict SUBSET of
+`AvatarPresence.toJSON()`, missing exactly `timestamp`. That omission
+is deliberate, not an oversight: a sender's claimed clock is
+information a receiver in a decentralized, no-trust environment has
+no business leaning on for anything, least of all deciding how fresh
+a claim is (see the next principle). There is exactly ONE presence
+model in this codebase — `core/AvatarPresence.js` — and an
+advertisement is never a second one; it's the subset of that model
+that's actually meaningful to hand to a transport, produced fresh from
+the real presence every time, never stored or reasoned about on its
+own terms.
+
+### Presence Lifecycle State Is A Derived Observation, Not A Stored Fact (0.2.37)
+
+PRESENT/STALE/ABSENT (`core/PresenceLifecycleState.js`) is never a
+field written onto an `AvatarPresenceAdvertisement`, never persisted,
+and never claimed by a sender about itself. It is computed fresh, on
+demand, from exactly one thing: how long it's been, ON THE RECEIVER'S
+OWN CLOCK, since that receiver last actually heard from a given
+avatarId (`core/PresenceFreshness.js`). This is why an avatar can
+transition from PRESENT to STALE to ABSENT with zero new messages ever
+arriving — "is Alice still around" is a judgment Bob makes about his
+own observations, not a fact Alice broadcasts. The distinction matters
+architecturally: a STORED liveness flag would need to be told to
+update; a DERIVED one is automatically correct for every possible
+elapsed time, forever, the moment `now` is supplied — precisely why
+`derivePresenceLifecycleState()` takes `now` as a parameter rather
+than reading a clock itself, keeping it exactly as pure and
+independently testable as every other derivation in `core/`.
+
+### Never Let A Transport Callback Write Directly Into Session State (0.2.37)
+
+`presence/LocalAvatarPresenceBroadcastProvider.js`'s `onmessage`
+handler does exactly one thing: append to a listener's inbox
+(`application/PresenceSyncService.js`'s `_inbox`). It never touches a
+`LocalPresenceStore`, never touches `RemoteAvatarRegistry`, and never
+reaches the render facade. Ingestion — the moment a raw, untrusted
+network message becomes this replica's own accepted state — happens
+ONLY inside `PresenceSyncService.pull()`, called on this replica's own
+schedule (once per render frame), never synchronously from the
+transport event itself. This is the "advertise/pull" round trip the
+0.2.37 design doc called for, and it exists for a reason beyond
+tidiness: 0.2.38 will need to insert trust checks, rate limits, and
+replay defenses at EXACTLY this boundary, and it can only do that
+cleanly because 0.2.37 already drew the boundary in one place rather
+than letting "a message arrived" and "this replica believes it" be the
+same event.
+
+### The Authoritative Position Is Always The Latest Presence; Interpolation Is Only Ever A Presentation Detail (0.2.37)
+
+`application/RemoteAvatarInterpolator.js` tracks two things: `_to`
+(the latest AvatarPresenceAdvertisement this replica has actually
+accepted — the authoritative value) and a smoothed, time-based blend
+toward it that only ever feeds the renderer. `sequence` getter reads
+`_to.sequence`, never anything interpolation-derived — nothing about
+"where does this avatar look like it currently is, mid-blend" is ever
+treated as ground truth, persisted, forwarded to another replica, or
+used to decide whether a FUTURE update should be accepted
+(`core/PresenceIngestion.js` always compares against the real stored
+advertisement). This separation is what makes visual smoothing free to
+change (durations, easing, a future physically-based blend) without
+touching correctness at all — exactly the same "presentation state
+never leaks into authoritative state" boundary
+`renderer/AvatarVisual.js`'s own gait clock (0.2.36) already draws for
+local animation, applied here to remote position instead of local
+pose.
