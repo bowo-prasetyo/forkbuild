@@ -102,7 +102,8 @@ export class WorldNavigationSession {
 	    avatarProfileUseCase = null,
 	    avatarPresenceSession = null,
 	    presenceBroadcastProvider = null,
-	    avatarTemplateRegistry = null
+	    avatarTemplateRegistry = null,
+	    presenceVisibilityUseCase = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -188,6 +189,11 @@ export class WorldNavigationSession {
 	    // "Remote Avatar Presence" section below for the full wiring.
 	    this._presenceBroadcastProvider = presenceBroadcastProvider;
 	    this._avatarTemplateRegistry = avatarTemplateRegistry;
+	    // 0.2.40 — OPTIONAL, same posture as every other avatar-related
+	    // collaborator here: a session built without one simply always
+	    // advertises (see the publish gate in _setupLocalAvatar() below),
+	    // exactly 0.2.37/0.2.38's own behavior, unchanged.
+	    this._presenceVisibilityUseCase = presenceVisibilityUseCase;
 	    this._presenceSyncService = null;
 	    this._remoteAvatarRegistry = null;
 	    this._presencePublishSubscription = null;
@@ -375,7 +381,18 @@ export class WorldNavigationSession {
             // CreateWorldViewUseCase — both come from being logged in),
             // so the local avatar's own presence is signed whenever it
             // exists at all.
-            if (this._presenceSyncService) {
+            //
+            // 0.2.40 — VISIBILITY: consulted here, BEFORE anything
+            // reaches the transport, never as a receiver-side filter
+            // and never by publishing an obscured/encrypted
+            // advertisement anyway — see docs/Principles.md,
+            // "Visibility Happens Before Broadcasting, Never After."
+            // A session without a presenceVisibilityUseCase wired
+            // always advertises, exactly 0.2.37/0.2.38's own behavior.
+            const canAdvertise = this._presenceVisibilityUseCase
+                ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise()
+                : true;
+            if (this._presenceSyncService && canAdvertise) {
                 const advertisement = toAvatarPresenceAdvertisement(presence);
                 this._presenceSyncService.publish(signAvatarPresenceAdvertisement(advertisement, this._identityProvider));
             }

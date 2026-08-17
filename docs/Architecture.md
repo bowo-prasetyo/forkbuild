@@ -4116,3 +4116,113 @@ the flagship test verifies exactly that (Alice's AvatarPresence/
 AvatarProfile/Publication and the original Placement are all
 byte-identical after Bob targets, inspects, AND edits — the edit forks
 a document, never touches the avatar at all).
+
+### Avatar Presence Visibility & Privacy (0.2.40)
+
+Closes the boundary 0.2.39 explicitly left open, WITHOUT touching how
+avatars move, render, trust, or interact — every 0.2.33–0.2.39 file
+this milestone doesn't list below is untouched. Establishes the SENDER
+half of a symmetry 0.2.38 already built the RECEIVER half of:
+
+    Sender side                              Receiver side
+
+    AvatarPresenceSession
+            │
+            ▼
+    PresenceVisibilityPolicy
+            │
+            ├── PUBLIC  ──────► advertise                  PresenceTrustBoundary
+            ├── FRIENDS ──────► advertise IF authorized ►         │
+            │                   peers are configured,             ▼
+            │                   else behaves like HIDDEN   Accepted Presence
+            ├── LOCAL   ──────► advertise (today,
+            │                   observationally == PUBLIC —
+            │                   only one transport scope
+            │                   exists — see docs/Principles.md)
+            └── HIDDEN  ──────► publish() never called at all
+
+"Visibility asks: should I even send this?" / "Trust asks: should I
+believe what arrived?" — deliberately opposite questions, on opposite
+sides of the transport, neither one aware of the other. See
+docs/Principles.md, "Visibility Happens Before Broadcasting, Never
+After."
+
+Core:
+
+- `core/PresenceVisibility.js` (new) — the closed vocabulary
+  `PUBLIC`/`FRIENDS`/`LOCAL`/`HIDDEN`, same `Object.freeze` +
+  `isValid*` pattern `core/PresenceLifecycleState.js` established.
+- `core/PresenceVisibilityPolicy.js` (new) — an immutable, PERSISTED
+  (unlike everything else in `core/Presence*.js`, which is either pure
+  derivation or explicitly ephemeral) value object:
+  `{ visibility, authorizedPeerIdentities }`. `shouldAdvertise()` is
+  the one decision it exists to make — parameter-free, since
+  visibility is a property of the SENDER's own configuration, never of
+  who might be asking. `authorizedPeerIdentities` is a plain,
+  manually-entered allow-list — trimmed, deduped, deterministically
+  sorted — not a friend-request system. See its own header for the
+  honest limitation: today's only transport has no per-recipient
+  addressing, so FRIENDS currently controls WHETHER a replica
+  advertises (empty list = behaves like HIDDEN), not WHO physically
+  receives the bytes once it does.
+
+Application:
+
+- `application/PresenceVisibilityUseCase.js` (new) — persistence +
+  defaults, structurally mirroring `application/AvatarProfileUseCase.js`:
+  `getPolicy()` (never-fails, creates-and-persists a default PUBLIC
+  policy on first access), `updatePolicy()` (throws on an unrecognized
+  visibility value, never partially applies), `onPolicyChanged()`
+  (same EventBus subscription shape as `onProfileChanged`/
+  `onUserChanged`). Storage key `presence-visibility:<username>`,
+  deliberately separate from `avatar-profile:<username>`.
+- `application/CreatePresenceVisibilityUseCase.js` (new) — the
+  storage-wiring shim, same shape as `CreateAvatarProfileUseCase.js`.
+- `application/CreateAvatarPresenceSessionUseCase.js` — now also wires
+  and returns `presenceVisibilityUseCase` alongside
+  `avatarProfileUseCase`/`presenceSession`, since "which identity is
+  this a live view of" is the same question all three answer.
+- `application/WorldNavigationSession.js` — gains an OPTIONAL
+  `presenceVisibilityUseCase` constructor dependency (same
+  "enforce/offer only when wired" posture as every other optional
+  avatar collaborator — a session built without one always advertises,
+  exactly 0.2.37/0.2.38's own behavior, unchanged). The publish gate
+  inside `_setupLocalAvatar()`'s presence-changed subscription now
+  reads `presenceVisibilityUseCase.getPolicy().shouldAdvertise()`
+  FRESH on every accepted presence update, before
+  `PresenceSyncService.publish()` is ever called — a policy change
+  mid-session takes effect on the very next movement, with no separate
+  "apply" step.
+- `application/CreateWorldViewUseCase.js` — threads
+  `presenceVisibilityUseCase` through from the same avatar-wiring
+  block that already builds `avatarProfileUseCase`/
+  `avatarPresenceSession`, absent under the exact same "nobody logged
+  in" condition.
+
+UI:
+
+- `ui/views/AvatarSettingsView.js` — gains a "Presence Visibility"
+  section, deliberately a SEPARATE form with its own Save button from
+  the appearance editor above it (independent underlying use cases,
+  independent storage keys — see docs/Principles.md). A visibility
+  dropdown; an "Authorized identities" textarea that only appears in
+  FRIENDS mode, with an honest inline note that an empty list behaves
+  like Hidden.
+
+Deliberately not in 0.2.40: a friends/social graph (the allow-list is
+manual, not mutual, not discovered), blocking, avatar collision,
+physical pushing, voice/chat, emotes, avatar trading, persistent
+remote-avatar storage, decentralized avatar-template distribution,
+encrypted/private presence, precise location privacy, and
+cryptographic anonymity. In particular: HIDDEN means "don't advertise,"
+never "advertise an encrypted presence nobody can read" — encryption
+is explicitly a separate, larger protocol problem left for later. Also
+not in 0.2.40: any change to `core/PresenceIngestion.js`,
+`application/PresenceTrustBoundary.js`, `application/PresenceSyncService.js`,
+`application/RemoteAvatarRegistry.js`, or anything else the RECEIVER
+side already established in 0.2.37/0.2.38 — visibility is entirely a
+SENDER-side gate, and the flagship test verifies exactly that: Bob's
+session, its `PresenceTrustBoundary`, and its `RemoteAvatarRegistry`
+are never touched at all — Bob simply never receives anything while
+Alice is HIDDEN, and starts receiving normally the moment she switches
+to PUBLIC, with no special-casing on his side whatsoever.

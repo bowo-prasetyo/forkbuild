@@ -93,6 +93,7 @@
 0.2.37  Decentralized Avatar Presence Synchronization        ✓
 0.2.38  Presence Trust, Replay & Conflict Handling            ✓
 0.2.39  World Entity Interaction & Selection                  ✓
+0.2.40  Avatar Presence Visibility & Privacy                   ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -441,7 +442,48 @@ since it raises real cross-replica authority questions ("who decides
 Alice collided with Bob?") that deserve their own carefully designed
 milestone, not a corner of this one.
 
-The avatar roadmap remains paused after 0.2.39 — nothing in this
+0.2.40 closes the boundary 0.2.39 explicitly left open (see
+docs/Principles.md, "Avatar Presence Has No Privacy Guarantee Beyond
+Transport Scope") without touching how avatars move, render, trust, or
+interact. `core/PresenceVisibilityPolicy.js` gives a sender explicit,
+persistent control over whether their presence is even eligible to be
+published at all — `PUBLIC`/`FRIENDS`/`LOCAL`/`HIDDEN`
+(`core/PresenceVisibility.js`) — consulted in
+`WorldNavigationSession._setupLocalAvatar()`'s publish path BEFORE
+`PresenceSyncService.publish()` is ever called, never as a
+receiver-side filter and never by sending an obscured/encrypted
+advertisement anyway (`HIDDEN` means `publish()` is simply never
+invoked). Deliberately kept small and honest about what it does and
+doesn't provide: `FRIENDS` requires an explicit, manually-entered
+`authorizedPeerIdentities` allow-list — not a friend-request system,
+not mutual, not discovered — and is upfront that today's only
+transport (`presence/LocalAvatarPresenceBroadcastProvider.js`, a
+same-origin `BroadcastChannel`) has no per-recipient addressing, so
+FRIENDS currently controls WHETHER a replica advertises (empty list
+behaves like HIDDEN) rather than WHO among the transport's listeners
+can decode what does get sent; `LOCAL` and `PUBLIC` are honestly
+documented as observationally identical today, for the same
+single-transport-scope reason. `AvatarProfile`/`AvatarPresence`/
+`PresenceVisibilityPolicy` stay three genuinely independent concerns —
+three storage keys, and in `ui/views/AvatarSettingsView.js`'s new
+"Presence Visibility" section, two independent forms with two
+independent Save actions, so editing one can never accidentally alter
+the other. The flagship test proves the sender/receiver symmetry with
+0.2.38's trust boundary end to end: Alice, HIDDEN, moves twice — Bob
+receives nothing, doesn't even know her avatar exists — then Alice
+switches to PUBLIC and her very next movement reaches Bob normally,
+with zero special-casing anywhere in Bob's own session. See
+docs/Architecture.md and docs/Principles.md, "Visibility Happens
+Before Broadcasting, Never After," "AvatarProfile, AvatarPresence, and
+PresenceVisibilityPolicy Are Three Independent Concerns," and "A
+Policy Abstraction Can Exist Before The Mechanism It Fully Assumes."
+Deliberately deferred, matching the design doc's own list: a
+friends/social graph, blocking, avatar collision, physical pushing,
+voice/chat, emotes, avatar trading, persistent remote-avatar storage,
+decentralized avatar-template distribution, encrypted/private
+presence, precise location privacy, and cryptographic anonymity.
+
+The avatar roadmap remains paused after 0.2.40 — nothing in this
 codebase assumes the next milestone resumes it rather than opening an
 entirely different arc.
 

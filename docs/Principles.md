@@ -1975,6 +1975,84 @@ deliberate milestone (see docs/Roadmap.md); 0.2.39 makes presence data
 easier to LOOK AT, but changes nothing about who it's already visible
 to.
 
+0.2.40 update: that later milestone. `core/PresenceVisibility.js`/
+`core/PresenceVisibilityPolicy.js` give a sender explicit, persistent
+control over whether their presence is even eligible to be advertised
+at all — see the principles immediately below. Read this paragraph's
+own claim carefully, though: it is STILL true, even now. Nothing about
+0.2.40 adds access control, encryption, or audience scoping to the
+WIRE — an advertisement that IS sent remains exactly as visible to
+every peer on the transport as it always was. What changed is entirely
+upstream of the wire: a sender can now choose not to send at all.
+
+### Visibility Happens Before Broadcasting, Never After (0.2.40)
+
+`WorldNavigationSession._setupLocalAvatar()`'s publish path now
+consults `PresenceVisibilityPolicy.shouldAdvertise()` BEFORE calling
+`PresenceSyncService.publish()` — never as a filter a receiver applies
+after the fact, and never by publishing an advertisement that has been
+obscured or encrypted so only some recipients can read it. This is a
+narrower, more honest promise than it might sound: HIDDEN means
+`publish()` is simply never called, full stop — not "publish something
+nobody can decode." A design that instead broadcast-then-hid, or
+broadcast-then-encrypted, would have LOOKED equivalent from the UI but
+would have been lying about what it actually guarantees — see
+`core/PresenceVisibilityPolicy.js`'s own header for exactly why FRIENDS
+mode is honest about NOT yet providing real per-recipient
+confidentiality, given the only transport that exists today
+(`presence/LocalAvatarPresenceBroadcastProvider.js`) has no
+per-recipient addressing at all. Trust (`application/
+PresenceTrustBoundary.js`, 0.2.38) and visibility are deliberately
+opposite sides of the same boundary: visibility is the SENDER asking
+"should I even send this," trust is the RECEIVER asking "should I
+believe what arrived" — see docs/Architecture.md's own diagram.
+
+### AvatarProfile, AvatarPresence, and PresenceVisibilityPolicy Are Three Independent Concerns (0.2.40)
+
+```text
+AvatarProfile             = what I look like        (persistent)
+AvatarPresence             = where I am               (ephemeral)
+PresenceVisibilityPolicy  = who may receive my presence (persistent)
+```
+
+Three separate persisted-or-ephemeral models, three separate storage
+keys (`avatar-profile:<username>`, none for AvatarPresence — it is
+never persisted at all — and `presence-visibility:<username>`), and in
+`ui/views/AvatarSettingsView.js`, two genuinely independent forms with
+two independent Save actions. Changing your visibility policy can
+never accidentally alter your appearance; changing your appearance can
+never accidentally alter who can see you. `PresenceVisibilityPolicy`
+is deliberately NOT a field on `AvatarPresence` (which would tie a
+rarely-changed preference to a stream published many times a second)
+and NOT a field on `WorldPlacement` (avatars and documents remain
+fundamentally different entities — see "Avatars Are Never Document
+Selection," 0.2.39). The one thing all three DO share is the same
+"stable per-owner configuration, created once with a safe default,
+persisted through an injected StorageProvider" shape — see
+`application/PresenceVisibilityUseCase.js`, deliberately mirroring
+`application/AvatarProfileUseCase.js` structurally without merging
+the two.
+
+### A Policy Abstraction Can Exist Before The Mechanism It Fully Assumes (0.2.40)
+
+`PresenceVisibility.LOCAL` and `PresenceVisibility.PUBLIC` are
+OBSERVATIONALLY IDENTICAL today — `PresenceVisibilityPolicy.shouldAdvertise()`
+returns `true` for both, honestly, because only one transport scope
+exists (`presence/LocalAvatarPresenceBroadcastProvider.js`'s same-origin
+`BroadcastChannel`) for LOCAL to meaningfully confine itself to versus
+PUBLIC. Modeling the distinction NOW, even though it currently changes
+nothing observable, is deliberate: the day a wider-reach transport
+(WebRTC, a relay) is added, LOCAL's meaning is already fully specified
+— "never use that transport, even though it's available" — and
+implementing it needs to change only the publish-routing code that
+picks a transport, never `PresenceVisibilityPolicy` itself or anything
+that already reads a `visibility` value. The same reasoning applies to
+FRIENDS: `authorizedPeerIdentities` is a real, persisted, honestly-
+described allow-list today (see the previous principle for what it
+does and does not yet guarantee), ready for a future point-to-point
+transport to actually address without this class changing shape at
+all.
+
 ### The Authoritative Position Is Always The Latest Presence; Interpolation Is Only Ever A Presentation Detail (0.2.37)
 
 `application/RemoteAvatarInterpolator.js` tracks two things: `_to`

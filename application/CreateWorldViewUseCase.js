@@ -117,12 +117,20 @@ export class CreateWorldViewUseCase {
         // spatialDiscoveryProvider (0.2.30) already established. World
         // View works completely normally with no local avatar; see
         // docs/Principles.md.
+        // 0.2.40: presenceVisibilityUseCase travels alongside the same
+        // avatarWiring — see CreateAvatarPresenceSessionUseCase's own
+        // comment. Absent (null) under the exact same "nobody logged
+        // in" condition as avatarProfileUseCase/avatarPresenceSession
+        // — with no local avatar to publish, there is nothing for a
+        // visibility policy to gate.
         let avatarProfileUseCase = null;
         let avatarPresenceSession = null;
+        let presenceVisibilityUseCase = null;
         if (identityProvider && typeof identityProvider.currentUser === 'function' && identityProvider.currentUser()) {
             const avatarWiring = new CreateAvatarPresenceSessionUseCase().execute(identityProvider);
             avatarProfileUseCase = avatarWiring.avatarProfileUseCase;
             avatarPresenceSession = avatarWiring.presenceSession;
+            presenceVisibilityUseCase = avatarWiring.presenceVisibilityUseCase;
         }
 
         // 0.2.37 — Decentralized Avatar Presence Synchronization.
@@ -169,6 +177,10 @@ export class CreateWorldViewUseCase {
                     // 0.2.35: the local avatar — see above.
                     avatarProfileUseCase,
                     avatarPresenceSession,
+                    // 0.2.40: gates whether the local avatar's
+                    // presence is even eligible to publish — see
+                    // WorldNavigationSession's own comment.
+                    presenceVisibilityUseCase,
                     // 0.2.37: remote avatar presence — see above.
                     presenceBroadcastProvider,
                     avatarTemplateRegistry
