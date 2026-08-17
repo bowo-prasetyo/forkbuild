@@ -1582,3 +1582,43 @@ explicitly left for a later, deliberate milestone (see
 docs/Roadmap.md) — this section exists so that milestone is an
 intentional ADDITION to the protocol's guarantees, never a retroactive
 fix for a promise this protocol was silently assumed to already make.
+
+## Avatar Presence Visibility & Privacy (0.2.40)
+
+Also adds NOTHING to the wire — `AvatarPresenceAdvertisement`'s shape
+(0.2.37, extended with an optional `signature` in 0.2.38) is
+byte-for-byte unchanged. `core/PresenceVisibilityPolicy.js` is
+consulted entirely on the SENDER's own machine, entirely before
+`PresenceSyncService.publish()` is ever called; nothing about it is
+observable on the wire by a receiver, and no receiver-side code
+changes at all.
+
+**What this milestone actually changes**: whether an advertisement is
+sent in the first place. `PresenceVisibility.HIDDEN` means
+`publish()` is simply never invoked — the previous section's "every
+field is visible to every peer that receives it" remains completely
+true; HIDDEN just means no peer ever receives anything to begin with.
+
+**Honest limitation of FRIENDS mode, stated plainly**: this protocol
+still has no per-recipient addressing. `presence/LocalAvatarPresenceBroadcastProvider.js`
+is a same-origin `BroadcastChannel` — fire-and-forget to EVERY
+listener, with no concept of "send only to X." `PresenceVisibility.FRIENDS`
+therefore does not yet provide real confidentiality: it controls
+whether THIS replica advertises at all (an empty `authorizedPeerIdentities`
+list behaves exactly like HIDDEN — nothing to show anyone, so nothing
+is sent), never who among the transport's listeners can decode what
+does get sent. A future point-to-point transport (WebRTC, a relay with
+per-peer delivery) could make FRIENDS meaningfully confidential
+without changing `core/PresenceVisibilityPolicy.js`'s shape at all —
+see docs/Principles.md, "A Policy Abstraction Can Exist Before The
+Mechanism It Fully Assumes." Until then, FRIENDS should be understood
+as "advertise only when I've decided there's a point," not "advertise
+privately."
+
+**Explicitly not part of this protocol**, now or implicitly promised
+by this milestone: encryption of any kind, cryptographic anonymity,
+per-recipient transport addressing, and precise location privacy
+(fuzzing/rounding a position before it's sent). `PresenceVisibility.LOCAL`
+and `PresenceVisibility.PUBLIC` remain observationally identical under
+this protocol as it stands today, for the same reason: only one
+transport scope exists.

@@ -1,5 +1,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { CreateAvatarProfileUseCase } from '../../application/CreateAvatarProfileUseCase.js';
+import { CreatePresenceVisibilityUseCase } from '../../application/CreatePresenceVisibilityUseCase.js';
+import { PresenceVisibility } from '../../core/PresenceVisibility.js';
 
 // 0.2.34 — the first VISIBLE avatar feature: an editor over the
 // persistent AvatarProfile core/application built in 0.2.33/0.2.34.
@@ -51,6 +53,16 @@ export default {
         const appearance = reactive({});
         const displayName = ref('');
 
+        // 0.2.40 — a genuinely independent form/save action from the
+        // appearance one above: separate underlying use case, separate
+        // storage key (see application/PresenceVisibilityUseCase.js),
+        // so saving one never implicitly saves the other.
+        const presenceVisibilityUseCase = ref(null);
+        const visibility = ref(PresenceVisibility.PUBLIC);
+        const authorizedPeerIdentitiesText = ref('');
+        const visibilitySaveError = ref(null);
+        const visibilitySaveStatus = ref('idle');
+
         const selectedTemplate = computed(() =>
             templates.value.find((t) => t.templateId === selectedTemplateId.value) || null
         );
@@ -75,6 +87,13 @@ export default {
             selectedTemplateId.value = template ? template.templateId : null;
             applyAppearance(effectiveAppearance);
             displayName.value = profile.displayName;
+
+            const visibilityWired = new CreatePresenceVisibilityUseCase().execute(identityUseCase.provider);
+            presenceVisibilityUseCase.value = visibilityWired.presenceVisibilityUseCase;
+            const policy = presenceVisibilityUseCase.value.getPolicy();
+            visibility.value = policy.visibility;
+            authorizedPeerIdentitiesText.value = policy.authorizedPeerIdentities.join('\n');
+
             loaded.value = true;
         }
 
@@ -116,6 +135,26 @@ export default {
             }
         }
 
+        // 0.2.40 — a plain allow-list, not a friend-request system:
+        // one identity per line (commas also accepted for convenience).
+        // Blank lines/whitespace are dropped by
+        // PresenceVisibilityPolicy itself, never here — this view
+        // stays as dumb about validation as the appearance form above.
+        function saveVisibility() {
+            visibilitySaveError.value = null;
+            visibilitySaveStatus.value = 'saving';
+            try {
+                presenceVisibilityUseCase.value.updatePolicy({
+                    visibility: visibility.value,
+                    authorizedPeerIdentities: authorizedPeerIdentitiesText.value.split(/[\n,]+/)
+                });
+                visibilitySaveStatus.value = 'saved';
+            } catch (error) {
+                visibilitySaveStatus.value = 'idle';
+                visibilitySaveError.value = error.message;
+            }
+        }
+
         let unsubscribeUser = null;
         onMounted(() => {
             unsubscribeUser = identityUseCase.onUserChanged((u) => {
@@ -144,7 +183,13 @@ export default {
             isAccessorySelected,
             toggleAccessory,
             save,
-            skinSwatch
+            skinSwatch,
+            PresenceVisibility,
+            visibility,
+            authorizedPeerIdentitiesText,
+            visibilitySaveError,
+            visibilitySaveStatus,
+            saveVisibility
         };
     },
     template: `
@@ -222,6 +267,47 @@ export default {
 
                     <button class="action-btn action-btn--primary" @click="save" :disabled="saveStatus === 'saving'">Save</button>
                 </div>
+            </div>
+
+            <!-- 0.2.40: a deliberately SEPARATE form/save action from
+                 appearance above — see docs/Principles.md,
+                 "AvatarProfile, AvatarPresence, and
+                 PresenceVisibilityPolicy Are Three Independent
+                 Concerns." Never affects how the avatar looks, only
+                 whether its live position is ever published at all. -->
+            <div v-if="loaded" class="avatar-settings-form avatar-settings-visibility">
+                <h2>Presence Visibility</h2>
+                <p class="form-hint form-hint--neutral">
+                    Controls who may receive your live position while you're in World View — never your avatar's appearance.
+                </p>
+
+                <label class="form-field">
+                    <span class="form-label">Visibility</span>
+                    <select v-model="visibility" class="form-select">
+                        <option :value="PresenceVisibility.PUBLIC">Public — anyone connected can see you</option>
+                        <option :value="PresenceVisibility.FRIENDS">Friends — only identities you authorize below</option>
+                        <option :value="PresenceVisibility.LOCAL">Local — this session's transport scope only</option>
+                        <option :value="PresenceVisibility.HIDDEN">Hidden — never advertise your presence</option>
+                    </select>
+                </label>
+
+                <label class="form-field" v-if="visibility === PresenceVisibility.FRIENDS">
+                    <span class="form-label">Authorized identities</span>
+                    <textarea
+                        v-model="authorizedPeerIdentitiesText"
+                        class="form-input avatar-visibility-peers"
+                        rows="3"
+                        placeholder="One username per line"
+                    ></textarea>
+                    <span class="form-hint form-hint--neutral">
+                        A plain allow-list, not a friend-request system. With none listed, Friends currently behaves like Hidden.
+                    </span>
+                </label>
+
+                <p v-if="visibilitySaveError" class="form-hint">{{ visibilitySaveError }}</p>
+                <p v-if="visibilitySaveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
+
+                <button class="action-btn action-btn--primary" @click="saveVisibility" :disabled="visibilitySaveStatus === 'saving'">Save Visibility</button>
             </div>
         </section>
     `

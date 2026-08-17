@@ -2369,6 +2369,27 @@ html, body {
     text-transform: capitalize;
 }
 
+/* 0.2.40: Presence Visibility — a deliberately separate section/form
+   from the appearance editor above, same card language, its own
+   heading and Save action. */
+.avatar-settings-visibility {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #2a2a2a;
+    max-width: 480px;
+}
+
+.avatar-settings-visibility h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+    color: #e0e0e0;
+}
+
+.avatar-visibility-peers {
+    resize: vertical;
+    font-family: inherit;
+}
+
 .avatar-color-swatch {
     flex: 0 0 auto;
     width: 2.2rem;
