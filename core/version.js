@@ -8,5 +8,5 @@
 export const VERSION = {
     major: 0,
     minor: 2,
-    patch: 38
+    patch: 39
 };

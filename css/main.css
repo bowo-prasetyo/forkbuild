@@ -1842,6 +1842,49 @@ html, body {
     letter-spacing: 0.04em;
 }
 
+/* 0.2.39: Avatar Info panel — same card language as
+   .document-info-panel/.placement-info-panel, a deliberately separate
+   panel for WHO is here (never WHAT the document is or WHERE it's
+   placed) — see docs/Principles.md, "Avatars Are Never Document
+   Selection." Read-only by design: no edit/move/delete affordances
+   exist here at all, only "Follow". */
+.avatar-info-panel {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.avatar-info-panel h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    color: #e0e0e0;
+}
+
+.avatar-info-status-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    margin-right: 0.3rem;
+    background: #4caf7d;
+}
+
+.avatar-info-status-dot--stale {
+    background: #d0a030;
+}
+
+.avatar-info-status-dot--conflicting {
+    background: #e74c3c;
+}
+
+.avatar-info-placeholder-note {
+    display: block;
+    font-size: 0.7rem;
+    color: #707070;
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;

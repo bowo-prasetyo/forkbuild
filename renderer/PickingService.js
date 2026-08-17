@@ -72,7 +72,15 @@ export class PickingService {
             buildingId,
             brickId,
             point: new Position(hit.point.x, hit.point.y, hit.point.z),
-            normal
+            normal,
+            // 0.2.39 — the raycaster's own hit distance, exposed so a
+            // caller comparing this against a simultaneous avatar pick
+            // (renderer/AvatarPickingService.js) can resolve which is
+            // actually NEARER the camera, rather than always
+            // preferring one category over the other regardless of
+            // depth. Every existing caller of pick()/pickRich() reads
+            // named fields and simply ignores this one.
+            distance: hit.distance
         };
     }
 

@@ -36,6 +36,7 @@ import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertiseme
 import { DEFAULT_AVATAR_TEMPLATE_ID } from '../core/AvatarProfile.js';
 import { signAvatarPresenceAdvertisement } from './PresenceSigning.js';
 import { summarizePresenceDiagnostics } from '../core/PresenceDiagnosticsSummary.js';
+import { AvatarInteractionState } from './spatial-state/AvatarInteractionState.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -192,6 +193,19 @@ export class WorldNavigationSession {
 	    this._presencePublishSubscription = null;
 	    this._remoteAvatarFrameSubscription = null;
 	    this._remoteAvatarsVisible = true;
+	    // 0.2.39 — World Entity Interaction & Selection. See the
+	    // "Avatar Interaction" section below for the full picture.
+	    // `_avatarInteraction` is deliberately its OWN state slice,
+	    // never folded into `_spatialSelection` — see
+	    // docs/Principles.md, "Avatars Are Never Document Selection."
+	    // `_followedRemoteAvatarId` is the camera-follows-a-REMOTE-
+	    // avatar counterpart to `_followAvatarEnabled` above (which
+	    // only ever follows the LOCAL avatar) — the two are mutually
+	    // exclusive (see setFollowAvatar/followAvatarId), because
+	    // there is only one camera.
+	    this._avatarInteraction = AvatarInteractionState.empty();
+	    this._followedRemoteAvatarId = null;
+	    this._lastFollowedRemotePosition = null;
 	    // Raw DiscoveryDiagnostics from the most recent
 	    // exploreLocation/exploreHere/whatsHere call — kept alongside
 	    // the summarized version so inspectDocument can look up a
@@ -437,6 +451,10 @@ export class WorldNavigationSession {
                 const knownPresences = this._presenceSyncService.pull(now);
                 this._remoteAvatarRegistry.sync(knownPresences, now);
                 this._remoteAvatarRegistry.tick(now);
+                // 0.2.39 — both read the SAME knownPresences/registry
+                // this frame already computed; neither adds a query.
+                this._pruneAvatarInteractionIfGone(knownPresences);
+                this._followRemoteAvatarIfEnabled(now);
             });
         }
     }
@@ -569,6 +587,97 @@ export class WorldNavigationSession {
             // camera through every step the avatar took while
             // unobserved.
             this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
+            // 0.2.39 — there is only one camera; following your OWN
+            // avatar and following a REMOTE one are mutually
+            // exclusive. See followAvatarId() below.
+            this._stopFollowingRemoteAvatarInternal();
+        }
+    }
+
+    // 0.2.39 — the camera-follows-a-REMOTE-avatar counterpart to
+    // setFollowAvatar/isFollowingAvatar above. Deliberately a
+    // SEPARATE surface, not a generalized "follow any avatarId"
+    // replacement for the existing boolean API — see
+    // docs/Principles.md, "Following The Avatar Never Redefines What
+    // The Camera Is Looking At": both follow relationships share that
+    // same principle (moveCamera() only, never focusDocument()/
+    // setActiveDocument()), but 0.2.36's local-avatar-follow keeps its
+    // own tested boolean contract completely unchanged.
+    getFollowedRemoteAvatarId() {
+        return this._followedRemoteAvatarId;
+    }
+
+    // Starts following avatarId's camera position. A no-op (returns
+    // false) if avatarId isn't currently a known remote avatar — most
+    // commonly because it's the LOCAL avatar (use setFollowAvatar for
+    // that) or because its presence already expired. Turns OFF
+    // local-avatar-follow, for the same one-camera reason
+    // setFollowAvatar turns this off.
+    followAvatarId(avatarId) {
+        if (!this._remoteAvatarRegistry || !this._remoteAvatarRegistry.has(avatarId)) {
+            return false;
+        }
+        this._followedRemoteAvatarId = avatarId;
+        this._lastFollowedRemotePosition = this._remoteAvatarRegistry.currentPosition(avatarId, Date.now());
+        this._followAvatarEnabled = false;
+        return true;
+    }
+
+    stopFollowingRemoteAvatar() {
+        this._stopFollowingRemoteAvatarInternal();
+    }
+
+    _stopFollowingRemoteAvatarInternal() {
+        this._followedRemoteAvatarId = null;
+        this._lastFollowedRemotePosition = null;
+    }
+
+    // Same delta-only camera shift _followAvatarIfEnabled uses for the
+    // local avatar, driven from the SAME interpolated position
+    // RemoteAvatarRegistry.tick() already pushes to the renderer every
+    // frame — following sees exactly what's on screen, never a
+    // separately-computed value. Gracefully stops following (rather
+    // than throwing or camera-jumping) the moment the target avatar is
+    // no longer known — e.g. its presence expired.
+    _followRemoteAvatarIfEnabled(now) {
+        if (!this._followedRemoteAvatarId || !this._spatialCameraController || !this._remoteAvatarRegistry) {
+            return;
+        }
+        if (!this._remoteAvatarRegistry.has(this._followedRemoteAvatarId)) {
+            this._stopFollowingRemoteAvatarInternal();
+            return;
+        }
+        const position = this._remoteAvatarRegistry.currentPosition(this._followedRemoteAvatarId, now);
+        const previous = this._lastFollowedRemotePosition;
+        this._lastFollowedRemotePosition = position;
+        if (!previous || !position) {
+            return;
+        }
+        const delta = {
+            x: position.x - previous.x,
+            y: position.y - previous.y,
+            z: position.z - previous.z
+        };
+        if (delta.x === 0 && delta.y === 0 && delta.z === 0) {
+            return;
+        }
+        this._spatialCameraController.moveCamera(delta);
+    }
+
+    // 0.2.39 — the moment a targeted avatar's presence actually
+    // expires (ABSENT-pruned from LocalPresenceStore — see
+    // application/RemoteAvatarRegistry.js's own sync()), the
+    // interaction target and any active follow relationship both
+    // gracefully clear, rather than pointing at an avatar that no
+    // longer exists. `knownPresences` is exactly what this frame's
+    // pull()/sync() already computed — no extra query.
+    _pruneAvatarInteractionIfGone(knownPresences) {
+        if (this._avatarInteraction.isEmpty || this.isLocalAvatarId(this._avatarInteraction.avatarId)) {
+            return;
+        }
+        const stillKnown = knownPresences.some((k) => k.advertisement.avatarId === this._avatarInteraction.avatarId);
+        if (!stillKnown) {
+            this._setAvatarInteraction(AvatarInteractionState.empty());
         }
     }
 
@@ -927,11 +1036,36 @@ export class WorldNavigationSession {
     // Interaction
     // -----------------------------------------------------------------
 	
+	// 0.2.39 — an avatar pick is checked ALONGSIDE the brick pick (both
+	// are cheap raycasts against entirely separate object sets — see
+	// renderer/AvatarPickingService.js), and whichever is actually
+	// NEARER the camera wins — never "bricks always win" regardless of
+	// depth (an avatar standing in front of a wall must be selectable
+	// as itself, not as the wall behind it). Exactly one of
+	// {avatar interaction target, brick/ground selection} is ever
+	// non-empty at a time — see docs/Principles.md, "Avatars Are Never
+	// Document Selection": every branch below explicitly clears the
+	// other. `toggle`/`additive` are meaningless for an avatar target
+	// (there is no multi-avatar-selection concept) and are simply
+	// ignored on that branch.
 	pick(screenX, screenY, { toggle = false, additive = false } = {}) {
 	    if (!this._session) {
 	        return null;
 	    }
 	    const brickHit = this._session.pick(screenX, screenY);
+	    const avatarHit = typeof this._session.pickAvatar === 'function'
+	        ? this._session.pickAvatar(screenX, screenY)
+	        : null;
+
+	    if (avatarHit && (!brickHit || avatarHit.distance < brickHit.distance)) {
+	        this._setAvatarInteraction(AvatarInteractionState.avatar(avatarHit.avatarId));
+	        this._setSpatialSelection(SpatialSelectionState.empty());
+	        this._session.clearSelection();
+	        this._session.clearHover();
+	        this._refreshGizmo();
+	        return this._avatarInteraction;
+	    }
+
 	    if (brickHit) {
 	        let nextSelection;
 	        if (additive) {
@@ -941,6 +1075,7 @@ export class WorldNavigationSession {
 	        } else {
 	            nextSelection = SpatialSelectionState.brick(brickHit);
 	        }
+	        this._setAvatarInteraction(AvatarInteractionState.empty());
 	        this._setSpatialSelection(nextSelection);
 			this._session.selectBricks(nextSelection.brickIds, nextSelection.brickId);
             this._session.clearHover();
@@ -951,6 +1086,7 @@ export class WorldNavigationSession {
         }
         const groundHit = this._session.pickGround(screenX, screenY);
         if (groundHit) {
+            this._setAvatarInteraction(AvatarInteractionState.empty());
             this._setSpatialSelection(SpatialSelectionState.ground(groundHit.position));
             this._session.clearSelection();
             this._session.clearHover();
@@ -959,6 +1095,7 @@ export class WorldNavigationSession {
             this._refreshGizmo();
             return this._spatialSelection;
         }
+        this._setAvatarInteraction(AvatarInteractionState.empty());
         this._setSpatialSelection(SpatialSelectionState.empty());
         this._session.clearSelection();
         this._session.clearHover();
@@ -996,6 +1133,7 @@ export class WorldNavigationSession {
     }
 
     clearSelection() {
+        this._setAvatarInteraction(AvatarInteractionState.empty());
         this._setSpatialSelection(SpatialSelectionState.empty());
         this._spatialInspection = SpatialInspectionState.empty();
         this._spatialEditingContext = SpatialEditingContext.empty();
@@ -1210,6 +1348,118 @@ export class WorldNavigationSession {
 
     getSpatialInspection() {
         return this._spatialInspection;
+    }
+
+    // 0.2.39 — the raw AvatarInteractionState, same shape/role as
+    // getSpatialSelection() but for the entirely separate avatar
+    // target slice — see docs/Principles.md, "Avatars Are Never
+    // Document Selection."
+    getAvatarInteraction() {
+        return this._avatarInteraction;
+    }
+
+    // Read-only, generalizes 0.2.29's inspectDocument() to avatars:
+    // resolves the CURRENT avatar interaction target into plain
+    // presentation data for ui/components/AvatarInfoPanel.js, reading
+    // from whichever source actually HOLDS that data — the local
+    // avatar's own AvatarProfileUseCase/AvatarPresenceSession, or a
+    // remote avatar's known presence via PresenceSyncService — never
+    // mutating anything, never forking, never touching presence. See
+    // docs/Principles.md, "Looking At Something Is Never The Same As
+    // Acting On It." Returns null when there is no current target, or
+    // when the targeted avatar is no longer known (e.g. its presence
+    // expired between being clicked and being inspected).
+    getAvatarInfo() {
+        if (!this._avatarInteraction || this._avatarInteraction.isEmpty) {
+            return null;
+        }
+        const avatarId = this._avatarInteraction.avatarId;
+        return this.isLocalAvatarId(avatarId)
+            ? this._inspectLocalAvatar()
+            : this._inspectRemoteAvatar(avatarId);
+    }
+
+    // Whether `avatarId` is THIS session's own local avatar — never a
+    // trust/authorization check, purely "which of the two data sources
+    // getAvatarInfo() should read from."
+    isLocalAvatarId(avatarId) {
+        return Boolean(this._avatarPresenceSession) && this._avatarPresenceSession.current.avatarId === avatarId;
+    }
+
+    // A lighter-weight alternative to getSpatialState().cameraPosition
+    // for callers (getAvatarInfo(), follow-avatar) that only need the
+    // camera's position, not a full findVisibleDocuments() pass.
+    getCameraPosition() {
+        if (!this._spatialCameraController) {
+            return null;
+        }
+        const state = this._spatialCameraController.getSpatialCameraState();
+        return { x: state.position.x, y: state.position.y, z: state.position.z };
+    }
+
+    _inspectLocalAvatar() {
+        if (!this._avatarProfileUseCase || !this._avatarPresenceSession) {
+            return null;
+        }
+        const { profile, template } = this._avatarProfileUseCase.getEffectiveAvatar();
+        const presence = this._avatarPresenceSession.current;
+        const cameraPosition = this.getCameraPosition();
+        return {
+            avatarId: presence.avatarId,
+            isLocal: true,
+            displayName: profile.displayName || profile.ownerIdentity || 'You',
+            ownerIdentity: profile.ownerIdentity,
+            templateLabel: template ? template.displayLabel : null,
+            // 0.2.37 never synchronizes real appearance for a REMOTE
+            // avatar — but THIS is the local avatar, whose template is
+            // always its own real, chosen one.
+            templatePlaceholder: false,
+            position: { x: presence.position.x, y: presence.position.y, z: presence.position.z },
+            rotation: { ...presence.rotation },
+            animation: presence.animation,
+            // Trust describes a RECEIVED claim about someone else;
+            // there is no such claim about yourself, and lifecycle
+            // (PRESENT/STALE/ABSENT) is a judgment a RECEIVER makes
+            // about elapsed time since last heard from — neither
+            // question is meaningful applied to your own, always-live
+            // presence.
+            lifecycleState: null,
+            trustStatus: null,
+            distance: cameraPosition ? distanceBetween(presence.position, cameraPosition) : null
+        };
+    }
+
+    _inspectRemoteAvatar(avatarId) {
+        if (!this._presenceSyncService) {
+            return null;
+        }
+        const known = this._presenceSyncService.listKnownPresences(Date.now());
+        const entry = known.find((k) => k.advertisement.avatarId === avatarId);
+        if (!entry) {
+            return null;
+        }
+        const defaultTemplate = this._avatarTemplateRegistry
+            ? this._avatarTemplateRegistry.get(DEFAULT_AVATAR_TEMPLATE_ID)
+            : null;
+        const cameraPosition = this.getCameraPosition();
+        return {
+            avatarId,
+            isLocal: false,
+            // ownerIdentity is the best synced identity signal
+            // available — a remote AvatarProfile's displayName is
+            // never distributed (see 0.2.37's own scope list), so it
+            // is never claimed here.
+            displayName: entry.advertisement.ownerIdentity || avatarId,
+            ownerIdentity: entry.advertisement.ownerIdentity,
+            templateLabel: defaultTemplate ? defaultTemplate.displayLabel : null,
+            templatePlaceholder: true,
+            position: { ...entry.advertisement.position },
+            rotation: { ...entry.advertisement.rotation },
+            animation: entry.advertisement.animation,
+            lifecycleState: entry.lifecycleState,
+            trustStatus: entry.trustObservation ? entry.trustObservation.status : null,
+            distance: cameraPosition ? distanceBetween(entry.advertisement.position, cameraPosition) : null
+        };
     }
 
     getSpatialEditingContext() {
@@ -2161,6 +2411,14 @@ export class WorldNavigationSession {
         this._spatialHover = hover;
     }
 
+    // 0.2.39 — deliberately minimal, unlike _setSpatialSelection: an
+    // avatar interaction target has no editing context, no brick
+    // inspection, no gizmo presentation to refresh — it is JUST an
+    // identifier a caller (getAvatarInfo()) resolves fresh on demand.
+    _setAvatarInteraction(avatarInteraction) {
+        this._avatarInteraction = avatarInteraction;
+    }
+
     _refreshInspection() {
         if (!this._inspectionService) {
             this._spatialInspection = SpatialInspectionState.empty();
@@ -2652,6 +2910,9 @@ export class WorldNavigationSession {
         this._avatarControlModeActive = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
+        this._avatarInteraction = AvatarInteractionState.empty();
+        this._followedRemoteAvatarId = null;
+        this._lastFollowedRemotePosition = null;
         if (this._remoteAvatarFrameSubscription) {
             this._remoteAvatarFrameSubscription();
             this._remoteAvatarFrameSubscription = null;

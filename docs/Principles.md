@@ -1880,6 +1880,101 @@ authoritative state, and authoritative state never leaks a raw trust
 verdict into presentation" split 0.2.37's interpolation principle
 already drew one layer down.
 
+### Selection Identifies What The User Is Interacting With; It Does Not Imply Ownership, Editability, Or Authority (0.2.39)
+
+`application/spatial-state/SpatialSelectionState.js` and the new
+`application/spatial-state/AvatarInteractionState.js` both answer the
+exact same shape of question — "what is the user currently pointed
+at?" — and neither one, by itself, ever grants a capability. Clicking
+a brick doesn't mean it's editable (see `getEditabilityNotice`,
+0.2.20/0.2.21); clicking an avatar doesn't mean it's yours, movable,
+deletable, or even real-time-accurate. `WorldNavigationSession.pick()`
+is deliberately the ONLY place a click resolves into a target, and
+every one of its branches — brick, avatar, ground, empty — sets state
+and nothing more: no editability check, no ownership check, no
+authority check happens at pick time. Those questions get asked
+LATER, by whatever acts on the target (`getEditabilityNotice` for a
+document, `moveSelection` triggering fork-on-write, nothing at all for
+an avatar — see the next principle). Keeping "what did I click"
+completely separate from "what am I allowed to do to it" is what lets
+`getAvatarInfo()` exist at all: an avatar can be a fully legitimate
+interaction target that supports being LOOKED AT while supporting zero
+of the operations a brick target supports.
+
+### Avatars Are Never Document Selection (0.2.39)
+
+`AvatarInteractionState` and `SpatialSelectionState` are two
+INDEPENDENT state slices, not two views onto one shared selection
+concept — an avatarId is structurally incapable of ever appearing
+inside `SpatialSelectionState`'s `items` array, because nothing in
+this codebase ever constructs one that way. This is enforced at three
+layers, not just one, so no future change to any single layer can
+accidentally blur the line:
+
+  - **Renderer**: `renderer/AvatarPickingService.js` raycasts against
+    avatar `AvatarVisual.root` groups; `renderer/PickingService.js`
+    raycasts against `MeshRegistry`'s brick meshes. Two disjoint
+    object sets, two separate raycasters — an avatar mesh is not even
+    a candidate when picking a brick, and vice versa.
+  - **Session**: `WorldNavigationSession.pick()` treats an avatar hit
+    and a brick/ground hit as mutually exclusive outcomes of the SAME
+    click — whichever is nearer the camera wins (see the next
+    principle), and the LOSING category is explicitly cleared, never
+    left stale.
+  - **Everything downstream of selection** — `application/
+    SpatialEditingService.js`, `TransformGizmoUseCase`, clipboard,
+    groups, undo/redo — reads `SpatialSelectionState` exclusively and
+    has no code path that could accept an avatarId even if one were
+    somehow constructed. An avatar being "selected" (targeted) can
+    never make it into a copied building group, a transform gizmo
+    gesture, or a CommandHistory entry — not because those systems
+    check and reject it, but because they never see it in the first
+    place.
+
+### Whichever Is Nearer Wins, Never Category (0.2.39)
+
+When a brick and an avatar are both along the SAME click ray (an
+avatar standing in front of a wall, say), `WorldNavigationSession.pick()`
+compares `renderer/PickingService.js`'s and `renderer/
+AvatarPickingService.js`'s own raycast `distance` fields and picks
+whichever is actually closer to the camera. It deliberately never
+hardcodes "bricks always win" or "avatars always win" — either rule
+would make the wrong thing selectable exactly when depth actually
+matters, which is precisely when a person standing in front of
+something is trying to click the PERSON.
+
+### Looking At Something Is Never The Same As Acting On It (0.2.39)
+
+`WorldNavigationSession.getAvatarInfo()` generalizes 0.2.29's
+`inspectDocument()` — both are strictly READ paths: they resolve an
+identifier into presentation data and touch nothing else. Nothing
+`getAvatarInfo()` does can fork a document, move a placement, alter
+AvatarPresence, or affect the trust/replay/equivocation state
+0.2.38 built. `ui/components/AvatarInfoPanel.js` makes this visible in
+the UI too: it renders exactly what the design doc's own mockup shows
+and nothing more — no Edit, no Move, no Delete, no Save. The ONE
+action available, "Follow", is a pure camera relationship (see
+`WorldNavigationSession.followAvatarId()` and 0.2.36's "Following The
+Avatar Never Redefines What The Camera Is Looking At") — even the
+single interactive affordance this panel offers never touches the
+avatar, the document, or anything persisted.
+
+### Avatar Presence Has No Privacy Guarantee Beyond Transport Scope (0.2.39)
+
+Made inspectable for the first time this milestone — `getAvatarInfo()`
+exposes a remote avatar's exact position, animation, and trust state
+to any replica that receives its presence — this is a good moment to
+say plainly what was always implicitly true since 0.2.37: an
+`AvatarPresenceAdvertisement` is observable by every peer connected to
+the same broadcast transport, with no access control, no audience
+scoping, and no notion of "who is allowed to see this" beyond "who is
+listening." This is a deliberate, DOCUMENTED boundary, not an
+oversight — see docs/Protocol.md. A future `PUBLIC`/`FRIENDS`/`LOCAL`/
+`HIDDEN` presence-visibility model is explicitly left for a later,
+deliberate milestone (see docs/Roadmap.md); 0.2.39 makes presence data
+easier to LOOK AT, but changes nothing about who it's already visible
+to.
+
 ### The Authoritative Position Is Always The Latest Presence; Interpolation Is Only Ever A Presentation Detail (0.2.37)
 
 `application/RemoteAvatarInterpolator.js` tracks two things: `_to`

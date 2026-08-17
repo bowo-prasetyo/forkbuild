@@ -1558,3 +1558,27 @@ plausible relative to the previous one, rate limiting, mandatory
 signing, and any authenticated cross-replica `AvatarProfile`
 distribution (appearance still is not synchronized at all — see the
 0.2.37 section above, unchanged).
+
+## World Entity Interaction & Selection (0.2.39)
+
+Adds NOTHING to the wire. Avatar targeting, inspection, and
+following are entirely local World View/session state
+(`application/spatial-state/AvatarInteractionState.js`) — no new
+message, no new field on `AvatarPresenceAdvertisement`, no change to
+`core/PresenceIngestion.js`/`application/PresenceTrustBoundary.js`.
+This milestone is worth a protocol note anyway, for what it makes
+newly VISIBLE rather than what it transmits:
+
+**Presence privacy boundary (documented, not enforced).** Now that a
+received `AvatarPresenceAdvertisement` is inspectable through the UI
+(`WorldNavigationSession.getAvatarInfo()`), it is worth stating
+plainly what has been true since 0.2.37: this protocol provides no
+access control, no audience scoping, and no notion of "who is allowed
+to see this presence" beyond "who is listening to the transport."
+Every field of an advertisement — exact position, animation, trust
+state — is visible to every peer that receives it, full stop. A future
+`PUBLIC`/`FRIENDS`/`LOCAL`/`HIDDEN` presence-visibility model is
+explicitly left for a later, deliberate milestone (see
+docs/Roadmap.md) — this section exists so that milestone is an
+intentional ADDITION to the protocol's guarantees, never a retroactive
+fix for a promise this protocol was silently assumed to already make.

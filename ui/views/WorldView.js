@@ -16,6 +16,7 @@ import PlacementEditorDialog from '../components/PlacementEditorDialog.js';
 import WorldSearchPanel from '../components/WorldSearchPanel.js';
 import LocationDocumentsDialog from '../components/LocationDocumentsDialog.js';
 import WorldLocationBrowser from '../components/WorldLocationBrowser.js';
+import AvatarInfoPanel from '../components/AvatarInfoPanel.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -44,7 +45,8 @@ export default {
         EditingSidebar, CommandPalette, ActionFeedback,
         DocumentInfoPanel, MetadataEditorDialog,
         PlacementInfoPanel, PlacementEditorDialog,
-        WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser
+        WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
+        AvatarInfoPanel
     },
     setup() {
         const route = useRoute();
@@ -95,6 +97,15 @@ export default {
         // layers), not a naming choice made for this milestone.
         const placementInfo = ref(null);
         const activePlacementInfo = ref(null);
+        // 0.2.39 — the Avatar Info panel's data, mirroring documentInfo/
+        // placementInfo's own shape: read fresh from session.getAvatarInfo()
+        // every refreshSpatialUI(), null whenever there is no current
+        // avatar interaction target (see application/spatial-state/
+        // AvatarInteractionState.js). followedRemoteAvatarId mirrors
+        // session.getFollowedRemoteAvatarId() purely so the panel knows
+        // whether to show "Follow" or "Stop Following".
+        const avatarInfo = ref(null);
+        const followedRemoteAvatarId = ref(null);
         const showPlacementEditor = ref(false);
         const placementEditTarget = ref(null);
         // 0.2.25: set only after checkPlacementOverlap() has found an
@@ -519,6 +530,20 @@ export default {
                 ? session.getPlacementInfo(spatialInspection.value.documentId)
                 : null;
 
+            // 0.2.39 — independent of spatialInspection above: an
+            // avatar interaction target and a brick/ground selection
+            // are mutually exclusive (see WorldNavigationSession.pick()),
+            // so at most one of {documentInfo/placementInfo, avatarInfo}
+            // is ever non-null at a time, but they're read from
+            // completely separate session state, never derived from
+            // each other.
+            avatarInfo.value = typeof session.getAvatarInfo === 'function'
+                ? session.getAvatarInfo()
+                : null;
+            followedRemoteAvatarId.value = typeof session.getFollowedRemoteAvatarId === 'function'
+                ? session.getFollowedRemoteAvatarId()
+                : null;
+
             const editingCtx = session.getSpatialEditingContext();
             if (editingCtx && !editingCtx.isEmpty) {
                 spatialEditingContext.value = {
@@ -939,7 +964,34 @@ export default {
         function toggleFollowAvatar(event) {
             followAvatar.value = !followAvatar.value;
             session.setFollowAvatar(followAvatar.value);
+            // 0.2.39 — following your OWN avatar and a REMOTE one are
+            // mutually exclusive (see WorldNavigationSession.setFollowAvatar's
+            // own comment); reflect that immediately rather than
+            // waiting for the next periodic refreshSpatialUI().
+            if (followAvatar.value) {
+                followedRemoteAvatarId.value = null;
+            }
             blurCheckbox(event);
+        }
+
+        // 0.2.39 — "Follow" on the Avatar Info panel. Deliberately
+        // separate from toggleFollowAvatar above: this follows
+        // whichever REMOTE avatar is currently the interaction target,
+        // never the local avatar — see
+        // WorldNavigationSession.followAvatarId's own comment for why
+        // that stays a genuinely different capability rather than a
+        // generalized "follow any avatarId" replacement for the
+        // existing boolean API.
+        function followAvatarFromPanel(avatarId) {
+            if (session.followAvatarId(avatarId)) {
+                followedRemoteAvatarId.value = avatarId;
+                followAvatar.value = false;
+            }
+        }
+
+        function stopFollowingAvatarFromPanel() {
+            session.stopFollowingRemoteAvatar();
+            followedRemoteAvatarId.value = null;
         }
 
         function toggleShowOtherAvatars(event) {
@@ -1041,6 +1093,10 @@ export default {
             toggleAvatarControlMode,
             toggleFollowAvatar,
             toggleShowOtherAvatars,
+            avatarInfo,
+            followedRemoteAvatarId,
+            followAvatarFromPanel,
+            stopFollowingAvatarFromPanel,
             loadedWorlds,
             nearbyWorlds,
             failedWorlds,
@@ -1353,6 +1409,13 @@ export default {
                     @focus="focusWorld(placementInfo.documentId)"
                     @move="openPlacementEditor(placementInfo)"
                     @view-here="openLocationDocuments(placementInfo.position)"
+                />
+                <AvatarInfoPanel
+                    v-if="avatarInfo"
+                    :info="avatarInfo"
+                    :following="followedRemoteAvatarId === avatarInfo.avatarId"
+                    @follow="followAvatarFromPanel(avatarInfo.avatarId)"
+                    @stop-follow="stopFollowingAvatarFromPanel"
                 />
 
                 <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">
