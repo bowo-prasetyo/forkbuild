@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.34** — Avatar Templates & Customization
+**Version 0.2.35** — Avatar Rendering & World Presence
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -226,6 +226,25 @@ preview (no Three.js needed yet). See docs/Principles.md, "A Template
 Is A Closed Vocabulary, Not An Asset Loader" and "Validate Strictly On
 Write; Degrade Gracefully On Read."
 
+0.2.35 puts the avatar physically into the World View's Three.js
+scene — the local user's own avatar, rendering only, no movement input
+or multiplayer yet. The renderer combines two independent inputs it
+never modifies: 0.2.34's resolved appearance and 0.2.33's
+`AvatarPresence` (position/rotation/animation) — `renderer/
+AvatarRenderer.js` converts template+appearance into a real
+`THREE.Group` (head/hair/torso/legs/accessories, one small box marker
+per selected accessory), and `renderer/AvatarVisual.js` keeps that
+object graph alive across updates: appearance changes rebuild only
+when content actually changed, while position/rotation/animation
+changes are cheap transform writes that never touch geometry. A "Show
+My Avatar" checkbox in World View is a pure client rendering
+preference — never persisted, never a new field on `AvatarProfile` or
+`AvatarPresence`. Moving the avatar (or changing its appearance) never
+touches a document's `WorldPlacement`, verified directly (byte-identical
+placement JSON before/after) in the flagship test. See
+docs/Principles.md, "An Avatar's Location Comes From Presence, Never
+From The Avatar Itself."
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -263,6 +282,7 @@ Write; Degrade Gracefully On Read."
 - **Client-Side Publication Preview & Lazy Rendering (0.2.32)** — Repository/Author View cards render a real thumbnail generated locally from a publication's actual document content, never from user-supplied metadata; a deterministic camera framing (fixed isometric angle, bounding-sphere distance) means the same content always gets the same intended shot; generation is lazy (only for cards actually scrolled into view), off the main thread, cancellable when a page or search changes, and cached in memory only, keyed by content identity — nothing about a preview is signed, persisted, or replicated, and a preview failure never hides the publication it belongs to.
 - **Avatar Identity & Presence Model (0.2.33)** — the first milestone of a multi-part avatar arc, establishing the model boundary before any rendering or movement code: a persistent `AvatarProfile` (avatarId/ownerIdentity/templateId/appearance/displayName), immutable and one per identity, is neither a Document, a Publication, nor a WorldPlacement; an ephemeral `AvatarPresence` (position/rotation/animation/sequence) lives only in an in-memory session with no storage dependency at all, and is deliberately never signed — a movement update is the wrong kind of fact for the durable-and-authorized trust model Publications and Placements use. No rendering, movement, or networking ships yet; see docs/Roadmap.md for 0.2.34 through 0.2.38.
 - **Avatar Templates & Customization (0.2.34)** — a small built-in template registry gives `AvatarProfile.appearance` a real, validated, declarative schema (skin/hair/shirt/pants/accessories, each with a closed set of options and optional colors) — never executable code or a pointer to a remote asset; `updateProfile()` strictly rejects anything outside a template's bounds, while `getEffectiveAvatar()` never throws, always resolving a complete appearance with graceful per-field fallback so a broken or unrecognized profile can never block World View access. Ships the first visible avatar feature, the Avatar Creator (`/avatar`), with every control driven by the selected template's own data and a lightweight SVG preview.
+- **Avatar Rendering & World Presence (0.2.35)** — the local user's own avatar now physically renders in the World View's Three.js scene, combining 0.2.34's resolved appearance and 0.2.33's `AvatarPresence` — two independent inputs the renderer only ever combines, never modifies; appearance changes rebuild the mesh graph only when content actually changed, while position/rotation/animation updates are cheap transform writes; a "Show My Avatar" checkbox is a pure client rendering preference, never persisted avatar state; moving or restyling an avatar never touches a document's `WorldPlacement`. No movement input or multiplayer yet.
   
 ## Architecture
 
@@ -362,6 +382,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.32  Client-Side Publication Preview & Lazy Rendering
 - [x] 0.2.33  Avatar Identity & Presence Model
 - [x] 0.2.34  Avatar Templates & Customization
+- [x] 0.2.35  Avatar Rendering & World Presence
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
@@ -141,9 +141,24 @@ export default {
         const feedbackMessage = ref('');
         const feedbackVisible = ref(false);
 
+        // 0.2.35: World View needs to know who's logged in to render
+        // that user's own avatar (see WorldNavigationSession's
+        // "Local Avatar" section) — the same identityUseCase.provider
+        // every other publish-capable surface (EditorView) already
+        // reads, just not previously threaded through here since
+        // nothing in World View needed identity before now.
+        const identityUseCase = inject('identityUseCase');
         const registry = new CreateBrickRegistryUseCase().execute();
-        const worldViewFactory = new CreateWorldViewUseCase().execute();
+        const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider);
         const session = worldViewFactory.createSession(registry);
+        // Purely a client rendering preference (see docs/Principles.md,
+        // "Avatar Visibility Is A Client Rendering Preference, Not
+        // Avatar State") — never persisted, never affects
+        // AvatarProfile/AvatarPresence. Reflects session.isLocalAvatarVisible()
+        // once the session actually starts (a local avatar may not
+        // exist at all if nobody is logged in — see hasLocalAvatar).
+        const showMyAvatar = ref(true);
+        const hasLocalAvatar = ref(false);
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
         const allPublications = ref([]);
 
@@ -853,11 +868,17 @@ export default {
         // Lifecycle
         // -----------------------------------------------------------------
 
+        function toggleShowMyAvatar() {
+            showMyAvatar.value = !showMyAvatar.value;
+            session.setLocalAvatarVisible(showMyAvatar.value);
+        }
+
         onMounted(() => {
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
             session.navigateToDocument(initialDocumentId);
             refreshSpatialUI();
+            hasLocalAvatar.value = session.hasLocalAvatar();
 
             viewport.value.addEventListener('pointerdown', onPointerDown);
             viewport.value.addEventListener('pointermove', onPointerMove);
@@ -886,6 +907,9 @@ export default {
             viewport,
             title,
             author,
+            showMyAvatar,
+            hasLocalAvatar,
+            toggleShowMyAvatar,
             loadedWorlds,
             nearbyWorlds,
             failedWorlds,
@@ -1012,6 +1036,32 @@ export default {
                 <p class="world-view-hint">
                     Drag to orbit • Scroll to zoom • Home to reset • Ctrl/Cmd+K command palette • Click to inspect / place
                 </p>
+
+                <!-- 0.2.35: a pure client rendering preference — see
+                     docs/Principles.md. "Show Other Avatars" is
+                     reserved for 0.2.37 (no other-avatar registry
+                     exists yet), so it stays checked and disabled
+                     rather than offering a control with nothing to
+                     control. -->
+                <div class="world-view-section world-view-section--avatar">
+                    <h4>Avatar</h4>
+                    <label class="world-view-avatar-toggle">
+                        <input
+                            type="checkbox"
+                            :checked="showMyAvatar"
+                            :disabled="!hasLocalAvatar"
+                            @change="toggleShowMyAvatar"
+                        />
+                        Show My Avatar
+                    </label>
+                    <label class="world-view-avatar-toggle world-view-avatar-toggle--disabled">
+                        <input type="checkbox" checked disabled />
+                        Show Other Avatars <span class="form-hint form-hint--neutral">(coming soon)</span>
+                    </label>
+                    <p v-if="!hasLocalAvatar" class="form-hint form-hint--neutral">
+                        Log in and create an avatar (My Avatar) to appear here.
+                    </p>
+                </div>
 
                 <div class="world-view-section world-view-section--search">
                     <h4>Search</h4>

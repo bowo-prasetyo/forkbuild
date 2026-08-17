@@ -79,7 +79,9 @@ export class WorldNavigationSession {
 	    moveWorldPlacementUseCase = null,
 	    spatialAllocationPolicy = SpatialAllocationPolicy.WARN,
 	    searchWorldUseCase = null,
-	    spatialDiscoveryProvider = null
+	    spatialDiscoveryProvider = null,
+	    avatarProfileUseCase = null,
+	    avatarPresenceSession = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -132,6 +134,18 @@ export class WorldNavigationSession {
 	    // docs/Principles.md, "Diagnostics Are Received From The
 	    // Discovery Layer, Never Invented By The UI (0.2.30)."
 	    this._spatialDiscoveryProvider = spatialDiscoveryProvider;
+	    // 0.2.35 — OPTIONAL, same "enforce/offer only when the
+	    // collaborator is actually wired" rule as every other
+	    // optional dependency in this constructor. Both null when
+	    // nobody is logged in (see CreateWorldViewUseCase) — a session
+	    // built without them simply renders no local avatar, exactly
+	    // the graceful-absence posture spatialDiscoveryProvider already
+	    // established.
+	    this._avatarProfileUseCase = avatarProfileUseCase;
+	    this._avatarPresenceSession = avatarPresenceSession;
+	    this._avatarProfileSubscription = null;
+	    this._avatarPresenceSubscription = null;
+	    this._localAvatarVisible = true;
 	    // Raw DiscoveryDiagnostics from the most recent
 	    // exploreLocation/exploreHere/whatsHere call — kept alongside
 	    // the summarized version so inspectDocument can look up a
@@ -249,6 +263,59 @@ export class WorldNavigationSession {
         this._spatialCameraController = new SpatialCameraController(this._session);
         this._inspectionService = new SpatialInspectionService(this);
         this._placementService = new SpatialPlacementService(this._registry);
+        this._setupLocalAvatar();
+    }
+
+    // -----------------------------------------------------------------
+    // Local Avatar (0.2.35)
+    // -----------------------------------------------------------------
+    //
+    // Deliberately narrow: renders ONLY the current user's own avatar,
+    // combining two independent, already-existing inputs it never
+    // modifies — AvatarProfileUseCase.getEffectiveAvatar() (WHAT it
+    // looks like) and AvatarPresenceSession.current (WHERE it is) —
+    // see docs/Principles.md, "An Avatar's Location Comes From
+    // Presence, Never From The Avatar Itself." Neither subscription
+    // here ever writes back to the profile, the presence, a Document,
+    // a WorldPlacement, or any discovery/publication provider — this
+    // session's avatar wiring only ever calls the render facade.
+    _setupLocalAvatar() {
+        if (!this._avatarProfileUseCase || !this._avatarPresenceSession) {
+            return;
+        }
+        const { template, appearance } = this._avatarProfileUseCase.getEffectiveAvatar();
+        this._session.setLocalAvatar(template, appearance, this._avatarPresenceSession.current);
+        this._session.setLocalAvatarVisible(this._localAvatarVisible);
+
+        this._avatarProfileSubscription = this._avatarProfileUseCase.onProfileChanged(() => {
+            const effective = this._avatarProfileUseCase.getEffectiveAvatar();
+            this._session.updateLocalAvatarAppearance(effective.template, effective.appearance);
+        });
+        this._avatarPresenceSubscription = this._avatarPresenceSession.onPresenceChanged((presence) => {
+            this._session.updateLocalAvatarPresence(presence);
+        });
+    }
+
+    // Whether a local avatar was actually wired for this session (i.e.
+    // someone was logged in when it started) — lets the UI decide
+    // whether "Show My Avatar" is even a meaningful control to offer.
+    hasLocalAvatar() {
+        return Boolean(this._avatarProfileUseCase && this._avatarPresenceSession);
+    }
+
+    isLocalAvatarVisible() {
+        return this._localAvatarVisible;
+    }
+
+    // A pure client rendering preference — see docs/Principles.md.
+    // Never touches AvatarProfile or AvatarPresence; toggling it
+    // twice in a row is a no-op exactly like every other purely
+    // visual toggle in this codebase.
+    setLocalAvatarVisible(visible) {
+        this._localAvatarVisible = visible;
+        if (this._session && typeof this._session.setLocalAvatarVisible === 'function') {
+            this._session.setLocalAvatarVisible(visible);
+        }
     }
 
     // -----------------------------------------------------------------
@@ -2267,6 +2334,14 @@ export class WorldNavigationSession {
 	}
 	
     dispose() {
+        if (this._avatarProfileSubscription) {
+            this._avatarProfileSubscription();
+            this._avatarProfileSubscription = null;
+        }
+        if (this._avatarPresenceSubscription) {
+            this._avatarPresenceSubscription();
+            this._avatarPresenceSubscription = null;
+        }
         if (this._session) {
             this._session.dispose();
             this._session = null;

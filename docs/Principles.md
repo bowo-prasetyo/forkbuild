@@ -1411,3 +1411,71 @@ produce an appearance that fails validation against the template it's
 now nominally attached to the very next time anything tried to save
 it. Resetting to the new template's defaults keeps the profile valid
 at every intermediate step, not just at the end of an edit.
+
+### An Avatar's Location Comes From Presence, Never From The Avatar Itself (0.2.35)
+
+`renderer/AvatarVisual.js` exposes exactly two independent write paths
+— `setAppearance(template, appearance)` and `setPose(position,
+rotation)` — and neither one is allowed to influence the other.
+`setAppearance` never touches `root.position`; `setPose` never
+touches a single mesh, material, or the pose group's children. This
+mirrors the model split 0.2.33 established (`AvatarProfile` answers
+"what does this look like," `AvatarPresence` answers "where is it")
+all the way down into the renderer: the WHAT and the WHERE are
+computed by different collaborators (`AvatarProfileUseCase.
+getEffectiveAvatar()` vs. `AvatarPresenceSession.current`) and applied
+through different methods, so there is no code path by which editing
+a profile could nudge a position, or moving a presence could alter an
+appearance.
+
+`WorldNavigationSession._setupLocalAvatar()` is the one place these
+two inputs are actually combined, and it only ever COMBINES them — it
+resolves an effective appearance and reads a current presence, then
+hands both, unmodified, to the render facade. It never computes a
+position, never invents an appearance, and never writes back to
+either `AvatarProfileUseCase` or `AvatarPresenceSession`. This is what
+makes the milestone's own architectural test concrete rather than
+aspirational: an avatar standing on a published castle and a castle's
+`WorldPlacement` are updated by entirely different code paths that
+happen to share a scene — moving one can never move the other, not
+because a check forbids it, but because no line of code exists that
+could.
+
+### A Preview And An Avatar Solve The Same Shape Of Problem Differently (0.2.35)
+
+0.2.32's `PreviewService` and 0.2.35's avatar renderer both convert
+already-authoritative data into Three.js objects nobody signs,
+persists, or replicates — but they earn that similarity from opposite
+directions, worth being explicit about so the parallel doesn't get
+overstated. A preview is a snapshot: rendered once (lazily, on
+visibility), cached, and only rebuilt if the underlying content
+actually changes — appropriate because a Publication's content is
+itself immutable. An avatar is a standing process: its presence is
+expected to change continuously (0.2.36 adds real movement), so
+`AvatarVisual` is deliberately built to be CHEAP to update on the
+hot path (`setPose`/`setAnimation` never touch geometry) while still
+being cheap to leave ALONE when nothing relevant changed
+(`setAppearance`'s content-equality check, mirroring `PreviewService`'s
+own cache-key discipline, just applied to a live object instead of a
+cache entry). Both conclusions follow from the same principle applied
+to different data: never do more rendering work than the actual rate
+of change justifies.
+
+### Avatar Visibility Is A Client Rendering Preference, Not Avatar State (0.2.35)
+
+"Show My Avatar" in World View is a `ref` local to
+`ui/views/WorldView.js` and a matching `_localAvatarVisible` flag on
+`WorldNavigationSession` — nowhere else. It is never written to
+`AvatarProfile`, never touches `AvatarPresence`, and is not persisted
+across a reload. Toggling it calls exactly one method on the render
+facade (`setLocalAvatarVisible`), which adds or removes an
+already-built `Object3D` from the scene — it never disposes the
+avatar, never re-fetches the profile, and never affects what
+`AvatarProfileUseCase.getEffectiveAvatar()` or `AvatarPresenceSession.
+current` would return to a DIFFERENT observer (a future remote peer,
+once 0.2.37 exists, would have no way to know or care whether Alice's
+own client happens to be hiding her avatar from herself). "Show Other
+Avatars" is deliberately shipped disabled rather than omitted — its
+control exists in the UI now precisely because it's the kind of
+preference this principle already covers, but it has nothing to
+connect to until a multi-avatar registry exists.

@@ -6,6 +6,8 @@ import { SpatialPreviewRenderer } from '../renderer/SpatialPreviewRenderer.js';
 import { TransformGizmoRenderer } from '../renderer/TransformGizmoRenderer.js';
 import { TransformGizmoController } from '../renderer/TransformGizmoController.js';
 import { TransformMath } from './TransformMath.js';
+import { AvatarRenderer } from '../renderer/AvatarRenderer.js';
+import { AvatarVisual } from '../renderer/AvatarVisual.js';
 
 // World View's render wiring. Exposes the same narrow gizmo surface
 // RenderWorldUseCase does — one shared TransformGizmoController design,
@@ -41,6 +43,24 @@ export class RenderWorldViewUseCase {
             controlsEnabler: renderer.cameraController,
             transformMath: TransformMath
         });
+
+        // 0.2.35 — the local user's own avatar. Deliberately just ONE
+        // AvatarVisual: rendering other participants' avatars is
+        // 0.2.37's job, once a presence registry actually exists.
+        // Built lazily (on the first setLocalAvatar call) rather than
+        // unconditionally here, so a viewport with nobody logged in
+        // never even constructs the object graph.
+        const avatarRenderer = new AvatarRenderer();
+        let localAvatarVisual = null;
+        let localAvatarVisible = true;
+
+        function ensureLocalAvatarVisual() {
+            if (!localAvatarVisual) {
+                localAvatarVisual = new AvatarVisual(avatarRenderer);
+            }
+            return localAvatarVisual;
+        }
+
         return {
             pick: (screenX, screenY) => pickingService.pickRich(screenX, screenY),
             pickGround: (screenX, screenY) => {
@@ -73,11 +93,69 @@ export class RenderWorldViewUseCase {
                 transformGizmoController.onKeyDown(keyEvent, selection),
             cancelGizmoGesture: () => transformGizmoController.cancelGesture(),
             isGizmoDragging: () => transformGizmoController.isDragging,
+
+            // 0.2.35 — see docs/Principles.md, "An Avatar's Location
+            // Comes From Presence, Never From The Avatar Itself." This
+            // facade only ever COMBINES a template+appearance with a
+            // presence; it never computes either one, and never
+            // touches worldRenderer/addWorld's document/placement
+            // machinery — an avatar and a published World are rendered
+            // through entirely separate code paths that happen to
+            // share one scene.
+            setLocalAvatar: (template, appearance, presence) => {
+                const visual = ensureLocalAvatarVisual();
+                visual.setAppearance(template, appearance);
+                visual.setPose(presence.position, presence.rotation);
+                visual.setAnimation(presence.animation);
+                if (localAvatarVisible) {
+                    renderer.add(visual.root);
+                }
+            },
+            updateLocalAvatarAppearance: (template, appearance) => {
+                if (!localAvatarVisual) {
+                    return;
+                }
+                localAvatarVisual.setAppearance(template, appearance);
+            },
+            updateLocalAvatarPresence: (presence) => {
+                if (!localAvatarVisual) {
+                    return;
+                }
+                localAvatarVisual.setPose(presence.position, presence.rotation);
+                localAvatarVisual.setAnimation(presence.animation);
+            },
+            // A pure client rendering preference (see docs/Principles.md)
+            // — toggling it never touches AvatarProfile, AvatarPresence,
+            // or anything persisted; it only adds/removes an already-
+            // built Object3D from the scene.
+            setLocalAvatarVisible: (visible) => {
+                localAvatarVisible = visible;
+                if (!localAvatarVisual) {
+                    return;
+                }
+                if (visible) {
+                    renderer.add(localAvatarVisual.root);
+                } else {
+                    renderer.remove(localAvatarVisual.root);
+                }
+            },
+            removeLocalAvatar: () => {
+                if (!localAvatarVisual) {
+                    return;
+                }
+                renderer.remove(localAvatarVisual.root);
+                localAvatarVisual.dispose();
+                localAvatarVisual = null;
+            },
             dispose() {
                 transformGizmoController.dispose();
                 transformGizmoRenderer.dispose();
                 spatialPreviewRenderer.dispose();
                 spatialSelectionRenderer.clear();
+                if (localAvatarVisual) {
+                    localAvatarVisual.dispose();
+                    localAvatarVisual = null;
+                }
                 renderer.dispose();
             }
         };

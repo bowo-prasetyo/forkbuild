@@ -2351,3 +2351,19 @@ html, body {
     color: #c9c9c9;
     text-transform: capitalize;
 }
+
+/* World View avatar visibility toggles (0.2.35) — a client rendering
+   preference, styled like every other small World View control, not
+   like a form tied to persisted state. */
+.world-view-avatar-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: #c9c9c9;
+    margin-bottom: 0.4rem;
+}
+
+.world-view-avatar-toggle--disabled {
+    color: #707070;
+}
