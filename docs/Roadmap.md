@@ -95,6 +95,7 @@
 0.2.39  World Entity Interaction & Selection                  ✓
 0.2.40  Avatar Presence Visibility & Privacy                   ✓
 0.2.41  Remote Avatar Appearance Synchronization                ✓
+0.2.42  Avatar-World Collision & Movement Constraints            ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -534,11 +535,60 @@ template fallback, and the same trust/visibility boundaries 0.2.38/
 0.2.40 already established, over two real `WorldNavigationSession`s
 and two real `BroadcastChannel`s.
 
-The avatar roadmap's own suggested next steps — 0.2.42 (avatar/world
-collision & movement constraints), 0.2.43 (emotes), 0.2.44 (chat), and
-eventually voice — remain exactly that: suggestions, not commitments.
-Nothing in this codebase assumes the next milestone resumes the avatar
-arc rather than opening an entirely different one.
+0.2.42 closes the one conspicuous limitation the movement model
+carried since 0.2.36: avatars could walk straight through published
+geometry. The movement pipeline gains one new step —
+`core/AvatarMovementSimulation.js`'s pure kinematics produce a
+PROPOSED position, `application/AvatarMovementConstraint.js` (backed
+by the pure geometry in `core/AvatarCollision.js`) resolves it against
+whatever collision geometry this replica currently has streamed in,
+and only THEN does the result reach `AvatarPresence` — see
+docs/Principles.md, "Collision Is A Constraint Applied To Movement,
+Never Part Of The Movement Simulation Itself." Deliberately scoped to
+"start simple": an upright bounding-box approximation of the avatar,
+axis-aligned per-brick bounds (ignoring `Brick.rotation`), static
+brick/ground collision, and an axis-separated SWEPT slide that both
+resolves diagonal approaches into a true slide (rather than a dead
+stop) and never tunnels through a thin obstacle on a single large
+step — see docs/Principles.md, "Start Simple: A Box Is A Good Enough
+Capsule." Honestly scoped to what this replica actually knows, not
+the whole decentralized world: collision geometry comes entirely from
+`WorldNavigationSession`'s own `_loadedDocuments` — a wall outside the
+streaming radius was never asked for and cannot suddenly become an
+obstacle — see docs/Principles.md, "The Local Avatar Is Constrained By
+Collision Geometry Currently Available To This Replica, Never By The
+Entire World." Derived, never persisted: no collision record, no
+`Avatar → Document` relationship, exactly `Document + WorldPlacement`
+math computed fresh every tick (docs/Principles.md, "Collision Is
+Derived From Document + Placement, Never A Third Relationship").
+`AvatarAnimationState` gains nothing — a collided step is movement
+information (`AvatarMovementController.isCollided()`, transient, never
+part of `AvatarPresence`), never an animation vocabulary entry
+(docs/Principles.md, "Collided Is Movement Information, Not An
+Animation Vocabulary"). Deliberately deferred, matching the design
+doc's own instruction: avatar-avatar collision (a genuinely harder,
+multiplayer-authority-laden problem — should Alice collide with Bob's
+DISPLAYED, interpolated position or his CLAIMED one? — left for a
+dedicated later milestone), standing on top of raised geometry (the
+avatar's vertical ground plane stays the fixed Y=0 plane 0.2.36
+established), and any change to presence's own wire shape, trust, or
+replay handling. `tests/AvatarCollision.test.js`'s flagship runs the
+design doc's own scripted scenario end to end: publish a wall → place
+it → load it into Alice's World View → stand next to it → hold W →
+stop at the boundary → turn 90° → slide along it → jump against it →
+never penetrate → Document/Publication/Placement remain byte-identical
+→ a real remote replica (Bob) sees Alice's already-constrained
+movement through completely ordinary presence sync, with zero
+collision-aware special-casing anywhere in his own session — collision
+is a local movement constraint, never a new network authority
+mechanism.
+
+The avatar roadmap's own suggested next steps — 0.2.43 (avatar-avatar
+interaction foundations), 0.2.44 (emotes/gestures/social actions),
+0.2.45 (text chat), and eventually voice/a richer social model —
+remain exactly that: suggestions, not commitments. Nothing in this
+codebase assumes the next milestone resumes the avatar arc rather than
+opening an entirely different one.
 
 ## 0.1.50 — What shipped
 

@@ -2191,3 +2191,112 @@ on a timer at all) — see `core/AvatarProfileAdvertisement.js`'s own
 header: appearance is low-frequency, persistent state, and re-sending
 it every frame the way presence does would be pure waste for data that
 essentially never changes.
+
+### Collision Is A Constraint Applied To Movement, Never Part Of The Movement Simulation Itself (0.2.42)
+
+`core/AvatarMovementSimulation.js` (0.2.36) is UNTOUCHED by this
+milestone — still the same pure, Three.js-free, world-geometry-free
+kinematics it always was, still producing a PROPOSED position from
+input intent alone. Collision (`core/AvatarCollision.js`,
+`application/AvatarMovementConstraint.js`) is a completely separate
+step, applied AFTER simulation, BEFORE the result reaches
+`AvatarPresence` — see `application/AvatarMovementController.js`'s own
+`tick()`: simulate first, constrain second, publish third. This is a
+deliberate design choice, not a convenient accident: mixing "what does
+the player want to do" with "what does the world's geometry allow"
+into one function would make BOTH harder to reason about and test
+independently, and would tie a pure, trivially-unit-testable kernel to
+whatever collision geometry happens to exist. The same "one pure
+kernel, one separate constraint step applied to its output" shape
+`core/PresenceIngestion.js` and `application/PresenceTrustBoundary.js`
+already draw between "is this claim newer" and "should I trust it at
+all" — applied here to movement instead of network trust.
+
+### The Local Avatar Is Constrained By Collision Geometry Currently Available To This Replica, Never By The Entire World (0.2.42)
+
+This project has spent every avatar milestone since 0.2.37 being
+honest about what a decentralized replica actually knows — presence
+visibility is transport-scoped (0.2.39), profile appearance is only
+what has actually been received (0.2.41), and the World View itself
+only ever renders what `updateSpatialView()` has streamed in within
+`STREAMING_RADIUS`. Collision extends that same honesty to movement:
+`application/AvatarMovementConstraint.js` reads WorldNavigationSession's
+own `_loadedDocuments` Map — BY REFERENCE, never a snapshot — so a
+building outside the streaming radius was never asked for and cannot
+suddenly become a collision obstacle, and a building that streams OUT
+(the camera moves away) stops obstructing on the very next tick, with
+no separate unload step of its own. The correct claim this milestone
+makes is never "the avatar cannot walk through anything that exists in
+the world" — it is "the local avatar is constrained by collision
+geometry currently available to this replica." `tests/AvatarCollision.test.js`
+tests this directly and explicitly: the exact same wall, published and
+placed identically, blocks movement when loaded and does NOT when it
+isn't — proving the boundary is real, not incidental.
+
+### Collision Is Derived From Document + Placement, Never A Third Relationship (0.2.42)
+
+```text
+Document           = WHAT exists
+WorldPlacement      = WHERE the document exists
+AvatarPresence      = WHERE the person is
+                      ↓
+              collision geometry — DERIVED, not stored
+```
+
+`application/AvatarMovementConstraint.js` computes every obstacle AABB
+fresh, on demand, every tick, from a brick's own position plus its
+`BrickRegistry` dimensions plus the document's own world-layout offset
+(`WorldNavigationSession._getWorldPosition`, the same source of truth
+spawning/focusing/forking already use). Nothing here is ever
+persisted: no collision record, no cache surviving a tick, no new
+storage key. And critically, no `Avatar → Document` relationship is
+ever created just because an avatar's movement happened to be
+constrained by that document's geometry — touching a wall does not
+make Alice an editor of it, a collaborator on it, or anything else
+that would need to be recorded. Collision is read-only geometry
+math applied to two already-existing facts, exactly as ephemeral as
+the movement tick that consulted it.
+
+### Collided Is Movement Information, Not An Animation Vocabulary (0.2.42)
+
+`core/AvatarAnimationState.js` gains nothing this milestone — still
+exactly `IDLE`/`WALKING`/`RUNNING`/`JUMPING`, the same four values
+0.2.35 established. Whether the most recent tick's movement was
+altered by collision (`AvatarMovementController.isCollided()`) is
+transient, per-tick bookkeeping — exactly like `_verticalVelocity`/
+`_grounded` before it — never persisted, never part of
+`AvatarPresence`'s own wire shape (`tests/AvatarCollision.test.js`
+checks this directly: `'collided' in presence.toJSON()` is always
+false), and never a `BLOCKED` animation state standing alongside
+`IDLE`/`WALKING`/`RUNNING`/`JUMPING`. The distinction matters: an
+animation state describes what the avatar's BODY is currently doing
+(a walk cycle, a jump arc) — a discrete, closed vocabulary every
+`AvatarTemplate` declares support for. "Collided" describes something
+that happened to the REQUESTED movement, a fact about input vs.
+outcome, not a pose. Conflating the two would mean every future
+consumer of animation state (the renderer, a future network peer) has
+to understand collision to render an avatar walking in place against
+a wall, when in truth nothing about that avatar's ANIMATION changed at
+all — it's still walking, it's simply not going anywhere.
+
+### Start Simple: A Box Is A Good Enough Capsule (0.2.42)
+
+`core/AvatarCollision.js` approximates the avatar as a single upright
+axis-aligned bounding box (`AVATAR_COLLISION_RADIUS`/
+`AVATAR_COLLISION_HEIGHT`), not a true capsule, and every brick's
+collision bounds as an axis-aligned box built from its
+`BrickDefinition` dimensions, deliberately ignoring `Brick.rotation` —
+the same simplification `application/SelectionBoundsService.js`
+already makes for gizmo bounds (0.1.38 onward), applied here to a new
+purpose. Full arbitrary mesh collision — thousands of objects,
+arbitrary rotations, groups — was explicitly out of scope for this
+first collision milestone (see docs/Roadmap.md): the client does not
+necessarily have every object loaded (see the streaming-honesty
+principle above), and treating rendered Three.js meshes as the
+authoritative collision model would tie movement correctness to
+render state in a way this codebase has consistently avoided
+elsewhere (`core/` stays engine-agnostic throughout). A rotated brick
+colliding as if it weren't, or a corner brick's diagonal edge being
+slightly more permissive than its true silhouette, are honestly
+accepted simplifications, not oversights — exactly the same posture
+`application/SelectionBoundsService.js`'s own header already takes.

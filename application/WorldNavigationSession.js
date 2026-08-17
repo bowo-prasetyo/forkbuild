@@ -30,6 +30,7 @@ import { SpatialAllocationPolicy, evaluateSpatialAllocation } from '../core/Spat
 import { distanceBetween, isWithinRadius } from '../core/SpatialQuery.js';
 import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSummary.js';
 import { AvatarMovementController } from './AvatarMovementController.js';
+import { AvatarMovementConstraint } from './AvatarMovementConstraint.js';
 import { PresenceSyncService } from './PresenceSyncService.js';
 import { RemoteAvatarRegistry } from './RemoteAvatarRegistry.js';
 import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
@@ -442,7 +443,10 @@ export class WorldNavigationSession {
         // test facade, e.g. Section C's spy) — movement simply never
         // ticks, exactly the same graceful-absence posture every other
         // optional collaborator in this file already follows.
-        this._avatarMovementController = new AvatarMovementController(this._avatarPresenceSession);
+        this._avatarMovementController = new AvatarMovementController(
+            this._avatarPresenceSession,
+            this._buildAvatarMovementConstraint()
+        );
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {
             this._avatarFrameSubscription = this._session.onAnimationFrame((deltaSeconds) => {
@@ -461,6 +465,30 @@ export class WorldNavigationSession {
                 }
             });
         }
+    }
+
+    // 0.2.42 — builds the LOCAL avatar's movement constraint from
+    // state this session already owns: `_loadedDocuments` (the exact
+    // streaming set updateSpatialView() maintains — see
+    // docs/Principles.md, "The Local Avatar Is Constrained By
+    // Collision Geometry Currently Available To This Replica"),
+    // `_getWorldPosition` (already the one source of truth for a
+    // document's world offset, fork-local-override included), and
+    // `_registry` (the BrickRegistry every other spatial use case here
+    // already shares). No new constructor dependency on
+    // WorldNavigationSession itself — collision is entirely DERIVED
+    // from state that already exists for other reasons, never a
+    // separately-wired collaborator. Always built, unconditionally:
+    // an empty `_loadedDocuments` (nothing streamed in yet) simply
+    // means the constraint finds no obstacles and never alters
+    // movement — the exact same graceful-absence behavior as if no
+    // constraint were wired at all.
+    _buildAvatarMovementConstraint() {
+        return new AvatarMovementConstraint({
+            loadedDocuments: this._loadedDocuments,
+            getWorldPosition: (documentId) => this._getWorldPosition(documentId),
+            brickRegistry: this._registry
+        });
     }
 
     // -----------------------------------------------------------------

@@ -4401,3 +4401,117 @@ been ingested, before her presence made the avatar visible at all), a
 second stranger avatar advertising an unrecognized template degrades
 to the placeholder without ever crashing, and Alice's appearance
 survives a presence ABSENT-prune-and-reappear cycle untouched.
+
+### Avatar-World Collision & Movement Constraints (0.2.42)
+
+Closes the one conspicuous limitation the movement model has carried
+since 0.2.36: an avatar could walk straight through a published wall.
+The movement pipeline becomes:
+
+    Keyboard
+       │
+       ▼
+    AvatarMovementController        (application/ — WHEN to tick, key state)
+       │
+       ▼
+    core/AvatarMovementSimulation.js   (pure kinematics — UNTOUCHED this milestone)
+       │  proposed position
+       ▼
+    application/AvatarMovementConstraint.js   (WHICH geometry is currently available)
+       │  + core/AvatarCollision.js            (pure geometry math)
+       │  constrained position, collided
+       ▼
+    AvatarPresence
+       │
+       ▼
+    AvatarVisual / renderer
+
+Deliberately NOT Three.js collision logic inside the simulation — see
+docs/Principles.md, "Collision Is A Constraint Applied To Movement,
+Never Part Of The Movement Simulation Itself." The split mirrors
+`core/PresenceIngestion.js`/`application/PresenceTrustBoundary.js`'s
+own pure-kernel/applied-constraint shape, one layer over.
+
+Core — pure geometry, no Document/WorldPlacement/BrickRegistry
+knowledge at all:
+
+- `core/AvatarCollision.js` (new) — `AVATAR_COLLISION_RADIUS`/
+  `AVATAR_COLLISION_HEIGHT` (an upright AABB standing in for a true
+  capsule — see docs/Principles.md, "Start Simple: A Box Is A Good
+  Enough Capsule"), `avatarAabbAt()`, `brickAabb()` (axis-aligned,
+  ignoring `Brick.rotation` — the same simplification
+  `application/SelectionBoundsService.js` already makes),
+  `translateAabb()`, `aabbsOverlap()`, and the real algorithm,
+  `resolveHorizontalMovement()`: an axis-separated SWEPT slide —
+  X and Z resolved independently (so a diagonal approach into a
+  corner blocks one axis while the other keeps moving — a true
+  slide, not a dead stop), each axis tested against the full
+  `[current, proposed]` range (not just the endpoint, so a single
+  large step can never tunnel through a thin obstacle). A
+  directional guard excludes any obstacle already on the TRAILING
+  side of the avatar's current position, so an obstacle the avatar
+  is flush against never blocks a step retreating away from it — see
+  that function's own inline comment for the exact edge case this
+  fixes. Vertical ground/gravity is untouched — this file has no
+  opinion about standing, falling, or jumping, only about whether a
+  horizontal step is obstructed.
+
+Application — supplies "the world geometry currently available to
+this replica":
+
+- `application/AvatarMovementConstraint.js` (new) — given
+  WorldNavigationSession's own `_loadedDocuments` Map (BY REFERENCE,
+  never a snapshot — see docs/Principles.md, "The Local Avatar Is
+  Constrained By Collision Geometry Currently Available To This
+  Replica"), `_getWorldPosition` (the same source of truth
+  spawning/focusing/forking already use, fork-local-position-override
+  included), and the shared `BrickRegistry`, builds an obstacle AABB
+  list distance-culled around the avatar (a broad phase — 12 world
+  units by default, deliberately much smaller than `STREAMING_RADIUS`
+  150: "loaded" and "worth iterating every movement tick" are
+  different concerns) and calls `core/AvatarCollision.js`'s
+  `resolveHorizontalMovement()`. An unrecognized brick `definitionId`
+  degrades to "not an obstacle" rather than throwing (docs/Principles.md,
+  "Validate Strictly On Write; Degrade Gracefully On Read"). Nothing
+  here is ever persisted or cached across ticks — every obstacle AABB
+  is recomputed fresh, on demand.
+- `application/AvatarMovementController.js` — gains an OPTIONAL
+  `movementConstraint` constructor argument (unchanged single-argument
+  construction still works, exactly 0.2.36's own signature — the same
+  "enforce/offer only when wired" posture as every other optional
+  collaborator here). `tick()` now: simulate (unchanged) → constrain
+  (new, only if wired) → publish. `isCollided()` exposes the most
+  recent tick's outcome — transient, never part of `AvatarPresence`
+  (see docs/Principles.md, "Collided Is Movement Information, Not An
+  Animation Vocabulary").
+- `application/WorldNavigationSession.js` — `_setupLocalAvatar()`
+  builds an `AvatarMovementConstraint` from state the session ALREADY
+  owns (`_loadedDocuments`, `_getWorldPosition`, `_registry`) — no new
+  constructor dependency on `WorldNavigationSession` itself; collision
+  is entirely derived, never separately wired. Built unconditionally:
+  an empty `_loadedDocuments` (nothing streamed in yet) simply means
+  no obstacles are ever found.
+
+Deliberately not in 0.2.42, matching the design doc's own scope:
+avatar-avatar collision (Alice colliding with Bob raises real
+multiplayer-authority questions — displayed vs. claimed remote
+position — left for a later networking milestone); standing on top of
+raised geometry (the avatar's vertical ground plane remains the fixed
+Y=0 plane 0.2.36 established; only HORIZONTAL collision against static
+geometry is added here); rotated-brick-accurate collision (see
+docs/Principles.md, "Start Simple: A Box Is A Good Enough Capsule");
+any new `AvatarAnimationState` value; any collision persistence or
+`Avatar → Document` relationship (docs/Principles.md, "Collision Is
+Derived From Document + Placement, Never A Third Relationship"); and
+any change to presence's own wire shape, trust boundary, or replay
+handling — `AvatarPresence` carries only avatar state before and after
+this milestone, verified directly in `tests/AvatarCollision.test.js`'s
+flagship. That flagship exercises the full scripted scenario: publish
+a wall → place it → load it into Alice's World View → stand next to it
+→ hold W → stop at the boundary → turn 90° → slide along it → jump
+against it → never penetrate → Document/Publication/Placement remain
+byte-identical → a real remote replica (Bob) sees Alice's
+ALREADY-CONSTRAINED movement through completely ordinary presence
+sync, with zero collision-aware special-casing anywhere in his own
+session — collision is a local movement constraint, never a new
+network authority mechanism.
