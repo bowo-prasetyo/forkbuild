@@ -1384,3 +1384,28 @@ already cleanly separates "what does this avatar look like" from
 "where is it," so that turning presence updates into network messages
 later is a transport problem layered on top of an already-correct
 local model, not a redesign of the model itself.
+
+## Local Avatar Movement & Animation (0.2.36)
+
+Still nothing crosses any wire. `AvatarPresence`'s own shape is
+completely unchanged from 0.2.33/0.2.35 — still exactly `avatarId`/
+`ownerIdentity`/`position`/`rotation`/`animation`/`sequence`/
+`timestamp`, still never signed, still never persisted. Movement just
+means `sequence` now advances far more often, and from a genuinely new
+producer (`AvatarMovementController`, alongside 0.2.35's spawn-
+repositioning) — but every one of those updates is `AvatarPresence.
+next()`, the exact same call 0.2.33 already defined, applied more
+frequently. `core/AvatarMovementState.js` (which keys are held) and the
+small `_verticalVelocity`/`_grounded` bookkeeping between simulation
+ticks are pure local input/working-state and are never serialized,
+never sent anywhere, and never appear in `AvatarPresence.toJSON()`.
+
+This matters for what 0.2.37 will actually need to build: a receiver
+of a future presence broadcast only ever needs to interpret the SAME
+fields 0.2.33 already defined, played back at whatever rate
+`sequence` reveals updates arrived. Nothing about HOW a position was
+computed locally (keyboard input, a future gamepad, a future NPC
+script) is part of the wire shape at all — the simulation that
+produces a position is exclusively this client's business, and the
+protocol only ever needs to agree on what a position update looks
+like once it exists.

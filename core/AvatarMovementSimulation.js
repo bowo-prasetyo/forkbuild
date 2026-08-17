@@ -1,0 +1,146 @@
+import { AvatarAnimationState } from './AvatarAnimationState.js';
+
+// 0.2.36 — deterministic, Three.js-free kinematics: given where the
+// avatar IS (position/rotationY, plus the small bit of physics-only
+// bookkeeping a jump needs — verticalVelocity/grounded) and what the
+// player currently WANTS (an AvatarMovementState), produces where it
+// should be ONE SIMULATION TICK later. Same "pure geometry,
+// independently testable, no engine dependency" split
+// PreviewCameraFraming.js (0.2.32) and AvatarPoseOffsets.js (0.2.35)
+// already established, applied here to locomotion.
+//
+// Deliberately NOT physically simulated against world geometry — see
+// docs/Principles.md, "Movement Is Kinematic, Not Physically
+// Simulated (0.2.36)." There is no notion of a brick, a building, or
+// a document anywhere in this file; the avatar can walk straight
+// through a published castle, and that is an accepted, explicit
+// limitation for this milestone, not an oversight. Collision against
+// world geometry is future scope with its own architectural
+// questions (is walkability derived from bricks? simplified spatial
+// bounds? streamed locally?) that this milestone does not attempt to
+// answer.
+//
+// Pure function: identical inputs always produce identical outputs.
+// No hidden clock, no Math.random, no Three.js import. The caller
+// (application/AvatarMovementController.js) owns the only mutable
+// state — verticalVelocity/grounded between ticks — and feeds it back
+// in on the next call; this file never remembers anything itself.
+const WALK_SPEED = 3; // world units / second
+const RUN_SPEED = 6;
+const TURN_RATE_DEGREES_PER_SECOND = 150;
+const JUMP_IMPULSE = 5; // world units / second, initial vertical speed
+const GRAVITY = 14; // world units / second^2
+const GROUND_Y = 0;
+// Defensive, not a gameplay speed limit: protects against a single
+// freak deltaSeconds (a backgrounded tab resuming, a debugger pause)
+// producing a teleport-sized jump in one tick. WALK_SPEED/RUN_SPEED
+// at any sane deltaSeconds never get near this.
+const MAX_STEP_PER_TICK = 2; // world units
+const MAX_DELTA_SECONDS = 0.25; // seconds — clamps a single tick's dt
+const MAX_Y = 8; // world units — "reasonable vertical bounds"
+
+export function simulateAvatarMovement({
+    position,
+    rotationY = 0,
+    verticalVelocity = 0,
+    grounded = true,
+    movementState,
+    deltaSeconds
+}) {
+    const dt = sanitizeDeltaSeconds(deltaSeconds);
+
+    // Turn first, then step along the NEW facing — an ordinary
+    // third-person walk, not strafing.
+    const nextRotationY = normalizeDegrees(
+        sanitizeNumber(rotationY, 0) + movementState.turnAxis * TURN_RATE_DEGREES_PER_SECOND * dt
+    );
+
+    const speed = movementState.running ? RUN_SPEED : WALK_SPEED;
+    const stepDistance = clamp(movementState.forwardAxis * speed * dt, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
+    const radians = nextRotationY * (Math.PI / 180);
+    const dx = Math.sin(radians) * stepDistance;
+    const dz = Math.cos(radians) * stepDistance;
+
+    let nextVerticalVelocity = sanitizeNumber(verticalVelocity, 0);
+    let nextGrounded = Boolean(grounded);
+
+    // A jump can only START from the ground — holding Space while
+    // already airborne does nothing new (no double-jump), and
+    // releasing/re-pressing it after landing jumps again; 0.2.36 does
+    // not attempt press-vs-hold edge detection, matching "movement is
+    // kinematic, not physically simulated" — good enough for a first
+    // pass, not a competitive-game-grade input model.
+    if (nextGrounded && movementState.jumpRequested) {
+        nextVerticalVelocity = JUMP_IMPULSE;
+        nextGrounded = false;
+    }
+
+    let y;
+    if (nextGrounded) {
+        // Grounded: the avatar walks on the flat Y=0 plane. Snapping
+        // to GROUND_Y outright (rather than integrating toward it)
+        // means any drift can never accumulate while walking — see
+        // "no NaN/Infinity, reasonable vertical bounds" in the design
+        // doc's own test list.
+        y = GROUND_Y;
+        nextVerticalVelocity = 0;
+    } else {
+        nextVerticalVelocity -= GRAVITY * dt;
+        y = sanitizeNumber(position.y, GROUND_Y) + nextVerticalVelocity * dt;
+        if (y <= GROUND_Y) {
+            y = GROUND_Y;
+            nextVerticalVelocity = 0;
+            nextGrounded = true;
+        }
+    }
+    y = clamp(y, GROUND_Y, MAX_Y);
+
+    const nextPosition = {
+        x: sanitizeNumber(sanitizeNumber(position.x, 0) + dx, position.x),
+        y,
+        z: sanitizeNumber(sanitizeNumber(position.z, 0) + dz, position.z)
+    };
+
+    return {
+        position: nextPosition,
+        rotationY: nextRotationY,
+        verticalVelocity: nextVerticalVelocity,
+        grounded: nextGrounded,
+        animation: resolveAnimationState({
+            moving: movementState.forwardAxis !== 0,
+            running: movementState.running,
+            grounded: nextGrounded
+        })
+    };
+}
+
+// A pure sub-decision worth naming on its own: what SHOULD be
+// playing, given only the kinematic facts this tick produced.
+// Jumping always wins (it temporarily overrides whatever locomotion
+// animation was playing before takeoff — see docs/Principles.md);
+// otherwise WALKING/RUNNING is exactly "is there any forward/back
+// intent right now," never "was there recently."
+function resolveAnimationState({ moving, running, grounded }) {
+    if (!grounded) return AvatarAnimationState.JUMPING;
+    if (moving) return running ? AvatarAnimationState.RUNNING : AvatarAnimationState.WALKING;
+    return AvatarAnimationState.IDLE;
+}
+
+function sanitizeDeltaSeconds(value) {
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    return Math.min(value, MAX_DELTA_SECONDS);
+}
+
+function sanitizeNumber(value, fallback) {
+    return Number.isFinite(value) ? value : fallback;
+}
+
+function normalizeDegrees(value) {
+    let d = sanitizeNumber(value, 0) % 360;
+    if (d < 0) d += 360;
+    return d;
+}
+
+function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}

@@ -27,8 +27,14 @@ async function runTests() {
     {
         const jumping = getAvatarPoseOffsets(AvatarAnimationState.JUMPING);
         assert(jumping.hopHeight > 0, '5. JUMPING is the only state that lifts the avatar (non-zero hopHeight)');
+        // NOT .map(getAvatarPoseOffsets) — Array.prototype.map calls
+        // its callback with (element, index, array), and 0.2.36 gave
+        // getAvatarPoseOffsets a second (animationTimeSeconds)
+        // parameter, so the shorthand would silently pass each
+        // animation's ARRAY INDEX as an elapsed-time value instead of
+        // the intended default of 0.
         const others = [AvatarAnimationState.IDLE, AvatarAnimationState.WALKING, AvatarAnimationState.RUNNING]
-            .map(getAvatarPoseOffsets);
+            .map((animation) => getAvatarPoseOffsets(animation));
         assert(others.every((pose) => pose.hopHeight === 0), '6. no other state lifts the avatar');
     }
 

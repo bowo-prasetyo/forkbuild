@@ -29,6 +29,7 @@ import { detectSpatialOverlap } from '../core/SpatialOverlap.js';
 import { SpatialAllocationPolicy, evaluateSpatialAllocation } from '../core/SpatialAllocationPolicy.js';
 import { distanceBetween, isWithinRadius } from '../core/SpatialQuery.js';
 import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSummary.js';
+import { AvatarMovementController } from './AvatarMovementController.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -157,6 +158,16 @@ export class WorldNavigationSession {
 	    this._avatarProfileSubscription = null;
 	    this._avatarPresenceSubscription = null;
 	    this._localAvatarVisible = true;
+	    // 0.2.36 — Local Avatar Movement & Animation. See the "Local
+	    // Avatar Movement" section below for the full picture;
+	    // `_avatarMovementController` is only ever constructed once an
+	    // avatar actually exists (same optional-collaborator posture as
+	    // everything else avatar-related in this constructor).
+	    this._avatarMovementController = null;
+	    this._avatarFrameSubscription = null;
+	    this._avatarControlModeActive = false;
+	    this._followAvatarEnabled = false;
+	    this._lastAvatarFollowPosition = null;
 	    // Raw DiscoveryDiagnostics from the most recent
 	    // exploreLocation/exploreHere/whatsHere call — kept alongside
 	    // the summarized version so inspectDocument can look up a
@@ -304,7 +315,119 @@ export class WorldNavigationSession {
         });
         this._avatarPresenceSubscription = this._avatarPresenceSession.onPresenceChanged((presence) => {
             this._session.updateLocalAvatarPresence(presence);
+            this._followAvatarIfEnabled(presence);
         });
+
+        // 0.2.36 — Local Avatar Movement. The controller owns raw key
+        // state and the pure kinematics tick; this session only ever
+        // decides WHEN it ticks (every render frame, via the same
+        // frame loop AvatarVisual's gait clock already uses) and WHAT
+        // key events reach it at all (only while Avatar Control Mode
+        // is on — see avatarKeyDown/avatarKeyUp below). Absent entirely
+        // when `_session` doesn't support onAnimationFrame (a minimal
+        // test facade, e.g. Section C's spy) — movement simply never
+        // ticks, exactly the same graceful-absence posture every other
+        // optional collaborator in this file already follows.
+        this._avatarMovementController = new AvatarMovementController(this._avatarPresenceSession);
+        this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
+        if (typeof this._session.onAnimationFrame === 'function') {
+            this._avatarFrameSubscription = this._session.onAnimationFrame((deltaSeconds) => {
+                this._avatarMovementController.tick(deltaSeconds);
+            });
+        }
+    }
+
+    // Shifts the camera by exactly the avatar's own movement delta —
+    // see docs/Principles.md, "Following The Avatar Never Redefines
+    // What The Camera Is Looking At (0.2.36)." Deliberately calls
+    // ONLY moveCamera() (position AND target shifted together,
+    // preserving whatever orbit offset the user last set) — never
+    // focusDocument()/setActiveDocument(), so following the avatar can
+    // never change `_focusedDocumentId`/`_activeDocumentId` or fork
+    // anything. Runs regardless of whether follow is enabled (so the
+    // tracked position never goes stale) but only ever MOVES the
+    // camera when it is.
+    _followAvatarIfEnabled(presence) {
+        const previous = this._lastAvatarFollowPosition;
+        this._lastAvatarFollowPosition = presence.position;
+        if (!this._followAvatarEnabled || !this._spatialCameraController || !previous) {
+            return;
+        }
+        const delta = {
+            x: presence.position.x - previous.x,
+            y: presence.position.y - previous.y,
+            z: presence.position.z - previous.z
+        };
+        if (delta.x === 0 && delta.y === 0 && delta.z === 0) {
+            return;
+        }
+        this._spatialCameraController.moveCamera(delta);
+    }
+
+    // Whether Avatar Control Mode currently captures W/A/S/D/Shift/
+    // Space — see avatarKeyDown/avatarKeyUp. An explicit toggle, never
+    // implied by focus/hover, so typing in a search box can never
+    // accidentally walk the avatar away — see the design doc's own
+    // concern and docs/Principles.md.
+    isAvatarControlModeActive() {
+        return this._avatarControlModeActive;
+    }
+
+    // Turning the mode OFF immediately releases every held key —
+    // exiting must return keyboard control to the rest of World View
+    // at once, never leave a key "stuck" because its keyup never
+    // arrived (e.g. focus moved to a dialog mid-press).
+    setAvatarControlMode(active) {
+        this._avatarControlModeActive = Boolean(active);
+        if (!this._avatarControlModeActive && this._avatarMovementController) {
+            this._avatarMovementController.releaseAll();
+        }
+    }
+
+    // Returns true if `key` was one the movement controller
+    // understands (so the UI knows whether to preventDefault/swallow
+    // the event) — false when control mode is off, no avatar exists,
+    // or the key is unrelated to movement, in every case leaving the
+    // key free for whatever else would normally handle it.
+    avatarKeyDown(key) {
+        if (!this._avatarControlModeActive || !this._avatarMovementController) {
+            return false;
+        }
+        return this._avatarMovementController.keyDown(key);
+    }
+
+    avatarKeyUp(key) {
+        if (!this._avatarMovementController) {
+            return false;
+        }
+        // Always forwarded, even if control mode was switched off
+        // between this key's down and up — so a key held before the
+        // mode was toggled off still cleanly releases instead of
+        // leaving stale state inside the controller (releaseAll()
+        // already covers the same case on the toggle itself; this
+        // covers the ordinary "released after mode already off" case).
+        return this._avatarMovementController.keyUp(key);
+    }
+
+    // Whether the camera currently follows the local avatar's
+    // movement — see _followAvatarIfEnabled above. A pure client
+    // camera preference, exactly like "Show My Avatar": never touches
+    // AvatarProfile, AvatarPresence, _focusedDocumentId, or
+    // _activeDocumentId.
+    isFollowingAvatar() {
+        return this._followAvatarEnabled;
+    }
+
+    setFollowAvatar(enabled) {
+        this._followAvatarEnabled = Boolean(enabled);
+        if (this._followAvatarEnabled && this._avatarPresenceSession) {
+            // Re-anchor to the CURRENT position rather than whatever
+            // was last recorded while follow was off — otherwise the
+            // first movement after re-enabling follow would yank the
+            // camera through every step the avatar took while
+            // unobserved.
+            this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
+        }
     }
 
     // Whether a local avatar was actually wired for this session (i.e.
@@ -2379,6 +2502,14 @@ export class WorldNavigationSession {
             this._avatarPresenceSubscription();
             this._avatarPresenceSubscription = null;
         }
+        if (this._avatarFrameSubscription) {
+            this._avatarFrameSubscription();
+            this._avatarFrameSubscription = null;
+        }
+        this._avatarMovementController = null;
+        this._avatarControlModeActive = false;
+        this._followAvatarEnabled = false;
+        this._lastAvatarFollowPosition = null;
         if (this._session) {
             this._session.dispose();
             this._session = null;

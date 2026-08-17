@@ -16,6 +16,16 @@ import { AvatarRenderer } from './AvatarRenderer.js';
 // explicitly says is fine to defer: "If the first implementation
 // simply rebuilds the avatar when its appearance changes, that's
 // perfectly acceptable."
+//
+// 0.2.36 adds `tick(deltaSeconds)`: a continuous, ELAPSED-TIME gait
+// clock so WALKING/RUNNING keep swinging even between presence
+// updates (which only arrive when application/AvatarMovementController
+// actually publishes a change — see its own header). This clock is
+// PURELY a rendering-smoothness concern, deliberately never written
+// to AvatarPresence — see docs/Principles.md, "Animation Is Driven By
+// Elapsed Time, Never By Frame Count," and core/AvatarPoseOffsets.js's
+// own header for why a receiver never needs to know the sender's
+// local animation clock.
 export class AvatarVisual {
     constructor(avatarRenderer = new AvatarRenderer()) {
         this._avatarRenderer = avatarRenderer;
@@ -23,6 +33,7 @@ export class AvatarVisual {
         this._poseGroup = null;
         this._appearanceKey = null;
         this._lastAnimation = null;
+        this._animationTime = 0;
     }
 
     setAppearance(template, appearance) {
@@ -45,7 +56,7 @@ export class AvatarVisual {
         this._poseGroup = poseGroup;
         this.root.add(poseGroup);
         if (this._lastAnimation) {
-            this._avatarRenderer.applyPose(this._poseGroup, this._lastAnimation);
+            this._avatarRenderer.applyPose(this._poseGroup, this._lastAnimation, this._animationTime);
         }
     }
 
@@ -66,9 +77,32 @@ export class AvatarVisual {
             return;
         }
         this._lastAnimation = animation;
+        // A fresh gait cycle always starts from phase zero — see
+        // core/AvatarPoseOffsets.js: animationTimeSeconds = 0
+        // reproduces the base pose exactly, so switching e.g. IDLE ->
+        // WALKING never pops mid-stride.
+        this._animationTime = 0;
         if (this._poseGroup) {
-            this._avatarRenderer.applyPose(this._poseGroup, animation);
+            this._avatarRenderer.applyPose(this._poseGroup, animation, this._animationTime);
         }
+    }
+
+    // Called once per render frame (see renderer/Renderer.js's
+    // per-frame listeners) regardless of whether a new presence
+    // arrived this frame — this is what keeps WALKING/RUNNING
+    // swinging smoothly between the (much less frequent) actual
+    // AvatarPresence updates. A no-op whenever nothing is built yet or
+    // the current animation has no gait cycle of its own
+    // (core/AvatarPoseOffsets.js already no-ops IDLE/JUMPING against
+    // time, but skipping the call entirely here avoids even the
+    // redundant re-application).
+    tick(deltaSeconds) {
+        if (!this._poseGroup || !this._lastAnimation) {
+            return;
+        }
+        const dt = Number.isFinite(deltaSeconds) && deltaSeconds > 0 ? deltaSeconds : 0;
+        this._animationTime += dt;
+        this._avatarRenderer.applyPose(this._poseGroup, this._lastAnimation, this._animationTime);
     }
 
     dispose() {
@@ -77,5 +111,7 @@ export class AvatarVisual {
             this._poseGroup = null;
         }
         this._appearanceKey = null;
+        this._lastAnimation = null;
+        this._animationTime = 0;
     }
 }

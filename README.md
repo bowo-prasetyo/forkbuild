@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.35** — Avatar Rendering & World Presence
+**Version 0.2.36** — Local Avatar Movement & Animation
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -257,6 +257,28 @@ Presence, Never From The Avatar Itself," "A Fresh Avatar Spawns
 Near What You're Looking At, Not At A Fixed Point," and "An Accessory
 Option Id Is Still Just An Id."
 
+0.2.36 makes the avatar an embodied local participant: W/S move it
+along its own facing, A/D turn that facing, Shift runs, Space jumps —
+entirely local, no network, no collision against world geometry (an
+avatar can walk through a published building; that's an accepted,
+explicit limitation, not an oversight). The pipeline stays one-way,
+exactly as the design doc asked: keyboard input →
+`AvatarMovementController` → `core/AvatarMovementSimulation.js` (pure
+kinematics, sanitized against NaN/Infinity and clamped against extreme
+deltas) → `AvatarPresence` (`sequence` advances by exactly one per
+accepted update, never once per render frame regardless of motion) →
+the renderer — a keystroke never touches a Three.js object directly.
+WALKING/RUNNING now play a real, continuous gait cycle driven by
+elapsed time (never a frame count — a 30fps machine and a 144fps
+machine walk at the same speed). An explicit "Control My Avatar"
+toggle captures WASD only while it's on, so typing or searching can
+never accidentally walk the avatar away; a "Follow Avatar" toggle
+shifts the camera by exactly the avatar's own movement delta without
+ever redefining what document is focused or active. See
+docs/Principles.md, "Input Changes Presence; Presence Changes The
+Renderer," "Movement Is Kinematic, Not Physically Simulated," and
+"Following The Avatar Never Redefines What The Camera Is Looking At."
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -295,6 +317,7 @@ Option Id Is Still Just An Id."
 - **Avatar Identity & Presence Model (0.2.33)** — the first milestone of a multi-part avatar arc, establishing the model boundary before any rendering or movement code: a persistent `AvatarProfile` (avatarId/ownerIdentity/templateId/appearance/displayName), immutable and one per identity, is neither a Document, a Publication, nor a WorldPlacement; an ephemeral `AvatarPresence` (position/rotation/animation/sequence) lives only in an in-memory session with no storage dependency at all, and is deliberately never signed — a movement update is the wrong kind of fact for the durable-and-authorized trust model Publications and Placements use. No rendering, movement, or networking ships yet; see docs/Roadmap.md for 0.2.34 through 0.2.38.
 - **Avatar Templates & Customization (0.2.34)** — a small built-in template registry gives `AvatarProfile.appearance` a real, validated, declarative schema (skin/hair/shirt/pants/accessories, each with a closed set of options and optional colors) — never executable code or a pointer to a remote asset; `updateProfile()` strictly rejects anything outside a template's bounds, while `getEffectiveAvatar()` never throws, always resolving a complete appearance with graceful per-field fallback so a broken or unrecognized profile can never block World View access. Ships the first visible avatar feature, the Avatar Creator (`/avatar`), with every control driven by the selected template's own data and a lightweight SVG preview.
 - **Avatar Rendering & World Presence (0.2.35)** — the local user's own avatar now physically renders in the World View's Three.js scene, combining 0.2.34's resolved appearance and 0.2.33's `AvatarPresence` — two independent inputs the renderer only ever combines, never modifies; appearance changes rebuild the mesh graph only when content actually changed, while position/rotation/animation updates are cheap transform writes; a "Show My Avatar" checkbox is a pure client rendering preference, never persisted avatar state; moving or restyling an avatar never touches a document's `WorldPlacement`. No movement input or multiplayer yet.
+- **Local Avatar Movement & Animation (0.2.36)** — W/S move the avatar along its own facing, A/D turn it, Shift runs, Space jumps; a pure `core/AvatarMovementSimulation.js` turns held keys into a new position/rotation/animation with no Three.js dependency, sanitized against NaN/Infinity and clamped against extreme per-tick deltas; `AvatarPresence.sequence` advances by exactly one per accepted update, never once per render frame regardless of motion; WALKING/RUNNING play a real elapsed-time gait cycle (never frame-count-based); an explicit "Control My Avatar" toggle captures WASD only while on, and "Follow Avatar" shifts the camera by the avatar's own movement delta without ever redefining the focused/active document. Entirely local — no network, no collision against world geometry, no multiplayer yet.
   
 ## Architecture
 
@@ -395,6 +418,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.33  Avatar Identity & Presence Model
 - [x] 0.2.34  Avatar Templates & Customization
 - [x] 0.2.35  Avatar Rendering & World Presence
+- [x] 0.2.36  Local Avatar Movement & Animation
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 
