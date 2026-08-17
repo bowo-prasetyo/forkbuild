@@ -3243,3 +3243,110 @@ or movement-plausibility checks beyond the bare `sequence` counter
 No UI at all ships in this milestone — it is core/application only,
 verified by `tests/AvatarProfile.test.js` and
 `tests/AvatarPresence.test.js`.
+
+### Avatar Templates & Customization (0.2.34)
+
+Stays strictly on the persistent-profile side, exactly as scoped — no
+rendering, movement, or networking. Gives `core/AvatarProfile.js`'s
+`appearance` bag (opaque since 0.2.33) a real, validated, declarative
+schema, backed by a small built-in template registry, and ships the
+first user-visible avatar surface: the Avatar Creator.
+
+    core/library/CoreAvatarTemplateLibrary.js  (built-in templates)
+                     │
+                     ▼
+    core/AvatarTemplateRegistry.js  (mirrors core/BrickRegistry.js)
+                     │
+        ┌────────────┴────────────┐
+        ▼                         ▼
+    AvatarProfileUseCase    ui/views/AvatarSettingsView.js
+    .updateProfile()          (Avatar Creator)
+      -> STRICT, throws       -> populates every control FROM
+         via                     the resolved template's own
+    core/AvatarAppearanceValidator.js   declared components
+                     │
+    AvatarProfileUseCase
+    .getEffectiveAvatar()
+      -> LENIENT, never throws
+         via
+    AvatarTemplate.resolveEffectiveAppearance()
+
+Core:
+
+- `core/AvatarTemplate.js` (new) — declarative template data: `body`
+  (fixed, not user-selectable), `components` (a map of `{ options,
+  hasColor, multiple }` per appearance field — `hasColor` accepts a
+  paired `"${name}Color"` hex field, `multiple` makes the field an
+  array, e.g. `accessories`), `supportedAnimations`, and
+  `defaultAppearance`. Every getter returns a frozen/defensive copy —
+  a template, once constructed, cannot be mutated by a caller.
+  `resolveEffectiveAppearance(appearance)` is the LENIENT read-time
+  resolver: fills a complete appearance field-by-field, falling back
+  to this template's own default for anything missing or invalid,
+  never throwing — see docs/Principles.md, "Validate Strictly On
+  Write; Degrade Gracefully On Read."
+- `core/AvatarAppearanceValidator.js` (new) — `validateAvatarAppearance
+  (appearance, template)`, the STRICT write-time check, returning a
+  `serializer/ValidationResult.js` (reused rather than inventing a
+  parallel shape — core/ already depends on serializer/ elsewhere).
+  Rejects: an unknown appearance field, an option value the named
+  component doesn't declare, a malformed color, a `*Color` field on a
+  component without `hasColor`, an `accessories` value that isn't an
+  array, an unknown entry inside it, too many entries, and an
+  oversized appearance object (JSON byte cap). Reports every violation
+  found, not just the first.
+- `core/AvatarTemplateRegistry.js` (new) — mirrors
+  `core/BrickRegistry.js` exactly: `register(library)`/`get(id)`/
+  `has(id)`/`getAll()`, keyed by `templateId`.
+- `core/library/CoreAvatarTemplateLibrary.js` (new) — the built-in
+  `{ id: 'core', templates: [...] }` library (mirrors
+  `core/library/CoreLibrary.js`'s shape), shipping two templates:
+  `humanoid-01` (the full option set) and `humanoid-02` (a smaller
+  variant that deliberately omits RUNNING/JUMPING from
+  `supportedAnimations`, proving templates genuinely differ rather
+  than sharing one hardcoded option set). No decentralized template
+  distribution — both are built-in, shipped with the client.
+
+Application:
+
+- `application/CreateAvatarTemplateRegistryUseCase.js` (new) — builds
+  an `AvatarTemplateRegistry` and registers `CoreAvatarTemplateLibrary`,
+  mirroring `CreateBrickRegistryUseCase`.
+- `application/AvatarProfileUseCase.js` — gains a required
+  `templateRegistry` constructor dependency and two new/changed
+  methods: `updateProfile()` now validates `templateId`/`appearance`
+  against the resolved template before persisting anything (and resets
+  appearance to the new template's defaults when `templateId` changes
+  without an accompanying `appearance` — see docs/Principles.md);
+  `getEffectiveAvatar()` (new) is the never-throws read path described
+  above, returning `{ profile, template, appearance }`.
+- `application/CreateAvatarProfileUseCase.js` — now also wires
+  `CreateAvatarTemplateRegistryUseCase` and returns `templateRegistry`
+  alongside `avatarProfileUseCase`.
+
+UI:
+
+- `ui/views/AvatarSettingsView.js` (new) — the Avatar Creator, routed
+  at `/avatar` (`ui/router/index.js`) and linked from the nav
+  (`ui/App.js`, "My Avatar"). Every control is populated FROM the
+  currently-selected template's own `componentNames`/`getComponent()`
+  data — never a hardcoded field list — so `humanoid-02` genuinely
+  offers a different, smaller form than `humanoid-01`. A lightweight,
+  deterministic inline SVG (torso/head/hair shapes colored from the
+  live `appearance` state) gives immediate visual feedback without any
+  Three.js dependency — "a lightweight template representation is
+  enough," per the design doc; real World View rendering is 0.2.35.
+  Skin-option-id -> swatch-color is a presentation-only lookup local
+  to this one file, not part of the appearance schema. Save calls
+  `updateProfile()` directly and surfaces its thrown validation error
+  message inline rather than silently failing.
+
+Deliberately not in 0.2.34: custom 3D mesh uploads, arbitrary GLTF/GLB
+files, user-supplied textures, a marketplace of assets, decentralized
+avatar assets, avatar animation/movement, other-user avatars, presence
+networking, and blockchain/storage of appearance assets — see
+docs/Principles.md, "A Template Is A Closed Vocabulary, Not An Asset
+Loader," for why deferring all of these is a safety property, not
+merely a scheduling one. Also not in 0.2.34: per-option human-readable
+labels (the Avatar Creator shows raw option ids like `hair-07`) — a
+presentation-only polish item, not a modeling one.

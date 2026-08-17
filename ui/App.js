@@ -23,6 +23,7 @@ export default {
 	                    <router-link to="/" class="app-nav-link">Home</router-link>
 	                    <router-link to="/editor" class="app-nav-link">Editor</router-link>
 	                    <router-link to="/repository" class="app-nav-link">Repository</router-link>
+	                    <router-link to="/avatar" class="app-nav-link">My Avatar</router-link>
 	                    <router-link to="/about" class="app-nav-link">About</router-link>
 	                </nav>
                     <UserWidget />

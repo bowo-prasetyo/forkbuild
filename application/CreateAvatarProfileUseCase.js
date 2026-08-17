@@ -1,8 +1,10 @@
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { AvatarProfileUseCase } from './AvatarProfileUseCase.js';
+import { CreateAvatarTemplateRegistryUseCase } from './CreateAvatarTemplateRegistryUseCase.js';
 
-// Wires the concrete storage backend, so ui/ never imports storage/
-// directly — same shape as CreateIdentityProviderUseCase and
+// Wires the concrete storage backend and the built-in template
+// registry, so ui/ never imports storage/ or core/library/ directly —
+// same shape as CreateIdentityProviderUseCase and
 // CreatePersistenceUseCase. Takes the already-logged-in
 // identityProvider as a parameter rather than constructing its own,
 // same convention CreatePublisherUseCase.execute(identityProvider)
@@ -12,8 +14,10 @@ import { AvatarProfileUseCase } from './AvatarProfileUseCase.js';
 export class CreateAvatarProfileUseCase {
     execute(identityProvider) {
         const storageProvider = new LocalStorageProvider();
+        const templateRegistry = new CreateAvatarTemplateRegistryUseCase().execute();
         return {
-            avatarProfileUseCase: new AvatarProfileUseCase(storageProvider, identityProvider)
+            avatarProfileUseCase: new AvatarProfileUseCase(storageProvider, identityProvider, templateRegistry),
+            templateRegistry
         };
     }
 }
