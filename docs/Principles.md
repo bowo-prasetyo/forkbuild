@@ -1331,3 +1331,83 @@ Presence Synchronization," when another replica first needs to ask
 deliberately doesn't build a signing envelope it can't yet justify.
 When that need arrives, it can be answered exactly the way Publication
 and PlacementRecord answered it: a new field, not a migration.
+
+### A Template Is A Closed Vocabulary, Not An Asset Loader (0.2.34)
+
+`core/AvatarTemplate.js` and the appearance it governs are declarative
+DATA — a fixed, enumerable set of component names, each with a fixed,
+enumerable set of option ids, plus a small set of "#rrggbb" color
+fields. There is no field anywhere in this shape that holds a URL, a
+file, a mesh reference, or anything else that could point at
+executable code or a remotely-loaded asset. An `appearance` object can
+only ever say "one of these already-known things," never "go fetch
+this."
+
+This is deliberate, not incidental, and it's what makes 0.2.34 safe to
+ship without any of the problems a general asset pipeline would
+introduce — security (no arbitrary file gets parsed or executed),
+bandwidth (nothing is downloaded merely to render a customization
+screen), provenance (every possible appearance was already shipped
+with the client, so "where did this come from" always has the same
+answer), compatibility (a template's own declared options are the only
+things a client is ever asked to render), and moderation (there is no
+user-supplied content to moderate). `core/AvatarAppearanceValidator.js`
+existing at all is the enforcement mechanism for this principle: an
+`appearance` that references anything outside its template's declared
+components/options is REJECTED at the write boundary
+(`AvatarProfileUseCase.updateProfile`), not sanitized, not partially
+accepted — see the next principle for why reads get the opposite
+treatment. Custom mesh uploads, arbitrary GLTF/GLB files, user-supplied
+textures, and a marketplace of assets are explicitly out of scope for
+this milestone, and for good reason — see docs/Roadmap.md.
+
+### Validate Strictly On Write; Degrade Gracefully On Read (0.2.34)
+
+`AvatarProfileUseCase` deliberately applies two different postures to
+the same data, at two different boundaries:
+
+- **`updateProfile()` is the WRITE boundary — strict, and it REJECTS.**
+  An unknown `templateId`, an appearance value outside its component's
+  declared options, a malformed color, an unknown accessory id, an
+  oversized appearance object — every one of these throws, and nothing
+  about the attempted update is persisted, not even the otherwise-valid
+  fields in the same call. Garbage never enters storage in the first
+  place; there is no janitor process anywhere in this codebase whose
+  job is to clean up a bad write after the fact.
+- **`getEffectiveAvatar()` is the READ boundary — lenient, and it NEVER
+  THROWS.** A profile that predates a template rename, a template a
+  future decentralized replica doesn't recognize, or (defensively) a
+  record that was somehow corrupted still resolves to a COMPLETE, safe
+  appearance — every individually-valid field is kept, every invalid
+  or unrecognized one falls back to the resolved template's own
+  default, field by field (`AvatarTemplate.resolveEffectiveAppearance`).
+  If the stored `templateId` itself isn't recognized at all, the whole
+  profile falls back to the default template. This is what makes the
+  design doc's own requirement literally true: **an invalid avatar
+  profile must never prevent the user from accessing the World View.**
+
+The same asymmetry already runs through this codebase — 0.2.0/0.2.2's
+`DocumentValidator` rejects a structurally malformed document outright
+but the migration pipeline built alongside it tolerates old,
+pre-versioned data leniently; 0.2.15/0.2.16/0.2.19's discovery pipeline
+treats a single corrupt record as isolated, not fatal, to everything
+else being read. Boundaries that CREATE data get to be strict, because
+strictness there is what keeps the store clean. Boundaries that
+CONSUME already-stored data have to be lenient, because by the time
+you're reading, refusing to render is a worse failure mode than
+rendering something slightly wrong.
+
+### Switching An Avatar's Template Resets Its Appearance (0.2.34)
+
+`AvatarProfileUseCase.updateProfile({ templateId })`, when called
+without an accompanying `appearance`, resets appearance to the NEW
+template's own defaults rather than carrying the old template's
+selections forward. This isn't just convenient — it's the only
+coherent behavior available: appearance option ids are meaningful only
+relative to the template that declared them (`hair-07` might exist on
+Humanoid-01 and not on Humanoid-02, or exist on both but mean a
+completely different hairstyle), so silently keeping them would
+produce an appearance that fails validation against the template it's
+now nominally attached to the very next time anything tried to save
+it. Resetting to the new template's defaults keeps the profile valid
+at every intermediate step, not just at the end of an edit.

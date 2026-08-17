@@ -87,6 +87,7 @@
 0.2.31  Publication Catalog & Repository UX               ✓
 0.2.32  Client-Side Publication Preview & Lazy Rendering  ✓
 0.2.33  Avatar Identity & Presence Model                  ✓
+0.2.34  Avatar Templates & Customization                  ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -243,14 +244,27 @@ and `core/AvatarPresence.js` (ephemeral, never signed, never
 persisted, never a WorldPlacement) — with no rendering, no movement,
 and no networking yet. See docs/Architecture.md, 0.2.33, and
 docs/Principles.md, "Identity, Avatar Profile, and Presence Are Three
-Different Questions." The rest of the avatar arc is tracked below as
-its own set of upcoming milestones, each scoped narrowly on purpose:
+Different Questions." The rest of the avatar arc is tracked below,
+each remaining milestone scoped narrowly on purpose:
 
-- **0.2.34 — Avatar Templates & Customization.** A constrained avatar
-  creator (base template, body/skin/hair/clothing/color parameters,
-  live preview) writing into `AvatarProfile.appearance`. Customization
-  describes the avatar; it does not contain arbitrary executable or
-  remotely-loaded assets.
+0.2.34 gives `AvatarProfile.appearance` a real, validated, declarative
+schema — a small built-in template registry
+(`core/library/CoreAvatarTemplateLibrary.js`, two templates today),
+strict rejection of anything outside a template's declared
+components/options at write time, and lenient field-by-field fallback
+to the resolved template's defaults at read time, so a stale or
+unrecognized profile can never block World View access. Ships the
+first user-visible avatar surface, the Avatar Creator
+(`/avatar` — "My Avatar" in the nav). See docs/Architecture.md, 0.2.34,
+and docs/Principles.md, "A Template Is A Closed Vocabulary, Not An
+Asset Loader" and "Validate Strictly On Write; Degrade Gracefully On
+Read." Deliberately deferred from 0.2.34, remaining OPTIONAL and
+unscheduled until a real need justifies the added complexity: custom
+3D mesh uploads, arbitrary GLTF/GLB files, user-supplied textures, a
+marketplace of assets, and decentralized avatar-asset distribution —
+every one of these was ruled out specifically because appearance stays
+a closed, built-in vocabulary, not because of scheduling.
+
 - **0.2.35 — Avatar Rendering in World View.** Avatars appear in the
   actual Three.js scene, rendered on top of a World's content —
   never inserted into the Document/World/Building model a published

@@ -5,6 +5,7 @@ import RepositoryView from '../views/RepositoryView.js';
 import AboutView from '../views/AboutView.js';
 import AuthorView from '../views/AuthorView.js';
 import WorldView from '../views/WorldView.js';
+import AvatarSettingsView from '../views/AvatarSettingsView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -12,6 +13,7 @@ const routes = [
     { path: '/repository', name: 'repository', component: RepositoryView },
     { path: '/author/:username', name: 'author', component: AuthorView },
     { path: '/world/:documentId', name: 'world', component: WorldView },
+    { path: '/avatar', name: 'avatar', component: AvatarSettingsView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 

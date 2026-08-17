@@ -1339,3 +1339,27 @@ being explicit that this milestone commits to neither yet:
   replay-resistant, but NOT cryptographically-authorized-per-message
   stream, deliberately distinct from every "signed envelope" this
   protocol has built so far.
+
+## Avatar Templates & Customization (0.2.34)
+
+Nothing crosses any wire in this milestone either — templates are
+built-in (`core/library/CoreAvatarTemplateLibrary.js`), shipped with
+the client, never fetched or distributed. Appearance validation
+(`core/AvatarAppearanceValidator.js`) is pure local logic checking
+already-local data against an already-local template; no request, no
+response, no message format is defined or needed.
+
+Worth being explicit about a temptation this milestone deliberately
+avoided: `appearance`'s new, real, validated schema might look like
+the moment to also add a signature over it. It's not — the reasoning
+from 0.2.33's Protocol section is unchanged. `AvatarProfile` still has
+no cross-replica distribution to make signing meaningful; that
+remains 0.2.37's decision to make, once a real "another replica needs
+to trust this" need exists. A validated schema and a SIGNED schema are
+different concerns — 0.2.34 answers "is this appearance well-formed
+and within the template's declared bounds," which every replica can
+already check locally and identically today, given the same built-in
+template library. It says nothing about, and doesn't need to say
+anything about, "did an authority actually authorize this specific
+appearance" — that question stays deferred, exactly where 0.2.33 left
+it.
