@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.38** — Presence Trust, Replay & Conflict Handling
+**Version 0.2.39** — World Entity Interaction & Selection
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -347,8 +347,39 @@ Document/Publication/WorldPlacement/SpatialIndex/AvatarProfile
 byte-identical from start to finish. **0.2.33 through 0.2.38 complete
 a full vertical slice of the avatar arc** — create, customize, see,
 move, see others move, handle hostile presence — and the avatar
-roadmap is deliberately PAUSED here as a stability checkpoint rather
-than continuing straight into chat, collision, or voice.
+roadmap was deliberately PAUSED there as a stability checkpoint.
+
+0.2.39 is the milestone that checkpoint was FOR: not a new avatar
+feature, but closing a gap 0.2.26–0.2.38 left visible — World View's
+click/selection model was built almost entirely around document
+bricks, and avatars deliberately did nothing when clicked since 0.2.35
+because no interaction model existed for them yet. `WorldNavigationSession.pick()`
+now runs a brick raycast and a completely separate avatar raycast
+(`renderer/PickingService.js`/`renderer/AvatarPickingService.js`)
+together and lets whichever is actually NEARER the camera win — an
+avatar standing in front of a wall is selectable as itself, never as
+the wall behind it. A brand-new state slice
+(`application/spatial-state/AvatarInteractionState.js`) tracks the
+avatar target, structurally unable to ever enter `SpatialSelectionState` —
+see docs/Principles.md, "Avatars Are Never Document Selection": an
+avatarId can never reach the clipboard, groups, the transform gizmo,
+or undo/redo, not because those systems reject it but because they
+never see it at all. Clicking an avatar opens a read-only Avatar Info
+panel (`ui/components/AvatarInfoPanel.js`) — display name, template,
+lifecycle/trust status, position, distance, animation — with
+deliberately no Edit/Move/Delete/Save; the one action, "Follow"
+(`WorldNavigationSession.followAvatarId()`), is a pure camera
+relationship, mutually exclusive with 0.2.36's own local-avatar-follow
+since there is only one camera. A targeted or followed avatar whose
+presence expires clears gracefully rather than pointing at nothing.
+Also documents, without implementing, a boundary worth naming now:
+presence has no privacy guarantee beyond transport scope — see
+docs/Protocol.md. The flagship test proves the whole thing end to end
+over a real `BroadcastChannel`: Bob clicks Alice (avatar target,
+Avatar Info), clicks her building (brick selection), edits it
+(document forks) — Alice's AvatarPresence/AvatarProfile/Publication and
+the original Placement stay byte-identical throughout. The avatar
+roadmap remains paused after 0.2.39.
 
 ## Features
 
@@ -391,6 +422,7 @@ than continuing straight into chat, collision, or voice.
 - **Local Avatar Movement & Animation (0.2.36)** — W/S move the avatar along its own facing, A/D turn it, Shift runs, Space jumps; a pure `core/AvatarMovementSimulation.js` turns held keys into a new position/rotation/animation with no Three.js dependency, sanitized against NaN/Infinity and clamped against extreme per-tick deltas; `AvatarPresence.sequence` advances by exactly one per accepted update, never once per render frame regardless of motion; WALKING/RUNNING play a real elapsed-time gait cycle (never frame-count-based); an explicit "Control My Avatar" toggle captures WASD only while on, and "Follow Avatar" shifts the camera by the avatar's own movement delta without ever redefining the focused/active document. Entirely local — no network, no collision against world geometry, no multiplayer yet.
 - **Decentralized Avatar Presence Synchronization (0.2.37)** — the local avatar's presence becomes observable by other replicas via a real, working `BroadcastChannel`-based transport (two same-origin tabs genuinely see each other's avatars move) — still never signed, never persisted; an advertise/pull round trip keeps message receipt and state acceptance as two separate steps, with `core/PresenceIngestion.js`'s monotonic-sequence rule tolerating reordered, duplicate, and gapped delivery with one simple check; presence lifecycle (PRESENT/STALE/ABSENT) is derived purely from elapsed time on the receiver's own clock, never a stored fact; remote avatar positions are visually interpolated for smoothness while the latest received presence stays sole authoritative state; "Show Other Avatars" works even for a logged-out viewer. Appearance is not synchronized yet — every remote avatar renders with a fixed placeholder look. No signatures, replay protection, or conflict resolution yet.
 - **Presence Trust, Replay & Conflict Handling (0.2.38)** — hardens the 0.2.37 ingestion boundary without redesigning it: an optional, real Ed25519 signature over every field of an advertisement (`application/PresenceSigning.js`); a trust-on-first-use identity binding so an avatarId can't simply be claimed by whoever speaks loudest (`core/PresenceAuthority.js`); bounded replay detection distinct from freshness (`core/PresenceReplayWindow.js`); equivocation detection reusing 0.2.19's own vocabulary for "same authority, same sequence, different content" (`core/PresenceEquivocation.js`); and a single policy axis — permissive (default, unsigned tolerated) vs. hardened (signature required) — via `core/PresenceTrustPolicy.js`. A rejected claim never overwrites what's currently displayed and arrival order never picks a winner, but is surfaced as an unobtrusive World View diagnostic line. `core/PresenceIngestion.js` itself, and every other 0.2.37 file, is untouched. Completes a full vertical slice of the avatar arc (0.2.33–0.2.38); the avatar roadmap deliberately pauses here.
+- **World Entity Interaction & Selection (0.2.39)** — the architecture-checkpoint milestone the pause was for: avatars become clickable, inspectable, and followable World View entities without ever becoming documents, placements, or editable world content. `WorldNavigationSession.pick()` runs a brick raycast and a completely separate avatar raycast (`renderer/PickingService.js`/`renderer/AvatarPickingService.js`) together and lets whichever is actually NEARER the camera win, never "bricks always win" regardless of depth. A brand-new, independent state slice (`application/spatial-state/AvatarInteractionState.js`) tracks the avatar target — structurally unable to ever enter `SpatialSelectionState`, so an avatarId can never reach the clipboard, groups, the transform gizmo, or undo/redo. Clicking an avatar opens a read-only Avatar Info panel (name, template, lifecycle/trust status, position, distance, animation) with deliberately no Edit/Move/Delete/Save — the one action, "Follow", is a pure camera relationship, mutually exclusive with 0.2.36's local-avatar-follow. Also documents (without implementing) an explicit boundary: presence has no privacy guarantee beyond transport scope. The flagship test proves it end to end: Bob clicks Alice (avatar target), clicks her building (brick selection), edits it (document forks) — Alice's AvatarPresence/AvatarProfile/Publication and the original Placement stay byte-identical throughout.
   
 ## Architecture
 
@@ -494,6 +526,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.36  Local Avatar Movement & Animation
 - [x] 0.2.37  Decentralized Avatar Presence Synchronization
 - [x] 0.2.38  Presence Trust, Replay & Conflict Handling
+- [x] 0.2.39  World Entity Interaction & Selection
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

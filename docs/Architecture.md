@@ -4005,3 +4005,114 @@ Also not in 0.2.38: any change to how a document's own
 persisted — verified directly (byte-identical placement JSON, unchanged
 document/spatial-index counts) in the flagship test, exactly as 0.2.37's
 own flagship verified.
+
+### World Entity Interaction & Selection (0.2.39)
+
+Makes avatars first-class interactive World View entities — clickable,
+inspectable, followable — WITHOUT making them documents, placements,
+or editable world content. See docs/Principles.md, "Avatars Are Never
+Document Selection." Formalizes the click-priority chain the design
+doc called for:
+
+    click
+      │
+      ▼
+    gizmo active? ──yes──► TransformGizmoController (unchanged)
+      │no
+      ▼
+    brick raycast (renderer/PickingService.js)
+    avatar raycast (renderer/AvatarPickingService.js)   ◄── run together,
+      │                                                     compared by distance
+      ▼
+    nearer of {brick, avatar} wins, or ground, or empty
+      │
+      ├── avatar  → AvatarInteractionState set, SpatialSelectionState cleared
+      ├── brick   → SpatialSelectionState set,  AvatarInteractionState cleared
+      ├── ground  → SpatialSelectionState set,  AvatarInteractionState cleared
+      └── empty   → both cleared
+
+Application:
+
+- `application/spatial-state/AvatarInteractionState.js` (new) — the
+  avatar-target counterpart to `SpatialSelectionState`/`SpatialHoverState`:
+  `{ avatarId }`, `isEmpty`, `static empty()`/`avatar(avatarId)`. A
+  SEPARATE state slice on purpose — see docs/Principles.md.
+- `application/AvatarPresenceLabels.js` (new) — `describeLifecycleState()`/
+  `describeTrustStatus()`, human-readable labels for
+  `PresenceLifecycleState`/`TrustStatus`, shared by `AvatarInfoPanel.js`,
+  same reasoning as `application/LicenseLabels.js`.
+- `application/RemoteAvatarRegistry.js` — gains `has(avatarId)` and
+  `currentPosition(avatarId, now)`, reading the SAME
+  `RemoteAvatarInterpolator` `tick()` already drives — used by
+  avatar-follow and by pruning an interaction target the moment its
+  presence actually expires.
+- `application/WorldNavigationSession.js` — `pick()` now also calls
+  `this._session.pickAvatar()` (guarded — a facade without it degrades
+  to "no avatar hit," never throws) and compares its `distance` against
+  a simultaneous brick hit's own `distance`; whichever branch wins
+  explicitly clears the OTHER state slice. New public surface:
+  `getAvatarInteraction()`, `getAvatarInfo()` (resolves the current
+  target into plain data — local avatar from `AvatarProfileUseCase`/
+  `AvatarPresenceSession`, remote avatar from `PresenceSyncService.listKnownPresences()`,
+  read-only, mirrors 0.2.29's `inspectDocument()`), `isLocalAvatarId()`,
+  `getCameraPosition()` (a lighter alternative to `getSpatialState().cameraPosition`),
+  `followAvatarId(avatarId)`/`stopFollowingRemoteAvatar()`/
+  `getFollowedRemoteAvatarId()` (the camera-follows-a-REMOTE-avatar
+  counterpart to 0.2.36's `setFollowAvatar`/`isFollowingAvatar` —
+  mutually exclusive with it, since there is only one camera; see
+  `_followRemoteAvatarIfEnabled()`, which reuses the SAME delta-only
+  `moveCamera()` shift 0.2.36 established). The remote-avatar frame
+  subscription (0.2.37) now also calls `_pruneAvatarInteractionIfGone()`
+  every frame, so a targeted or followed avatar whose presence expires
+  clears gracefully rather than pointing at nothing.
+
+Renderer:
+
+- `renderer/AvatarPickingService.js` (new) — raycasts against a
+  `Map<avatarId, Object3D>` of avatar `AvatarVisual.root` groups,
+  `recursive: true` (an avatar's real shape is root → poseGroup → body
+  parts, never one flat mesh), walking the intersection's parent chain
+  back to whichever root it belongs to. A completely separate object
+  set and raycaster instance from `renderer/PickingService.js` — see
+  docs/Principles.md.
+- `renderer/PickingService.js` — `pickRich()` now also returns
+  `distance` (the raycaster's own hit distance), additive and ignored
+  by every existing caller, consumed only by the new priority
+  comparison above.
+- `application/RenderWorldViewUseCase.js` — constructs an
+  `AvatarPickingService` alongside the existing `PickingService`;
+  tracks `localAvatarId` (from `setLocalAvatar`'s own `presence.avatarId`,
+  cleared by `removeLocalAvatar`); exposes `pickAvatar(screenX, screenY)`,
+  building the candidate roots map FRESH on every call from whichever
+  avatars are CURRENTLY VISIBLE (respecting both "Show My Avatar" and
+  "Show Other Avatars") — a hidden avatar is never a pickable candidate.
+
+UI:
+
+- `ui/components/AvatarInfoPanel.js` (new) — pure presentation,
+  same shape as `DocumentInfoPanel`/`PlacementInfoPanel`: renders
+  `WorldNavigationSession.getAvatarInfo()`'s output, emits
+  `follow`/`stop-follow`. Deliberately shows NO edit/move/delete/save
+  affordances — see docs/Principles.md, "Looking At Something Is Never
+  The Same As Acting On It." "Follow" only appears for a REMOTE avatar.
+- `ui/views/WorldView.js` — renders `AvatarInfoPanel` alongside
+  `DocumentInfoPanel`/`PlacementInfoPanel` (at most one of the two
+  families is ever populated at a time, since the underlying state
+  slices are mutually exclusive); `followAvatarFromPanel()`/
+  `stopFollowingAvatarFromPanel()` wire the panel's "Follow" button to
+  `followAvatarId()`/`stopFollowingRemoteAvatar()`.
+
+Deliberately not in 0.2.39: any privacy/visibility model for presence
+(documented as an explicit, deliberate boundary instead — see
+docs/Principles.md, "Avatar Presence Has No Privacy Guarantee Beyond
+Transport Scope," and docs/Roadmap.md), avatar collision, pushing
+other avatars, gestures/emotes, chat, voice, trading, avatar ownership
+transfer, a friends/social graph, and decentralized avatar-template
+distribution. Also not in 0.2.39: any change to `core/PresenceIngestion.js`,
+`application/PresenceTrustBoundary.js`, or anything else 0.2.37/0.2.38
+already established — this milestone adds an INTERACTION layer on top
+of presence, never touches trust/replay/transport underneath it, and
+the flagship test verifies exactly that (Alice's AvatarPresence/
+AvatarProfile/Publication and the original Placement are all
+byte-identical after Bob targets, inspects, AND edits — the edit forks
+a document, never touches the avatar at all).

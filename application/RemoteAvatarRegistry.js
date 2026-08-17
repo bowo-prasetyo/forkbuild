@@ -69,6 +69,29 @@ export class RemoteAvatarRegistry {
         return this._interpolators.size;
     }
 
+    // 0.2.39 — whether a given avatarId is currently a KNOWN remote
+    // avatar (still present, per sync()'s own bookkeeping — an
+    // avatarId that has aged into ABSENT and been pruned is no longer
+    // known). Used by WorldNavigationSession to gracefully drop an
+    // avatar-interaction target or a followed avatar the moment its
+    // presence actually expires, rather than pointing at a
+    // no-longer-existing remote avatar.
+    has(avatarId) {
+        return this._interpolators.has(avatarId);
+    }
+
+    // The SAME interpolated position tick() already pushes to the
+    // render facade every frame, exposed here for
+    // WorldNavigationSession's "follow this remote avatar" camera
+    // relationship (0.2.39) — deliberately reads the interpolator
+    // directly rather than adding a second position-tracking path;
+    // following sees EXACTLY what the renderer is currently drawing,
+    // never a different, more-authoritative value.
+    currentPosition(avatarId, now = Date.now()) {
+        const interpolator = this._interpolators.get(avatarId);
+        return interpolator ? interpolator.currentPresence(now).position : null;
+    }
+
     dispose() {
         for (const avatarId of this._interpolators.keys()) {
             this._renderFacade.removeRemoteAvatar(avatarId);

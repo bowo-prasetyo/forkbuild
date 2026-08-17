@@ -92,6 +92,7 @@
 0.2.36  Local Avatar Movement & Animation                   ✓
 0.2.37  Decentralized Avatar Presence Synchronization        ✓
 0.2.38  Presence Trust, Replay & Conflict Handling            ✓
+0.2.39  World Entity Interaction & Selection                  ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -393,12 +394,56 @@ collision, avatar-to-avatar interaction, and voice/chat.
 
 **0.2.33 through 0.2.38 complete a full vertical slice of the avatar
 arc**: create an avatar, customize it, see it, move it, see others move,
-and handle hostile/stale/conflicting presence. The avatar roadmap is
-deliberately PAUSED here rather than immediately continuing into chat,
-collision, emotes, voice, or avatar trading — this is a stability/
-architecture checkpoint, not a stopping point. The next design doc may
-resume the avatar arc, or open an entirely different one; nothing in
-this codebase assumes which.
+and handle hostile/stale/conflicting presence. The avatar roadmap was
+deliberately PAUSED at that checkpoint rather than immediately
+continuing into chat, collision, emotes, voice, or avatar trading.
+
+0.2.39 is the architecture-checkpoint milestone that pause was FOR:
+not a new avatar feature, but the gap 0.2.26–0.2.38 left visible —
+World View's click/selection model was designed almost entirely around
+document bricks, and avatars (0.2.35 onward) deliberately did nothing
+when clicked because no interaction model existed yet for them. Makes
+avatars first-class interactive World View entities — clickable,
+inspectable, followable — WITHOUT ever making them documents,
+placements, or editable world content. `WorldNavigationSession.pick()`
+now checks a brick raycast and an avatar raycast TOGETHER
+(`renderer/PickingService.js`/`renderer/AvatarPickingService.js`,
+completely separate object sets) and lets whichever is actually nearer
+the camera win — an avatar standing in front of a wall is selectable
+as itself, never as the wall behind it. A NEW, independent state slice
+(`application/spatial-state/AvatarInteractionState.js`) tracks the
+avatar target, structurally unable to enter `SpatialSelectionState` —
+see docs/Principles.md, "Avatars Are Never Document Selection": an
+avatarId can never reach the clipboard, groups, the transform gizmo,
+or undo/redo, not because those systems reject it but because they
+never see it at all. Clicking an avatar shows a read-only Avatar Info
+panel (`ui/components/AvatarInfoPanel.js`) — display name, template,
+lifecycle/trust status, position, distance, animation — with
+deliberately NO Edit/Move/Delete/Save; the one available action,
+"Follow" (`WorldNavigationSession.followAvatarId()`), is a pure camera
+relationship, mutually exclusive with 0.2.36's own local-avatar-follow
+since there is only one camera. A targeted or followed avatar whose
+presence expires (0.2.38's ABSENT-pruning) clears gracefully rather
+than pointing at nothing. See docs/Architecture.md and
+docs/Principles.md, "Selection Identifies What The User Is Interacting
+With; It Does Not Imply Ownership, Editability, Or Authority,"
+"Whichever Is Nearer Wins, Never Category," and "Looking At Something
+Is Never The Same As Acting On It." Also documents, without
+implementing, an explicit boundary the design doc asked to name now
+rather than later: presence has no privacy guarantee beyond transport
+scope — see docs/Protocol.md and docs/Principles.md, "Avatar Presence
+Has No Privacy Guarantee Beyond Transport Scope." Deliberately deferred,
+matching the design doc's own list: avatar collision, pushing other
+avatars, gestures/emotes, chat, voice, trading, avatar ownership
+transfer, a friends/social graph, private/scoped presence, and
+decentralized avatar-template distribution — collision in particular,
+since it raises real cross-replica authority questions ("who decides
+Alice collided with Bob?") that deserve their own carefully designed
+milestone, not a corner of this one.
+
+The avatar roadmap remains paused after 0.2.39 — nothing in this
+codebase assumes the next milestone resumes it rather than opening an
+entirely different arc.
 
 ## 0.1.50 — What shipped
 

@@ -1,6 +1,7 @@
 import { Renderer } from '../renderer/Renderer.js';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
 import { PickingService } from '../renderer/PickingService.js';
+import { AvatarPickingService } from '../renderer/AvatarPickingService.js';
 import { SpatialSelectionRenderer } from '../renderer/SpatialSelectionRenderer.js';
 import { SpatialPreviewRenderer } from '../renderer/SpatialPreviewRenderer.js';
 import { TransformGizmoRenderer } from '../renderer/TransformGizmoRenderer.js';
@@ -30,6 +31,10 @@ export class RenderWorldViewUseCase {
             renderer.domElement,
             worldRenderer.meshRegistry
         );
+        // 0.2.39 — a completely separate raycast target set from
+        // pickingService above; see docs/Principles.md, "Avatars Are
+        // Never Document Selection."
+        const avatarPickingService = new AvatarPickingService(renderer.camera, renderer.domElement);
         const spatialSelectionRenderer = new SpatialSelectionRenderer(
             worldRenderer.meshRegistry
         );
@@ -51,6 +56,11 @@ export class RenderWorldViewUseCase {
         const avatarRenderer = new AvatarRenderer();
         let localAvatarVisual = null;
         let localAvatarVisible = true;
+        // 0.2.39 — tracked purely so pickAvatar() can include the
+        // local avatar's root under its own avatarId; nothing else in
+        // this facade needs to know it (setLocalAvatar/updatePresence/
+        // etc. never read it back).
+        let localAvatarId = null;
 
         function ensureLocalAvatarVisual() {
             if (!localAvatarVisual) {
@@ -87,6 +97,37 @@ export class RenderWorldViewUseCase {
             pickGround: (screenX, screenY) => {
                 const pos = pickingService.pickGroundPosition(screenX, screenY);
                 return pos ? { type: 'ground', position: pos } : null;
+            },
+            // 0.2.39 — a completely separate pickable set from pick()
+            // above: only avatar roots CURRENTLY IN THE SCENE (never a
+            // hidden local avatar, never a remote avatar hidden by
+            // "Show Other Avatars"), built fresh on every call so
+            // visibility toggles take effect immediately with no
+            // separate cache to keep in sync. Returns
+            // { type: 'avatar', avatarId, isLocal, distance } or null
+            // — never a brick-shaped hit, and never mixed into the
+            // same result shape pick() returns, so nothing downstream
+            // can accidentally treat an avatar hit as a brick hit.
+            pickAvatar: (screenX, screenY) => {
+                const roots = new Map();
+                if (localAvatarVisual && localAvatarVisible && localAvatarId) {
+                    roots.set(localAvatarId, localAvatarVisual.root);
+                }
+                if (remoteAvatarsVisible) {
+                    for (const [avatarId, visual] of remoteAvatarVisuals) {
+                        roots.set(avatarId, visual.root);
+                    }
+                }
+                const hit = avatarPickingService.pick(screenX, screenY, roots);
+                if (!hit) {
+                    return null;
+                }
+                return {
+                    type: 'avatar',
+                    avatarId: hit.avatarId,
+                    isLocal: hit.avatarId === localAvatarId,
+                    distance: hit.distance
+                };
             },
             getCameraState: () => renderer.cameraController.getState(),
             setCameraState: (state) => renderer.cameraController.setState(state),
@@ -125,6 +166,7 @@ export class RenderWorldViewUseCase {
             // share one scene.
             setLocalAvatar: (template, appearance, presence) => {
                 const visual = ensureLocalAvatarVisual();
+                localAvatarId = presence.avatarId;
                 visual.setAppearance(template, appearance);
                 visual.setPose(presence.position, presence.rotation);
                 visual.setAnimation(presence.animation);
@@ -167,6 +209,7 @@ export class RenderWorldViewUseCase {
                 renderer.remove(localAvatarVisual.root);
                 localAvatarVisual.dispose();
                 localAvatarVisual = null;
+                localAvatarId = null;
             },
             // 0.2.36 — lets application/AvatarMovementController.js
             // (via WorldNavigationSession) tick its own kinematics
