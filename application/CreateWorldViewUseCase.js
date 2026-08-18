@@ -123,14 +123,23 @@ export class CreateWorldViewUseCase {
         // in" condition as avatarProfileUseCase/avatarPresenceSession
         // — with no local avatar to publish, there is nothing for a
         // visibility policy to gate.
+        // 0.2.58: avatarProfileVisibilityUseCase travels alongside the
+        // same avatarWiring, absent under the identical "nobody logged
+        // in" condition — see CreateAvatarPresenceSessionUseCase's own
+        // comment. Profile publishing now gates on ITS OWN policy
+        // rather than borrowing presence's — see docs/Principles.md,
+        // "Profile Gets Its Own Publication Gate, Superseding The
+        // Shared One."
         let avatarProfileUseCase = null;
         let avatarPresenceSession = null;
         let presenceVisibilityUseCase = null;
+        let avatarProfileVisibilityUseCase = null;
         if (identityProvider && typeof identityProvider.currentUser === 'function' && identityProvider.currentUser()) {
             const avatarWiring = new CreateAvatarPresenceSessionUseCase().execute(identityProvider);
             avatarProfileUseCase = avatarWiring.avatarProfileUseCase;
             avatarPresenceSession = avatarWiring.presenceSession;
             presenceVisibilityUseCase = avatarWiring.presenceVisibilityUseCase;
+            avatarProfileVisibilityUseCase = avatarWiring.avatarProfileVisibilityUseCase;
         }
 
         // 0.2.37 — Decentralized Avatar Presence Synchronization.
@@ -200,6 +209,11 @@ export class CreateWorldViewUseCase {
                     // presence is even eligible to publish — see
                     // WorldNavigationSession's own comment.
                     presenceVisibilityUseCase,
+                    // 0.2.58: gates whether the local avatar's
+                    // PROFILE is even eligible to publish — its own,
+                    // independent policy, no longer borrowing
+                    // presenceVisibilityUseCase's.
+                    avatarProfileVisibilityUseCase,
                     // 0.2.37: remote avatar presence — see above.
                     presenceBroadcastProvider,
                     avatarTemplateRegistry,

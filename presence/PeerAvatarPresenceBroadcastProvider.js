@@ -72,10 +72,29 @@ export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcast
     // name already uses — one wire shape, one logical protocol
     // identity, travelling over two different transports; there is no
     // reason for it to be spelled two different ways.
+    //
+    // isFriend: 0.2.58 addition — a zero-arg-per-call function
+    // `(peerIdentityId) => boolean`, called fresh on every advertise()
+    // for every candidate peer, never cached, mirroring
+    // getVisibilityPolicy's own "always current, never stale" contract.
+    // This transport never imports core/FriendshipRecord.js,
+    // core/FriendshipState.js, or application/FriendRelationshipUseCase.js
+    // itself — it only knows how to ask the injected predicate and pass
+    // its answer straight through as `shouldAdvertiseToPeer`'s
+    // `{ isFriend }` context, keeping the actual friendship STORE
+    // entirely the caller's concern (see docs/Principles.md, "Peer
+    // Selection Is A Transport Concern, Never A Presence-Core Concern,"
+    // extended here one layer further: even THIS transport, which does
+    // do peer selection, never reads a friendship store directly — it
+    // reads a predicate its caller closed over one). Defaults to
+    // `() => false` — a caller that never wires friendship awareness
+    // gets EXACTLY 0.2.53's own behavior: FRIENDS still works via
+    // authorizedPeerIdentities alone, nothing silently changes.
     constructor({
         peerMessageBus,
         connectedPeerRegistry,
         getVisibilityPolicy = () => PresenceVisibilityPolicy.default(),
+        isFriend = () => false,
         protocol = PeerAvatarPresenceBroadcastProvider.DEFAULT_PROTOCOL
     } = {}) {
         super();
@@ -88,6 +107,7 @@ export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcast
         this._bus = peerMessageBus;
         this._registry = connectedPeerRegistry;
         this._getVisibilityPolicy = getVisibilityPolicy;
+        this._isFriend = isFriend;
         this._protocol = protocol;
 
         // Every peer already connected when this transport is built,
@@ -136,7 +156,8 @@ export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcast
             }
             const peerIdentity = peer.remoteIdentity;
             const peerIdentityId = peerIdentity ? peerIdentity.identityId : null;
-            if (!policy.shouldAdvertiseToPeer(peerIdentityId)) {
+            const isFriend = peerIdentityId ? Boolean(this._isFriend(peerIdentityId)) : false;
+            if (!policy.shouldAdvertiseToPeer(peerIdentityId, { isFriend })) {
                 continue;
             }
             try {

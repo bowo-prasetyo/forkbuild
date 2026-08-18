@@ -62,14 +62,26 @@ export class PresenceVisibilityPolicy {
     // The ONE decision this class exists to make, consulted at the
     // SENDER before PresenceSyncService.publish() is ever called — see
     // docs/Principles.md, "Visibility Happens Before Broadcasting,
-    // Never After." Pure and parameter-free: everything it needs is
-    // already `this`.
-    shouldAdvertise() {
+    // Never After." Otherwise pure: everything it needs is already
+    // `this`, except for `context.hasFriend` (0.2.58 addition).
+    //
+    // `context.hasFriend` — a coarse counterpart to
+    // shouldAdvertiseToPeer()'s own per-peer `context.isFriend`: "do I
+    // currently have AT LEAST ONE real, mutual FriendshipState.FRIEND,"
+    // never which one. This method has no per-peer concept at all
+    // (that is exactly what makes it the COARSE gate — see this class's
+    // own file header) so it cannot ask "is peer X a friend," only "is
+    // there ANY reason to even try publishing." Omitting `context` (or
+    // `hasFriend`) is the same as `hasFriend: false` — the exact
+    // pre-0.2.58 behavior, unchanged: FRIENDS with an empty
+    // authorizedPeerIdentities and no hasFriend context still behaves
+    // like HIDDEN.
+    shouldAdvertise({ hasFriend = false } = {}) {
         switch (this._visibility) {
             case PresenceVisibility.HIDDEN:
                 return false;
             case PresenceVisibility.FRIENDS:
-                return this._authorizedPeerIdentities.length > 0;
+                return this._authorizedPeerIdentities.length > 0 || hasFriend === true;
             case PresenceVisibility.PUBLIC:
             case PresenceVisibility.LOCAL:
             default:
@@ -96,19 +108,40 @@ export class PresenceVisibilityPolicy {
     // shouldAdvertise(), still consulted first, still exactly what it
     // was in 0.2.40) but "should THIS SPECIFIC peer receive it."
     //
+    // `context.isFriend` — 0.2.58 addition. Whether `peerIdentityId`
+    // currently holds `core/FriendshipState.js#FRIEND` with THIS
+    // replica, per THIS replica's OWN `core/FriendshipRecord.js` (see
+    // docs/Principles.md, "A Visibility Policy Consults A Fact, Never
+    // A Store," 0.2.58) — a plain boolean the CALLER computes and
+    // hands in, never something this class looks up itself. This class
+    // stays exactly as pure as it always was: no import of
+    // core/FriendshipRecord.js, core/FriendshipState.js, or anything
+    // that could read a friendship store, here or anywhere else in
+    // core/. Omitting `context` (or `isFriend`) entirely is the same
+    // as passing `isFriend: false` — a caller that hasn't been taught
+    // about friendship yet degrades to exactly 0.2.40/0.2.53's own
+    // behavior, never a silent grant.
+    //
     //   PUBLIC  — every eligible authenticated peer, no exceptions.
     //             "Eligible" is the transport's own job (an
     //             AUTHENTICATED peer only) — this method never
     //             re-derives that.
-    //   FRIENDS — only a peer whose PROVEN identityId (peer/
+    //   FRIENDS — a peer whose PROVEN identityId (peer/
     //             PeerIdentity.js#identityId, from a real 0.2.49
-    //             handshake — never an unauthenticated hint) appears
-    //             in authorizedPeerIdentities. Finally a REAL
-    //             per-recipient decision, not merely "is the list
-    //             non-empty" — see core/PresenceVisibility.js's own
-    //             header, which named this exact limitation in 0.2.40
-    //             and always expected it to resolve exactly like this
-    //             once a point-to-point transport existed.
+    //             handshake — never an unauthenticated hint) is either
+    //             (a) reported as `context.isFriend === true` — a real
+    //             mutual `FriendshipState.FRIEND`, the primary meaning
+    //             of this tier as of 0.2.58 — or (b) present in
+    //             `authorizedPeerIdentities`, the plain, manually-typed
+    //             allow-list 0.2.40 originally built. The two are
+    //             ADDITIVE, never exclusive: mutual friendship is the
+    //             expected way this tier gets populated going forward,
+    //             but a manually-authorized identity — someone this
+    //             replica has decided to trust WITHOUT going through
+    //             (or before completing) the 0.2.57 REQUEST/ACCEPT
+    //             exchange — still works exactly as it always has. See
+    //             docs/Principles.md, "FRIENDS Means Mutual Friendship
+    //             OR An Explicit Grant, Never Either Alone" (0.2.58).
     //   LOCAL   — never sent to a peer connection, regardless of who
     //             the peer is. A real, authenticated peer connection
     //             — even a same-machine `LocalPeerConnectionProvider`
@@ -132,7 +165,7 @@ export class PresenceVisibilityPolicy {
     // asking "should I believe what arrived," and a PUBLIC or
     // FRIENDS-authorized send here can still turn out to be malicious
     // or malformed once it reaches the other side's trust boundary.
-    shouldAdvertiseToPeer(peerIdentityId) {
+    shouldAdvertiseToPeer(peerIdentityId, { isFriend = false } = {}) {
         switch (this._visibility) {
             case PresenceVisibility.HIDDEN:
                 return false;
@@ -141,7 +174,7 @@ export class PresenceVisibilityPolicy {
             case PresenceVisibility.FRIENDS:
                 return typeof peerIdentityId === 'string'
                     && peerIdentityId.length > 0
-                    && this._authorizedPeerIdentities.includes(peerIdentityId);
+                    && (isFriend === true || this._authorizedPeerIdentities.includes(peerIdentityId));
             case PresenceVisibility.PUBLIC:
             default:
                 return true;
