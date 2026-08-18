@@ -612,6 +612,74 @@ html, body {
 .modal-btn--primary:hover {
     background: #5fc490;
 }
+
+/* Identity List (LoginModal, 0.2.46) */
+.identity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 220px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.identity-list-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+.identity-list-item:hover {
+    border-color: #4caf7d;
+    background: #182018;
+}
+
+.identity-list-item-label {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.identity-list-item-id {
+    color: #707070;
+    font-size: 0.75rem;
+    font-family: monospace;
+    flex-shrink: 0;
+}
+
+.identity-divider {
+    display: flex;
+    align-items: center;
+    margin: 0.75rem 0;
+    color: #707070;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.identity-divider::before,
+.identity-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #2a2a2a;
+}
+
+.identity-divider span {
+    padding: 0 0.6rem;
+}
+
 .publication-fork-of {
     margin: 0.25rem 0;
     color: #e0a34c;

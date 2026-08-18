@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.45** — Ephemeral Avatar Interaction Synchronization
+**Version 0.2.46** — Local Identity & Authentication Session
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -544,8 +544,8 @@ target does, and no replica gains any new reach into another avatar's
 state because of it. A bounded replay window does double duty,
 tracking both `interactionId` (duplicate suppression) and `sequence`
 (staleness rejection) per avatarId. One real gap is named rather than
-hidden: no equivocation detection exists for interactions yet, left
-explicitly to 0.2.46. The flagship test proves the shape end to end
+hidden: no equivocation detection exists for interactions yet, left to
+a future, still-unscheduled milestone. The flagship test proves the shape end to end
 over a real `BroadcastChannel`: Bob waves at Alice, Alice's replica
 renders it on Bob's own avatar visual, an attacker's replay/staleness/
 tamper/impersonation attempts all fail, the gesture expires on its
@@ -556,6 +556,67 @@ The avatar roadmap's own suggested next steps — interaction trust,
 replay & abuse controls (the equivocation gap named above, plus spam/
 blocking), avatar privacy & blocking, an emotes/animation library,
 eventually text chat/voice — remain suggestions, not commitments.
+
+0.2.46 exercises that non-commitment: rather than continuing the avatar
+arc, it pauses it at exactly the checkpoint 0.2.45 left it and opens a
+different, more foundational one — decentralized identity itself.
+0.2.16 gave every signed object a `did:key` signer, but the KEY behind
+that signer was always a side effect of typing a username: `login('alice')`
+lazily derived a keypair from whatever string was typed, so "which
+account is the app showing?" and "which cryptographic key does this
+device hold?" were silently the same event. 0.2.46 separates them for
+real. `identity/LocalIdentity.js` (new) is a durable, validated record
+of a key this device actually possesses — `identityId`/`publicKey`/
+`algorithm`/`label`/`createdAt`, constructed only when its `identityId`
+provably derives from its own `publicKey`. `identity/
+AuthenticationSession.js` (new) is the missing third concept: not "does
+this device hold this key" (durable, `LocalIdentity`) and not "what
+name is shown" (`identity/Identity.js`, 0.1.21, unchanged), but "is one
+of this device's identities unlocked right now" — `ANONYMOUS` or
+`AUTHENTICATED`, with an `identityId` and `authenticatedAt` only in the
+latter state, invalid by construction otherwise. `identity/
+LocalIdentityProvider.js` is rebuilt on top of both: `createLocalIdentity(label)`
+generates a keypair immediately and stores it in a durable, listable
+index — independent of any login flow — and `authenticate(identityId)`/
+`endSession()` start and end the session by unlocking a key this device
+already holds, never by deriving a fresh one from a typed string. Every
+pre-existing method — `login(username)`, `logout()`, `currentUser()`,
+`sign()`, `getSigningIdentity()`, `signCanonical()` — keeps its exact
+0.1.21/0.2.16 signature and behavior, now implemented AS a thin,
+backward-compatible layer over the session model (`login(label)` finds-
+or-creates a `LocalIdentity` for that label and authenticates it;
+`currentUser()` is a pure, derived view of the current session, never a
+second stored fact that could drift out of sync with it) — every one of
+the ~45 existing tests, and every existing use case that signs
+publications, placements, or avatar presence/profile/interaction
+advertisements, keeps working completely unchanged.
+`getSigningIdentity()`/`signCanonical()` are now genuinely gated by
+`AuthenticationSession`, not merely by `currentUser()` happening to
+agree with it — proven directly in `tests/LocalIdentitySession.test.js`
+by ending a session and watching signing fail with "no active
+authentication session" while the identity's key remains on disk,
+untouched, ready to be re-authenticated later. The Login modal
+(`ui/components/LoginModal.js`) is rebuilt to match: it lists every
+identity this device already holds (`IdentityUseCase.listIdentities()`)
+so logging back in means picking the identity you already have, and
+"Create New Identity" is an explicit, separate action
+(`createIdentity()` + `authenticate()`) rather than a side effect of
+retyping a name. See docs/Architecture.md, "Local Identity &
+Authentication Session (0.2.46)," and docs/Principles.md, "Login
+Unlocks An Identity; It Does Not Derive One From A Typed Name" and
+"Identity Existence And Session Authentication Are Independent Facts."
+Deliberately not in 0.2.46, matching the scope a decentralized identity
+system needs to earn in stages: no passphrase/encryption protecting the
+stored private key (today's key material is exactly as protected as
+0.2.16's always was — plain local storage — a real gap named here, not
+hidden), no portable identity export/import or recovery phrase (moving
+to a new device still means creating a new identity — a genuinely
+different, harder problem left for its own milestone), no peer
+discovery or authenticated peer sessions, and no change at all to the
+signed-object wire formats, `core/Signature.js`, or
+`identity/LocalAuthorizationVerifier.js` — a `SigningIdentity` still
+looks, verifies, and travels exactly as it did in 0.2.16; only WHERE it
+comes from on the signing side changed.
 
 ## Features
 
@@ -604,8 +665,9 @@ eventually text chat/voice — remain suggestions, not commitments.
 - **Avatar-World Collision & Movement Constraints (0.2.42)** — closes the one conspicuous limitation the movement model carried since 0.2.36: avatars could walk straight through published geometry. `core/AvatarMovementSimulation.js`'s pure kinematics (completely untouched) produce a PROPOSED position; `application/AvatarMovementConstraint.js`, backed by pure geometry in `core/AvatarCollision.js`, resolves it against whatever collision geometry this replica currently has streamed in, before the result ever reaches `AvatarPresence`. Deliberately "start simple" — an upright bounding-box avatar, axis-aligned per-brick bounds (ignoring rotation, the same simplification `application/SelectionBoundsService.js` already makes), and an axis-separated SWEPT slide: a diagonal approach into a corner blocks the axis that actually hits something while the other keeps moving (a true slide, not a dead stop), and every axis is tested against its full step range so a single large tick can never tunnel through a thin obstacle. Honestly scoped to what this replica actually knows: collision geometry comes entirely from `WorldNavigationSession`'s own currently-loaded documents — the exact same wall blocks movement when streamed in and never obstructs anything when it isn't. Derived, never persisted: no collision record, no `Avatar → Document` relationship, just `Document + WorldPlacement` math recomputed fresh every tick. `AvatarAnimationState` gains nothing — a collided step is movement information (`isCollided()`, transient, never part of `AvatarPresence`), never a `BLOCKED` animation state. Deliberately deferred: avatar-avatar collision (Bob's displayed vs. claimed position is a real multiplayer-authority question left for later), standing on raised geometry, and any change to presence's own wire shape or trust handling. The flagship test runs the design doc's own scripted scenario end to end — publish a wall, load it, walk into it and stop at the boundary, turn and slide along it, jump against it without penetrating, Document/Publication/Placement remain byte-identical throughout, and a real remote replica sees Alice's already-constrained movement through completely ordinary presence sync, with zero collision-aware special-casing on his side.
 - **Avatar-Avatar Proximity & Interaction Targets (0.2.43)** — answers "who is near me?" as a DERIVED, purely local fact — nothing written to a Document, Publication, WorldPlacement, or AvatarProfile, nothing sent over the wire. `core/AvatarProximity.js`'s `computeNearbyAvatars()` computes it over the exact same trusted remote-presence list that already drives rendering, reusing `core/SpatialQuery.js`'s `distanceBetween()` verbatim. Two replicas computing "who is near me" independently are never required to agree — the same tolerance already extended to remote avatar rendering itself. `getNearbyAvatars(radius)` distinguishes PRESENT from STALE; an ABSENT avatar is simply never reachable, because `LocalPresenceStore` already deletes an ABSENT record the moment it's asked for — no new filtering needed. A small catch-up rides along: `getAvatarDisplayName()` fixes a stale 0.2.39 comment claiming a remote avatar's name "is never distributed" — true when written, false since 0.2.41. The new "Nearby Avatars" panel reaches an avatarId without a screen-space pick, but reuses every existing mechanism once it does — the same `getAvatarInfo()`, the same `followAvatarId()`, the same status-dot vocabulary; no new camera mechanism. Per the design doc's own explicit contract, nearness never authorizes mutation: `targetAvatar()`'s entire effect is on the caller's own local UI-focus state, and there is no method anywhere that lets one replica write to another avatar's own presence or profile. The flagship test proves it directly: after an entire scripted scenario of querying, targeting, and following, Alice's own AvatarProfile and AvatarPresence stay byte-identical throughout. Avatar-avatar collision remains deliberately deferred — a genuinely harder, multiplayer-authority-laden problem.
 - **Local Avatar Interaction & Social Presence (0.2.44)** — answers "once I know another avatar is nearby, what can I actually do with it?" with a deliberately small, still wire-format-free answer. A closed local gesture vocabulary — GREET/WAVE/POINT (`core/AvatarInteractionKind.js`) — is its OWN vocabulary, never folded into `core/AvatarAnimationState.js` (the one that DOES ride `AvatarPresence.animation` onto the wire), so a gesture is structurally incapable of being networked by accident. A shared cooldown (`core/AvatarInteractionCooldown.js`) rate-limits every gesture now, under easy local conditions, so a future networked version inherits an already-proven invariant instead of inventing rate-limiting later. Performing a gesture (`WorldNavigationSession.performAvatarInteraction()`) only ever writes to the caller's OWN local `AvatarInteractionState` — extended with `interaction`/`interactionStartedAt` — and is rendered ONLY on the gesturing avatar's own replica (`renderer/AvatarVisual.js#setGesture()`, an upper-body pose overlay reusing `core/AvatarPoseOffsets.js`'s own vocabulary) with no remote-avatar counterpart anywhere in the codebase. A temporary facing override (`core/AvatarFacing.js`) makes an avatar visually face its current target while stationary, applied directly to the Three.js root — never to `AvatarPresence.rotation` — and an actively-moving player's own input always wins over it. The Avatar Info panel grows exactly three buttons; three of the design doc's other named intents (Invite to Follow, Stop Following, Inspect) needed no new code at all, because they already existed since 0.2.39/0.2.43. Nothing here reaches a Document, a Publication, a WorldPlacement, or the wire — see docs/Principles.md, "Observation Does Not Imply Authority, And Interaction Does Not Imply Control."
-- **Ephemeral Avatar Interaction Synchronization (0.2.45)** — the networked half of 0.2.44's gestures, deliberately narrow: a GREET/WAVE/POINT is an EVENT, never STATE, so it is never retained once rendered. A third, independent wire shape (`core/AvatarInteractionAdvertisement.js` — `avatarId`/`interactionId`/`kind`/`targetAvatarId`/`sequence`/`timestamp`/optional `signature`) travels on its own `BroadcastChannel` (`'forkbuild:avatar-interaction'`), through its own trust boundary (`application/AvatarInteractionTrustBoundary.js` — structural validity → signature/policy → authority → replay/staleness, deliberately with NO equivocation check, a named gap left to 0.2.46) and its own bounded replay window that tracks both `interactionId` (duplicate suppression) and `sequence` (staleness rejection) per avatarId. `AvatarInteractionSyncService.pull()` returns only the newly-accepted events since the last call — never a persisted "current" record the way presence/profile sync services keep one. `targetAvatarId` is a CLAIM ("Bob claims he waved at Alice"), never an instruction — a bystander can observe and render the same event the named target does, and no replica gains any reach into another avatar's own state. A trusted event renders on the SENDER's own remote avatar visual (`RenderWorldViewUseCase#setRemoteAvatarGesture()`, reusing `AvatarVisual.setGesture()` byte-for-byte) and auto-expires after ~1.8s with no "stop" message ever required. `AvatarPresence`/`AvatarProfile` gain zero new fields; the flagship test proves a full replay/tamper/impersonation attack scenario over a real `BroadcastChannel` never renders a forged gesture, and never touches a Document, Publication, WorldPlacement, or the spatial index.
-  
+- **Ephemeral Avatar Interaction Synchronization (0.2.45)** — the networked half of 0.2.44's gestures, deliberately narrow: a GREET/WAVE/POINT is an EVENT, never STATE, so it is never retained once rendered. A third, independent wire shape (`core/AvatarInteractionAdvertisement.js` — `avatarId`/`interactionId`/`kind`/`targetAvatarId`/`sequence`/`timestamp`/optional `signature`) travels on its own `BroadcastChannel` (`'forkbuild:avatar-interaction'`), through its own trust boundary (`application/AvatarInteractionTrustBoundary.js` — structural validity → signature/policy → authority → replay/staleness, deliberately with NO equivocation check, a named gap left to a future, still-unscheduled milestone) and its own bounded replay window that tracks both `interactionId` (duplicate suppression) and `sequence` (staleness rejection) per avatarId. `AvatarInteractionSyncService.pull()` returns only the newly-accepted events since the last call — never a persisted "current" record the way presence/profile sync services keep one. `targetAvatarId` is a CLAIM ("Bob claims he waved at Alice"), never an instruction — a bystander can observe and render the same event the named target does, and no replica gains any reach into another avatar's own state. A trusted event renders on the SENDER's own remote avatar visual (`RenderWorldViewUseCase#setRemoteAvatarGesture()`, reusing `AvatarVisual.setGesture()` byte-for-byte) and auto-expires after ~1.8s with no "stop" message ever required. `AvatarPresence`/`AvatarProfile` gain zero new fields; the flagship test proves a full replay/tamper/impersonation attack scenario over a real `BroadcastChannel` never renders a forged gesture, and never touches a Document, Publication, WorldPlacement, or the spatial index.
+- **Local Identity & Authentication Session (0.2.46)** — pauses the avatar arc to fix a conflation that dates back to 0.2.16: `login(username)` used to lazily derive a signing key from whatever string was typed, so "which account is shown" and "which key this device holds" were the same event by construction. `identity/LocalIdentity.js` (new) is a durable, validated record of a key this device actually possesses (`identityId`/`publicKey`/`algorithm`/`label`/`createdAt`, its `identityId` provably derived from its own `publicKey`), created up front via `createLocalIdentity(label)` — independent of any login flow. `identity/AuthenticationSession.js` (new) answers the genuinely missing question, "is one of them unlocked right now" (`ANONYMOUS`/`AUTHENTICATED`), separate from both `LocalIdentity` (durable) and `identity/Identity.js` (a display label, unchanged since 0.1.21). `identity/LocalIdentityProvider.js` is rebuilt on top of both, with `authenticate(identityId)`/`endSession()` unlocking or releasing a key this device already holds — but every pre-existing method (`login`/`logout`/`currentUser`/`sign`/`getSigningIdentity`/`signCanonical`) keeps its exact 0.1.21/0.2.16 signature and behavior as a thin compatibility layer over the new model, so every existing use case and test that signs a publication, placement, or avatar advertisement keeps working unchanged. Signing is now genuinely gated by the session, not merely by `currentUser()` happening to agree with it, proven in `tests/LocalIdentitySession.test.js` by ending a session and watching signing fail while the key stays on disk untouched. The Login modal now lists every identity this device holds and makes "Create New Identity" an explicit action, never a side effect of retyping a name. Deliberately not in 0.2.46: passphrase/encryption on the stored key, portable identity export/import or recovery, and peer discovery/authenticated peer sessions — the wire formats and `identity/LocalAuthorizationVerifier.js` are completely unchanged; only where a signing key comes from changed.
+
 ## Architecture
 
 ForkBuild is layered as **core / application / renderer / ui**, with infrastructure adapters (storage, publisher, discovery, serializer, world-layout) surrounding them.

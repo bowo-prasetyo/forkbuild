@@ -4935,9 +4935,11 @@ Deliberately not in 0.2.45, matching the design doc's own scope: chat,
 direct messaging, voice, friend requests, blocking, guaranteed
 delivery, per-recipient encryption, interaction history, persistent
 emotes, trading, avatar-to-avatar physics, or a formal permissions
-system — all left for later, narrower milestones (0.2.46 "Interaction
-Trust, Replay & Abuse Controls," 0.2.47 "Avatar Privacy, Blocking &
-Interaction Permissions"). No new UI surface either: the design doc's
+system — all left for later, unscheduled milestones, tentatively titled
+"Interaction Trust, Replay & Abuse Controls" and "Avatar Privacy,
+Blocking & Interaction Permissions" (0.2.46 itself opened a different
+arc — Local Identity & Authentication Session, below — rather than
+continuing this one). No new UI surface either: the design doc's
 own framing — "a simple avatar gesture is enough," explicitly
 cautioning against a chat-style notification system this early — means
 the existing 3D gesture rendering (0.2.44's own `AvatarVisual.setGesture`,
@@ -4961,3 +4963,170 @@ tampers/impersonates the captured packet (none of it renders), the
 gesture expires on its own, and `AvatarPresence`/`AvatarProfile` of
 both avatars — plus the published `Document`/`WorldPlacement`/spatial
 index — are verified byte-identical throughout.
+
+### Local Identity & Authentication Session (0.2.46)
+
+```text
+0.2.16 (before)                        0.2.46 (after)
+────────────────                        ───────────────
+login('alice')                          createLocalIdentity('alice')
+  │                                       │  generates a keypair NOW,
+  │  lazily derives a keypair             │  stores it in a durable,
+  │  FROM the typed string,               │  listable index — before
+  │  the first time it's needed           │  any login/session exists
+  ▼                                       ▼
+currentUser() == signing identity       LocalIdentity
+  (the same event, always)                 │  "a key THIS device holds"
+                                            │  (durable, survives logout)
+                                            ▼
+                                         authenticate(identityId)
+                                            │  "unlock a key I already
+                                            │   hold" — never derive one
+                                            ▼
+                                         AuthenticationSession
+                                            │  "is one in use right now?"
+                                            │  (transient; ANONYMOUS or
+                                            │   AUTHENTICATED)
+                                            ▼
+                                         currentUser() / getSigningIdentity()
+                                            — pure, derived VIEWS of the
+                                            session, never a second fact
+```
+
+0.2.16 gave every signed object an answer to "who authorized this?" —
+but the KEY behind that answer was always a side effect of `login()`
+receiving a username string: the first call to `getSigningIdentity()`
+for a given username lazily generated and cached a keypair keyed by
+that exact string. That was honest cryptography (a real Ed25519 key, a
+real did:key, a real signature) sitting behind a dishonest premise: it
+made "which account is the app showing" and "which cryptographic key
+does this device hold" the same event by construction, so there was
+never a way to ask either question independently, and no way to
+express "this device holds a key but isn't currently using it" at all.
+
+0.2.46 is deliberately the LOCAL half only of the identity/session
+architecture the design doc lays out — no server, no network, no
+recovery mechanism, matching the doc's own staged scope ("0.2.46 —
+Local Identity & Authentication Session," explicitly local-only). It
+introduces two new pure-data concepts and rebuilds the existing
+provider on top of them, without changing the external shape of a
+single method every other part of the codebase already calls.
+
+Identity (all pure data, no I/O):
+
+- `identity/LocalIdentity.js` (new) — an identity whose PRIVATE key
+  THIS device currently holds: `identityId` (a did:key), `publicKey`,
+  `algorithm`, a local-only `label` (presentation metadata, never part
+  of the cryptographic identity and never transmitted as an
+  authorization claim), and `createdAt`. The constructor verifies
+  `identityId` actually derives from `publicKey`
+  (`Ed25519.publicKeyToDidKey`) — a `LocalIdentity` can never silently
+  disagree with the `SigningIdentity` it converts into. Deliberately a
+  THIRD identity concept, distinct from the two 0.2.16/0.1.21 already
+  established: `identity/SigningIdentity.js` answers "which key
+  authorized this object?" with possession neither known nor implied
+  (it travels with anything signed, including replicas received from
+  someone else entirely); `identity/Identity.js` answers "which
+  account is the app showing?" (a display label, unchanged since
+  0.1.21); `LocalIdentity` answers "which keys can THIS device
+  actually sign with?" — always local, always implies possession.
+- `identity/AuthenticationSession.js` (new) — is one of this device's
+  identities unlocked right now? `AuthenticationState.ANONYMOUS` or
+  `AUTHENTICATED`, carrying `identityId`/`authenticatedAt` only in the
+  latter state — invalid by construction otherwise (the constructor
+  throws if `AUTHENTICATED` is requested without an `identityId`).
+  There is no server to issue this session; it is the local client's
+  own record that it currently holds the private key half of
+  `identityId` and is therefore willing to sign on its behalf. Static
+  `anonymous()`/`authenticated(identityId, at)` factories and
+  `toJSON()`/`fromJSON()` mirror every other pure-data entity's shape
+  in this codebase.
+
+Identity provider (the seam every other file actually calls through):
+
+- `identity/LocalIdentityProvider.js` (rebuilt internally; external
+  shape unchanged) — durable state moves from one lazily-created
+  per-username key (`local-signing-key:<username>`) to a proper
+  identity index (`local-identities`, listable via
+  `listLocalIdentities()`/`getLocalIdentity()`) plus a single active
+  session record (`local-session`). New lifecycle methods:
+  `createLocalIdentity(label)` (generates a keypair immediately,
+  independent of any login — the design doc's "Identity = f(publicKey)"
+  step), `authenticate(identityId)` (throws if this device doesn't
+  hold that identity's key — a session can never be authenticated onto
+  an identity this device didn't itself create), `endSession()`
+  (clears the active session; never touches the identity or its key),
+  `currentSession()`, `isAuthenticated()`. The pre-existing surface —
+  `login(username)`, `logout()`, `currentUser()`, `sign(data)`,
+  `getSigningIdentity()`, `signCanonical(descriptor)` — keeps its
+  EXACT signature and behavior: `login(label)` finds an existing
+  `LocalIdentity` carrying that label (so the same typed username
+  keeps resolving to the same key on this device, exactly as 0.2.16
+  guaranteed) or creates one, then calls `authenticate()`; `logout()`
+  calls `endSession()`; `currentUser()` is now a PURE, DERIVED view of
+  `currentSession()` — reading the authenticated identity's `label` —
+  rather than a second, independently-stored fact that session state
+  could drift away from; `getSigningIdentity()`/`signCanonical()` now
+  require an authenticated session (`_requireAuthenticatedIdentity()`),
+  throwing "no active authentication session" rather than the old
+  "no user logged in" — a distinction that matters because it is now
+  possible (and tested) for a `LocalIdentity` to exist on a device
+  with no session currently authenticated onto it.
+- `application/IdentityUseCase.js` — gains `createIdentity(label)`,
+  `listIdentities()`, `authenticate(identityId)`, `endSession()`,
+  `currentSession()`, `isAuthenticated()`, and `onSessionChanged()`
+  alongside the unchanged `login()`/`logout()`/`currentUser()`/
+  `onUserChanged()`. Every path that changes who's logged in — legacy
+  `login()`/`logout()` included — publishes BOTH `IdentityChanged` and
+  `AuthenticationSessionChanged`, so a component can subscribe to
+  whichever question it actually cares about, and the two can never
+  observably disagree.
+
+UI:
+
+- `ui/components/LoginModal.js` (rebuilt) — lists every
+  `LocalIdentity` this device holds (`IdentityUseCase.listIdentities()`),
+  each one a button that calls `authenticate(identityId)` directly;
+  logging back in means picking the identity you already have, not
+  retyping a string and hoping it maps to the same key. "Create New
+  Identity" is a separate, explicit action
+  (`createIdentity(label)` + `authenticate()`), never a side effect of
+  typing a name that happens to be new.
+- `ui/components/UserWidget.js` — logout now calls
+  `identityUseCase.endSession()`, the new session vocabulary, instead
+  of the legacy `logout()` alias (both remain equivalent; the widget
+  adopts the name that matches what's actually happening).
+
+Deliberately not in 0.2.46, matching the design doc's own staged
+scope: no passphrase or encryption protecting the stored private key
+(key material is exactly as protected as 0.2.16's always was — plain
+local storage via `StorageProvider`, a real limitation named here, not
+hidden); no portable identity export/import or recovery phrase (moving
+to a new device still means creating a brand-new identity); no peer
+discovery or authenticated peer session (an `AuthenticationSession`
+still only ever proves something to the LOCAL device holding it —
+nothing here lets Alice prove her identity to Bob over a network); and
+no change at all to `core/Signature.js`, `identity/SigningIdentity.js`,
+or `identity/LocalAuthorizationVerifier.js` — a signature produced
+under the new model verifies through the completely unmodified 0.2.16
+verification pipeline, proven directly by running
+`tests/DecentralizedIdentity.test.js`'s full flagship (identity ->
+publish -> place -> index -> discover -> verify -> resolve -> stream)
+unmodified against the rebuilt provider.
+
+`tests/LocalIdentitySession.test.js` covers `LocalIdentity`'s
+validated construction (including a forged `identityId`/`publicKey`
+pairing being rejected), that creating an identity does not by itself
+authenticate a session, a single device holding multiple independent
+identities (switching sessions never deletes or overwrites the other),
+that logging out ends the session while the identity and its key
+survive on disk, full backward compatibility of the legacy
+`login`/`logout`/`currentUser`/`sign` surface (including that the same
+typed username keeps resolving to the same `LocalIdentity`), signing
+gated end-to-end by `AuthenticationSession` and verified against a
+real `Signature` through `LocalAuthorizationVerifier`, and
+`AuthenticationSession`'s own pure-data invariants. The entire
+pre-existing test suite (~45 files calling `provider.login(...)`, plus
+every avatar presence/profile/interaction signing path) was run
+unmodified against the rebuilt provider and passes without a single
+change.

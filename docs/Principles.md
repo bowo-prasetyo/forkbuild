@@ -2574,11 +2574,62 @@ nothing to equivocate WITH. The narrower, genuinely adversarial
 question this leaves open — the SAME bound signing authority producing
 two DIFFERENT `interactionId`s at the identical `sequence`, racing to
 see which one a given replica happens to process first — is real, and
-is explicitly left to 0.2.46 ("Interaction Trust, Replay & Abuse
-Controls," docs/Roadmap.md) rather than solved here. What 0.2.45 DOES
+is left to a future milestone rather than solved here; it remains
+unscheduled, since 0.2.46 opened an entirely different arc (Local
+Identity & Authentication Session — see docs/Roadmap.md) instead of
+continuing the avatar interaction trust work. What 0.2.45 DOES
 still guarantee even without it: `sequence` must strictly increase to
 be accepted at all, so a second claim reusing an already-used sequence
 is at minimum rejected as STALE, never silently rendered as if it were
 new. A gap that is named in the code and the docs, with a monotonic
 fallback already in place, is a deliberate scope boundary; a gap that
 is simply never mentioned is a bug waiting to be discovered later.
+
+### Login Unlocks An Identity; It Does Not Derive One From A Typed Name (0.2.46)
+
+Before 0.2.46, `login(username)` lazily generated a keypair FROM the
+typed string the first time it was needed — so "logging back in" meant
+retyping the same string and trusting it would happen to resolve to
+the same key, and there was no way for a user to see, choose among, or
+knowingly return to a specific identity; the string itself was the
+only handle on it. 0.2.46 makes identity creation and identity
+selection two different, explicit verbs:
+`identity/LocalIdentityProvider.js#createLocalIdentity(label)` mints a
+keypair and stores it in a durable, listable index, independent of any
+login flow; `authenticate(identityId)` unlocks one specific identity
+this device already holds, addressed by its own `identityId`, never
+re-derived from a label. `ui/components/LoginModal.js` reflects this
+directly: it lists every identity the device holds
+(`IdentityUseCase.listIdentities()`) so logging back in is picking
+from that list, and "Create New Identity" is its own explicit button,
+never a side effect of typing a name that happens to be new. The
+legacy `login(username)` call is kept, unchanged, as a genuine
+convenience on top of this — find-or-create by label, then authenticate
+— not because label-based lookup is the right long-term model, but
+because every existing caller depends on its exact behavior and losing
+nothing by keeping it. What changed is that it is no longer the ONLY
+way to reach an identity.
+
+### Identity Existence And Session Authentication Are Independent Facts (0.2.46)
+
+A `LocalIdentity` existing on a device (`listLocalIdentities()`
+includes it) and that identity currently being authenticated
+(`currentSession().identityId === it`) are two different, independently
+true-or-false facts, deliberately never collapsed into one. Creating an
+identity (`createLocalIdentity()`) does not authenticate a session;
+ending a session (`endSession()`/`logout()`) does not delete or forget
+the identity or its key; switching which identity is authenticated
+(`authenticate()`) never touches any OTHER identity this device holds.
+`tests/LocalIdentitySession.test.js` proves each direction directly:
+signing is refused immediately after creating an identity (session
+still `ANONYMOUS`), and signing is refused immediately after logging
+out even though `listLocalIdentities()` still lists the identity and
+re-authenticating recovers the exact same `identityId`. This is what
+makes multi-identity devices possible without special-casing: a "Work
+Account" and a "Personal Account" are just two `LocalIdentity` entries,
+and switching between them is nothing more than which one the single
+`AuthenticationSession` currently names — never a delete-and-recreate,
+never a per-identity storage wipe. `currentUser()` and
+`getSigningIdentity()` are both, deliberately, PURE FUNCTIONS of
+`currentSession()` — derived views, never a second place either fact
+could be separately, and wrongly, recorded.
