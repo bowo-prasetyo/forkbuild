@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.49** — Authenticated Peer Connection Model
+**Version 0.2.52** — Authenticated Peer Messaging & Protocol Multiplexing
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -742,6 +742,73 @@ reconnecting presence/profile/interaction sync to run over an
 authenticated peer connection instead of today's open
 `BroadcastChannel`.
 
+0.2.50 answers the other half 0.2.49 deliberately deferred — how does
+Alice find Bob's address at all — with a portable, deliberately UNSIGNED
+`peer/PeerInvitation.js` (endpoint, expiry, an optional untrusted
+identityHint) that a `peer/PeerDiscoveryProvider.js` turns into a
+`peer/PeerDiscoveryRecord.js`: a mere candidate, never a proof — only
+0.2.49's own unmodified handshake may ever say "this is Bob."
+`application/ConnectToPeerUseCase.js`/`application/ConnectedPeer.js`/
+`application/ConnectedPeerRegistry.js` wire discovery through
+authentication into one derived `peer/PeerLifecycleState.js`
+(DISCOVERED → CONNECTING → CONNECTED → AUTHENTICATING → AUTHENTICATED),
+auto-removing a peer the instant its connection closes or fails — no
+persisted "connected peers" list, no automatic friend relationship. See
+docs/Architecture.md, "Peer Discovery & Rendezvous (0.2.50)."
+
+0.2.51 closes the transport gap both prior milestones named:
+`peer/WebRtcPeerConnection.js`/`peer/WebRtcPeerConnectionProvider.js`
+are a real `RTCPeerConnection`/`RTCDataChannel` pair satisfying the
+exact same `PeerConnection`/`PeerConnectionProvider` contract
+`LocalPeerConnectionProvider` already did, so nothing above that
+interface needed to change. Signaling (`peer/PeerConnectionOffer.js`/
+`peer/PeerConnectionAnswer.js`) is handed off exactly as manually and
+deliberately as a `PeerInvitation` already is — no signaling server, no
+STUN/TURN configured by default. A serialized offer is usable verbatim
+as a `PeerInvitation#endpoint`, so 0.2.50's discovery flow plugs into a
+real transport with zero code changes; the flagship test proves two
+genuinely separate `RTCPeerConnection`s reaching mutual 0.2.49
+authentication over a real DataChannel. See docs/Architecture.md, "Real
+WebRTC Peer Transport & Signaling Handoff (0.2.51)."
+
+0.2.52 answers the question those milestones' own proposed follow-ons
+opened first: once Alice and Bob have a real, authenticated peer
+connection, how do different decentralized application protocols
+safely share it? `peer/PeerMessage.js` (new) is the deliberately boring
+wire envelope every application message now travels in —
+`messageId`/`protocol`/`version`/`payload`, structurally validated but
+never interpreted. `peer/PeerMessageBus.js` (new) is the
+application-facing multiplexer sitting directly on
+`application/ConnectedPeer.js`: `subscribe(protocol, handler)`
+registers once, independent of which peer eventually sends;
+`send(connectedPeer, protocol, payload)` delivers to exactly one peer.
+The central rule is structural, not just documented: a peer whose
+`getLifecycleState()` is not, right now, AUTHENTICATED gets no message
+channel at all — every incoming message is re-checked against the
+peer's CURRENT lifecycle at delivery time, not merely at the moment a
+protocol attached, so a connection that is CONNECTED but still
+AUTHENTICATING (or one whose authentication later FAILED) cannot inject
+anything through the bus. Deliberately, no second generic message
+signature was added — the connection is already authenticated, and a
+protocol that needs cryptographic proof over its own payload signs at
+its own layer, exactly like `core/AvatarPresenceAdvertisement.js`
+already does. The flagship test (`tests/PeerMessaging.test.js`) runs
+the identical application-level scenario — mutual authentication, then
+Alice sends `test.alpha`/`test.beta`/`test.unknown` and Bob (subscribed
+only to the first two) receives exactly those two — over BOTH
+`LocalPeerConnectionProvider` and `WebRtcPeerConnectionProvider`,
+unmodified, proving the abstraction is real rather than an interface
+with one implementation underneath. See docs/Architecture.md,
+"Authenticated Peer Messaging & Protocol Multiplexing (0.2.52)," and
+docs/Principles.md, "A Peer Connection Transports Messages; It Does Not
+Interpret Them," "A Peer Message Envelope Carries Routing Information,
+Never Meaning," and "Replay Semantics Belong To The Protocol, Never The
+Bus." Deliberately not in 0.2.52: any real protocol actually using this
+bus yet — Presence/Profile/Interaction remain on their own separate
+`BroadcastChannel`s until a future milestone moves them over one at a
+time; any change to `PresenceVisibilityPolicy`'s FRIENDS tier; and any
+new UI — this milestone is substrate only.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -794,6 +861,9 @@ authenticated peer connection instead of today's open
 - **Identity Security & Key Protection (0.2.47)** — closes the gap 0.2.46 named instead of moving on to portability or peer networking: a `LocalIdentity`'s private key can now be protected by a user-chosen passphrase, either from creation (`createLocalIdentity(label, passphrase)`) or migrated in place later (`protectIdentity(identityId, passphrase)`), always opt-in and never forced. `identity/KeyEncryption.js` (new) is a self-contained PBKDF2-HMAC-SHA512 + SHA512-CTR + HMAC-SHA512 encrypt-then-MAC scheme, built from the same `sha512` primitive `identity/Ed25519.js` already established rather than a new dependency; a wrong passphrase and a tampered record fail identically, rejected by the MAC before decryption is ever trusted. `identity/VaultLock.js` (new) is a FOURTH identity concept — "is this identity's key decrypted in memory right now?" — genuinely independent of `LocalIdentity` (durable) and `AuthenticationSession` (persisted): a protected identity can be logged in while its vault is `LOCKED`, and a page reload always finds a protected vault `LOCKED` regardless of session state, because the decrypted seed lives only in a volatile in-memory cache nothing ever persists. `identity/FailedUnlockTracker.js` enforces a time-based cooldown after repeated wrong passphrases (the correct one is refused too, mid-cooldown); `identity/VaultTimeoutPolicy.js` auto-locks an unlocked vault after a fixed lifetime, honestly not true activity tracking, without ending the session itself. `LoginModal`/`UserWidget` gain inline passphrase prompts and a distinct "🔒 locked, still logged in" state. Deliberately not in 0.2.47: changing/removing a passphrase once set, PIN-strength policy, true idle-activity detection, portable export/import, and peer discovery/authenticated sessions.
 - **Portable Identity, Export, Import & Recovery (0.2.48)** — closes the gap 0.2.46 and 0.2.47 both named: a `LocalIdentity`'s private key can now move to a second device as a protected, versioned package, never a plaintext seed. `identity/IdentityExport.js`/`IdentityImport.js`/`IdentityRecovery.js` (new) build, strictly validate, and decrypt/verify a portable package built from 0.2.47's own `KeyEncryption` record shape — no second invented format. The central invariant, proven end to end in `tests/PortableIdentity.test.js`'s flagship test: a signature produced on a second, completely independent device after import verifies with the identity's ORIGINAL public key through the unmodified `LocalAuthorizationVerifier`. Importing a duplicate identity is a pure no-op (`ALREADY_EXISTS`, doesn't even require the correct passphrase); an imported identity always lands protected and `LOCKED`, regardless of whether it was protected at rest on its origin device — import proves possession, never authentication. `ui/views/IdentityManagementView.js` (new, "My Identities") is a dedicated view for lock/unlock/export/import across every identity a device holds. Deliberately not in 0.2.48: changing/removing a passphrase, any recovery path that doesn't require both the exported file and its passphrase (there is no password reset), non-file package transport, and peer discovery/authenticated sessions.
 - **Authenticated Peer Connection Model (0.2.49)** — begins the decentralized peer arc with one deliberately narrow question: not yet "how does Alice find Bob," but "once Alice has a connection to something claiming to be Bob, how does she cryptographically establish who Bob is?" A new, transport-agnostic vocabulary independent of avatars/presence/profiles/documents: `peer/PeerConnectionProvider.js`/`peer/PeerConnection.js` (new, abstract — the same throwing-stubs boundary `discovery/DiscoveryProvider.js` already establishes) carry ONLY transport state (`peer/PeerConnectionState.js`); `peer/LocalPeerConnectionProvider.js` (new) is a real in-process implementation, standing in for a future WebRTC/relay transport. `peer/PeerAuthenticationSession.js` (new) layers a completely independent state machine (`peer/PeerAuthenticationState.js`) on top: a symmetric mutual challenge-response handshake where each side signs the other's challenge via `identity/LocalIdentityProvider.js`'s own unmodified `signCanonical()`, over a new canonical descriptor (`core/PeerAuthenticationEnvelope.js`, `SignatureType.PEER_AUTHENTICATION`) that signs `protocol`/`purpose`/`sessionNonce`/`challenge`/`identityId`/`publicKey` together — the `sessionNonce` (the connection's own id) is what makes a captured, entirely genuine handshake fail when replayed into a different connection, since the signature itself no longer verifies. A verified PROOF yields a `peer/PeerIdentity.js` — proof of key possession only, never persisted, discarded the instant the connection closes; there is no "friends" list or trusted-peer database anywhere in this milestone, on purpose — a peer connection authenticates a key, not an account. `tests/PeerAuthentication.test.js`'s flagship test mutually authenticates two independent `LocalIdentityProvider` instances over a real connection, then proves close/reconnect requires a fresh handshake, and separately proves a replayed handshake, a modified challenge, a substituted public key (both as a mismatch and as a full impersonation attempt), and a genuinely valid signature reused against a different challenge are all rejected — several purely because the underlying signature's own cryptographic binding fails, not a shallow field check — while `core/AvatarPresenceAdvertisement.js` signing stays completely unaffected. Deliberately not in 0.2.49: any peer discovery/rendezvous mechanism, any persistent trusted-peer concept, a real network transport, and reconnecting presence/profile/interaction sync to run over an authenticated connection instead of today's open `BroadcastChannel`.
+- **Peer Discovery & Rendezvous (0.2.50)** — answers the half of 0.2.49's own deferral about finding Bob's address at all: `peer/PeerInvitation.js` (new) is a portable, deliberately UNSIGNED rendezvous hint (endpoint, expiry, an optional untrusted `identityHint`); `peer/PeerDiscoveryProvider.js`/`peer/LocalPeerDiscoveryProvider.js` (new) turn one into a `peer/PeerDiscoveryRecord.js` — a candidate, never a proof, per docs/Principles.md, "Discovery Finds A Candidate; It Never Authenticates One." `application/DiscoverPeersUseCase.js`/`application/ConnectToPeerUseCase.js` (new) wire discovery through completely unmodified 0.2.49 authentication; `application/ConnectedPeer.js`/`application/ConnectedPeerRegistry.js` (new) track the live result as one PURE, derived `peer/PeerLifecycleState.js` (DISCOVERED → CONNECTING → CONNECTED → AUTHENTICATING → AUTHENTICATED → FAILED/CLOSED), auto-removing a peer the moment its connection disappears — no persisted "connected peers" list, no automatic friend relationship. The flagship test (`tests/PeerDiscovery.test.js`) runs invitation → discovery → connection → mutual authentication end to end, then proves a tampered endpoint fails the connection outright and a tampered identityHint never affects the real, proven `remoteIdentity`. Deliberately not in 0.2.50: any real network transport, signing a `PeerInvitation`, any persistent contacts/aliases system, or new UI.
+- **Real WebRTC Peer Transport & Signaling Handoff (0.2.51)** — closes the transport gap 0.2.49 and 0.2.50 both named: `peer/WebRtcPeerConnection.js`/`peer/WebRtcPeerConnectionProvider.js` (new) are a real `RTCPeerConnection`/`RTCDataChannel` pair satisfying the exact same `peer/PeerConnection.js`/`peer/PeerConnectionProvider.js` contract `LocalPeerConnectionProvider` already did, so `ConnectToPeerUseCase`/`DiscoverPeersUseCase` needed no changes to drive it. Signaling (`peer/PeerConnectionOffer.js`/`peer/PeerConnectionAnswer.js`, new — deliberately UNSIGNED and short-lived, like a `PeerInvitation`) is handed off exactly as manually as 0.2.50's own invitation handoff — no signaling server, no STUN/TURN configured by default (an `iceServers` option exists but ships empty). A serialized offer is usable verbatim as a `PeerInvitation#endpoint`, so 0.2.50's discovery flow plugs into a real transport with zero changes. The flagship test (`tests/WebRtcPeerTransport.test.js`) proves two genuinely separate `RTCPeerConnection`s — signaling relayed only as JSON, simulating an actual copy/paste — reach mutual 0.2.49 authentication over a real DataChannel, and that closing/reconnecting behave correctly under real network timing. Also fixed, surfaced by real timing: a `ConnectedPeer#dispose()` listener-iteration bug 0.2.50 shipped. Deliberately not in 0.2.51: any signaling server, real NAT-traversal hardening, any application message protocol beyond 0.2.49's own HELLO/PROOF, or new UI.
+- **Authenticated Peer Messaging & Protocol Multiplexing (0.2.52)** — "once Alice and Bob have an authenticated peer connection, how do different decentralized application protocols safely share it?" `peer/PeerMessage.js` (new) is the deliberately boring wire envelope every application message now travels in — `messageId`/`protocol`/`version`/`payload`, structurally validated but never interpreted, carrying no avatar state, username, trust state, or signature. `peer/PeerMessageBus.js` (new) is the application-facing multiplexer sitting directly on `application/ConnectedPeer.js`: `subscribe(protocol, handler)` registers once, independent of which peer sends; `send(connectedPeer, protocol, payload)` delivers to exactly one peer; structurally, it never contains `if (protocol === '...')` anywhere, only a `Map` from protocol name to whatever subscribed. The central security property is structural: a peer whose `getLifecycleState()` is not, right now, AUTHENTICATED gets no message channel — every incoming message is re-checked against the peer's CURRENT lifecycle at delivery time, never merely at `attach()` time, so a connection that is CONNECTED but still AUTHENTICATING (or one whose authentication later FAILED) cannot inject anything. Generic transport hygiene only — a malformed envelope, an oversized one (`MAX_PEER_MESSAGE_BYTES`), or a duplicate `messageId` (suppressed in a small BOUNDED window, deliberately not `replication/ReplayGuard.js`'s unbounded ledger) are rejected before reaching a handler; an unknown protocol is simply ignored. Deliberately, per the design doc's own reasoning, no second generic message signature was added — the connection is already authenticated, and a protocol needing its own cryptographic proof signs at its own layer, exactly like `core/AvatarPresenceAdvertisement.js` already does. The flagship test (`tests/PeerMessaging.test.js`) runs the identical application-level scenario — mutual authentication, then Alice sends `test.alpha`/`test.beta`/`test.unknown` and Bob (subscribed only to the first two) receives exactly those two, each once, with the real proven sender identity attached — over BOTH `LocalPeerConnectionProvider` and `WebRtcPeerConnectionProvider`, unmodified, proving the abstraction is real rather than an interface with one implementation underneath; separate tests prove the AUTHENTICATED-gating property deterministically and that a HELLO/PROOF handshake message sharing the same `onMessage()` stream can never be mistaken for a `PeerMessage` envelope. Deliberately not in 0.2.52: any real protocol actually using this bus yet (Presence/Profile/Interaction remain on their own `BroadcastChannel`s), any change to `PresenceVisibilityPolicy`'s FRIENDS tier, message ordering/retry/acknowledgment guarantees beyond the underlying `PeerConnection`, or new UI.
 
 ## Architecture
 
@@ -904,6 +974,13 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.43  Avatar-Avatar Proximity & Interaction Targets
 - [x] 0.2.44  Local Avatar Interaction & Social Presence
 - [x] 0.2.45  Ephemeral Avatar Interaction Synchronization
+- [x] 0.2.46  Local Identity & Authentication Session
+- [x] 0.2.47  Identity Security & Key Protection
+- [x] 0.2.48  Portable Identity, Export, Import & Recovery
+- [x] 0.2.49  Authenticated Peer Connection Model
+- [x] 0.2.50  Peer Discovery & Rendezvous
+- [x] 0.2.51  Real WebRTC Peer Transport & Signaling Handoff
+- [x] 0.2.52  Authenticated Peer Messaging & Protocol Multiplexing
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 
