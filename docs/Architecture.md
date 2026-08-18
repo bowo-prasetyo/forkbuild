@@ -6204,3 +6204,152 @@ UI, finally with something real to show once any protocol uses it; and
 a network-mode/local-mode transport switch wired into the actual
 browser app, unchanged from 0.2.51's own proposal, now with a second
 real transport to switch to.
+
+### Peer-Based Avatar Profile Synchronization (0.2.54)
+
+```text
+Local AvatarProfileUseCase          (0.2.33/0.2.34, unmodified)
+        │
+        ▼
+AvatarProfileSyncService.publish(ad)  (0.2.41, unmodified — still ONE
+        │                               argument, still no idea who receives it)
+        ▼
+AvatarPresenceBroadcastProvider's interface  (0.2.37's interface, unmodified,
+        │                                      reused directly for profile
+        │                                      since 0.2.41 — see
+        │                                      CreateWorldViewUseCase.js)
+        │
+        ├── LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile')
+        │       (0.2.37/0.2.41 — BroadcastChannel, still the app's DEFAULT)
+        │
+        └── PeerAvatarPresenceBroadcastProvider(protocol:'forkbuild:avatar-profile')
+                  (0.2.53's class, REUSED unmodified, NEW instance/protocol)
+                  │
+                  │  for each connectedPeerRegistry.list() peer:
+                  │    AUTHENTICATED right now?  (peer/PeerLifecycleState.js)
+                  │    shouldAdvertiseToPeer(peer.remoteIdentity.identityId)?
+                  │        (core/AvatarProfileVisibilityPolicy.js, NEW file)
+                  │    → PeerMessageBus.send(peer, 'forkbuild:avatar-profile', ad)
+                  ▼
+      peer/PeerMessageBus.js         (0.2.52, unmodified — the SAME shared
+      application/ConnectedPeer.js    bus/registry a node's presence
+      peer/PeerConnection.js          transport already attached to)
+      peer/PeerAuthenticationSession.js (all unmodified)
+                  │
+                  ▼            (the SAME advertisement, received)
+      PeerMessageBus.subscribe('forkbuild:avatar-profile', cb)
+                  │
+                  ▼
+      PeerAvatarPresenceBroadcastProvider#onAdvertisement(cb)
+                  │
+                  ▼
+      AvatarProfileSyncService.pull()        (0.2.41, unmodified)
+      application/LocalAvatarProfileStore.js  (0.2.41, unmodified)
+      application/AvatarProfileTrustBoundary.js (0.2.41, unmodified)
+      core/AvatarProfileIngestion.js / AvatarProfileEquivocation.js
+      application/AvatarProfileSigning.js  (all unmodified)
+                  │
+                  ▼
+      RemoteAvatarAppearanceRegistry → renderer  (0.2.41, unmodified)
+```
+
+0.2.54 answers the second item on 0.2.53's own proposed follow-on
+list: "the identical transport swap applied to 0.2.41's own
+`BroadcastChannel`-based protocol, keeping its existing
+signature/trust/replay machinery completely untouched." Unlike 0.2.53,
+this milestone adds no second real implementation class at all —
+`presence/PeerAvatarPresenceBroadcastProvider.js` is REUSED, byte-for-
+byte unmodified, for the profile channel too, a SECOND instance
+constructed with `protocol: 'forkbuild:avatar-profile'` instead of its
+own default. This is not a shortcut; it is the identical reuse
+decision `CreateWorldViewUseCase.js` already made in 0.2.41 when it
+pointed `LocalAvatarPresenceBroadcastProvider` at a second
+`BroadcastChannel` name rather than duplicating a presence-flavored-
+in-name-only sibling class — `PeerAvatarPresenceBroadcastProvider`'s
+own 0.2.53 header even named this exact future reuse as the reason its
+`protocol`/`getVisibilityPolicy` constructor parameters were injectable
+in the first place. Because every file downstream of `presence/
+AvatarPresenceBroadcastProvider.js`'s interface only ever depended on
+the interface, not on which concrete provider (or which INSTANCE of a
+provider) implemented it, `application/AvatarProfileSyncService.js`
+through `application/RemoteAvatarAppearanceRegistry.js` — the entire
+0.2.41 profile pipeline — needed zero changes, the identical payoff
+0.2.53 already collected for presence.
+
+The one genuinely new file this milestone adds is `core/
+AvatarProfileVisibilityPolicy.js`, and it exists to answer a warning
+the design doc raised explicitly: a real point-to-point transport lets
+"who may see my presence" and "who may see what I look like" finally
+be two DIFFERENT, independently-enforceable facts — `Presence: PUBLIC,
+Profile: FRIENDS` and `Presence: FRIENDS, Profile: PUBLIC` are both
+real, representable configurations, never silently the same policy
+wearing two hats. `core/PresenceVisibilityPolicy.js` is not reused,
+not subclassed, and not read by the profile transport at all — a
+brand-new, independent instance of `AvatarProfileVisibilityPolicy` is
+injected as profile's OWN `getVisibilityPolicy`, consulted by the same
+unmodified `PeerAvatarPresenceBroadcastProvider#advertise()` loop, once
+per AUTHENTICATED peer, exactly the way presence's own policy already
+is. 0.2.54's own default rule is deliberately minimal — "every
+AUTHENTICATED peer is eligible," the same permissive posture
+`application/AvatarProfileTrustBoundary.js` already took on the TRUST
+side in 0.2.41 ("no `PresenceTrustPolicy`-equivalent knob exists for
+profiles") — because there is still no live profile-sharing
+configuration surface anywhere in the running app for a richer
+FRIENDS/LOCAL/HIDDEN tier to hang off of. See docs/Principles.md,
+"Profile Visibility Is Never Presence Visibility."
+
+`presence/LocalAvatarPresenceBroadcastProvider.js` remains
+`CreateWorldViewUseCase.js`'s only DEFAULT-wired transport for profile,
+unchanged, for the identical reason presence itself was left
+unswitched in 0.2.53: there is still no live "Connected Peers" UI for
+a real session to ever have an authenticated peer to send a profile
+to. Profile synchronization still never depends on presence in any
+direction — see docs/Principles.md, "A Protocol's State-Keeping
+Semantics Are Its Own, Never Borrowed From Its Neighbor" — proven in
+the flagship by Charlie, who never has a presence transport wired at
+all, yet still resolves Alice's real appearance through
+`AvatarProfileSyncService`/`RemoteAvatarAppearanceRegistry` alone.
+
+The flagship test (`tests/PeerAvatarProfile.test.js`, Section C) runs
+a real three-node scenario over `peer/LocalPeerConnectionProvider.js`:
+Alice's already-customized profile reaches Bob and Charlie through the
+periodic-republish bootstrap the very first frame (0.2.41's own "0
+means never published" mechanic, unmodified); a later edit strictly
+increments `AvatarProfile.revision` and reaches both independently; a
+genuinely-signed but now-stale revision sent directly over the bus is
+rejected; two genuinely-signed, conflicting claims at the identical
+revision are resolved as equivocation, the first accepted claim kept;
+an unrecognized template degrades to the placeholder, never a crash;
+Alice's connection to Bob closes and reconnects, and her profile is
+proven byte-identical across the gap — nothing about a peer connection's
+lifecycle ever prunes `LocalAvatarProfileStore`; Alice's PRESENCE is
+then independently expired past staleness on Bob's side, and her
+PROFILE survives that too; and finally, Alice's own genuine signature,
+stolen from her current advertisement and paired with tampered
+appearance, is rejected by the completely unmodified 0.2.41 trust
+boundary. Throughout, her `AvatarPresence`, the original `Publication`,
+and its `WorldPlacement` stay byte-identical — peer profile sync never
+touches any of them.
+
+Deliberately not in 0.2.54, matching the design doc's own explicit
+scope: any FRIENDS/LOCAL/HIDDEN tier for profile visibility (0.2.54
+ships PUBLIC-only, by design, until a real profile-sharing
+configuration surface exists to justify one); wiring
+`PeerAvatarPresenceBroadcastProvider` as profile's DEFAULT transport in
+`CreateWorldViewUseCase.js` (still no "Connected Peers" UI to make that
+meaningful, the same posture 0.2.53 already took for presence); a
+"catch me up on demand" request/response protocol (0.2.41's periodic
+republish is reused as-is, unmodified, exactly as the design doc asked);
+and moving Avatar Interaction (0.2.45) onto `PeerMessageBus` — it
+remains on its own separate `BroadcastChannel`, untouched.
+
+Proposed, unscheduled follow-on milestones this opens: Peer-Based
+Avatar Interaction (0.2.45's `BroadcastChannel`-based protocol, the
+last of the three, moved onto `PeerMessageBus` — the one genuinely
+different case, since it replicates an EVENT rather than STATE); a
+real, configurable `AvatarProfileVisibilityPolicy` with FRIENDS/LOCAL/
+HIDDEN tiers, once a profile-sharing configuration surface exists for
+one to mean something; a live "Connected Peers" UI; and a
+network-mode/local-mode transport switch wired into the actual browser
+app for BOTH presence and profile together, unchanged from 0.2.51's
+own proposal.

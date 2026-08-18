@@ -1377,6 +1377,74 @@ and a network-mode/local-mode transport switch in `CreateWorldViewUseCase.js`,
 unchanged from 0.2.51's own proposal, now with a second real transport
 to switch to.
 
+0.2.54 answers the first of those two by name: "the identical
+transport swap applied to 0.2.41's own `BroadcastChannel`-based
+protocol, keeping its existing signature/trust/replay machinery
+untouched." Unlike 0.2.53, no second real transport CLASS was needed —
+`presence/PeerAvatarPresenceBroadcastProvider.js` is reused
+byte-for-byte unmodified, constructed a second time with
+`protocol: 'forkbuild:avatar-profile'`, the identical "generic
+transport wrapper, nothing presence-specific baked into its actual
+logic" reuse `CreateWorldViewUseCase.js` already applied to
+`LocalAvatarPresenceBroadcastProvider` back in 0.2.41. Because
+`application/AvatarProfileSyncService.js` through `application/
+RemoteAvatarAppearanceRegistry.js` only ever depended on `presence/
+AvatarPresenceBroadcastProvider.js`'s interface, not on which provider
+instance implemented it, the entire 0.2.41 profile pipeline needed
+zero changes — the same payoff 0.2.53 already collected for presence,
+collected again one protocol over.
+
+The one new file, `core/AvatarProfileVisibilityPolicy.js`, exists
+because a real point-to-point transport raises the identical question
+for profile that 0.2.53 already answered for presence — "which of my
+currently-AUTHENTICATED peers actually receives this?" — but the
+design doc was explicit that the ANSWER must not be borrowed from
+presence's own policy: `Presence: PUBLIC, Profile: FRIENDS` and
+`Presence: FRIENDS, Profile: PUBLIC` are both real, independently
+representable configurations. `core/PresenceVisibilityPolicy.js` is
+never read by the profile transport; a brand-new, independent
+`AvatarProfileVisibilityPolicy` instance is injected as profile's own
+`getVisibilityPolicy` instead. 0.2.54's own default rule is
+deliberately minimal — every AUTHENTICATED peer is eligible, no
+FRIENDS/LOCAL/HIDDEN tier yet — the same permissive, explicitly
+temporary posture `application/AvatarProfileTrustBoundary.js` already
+took on the TRUST side in 0.2.41, since there is still no live
+profile-sharing configuration surface anywhere in the running app for
+a richer tier to mean anything yet. See docs/Principles.md, "Profile
+Visibility Is Never Presence Visibility."
+
+The flagship test (`tests/PeerAvatarProfile.test.js`) runs the design
+doc's own three-node scenario: Alice's already-customized profile
+reaches Bob and Charlie through 0.2.41's unmodified periodic-republish
+bootstrap; a later edit strictly increments `AvatarProfile.revision`
+and both catch up independently; a stale revision, a same-revision
+conflicting claim (equivocation), and a stolen-but-genuine signature
+paired with tampered content are each rejected by the completely
+unmodified 0.2.41 trust boundary; an unrecognized template degrades to
+the placeholder; Alice's connection to Bob drops and reconnects with
+her profile proven byte-identical the entire time; and her PRESENCE is
+independently expired past staleness on Bob's side while her PROFILE
+survives untouched — see docs/Principles.md, "A Protocol's
+State-Keeping Semantics Are Its Own, Never Borrowed From Its
+Neighbor." Charlie, notably, never has a presence transport wired at
+all for the entire test, and still resolves Alice's real appearance
+through profile alone — proving "a peer can know your profile without
+currently observing your avatar" structurally, not merely by
+assertion. See docs/Architecture.md, "Peer-Based Avatar Profile
+Synchronization (0.2.54)."
+
+Proposed, unscheduled follow-on milestones this opens: Peer-Based
+Avatar Interaction — 0.2.45's own `BroadcastChannel`-based protocol,
+the last of the three, moved onto `PeerMessageBus` in turn; unlike
+presence and profile, it replicates an EVENT rather than STATE, so it
+gets to prove the new message bus never accidentally turns a transient
+occurrence into durable replicated state. Also still proposed and
+unscheduled: a real, configurable `AvatarProfileVisibilityPolicy` with
+FRIENDS/LOCAL/HIDDEN tiers, once a profile-sharing configuration
+surface exists for one to mean something; a live "Connected Peers" UI;
+and a network-mode/local-mode transport switch in
+`CreateWorldViewUseCase.js` covering presence AND profile together.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

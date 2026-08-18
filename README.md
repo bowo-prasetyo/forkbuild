@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.53** — Peer-Based Avatar Presence
+**Version 0.2.54** — Peer-Based Avatar Profile Synchronization
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -856,6 +856,39 @@ Avatar Interaction onto `PeerMessageBus` — both remain on their own
 `BroadcastChannel`s, exactly as Presence itself did before this
 milestone.
 
+0.2.54 moves the second of those two: "the identical transport swap
+applied to 0.2.41's own `BroadcastChannel`-based profile protocol,
+keeping its existing signature/trust/replay machinery untouched."
+Unlike 0.2.53, no second transport class was needed —
+`presence/PeerAvatarPresenceBroadcastProvider.js` is reused
+byte-for-byte unmodified, constructed a second time with
+`protocol: 'forkbuild:avatar-profile'`, the same reuse
+`CreateWorldViewUseCase.js` already applied to
+`LocalAvatarPresenceBroadcastProvider` for profile back in 0.2.41.
+Because `AvatarProfileSyncService` through `RemoteAvatarAppearanceRegistry`
+only ever depended on the transport INTERFACE, the entire 0.2.41
+profile pipeline needed zero changes. The one new file, `core/
+AvatarProfileVisibilityPolicy.js`, deliberately answers "which peers
+receive my profile" WITHOUT reusing `PresenceVisibilityPolicy` —
+`Presence: PUBLIC, Profile: FRIENDS` and the reverse are both real,
+independently representable configurations, never one policy silently
+wearing two hats; 0.2.54's own default is the simplest honest rule
+("every AUTHENTICATED peer is eligible," no FRIENDS/LOCAL/HIDDEN tier
+yet), matching the same permissive, explicitly temporary posture
+`AvatarProfileTrustBoundary` already took on the trust side in 0.2.41.
+The flagship test (`tests/PeerAvatarProfile.test.js`) runs the same
+three-node scenario: Alice's customized profile reaches Bob and
+Charlie over `PeerMessageBus`, a later edit strictly increments the
+revision and both catch up, a stale revision/equivocating claim/
+stolen-signature tamper are each rejected by the unmodified 0.2.41
+trust boundary, an unrecognized template degrades to the placeholder,
+a connection drop-and-reconnect leaves the profile byte-identical
+throughout, and Alice's PRESENCE independently going stale on Bob's
+side never touches her PROFILE. Charlie never has a presence transport
+wired at all, and still resolves Alice's real appearance through
+profile alone — proving profile synchronization never depends on
+presence, structurally, not merely by assertion.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1030,6 +1063,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.51  Real WebRTC Peer Transport & Signaling Handoff
 - [x] 0.2.52  Authenticated Peer Messaging & Protocol Multiplexing
 - [x] 0.2.53  Peer-Based Avatar Presence
+- [x] 0.2.54  Peer-Based Avatar Profile Synchronization
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 
