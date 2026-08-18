@@ -103,6 +103,7 @@
 0.2.47  Identity Security & Key Protection                             ✓
 0.2.48  Portable Identity, Export, Import & Recovery                    ✓
 0.2.49  Authenticated Peer Connection Model                             ✓
+0.2.50  Peer Discovery & Rendezvous                                     ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -1012,6 +1013,91 @@ AUTHENTICATED connection; and reconnecting presence/profile/
 interaction sync to run over an authenticated peer connection instead
 of today's open `BroadcastChannel` — this milestone proves the
 handshake works, it does not yet plug anything else into it.
+
+0.2.50 answers the other half of 0.2.49's own deferral — "how does Alice
+find Bob's address at all" — with the deliberately narrow first mechanism
+the design doc asked for: a portable, invitation-based rendezvous hint,
+kept strictly separate from authentication rather than folded into it. The
+governing rule: a discovery mechanism may say "here is something that
+might be Bob," and must never say "this is Bob" — only 0.2.49's own
+`peer/PeerAuthenticationSession.js`, completely unmodified, may ever say
+the second thing. New vocabulary: `peer/PeerInvitation.js` (a portable,
+deliberately UNSIGNED package — endpoint, expiry, an optional untrusted
+identityHint), `peer/PeerDiscoveryRecord.js` (the candidate a discovery
+mechanism actually produces), `peer/PeerDiscoverySource.js`
+(`INVITATION` today; `LAN`/`RENDEZVOUS_SERVICE`/`DHT` named,
+unimplemented), `peer/PeerDiscoveryProvider.js` (new abstract adapter
+boundary, the same throwing-stubs shape `discovery/DiscoveryProvider.js`
+and `peer/PeerConnectionProvider.js` already established), and its first
+real implementation, `peer/LocalPeerDiscoveryProvider.js` — in-memory,
+invitation-only, rejecting an expired invitation outright before any
+record is ever created. `application/DiscoverPeersUseCase.js` and
+`application/ConnectToPeerUseCase.js` wire the whole flow —
+Discovery → Candidate Endpoint → Peer Connection → 0.2.49 Mutual
+Authentication → Authenticated PeerIdentity — with `application/
+ConnectedPeer.js` (a live aggregate whose `getLifecycleState()` is a
+PURE, derived composite — `peer/PeerLifecycleState.js`'s
+DISCOVERED/CONNECTING/CONNECTED/AUTHENTICATING/AUTHENTICATED/FAILED/
+CLOSED — over the two real, still-completely-separate 0.2.49 state
+machines, never a third stored one) tracked by `application/
+ConnectedPeerRegistry.js`, which removes a peer automatically, structurally,
+the instant its connection closes or fails — no persisted "connected
+peers" list, no automatic permanent friend relationship. A deliberately
+narrow, local-only, never-persisted peer alias (`ConnectedPeer.setAlias()`)
+is the one "useful addition" the design doc asked for without building a
+social system: it never survives a reconnect, even to the identical,
+already-proven identityId. The flagship test
+(`tests/PeerDiscovery.test.js`) runs the design doc's own scripted
+scenario over a real `LocalPeerConnectionProvider` and two genuinely
+independent `LocalIdentityProvider` instances — invitation, import,
+discovery, connect, mutual authentication succeeding on BOTH sides,
+Bob's proven `PeerIdentity` for Alice and Alice's own proven `PeerIdentity`
+for Bob — then separately proves a tampered endpoint fails the connection
+outright, a tampered identityHint never overrides what authentication
+actually determines, a captured invitation replayed after its own expiry
+is rejected by discovery before any connection is attempted, closing
+removes the peer from both sides' registries, and reconnecting produces a
+fresh `ConnectedPeer` with no alias or state carried over. See
+docs/Architecture.md, "Peer Discovery & Rendezvous (0.2.50)," and
+docs/Principles.md, "An Invitation Is A Rendezvous Hint, Never A
+Credential," "Discovery Finds A Candidate; It Never Authenticates One,"
+"A Peer's Lifecycle Is Derived, Never A Third State Machine," and "A Peer
+Alias Is A Local Note, Never A Claim About The Peer."
+
+Deliberately not in 0.2.50: any real network transport — LAN broadcast, a
+rendezvous service, a DHT — `peer/LocalPeerConnectionProvider.js` remains
+the deterministic in-process test transport, exactly as 0.2.49 left it;
+finding two real, different browser sessions and getting real bytes
+between them is the still-proposed "Real Browser Peer Transport," below.
+Signing or otherwise cryptographically protecting a `PeerInvitation` — see
+docs/Principles.md for why that would solve a problem this design doesn't
+have. Any persistent contacts/friends list, or alias keyed by identityId
+rather than by one live connection. Any new UI wiring a "Connected Peers"
+panel into the actual browser app — the `peer/`/`application/` layer is
+complete and fully tested, but a live panel would only be able to connect
+to itself in-process today; it is deferred until a real transport exists
+to make it a genuine demonstration rather than a toy. Reconnecting
+presence/profile/interaction sync to run over an authenticated peer
+connection — unchanged from 0.2.49's own deferral. And an `AvatarPresence`/
+"online" concept keyed off peer authentication — a peer being
+AUTHENTICATED says nothing about whether any avatar is visible in the
+world; Identity, Authentication, Peer, and Presence remain four separate
+questions.
+
+Proposed, unscheduled follow-on milestones this opens: Real Browser Peer
+Transport (WebRTC, or another genuine network transport, satisfying the
+exact same `peer/PeerConnectionProvider.js` contract
+`LocalPeerConnectionProvider` already does — including the signaling
+question WebRTC itself raises, which is a discovery/rendezvous-shaped
+problem, not an authentication one, per this milestone's own separation);
+Authenticated Peer Sessions & Capabilities (what an authenticated
+connection may actually be used for, once one exists — authorization
+layered on top of identity, the same "signatures establish who acted;
+authorization establishes whether they were allowed to" distinction
+0.2.17 already drew); LAN and rendezvous-service discovery providers,
+satisfying `peer/PeerDiscoveryProvider.js`'s existing contract without
+changing it; and a live "Connected Peers" UI, once a real transport makes
+one meaningful.
 
 ## 0.1.50 — What shipped
 
