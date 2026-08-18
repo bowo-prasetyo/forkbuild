@@ -1308,6 +1308,75 @@ hardening for cross-network use (unchanged from 0.2.51's own proposal);
 and Authenticated Peer Sessions & Capabilities, unchanged from 0.2.50's
 own proposal.
 
+0.2.53 answers the first item on that list, deliberately scoped as a
+transport migration rather than a presence redesign: "replace
+BroadcastChannel as the primary remote-presence transport with
+authenticated peer messaging, while preserving the entire 0.2.38
+presence trust model." `presence/PeerAvatarPresenceBroadcastProvider.js`
+(new) is a second, real implementation of the SAME `presence/
+AvatarPresenceBroadcastProvider.js` interface `presence/
+LocalAvatarPresenceBroadcastProvider.js` has satisfied since 0.2.37 —
+built on `peer/PeerMessageBus.js` and `application/ConnectedPeerRegistry.js`
+(0.2.52/0.2.50, both completely unmodified) instead of `BroadcastChannel`.
+Because every file downstream of that interface only ever depended on
+it, not on which concrete provider implemented it,
+`application/PresenceSyncService.js` through `core/PresenceFreshness.js`
+— the entire 0.2.37/0.2.38 ingestion and trust pipeline — needed zero
+changes. The one new question a real point-to-point transport actually
+raises: presence is no longer one broadcast to everyone on an origin,
+it is N independent one-to-one sends, one per currently-AUTHENTICATED
+peer — decided by a brand-new per-peer method,
+`core/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer(peerIdentityId)`,
+consulted once per peer inside the new transport's own `advertise()`,
+never inside presence's core classes and never by adding a
+recipient/visibility field to the wire shape itself. This finally gives
+PUBLIC ("every eligible AUTHENTICATED peer"), FRIENDS ("only a peer
+whose PROVEN `peer/PeerIdentity.js#identityId` — a did:key from a real
+0.2.49 handshake, never an `AvatarProfile#ownerIdentity` username — is
+in `authorizedPeerIdentities`"), and LOCAL ("never reaches a peer
+connection at all, even a same-machine one — confined to
+BroadcastChannel's own same-origin scope") the genuinely distinct
+meanings 0.2.40 could only describe as "observationally identical
+today." `presence/LocalAvatarPresenceBroadcastProvider.js` is not
+removed or deprecated — `CreateWorldViewUseCase.js` still wires it as
+the app's only DEFAULT transport, unchanged, since there is still no
+live "Connected Peers" UI anywhere in the running app for a real user
+session to ever have an authenticated peer to send to. Presence still
+never establishes a connection: the new transport only ever iterates
+peers that already exist in `ConnectedPeerRegistry`, never calls
+`connect()`. The flagship test (`tests/PeerAvatarPresence.test.js`)
+runs the design doc's own three-node scenario over a real
+`peer/LocalPeerConnectionProvider.js` network — Alice dials both Bob
+and Charlie, who never connect to each other at all — through PUBLIC
+(both receive it), FRIENDS-authorizing-Bob (only Bob's view updates;
+Charlie's stays exactly where it was), HIDDEN (neither receives
+anything, though Alice's own local presence keeps genuinely advancing),
+and PUBLIC again (both catch up together); a final tamper test sends a
+stolen-but-genuine signature over the very connection Bob just
+legitimately received presence over, rejected by the completely
+unmodified 0.2.38 trust boundary. See docs/Architecture.md, "Peer-Based
+Avatar Presence (0.2.53)," and docs/Principles.md, "A Transport
+Migration Should Leave The Trust Model Untouched," "Peer Selection Is A
+Transport Concern, Never A Presence-Core Concern," and "Presence Never
+Establishes A Connection." Deliberately not in 0.2.53: automatic peer
+discovery, friend requests, a peer directory, mesh routing or presence
+forwarding (Bob never relays Alice's presence to Charlie on her
+behalf), a NAT relay service, chat, voice, persistent peer trust, any
+new UI, and moving Avatar Profile (0.2.41) or Avatar Interaction
+(0.2.45) onto `PeerMessageBus` — both remain on their own
+`BroadcastChannel`s, exactly as Presence itself did before this
+milestone.
+
+Proposed, unscheduled follow-on milestones this opens: Peer-Based
+Avatar Profile Synchronization and Peer-Based Avatar Interaction — the
+identical transport swap applied to 0.2.41's and 0.2.45's own
+`BroadcastChannel`-based protocols, each keeping its own existing
+signature/trust/replay machinery untouched; a live "Connected Peers" UI
+wired into the actual browser app, finally with something real to show;
+and a network-mode/local-mode transport switch in `CreateWorldViewUseCase.js`,
+unchanged from 0.2.51's own proposal, now with a second real transport
+to switch to.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

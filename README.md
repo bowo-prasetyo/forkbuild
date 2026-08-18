@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.52** — Authenticated Peer Messaging & Protocol Multiplexing
+**Version 0.2.53** — Peer-Based Avatar Presence
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -809,6 +809,53 @@ bus yet — Presence/Profile/Interaction remain on their own separate
 time; any change to `PresenceVisibilityPolicy`'s FRIENDS tier; and any
 new UI — this milestone is substrate only.
 
+0.2.53 answers the question that deferral opened first: "replace
+`BroadcastChannel` as the primary remote-presence transport with
+authenticated peer messaging, while preserving the entire 0.2.38
+presence trust model." `presence/PeerAvatarPresenceBroadcastProvider.js`
+(new) is a second, real implementation of the same `presence/
+AvatarPresenceBroadcastProvider.js` interface
+`LocalAvatarPresenceBroadcastProvider` has satisfied since 0.2.37,
+built on `PeerMessageBus`/`ConnectedPeerRegistry` (both completely
+unmodified) instead of `BroadcastChannel` — because every file
+downstream of that interface (`PresenceSyncService` through
+`PresenceFreshness`) only ever depended on it, not on which provider
+implemented it, the entire 0.2.37/0.2.38 ingestion and trust pipeline
+needed zero changes. The one genuinely new question a point-to-point
+transport raises — presence is now N independent one-to-one sends, one
+per AUTHENTICATED peer, not one broadcast — is answered by a new
+per-peer method, `PresenceVisibilityPolicy#shouldAdvertiseToPeer(peerIdentityId)`,
+consulted once per peer inside the new transport's own `advertise()`,
+never inside presence's core classes and never by putting a
+recipient/visibility field on the wire. This finally gives PUBLIC
+("every eligible AUTHENTICATED peer"), FRIENDS ("only a peer whose
+PROVEN peer identityId — a did:key from a real 0.2.49 handshake, never
+a display name — is authorized"), and LOCAL ("never reaches a peer
+connection at all, even a same-machine one") the genuinely distinct
+meanings 0.2.40 could only call "observationally identical today."
+`LocalAvatarPresenceBroadcastProvider` is not removed — it stays the
+app's only DEFAULT-wired transport, since there is still no live
+"Connected Peers" UI for a real session to ever have an authenticated
+peer to send to. Presence still never establishes a connection: the new
+transport only ever iterates peers `ConnectedPeerRegistry` already
+knows about, never calls `connect()`. The flagship test
+(`tests/PeerAvatarPresence.test.js`) runs a real three-node scenario —
+Alice connects to both Bob and Charlie, who never connect to each
+other — through PUBLIC (both receive her movement), FRIENDS-authorizing-
+Bob-only (Charlie's view freezes exactly where it was), HIDDEN (neither
+receives anything, though Alice's own presence keeps genuinely
+advancing), and PUBLIC again (both catch up together), then proves a
+tampered advertisement carrying a stolen-but-genuine signature is still
+rejected by the completely unmodified 0.2.38 trust boundary, sent over
+the very peer connection that just delivered legitimate presence.
+Deliberately not in 0.2.53: peer discovery/friend requests (unchanged
+from 0.2.50), presence forwarding or mesh routing (Bob never relays
+Alice's presence to Charlie on her behalf), a NAT relay service, chat,
+voice, persistent peer trust, any new UI, and moving Avatar Profile or
+Avatar Interaction onto `PeerMessageBus` — both remain on their own
+`BroadcastChannel`s, exactly as Presence itself did before this
+milestone.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -864,6 +911,7 @@ new UI — this milestone is substrate only.
 - **Peer Discovery & Rendezvous (0.2.50)** — answers the half of 0.2.49's own deferral about finding Bob's address at all: `peer/PeerInvitation.js` (new) is a portable, deliberately UNSIGNED rendezvous hint (endpoint, expiry, an optional untrusted `identityHint`); `peer/PeerDiscoveryProvider.js`/`peer/LocalPeerDiscoveryProvider.js` (new) turn one into a `peer/PeerDiscoveryRecord.js` — a candidate, never a proof, per docs/Principles.md, "Discovery Finds A Candidate; It Never Authenticates One." `application/DiscoverPeersUseCase.js`/`application/ConnectToPeerUseCase.js` (new) wire discovery through completely unmodified 0.2.49 authentication; `application/ConnectedPeer.js`/`application/ConnectedPeerRegistry.js` (new) track the live result as one PURE, derived `peer/PeerLifecycleState.js` (DISCOVERED → CONNECTING → CONNECTED → AUTHENTICATING → AUTHENTICATED → FAILED/CLOSED), auto-removing a peer the moment its connection disappears — no persisted "connected peers" list, no automatic friend relationship. The flagship test (`tests/PeerDiscovery.test.js`) runs invitation → discovery → connection → mutual authentication end to end, then proves a tampered endpoint fails the connection outright and a tampered identityHint never affects the real, proven `remoteIdentity`. Deliberately not in 0.2.50: any real network transport, signing a `PeerInvitation`, any persistent contacts/aliases system, or new UI.
 - **Real WebRTC Peer Transport & Signaling Handoff (0.2.51)** — closes the transport gap 0.2.49 and 0.2.50 both named: `peer/WebRtcPeerConnection.js`/`peer/WebRtcPeerConnectionProvider.js` (new) are a real `RTCPeerConnection`/`RTCDataChannel` pair satisfying the exact same `peer/PeerConnection.js`/`peer/PeerConnectionProvider.js` contract `LocalPeerConnectionProvider` already did, so `ConnectToPeerUseCase`/`DiscoverPeersUseCase` needed no changes to drive it. Signaling (`peer/PeerConnectionOffer.js`/`peer/PeerConnectionAnswer.js`, new — deliberately UNSIGNED and short-lived, like a `PeerInvitation`) is handed off exactly as manually as 0.2.50's own invitation handoff — no signaling server, no STUN/TURN configured by default (an `iceServers` option exists but ships empty). A serialized offer is usable verbatim as a `PeerInvitation#endpoint`, so 0.2.50's discovery flow plugs into a real transport with zero changes. The flagship test (`tests/WebRtcPeerTransport.test.js`) proves two genuinely separate `RTCPeerConnection`s — signaling relayed only as JSON, simulating an actual copy/paste — reach mutual 0.2.49 authentication over a real DataChannel, and that closing/reconnecting behave correctly under real network timing. Also fixed, surfaced by real timing: a `ConnectedPeer#dispose()` listener-iteration bug 0.2.50 shipped. Deliberately not in 0.2.51: any signaling server, real NAT-traversal hardening, any application message protocol beyond 0.2.49's own HELLO/PROOF, or new UI.
 - **Authenticated Peer Messaging & Protocol Multiplexing (0.2.52)** — "once Alice and Bob have an authenticated peer connection, how do different decentralized application protocols safely share it?" `peer/PeerMessage.js` (new) is the deliberately boring wire envelope every application message now travels in — `messageId`/`protocol`/`version`/`payload`, structurally validated but never interpreted, carrying no avatar state, username, trust state, or signature. `peer/PeerMessageBus.js` (new) is the application-facing multiplexer sitting directly on `application/ConnectedPeer.js`: `subscribe(protocol, handler)` registers once, independent of which peer sends; `send(connectedPeer, protocol, payload)` delivers to exactly one peer; structurally, it never contains `if (protocol === '...')` anywhere, only a `Map` from protocol name to whatever subscribed. The central security property is structural: a peer whose `getLifecycleState()` is not, right now, AUTHENTICATED gets no message channel — every incoming message is re-checked against the peer's CURRENT lifecycle at delivery time, never merely at `attach()` time, so a connection that is CONNECTED but still AUTHENTICATING (or one whose authentication later FAILED) cannot inject anything. Generic transport hygiene only — a malformed envelope, an oversized one (`MAX_PEER_MESSAGE_BYTES`), or a duplicate `messageId` (suppressed in a small BOUNDED window, deliberately not `replication/ReplayGuard.js`'s unbounded ledger) are rejected before reaching a handler; an unknown protocol is simply ignored. Deliberately, per the design doc's own reasoning, no second generic message signature was added — the connection is already authenticated, and a protocol needing its own cryptographic proof signs at its own layer, exactly like `core/AvatarPresenceAdvertisement.js` already does. The flagship test (`tests/PeerMessaging.test.js`) runs the identical application-level scenario — mutual authentication, then Alice sends `test.alpha`/`test.beta`/`test.unknown` and Bob (subscribed only to the first two) receives exactly those two, each once, with the real proven sender identity attached — over BOTH `LocalPeerConnectionProvider` and `WebRtcPeerConnectionProvider`, unmodified, proving the abstraction is real rather than an interface with one implementation underneath; separate tests prove the AUTHENTICATED-gating property deterministically and that a HELLO/PROOF handshake message sharing the same `onMessage()` stream can never be mistaken for a `PeerMessage` envelope. Deliberately not in 0.2.52: any real protocol actually using this bus yet (Presence/Profile/Interaction remain on their own `BroadcastChannel`s), any change to `PresenceVisibilityPolicy`'s FRIENDS tier, message ordering/retry/acknowledgment guarantees beyond the underlying `PeerConnection`, or new UI.
+- **Peer-Based Avatar Presence (0.2.53)** — replaces `BroadcastChannel` as the primary remote-presence transport with authenticated peer messaging, while preserving the entire 0.2.38 presence trust model untouched. `presence/PeerAvatarPresenceBroadcastProvider.js` (new) is a second real implementation of the same `AvatarPresenceBroadcastProvider` interface `LocalAvatarPresenceBroadcastProvider` has satisfied since 0.2.37, built on `PeerMessageBus`/`ConnectedPeerRegistry` instead of `BroadcastChannel` — every downstream file (`PresenceSyncService` through `PresenceFreshness`) needed zero changes. A new per-peer method, `PresenceVisibilityPolicy#shouldAdvertiseToPeer(peerIdentityId)`, decides which of a replica's currently-AUTHENTICATED peers actually receive a given advertisement — never inside presence's core classes, never on the wire — finally giving PUBLIC (every eligible authenticated peer), FRIENDS (only a peer whose PROVEN did:key identityId is authorized), and LOCAL (never reaches a peer connection at all) the genuinely distinct meanings 0.2.40 could only call "observationally identical." `LocalAvatarPresenceBroadcastProvider` stays the app's only default-wired transport — there is still no live "Connected Peers" UI. Presence still never establishes a connection. The flagship test proves a real three-node scenario (Alice, Bob, Charlie — Bob and Charlie never connect to each other) through PUBLIC/FRIENDS/HIDDEN/PUBLIC transitions and a tamper attempt rejected by the unmodified 0.2.38 trust boundary.
 
 ## Architecture
 
@@ -981,6 +1029,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.50  Peer Discovery & Rendezvous
 - [x] 0.2.51  Real WebRTC Peer Transport & Signaling Handoff
 - [x] 0.2.52  Authenticated Peer Messaging & Protocol Multiplexing
+- [x] 0.2.53  Peer-Based Avatar Presence
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 
