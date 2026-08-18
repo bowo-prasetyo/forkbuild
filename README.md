@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.48** — Portable Identity, Export, Import & Recovery
+**Version 0.2.49** — Authenticated Peer Connection Model
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -706,6 +706,42 @@ package besides a plain JSON file/textarea; and — unchanged from
 0.2.46/0.2.47 — any peer discovery mechanism or authenticated peer
 session.
 
+0.2.49 begins the decentralized peer arc those four milestones kept
+naming and deferring, with one deliberately narrow question: not "how
+does Alice find Bob," but "once Alice has a connection to something
+claiming to be Bob, how does she cryptographically establish who Bob
+is?" `peer/PeerConnectionProvider.js`/`peer/PeerConnection.js` (new,
+abstract) carry ONLY transport state
+(`peer/PeerConnectionState.js`); `peer/LocalPeerConnectionProvider.js`
+(new) is a real in-process transport, two endpoints sharing one
+connectionId, standing in for a future WebRTC/relay implementation.
+`peer/PeerAuthenticationSession.js` (new) layers a completely
+independent state machine (`peer/PeerAuthenticationState.js`) on top: a
+symmetric mutual challenge-response handshake where each side signs the
+other's challenge via `identity/LocalIdentityProvider.js`'s own
+unmodified `signCanonical()`, over a new canonical descriptor
+(`core/PeerAuthenticationEnvelope.js`, a new
+`SignatureType.PEER_AUTHENTICATION`) binding `protocol`/`purpose`/
+`sessionNonce`/`challenge`/`identityId`/`publicKey` together — the
+connection's own `sessionNonce` is what makes a captured, genuine
+handshake fail when replayed into a different connection, since the
+signature itself no longer verifies. A verified PROOF yields a
+`peer/PeerIdentity.js` — proof of key possession only, discarded the
+instant the connection closes, never persisted anywhere: a peer
+connection authenticates a key, not an account, and there is no
+"friends" list or trusted-peer database in this milestone at all. See
+docs/Architecture.md, "Authenticated Peer Connection Model (0.2.49),"
+and docs/Principles.md, "A Peer Connection Authenticates A Key, Not An
+Account," "A Peer Authentication Signature Is Scoped To One Connection,
+Never To One Identity," and "Transport State And Authentication State
+Are Two Different Questions." Deliberately not in 0.2.49: any peer
+discovery or rendezvous mechanism (finding an address to `connect()` to
+at all remains its own still-unscheduled milestone); any persistent
+trusted-peer concept; a real WebRTC or other network transport; and
+reconnecting presence/profile/interaction sync to run over an
+authenticated peer connection instead of today's open
+`BroadcastChannel`.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -757,6 +793,7 @@ session.
 - **Local Identity & Authentication Session (0.2.46)** — pauses the avatar arc to fix a conflation that dates back to 0.2.16: `login(username)` used to lazily derive a signing key from whatever string was typed, so "which account is shown" and "which key this device holds" were the same event by construction. `identity/LocalIdentity.js` (new) is a durable, validated record of a key this device actually possesses (`identityId`/`publicKey`/`algorithm`/`label`/`createdAt`, its `identityId` provably derived from its own `publicKey`), created up front via `createLocalIdentity(label)` — independent of any login flow. `identity/AuthenticationSession.js` (new) answers the genuinely missing question, "is one of them unlocked right now" (`ANONYMOUS`/`AUTHENTICATED`), separate from both `LocalIdentity` (durable) and `identity/Identity.js` (a display label, unchanged since 0.1.21). `identity/LocalIdentityProvider.js` is rebuilt on top of both, with `authenticate(identityId)`/`endSession()` unlocking or releasing a key this device already holds — but every pre-existing method (`login`/`logout`/`currentUser`/`sign`/`getSigningIdentity`/`signCanonical`) keeps its exact 0.1.21/0.2.16 signature and behavior as a thin compatibility layer over the new model, so every existing use case and test that signs a publication, placement, or avatar advertisement keeps working unchanged. Signing is now genuinely gated by the session, not merely by `currentUser()` happening to agree with it, proven in `tests/LocalIdentitySession.test.js` by ending a session and watching signing fail while the key stays on disk untouched. The Login modal now lists every identity this device holds and makes "Create New Identity" an explicit action, never a side effect of retyping a name. Deliberately not in 0.2.46: passphrase/encryption on the stored key, portable identity export/import or recovery, and peer discovery/authenticated peer sessions — the wire formats and `identity/LocalAuthorizationVerifier.js` are completely unchanged; only where a signing key comes from changed.
 - **Identity Security & Key Protection (0.2.47)** — closes the gap 0.2.46 named instead of moving on to portability or peer networking: a `LocalIdentity`'s private key can now be protected by a user-chosen passphrase, either from creation (`createLocalIdentity(label, passphrase)`) or migrated in place later (`protectIdentity(identityId, passphrase)`), always opt-in and never forced. `identity/KeyEncryption.js` (new) is a self-contained PBKDF2-HMAC-SHA512 + SHA512-CTR + HMAC-SHA512 encrypt-then-MAC scheme, built from the same `sha512` primitive `identity/Ed25519.js` already established rather than a new dependency; a wrong passphrase and a tampered record fail identically, rejected by the MAC before decryption is ever trusted. `identity/VaultLock.js` (new) is a FOURTH identity concept — "is this identity's key decrypted in memory right now?" — genuinely independent of `LocalIdentity` (durable) and `AuthenticationSession` (persisted): a protected identity can be logged in while its vault is `LOCKED`, and a page reload always finds a protected vault `LOCKED` regardless of session state, because the decrypted seed lives only in a volatile in-memory cache nothing ever persists. `identity/FailedUnlockTracker.js` enforces a time-based cooldown after repeated wrong passphrases (the correct one is refused too, mid-cooldown); `identity/VaultTimeoutPolicy.js` auto-locks an unlocked vault after a fixed lifetime, honestly not true activity tracking, without ending the session itself. `LoginModal`/`UserWidget` gain inline passphrase prompts and a distinct "🔒 locked, still logged in" state. Deliberately not in 0.2.47: changing/removing a passphrase once set, PIN-strength policy, true idle-activity detection, portable export/import, and peer discovery/authenticated sessions.
 - **Portable Identity, Export, Import & Recovery (0.2.48)** — closes the gap 0.2.46 and 0.2.47 both named: a `LocalIdentity`'s private key can now move to a second device as a protected, versioned package, never a plaintext seed. `identity/IdentityExport.js`/`IdentityImport.js`/`IdentityRecovery.js` (new) build, strictly validate, and decrypt/verify a portable package built from 0.2.47's own `KeyEncryption` record shape — no second invented format. The central invariant, proven end to end in `tests/PortableIdentity.test.js`'s flagship test: a signature produced on a second, completely independent device after import verifies with the identity's ORIGINAL public key through the unmodified `LocalAuthorizationVerifier`. Importing a duplicate identity is a pure no-op (`ALREADY_EXISTS`, doesn't even require the correct passphrase); an imported identity always lands protected and `LOCKED`, regardless of whether it was protected at rest on its origin device — import proves possession, never authentication. `ui/views/IdentityManagementView.js` (new, "My Identities") is a dedicated view for lock/unlock/export/import across every identity a device holds. Deliberately not in 0.2.48: changing/removing a passphrase, any recovery path that doesn't require both the exported file and its passphrase (there is no password reset), non-file package transport, and peer discovery/authenticated sessions.
+- **Authenticated Peer Connection Model (0.2.49)** — begins the decentralized peer arc with one deliberately narrow question: not yet "how does Alice find Bob," but "once Alice has a connection to something claiming to be Bob, how does she cryptographically establish who Bob is?" A new, transport-agnostic vocabulary independent of avatars/presence/profiles/documents: `peer/PeerConnectionProvider.js`/`peer/PeerConnection.js` (new, abstract — the same throwing-stubs boundary `discovery/DiscoveryProvider.js` already establishes) carry ONLY transport state (`peer/PeerConnectionState.js`); `peer/LocalPeerConnectionProvider.js` (new) is a real in-process implementation, standing in for a future WebRTC/relay transport. `peer/PeerAuthenticationSession.js` (new) layers a completely independent state machine (`peer/PeerAuthenticationState.js`) on top: a symmetric mutual challenge-response handshake where each side signs the other's challenge via `identity/LocalIdentityProvider.js`'s own unmodified `signCanonical()`, over a new canonical descriptor (`core/PeerAuthenticationEnvelope.js`, `SignatureType.PEER_AUTHENTICATION`) that signs `protocol`/`purpose`/`sessionNonce`/`challenge`/`identityId`/`publicKey` together — the `sessionNonce` (the connection's own id) is what makes a captured, entirely genuine handshake fail when replayed into a different connection, since the signature itself no longer verifies. A verified PROOF yields a `peer/PeerIdentity.js` — proof of key possession only, never persisted, discarded the instant the connection closes; there is no "friends" list or trusted-peer database anywhere in this milestone, on purpose — a peer connection authenticates a key, not an account. `tests/PeerAuthentication.test.js`'s flagship test mutually authenticates two independent `LocalIdentityProvider` instances over a real connection, then proves close/reconnect requires a fresh handshake, and separately proves a replayed handshake, a modified challenge, a substituted public key (both as a mismatch and as a full impersonation attempt), and a genuinely valid signature reused against a different challenge are all rejected — several purely because the underlying signature's own cryptographic binding fails, not a shallow field check — while `core/AvatarPresenceAdvertisement.js` signing stays completely unaffected. Deliberately not in 0.2.49: any peer discovery/rendezvous mechanism, any persistent trusted-peer concept, a real network transport, and reconnecting presence/profile/interaction sync to run over an authenticated connection instead of today's open `BroadcastChannel`.
 
 ## Architecture
 

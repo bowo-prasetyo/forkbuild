@@ -102,6 +102,7 @@
 0.2.46  Local Identity & Authentication Session                       ✓
 0.2.47  Identity Security & Key Protection                             ✓
 0.2.48  Portable Identity, Export, Import & Recovery                    ✓
+0.2.49  Authenticated Peer Connection Model                             ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -914,6 +915,103 @@ testable across two genuinely independent devices thanks to 0.2.48's
 export/import); and, once those exist, reconnecting presence/profile/
 interaction sync to run over genuinely authenticated peer connections
 instead of an open same-origin `BroadcastChannel`.
+
+0.2.49 begins the decentralized peer arc 0.2.46-0.2.48 kept naming and
+deferring, but with one deliberately narrow question: not yet "how does
+Alice find Bob," but "once Alice has a connection to something claiming
+to be Bob, how does she cryptographically establish who Bob is?" A new
+vocabulary, kept independent of avatars, presence, profiles, and world
+documents: `peer/PeerConnectionProvider.js` (new, abstract transport
+boundary — `connect(remoteAddress)`/`onIncomingConnection()`/`dispose()`,
+the same throwing-stubs shape `discovery/DiscoveryProvider.js` and
+`collaboration/CollaborationTransport.js` already establish) and
+`peer/PeerConnection.js` (new, one connection's own
+send/onMessage/onStateChange/close, carrying ONLY transport state —
+`peer/PeerConnectionState.js`'s DISCONNECTED/CONNECTING/CONNECTED/
+FAILED/CLOSED). `peer/LocalPeerConnectionProvider.js` (new) is the
+first real implementation: two or more instances sharing one
+`LocalPeerNetwork` connect to each other entirely in-process, no
+browser transport involved — the peer-layer analogue of
+`collaboration/LocalCollaborationTransport.js`, standing in for a
+future `WebRTCPeerConnectionProvider` without anything above this
+interface needing to change. Deliberately NOT committed to WebRTC, and
+deliberately not yet asking how Alice finds Bob's address at all — see
+docs/Roadmap.md's own "Peer Discovery & Transport Abstraction," still
+unscheduled.
+
+Authentication itself is a second, independent state machine layered
+strictly on top of a connection, never folded into it —
+`peer/PeerAuthenticationState.js`'s own IDLE/AUTHENTICATING/
+AUTHENTICATED/FAILED, tracked by `peer/PeerAuthenticationSession.js`
+(new). The handshake is a mutual challenge-response, run identically on
+both ends rather than as an initiator/responder protocol: `start()`
+sends a HELLO carrying this side's identityId/publicKey and a fresh
+CHALLENGE for the peer to sign back; receiving a HELLO immediately
+answers it with a PROOF — a real Ed25519 signature, via identity/
+LocalIdentityProvider.js's own `signCanonical()`, over a canonical
+envelope (`core/PeerAuthenticationEnvelope.js`'s new
+`getPeerAuthenticationSigningDescriptor()`, and a new
+`SignatureType.PEER_AUTHENTICATION` in `core/Signature.js`) covering
+`protocol`/`purpose`/`sessionNonce`/`challenge`/`identityId`/
+`publicKey` together, never a narrower subset — exactly the same "sign
+everything that matters, never let a captured signature be replayed
+with one field swapped" discipline 0.2.38 already applied to presence
+advertisements. `sessionNonce` is the connection's own connectionId,
+signed over in every PROOF — this is what makes a captured, entirely
+genuine handshake fail when replayed into a different connection,
+because the signature itself no longer verifies against a different
+sessionNonce, not because of some separate deduplication table. A peer
+connection does not authenticate a user account; it authenticates
+possession of an identity key — whichever `LocalIdentity` the local
+`identityProvider` happens to be currently authenticated as, reusing
+0.2.46's `AuthenticationSession` and 0.2.47's `VaultLock` exactly the
+way `application/PresenceSigning.js` already does, with no separate
+peer-specific signing path to keep in sync. A verified PROOF produces a
+`peer/PeerIdentity.js` (new) — the identity the OTHER end of THIS
+connection has proven it controls, structurally identical to
+`LocalIdentity`'s own identityId-must-match-publicKey invariant, but
+carrying no label, no createdAt, and never persisted: closing the
+connection (or the connection failing) immediately discards it and
+resets `authenticationState` to IDLE, and reconnecting always means a
+brand-new session over a brand-new connection proving possession again
+from nothing — see docs/Principles.md, "A Peer Connection Authenticates
+A Key, Not An Account" and "A Peer Authentication Signature Is Scoped
+To One Connection, Never To One Identity."
+
+No persistent peer trust anywhere in 0.2.49, on purpose: authentication
+answers "is this connection currently controlled by identity X," never
+"do I trust X forever" — there is no friends list, no trusted-peer
+database, nothing written to storage at all. `tests/
+PeerAuthentication.test.js`'s flagship test drives two genuinely
+independent `LocalIdentityProvider` instances — standing in for two
+separate devices, exactly like 0.2.48's own two-device proof — across a
+real `LocalPeerConnectionProvider` connection to full mutual
+authentication, then proves closing discards it and reconnecting
+requires re-proving from nothing; separate tests forge a replayed
+handshake, a modified challenge, a substituted public key (both as a
+bare mismatch and as a full impersonation attempt with an internally
+consistent but different identity), and a genuinely valid signature
+reused against a different challenge with `sessionNonce`/`challenge`
+relabeled to match — every one rejected, several purely on the
+underlying signature's own cryptographic binding rather than on a
+shallow field-equality check. A last test proves `core/
+AvatarPresenceAdvertisement.js` signing is completely unaffected and
+that a presence signature is never mistaken for a peer-authentication
+proof (`signature domain mismatch`), and no file under `core/`,
+`application/`, `world/`, `publisher/`, `discovery/`, or `presence/`
+was touched.
+
+Deliberately not in 0.2.49: any peer discovery or rendezvous mechanism
+(finding Bob's address at all remains the still-unscheduled "Peer
+Discovery & Transport Abstraction" milestone this one was carved out
+of); any persistent trusted-peer/"friends" concept; a real WebRTC (or
+any other real network) transport — `LocalPeerConnectionProvider` is
+real, working, in-process code, not a mock, but it is still one
+process; re-authentication or session renewal on an already-
+AUTHENTICATED connection; and reconnecting presence/profile/
+interaction sync to run over an authenticated peer connection instead
+of today's open `BroadcastChannel` — this milestone proves the
+handshake works, it does not yet plug anything else into it.
 
 ## 0.1.50 — What shipped
 
