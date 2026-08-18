@@ -5327,3 +5327,163 @@ carry fully independent lock states. The entire pre-existing test suite
 `tests/DecentralizedIdentity.test.js`'s full flagship — was run
 unmodified against the extended provider and passes without a single
 change.
+
+### Portable Identity, Export, Import & Recovery (0.2.48)
+
+```text
+Device A                                    Device B
+LocalIdentity                               LocalIdentity
+    identityId ─┐                               identityId ─┐  (same)
+    publicKey   │                               publicKey   │  (same)
+    privateKey  │  exportLocalIdentity()          privateKey │  (same bytes,
+                │        │                                   │   re-derived
+                │        ▼                                   │   & checked)
+                │   ┌───────────────┐   importLocalIdentity() │
+                └──▶│ export package│────────────────────────┘
+                    │ (encrypted    │
+                    │  private key) │
+                    └───────────────┘
+
+    starts LOCKED on Device A               starts LOCKED on Device B too
+    (if protected) exactly like              (unconditionally — import never
+    any other protected identity             authenticates, never unlocks)
+```
+
+0.2.46 gave a `LocalIdentity` a durable, inspectable existence; 0.2.47
+protected its private key at rest — but both milestones named, rather
+than closed, the same gap: the key still only ever existed on the ONE
+device that generated it. 0.2.48 closes it. The central invariant
+stated once and enforced in three places: exporting and importing an
+identity preserves the identity itself, not merely its display name — a
+signature produced on the receiving device after import must verify
+with the identity's ORIGINAL public key, through the completely
+unmodified `LocalAuthorizationVerifier` pipeline.
+
+Package format (pure data, no I/O):
+
+- `identity/IdentityExport.js` (new) — `buildExportPackage()` returns a
+  plain, JSON-safe object: `formatVersion`, `identityId`, `publicKey`,
+  `algorithm`, an untrusted `label` HINT (local-only presentation
+  metadata exactly like `LocalIdentity.js`'s own `label` — never part of
+  the cryptographic identity, never validated, never trusted for
+  anything but a suggested default on the importing side), and
+  `encryptedPrivateKey` — an `identity/KeyEncryption.js` record,
+  VERBATIM. There is deliberately no second, separately-invented
+  "portable secret" format; the export package protects its private key
+  exactly the way 0.2.47 already protects one at rest.
+
+Validation (pure, passphrase-free):
+
+- `identity/IdentityImport.js` (new) — `validatePackage()` throws
+  `IdentityPackageError` on the first structural problem it finds:
+  unknown `formatVersion`, a missing/malformed field, an
+  `encryptedPrivateKey` missing any of `KeyEncryption.encrypt()`'s own
+  fields — and, the one check that needs actual cryptography rather
+  than shape, that `identityId` is the EXACT did:key derivation of
+  `publicKey` (the identical invariant `LocalIdentity.js`'s constructor
+  already enforces for a live identity). This catches a tampered or
+  corrupted package immediately, before anything is decrypted — public-
+  key consistency needs no secret to check.
+
+Recovery decision (storage-agnostic, side-effect-free):
+
+- `identity/IdentityRecovery.js` (new) — `recoverIdentity({ package,
+  passphrase, existingIdentities })` runs validate → duplicate-check →
+  decrypt → verify, in that order, and never writes anything itself
+  (its caller, `LocalIdentityProvider.importLocalIdentity()`, is the
+  only thing that persists). An `identityId` already present with
+  MATCHING key material short-circuits to `{ status: 'ALREADY_EXISTS' }`
+  before decryption is even attempted — a duplicate import doesn't even
+  need the correct passphrase, because there is genuinely nothing left
+  to prove. Matching `identityId` with DIFFERENT key material throws
+  `IdentityConflictError` — currently unreachable through two
+  honestly-generated packages (a did:key is a bijective encoding of the
+  public key itself, so two different keys can never collide), kept as
+  a defensive floor rather than assumed away. Otherwise: `KeyEncryption
+  .decrypt()` (wrong passphrase or a tampered record →
+  `IncorrectPassphraseError`, identical to 0.2.47's own at-rest
+  behavior), then the decrypted seed's OWN derived public key is checked
+  AGAIN against the package's claim (`IdentityPackageError` if they
+  disagree — a package whose ciphertext decrypts cleanly under the
+  given passphrase but doesn't correspond to its own stated public key
+  is corrupted or malicious, a distinct failure from a wrong
+  passphrase) — only then is `{ status: 'IMPORTED', ...seedBytes }`
+  returned for the caller to persist.
+
+Identity provider (the seam, extended again):
+
+- `identity/LocalIdentityProvider.js` — `exportLocalIdentity(identityId,
+  passphrase)`: for a protected identity, ALWAYS re-decrypts from the
+  stored record — it never reads `_vaultCache`, even if the identity is
+  currently unlocked, so exporting demands the passphrase again as its
+  own explicit security boundary, distinct from "is this session already
+  authenticated." For an unprotected identity, the same single
+  `passphrase` parameter plays a different role: there's nothing to
+  decrypt, so it's simply the NEW passphrase chosen to protect the
+  export for transit — the package format doesn't distinguish "was
+  protected at rest" from "protected only for export." Never
+  rate-limited by `FailedUnlockTracker` — a one-shot local operation by
+  the identity's own owner, not a guessing surface. `importLocalIdentity
+  (package, passphrase, { label })`: on `IMPORTED`, persists via the
+  SAME `_storeProtectedKey()` 0.2.47 already uses — the imported copy is
+  ALWAYS `protected: true`, regardless of whether the source was
+  protected on its origin device, because the only secret this device
+  ever had was the decrypted seed plus the import passphrase. Never
+  calls `authenticate()` and never touches `_vaultCache` — the imported
+  identity starts, and stays, LOCKED exactly like any other protected
+  identity, because import proves this device now HOLDS the key, never
+  that it has been authenticated with it.
+- `application/IdentityUseCase.js` — thin `exportIdentity()`/
+  `importIdentity()` delegation, the same division every other method
+  in the file already follows.
+
+UI:
+
+- `ui/views/IdentityManagementView.js` (new, routed at `/identity`,
+  linked from `App.js` as "My Identities") — a DEDICATED view, not an
+  extension of `ui/components/LoginModal.js`: LoginModal answers "which
+  identity is the app showing as logged in right now," a fast
+  single-identity decision; this view answers "what does this device
+  hold, and what can I do with each key," independent of which one (if
+  any) is currently authenticated. Every identity gets its own
+  lock/unlock control and an "Export Identity" action that opens an
+  inline passphrase prompt — re-entered every time, exactly as
+  `exportLocalIdentity()` requires — followed by the package as
+  read-only JSON plus a `download` link. The import form previews
+  label/identityId/algorithm/already-exists status by parsing the
+  pasted (or file-loaded) JSON client-side, entirely passphrase-free,
+  before the passphrase field is even shown — matching `IdentityImport
+  .js`'s own "structural validation needs no secret" property — and
+  surfaces the exact outcome (`ALREADY_EXISTS` vs. freshly `IMPORTED`
+  and now LOCKED) rather than a generic success message.
+
+Deliberately not in 0.2.48: changing or removing a protected identity's
+passphrase (unchanged gap from 0.2.47); any recovery path that works
+with only the passphrase or only the exported file — see
+docs/Principles.md, "Recovery Is Not Password Recovery"; any transport
+for the package besides a plain JSON file/textarea (no QR code, no
+peer-to-peer transfer); and — unchanged from 0.2.46/0.2.47 — any peer
+discovery mechanism or authenticated peer session. No change whatsoever
+to `core/Signature.js`, `identity/SigningIdentity.js`, or `identity/
+LocalAuthorizationVerifier.js` — proven directly in `tests/
+PortableIdentity.test.js`'s flagship test by running a signature
+produced on a post-import identity through the completely unmodified
+verifier.
+
+`tests/PortableIdentity.test.js` covers: the flagship cross-device
+export → import → sign → verify round trip, including the imported
+identity starting LOCKED and a locked re-export of the same identity
+still requiring its passphrase; exporting demanding the passphrase again
+even while the vault is currently unlocked; exporting and importing an
+UNPROTECTED identity (the imported copy is always protected regardless);
+duplicate import as a pure no-op that doesn't even require the correct
+passphrase; a synthetic conflicting-key-material case exercised directly
+against `IdentityRecovery.recoverIdentity()`; a battery of malformed/
+tampered packages (bad format version, identityId/publicKey mismatch,
+malformed fields, a tampered ciphertext caught by the MAC) each rejected
+without leaving any partial identity behind; `IdentityImport
+.validatePackage()` used standalone with no provider or passphrase at
+all; and a byte-identical check that unrelated persisted state — a
+stand-in "world state" storage key and a completely unrelated second
+identity on the same device — survives an entire mix of successful and
+failed export/import operations without a single byte changing.

@@ -10,6 +10,8 @@ import * as KeyEncryption from './KeyEncryption.js';
 import { Signature, SIGNING_DOMAIN } from '../core/Signature.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
+import * as IdentityExport from './IdentityExport.js';
+import * as IdentityRecovery from './IdentityRecovery.js';
 
 const IDENTITIES_INDEX_KEY = 'local-identities';
 const IDENTITY_KEY_PREFIX = 'local-identity-key:';
@@ -59,6 +61,18 @@ const PROVIDER_ID = 'local';
 // changes. Protecting an existing identity (`protectIdentity`) migrates
 // it in place, non-destructively, only when the owner asks — 0.2.47
 // never forces a passphrase onto an identity that never had one.
+//
+// 0.2.47 named, rather than closed, the gap that a LocalIdentity's key
+// still only ever existed on the one device that generated it. 0.2.48
+// closes that: `exportLocalIdentity(identityId, passphrase)` /
+// `importLocalIdentity(package, passphrase, { label })` move an
+// identity's PRIVATE key between devices as a protected, versioned
+// package (identity/IdentityExport.js, validated on the way back in by
+// identity/IdentityImport.js, decrypted and duplicate-checked by
+// identity/IdentityRecovery.js) — never a plaintext seed, and never
+// silently. An imported identity always lands LOCKED, exactly like any
+// other protected identity: import proves this device now HOLDS the
+// key, never that it has been authenticated with it.
 export class LocalIdentityProvider extends IdentityProvider {
     constructor(storageProvider, {
         pbkdf2Iterations = KeyEncryption.DEFAULT_ITERATIONS,
@@ -276,6 +290,134 @@ export class LocalIdentityProvider extends IdentityProvider {
             createdAt,
             encryption
         });
+    }
+
+    // --- 0.2.48: portable identity export / import / recovery ----------
+    //
+    // exportLocalIdentity(identityId, passphrase) builds a self-contained
+    // portable package (identity/IdentityExport.js) that identityId's
+    // PRIVATE key travels inside, protected under `passphrase` with the
+    // exact same KeyEncryption record shape 0.2.47 already uses at rest —
+    // there is no separate, second "portable secret" format.
+    //
+    // `passphrase` plays two roles depending on the source identity, and
+    // is deliberately the SAME single value for both, matching how
+    // createLocalIdentity/protectIdentity already reuse one passphrase
+    // param for more than one role:
+    //   - protected identity: the CURRENT unlock passphrase, required to
+    //     decrypt the seed from its stored record. This ALWAYS re-reads
+    //     and re-decrypts from storage — it never reads the in-memory
+    //     _vaultCache, even if the vault is currently unlocked. Exporting
+    //     gets its own explicit security boundary: proving you know the
+    //     passphrase right now, not merely that you unlocked it earlier
+    //     in this session.
+    //   - unprotected identity: nothing to decrypt (the seed is already
+    //     plaintext on disk) — `passphrase` is simply the NEW passphrase
+    //     chosen to protect the exported copy for transit. The package
+    //     format doesn't distinguish "was protected at rest" from "was
+    //     protected only for export" — both produce an
+    //     encryptedPrivateKey a receiving device can only open with the
+    //     right passphrase.
+    //
+    // Never rate-limited the way unlock() is — a wrong passphrase here
+    // simply fails the export attempt (KeyEncryption.decrypt's own
+    // IncorrectPassphraseError); FailedUnlockTracker guards live
+    // signing/authentication, not this one-shot local operation. A real,
+    // named gap if export were ever exposed to something other than the
+    // identity's own owner acting locally — it isn't, today.
+    exportLocalIdentity(identityId, passphrase) {
+        if (!passphrase || typeof passphrase !== 'string' || !passphrase.trim()) {
+            throw new Error('LocalIdentityProvider: a passphrase is required to export an identity');
+        }
+        const identity = this.getLocalIdentity(identityId);
+        if (!identity) {
+            throw new Error('LocalIdentityProvider: cannot export, no local identity with id ' + identityId);
+        }
+        const stored = this._storageProvider.load(IDENTITY_KEY_PREFIX + identityId);
+        if (!stored) {
+            throw new Error('LocalIdentityProvider: cannot export, no key material found for this identity');
+        }
+        let seedBytes;
+        if (identity.isProtected) {
+            if (!stored.encryption) {
+                throw new Error('LocalIdentityProvider: identity is protected but has no encrypted key material');
+            }
+            seedBytes = KeyEncryption.decrypt(stored.encryption, passphrase);
+        } else {
+            seedBytes = Ed25519.hexToBytes(stored.seed);
+        }
+        return IdentityExport.buildExportPackage({
+            identityId: identity.identityId,
+            publicKey: identity.publicKey,
+            algorithm: identity.algorithm,
+            label: identity.label,
+            createdAt: identity.createdAt.toISOString(),
+            seedBytes,
+            passphrase,
+            iterations: this._pbkdf2Iterations
+        });
+    }
+
+    // importLocalIdentity(package, passphrase, { label }) turns a package
+    // exportLocalIdentity produced (on this device or another) back into
+    // key material this device holds, via identity/IdentityRecovery.js's
+    // validate -> duplicate-check -> decrypt -> verify pipeline.
+    //
+    // Three, and only three, outcomes:
+    //   - malformed/tampered package, or a package whose decrypted key
+    //     doesn't match its own claimed public key -> throws
+    //     IdentityImport.IdentityPackageError, nothing persisted.
+    //   - wrong passphrase (or a tampered encrypted record) -> throws
+    //     KeyEncryption.IncorrectPassphraseError, nothing persisted.
+    //   - identityId already present on this device with DIFFERENT key
+    //     material -> throws IdentityRecovery.IdentityConflictError,
+    //     existing identity untouched, nothing new persisted. (See
+    //     IdentityRecovery.js: this is currently unreachable by any
+    //     honestly-generated package, kept as a defensive floor.)
+    //   - identityId already present with the SAME key material ->
+    //     returns { status: 'ALREADY_EXISTS', identity }, a pure no-op —
+    //     never creates a second copy, never touches the existing entry,
+    //     and notably never even requires the passphrase to be correct.
+    //   - genuinely new identity -> decrypts, verifies, and persists it
+    //     as a NEW protected identity (`protected: true` always, even if
+    //     the source was unprotected on its origin device — the only
+    //     secret this device ever had was the decrypted seed plus the
+    //     import passphrase, so that passphrase is what protects it
+    //     here), returns { status: 'IMPORTED', identity }. The imported
+    //     identity is never authenticated and never added to the vault
+    //     cache by this call — it starts, and stays, LOCKED until its
+    //     owner explicitly unlocks it, exactly like any other protected
+    //     identity created by protectIdentity() or createLocalIdentity()
+    //     with a passphrase.
+    //
+    // `label` overrides the package's own (untrusted, presentation-only)
+    // label hint; if neither is provided, falls back to a generic
+    // placeholder rather than silently importing an unlabeled identity.
+    importLocalIdentity(pkg, passphrase, { label } = {}) {
+        const existingIndex = this._loadIndex();
+        const result = IdentityRecovery.recoverIdentity({
+            package: pkg,
+            passphrase,
+            existingIdentities: existingIndex
+        });
+
+        if (result.status === 'ALREADY_EXISTS') {
+            return { status: 'ALREADY_EXISTS', identity: LocalIdentity.fromJSON(result.entry) };
+        }
+
+        const finalLabel = (label && label.trim()) || (result.label && result.label.trim()) || 'Imported Identity';
+        const entry = {
+            identityId: result.identityId,
+            publicKey: result.publicKey,
+            algorithm: result.algorithm,
+            label: finalLabel,
+            createdAt: result.createdAt,
+            protected: true
+        };
+        this._storeProtectedKey(entry.identityId, result.seedBytes, entry.publicKey, entry.createdAt, passphrase);
+        existingIndex.push(entry);
+        this._saveIndex(existingIndex);
+        return { status: 'IMPORTED', identity: LocalIdentity.fromJSON(entry) };
     }
 
     // --- 0.2.46: authentication session --------------------------------

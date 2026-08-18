@@ -2728,3 +2728,60 @@ states this trade honestly rather than implying a more sophisticated
 mechanism than what's actually implemented — the same discipline
 `identity/KeyEncryption.js`'s own comment applies to its chosen PBKDF2
 iteration count.
+
+### Exporting And Importing An Identity Preserves The Identity, Not Merely Its Name (0.2.48)
+
+The test that actually matters for `identity/IdentityExport.js`/
+`IdentityImport.js`/`IdentityRecovery.js` was never "do the fields
+survive the round trip" — a `label` string surviving a JSON round trip
+proves nothing about cryptography. It's "does a signature produced on
+the SECOND device, after import, verify with the identity's ORIGINAL
+public key" — exercised directly in `tests/PortableIdentity.test.js`'s
+flagship test, which signs on a real Device A, exports, imports into a
+completely independent `LocalIdentityProvider` instance standing in for
+Device B, signs again there, and runs both signatures through the same
+unmodified `LocalAuthorizationVerifier`. `identityId` is never taken on
+faith either: `IdentityImport.validatePackage()` re-derives it from the
+package's own `publicKey` via the identical did:key math `identity/
+LocalIdentity.js`'s constructor already enforces, and `IdentityRecovery
+.recoverIdentity()` derives a SECOND public key from the just-decrypted
+seed and checks that against the package's claim too — two independent
+checks a corrupted or hand-edited package would have to satisfy
+simultaneously, not one.
+
+### Recovery Is Not Password Recovery (0.2.48)
+
+There is no "forgot your passphrase?" flow anywhere in this milestone,
+and there cannot be one without breaking the model the rest of this
+codebase has built: nothing about a decentralized identity involves a
+central authority capable of resetting anything. An export package's
+`encryptedPrivateKey` is exactly as opaque to anyone without its
+passphrase as the on-disk record `identity/KeyEncryption.js` already
+protects an identity with at rest — the SAME encrypt-then-MAC
+construction, not a weaker "recovery-friendly" variant. Losing both the
+exported file and its passphrase means the identity is gone; that is
+not a bug this milestone left unfixed, it is the honest consequence of
+"the private key on a device IS the identity" (docs/Principles.md,
+"Login Unlocks An Identity; It Does Not Derive One From A Typed Name")
+applied consistently to the portable case too.
+
+### Duplicate Identity Import Is A No-Op, Never A Silent Overwrite (0.2.48)
+
+`IdentityRecovery.recoverIdentity()` checks whether the package's
+`identityId` already exists on this device BEFORE attempting to decrypt
+anything — and if it does, with matching key material, the ENTIRE
+operation short-circuits to `{ status: 'ALREADY_EXISTS' }` without ever
+touching the passphrase at all (`tests/PortableIdentity.test.js` proves
+this directly: importing an already-present identity with a deliberately
+wrong passphrase still reports `ALREADY_EXISTS`, never an error). The
+alternative designs both fail the same test differently: silently
+overwriting the existing entry could downgrade a protected identity to
+whatever the imported package happened to carry, and silently ignoring
+the import without saying so leaves the owner unable to tell "nothing
+to do" apart from "it silently failed." Mismatched key material under
+the same `identityId` — unreachable through any two honestly-generated
+packages, since a did:key is a bijective encoding of the public key
+itself — is rejected outright as `IdentityConflictError` rather than
+resolved either way automatically, the same "never automatic, never
+forced" discipline `protectIdentity()` already applies to migrating an
+identity in place.
