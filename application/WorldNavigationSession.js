@@ -143,7 +143,9 @@ export class WorldNavigationSession {
 	    avatarTemplateRegistry = null,
 	    presenceVisibilityUseCase = null,
 	    avatarProfileBroadcastProvider = null,
-	    avatarInteractionBroadcastProvider = null
+	    avatarInteractionBroadcastProvider = null,
+	    avatarProfileVisibilityUseCase = null,
+	    hasFriend = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -234,6 +236,29 @@ export class WorldNavigationSession {
 	    // advertises (see the publish gate in _setupLocalAvatar() below),
 	    // exactly 0.2.37/0.2.38's own behavior, unchanged.
 	    this._presenceVisibilityUseCase = presenceVisibilityUseCase;
+	    // 0.2.58 — OPTIONAL, profile's OWN independent publish gate. See
+	    // _publishLocalAvatarProfile() below: when this is wired, profile
+	    // publishing consults ONLY this policy, never presenceVisibilityUseCase's
+	    // — see docs/Principles.md, "Profile Gets Its Own Publication
+	    // Gate, Superseding The Shared One." A session built WITHOUT one
+	    // (every pre-0.2.58 caller, and any test that only wires
+	    // presenceVisibilityUseCase) falls back to the exact 0.2.41
+	    // shared-gate behavior unchanged — see _publishLocalAvatarProfile's
+	    // own comment.
+	    this._avatarProfileVisibilityUseCase = avatarProfileVisibilityUseCase;
+	    // 0.2.58 — OPTIONAL zero-arg predicate: "do I currently have AT
+	    // LEAST ONE real, mutual FriendshipState.FRIEND," re-consulted
+	    // fresh on every publish attempt, never cached — the COARSE
+	    // counterpart to the per-peer `isFriend` predicate
+	    // presence/PeerAvatarPresenceBroadcastProvider.js#advertise()
+	    // itself consults. Feeds PresenceVisibilityPolicy#shouldAdvertise()/
+	    // AvatarProfileVisibilityPolicy#shouldAdvertise()'s own
+	    // `{ hasFriend }` context via _hasFriendContext() below. Absent
+	    // (null) is the exact pre-0.2.58 behavior: FRIENDS with an empty
+	    // authorizedPeerIdentities still behaves like HIDDEN at this
+	    // coarse gate, unchanged — see core/PresenceVisibilityPolicy.js's
+	    // own shouldAdvertise() header.
+	    this._hasFriend = hasFriend;
 	    this._presenceSyncService = null;
 	    this._remoteAvatarRegistry = null;
 	    this._presencePublishSubscription = null;
@@ -477,7 +502,7 @@ export class WorldNavigationSession {
             // A session without a presenceVisibilityUseCase wired
             // always advertises, exactly 0.2.37/0.2.38's own behavior.
             const canAdvertise = this._presenceVisibilityUseCase
-                ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise()
+                ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise(this._hasFriendContext())
                 : true;
             if (this._presenceSyncService && canAdvertise) {
                 const advertisement = toAvatarPresenceAdvertisement(presence);
@@ -876,7 +901,7 @@ export class WorldNavigationSession {
             return;
         }
         const canAdvertise = this._presenceVisibilityUseCase
-            ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise()
+            ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise(this._hasFriendContext())
             : true;
         if (!canAdvertise) {
             return;
@@ -914,25 +939,44 @@ export class WorldNavigationSession {
     // and handed to the transport, called from two sites: an explicit
     // profile edit (immediate) and the periodic republish tick in
     // _setupLocalAvatar() above (eventual, for a replica that joins
-    // mid-session). Reuses the EXACT same visibility gate presence
-    // publishing already established — see docs/Principles.md,
-    // "Presence And Profile Share One Publication Gate": HIDDEN/empty-
-    // FRIENDS means neither a movement NOR a profile edit ever reaches
-    // the transport, one single policy, never two independently-
-    // configured privacy systems.
+    // mid-session).
+    //
+    // 0.2.58 — SUPERSEDES 0.2.41's "Presence And Profile Share One
+    // Publication Gate": profile now gates on its OWN
+    // avatarProfileVisibilityUseCase when one is wired, completely
+    // independent of presenceVisibilityUseCase — see docs/Principles.md,
+    // "Profile Gets Its Own Publication Gate, Superseding The Shared
+    // One." `Presence: HIDDEN, Profile: PUBLIC` and `Presence: PUBLIC,
+    // Profile: HIDDEN` are now both real, independently-representable
+    // configurations, exactly as core/AvatarProfileVisibilityPolicy.js's
+    // own header always intended once a real profile-visibility
+    // configuration surface existed. A session that does NOT wire
+    // avatarProfileVisibilityUseCase (any pre-0.2.58 caller) falls back
+    // to the EXACT 0.2.41 shared-gate behavior, unchanged — this is a
+    // purely ADDITIVE change, never a breaking one.
     _publishLocalAvatarProfile(profile, now) {
         this._lastProfilePublishAt = now;
         if (!this._avatarProfileSyncService) {
             return;
         }
-        const canAdvertise = this._presenceVisibilityUseCase
-            ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise()
-            : true;
+        const canAdvertise = this._avatarProfileVisibilityUseCase
+            ? this._avatarProfileVisibilityUseCase.getPolicy().shouldAdvertise(this._hasFriendContext())
+            : (this._presenceVisibilityUseCase ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise(this._hasFriendContext()) : true);
         if (!canAdvertise) {
             return;
         }
         const advertisement = toAvatarProfileAdvertisement(profile);
         this._avatarProfileSyncService.publish(signAvatarProfileAdvertisement(advertisement, this._identityProvider));
+    }
+
+    // 0.2.58 — the one place `_hasFriend` (see the constructor's own
+    // comment) is actually consulted and turned into the `{ hasFriend }`
+    // context both PresenceVisibilityPolicy#shouldAdvertise() and
+    // AvatarProfileVisibilityPolicy#shouldAdvertise() accept. Called
+    // fresh every time, never cached, exactly like every other
+    // visibility decision in this file.
+    _hasFriendContext() {
+        return { hasFriend: this._hasFriend ? Boolean(this._hasFriend()) : false };
     }
 
     // Shifts the camera by exactly the avatar's own movement delta —

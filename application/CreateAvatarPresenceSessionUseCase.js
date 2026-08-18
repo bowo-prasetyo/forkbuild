@@ -1,5 +1,6 @@
 import { CreateAvatarProfileUseCase } from './CreateAvatarProfileUseCase.js';
 import { CreatePresenceVisibilityUseCase } from './CreatePresenceVisibilityUseCase.js';
+import { CreateAvatarProfileVisibilityUseCase } from './CreateAvatarProfileVisibilityUseCase.js';
 import { AvatarPresenceSession } from './AvatarPresenceSession.js';
 
 // Wires an AvatarPresenceSession for the current identity, built FROM
@@ -15,12 +16,19 @@ import { AvatarPresenceSession } from './AvatarPresenceSession.js';
 // this use case already answers for avatarProfileUseCase/
 // presenceSession, so it's wired here rather than as a third,
 // independently-constructed collaborator elsewhere.
+//
+// 0.2.58 — also wires avatarProfileVisibilityUseCase, the same way and
+// for the same reason: profile now has its OWN persisted, independent
+// publication gate (see docs/Principles.md, "Profile Gets Its Own
+// Publication Gate, Superseding The Shared One") rather than only ever
+// borrowing presenceVisibilityUseCase's.
 export class CreateAvatarPresenceSessionUseCase {
     execute(identityProvider, initialState = {}) {
         const { avatarProfileUseCase } = new CreateAvatarProfileUseCase().execute(identityProvider);
         const { presenceVisibilityUseCase } = new CreatePresenceVisibilityUseCase().execute(identityProvider);
+        const { avatarProfileVisibilityUseCase } = new CreateAvatarProfileVisibilityUseCase().execute(identityProvider);
         const profile = avatarProfileUseCase.getProfile();
         const presenceSession = new AvatarPresenceSession(profile, initialState);
-        return { presenceSession, avatarProfileUseCase, presenceVisibilityUseCase, profile };
+        return { presenceSession, avatarProfileUseCase, presenceVisibilityUseCase, avatarProfileVisibilityUseCase, profile };
     }
 }

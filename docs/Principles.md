@@ -3430,3 +3430,147 @@ therefore intentionally narrower than a complete social graph: a
 codebase that ever moves it back to `REQUESTED` or `NONE`. Revocation
 is real, substantial, unbuilt work, left to its own future milestone —
 see docs/Roadmap.md's own list of what 0.2.57 deliberately left out.
+
+### A Social Relationship Grants Eligibility; A Visibility Policy Grants Access (0.2.58)
+
+Being friends does not automatically reveal anything. `core/
+FriendshipRecord.js` (0.2.57) answers exactly one question — "have Alice
+and Bob mutually consented to a relationship?" — and 0.2.58 refuses to
+let that answer double as a distribution decision. `core/
+PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()` and `core/
+AvatarProfileVisibilityPolicy.js#shouldAdvertiseToPeer()` both gained a
+`context.isFriend` parameter this milestone, but FRIENDS visibility
+still has to be SET — Alice choosing PUBLIC keeps broadcasting to Bob,
+Charlie, and everyone else regardless of who she is or isn't friends
+with; Alice choosing HIDDEN keeps hiding from Bob even though they are
+mutual friends. Friendship is an INPUT a policy MAY reference, never a
+bypass around one. This is the direct continuation of "AvatarProfile,
+AvatarPresence, and PresenceVisibilityPolicy Are Three Independent
+Concerns" (0.2.40): a fourth concern, `FriendshipRecord`, joins the
+picture without collapsing into any of the first three.
+
+### A Visibility Policy Consults A Fact, Never A Store (0.2.58)
+
+`core/PresenceVisibilityPolicy.js` and `core/AvatarProfileVisibilityPolicy.js`
+still import nothing from `core/FriendshipRecord.js`, `core/
+FriendshipState.js`, or `application/FriendRelationshipUseCase.js` —
+not before this milestone, not after it. Both classes' `shouldAdvertiseToPeer()`
+methods accept a plain `{ isFriend }` boolean the CALLER computes and
+hands in; both `shouldAdvertise()` methods accept the coarser `{
+hasFriend }` counterpart, the same way. `presence/
+PeerAvatarPresenceBroadcastProvider.js` — the one class in this
+codebase that DOES read a friendship-flavored predicate — still never
+reads a `FriendshipRecord` itself either: its constructor's `isFriend`
+parameter is a plain function the wiring layer closes over its own
+`FriendRelationshipUseCase.getState()` call to produce (see
+`tests/FriendAwareVisibility.test.js`'s own FLAGSHIP for exactly this
+shape). This is the same discipline "Peer Selection Is A Transport
+Concern, Never A Presence-Core Concern" (0.2.53) already established,
+extended one layer further: a pure policy answering "should I
+advertise" must never itself be capable of going and finding out who is
+a friend — it can only be TOLD, fresh, every time it is asked, by
+whichever application-layer caller actually owns that store. A `core/`
+class that could read `application/FriendRelationshipUseCase.js`
+directly would blur exactly the boundary `docs/Architecture.md`'s own
+layering has protected since this project's very first milestone.
+
+### FRIENDS Means Mutual Friendship OR An Explicit Grant, Never Either Alone (0.2.58)
+
+`core/PresenceVisibilityPolicy.js`'s `authorizedPeerIdentities` — the
+plain, manually-typed allow-list 0.2.40 built, back when no mutual
+friendship concept existed to wire it to — is not replaced by 0.2.58,
+it is joined. `shouldAdvertiseToPeer()`'s FRIENDS branch now reads
+`isFriend === true || this._authorizedPeerIdentities.includes(peerIdentityId)`
+— an OR, never a replacement. This is deliberate: a manually-authorized
+identity is a real, useful thing to be able to express — someone this
+replica has decided to trust WITHOUT (or before completing) a full
+0.2.57 REQUEST/ACCEPT exchange — and nothing about shipping real
+friendship makes that capability wrong or worth deleting. What 0.2.58
+refuses to do is the REVERSE: interpret any WEAKER relationship state as
+sufficient on its own. `FriendshipState.REQUESTED` does not qualify.
+`PeerRelationshipStatus.KNOWN` does not qualify. A merely
+`PeerLifecycleState.AUTHENTICATED` connection, with no relationship
+recorded at all, does not qualify. Only `FriendshipState.FRIEND` — one
+side's signed REQUEST answered by the other side's signed ACCEPT — ever
+sets `isFriend: true`. See "Friendship Is Mutual Consent, Never A
+Unilateral Claim" (0.2.57), which this milestone extends rather than
+loosens.
+
+### The Sender's Own Friendship Record Decides, Never The Receiver's (0.2.58)
+
+`presence/PeerAvatarPresenceBroadcastProvider.js#advertise()` computes
+`isFriend` by asking ITS OWN replica's `isFriend` predicate about the
+REMOTE peer's proven identityId — Alice's transport asks "does MY
+`FriendshipRecord` for Bob say FRIEND," never anything carried on the
+wire by Bob himself. A malicious or merely out-of-sync peer claiming
+"we're friends" in some hypothetical future protocol extension could
+never be trusted to grant itself anything — exactly the same posture
+`core/PresenceTrustPolicy.js`/`application/PresenceTrustBoundary.js`
+already take toward every other claim a remote peer makes about itself.
+This is why `tests/FriendAwareVisibility.test.js`'s own FLAGSHIP proves
+Bob structurally CANNOT alter Alice's policy (step 13): there is no
+protocol anywhere in this codebase, existing or new, that lets an
+incoming `PeerMessage` write to `PresenceVisibilityUseCase`/
+`AvatarProfileVisibilityUseCase` — both live entirely in local storage,
+read only by their own owner's transports.
+
+### Profile Gets Its Own Publication Gate, Superseding The Shared One (0.2.58)
+
+0.2.41's "Presence And Profile Share One Publication Gate" was itself
+flagged, in 0.2.54's own header, as a temporary limitation: "there is
+still no live profile-sharing configuration surface anywhere in the
+running app for a richer tier to mean anything." That surface now
+exists — `application/AvatarProfileVisibilityUseCase.js`,
+`ui/views/AvatarSettingsView.js`'s own "Profile Visibility" section —
+so `WorldNavigationSession._publishLocalAvatarProfile()` now consults
+its OWN `avatarProfileVisibilityUseCase`, completely independent of
+`presenceVisibilityUseCase`, whenever one is wired. `Presence: HIDDEN,
+Profile: PUBLIC` (nobody sees you move, but your appearance is still
+shared with whoever asks) and the reverse, `Presence: PUBLIC, Profile:
+HIDDEN`, are both now real, independently-representable configurations
+— see `tests/FriendAwareVisibility.test.js` Section D. A session that
+does NOT wire `avatarProfileVisibilityUseCase` — every pre-0.2.58
+caller, and any test exercising only `presenceVisibilityUseCase` —
+falls back to the EXACT 0.2.41 shared-gate behavior, unchanged: this is
+a purely additive change, proven by `tests/AvatarAppearanceSync.test.js`'s
+own L4 (assertion 78) still passing completely unmodified.
+
+### Withholding A Future Advertisement Is Not Remote Deletion (0.2.58)
+
+Switching Profile Visibility to HIDDEN (or narrowing FRIENDS) stops the
+NEXT profile advertisement from reaching an ineligible peer. It does
+not, and structurally cannot, reach into a peer who already received an
+earlier, ACCEPTED advertisement and make them forget it —
+`application/LocalAvatarProfileStore.js` (0.2.41, unmodified) has no
+expiry, no remote-wipe primitive, and no mechanism by which Alice's
+policy change could ever be delivered to Bob's own local store as an
+instruction to erase something. This was already true before 0.2.58 —
+0.2.54's own `AvatarProfileVisibilityPolicy` header already noted "a
+future milestone can give this real tiers" without ever promising those
+tiers would retroactively redact anything — but it is worth stating
+plainly now that a real, independently-configurable profile FRIENDS
+tier exists to make someone reach for it: this protocol is state
+SYNCHRONIZATION, not an access-control database with revocable grants.
+`ui/views/AvatarSettingsView.js`'s own explanatory copy says so
+directly, in the same place a person actually sets the policy, rather
+than leaving it as an assumption only a source-reading engineer would
+notice.
+
+### Friendship Persists Across A Connection; Its Eligibility Is Re-Proven On Every One (0.2.58)
+
+`core/FriendshipRecord.js` is keyed on `identityId`, never on a
+`connectionId` or any other transport-scoped handle (see "A Peer
+Relationship Remembers An Identity, Never An Endpoint," 0.2.56, which
+applies identically here). So when Bob disconnects and later
+reconnects, nothing about `presence/PeerAvatarPresenceBroadcastProvider.js`'s
+`isFriend` wiring needs to know or care that anything happened: the
+freshly-authenticated connection proves the SAME `identityId` all over
+again (0.2.49, unmodified), the injected `isFriend` predicate is
+re-consulted fresh on the very next `advertise()` call (never cached,
+same as `getVisibilityPolicy()` itself), and it reports exactly what it
+always would have — no re-authorization gesture, no re-sent friend
+request, no special reconnect-time code path anywhere in this
+codebase. `tests/FriendAwareVisibility.test.js`'s own FLAGSHIP proves
+this directly: Bob's brand-new post-reconnect connection is recognized
+as a friend on the very first movement that follows, from his proven
+identity alone.
