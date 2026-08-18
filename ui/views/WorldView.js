@@ -1015,6 +1015,19 @@ export default {
             followedRemoteAvatarId.value = null;
         }
 
+        // 0.2.44 — Greet/Wave/Point from the Avatar Info panel.
+        // Deliberately thin: WorldNavigationSession.performAvatarInteraction()
+        // owns every real decision (is there a target, is it a cooldown,
+        // is the kind valid) — this handler doesn't second-guess a
+        // false return, it just doesn't refresh anything extra. See
+        // docs/Principles.md, "An Interaction Request Is Not Authority
+        // Over Another Avatar."
+        function performAvatarInteraction(kind) {
+            if (typeof session.performAvatarInteraction === 'function') {
+                session.performAvatarInteraction(kind);
+            }
+        }
+
         // 0.2.43 — clicking a "Nearby Avatars" row reaches the SAME
         // avatarId a 3D-viewport click would, through
         // WorldNavigationSession.targetAvatar() — opens the identical
@@ -1128,6 +1141,7 @@ export default {
             followedRemoteAvatarId,
             followAvatarFromPanel,
             stopFollowingAvatarFromPanel,
+            performAvatarInteraction,
             nearbyAvatars,
             selectNearbyAvatar,
             loadedWorlds,
@@ -1460,6 +1474,7 @@ export default {
                     :following="followedRemoteAvatarId === avatarInfo.avatarId"
                     @follow="followAvatarFromPanel(avatarInfo.avatarId)"
                     @stop-follow="stopFollowingAvatarFromPanel"
+                    @interact="performAvatarInteraction"
                 />
 
                 <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">

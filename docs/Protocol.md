@@ -1817,3 +1817,48 @@ harder problem); and any mutation capability whatsoever that proximity
 unlocks — see docs/Principles.md, "Nearness Never Authorizes
 Mutation." `AvatarPresenceAdvertisement`'s shape remains exactly what
 0.2.37/0.2.38 established, unsigned-tolerant, byte-for-byte unchanged.
+
+## Local Avatar Interaction & Social Presence (0.2.44)
+
+**Adds NOTHING to the wire.** This is the headline claim of the
+milestone, not an incidental one — the design doc's own explicit
+instruction was "no new wire format yet," and the implementation holds
+to it by construction, not by discipline alone: `core/
+AvatarInteractionKind.js`'s GREET/WAVE/POINT vocabulary is a
+completely separate closed vocabulary from `core/
+AvatarAnimationState.js`, the one that DOES ride `AvatarPresence.
+animation` onto `AvatarPresenceAdvertisement` on every broadcast (see
+the 0.2.33/0.2.37 sections above). There is no code path anywhere in
+this codebase that reads an `AvatarInteractionKind` value and writes
+it into an advertisement — the two vocabularies never even import from
+the same call sites. `AvatarPresenceAdvertisement`'s shape remains
+exactly what 0.2.37/0.2.38 established: `avatarId`, `ownerIdentity`,
+`position`, `rotation`, `animation` (still only ever IDLE/WALKING/
+RUNNING/JUMPING), `sequence`, plus the optional `signature`. `core/
+AvatarProfileAdvertisement.js`'s shape is likewise untouched.
+
+**A gesture is never observable by another replica, protocol or
+otherwise.** `WorldNavigationSession.performAvatarInteraction(kind)`
+writes only to the caller's own, purely local `AvatarInteractionState`
+— see docs/Principles.md, "Observation Does Not Imply Authority, And
+Interaction Does Not Imply Control." Bob waving at Alice produces
+literally zero bytes on any transport; Alice's own replica has no way
+to know it happened, and never will, unless and until a future
+milestone deliberately designs a networked form of it (0.2.45 —
+Networked Ephemeral Avatar Interactions, itself explicitly deferred
+rather than designed here, precisely because it raises real protocol
+questions this milestone's design doc lists but does not answer: who
+may send an interaction, can it be replayed, does it need a sequence
+number, what does `FRIENDS` visibility mean for it, can it be spammed
+at a target, can a target block a sender). None of those questions are
+answered by 0.2.44, on purpose — answering them without a shared
+transport to answer them FOR would just be guessing.
+
+**Explicitly not part of this protocol**: any message, field, or
+envelope for GREET/WAVE/POINT (deferred to 0.2.45, if taken up at
+all); any change to the protocol version
+(`core/protocolVersion.js` is untouched, and the 0.2.44 patch bump on
+`core/version.js` tracks milestone progress only — see
+docs/Principles.md, "Version the protocol independently from the
+application"); and any notion of "the receiver's copy of my gesture" —
+there is no receiver, because there is no message.

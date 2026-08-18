@@ -32,6 +32,18 @@ import { describeLifecycleState, describeTrustStatus } from '../../application/A
 // appears for a REMOTE avatar — following yourself is meaningless,
 // and the existing "Follow Avatar" checkbox already covers your own
 // avatar (0.2.36).
+//
+// 0.2.44 — three more buttons join Follow, also REMOTE-avatar-only:
+// Greet/Wave/Point, emitting a single 'interact' event carrying the
+// core/AvatarInteractionKind.js value. This panel has no opinion about
+// cooldowns or whether the click actually took effect — it just asks;
+// WorldNavigationSession.performAvatarInteraction() is the one place
+// that decides yes/no (see docs/Principles.md, "An Interaction
+// Request Is Not Authority Over Another Avatar"). No "Inspect
+// Profile" button: this panel being open already IS the inspection —
+// see docs/Principles.md, "Looking At Something Is Never The Same As
+// Acting On It" — reusing that existing surface rather than adding a
+// second, redundant one.
 export default {
     name: 'AvatarInfoPanel',
     props: {
@@ -44,7 +56,7 @@ export default {
             default: false
         }
     },
-    emits: ['follow', 'stop-follow'],
+    emits: ['follow', 'stop-follow', 'interact'],
     methods: {
         lifecycleLabel(state) {
             return describeLifecycleState(state);
@@ -108,6 +120,9 @@ export default {
             <div class="info-actions" v-if="!info.isLocal">
                 <button v-if="!following" class="action-btn" @click="$emit('follow')">Follow</button>
                 <button v-else class="action-btn action-btn--primary" @click="$emit('stop-follow')">Stop Following</button>
+                <button class="action-btn" @click="$emit('interact', 'greet')">Greet</button>
+                <button class="action-btn" @click="$emit('interact', 'wave')">Wave</button>
+                <button class="action-btn" @click="$emit('interact', 'point')">Point</button>
             </div>
         </div>
     `

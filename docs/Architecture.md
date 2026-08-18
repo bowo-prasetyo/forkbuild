@@ -4623,3 +4623,158 @@ in the proximity code itself, and — throughout every step, including
 Bob targeting and following her from the Nearby list — Alice's own
 `AvatarProfile`/`AvatarPresence`, read from her own session, never
 change.
+
+### Local Avatar Interaction & Social Presence (0.2.44)
+
+```text
+Bob targets Alice (existing 0.2.43 targetAvatar())
+       │
+Bob clicks "Wave" in the Avatar Info panel
+       │
+WorldNavigationSession.performAvatarInteraction('wave')
+       │
+   allowed?  (core/AvatarInteractionCooldown.js)
+   ├── no  → ignored, no state change
+   └── yes → AvatarInteractionState.withInteraction('wave', now)
+                       │
+             every render frame:
+                       │
+       ┌───────────────┴────────────────┐
+       ▼                                 ▼
+setLocalAvatarGesture('wave')   setLocalAvatarFacing(yaw)
+(renderer/AvatarVisual.js:      (renderer/AvatarVisual.js:
+ upper-body pose overlay,        temporary root.rotation.y
+ core/AvatarGesturePoseOffsets)  override, core/AvatarFacing.js)
+       │                                 │
+       ▼                                 ▼
+  Bob's OWN avatar visibly waves   Bob's OWN avatar visibly faces
+  for ~1.8s, then auto-clears      Alice while stationary; an
+  back to NONE                     actively-moving player's own
+                                    input always wins instead
+```
+
+Nothing above ever reaches a transport. See docs/Principles.md,
+"Observation Does Not Imply Authority, And Interaction Does Not Imply
+Control" and "A Gesture Is Presentation, Never Presence."
+
+Core (all pure, Three.js-free, no dependency on anything else in this
+milestone):
+
+- `core/AvatarInteractionKind.js` (new) — the closed vocabulary NONE/
+  GREET/WAVE/POINT, deliberately separate from
+  `core/AvatarAnimationState.js` (which lives on the broadcast
+  `AvatarPresence.animation`) so a gesture structurally cannot reach
+  the wire.
+- `core/AvatarInteractionCooldown.js` (new) — `canPerformInteraction
+  (lastPerformedAt, now, cooldownMs = 1500)`, a pure rate-limit
+  predicate. One shared cooldown across the whole small vocabulary.
+- `core/AvatarFacing.js` (new) — `computeFacingYawDegrees(fromPosition,
+  toPosition)`, pure geometry using the exact angle convention
+  `core/AvatarMovementSimulation.js` already established for
+  `rotation.y` (0° faces +Z, 90° faces +X). Returns `null` when the
+  two positions coincide on the X/Z plane.
+- `core/AvatarGesturePoseOffsets.js` (new) — `getGesturePoseOverride
+  (interactionKind, elapsedSeconds)`, a deterministic mapping from a
+  gesture to an upper-body (headTilt/bodyTilt) pose override, reusing
+  the SAME pose-offset vocabulary `core/AvatarPoseOffsets.js`
+  established for locomotion. WAVE wobbles over elapsed time (a small
+  head-tilt oscillation); GREET/POINT are static tilts. Deliberately
+  never touches legSplay/hopHeight — a gesture overlays locomotion, it
+  never replaces it. The avatar model has no separate arm geometry yet
+  (see `renderer/AvatarRenderer.js#build()`); this reuses exactly the
+  body/head articulation the renderer can already move rather than
+  inventing new mesh, an honest, explicitly scoped-down first pass.
+
+Application:
+
+- `application/spatial-state/AvatarInteractionState.js` gains two new
+  fields — `interaction` (the closed vocabulary above, default NONE)
+  and `interactionStartedAt` — plus `withInteraction(interaction,
+  interactionStartedAt)`, an immutable setter in the same style as
+  every other spatial-state class. Deliberately keeps `avatarId` as
+  the existing field name rather than the design doc's own
+  illustrative `targetAvatarId` — the name is already load-bearing
+  across ~20 call sites and tests; renaming it would be pure churn.
+- `application/WorldNavigationSession.js` gains
+  `performAvatarInteraction(kind)`: rejects when there is no current
+  target, the target is the local avatar itself (gesturing at
+  yourself is meaningless), the kind is invalid/NONE, or the shared
+  cooldown hasn't elapsed; otherwise records the gesture on
+  `_avatarInteraction` and returns `true`. A new private method,
+  `_updateLocalAvatarInteractionPresentation(now)`, runs every render
+  frame (added to the SAME `onAnimationFrame` callback 0.2.36's
+  movement tick and 0.2.41's profile republish already share):
+  auto-expires a gesture back to NONE after ~1.8s, then pushes the
+  current gesture and a computed facing override to the render
+  facade. Facing is computed only while
+  `AvatarMovementController#hasMovementInput()` (new getter) is
+  false — an actively-moving player's own input always wins over the
+  temporary "look at target" override.
+- `application/AvatarMovementController.js` gains `hasMovementInput()`
+  — a cheap getter over already-tracked key state, added purely so the
+  facing behavior above has something honest to gate on.
+
+Renderer:
+
+- `renderer/AvatarVisual.js` gains `setGesture(interactionKind)` and
+  `setFacingOverride(yawDegrees)`. Both are purely local, rendering-
+  only overlays: `setGesture` restarts its own elapsed-time wobble
+  clock (ticked alongside the existing gait clock) and layers an
+  upper-body pose override on top of whatever locomotion pose is
+  already showing; `setFacingOverride` writes `root.rotation.y`
+  directly, remembering the real presence-driven rotation
+  (`_lastRotationY`) so clearing the override (`null`) restores it
+  immediately with no new `setPose()` call required.
+- `renderer/AvatarRenderer.js#applyPose()` gains an optional fourth
+  `gestureOverride` parameter: when present, it replaces just the
+  body/head tilt the locomotion pose would otherwise contribute, while
+  leg splay and hop height still come from locomotion — a gesture is
+  upper-body-only.
+- `application/RenderWorldViewUseCase.js`'s facade gains
+  `setLocalAvatarFacing(yawDegrees)` and `setLocalAvatarGesture
+  (interactionKind)` — thin pass-throughs to the local
+  `AvatarVisual`. Neither has a remote-avatar counterpart; see
+  docs/Principles.md.
+
+UI:
+
+- `ui/components/AvatarInfoPanel.js` gains three buttons — Greet,
+  Wave, Point — alongside the existing Follow/Stop Following, all
+  REMOTE-avatar-only (`v-if="!info.isLocal"`, the same gate Follow
+  already used). Each emits a single `interact` event carrying the
+  `AvatarInteractionKind` string; the panel has no opinion about
+  cooldowns — `WorldNavigationSession.performAvatarInteraction()` is
+  the one place that decides. No "Inspect Profile" button: the panel
+  being open already IS the inspection (see docs/Principles.md,
+  "Looking At Something Is Never The Same As Acting On It") — reusing
+  that existing surface rather than adding a second, redundant one.
+  "Invite to Follow"/"Stop Following"/"Inspect" — three of the six
+  intents the design doc names — needed no new code at all: they are
+  exactly the existing Follow/Stop Following buttons and the existing
+  "open the panel" behavior.
+- `ui/views/WorldView.js` gains `performAvatarInteraction(kind)`, a
+  thin handler wired to `AvatarInfoPanel`'s new `interact` event —
+  calls straight through to the session method and does not
+  second-guess a `false` return (no target, cooldown, or invalid
+  kind all look identical to the UI: nothing visibly happens).
+
+Deliberately not in 0.2.44, matching the design doc's own scope: any
+networked/broadcast form of GREET/WAVE/POINT (0.2.45 — Networked
+Ephemeral Avatar Interactions); any change to the wire protocol at all
+(`docs/Protocol.md` is unchanged by this milestone); arm geometry or
+any other new avatar mesh (the gesture pose reuses only body/head
+articulation the renderer could already move); a visible cooldown
+countdown or disabled-button UI state (a rejected click is silently a
+no-op, matching the design doc's own flowchart: "no → ignore"); and any
+persisted record of who gestured at whom — a gesture is transient
+render state, gone the moment it expires or the session ends, never
+written to a Document, a PlacementRecord, or anywhere else.
+`tests/AvatarInteractionGestures.test.js` covers the pure math (facing
+angles, cooldown timing, gesture pose offsets) independently of any
+session, then exercises `performAvatarInteraction()` and the per-frame
+presentation loop together: a gesture is rejected with no target, at
+yourself, with an invalid kind, or on cooldown; accepted otherwise and
+visible on the very next frame; a held movement key clears the facing
+override without interrupting an in-progress gesture; and real elapsed
+time auto-expires the gesture back to NONE with no explicit "stop"
+call ever needed.

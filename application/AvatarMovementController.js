@@ -141,6 +141,20 @@ export class AvatarMovementController {
         return this._collided;
     }
 
+    // 0.2.44 — whether the player is CURRENTLY holding any directional
+    // key (forward/backward/left/right — turning included, since
+    // turning is also an explicit facing choice the user is making,
+    // never something a facing override should fight). Read by
+    // WorldNavigationSession's avatar-facing behavior (see
+    // core/AvatarFacing.js) to decide whether a temporary "look at
+    // target" override is allowed to apply at all this frame — an
+    // actively-moving player's own input always wins. Deliberately
+    // ignores Shift/Space: running or jumping alone implies nothing
+    // about facing.
+    hasMovementInput() {
+        return this._keys.forward || this._keys.backward || this._keys.left || this._keys.right;
+    }
+
     _currentMovementState() {
         return new AvatarMovementState({
             forwardAxis: (this._keys.forward ? 1 : 0) - (this._keys.backward ? 1 : 0),
