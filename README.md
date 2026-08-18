@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.46** — Local Identity & Authentication Session
+**Version 0.2.47** — Identity Security & Key Protection
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -618,6 +618,49 @@ signed-object wire formats, `core/Signature.js`, or
 looks, verifies, and travels exactly as it did in 0.2.16; only WHERE it
 comes from on the signing side changed.
 
+0.2.47 closes exactly the gap 0.2.46 named instead of moving straight
+on to portability or peer networking: a `LocalIdentity`'s private key
+sat in storage exactly as plainly as 0.2.16's always did. It adds a
+FOURTH concept alongside 0.2.46's three — `identity/VaultLock.js`,
+"is this identity's private key decrypted in memory right now?" —
+independent of both `LocalIdentity` (durable) and
+`AuthenticationSession` (persisted, but transient): a protected
+identity can be logged in (`AUTHENTICATED`) while its vault is
+`LOCKED`, and a page reload always finds a protected vault `LOCKED`
+regardless of whether the session survived, because the decrypted seed
+is never written anywhere durable — not by omission, but structurally:
+`identity/KeyEncryption.js`'s PBKDF2-HMAC-SHA512 + SHA512-CTR +
+HMAC-SHA512 encrypt-then-MAC (built from the same self-contained
+`sha512` primitive `identity/Ed25519.js` already established, no new
+dependency) decrypts a seed only into a plain, in-memory
+`LocalIdentityProvider._vaultCache` Map that nothing ever persists.
+Opting in is always explicit and non-destructive: `createLocalIdentity(
+label, passphrase)` protects a key from birth; `protectIdentity(
+identityId, passphrase)` migrates an existing unprotected identity in
+place, preserving its exact `identityId`, and starts it `LOCKED`
+immediately afterward. Wrong passphrases and tampered records fail
+identically (`IncorrectPassphraseError`, the MAC checked before
+decryption is ever trusted), repeated failures trip a time-based
+cooldown that even the correct passphrase can't bypass early
+(`identity/FailedUnlockTracker.js`), and an unlocked vault auto-expires
+after a fixed lifetime since last unlock
+(`identity/VaultTimeoutPolicy.js` — honestly a bounded lifetime, not
+true activity tracking) without ever ending the `AuthenticationSession`
+itself — `_requireAuthenticatedIdentity()` now tells "not logged in"
+and "locked" apart as two different refusal reasons.
+`ui/components/LoginModal.js`'s identity list marks protected
+identities and prompts for a passphrase inline before authenticating;
+`ui/components/UserWidget.js` shows a third, honest state — 🔒 name +
+Unlock — when the session is authenticated but the vault has
+idle-locked, rather than pretending signing still works. See
+docs/Architecture.md, "Identity Security & Key Protection (0.2.47),"
+and docs/Principles.md, "Identity Existence, Vault Unlock, And Session
+Authentication Are Three Independent Facts, Not Two." Deliberately not
+in 0.2.47: changing or removing a passphrase once set, any PIN-strength
+policy, true activity-based idle detection, and — unchanged from
+0.2.46 — portable identity export/import/recovery and peer discovery/
+authenticated peer sessions.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -667,6 +710,7 @@ comes from on the signing side changed.
 - **Local Avatar Interaction & Social Presence (0.2.44)** — answers "once I know another avatar is nearby, what can I actually do with it?" with a deliberately small, still wire-format-free answer. A closed local gesture vocabulary — GREET/WAVE/POINT (`core/AvatarInteractionKind.js`) — is its OWN vocabulary, never folded into `core/AvatarAnimationState.js` (the one that DOES ride `AvatarPresence.animation` onto the wire), so a gesture is structurally incapable of being networked by accident. A shared cooldown (`core/AvatarInteractionCooldown.js`) rate-limits every gesture now, under easy local conditions, so a future networked version inherits an already-proven invariant instead of inventing rate-limiting later. Performing a gesture (`WorldNavigationSession.performAvatarInteraction()`) only ever writes to the caller's OWN local `AvatarInteractionState` — extended with `interaction`/`interactionStartedAt` — and is rendered ONLY on the gesturing avatar's own replica (`renderer/AvatarVisual.js#setGesture()`, an upper-body pose overlay reusing `core/AvatarPoseOffsets.js`'s own vocabulary) with no remote-avatar counterpart anywhere in the codebase. A temporary facing override (`core/AvatarFacing.js`) makes an avatar visually face its current target while stationary, applied directly to the Three.js root — never to `AvatarPresence.rotation` — and an actively-moving player's own input always wins over it. The Avatar Info panel grows exactly three buttons; three of the design doc's other named intents (Invite to Follow, Stop Following, Inspect) needed no new code at all, because they already existed since 0.2.39/0.2.43. Nothing here reaches a Document, a Publication, a WorldPlacement, or the wire — see docs/Principles.md, "Observation Does Not Imply Authority, And Interaction Does Not Imply Control."
 - **Ephemeral Avatar Interaction Synchronization (0.2.45)** — the networked half of 0.2.44's gestures, deliberately narrow: a GREET/WAVE/POINT is an EVENT, never STATE, so it is never retained once rendered. A third, independent wire shape (`core/AvatarInteractionAdvertisement.js` — `avatarId`/`interactionId`/`kind`/`targetAvatarId`/`sequence`/`timestamp`/optional `signature`) travels on its own `BroadcastChannel` (`'forkbuild:avatar-interaction'`), through its own trust boundary (`application/AvatarInteractionTrustBoundary.js` — structural validity → signature/policy → authority → replay/staleness, deliberately with NO equivocation check, a named gap left to a future, still-unscheduled milestone) and its own bounded replay window that tracks both `interactionId` (duplicate suppression) and `sequence` (staleness rejection) per avatarId. `AvatarInteractionSyncService.pull()` returns only the newly-accepted events since the last call — never a persisted "current" record the way presence/profile sync services keep one. `targetAvatarId` is a CLAIM ("Bob claims he waved at Alice"), never an instruction — a bystander can observe and render the same event the named target does, and no replica gains any reach into another avatar's own state. A trusted event renders on the SENDER's own remote avatar visual (`RenderWorldViewUseCase#setRemoteAvatarGesture()`, reusing `AvatarVisual.setGesture()` byte-for-byte) and auto-expires after ~1.8s with no "stop" message ever required. `AvatarPresence`/`AvatarProfile` gain zero new fields; the flagship test proves a full replay/tamper/impersonation attack scenario over a real `BroadcastChannel` never renders a forged gesture, and never touches a Document, Publication, WorldPlacement, or the spatial index.
 - **Local Identity & Authentication Session (0.2.46)** — pauses the avatar arc to fix a conflation that dates back to 0.2.16: `login(username)` used to lazily derive a signing key from whatever string was typed, so "which account is shown" and "which key this device holds" were the same event by construction. `identity/LocalIdentity.js` (new) is a durable, validated record of a key this device actually possesses (`identityId`/`publicKey`/`algorithm`/`label`/`createdAt`, its `identityId` provably derived from its own `publicKey`), created up front via `createLocalIdentity(label)` — independent of any login flow. `identity/AuthenticationSession.js` (new) answers the genuinely missing question, "is one of them unlocked right now" (`ANONYMOUS`/`AUTHENTICATED`), separate from both `LocalIdentity` (durable) and `identity/Identity.js` (a display label, unchanged since 0.1.21). `identity/LocalIdentityProvider.js` is rebuilt on top of both, with `authenticate(identityId)`/`endSession()` unlocking or releasing a key this device already holds — but every pre-existing method (`login`/`logout`/`currentUser`/`sign`/`getSigningIdentity`/`signCanonical`) keeps its exact 0.1.21/0.2.16 signature and behavior as a thin compatibility layer over the new model, so every existing use case and test that signs a publication, placement, or avatar advertisement keeps working unchanged. Signing is now genuinely gated by the session, not merely by `currentUser()` happening to agree with it, proven in `tests/LocalIdentitySession.test.js` by ending a session and watching signing fail while the key stays on disk untouched. The Login modal now lists every identity this device holds and makes "Create New Identity" an explicit action, never a side effect of retyping a name. Deliberately not in 0.2.46: passphrase/encryption on the stored key, portable identity export/import or recovery, and peer discovery/authenticated peer sessions — the wire formats and `identity/LocalAuthorizationVerifier.js` are completely unchanged; only where a signing key comes from changed.
+- **Identity Security & Key Protection (0.2.47)** — closes the gap 0.2.46 named instead of moving on to portability or peer networking: a `LocalIdentity`'s private key can now be protected by a user-chosen passphrase, either from creation (`createLocalIdentity(label, passphrase)`) or migrated in place later (`protectIdentity(identityId, passphrase)`), always opt-in and never forced. `identity/KeyEncryption.js` (new) is a self-contained PBKDF2-HMAC-SHA512 + SHA512-CTR + HMAC-SHA512 encrypt-then-MAC scheme, built from the same `sha512` primitive `identity/Ed25519.js` already established rather than a new dependency; a wrong passphrase and a tampered record fail identically, rejected by the MAC before decryption is ever trusted. `identity/VaultLock.js` (new) is a FOURTH identity concept — "is this identity's key decrypted in memory right now?" — genuinely independent of `LocalIdentity` (durable) and `AuthenticationSession` (persisted): a protected identity can be logged in while its vault is `LOCKED`, and a page reload always finds a protected vault `LOCKED` regardless of session state, because the decrypted seed lives only in a volatile in-memory cache nothing ever persists. `identity/FailedUnlockTracker.js` enforces a time-based cooldown after repeated wrong passphrases (the correct one is refused too, mid-cooldown); `identity/VaultTimeoutPolicy.js` auto-locks an unlocked vault after a fixed lifetime, honestly not true activity tracking, without ending the session itself. `LoginModal`/`UserWidget` gain inline passphrase prompts and a distinct "🔒 locked, still logged in" state. Deliberately not in 0.2.47: changing/removing a passphrase once set, PIN-strength policy, true idle-activity detection, portable export/import, and peer discovery/authenticated sessions.
 
 ## Architecture
 

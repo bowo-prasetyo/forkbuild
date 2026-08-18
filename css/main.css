@@ -680,6 +680,34 @@ html, body {
     padding: 0 0.6rem;
 }
 
+/* Key Protection (LoginModal/UserWidget, 0.2.47) */
+.identity-lock-icon {
+    margin-right: 0.3rem;
+}
+
+.identity-unlock-form {
+    padding: 0.6rem 0.75rem;
+    background: #121212;
+    border: 1px solid #4caf7d;
+    border-radius: 4px;
+}
+
+.identity-unlock-label {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: #d0d0d0;
+}
+
+.identity-unlock-error {
+    margin: -0.4rem 0 0.75rem;
+    color: #e05c5c;
+    font-size: 0.8rem;
+}
+
+.user-name--locked {
+    color: #e0a34c;
+}
+
 .publication-fork-of {
     margin: 0.25rem 0;
     color: #e0a34c;
