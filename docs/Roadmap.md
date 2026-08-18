@@ -1536,6 +1536,137 @@ same persistent-relationship concept to mean anything beyond today's
 PUBLIC-only defaults; and Peer Messaging / Minimal Social Chat, finally
 giving `peer/PeerMessageBus.js` a real protocol to carry.
 
+0.2.56 answers the first item that list named for a second time —
+0.2.49 raised it, 0.2.55 named it again and again declined to build
+it: "I successfully authenticated Bob once. How do I remember that I
+know Bob without pretending the old connection is still alive?" This
+is the missing distinction between an EPHEMERAL peer session and a
+PERSISTENT social relationship, and the milestone draws it as a new
+three-layer model, each layer already familiar from somewhere else in
+this codebase:
+
+```text
+peer/PeerIdentity.js        "Who is on the other end of THIS connection,
+                              provably, right now?" — scoped to one
+                              connection, gone the instant it closes.
+core/PeerRelationship.js    "Have I, on some past occasion, proven that
+   (NEW)                     identity and chosen to keep a local note
+                              about it?" — durable, survives a reload.
+ConnectedPeerRegistry       "Is that identity connected RIGHT NOW?" —
+                              always answered fresh, from the registry
+                              alone, never copied into the relationship.
+```
+
+`core/PeerRelationship.js` (new) is a small, immutable value object —
+identityId, publicKey, algorithm, alias, status, createdAt,
+lastAuthenticatedAt — deliberately excluding everything 0.2.49–0.2.55
+already established as connection-scoped: no endpoint, no
+connectionId, no session nonce. `core/PeerRelationshipStatus.js` (new)
+is a vocabulary of exactly one value, `KNOWN` — the design doc's own
+instinct to add `ONLINE`/`OFFLINE` was rejected, because that question
+is already, and only ever, answered by the unmodified
+`ConnectedPeerRegistry`; storing it a second time here would just
+invite the two copies to disagree. `application/
+PeerRelationshipUseCase.js` (new) is the persistence-and-policy layer,
+following the exact "one durable record per local owner, loaded/
+created/saved through an injected StorageProvider" shape
+`application/AvatarProfileUseCase.js` already established in 0.2.33 —
+`getRelationships()`, `getRelationship(identityId)`,
+`rememberPeer(peerIdentity, {alias})`, `noteAuthenticated(peerIdentity)`,
+`updateAlias(identityId, alias)`, `forgetPeer(identityId)`, and an
+`onRelationshipsChanged` subscription mirroring `ConnectedPeerRegistry
+#onChange`'s own shape.
+
+The one security-critical decision in the whole milestone is where
+`rememberPeer()` is allowed to get its identity from. It requires an
+actual `peer/PeerIdentity.js` INSTANCE — the type `peer/
+PeerAuthenticationSession.js` only ever produces after a real, mutual,
+signed handshake completes — and refuses everything else: a plain
+object, a bare identityId string, anything built from a `peer/
+PeerInvitation.js#identityHint`. An invitation can say "I might be
+Bob"; only a completed authentication can say "I have proven
+possession of this key," and only the latter is eligible to become a
+persistent relationship — see docs/Principles.md, "A Peer Relationship
+Remembers An Identity, Never An Endpoint" (0.2.56).
+
+Remembering is never automatic. Nothing in `PeerSessionManager`,
+`ConnectToPeerUseCase`, or `PeerAuthenticationSession` calls
+`rememberPeer()` on this milestone's behalf — the only call site in
+the whole codebase is `ui/views/PeerConnectionsView.js`'s new
+"Remember" button, which appears on an authenticated peer's card
+exactly where 0.2.55 deliberately put nothing. See docs/Principles.md,
+"Remembering A Peer Is A Deliberate Act, Never A Side Effect Of
+Authentication" (0.2.56) — authentication proves possession of a key,
+not that this device's owner wants that key kept around. The view adds
+a second, independent list below "My Peers" — "Known Peers," reading
+`PeerRelationshipUseCase.getRelationships()` — showing each
+relationship's alias, when it was first met, when it was last
+re-authenticated, and a "Connected now"/"Not connected" badge computed
+live from the SAME `peers` list "My Peers" already renders, never
+stored on the relationship itself. Forgetting deletes only that one
+local record — see docs/Principles.md, "Forgetting A Peer Deletes A
+Local Record, Never The Peer" (0.2.56) — leaving both
+`ConnectedPeerRegistry` and the forgotten identity's own device
+completely untouched.
+
+The flagship test (`tests/PeerRelationships.test.js`) proves
+`core/PeerRelationship.js`'s validation and immutability in isolation,
+then `PeerRelationshipUseCase`'s full CRUD surface including its
+per-owner scoping (two local identities sharing one device's storage
+see two genuinely separate Known Peers lists) and its change
+notifications, then drives the design doc's own end-to-end scenario
+over a REAL WebRTC connection (`application/PeerSessionManager.js`,
+0.2.55, unmodified): Alice and Bob authenticate; Alice remembers Bob by
+his freshly PROVEN identity, never the invitation she originally sent
+him; they disconnect and `ConnectedPeerRegistry` empties out exactly
+as 0.2.50 already guaranteed, while the relationship survives; a
+brand-new `PeerRelationshipUseCase` instance over the SAME storage (a
+simulated reload) still knows Bob; Alice and Bob connect again through
+a completely fresh invitation/connection/authentication — a different
+`connectionId`, nothing resumed — and the newly proven identity is
+matched against the remembered relationship and its
+`lastAuthenticatedAt` bumped; Alice forgets Bob, and Bob's own
+`LocalIdentityProvider` session, on his own device, is proven to still
+sign normally, completely unaffected by Alice's local deletion. This
+is the invariant the design doc asked for, proven rather than merely
+asserted: connections are ephemeral, relationships are durable, and
+identity is the bridge between them.
+
+Deliberately not in 0.2.56, matching the design doc's own explicit,
+narrow scope: `ONLINE`/`OFFLINE` status on a relationship (derived
+live from `ConnectedPeerRegistry` instead, never duplicated — see
+docs/Principles.md); a "Connect" button that dials a specific known
+peer directly — no such addressing exists yet, rendezvous is still the
+same manual, copy/paste invitation handoff 0.2.50/0.2.51 already
+established, and a known peer simply happens to be recognized once
+whichever connection authenticates turns out to be them; any
+notes/description field beyond `alias` — the design doc considered
+`notes` and explicitly deferred it; any privacy or visibility policy
+that reads `PeerRelationship` — `core/PresenceVisibilityPolicy.js` and
+its profile counterpart are completely untouched, still keyed on their
+own manually-entered allow-lists; and, above all, `Friend` — a mutual,
+two-sided social relationship requiring Bob's own agreement, signed
+requests, acceptance, and revocation, which is real, substantial,
+unbuilt work, never something a "Known Peers" list backs into by
+accident of what was convenient to keep around. See docs/Principles.md,
+"Knowing Is Not Befriending" (0.2.56).
+
+Proposed, unscheduled follow-on milestones this opens: Decentralized
+Friend Relationship — the mutual, two-sided upgrade from `KNOWN` to a
+real `Friend`, needing signed friend requests/acceptance/revocation and
+an honest answer to "how do Alice and Bob mutually agree they are
+friends when there is no server to ask"; Friend-Based Privacy — wiring
+`core/PresenceVisibilityPolicy.js`'s `FRIENDS` tier (and its profile
+counterpart) to read real `PeerRelationship` records instead of a
+manually-typed identity allow-list, which only becomes meaningful once
+Friend exists as a real, mutual concept; Minimal Peer Chat, finally
+giving `peer/PeerMessageBus.js` a real protocol to carry, most
+naturally scoped to Known Peers first; and Social Notifications /
+Presence, surfacing "a known peer just came online" using nothing but
+`ConnectedPeerRegistry` change events cross-referenced against
+`PeerRelationshipUseCase.getRelationships()` — both of which already
+exist, completely unmodified, the moment this milestone ships.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49
