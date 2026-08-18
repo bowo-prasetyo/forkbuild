@@ -4778,3 +4778,186 @@ visible on the very next frame; a held movement key clears the facing
 override without interrupting an in-progress gesture; and real elapsed
 time auto-expires the gesture back to NONE with no explicit "stop"
 call ever needed.
+
+### Ephemeral Avatar Interaction Synchronization (0.2.45)
+
+```text
+Bob's replica                                    Alice's replica
+──────────────                                    ───────────────
+performAvatarInteraction('wave')
+  (0.2.44 local gesture, unchanged)
+       │
+_publishAvatarInteraction()
+       │
+toAvatarInteractionAdvertisement()
+  { avatarId: bob, interactionId,
+    kind: 'wave', targetAvatarId: alice,
+    sequence, timestamp }
+       │
+signAvatarInteractionAdvertisement()
+       │
+AvatarInteractionSyncService.publish()
+       │
+LocalAvatarPresenceBroadcastProvider
+  ('forkbuild:avatar-interaction')  ──────────►  onAdvertisement() → inbox
+                                                        │
+                                          AvatarInteractionSyncService.pull()
+                                                        │
+                                          AvatarInteractionTrustBoundary.evaluate()
+                                            structural → signature/policy →
+                                            authority → replay/staleness
+                                                        │
+                                                    accepted?
+                                                   ┌────┴────┐
+                                                   no        yes
+                                                   │          │
+                                              dropped   _applyRemoteAvatarInteraction()
+                                                             │
+                                                session.setRemoteAvatarGesture(bob, 'wave')
+                                                             │
+                                                  renderer/AvatarVisual.js#setGesture()
+                                                  — reused AS-IS on BOB'S OWN remote
+                                                    avatar visual (never Alice's)
+                                                             │
+                                                  ~1.8s later, _expireRemoteAvatarGestures()
+                                                  clears it back to null automatically
+```
+
+See docs/Principles.md, "State Synchronization And Event Synchronization
+Are Different Protocols," "Presence Describes An Avatar's Current
+State; Interaction Describes An Event That Happened," and "A Claimed
+Target Is Never An Instruction." Nothing here touches
+`AvatarPresenceAdvertisement`, `AvatarProfileAdvertisement`, a
+`Document`, a `WorldPlacement`, or the spatial index — a THIRD,
+independent channel/trust-boundary/sync-service, mirroring 0.2.37's
+presence and 0.2.41's profile shape without sharing state with either.
+
+Core (all pure, no dependency on transport or rendering):
+
+- `core/AvatarInteractionAdvertisement.js` (new) — the wire shape for
+  ONE performed gesture: `avatarId`, `ownerIdentity`, a fresh
+  `interactionId` (UUID, for duplicate suppression independent of
+  ordering), `kind` (never NONE), `targetAvatarId`, a flat per-avatar
+  `sequence` (its OWN counter, never `AvatarPresence.sequence`),
+  `timestamp` (event metadata only, never an authority mechanism), and
+  an optional `signature`. `toAvatarInteractionAdvertisement()`,
+  `isValidAvatarInteractionAdvertisement()`, and
+  `getAvatarInteractionSigningDescriptor()` mirror
+  `core/AvatarPresenceAdvertisement.js`'s own three-function shape
+  exactly.
+- `core/AvatarInteractionIngestion.js` (new) —
+  `resolveIncomingInteraction(highestAcceptedSequence,
+  incomingAdvertisement)`, the same pure monotonic-sequence decision
+  `core/PresenceIngestion.js` makes for presence, but compared against
+  a bare highwater NUMBER rather than a full retained "current claim"
+  — an interaction event has no "current" slot to replace.
+- `core/AvatarInteractionReplayWindow.js` (new) — a bounded, per-
+  avatarId structure doing double duty: a recent-`interactionId` set
+  (exact-duplicate suppression) AND a `highestSequence` highwater mark
+  (staleness rejection), both consulted by the trust boundary below.
+  Bounded at 32 entries per avatarId, the same anti-replay-window
+  posture `core/PresenceReplayWindow.js` already established for a
+  different (but analogous) reason.
+- `core/AvatarInteractionTrustPolicy.js` (new) — mirrors
+  `core/PresenceTrustPolicy.js` exactly: the one real policy axis is
+  `requireSignedInteraction` (`permissive()`/`hardened()`), its own
+  separate class/instance from presence's policy so the two can be
+  configured independently.
+- `core/Signature.js` gains `SignatureType.AVATAR_INTERACTION`.
+- `identity/LocalAuthorizationVerifier.js` gains
+  `verifyAvatarInteractionAdvertisement()`, the same did:key-is-the-
+  identity shape `verifyPresenceAdvertisement()`/
+  `verifyAvatarProfileAdvertisement()` already established.
+
+Application:
+
+- `application/AvatarInteractionSigning.js` (new) —
+  `signAvatarInteractionAdvertisement(advertisement, identityProvider)`,
+  mirroring `application/PresenceSigning.js` exactly: optional by
+  construction, degrades to unsigned rather than throwing.
+- `application/AvatarInteractionTrustBoundary.js` (new) — the
+  interaction counterpart to `PresenceTrustBoundary`/
+  `AvatarProfileTrustBoundary`, with its OWN `PresenceAuthorityRegistry`
+  instance (never shared with presence's or profile's own). `evaluate()`
+  takes ONE argument, not two — there is no "currently stored claim" to
+  compare against — and has deliberately NO equivocation check; see
+  docs/Principles.md, "An Event Stream Has No Room For Equivocation
+  Detection, And That Gap Is Named, Not Hidden."
+- `application/AvatarInteractionSyncService.js` (new) — the
+  advertise/pull round trip `PresenceSyncService`/
+  `AvatarProfileSyncService` already established, but deliberately
+  simpler: no `LocalAvatarInteractionStore`, no `list()`/`get()`.
+  `pull()` drains the inbox, judges each arrival through the trust
+  boundary, and returns ONLY the events accepted THIS call — a
+  transient batch, never a persisted view. No periodic republish
+  (unlike profile's `PROFILE_REPUBLISH_INTERVAL_MS`) — a missed
+  gesture is never something a later-joining replica should catch up
+  on.
+- `application/CreateWorldViewUseCase.js` wires a THIRD
+  `LocalAvatarPresenceBroadcastProvider` instance, reused as-is (the
+  same generic named-BroadcastChannel wrapper 0.2.41 already reused for
+  profile) on its own `'forkbuild:avatar-interaction'` channel name —
+  never sharing a channel with presence's or profile's own traffic.
+- `application/WorldNavigationSession.js`: `performAvatarInteraction()`
+  gains one more step after its existing 0.2.44 local-state update —
+  `_publishAvatarInteraction(kind, targetAvatarId, now)` — which signs
+  and publishes a fresh advertisement through the visibility gate
+  presence/profile publishing already share (see docs/Principles.md,
+  "Presence And Profile Share One Publication Gate," now covering
+  interactions too). A new `_localInteractionSequence` counter (own,
+  separate from presence's `sequence`) advances on every publish. The
+  remote-avatar frame subscription (the same one that already drives
+  `PresenceSyncService.pull()`/`AvatarProfileSyncService.pull()` each
+  frame) gains a symmetric step: drain
+  `AvatarInteractionSyncService.pull()`, call the new
+  `_applyRemoteAvatarInteraction(event, now)` for each accepted event
+  (renders on the SENDER's own remote avatar visual, tracked in a new
+  `_remoteAvatarGestureExpiry` Map), then
+  `_expireRemoteAvatarGestures(now)` clears anything past its ~1.8s
+  lifetime (the SAME `GESTURE_DURATION_MS` constant the local half
+  already used) back to no-gesture, automatically, with no "stop"
+  message ever required from the sender.
+
+Renderer:
+
+- `application/RenderWorldViewUseCase.js`'s facade gains
+  `setRemoteAvatarGesture(avatarId, interactionKind)` — the remote
+  counterpart to `setLocalAvatarGesture`, but calling the EXACT SAME
+  `AvatarVisual.setGesture()` 0.2.44 already built (already generic,
+  nothing local-only baked into its own logic) on a REMOTE avatar's own
+  visual instead. No renderer-level code changed at all —
+  `renderer/AvatarVisual.js` is reused byte-for-byte. A no-op if the
+  avatarId has no presence-driven visual yet, the same
+  "appearance/gesture never creates a remote avatar on its own" rule
+  `updateRemoteAvatarAppearance` already follows.
+
+Deliberately not in 0.2.45, matching the design doc's own scope: chat,
+direct messaging, voice, friend requests, blocking, guaranteed
+delivery, per-recipient encryption, interaction history, persistent
+emotes, trading, avatar-to-avatar physics, or a formal permissions
+system — all left for later, narrower milestones (0.2.46 "Interaction
+Trust, Replay & Abuse Controls," 0.2.47 "Avatar Privacy, Blocking &
+Interaction Permissions"). No new UI surface either: the design doc's
+own framing — "a simple avatar gesture is enough," explicitly
+cautioning against a chat-style notification system this early — means
+the existing 3D gesture rendering (0.2.44's own `AvatarVisual.setGesture`,
+now applied to a remote avatar too) IS the user-visible signal; the
+Avatar Info panel and Nearby Avatars panel are unchanged from 0.2.44/
+0.2.43. `docs/Protocol.md` gains a new OPTIONAL wire message shape
+(the interaction advertisement) but the CORE protocol — Publication,
+PlacementRecord, SpatialIndexRoot, and their signing/verification
+rules — is completely unchanged.
+
+`tests/AvatarInteractionSync.test.js` covers each new core/application
+file in isolation (advertisement validity/signing, the pure ingestion
+decision, the bounded replay window's dual id/sequence bookkeeping, the
+trust policy, real Ed25519 verification, the trust boundary's full
+accept/reject pipeline, and the sync service's publish/pull-returns-
+events-not-state contract), then a `WorldNavigationSession` integration
+section, then a FLAGSHIP scenario: two real sessions communicating over
+a real `BroadcastChannel`, Bob WAVEs at Alice, Alice's replica renders
+it on Bob's own avatar visual, an attacker replays/staleness-attacks/
+tampers/impersonates the captured packet (none of it renders), the
+gesture expires on its own, and `AvatarPresence`/`AvatarProfile` of
+both avatars — plus the published `Document`/`WorldPlacement`/spatial
+index — are verified byte-identical throughout.

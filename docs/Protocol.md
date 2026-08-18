@@ -1862,3 +1862,133 @@ all); any change to the protocol version
 docs/Principles.md, "Version the protocol independently from the
 application"); and any notion of "the receiver's copy of my gesture" —
 there is no receiver, because there is no message.
+
+## Ephemeral Avatar Interaction Synchronization (0.2.45)
+
+A genuinely NEW wire shape and a THIRD transport — the 0.2.44 section
+above explicitly deferred a networked form of GREET/WAVE/POINT; this is
+that milestone. `core/AvatarInteractionAdvertisement.js`'s
+`AvatarInteractionAdvertisement`:
+
+```
+{
+  avatarId: string,
+  ownerIdentity: string | null,
+  interactionId: string,             // fresh UUID per performed gesture
+  kind: 'greet' | 'wave' | 'point',  // NEVER 'none' on the wire
+  targetAvatarId: string,
+  sequence: integer,                 // this avatar's OWN interaction-sequence counter
+  timestamp: number,                 // sender's clock — event metadata only, never authority
+  signature?: {                      // OPTIONAL — core/Signature.js
+    algorithm: 'Ed25519',
+    signer: string,                  // did:key
+    signature: string,               // hex
+    signedHash: string,              // hex
+    domain: 'forkbuild/avatar-interaction',
+    signedAt: string | null
+  }
+}
+```
+
+Deliberately its OWN advertisement, never folded into
+`AvatarPresenceAdvertisement` or `AvatarProfileAdvertisement` — see
+docs/Principles.md, "Presence Describes An Avatar's Current State;
+Interaction Describes An Event That Happened." Neither of those two
+existing shapes gained a single field this milestone;
+`tests/AvatarPresenceSync.test.js`/`AvatarPresenceTrust.test.js`/
+`AvatarAppearanceSync.test.js` are untouched and still pass unmodified.
+Follows 0.2.38/0.2.41's signing shape exactly: unsigned is structurally
+valid (an interaction-specific policy knob, `core/
+AvatarInteractionTrustPolicy.js`, decides whether a given receiver
+tolerates that — defaulting to permissive, same as presence/profile),
+and when present, `signature` covers a canonical envelope over EVERY
+other field (`getAvatarInteractionSigningDescriptor()`) — never a
+narrower subset, for the same reason 0.2.38/0.2.41 sign their own full
+content: a signature over only `avatarId`+`sequence` would let an
+attacker swap in a different `kind`/`targetAvatarId` while keeping a
+valid signature.
+
+**`sequence`, not reused from `AvatarPresence.sequence`.** Its own,
+separate per-avatar counter (`WorldNavigationSession._localInteractionSequence`),
+because it answers a different question than presence's own sequence
+does — "newer EVENT from Bob," not "newer STATE of Bob." See
+docs/Principles.md, "State Synchronization And Event Synchronization
+Are Different Protocols." `core/AvatarInteractionIngestion.js`'s
+`resolveIncomingInteraction()` is the `sequence` analogue of
+`core/PresenceIngestion.js`'s own comparison, but checked against a
+bare highwater number (`core/AvatarInteractionReplayWindow.js`'s own
+per-avatarId bookkeeping) rather than a full retained "current claim"
+— there is no "current" interaction to replace.
+
+**`interactionId`, a genuinely new kind of field this protocol hasn't
+needed before.** Neither `AvatarPresenceAdvertisement` nor
+`AvatarProfileAdvertisement` carries an id of its own — presence/
+profile replay detection is keyed by a content hash of the payload
+instead (`computeContentHash` over the signing descriptor's payload).
+An interaction event's replay detection is keyed by `interactionId`
+directly: the design doc's own instruction was that this field exists
+specifically "for duplicate suppression independently from avatar
+movement," and since it is itself part of the signed payload, an
+attacker without the real signing key can never forge a fresh
+`interactionId` onto old, captured content to slip past the replay
+window.
+
+**Transport**: a THIRD, separate `BroadcastChannel`
+(`'forkbuild:avatar-interaction'`, alongside presence's
+`'forkbuild:avatar-presence'` and profile's `'forkbuild:avatar-profile'`)
+— same `presence/LocalAvatarPresenceBroadcastProvider.js` class, a
+third instance, reused as-is. Fire-and-forget, unordered, lossy, like
+every transport in this protocol — but with NO periodic republish,
+unlike profile's 15-second catch-up tick: a missed gesture is never
+something a later-joining replica should ever see arrive retroactively
+(see docs/Principles.md, same section as above — "you want her latest
+profile and presence, not ten minutes of old waves").
+
+**Trust**: `application/AvatarInteractionTrustBoundary.js` mirrors
+0.2.38/0.2.41's structure — structural validity → signature/policy →
+authority → replay/staleness — but is deliberately SHORTER than either:
+no equivocation check exists (see docs/Principles.md, "An Event Stream
+Has No Room For Equivocation Detection, And That Gap Is Named, Not
+Hidden" — explicitly left to 0.2.46). Identity binding is again
+trust-on-first-use (`core/PresenceAuthority.js`'s
+`PresenceAuthorityRegistry`, reused — but its own THIRD, separate
+instance: presence-authority, profile-authority, and
+interaction-authority for the same `avatarId` are all bound
+independently; winning the race to claim one never hijacks either of
+the other two). Replay protection is `core/
+AvatarInteractionReplayWindow.js` — its own bespoke bounded structure,
+neither presence's `PresenceReplayWindow` nor profile's unbounded
+`replication/ReplayGuard.js` reused directly, because it needs to
+answer both an identity question (`interactionId`) and an ordering
+question (`sequence`) from one structure, a combination neither
+existing replay mechanism was built for.
+
+**`targetAvatarId` is a claim, never a routing instruction, and never
+enforced at the protocol layer.** Nothing in this wire shape, and
+nothing in `AvatarInteractionTrustBoundary`, restricts WHO may receive
+or render an advertisement based on `targetAvatarId` — every replica
+that hears the broadcast (the claimed target, or any bystander) applies
+the identical acceptance rule and, if accepted, the identical rendering
+rule (on the SENDER's own avatar, keyed by `avatarId`, never by
+`targetAvatarId`). See docs/Principles.md, "A Claimed Target Is Never
+An Instruction." Whether a specific replica's UI chooses to visually
+emphasize an event where it happens to be the named target is a local
+presentation decision this protocol says nothing about.
+
+**Explicitly not part of this protocol**: persistence of any kind — an
+accepted interaction event is rendered once and discarded;
+`application/AvatarInteractionSyncService.js` retains no per-avatarId
+"current interaction," unlike `LocalPresenceStore`/
+`LocalAvatarProfileStore`, both of which do; per-recipient routing,
+encryption, or delivery guarantees (fire-and-forget, exactly like
+presence/profile); a `FRIENDS`-only or blocked-sender visibility mode
+specific to interactions (publishing reuses `core/
+PresenceVisibilityPolicy.js`'s existing `shouldAdvertise()` gate
+verbatim — the same single decision presence/profile publishing
+already consult, extended to interactions rather than duplicated); and
+any equivocation/multi-device-conflict handling for the SAME bound
+authority racing itself (named as a real, explicit gap above, deferred
+to 0.2.46). No change to `core/protocolVersion.js` — this is an
+ADDITIVE, optional new advertisement shape a replica that has never
+heard of it simply never receives (no existing message shape changed,
+no existing field renamed or repurposed).

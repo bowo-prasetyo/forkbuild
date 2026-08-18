@@ -292,6 +292,28 @@ export class RenderWorldViewUseCase {
                 }
                 visual.setAppearance(template, appearance);
             },
+            // 0.2.45 — the remote-avatar counterpart to
+            // setLocalAvatarGesture: reuses AvatarVisual.setGesture()
+            // directly on a REMOTE avatar's own visual (see
+            // renderer/AvatarVisual.js — already generic, nothing
+            // local-only baked into its own logic despite 0.2.44 only
+            // ever calling it for the local avatar until now). Called
+            // by application/WorldNavigationSession.js the moment a
+            // trusted AvatarInteractionAdvertisement is accepted, and
+            // again with `null` once the gesture's own short lifetime
+            // expires — see docs/Principles.md, "Interaction Is
+            // Rendered, Never Retained." A no-op if the avatarId has no
+            // presence-driven visual yet — exactly
+            // updateRemoteAvatarAppearance's own "appearance never
+            // creates a remote avatar on its own" rule, applied to a
+            // gesture instead.
+            setRemoteAvatarGesture: (avatarId, interactionKind) => {
+                const visual = remoteAvatarVisuals.get(avatarId);
+                if (!visual) {
+                    return;
+                }
+                visual.setGesture(interactionKind);
+            },
             removeRemoteAvatar: (avatarId) => {
                 const visual = remoteAvatarVisuals.get(avatarId);
                 if (!visual) {

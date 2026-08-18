@@ -2468,3 +2468,117 @@ ever asked to resolve a NETWORKED avatar-avatar conflict — building
 the locally-scoped version of a hard problem first, and getting its
 edge cases right while the stakes are low, is the established pattern
 this milestone continues rather than a new one it invents.
+
+### State Synchronization And Event Synchronization Are Different Protocols (0.2.45)
+
+`application/PresenceSyncService.js` and `application/AvatarProfileSyncService.js`
+both answer the same underlying question — "what is the LATEST thing
+this avatarId has told me?" — and both keep exactly one record per
+avatarId to answer it. `application/AvatarInteractionSyncService.js`
+answers a genuinely different question — "did anything NEW just
+happen?" — and keeps no record at all: `pull()` returns a fresh,
+transient batch of newly-accepted events every call, never a
+`list()`/`get()` a caller can ask for again later. This is not a
+missing feature; it is the correct shape for what an interaction IS.
+
+The test is simple and durable: if Alice disappears for ten minutes
+and reconnects, a returning replica wants her LATEST profile and
+LATEST presence — never her presence from nine minutes ago, and
+certainly never ten minutes of queued-up waves replayed on arrival.
+
+    Profile     -> retain latest   (durable identity, rarely changes)
+    Presence    -> retain latest while fresh (ephemeral, continuously updated)
+    Interaction -> don't retain at all (an event, not a value)
+
+A future milestone tempted to add "interaction history" or "replay a
+missed gesture on reconnect" is not extending this protocol — it is
+choosing to build a DIFFERENT one, deliberately, with its own
+persistence and trust story. That is a legitimate future milestone
+(chat/notifications-adjacent), not a bug fix to this one.
+
+### Presence Describes An Avatar's Current State; Interaction Describes An Event That Happened (0.2.45)
+
+`core/AvatarInteractionAdvertisement.js` is deliberately its own wire
+shape, never a field bolted onto `AvatarPresenceAdvertisement` — see
+0.2.44's own "A Gesture Is Presentation, Never Presence," now extended
+across the wire instead of just within one replica. Presence answers
+"where/how is Bob RIGHT NOW" — a question with exactly one current
+answer, replaced wholesale by whatever arrives next.  Interaction
+answers "what did Bob just DO" — a question with a NEW answer every
+time, none of which ever supersede or replace a previous one; they
+simply keep happening.
+
+Folding `kind`/`targetAvatarId` onto `AvatarPresenceAdvertisement`
+would have been the cheaper implementation in the short term (one
+fewer channel, one fewer trust boundary) and the wrong one: every
+single movement update would then need to carry gesture fields most of
+the time set to nothing, multiplying presence traffic for no reason,
+and — far more importantly — it would make "gestures accidentally
+becoming part of presence" a permanent structural risk instead of
+something that plainly cannot happen, exactly the trap 0.2.44's own
+local-only vocabulary was built to avoid one layer down.
+
+### A Claimed Target Is Never An Instruction (0.2.45)
+
+`AvatarInteractionAdvertisement.targetAvatarId` says "the sender claims
+to have performed this gesture directed at this avatarId." A receiving
+replica — whether it's the named target, or merely a bystander who
+happens to also know both avatars — reads this as exactly that claim,
+and nothing more. There is no code path anywhere in this milestone
+that reads an incoming `targetAvatarId`, matches it against the local
+avatar's own id, and does anything DIFFERENT as a result — no forced
+camera turn, no auto-opened panel, no state change on the named
+target's own replica. `application/WorldNavigationSession.js`'s
+`_applyRemoteAvatarInteraction()` renders the gesture on the SENDER's
+own avatar visual (`event.avatarId`), never touches anything keyed by
+`event.targetAvatarId` at all.
+
+This is 0.2.44's "wanting to interact with another avatar gives zero
+reach into that avatar's own state" carried across the wire intact —
+the network does not get to reintroduce an authority relationship a
+single replica was never allowed to have. It is also what makes
+Charlie's case (a bystander, neither sender nor target) unremarkable
+rather than a special case requiring its own rule: Charlie's replica
+receives the identical advertisement Alice's does, and both apply the
+identical, target-blind rendering rule. Whether Charlie's client
+chooses to actually SHOW it is a local presentation decision no
+protocol field controls.
+
+### A Bounded Replay Window Can Do Double Duty For An Identity And An Ordering Question At Once (0.2.45)
+
+`core/AvatarInteractionReplayWindow.js` answers two related but
+distinct questions from one bounded structure per avatarId: "have I
+seen this exact `interactionId` before?" (duplicate suppression,
+identity-based, order-independent) and "is this at least as new as the
+newest thing I've accepted from this avatarId?" (staleness rejection,
+sequence-based, order-DEPENDENT). `core/PresenceReplayWindow.js` only
+ever answers the first question for presence, because
+`core/PresenceIngestion.js`'s monotonic-sequence rule is checked
+against a full retained "current advertisement" instead — a structure
+interaction deliberately doesn't keep (see this milestone's first
+principle above). Combining both concerns into ONE bounded window,
+rather than reusing PresenceReplayWindow's shape by itself, is what
+lets `application/AvatarInteractionTrustBoundary.js` reject a replayed
+OR a genuinely-old-but-never-before-seen event without retaining
+anything beyond a handful of recent ids and one integer per avatarId.
+
+### An Event Stream Has No Room For Equivocation Detection, And That Gap Is Named, Not Hidden (0.2.45)
+
+`application/AvatarInteractionTrustBoundary.js` has no equivocation
+check, unlike `application/PresenceTrustBoundary.js`/
+`AvatarProfileTrustBoundary.js`. Equivocation detection needs a
+retained "current claim at this causal position" to compare a
+competing one against; 0.2.45 deliberately keeps no such thing for
+interactions (see this milestone's first principle above) — there is
+nothing to equivocate WITH. The narrower, genuinely adversarial
+question this leaves open — the SAME bound signing authority producing
+two DIFFERENT `interactionId`s at the identical `sequence`, racing to
+see which one a given replica happens to process first — is real, and
+is explicitly left to 0.2.46 ("Interaction Trust, Replay & Abuse
+Controls," docs/Roadmap.md) rather than solved here. What 0.2.45 DOES
+still guarantee even without it: `sequence` must strictly increase to
+be accepted at all, so a second claim reusing an already-used sequence
+is at minimum rejected as STALE, never silently rendered as if it were
+new. A gap that is named in the code and the docs, with a monotonic
+fallback already in place, is a deliberate scope boundary; a gap that
+is simply never mentioned is a bug waiting to be discovered later.
