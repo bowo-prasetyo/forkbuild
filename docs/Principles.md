@@ -2785,3 +2785,69 @@ itself — is rejected outright as `IdentityConflictError` rather than
 resolved either way automatically, the same "never automatic, never
 forced" discipline `protectIdentity()` already applies to migrating an
 identity in place.
+
+### A Peer Connection Authenticates A Key, Not An Account (0.2.49)
+
+`peer/PeerAuthenticationSession.js` answers exactly one question: "does
+the other end of THIS connection currently hold the private key for
+identityId X?" It never answers, and is never asked to answer, "is this
+the same person Alice met yesterday," "does this key belong to a real
+human," or "should Alice trust this key with anything." Those are
+account, reputation, and authorization questions respectively — the
+same separation `docs/Roadmap.md`'s own vocabulary draws between
+Discovery ("how did I find this endpoint?"), Authentication ("who
+controls this endpoint?"), Authorization ("what may it do?"), and
+Visibility ("what am I willing to reveal?"). A successful handshake
+produces a `peer/PeerIdentity.js` — a proven key, nothing more — and
+0.2.49 deliberately stops there: there is no "friends" list, no
+trusted-peer database, no persistence of the fact this handshake ever
+happened, anywhere in this milestone. "Is this connection currently
+controlled by identity X" and "do I trust X forever" are different
+questions on purpose, and only the first one has an answer yet.
+
+### A Peer Authentication Signature Is Scoped To One Connection, Never To One Identity (0.2.49)
+
+Every signature `core/PeerAuthenticationEnvelope.js`'s
+`getPeerAuthenticationSigningDescriptor()` produces covers the
+connection's own `sessionNonce` (its connectionId) alongside the
+challenge, identityId, and publicKey. This is deliberately NOT the same
+shape 0.2.16 established for a `Publication` or `PlacementRecord`,
+where a signature is meant to travel — to be copied, replicated, and
+verified by anyone, indefinitely, independent of how it arrived. A
+peer-authentication signature is the opposite on purpose: it proves
+something true only about ONE live connection, at the moment it was
+produced, and is worthless the instant that connection ends. Binding
+every signature to `sessionNonce` is what makes `tests/
+PeerAuthentication.test.js`'s replay test fail for the right reason —
+capturing a completely genuine PROOF message and feeding it into a
+brand-new connection doesn't fail because of some separate
+"already-used signature" tracking table (the unbounded-memory failure
+mode `core/PresenceReplayWindow.js`'s own header already rejected for a
+different, higher-frequency stream); it fails because the signature
+itself, reconstructed and re-verified against the new connection's
+different `sessionNonce`, simply does not check out. The proof is
+self-invalidating outside the one context it was made for, the same
+way a Kerberos ticket or a TLS session key is scoped to one session
+rather than to the identity that produced it.
+
+### Transport State And Authentication State Are Two Different Questions (0.2.49)
+
+`peer/PeerConnectionState.js` (DISCONNECTED/CONNECTING/CONNECTED/
+FAILED/CLOSED) and `peer/PeerAuthenticationState.js` (IDLE/
+AUTHENTICATING/AUTHENTICATED/FAILED) are two separate, independently
+tracked enums, not two branches of one state machine. "A channel exists
+to something" and "we know who is on it" are genuinely different facts
+that change at different times for different reasons — a connection
+can be CONNECTED for an arbitrary stretch before a handshake even
+starts, and a FAILED handshake (a bad signature, a replayed message)
+leaves the underlying transport completely untouched, still CONNECTED,
+available for the caller to decide what happens next, rather than
+forcibly tearing down a connection the handshake layer doesn't own.
+Only one direction is wired automatically, deliberately: a connection
+transitioning to CLOSED or FAILED always resets an in-progress or
+completed `PeerAuthenticationSession` back to IDLE and discards its
+`remoteIdentity`, because authentication about a connection that no
+longer exists is never a fact worth keeping — see "A Peer Authentication
+Signature Is Scoped To One Connection, Never To One Identity," above.
+The reverse never happens: nothing about authentication succeeding,
+failing, or being reset ever changes `transportState`.

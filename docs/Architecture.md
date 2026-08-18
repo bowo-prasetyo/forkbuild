@@ -5487,3 +5487,115 @@ all; and a byte-identical check that unrelated persisted state — a
 stand-in "world state" storage key and a completely unrelated second
 identity on the same device — survives an entire mix of successful and
 failed export/import operations without a single byte changing.
+
+### Authenticated Peer Connection Model (0.2.49)
+
+```text
+                Alice's device                         Bob's device
+                LocalIdentityProvider                   LocalIdentityProvider
+                (AuthenticationSession,                 (AuthenticationSession,
+                 VaultLock — unchanged)                  VaultLock — unchanged)
+                       │                                        │
+                       ▼                                        ▼
+             PeerAuthenticationSession   ◄── connection ──►  PeerAuthenticationSession
+                 authenticationState                            authenticationState
+                 remoteIdentity                                 remoteIdentity
+                       │                                        │
+                       ▼                                        ▼
+                 PeerConnection          ◄── messages ────►  PeerConnection
+                 transportState                                 transportState
+                       │                                        │
+                       └──────────── LocalPeerConnectionProvider ────────┘
+                                    (shared LocalPeerNetwork)
+```
+
+Two strictly separate state machines, on purpose (see docs/
+Principles.md, "Transport State And Authentication State Are Two
+Different Questions"): `peer/PeerConnectionState.js`
+(DISCONNECTED/CONNECTING/CONNECTED/FAILED/CLOSED) belongs to
+`peer/PeerConnection.js`, and `peer/PeerAuthenticationState.js`
+(IDLE/AUTHENTICATING/AUTHENTICATED/FAILED) belongs to
+`peer/PeerAuthenticationSession.js`, which is constructed WITH a
+connection rather than being one. `peer/PeerConnectionProvider.js` is
+the abstract transport boundary — `connect(remoteAddress)` /
+`onIncomingConnection()` / `dispose()` — the same throwing-stubs shape
+`discovery/DiscoveryProvider.js` established; `peer/
+LocalPeerConnectionProvider.js` is its first real implementation, two
+or more instances sharing one `LocalPeerNetwork` (a plain address
+registry) wiring pairs of `LocalPeerConnection`s together entirely
+in-process, message delivery deferred by one microtask so it behaves
+like a real, asynchronous transport rather than a same-tick function
+call. No commitment to WebRTC or any other real network transport is
+made here — see docs/Roadmap.md's own still-unscheduled "Peer Discovery
+& Transport Abstraction" entry.
+
+The handshake itself (`peer/PeerAuthenticationSession.js`) is symmetric
+— there is no initiator/responder distinction, both sides run identical
+logic:
+
+```text
+Alice                                          Bob
+  │──────────── HELLO(idA, pkA, challengeA) ───────────►│
+  │◄─────────── HELLO(idB, pkB, challengeB) ─────────────│
+  │──────────── PROOF(idA, pkA, sig(challengeB)) ───────►│
+  │◄─────────── PROOF(idB, pkB, sig(challengeA)) ────────│
+  │                                                       │
+  └──── both sides independently reach AUTHENTICATED ────┘
+```
+
+A HELLO is an identity claim plus a fresh CHALLENGE the sender wants
+answered; a PROOF answers a specific HELLO with a real Ed25519
+signature — `identity/LocalIdentityProvider.js`'s own `signCanonical()`,
+completely unmodified — over `core/PeerAuthenticationEnvelope.js`'s new
+canonical descriptor (`getPeerAuthenticationSigningDescriptor()`,
+backed by a new `SignatureType.PEER_AUTHENTICATION` in `core/
+Signature.js`) covering `protocol`, `purpose`, `sessionNonce`
+(the connection's own connectionId), `challenge`, `identityId`, AND
+`publicKey` together — never a narrower subset, for the same
+causal-history reason 0.2.38 signs every field of a presence
+advertisement rather than a subset. Verification reuses `identity/
+LocalAuthorizationVerifier.js`'s own `verifyDescriptor()` unmodified;
+0.2.49 adds a new SignatureType, not a new verifier. A verified PROOF
+produces a `peer/PeerIdentity.js` — structurally identical to
+`LocalIdentity`'s own identityId-must-derive-from-publicKey invariant,
+but carrying no label, no createdAt, and living only as long as the
+connection that proved it: the session subscribes to its connection's
+`onStateChange()`, and a transition to CLOSED or FAILED immediately
+resets `authenticationState` to IDLE and discards `remoteIdentity` —
+see docs/Principles.md, "A Peer Authentication Signature Is Scoped To
+One Connection, Never To One Identity."
+
+Deliberately not in 0.2.49: any peer discovery or rendezvous mechanism
+(finding an address to `connect()` to at all remains the still-
+unscheduled "Peer Discovery & Transport Abstraction" milestone this one
+was carved out of); any persistent trusted-peer/"friends" concept —
+see docs/Principles.md, "A Peer Connection Authenticates A Key, Not An
+Account"; a real WebRTC (or any other real network) transport; re-
+authentication on an already-`AUTHENTICATED` connection; and
+reconnecting presence/profile/interaction sync to run over an
+authenticated peer connection instead of today's open
+`BroadcastChannel` — this milestone proves the handshake, it does not
+yet plug anything else into it. No file under `core/` (besides the two
+new, additive files), `application/`, `world/`, `publisher/`,
+`discovery/`, or `presence/` was touched.
+
+`tests/PeerAuthentication.test.js` covers: `PeerIdentity`'s own
+validated construction; `LocalPeerConnectionProvider` as a real
+bidirectional in-process transport; the flagship two-independent-device
+mutual authentication (mirroring `tests/PortableIdentity.test.js`'s own
+two-device setup), followed by close discarding authentication on BOTH
+ends and reconnect requiring — and successfully completing — a
+brand-new handshake; a captured, entirely genuine handshake message
+replayed into a fresh connection, rejected specifically on
+`sessionNonce`; a modified challenge in an otherwise-genuine PROOF,
+rejected; a substituted public key, rejected both as a bare
+identityId/publicKey mismatch and as a fully self-consistent
+impersonation attempt using a different real identity's own key (the
+signature still fails because it was never produced for that
+identity); a genuinely valid signature reused against a different
+challenge with `sessionNonce`/`challenge` both relabeled to match the
+target connection, rejected purely because the underlying signature no
+longer verifies; and a final check that `core/
+AvatarPresenceAdvertisement.js` signing is completely unaffected and
+that a presence signature can never be mistaken for a peer-
+authentication proof (`signature domain mismatch`).

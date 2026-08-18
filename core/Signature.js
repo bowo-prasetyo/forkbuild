@@ -50,7 +50,18 @@ export const SignatureType = Object.freeze({
     // AVATAR_PROFILE's own STATE advertisements. See
     // core/AvatarInteractionAdvertisement.js's
     // getAvatarInteractionSigningDescriptor().
-    AVATAR_INTERACTION: 'avatar-interaction'
+    AVATAR_INTERACTION: 'avatar-interaction',
+    // 0.2.49 — a REQUIRED signature (never optional the way the
+    // advertisement types above are) over a peer authentication PROOF
+    // message (core/PeerAuthenticationEnvelope.js's wire shape). Every
+    // other SignatureType proves "who authorized this piece of
+    // content"; this one proves something narrower and more
+    // immediate — "who is currently holding the private key on the
+    // other end of THIS connection, answering THIS challenge, right
+    // now" — never a claim about a document, placement, or advertised
+    // state. See core/PeerAuthenticationEnvelope.js's
+    // getPeerAuthenticationSigningDescriptor().
+    PEER_AUTHENTICATION: 'peer-authentication'
 });
 
 export class Signature {
