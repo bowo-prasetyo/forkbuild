@@ -2388,3 +2388,83 @@ own CSS verbatim, the identical lifecycle/trust vocabulary
 everywhere in this UI. The only genuinely new code is the ONE thing
 that's actually new: knowing an avatarId is worth reaching at all
 because it's nearby.
+
+### Observation Does Not Imply Authority, And Interaction Does Not Imply Control (0.2.44)
+
+```text
+Bob targets Alice
+       │
+Bob chooses "Wave"
+       │
+Bob's own local AvatarInteractionState
+       │
+Bob's OWN avatar performs a WAVE pose
+       │
+Alice's replica never hears about any of this.
+```
+
+0.2.43 already established that nearness never authorizes mutation;
+0.2.44 extends the identical boundary to the next question a design
+doc could easily get wrong: does WANTING to interact with Alice give
+Bob any reach into Alice's own state? No. `WorldNavigationSession.
+performAvatarInteraction(kind)` is, by construction, incapable of
+touching anything belonging to a remote avatar — it reads and writes
+exactly one thing, `this._avatarInteraction`, the SAME caller-local
+slice `targetAvatar()` already owned since 0.2.39. A GREET/WAVE/POINT
+gesture never becomes a message, a presence update, or a profile edit;
+it is rendered, locally, on the ACTOR's own avatar only —
+`renderer/AvatarVisual.js#setGesture()` is called exclusively through
+`RenderWorldViewUseCase`'s `setLocalAvatarGesture`, which has no
+remote-avatar counterpart at all. There is no
+`setRemoteAvatarGesture()` in this codebase, on purpose: building one
+would be building the exact thing this milestone's design doc asked to
+defer to 0.2.45, and building it "by accident" as a side effect of a
+UI button is precisely the failure mode this principle exists to name
+and refuse.
+
+### A Gesture Is Presentation, Never Presence (0.2.44)
+
+`core/AvatarInteractionKind.js`'s NONE/GREET/WAVE/POINT vocabulary is
+deliberately its OWN closed vocabulary, never a new value added to
+`core/AvatarAnimationState.js`. That distinction is not stylistic:
+`AvatarAnimationState` values live on `AvatarPresence.animation`,
+which `core/AvatarPresenceAdvertisement.js` broadcasts to every
+replica on every accepted movement. Had GREET/WAVE/POINT been added
+there instead, performing a gesture would have silently started
+NETWORKING it — the exact scope the 0.2.44 design doc explicitly
+deferred to a later, deliberately-designed protocol milestone. Keeping
+the two vocabularies separate makes "a local gesture cannot reach the
+wire" true by construction: there is no code path that reads an
+`AvatarInteractionKind` value and writes it into an `AvatarPresence`
+or an advertisement. The same split applies to FACING: when Bob
+targets Alice, `WorldNavigationSession` may compute a temporary yaw
+that makes Bob's avatar visually face her
+(`core/AvatarFacing.js#computeFacingYawDegrees()`), but that yaw is
+applied only as `renderer/AvatarVisual.js`'s `setFacingOverride()` — a
+transform written directly onto the Three.js root, never onto
+`AvatarPresence.rotation`. An actively-moving player's own input
+always wins (`AvatarMovementController#hasMovementInput()` gates the
+override off entirely), and the override never survives a real
+presence-driven `setPose()` call once movement resumes. Both gesture
+and facing, in other words, are exactly the kind of fact 0.2.36's own
+gait clock already established a precedent for: something the renderer
+tracks ON TOP OF presence, that presence itself never needs to know
+about.
+
+### Interaction Cooldowns Exist Before Interactions Are Networked (0.2.44)
+
+`core/AvatarInteractionCooldown.js`'s `canPerformInteraction()` gates
+every GREET/WAVE/POINT through one shared rate limit, entirely locally
+— there is no attacker to defend against yet, since nothing here
+reaches another replica. That is deliberate, not premature: the
+invariant "a user cannot flood the system by holding a button" is
+established and tested NOW, under the easy conditions (one process,
+one sender, a trusted local clock), specifically so that 0.2.45's
+networked version of interactions inherits an already-proven building
+block instead of inventing rate-limiting for the first time under the
+much harder conditions of a shared, adversarial transport. Compare
+0.2.42's collision geometry existing a full milestone before it was
+ever asked to resolve a NETWORKED avatar-avatar conflict — building
+the locally-scoped version of a hard problem first, and getting its
+edge cases right while the stakes are low, is the established pattern
+this milestone continues rather than a new one it invents.

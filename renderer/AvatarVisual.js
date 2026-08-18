@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { AvatarRenderer } from './AvatarRenderer.js';
+import { getGesturePoseOverride } from '../core/AvatarGesturePoseOffsets.js';
 
 // 0.2.35 — one avatar's live Three.js presence: a stable `root`
 // object a caller adds to the scene ONCE, plus the bookkeeping that
@@ -26,6 +27,20 @@ import { AvatarRenderer } from './AvatarRenderer.js';
 // Elapsed Time, Never By Frame Count," and core/AvatarPoseOffsets.js's
 // own header for why a receiver never needs to know the sender's
 // local animation clock.
+//
+// 0.2.44 adds two more LOCAL-ONLY, rendering-only concerns, neither
+// ever touching AvatarPresence or the wire:
+//
+//   setGesture(interactionKind)  — an upper-body GREET/WAVE/POINT
+//                                  overlay (see
+//                                  core/AvatarGesturePoseOffsets.js),
+//                                  its own elapsed-time clock exactly
+//                                  like the gait clock above.
+//   setFacingOverride(yawDegrees) — a temporary yaw applied ON TOP OF
+//                                  whatever setPose's rotation last
+//                                  set, restored the moment it's
+//                                  cleared (null) — see
+//                                  core/AvatarFacing.js.
 export class AvatarVisual {
     constructor(avatarRenderer = new AvatarRenderer()) {
         this._avatarRenderer = avatarRenderer;
@@ -34,6 +49,15 @@ export class AvatarVisual {
         this._appearanceKey = null;
         this._lastAnimation = null;
         this._animationTime = 0;
+        // 0.2.44 — see this file's own header above. `_lastRotationY`
+        // is what setFacingOverride(null) restores to: the real,
+        // presence-driven facing setPose most recently set, kept
+        // around so "let go of the override" never needs a fresh
+        // presence update to take effect.
+        this._gestureKind = null;
+        this._gestureTime = 0;
+        this._facingOverrideDegrees = null;
+        this._lastRotationY = 0;
     }
 
     setAppearance(template, appearance) {
@@ -55,9 +79,7 @@ export class AvatarVisual {
         const { poseGroup } = this._avatarRenderer.build(template, appearance);
         this._poseGroup = poseGroup;
         this.root.add(poseGroup);
-        if (this._lastAnimation) {
-            this._avatarRenderer.applyPose(this._poseGroup, this._lastAnimation, this._animationTime);
-        }
+        this._applyPose();
     }
 
     // Presence exclusively owns root's world position and facing —
@@ -67,9 +89,15 @@ export class AvatarVisual {
     // use (see renderer/BrickRenderer.js's own `* (Math.PI / 180)`) —
     // only the Y axis (facing) is applied; an avatar has no reason to
     // pitch or roll from a presence update in 0.2.35.
+    //
+    // 0.2.44 — no longer writes root.rotation.y directly: it records
+    // the real facing and defers to _applyFacing(), which lets an
+    // active setFacingOverride keep winning visually without this
+    // method needing to know that override exists.
     setPose(position, rotation) {
         this.root.position.set(position.x, position.y, position.z);
-        this.root.rotation.y = THREE.MathUtils.degToRad(rotation ? rotation.y || 0 : 0);
+        this._lastRotationY = rotation ? (rotation.y || 0) : 0;
+        this._applyFacing();
     }
 
     setAnimation(animation) {
@@ -82,27 +110,69 @@ export class AvatarVisual {
         // reproduces the base pose exactly, so switching e.g. IDLE ->
         // WALKING never pops mid-stride.
         this._animationTime = 0;
-        if (this._poseGroup) {
-            this._avatarRenderer.applyPose(this._poseGroup, animation, this._animationTime);
+        this._applyPose();
+    }
+
+    // 0.2.44 — see core/AvatarInteractionKind.js for the closed
+    // vocabulary (GREET/WAVE/POINT); pass null (or NONE) to clear.
+    // A fresh gesture always restarts its own elapsed-time clock from
+    // zero, the same "no visible pop, no mid-cycle jump" reasoning
+    // setAnimation above already follows for a locomotion change.
+    setGesture(interactionKind) {
+        const normalized = interactionKind && interactionKind !== 'none' ? interactionKind : null;
+        if (normalized === this._gestureKind) {
+            return;
         }
+        this._gestureKind = normalized;
+        this._gestureTime = 0;
+        this._applyPose();
+    }
+
+    // 0.2.44 — a temporary, LOCAL-ONLY yaw override layered on top of
+    // whatever AvatarPresence.rotation last set via setPose() —
+    // never written back to AvatarPresence, never networked (see
+    // application/WorldNavigationSession.js's avatar-facing behavior
+    // for who calls this and when). `null` restores the avatar to its
+    // real presence-driven facing immediately, using the rotation
+    // setPose already remembered — no new presence update required to
+    // "let go."
+    setFacingOverride(yawDegrees) {
+        this._facingOverrideDegrees = Number.isFinite(yawDegrees) ? yawDegrees : null;
+        this._applyFacing();
+    }
+
+    _applyFacing() {
+        const yaw = this._facingOverrideDegrees !== null ? this._facingOverrideDegrees : this._lastRotationY;
+        this.root.rotation.y = THREE.MathUtils.degToRad(yaw);
+    }
+
+    _applyPose() {
+        if (!this._poseGroup || !this._lastAnimation) {
+            return;
+        }
+        const gestureOverride = this._gestureKind
+            ? getGesturePoseOverride(this._gestureKind, this._gestureTime)
+            : null;
+        this._avatarRenderer.applyPose(this._poseGroup, this._lastAnimation, this._animationTime, gestureOverride);
     }
 
     // Called once per render frame (see renderer/Renderer.js's
     // per-frame listeners) regardless of whether a new presence
     // arrived this frame — this is what keeps WALKING/RUNNING
     // swinging smoothly between the (much less frequent) actual
-    // AvatarPresence updates. A no-op whenever nothing is built yet or
-    // the current animation has no gait cycle of its own
-    // (core/AvatarPoseOffsets.js already no-ops IDLE/JUMPING against
-    // time, but skipping the call entirely here avoids even the
-    // redundant re-application).
+    // AvatarPresence updates, and (0.2.44) an active gesture wobbling
+    // smoothly too. A no-op whenever nothing is built yet or nothing
+    // is currently playing.
     tick(deltaSeconds) {
         if (!this._poseGroup || !this._lastAnimation) {
             return;
         }
         const dt = Number.isFinite(deltaSeconds) && deltaSeconds > 0 ? deltaSeconds : 0;
         this._animationTime += dt;
-        this._avatarRenderer.applyPose(this._poseGroup, this._lastAnimation, this._animationTime);
+        if (this._gestureKind) {
+            this._gestureTime += dt;
+        }
+        this._applyPose();
     }
 
     dispose() {
@@ -113,5 +183,8 @@ export class AvatarVisual {
         this._appearanceKey = null;
         this._lastAnimation = null;
         this._animationTime = 0;
+        this._gestureKind = null;
+        this._gestureTime = 0;
+        this._facingOverrideDegrees = null;
     }
 }

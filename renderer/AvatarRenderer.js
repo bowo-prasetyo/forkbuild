@@ -202,17 +202,28 @@ export class AvatarRenderer {
     // stays exclusively AvatarPresence's to decide). `animationTimeSeconds`
     // (0.2.36) lets WALKING/RUNNING read as an actual gait cycle
     // rather than one frozen frame — see core/AvatarPoseOffsets.js.
-    applyPose(poseGroup, animation, animationTimeSeconds = 0) {
+    //
+    // 0.2.44 — `gestureOverride` (see core/AvatarGesturePoseOffsets.js)
+    // is an OPTIONAL upper-body override for a local GREET/WAVE/POINT:
+    // when present, it replaces just the body/head tilt this call
+    // would otherwise take from the locomotion pose, while legSplay
+    // and hopHeight still come from the locomotion pose exactly as
+    // before — a gesture is upper-body-only, layered on top of
+    // whatever the avatar's legs are already doing, never a second,
+    // competing full-body pose.
+    applyPose(poseGroup, animation, animationTimeSeconds = 0, gestureOverride = null) {
         const offsets = getAvatarPoseOffsets(animation, animationTimeSeconds);
         const parts = poseGroup.userData.avatarParts || {};
+        const bodyTiltDegrees = gestureOverride ? gestureOverride.bodyTiltDegrees : offsets.bodyTiltDegrees;
+        const headTiltDegrees = gestureOverride ? gestureOverride.headTiltDegrees : offsets.headTiltDegrees;
         if (parts.legs) {
             parts.legs.rotation.x = THREE.MathUtils.degToRad(offsets.legSplayDegrees);
         }
         if (parts.torso) {
-            parts.torso.rotation.x = THREE.MathUtils.degToRad(offsets.bodyTiltDegrees);
+            parts.torso.rotation.x = THREE.MathUtils.degToRad(bodyTiltDegrees);
         }
         if (parts.head) {
-            parts.head.rotation.x = THREE.MathUtils.degToRad(offsets.headTiltDegrees);
+            parts.head.rotation.x = THREE.MathUtils.degToRad(headTiltDegrees);
         }
         poseGroup.position.y = offsets.hopHeight;
     }

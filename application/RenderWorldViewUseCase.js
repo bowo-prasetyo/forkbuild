@@ -187,6 +187,28 @@ export class RenderWorldViewUseCase {
                 localAvatarVisual.setPose(presence.position, presence.rotation);
                 localAvatarVisual.setAnimation(presence.animation);
             },
+            // 0.2.44 — see renderer/AvatarVisual.js's own header: a
+            // temporary, LOCAL-ONLY yaw override, never touching
+            // AvatarPresence. A no-op before the local avatar exists
+            // (nothing to face with yet).
+            setLocalAvatarFacing: (yawDegrees) => {
+                if (!localAvatarVisual) {
+                    return;
+                }
+                localAvatarVisual.setFacingOverride(yawDegrees);
+            },
+            // 0.2.44 — GREET/WAVE/POINT: a purely local, rendering-only
+            // pose overlay on Bob's OWN avatar — see
+            // application/WorldNavigationSession.js's
+            // performAvatarInteraction() for the full picture. Never
+            // called for a remote avatar: 0.2.44 explicitly does not
+            // network gestures (see docs/Roadmap.md).
+            setLocalAvatarGesture: (interactionKind) => {
+                if (!localAvatarVisual) {
+                    return;
+                }
+                localAvatarVisual.setGesture(interactionKind);
+            },
             // A pure client rendering preference (see docs/Principles.md)
             // — toggling it never touches AvatarProfile, AvatarPresence,
             // or anything persisted; it only adds/removes an already-

@@ -97,6 +97,7 @@
 0.2.41  Remote Avatar Appearance Synchronization                ✓
 0.2.42  Avatar-World Collision & Movement Constraints            ✓
 0.2.43  Avatar-Avatar Proximity & Interaction Targets             ✓
+0.2.44  Local Avatar Interaction & Social Presence                 ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -633,14 +634,41 @@ Bob's remote, interpolated, potentially-stale state — which one
 decides?) — left for a dedicated later milestone, if one is ever taken
 up at all.
 
-The avatar roadmap's own suggested next steps — 0.2.44 (emotes,
-gestures, and social actions, treated as presence-adjacent ephemeral
-events rather than persistent profile changes), 0.2.45 (avatar-avatar
-interaction mechanics), 0.2.46 (text chat as its own communication
-channel), and eventually voice/a richer social model — remain exactly
-that: suggestions, not commitments. Nothing in this codebase assumes
-the next milestone resumes the avatar arc rather than opening an
-entirely different one.
+0.2.44 answers the next question the design doc posed: "once I know
+another avatar is nearby, what can I actually do with it?" —
+deliberately with the smallest possible answer, and deliberately still
+with no wire format change. A closed vocabulary of local gestures
+(`core/AvatarInteractionKind.js` — GREET/WAVE/POINT), a shared cooldown
+proven now while conditions are easy (`core/
+AvatarInteractionCooldown.js`, one sender, one trusted local clock) so
+0.2.45's eventual networked version inherits it rather than inventing
+rate-limiting under harder conditions, and a purely local, purely
+presentation gesture pose + facing override
+(`renderer/AvatarVisual.js#setGesture()`/`setFacingOverride()`) that
+never touches `AvatarPresence` and is never rendered on anyone but the
+gesturing avatar's own replica. `AvatarInteractionState` — unchanged in
+shape since 0.2.39, per 0.2.43's own note — finally grows the two
+fields the design doc asked for, `interaction`/`interactionStartedAt`,
+kept on the SAME state slice rather than a third one, because a
+gesture is meaningless without the target it travels alongside. The
+Avatar Info panel grows exactly three buttons (Greet/Wave/Point); three
+of the design doc's other named intents — Invite to Follow, Stop
+Following, Inspect — needed no new code at all, because they were
+already Follow/Stop Following and "open the panel," established since
+0.2.39/0.2.43. See docs/Principles.md, "Observation Does Not Imply
+Authority, And Interaction Does Not Imply Control" and "A Gesture Is
+Presentation, Never Presence" — the same nearness-never-authorizes-
+mutation boundary 0.2.43 drew for OBSERVING another avatar now extends,
+unbroken, to WANTING to interact with one.
+
+The avatar roadmap's own suggested next steps — 0.2.45 (networked
+ephemeral avatar interactions, the deliberately-deferred networked
+half of 0.2.44's gestures), 0.2.46 (interaction trust, replay & rate
+limiting), 0.2.47 (avatar privacy, blocking & interaction permissions),
+0.2.48 (an avatar emotes & animation library), and eventually text
+chat/voice/a richer social model — remain exactly that: suggestions,
+not commitments. Nothing in this codebase assumes the next milestone
+resumes the avatar arc rather than opening an entirely different one.
 
 ## 0.1.50 — What shipped
 

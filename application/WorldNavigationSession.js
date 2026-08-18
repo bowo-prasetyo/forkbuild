@@ -43,6 +43,9 @@ import { RemoteAvatarAppearanceRegistry } from './RemoteAvatarAppearanceRegistry
 import { toAvatarProfileAdvertisement } from '../core/AvatarProfileAdvertisement.js';
 import { signAvatarProfileAdvertisement } from './AvatarProfileSigning.js';
 import { computeNearbyAvatars } from '../core/AvatarProximity.js';
+import { AvatarInteractionKind, isValidInteractionKind } from '../core/AvatarInteractionKind.js';
+import { canPerformInteraction } from '../core/AvatarInteractionCooldown.js';
+import { computeFacingYawDegrees } from '../core/AvatarFacing.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -80,6 +83,14 @@ const NEARBY_RADIUS = 5;
 // person walking at WALK_SPEED (core/AvatarMovementSimulation.js)
 // covers this whole radius in well under ten seconds.
 const DEFAULT_NEARBY_AVATAR_RADIUS = 15;
+// 0.2.44 — how long a local GREET/WAVE/POINT gesture keeps playing
+// before automatically returning to NONE — see
+// _updateLocalAvatarInteractionPresentation() below. Deliberately
+// short: a gesture is a momentary social beat, never a persistent
+// state the user has to remember to turn off (there is no "stop
+// waving" button, matching the design doc's own framing of these as
+// transient events rather than a mode).
+const GESTURE_DURATION_MS = 1800;
 // 0.2.35 follow-up: a fresh AvatarPresence otherwise always spawns at
 // literal world origin regardless of which document a session opens
 // on — and a document's own placement (0.2.24's deterministic grid
@@ -253,6 +264,13 @@ export class WorldNavigationSession {
 	    this._avatarInteraction = AvatarInteractionState.empty();
 	    this._followedRemoteAvatarId = null;
 	    this._lastFollowedRemotePosition = null;
+	    // 0.2.44 — Local Avatar Interaction & Social Presence. Gates
+	    // GREET/WAVE/POINT through ONE shared cooldown regardless of
+	    // which gesture was last performed — see
+	    // core/AvatarInteractionCooldown.js. 0 means "never yet
+	    // performed," which — like `_lastProfilePublishAt` above —
+	    // deliberately makes the very FIRST gesture always allowed.
+	    this._lastInteractionPerformedAt = 0;
 	    // Raw DiscoveryDiagnostics from the most recent
 	    // exploreLocation/exploreHere/whatsHere call — kept alongside
 	    // the summarized version so inspectDocument can look up a
@@ -461,6 +479,13 @@ export class WorldNavigationSession {
         if (typeof this._session.onAnimationFrame === 'function') {
             this._avatarFrameSubscription = this._session.onAnimationFrame((deltaSeconds) => {
                 this._avatarMovementController.tick(deltaSeconds);
+                const now = Date.now();
+                // 0.2.44 — expires a finished gesture and refreshes the
+                // local avatar's facing override, both purely local,
+                // purely presentation — see
+                // _updateLocalAvatarInteractionPresentation()'s own
+                // header.
+                this._updateLocalAvatarInteractionPresentation(now);
                 // 0.2.41 — periodic profile republish, rides the SAME
                 // frame loop as movement — see
                 // PROFILE_REPUBLISH_INTERVAL_MS's own comment for why
@@ -469,7 +494,6 @@ export class WorldNavigationSession {
                 // that lets a replica joining mid-session eventually
                 // see current appearance without an explicit edit ever
                 // happening).
-                const now = Date.now();
                 if (this._avatarProfileSyncService && now - this._lastProfilePublishAt >= PROFILE_REPUBLISH_INTERVAL_MS) {
                     this._publishLocalAvatarProfile(this._avatarProfileUseCase.getProfile(), now);
                 }
@@ -697,6 +721,42 @@ export class WorldNavigationSession {
         return this._avatarInteraction;
     }
 
+    // 0.2.44 — GREET/WAVE/POINT: a LOCAL, presentation-only gesture
+    // the user chooses to perform at the CURRENT avatar interaction
+    // target. See docs/Principles.md, "Observation Does Not Imply
+    // Authority, And Interaction Does Not Imply Control": this never
+    // touches AvatarPresence and never reaches the transport (see the
+    // design doc's own scope — no wire format change in 0.2.44). It
+    // only ever changes THIS replica's own local AvatarInteractionState,
+    // which _updateLocalAvatarInteractionPresentation() below then
+    // renders as a temporary pose overlay on Bob's OWN avatar — never
+    // Alice's; Alice's replica never even hears about it.
+    //
+    // Requires a REMOTE target: gesturing with nothing targeted, or at
+    // yourself, is a no-op, the same "not currently a valid target"
+    // posture followAvatarId() already has. Rate-limited by
+    // core/AvatarInteractionCooldown.js so holding a button (or a
+    // scripted spam) can never restart the gesture faster than the
+    // shared cooldown allows. Returns true when the gesture was
+    // actually accepted, false otherwise (no target, invalid kind, or
+    // still on cooldown) — the same boolean-outcome contract
+    // followAvatarId() already established.
+    performAvatarInteraction(kind) {
+        if (this._avatarInteraction.isEmpty || this.isLocalAvatarId(this._avatarInteraction.avatarId)) {
+            return false;
+        }
+        if (!isValidInteractionKind(kind) || kind === AvatarInteractionKind.NONE) {
+            return false;
+        }
+        const now = Date.now();
+        if (!canPerformInteraction(this._lastInteractionPerformedAt, now)) {
+            return false;
+        }
+        this._lastInteractionPerformedAt = now;
+        this._setAvatarInteraction(this._avatarInteraction.withInteraction(kind, now));
+        return true;
+    }
+
     // A pure client rendering preference, exactly like
     // isLocalAvatarVisible/setLocalAvatarVisible — never touches
     // presence sync, the known-remote-avatar set, or anything
@@ -920,6 +980,61 @@ export class WorldNavigationSession {
         if (!stillKnown) {
             this._setAvatarInteraction(AvatarInteractionState.empty());
         }
+    }
+
+    // 0.2.44 — runs every render frame, right after movement ticks:
+    // expires a finished gesture back to NONE, then pushes the
+    // current gesture kind AND facing override to the render facade.
+    // Both purely local, purely presentation — see this file's own
+    // avatar-interaction comments above, core/AvatarGesturePoseOffsets.js,
+    // and core/AvatarFacing.js. Reads `_avatarInteraction`/
+    // `_remoteAvatarRegistry`, both already current from this or the
+    // previous frame — no new query added.
+    _updateLocalAvatarInteractionPresentation(now) {
+        if (!this._session || typeof this._session.setLocalAvatarGesture !== 'function') {
+            return;
+        }
+        if (this._avatarInteraction.isGesturing
+            && now - this._avatarInteraction.interactionStartedAt >= GESTURE_DURATION_MS) {
+            this._setAvatarInteraction(this._avatarInteraction.withInteraction(AvatarInteractionKind.NONE, null));
+        }
+        this._session.setLocalAvatarGesture(this._avatarInteraction.isGesturing ? this._avatarInteraction.interaction : null);
+        this._applyAvatarFacing(now);
+    }
+
+    // 0.2.44 — see docs/Principles.md, "Facing A Target Is
+    // Presentation, Never Presence": computes (or clears) a temporary
+    // yaw override that makes the local avatar face its current
+    // interaction target, but ONLY while the player isn't actively
+    // steering — an actively-moving player's own input always wins,
+    // so this never fights AvatarMovementController's own rotation.
+    _applyAvatarFacing(now) {
+        if (!this._session || typeof this._session.setLocalAvatarFacing !== 'function' || !this._avatarPresenceSession) {
+            return;
+        }
+        const targetPosition = this._facingTargetPosition(now);
+        const isMoving = Boolean(this._avatarMovementController && this._avatarMovementController.hasMovementInput());
+        if (!targetPosition || isMoving) {
+            this._session.setLocalAvatarFacing(null);
+            return;
+        }
+        const localPosition = this._avatarPresenceSession.current.position;
+        this._session.setLocalAvatarFacing(computeFacingYawDegrees(localPosition, targetPosition));
+    }
+
+    // The CURRENT interaction target's position, or null when there is
+    // no target, the target is the local avatar itself (facing
+    // yourself is meaningless), or the target's presence isn't known
+    // to `_remoteAvatarRegistry` (e.g. it expired this same frame,
+    // before `_pruneAvatarInteractionIfGone` got to it) — gracefully
+    // "no facing override" in every case, never a thrown error.
+    _facingTargetPosition(now) {
+        if (this._avatarInteraction.isEmpty || this.isLocalAvatarId(this._avatarInteraction.avatarId)) {
+            return null;
+        }
+        return this._remoteAvatarRegistry
+            ? this._remoteAvatarRegistry.currentPosition(this._avatarInteraction.avatarId, now)
+            : null;
     }
 
     // Whether a local avatar was actually wired for this session (i.e.
