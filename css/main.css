@@ -2711,3 +2711,128 @@ html, body {
 .identity-import-result .modal-btn {
     margin-top: 0.5rem;
 }
+
+/* 0.2.55 — Peer Connections & Rendezvous UI. Reuses .identity-mgmt-*,
+   .form-*, .action-btn*, and .modal-* wholesale (same card/form/modal
+   language IdentityManagementView already established) and adds only
+   what is genuinely new: the lifecycle badge, the signaling
+   copy/paste boxes, and the step-by-step connection progression. */
+.peer-connections-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.peer-actions {
+    display: flex;
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+
+.peer-my-peers-heading {
+    margin-top: 2rem;
+}
+
+.peer-signal-box {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    margin: 1rem 0;
+    max-width: 480px;
+}
+
+.peer-signal-box h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+    color: #e0e0e0;
+}
+
+.peer-signal-box--nested {
+    margin-top: 1rem;
+    margin-bottom: 0;
+}
+
+.peer-signal-json {
+    font-family: monospace;
+    font-size: 0.72rem;
+    resize: vertical;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.peer-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.peer-badge--authenticated {
+    background: rgba(76, 175, 125, 0.15);
+    color: #4caf7d;
+}
+
+.peer-badge--pending {
+    background: rgba(230, 180, 80, 0.15);
+    color: #e6b450;
+}
+
+.peer-badge--failed {
+    background: rgba(224, 90, 90, 0.15);
+    color: #e05a5a;
+}
+
+.peer-progression {
+    list-style: none;
+    margin: 0.5rem 0 0.75rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.78rem;
+    color: #707070;
+}
+
+.peer-progression-step--done {
+    color: #4caf7d;
+}
+
+.peer-progression li::before {
+    content: '○ ';
+}
+
+.peer-progression-step--done::before {
+    content: '● ';
+}
+
+.peer-alias-field {
+    display: block;
+    margin: 0.5rem 0 0.75rem;
+    max-width: 320px;
+}
+
+.peer-complete-box {
+    margin: 0.5rem 0 0.75rem;
+    padding: 0.75rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.peer-detail-panel {
+    width: 480px;
+}
+
+.peer-detail-row {
+    margin-bottom: 0.75rem;
+}
+
+.peer-detail-value {
+    display: block;
+    color: #d0d0d0;
+    font-size: 0.82rem;
+    word-break: break-all;
+}

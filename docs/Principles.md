@@ -3214,3 +3214,52 @@ gives Charlie a profile transport and nothing else, and he still
 resolves Alice's real appearance, proving "a peer can know your
 profile without currently observing your avatar" structurally, not
 merely by assertion.
+
+### A Peer Session Manager Owns Connections, Never What Travels Over Them (0.2.55)
+
+`application/PeerSessionManager.js` answers exactly one question — "how
+does an invitation become an authenticated `ConnectedPeer`?" — and
+stops there, on purpose. It has no method that sends an application
+message, no method that reads or writes presence, a profile, or an
+avatar, and no dependency on `peer/PeerMessageBus.js` anywhere in its
+own file. This mirrors, one layer up, the exact boundary `peer/
+PeerMessageBus.js` itself already drew in 0.2.52 ("A Peer Connection
+Transports Messages; It Does Not Interpret Them") and `peer/
+PeerConnection.js` drew below that in 0.2.49: each layer in this stack
+answers a narrower question than the one below it makes possible, and
+refuses every temptation to answer a broader one just because it
+happens to be sitting closest to the code that could. Presence
+(0.2.53), Profile (0.2.54), and any future chat protocol all attach to
+the SAME `ConnectedPeerRegistry` a `PeerSessionManager` exposes via
+`.registry` — never by routing through `PeerSessionManager` itself,
+and never by `PeerSessionManager` reaching into them. A future
+milestone that wired `presence/PeerAvatarPresenceBroadcastProvider.js`
+to a real, running session's peers would do it by handing that
+transport the SAME registry instance this class already produces —
+never by teaching this class what presence is.
+
+### An Authenticated Peer Is Not A Friend (0.2.55)
+
+0.2.55 is the first milestone where a real person, not a test file,
+can look at a `ConnectedPeer` and be tempted to think "this is someone
+I know now." It is not, and the UI is built to never imply it is.
+`ui/views/PeerConnectionsView.js`'s own Peer Identity panel labels a
+connection's `Session` field "Ephemeral," never "Trusted" or "Saved,"
+and offers no button whose effect outlives the connection it names —
+no "Add Friend," no "Remember This Peer," no "Always Trust This
+Identity." Closing a peer's connection removes it from
+`ConnectedPeerRegistry` exactly as it always has since 0.2.50 — this
+milestone does not add a shadow list that survives the removal. A
+local alias (`ConnectedPeer#setAlias`) looks, at a glance, like it
+might be the start of a contacts system; it structurally cannot become
+one, because nothing about it — not the alias text, not the fact one
+was ever set, not which `identityId` it was set for — is retained
+anywhere once the `ConnectedPeer` it lives on is disposed. See
+docs/Principles.md, "A Peer Alias Is A Local Note, Never A Claim About
+The Peer" (0.2.50), which this milestone's UI is the first to actually
+render on screen rather than only exercise in a test. Persistent Peer
+Relationships / Friends remains exactly what docs/Roadmap.md has
+called it since 0.2.49 first raised the possibility: a genuinely
+separate, deliberately unscheduled architectural question, never
+something a "Connected Peers" screen backs into by accident of what
+was convenient to keep around.
