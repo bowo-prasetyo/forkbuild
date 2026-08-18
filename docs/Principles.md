@@ -2983,3 +2983,89 @@ this connection currently controlled by identity X" into "do I have a
 standing relationship with X" (see "A Peer Connection Authenticates A Key,
 Not An Account," 0.2.49); a real transport makes the connection real, not
 the relationship.
+
+### A Peer Connection Transports Messages; It Does Not Interpret Them (0.2.52)
+
+`peer/PeerConnection.js` and `peer/WebRtcPeerConnection.js` move opaque,
+JSON-shaped objects and have never known what any of them mean —
+`send()`/`onMessage()` don't even know a HELLO from a PROOF, let alone a
+future presence advertisement from a chat message. 0.2.52's `peer/
+PeerMessageBus.js` sits directly on top of that same discipline rather than
+breaking it: it routes on `protocol` — a bare string — and hands `payload`
+to whatever subscribed, untouched, unopened, uninterpreted. There is no `if
+(protocol === 'avatar-presence')` anywhere in `peer/PeerMessageBus.js`, on
+purpose; a codebase where the multiplexer needs to know what every protocol
+means to route it correctly is a codebase where adding protocol #6 requires
+touching code that protocols #1 through #5 already depend on. `peer/
+PeerMessage.js`'s own envelope enforces the same boundary from the other
+side: it carries `messageId`/`protocol`/`version`/`payload` and nothing
+else — no avatar state, no username, no authorization decision, no trust
+state, and (see the next principle) no signature — because every one of
+those is a claim about what `payload` MEANS, and meaning belongs entirely
+to the protocol that produced it. This is also why 0.2.52 adds no second,
+generic `PeerMessage.signature` field: the connection itself is already
+authenticated (`peer/PeerAuthenticationSession.js`, unmodified since 0.2.49)
+— that proves WHO controls the channel — and whether a given protocol's
+OWN payload additionally needs cryptographic proof is a decision only that
+protocol can make, exactly as `core/AvatarPresenceAdvertisement.js` and
+friends already decide it for themselves today, over `BroadcastChannel`,
+with no peer connection involved at all. A generic envelope-level signature
+would be a cryptographic layer bolted on before any protocol using it has
+said whether it needs one.
+
+### A Peer Message Envelope Carries Routing Information, Never Meaning (0.2.52)
+
+`messageId`, `protocol`, and `version` on a `peer/PeerMessage.js` envelope
+exist for exactly one layer's own bookkeeping — `peer/PeerMessageBus.js`'s
+own routing and duplicate-suppression — and none of the three means what a
+protocol built on top might assume from the name. `messageId` is NOT a
+sequence number: it exists purely so a bounded local window can recognize
+"I already delivered this" when an unreliable transport redelivers the same
+bytes, and it says nothing about ordering — two messages with unrelated
+`messageId`s carry no implied relationship, arrival order, or causal
+history. `version` is NOT this layer's own schema version; it is carried,
+opaque, entirely for the PROTOCOL's own use (`core/
+AvatarInteractionAdvertisement.js`'s `sequence`, `core/
+AvatarProfileAdvertisement.js`'s `profileRevision`, and any future
+protocol's own versioning scheme all remain that protocol's business, not
+this envelope's) — `peer/PeerMessageBus.js` never compares two `version`
+values against each other, only checks that the one on any given envelope
+is a positive integer. `protocol` is a bare routing key, not a claim about
+trust, freshness, or authorization — the whole reason PUBLIC/FRIENDS/LOCAL/
+HIDDEN, replay windows, and equivocation handling all live one layer up in
+`core/`/`application/`, per-protocol, rather than being generalized into
+this envelope. Concretely: `peer/PeerMessageBus.js`'s bounded duplicate
+window (see "Replay Semantics Belong To The Protocol, Never The Bus",
+directly below) suppressing a repeated `messageId` is TRANSPORT hygiene —
+"don't hand the same bytes to a handler twice" — and is a completely
+different question from whether a PROTOCOL considers a given payload stale
+or superseded, which is `core/PresenceFreshness.js`, `core/
+PresenceReplayWindow.js`, and `application/AvatarInteractionTrustBoundary.js`'s
+own, entirely separate business.
+
+### Replay Semantics Belong To The Protocol, Never The Bus (0.2.52)
+
+`peer/PeerMessageBus.js`'s own duplicate-`messageId` suppression is
+deliberately narrow and deliberately BOUNDED — a small, fixed-size,
+per-connection window, unlike `replication/ReplayGuard.js`'s own
+unbounded, potentially-persisted ledger answering the completely different
+question "have I ever accepted this immutable object." The bus's window
+answers only "did I already hand this exact envelope to a handler a moment
+ago" — pure transport hygiene against an unreliable channel redelivering
+the same bytes, not a security boundary and not a freshness judgment. It
+is not, and must never become, the place that decides whether a
+presence advertisement is stale (`core/PresenceFreshness.js`), whether an
+avatar interaction event is a legitimate duplicate or a replay attack
+(`core/AvatarInteractionReplayWindow.js`'s own sequence + `interactionId`
+tracking, consulted by `application/AvatarInteractionTrustBoundary.js`),
+or whether two conflicting claims constitute equivocation (`core/
+PresenceEquivocation.js`).
+Each of those already exists, already works, and already lives ONE LAYER
+ABOVE the transport — precisely where 0.2.37 through 0.2.45 put them,
+before a real peer connection existed at all. Folding any of that
+judgment into `peer/PeerMessageBus.js` would duplicate logic that already
+has a home and, worse, would force every future protocol to inherit
+whatever replay policy the bus happened to pick, rather than choosing its
+own — the same mistake "Replay Detection And Freshness Are Different
+Questions, Answered By Different Code" (0.2.38) already named once, one
+layer down.

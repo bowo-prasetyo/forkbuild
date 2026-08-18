@@ -1205,19 +1205,108 @@ persistent peer trust, friends, aliases-by-identityId, or any social-
 graph concept — 0.2.49's "authenticates a key, not an account" stance is
 completely untouched by having a real network under it.
 
-Proposed, unscheduled follow-on milestones this opens: Decentralized
+Proposed, unscheduled follow-on milestones 0.2.51 opened: Decentralized
 Application Messaging (a real protocol layered on top of an authenticated
-`PeerConnection` — chat, structured data exchange — the first actual use
-of a channel this milestone proved can move bytes for real); Peer Session
-/ Presence Integration (moving presence/profile/interaction sync from
-today's open `BroadcastChannel` to authenticated peer channels without
-changing their existing signed-advertisement semantics — the specific
-reconnection 0.2.49, 0.2.50, and 0.2.51 have each named and deferred in
-turn); a live "Connected Peers" UI, now backed by a transport that can
-actually demonstrate two different browser sessions connecting; STUN/TURN
-configuration and real NAT-traversal hardening for cross-network use; and
-Authenticated Peer Sessions & Capabilities, unchanged from 0.2.50's own
-proposal.
+`PeerConnection`); Peer Session / Presence Integration (moving presence/
+profile/interaction sync from today's open `BroadcastChannel` to
+authenticated peer channels); a live "Connected Peers" UI; STUN/TURN
+configuration and real NAT-traversal hardening; and Authenticated Peer
+Sessions & Capabilities. 0.2.52, directly below, closes the first of
+these.
+
+0.2.52 answers the question that list opened first: once Alice and Bob
+have a real, authenticated peer connection (0.2.49 through 0.2.51, all
+three completely unmodified here), how do different decentralized
+application protocols safely share it? Not yet a real protocol —
+Presence, Avatar Profile, and Avatar Interaction all still run over their
+own `BroadcastChannel`s, completely untouched — but the multiplexing
+substrate every future one will need, so a protocol subscribes exactly
+once and never learns, or needs to learn, whether the peer underneath is
+`peer/LocalPeerConnectionProvider.js` or `peer/
+WebRtcPeerConnectionProvider.js`. `peer/PeerMessage.js` (new) is the
+deliberately boring wire envelope every application message now travels
+in — `messageId`/`protocol`/`version`/`payload`, structurally validated
+but never interpreted, carrying no avatar state, username, authorization
+decision, trust state, or signature; see docs/Principles.md, "A Peer
+Message Envelope Carries Routing Information, Never Meaning." `peer/
+PeerMessageBus.js` (new) is the application-facing multiplexer sitting
+directly on `application/ConnectedPeer.js` and nothing lower:
+`subscribe(protocol, handler)` registers once, independent of which peer
+eventually sends; `send(connectedPeer, protocol, payload)` delivers to
+exactly one peer. Structurally, never `if (protocol === 'avatar-
+presence')` anywhere — only a `Map` from protocol name to whatever
+handlers subscribed; see docs/Principles.md, "A Peer Connection
+Transports Messages; It Does Not Interpret Them."
+
+The central rule, structurally enforced rather than merely documented
+(the design doc's own #4): a peer whose `getLifecycleState()` is not,
+right now, `AUTHENTICATED` gets no message channel at all — `send()`
+throws, and every INCOMING message is re-checked against the peer's
+CURRENT lifecycle at delivery time, not merely at the moment a protocol
+`attach()`ed, so a connection that is CONNECTED but still AUTHENTICATING
+(or one whose authentication later FAILED) cannot inject anything through
+the bus, even a perfectly well-formed envelope. `peer/
+PeerAuthenticationSession.js` is completely unmodified; `PeerMessageBus`
+only ever reads its result. Transport-level hygiene only, per the design
+doc's own explicit list: a malformed envelope, an oversized one (a
+generous, arbitrary `MAX_PEER_MESSAGE_BYTES` ceiling — transport hygiene,
+never a real per-protocol budget), and a duplicate `messageId`
+(suppressed within a small BOUNDED per-connection window — deliberately
+not `replication/ReplayGuard.js`'s own unbounded ledger) are all rejected
+here; an unknown protocol is simply ignored. What a stale or replayed
+APPLICATION message means is never this layer's question — see docs/
+Principles.md, "Replay Semantics Belong To The Protocol, Never The Bus."
+Deliberately, per the design doc's own explicit reasoning, no second
+generic message signature was added: the connection is already
+authenticated, and a protocol that additionally needs cryptographic proof
+over its own payload signs at ITS OWN layer, exactly like `core/
+AvatarPresenceAdvertisement.js` and friends already do.
+
+The flagship test (`tests/PeerMessaging.test.js`) runs the identical
+application-level scenario over BOTH `peer/LocalPeerConnectionProvider.js`
+and `peer/WebRtcPeerConnectionProvider.js`, completely unmodified: Alice
+and Bob mutually authenticate, Alice sends `test.alpha`/`test.beta`/
+`test.unknown`, and Bob — subscribed only to the first two — receives
+exactly those two, each exactly once, with the real proven sender
+identity riding along in the delivery metadata; the unsubscribed
+`test.unknown` protocol, a genuine message over a genuine authenticated
+connection, is silently dropped rather than reaching an unrelated
+handler. Separate tests prove the central security property
+deterministically: a message arriving on a CONNECTED-but-not-yet-
+AUTHENTICATED connection is dropped, the identical connection delivers
+normally the moment it reaches AUTHENTICATED, and a connection whose
+authentication later FAILS goes back to dropping everything — and that a
+`PeerAuthenticationSession` HELLO/PROOF message sharing the exact same
+`onMessage()` stream can never be mistaken for a PeerMessage envelope, so
+no special-case filter is needed to keep the two apart.
+
+Deliberately not in 0.2.52: any real application protocol actually using
+this bus — Presence/Profile/Interaction remain on their own
+`BroadcastChannel`s, unchanged, until a future milestone begins moving
+them over; any change to `PresenceVisibilityPolicy`'s PUBLIC/FRIENDS/
+LOCAL/HIDDEN vocabulary, even though a real per-recipient authenticated
+channel finally makes FRIENDS meaningful — that redesign waits until the
+substrate it needs is proven, not the other way around; a second, generic
+message-level signature; message ordering, acknowledgment, retry, or
+delivery guarantees beyond what the underlying `PeerConnection` already
+offers, fire-and-forget exactly like a HELLO/PROOF already is; and any UI
+surface — this milestone is substrate only, with nothing yet plugged into
+it worth showing.
+
+Proposed, unscheduled follow-on milestones this opens: Peer-Based Avatar
+Presence (moving `PresenceSyncService` from today's open
+`BroadcastChannel` to `PeerMessageBus`, without touching
+`AvatarPresenceAdvertisement`, `PresenceIngestion`, `PresenceTrustBoundary`,
+or any lifecycle/replay/equivocation logic — transport only); Peer-Based
+Avatar Profile Synchronization and Peer-Based Avatar Interaction, the same
+transport swap applied to the other two `BroadcastChannel`-based protocols
+in turn; a `PresenceVisibilityPolicy` FRIENDS tier that actually means
+something once presence travels over per-recipient authenticated channels
+instead of an open broadcast; a live "Connected Peers" UI wired into the
+actual browser app; STUN/TURN configuration and real NAT-traversal
+hardening for cross-network use (unchanged from 0.2.51's own proposal);
+and Authenticated Peer Sessions & Capabilities, unchanged from 0.2.50's
+own proposal.
 
 ## 0.1.50 — What shipped
 
