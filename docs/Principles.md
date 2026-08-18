@@ -2926,3 +2926,60 @@ alias survives a reconnect, keyed by identityId rather than by connection —
 is exactly the kind of "social friend system" the design doc asked NOT to
 build yet; this principle is what keeps a future one from being backed into
 accidentally by a convenience field.
+
+### A Signaling Payload Is Not An Identity Proof (0.2.51)
+
+`peer/PeerConnectionOffer.js` and `peer/PeerConnectionAnswer.js` answer "here
+is the WebRTC session description and candidates needed to open a direct
+channel" — never "this is who I am." Both are deliberately UNSIGNED, for
+exactly the reason `peer/PeerInvitation.js` already is (see "An Invitation Is
+A Rendezvous Hint, Never A Credential," 0.2.50): signing them would suggest
+the payload is trustworthy evidence of something, when its only job is to
+carry SDP and ICE candidates from one side to the other. Someone who
+intercepts and replays an offer verbatim gains only a candidate SDP worth
+attempting a connection to — not Bob's identity, and no head start on proving
+it, because nothing in `peer/PeerAuthenticationSession.js`'s handshake ever
+reads a signaling-layer value; that handshake runs identically, over the
+real DataChannel this signaling produced, regardless of how honestly that
+DataChannel came to exist. This is what makes a tampered or forged answer
+harmless in the specific way that matters: `peer/
+WebRtcPeerConnection.js#acceptRemoteAnswer()` checks the answer's
+`connectionId` matches and that it has not expired — necessary for the
+handshake to complete AT ALL — but even a fully well-formed answer, honestly
+relayed from a genuine third party who is not who the offer was meant for,
+produces nothing more than a working DataChannel to THAT third party;
+whether the entity on the other end is who anyone expected remains entirely
+peer/PeerAuthenticationSession.js's question, asked fresh, exactly as it is
+for every other transport. Binding an offer's `connectionId` to the eventual
+connection's own `sessionNonce` — see "A Peer Authentication Signature Is
+Scoped To One Connection, Never To One Identity" (0.2.49) — is what closes
+the loop: a signature produced for one WebRTC connection cannot be replayed
+into a different one just because both happened to originate from
+signaling payloads that were captured together.
+
+### A Transport Connection Is Never An Authenticated Peer (0.2.51)
+
+`peer/WebRtcPeerConnection.js` knows how bytes move — SDP, ICE candidates,
+DataChannel open/close/message — and is structurally incapable of knowing
+who owns them: it carries no identity field, no avatar reference, no
+username, nothing an authentication layer could mistake for a shortcut. This
+is the same discipline `peer/PeerConnection.js`'s own header has demanded
+since 0.2.49 ("does a channel exist" vs. "who is on it"), now proven under a
+transport that actually has real-world reasons to want the shortcut — a
+live network connection to a specific machine FEELS like it should mean
+something about who is there, the way it never quite does for an in-process
+`LocalPeerConnection`. It still doesn't: a `peer/PeerIdentity.js` comes into
+existence only when `peer/PeerAuthenticationSession.js`'s handshake verifies
+a PROOF, exactly as before, and disappears the instant the connection closes
+— including a REAL WebRTC connection closing, propagated now via an
+explicit CLOSE_SENTINEL rather than an instantly mirrored one, but the
+consequence is identical either way. Concretely: if Alice reconnects to Bob
+five times over five separate WebRTC connections, that is five separate
+`peer/PeerConnection.js#connectionId`s, five separate `peer/
+PeerAuthenticationSession.js` instances, and five separately-proven `peer/
+PeerIdentity.js` instances — even though all five may resolve to the exact
+same public key. Nothing about having a real network underneath changes "is
+this connection currently controlled by identity X" into "do I have a
+standing relationship with X" (see "A Peer Connection Authenticates A Key,
+Not An Account," 0.2.49); a real transport makes the connection real, not
+the relationship.

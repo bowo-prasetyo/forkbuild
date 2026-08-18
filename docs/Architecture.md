@@ -5676,7 +5676,7 @@ carried over, re-authenticating completely from nothing). No file under
 Deliberately not in 0.2.50: any real network transport (LAN broadcast, a
 rendezvous service, a DHT) — `peer/LocalPeerConnectionProvider.js` remains
 the deterministic in-process test transport, exactly as 0.2.49 left it;
-see docs/Roadmap.md's own still-proposed "Real Browser Peer Transport."
+see 0.2.51, below, which closes this specific gap.
 Signing or otherwise cryptographically protecting a `PeerInvitation` — see
 docs/Principles.md, "An Invitation Is A Rendezvous Hint, Never A
 Credential," for why that would be the wrong fix for the wrong problem.
@@ -5715,3 +5715,174 @@ longer verifies; and a final check that `core/
 AvatarPresenceAdvertisement.js` signing is completely unaffected and
 that a presence signature can never be mistaken for a peer-
 authentication proof (`signature domain mismatch`).
+
+### Real WebRTC Peer Transport & Signaling Handoff (0.2.51)
+
+```text
+   Alice                                              Bob
+     │                                                  │
+     ▼                                                  │
+createOffer() ──► PeerConnectionOffer                   │
+     │            (connectionId, sdp, ice, expiry)      │
+     │                     │                             │
+     │       (invitation endpoint / copy-paste / QR)     │
+     │                     └───────────────────────────► │
+     │                                                    ▼
+     │                                             connect(offer) ──► PeerConnectionAnswer
+     │                                                    │           (connectionId, sdp, ice, expiry)
+     │       (reply / copy-paste / QR)                    │
+     │◄───────────────────────────────────────────────────┘
+     ▼
+acceptRemoteAnswer(answer)
+     │
+     ▼
+   WebRtcPeerConnection  ◄── real RTCDataChannel ──►  WebRtcPeerConnection
+     transportState                                     transportState
+     │                                                    │
+     ▼                                                    ▼
+peer/PeerAuthenticationSession.js  ◄── unmodified ──►  peer/PeerAuthenticationSession.js
+   (0.2.49, completely unchanged)
+```
+
+0.2.51 closes the specific gap 0.2.49 named at the transport layer ("no
+commitment to WebRTC or any other real network transport is made here")
+and 0.2.50 named again ("finding two real, different browser sessions and
+getting real bytes between them is the still-proposed 'Real Browser Peer
+Transport'"). `peer/WebRtcPeerConnection.js` (new) and `peer/
+WebRtcPeerConnectionProvider.js` (new) satisfy the exact same `peer/
+PeerConnection.js`/`peer/PeerConnectionProvider.js` contracts `peer/
+LocalPeerConnectionProvider.js` already does — `connect(remoteAddress)`,
+`onIncomingConnection()`, `dispose()`, `send()`, `onMessage()`,
+`onStateChange()`, `close()` — so `application/ConnectToPeerUseCase.js`
+and `application/DiscoverPeersUseCase.js` needed no changes to their own
+decision logic to drive a real transport instead of an in-process one.
+The base `peer/PeerConnection.js` interface is deliberately widened by
+exactly two things, both purely about moving bytes, never about
+identity: `role` (`'offerer'` or `'answerer'` — the two sides of a WebRTC
+handshake genuinely run different code, unlike 0.2.49's own symmetric
+handshake) and `localSignal`/`onLocalSignalReady()`/`acceptRemoteAnswer()`
+— the signaling extension a caller uses to actually relay SDP/ICE
+payloads out-of-band. Nothing here ever exposes identity, an avatar, a
+username, or an authenticated peer — see docs/Principles.md, "A Transport
+Connection Is Never An Authenticated Peer."
+
+WebRTC's own signaling requirement — Alice and Bob still have to exchange
+an SDP offer and answer before any DataChannel can open — is answered
+with the same "portable payload, deliberate out-of-band handoff" shape
+0.2.50 already established for discovery, never a signaling SERVER this
+milestone would have to operate. `peer/PeerConnectionOffer.js` (new) and
+`peer/PeerConnectionAnswer.js` (new) are the portable packages:
+`formatVersion`, `connectionId`, `sdp`, `iceCandidates`, `createdAt`,
+`expiresAt` — deliberately UNSIGNED and deliberately short-lived (a 5
+minute default, shorter than a `PeerInvitation`'s own longer rendezvous
+window), exactly as untrusted as a `peer/PeerInvitation.js` — see docs/
+Principles.md, "A Signaling Payload Is Not An Identity Proof." An offer's
+own `connectionId` — minted once, by the offering side, in
+`PeerConnectionOffer.create()` — becomes the eventual `peer/
+PeerConnection.js#connectionId` on BOTH ends (the answerer adopts it
+verbatim rather than generating its own), which in turn is the
+`sessionNonce` 0.2.49's handshake already binds every signature to; no
+new coordination mechanism was needed to make both sides agree on one
+connectionId. `WebRtcPeerConnection` waits for `RTCPeerConnection`'s
+`iceGatheringState` to reach `'complete'` before exposing `localSignal` —
+non-trickle ICE, deliberately, so the entire payload is one self-
+contained, copy-pasteable (or QR-able) blob rather than a live stream of
+candidate messages a static invitation-style handoff has no channel for.
+
+Critically, a serialized `PeerConnectionOffer` is usable verbatim as a
+`peer/PeerInvitation.js#endpoint` — `endpoint` was already documented as
+opaque at that layer since 0.2.50 — so 0.2.50's discovery flow
+(`PeerInvitation` → `LocalPeerDiscoveryProvider` → `DiscoverPeersUseCase`)
+plugs into this real transport with ZERO changes to any of those files;
+the flagship test proves it by routing an actual WebRTC offer through
+completely unmodified 0.2.50 discovery code. `application/
+ConnectToPeerUseCase.js` gained exactly one new method,
+`attach(connection, discoveryRecord)`, wrapping an ALREADY-EXISTING
+connection in 0.2.49 authentication and the registry — for a transport
+where dialing and connection-object-creation are two separate steps
+(`WebRtcPeerConnectionProvider#createOffer()`'s caller holds a connection
+before any remote answer has even arrived). `connect()` and `listen()`
+are now both thin wrappers over it, with no observable behavior change
+for either. The same use case's `_authenticate()` also stopped assuming a
+connection is already CONNECTED the instant it exists — `peer/
+LocalPeerConnectionProvider.js` always was, since in-process pairing is
+instant, so `session.start()` used to run synchronously, same tick; a
+real ICE negotiation cannot make that promise. `_authenticate()` now
+waits for `transportState` to reach CONNECTED — immediately if it already
+has, otherwise via `onStateChange()` — before starting the handshake,
+correct for both transports at once and an exact no-op for the
+already-synchronous `LocalPeerConnectionProvider` path.
+
+Real WebRTC also has no equivalent of `LocalPeerConnection`'s instantly-
+mirrored `close()` — an abrupt `RTCPeerConnection#close()` gives the
+remote side nothing to react to promptly, leaving it to notice only via
+ICE's own, far slower, consent-freshness/failure timers. `peer/
+WebRtcPeerConnection.js#close()` sends one small, transport-level
+CLOSE_SENTINEL over the DataChannel first — filtered out of `onMessage()`
+and invisible to `peer/PeerAuthenticationSession.js` or anything else
+above this layer, still carrying no identity — so closing propagates in
+about one real network round-trip instead. A connection that never
+receives it (the remote already vanished) still eventually reaches
+CLOSED/FAILED via ICE's own detection regardless; the sentinel is a
+latency improvement, not a correctness dependency.
+
+Building and testing this against a REAL, two-connection, realistically-
+timed transport surfaced a genuine, pre-existing bug one layer up, in
+code 0.2.50 shipped: `application/ConnectedPeer.js#_notify()` iterated
+its `_stateListeners` Set live, but `application/
+ConnectedPeerRegistry.js`'s own auto-removal-on-CLOSED handler calls
+`dispose()` — which `clear()`s that very Set — from inside that same
+notification. Clearing a `Set` mid-iteration truncates a `for...of`
+already in progress, so any listener registered after the registry's own
+internal one silently never ran. `peer/LocalPeerConnectionProvider.js`'s
+instant, synchronous close never gave any test a listener that needed to
+survive registry disposal within the same notification pass to expose
+this; a real, network-timed WebRTC close did. Fixed by snapshotting
+(`Array.from(this._stateListeners)`) before iterating — every listener
+subscribed at notification time is now called exactly once, regardless of
+what it does in response. No behavior change for any existing 0.2.49/
+0.2.50 code path; `tests/PeerAuthentication.test.js` and `tests/
+PeerDiscovery.test.js` both still pass completely unmodified.
+
+The flagship test (`tests/WebRtcPeerTransport.test.js`) runs the full
+chain over a REAL `RTCPeerConnection`/`RTCDataChannel` pair — two
+genuinely separate objects in the actual browser this test suite runs
+in, not a shared in-process registry — with signaling relayed only as
+JSON that has round-tripped through `JSON.stringify`/`JSON.parse`,
+simulating an actual copy/paste handoff rather than a live reference:
+Alice opens a WebRTC offer and attaches it to authentication immediately
+(authentication does not actually start until the connection reaches
+CONNECTED); the offer becomes a completely ordinary 0.2.50
+`PeerInvitation`'s endpoint; Bob imports it, discovers it, and connects
+through the unmodified `ConnectToPeerUseCase.connect()` path; his answer
+relays back the same way; both sides independently reach AUTHENTICATED
+over the real DataChannel holding the other's proven `PeerIdentity` — a
+real message sent over the channel is confirmed to actually arrive.
+Separate tests then prove: a stale/replayed offer is rejected by
+`connect()` before any `RTCPeerConnection` work begins; an answer for the
+wrong `connectionId` is rejected outright, leaving the connection
+untouched (still CONNECTING, not corrupted into a half-applied state);
+closing a real connection removes the peer from both sides' registries —
+a genuine network fact now, not an instantly mirrored one; and
+reconnecting opens a brand-new WebRTC connection with a fresh
+connectionId, re-authenticating completely from nothing, no alias carried
+over. See docs/Principles.md, "A Signaling Payload Is Not An Identity
+Proof" and "A Transport Connection Is Never An Authenticated Peer."
+
+Deliberately not in 0.2.51: any signaling SERVER or rendezvous service —
+the offer/answer handoff is exactly as manual and deliberate as 0.2.50's
+own invitation handoff, on purpose, never a centralized dependency this
+milestone would have to operate; STUN/TURN configuration for real NAT
+traversal across the open internet — `WebRtcPeerConnectionProvider`
+accepts an `iceServers` option and passes it straight through unmodified,
+but ships with none configured, so same-network/loopback connectivity is
+all this milestone proves; any application-level message protocol beyond
+0.2.49's own HELLO/PROOF — a `PeerConnection` still just moves opaque,
+JSON-shaped messages, exactly as before; reconnecting presence/profile/
+interaction sync to run over an authenticated peer connection instead of
+today's open `BroadcastChannel` — unchanged from 0.2.49's and 0.2.50's
+own deferral, now finally within reach; any new UI wiring a live
+"Connected Peers" panel into the actual browser app; and persistent peer
+trust, friends, aliases-by-identityId, or any social-graph concept —
+0.2.49's "authenticates a key, not an account" stance is completely
+untouched by having a real network under it.
