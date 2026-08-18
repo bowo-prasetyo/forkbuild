@@ -3069,3 +3069,77 @@ whatever replay policy the bus happened to pick, rather than choosing its
 own — the same mistake "Replay Detection And Freshness Are Different
 Questions, Answered By Different Code" (0.2.38) already named once, one
 layer down.
+
+### A Transport Migration Should Leave The Trust Model Untouched (0.2.53)
+
+`presence/PeerAvatarPresenceBroadcastProvider.js` is a second, real
+implementation of `presence/AvatarPresenceBroadcastProvider.js`'s
+interface — the SAME interface `presence/LocalAvatarPresenceBroadcastProvider.js`
+has satisfied since 0.2.37 — and that is the entire reason 0.2.53 could
+ship without touching `application/PresenceSyncService.js`,
+`application/LocalPresenceStore.js`, `application/PresenceTrustBoundary.js`,
+`core/PresenceIngestion.js`, `core/PresenceAuthority.js`,
+`core/PresenceReplayWindow.js`, `core/PresenceEquivocation.js`, or
+`core/PresenceFreshness.js` — every one of 0.2.37 through 0.2.38's own
+files stays byte-for-byte what it already was. This is the payoff of a
+design choice made six milestones earlier, in 0.2.37's own header,
+when presence's transport was deliberately modeled as an interface
+rather than a concrete dependency: "transport-independent" was a claim
+worth testing, not just asserting, and 0.2.53's flagship
+(`tests/PeerAvatarPresence.test.js`, Section D, assertion 35) tests it
+directly — a tampered advertisement, carrying a stolen-but-genuine
+signature, sent over a REAL authenticated peer connection instead of
+`BroadcastChannel`, is rejected by the exact same, unmodified trust
+boundary. A milestone that changes WHERE bytes travel and finds itself
+also needing to change WHETHER a claim is believed has quietly stopped
+being a transport migration and started being a trust redesign — see
+"0.2.37 Establishes Transport Semantics; 0.2.38 Establishes Trust
+Semantics" above, which named this exact boundary before a second
+transport existed to test it against.
+
+### Peer Selection Is A Transport Concern, Never A Presence-Core Concern (0.2.53)
+
+`core/AvatarPresenceAdvertisement.js`'s wire shape gained nothing in
+0.2.53 — no `recipient`, no `visibility`, no authorized-peer list ever
+travels on it, over either transport. `application/PresenceSyncService.js#publish()`
+still takes exactly one argument, an advertisement, exactly as it has
+since 0.2.37, and still has no idea whether zero, one, or five peers
+end up receiving it. The decision of WHICH of a replica's currently
+AUTHENTICATED peer connections actually receive a given advertisement
+lives entirely inside `presence/PeerAvatarPresenceBroadcastProvider.js#advertise()`,
+which asks `core/PresenceVisibilityPolicy.js#shouldAdvertiseToPeer()`
+once per peer, immediately before sending to that one peer specifically
+— never once, in advance, to build a recipient list that then leaks
+into anything upstream. Keeping this decision at the transport, rather
+than teaching `PresenceSyncService` or `WorldNavigationSession` to
+understand "peers" at all, is what let 0.2.53 add real, per-recipient
+FRIENDS enforcement — the thing `core/PresenceVisibilityPolicy.js`
+named as a future possibility all the way back in 0.2.40 — without
+either of those two classes changing by a single line. A future
+transport (a relay, a mesh) that needs a completely different
+selection strategy changes nothing about `core/`/`application/`'s own
+presence code either, for the identical reason.
+
+### Presence Never Establishes A Connection (0.2.53)
+
+Receiving a presence advertisement is deliberately never, anywhere in
+this codebase, a trigger to `connect()` to anyone.
+`presence/PeerAvatarPresenceBroadcastProvider.js` only ever iterates
+`application/ConnectedPeerRegistry.js#list()` — connections that
+already exist, right now, for reasons entirely outside this class's
+own knowledge — and never calls `peer/PeerConnectionProvider.js#connect()`,
+imports `application/ConnectToPeerUseCase.js`, or reacts to an
+incoming advertisement by reaching for either. The layering stays
+strictly one-directional: Discovery finds a candidate address (0.2.50)
+→ Connection opens a transport to it (0.2.49/0.2.51) → Authentication
+proves who is on the other end (0.2.49) → only THEN can Presence (or
+any other protocol on `peer/PeerMessageBus.js`) exchange anything over
+it. A design that let an inbound advertisement, or even a bare
+`avatarId`/`ownerIdentity` claim, trigger an outbound connection
+attempt would turn presence — a fire-and-forget, unauthenticated-until-
+ingested claim — into a connection-amplification primitive: a
+malicious or merely misconfigured sender could cause every replica
+that happens to receive one broadcast advertisement to dial out
+somewhere. Presence stays exactly what 0.2.33 originally scoped it to
+be — a description of where an avatar already-connected-to-something
+currently is — never a mechanism for becoming connected to anything.
