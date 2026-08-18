@@ -1,4 +1,5 @@
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
+import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { ConnectedPeer } from './ConnectedPeer.js';
 import { ConnectedPeerRegistry } from './ConnectedPeerRegistry.js';
 
@@ -25,6 +26,18 @@ import { ConnectedPeerRegistry } from './ConnectedPeerRegistry.js';
 // ever populate a ConnectedPeer's remoteIdentity is a real, verified PROOF
 // — see application/ConnectedPeer.js and docs/Principles.md, "Discovery
 // Finds A Candidate; It Never Authenticates One."
+//
+// 0.2.51 note: `_authenticate()` no longer assumes `connection` is already
+// CONNECTED the instant it exists. `peer/LocalPeerConnectionProvider.js`
+// always was — pairing two in-process connections is instant — so
+// `session.start()` used to run synchronously, same tick, right here. A
+// real transport (`peer/WebRtcPeerConnectionProvider.js`) cannot make that
+// promise: ICE negotiation and DataChannel establishment are genuinely
+// asynchronous. Waiting for the connection's own `transportState` to reach
+// CONNECTED before calling `start()` — immediately if it already has,
+// otherwise via `onStateChange()` — makes this use case correct for BOTH,
+// with the synchronous case unchanged in observable behavior (still starts
+// before this call's caller gets control back).
 export class ConnectToPeerUseCase {
     constructor({ peerConnectionProvider, identityProvider, verifier, registry = new ConnectedPeerRegistry() } = {}) {
         if (!peerConnectionProvider || typeof peerConnectionProvider.connect !== 'function') {
@@ -60,6 +73,18 @@ export class ConnectToPeerUseCase {
         });
     }
 
+    // Wraps an ALREADY-EXISTING peer/PeerConnection.js in 0.2.49
+    // authentication and this registry, without this use case having asked
+    // its provider to create the connection via connect(). `connect()` and
+    // `listen()` are both thin wrappers over this. Exists for a transport
+    // where dialing and connection-object-creation are two separate steps
+    // — peer/WebRtcPeerConnectionProvider.js's own `createOffer()`, whose
+    // caller already holds a WebRtcPeerConnection before any remote answer
+    // has even arrived, let alone before the connection reaches CONNECTED.
+    attach(connection, discoveryRecord = null) {
+        return this._authenticate(connection, discoveryRecord);
+    }
+
     _authenticate(connection, discoveryRecord) {
         const session = new PeerAuthenticationSession({
             connection,
@@ -68,7 +93,22 @@ export class ConnectToPeerUseCase {
         });
         const connectedPeer = new ConnectedPeer({ connection, authenticationSession: session, discoveryRecord });
         this._registry.add(connectedPeer);
-        session.start();
+        this._startWhenConnected(connection, session);
         return connectedPeer;
+    }
+
+    _startWhenConnected(connection, session) {
+        if (connection.transportState === PeerConnectionState.CONNECTED) {
+            session.start();
+            return;
+        }
+        const unsubscribe = connection.onStateChange((state) => {
+            if (state === PeerConnectionState.CONNECTED) {
+                unsubscribe();
+                session.start();
+            } else if (state === PeerConnectionState.CLOSED || state === PeerConnectionState.FAILED) {
+                unsubscribe();
+            }
+        });
     }
 }

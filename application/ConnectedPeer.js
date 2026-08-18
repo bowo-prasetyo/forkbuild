@@ -80,7 +80,22 @@ export class ConnectedPeer {
 
     _notify() {
         const state = this.getLifecycleState();
-        for (const listener of this._stateListeners) {
+        // Snapshot before iterating: a CLOSED/FAILED notification here is
+        // exactly what drives application/ConnectedPeerRegistry.js's own
+        // auto-removal (see its header), which calls dispose() — and
+        // dispose() clears `_stateListeners` synchronously, from WITHIN
+        // this same notification. Iterating the live Set directly would
+        // let that clear() truncate a `for...of` already in progress,
+        // silently skipping any listener registered after the registry's
+        // own (Set iteration stops once the set it's iterating is
+        // cleared). A snapshot guarantees every listener subscribed at
+        // notification time is called exactly once, regardless of what a
+        // listener does to this object in response — 0.2.51's real,
+        // network-timed WebRtcPeerConnection is what first exposed this;
+        // peer/LocalPeerConnectionProvider.js's instant, synchronous close
+        // never left a test with an external listener still needing to
+        // observe CLOSED after registry disposal.
+        for (const listener of Array.from(this._stateListeners)) {
             listener(state);
         }
     }
