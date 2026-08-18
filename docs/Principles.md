@@ -3263,3 +3263,97 @@ called it since 0.2.49 first raised the possibility: a genuinely
 separate, deliberately unscheduled architectural question, never
 something a "Connected Peers" screen backs into by accident of what
 was convenient to keep around.
+
+### A Peer Relationship Remembers An Identity, Never An Endpoint (0.2.56)
+
+`core/PeerRelationship.js` carries exactly six fields: `identityId`,
+`publicKey`, `algorithm`, `alias`, `status`, and two timestamps. There
+is no field for an endpoint, a `connectionId`, a session nonce, a
+WebRTC candidate, or anything else that named a specific transport
+session — see that file's own header, which calls this out explicitly
+as the reason a `PeerRelationship` can never be used to skip a fresh
+handshake. `application/PeerRelationshipUseCase.js#rememberPeer`
+enforces where that identity is allowed to come from just as strictly
+as it enforces what is stored: its one parameter must be an actual
+`peer/PeerIdentity.js` instance — the type `peer/
+PeerAuthenticationSession.js` only ever produces after a real, mutual,
+signed proof completes — never a plain object, never a string, and
+never anything built from a `peer/PeerInvitation.js#identityHint`. An
+invitation can say "I might be Bob"; only a completed handshake can
+say "I have proven possession of this key," and only the latter is
+eligible to become a persistent relationship. Reconnecting to a known
+peer therefore always means: open a brand-new connection through the
+ordinary `PeerSessionManager` invitation flow (0.2.55, unmodified),
+let it authenticate completely from nothing (0.2.49, unmodified), and
+only THEN compare the freshly proven `remoteIdentity.identityId`
+against `PeerRelationshipUseCase.getRelationship()`. The rendezvous
+endpoint that got the two sides talking is never authoritative about
+who's on the other end — the cryptographic identity always is.
+
+### Remembering A Peer Is A Deliberate Act, Never A Side Effect Of Authentication (0.2.56)
+
+Nothing in `application/PeerSessionManager.js`,
+`application/ConnectToPeerUseCase.js`, or `peer/
+PeerAuthenticationSession.js` calls `PeerRelationshipUseCase.rememberPeer()`.
+Authenticating a connection and remembering an identity are two
+independently triggered actions, on purpose: authentication proves
+"this peer controls this key," a fact this codebase has been willing
+to compute automatically since 0.2.49; remembering means "I want this
+identity in my Known Peers," a decision only a person can make, and
+`ui/views/PeerConnectionsView.js`'s own "Remember" button is the only
+call site in the entire codebase. This is the direct continuation of
+0.2.55's own "An Authenticated Peer Is Not A Friend" — 0.2.55 refused
+to let a live connection MASQUERADE as a saved relationship; 0.2.56
+adds the real, persistent relationship concept 0.2.55 pointedly left
+out, and still refuses to create one without an explicit gesture. The
+same discipline applies going forward: `noteAuthenticated()` — called
+when a peer that is ALREADY known authenticates again — only ever
+refreshes `lastAuthenticatedAt` on an existing record; it is
+structurally incapable of creating a new one; it looks the identity
+up first and returns `null` untouched if nothing is remembered yet.
+Whether authenticating a connection to a NEW, not-yet-known identity
+should ever surface an unprompted "you connected to someone new" nudge
+in the UI remains open, deliberately unscheduled, future work — this
+milestone shipped only the explicit "Remember" gesture the design doc
+asked for.
+
+### Forgetting A Peer Deletes A Local Record, Never The Peer (0.2.56)
+
+`PeerRelationshipUseCase.forgetPeer(identityId)` does exactly one
+thing: it removes one row from this device's own, locally-scoped
+storage. It has no network call, no signature, no message sent to
+anyone — it cannot have one, because nothing about a `PeerRelationship`
+was ever addressed to the peer it describes in the first place (see "A
+Peer Relationship Remembers An Identity, Never An Endpoint," above). Bob's
+own `LocalIdentity`, his signing key, his `AvatarProfile`, his
+publications, his documents, and his world placements are untouched by
+Alice forgetting him — they live on Bob's device (or wherever he chose
+to publish them), not on Alice's, and Alice's local relationship record
+was never anything more than her own note that she once proved who he
+was. Forgetting also never touches `application/ConnectedPeerRegistry.js`:
+if the forgotten identity happens to be connected right now, the live
+`ConnectedPeer` keeps running, exactly as authenticated as it was a
+moment ago — forgetting only means the NEXT time this identity
+authenticates, `PeerRelationshipUseCase.getRelationship()` will report
+it as unknown again, same as anyone this device has never met.
+
+### Knowing Is Not Befriending (0.2.56)
+
+`core/PeerRelationshipStatus.js` defines exactly one value — `KNOWN` —
+deliberately, not as a placeholder waiting to be filled in. "I have
+authenticated this identity at least once and chosen to keep a local
+note about it" is a complete, self-contained claim; it says nothing
+about mutual consent, reciprocity, or any social meaning beyond "my
+device recognizes this key." A genuine `Friend` relationship — one
+where the design doc's own next milestone asks how Alice and Bob
+mutually agree they are friends in a decentralized system, with
+signed requests, acceptance, and revocation — is a real, separate
+concept this milestone deliberately did not build, per docs/Roadmap.md,
+Proposed, Unscheduled: "Decentralized Friend Relationship." Alice can
+KNOW Bob the moment she authenticates and clicks Remember, entirely
+unilaterally, with no action required from Bob at all — the same way
+she could always set a local alias on him (0.2.50). Nothing about
+`PeerRelationship` is ever sent to Bob, shown to Bob, or requires Bob's
+agreement; conflating that with friendship would quietly promise a
+mutual, social guarantee this milestone never built and never signed
+anything to support.

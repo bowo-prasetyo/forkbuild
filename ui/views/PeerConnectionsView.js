@@ -12,13 +12,23 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 // read straight off the SAME application/ConnectedPeer.js / peer/
 // PeerAuthenticationSession.js this codebase has had since 0.2.49/0.2.50.
 //
-// Two deliberate non-features, matching the milestone's own scope: no
-// persistent "friends" list (a peer here exists only for the lifetime of
-// its connection — see application/ConnectedPeerRegistry.js's own header),
-// and no chat (peer/PeerMessageBus.js is not touched anywhere in this
-// file). An alias typed into a peer's card is exactly what application/
-// ConnectedPeer.js already documents it as: a local note, never sent,
-// never surviving a reconnect.
+// No chat (peer/PeerMessageBus.js is still not touched anywhere in this
+// file). An alias typed into a peer's CARD — the "Local alias" field
+// below — is exactly what application/ConnectedPeer.js already documents
+// it as: a local note, never sent, never surviving a reconnect.
+//
+// 0.2.56 adds the persistent counterpart 0.2.55 deliberately declined to
+// add: "Known Peers," backed entirely by application/
+// PeerRelationshipUseCase.js. The two lists on this page answer two
+// different questions and are never merged into one: "My Peers" is
+// exactly as ephemeral as it always was — every row disappears the
+// instant application/ConnectedPeerRegistry.js says the connection is
+// gone — while "Known Peers" is exactly as durable as
+// application/PeerRelationshipUseCase.js's own storage, surviving a
+// disconnect, a reload, and the app restarting. A peer only ever crosses
+// from the first list into the second by an explicit "Remember" click —
+// see docs/Principles.md, "Remembering A Peer Is A Deliberate Act, Never
+// A Side Effect Of Authentication" (0.2.56) — never automatically.
 const LIFECYCLE_LABELS = {
     [PeerLifecycleState.CONNECTING]: 'Connecting…',
     [PeerLifecycleState.CONNECTED]: 'Connected — not yet authenticated',
@@ -58,7 +68,7 @@ function formatDuration(ms) {
 }
 
 function stripPrefix(message) {
-    return message.replace(/^(PeerSessionManager|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
+    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
 }
 
 export default {
@@ -66,9 +76,12 @@ export default {
     setup() {
         const identityUseCase = inject('identityUseCase');
         const peerSessionManager = inject('peerSessionManager');
+        const peerRelationshipUseCase = inject('peerRelationshipUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
         const peers = ref(peerSessionManager.listPeers());
+        const relationships = ref(isAuthenticated.value ? peerRelationshipUseCase.getRelationships() : []);
+        const relationshipError = ref('');
         const now = ref(Date.now());
         // Purely local, view-only bookkeeping for "connected duration" —
         // application/ConnectedPeer.js itself has no createdAt, on purpose
@@ -89,6 +102,54 @@ export default {
         function connectedFor(peer) {
             const since = firstSeenAt.get(peer.connectionId);
             return since ? formatDuration(now.value - since) : '0s';
+        }
+
+        // --- Known Peers (0.2.56) ----------------------------------------
+        function refreshRelationships(list) {
+            relationships.value = list || peerRelationshipUseCase.getRelationships();
+        }
+
+        // A relationship is looked up ONLY by a peer's already-verified
+        // remoteIdentity — see application/PeerRelationshipUseCase.js's
+        // own header on why an invitation hint is never eligible here.
+        function relationshipFor(peer) {
+            return peer.remoteIdentity ? peerRelationshipUseCase.getRelationship(peer.remoteIdentity.identityId) : null;
+        }
+
+        // "Is this known peer connected right now?" is never stored on
+        // the relationship itself — see core/PeerRelationshipStatus.js's
+        // own header — it is derived, fresh, from the SAME live `peers`
+        // list "My Peers" already renders above.
+        function isConnectedNow(identityId) {
+            return peers.value.some((p) => p.remoteIdentity
+                && p.remoteIdentity.identityId === identityId
+                && p.getLifecycleState() === PeerLifecycleState.AUTHENTICATED);
+        }
+
+        function rememberPeer(peer) {
+            relationshipError.value = '';
+            try {
+                peerRelationshipUseCase.rememberPeer(peer.remoteIdentity, { alias: peer.alias || undefined });
+            } catch (e) {
+                relationshipError.value = stripPrefix(e.message);
+            }
+        }
+
+        function forgetKnownPeer(identityId) {
+            relationshipError.value = '';
+            try {
+                peerRelationshipUseCase.forgetPeer(identityId);
+            } catch (e) {
+                relationshipError.value = stripPrefix(e.message);
+            }
+        }
+
+        function updateKnownAlias(identityId, event) {
+            peerRelationshipUseCase.updateAlias(identityId, event.target.value);
+        }
+
+        function formatWhen(date) {
+            return date instanceof Date ? date.toLocaleString() : '';
         }
 
         // --- Invite Someone ---------------------------------------------
@@ -211,16 +272,23 @@ export default {
         }
 
         let unsubscribePeers = null;
+        let unsubscribeRelationships = null;
         let unsubscribeSession = null;
         let tickInterval = null;
         onMounted(() => {
             refreshPeers();
+            refreshRelationships();
             unsubscribePeers = peerSessionManager.onPeersChanged((list) => refreshPeers(list));
-            unsubscribeSession = identityUseCase.onSessionChanged(() => { isAuthenticated.value = identityUseCase.isAuthenticated(); });
+            unsubscribeRelationships = peerRelationshipUseCase.onRelationshipsChanged((list) => refreshRelationships(list));
+            unsubscribeSession = identityUseCase.onSessionChanged(() => {
+                isAuthenticated.value = identityUseCase.isAuthenticated();
+                refreshRelationships();
+            });
             tickInterval = setInterval(() => { now.value = Date.now(); }, 1000);
         });
         onBeforeUnmount(() => {
             if (unsubscribePeers) unsubscribePeers();
+            if (unsubscribeRelationships) unsubscribeRelationships();
             if (unsubscribeSession) unsubscribeSession();
             if (tickInterval) clearInterval(tickInterval);
         });
@@ -232,17 +300,21 @@ export default {
             showAcceptForm, importText, acceptError, acceptReply, submitAcceptInvitation, closeAcceptForm,
             completingConnectionId, completeReplyText, completeError, startComplete, submitComplete, awaitingReply,
             selectedPeer, openDetail, closeDetail, disconnectPeer, updateAlias,
-            copiedKey, copyText
+            copiedKey, copyText,
+            relationships, relationshipError, relationshipFor, isConnectedNow,
+            rememberPeer, forgetKnownPeer, updateKnownAlias, formatWhen
         };
     },
     template: `
         <section class="peer-connections-view">
             <h1>Connected Peers</h1>
             <p class="form-hint form-hint--neutral">
-                A peer here is a live, authenticated WebRTC connection — nothing more.
-                Closing it makes the peer disappear; nothing about it is ever saved as a
-                "friend" or a permanent trust relationship. Reconnecting always
-                re-authenticates from nothing.
+                A peer in "My Peers" below is a live, authenticated WebRTC connection —
+                nothing more. Closing it makes the peer disappear from this list; that alone
+                never saves anything. Choosing <strong>Remember</strong> on an authenticated peer
+                is the one deliberate way to keep a local record of who they are — see
+                "Known Peers" further down. Either way, reconnecting always re-authenticates
+                from nothing; nothing about a past connection itself is ever reused.
             </p>
 
             <p v-if="!isAuthenticated" class="form-hint form-hint--neutral">
@@ -349,13 +421,63 @@ export default {
                         </button>
                     </div>
 
+                    <p v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && relationshipFor(peer)" class="form-hint form-hint--neutral">
+                        ✓ Known Peer{{ relationshipFor(peer).alias ? ' — ' + relationshipFor(peer).alias : '' }}
+                    </p>
+
                     <div class="identity-mgmt-actions">
+                        <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && !relationshipFor(peer)"
+                                class="action-btn action-btn--secondary" @click="rememberPeer(peer)">
+                            Remember
+                        </button>
+                        <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && relationshipFor(peer)"
+                                class="action-btn action-btn--secondary" @click="forgetKnownPeer(peer.remoteIdentity.identityId)">
+                            Forget
+                        </button>
                         <button class="action-btn action-btn--secondary" @click="openDetail(peer)">Details</button>
                         <button class="action-btn action-btn--danger" @click="disconnectPeer(peer)">Disconnect</button>
                     </div>
                 </div>
             </div>
             <p v-else class="form-hint form-hint--neutral">No peers connected right now.</p>
+
+            <p v-if="relationshipError" class="identity-unlock-error">{{ relationshipError }}</p>
+
+            <h2 class="peer-my-peers-heading">Known Peers</h2>
+            <p class="form-hint form-hint--neutral">
+                A known peer remembers an IDENTITY, never a connection or an address. Reconnecting to a
+                known peer always re-authenticates from nothing before this device treats the result as the
+                same person again — "Connected now" below is read live from My Peers, never stored here.
+            </p>
+            <div v-if="relationships.length" class="identity-mgmt-list">
+                <div v-for="relationship in relationships" :key="relationship.identityId" class="identity-mgmt-card">
+                    <div class="identity-mgmt-card-header">
+                        <span class="identity-mgmt-name">{{ relationship.alias || shortId(relationship.identityId) }}</span>
+                        <span class="peer-badge" :class="isConnectedNow(relationship.identityId) ? 'peer-badge--authenticated' : 'peer-badge--pending'">
+                            {{ isConnectedNow(relationship.identityId) ? 'Connected now' : 'Not connected' }}
+                        </span>
+                    </div>
+                    <p class="identity-mgmt-status">
+                        {{ shortId(relationship.identityId) }} · known since {{ formatWhen(relationship.createdAt) }}
+                        <br />last authenticated {{ formatWhen(relationship.lastAuthenticatedAt) }}
+                    </p>
+
+                    <label class="peer-alias-field">
+                        <span class="form-label">Alias</span>
+                        <input type="text" class="form-input" :value="relationship.alias || ''"
+                               placeholder="e.g. Bob"
+                               @change="updateKnownAlias(relationship.identityId, $event)" />
+                    </label>
+
+                    <div class="identity-mgmt-actions">
+                        <button class="action-btn action-btn--danger" @click="forgetKnownPeer(relationship.identityId)">Forget</button>
+                    </div>
+                </div>
+            </div>
+            <p v-else class="form-hint form-hint--neutral">
+                No known peers yet. Authenticate a connection above, then click <strong>Remember</strong> on
+                their card to keep a local record of who they are.
+            </p>
 
             <div v-if="selectedPeer" role="dialog" aria-label="Peer identity" class="modal-overlay" @click.self="closeDetail">
                 <div class="modal-panel peer-detail-panel">

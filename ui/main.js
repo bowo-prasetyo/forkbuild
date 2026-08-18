@@ -4,6 +4,7 @@ import { router } from './router/index.js';
 import { CreateIdentityProviderUseCase } from '../application/CreateIdentityProviderUseCase.js';
 import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
+import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -15,9 +16,15 @@ const identityUseCase = new IdentityUseCase(identityProvider);
 // whichever identity is currently signed in here, never a second,
 // separate one.
 const peerSessionManager = new PeerSessionManager({ identityProvider });
+// 0.2.56 — one app-wide PeerRelationshipUseCase, same reasoning: a
+// remembered peer must survive navigating away from /peers, and must
+// survive a reload, which peerSessionManager's own registry never does
+// on purpose (see application/ConnectedPeerRegistry.js's own header).
+const peerRelationshipUseCase = new CreatePeerRelationshipUseCase().execute(identityProvider);
 
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
+app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
 app.use(router);
 app.mount('#app');
