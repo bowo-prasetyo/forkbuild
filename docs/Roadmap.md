@@ -101,6 +101,7 @@
 0.2.45  Ephemeral Avatar Interaction Synchronization                 ✓
 0.2.46  Local Identity & Authentication Session                       ✓
 0.2.47  Identity Security & Key Protection                             ✓
+0.2.48  Portable Identity, Export, Import & Recovery                    ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -820,27 +821,99 @@ exactly as typed); true activity-based idle detection rather than a
 fixed unlock lifetime; and — unchanged from 0.2.46's own list — portable
 identity export/import/recovery and any peer discovery or authenticated
 peer session. Protecting a key locally doesn't change that it is still
-the only copy on the only device that has it; that is exactly what the
-next proposed milestone below is for.
+the only copy on the only device that has it; that is exactly what
+0.2.48, below, is for.
+
+0.2.48 closes that specific gap — the one 0.2.46 and 0.2.47 both named
+and left open — rather than moving on to peer discovery: a
+`LocalIdentity`'s private key has only ever existed on the one device
+that generated it. `identity/IdentityExport.js` defines the portable
+package: `formatVersion`, `identityId`, `publicKey`, `algorithm`, an
+untrusted `label` HINT (never authoritative — the exact same
+"local-only, never an authorization claim" property `LocalIdentity.js`
+already documents for a live identity), and `encryptedPrivateKey` — a
+`KeyEncryption` record, verbatim, not a second "portable secret" format
+invented for this milestone. `identity/IdentityImport.js` strictly
+validates a package BEFORE anything is decrypted or persisted: format
+version, every field's shape, and — the one check needing actual
+cryptography, not just shape — that `identityId` is the exact did:key
+derivation of `publicKey`, catching a tampered package without needing
+the passphrase at all. `identity/IdentityRecovery.js` orchestrates the
+rest, storage-agnostic and side-effect-free: an identityId already
+present on this device with matching key material short-circuits to
+`ALREADY_EXISTS` before the passphrase is even checked (never a second
+copy, never requires knowing the real passphrase for a no-op);
+mismatched key material under the same identityId — unreachable via two
+honestly-generated packages, since a did:key is a bijective encoding of
+the public key — is rejected as `IdentityConflictError`, a defensive
+floor, never resolved automatically either way; a genuinely new
+identity is decrypted, has its derived public key checked AGAIN against
+the package's own claim, and only then handed back for the caller to
+persist. `identity/LocalIdentityProvider.js` gains
+`exportLocalIdentity(identityId, passphrase)` — which, for a protected
+identity, ALWAYS re-decrypts from the stored record rather than reading
+the in-memory vault cache, so exporting demands the passphrase again
+even while the identity sits unlocked, an explicit security boundary
+distinct from "is this session already authenticated" — and
+`importLocalIdentity(package, passphrase, { label })`, which persists
+an imported identity as protected and LOCKED, always, regardless of
+whether the source identity was protected at rest on its origin device:
+the only secret the receiving device ever had was the decrypted seed
+plus the import passphrase, so that is what protects it here. Importing
+never authenticates and never populates the vault cache — proving this
+device now HOLDS a key is a different fact from proving it has been
+unlocked with it. `ui/views/IdentityManagementView.js` (new, routed at
+`/identity`, linked from `App.js`'s nav as "My Identities") is a
+dedicated view for a question `ui/components/LoginModal.js` was never
+meant to answer — "what does this device hold, and what can I do with
+each key" — rather than folding export/import controls into the
+single-identity login flow: lock/unlock any identity independent of
+which one is currently authenticated, export with its own inline
+passphrase prompt, and an import form that previews label/identityId/
+algorithm/already-exists status from the pasted package BEFORE any
+passphrase is entered or anything is decrypted. See
+docs/Architecture.md, "Portable Identity, Export, Import & Recovery
+(0.2.48)," and docs/Principles.md, "Exporting And Importing An Identity
+Preserves The Identity, Not Merely Its Name," "Recovery Is Not Password
+Recovery," and "Duplicate Identity Import Is A No-Op, Never A Silent
+Overwrite." `tests/PortableIdentity.test.js`'s flagship test proves the
+central invariant end to end: create and protect an identity on one
+`LocalIdentityProvider` instance, sign, export, import into a completely
+independent second instance, and confirm a signature produced on the
+SECOND instance verifies with the identity's ORIGINAL public key through
+the entirely unmodified `LocalAuthorizationVerifier` — the identity
+itself survived the trip, not merely its label.
+
+Deliberately not in 0.2.48: changing or removing a protected identity's
+passphrase (unchanged gap from 0.2.47 — protecting or moving a key still
+doesn't make its passphrase editable); any recovery mechanism that
+doesn't require BOTH the exported package and its passphrase (see
+docs/Principles.md, "Recovery Is Not Password Recovery" — there is no
+central authority this milestone could add one without contradicting);
+QR-code or other non-file transport for the exported package (today's
+package is a plain JSON file/textarea, nothing more); and — unchanged
+from 0.2.46/0.2.47's own lists — any peer discovery mechanism or
+authenticated peer session. An identity that can now move between
+devices still only ever proves something to whichever LOCAL device
+currently holds it; nothing here lets Alice prove her identity to Bob
+over a network.
 
 Proposed, unscheduled follow-on milestones this opens (suggestions,
 not commitments, exactly like the avatar arc's own list above):
 Passphrase Management (changing or removing a protected identity's
-passphrase, and a real PIN/passphrase-strength policy — the two gaps
-0.2.47 named above); Portable Identity & Key Recovery (encrypted
-export/import so an identity survives moving to a new device, likely
-building directly on 0.2.47's `KeyEncryption` record shape rather than
-inventing a second encrypted-export format); Peer Discovery & Transport
+passphrase, and a real PIN/passphrase-strength policy — the gaps 0.2.47
+named and 0.2.48 left exactly as open); Peer Discovery & Transport
 Abstraction (separating "finding another peer" from "communicating
 with one," with today's `presence/LocalAvatarPresenceBroadcastProvider.js`
 becoming one local transport among several rather than the only one);
 Authenticated Peer Sessions (mutual proof of identity-key possession
 between two live peers, building on 0.2.46's `AuthenticationSession`
 and 0.2.47's `VaultLock` the way `identity/LocalAuthorizationVerifier.js`
-already builds on `identity/SigningIdentity.js`); and, once those
-exist, reconnecting presence/profile/interaction sync to run over
-genuinely authenticated peer connections instead of an open
-same-origin `BroadcastChannel`.
+already builds on `identity/SigningIdentity.js`, and now meaningfully
+testable across two genuinely independent devices thanks to 0.2.48's
+export/import); and, once those exist, reconnecting presence/profile/
+interaction sync to run over genuinely authenticated peer connections
+instead of an open same-origin `BroadcastChannel`.
 
 ## 0.1.50 — What shipped
 

@@ -151,6 +151,25 @@ export class IdentityUseCase {
         return () => subscription.unsubscribe();
     }
 
+    // --- 0.2.48: portable identity export / import ----------------------
+    //
+    // Thin delegation, exactly like every other method in this file —
+    // identity/LocalIdentityProvider.js's exportLocalIdentity()/
+    // importLocalIdentity() already do the real work (see its own
+    // comment). importIdentity() only fires a change notification when
+    // something actually CHANGED (`status === 'IMPORTED'`): an
+    // ALREADY_EXISTS result is a pure no-op by design, and neither
+    // outcome ever touches currentUser()/currentSession() — importing an
+    // identity never authenticates it.
+    exportIdentity(identityId, passphrase) {
+        return this._identityProvider.exportLocalIdentity(identityId, passphrase);
+    }
+
+    importIdentity(pkg, passphrase, label = null) {
+        const result = this._identityProvider.importLocalIdentity(pkg, passphrase, { label });
+        return result;
+    }
+
     _publishChange() {
         this._eventBus.publish(IDENTITY_EVENT, { user: this.currentUser() });
         this._eventBus.publish(SESSION_EVENT, { session: this.currentSession() });

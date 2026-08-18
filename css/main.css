@@ -2612,3 +2612,102 @@ html, body {
     color: #707070;
     font-size: 0.72rem;
 }
+
+/* Identity Management (0.2.48) — a dedicated view, distinct from
+   LoginModal's identity-list (reused/extended above): every identity
+   this device holds, lock/unlock and export controls per identity, plus
+   create/import forms. Card language matches avatar-preview-panel. */
+.identity-management-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.identity-mgmt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+}
+
+.identity-mgmt-card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+}
+
+.identity-mgmt-card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.identity-mgmt-name {
+    font-weight: 600;
+    color: #e0e0e0;
+    font-size: 0.95rem;
+}
+
+.identity-mgmt-status {
+    margin: 0.25rem 0 0.75rem;
+    color: #909090;
+    font-size: 0.8rem;
+}
+
+.identity-mgmt-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.identity-mgmt-form {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #2a2a2a;
+    max-width: 480px;
+}
+
+.identity-mgmt-form h2 {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+    color: #e0e0e0;
+}
+
+.identity-export-json {
+    font-family: monospace;
+    font-size: 0.72rem;
+    resize: vertical;
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.identity-import-preview {
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.82rem;
+    color: #c9c9c9;
+}
+
+.identity-import-preview p {
+    margin: 0.15rem 0;
+}
+
+.identity-import-result {
+    background: #121212;
+    border: 1px solid #4caf7d;
+    border-radius: 4px;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    color: #d0d0d0;
+}
+
+.identity-import-result .modal-btn {
+    margin-top: 0.5rem;
+}
