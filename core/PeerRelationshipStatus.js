@@ -15,11 +15,13 @@
 // because it is the only value that exists — a relationship you can
 // look up at all IS a relationship in the KNOWN state, by definition.
 //
-// This is intentionally NOT the same vocabulary as a future "Friend"
-// concept (0.2.57, proposed, unscheduled) — see docs/Principles.md,
-// "Knowing Is Not Befriending" (0.2.56). KNOWN answers "have I met
-// this identity and chosen to keep a local record of it," nothing
-// more.
+// This is intentionally NOT the same vocabulary as the "Friend"
+// concept 0.2.57 went on to build (see core/FriendshipState.js's own
+// NONE/REQUESTED/FRIEND) — see docs/Principles.md, "Knowing Is Not
+// Befriending" (0.2.56). KNOWN answers "have I met this identity and
+// chosen to keep a local record of it," nothing more; it stays exactly
+// this narrow even now that a real, mutual Friend concept exists
+// alongside it.
 export const PeerRelationshipStatus = Object.freeze({
     KNOWN: 'KNOWN'
 });

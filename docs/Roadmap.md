@@ -1667,6 +1667,48 @@ Presence, surfacing "a known peer just came online" using nothing but
 `PeerRelationshipUseCase.getRelationships()` — both of which already
 exist, completely unmodified, the moment this milestone ships.
 
+0.2.57 answers the first item that list named: Decentralized Friend
+Relationships & Mutual Consent. `core/FriendshipAdvertisement.js`
+defines a small, closed REQUEST/ACCEPT vocabulary (`core/
+FriendshipAction.js`) exchanged as REQUIRED, signed events directly
+between two already-AUTHENTICATED peers over `peer/PeerMessageBus.js`
+(0.2.52, unmodified) — never optionally signed the way presence/
+profile/interaction are, because there is no server anywhere that
+could otherwise vouch for "Bob accepted Alice's request." Each device
+keeps its own durable `core/FriendshipRecord.js` — the outgoing action
+it authored and the incoming action it received and independently
+verified — and derives `core/FriendshipState.js`'s `NONE`/`REQUESTED`/
+`FRIEND` fresh from the two, the same "computed, never stored"
+discipline `peer/PeerLifecycleState.js` already established: `FRIEND`
+requires one side's signed REQUEST answered by the OTHER side's signed
+ACCEPT, never merely both sides happening to ask at once. See
+docs/Principles.md, "Friendship Is Mutual Consent, Never A Unilateral
+Claim" and "A Friend Request Is Signed Evidence, Never A Server
+Record." `application/FriendRelationshipUseCase.js` is the first live
+consumer of `peer/PeerMessageBus.js` in the running app — the World
+View's own presence/profile/interaction sync still runs over the
+BroadcastChannel transport (`application/CreateWorldViewUseCase.js`,
+untouched) — and its ingestion boundary binds every incoming claim to
+the SPECIFIC already-authenticated connection it arrived on, never
+merely to what the payload itself claims, defeating even a captured,
+genuinely-valid signature relayed over an impostor's own connection.
+`ui/views/PeerConnectionsView.js` grows a third list, "Friends," fully
+independent of "My Peers" and "Known Peers" — a friend request can be
+sent to, and accepted from, a peer this device never separately chose
+to "Remember." Deliberately not in 0.2.57, matching the design doc's
+own narrow scope: REJECT, CANCEL, BLOCK, and UNFRIEND — see
+docs/Principles.md, "Friendship Can Be Established, But Not Yet
+Revoked" —
+each introduces revocation semantics ("what does it mean when the two
+sides' local records disagree?") left to a later milestone rather than
+shipped half-answered; friend-based presence/profile privacy — `core/
+PresenceVisibilityPolicy.js`'s `FRIENDS` tier stays exactly the
+manually-typed allow-list 0.2.40 built, untouched, now that a real
+`Friend` concept finally exists to wire it to later; and any chat,
+notification, or store-and-forward delivery — a friend request or
+acceptance can only ever be sent while both sides are, right now, on a
+live, authenticated connection.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

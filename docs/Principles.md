@@ -3357,3 +3357,76 @@ she could always set a local alias on him (0.2.50). Nothing about
 agreement; conflating that with friendship would quietly promise a
 mutual, social guarantee this milestone never built and never signed
 anything to support.
+
+### Friendship Is Mutual Consent, Never A Unilateral Claim (0.2.57)
+
+`core/FriendshipState.js#deriveFriendshipState()` only ever returns
+`FRIEND` for one shape of evidence: a signed REQUEST from one identity
+answered by a signed ACCEPT from the OTHER. Two identities each sending
+their own REQUEST, with no ACCEPT from either side, is still
+`REQUESTED` — even though, informally, "they both asked." This is
+deliberate, not an oversight: asking is not agreeing. A REQUEST is one
+identity's unilateral desire; only an ACCEPT is signed evidence that
+the OTHER side actually looked at that desire and consented to it. If
+mutual, simultaneous REQUESTs alone were treated as `FRIEND`, two
+identities could end up "friends" without either one ever having
+reviewed or agreed to anything the other side actually proposed — the
+same unilateral-claim failure mode `core/PeerRelationshipStatus.js`'s
+own header already named for `KNOWN` ("Alice can KNOW Bob... entirely
+unilaterally, with no action required from Bob at all"), reintroduced
+one level up if `FRIEND` were allowed to work the same way. `core/
+FriendshipRecord.js` therefore stores TWO independent slots —
+`outgoingAction` (what this device authored) and `incomingAction` (what
+the other identity authored, already verified) — and `FRIEND` is a
+property of the PAIR, never of either slot alone.
+
+### A Friend Request Is Signed Evidence, Never A Server Record (0.2.57)
+
+There is no server anywhere in this architecture that could tell Alice
+"Bob accepted your request" — the only thing that can ever tell her
+that is Bob's own Ed25519 signature over exactly that claim, arriving
+over the same authenticated connection 0.2.49 already proved he
+controls. This is why `identity/LocalAuthorizationVerifier.js#verifyFriendshipAdvertisement()`
+is the first verify* method in this file to refuse an UNSIGNED
+advertisement outright, rather than tolerating it the way
+`verifyPresenceAdvertisement()`/`verifyAvatarProfileAdvertisement()`/
+`verifyAvatarInteractionAdvertisement()` all do (see core/
+PresenceTrustPolicy.js for why those three CAN afford to be lenient:
+an unsigned presence claim degrades to "less trusted," never to "no
+relationship exists at all"). A friendship advertisement has no such
+soft landing — an unsigned REQUEST or ACCEPT proves nothing whatsoever,
+so it is not evidence at all, and this codebase refuses to pretend
+otherwise by storing it as if it were.
+`application/FriendRelationshipUseCase.js#_handleIncoming()` goes one
+step further than the signature check alone: it also requires the
+claimed `actorIdentity` to equal the `remoteIdentity` THIS SPECIFIC,
+already-authenticated connection proved during its own 0.2.49
+handshake — never merely whatever the payload claims about itself. A
+signature that verifies perfectly is still discarded if it arrives over
+the wrong connection, which is what makes even a captured, genuinely
+valid advertisement worthless to a third party relaying it over their
+OWN connection (see `tests/FriendRelationships.test.js`'s flagship,
+step 15).
+
+### Friendship Can Be Established, But Not Yet Revoked (0.2.57)
+
+`core/FriendshipAction.js` defines exactly two actions — REQUEST and
+ACCEPT — deliberately, not as a first installment waiting to be
+completed. REJECT, CANCEL, BLOCK, and UNFRIEND were all considered and
+all deliberately left out, because every one of them raises the same
+hard question this milestone declines to answer yet: what happens when
+the two sides' independently-held local records disagree about whether
+a relationship still exists? If Alice unilaterally deletes her local
+`FriendshipRecord` for Bob while Bob's own device still holds a valid
+`FRIEND` derivation, the two replicas now disagree — not necessarily
+WRONG, but a real state that needs its own explicit, signed semantics
+(a REVOKE action Bob's device can verify and act on, most likely) that
+this milestone did not design. Shipping half of that answer — letting
+Alice's UI show "not friends" while Bob's still confidently shows
+"friends," with no signed event ever explaining why — would be worse
+than not offering the button at all. This milestone's invariant is
+therefore intentionally narrower than a complete social graph: a
+`FriendshipRecord`, once it reaches `FRIEND`, has no code path in this
+codebase that ever moves it back to `REQUESTED` or `NONE`. Revocation
+is real, substantial, unbuilt work, left to its own future milestone —
+see docs/Roadmap.md's own list of what 0.2.57 deliberately left out.

@@ -1,5 +1,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
+import { FriendshipState } from '../../core/FriendshipState.js';
+import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 
 // 0.2.55 — Peer Connections & Rendezvous UI: the first live surface over
 // everything 0.2.49 through 0.2.54 built underneath. Answers the one
@@ -29,6 +31,16 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 // from the first list into the second by an explicit "Remember" click —
 // see docs/Principles.md, "Remembering A Peer Is A Deliberate Act, Never
 // A Side Effect Of Authentication" (0.2.56) — never automatically.
+//
+// 0.2.57 adds a THIRD, independent list, "Friends," and a matching pair
+// of actions on an authenticated peer's card: "Send Friend Request" and
+// "Accept Friend Request." Backed entirely by application/
+// FriendRelationshipUseCase.js, never by PeerRelationshipUseCase — a
+// Known Peer and a Friend answer genuinely different questions (see
+// docs/Principles.md, "Friendship Is Mutual Consent, Never A Unilateral
+// Claim") and this view never conflates the two: a friend request can
+// be sent to, and accepted from, a peer this device has never
+// "Remembered" at all.
 const LIFECYCLE_LABELS = {
     [PeerLifecycleState.CONNECTING]: 'Connecting…',
     [PeerLifecycleState.CONNECTED]: 'Connected — not yet authenticated',
@@ -68,7 +80,7 @@ function formatDuration(ms) {
 }
 
 function stripPrefix(message) {
-    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
+    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|FriendRelationshipUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
 }
 
 export default {
@@ -77,11 +89,14 @@ export default {
         const identityUseCase = inject('identityUseCase');
         const peerSessionManager = inject('peerSessionManager');
         const peerRelationshipUseCase = inject('peerRelationshipUseCase');
+        const friendRelationshipUseCase = inject('friendRelationshipUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
         const peers = ref(peerSessionManager.listPeers());
         const relationships = ref(isAuthenticated.value ? peerRelationshipUseCase.getRelationships() : []);
         const relationshipError = ref('');
+        const friendships = ref(isAuthenticated.value ? friendRelationshipUseCase.getRelationships() : []);
+        const friendshipError = ref('');
         const now = ref(Date.now());
         // Purely local, view-only bookkeeping for "connected duration" —
         // application/ConnectedPeer.js itself has no createdAt, on purpose
@@ -151,6 +166,68 @@ export default {
         function formatWhen(date) {
             return date instanceof Date ? date.toLocaleString() : '';
         }
+
+        // --- Friends (0.2.57) ---------------------------------------------
+        // Looked up ONLY by a peer's already-verified remoteIdentity —
+        // the exact same discipline relationshipFor() above already
+        // applies, for the exact same reason: an unauthenticated
+        // invitation hint is never eligible to stand in for a proven
+        // identity.
+        function friendshipFor(peer) {
+            return peer.remoteIdentity ? friendRelationshipUseCase.getRelationship(peer.remoteIdentity.identityId) : null;
+        }
+
+        function friendStatus(peer) {
+            const record = friendshipFor(peer);
+            return record ? record.status : FriendshipState.NONE;
+        }
+
+        function hasPendingIncomingRequest(peer) {
+            const record = friendshipFor(peer);
+            return Boolean(record && !record.outgoingAction
+                && record.incomingAction && record.incomingAction.action === FriendshipAction.REQUEST);
+        }
+
+        function hasSentRequest(peer) {
+            const record = friendshipFor(peer);
+            return Boolean(record && record.status !== FriendshipState.FRIEND
+                && record.outgoingAction && record.outgoingAction.action === FriendshipAction.REQUEST);
+        }
+
+        function sendFriendRequest(peer) {
+            friendshipError.value = '';
+            try {
+                friendRelationshipUseCase.sendFriendRequest(peer);
+            } catch (e) {
+                friendshipError.value = stripPrefix(e.message);
+            }
+        }
+
+        function acceptFriendRequest(peer) {
+            friendshipError.value = '';
+            try {
+                friendRelationshipUseCase.acceptFriendRequest(peer);
+            } catch (e) {
+                friendshipError.value = stripPrefix(e.message);
+            }
+        }
+
+        function refreshFriendships(list) {
+            friendships.value = list || friendRelationshipUseCase.getRelationships();
+        }
+
+        // A friend never carries its own alias — see core/
+        // FriendshipRecord.js's own header on why it stores only signed
+        // evidence, never a local note. This cross-references the SAME
+        // application/PeerRelationshipUseCase.js alias "Known Peers"
+        // already renders, falling back to a shortened identityId for a
+        // friend this device never separately chose to "Remember."
+        function friendDisplayName(identityId) {
+            const relationship = peerRelationshipUseCase.getRelationship(identityId);
+            return (relationship && relationship.alias) || shortId(identityId);
+        }
+
+        const friends = computed(() => friendships.value.filter((f) => f.status === FriendshipState.FRIEND));
 
         // --- Invite Someone ---------------------------------------------
         const invitePending = ref(false);
@@ -273,22 +350,27 @@ export default {
 
         let unsubscribePeers = null;
         let unsubscribeRelationships = null;
+        let unsubscribeFriendships = null;
         let unsubscribeSession = null;
         let tickInterval = null;
         onMounted(() => {
             refreshPeers();
             refreshRelationships();
+            refreshFriendships();
             unsubscribePeers = peerSessionManager.onPeersChanged((list) => refreshPeers(list));
             unsubscribeRelationships = peerRelationshipUseCase.onRelationshipsChanged((list) => refreshRelationships(list));
+            unsubscribeFriendships = friendRelationshipUseCase.onRelationshipsChanged((list) => refreshFriendships(list));
             unsubscribeSession = identityUseCase.onSessionChanged(() => {
                 isAuthenticated.value = identityUseCase.isAuthenticated();
                 refreshRelationships();
+                refreshFriendships();
             });
             tickInterval = setInterval(() => { now.value = Date.now(); }, 1000);
         });
         onBeforeUnmount(() => {
             if (unsubscribePeers) unsubscribePeers();
             if (unsubscribeRelationships) unsubscribeRelationships();
+            if (unsubscribeFriendships) unsubscribeFriendships();
             if (unsubscribeSession) unsubscribeSession();
             if (tickInterval) clearInterval(tickInterval);
         });
@@ -302,7 +384,9 @@ export default {
             selectedPeer, openDetail, closeDetail, disconnectPeer, updateAlias,
             copiedKey, copyText,
             relationships, relationshipError, relationshipFor, isConnectedNow,
-            rememberPeer, forgetKnownPeer, updateKnownAlias, formatWhen
+            rememberPeer, forgetKnownPeer, updateKnownAlias, formatWhen,
+            FriendshipState, friends, friendshipError, friendStatus, hasPendingIncomingRequest, hasSentRequest,
+            sendFriendRequest, acceptFriendRequest, friendDisplayName
         };
     },
     template: `
@@ -424,6 +508,15 @@ export default {
                     <p v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && relationshipFor(peer)" class="form-hint form-hint--neutral">
                         ✓ Known Peer{{ relationshipFor(peer).alias ? ' — ' + relationshipFor(peer).alias : '' }}
                     </p>
+                    <p v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && friendStatus(peer) === FriendshipState.FRIEND" class="form-hint form-hint--neutral">
+                        ✓ Friend
+                    </p>
+                    <p v-else-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && hasPendingIncomingRequest(peer)" class="form-hint form-hint--neutral">
+                        {{ peer.alias || shortId(peer.remoteIdentity.identityId) }} sent you a friend request.
+                    </p>
+                    <p v-else-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && hasSentRequest(peer)" class="form-hint form-hint--neutral">
+                        Friend request sent — waiting for them to accept.
+                    </p>
 
                     <div class="identity-mgmt-actions">
                         <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && !relationshipFor(peer)"
@@ -434,6 +527,14 @@ export default {
                                 class="action-btn action-btn--secondary" @click="forgetKnownPeer(peer.remoteIdentity.identityId)">
                             Forget
                         </button>
+                        <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && friendStatus(peer) === FriendshipState.NONE && !hasPendingIncomingRequest(peer)"
+                                class="action-btn action-btn--secondary" @click="sendFriendRequest(peer)">
+                            Send Friend Request
+                        </button>
+                        <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && hasPendingIncomingRequest(peer)"
+                                class="action-btn action-btn--primary" @click="acceptFriendRequest(peer)">
+                            Accept Friend Request
+                        </button>
                         <button class="action-btn action-btn--secondary" @click="openDetail(peer)">Details</button>
                         <button class="action-btn action-btn--danger" @click="disconnectPeer(peer)">Disconnect</button>
                     </div>
@@ -442,6 +543,7 @@ export default {
             <p v-else class="form-hint form-hint--neutral">No peers connected right now.</p>
 
             <p v-if="relationshipError" class="identity-unlock-error">{{ relationshipError }}</p>
+            <p v-if="friendshipError" class="identity-unlock-error">{{ friendshipError }}</p>
 
             <h2 class="peer-my-peers-heading">Known Peers</h2>
             <p class="form-hint form-hint--neutral">
@@ -477,6 +579,32 @@ export default {
             <p v-else class="form-hint form-hint--neutral">
                 No known peers yet. Authenticate a connection above, then click <strong>Remember</strong> on
                 their card to keep a local record of who they are.
+            </p>
+
+            <h2 class="peer-my-peers-heading">Friends</h2>
+            <p class="form-hint form-hint--neutral">
+                A friend is mutual consent, proven — never a local note like a Known Peer. This
+                device only shows someone here once it holds a signed request from one side and a
+                signed acceptance from the other. "Connected now" below is read live from My Peers,
+                the same as Known Peers above; reconnecting always re-authenticates from nothing
+                first.
+            </p>
+            <div v-if="friends.length" class="identity-mgmt-list">
+                <div v-for="friend in friends" :key="friend.identityId" class="identity-mgmt-card">
+                    <div class="identity-mgmt-card-header">
+                        <span class="identity-mgmt-name">{{ friendDisplayName(friend.identityId) }}</span>
+                        <span class="peer-badge" :class="isConnectedNow(friend.identityId) ? 'peer-badge--authenticated' : 'peer-badge--pending'">
+                            {{ isConnectedNow(friend.identityId) ? 'Connected now' : 'Not connected' }}
+                        </span>
+                    </div>
+                    <p class="identity-mgmt-status">
+                        {{ shortId(friend.identityId) }} · friends since {{ formatWhen(friend.updatedAt) }}
+                    </p>
+                </div>
+            </div>
+            <p v-else class="form-hint form-hint--neutral">
+                No friends yet. Send a friend request from an authenticated peer's card above, or
+                accept one they sent you.
             </p>
 
             <div v-if="selectedPeer" role="dialog" aria-label="Peer identity" class="modal-overlay" @click.self="closeDetail">

@@ -3,6 +3,7 @@ import { Signature, SIGNING_DOMAIN } from '../core/Signature.js';
 import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
 import { getAvatarProfileSigningDescriptor } from '../core/AvatarProfileAdvertisement.js';
 import { getAvatarInteractionSigningDescriptor } from '../core/AvatarInteractionAdvertisement.js';
+import { getFriendshipSigningDescriptor } from '../core/FriendshipAdvertisement.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -182,6 +183,41 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getAvatarInteractionSigningDescriptor(advertisement), advertisement.signature, identity);
+    }
+
+    // 0.2.57 — unlike verifyPresenceAdvertisement()/
+    // verifyAvatarProfileAdvertisement()/verifyAvatarInteractionAdvertisement()
+    // above, a friendship advertisement is NEVER tolerated unsigned —
+    // see core/FriendshipAdvertisement.js's own header on why there is
+    // no server anywhere that could otherwise vouch for "Bob accepted
+    // Alice's request." It also, uniquely among this file's verify*
+    // methods, checks the signer against a claim CARRIED ON the
+    // advertisement itself (`actorIdentity`) rather than merely
+    // recovering an identity from the signature and trusting whatever
+    // the payload happens to say about it — a REQUEST/ACCEPT is
+    // meaningless unless it is provably FROM the identity it claims to
+    // be from, every single time, with no trust-on-first-use binding
+    // the way core/PresenceAuthority.js allows one layer down.
+    verifyFriendshipAdvertisement(advertisement) {
+        if (!advertisement) {
+            return { valid: false, signed: false, reason: 'no advertisement' };
+        }
+        if (!advertisement.signature) {
+            return { valid: false, signed: false, reason: 'a friendship advertisement must be signed' };
+        }
+        const sig = Signature.fromJSON(advertisement.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== advertisement.actorIdentity) {
+            return { valid: false, signed: true, reason: 'signer does not match the claimed actorIdentity' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getFriendshipSigningDescriptor(advertisement), advertisement.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).

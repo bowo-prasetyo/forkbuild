@@ -6636,3 +6636,123 @@ Peers first; and Social Notifications / Presence, surfacing "a known
 peer just came online" from nothing but `ConnectedPeerRegistry` change
 events cross-referenced against `PeerRelationshipUseCase.getRelationships()`
 — both already available, completely unmodified, today.
+
+### Decentralized Friend Relationships & Mutual Consent (0.2.57)
+
+```text
+core/FriendshipAdvertisement.js   "actorIdentity did REQUEST/ACCEPT,
+   (NEW, wire shape)               addressed to subjectIdentity" —
+                                    REQUIRED signature, never optional
+        │  sent via peer/PeerMessageBus.js, over an already-
+        │  AUTHENTICATED (0.2.49) connection only
+        ▼
+application/FriendRelationshipUseCase.js   (NEW)
+        │  ingestion boundary, in order:
+        │   1. well-formed shape
+        │   2. subjectIdentity === my current identity
+        │   3. actorIdentity === THIS connection's proven remoteIdentity
+        │   4. signature verifies (identity/LocalAuthorizationVerifier
+        │      .verifyFriendshipAdvertisement — REQUIRED, unlike
+        │      presence/profile/interaction's optional signing)
+        │   5. (ACCEPT only) a matching outgoing REQUEST exists
+        ▼
+core/FriendshipRecord.js         "my own durable half of ONE
+   (NEW, immutable)                relationship with ONE identity"
+        │  outgoingAction, incomingAction — the actual signed
+        │  advertisements, kept as their own evidence, never
+        │  collapsed into a bare status flag
+        ▼
+core/FriendshipState.js          NONE / REQUESTED / FRIEND — derived
+   (NEW, pure function)           fresh from the two actions above,
+                                   never stored; FRIEND requires one
+                                   side's REQUEST answered by the
+                                   OTHER side's ACCEPT
+```
+
+0.2.57 answers the question 0.2.56 named and explicitly declined to
+answer (docs/Principles.md, "Knowing Is Not Befriending"): "How can
+Alice and Bob become friends without a central server deciding that
+they are?" It draws the same kind of narrow, deliberate boundary every
+milestone since 0.2.49 has drawn — a signed REQUEST/ACCEPT exchange and
+two independently-persisted, mutually-derived records, and stops there.
+No REJECT, CANCEL, BLOCK, or UNFRIEND (see docs/Principles.md,
+"Friendship Can Be Established, But Not Yet Revoked"); no wiring into
+`core/PresenceVisibilityPolicy.js`'s `FRIENDS` tier; no chat.
+
+`core/FriendshipAdvertisement.js` follows `core/
+PeerAuthenticationEnvelope.js`'s own precedent, not presence/profile/
+interaction's: a REQUIRED signature, because there is no server able to
+vouch for a friend request/acceptance the way a receiver's own trust
+policy can afford to tolerate for an unsigned presence claim. Its
+signing descriptor covers actor, subject, action, sequence, AND
+timestamp — never a narrower subset — for the same causal-history
+reason every advertisement type since 0.2.18 covers every field.
+`core/FriendshipAction.js` is a deliberately closed vocabulary of
+exactly two values, `REQUEST`/`ACCEPT`, each mapped to a FIXED sequence
+number (1/2) rather than a per-relationship counter this replica would
+need to durably hand out — safe only because the vocabulary never
+repeats an action.
+
+`identity/LocalAuthorizationVerifier.js#verifyFriendshipAdvertisement()`
+is the first verify* method in this file that (a) refuses an unsigned
+advertisement outright rather than tolerating it, and (b) checks the
+signer against a claim CARRIED ON the advertisement itself
+(`actorIdentity`), not merely recovering an identity from the signature
+and trusting whatever the payload says about it — there is no
+trust-on-first-use binding here the way `core/PresenceAuthority.js`
+allows one layer down; a REQUEST/ACCEPT must be provably from the
+identity it claims to be from, every single time.
+
+`application/FriendRelationshipUseCase.js` is the first LIVE consumer
+of `peer/PeerMessageBus.js` in the running app: 0.2.52 through 0.2.55
+built and tested the peer-based transport, but `application/
+CreateWorldViewUseCase.js`'s presence/profile/interaction sync still
+runs over the `BroadcastChannel` transport 0.2.37 established. Friend
+requests travel over the exact same real WebRTC connections the
+`/peers` page (0.2.55) already authenticates — `ui/main.js` now
+constructs one app-wide `peer/PeerMessageBus.js` instance, shared the
+same way `peerSessionManager`/`peerRelationshipUseCase` already are.
+The class owns both persistence AND transport (unlike
+`PeerRelationshipUseCase`, pure local storage with no network at all) —
+a friend request means nothing until it actually reaches the other
+identity, so the two are one boundary here, not two. Its ingestion
+boundary (see the diagram above) is the real security surface: step 3
+— binding the claimed `actorIdentity` to the SPECIFIC, already-
+authenticated connection a message arrived on — is what defeats even a
+captured, genuinely-valid signature replayed by a third party over
+their OWN connection, proven directly in the flagship test's final act
+(Charlie replaying Alice's real, validly-signed REQUEST gets nowhere).
+
+`ui/views/PeerConnectionsView.js` gains a third, fully independent
+list, "Friends," alongside "My Peers" and "Known Peers" — and two new
+buttons on an authenticated peer's card, "Send Friend Request" and
+"Accept Friend Request," gated on `core/FriendshipState.js` exactly the
+way "Remember"/"Forget" are gated on whether a `PeerRelationship`
+exists. A friend request can be sent to, and accepted from, a peer this
+device never separately chose to "Remember" — Known Peer and Friend
+never require each other, proven directly in the flagship (Alice and
+Bob become friends with zero `PeerRelationship` ever created on either
+side).
+
+The flagship test (`tests/FriendRelationships.test.js`) runs in two
+tiers, the same shape `tests/PeerRelationships.test.js` established.
+The first — `core/FriendshipRecord.js`/`core/FriendshipState.js`
+construction and the derived mutual-consent state machine, `core/
+FriendshipAdvertisement.js` shape validation, `identity/
+LocalAuthorizationVerifier.js`'s required-signature/tamper/actor-
+binding checks, and `FriendRelationshipUseCase`'s local security
+boundary — needs no network transport. The second drives the design
+doc's own scripted scenario over REAL `peer/WebRtcPeerConnectionProvider.js`
+connections via `application/PeerSessionManager.js` (0.2.55,
+unmodified): Alice requests, Bob receives and verifies it as pending,
+Bob accepts, Alice receives and verifies the acceptance, both
+independently derive `FRIEND` with zero server involved; the
+relationship survives disconnecting both sides and a simulated reload
+(brand-new `FriendRelationshipUseCase`/`PeerMessageBus` instances over
+the same storage); reconnecting through a completely fresh invitation/
+connection/authentication still recognizes the friendship, proving it
+is a property of the IDENTITY, never the connection; and Charlie — a
+genuine third identity — cannot manufacture either half of the
+relationship, including by replaying a real, captured, validly-signed
+advertisement of Alice's own over his own, different, authenticated
+connection.

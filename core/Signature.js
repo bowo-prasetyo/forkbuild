@@ -61,7 +61,16 @@ export const SignatureType = Object.freeze({
     // now" — never a claim about a document, placement, or advertised
     // state. See core/PeerAuthenticationEnvelope.js's
     // getPeerAuthenticationSigningDescriptor().
-    PEER_AUTHENTICATION: 'peer-authentication'
+    PEER_AUTHENTICATION: 'peer-authentication',
+    // 0.2.57 — a REQUIRED signature (never optional, exactly like
+    // PEER_AUTHENTICATION above, and unlike AVATAR_PRESENCE/
+    // AVATAR_PROFILE/AVATAR_INTERACTION) over a friendship REQUEST or
+    // ACCEPT (core/FriendshipAdvertisement.js's wire shape). Proves
+    // "identity X really did request/accept friendship with identity
+    // Y" — the one piece of evidence a decentralized system with no
+    // central friend database has to offer either side. See
+    // core/FriendshipAdvertisement.js's getFriendshipSigningDescriptor().
+    FRIENDSHIP: 'friendship'
 });
 
 export class Signature {
