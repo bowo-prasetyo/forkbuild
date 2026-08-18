@@ -3143,3 +3143,74 @@ that happens to receive one broadcast advertisement to dial out
 somewhere. Presence stays exactly what 0.2.33 originally scoped it to
 be — a description of where an avatar already-connected-to-something
 currently is — never a mechanism for becoming connected to anything.
+
+### Profile Visibility Is Never Presence Visibility (0.2.54)
+
+"Everyone allowed to see my presence" and "everyone allowed to see
+what I look like" are different pieces of information, and 0.2.54
+refuses to let a real point-to-point transport quietly collapse them
+into one. `core/AvatarProfileVisibilityPolicy.js` is a genuinely
+separate class from `core/PresenceVisibilityPolicy.js` — never the
+same instance, never a subclass, never read by
+`presence/PeerAvatarPresenceBroadcastProvider.js#advertise()`'s
+profile-protocol instance through presence's own policy object. A
+person choosing `Presence: PUBLIC, Profile: FRIENDS` (broadcast that
+I'm online, but only friends see my appearance) or the reverse,
+`Presence: FRIENDS, Profile: PUBLIC`, must both be real, independently
+representable configurations — not a distinction the architecture
+quietly can't express because one policy object got reused for two
+questions. 0.2.54's own default rule is deliberately the simplest
+thing that is still HONEST about this: `AvatarProfileVisibilityPolicy`
+grants every AUTHENTICATED peer eligibility (no FRIENDS/LOCAL/HIDDEN
+tier yet — there is still no live profile-sharing configuration
+surface anywhere in the running app for a richer tier to mean
+anything, the same posture `application/AvatarProfileTrustBoundary.js`
+already took on the TRUST side in 0.2.41), rather than pretending
+presence's own policy controls profile privacy just because reusing it
+would have been less code. A future milestone can give
+`AvatarProfileVisibilityPolicy` real tiers the identical additive way
+0.2.40 first gave presence its own, without
+`AvatarProfileSyncService`, `WorldNavigationSession`, or the wire shape
+of `core/AvatarProfileAdvertisement.js` needing to change at all — see
+"Peer Selection Is A Transport Concern, Never A Presence-Core Concern"
+above, which applies here identically, one protocol over.
+
+### A Protocol's State-Keeping Semantics Are Its Own, Never Borrowed From Its Neighbor (0.2.54)
+
+By 0.2.54, three protocols share one `peer/PeerMessageBus.js`, and each
+answers "what does a receiver keep?" completely differently — on
+purpose, never by accident of implementation reuse:
+
+| Protocol            | Meaning              | Receiver keeps                    |
+| -------------------- | --------------------- | ---------------------------------- |
+| `AvatarProfile`       | current appearance    | latest ACCEPTED revision, forever  |
+| `AvatarPresence`      | current location      | latest ACCEPTED sequence, PRUNED once stale |
+| `AvatarInteraction`   | something happened    | nothing — an event is never replicated state |
+
+`application/LocalAvatarProfileStore.js` never expires a record on its
+own — an avatar's LOOK is a durable fact, unaffected by its owner
+being temporarily away — while `application/LocalPresenceStore.js`'s
+own freshness/staleness machinery (0.2.38) exists specifically because
+a LOCATION claim genuinely goes stale. 0.2.54's flagship
+(`tests/PeerAvatarProfile.test.js`, Section C) proves this distinction
+survives the SAME shared transport, not just the SAME shared code:
+fast-forwarding a receiver's clock past presence's own staleness
+window prunes Alice from `application/RemoteAvatarRegistry.js`
+entirely, while her profile — sitting in a completely separate store,
+reached over a completely separate `PeerMessageBus` protocol string —
+is provably untouched. Neither store, nor either protocol's trust
+boundary, was taught anything about the other to make this true; it
+falls out of `core/AvatarProfileIngestion.js` and
+`core/PresenceIngestion.js` staying the deliberately-duplicated,
+independent functions 0.2.41 already chose them to be (see
+`core/AvatarProfileIngestion.js`'s own header) rather than one shared
+"replicated value" abstraction parameterized by protocol — a shared
+abstraction would have had to grow a "does this protocol expire?" flag
+sooner or later, and that flag is exactly the kind of coupling this
+principle exists to rule out in advance. The same reasoning is why
+`application/AvatarProfileSyncService.js` is never constructed with,
+or made to depend on, a presence transport at all — 0.2.54's flagship
+gives Charlie a profile transport and nothing else, and he still
+resolves Alice's real appearance, proving "a peer can know your
+profile without currently observing your avatar" structurally, not
+merely by assertion.
