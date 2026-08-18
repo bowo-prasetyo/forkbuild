@@ -7,6 +7,7 @@ import AuthorView from '../views/AuthorView.js';
 import WorldView from '../views/WorldView.js';
 import AvatarSettingsView from '../views/AvatarSettingsView.js';
 import IdentityManagementView from '../views/IdentityManagementView.js';
+import PeerConnectionsView from '../views/PeerConnectionsView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -16,6 +17,7 @@ const routes = [
     { path: '/world/:documentId', name: 'world', component: WorldView },
     { path: '/avatar', name: 'avatar', component: AvatarSettingsView },
     { path: '/identity', name: 'identity', component: IdentityManagementView },
+    { path: '/peers', name: 'peers', component: PeerConnectionsView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 

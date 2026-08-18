@@ -1445,6 +1445,97 @@ surface exists for one to mean something; a live "Connected Peers" UI;
 and a network-mode/local-mode transport switch in
 `CreateWorldViewUseCase.js` covering presence AND profile together.
 
+0.2.55 answers the one item that list, and 0.2.53's own list before
+it, kept naming and neither ever scheduled: a live "Connected Peers"
+UI. Not because it was hard — every piece it needed already existed —
+but because nothing had yet asked a real person to walk through
+0.2.49-0.2.52's own pipeline by hand. `application/
+PeerSessionManager.js` (new) is the one small application class the
+design doc asked for, and its job is deliberately narrow: compose
+`application/DiscoverPeersUseCase.js` and `application/
+ConnectToPeerUseCase.js` — both completely unmodified — behind three
+verbs a UI can call without knowing WebRTC exists underneath it:
+`createInvitation()` opens a real `peer/WebRtcPeerConnectionProvider.js`
+offer, attaches it to 0.2.49 authentication and the registry
+immediately (so a pending connection shows up as CONNECTING right
+away), and waits for ICE gathering before wrapping the offer as an
+ordinary `PeerInvitation`; `acceptInvitation()` imports one through
+the unmodified 0.2.50 discovery layer, connects, and returns the
+resulting WebRTC answer the inviter must relay back; `completeConnection()`
+applies that answer to the SAME pending connection, looked up by
+`connectionId` in `ConnectedPeerRegistry` rather than held as a live
+reference — the one thing a UI actually needs to remember between
+"invite" and "someone replied." None of this is new signaling
+machinery: it is the exact offer → portable payload → answer →
+portable payload → real DataChannel handoff `tests/
+WebRtcPeerTransport.test.js` already proved in 0.2.51, now reachable
+from three named methods instead of only from a test file.
+
+The new `ui/views/PeerConnectionsView.js`, at `/peers`, is pure
+presentation over that one class, following the exact division every
+other view in this codebase already keeps from its own use case (see
+`ui/views/IdentityManagementView.js`). "My Peers" reads
+`ConnectedPeerRegistry.list()` directly and renders each peer's
+already-existing `peer/PeerLifecycleState.js` as a badge and a
+step-by-step progression (Rendezvous discovered → WebRTC connecting →
+Peer connected → Authenticating → Authenticated) — the view computes
+none of this itself, only labels states that already existed since
+0.2.50. "Invite Someone" and "Connect to Peer" walk a person through
+the same manual, no-signaling-server copy/paste handoff 0.2.51 already
+established for two browser tabs; the view adds nothing to it beyond a
+textarea and a Copy button. A Peer Identity panel shows the real
+`remoteIdentity` — did:key, public key, algorithm — only once
+`getLifecycleState()` genuinely reports AUTHENTICATED, and names the
+connection "Ephemeral," never "Friend": see docs/Principles.md, "A
+Peer Session Manager Owns Connections, Never What Travels Over Them,"
+and "An Authenticated Peer Is Not A Friend." A per-peer local alias
+(`ConnectedPeer#setAlias`, unmodified since 0.2.50) is editable
+directly on the card and, exactly as it always has, never leaves this
+device.
+
+The flagship test (`tests/PeerConnectionsUI.test.js`) drives
+`PeerSessionManager` end to end over a real WebRTC connection: Alice
+creates an invitation, Bob imports and connects, Alice completes the
+handshake with Bob's relayed reply, and both sides reach a real,
+mutually-proven AUTHENTICATED peer — each visible in the OTHER's own
+`listPeers()`, never merely its own. A local alias is proven to never
+reach the peer's own view of the same connection. Disconnecting is
+proven to remove the peer from both sides' registries, never merely
+hide it locally. Separate cases prove a garbage-text invitation, an
+unknown `connectionId` passed to `completeConnection()`, and a
+malformed reply all fail with a clear, friendly message rather than a
+raw exception — and that a captured invitation replayed after its own
+expiry is rejected by the unmodified 0.2.50 discovery layer before any
+connection is even attempted, exactly as 0.2.50's own flagship already
+proved for the non-UI path.
+
+Deliberately not in 0.2.55, matching the design doc's own explicit
+scope: chat (`peer/PeerMessageBus.js` is not imported anywhere in this
+milestone's files); a persistent friends/contacts list (a closed peer
+still simply disappears from `ConnectedPeerRegistry` — there is no
+"forget" operation because there is nothing durable to forget); any
+automatic discovery mechanism beyond invitation-based rendezvous (LAN,
+mDNS, a rendezvous server, a DHT all remain proposed, unscheduled); and
+any change to Presence or Profile wiring — `CreateWorldViewUseCase.js`
+still wires only the local `BroadcastChannel` transports by default,
+exactly as 0.2.53 and 0.2.54 both left it. `PeerSessionManager` and the
+downstream presence/profile transports now share the same
+`ConnectedPeerRegistry` type, but nothing in this milestone connects
+them at the app level — that wiring remains a deliberate, separate,
+unscheduled decision.
+
+Proposed, unscheduled follow-on milestones this opens: wiring
+`presence/PeerAvatarPresenceBroadcastProvider.js` (0.2.53) and its
+profile counterpart (0.2.54) into `CreateWorldViewUseCase.js` as the
+app's real, live transport now that a session can actually acquire an
+authenticated peer through the UI; Persistent Peer Relationships /
+Friends, a genuinely separate architectural question from "who am I
+connected to right now" that 0.2.55 deliberately declined to conflate
+with it; Peer/Avatar Privacy & Friends-Only Policies, which needs that
+same persistent-relationship concept to mean anything beyond today's
+PUBLIC-only defaults; and Peer Messaging / Minimal Social Chat, finally
+giving `peer/PeerMessageBus.js` a real protocol to carry.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49
