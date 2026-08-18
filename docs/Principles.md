@@ -3574,3 +3574,97 @@ codebase. `tests/FriendAwareVisibility.test.js`'s own FLAGSHIP proves
 this directly: Bob's brand-new post-reconnect connection is recognized
 as a friend on the very first movement that follows, from his proven
 identity alone.
+
+### A Transport Migration Is Complete Only Once Something Actually Uses It (0.2.59)
+
+0.2.53 built `presence/PeerAvatarPresenceBroadcastProvider.js`. 0.2.54
+proved it could carry a second, independent protocol on the same bus.
+0.2.58 taught it to consult real friendship. All three milestones were,
+by their own explicit scope notes, unwired: `application/
+CreateWorldViewUseCase.js` — the one place that actually decides what
+World View's avatar layer runs over — kept building `presence/
+LocalAvatarPresenceBroadcastProvider.js` regardless. A capability that
+exists, is tested, and is never reached by the running application is
+not a shipped capability; it is a rehearsal. 0.2.59 is deliberately not
+a new capability at all — every collaborator it touches
+(`PeerAvatarPresenceBroadcastProvider`, `FriendRelationshipUseCase`,
+`PresenceVisibilityPolicy`, `AvatarProfileVisibilityPolicy`) is
+untouched — its entire content is closing the gap between "this code
+path exists" and "this code path is what actually runs."
+
+### Once A Peer Is Authenticated, Avatar State Travels Through It, Never Around It (0.2.59)
+
+The organizing claim of this milestone, stated plainly: presence,
+profile, and interaction are not three separate design questions about
+which transport to use — they are three instances of the same answer.
+Once `application/ConnectedPeerRegistry.js` holds an AUTHENTICATED
+connection to a peer, every avatar-social protocol this replica speaks
+attaches to that SAME connection, through the SAME `peer/
+PeerMessageBus.js`, gated by that protocol's OWN visibility policy —
+never a second, parallel channel that happens to reach the same peer
+by a different, unauthenticated, unaccountable path. `presence/
+LocalAvatarPresenceBroadcastProvider.js` (`BroadcastChannel`) is the
+one deliberate exception, and it is exactly that: a SEPARATE,
+same-origin, non-authenticated scope that was never claiming to BE a
+peer connection in the first place (see "A Peer Connection Authenticates
+A Key, Not An Account," 0.2.49). Once a real peer transport is
+available, nothing about World View's avatar layer ever reaches for it
+again.
+
+### No Authenticated Peers Is A Population Of Zero, Never An Absent Transport (0.2.59)
+
+"Alice has logged in but has no authenticated peer connections right
+now" and "Alice's avatar social layer has no transport" are different
+facts, and this milestone keeps them different on purpose.
+`application/CreateWorldViewUseCase.js` decides ONCE, at construction
+time, whether a real peer transport was supplied — never by polling
+`connectedPeerRegistry.list().length` — so a replica with zero peers
+right now still has a fully live `PeerAvatarPresenceBroadcastProvider`
+for presence, profile, and interaction; `advertise()` simply has an
+empty registry to iterate and sends nothing, the identical "fire into a
+population of zero" behavior a real, populated deployment already
+tolerates for every advertisement HIDDEN or an empty FRIENDS list
+already suppresses (see core/PresenceVisibilityPolicy.js). The moment a
+peer authenticates, the exact same already-built transport starts
+reaching them — no rebuild, no re-subscribe, no session restart. See
+"Login Does Not Make Someone Globally Visible" below for the layered
+consequence this makes possible.
+
+### BroadcastChannel Is A Development Transport, Never A Production One (0.2.59)
+
+`presence/LocalAvatarPresenceBroadcastProvider.js` is not deleted by
+this milestone, and should not be: it remains the fastest way to
+demonstrate two same-origin browser tabs genuinely observing each
+other's avatars, with zero peer-authentication setup, and every
+existing test in this suite that never wires a peer transport keeps
+working over it completely unchanged. What changes is its ROLE. Before
+0.2.59, it was the only transport World View's avatar layer had ever
+actually run over, so it was, by default, the production one. After
+0.2.59, `application/CreateWorldViewUseCase.js` reaches for the real
+peer transport whenever the caller supplies one, and the real, running
+application (`ui/main.js` -> `ui/views/WorldView.js`) always does. A
+same-origin `BroadcastChannel` was never a substitute for an
+authenticated, cryptographically-identified connection to a specific
+remote identity — it cannot tell two tabs apart, cannot exclude a
+non-friend, and cannot outlive the origin it lives in — so treating it
+as a fallback of last resort, rather than the default, is simply
+naming what was already true about it.
+
+### Login Does Not Make Someone Globally Visible (0.2.59)
+
+Stacking every layer this arc has built, in order: logging in
+establishes a LOCAL identity (0.2.46) — nobody else knows or is
+affected. Authenticating a peer connection to Bob proves a
+cryptographic fact about that ONE relationship (0.2.49) — it grants
+Bob no visibility by itself. Presence/profile visibility policy
+(0.2.40/0.2.54/0.2.58) then decides what, if anything, crosses that
+specific authenticated connection. At no point in this chain does
+"being logged in" imply "being broadcast to anyone, anywhere" — the
+old `BroadcastChannel` transport's same-origin reach made this
+distinction easy to blur (every same-origin tab heard everything PUBLIC
+produced, with no authentication step at all); a real peer transport
+makes the three layers observably separate, because each one now has
+its own, independently inspectable gate a message must cross. A
+replica with a local avatar, zero authenticated peers, and Presence:
+PUBLIC is visible to precisely nobody — not hidden, not broadcasting
+into a void, simply not yet connected to anyone who could receive it.

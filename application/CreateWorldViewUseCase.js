@@ -23,6 +23,9 @@ import { SearchWorldUseCase } from './SearchWorldUseCase.js';
 import { CreateAvatarPresenceSessionUseCase } from './CreateAvatarPresenceSessionUseCase.js';
 import { CreateAvatarTemplateRegistryUseCase } from './CreateAvatarTemplateRegistryUseCase.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
+import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
+import { AvatarProfileVisibilityPolicy } from '../core/AvatarProfileVisibilityPolicy.js';
+import { FriendshipState } from '../core/FriendshipState.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -42,7 +45,32 @@ import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPre
 // already reads, so a placement created/moved here is immediately
 // visible to spatial streaming with no separate sync step.
 export class CreateWorldViewUseCase {
-    execute(identityProvider = null) {
+    // 0.2.59 — Peer-Based Avatar Social Transport. `peerMessageBus` /
+    // `connectedPeerRegistry` are the SAME app-wide peer/PeerMessageBus.js
+    // and application/ConnectedPeerRegistry.js (via PeerSessionManager)
+    // ui/main.js already builds for the friendship protocol (0.2.57) —
+    // shared, injected collaborators this use case never owns or
+    // disposes, exactly the convention presence/
+    // PeerAvatarPresenceBroadcastProvider.js's own header already
+    // documents. `friendRelationshipUseCase` supplies the `isFriend`/
+    // `hasFriend` predicates every visibility policy already knows how
+    // to consult (0.2.58) — this use case never reads a
+    // FriendshipRecord itself, only the predicate.
+    //
+    // Whether World View's avatar social layer (presence/profile/
+    // interaction) actually rides authenticated peer connections, or
+    // falls back to the same-origin BroadcastChannel transport 0.2.37
+    // introduced, is decided ONCE, right here, by whether a real peer
+    // transport was actually supplied — never by whether any peer is
+    // CURRENTLY connected. A caller with no authenticated peers right
+    // now still gets the peer transport; it just has nobody to fan out
+    // to yet (see presence/PeerAvatarPresenceBroadcastProvider.js#advertise()
+    // — an empty connectedPeerRegistry.list() is simply a no-op send).
+    // "Nobody sees me right now" and "I have no transport at all" are
+    // different facts — see docs/Principles.md, "No Authenticated
+    // Peers Is A Population Of Zero, Never An Absent Transport"
+    // (0.2.59).
+    execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
@@ -153,26 +181,86 @@ export class CreateWorldViewUseCase {
         // fixed placeholder appearance for an unknown remote avatar,
         // never to render the local avatar (that stays
         // avatarProfileUseCase's job).
-        const presenceBroadcastProvider = new LocalAvatarPresenceBroadcastProvider();
-        // 0.2.41 — a SEPARATE channel from presence's own, so a
+        // 0.2.59 — a real peer transport is preferred whenever the
+        // caller actually wired one; a caller that doesn't (most
+        // existing tests, and any future headless/embedded use of this
+        // use case) gets the exact same LOCAL DEVELOPMENT TRANSPORT
+        // (BroadcastChannel) 0.2.37/0.2.41/0.2.45 always built — see
+        // presence/LocalAvatarPresenceBroadcastProvider.js's own header:
+        // it simulates decentralized presence across same-origin tabs,
+        // useful for local development and testing, but it is not a
+        // real Internet peer network and is no longer the PRIMARY
+        // transport once a real one is available. See
+        // docs/Principles.md, "BroadcastChannel Is A Development
+        // Transport, Never A Production One" (0.2.59).
+        const usePeerTransport = Boolean(peerMessageBus && connectedPeerRegistry);
+
+        // `isFriend`/`hasFriend`: 0.2.58 already taught every
+        // visibility policy AND WorldNavigationSession how to consult
+        // these predicates — this is simply the first caller to
+        // actually supply them from a real, live FriendRelationshipUseCase
+        // rather than a test-only closure. Absent (undefined/null) when
+        // no friendRelationshipUseCase is wired, which is the exact
+        // pre-0.2.59 "FRIENDS means only the manual allow-list" fallback
+        // every policy already implements on its own.
+        const isFriend = friendRelationshipUseCase
+            ? (peerIdentityId) => friendRelationshipUseCase.getState(peerIdentityId) === FriendshipState.FRIEND
+            : undefined;
+        const hasFriend = friendRelationshipUseCase
+            ? () => friendRelationshipUseCase.getRelationships().some((relationship) => relationship.isFriend)
+            : null;
+
+        // Presence's own transport. getVisibilityPolicy reads
+        // presenceVisibilityUseCase FRESH on every advertise() (never
+        // cached) once one is wired (logged in); absent (logged out),
+        // PeerAvatarPresenceBroadcastProvider's own default already
+        // matches LocalAvatarPresenceBroadcastProvider's unconditional
+        // "advertise to everyone" behavior, so nothing extra is passed.
+        const presenceBroadcastProvider = usePeerTransport
+            ? new PeerAvatarPresenceBroadcastProvider({
+                peerMessageBus,
+                connectedPeerRegistry,
+                ...(presenceVisibilityUseCase ? { getVisibilityPolicy: () => presenceVisibilityUseCase.getPolicy() } : {}),
+                ...(isFriend ? { isFriend } : {})
+            })
+            : new LocalAvatarPresenceBroadcastProvider();
+        // 0.2.41 — a SEPARATE channel/protocol from presence's own, so a
         // torrent of movement updates never competes with (or gets
         // confused for) the rare profile updates on this one — see
-        // application/AvatarProfileSyncService.js's own header.
-        // LocalAvatarPresenceBroadcastProvider is reused directly
-        // (it's already a generic named-BroadcastChannel wrapper with
-        // nothing presence-specific baked into its actual logic — see
-        // its own header) rather than duplicated into a
-        // presence-flavored-in-name-only sibling class.
-        const avatarProfileBroadcastProvider = new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile');
+        // application/AvatarProfileSyncService.js's own header. Its own
+        // AvatarProfileVisibilityPolicy is consulted here too — see
+        // core/AvatarProfileVisibilityPolicy.js's own header: "who may
+        // see my presence" and "who may see my appearance" are
+        // different questions, never the same policy instance.
+        const avatarProfileBroadcastProvider = usePeerTransport
+            ? new PeerAvatarPresenceBroadcastProvider({
+                peerMessageBus,
+                connectedPeerRegistry,
+                protocol: 'forkbuild:avatar-profile',
+                getVisibilityPolicy: avatarProfileVisibilityUseCase
+                    ? () => avatarProfileVisibilityUseCase.getPolicy()
+                    : () => AvatarProfileVisibilityPolicy.default(),
+                ...(isFriend ? { isFriend } : {})
+            })
+            : new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile');
         // 0.2.45 — Ephemeral Avatar Interaction Synchronization: a
-        // THIRD, separate channel from presence's and profile's own —
-        // see application/AvatarInteractionSyncService.js's own header
-        // for why interaction traffic is never folded into either.
-        // Reuses LocalAvatarPresenceBroadcastProvider directly, the
-        // same generic named-BroadcastChannel wrapper 0.2.41 already
-        // reused for profile's channel instead of building a
-        // presence-flavored-in-name-only sibling class.
-        const avatarInteractionBroadcastProvider = new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-interaction');
+        // THIRD, separate channel/protocol from presence's and
+        // profile's own — see application/AvatarInteractionSyncService.js's
+        // own header for why interaction traffic is never folded into
+        // either. 0.2.59: reuses presence's OWN visibility policy for
+        // its per-peer gate (never profile's), mirroring
+        // WorldNavigationSession._publishAvatarInteraction()'s own
+        // coarse gate, which has always reused presenceVisibilityUseCase
+        // rather than gaining a fourth, interaction-specific policy.
+        const avatarInteractionBroadcastProvider = usePeerTransport
+            ? new PeerAvatarPresenceBroadcastProvider({
+                peerMessageBus,
+                connectedPeerRegistry,
+                protocol: 'forkbuild:avatar-interaction',
+                ...(presenceVisibilityUseCase ? { getVisibilityPolicy: () => presenceVisibilityUseCase.getPolicy() } : {}),
+                ...(isFriend ? { isFriend } : {})
+            })
+            : new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-interaction');
         const avatarTemplateRegistry = new CreateAvatarTemplateRegistryUseCase().execute();
 
         return {
@@ -220,7 +308,13 @@ export class CreateWorldViewUseCase {
                     // 0.2.41: remote avatar appearance — see above.
                     avatarProfileBroadcastProvider,
                     // 0.2.45: ephemeral avatar interaction sync — see above.
-                    avatarInteractionBroadcastProvider
+                    avatarInteractionBroadcastProvider,
+                    // 0.2.59: the coarse "do I currently have at least
+                    // one real, mutual friend" predicate 0.2.58 already
+                    // taught WorldNavigationSession to consult — see
+                    // above for why this is the first caller to
+                    // actually supply it.
+                    hasFriend
                 });
             },
             // Expose the spatial index and content store so the application

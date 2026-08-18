@@ -169,8 +169,23 @@ export default {
         // reads, just not previously threaded through here since
         // nothing in World View needed identity before now.
         const identityUseCase = inject('identityUseCase');
+        // 0.2.59 — Peer-Based Avatar Social Transport: the SAME
+        // app-wide PeerSessionManager/PeerMessageBus/FriendRelationshipUseCase
+        // ui/main.js already provides for /peers and the friendship
+        // protocol (0.2.55/0.2.57), handed to CreateWorldViewUseCase so
+        // presence/profile/interaction ride the real authenticated peer
+        // network instead of the local development BroadcastChannel
+        // transport — see application/CreateWorldViewUseCase.js's own
+        // comment.
+        const peerSessionManager = inject('peerSessionManager');
+        const peerMessageBus = inject('peerMessageBus');
+        const friendRelationshipUseCase = inject('friendRelationshipUseCase');
         const registry = new CreateBrickRegistryUseCase().execute();
-        const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider);
+        const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
+            peerMessageBus,
+            connectedPeerRegistry: peerSessionManager ? peerSessionManager.registry : null,
+            friendRelationshipUseCase
+        });
         const session = worldViewFactory.createSession(registry);
         // Purely a client rendering preference (see docs/Principles.md,
         // "Avatar Visibility Is A Client Rendering Preference, Not
