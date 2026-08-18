@@ -2851,3 +2851,78 @@ longer exists is never a fact worth keeping — see "A Peer Authentication
 Signature Is Scoped To One Connection, Never To One Identity," above.
 The reverse never happens: nothing about authentication succeeding,
 failing, or being reset ever changes `transportState`.
+
+### An Invitation Is A Rendezvous Hint, Never A Credential (0.2.50)
+
+`peer/PeerInvitation.js` answers "where might Bob be reachable" — never
+"this is Bob." An invitation is deliberately NOT signed, and its optional
+`identityHint` is deliberately never consulted by
+`peer/PeerAuthenticationSession.js`'s handshake. Someone who copies an
+invitation verbatim, including its identityHint, gains only a candidate
+address worth attempting a connection to — not Bob's identity, and not any
+head start on proving it. This is what makes tampering with an invitation
+harmless in the specific way that matters: modifying its endpoint makes the
+connection attempt fail outright (`peer/PeerConnectionProvider.js#connect()`
+either can't reach anything there or reaches something that fails the
+handshake); modifying its identityHint changes nothing about what
+authentication proves, because authentication was never reading it to begin
+with. Only a verified PROOF may ever populate a `remoteIdentity` — see "A
+Peer Connection Authenticates A Key, Not An Account" (0.2.49), which this
+principle extends one layer earlier: discovery isn't merely untrusted
+alongside authentication, it structurally cannot influence what
+authentication concludes, because nothing in the handshake ever reads a
+discovery-layer value at all.
+
+### Discovery Finds A Candidate; It Never Authenticates One (0.2.50)
+
+`peer/PeerDiscoveryProvider.js` and its records
+(`peer/PeerDiscoveryRecord.js`) exist to answer exactly one question: "what
+endpoint is worth attempting a connection to?" Whether that candidate turns
+out to be who it claims — or anyone verifiable at all — is entirely
+`peer/PeerAuthenticationSession.js`'s question, asked fresh, every time,
+over whatever real connection `application/ConnectToPeerUseCase.js` opens
+to that candidate. This is the same "Discovery, Authentication,
+Authorization, Visibility are different questions" separation the 0.2.49
+design doc already drew, made structural here rather than merely
+documented: no discovery type carries a validity flag, no discovery method
+returns anything resembling "trusted," and `application/
+DiscoverPeersUseCase.js` has no method that could be mistaken for one. A
+discovery mechanism may say "here is something that might be Bob." It
+structurally cannot say "this is Bob" — there is no field to put that claim
+in.
+
+### A Peer's Lifecycle Is Derived, Never A Third State Machine (0.2.50)
+
+`peer/PeerLifecycleState.js`'s DISCOVERED → CONNECTING → CONNECTED →
+AUTHENTICATING → AUTHENTICATED → FAILED/CLOSED reads like a single
+lifecycle, and a UI is meant to read it that way — but nothing ever stores
+it. `derivePeerLifecycleState()` is a pure function recomputing this value,
+every call, from whichever real `peer/PeerConnectionState.js` and
+`peer/PeerAuthenticationState.js` currently exist (or their absence, for a
+bare discovery candidate that was never connected to at all). Storing a
+third value instead would immediately face the exact question 0.2.49's own
+"Transport State And Authentication State Are Two Different Questions"
+principle exists to avoid: what happens when the stored composite disagrees
+with the two real state machines it's supposed to summarize? A derived
+function has no such question to answer, by construction — the same
+"computed, not stored" discipline this codebase already applies to document
+lifecycle status (0.2.21), spatial overlap (0.2.25), and distance (0.2.28),
+applied here to a peer's own connection lifecycle.
+
+### A Peer Alias Is A Local Note, Never A Claim About The Peer (0.2.50)
+
+`application/ConnectedPeer.js#setAlias()` is a purely local, in-memory
+label this device typed for itself, about one live connection. It is never
+signed, never sent to the peer, never written to storage, and disappears
+the moment that `ConnectedPeer` is discarded — which happens automatically
+the instant its connection closes (`application/
+ConnectedPeerRegistry.js`). Reconnecting to the exact same, already-proven
+identityId later starts with no alias carried over, exactly as 0.2.49
+already established for `remoteIdentity` itself: "is this connection
+currently controlled by identity X" and "do I have a permanent relationship
+with X" remain different questions, and 0.2.50 deliberately does not answer
+the second one. A real, persistent contacts/friends system — one where an
+alias survives a reconnect, keyed by identityId rather than by connection —
+is exactly the kind of "social friend system" the design doc asked NOT to
+build yet; this principle is what keeps a future one from being backed into
+accidentally by a convenience field.

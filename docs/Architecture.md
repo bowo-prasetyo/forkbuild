@@ -5579,6 +5579,122 @@ yet plug anything else into it. No file under `core/` (besides the two
 new, additive files), `application/`, `world/`, `publisher/`,
 `discovery/`, or `presence/` was touched.
 
+### Peer Discovery & Rendezvous (0.2.50)
+
+```text
+Discovery                Candidate Endpoint       Peer Connection        0.2.49 Handshake
+peer/PeerInvitation.js   peer/PeerDiscoveryRecord.js  peer/PeerConnectionProvider.js  peer/PeerAuthenticationSession.js
+        │                          │                          │                          │
+        ▼                          ▼                          ▼                          ▼
+DiscoverPeersUseCase ──► candidateEndpoint ──► ConnectToPeerUseCase ──► ConnectedPeer ──► remoteIdentity
+(application/)                                  (application/)          (application/)     (proven, or null)
+```
+
+0.2.50 answers the question 0.2.49 deliberately carved itself away from:
+"how does Alice find Bob's address at all?" — with the one deliberately
+narrow answer the design doc asked for first: a portable, invitation-based
+rendezvous hint, never a network scan, a signaling server, or a DHT. The
+governing rule, stated once and then enforced structurally everywhere
+below rather than merely documented: **a discovery mechanism may say
+"here is something that might be Bob." It must never say "this is Bob."**
+Only `peer/PeerAuthenticationSession.js` — completely unmodified since
+0.2.49 — may ever say the second thing.
+
+`peer/PeerInvitation.js` (new) is the portable package: `formatVersion`,
+`invitationId`, `endpoint` (opaque, the same "nothing above this interface
+needs to know which transport this is" posture `peer/
+PeerConnectionProvider.js` already established for `remoteAddress`),
+`expiresAt`, and an optional `identityHint` — untrusted, exactly the same
+"local-only, never an authorization claim" property `identity/
+IdentityExport.js`'s own `label` hint already carries. Deliberately NOT
+signed — see docs/Principles.md, "An Invitation Is A Rendezvous Hint,
+Never A Credential." `peer/PeerDiscoveryRecord.js` (new) is the candidate
+a discovery mechanism actually produces from one: `candidateEndpoint`,
+`identityHint` (carried through, still untrusted), and `source`
+(`peer/PeerDiscoverySource.js`, new — `INVITATION` today; `LAN`,
+`RENDEZVOUS_SERVICE`, `DHT` named as future values, unimplemented).
+`peer/PeerDiscoveryProvider.js` (new, abstract) is the same
+throwing-stubs adapter boundary `discovery/DiscoveryProvider.js` and
+`peer/PeerConnectionProvider.js` already established —
+`importInvitation()`/`list()`/`forget()`/`onDiscovered()`/`dispose()` — so
+a future LAN or rendezvous-service provider satisfies the exact same
+contract `peer/LocalPeerDiscoveryProvider.js` (new) does today: validate
+an invitation (rejecting an expired one outright, before any
+`PeerDiscoveryRecord` is created — see "replay after expiry" in the
+flagship test below), hold discovered records in memory, notify
+subscribers.
+
+`application/DiscoverPeersUseCase.js` (new) and `application/
+ConnectToPeerUseCase.js` (new) are the use-case pair the design doc's
+`DiscoverPeersUseCase`/`ConnectToPeerUseCase` sketch asked for.
+`ConnectToPeerUseCase.connect(discoveryRecord)` is the ACTIVE half:
+`peerConnectionProvider.connect(discoveryRecord.candidateEndpoint)`, then a
+brand-new `peer/PeerAuthenticationSession.js` layered on top, started
+immediately. `.listen()` is the PASSIVE half — accepting an incoming
+connection runs through the identical `_authenticate()` path, because the
+0.2.49 handshake itself has no initiator/responder distinction; the
+symmetry is real, not merely documented. Neither method ever reads
+`discoveryRecord.identityHint` — see docs/Principles.md, "Discovery Finds
+A Candidate; It Never Authenticates One."
+
+`application/ConnectedPeer.js` (new) is the live, UI-facing aggregate: a
+connection plus its authentication session plus (when this side did the
+discovering) the discovery record that led here. `getLifecycleState()`
+calls `peer/PeerLifecycleState.js`'s new `derivePeerLifecycleState()` — a
+PURE function, computed fresh on every call from the two real, unmodified
+0.2.49 state machines, never a third stored one (see docs/Principles.md,
+"A Peer's Lifecycle Is Derived, Never A Third State Machine"). `setAlias()`
+is a deliberately narrow, local-only, never-persisted label — see
+docs/Principles.md, "A Peer Alias Is A Local Note, Never A Claim About The
+Peer." `application/ConnectedPeerRegistry.js` (new) tracks every live
+`ConnectedPeer`, keyed by connectionId, and — structurally, not by
+caller discipline — removes one automatically the instant its lifecycle
+reaches CLOSED or FAILED: there is no persisted "connected peers" list
+anywhere, and no automatic permanent friend relationship, matching 0.2.49's
+own "no trusted-peer database, anywhere" stance one layer up.
+
+The flagship test (`tests/PeerDiscovery.test.js`) runs the design doc's
+own scripted scenario over a real `LocalPeerConnectionProvider` and two
+genuinely independent `LocalIdentityProvider` instances: Alice creates an
+invitation naming her own endpoint (with her own identityId riding along
+as a courtesy hint) → Bob imports it → discovers her candidate endpoint →
+connects → 0.2.49 mutual authentication runs to completion on BOTH sides
+(Bob via `connect()`, Alice via her own `listen()`) → Bob's `ConnectedPeer`
+holds Alice's real, proven `PeerIdentity`, and Alice's independently holds
+Bob's. Separate tests then modify the endpoint (the connection attempt
+fails outright, at the transport layer, nothing ever reaches the registry)
+and the identityHint (the connection still succeeds against the genuine
+endpoint, and the resulting `remoteIdentity` is still, provably, Alice —
+never the tampered hint); replay a captured invitation after its own
+expiry (rejected by discovery, before any connection is attempted); close
+the connection (the peer disappears from both sides' registries,
+automatically); and reconnect (a brand-new `ConnectedPeer`, no alias
+carried over, re-authenticating completely from nothing). No file under
+`core/`, `world/`, `publisher/`, `discovery/`, `presence/`, or any existing
+`peer/`/`identity/` file was touched — 0.2.50 is additive only.
+
+Deliberately not in 0.2.50: any real network transport (LAN broadcast, a
+rendezvous service, a DHT) — `peer/LocalPeerConnectionProvider.js` remains
+the deterministic in-process test transport, exactly as 0.2.49 left it;
+see docs/Roadmap.md's own still-proposed "Real Browser Peer Transport."
+Signing or otherwise cryptographically protecting a `PeerInvitation` — see
+docs/Principles.md, "An Invitation Is A Rendezvous Hint, Never A
+Credential," for why that would be the wrong fix for the wrong problem.
+Any persistent contacts/friends list, alias-by-identityId, or other
+"remember this peer across connections" mechanism — `ConnectedPeer`'s
+alias is deliberately the narrowest possible answer to the design doc's
+"peer aliases" idea, not a first draft of a social system. Any new UI —
+`peer/`/`application/` are complete and fully tested, but wiring a live
+"Connected Peers" panel into the actual browser app is deferred until
+0.2.51 gives two real endpoints something more meaningful than a
+same-process loopback to demonstrate; building that UI now, against a
+transport that cannot yet connect two different browser sessions, would
+be a toy rather than a genuine preview. An `AvatarPresence`/"online"
+concept keyed off peer authentication — see docs/Principles.md's own
+"Identity, Authentication, Peer, Presence, Visibility, Avatar Profile" list
+this milestone deliberately leaves untouched: a peer being AUTHENTICATED
+says nothing about whether any avatar is visible in the world.
+
 `tests/PeerAuthentication.test.js` covers: `PeerIdentity`'s own
 validated construction; `LocalPeerConnectionProvider` as a real
 bidirectional in-process transport; the flagship two-independent-device
