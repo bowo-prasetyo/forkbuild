@@ -1949,7 +1949,9 @@ profile and presence, not ten minutes of old waves").
 authority → replay/staleness — but is deliberately SHORTER than either:
 no equivocation check exists (see docs/Principles.md, "An Event Stream
 Has No Room For Equivocation Detection, And That Gap Is Named, Not
-Hidden" — explicitly left to 0.2.46). Identity binding is again
+Hidden" — left to a future milestone, still unscheduled; 0.2.46 went to
+identity/session architecture instead, see docs/Roadmap.md). Identity
+binding is again
 trust-on-first-use (`core/PresenceAuthority.js`'s
 `PresenceAuthorityRegistry`, reused — but its own THIRD, separate
 instance: presence-authority, profile-authority, and
@@ -1987,8 +1989,8 @@ PresenceVisibilityPolicy.js`'s existing `shouldAdvertise()` gate
 verbatim — the same single decision presence/profile publishing
 already consult, extended to interactions rather than duplicated); and
 any equivocation/multi-device-conflict handling for the SAME bound
-authority racing itself (named as a real, explicit gap above, deferred
-to 0.2.46). No change to `core/protocolVersion.js` — this is an
+authority racing itself (named as a real, explicit gap above, still
+unscheduled — see docs/Roadmap.md). No change to `core/protocolVersion.js` — this is an
 ADDITIVE, optional new advertisement shape a replica that has never
 heard of it simply never receives (no existing message shape changed,
 no existing field renamed or repurposed).

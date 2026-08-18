@@ -1,6 +1,9 @@
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import LoginModal from './LoginModal.js';
 
+// 0.2.46: reads the same AuthenticationSession every other subsystem
+// can now ask about, rather than inferring "logged in" from currentUser()
+// alone — see application/IdentityUseCase.js.
 export default {
     name: 'UserWidget',
     components: { LoginModal },
@@ -11,7 +14,7 @@ export default {
         let unsubscribe = null;
 
         function logout() {
-            identityUseCase.logout();
+            identityUseCase.endSession();
         }
 
         onMounted(() => {

@@ -99,6 +99,7 @@
 0.2.43  Avatar-Avatar Proximity & Interaction Targets             ✓
 0.2.44  Local Avatar Interaction & Social Presence                 ✓
 0.2.45  Ephemeral Avatar Interaction Synchronization                 ✓
+0.2.46  Local Identity & Authentication Session                       ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -694,14 +695,107 @@ tamper/impersonation attempts all fail, the gesture expires on its own,
 and neither avatar's `AvatarPresence`/`AvatarProfile` — nor any
 `Document`/`WorldPlacement`/spatial index — is ever touched.
 
-The avatar roadmap's own suggested next steps — 0.2.46 (interaction
-trust, replay & abuse controls — the equivocation gap 0.2.45 named
-above, plus spam/blocking), 0.2.47 (avatar privacy, blocking &
-interaction permissions), 0.2.48 (an avatar emotes & animation
-library), and eventually text chat/voice/a richer social model —
-remain exactly that: suggestions, not commitments. Nothing in this
-codebase assumes the next milestone resumes the avatar arc rather than
-opening an entirely different one.
+The avatar roadmap's own suggested next steps — interaction trust,
+replay & abuse controls (the equivocation gap 0.2.45 named above, plus
+spam/blocking), avatar privacy, blocking & interaction permissions, an
+avatar emotes & animation library, and eventually text chat/voice/a
+richer social model — remained exactly that: suggestions, not
+commitments. As 0.2.45 itself said, nothing in this codebase assumed
+the next milestone would resume the avatar arc rather than opening an
+entirely different one — and 0.2.46 exercises exactly that: it pauses
+the avatar arc at its 0.2.45 checkpoint and opens decentralized
+identity/session architecture instead, on the reasoning that "who is
+the user behind `ownerIdentity`, and how does a decentralized
+application establish that identity without a central login server?"
+is more foundational than any further avatar feature. The avatar
+arc's own suggested next steps above remain unscheduled, available to
+resume whenever a real need reopens them.
+
+0.2.46 answers that question, deliberately scoped to its LOCAL half
+only — no network, no server, no recovery mechanism yet. It separates
+three concepts that 0.2.16 had silently conflated into one event
+(typing a username): `identity/LocalIdentity.js` (new) is a durable
+record of a keypair THIS device actually holds — `identityId` (a
+did:key, the exact derivation `identity/SigningIdentity.js` already
+uses), `publicKey`, `algorithm`, a local-only `label`, and `createdAt`
+— constructed only when its `identityId` provably derives from its own
+`publicKey`. `identity/AuthenticationSession.js` (new) answers a
+question that never had a dedicated answer before: not "does this
+device hold this key" (durable — `LocalIdentity`) and not "what name
+is the app showing" (`identity/Identity.js`, 0.1.21, unchanged), but
+"is one of them unlocked right now" — `ANONYMOUS` or `AUTHENTICATED`,
+carrying an `identityId`/`authenticatedAt` pair only in the latter
+state, invalid by construction otherwise. `identity/
+LocalIdentityProvider.js` is rebuilt on both: `createLocalIdentity(label)`
+generates a keypair immediately and stores it in a durable, listable
+index, independent of any login flow — the design doc's own "Identity
+= f(publicKey)" step — and `authenticate(identityId)`/`endSession()`
+start and end a session by unlocking (or releasing) a key this device
+already holds, never by deriving a fresh one from a typed string.
+Every pre-existing method on the provider — `login(username)`,
+`logout()`, `currentUser()`, `sign()`, `getSigningIdentity()`,
+`signCanonical()` — keeps its EXACT 0.1.21/0.2.16 signature and
+observable behavior, now implemented as a thin, backward-compatible
+layer over the session model: `login(label)` finds-or-creates a
+`LocalIdentity` carrying that label and authenticates it (so the same
+typed username still resolves back to the same key on the same
+device, exactly as 0.2.16 already guaranteed), and `currentUser()` is
+a pure, derived VIEW of the current `AuthenticationSession` rather
+than a second stored fact that could drift out of sync with it. Every
+one of the roughly forty-five existing tests that call
+`provider.login('alice')`, and every application/ use case that signs
+a publication, placement, or avatar presence/profile/interaction
+advertisement through `getSigningIdentity()`/`signCanonical()`, keeps
+working completely unchanged — proven by running the full existing
+suite unmodified. What DID change, and is now directly testable for
+the first time: signing is genuinely gated by `AuthenticationSession`,
+not merely by `currentUser()` happening to agree with it —
+`tests/LocalIdentitySession.test.js` ends a session and watches
+`getSigningIdentity()`/`signCanonical()` refuse with "no active
+authentication session" while the identity and its key remain on disk,
+completely untouched, ready to be re-authenticated later; and a single
+device can now hold multiple independent identities (`listLocalIdentities()`),
+switching between them by authenticating a different one without ever
+deleting or overwriting another. See docs/Architecture.md, "Local
+Identity & Authentication Session (0.2.46)," and docs/Principles.md,
+"Login Unlocks An Identity; It Does Not Derive One From A Typed Name"
+and "Identity Existence And Session Authentication Are Independent
+Facts." The Login modal (`ui/components/LoginModal.js`) is rebuilt to
+match: it lists every identity this device already holds so logging
+back in means picking the identity you already have, and creating a
+new one (`IdentityUseCase.createIdentity()` + `authenticate()`) is an
+explicit, separate action, never a side effect of retyping a name.
+
+Deliberately not in 0.2.46, matching the design doc's own staged
+scope: a passphrase or any encryption protecting the stored private
+key (today's key material is exactly as protected as 0.2.16's always
+was — plain local storage, a real limitation named here rather than
+hidden); portable identity export/import or a recovery phrase (moving
+to a new device still means creating a brand-new identity — a
+genuinely different, harder problem, explicitly proposed as its own
+future milestone, "Portable Identity & Key Recovery," below); any peer
+discovery mechanism or authenticated peer session (today's identities
+still only ever prove something to the LOCAL device holding them —
+nothing here lets Alice prove her identity to Bob over a network); and
+any change whatsoever to the signed-object wire formats, `core/
+Signature.js`, or `identity/LocalAuthorizationVerifier.js` — a
+`SigningIdentity` still looks, verifies, and travels exactly as it did
+in 0.2.16, because only WHERE it comes from on the signing side
+changed, never what it IS once produced.
+
+Proposed, unscheduled follow-on milestones this opens (suggestions,
+not commitments, exactly like the avatar arc's own list above):
+Portable Identity & Key Recovery (encrypted export/import so an
+identity survives moving to a new device); Peer Discovery & Transport
+Abstraction (separating "finding another peer" from "communicating
+with one," with today's `presence/LocalAvatarPresenceBroadcastProvider.js`
+becoming one local transport among several rather than the only one);
+Authenticated Peer Sessions (mutual proof of identity-key possession
+between two live peers, building on 0.2.46's `AuthenticationSession`
+the way `identity/LocalAuthorizationVerifier.js` already builds on
+`identity/SigningIdentity.js`); and, once those exist, reconnecting
+presence/profile/interaction sync to run over genuinely authenticated
+peer connections instead of an open same-origin `BroadcastChannel`.
 
 ## 0.1.50 — What shipped
 
