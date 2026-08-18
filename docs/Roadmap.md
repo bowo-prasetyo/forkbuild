@@ -100,6 +100,7 @@
 0.2.44  Local Avatar Interaction & Social Presence                 ✓
 0.2.45  Ephemeral Avatar Interaction Synchronization                 ✓
 0.2.46  Local Identity & Authentication Session                       ✓
+0.2.47  Identity Security & Key Protection                             ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -783,19 +784,63 @@ Signature.js`, or `identity/LocalAuthorizationVerifier.js` — a
 in 0.2.16, because only WHERE it comes from on the signing side
 changed, never what it IS once produced.
 
+0.2.47 closes the specific gap 0.2.46 named rather than continuing
+straight into portability or peer networking: a `LocalIdentity`'s
+private key sat on disk exactly as plainly as 0.2.16's always did.
+It introduces a FOURTH concept alongside 0.2.46's three —
+`identity/VaultLock.js`, "is this identity's key decrypted in memory
+right now?" — deliberately independent of both `LocalIdentity`
+(durable) and `AuthenticationSession` (persisted, but transient): a
+protected identity can be AUTHENTICATED while its vault is LOCKED, and
+a page reload always finds a protected vault LOCKED regardless of
+whether the session survived, because the decrypted seed is never
+written anywhere durable at all (`identity/KeyEncryption.js`'s PBKDF2-
+HMAC-SHA512 + SHA512-CTR + HMAC-SHA512 encrypt-then-MAC, built from the
+same self-contained `sha512` primitive `identity/Ed25519.js` already
+established, not a new dependency). Opting a new identity into
+protection (`createLocalIdentity(label, passphrase)`) or migrating an
+existing one in place (`protectIdentity(identityId, passphrase)`) is
+always the owner's explicit choice — an identity created before 0.2.47
+existed, or created since without a passphrase, keeps behaving exactly
+as it always did. Failed-unlock attempts are rate-limited by a
+time-based (not passphrase-based) cooldown
+(`identity/FailedUnlockTracker.js`), and an unlocked vault auto-expires
+after a fixed lifetime since last unlock
+(`identity/VaultTimeoutPolicy.js`, honestly NOT true activity
+detection — see docs/Principles.md) without ever ending the
+`AuthenticationSession` itself. See docs/Architecture.md, "Identity
+Security & Key Protection (0.2.47)," and docs/Principles.md, "Identity
+Existence, Vault Unlock, And Session Authentication Are Three
+Independent Facts, Not Two."
+
+Deliberately not in 0.2.47: changing or removing a passphrase once set
+(a real, named gap — today's protection, once chosen, isn't yet
+editable); any PIN-strength/complexity policy (a passphrase is accepted
+exactly as typed); true activity-based idle detection rather than a
+fixed unlock lifetime; and — unchanged from 0.2.46's own list — portable
+identity export/import/recovery and any peer discovery or authenticated
+peer session. Protecting a key locally doesn't change that it is still
+the only copy on the only device that has it; that is exactly what the
+next proposed milestone below is for.
+
 Proposed, unscheduled follow-on milestones this opens (suggestions,
 not commitments, exactly like the avatar arc's own list above):
-Portable Identity & Key Recovery (encrypted export/import so an
-identity survives moving to a new device); Peer Discovery & Transport
+Passphrase Management (changing or removing a protected identity's
+passphrase, and a real PIN/passphrase-strength policy — the two gaps
+0.2.47 named above); Portable Identity & Key Recovery (encrypted
+export/import so an identity survives moving to a new device, likely
+building directly on 0.2.47's `KeyEncryption` record shape rather than
+inventing a second encrypted-export format); Peer Discovery & Transport
 Abstraction (separating "finding another peer" from "communicating
 with one," with today's `presence/LocalAvatarPresenceBroadcastProvider.js`
 becoming one local transport among several rather than the only one);
 Authenticated Peer Sessions (mutual proof of identity-key possession
 between two live peers, building on 0.2.46's `AuthenticationSession`
-the way `identity/LocalAuthorizationVerifier.js` already builds on
-`identity/SigningIdentity.js`); and, once those exist, reconnecting
-presence/profile/interaction sync to run over genuinely authenticated
-peer connections instead of an open same-origin `BroadcastChannel`.
+and 0.2.47's `VaultLock` the way `identity/LocalAuthorizationVerifier.js`
+already builds on `identity/SigningIdentity.js`); and, once those
+exist, reconnecting presence/profile/interaction sync to run over
+genuinely authenticated peer connections instead of an open
+same-origin `BroadcastChannel`.
 
 ## 0.1.50 — What shipped
 

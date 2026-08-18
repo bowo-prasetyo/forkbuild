@@ -5130,3 +5130,200 @@ pre-existing test suite (~45 files calling `provider.login(...)`, plus
 every avatar presence/profile/interaction signing path) was run
 unmodified against the rebuilt provider and passes without a single
 change.
+
+### Identity Security & Key Protection (0.2.47)
+
+```text
+identity exists          identity is unlocked        session is active
+────────────────          ─────────────────────        ──────────────────
+LocalIdentity              VaultLock (new)               AuthenticationSession
+"a key this device         "is the PRIVATE KEY            "is this identity the
+ holds" — durable,          decrypted in memory            app's active user?" —
+ survives everything         right now?" — transient,      persisted, survives a
+ below                       NEVER persisted                page reload
+
+                          unprotected -> always UNLOCKED
+                          protected   -> LOCKED on every
+                                         fresh page load,
+                                         regardless of
+                                         session state
+```
+
+0.2.46 separated "which key does this device hold" from "is one of
+them the app's active user" — but left the key itself exactly as
+exposed as 0.2.16's always was: a protected identity's seed sat in
+`StorageProvider` as plain hex, readable by anything that could read
+`localStorage`. That gap was named, not hidden, in 0.2.46's own
+"deliberately not in 0.2.46" list. 0.2.47 closes it for identities that
+opt in, and in doing so introduces a FOURTH concept the design doc's
+own three-state framing asks for: `identity/VaultLock.js` answers "is
+this identity's private key decrypted in memory right now?" —
+genuinely independent of both `LocalIdentity` (durable, on disk) and
+`AuthenticationSession` (transient, but persisted). A protected
+identity can be AUTHENTICATED (the app shows it as logged in) while its
+`VaultLock` is LOCKED — an idle timeout or an explicit `lock()` call
+evicted the decrypted seed from memory — and signing fails with a
+reason that says exactly that, distinct from "not logged in" at all.
+
+Cryptography (all pure functions, no I/O, built from the SAME
+self-contained `sha512` primitive `identity/Ed25519.js` already
+established — no WebCrypto, no new dependency):
+
+- `identity/KeyEncryption.js` (new) — three standard, textbook
+  compositions of SHA-512, never a novel cipher: PBKDF2-HMAC-SHA512
+  stretches a passphrase into key material (slow on purpose — see the
+  file's own comment on why `DEFAULT_ITERATIONS` is tuned for
+  interactive latency in a pure-JS engine rather than audited against
+  modern offline-attack cost models, a real, named limitation exactly
+  like `identity/Ed25519.js`'s own "self-contained... not a substitute
+  for a wallet" framing); a SHA512-CTR keystream XORs the 32-byte seed
+  (a block cipher would be the conventional choice — a hash-based
+  stream cipher is what "no dependency beyond SHA-512" actually buys);
+  and HMAC-SHA512, under a key SEPARATELY derived from encryption's own
+  key, tags the ciphertext (encrypt-then-MAC). `decrypt()` checks the
+  tag BEFORE trusting the ciphertext, in constant time, so a wrong
+  passphrase or a tampered record is rejected outright as
+  `IncorrectPassphraseError` — never silently decrypted into
+  wrong-but-plausible bytes that would become an invalid signing key
+  nobody noticed was invalid.
+
+Lock state (pure data):
+
+- `identity/VaultLock.js` (new) — `LockState.LOCKED`/`UNLOCKED`, an
+  `identityId` and, only in the unlocked state, `unlockedAt`. Never
+  serialized to storage anywhere in this codebase — persisting
+  "unlocked" would mean writing the decrypted seed, or a fact that
+  reconstructs it, to disk, defeating the entire point of encrypting it
+  there. This is WHY a protected identity's vault always starts LOCKED
+  on a fresh page load even when its `AuthenticationSession` is still
+  `AUTHENTICATED` from before the reload — there is nothing durable
+  that could remember an unlock.
+- `identity/FailedUnlockTracker.js` (new) — pure, in-memory,
+  per-`identityId` failed-attempt counters with an injectable clock.
+  Reaching `maxAttempts` starts a `cooldownMs` window during which even
+  the CORRECT passphrase is refused — the lockout is time-based, not
+  passphrase-based, so an attacker who eventually guesses right during
+  the cooldown still doesn't get in. Never persisted, for the same
+  reason `VaultLock` isn't: this rate-limits a live guessing loop within
+  one running session, not something meant to survive a restart.
+- `identity/VaultTimeoutPolicy.js` (new) — `isVaultExpired(unlockedAt,
+  now, timeoutMs)`, a pure function, stated honestly for what it is: a
+  fixed maximum duration since last unlock, not real activity tracking.
+  Wiring "reset on every click" would need an activity hook threaded
+  through the entire UI for a property a bounded lifetime already
+  delivers. Computed fresh on every read — never a stored "expired"
+  flag — the identical "computed, not stored" discipline
+  docs/Principles.md already applies to document lifecycle status and
+  spatial overlap.
+
+Identity provider (the seam, extended rather than replaced):
+
+- `identity/LocalIdentity.js` — gains `isProtected`, defaulting to
+  `false` so every entry stored before 0.2.47 existed — which never had
+  a `protected` field at all — deserializes as the unprotected identity
+  it has always been. Display/routing metadata exactly like `label`,
+  never key material.
+- `identity/LocalIdentityProvider.js` — `createLocalIdentity(label,
+  passphrase)`: a passphrase means the plaintext seed is NEVER written
+  to storage at all, `KeyEncryption.encrypt()` runs before the very
+  first save. `protectIdentity(identityId, passphrase)` (new): migrates
+  an EXISTING unprotected identity in place — reads the plaintext seed
+  once, re-writes it encrypted, flips the index entry — never automatic,
+  never forced, only when the owner explicitly calls it; the identity
+  starts LOCKED immediately afterward, because having had the plaintext
+  in hand a moment ago to encrypt it doesn't carry over into "already
+  unlocked." `unlock(identityId, passphrase)`/`lock(identityId)` (new):
+  decrypt the seed into (or evict it from) an in-memory-only
+  `_vaultCache` Map, never touching `AuthenticationSession` — "lock/
+  unlock without deleting it." `vaultLock(identityId)`/`isUnlocked(
+  identityId)` (new): the lock state computed fresh, lazily evicting an
+  idle-expired cache entry right there on read.
+  `checkVaultTimeouts()` (new): a proactive sweep a UI timer can call so
+  an idle-expired vault is announced rather than only discovered the
+  next time something tries to sign. `authenticate(identityId,
+  passphrase)`: a protected identity that isn't already unlocked
+  requires the passphrase here — authenticating onto a locked vault
+  unlocks it as part of the same call, so the common "log in" gesture
+  stays one step, not two. `endSession()` now also evicts that
+  identity's vault cache entry — no session should ever leave a
+  protected identity's key sitting decrypted in memory with nothing
+  authenticated onto it. `_requireAuthenticatedIdentity()` gains a
+  SECOND check after the existing session check: "no active
+  authentication session" and "identity is locked" are told apart as
+  different refusal reasons, checked in that order.
+  `login(username, passphrase)`/every other pre-existing method keeps
+  its exact 0.1.21/0.2.16/0.2.46 signature — the passphrase parameter is
+  optional and additive; every caller that passes none (all ~45
+  pre-existing tests, unmodified) sees no behavior change whatsoever.
+- `application/IdentityUseCase.js` — gains `protectIdentity()`,
+  `unlock()`, `lock()`, `vaultLock()`, `isUnlocked()`,
+  `checkVaultTimeouts()`, and a THIRD event type,
+  `VaultLockChanged` (`onVaultLockChanged()`), deliberately NOT folded
+  into `IdentityChanged`/`AuthenticationSessionChanged` — a vault can
+  lock or unlock without who's-authenticated changing at all, and a
+  component only listening for the other two would miss it.
+
+UI:
+
+- `ui/components/LoginModal.js` (rebuilt) — a protected identity in the
+  list can't be logged into with one click any more; clicking one opens
+  an inline passphrase prompt instead of calling `authenticate()`
+  directly, and a wrong passphrase surfaces the provider's own
+  remaining-attempts/lockout message. The "Create New Identity" section
+  gains an optional passphrase field: blank creates exactly the
+  unprotected identity 0.2.46 always created; filled in, the key is
+  protected from the moment it's born. A new `unlockIdentityId` prop
+  lets a caller open the modal straight into one identity's unlock
+  prompt.
+- `ui/components/UserWidget.js` — shows a THIRD, distinct state
+  (🔒 name + Unlock button) when the current session is authenticated
+  but its vault has idle-locked, rather than collapsing that into either
+  "logged in" or "logged out" — signing genuinely won't work again until
+  the passphrase is re-entered, so showing anything else would be the
+  UI claiming a capability the app doesn't currently have. A 15-second
+  `setInterval` calls `checkVaultTimeouts()` so an idle vault is noticed
+  even if nothing happens to attempt a sign in the meantime.
+
+Deliberately not in 0.2.47: `changePassphrase()`/removing protection
+once set (a protected identity's passphrase, once chosen, is not yet
+editable — a real, named gap, not an oversight); any PIN-strength or
+complexity policy (a passphrase is accepted exactly as typed, with no
+judgment about how guessable it is); true activity-based idle detection
+(`VaultTimeoutPolicy` is a fixed unlock lifetime, not a listener on
+every click/keystroke — see the file's own comment); portable identity
+export/import or a recovery phrase (moving to a new device still means
+creating a brand-new identity — 0.2.46 already scoped this out as its
+own future milestone, and protecting a key locally doesn't change that
+it's still the only copy on the only device that has it); and any peer
+discovery or authenticated peer session (an unlocked vault still only
+ever proves something to the LOCAL device holding it). No change
+whatsoever to `core/Signature.js`, `identity/SigningIdentity.js`, or
+`identity/LocalAuthorizationVerifier.js` — a signature produced by a
+protected identity verifies through the completely unmodified 0.2.16
+pipeline, proven directly in `tests/IdentityKeyProtection.test.js` by
+running a protected identity's signature through
+`LocalAuthorizationVerifier.verifyDescriptor()`.
+
+`tests/IdentityKeyProtection.test.js` covers `KeyEncryption`'s
+round-trip/wrong-passphrase/tamper-detection/salt-nonce-uniqueness
+properties; `LocalIdentity` backward compatibility with pre-0.2.47
+stored entries carrying no `protected` field; that a protected
+identity's plaintext seed is never written to storage at all; signing
+refused with distinct reasons for "not authenticated" versus "locked,"
+verified end-to-end through a real `Signature`/`LocalAuthorizationVerifier`;
+failed-unlock attempt counting, time-based cooldown enforcement (the
+correct passphrase still refused mid-cooldown), and counter reset on
+success; automatic vault expiration as a pure function of
+(unlockedAt, now, timeoutMs) that locks the vault WITHOUT ending the
+session; in-place, non-destructive migration of an existing unprotected
+identity that preserves the exact same cryptographic key; the full
+three-state distinction surviving a simulated page reload (a fresh
+provider instance over the same storage keeps the identity and the
+session, but not the vault); `endSession()` evicting the vault cache so
+logging back in never silently reuses a stale unlock; and a
+multi-identity device where a protected and an unprotected identity
+carry fully independent lock states. The entire pre-existing test suite
+— including `tests/LocalIdentitySession.test.js` and
+`tests/DecentralizedIdentity.test.js`'s full flagship — was run
+unmodified against the extended provider and passes without a single
+change.

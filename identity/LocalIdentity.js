@@ -24,8 +24,16 @@ import * as Ed25519 from './Ed25519.js';
 // and never transmitted as an authorization claim. Two devices, or two
 // LocalIdentity entries on the same device, may use the same label; the
 // identityId is what actually distinguishes them.
+//
+// isProtected (0.2.47) answers "does this identity's private key require
+// a passphrase to decrypt?" — display/routing metadata exactly like
+// label, never key material itself (see identity/KeyEncryption.js for
+// where the actual encrypted bytes live). It defaults to false so every
+// pre-0.2.47 stored identity — which never had a `protected` field at
+// all — deserializes as the unprotected identity it has always been,
+// with no migration required to keep loading it.
 export class LocalIdentity {
-    constructor({ identityId, publicKey, algorithm = 'Ed25519', label, createdAt } = {}) {
+    constructor({ identityId, publicKey, algorithm = 'Ed25519', label, createdAt, protected: isProtected = false } = {}) {
         if (!identityId || typeof identityId !== 'string') {
             throw new Error('LocalIdentity: identityId is required');
         }
@@ -43,6 +51,7 @@ export class LocalIdentity {
         this._algorithm = algorithm;
         this._label = label.trim();
         this._createdAt = createdAt ? new Date(createdAt) : new Date();
+        this._isProtected = !!isProtected;
     }
 
     get identityId() { return this._identityId; }
@@ -50,6 +59,7 @@ export class LocalIdentity {
     get algorithm() { return this._algorithm; }
     get label() { return this._label; }
     get createdAt() { return this._createdAt; }
+    get isProtected() { return this._isProtected; }
 
     toJSON() {
         return {
@@ -57,7 +67,8 @@ export class LocalIdentity {
             publicKey: this._publicKey,
             algorithm: this._algorithm,
             label: this._label,
-            createdAt: this._createdAt.toISOString()
+            createdAt: this._createdAt.toISOString(),
+            protected: this._isProtected
         };
     }
 

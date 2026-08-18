@@ -2,6 +2,7 @@ import { EventBus } from '../core/events/EventBus.js';
 
 const IDENTITY_EVENT = 'IdentityChanged';
 const SESSION_EVENT = 'AuthenticationSessionChanged';
+const VAULT_LOCK_EVENT = 'VaultLockChanged';
 
 // Wraps IdentityProvider to provide a subscription-based interface for
 // UI components, mirroring DocumentManager's onStateChanged pattern.
@@ -19,6 +20,14 @@ const SESSION_EVENT = 'AuthenticationSessionChanged';
 // authenticate/endSession) fires both IdentityChanged and
 // AuthenticationSessionChanged, so a component can subscribe to
 // whichever question it actually cares about.
+//
+// 0.2.47 adds a THIRD, independent event — VaultLockChanged — for the
+// fourth concept identity/VaultLock.js introduces: whether a protected
+// identity's key is currently decrypted in memory. This deliberately
+// does NOT ride along on IdentityChanged/AuthenticationSessionChanged
+// the way login/logout do: a vault can lock (idle timeout, an explicit
+// lock() call) or unlock without who's-authenticated changing at all,
+// and a UI that only listened for the other two events would miss it.
 export class IdentityUseCase {
     constructor(identityProvider) {
         this._identityProvider = identityProvider;
@@ -29,8 +38,8 @@ export class IdentityUseCase {
         return this._identityProvider;
     }
 
-    login(username) {
-        const identity = this._identityProvider.login(username);
+    login(username, passphrase = null) {
+        const identity = this._identityProvider.login(username, passphrase);
         this._publishChange();
         return identity;
     }
@@ -54,8 +63,8 @@ export class IdentityUseCase {
     }
 
     // --- 0.2.46: identity lifecycle ------------------------------------
-    createIdentity(label) {
-        return this._identityProvider.createLocalIdentity(label);
+    createIdentity(label, passphrase = null) {
+        return this._identityProvider.createLocalIdentity(label, passphrase);
     }
 
     listIdentities() {
@@ -63,15 +72,20 @@ export class IdentityUseCase {
     }
 
     // --- 0.2.46: authentication session --------------------------------
-    authenticate(identityId) {
-        const session = this._identityProvider.authenticate(identityId);
+    authenticate(identityId, passphrase = null) {
+        const session = this._identityProvider.authenticate(identityId, passphrase);
         this._publishChange();
+        this._publishLockChange(identityId);
         return session;
     }
 
     endSession() {
+        const endingIdentityId = this.currentSession().identityId;
         this._identityProvider.endSession();
         this._publishChange();
+        if (endingIdentityId) {
+            this._publishLockChange(endingIdentityId);
+        }
     }
 
     currentSession() {
@@ -91,8 +105,58 @@ export class IdentityUseCase {
         return () => subscription.unsubscribe();
     }
 
+    // --- 0.2.47: key protection ------------------------------------------
+    protectIdentity(identityId, passphrase) {
+        const identity = this._identityProvider.protectIdentity(identityId, passphrase);
+        this._publishChange();
+        this._publishLockChange(identityId);
+        return identity;
+    }
+
+    unlock(identityId, passphrase) {
+        const lock = this._identityProvider.unlock(identityId, passphrase);
+        this._publishLockChange(identityId);
+        return lock;
+    }
+
+    lock(identityId) {
+        const lock = this._identityProvider.lock(identityId);
+        this._publishLockChange(identityId);
+        return lock;
+    }
+
+    vaultLock(identityId) {
+        return this._identityProvider.vaultLock(identityId);
+    }
+
+    isUnlocked(identityId) {
+        return this._identityProvider.isUnlocked(identityId);
+    }
+
+    // Meant to be called from a UI timer (see ui/components/UserWidget.js)
+    // so an idle-expired vault is announced proactively rather than only
+    // discovered the next time something tries to sign.
+    checkVaultTimeouts() {
+        const expired = this._identityProvider.checkVaultTimeouts();
+        expired.forEach((identityId) => this._publishLockChange(identityId));
+        return expired;
+    }
+
+    // Returns an unsubscribe function.
+    onVaultLockChanged(callback) {
+        const subscription = this._eventBus.subscribe(
+            VAULT_LOCK_EVENT,
+            ({ identityId, lock }) => callback(identityId, lock)
+        );
+        return () => subscription.unsubscribe();
+    }
+
     _publishChange() {
         this._eventBus.publish(IDENTITY_EVENT, { user: this.currentUser() });
         this._eventBus.publish(SESSION_EVENT, { session: this.currentSession() });
+    }
+
+    _publishLockChange(identityId) {
+        this._eventBus.publish(VAULT_LOCK_EVENT, { identityId, lock: this._identityProvider.vaultLock(identityId) });
     }
 }

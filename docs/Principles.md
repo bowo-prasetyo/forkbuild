@@ -2633,3 +2633,98 @@ never a per-identity storage wipe. `currentUser()` and
 `getSigningIdentity()` are both, deliberately, PURE FUNCTIONS of
 `currentSession()` — derived views, never a second place either fact
 could be separately, and wrongly, recorded.
+
+### Identity Existence, Vault Unlock, And Session Authentication Are Three Independent Facts, Not Two (0.2.47)
+
+0.2.46 established that a `LocalIdentity` existing and its
+`AuthenticationSession` being authenticated are independent facts.
+0.2.47 adds a THIRD: whether that identity's private key is currently
+DECRYPTED (`identity/VaultLock.js`). All three can disagree with each
+other at once, and the codebase never collapses any two of them into
+one: a protected identity can exist on a device that has never
+authenticated it (created, never logged into); it can be AUTHENTICATED
+— the app shows it as the active user — while its vault is LOCKED, if
+an idle timeout or an explicit `lock()` call evicted the decrypted seed
+since the last unlock; and ending a session (`endSession()`) evicts the
+vault too, so a fresh `authenticate()` afterward always asks for the
+passphrase again rather than silently reusing a stale unlock. The
+clearest proof this is a real, load-bearing distinction rather than
+accounting trivia: a simulated page reload (a fresh
+`LocalIdentityProvider` instance reading the SAME storage) keeps the
+identity (durable) and the session (persisted), but NOT the vault
+(deliberately never persisted at all) — see
+`tests/IdentityKeyProtection.test.js`, "identity/session/vault: three
+independent facts, only the vault resets on reload." Reusing the
+1-of-2 mental model from 0.2.46 — "not authenticated" is the only
+reason signing could fail — would have made "identity is locked" an
+impossible-to-express error; `_requireAuthenticatedIdentity()` checks
+the session first and the vault second, deliberately, because they are
+answering genuinely different questions.
+
+### An Unlocked Vault Must Never Touch Storage (0.2.47)
+
+The entire security property `identity/KeyEncryption.js` provides
+collapses to nothing the moment a decrypted seed, or any fact that
+trivially reconstructs one, is written to `StorageProvider`. So it
+never is: `LocalIdentityProvider._vaultCache` is a plain in-memory
+`Map`, constructed fresh by every `new LocalIdentityProvider(...)`
+call, with no `save()`/`load()` call anywhere near it. This is a
+structural guarantee, not a convention that has to be remembered per
+call site — there is exactly one place in the entire file that ever
+writes to `_vaultCache` (`unlock()`) and exactly two that ever clear an
+entry (`lock()`, and the lazy expiry check inside `vaultLock()`), and
+none of the three touch `_storageProvider`. The direct, useful
+consequence: a protected identity's vault is ALWAYS locked on a fresh
+page load, with no special-case code needed to enforce it — there is
+simply nothing durable an unlock could have left behind to check
+against.
+
+### A Wrong Passphrase And A Tampered Record Must Fail Identically (0.2.47)
+
+`KeyEncryption.decrypt()` never distinguishes "the passphrase was
+wrong" from "the stored record was corrupted or tampered with" — both
+produce the exact same `IncorrectPassphraseError`, because the
+mechanism that catches each is the same: an HMAC-SHA512 tag, computed
+under a key derived from the ATTEMPTED passphrase, checked in constant
+time against the tag stored alongside the ciphertext, BEFORE the
+ciphertext is decrypted at all. This is encrypt-then-MAC specifically
+because the alternative — decrypt first, see if the result looks like
+a plausible 32-byte seed — has no reliable failure signal: a wrong
+passphrase run through SHA512-CTR produces 32 bytes that are
+statistically indistinguishable from a valid seed, so "did decryption
+succeed?" is not a question that construction could ever honestly
+answer. Checking the tag first means a wrong guess is rejected
+outright, loudly, every time — never silently accepted as an
+Ed25519 key that happens to produce nonsense signatures nobody
+notices are invalid until they fail verification somewhere downstream.
+
+### Failed-Unlock Lockout Is Time-Based, Not Passphrase-Based (0.2.47)
+
+Once `FailedUnlockTracker` records `maxAttempts` consecutive failures
+for an identity, it refuses EVERY unlock attempt — including one with
+the objectively correct passphrase — until `cooldownMs` has elapsed.
+Checking the passphrase first and only enforcing the cooldown on
+failure would let an attacker who eventually guesses right during the
+cooldown window walk straight in, defeating the point of having a
+cooldown at all; checking the cooldown BEFORE the (deliberately slow)
+KDF even runs is also what keeps a lockout responsive rather than
+paying a full PBKDF2 cost just to say no. `recordSuccess()` clears the
+counter entirely rather than merely pausing it, so a legitimate owner
+who mistypes a few times and then gets it right is never left carrying
+a partial strike count into their next visit.
+
+### A Bounded Unlock Lifetime Is Not The Same Claim As Idle Detection (0.2.47)
+
+`identity/VaultTimeoutPolicy.js#isVaultExpired(unlockedAt, now,
+timeoutMs)` answers "has it been more than `timeoutMs` since this
+vault was last UNLOCKED" — not "has the user been inactive for
+`timeoutMs`." The two sound similar and are not: real idle detection
+needs an activity signal (a keystroke, a click, a mutation) reset on
+every one, threaded through every surface of the UI, for a security
+property a much simpler fixed-lifetime policy already delivers —
+leave a protected identity unlocked and unattended, and it re-locks on
+its own regardless of what else might be happening on the page. 0.2.47
+states this trade honestly rather than implying a more sophisticated
+mechanism than what's actually implemented — the same discipline
+`identity/KeyEncryption.js`'s own comment applies to its chosen PBKDF2
+iteration count.
