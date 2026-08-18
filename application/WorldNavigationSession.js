@@ -46,6 +46,9 @@ import { computeNearbyAvatars } from '../core/AvatarProximity.js';
 import { AvatarInteractionKind, isValidInteractionKind } from '../core/AvatarInteractionKind.js';
 import { canPerformInteraction } from '../core/AvatarInteractionCooldown.js';
 import { computeFacingYawDegrees } from '../core/AvatarFacing.js';
+import { AvatarInteractionSyncService } from './AvatarInteractionSyncService.js';
+import { toAvatarInteractionAdvertisement } from '../core/AvatarInteractionAdvertisement.js';
+import { signAvatarInteractionAdvertisement } from './AvatarInteractionSigning.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -139,7 +142,8 @@ export class WorldNavigationSession {
 	    presenceBroadcastProvider = null,
 	    avatarTemplateRegistry = null,
 	    presenceVisibilityUseCase = null,
-	    avatarProfileBroadcastProvider = null
+	    avatarProfileBroadcastProvider = null,
+	    avatarInteractionBroadcastProvider = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -271,6 +275,26 @@ export class WorldNavigationSession {
 	    // performed," which — like `_lastProfilePublishAt` above —
 	    // deliberately makes the very FIRST gesture always allowed.
 	    this._lastInteractionPerformedAt = 0;
+	    // 0.2.45 — Ephemeral Avatar Interaction Synchronization.
+	    // OPTIONAL, same posture as every other broadcast-provider
+	    // collaborator in this constructor: a session built without one
+	    // simply never publishes or receives interaction EVENTS at all
+	    // (a gesture still fully happens locally either way — see
+	    // performAvatarInteraction below). `_localInteractionSequence`
+	    // is this avatar's OWN, separate monotonic counter for
+	    // interaction events specifically — never AvatarPresence's own
+	    // `sequence` — see core/AvatarInteractionAdvertisement.js's own
+	    // header for why. `_remoteAvatarGestureExpiry` is
+	    // avatarId -> the timestamp a REMOTE avatar's currently-playing
+	    // received gesture should be cleared, the receiving-side
+	    // counterpart to `_avatarInteraction.interactionStartedAt` on
+	    // this replica's own local gesture — see
+	    // _applyRemoteAvatarInteraction/_expireRemoteAvatarGestures
+	    // below.
+	    this._avatarInteractionBroadcastProvider = avatarInteractionBroadcastProvider;
+	    this._avatarInteractionSyncService = null;
+	    this._localInteractionSequence = 0;
+	    this._remoteAvatarGestureExpiry = new Map();
 	    // Raw DiscoveryDiagnostics from the most recent
 	    // exploreLocation/exploreHere/whatsHere call — kept alongside
 	    // the summarized version so inspectDocument can look up a
@@ -580,6 +604,15 @@ export class WorldNavigationSession {
             );
         }
 
+        // 0.2.45 — OPTIONAL: a session without an interaction broadcast
+        // provider still renders every remote avatar exactly as before,
+        // it just never plays a received GREET/WAVE/POINT for anyone.
+        // See docs/Principles.md, "Presence Describes An Avatar's
+        // Current State; Interaction Describes An Event That Happened."
+        if (this._avatarInteractionBroadcastProvider) {
+            this._avatarInteractionSyncService = new AvatarInteractionSyncService(this._avatarInteractionBroadcastProvider, { localAvatarId });
+        }
+
         this._remoteAvatarRegistry = new RemoteAvatarRegistry(this._session, {
             defaultTemplate, defaultAppearance,
             appearanceResolver: this._remoteAvatarAppearanceRegistry
@@ -621,7 +654,69 @@ export class WorldNavigationSession {
                 if (this._avatarProfileSyncService) {
                     this._remoteAvatarAppearanceRegistry.sync(this._remoteAvatarRegistry.knownAvatarIds());
                 }
+                // 0.2.45 — drains any newly-accepted interaction EVENTS
+                // and plays each one on its sender's own remote avatar
+                // visual, then expires whichever received gestures have
+                // finished playing. See _applyRemoteAvatarInteraction/
+                // _expireRemoteAvatarGestures below for why this is
+                // never a "known list" the way presence/profile pull()
+                // returns — an interaction event is rendered once and
+                // then genuinely forgotten.
+                if (this._avatarInteractionSyncService) {
+                    for (const event of this._avatarInteractionSyncService.pull()) {
+                        this._applyRemoteAvatarInteraction(event, now);
+                    }
+                }
+                this._expireRemoteAvatarGestures(now);
             });
+        }
+    }
+
+    // 0.2.45 — plays ONE accepted interaction event on the SENDER's own
+    // remote avatar visual — "Remote interaction event -> RemoteAvatarVisual,"
+    // per the design doc's own pipeline. Deliberately keyed by
+    // `event.avatarId` (who PERFORMED the gesture), never
+    // `event.targetAvatarId`: the gesture is presentation on the
+    // sender's own body, exactly like the LOCAL half 0.2.44 already
+    // established (a wave is rendered on Bob, not teleported onto
+    // Alice) — see core/AvatarInteractionAdvertisement.js's own header
+    // for why `targetAvatarId` is a claim, never an instruction. A
+    // no-op if the sender isn't currently a known (presence-driven)
+    // remote avatar, or the render facade doesn't support gestures —
+    // the same graceful-absence posture every other optional avatar
+    // surface in this file already follows.
+    _applyRemoteAvatarInteraction(event, now) {
+        if (!this._remoteAvatarRegistry || !this._remoteAvatarRegistry.has(event.avatarId)) {
+            return;
+        }
+        if (!this._session || typeof this._session.setRemoteAvatarGesture !== 'function') {
+            return;
+        }
+        this._session.setRemoteAvatarGesture(event.avatarId, event.kind);
+        this._remoteAvatarGestureExpiry.set(event.avatarId, now + GESTURE_DURATION_MS);
+    }
+
+    // 0.2.45 — the receiving-side counterpart to
+    // _updateLocalAvatarInteractionPresentation()'s own local-gesture
+    // expiry: once a received gesture's short lifetime elapses, clears
+    // it back to no-gesture, with no explicit "stop" message from the
+    // sender ever required or expected — see docs/Principles.md,
+    // "Interaction Is Rendered, Never Retained." Reuses the SAME
+    // GESTURE_DURATION_MS a local gesture plays for, so a sender's own
+    // avatar and everyone watching it see the gesture for the same
+    // visual duration.
+    _expireRemoteAvatarGestures(now) {
+        if (this._remoteAvatarGestureExpiry.size === 0) {
+            return;
+        }
+        if (!this._session || typeof this._session.setRemoteAvatarGesture !== 'function') {
+            return;
+        }
+        for (const [avatarId, expiresAt] of this._remoteAvatarGestureExpiry) {
+            if (now >= expiresAt) {
+                this._remoteAvatarGestureExpiry.delete(avatarId);
+                this._session.setRemoteAvatarGesture(avatarId, null);
+            }
         }
     }
 
@@ -752,9 +847,51 @@ export class WorldNavigationSession {
         if (!canPerformInteraction(this._lastInteractionPerformedAt, now)) {
             return false;
         }
+        const targetAvatarId = this._avatarInteraction.avatarId;
         this._lastInteractionPerformedAt = now;
         this._setAvatarInteraction(this._avatarInteraction.withInteraction(kind, now));
+        // 0.2.45 — ADVERTISE: see _publishAvatarInteraction's own header.
+        // Never changes this method's return contract — a gesture that
+        // fails to publish (no sync service wired, no local avatar
+        // identity, or visibility policy says HIDDEN) still fully
+        // happened LOCALLY, exactly 0.2.44's own behavior.
+        this._publishAvatarInteraction(kind, targetAvatarId, now);
         return true;
+    }
+
+    // 0.2.45 — the ONE place a performed gesture is signed and handed
+    // to its own transport, mirroring _publishLocalAvatarProfile's role
+    // one layer over. Reuses the EXACT same visibility gate presence/
+    // profile publishing already share — see docs/Principles.md,
+    // "Presence And Profile Share One Publication Gate," extended here
+    // to interactions too: HIDDEN/empty-FRIENDS means a gesture never
+    // reaches the transport either, one single policy. A single
+    // fire-and-forget publish, deliberately never a periodic republish
+    // the way profile gets one — see
+    // application/AvatarInteractionSyncService.js's own header for why
+    // a missed gesture is not something a later-joining replica should
+    // ever catch up on.
+    _publishAvatarInteraction(kind, targetAvatarId, now) {
+        if (!this._avatarInteractionSyncService || !this._avatarPresenceSession) {
+            return;
+        }
+        const canAdvertise = this._presenceVisibilityUseCase
+            ? this._presenceVisibilityUseCase.getPolicy().shouldAdvertise()
+            : true;
+        if (!canAdvertise) {
+            return;
+        }
+        this._localInteractionSequence += 1;
+        const presence = this._avatarPresenceSession.current;
+        const advertisement = toAvatarInteractionAdvertisement({
+            avatarId: presence.avatarId,
+            ownerIdentity: presence.ownerIdentity,
+            kind,
+            targetAvatarId,
+            sequence: this._localInteractionSequence,
+            timestamp: now
+        });
+        this._avatarInteractionSyncService.publish(signAvatarInteractionAdvertisement(advertisement, this._identityProvider));
     }
 
     // A pure client rendering preference, exactly like
@@ -3283,6 +3420,12 @@ export class WorldNavigationSession {
         }
         this._remoteAvatarAppearanceRegistry = null;
         this._lastProfilePublishAt = 0;
+        if (this._avatarInteractionSyncService) {
+            this._avatarInteractionSyncService.dispose();
+            this._avatarInteractionSyncService = null;
+        }
+        this._localInteractionSequence = 0;
+        this._remoteAvatarGestureExpiry.clear();
         if (this._remoteAvatarRegistry) {
             this._remoteAvatarRegistry.dispose();
             this._remoteAvatarRegistry = null;

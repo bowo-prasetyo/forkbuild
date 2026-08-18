@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.44** — Local Avatar Interaction & Social Presence
+**Version 0.2.45** — Ephemeral Avatar Interaction Synchronization
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -528,10 +528,34 @@ OBSERVING another avatar now extends, unbroken, to WANTING to interact
 with one — see docs/Principles.md, "Observation Does Not Imply
 Authority, And Interaction Does Not Imply Control."
 
-The avatar roadmap's own suggested next steps — networked ephemeral
-interactions, interaction trust/replay/rate-limiting, avatar privacy &
-blocking, an emotes/animation library, eventually text chat/voice —
-remain suggestions, not commitments.
+0.2.45 answers the question 0.2.44 deliberately deferred: "how can
+Alice see that Bob waved at her without turning a gesture into
+persistent avatar state?" A third, independent advertise/trust/pull
+pipeline (`core/AvatarInteractionAdvertisement.js` →
+`application/AvatarInteractionTrustBoundary.js` →
+`application/AvatarInteractionSyncService.js`) mirrors the shape
+presence/profile already established without copying either blindly:
+`pull()` returns a transient batch of newly-accepted EVENTS, never a
+persisted "current" record — an interaction genuinely isn't state, see
+docs/Principles.md, "State Synchronization And Event Synchronization
+Are Different Protocols." `targetAvatarId` travels as a CLAIM, never
+an instruction — a bystander can observe the same event the named
+target does, and no replica gains any new reach into another avatar's
+state because of it. A bounded replay window does double duty,
+tracking both `interactionId` (duplicate suppression) and `sequence`
+(staleness rejection) per avatarId. One real gap is named rather than
+hidden: no equivocation detection exists for interactions yet, left
+explicitly to 0.2.46. The flagship test proves the shape end to end
+over a real `BroadcastChannel`: Bob waves at Alice, Alice's replica
+renders it on Bob's own avatar visual, an attacker's replay/staleness/
+tamper/impersonation attempts all fail, the gesture expires on its
+own, and neither avatar's `AvatarPresence`/`AvatarProfile` — nor any
+`Document`/`WorldPlacement`/spatial index — is ever touched.
+
+The avatar roadmap's own suggested next steps — interaction trust,
+replay & abuse controls (the equivocation gap named above, plus spam/
+blocking), avatar privacy & blocking, an emotes/animation library,
+eventually text chat/voice — remain suggestions, not commitments.
 
 ## Features
 
@@ -580,6 +604,7 @@ remain suggestions, not commitments.
 - **Avatar-World Collision & Movement Constraints (0.2.42)** — closes the one conspicuous limitation the movement model carried since 0.2.36: avatars could walk straight through published geometry. `core/AvatarMovementSimulation.js`'s pure kinematics (completely untouched) produce a PROPOSED position; `application/AvatarMovementConstraint.js`, backed by pure geometry in `core/AvatarCollision.js`, resolves it against whatever collision geometry this replica currently has streamed in, before the result ever reaches `AvatarPresence`. Deliberately "start simple" — an upright bounding-box avatar, axis-aligned per-brick bounds (ignoring rotation, the same simplification `application/SelectionBoundsService.js` already makes), and an axis-separated SWEPT slide: a diagonal approach into a corner blocks the axis that actually hits something while the other keeps moving (a true slide, not a dead stop), and every axis is tested against its full step range so a single large tick can never tunnel through a thin obstacle. Honestly scoped to what this replica actually knows: collision geometry comes entirely from `WorldNavigationSession`'s own currently-loaded documents — the exact same wall blocks movement when streamed in and never obstructs anything when it isn't. Derived, never persisted: no collision record, no `Avatar → Document` relationship, just `Document + WorldPlacement` math recomputed fresh every tick. `AvatarAnimationState` gains nothing — a collided step is movement information (`isCollided()`, transient, never part of `AvatarPresence`), never a `BLOCKED` animation state. Deliberately deferred: avatar-avatar collision (Bob's displayed vs. claimed position is a real multiplayer-authority question left for later), standing on raised geometry, and any change to presence's own wire shape or trust handling. The flagship test runs the design doc's own scripted scenario end to end — publish a wall, load it, walk into it and stop at the boundary, turn and slide along it, jump against it without penetrating, Document/Publication/Placement remain byte-identical throughout, and a real remote replica sees Alice's already-constrained movement through completely ordinary presence sync, with zero collision-aware special-casing on his side.
 - **Avatar-Avatar Proximity & Interaction Targets (0.2.43)** — answers "who is near me?" as a DERIVED, purely local fact — nothing written to a Document, Publication, WorldPlacement, or AvatarProfile, nothing sent over the wire. `core/AvatarProximity.js`'s `computeNearbyAvatars()` computes it over the exact same trusted remote-presence list that already drives rendering, reusing `core/SpatialQuery.js`'s `distanceBetween()` verbatim. Two replicas computing "who is near me" independently are never required to agree — the same tolerance already extended to remote avatar rendering itself. `getNearbyAvatars(radius)` distinguishes PRESENT from STALE; an ABSENT avatar is simply never reachable, because `LocalPresenceStore` already deletes an ABSENT record the moment it's asked for — no new filtering needed. A small catch-up rides along: `getAvatarDisplayName()` fixes a stale 0.2.39 comment claiming a remote avatar's name "is never distributed" — true when written, false since 0.2.41. The new "Nearby Avatars" panel reaches an avatarId without a screen-space pick, but reuses every existing mechanism once it does — the same `getAvatarInfo()`, the same `followAvatarId()`, the same status-dot vocabulary; no new camera mechanism. Per the design doc's own explicit contract, nearness never authorizes mutation: `targetAvatar()`'s entire effect is on the caller's own local UI-focus state, and there is no method anywhere that lets one replica write to another avatar's own presence or profile. The flagship test proves it directly: after an entire scripted scenario of querying, targeting, and following, Alice's own AvatarProfile and AvatarPresence stay byte-identical throughout. Avatar-avatar collision remains deliberately deferred — a genuinely harder, multiplayer-authority-laden problem.
 - **Local Avatar Interaction & Social Presence (0.2.44)** — answers "once I know another avatar is nearby, what can I actually do with it?" with a deliberately small, still wire-format-free answer. A closed local gesture vocabulary — GREET/WAVE/POINT (`core/AvatarInteractionKind.js`) — is its OWN vocabulary, never folded into `core/AvatarAnimationState.js` (the one that DOES ride `AvatarPresence.animation` onto the wire), so a gesture is structurally incapable of being networked by accident. A shared cooldown (`core/AvatarInteractionCooldown.js`) rate-limits every gesture now, under easy local conditions, so a future networked version inherits an already-proven invariant instead of inventing rate-limiting later. Performing a gesture (`WorldNavigationSession.performAvatarInteraction()`) only ever writes to the caller's OWN local `AvatarInteractionState` — extended with `interaction`/`interactionStartedAt` — and is rendered ONLY on the gesturing avatar's own replica (`renderer/AvatarVisual.js#setGesture()`, an upper-body pose overlay reusing `core/AvatarPoseOffsets.js`'s own vocabulary) with no remote-avatar counterpart anywhere in the codebase. A temporary facing override (`core/AvatarFacing.js`) makes an avatar visually face its current target while stationary, applied directly to the Three.js root — never to `AvatarPresence.rotation` — and an actively-moving player's own input always wins over it. The Avatar Info panel grows exactly three buttons; three of the design doc's other named intents (Invite to Follow, Stop Following, Inspect) needed no new code at all, because they already existed since 0.2.39/0.2.43. Nothing here reaches a Document, a Publication, a WorldPlacement, or the wire — see docs/Principles.md, "Observation Does Not Imply Authority, And Interaction Does Not Imply Control."
+- **Ephemeral Avatar Interaction Synchronization (0.2.45)** — the networked half of 0.2.44's gestures, deliberately narrow: a GREET/WAVE/POINT is an EVENT, never STATE, so it is never retained once rendered. A third, independent wire shape (`core/AvatarInteractionAdvertisement.js` — `avatarId`/`interactionId`/`kind`/`targetAvatarId`/`sequence`/`timestamp`/optional `signature`) travels on its own `BroadcastChannel` (`'forkbuild:avatar-interaction'`), through its own trust boundary (`application/AvatarInteractionTrustBoundary.js` — structural validity → signature/policy → authority → replay/staleness, deliberately with NO equivocation check, a named gap left to 0.2.46) and its own bounded replay window that tracks both `interactionId` (duplicate suppression) and `sequence` (staleness rejection) per avatarId. `AvatarInteractionSyncService.pull()` returns only the newly-accepted events since the last call — never a persisted "current" record the way presence/profile sync services keep one. `targetAvatarId` is a CLAIM ("Bob claims he waved at Alice"), never an instruction — a bystander can observe and render the same event the named target does, and no replica gains any reach into another avatar's own state. A trusted event renders on the SENDER's own remote avatar visual (`RenderWorldViewUseCase#setRemoteAvatarGesture()`, reusing `AvatarVisual.setGesture()` byte-for-byte) and auto-expires after ~1.8s with no "stop" message ever required. `AvatarPresence`/`AvatarProfile` gain zero new fields; the flagship test proves a full replay/tamper/impersonation attack scenario over a real `BroadcastChannel` never renders a forged gesture, and never touches a Document, Publication, WorldPlacement, or the spatial index.
   
 ## Architecture
 
@@ -689,6 +714,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.42  Avatar-World Collision & Movement Constraints
 - [x] 0.2.43  Avatar-Avatar Proximity & Interaction Targets
 - [x] 0.2.44  Local Avatar Interaction & Social Presence
+- [x] 0.2.45  Ephemeral Avatar Interaction Synchronization
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

@@ -42,7 +42,15 @@ export const SignatureType = Object.freeze({
     // wire shape), never over AvatarProfile itself. See
     // core/AvatarProfileAdvertisement.js's
     // getAvatarProfileSigningDescriptor().
-    AVATAR_PROFILE: 'avatar-profile'
+    AVATAR_PROFILE: 'avatar-profile',
+    // 0.2.45 — the same, one layer up again: an OPTIONAL signature over
+    // an AvatarInteractionAdvertisement (core/
+    // AvatarInteractionAdvertisement.js's wire shape) — the ephemeral
+    // GREET/WAVE/POINT EVENT counterpart to AVATAR_PRESENCE/
+    // AVATAR_PROFILE's own STATE advertisements. See
+    // core/AvatarInteractionAdvertisement.js's
+    // getAvatarInteractionSigningDescriptor().
+    AVATAR_INTERACTION: 'avatar-interaction'
 });
 
 export class Signature {

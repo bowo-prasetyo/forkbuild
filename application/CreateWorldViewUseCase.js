@@ -155,6 +155,15 @@ export class CreateWorldViewUseCase {
         // its own header) rather than duplicated into a
         // presence-flavored-in-name-only sibling class.
         const avatarProfileBroadcastProvider = new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile');
+        // 0.2.45 — Ephemeral Avatar Interaction Synchronization: a
+        // THIRD, separate channel from presence's and profile's own —
+        // see application/AvatarInteractionSyncService.js's own header
+        // for why interaction traffic is never folded into either.
+        // Reuses LocalAvatarPresenceBroadcastProvider directly, the
+        // same generic named-BroadcastChannel wrapper 0.2.41 already
+        // reused for profile's channel instead of building a
+        // presence-flavored-in-name-only sibling class.
+        const avatarInteractionBroadcastProvider = new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-interaction');
         const avatarTemplateRegistry = new CreateAvatarTemplateRegistryUseCase().execute();
 
         return {
@@ -195,7 +204,9 @@ export class CreateWorldViewUseCase {
                     presenceBroadcastProvider,
                     avatarTemplateRegistry,
                     // 0.2.41: remote avatar appearance — see above.
-                    avatarProfileBroadcastProvider
+                    avatarProfileBroadcastProvider,
+                    // 0.2.45: ephemeral avatar interaction sync — see above.
+                    avatarInteractionBroadcastProvider
                 });
             },
             // Expose the spatial index and content store so the application

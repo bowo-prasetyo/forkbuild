@@ -98,6 +98,7 @@
 0.2.42  Avatar-World Collision & Movement Constraints            ✓
 0.2.43  Avatar-Avatar Proximity & Interaction Targets             ✓
 0.2.44  Local Avatar Interaction & Social Presence                 ✓
+0.2.45  Ephemeral Avatar Interaction Synchronization                 ✓
 
 Nested Groups / Hierarchical Editing — remains OPTIONAL, and is not put
 back on the roadmap yet. 0.1.43–0.1.50 repeatedly demonstrated that the
@@ -661,14 +662,46 @@ Presentation, Never Presence" — the same nearness-never-authorizes-
 mutation boundary 0.2.43 drew for OBSERVING another avatar now extends,
 unbroken, to WANTING to interact with one.
 
-The avatar roadmap's own suggested next steps — 0.2.45 (networked
-ephemeral avatar interactions, the deliberately-deferred networked
-half of 0.2.44's gestures), 0.2.46 (interaction trust, replay & rate
-limiting), 0.2.47 (avatar privacy, blocking & interaction permissions),
-0.2.48 (an avatar emotes & animation library), and eventually text
-chat/voice/a richer social model — remain exactly that: suggestions,
-not commitments. Nothing in this codebase assumes the next milestone
-resumes the avatar arc rather than opening an entirely different one.
+0.2.45 answers the question 0.2.44 deliberately deferred: "how can
+Alice see that Bob waved at her without turning a gesture into
+persistent avatar state?" A third, independent
+advertise/trust/pull pipeline — `core/AvatarInteractionAdvertisement.js`
+→ `application/AvatarInteractionTrustBoundary.js` →
+`application/AvatarInteractionSyncService.js` — mirrors the shape
+0.2.37/0.2.38 and 0.2.41 already established for presence and profile,
+deliberately without copying either blindly: `AvatarInteractionSyncService.pull()`
+returns a transient batch of newly-accepted EVENTS, never a persisted
+"current" record the way `PresenceSyncService`/`AvatarProfileSyncService`
+do, because an interaction genuinely isn't state — see
+docs/Principles.md, "State Synchronization And Event Synchronization
+Are Different Protocols." `targetAvatarId` travels on the wire as a
+CLAIM ("Bob claims he waved at Alice"), never as an instruction — a
+bystander who isn't the named target can observe and render the same
+event Alice does, and no replica gains any new reach into another
+avatar's own state because of it, the identical boundary 0.2.44 already
+drew for the purely local half of this feature. A bounded replay
+window (`core/AvatarInteractionReplayWindow.js`) does double duty,
+tracking both `interactionId` (duplicate suppression) and `sequence`
+(staleness rejection) per avatarId — deliberately its own structure,
+neither presence's nor profile's replay mechanism reused verbatim. One
+real gap is named rather than hidden: no equivocation detection exists
+for interactions (the same bound signing authority producing two
+different events at one sequence number), left explicitly to 0.2.46
+rather than solved here. The flagship test proves the shape end to
+end over a real `BroadcastChannel`: Bob waves at Alice, Alice's replica
+renders it on Bob's own avatar visual, an attacker's replay/staleness/
+tamper/impersonation attempts all fail, the gesture expires on its own,
+and neither avatar's `AvatarPresence`/`AvatarProfile` — nor any
+`Document`/`WorldPlacement`/spatial index — is ever touched.
+
+The avatar roadmap's own suggested next steps — 0.2.46 (interaction
+trust, replay & abuse controls — the equivocation gap 0.2.45 named
+above, plus spam/blocking), 0.2.47 (avatar privacy, blocking &
+interaction permissions), 0.2.48 (an avatar emotes & animation
+library), and eventually text chat/voice/a richer social model —
+remain exactly that: suggestions, not commitments. Nothing in this
+codebase assumes the next milestone resumes the avatar arc rather than
+opening an entirely different one.
 
 ## 0.1.50 — What shipped
 
