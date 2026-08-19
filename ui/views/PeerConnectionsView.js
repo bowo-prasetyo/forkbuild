@@ -58,6 +58,16 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 // be sent to, and accepted from, a peer this device has never
 // "Remembered" at all.
 //
+// 0.2.64 adds "Find a Peer": an identity search over candidates this
+// device has discovered (imported invitations it hasn't necessarily
+// connected to yet — see application/FindPeerUseCase.js), entirely
+// distinct from "My Peers"/"Known Peers" below. A candidate card is
+// always labeled "Discovered," never a name — this page never displays
+// an identity as an established fact before peer/
+// PeerAuthenticationSession.js's own handshake actually proves it, and a
+// mismatch is rejected and closed automatically, the exact same shape
+// 0.2.62's Reconnect rejection already established one section down.
+//
 // 0.2.62 adds Reconnect to a Known Peer card that isn't connected right
 // now. It is deliberately NOT a new transport or a remembered address —
 // application/PeerReconnectionUseCase.js walks the exact same
@@ -107,7 +117,7 @@ function formatDuration(ms) {
 }
 
 function stripPrefix(message) {
-    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|PeerReconnectionUseCase|FriendRelationshipUseCase|PeerBlockUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
+    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|PeerReconnectionUseCase|FindPeerUseCase|FriendRelationshipUseCase|PeerBlockUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
 }
 
 export default {
@@ -119,6 +129,7 @@ export default {
         const peerReconnectionUseCase = inject('peerReconnectionUseCase');
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
         const peerBlockUseCase = inject('peerBlockUseCase');
+        const findPeerUseCase = inject('findPeerUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
         const peers = ref(peerSessionManager.listPeers());
@@ -463,6 +474,80 @@ export default {
             acceptReply.value = '';
         }
 
+        // --- Find a Peer (0.2.64) -------------------------------------------
+        // "Discovered" is never "Authenticated" — see application/
+        // FindPeerUseCase.js's own header. A candidate below is exactly
+        // as untrusted as any invitation this device has ever imported;
+        // clicking Connect starts a REAL connection through the exact
+        // same WebRTC + 0.2.49 handshake pipeline every other card on
+        // this page already goes through, and the result shows up in
+        // "My Peers" above like any other pending connection — this
+        // section never renders a second, competing progression display
+        // for it.
+        const findImportText = ref('');
+        const findImportPending = ref(false);
+        const findImportError = ref('');
+        const findImportSuccess = ref('');
+        async function submitFindImport() {
+            findImportError.value = '';
+            findImportSuccess.value = '';
+            if (!findImportText.value.trim()) {
+                return;
+            }
+            findImportPending.value = true;
+            try {
+                const record = findPeerUseCase.importCandidate(findImportText.value.trim());
+                findImportSuccess.value = record.identityHint
+                    ? `Candidate added — claims to be ${shortId(record.identityHint)}.`
+                    : 'Candidate added — no identity hint was included.';
+                findImportText.value = '';
+            } catch (e) {
+                findImportError.value = stripPrefix(e.message);
+            } finally {
+                findImportPending.value = false;
+            }
+        }
+
+        const findIdentityId = ref('');
+        const findCandidates = ref([]);
+        const findSearched = ref(false);
+        const findError = ref('');
+        const findConnectingId = ref(null);
+        const findReplies = reactive({});
+        const findRejectedError = ref('');
+
+        function submitFind() {
+            findError.value = '';
+            findRejectedError.value = '';
+            const identityId = findIdentityId.value.trim();
+            if (!identityId) {
+                return;
+            }
+            try {
+                findCandidates.value = findPeerUseCase.search(identityId);
+                findSearched.value = true;
+            } catch (e) {
+                findError.value = stripPrefix(e.message);
+            }
+        }
+
+        function candidateExpiry(record) {
+            return formatDuration(Math.max(0, record.expiresAt.getTime() - now.value));
+        }
+
+        async function connectToCandidate(record) {
+            findError.value = '';
+            findConnectingId.value = record.peerDiscoveryId;
+            try {
+                const { reply } = await findPeerUseCase.connect(record, findIdentityId.value.trim());
+                findReplies[record.peerDiscoveryId] = reply;
+            } catch (e) {
+                findError.value = stripPrefix(e.message);
+            } finally {
+                findConnectingId.value = null;
+            }
+        }
+
         // --- Complete Connection (the inviter's second, closing step) ------
         const completingConnectionId = ref(null);
         const completeReplyText = ref('');
@@ -537,6 +622,7 @@ export default {
         let unsubscribeBlocked = null;
         let unsubscribeSession = null;
         let unsubscribeReconnectRejected = null;
+        let unsubscribeFindRejected = null;
         let tickInterval = null;
         onMounted(() => {
             refreshPeers();
@@ -564,6 +650,15 @@ export default {
                 const label = (relationship && relationship.alias) || (relationship ? shortId(relationship.identityId) : 'the known peer');
                 reconnectRejectedError.value = `Reconnect rejected: the connection authenticated as a different identity than ${label} — it has been closed.`;
             });
+            // 0.2.64 — a "Find a Peer" connect() that authenticates as
+            // someone other than the identity Alice searched for is
+            // never silently dropped either: the connection is already
+            // closed by application/ConnectToPeerUseCase.js by the time
+            // this fires (see application/FindPeerUseCase.js's own
+            // header) — this only explains what happened.
+            unsubscribeFindRejected = findPeerUseCase.onCandidateRejected(({ expectedIdentityId }) => {
+                findRejectedError.value = `Connection rejected: whoever answered at that candidate's endpoint was not ${shortId(expectedIdentityId)} — the connection has been closed.`;
+            });
             tickInterval = setInterval(() => { now.value = Date.now(); }, 1000);
         });
         onBeforeUnmount(() => {
@@ -573,6 +668,7 @@ export default {
             if (unsubscribeBlocked) unsubscribeBlocked();
             if (unsubscribeSession) unsubscribeSession();
             if (unsubscribeReconnectRejected) unsubscribeReconnectRejected();
+            if (unsubscribeFindRejected) unsubscribeFindRejected();
             if (tickInterval) clearInterval(tickInterval);
         });
 
@@ -592,7 +688,10 @@ export default {
             FriendshipState, friends, friendshipError, friendStatus, hasPendingIncomingRequest, hasSentRequest,
             sendFriendRequest, acceptFriendRequest, friendDisplayName,
             rejectFriendRequest, cancelFriendRequest, unfriendPeer, unfriendByIdentity, connectedPeerFor,
-            blocked, blockError, isBlockedIdentity, blockIdentity, unblockIdentity
+            blocked, blockError, isBlockedIdentity, blockIdentity, unblockIdentity,
+            findImportText, findImportPending, findImportError, findImportSuccess, submitFindImport,
+            findIdentityId, findCandidates, findSearched, findError, findConnectingId, findReplies,
+            findRejectedError, submitFind, candidateExpiry, connectToCandidate
         };
     },
     template: `
@@ -665,6 +764,86 @@ export default {
                             {{ copiedKey === 'reply' ? 'Copied!' : 'Copy Reply' }}
                         </button>
                     </div>
+                </div>
+
+                <h2 class="peer-my-peers-heading">Find a Peer</h2>
+                <p class="form-hint form-hint--neutral">
+                    Discovery only ever finds a <strong>candidate</strong> — never a proven identity. Add
+                    invitations you've received here without connecting to them yet, then search by identity
+                    to find one worth attempting. Connecting still runs the full WebRTC + authentication
+                    handshake every other connection on this page does; if whoever actually answers isn't the
+                    identity you searched for, the connection is rejected and closed automatically, exactly
+                    like a rejected <strong>Reconnect</strong> above.
+                </p>
+
+                <div class="peer-signal-box">
+                    <h3>Add a Candidate</h3>
+                    <p class="form-hint form-hint--neutral">
+                        Paste an invitation someone sent you to add it to this device's discovery pool — this
+                        does not connect to it.
+                    </p>
+                    <textarea v-model="findImportText" class="form-input peer-signal-json" rows="4"
+                              placeholder="Paste an invitation here"></textarea>
+                    <p v-if="findImportError" class="identity-unlock-error">{{ findImportError }}</p>
+                    <p v-if="findImportSuccess" class="form-hint form-hint--neutral">{{ findImportSuccess }}</p>
+                    <div class="modal-actions">
+                        <button class="modal-btn modal-btn--primary" :disabled="findImportPending" @click="submitFindImport">
+                            {{ findImportPending ? 'Adding…' : 'Add Candidate' }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="peer-signal-box">
+                    <h3>Find Someone</h3>
+                    <label class="peer-alias-field">
+                        <span class="form-label">Identity</span>
+                        <input type="text" class="form-input" v-model="findIdentityId"
+                               placeholder="did:key:..." @keyup.enter="submitFind" />
+                    </label>
+                    <div class="modal-actions">
+                        <button class="modal-btn modal-btn--primary" @click="submitFind">Discover</button>
+                    </div>
+                    <p v-if="findError" class="identity-unlock-error">{{ findError }}</p>
+                    <p v-if="findRejectedError" class="identity-unlock-error">{{ findRejectedError }}</p>
+
+                    <div v-if="findCandidates.length" class="identity-mgmt-list">
+                        <div v-for="record in findCandidates" :key="record.peerDiscoveryId" class="identity-mgmt-card">
+                            <div class="identity-mgmt-card-header">
+                                <span class="identity-mgmt-name">Candidate — {{ shortId(findIdentityId) }}</span>
+                                <span class="peer-badge peer-badge--pending">Discovered</span>
+                            </div>
+                            <p class="identity-mgmt-status">
+                                Source: {{ record.source }} · expires in {{ candidateExpiry(record) }}
+                            </p>
+                            <p class="form-hint form-hint--neutral">
+                                This is only a claim — connecting proves (or disproves) it.
+                            </p>
+
+                            <div v-if="findReplies[record.peerDiscoveryId]" class="peer-signal-box peer-signal-box--nested">
+                                <p class="form-hint form-hint--neutral">
+                                    Send this reply back to whoever gave you this candidate — the connection
+                                    will not complete until they paste it in. Check <strong>My Peers</strong>
+                                    above for live progress.
+                                </p>
+                                <textarea class="form-input peer-signal-json" rows="5" readonly :value="findReplies[record.peerDiscoveryId]"></textarea>
+                                <button class="modal-btn modal-btn--primary"
+                                        @click="copyText(findReplies[record.peerDiscoveryId], 'find-reply-' + record.peerDiscoveryId)">
+                                    {{ copiedKey === ('find-reply-' + record.peerDiscoveryId) ? 'Copied!' : 'Copy Reply' }}
+                                </button>
+                            </div>
+                            <div v-else class="identity-mgmt-actions">
+                                <button class="action-btn action-btn--primary"
+                                        :disabled="findConnectingId === record.peerDiscoveryId"
+                                        @click="connectToCandidate(record)">
+                                    {{ findConnectingId === record.peerDiscoveryId ? 'Connecting…' : 'Connect' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p v-else-if="findSearched" class="form-hint form-hint--neutral">
+                        No fresh candidates for that identity yet. Add one above, or ask them to send you an
+                        invitation.
+                    </p>
                 </div>
             </template>
 

@@ -22,9 +22,23 @@ export class PeerDiscoveryProvider {
         throw new Error('PeerDiscoveryProvider.importInvitation() must be implemented by a subclass');
     }
 
-    // Every PeerDiscoveryRecord this provider currently knows about.
+    // Every PeerDiscoveryRecord this provider currently knows about —
+    // never an expired one; see peer/PeerDiscoveryRecord.js#isExpired().
     list() {
         throw new Error('PeerDiscoveryProvider.list() must be implemented by a subclass');
+    }
+
+    // 0.2.64 — "does this provider currently hold any candidate CLAIMING
+    // to be this identity?" Deliberately named discover(), not find() or
+    // lookup(): the result is exactly as untrusted as list()'s own
+    // records, filtered by identityHint alone — a field this provider
+    // never verified and never will (see peer/PeerDiscoveryRecord.js's own
+    // header). A caller (application/FindPeerUseCase.js) treats every
+    // returned record as "candidate found," never "identity found," and
+    // still owes it a full connection + peer/PeerAuthenticationSession.js
+    // handshake before that record means anything at all.
+    discover(identityId) {
+        throw new Error('PeerDiscoveryProvider.discover() must be implemented by a subclass');
     }
 
     // Discards one record. Forgetting a candidate has no effect on any
