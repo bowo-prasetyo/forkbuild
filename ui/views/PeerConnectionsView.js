@@ -755,6 +755,10 @@ export default {
                     </p>
 
                     <div class="identity-mgmt-actions">
+                        <router-link v-if="!isBlockedIdentity(friend.identityId)"
+                                     :to="'/chat/' + friend.identityId" class="action-btn action-btn--primary">
+                            Chat
+                        </router-link>
                         <button v-if="isConnectedNow(friend.identityId)"
                                 class="action-btn action-btn--secondary" @click="unfriendByIdentity(friend.identityId)">
                             Unfriend
