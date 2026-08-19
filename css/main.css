@@ -2947,6 +2947,37 @@ html, body {
     flex: 1;
 }
 
+/* 0.2.73 — Authenticated Voice / Audio. Reuses .action-btn/.action-btn--primary
+   and .identity-unlock-error wholesale; adds only the call button and
+   call bar language that's genuinely new. */
+.call-btn {
+    margin-left: auto;
+}
+
+.call-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: rgba(76, 175, 125, 0.1);
+    border: 1px solid rgba(76, 175, 125, 0.35);
+    border-radius: 8px;
+}
+
+.call-bar-status {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4caf7d;
+    margin-right: auto;
+}
+
+.call-btn--end {
+    background: rgba(224, 90, 90, 0.18);
+    border-color: rgba(224, 90, 90, 0.4);
+    color: #e05a5a;
+}
+
 /* 0.2.70 — Presence & Conversation Lifecycle. Reuses .identity-mgmt-*,
    .peer-badge*, .peer-detail-row, and .form-hint* wholesale — the same
    card/list language every other social surface already uses — and

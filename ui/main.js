@@ -23,6 +23,7 @@ import { CreateConversationReadTrackerUseCase } from '../application/CreateConve
 import { CreateConversationReadOutboxUseCase } from '../application/CreateConversationReadOutboxUseCase.js';
 import { CreateRemoteReadReceiptStoreUseCase } from '../application/CreateRemoteReadReceiptStoreUseCase.js';
 import { PeerPresenceUseCase } from '../application/PeerPresenceUseCase.js';
+import { VoiceUseCase } from '../application/VoiceUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
@@ -167,6 +168,23 @@ const peerPresenceUseCase = new PeerPresenceUseCase({
     conversationReadTracker
 });
 
+// 0.2.73 — one app-wide VoiceUseCase. Rides the SAME peerMessageBus/
+// registry every other peer/PeerMessageBus.js protocol here does, and
+// consults the SAME friendRelationshipUseCase/peerBlockUseCase chatUseCase
+// already uses as its authorization inputs — see application/
+// VoiceUseCase.js's own header on why voice reuses chat's own
+// eligibility question rather than inventing a voice-specific trust
+// system. Deliberately no Create*UseCase wrapper: unlike chat, voice has
+// no durable storage at all (see that file's own header, "Voice Is
+// Ephemeral") — application/LocalAudioTrackProvider.js's own default
+// (real navigator.mediaDevices.getUserMedia) is all it needs.
+const voiceUseCase = new VoiceUseCase(identityProvider, {
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry,
+    friendRelationshipUseCase,
+    peerBlockUseCase
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -178,6 +196,7 @@ app.provide('identityLifecyclePropagationUseCase', identityLifecyclePropagationU
 app.provide('peerBlockUseCase', peerBlockUseCase);
 app.provide('chatUseCase', chatUseCase);
 app.provide('peerPresenceUseCase', peerPresenceUseCase);
+app.provide('voiceUseCase', voiceUseCase);
 // 0.2.59 — Peer-Based Avatar Social Transport. The SAME app-wide bus
 // friendRelationshipUseCase already rides, now also provided directly
 // so World View can attach presence/profile/interaction to it — see

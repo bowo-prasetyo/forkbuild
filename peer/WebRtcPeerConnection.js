@@ -37,6 +37,37 @@ const CLOSE_SENTINEL = '__forkbuild_webrtc_close__';
 // precedent peer/LocalPeerConnectionProvider.js already set with its own
 // `.address`/`.network`. They carry SDP and ICE candidates only, never
 // identity, never authentication state.
+//
+// 0.2.73 — Authenticated Voice / Audio adds a SECOND, equally deliberate
+// widening: `addAudioTrack`/`removeAudioTrack`/`renegotiate`/
+// `applyRemoteOffer`/`applyRemoteAnswer`/`onRemoteTrack`. Per the design
+// doc's own central rule — "one logical PeerConnection, never a second
+// one for voice" — these methods add an audio `RTCRtpTransceiver` to
+// THIS SAME `RTCPeerConnection`, the one already carrying the DataChannel
+// peer/PeerMessageBus.js multiplexes every other protocol over, and
+// renegotiate it in place. This class still knows nothing about WHO is
+// on the other end (that stays peer/PeerAuthenticationSession.js's job)
+// and nothing about WHY a track was added (that is
+// application/VoiceUseCase.js's job, one layer up, which is also the
+// only place that decides WHEN to call these methods, gated by
+// authentication and social eligibility exactly like every other
+// protocol layered on peer/PeerMessageBus.js). This class only performs
+// the mechanical SDP renegotiation math — createOffer/setLocalDescription
+// on request, setRemoteDescription/createAnswer/setLocalDescription on
+// request — never decides to call itself, never sends anything over any
+// transport (the renegotiation SDP text is handed back to the caller,
+// which is application/VoiceUseCase.js relaying it over
+// peer/PeerMessageBus.js's own `forkbuild:voice-media` protocol — see
+// that file's own header on why renegotiation deliberately travels
+// IN-BAND over the connection it is renegotiating, rather than through
+// any out-of-band signaling channel). Unlike the INITIAL offer/answer
+// above, renegotiation needs no fresh ICE candidate exchange at all in
+// the common case — the existing ICE transport (bundled, per this
+// class's own default RTCPeerConnection configuration) is simply reused
+// for the new `m=audio` section, so `renegotiate()`/`applyRemoteOffer()`
+// below resolve as soon as `setLocalDescription()` itself resolves,
+// never waiting on `_waitForIceGatheringComplete()` the way the INITIAL
+// handshake must.
 export class WebRtcPeerConnection extends PeerConnection {
     constructor({ connectionId, role, iceServers = [], remoteOffer = null, ttlMs, now = new Date(), RTCPeerConnectionImpl = globalThis.RTCPeerConnection } = {}) {
         super();
@@ -65,6 +96,9 @@ export class WebRtcPeerConnection extends PeerConnection {
         this._messageListeners = new Set();
         this._stateListeners = new Set();
         this._localSignalListeners = new Set();
+        // 0.2.73 — see this class's own header on the audio widening.
+        this._trackListeners = new Set();
+        this._audioSender = null;
 
         this._peerConnection = new RTCPeerConnectionImpl({ iceServers });
         this._peerConnection.addEventListener('icecandidate', (event) => {
@@ -73,6 +107,16 @@ export class WebRtcPeerConnection extends PeerConnection {
             }
         });
         this._peerConnection.addEventListener('iceconnectionstatechange', () => this._handleIceConnectionStateChange());
+        // 0.2.73 — fires once per remote track a peer's own
+        // addAudioTrack()/renegotiate() causes to arrive here. Never
+        // fired for anything this side itself sent — only for a track
+        // this class received, exactly like onMessage() only ever
+        // delivers what arrived, never an echo of what was sent.
+        this._peerConnection.addEventListener('track', (event) => {
+            for (const listener of this._trackListeners) {
+                listener(event.track, event.streams[0] || null);
+            }
+        });
 
         if (role === 'offerer') {
             this._dataChannel = this._peerConnection.createDataChannel(DATA_CHANNEL_LABEL);
@@ -153,6 +197,95 @@ export class WebRtcPeerConnection extends PeerConnection {
         return () => this._stateListeners.delete(callback);
     }
 
+    // 0.2.73 — attaches ONE local audio MediaStreamTrack to this SAME
+    // RTCPeerConnection. Throws if a track is already attached — this
+    // class holds at most one outgoing audio sender at a time, matching
+    // application/VoiceUseCase.js's own "one call at a time, per peer"
+    // scope; a caller that wants to swap tracks (e.g. muting by
+    // replacing with a silent track) uses the returned RTCRtpSender's own
+    // `replaceTrack()`, not a second addAudioTrack(). Does NOT
+    // renegotiate by itself — see renegotiate() below; a caller adds
+    // every track it intends to add first, then renegotiates once.
+    addAudioTrack(track) {
+        if (this._audioSender) {
+            throw new Error('WebRtcPeerConnection: an audio track is already attached');
+        }
+        this._audioSender = this._peerConnection.addTrack(track);
+        return this._audioSender;
+    }
+
+    // The mirror of addAudioTrack() — detaches and stops whatever local
+    // audio track was attached. A no-op if none was ever attached
+    // (harmless to call from application/VoiceUseCase.js's own teardown
+    // path regardless of how far a call actually got).
+    removeAudioTrack() {
+        if (!this._audioSender) {
+            return;
+        }
+        try {
+            this._peerConnection.removeTrack(this._audioSender);
+        } catch {
+            // Already removed by the underlying RTCPeerConnection (e.g.
+            // the connection itself is already closed) — nothing left to
+            // do.
+        }
+        if (this._audioSender.track) {
+            this._audioSender.track.stop();
+        }
+        this._audioSender = null;
+    }
+
+    // Returns an unsubscribe function. `callback(track, stream)` fires
+    // for every remote track this connection receives — in 0.2.73,
+    // always exactly one audio track per call, since
+    // application/VoiceUseCase.js never attaches more than one local
+    // track at a time on either side.
+    onRemoteTrack(callback) {
+        this._trackListeners.add(callback);
+        return () => this._trackListeners.delete(callback);
+    }
+
+    // Creates and applies a fresh local offer reflecting whatever local
+    // tracks are currently attached (or removed) — the renegotiation
+    // counterpart of _beginOffer() above, callable at any time after the
+    // connection first reached CONNECTED, not only once at construction.
+    // See this class's own header on why no ICE gathering wait is needed
+    // here. Resolves with the raw SDP offer text for the caller
+    // (application/VoiceUseCase.js) to relay over
+    // peer/PeerMessageBus.js — this class never sends it anywhere itself.
+    async renegotiate() {
+        if (this._transportState !== PeerConnectionState.CONNECTED) {
+            throw new Error('WebRtcPeerConnection: cannot renegotiate, connection is ' + this._transportState);
+        }
+        const offerDescription = await this._peerConnection.createOffer();
+        await this._peerConnection.setLocalDescription(offerDescription);
+        return this._peerConnection.localDescription.sdp;
+    }
+
+    // The receiving side of a renegotiation: applies a remote offer
+    // (raw SDP text, from a core/VoiceMediaSignal.js the caller already
+    // validated) and produces a local answer. Resolves with the raw SDP
+    // answer text for the caller to relay back.
+    async applyRemoteOffer(sdp) {
+        if (this._transportState !== PeerConnectionState.CONNECTED) {
+            throw new Error('WebRtcPeerConnection: cannot apply a remote offer, connection is ' + this._transportState);
+        }
+        await this._peerConnection.setRemoteDescription({ type: 'offer', sdp });
+        const answerDescription = await this._peerConnection.createAnswer();
+        await this._peerConnection.setLocalDescription(answerDescription);
+        return this._peerConnection.localDescription.sdp;
+    }
+
+    // Completes a renegotiation this side initiated with renegotiate() —
+    // applies the remote answer (raw SDP text) this side's own offer
+    // produced.
+    async applyRemoteAnswer(sdp) {
+        if (this._transportState !== PeerConnectionState.CONNECTED) {
+            throw new Error('WebRtcPeerConnection: cannot apply a remote answer, connection is ' + this._transportState);
+        }
+        await this._peerConnection.setRemoteDescription({ type: 'answer', sdp });
+    }
+
     // Real WebRTC has no equivalent of peer/LocalPeerConnectionProvider.js's
     // instantly-mirrored close — an abrupt RTCPeerConnection#close() gives
     // the remote side nothing to react to promptly, leaving it to notice
@@ -169,6 +302,15 @@ export class WebRtcPeerConnection extends PeerConnection {
         if (this._transportState === PeerConnectionState.CLOSED) {
             return;
         }
+        // 0.2.73 — a still-attached local audio track is stopped here
+        // too, so closing the connection also releases the microphone
+        // promptly rather than leaving it held until garbage collection
+        // — see docs/Principles.md, "Voice Is Ephemeral; Closing The
+        // Connection Is Always A Safe Way To End It."
+        if (this._audioSender && this._audioSender.track) {
+            this._audioSender.track.stop();
+        }
+        this._audioSender = null;
         if (this._dataChannel && this._dataChannel.readyState === 'open') {
             try { this._dataChannel.send(JSON.stringify({ [CLOSE_SENTINEL]: true })); } catch { /* remote already gone */ }
         }

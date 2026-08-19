@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.72** — Conversation Lifecycle & Message Cancellation
+**Version 0.2.73** — Authenticated Voice / Audio
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -1130,6 +1130,45 @@ Deliberately not in 0.2.72: any conversation-level delete/archive
 operation, cancelling an already-SENT entry, and un-cancelling a message
 if a peer is later unblocked or re-friended.
 
+0.2.73 takes up the milestone 0.2.70–0.2.72 deliberately deferred: real-time
+voice over an already-authenticated peer. The central rule — media never
+establishes peer identity, authenticated peer identity authorizes media —
+is enforced structurally, not by convention: `application/VoiceUseCase.js`
+adds an audio track to the SAME `peer/WebRtcPeerConnection.js` already
+carrying chat's DataChannel and renegotiates that ONE RTCPeerConnection in
+place, never opening a second connection or a second signaling flow; the
+renegotiation SDP itself travels in-band, over its own protocol
+(`forkbuild:voice-media`) on the same already-authenticated
+`peer/PeerMessageBus.js` that carries the call's own lifecycle signals
+(`forkbuild:voice-call`). Voice reuses chat's exact authorization question
+— authenticated, not blocked, `FriendshipState.FRIEND` — rather than
+inventing a voice-specific trust system, checked fresh at every step
+(invite, accept, and again the instant a block or unfriend lands mid-call).
+`core/VoiceSessionState.js` is deliberately independent of
+`peer/PeerLifecycleState.js`: ending a call never closes the underlying
+connection, and the connection dying is what ends a call, never the
+reverse. Exactly one side of a call — whichever one's underlying
+connection was the original `role: 'offerer'`, fixed forever at 0.2.51's
+own handshake — ever creates a renegotiation offer, eliminating SDP glare
+by construction rather than needing a "polite peer" protocol. A device
+tracks at most one call at a time; local audio is requested only once a
+call is actually being placed or accepted, never merely rung; muting is
+purely local device state, never transmitted; and nothing about a call is
+ever persisted — voice is exactly as ephemeral as presence, never a call
+history. The flagship test (`tests/AuthenticatedVoice.test.js`) proves the
+full lifecycle — INVITE → RINGING → ACCEPT → in-band SDP renegotiation
+over the SAME RTCPeerConnection → real bidirectional audio → hang up →
+the peer connection survives untouched — over real WebRTC connections with
+real (synthetic, oscillator-driven) audio tracks, plus two SECURITY
+FLAGSHIPS: an expected-identity mismatch means a call is never even
+possible, inherited entirely from 0.2.62's existing guard with zero new
+enforcement code; and blocking a peer mid-call terminates that call
+immediately, refuses a new call attempt, and leaves the underlying peer
+connection completely untouched. Deliberately not in 0.2.73: group calls,
+call recording or history, video, a richer device-selection UI, and
+resolving simultaneous mutual calls (two peers calling each other at
+once) — a real, named limitation, not a hidden gap.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1336,6 +1375,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.70  Presence & Conversation Lifecycle
 - [x] 0.2.71  Explicit Read Acknowledgement
 - [x] 0.2.72  Conversation Lifecycle & Message Cancellation
+- [x] 0.2.73  Authenticated Voice / Audio
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

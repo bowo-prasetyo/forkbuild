@@ -4964,3 +4964,134 @@ sketch of this milestone considered, would have quietly told a user "I
 gave up on time" when the true story was "you told me to stop" — a
 materially different, and more honest, thing to say back to the person
 who made that choice.
+
+### Media Never Establishes Peer Identity; Authenticated Peer Identity Authorizes Media (0.2.73)
+
+A WebRTC audio track proves nothing about who is speaking — it carries
+no signature, no challenge/response, nothing `peer/PeerAuthenticationSession.js`
+would recognize as evidence. `application/VoiceUseCase.js` never treats
+it as though it did: every operation starts by requiring a
+`connectedPeer` that is ALREADY, right now, `PeerLifecycleState.AUTHENTICATED`
+— exactly the same precondition every other protocol built on
+`peer/PeerMessageBus.js` (chat, friendship, presence) already enforces,
+never a voice-specific relaxation of it. The direction only ever runs
+one way: authentication (0.2.49) establishes who is on a connection;
+voice (0.2.73), like every protocol before it, merely gets to ASK
+whether that already-established identity is currently authorized to
+do the thing it wants to do. Nothing about adding a media track ever
+lets a connection skip, shortcut, or substitute for the identity proof
+`peer/PeerAuthenticationSession.js` alone provides.
+
+### One Logical PeerConnection Serves Every Protocol, Including Media (0.2.73)
+
+The temptation a media feature almost always creates is a second
+connection — its own signaling, its own lifecycle, its own trust
+question to answer from scratch. 0.2.73 deliberately refuses it:
+`peer/WebRtcPeerConnection.js`'s new `addAudioTrack()`/`renegotiate()`/
+`applyRemoteOffer()`/`applyRemoteAnswer()`/`onRemoteTrack()` all operate
+on the SAME `RTCPeerConnection` already carrying
+`peer/PeerMessageBus.js`'s DataChannel — chat, friendship, presence, and
+now voice are four protocols sharing ONE authenticated transport, never
+four separately-authenticated ones. This is the same discipline
+`peer/PeerMessageBus.js` itself established in 0.2.52 for data
+protocols, extended for the first time to a MEDIA protocol: a shared
+connection, once authenticated, is a resource every application-level
+concern is entitled to build on, never a reason to open a parallel one.
+
+### Renegotiation Travels In-Band, Over The Connection It Renegotiates (0.2.73)
+
+The INITIAL WebRTC handshake (0.2.51) needs an out-of-band channel
+precisely because no connection exists yet to carry it — an offer has
+nowhere else to travel except through a discovery invitation, a
+copy/paste, a QR code. A voice renegotiation has the opposite shape:
+the connection it is renegotiating ALREADY exists, is ALREADY
+authenticated, and already has a reliable, ordered channel of its own.
+`core/VoiceMediaSignal.js` deliberately travels over that same
+connection's own `peer/PeerMessageBus.js`, on its own protocol string,
+rather than through any rendezvous or out-of-band mechanism — there is
+nothing left to bootstrap once a connection already exists, and
+inventing a second signaling path for renegotiation would only
+reintroduce the exact bootstrap problem 0.2.49 through 0.2.66 spent
+milestones solving, for a question that was already answered the moment
+the call's own underlying connection authenticated.
+
+### Exactly One Side Renegotiates; Role Decides Which, Forever (0.2.73)
+
+Real WebRTC renegotiation between two peers that might both propose
+changes at once ordinarily needs a "polite peer" protocol to resolve
+the conflict. 0.2.73 avoids the entire class of problem structurally:
+`peer/WebRtcPeerConnection.js#role` (0.2.51) — `'offerer'` or
+`'answerer'`, fixed forever at the moment THAT connection's DataChannel
+was first established, completely independent of who happens to place
+any particular later call — is reused as the single, permanent answer
+to "who renegotiates." `application/VoiceUseCase.js#_beginMediaNegotiation()`
+runs identical code on both sides and only the `role === 'offerer'` side
+ever calls `renegotiate()`; the other side attaches its own track and
+waits. A fact 0.2.51 already established once, for an entirely
+different reason, turns out to be exactly the tie-breaker every later
+renegotiation needs — a coincidence worth naming, not re-deriving with
+new state.
+
+### Voice Lifecycle Is Independent Of Peer Lifecycle (0.2.73)
+
+`peer/PeerConnection.js`'s own header already separated transport state
+from authentication state, and 0.2.72 kept "what may still happen" fully
+separate from "what already happened." 0.2.73 draws the identical
+boundary a third time: `core/VoiceSessionState.js` answers "is this peer
+currently participating in an audio session," a question with no
+bearing at all on `peer/PeerLifecycleState.js`'s own "does a channel to
+them exist, and is it authenticated." Ending a call never closes the
+underlying connection — `application/VoiceUseCase.js#endCall()` only
+ever tears down local media and sends a control signal — and a
+connection dropping is what ends a call as a CONSEQUENCE, never
+something voice itself decides to do to the connection. A peer can be
+`AUTHENTICATED` with voice `IDLE`, or (briefly, mid-teardown) voice
+`ENDED` with the peer still fully `AUTHENTICATED`; neither axis is ever
+inferred from the other.
+
+### Voice Reuses Chat's Own Authorization Question; It Never Invents A Second Trust System (0.2.73)
+
+`application/ChatUseCase.js#canChat()` and
+`application/VoiceUseCase.js#canCall()` are deliberately the same
+predicate: authenticated, not blocked, `FriendshipState.FRIEND`. Voice
+could have invented its own, narrower or broader, eligibility rule —
+the design doc explicitly named this as a product decision it was
+choosing NOT to make differently from chat without a concrete reason to.
+Reusing the identical predicate means the SAME proactive-cancellation
+machinery 0.2.72 already built for chat (subscribing to
+`peerBlockUseCase.onBlockedChanged()`/`friendRelationshipUseCase
+.onRelationshipsChanged()`, tearing down whatever is already in flight
+the instant eligibility flips) extends to voice by simply subscribing a
+second, independent time — no new trust vocabulary, no new revocation
+mechanism, and no risk of chat and voice ever disagreeing about whether
+two people are currently allowed to reach each other.
+
+### Audio Device State Is Never Presence, Never A Wire Fact (0.2.73)
+
+Presence (`core/AvatarPresence.js`, `core/PresenceLifecycleState.js`)
+answers "where/how is this avatar currently represented" — deliberately
+ephemeral, deliberately social, and deliberately never asked to carry
+information it was never designed for. `application/VoiceUseCase.js#setMuted()`
+only ever flips a local `MediaStreamTrack#enabled` flag — never
+transmitted, never folded into `core/VoiceCallSignal.js` or
+`core/VoiceMediaSignal.js`, and never surfaced through presence's own
+vocabulary. "Bob is muted" as something Alice's UI could display is a
+real, separate future feature — an explicit signal someone would have
+to choose to send — never an accidental consequence of overloading a
+vocabulary that already means something else.
+
+### Voice Is Ephemeral Like Presence And Connections, Never Durable Like Conversations Or Relationships (0.2.73)
+
+`application/ConversationStore.js` (0.2.69) made a deliberate, narrow
+case for SOME chat state to survive a reload. Voice makes the opposite
+case just as deliberately: nothing about a call — not its callId, not
+its participants, not when it happened — is ever written to storage.
+`core/VoiceSessionState.js#ENDED` is a genuinely terminal, transient
+value, published exactly once and immediately cleared, the same shape
+`peer/PeerAuthenticationState.js#FAILED` already established for one
+connection's own authentication attempt. A "recent calls" list, a
+missed-call notification, or any other durable trace of a call having
+happened is real future work this milestone deliberately does not
+attempt — voice stays exactly as ephemeral as the presence and
+connection layers it is built on, never quietly acquiring the
+durability chat earned for itself in 0.2.69–0.2.72.
