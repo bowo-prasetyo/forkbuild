@@ -1,4 +1,5 @@
 import * as Ed25519 from './Ed25519.js';
+import { IdentityLifecycleState, isValidIdentityLifecycleState } from '../core/IdentityLifecycleState.js';
 
 // An identity whose PRIVATE key THIS device currently holds. New in
 // 0.2.46 — the missing piece between two identity concepts that already
@@ -32,8 +33,27 @@ import * as Ed25519 from './Ed25519.js';
 // pre-0.2.47 stored identity — which never had a `protected` field at
 // all — deserializes as the unprotected identity it has always been,
 // with no migration required to keep loading it.
+//
+// lifecycleState/successorIdentityId (0.2.67) answer a fourth question,
+// durable like isProtected but otherwise independent of it: "has this
+// identity's own owner permanently declared it no longer trustworthy?"
+// See core/IdentityLifecycleState.js for why this is deliberately kept
+// apart from VaultLock and AuthenticationSession. lifecycleState
+// defaults to ACTIVE for the exact same backward-compatibility reason
+// isProtected defaults to false — every identity that existed before
+// 0.2.67 keeps loading as the ACTIVE identity it has always been.
+// successorIdentityId is an informational pointer set by
+// identity/LocalIdentityProvider.js#declareSuccessor() — see that
+// method, and core/IdentitySuccessionEnvelope.js, for the signed
+// record it is derived from. It may be present on an identity that is
+// still ACTIVE (naming a successor does not itself revoke anything —
+// see docs/Principles.md, "Declaring A Successor Does Not Revoke The
+// Predecessor").
 export class LocalIdentity {
-    constructor({ identityId, publicKey, algorithm = 'Ed25519', label, createdAt, protected: isProtected = false } = {}) {
+    constructor({
+        identityId, publicKey, algorithm = 'Ed25519', label, createdAt, protected: isProtected = false,
+        lifecycleState = IdentityLifecycleState.ACTIVE, successorIdentityId = null
+    } = {}) {
         if (!identityId || typeof identityId !== 'string') {
             throw new Error('LocalIdentity: identityId is required');
         }
@@ -46,12 +66,20 @@ export class LocalIdentity {
         if (Ed25519.publicKeyToDidKey(Ed25519.hexToBytes(publicKey)) !== identityId) {
             throw new Error('LocalIdentity: identityId does not match publicKey');
         }
+        if (!isValidIdentityLifecycleState(lifecycleState)) {
+            throw new Error('LocalIdentity: lifecycleState must be ACTIVE or REVOKED');
+        }
+        if (successorIdentityId && successorIdentityId === identityId) {
+            throw new Error('LocalIdentity: successorIdentityId cannot be the identity itself');
+        }
         this._identityId = identityId;
         this._publicKey = publicKey;
         this._algorithm = algorithm;
         this._label = label.trim();
         this._createdAt = createdAt ? new Date(createdAt) : new Date();
         this._isProtected = !!isProtected;
+        this._lifecycleState = lifecycleState;
+        this._successorIdentityId = successorIdentityId || null;
     }
 
     get identityId() { return this._identityId; }
@@ -60,6 +88,9 @@ export class LocalIdentity {
     get label() { return this._label; }
     get createdAt() { return this._createdAt; }
     get isProtected() { return this._isProtected; }
+    get lifecycleState() { return this._lifecycleState; }
+    get isRevoked() { return this._lifecycleState === IdentityLifecycleState.REVOKED; }
+    get successorIdentityId() { return this._successorIdentityId; }
 
     toJSON() {
         return {
@@ -68,7 +99,9 @@ export class LocalIdentity {
             algorithm: this._algorithm,
             label: this._label,
             createdAt: this._createdAt.toISOString(),
-            protected: this._isProtected
+            protected: this._isProtected,
+            lifecycleState: this._lifecycleState,
+            successorIdentityId: this._successorIdentityId
         };
     }
 

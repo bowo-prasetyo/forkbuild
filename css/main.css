@@ -613,6 +613,15 @@ html, body {
     background: #5fc490;
 }
 
+.modal-btn--danger {
+    background: #c0392b;
+    color: #ffffff;
+}
+
+.modal-btn--danger:hover {
+    background: #e74c3c;
+}
+
 /* Identity List (LoginModal, 0.2.46) */
 .identity-list {
     display: flex;
@@ -706,6 +715,12 @@ html, body {
 
 .user-name--locked {
     color: #e0a34c;
+}
+
+/* Identity Lifecycle Hardening (0.2.67) */
+.identity-revoked-badge {
+    color: #e05c5c;
+    font-weight: 600;
 }
 
 .publication-fork-of {

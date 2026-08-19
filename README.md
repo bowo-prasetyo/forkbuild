@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.66** — Real Network Rendezvous & NAT Traversal
+**Version 0.2.67** — Identity Lifecycle Hardening
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -911,6 +911,56 @@ loop over a real WebRTC connection: an invitation Alice creates, Bob
 accepts, and Alice completes reaches mutual AUTHENTICATED peers, each
 visible in the other's own My Peers, before a disconnect removes both.
 
+0.2.67 answers a question 0.2.46 through 0.2.48 all named but never
+closed: "what happens when the owner wants to change, rotate, revoke,
+or recover an identity?" Three new operations join identity/
+LocalIdentityProvider.js's existing lifecycle surface. `changePassphrase`
+re-protects an already-protected identity's key under a new passphrase
+in place — same identityId, same public key, every existing signature
+and peer relationship stays valid, because a passphrase protects the
+KEY, never the identity itself. `declareSuccessor` produces a signed,
+cryptographically verifiable statement that one identity names another
+as its successor — deliberately NOT a mutation of the original: identityId
+stays immutable for the lifetime of the cryptographic identity it names,
+so a rotation is always two identities plus a signed, directional link
+between them, never one identity whose key quietly changed underneath
+the same id. `revokeIdentity` produces a signed, PERMANENT self-revocation
+(only the identity's own key can ever produce one — there is no central
+authority anywhere in this architecture that could revoke a key it
+doesn't control) and durably flips its lifecycle state to REVOKED.
+
+The one enforcement point is deliberately narrow: `_requireAuthenticatedIdentity()`
+— the single gate every signing call in this codebase already passes
+through — now also refuses a revoked identity, alongside its existing
+"no active session" and "vault locked" checks. Because peer/
+PeerAuthenticationSession.js's PROOF step has no path to a signature
+that doesn't run through that same gate, a revoked identity loses the
+ability to complete any NEW peer-authentication handshake with zero
+lines changed under peer/ — proven directly in the flagship test, which
+authenticates Alice to Bob, changes her passphrase (Bob notices
+nothing), rotates her to a successor and revokes her original identity
+in one signed act, then watches a fresh connection attempt using the
+revoked identity fail cleanly rather than crash the transport.
+Revocation is deliberately narrow in another way too: it never
+retroacts onto anything already established (peer connections have
+been fully ephemeral since 0.2.49, re-proved from nothing on every
+reconnect) and it never ends the AuthenticationSession or forbids
+re-authenticating — VAULT LOCKED, AUTHENTICATION INACTIVE, and IDENTITY
+REVOKED stay three genuinely independent facts, the same discipline
+0.2.46/0.2.47 already established for the first two.
+
+Recovery itself gained no new mechanism, on purpose: 0.2.48's
+export/import already IS recovery ("regain control of an identity you
+still have the exported package and passphrase for"). What 0.2.67 adds
+is the ability, once recovered, to also revoke a compromised original
+and point everyone who still has it at a named successor — and it is
+explicit about the one gap this leaves rather than pretending to solve
+it: lifecycle state is a durable fact on the revoking device only, and
+does not travel inside an export package. Propagating "identity A is
+revoked, trust B instead" to every device or peer that still knows A is
+left to a future milestone, over the same decentralized infrastructure
+this codebase already has — never a central revocation server.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1111,6 +1161,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.64  Decentralized Peer Discovery
 - [x] 0.2.65  Distributed Peer Rendezvous
 - [x] 0.2.66  Real Network Rendezvous & NAT Traversal
+- [x] 0.2.67  Identity Lifecycle Hardening
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

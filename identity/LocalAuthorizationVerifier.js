@@ -5,6 +5,8 @@ import { getAvatarProfileSigningDescriptor } from '../core/AvatarProfileAdvertis
 import { getAvatarInteractionSigningDescriptor } from '../core/AvatarInteractionAdvertisement.js';
 import { getFriendshipSigningDescriptor } from '../core/FriendshipAdvertisement.js';
 import { getRendezvousPublicationSigningDescriptor } from '../core/RendezvousPublicationEnvelope.js';
+import { getIdentityRevocationSigningDescriptor } from '../core/IdentityRevocationEnvelope.js';
+import { getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -257,6 +259,66 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getRendezvousPublicationSigningDescriptor(publication), publication.signature, identity);
+    }
+
+    // 0.2.67 — like verifyFriendshipAdvertisement() above and unlike
+    // every AVATAR_*/RENDEZVOUS_PUBLICATION verify* method, a revocation
+    // record is NEVER tolerated unsigned: see core/
+    // IdentityRevocationEnvelope.js's own header on why only the
+    // identity's own key can ever produce a meaningful one. The signer
+    // MUST equal the record's own `identityId` — a revocation record is
+    // pointless unless the identity it claims to revoke is provably the
+    // one that signed it; nothing here trusts a claimed identityId on
+    // its own the way a legacy/unsigned object elsewhere in this
+    // codebase is tolerated.
+    verifyIdentityRevocation(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no revocation record' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a revocation record must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.identityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the revoked identityId' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getIdentityRevocationSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.2.67 — the same REQUIRED-signature discipline as
+    // verifyIdentityRevocation() above, applied to a successor
+    // declaration: the signer MUST equal the record's own
+    // `predecessorIdentityId` (see core/IdentitySuccessionEnvelope.js's
+    // own header on why only the predecessor ever signs one — the
+    // successor never counter-signs).
+    verifyIdentitySuccession(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no succession record' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a succession record must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.predecessorIdentityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the predecessorIdentityId' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getIdentitySuccessionSigningDescriptor(record), record.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).
