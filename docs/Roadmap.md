@@ -1709,6 +1709,116 @@ notification, or store-and-forward delivery — a friend request or
 acceptance can only ever be sent while both sides are, right now, on a
 live, authenticated connection.
 
+0.2.58 through 0.2.66 continued the peer/social arc this document
+narrated in detail through 0.2.57 — friend-aware privacy, peer-based
+avatar social transport, friendship revocation and blocking, direct
+peer messaging and live chat, peer connection resilience, reliable
+offline messaging, decentralized peer discovery, distributed rendezvous,
+and finally a real network rendezvous/NAT-traversal transport (see the
+version list and README.md's own "Current Status" for what each
+shipped) — their own full narrated write-ups did not make it back into
+this file; git history and each milestone's `tests/*.test.js` flagship
+remain the authoritative record for that stretch.
+
+0.2.67 — Identity Lifecycle Hardening — is the next milestone after
+0.2.66, chosen deliberately over another social-arc feature: 0.2.66
+proved ForkBuild's identity can travel across a real network boundary
+(genuine WebRTC, genuine NAT traversal, identity authority still
+completely outside rendezvous); that made it the right moment to
+harden the OTHER boundary this architecture has leaned on since
+0.2.46 — "what happens when the owner wants to change, rotate, revoke,
+or recover an identity?" — before building further on top of it.
+Scoped to exactly four questions, deliberately kept apart rather than
+folded into one "account recovery" mechanism (see
+docs/Principles.md, "Backup, Recovery, Rotation, And Revocation Are
+Four Different Questions"):
+
+```text
+0.2.67
+├── passphrase change      changePassphrase() — same identity, new key protection
+├── key rotation            declareSuccessor() — a signed, distinct successor, never a mutation
+├── identity revocation     revokeIdentity() — permanent, self-attested, never third-party
+└── recovery semantics      no new mechanism — 0.2.48's export/import composes with the above
+```
+
+`identity/LocalIdentityProvider.js#changePassphrase(identityId, oldPassphrase, newPassphrase)`
+re-encrypts an already-protected identity's key under a new passphrase
+in place — identityId, publicKey, and every signature or relationship
+keyed on them stay untouched, because a passphrase protects the key,
+never the identity. `declareSuccessor(identityId, successorIdentityId)`
+produces a signed `core/IdentitySuccessionEnvelope.js` record — signed
+by the PREDECESSOR alone, never counter-signed — deliberately keeping
+`identityId` immutable for the lifetime of the cryptographic identity
+it names (see docs/Principles.md, "An Identity Identifier Is Immutable
+For The Lifetime Of That Cryptographic Identity"): a rotation is always
+two identities plus a signed link, never one identity whose key quietly
+changed. `revokeIdentity(identityId, { passphrase, reason, successorIdentityId })`
+produces a signed, PERMANENT `core/IdentityRevocationEnvelope.js`
+record — self-attested, because this architecture builds no mechanism
+for any third party, including a hypothetical ForkBuild identity
+server, to revoke a key it does not control — and durably flips
+`identity/LocalIdentity.js`'s new `lifecycleState` to `REVOKED`.
+
+The entire enforcement surface is one gate:
+`_requireAuthenticatedIdentity()`, the single choke point
+`signCanonical()`/`getSigningIdentity()` already share, now also
+refuses a revoked identity. Because `peer/PeerAuthenticationSession.js`'s
+PROOF step has no path to a signature that doesn't run through that
+exact gate, a revoked identity loses the ability to complete any NEW
+peer-authentication handshake with zero lines changed under `peer/` —
+its existing try/catch around a locked-vault failure catches the
+revocation error identically. Revocation never retroacts onto an
+already-`AUTHENTICATED` peer connection (fully ephemeral since 0.2.49,
+nothing persistent to reach into) and never ends the
+`AuthenticationSession` itself — `VAULT LOCKED`, `AUTHENTICATION
+INACTIVE`, and `IDENTITY REVOKED` stay three independent facts, the
+same discipline 0.2.46/0.2.47 established for the first two. The
+flagship scenario (`tests/IdentityLifecycle.test.js`), run over a real
+`peer/LocalPeerConnectionProvider.js` connection: Alice authenticates
+and connects to Bob; changes her passphrase and reconnects — Bob
+authenticates the identical identityId with zero special-casing;
+rotates to a successor and revokes her original identity in one signed
+act; a fresh connection attempt using the revoked identity fails
+cleanly on Alice's own side before Bob ever sees a HELLO; and the
+successor identity, entirely independent, signs normally as itself.
+
+Deliberately not in 0.2.67, named rather than hidden: any mechanism
+that propagates a revocation to another device or peer. A revocation
+is a durable fact on the revoking device only — it does not travel
+inside a 0.2.48 export package, so a device recovering an identity from
+a before-the-compromise backup starts that copy `ACTIVE` (proven
+directly in the flagship's recovery-composition block). Solving that —
+letting Bob, or any device that still holds Alice's old key, learn "A
+is revoked, trust B instead" without a central revocation server — is
+real, substantial, unbuilt work for a future milestone, over the same
+decentralized infrastructure this codebase already has (see
+docs/Principles.md, "No Central Authority Can Revoke An Identity It
+Does Not Control"). Also deliberately out of scope: any PIN/passphrase-
+strength policy (unchanged gap from 0.2.47); multi-device identity, or
+any answer to "is an identity a person, a device, or a key" — a real
+question this milestone's own design discussion named but declined to
+solve, consistent with keeping today's single-device model evolvable
+rather than closing off options prematurely; and any UI or protocol
+change to `peer/PeerRelationshipUseCase.js`/`application/
+FriendRelationshipUseCase.js` — a revoked identity's existing peer
+relationships and friendships are untouched local records, exactly as
+durable and exactly as silent about the revocation as they were before
+this milestone, until a future propagation mechanism gives them
+something to react to.
+
+Proposed, unscheduled follow-on milestones this opens: Revocation
+Propagation (letting a signed `core/IdentityRevocationEnvelope.js`/
+`core/IdentitySuccessionEnvelope.js` record travel to peers who already
+know the old identity, over `peer/PeerMessageBus.js`, and teaching
+`core/PeerRelationship.js`/`core/FriendshipRecord.js` to surface "this
+peer's identity was revoked — remembered successor: …" without treating
+either as a new kind of authority); Passphrase/PIN Strength Policy
+(unchanged gap from 0.2.47); and Identity-Aware Multi-Device Semantics
+— the "is an identity a person, a device, or a key" question this
+milestone deliberately declined to answer, now more pressing than ever
+with a real network transport and a real revocation/rotation vocabulary
+both in place.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

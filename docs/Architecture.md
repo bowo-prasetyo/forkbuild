@@ -6756,3 +6756,149 @@ genuine third identity — cannot manufacture either half of the
 relationship, including by replaying a real, captured, validly-signed
 advertisement of Alice's own over his own, different, authenticated
 connection.
+
+### Identity Lifecycle Hardening (0.2.67)
+
+0.2.46 through 0.2.48 built a durable, session-gated, vault-locked,
+portable identity — but none of them ever answered what happens when
+the owner wants to CHANGE something about it. 0.2.67 closes that,
+scoped to exactly four questions, deliberately kept as four separate
+concepts rather than one "account recovery" mechanism:
+
+```text
+Backup      = preserve an existing identity        (0.2.48, unchanged)
+Recovery    = regain control of an existing identity (0.2.48, unchanged)
+Rotation    = deliberately establish a successor identity (NEW)
+Revocation  = permanently invalidate an identity           (NEW)
+```
+
+**Passphrase change.** `identity/LocalIdentityProvider.js#changePassphrase(identityId, oldPassphrase, newPassphrase)`
+decrypts with the current passphrase and re-encrypts under the new one
+in place, exactly the way `protectIdentity()` already writes a fresh
+`KeyEncryption` record. The identity itself — identityId, publicKey,
+label, createdAt — is completely untouched, because a passphrase
+protects the KEY at rest, never the identity's cryptographic identity.
+Every signature this identity has ever produced, every `core/
+PeerRelationship.js` and `core/FriendshipRecord.js` keyed on its
+identityId, stays exactly as valid as before; no downstream file needed
+to change at all. Subject to the same `FailedUnlockTracker` cooldown
+`unlock()` already enforces, and always forces the vault back to
+LOCKED afterward — the identity starts fresh under its new passphrase,
+never silently carrying over "already unlocked" from one that no
+longer applies.
+
+**Rotation.** The design question this milestone had to settle first:
+does rotating a key mean identity A silently BECOMES identity B, or
+does it mean two distinct identities plus a link between them? This
+codebase already has a strong answer from `identity/LocalIdentity.js`'s
+own founding invariant (`identityId` IS the did:key derivation of
+`publicKey` — see 0.2.46) — an identityId that could be repointed at a
+different key would break that invariant retroactively for every
+signature it ever produced. So rotation stays two identities:
+`identity/LocalIdentityProvider.js#declareSuccessor(identityId, successorIdentityId)`
+produces a signed `core/IdentitySuccessionEnvelope.js` record — the
+PREDECESSOR's own key declaring "this identity is my successor,"
+never a counter-signature from the successor (it is already its own,
+independently valid identity, provable entirely on its own terms).
+Deliberately does not require this device to hold the successor's
+key at all — only a structurally valid did:key, recovered via
+`identity/Ed25519.js#didKeyToPublicKey()` — so Alice can name a
+successor she generated on a second device she hasn't finished setting
+up yet. And deliberately does NOT revoke the predecessor: declaring a
+successor is a statement of intent, not an event with consequences for
+the old key's ability to keep signing.
+
+**Revocation.** `identity/LocalIdentityProvider.js#revokeIdentity(identityId, { passphrase, reason, successorIdentityId })`
+produces a signed, PERMANENT `core/IdentityRevocationEnvelope.js`
+record — self-attested, by design: only the identity's own key can
+ever produce one, because this architecture builds no mechanism, and
+never will, for a third party or a central authority to revoke a key
+it does not control (see docs/Principles.md, "No Central Authority Can
+Revoke An Identity It Does Not Control"). It durably flips `identity/
+LocalIdentity.js`'s new `lifecycleState` (`core/IdentityLifecycleState.js`
+— `ACTIVE`/`REVOKED`, defaulting to `ACTIVE` for every pre-0.2.67
+identity, the same backward-compatibility default `isProtected` used
+in 0.2.47) to `REVOKED`. An optional `successorIdentityId` bundles a
+`declareSuccessor()` call into the same signed user action, covering
+the common "I am rotating right now, and the old key stops working
+right now" gesture without merging the two concepts into one envelope
+type.
+
+The one enforcement point is deliberately the narrowest possible:
+`LocalIdentityProvider#_requireAuthenticatedIdentity()` — the single
+gate `signCanonical()`/`getSigningIdentity()` already run through for
+every signature this codebase produces — now checks `identity.isRevoked`
+between its existing "no active session" and "vault locked" checks.
+That is the ENTIRE enforcement surface. Because `peer/
+PeerAuthenticationSession.js#start()`/its HELLO handler have no path to
+a PROOF signature that doesn't call straight through this same gate,
+revocation also closes the door on any NEW peer-authentication
+handshake, with zero lines changed under `peer/` — `start()`'s existing
+try/catch around `getSigningIdentity()` (already there to handle a
+locked vault) catches the revocation error and fails the session
+cleanly (`PeerAuthenticationState.FAILED`) rather than throwing through
+the transport. See docs/Principles.md, "Revocation Is A Signing Gate,
+Not A Session Gate," for why `currentSession()`/`currentUser()` stay
+completely unaffected: `VAULT LOCKED`, `AUTHENTICATION INACTIVE`, and
+`IDENTITY REVOKED` remain three genuinely independent facts, extending
+the same discipline 0.2.46/0.2.47 already established for the first
+two — an owner can still authenticate onto, inspect, and export a
+revoked identity one last time; they simply cannot make it sign
+anything NEW.
+
+Revocation deliberately does NOT retroact onto anything already
+established: an already-`AUTHENTICATED` `peer/PeerIdentity.js` on some
+live connection elsewhere is not torn down, because peer connections
+have been fully ephemeral — re-proved from nothing on every reconnect —
+since 0.2.49; there is no persistent peer-trust ledger anywhere in this
+codebase for a revocation to even reach into. See docs/Principles.md,
+"Revocation Prevents New Trust; It Does Not Retroactively Revoke Old
+Trust."
+
+**Recovery**, deliberately, gained no new mechanism. 0.2.48's
+export/import already answers "regain control of an identity you still
+have the exported package and passphrase for" — 0.2.67 only makes it
+possible, once recovered, to also revoke a compromised original and
+point everyone who still has it at a named successor.
+`identity/LocalAuthorizationVerifier.js` gains `verifyIdentityRevocation()`/
+`verifyIdentitySuccession()`, mirroring `verifyFriendshipAdvertisement()`'s
+own REQUIRED-signature discipline (never tolerated unsigned, unlike
+every `AVATAR_*`/`RENDEZVOUS_PUBLICATION` verify method) — these exist
+so a revocation or succession record is cryptographically checkable by
+anyone who holds it, in preparation for eventually propagating it, but
+0.2.67 deliberately builds no propagation mechanism at all: a
+revocation is a durable fact on the revoking device only, and does not
+travel inside an export package (`tests/IdentityLifecycle.test.js`
+proves this directly — a device recovering Alice's identity from a
+BEFORE-the-compromise backup starts that copy `ACTIVE`, an explicit,
+named limitation rather than a silently missed case). Propagating
+"identity A is revoked, trust B instead" to every device or peer that
+still knows A is left to a future milestone, over the same
+decentralized infrastructure this codebase already has — never a
+central revocation server; see docs/Principles.md, "No Central
+Authority Can Revoke An Identity It Does Not Control."
+
+`ui/views/IdentityManagementView.js` gains three inline forms
+alongside its existing unlock/export ones — Change Passphrase, Declare
+Successor, Revoke — plus a lifecycle badge and successor pointer on
+each identity card, all pure presentation over
+`application/IdentityUseCase.js`'s thin delegation, exactly matching
+this view's existing division of labor.
+
+The flagship test (`tests/IdentityLifecycle.test.js`) runs the
+milestone's own scripted scenario over a REAL `peer/
+LocalPeerConnectionProvider.js` network: Alice authenticates and
+connects to Bob, reaching mutual `AUTHENTICATED`; she changes her vault
+passphrase and reconnects — Bob authenticates the identical identityId
+with zero special-casing; she rotates to a successor and revokes her
+original identity in the same signed act; a fresh connection attempt
+using the revoked identity fails cleanly on Alice's OWN side
+(`PeerAuthenticationState.FAILED`, reason naming the revocation) before
+Bob ever sees a HELLO; and the successor identity, on an entirely
+independent device, signs normally as itself, completely unaffected by
+its predecessor's revoked status. Separate blocks prove `changePassphrase`
+leaves signatures byte-identical across the change, a forged revocation
+record (genuinely signed, by the WRONG identity) is rejected specifically
+on signer mismatch, an unsigned revocation is never tolerated, and
+0.2.48's export/import composes cleanly with revocation without either
+milestone's code needing to change.

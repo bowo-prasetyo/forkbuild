@@ -211,6 +211,93 @@ export default {
             importResult.value = null;
         }
 
+        // --- 0.2.67: change passphrase ----------------------------------------
+        const changingPassphraseId = ref(null);
+        const changeOldPassphrase = ref('');
+        const changeNewPassphrase = ref('');
+        const changePassphraseError = ref('');
+
+        function startChangePassphrase(identity) {
+            changingPassphraseId.value = identity.identityId;
+            changeOldPassphrase.value = '';
+            changeNewPassphrase.value = '';
+            changePassphraseError.value = '';
+        }
+        function cancelChangePassphrase() {
+            changingPassphraseId.value = null;
+        }
+        function confirmChangePassphrase() {
+            if (!changeOldPassphrase.value || !changeNewPassphrase.value) {
+                return;
+            }
+            try {
+                identityUseCase.changePassphrase(changingPassphraseId.value, changeOldPassphrase.value, changeNewPassphrase.value);
+                cancelChangePassphrase();
+                refresh();
+            } catch (e) {
+                changePassphraseError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+            }
+        }
+
+        // --- 0.2.67: declare successor ------------------------------------------
+        const successorFormId = ref(null);
+        const successorIdentityInput = ref('');
+        const successorPassphrase = ref('');
+        const successorError = ref('');
+
+        function startDeclareSuccessor(identity) {
+            successorFormId.value = identity.identityId;
+            successorIdentityInput.value = '';
+            successorPassphrase.value = '';
+            successorError.value = '';
+        }
+        function cancelDeclareSuccessor() {
+            successorFormId.value = null;
+        }
+        function confirmDeclareSuccessor() {
+            if (!successorIdentityInput.value.trim()) {
+                return;
+            }
+            try {
+                identityUseCase.declareSuccessor(successorFormId.value, successorIdentityInput.value.trim(), successorPassphrase.value || null);
+                cancelDeclareSuccessor();
+                refresh();
+            } catch (e) {
+                successorError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+            }
+        }
+
+        // --- 0.2.67: revoke ------------------------------------------------------
+        const revokingId = ref(null);
+        const revokeReason = ref('');
+        const revokeSuccessor = ref('');
+        const revokePassphrase = ref('');
+        const revokeError = ref('');
+
+        function startRevoke(identity) {
+            revokingId.value = identity.identityId;
+            revokeReason.value = '';
+            revokeSuccessor.value = identity.successorIdentityId || '';
+            revokePassphrase.value = '';
+            revokeError.value = '';
+        }
+        function cancelRevoke() {
+            revokingId.value = null;
+        }
+        function confirmRevoke() {
+            try {
+                identityUseCase.revokeIdentity(revokingId.value, {
+                    passphrase: revokePassphrase.value || null,
+                    reason: revokeReason.value.trim() || null,
+                    successorIdentityId: revokeSuccessor.value.trim() || null
+                });
+                cancelRevoke();
+                refresh();
+            } catch (e) {
+                revokeError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+            }
+        }
+
         let unsubscribeUser = null;
         let unsubscribeSession = null;
         let unsubscribeLock = null;
@@ -231,7 +318,13 @@ export default {
             exportingId, exportPassphrase, exportError, exportedPackage, startExport, cancelExport, confirmExport,
             newLabel, newPassphrase, createIdentity,
             showImportForm, importText, importLabel, importPassphrase, importError, importResult,
-            importPreview, onImportFileChosen, confirmImport, dismissImportResult
+            importPreview, onImportFileChosen, confirmImport, dismissImportResult,
+            changingPassphraseId, changeOldPassphrase, changeNewPassphrase, changePassphraseError,
+            startChangePassphrase, cancelChangePassphrase, confirmChangePassphrase,
+            successorFormId, successorIdentityInput, successorPassphrase, successorError,
+            startDeclareSuccessor, cancelDeclareSuccessor, confirmDeclareSuccessor,
+            revokingId, revokeReason, revokeSuccessor, revokePassphrase, revokeError,
+            startRevoke, cancelRevoke, confirmRevoke
         };
     },
     template: `
@@ -263,6 +356,10 @@ export default {
                         {{ isCurrentSession(identity) ? 'Authenticated' : 'Not signed in' }}
                         <template v-if="identity.isProtected"> · {{ isUnlocked(identity) ? 'Unlocked' : 'Locked' }}</template>
                         <template v-else> · Unprotected</template>
+                        <template v-if="identity.lifecycleState === 'REVOKED'"> · <span class="identity-revoked-badge">⚠ Revoked</span></template>
+                    </p>
+                    <p v-if="identity.successorIdentityId" class="form-hint form-hint--neutral">
+                        Successor: …{{ shortId(identity.successorIdentityId) }}
                     </p>
 
                     <div v-if="unlockingId === identity.identityId" class="identity-unlock-form">
@@ -303,10 +400,55 @@ export default {
                         </template>
                     </div>
 
+                    <div v-else-if="changingPassphraseId === identity.identityId" class="identity-unlock-form">
+                        <p class="identity-unlock-label">Changing the passphrase never changes the identity itself — its identityId, public key, and every signature it has ever produced stay exactly as valid as before.</p>
+                        <input v-model="changeOldPassphrase" type="password" placeholder="Current passphrase" class="modal-input" autofocus />
+                        <input v-model="changeNewPassphrase" type="password" placeholder="New passphrase" class="modal-input" @keydown.enter="confirmChangePassphrase" @keydown.escape="cancelChangePassphrase" />
+                        <p v-if="changePassphraseError" class="identity-unlock-error">{{ changePassphraseError }}</p>
+                        <div class="modal-actions">
+                            <button class="modal-btn modal-btn--secondary" @click="cancelChangePassphrase">Cancel</button>
+                            <button class="modal-btn modal-btn--primary" @click="confirmChangePassphrase">Change Passphrase</button>
+                        </div>
+                    </div>
+
+                    <div v-else-if="successorFormId === identity.identityId" class="identity-unlock-form">
+                        <p class="identity-unlock-label">
+                            Declaring a successor signs a statement that another identity replaces this one. It does NOT revoke this identity — do that separately, below, when the rotation should actually take effect.
+                        </p>
+                        <input v-model="successorIdentityInput" type="text" placeholder="Successor identity (did:key:z…)" class="modal-input" autofocus />
+                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="successorPassphrase" type="password" placeholder="Passphrase" class="modal-input" @keydown.enter="confirmDeclareSuccessor" @keydown.escape="cancelDeclareSuccessor" />
+                        <p v-if="successorError" class="identity-unlock-error">{{ successorError }}</p>
+                        <div class="modal-actions">
+                            <button class="modal-btn modal-btn--secondary" @click="cancelDeclareSuccessor">Cancel</button>
+                            <button class="modal-btn modal-btn--primary" @click="confirmDeclareSuccessor">Declare Successor</button>
+                        </div>
+                    </div>
+
+                    <div v-else-if="revokingId === identity.identityId" class="identity-unlock-form">
+                        <p class="identity-unlock-label">
+                            Revoking {{ identity.label }} is permanent. It can never sign anything new again, on this
+                            device or any device that already holds its key. This does not affect anything already
+                            established with it — only new activity going forward.
+                        </p>
+                        <input v-model="revokeReason" type="text" placeholder="Reason (optional, shown only to you)" class="modal-input" autofocus />
+                        <input v-model="revokeSuccessor" type="text" placeholder="Successor identity (optional, did:key:z…)" class="modal-input" />
+                        <input v-if="identity.isProtected && !isUnlocked(identity)" v-model="revokePassphrase" type="password" placeholder="Passphrase" class="modal-input" @keydown.enter="confirmRevoke" @keydown.escape="cancelRevoke" />
+                        <p v-if="revokeError" class="identity-unlock-error">{{ revokeError }}</p>
+                        <div class="modal-actions">
+                            <button class="modal-btn modal-btn--secondary" @click="cancelRevoke">Cancel</button>
+                            <button class="modal-btn modal-btn--danger" @click="confirmRevoke">Revoke Identity</button>
+                        </div>
+                    </div>
+
                     <div v-else class="identity-mgmt-actions">
                         <button v-if="identity.isProtected && isUnlocked(identity)" class="action-btn action-btn--secondary" @click="lockIdentity(identity)">Lock</button>
                         <button v-else-if="identity.isProtected" class="action-btn action-btn--secondary" @click="startUnlock(identity)">Unlock</button>
                         <button class="action-btn action-btn--secondary" @click="startExport(identity)">Export Identity</button>
+                        <button v-if="identity.isProtected" class="action-btn action-btn--secondary" @click="startChangePassphrase(identity)">Change Passphrase</button>
+                        <template v-if="identity.lifecycleState !== 'REVOKED'">
+                            <button class="action-btn action-btn--secondary" @click="startDeclareSuccessor(identity)">Declare Successor</button>
+                            <button class="action-btn action-btn--danger" @click="startRevoke(identity)">Revoke</button>
+                        </template>
                     </div>
                 </div>
             </div>

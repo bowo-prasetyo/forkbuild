@@ -4391,3 +4391,155 @@ than papering over it, and the fix is deliberately NOT attempted here:
 solving many-peers-per-publication means a real signaling relay
 capable of handing out a fresh offer per inbound attempt — a genuinely
 different, harder problem, left to a later milestone.
+
+### An Identity Identifier Is Immutable For The Lifetime Of That Cryptographic Identity (0.2.67)
+
+`identity/LocalIdentity.js`'s founding invariant, since 0.2.46, is that
+`identityId` IS the did:key derivation of `publicKey` — the constructor
+refuses to construct one where the two disagree. 0.2.67's rotation
+design had to either honor that invariant or quietly break it: could
+"rotating a key" mean identityId stays the same string while the key
+underneath it changes? No — every signature that identityId ever
+produced would retroactively become unverifiable against whichever key
+happens to be current NOW, turning `identityId` from a fixed
+cryptographic fact into a mutable account name with a history problem.
+So `identity/LocalIdentityProvider.js#declareSuccessor()` never
+repoints an identityId at a new key. It always produces a NEW,
+independent identity plus a signed, directional link
+(`core/IdentitySuccessionEnvelope.js`) from the old one to the new one.
+A rotation is two identities, always, never one identity that
+changed.
+
+### A Successor Declaration Is Signed By The Predecessor, Never Counter-Signed By The Successor (0.2.67)
+
+`core/IdentitySuccessionEnvelope.js`'s signature is produced entirely
+by the PREDECESSOR's key. The successor never signs anything to
+"accept" the role. This is not an oversight — the successor identity
+is already, on its own terms, a fully valid, independently provable
+`LocalIdentity` the moment it is created; nothing about being named a
+successor changes what it is or requires new proof of what it already
+proved by existing. What the declaration establishes is a fact ABOUT
+the predecessor ("I, identity A, name identity B as what replaces me")
+— which is why only A's signature is either necessary or meaningful
+here, the same way a will only needs the testator's signature, not the
+heir's.
+
+### Declaring A Successor Does Not Revoke The Predecessor (0.2.67)
+
+`identity/LocalIdentityProvider.js#declareSuccessor()` never touches
+`lifecycleState`. Alice can name her next key as a successor today and
+keep signing with her current key for weeks — the declaration is a
+statement of intent, not an event with consequences for what the old
+key can still do. Revocation is a separate, deliberate act
+(`revokeIdentity()`), which happens to accept an optional
+`successorIdentityId` of its own so the common "I am rotating right
+now, and the old key stops working right now" gesture can still be one
+signed user action — but "I have a successor" and "I am revoked" stay
+two independently-true-or-false facts about an identity, never one
+collapsing into the other.
+
+### An Identity Can Be Revoked Without A Successor (0.2.67)
+
+The reverse of the principle above: `core/IdentityRevocationEnvelope.js`'s
+`successorIdentityId` field is optional, and `revokeIdentity()` never
+requires one. Losing a device, or simply wanting to stop using an
+identity, is a completely valid reason to revoke it with nothing lined
+up to replace it — this codebase does not force every revocation into
+the shape of a planned rotation.
+
+### A Revocation Is Self-Attested, Never Third-Party (0.2.67)
+
+`core/IdentityRevocationEnvelope.js`'s REQUIRED signature must be
+produced by the very identityId it revokes — the same discipline
+`core/FriendshipAdvertisement.js` already established in 0.2.57 for
+"there is no server anywhere that could otherwise vouch for this,"
+applied here to a claim with even higher stakes. See the next
+principle for what this rules out.
+
+### No Central Authority Can Revoke An Identity It Does Not Control (0.2.67)
+
+`identity/LocalAuthorizationVerifier.js#verifyIdentityRevocation()`
+requires the signature's `signer` to equal the record's own
+`identityId` — a revocation record is meaningless unless the identity
+it claims to revoke is provably the one that produced it. This is a
+deliberate, structural refusal to build the tempting alternative: a
+ForkBuild identity server that could answer "is Alice revoked?"
+authoritatively. That would undermine the single strongest property
+this architecture has maintained since 0.2.16 — the key IS the
+authority, not a server. So there is no code path anywhere, in 0.2.67
+or otherwise, by which anyone other than an identity's own current key
+can produce a revocation record for it. A stolen device does not, by
+itself, let an attacker revoke the victim's OTHER identities; a
+compromised identity can only ever revoke itself, by whoever currently
+holds its key — which is exactly why backing up a key (0.2.48) before
+it might be needed for exactly this purpose matters.
+
+### Revocation Is A Signing Gate, Not A Session Gate (0.2.67)
+
+`identity/LocalIdentityProvider.js#_requireAuthenticatedIdentity()` —
+reached only by `signCanonical()`/`getSigningIdentity()` — is the one
+and only place revocation is enforced. `authenticate()`, `currentSession()`,
+and `currentUser()` are completely untouched by a revoked identity's
+status: the app can still show a revoked identity as "logged in," and
+its owner can still inspect its revocation record or export it one
+final time. This extends, rather than breaks, the independence 0.2.46
+established between "identity exists" and "session is authenticated,"
+and 0.2.47 extended to "vault is unlocked": `VAULT LOCKED`,
+`AUTHENTICATION INACTIVE`, and `IDENTITY REVOKED` are three genuinely
+independent facts about one identity, checked in that order only
+because a locked-vault question is meaningless before an authenticated-
+session question is settled, and a revoked-identity question is
+checked ahead of both because it is the most permanent of the three —
+see `_requireAuthenticatedIdentity()`'s own comment for the exact
+order and why.
+
+### Revocation Prevents New Trust; It Does Not Retroactively Revoke Old Trust (0.2.67)
+
+Revoking an identity closes exactly one door: the ability to produce a
+new, valid signature — including a new `peer/PeerAuthenticationSession.js`
+PROOF — from that point forward. It does not, and structurally cannot,
+reach into an already-`AUTHENTICATED` `peer/PeerIdentity.js` on some
+live connection elsewhere and tear it down, because this codebase has
+never persisted a "currently trusted peers" ledger for a revocation to
+even find: every peer connection has been fully ephemeral, re-proved
+from nothing on every reconnect, since 0.2.49. This is a direct
+consequence of that earlier design, not a gap 0.2.67 introduces — a
+revocation reaching backward into a live session would require exactly
+the kind of persistent cross-session peer-trust state 0.2.49 through
+0.2.56 deliberately never built.
+
+### Changing A Passphrase Never Changes The Identity (0.2.67)
+
+`identity/LocalIdentityProvider.js#changePassphrase()` touches exactly
+one thing: which bytes protect the private key at rest. identityId,
+publicKey, label, createdAt, every signature ever produced, every
+`core/PeerRelationship.js`/`core/FriendshipRecord.js` keyed on this
+identity's identityId — none of it needs to change, or even be aware a
+passphrase change happened, because none of it was ever keyed on the
+passphrase. This is the same distinction 0.2.47 drew between "is the
+key encrypted" and "which key is it" applied to the encryption itself
+changing rather than merely being added.
+
+### Backup, Recovery, Rotation, And Revocation Are Four Different Questions (0.2.67)
+
+It would have been tempting to fold all four into one "account
+management" surface — they all involve a passphrase, a stored package,
+or a signed statement about an identity. This codebase deliberately
+keeps them apart:
+
+```text
+Backup      "preserve this identity, elsewhere"           (0.2.48)
+Recovery    "regain control of an identity I still have
+             the exported package and passphrase for"     (0.2.48)
+Rotation    "deliberately establish a successor identity" (0.2.67)
+Revocation  "permanently invalidate an identity"           (0.2.67)
+```
+
+Backup and Recovery never needed a lifecycle concept at all — moving a
+key between devices is orthogonal to whether that key is still trusted.
+Rotation and Revocation never needed a second key-transport format —
+they are signed statements ABOUT an identity, not packages containing
+one. Collapsing these into a single mechanism would have made each one
+individually less honest about what it actually guarantees; see this
+file's own "Recovery Is Not Password Recovery" (0.2.48) for the same
+instinct applied one milestone earlier.

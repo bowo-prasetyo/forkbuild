@@ -170,6 +170,48 @@ export class IdentityUseCase {
         return result;
     }
 
+    // --- 0.2.67: identity lifecycle hardening ----------------------------
+    //
+    // Thin delegation, exactly like every other method in this file —
+    // identity/LocalIdentityProvider.js does the real work (see its own
+    // 0.2.67 comment block). Each of these three fires BOTH
+    // IdentityChanged (the identities list — lifecycleState/
+    // successorIdentityId are part of what a UI renders per identity)
+    // AND VaultLockChanged (all three force the vault closed afterward,
+    // exactly like protectIdentity() already does), so a UI subscribed
+    // to either already sees the result with no new event type to learn.
+    changePassphrase(identityId, oldPassphrase, newPassphrase) {
+        const identity = this._identityProvider.changePassphrase(identityId, oldPassphrase, newPassphrase);
+        this._publishChange();
+        this._publishLockChange(identityId);
+        return identity;
+    }
+
+    declareSuccessor(identityId, successorIdentityId, passphrase = null) {
+        const record = this._identityProvider.declareSuccessor(identityId, successorIdentityId, { passphrase });
+        this._publishChange();
+        return record;
+    }
+
+    revokeIdentity(identityId, { passphrase = null, reason = null, successorIdentityId = null } = {}) {
+        const record = this._identityProvider.revokeIdentity(identityId, { passphrase, reason, successorIdentityId });
+        this._publishChange();
+        this._publishLockChange(identityId);
+        return record;
+    }
+
+    isRevoked(identityId) {
+        return this._identityProvider.isRevoked(identityId);
+    }
+
+    getRevocationRecord(identityId) {
+        return this._identityProvider.getRevocationRecord(identityId);
+    }
+
+    getSuccessionRecord(identityId) {
+        return this._identityProvider.getSuccessionRecord(identityId);
+    }
+
     _publishChange() {
         this._eventBus.publish(IDENTITY_EVENT, { user: this.currentUser() });
         this._eventBus.publish(SESSION_EVENT, { session: this.currentSession() });

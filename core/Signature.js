@@ -86,7 +86,24 @@ export const SignatureType = Object.freeze({
     // never treated as "more trustworthy," since only a live handshake ever
     // proves identity. See core/RendezvousPublicationEnvelope.js's
     // getRendezvousPublicationSigningDescriptor().
-    RENDEZVOUS_PUBLICATION: 'rendezvous-publication'
+    RENDEZVOUS_PUBLICATION: 'rendezvous-publication',
+    // 0.2.67 — a REQUIRED signature (never optional, like PEER_AUTHENTICATION
+    // and FRIENDSHIP above, and unlike the AVATAR_*/RENDEZVOUS_PUBLICATION
+    // types), over a self-revocation record (core/
+    // IdentityRevocationEnvelope.js's wire shape). Proves "the owner of
+    // identityId itself declared this key no longer trustworthy" — the
+    // only party this architecture ever lets make that declaration is
+    // the identity's own key, so an unsigned or third-party-signed
+    // revocation is never even a well-formed claim. See core/
+    // IdentityRevocationEnvelope.js's getIdentityRevocationSigningDescriptor().
+    IDENTITY_REVOCATION: 'identity-revocation',
+    // 0.2.67 — the same REQUIRED discipline, over a signed successor
+    // declaration (core/IdentitySuccessionEnvelope.js's wire shape).
+    // Proves "identity A itself named identity B as its successor" —
+    // signed by the PREDECESSOR only; the successor never counter-signs
+    // (see that file's own header for why). See core/
+    // IdentitySuccessionEnvelope.js's getIdentitySuccessionSigningDescriptor().
+    IDENTITY_SUCCESSION: 'identity-succession'
 });
 
 export class Signature {

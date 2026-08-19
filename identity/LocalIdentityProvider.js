@@ -12,9 +12,14 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 import * as IdentityExport from './IdentityExport.js';
 import * as IdentityRecovery from './IdentityRecovery.js';
+import { IdentityLifecycleState } from '../core/IdentityLifecycleState.js';
+import { toIdentityRevocationRecord, getIdentityRevocationSigningDescriptor } from '../core/IdentityRevocationEnvelope.js';
+import { toIdentitySuccessionRecord, getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
 
 const IDENTITIES_INDEX_KEY = 'local-identities';
 const IDENTITY_KEY_PREFIX = 'local-identity-key:';
+const IDENTITY_REVOCATION_PREFIX = 'local-identity-revocation:';
+const IDENTITY_SUCCESSION_PREFIX = 'local-identity-succession:';
 const SESSION_KEY = 'local-session';
 const LEGACY_STORAGE_KEY = 'local-identity';
 const PROVIDER_ID = 'local';
@@ -73,6 +78,32 @@ const PROVIDER_ID = 'local';
 // silently. An imported identity always lands LOCKED, exactly like any
 // other protected identity: import proves this device now HOLDS the
 // key, never that it has been authenticated with it.
+//
+// 0.2.46 through 0.2.48 answered "does this device hold this identity,"
+// "is its key currently decrypted," and "can its key move to another
+// device" — but never "what happens when the owner wants to change,
+// rotate, revoke, or recover it." 0.2.67 closes that: `changePassphrase`
+// re-protects an existing protected identity's key under a new
+// passphrase without touching the identity itself (same identityId,
+// same public key, every existing signature and peer relationship stays
+// valid — see docs/Principles.md, "Changing A Passphrase Never Changes
+// The Identity"); `declareSuccessor` produces a signed, cryptographically
+// verifiable statement that one identity names another as its
+// successor, WITHOUT collapsing them into one mutable identity (see
+// core/IdentitySuccessionEnvelope.js's own header); `revokeIdentity`
+// produces a signed, PERMANENT self-revocation and closes the one gate
+// that matters everywhere else in this codebase — `signCanonical()`/
+// `getSigningIdentity()` refuse a revoked identity from that point on,
+// which is also what stops it from completing any NEW peer/
+// PeerAuthenticationSession.js handshake, with zero changes to any file
+// under peer/ (see this class's own `_requireAuthenticatedIdentity()`).
+// Recovery itself gained no new mechanism: 0.2.48's export/import
+// already IS recovery ("regain control of an identity you still have
+// the exported package and passphrase for"); 0.2.67 only makes it
+// possible, once recovered, to also revoke a compromised original and
+// point everyone who still has it at a named successor. See
+// docs/Principles.md, "Backup, Recovery, Rotation, And Revocation Are
+// Four Different Questions."
 export class LocalIdentityProvider extends IdentityProvider {
     constructor(storageProvider, {
         pbkdf2Iterations = KeyEncryption.DEFAULT_ITERATIONS,
@@ -420,6 +451,242 @@ export class LocalIdentityProvider extends IdentityProvider {
         return { status: 'IMPORTED', identity: LocalIdentity.fromJSON(entry) };
     }
 
+    // --- 0.2.67: identity lifecycle hardening ---------------------------
+    //
+    // Re-protects an EXISTING protected identity's key under a new
+    // passphrase, in place: decrypts with the current passphrase,
+    // re-encrypts under the new one with a fresh salt/nonce (identity/
+    // KeyEncryption.js's encrypt() always generates both fresh — see
+    // its own header), and overwrites the stored record. The identity
+    // itself is completely untouched — same identityId, same publicKey,
+    // same label, same createdAt — because a passphrase protects the
+    // KEY, never the identity's cryptographic identity itself (see
+    // docs/Principles.md, "Changing A Passphrase Never Changes The
+    // Identity"). Every existing signature this identity ever produced
+    // stays exactly as valid as it always was; no peer relationship,
+    // friendship, or placement needs to know anything happened. Subject
+    // to the same failed-attempt cooldown unlock() already enforces —
+    // repeatedly guessing the CURRENT passphrase to change it is exactly
+    // as much an offline-attacker risk as repeatedly guessing it to
+    // unlock. Always evicts the vault cache afterward, exactly like
+    // protectIdentity() — the identity starts LOCKED under its new
+    // passphrase, never silently carrying over "already unlocked" from a
+    // passphrase that no longer applies. Requires the identity to
+    // already be protected; use protectIdentity() to add a passphrase to
+    // one that never had one.
+    changePassphrase(identityId, oldPassphrase, newPassphrase) {
+        if (!oldPassphrase || typeof oldPassphrase !== 'string') {
+            throw new Error('LocalIdentityProvider: the current passphrase is required to change it');
+        }
+        if (!newPassphrase || typeof newPassphrase !== 'string' || !newPassphrase.trim()) {
+            throw new Error('LocalIdentityProvider: a new passphrase is required');
+        }
+        const identity = this.getLocalIdentity(identityId);
+        if (!identity) {
+            throw new Error('LocalIdentityProvider: cannot change passphrase, no local identity with id ' + identityId);
+        }
+        if (!identity.isProtected) {
+            throw new Error('LocalIdentityProvider: identity has no passphrase set — use protectIdentity to add one');
+        }
+        if (this._failedUnlocks.isLockedOut(identityId)) {
+            const seconds = Math.ceil(this._failedUnlocks.remainingCooldownMs(identityId) / 1000);
+            throw new Error('LocalIdentityProvider: too many failed unlock attempts, try again in ' + seconds + 's');
+        }
+        const stored = this._storageProvider.load(IDENTITY_KEY_PREFIX + identityId);
+        if (!stored || !stored.encryption) {
+            throw new Error('LocalIdentityProvider: identity is protected but has no encrypted key material');
+        }
+        let seedBytes;
+        try {
+            seedBytes = KeyEncryption.decrypt(stored.encryption, oldPassphrase);
+        } catch (e) {
+            this._failedUnlocks.recordFailure(identityId);
+            throw new Error('LocalIdentityProvider: incorrect current passphrase');
+        }
+        this._failedUnlocks.recordSuccess(identityId);
+        this._storeProtectedKey(identityId, seedBytes, stored.publicKey, stored.createdAt, newPassphrase);
+        this._vaultCache.delete(identityId);
+        return this.getLocalIdentity(identityId);
+    }
+
+    // Produces a signed, cryptographically verifiable statement that
+    // identityId (the predecessor, whose key this device must be able to
+    // unlock) names successorIdentityId as its successor — see core/
+    // IdentitySuccessionEnvelope.js for exactly what this does and does
+    // not mean. Deliberately does NOT require this device to hold the
+    // successor's key at all: successorIdentityId only needs to be a
+    // structurally valid did:key (its public key is recovered from the
+    // did:key itself — see identity/Ed25519.js#didKeyToPublicKey), so
+    // Alice can name a successor she generated on a brand-new device she
+    // hasn't even finished setting up yet, as long as she already knows
+    // its public identity. Purely declarative: the predecessor identity
+    // is NOT revoked by this call — see revokeIdentity()'s own
+    // `successorIdentityId` option for the one-call "rotate and revoke
+    // together" path, and docs/Principles.md, "Declaring A Successor
+    // Does Not Revoke The Predecessor."
+    declareSuccessor(identityId, successorIdentityId, { passphrase = null } = {}) {
+        const identity = this.getLocalIdentity(identityId);
+        if (!identity) {
+            throw new Error('LocalIdentityProvider: cannot declare a successor, no local identity with id ' + identityId);
+        }
+        const record = this._signSuccession(identity, successorIdentityId, passphrase);
+        const index = this._loadIndex();
+        const entry = index.find((e) => e.identityId === identityId);
+        entry.successorIdentityId = successorIdentityId;
+        this._saveIndex(index);
+        return record;
+    }
+
+    // Produces a signed, PERMANENT self-revocation of identityId (this
+    // device must be able to unlock identityId's own key — see this
+    // file's own header on why revocation can only ever be self-
+    // attested) and durably flips its lifecycleState to REVOKED. From
+    // this point on, signCanonical()/getSigningIdentity() refuse this
+    // identity outright (see _requireAuthenticatedIdentity() below) —
+    // which is also, with zero changes to any file under peer/, what
+    // makes it impossible for this identity to complete any NEW peer/
+    // PeerAuthenticationSession.js handshake ever again, because that
+    // handshake's PROOF step has no other way to produce a signature
+    // than calling straight through this same gate.
+    //
+    // Deliberately, explicitly does NOT retroact onto anything already
+    // established before revocation — an already-AUTHENTICATED
+    // peer/PeerIdentity.js on some live connection elsewhere is not
+    // torn down, because peer connections have been fully ephemeral,
+    // re-proved from nothing on every reconnect, since 0.2.49; there is
+    // no persistent peer-trust ledger anywhere in this codebase for a
+    // revocation to even reach into. See docs/Principles.md, "Revocation
+    // Prevents New Trust; It Does Not Retroactively Revoke Old Trust."
+    //
+    // Also, deliberately, does NOT end the AuthenticationSession or
+    // evict the vault beyond this one call's own forced re-lock (see
+    // below) — an identity can be REVOKED and still AUTHENTICATED, so
+    // its owner can keep inspecting it (read its own revocation record,
+    // export it one final time) without the app abruptly logging them
+    // out. Always evicts the vault cache once the revocation itself is
+    // produced, though: a revoked identity should never keep sitting
+    // decrypted in memory a moment longer than the one signature it
+    // just needed to produce.
+    //
+    // `successorIdentityId` is optional. When given, this call ALSO
+    // produces and stores a signed IdentitySuccessionRecord in the same
+    // step (exactly what declareSuccessor() would produce on its own),
+    // so the common "I am rotating right now, and the old key stops
+    // working right now" gesture is one signed user action, not two.
+    revokeIdentity(identityId, { passphrase = null, reason = null, successorIdentityId = null } = {}) {
+        const identity = this.getLocalIdentity(identityId);
+        if (!identity) {
+            throw new Error('LocalIdentityProvider: cannot revoke, no local identity with id ' + identityId);
+        }
+        if (identity.isRevoked) {
+            throw new Error('LocalIdentityProvider: identity is already revoked');
+        }
+        if (successorIdentityId) {
+            this._signSuccession(identity, successorIdentityId, passphrase);
+        }
+        const seedHex = this._resolveOrUnlockSeedHex(identity, passphrase);
+        const revokedAt = new Date().toISOString();
+        const record = toIdentityRevocationRecord({
+            identityId: identity.identityId,
+            publicKey: identity.publicKey,
+            algorithm: identity.algorithm,
+            reason,
+            successorIdentityId,
+            revokedAt
+        });
+        const signedRecord = this._signEnvelope(record, getIdentityRevocationSigningDescriptor(record), identity.identityId, seedHex);
+        this._storageProvider.save(IDENTITY_REVOCATION_PREFIX + identityId, signedRecord);
+
+        const index = this._loadIndex();
+        const entry = index.find((e) => e.identityId === identityId);
+        entry.lifecycleState = IdentityLifecycleState.REVOKED;
+        if (successorIdentityId) {
+            entry.successorIdentityId = successorIdentityId;
+        }
+        this._saveIndex(index);
+        this._vaultCache.delete(identityId);
+        return signedRecord;
+    }
+
+    isRevoked(identityId) {
+        const identity = this.getLocalIdentity(identityId);
+        return Boolean(identity && identity.isRevoked);
+    }
+
+    getRevocationRecord(identityId) {
+        return this._storageProvider.load(IDENTITY_REVOCATION_PREFIX + identityId) || null;
+    }
+
+    getSuccessionRecord(identityId) {
+        return this._storageProvider.load(IDENTITY_SUCCESSION_PREFIX + identityId) || null;
+    }
+
+    // Shared by declareSuccessor() and revokeIdentity()'s own optional
+    // successorIdentityId path, so naming a successor is signed and
+    // stored identically no matter which call produced it.
+    _signSuccession(predecessorIdentity, successorIdentityId, passphrase) {
+        if (!successorIdentityId || typeof successorIdentityId !== 'string') {
+            throw new Error('LocalIdentityProvider: successorIdentityId is required to declare a successor');
+        }
+        if (successorIdentityId === predecessorIdentity.identityId) {
+            throw new Error('LocalIdentityProvider: an identity cannot be its own successor');
+        }
+        const successorPublicKeyBytes = Ed25519.didKeyToPublicKey(successorIdentityId);
+        if (!successorPublicKeyBytes) {
+            throw new Error('LocalIdentityProvider: successorIdentityId is not a valid did:key');
+        }
+        const seedHex = this._resolveOrUnlockSeedHex(predecessorIdentity, passphrase);
+        const record = toIdentitySuccessionRecord({
+            predecessorIdentityId: predecessorIdentity.identityId,
+            predecessorPublicKey: predecessorIdentity.publicKey,
+            successorIdentityId,
+            successorPublicKey: Ed25519.bytesToHex(successorPublicKeyBytes),
+            declaredAt: new Date().toISOString()
+        });
+        const signedRecord = this._signEnvelope(
+            record, getIdentitySuccessionSigningDescriptor(record), predecessorIdentity.identityId, seedHex
+        );
+        this._storageProvider.save(IDENTITY_SUCCESSION_PREFIX + predecessorIdentity.identityId, signedRecord);
+        return signedRecord;
+    }
+
+    // identityId + an explicit passphrase is the security boundary for
+    // every lifecycle-mutating operation in this section, matching
+    // exportLocalIdentity()'s own stance: a protected identity that
+    // isn't already unlocked needs its passphrase supplied right here,
+    // an already-unlocked one (or one being acted on within its own
+    // vault timeout) does not, and an unprotected one never did.
+    _resolveOrUnlockSeedHex(identity, passphrase) {
+        if (identity.isProtected && !this.isUnlocked(identity.identityId)) {
+            if (!passphrase) {
+                throw new Error('LocalIdentityProvider: this identity is protected, a passphrase is required');
+            }
+            this.unlock(identity.identityId, passphrase);
+        }
+        return this._resolveSeedHex(identity.identityId);
+    }
+
+    // Signs an arbitrary lifecycle record with identityId's own key and
+    // attaches the resulting Signature, exactly the same canonical-
+    // envelope-then-Ed25519 construction signCanonical() below uses for
+    // ordinary content signing — but callable for ANY local identity
+    // this device holds, never only the currently-AUTHENTICATED one,
+    // because revoking or declaring a successor for an identity should
+    // never require first making that identity the app's active login.
+    _signEnvelope(record, descriptor, signerIdentityId, seedHex) {
+        const bytes = Signature.canonicalBytes(descriptor);
+        const signatureBytes = Ed25519.sign(Ed25519.hexToBytes(seedHex), Ed25519.utf8ToBytes(bytes));
+        const signature = new Signature({
+            algorithm: 'Ed25519',
+            signer: signerIdentityId,
+            signature: Ed25519.bytesToHex(signatureBytes),
+            signedHash: computeContentHash(bytes),
+            domain: SIGNING_DOMAIN + '/' + descriptor.type,
+            signedAt: new Date()
+        });
+        return { ...record, signature: signature.toJSON() };
+    }
+
     // --- 0.2.46: authentication session --------------------------------
     //
     // "Login," for a decentralized identity: prove (to this device
@@ -555,6 +822,19 @@ export class LocalIdentityProvider extends IdentityProvider {
     // one currently authenticated. An unprotected identity never hits
     // the second check at all; isUnlocked() is unconditionally true for
     // it.
+    //
+    // 0.2.67 adds a THIRD reason, checked between the two: "identity has
+    // been revoked" — deliberately before the vault-lock check, since a
+    // revoked identity is refused regardless of whether it happens to be
+    // unlocked. This is the ONE gate identity/LocalIdentityProvider.js
+    // enforces for revocation — see revokeIdentity()'s own header for
+    // why nothing under peer/ needed to change for a revoked identity to
+    // also lose the ability to complete a NEW peer authentication
+    // handshake: peer/PeerAuthenticationSession.js's PROOF step has no
+    // path to a signature that doesn't run through here. Note this
+    // check is about SIGNING, not about being logged in — currentSession()/
+    // currentUser() stay completely unaffected by revocation (see docs/
+    // Principles.md, "Revocation Is A Signing Gate, Not A Session Gate").
     _requireAuthenticatedIdentity() {
         const session = this.currentSession();
         if (!session.isAuthenticated) {
@@ -563,6 +843,9 @@ export class LocalIdentityProvider extends IdentityProvider {
         const identity = this.getLocalIdentity(session.identityId);
         if (!identity) {
             throw new Error('LocalIdentityProvider: cannot sign, authenticated identity not found on this device');
+        }
+        if (identity.isRevoked) {
+            throw new Error('LocalIdentityProvider: cannot sign, identity has been revoked');
         }
         if (!this.isUnlocked(identity.identityId)) {
             throw new Error('LocalIdentityProvider: cannot sign, identity is locked — unlock it with its passphrase first');
