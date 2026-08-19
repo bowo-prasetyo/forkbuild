@@ -104,18 +104,26 @@ export class DiscoveryBootstrap extends PeerDiscoveryProvider {
     }
 
     // Fans `identityId` out to the local provider AND every configured
-    // bootstrap provider, tolerating any one of them throwing (a
-    // rendezvous node that is down, or simply doesn't recognize
-    // `identityId`) without losing the others' results. TWO DIFFERENT
-    // providers legitimately returning two different candidates for the
-    // same identityId are BOTH kept, unmerged — exactly the same "a
-    // different endpoint claiming the same identity is never silently
+    // bootstrap provider, tolerating any one of them throwing OR (0.2.66)
+    // rejecting (a rendezvous node that is down, or simply doesn't
+    // recognize `identityId`) without losing the others' results. TWO
+    // DIFFERENT providers legitimately returning two different candidates
+    // for the same identityId are BOTH kept, unmerged — exactly the same
+    // "a different endpoint claiming the same identity is never silently
     // collapsed" discipline docs/Principles.md already established for a
     // single provider under 0.2.64, now holding across providers too: a
     // malicious or merely stale bootstrap node's answer is never allowed
     // to crowd out an honest one, or vice versa. Only application/
     // FindPeerUseCase.js's authentication step ever decides between them.
-    discover(identityId) {
+    //
+    // 0.2.66 — async, and every bootstrap provider is asked CONCURRENTLY
+    // (Promise.allSettled), never one after another: a real network round
+    // trip to peer/WebSocketRendezvousTransport.js has real latency, and
+    // querying N configured rendezvous nodes should cost roughly the
+    // slowest ONE of them, not their sum. The local provider is still
+    // read first and synchronously — it never touches a transport, so
+    // there is nothing to gain by including it in the same fan-out.
+    async discover(identityId) {
         if (!identityId || typeof identityId !== 'string') {
             throw new Error('DiscoveryBootstrap: identityId is required');
         }
@@ -123,14 +131,26 @@ export class DiscoveryBootstrap extends PeerDiscoveryProvider {
         for (const record of this._localProvider.discover(identityId)) {
             merged.set(record.peerDiscoveryId, record);
         }
-        for (const provider of this._bootstrapUnsubscribes.keys()) {
-            let records;
+        const providers = Array.from(this._bootstrapUnsubscribes.keys());
+        // A provider whose discover() throws SYNCHRONOUSLY (every
+        // PeerDiscoveryProvider before 0.2.66 did, and a hand-rolled fake
+        // still might — see tests/DistributedPeerRendezvous.test.js's own
+        // `brokenProvider`) must degrade exactly like one that rejects
+        // asynchronously; wrapping the call in Promise.resolve()/reject()
+        // here is what keeps Promise.allSettled() itself from ever seeing
+        // that throw escape .map() before it can even run.
+        const settled = await Promise.allSettled(providers.map((provider) => {
             try {
-                records = provider.discover(identityId);
-            } catch {
+                return Promise.resolve(provider.discover(identityId));
+            } catch (e) {
+                return Promise.reject(e);
+            }
+        }));
+        for (const outcome of settled) {
+            if (outcome.status !== 'fulfilled') {
                 continue; // one unreachable/misbehaving bootstrap provider never blocks the others
             }
-            for (const record of records) {
+            for (const record of outcome.value) {
                 merged.set(record.peerDiscoveryId, record);
             }
         }
@@ -156,15 +176,36 @@ export class DiscoveryBootstrap extends PeerDiscoveryProvider {
     // LAN provider, say). Never touches the local provider: publishing is
     // "make ME findable," a completely different act from
     // importInvitation()'s "make THIS invitation of SOMEONE ELSE'S
-    // findable to me." Returns every publication actually made.
-    publishToAll(invitationInput, options) {
+    // findable to me." Returns every publication actually made. Async —
+    // publish() itself is (see peer/RendezvousDiscoveryProvider.js's own
+    // header) — and, unlike discover() above, deliberately NOT tolerant
+    // of one provider's publish() failing: "be discoverable" is a
+    // deliberate act a caller should learn about failing, never a
+    // best-effort background refresh the way a LOOKUP degrading is.
+    async publishToAll(invitationInput, options) {
         const publications = [];
         for (const provider of this._bootstrapUnsubscribes.keys()) {
             if (typeof provider.publish === 'function') {
-                publications.push(provider.publish(invitationInput, options));
+                publications.push(await provider.publish(invitationInput, options));
             }
         }
         return publications;
+    }
+
+    // 0.2.66 — the fan-out counterpart to publishToAll() above: withdraws
+    // this device's own publication from every configured bootstrap
+    // provider that supports unpublish(). Tolerates any one provider
+    // failing to confirm withdrawal — unlike publishToAll() (a deliberate
+    // act worth surfacing a failure for), a best-effort "stop being
+    // findable" is still worth attempting everywhere else even when one
+    // node cannot be reached, exactly the same degrade-not-fail posture
+    // discover() above already applies to LOOKUP.
+    async unpublishFromAll() {
+        for (const provider of this._bootstrapUnsubscribes.keys()) {
+            if (typeof provider.unpublish === 'function') {
+                try { await provider.unpublish(); } catch { /* one node failing to confirm withdrawal never blocks the others */ }
+            }
+        }
     }
 
     dispose() {

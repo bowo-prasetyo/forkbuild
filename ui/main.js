@@ -4,6 +4,12 @@ import { router } from './router/index.js';
 import { CreateIdentityProviderUseCase } from '../application/CreateIdentityProviderUseCase.js';
 import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
+import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
+import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTransport.js';
+import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
+import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
+import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
+import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
 import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
 import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
@@ -15,6 +21,23 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
+// 0.2.66 — real ICE (STUN/TURN) configuration and a real, networked
+// rendezvous bootstrap, both wired the same way: a plain, inspectable
+// config module (peer/IceServerConfig.js, peer/RendezvousConfig.js) this
+// file reads, never a value baked directly into either provider. See
+// peer/RendezvousConfig.js's own header on why DEFAULT_RENDEZVOUS_URLS is
+// empty out of the box — a fresh checkout behaves exactly as every prior
+// milestone already did (out-of-band invitations only) until an operator
+// configures a real rendezvous URL there, at which point
+// discoveryBootstrap starts actually asking it on every discover() and
+// publishSelf(), with zero changes anywhere else in this file.
+const peerConnectionProvider = new WebRtcPeerConnectionProvider({ iceServers: DEFAULT_ICE_SERVERS });
+const discoveryBootstrap = new DiscoveryBootstrap({
+    bootstrapProviders: DEFAULT_RENDEZVOUS_URLS.map((url) => new RendezvousDiscoveryProvider({
+        transport: new WebSocketRendezvousTransport({ url }),
+        identityProvider
+    }))
+});
 // 0.2.55 — one app-wide PeerSessionManager, provided the same way
 // previewService/identityUseCase already are, so its registry of live
 // peers survives navigating away from /peers and back. Shares the SAME
@@ -22,7 +45,7 @@ const identityUseCase = new IdentityUseCase(identityProvider);
 // connection this device authenticates always proves possession of
 // whichever identity is currently signed in here, never a second,
 // separate one.
-const peerSessionManager = new PeerSessionManager({ identityProvider });
+const peerSessionManager = new PeerSessionManager({ identityProvider, peerConnectionProvider, discoveryProvider: discoveryBootstrap });
 // 0.2.56 — one app-wide PeerRelationshipUseCase, same reasoning: a
 // remembered peer must survive navigating away from /peers, and must
 // survive a reload, which peerSessionManager's own registry never does

@@ -35,21 +35,26 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
     setAvailable(available) { this._available = Boolean(available); }
     get isAvailable() { return this._available; }
 
-    publish(publication) {
+    // async only to satisfy peer/RendezvousTransport.js's own contract —
+    // see that file's own header. Every operation below still runs
+    // entirely synchronously against the in-memory Map; wrapping an
+    // already-known result in a Promise changes nothing observable beyond
+    // requiring `await` at the call site.
+    async publish(publication) {
         this._assertAvailable();
         this._pruneExpired();
         this._publications.set(publication.identityHint, publication);
         return publication;
     }
 
-    lookup(identityId) {
+    async lookup(identityId) {
         this._assertAvailable();
         this._pruneExpired();
         const publication = this._publications.get(identityId);
         return publication ? [publication] : [];
     }
 
-    remove(publicationId) {
+    async remove(publicationId) {
         this._assertAvailable();
         for (const [identityHint, publication] of this._publications) {
             if (publication.publicationId === publicationId) {

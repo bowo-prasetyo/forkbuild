@@ -3,6 +3,8 @@ import { PeerDiscoveryRecord } from './PeerDiscoveryRecord.js';
 import { PeerDiscoverySource } from './PeerDiscoverySource.js';
 import { PeerInvitation } from './PeerInvitation.js';
 import { RendezvousPublication } from './RendezvousPublication.js';
+import { signRendezvousPublication } from './RendezvousPublicationSigning.js';
+import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 // 0.2.65 — Distributed Peer Rendezvous.
 //
@@ -55,13 +57,39 @@ import { RendezvousPublication } from './RendezvousPublication.js';
 //   query — the same failure-isolation discipline spatial/
 //   DecentralizedSpatialDiscoveryProvider.js already established for a
 //   different, and much larger, trust pipeline.
+//
+// 0.2.66 — Real Network Rendezvous & NAT Traversal. Two changes, both
+// additive, neither touching the three-stage vocabulary above:
+//
+//   publish()/unpublish()/discover() are now ASYNC — see peer/
+//   RendezvousTransport.js's own header on why a REAL network round trip
+//   (peer/WebSocketRendezvousTransport.js, this milestone's own concrete
+//   transport, alongside peer/LocalRendezvousNetwork.js) cannot stay
+//   synchronous the way 0.2.65's in-memory-only world could get away
+//   with. `list()`/`importInvitation()`/`forget()`/`onDiscovered()` are
+//   UNCHANGED and still fully synchronous — they only ever read/write
+//   this device's own local cache, never the transport.
+//
+//   An OPTIONAL `identityProvider` lets publish() sign the outgoing
+//   publication (peer/RendezvousPublicationSigning.js) before it ever
+//   reaches the transport, and an OPTIONAL `verifier` (defaulting to
+//   identity/LocalAuthorizationVerifier.js, the same default peer/
+//   PeerAuthenticationSession.js already uses) lets _mergePublication
+//   below discard a publication whose signature is present but invalid —
+//   tampering caught one layer earlier than 0.2.65 could catch it, never
+//   a replacement for it. A publication with NO signature is unaffected:
+//   see identity/LocalAuthorizationVerifier.js#verifyRendezvousPublication
+//   and core/Signature.js's own RENDEZVOUS_PUBLICATION header on why
+//   signing stays optional.
 export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
-    constructor({ transport } = {}) {
+    constructor({ transport, identityProvider = null, verifier = new LocalAuthorizationVerifier() } = {}) {
         super();
         if (!transport || typeof transport.lookup !== 'function' || typeof transport.publish !== 'function') {
             throw new Error('RendezvousDiscoveryProvider: a RendezvousTransport is required');
         }
         this._transport = transport;
+        this._identityProvider = identityProvider;
+        this._verifier = verifier;
         this._records = new Map(); // peerDiscoveryId -> PeerDiscoveryRecord, this device's own local cache
         this._discoveredListeners = new Set();
         this._ownPublicationId = null; // this node's own most recent PUBLISH, for a bare unpublish() call
@@ -95,32 +123,37 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
     // transport. Never publishes a private credential — a PeerInvitation
     // never contains one (see that file's own header) — and never claims
     // permanence: the publication expires on its own, deliberately no
-    // later than the invitation itself.
-    publish(invitationInput, { ttlMs, now = new Date() } = {}) {
+    // later than the invitation itself. Opportunistically signed (see
+    // this file's own header) when this instance was given an
+    // identityProvider; otherwise published exactly as unsigned as every
+    // 0.2.65 publication always was. Async — see this file's own header.
+    async publish(invitationInput, { ttlMs, now = new Date() } = {}) {
         const invitation = invitationInput instanceof PeerInvitation ? invitationInput : PeerInvitation.fromJSON(invitationInput);
         if (!invitation.identityHint) {
             throw new Error('RendezvousDiscoveryProvider: an invitation with no identityHint cannot be published — nobody could ever look it up by identity');
         }
-        const publication = RendezvousPublication.create({
+        let publication = RendezvousPublication.create({
             invitation,
             now,
             ...(ttlMs !== undefined ? { ttlMs } : {})
         });
-        this._transport.publish(publication);
+        publication = signRendezvousPublication(publication, this._identityProvider);
+        const stored = await this._transport.publish(publication);
         this._ownPublicationId = publication.publicationId;
-        return publication;
+        return stored;
     }
 
     // REMOVE — explicit withdrawal, e.g. on logout or an intentional "stop
     // being discoverable." Never implied by a publication merely expiring
     // on its own — an active withdrawal and a natural lapse are two
     // different acts (see this file's own header). Defaults to this
-    // node's own last publish() when called with no argument.
-    unpublish(publicationId = this._ownPublicationId) {
+    // node's own last publish() when called with no argument. Async — see
+    // this file's own header.
+    async unpublish(publicationId = this._ownPublicationId) {
         if (!publicationId) {
             return false;
         }
-        const removed = this._transport.remove(publicationId);
+        const removed = await this._transport.remove(publicationId);
         if (publicationId === this._ownPublicationId) {
             this._ownPublicationId = null;
         }
@@ -134,10 +167,11 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
 
     // LOOKUP — a REAL network query, unlike peer/LocalPeerDiscoveryProvider.js's
     // own discover() (a search over only what was already imported). See
-    // this file's own header for the two things that make this safe to
-    // call even against a hostile or flaky network: graceful degradation
-    // on transport failure, and per-entry rejection of anything malformed.
-    discover(identityId, { now = new Date() } = {}) {
+    // this file's own header for the things that make this safe to call
+    // even against a hostile or flaky network: graceful degradation on
+    // transport failure, and per-entry rejection of anything malformed OR
+    // (0.2.66) signed-but-invalid. Async — see this file's own header.
+    async discover(identityId, { now = new Date() } = {}) {
         if (!identityId || typeof identityId !== 'string') {
             throw new Error('RendezvousDiscoveryProvider: identityId is required');
         }
@@ -145,7 +179,7 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
 
         let publications = [];
         try {
-            publications = this._transport.lookup(identityId) || [];
+            publications = await this._transport.lookup(identityId) || [];
         } catch {
             // Rendezvous network unreachable right now — proceed with
             // whatever this device already has cached. See this file's
@@ -188,6 +222,19 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
         }
         if (publication.isExpired(now)) {
             return;
+        }
+        // 0.2.66 — a publication that CLAIMS a signature but does not
+        // actually verify (tampered in transit, forged by a node that
+        // does not hold identityHint's own key) is discarded here, the
+        // same "skip it, never crash the lookup" treatment as a malformed
+        // entry above. An UNSIGNED publication is untouched — see this
+        // file's own header and identity/LocalAuthorizationVerifier.js#
+        // verifyRendezvousPublication on why signing stays optional.
+        if (this._verifier && typeof this._verifier.verifyRendezvousPublication === 'function') {
+            const result = this._verifier.verifyRendezvousPublication(publication);
+            if (!result.valid) {
+                return;
+            }
         }
         this._mergeLocalRecord({
             candidateEndpoint: publication.endpoint,

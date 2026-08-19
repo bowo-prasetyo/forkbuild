@@ -71,7 +71,7 @@ function makeFakeSessionManager(connect, discoveryProvider) {
             const invitation = invitationInput instanceof PeerInvitation ? invitationInput : PeerInvitation.fromJSON(invitationInput);
             return discoveryProvider.importInvitation(invitation);
         },
-        discoverCandidates(identityId) {
+        async discoverCandidates(identityId) {
             return discoveryProvider.discover(identityId);
         },
         async connectToDiscovered(record, { expectedIdentityId } = {}) {
@@ -123,40 +123,40 @@ async function runTests() {
     const first = PeerInvitation.create({ endpoint: 'bob-v1', identityHint: 'did:key:bob' });
     const second = PeerInvitation.create({ endpoint: 'bob-v2', identityHint: 'did:key:bob' });
 
-    network.publish(RendezvousPublication.create({ invitation: first }));
-    network.publish(RendezvousPublication.create({ invitation: second }));
-    const found = network.lookup('did:key:bob');
+    await network.publish(RendezvousPublication.create({ invitation: first }));
+    await network.publish(RendezvousPublication.create({ invitation: second }));
+    const found = await network.lookup('did:key:bob');
     assert(found.length === 1, 'duplicate publications for the same identity never accumulate — the network holds "where reachable right now," never a history');
     assert(found[0].endpoint === 'bob-v2', 'the newer publication replaces the older one, regardless of endpoint');
     console.log('✓ LocalRendezvousNetwork: a fresh publication for the same identity replaces the old one, never duplicates it');
 }
 {
     const network = new LocalRendezvousNetwork();
-    const publication = network.publish(RendezvousPublication.create({ invitation: PeerInvitation.create({ endpoint: 'bob-v1', identityHint: 'did:key:bob' }) }));
-    assert(network.lookup('did:key:bob').length === 1, 'setup: published and found');
+    const publication = await network.publish(RendezvousPublication.create({ invitation: PeerInvitation.create({ endpoint: 'bob-v1', identityHint: 'did:key:bob' }) }));
+    assert((await network.lookup('did:key:bob')).length === 1, 'setup: published and found');
 
-    const removed = network.remove(publication.publicationId);
+    const removed = await network.remove(publication.publicationId);
     assert(removed === true, 'remove() reports that something was actually withdrawn');
-    assert(network.lookup('did:key:bob').length === 0, 'a node explicitly disappearing (REMOVE) leaves nothing behind for LOOKUP to find');
-    assert(network.remove(publication.publicationId) === false, 'removing an already-removed publication is a no-op, not an error');
+    assert((await network.lookup('did:key:bob')).length === 0, 'a node explicitly disappearing (REMOVE) leaves nothing behind for LOOKUP to find');
+    assert(await network.remove(publication.publicationId) === false, 'removing an already-removed publication is a no-op, not an error');
     console.log('✓ LocalRendezvousNetwork: REMOVE withdraws a publication for good — "no route right now," not an error');
 }
 {
     const network = new LocalRendezvousNetwork();
     const invitation = PeerInvitation.create({ endpoint: 'bob-address', identityHint: 'did:key:bob', ttlMs: 30 });
-    network.publish(RendezvousPublication.create({ invitation, ttlMs: 30 }));
+    await network.publish(RendezvousPublication.create({ invitation, ttlMs: 30 }));
     await wait(60);
-    assert(network.lookup('did:key:bob').length === 0, 'an expired publication is pruned lazily and never returned by LOOKUP');
+    assert((await network.lookup('did:key:bob')).length === 0, 'an expired publication is pruned lazily and never returned by LOOKUP');
     console.log('✓ LocalRendezvousNetwork: an expired publication is unusable, never merely stale-but-listed');
 }
 {
     const network = new LocalRendezvousNetwork();
     network.setAvailable(false);
     let threw = false;
-    try { network.lookup('did:key:bob'); } catch { threw = true; }
+    try { await network.lookup('did:key:bob'); } catch { threw = true; }
     assert(threw, 'a temporarily unavailable rendezvous network refuses operations outright, rather than silently answering "nothing here"');
     network.setAvailable(true);
-    assert(network.lookup('did:key:bob').length === 0, 'once available again, ordinary lookups resume');
+    assert((await network.lookup('did:key:bob')).length === 0, 'once available again, ordinary lookups resume');
     console.log('✓ LocalRendezvousNetwork: unavailability is explicit and recoverable, never silently misreported as "nothing published"');
 }
 
@@ -170,10 +170,10 @@ async function runTests() {
     const bob = new RendezvousDiscoveryProvider({ transport: network });
     const alice = new RendezvousDiscoveryProvider({ transport: network });
 
-    assert(alice.discover('did:key:bob').length === 0, 'nobody has published anything for bob yet');
-    bob.publish(PeerInvitation.create({ endpoint: 'bob-address', identityHint: 'did:key:bob' }));
+    assert((await alice.discover('did:key:bob')).length === 0, 'nobody has published anything for bob yet');
+    await bob.publish(PeerInvitation.create({ endpoint: 'bob-address', identityHint: 'did:key:bob' }));
 
-    const found = alice.discover('did:key:bob');
+    const found = await alice.discover('did:key:bob');
     assert(found.length === 1 && found[0].candidateEndpoint === 'bob-address', 'discover() is a REAL lookup against the transport, not merely a search over what THIS provider already imported');
     assert(found[0].source === PeerDiscoverySource.RENDEZVOUS_SERVICE, 'a network-discovered candidate is labeled with its own provenance, distinct from a manually imported INVITATION');
     console.log('✓ RendezvousDiscoveryProvider: publish() and discover() are a genuine PUBLISH/LOOKUP round trip over the transport');
@@ -184,14 +184,14 @@ async function runTests() {
     const network = new LocalRendezvousNetwork();
     const bob = new RendezvousDiscoveryProvider({ transport: network });
     const alice = new RendezvousDiscoveryProvider({ transport: network });
-    bob.publish(PeerInvitation.create({ endpoint: 'bob-address', identityHint: 'did:key:bob' }));
-    alice.discover('did:key:bob'); // primes alice's own local cache
+    await bob.publish(PeerInvitation.create({ endpoint: 'bob-address', identityHint: 'did:key:bob' }));
+    await alice.discover('did:key:bob'); // primes alice's own local cache
 
     network.setAvailable(false);
     let threw = false;
     let result;
     try {
-        result = alice.discover('did:key:bob');
+        result = await alice.discover('did:key:bob');
     } catch {
         threw = true;
     }
@@ -219,7 +219,7 @@ async function runTests() {
     let threw = false;
     let result;
     try {
-        result = alice.discover('did:key:bob');
+        result = await alice.discover('did:key:bob');
     } catch {
         threw = true;
     }
@@ -233,8 +233,8 @@ async function runTests() {
     const charlieNetworkNode = new RendezvousDiscoveryProvider({ transport: network });
     const alice = new RendezvousDiscoveryProvider({ transport: network });
 
-    charlieNetworkNode.publish(PeerInvitation.create({ endpoint: 'charlie-address', identityHint: 'did:key:bob' }));
-    const found = alice.discover('did:key:bob');
+    await charlieNetworkNode.publish(PeerInvitation.create({ endpoint: 'charlie-address', identityHint: 'did:key:bob' }));
+    const found = await alice.discover('did:key:bob');
     assert(found.length === 1 && found[0].candidateEndpoint === 'charlie-address', 'a malicious publication claiming to be bob is discoverable under his identity — discovery never filters this out, by design');
     console.log('✓ RendezvousDiscoveryProvider: a malicious publication claiming someone else\'s identity is discoverable, exactly as untrusted as any other candidate (authentication is what catches it — see the flagship below)');
 }
@@ -244,12 +244,12 @@ async function runTests() {
     const network = new LocalRendezvousNetwork();
     const bob = new RendezvousDiscoveryProvider({ transport: network });
     const alice = new RendezvousDiscoveryProvider({ transport: network });
-    bob.publish(PeerInvitation.create({ endpoint: 'bob-address', identityHint: 'did:key:bob' }));
-    assert(alice.discover('did:key:bob').length === 1, 'setup: published and found');
+    await bob.publish(PeerInvitation.create({ endpoint: 'bob-address', identityHint: 'did:key:bob' }));
+    assert((await alice.discover('did:key:bob')).length === 1, 'setup: published and found');
 
-    assert(bob.unpublish() === true, 'unpublish() with no argument withdraws this node\'s own last publication');
+    assert(await bob.unpublish() === true, 'unpublish() with no argument withdraws this node\'s own last publication');
     const freshAlice = new RendezvousDiscoveryProvider({ transport: network });
-    assert(freshAlice.discover('did:key:bob').length === 0, 'a freshly-asking device sees nothing published for bob once he has withdrawn');
+    assert((await freshAlice.discover('did:key:bob')).length === 0, 'a freshly-asking device sees nothing published for bob once he has withdrawn');
     console.log('✓ RendezvousDiscoveryProvider: unpublish() withdraws this node\'s own publication from the network');
 }
 
@@ -271,10 +271,10 @@ async function runTests() {
     assert(local.discover('did:key:bob').length === 1, 'importInvitation() always goes to the local provider, never a bootstrap one');
 
     // Two DIFFERENT rendezvous nodes each publish something for bob.
-    new RendezvousDiscoveryProvider({ transport: nodeA }).publish(PeerInvitation.create({ endpoint: 'via-node-a', identityHint: 'did:key:bob' }));
-    new RendezvousDiscoveryProvider({ transport: nodeB }).publish(PeerInvitation.create({ endpoint: 'via-node-b', identityHint: 'did:key:bob' }));
+    await new RendezvousDiscoveryProvider({ transport: nodeA }).publish(PeerInvitation.create({ endpoint: 'via-node-a', identityHint: 'did:key:bob' }));
+    await new RendezvousDiscoveryProvider({ transport: nodeB }).publish(PeerInvitation.create({ endpoint: 'via-node-b', identityHint: 'did:key:bob' }));
 
-    const found = bootstrap.discover('did:key:bob');
+    const found = await bootstrap.discover('did:key:bob');
     const endpoints = found.map((r) => r.candidateEndpoint).sort();
     assert(endpoints.length === 3, 'discover() merges the manual candidate AND one candidate from each configured bootstrap provider — none silently collapsed');
     assert(endpoints.includes('manual-address') && endpoints.includes('via-node-a') && endpoints.includes('via-node-b'), 'every distinct source\'s candidate survives the merge');
@@ -291,12 +291,12 @@ async function runTests() {
         onDiscovered() { return () => {}; }
     };
     const bootstrap = new DiscoveryBootstrap({ bootstrapProviders: [rendezvous, brokenProvider] });
-    rendezvous.publish(PeerInvitation.create({ endpoint: 'good-node-address', identityHint: 'did:key:bob' }));
+    await rendezvous.publish(PeerInvitation.create({ endpoint: 'good-node-address', identityHint: 'did:key:bob' }));
 
     let threw = false;
     let found;
     try {
-        found = bootstrap.discover('did:key:bob');
+        found = await bootstrap.discover('did:key:bob');
     } catch {
         threw = true;
     }
@@ -313,7 +313,7 @@ async function runTests() {
     bootstrap.addBootstrapProvider(rendezvousB); // idempotent — never double-wires the same provider
 
     const invitation = PeerInvitation.create({ endpoint: 'alice-address', identityHint: 'did:key:alice' });
-    const published = bootstrap.publishToAll(invitation);
+    const published = await bootstrap.publishToAll(invitation);
     assert(published.length === 2, 'publishToAll() publishes to every configured bootstrap provider that supports publish()');
     assert(bootstrap.bootstrapProviders.length === 2 && bootstrap.bootstrapProviders.includes(rendezvousA) && bootstrap.bootstrapProviders.includes(rendezvousB), 'bootstrapProviders() exposes exactly what was actually configured');
 
@@ -381,17 +381,17 @@ async function runTests() {
     // could hand back (see peer/RendezvousTransport.js's own header: a
     // transport never verifies who is entitled to publish under a given
     // identityId).
-    new RendezvousDiscoveryProvider({ transport: nodeA }).publish(PeerInvitation.create({ endpoint: charlie.transport.address, identityHint: bob.id }));
+    await new RendezvousDiscoveryProvider({ transport: nodeA }).publish(PeerInvitation.create({ endpoint: charlie.transport.address, identityHint: bob.id }));
 
     // Candidate 4: bob himself, genuinely reachable via node B — a
     // completely independent rendezvous node from A, so his own genuine
     // publication is never at risk of being overwritten by charlie's.
-    new RendezvousDiscoveryProvider({ transport: nodeB }).publish(PeerInvitation.create({ endpoint: bob.transport.address, identityHint: bob.id }));
+    await new RendezvousDiscoveryProvider({ transport: nodeB }).publish(PeerInvitation.create({ endpoint: bob.transport.address, identityHint: bob.id }));
 
     await wait(20); // let candidate 1's short ttl actually lapse
 
     const findPeerUseCase = new FindPeerUseCase({ peerSessionManager: makeFakeSessionManager(alice.connect, bootstrap) });
-    const candidates = findPeerUseCase.search(bob.id);
+    const candidates = await findPeerUseCase.search(bob.id);
     const endpoints = candidates.map((c) => c.candidateEndpoint);
     assert(!endpoints.includes('stale-address'), 'the stale candidate is pruned — silently absent, never surfaced as an error');
     assert(endpoints.length === 2, 'exactly the two GENUINE (if not necessarily honest) candidates survive: charlie-mislabeled-as-bob and bob himself; the malformed entry never became a candidate at all');

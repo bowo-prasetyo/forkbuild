@@ -70,7 +70,23 @@ export const SignatureType = Object.freeze({
     // Y" — the one piece of evidence a decentralized system with no
     // central friend database has to offer either side. See
     // core/FriendshipAdvertisement.js's getFriendshipSigningDescriptor().
-    FRIENDSHIP: 'friendship'
+    FRIENDSHIP: 'friendship',
+    // 0.2.66 — an OPTIONAL signature over a peer/RendezvousPublication.js
+    // (never over the peer/PeerInvitation.js it wraps, which stays exactly
+    // as unsigned as 0.2.50 always made it — see that file's own header).
+    // Unlike PEER_AUTHENTICATION/FRIENDSHIP above, this is optional exactly
+    // like AVATAR_PRESENCE/AVATAR_PROFILE/AVATAR_INTERACTION: a rendezvous
+    // network is deliberately never required to reject an unsigned
+    // publication (see peer/RendezvousTransport.js's own header — it
+    // authenticates no one, signed or not). What this signature buys, when
+    // present, is tamper-evidence one layer BEFORE peer/
+    // PeerAuthenticationSession.js's own handshake ever runs: a publication
+    // whose signature does not verify, or whose signer does not match the
+    // identity it claims to publish for, is discarded as obviously bogus —
+    // never treated as "more trustworthy," since only a live handshake ever
+    // proves identity. See core/RendezvousPublicationEnvelope.js's
+    // getRendezvousPublicationSigningDescriptor().
+    RENDEZVOUS_PUBLICATION: 'rendezvous-publication'
 });
 
 export class Signature {

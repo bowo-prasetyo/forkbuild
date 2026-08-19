@@ -516,7 +516,7 @@ export default {
         const findReplies = reactive({});
         const findRejectedError = ref('');
 
-        function submitFind() {
+        async function submitFind() {
             findError.value = '';
             findRejectedError.value = '';
             const identityId = findIdentityId.value.trim();
@@ -524,10 +524,41 @@ export default {
                 return;
             }
             try {
-                findCandidates.value = findPeerUseCase.search(identityId);
+                findCandidates.value = await findPeerUseCase.search(identityId);
                 findSearched.value = true;
             } catch (e) {
                 findError.value = stripPrefix(e.message);
+            }
+        }
+
+        // --- Be Discoverable (0.2.66) ----------------------------------------
+        // "Publish me to whatever rendezvous network is configured" — see
+        // application/FindPeerUseCase.js#publishSelf's own header. Never
+        // available unless at least one real rendezvous node is actually
+        // configured (ui/main.js) — with none configured, publishSelf()
+        // has nothing to publish TO and this section explains that rather
+        // than offering a button that would silently do nothing.
+        const publishPending = ref(false);
+        const publishError = ref('');
+        const isPublished = ref(false);
+        async function togglePublish() {
+            publishError.value = '';
+            publishPending.value = true;
+            try {
+                if (isPublished.value) {
+                    await findPeerUseCase.stopPublishing();
+                    isPublished.value = false;
+                } else {
+                    const publication = await findPeerUseCase.publishSelf();
+                    isPublished.value = Boolean(publication);
+                    if (!publication) {
+                        publishError.value = 'No rendezvous network is configured on this device — see peer/RendezvousConfig.js.';
+                    }
+                }
+            } catch (e) {
+                publishError.value = stripPrefix(e.message);
+            } finally {
+                publishPending.value = false;
             }
         }
 
@@ -691,7 +722,8 @@ export default {
             blocked, blockError, isBlockedIdentity, blockIdentity, unblockIdentity,
             findImportText, findImportPending, findImportError, findImportSuccess, submitFindImport,
             findIdentityId, findCandidates, findSearched, findError, findConnectingId, findReplies,
-            findRejectedError, submitFind, candidateExpiry, connectToCandidate
+            findRejectedError, submitFind, candidateExpiry, connectToCandidate,
+            publishPending, publishError, isPublished, togglePublish
         };
     },
     template: `
@@ -789,6 +821,23 @@ export default {
                     <div class="modal-actions">
                         <button class="modal-btn modal-btn--primary" :disabled="findImportPending" @click="submitFindImport">
                             {{ findImportPending ? 'Adding…' : 'Add Candidate' }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="peer-signal-box">
+                    <h3>Be Discoverable</h3>
+                    <p class="form-hint form-hint--neutral">
+                        Publishes an offer for this device under your own identity to every rendezvous
+                        network this app is configured with, so someone who only knows your identity can
+                        find and connect to you without an invitation ever passing between you directly.
+                        A publication answers at most one incoming connection — publish again once someone
+                        connects if you want to be found for a next one.
+                    </p>
+                    <p v-if="publishError" class="identity-unlock-error">{{ publishError }}</p>
+                    <div class="modal-actions">
+                        <button class="modal-btn modal-btn--primary" :disabled="publishPending" @click="togglePublish">
+                            {{ publishPending ? 'Working…' : (isPublished ? 'Stop Being Discoverable' : 'Be Discoverable') }}
                         </button>
                     </div>
                 </div>

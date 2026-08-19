@@ -4,6 +4,7 @@ import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvert
 import { getAvatarProfileSigningDescriptor } from '../core/AvatarProfileAdvertisement.js';
 import { getAvatarInteractionSigningDescriptor } from '../core/AvatarInteractionAdvertisement.js';
 import { getFriendshipSigningDescriptor } from '../core/FriendshipAdvertisement.js';
+import { getRendezvousPublicationSigningDescriptor } from '../core/RendezvousPublicationEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -218,6 +219,44 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getFriendshipSigningDescriptor(advertisement), advertisement.signature, identity);
+    }
+
+    // 0.2.66 — a peer/RendezvousPublication.js signature is OPTIONAL,
+    // exactly like verifyPresenceAdvertisement()/verifyAvatarProfileAdvertisement()
+    // above and unlike verifyFriendshipAdvertisement()'s REQUIRED one — see
+    // core/Signature.js's own RENDEZVOUS_PUBLICATION header. Unlike those
+    // two permissive checks, though, this one DOES cross-check the signer
+    // against the publication's own claimed identity (`identityHint`),
+    // the same binding verifyFriendshipAdvertisement() already does against
+    // `actorIdentity`: a publication is a claim of the form "identityHint
+    // is reachable here," so a signature that verifies but was produced by
+    // some OTHER identity proves nothing about identityHint at all — it
+    // would otherwise let anyone sign a syntactically valid "endorsement"
+    // of an endpoint under a name that isn't theirs. Still never a
+    // substitute for peer/PeerAuthenticationSession.js's own handshake —
+    // see this method's only caller, peer/RendezvousDiscoveryProvider.js#_mergePublication,
+    // for how a verified signature only ever means "discard this earlier,
+    // as obviously bogus," never "trust this connection."
+    verifyRendezvousPublication(publication) {
+        if (!publication) {
+            return { valid: false, signed: false, reason: 'no publication' };
+        }
+        if (!publication.signature) {
+            return { valid: true, signed: false, reason: 'unsigned publication' };
+        }
+        const sig = Signature.fromJSON(publication.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== publication.identityHint) {
+            return { valid: false, signed: true, reason: 'signer does not match the publication\'s own identityHint' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getRendezvousPublicationSigningDescriptor(publication), publication.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).

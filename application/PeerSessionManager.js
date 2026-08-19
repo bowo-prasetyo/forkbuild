@@ -147,13 +147,18 @@ export class PeerSessionManager {
         return this._discoverPeersUseCase.importInvitation(invitation);
     }
 
-    // Every currently-fresh candidate in this session's own pool whose
-    // (untrusted) identityHint matches `identityId` — see application/
-    // DiscoverPeersUseCase.js#discover and peer/
-    // LocalPeerDiscoveryProvider.js#discover's own headers on why this is
-    // a search over ALREADY-imported candidates, never a live network
-    // lookup.
-    discoverCandidates(identityId) {
+    // Every currently-fresh candidate whose (untrusted) identityHint
+    // matches `identityId` — see application/DiscoverPeersUseCase.js#discover
+    // and peer/LocalPeerDiscoveryProvider.js#discover's own headers on why
+    // this is a search over ALREADY-imported/-discovered candidates, never
+    // a fresh network round trip by itself. 0.2.66 — async: when the
+    // discoveryProvider supplied to this class's own constructor is a
+    // peer/DiscoveryBootstrap.js fanning out to a real peer/
+    // RendezvousDiscoveryProvider.js, this IS a live LOOKUP against the
+    // network, not merely a local cache read — see those files' own
+    // headers. Awaiting a purely local discoveryProvider (the default)
+    // costs nothing beyond a microtask.
+    async discoverCandidates(identityId) {
         return this._discoverPeersUseCase.discover(identityId);
     }
 
@@ -163,6 +168,51 @@ export class PeerSessionManager {
 
     forgetCandidate(peerDiscoveryId) {
         this._discoverPeersUseCase.forgetDiscoveredPeer(peerDiscoveryId);
+    }
+
+    // 0.2.66 — "make me findable." Builds a fresh WebRTC offer exactly
+    // like createInvitation() above (that pending connection shows up in
+    // "My Peers" as CONNECTING immediately, exactly the same as an
+    // ordinary invitation's), then publishes it under this device's own
+    // identityId via the discoveryProvider instead of handing it to one
+    // specific person out-of-band. IMPORTANT, and inherent to peer/
+    // WebRtcPeerConnectionProvider.js's own one-offer/one-answer design
+    // (see that file's own header — it has no ambient "listen for
+    // anyone" channel): ONE publishSelf() answers AT MOST ONE inbound
+    // connection attempt. A second peer who discovers and tries this same
+    // publication after a first has already completed the handshake finds
+    // the underlying WebRTC offer already consumed. Call publishSelf()
+    // again (a fresh offer, a fresh publication, overwriting the old one
+    // — see peer/LocalRendezvousNetwork.js's own header on why the
+    // network holds only "reachable right now," never a history) to be
+    // findable for a NEXT connection. Solving many-peers-per-publication
+    // would mean a real signaling relay that hands out a fresh offer per
+    // inbound attempt — deliberately out of scope here, see this
+    // milestone's own docs/Principles.md entry.
+    //
+    // Return shape is exactly whatever application/DiscoverPeersUseCase.js#publish
+    // resolves to, unwrapped no further — `null` when nothing was actually
+    // published (no rendezvous network configured at all — see peer/
+    // RendezvousConfig.js's own empty-by-default list), one
+    // RendezvousPublication when discoveryProvider is a bare peer/
+    // RendezvousDiscoveryProvider.js, or an ARRAY of them (one per
+    // configured bootstrap node) when it is a peer/DiscoveryBootstrap.js —
+    // the shape ui/main.js actually wires this class with. A caller that
+    // only needs "did this work at all" (see ui/views/PeerConnectionsView.js#togglePublish)
+    // can check truthiness either way; one that needs a specific
+    // publication's own fields must know which shape it is holding.
+    async publishSelf({ ttlMs = DEFAULT_INVITATION_TTL_MS } = {}) {
+        const { invitation } = await this.createInvitation({ ttlMs });
+        return this._discoverPeersUseCase.publish(invitation, { ttlMs });
+    }
+
+    // Withdraws this session's own last publishSelf() — see application/
+    // DiscoverPeersUseCase.js#unpublish's own header for how this reaches
+    // every configured bootstrap provider, tolerating any one of them
+    // failing, exactly like discoverCandidates() above tolerates one
+    // failing to answer.
+    async stopPublishing() {
+        return this._discoverPeersUseCase.unpublish();
     }
 
     // 0.2.64 — connects to an ALREADY-discovered candidate (see

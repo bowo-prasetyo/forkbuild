@@ -157,14 +157,14 @@ async function runTests() {
     const findPeerUseCase = new FindPeerUseCase({ peerSessionManager: makeFakeSessionManager(alice.connect) });
 
     let threw = false;
-    try { findPeerUseCase.search(''); } catch (e) { threw = e.message.includes('identityId is required'); }
+    try { await findPeerUseCase.search(''); } catch (e) { threw = e.message.includes('identityId is required'); }
     assert(threw, 'searching with no identityId is refused');
 
     threw = false;
     try { await findPeerUseCase.connect(new PeerDiscoveryRecord({ candidateEndpoint: 'x', source: 'INVITATION' }), ''); } catch (e) { threw = e.message.includes('identityId is required'); }
     assert(threw, 'connecting with no identityId to expect is refused — there would be nothing to verify against');
 
-    assert(findPeerUseCase.search('did:key:nobody-imported-anything-for-this').length === 0, 'searching for an identity nothing was ever imported for returns no candidates, never throws');
+    assert((await findPeerUseCase.search('did:key:nobody-imported-anything-for-this')).length === 0, 'searching for an identity nothing was ever imported for returns no candidates, never throws');
     console.log('✓ FindPeerUseCase: malformed/missing input is refused before any connection attempt');
 }
 
@@ -185,7 +185,7 @@ let flagship;
     const genuineInvitation = PeerInvitation.create({ endpoint: bob.transport.address, identityHint: bob.id });
     findPeerUseCase.importCandidate(genuineInvitation);
 
-    const candidates = findPeerUseCase.search(bob.id);
+    const candidates = await findPeerUseCase.search(bob.id);
     assert(candidates.length === 1, "searching bob's identityId finds exactly the one candidate imported for him");
     assert(candidates[0].identityHint === bob.id, 'setup: the candidate claims to be bob');
 
@@ -232,7 +232,7 @@ let flagship;
     const forgedInvitation = PeerInvitation.create({ endpoint: charlie.transport.address, identityHint: bob.id });
     findPeerUseCase.importCandidate(forgedInvitation);
 
-    const candidates = findPeerUseCase.search(bob.id);
+    const candidates = await findPeerUseCase.search(bob.id);
     assert(candidates.some((r) => r.candidateEndpoint === charlie.transport.address), 'setup: the forged candidate is discoverable under bob\'s own identityId');
 
     let rejected = null;

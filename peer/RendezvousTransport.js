@@ -18,32 +18,49 @@
 // against reality only by peer/PeerAuthenticationSession.js's own
 // handshake, never here.
 //
-// Today's one concrete implementation, peer/LocalRendezvousNetwork.js, is
-// an in-memory stand-in for a real rendezvous SERVER (or, eventually, a
-// DHT) — real, working code exercising the exact contract a future
-// networked implementation will also have to satisfy.
+// 0.2.65 shipped one concrete implementation, peer/LocalRendezvousNetwork.js
+// — an in-memory stand-in for a real rendezvous SERVER, real working code
+// exercising the exact contract a future networked implementation would
+// also have to satisfy, but synchronous throughout, because an in-process
+// Map never needs to await anything.
+//
+// 0.2.66 adds the networked implementation that comment was written for —
+// peer/WebSocketRendezvousTransport.js — and a real network round trip
+// cannot be synchronous. Every method below is therefore now ASYNC:
+// publish()/lookup()/remove() each return a Promise, resolving exactly to
+// what they always returned (a stored publication, an array of fresh
+// publications, a boolean), rejecting exactly where they always threw (the
+// transport is unreachable). peer/LocalRendezvousNetwork.js's own
+// implementation stays entirely synchronous internally — wrapping an
+// already-resolved value in a Promise costs it nothing and changes no
+// externally-visible behavior beyond requiring `await` at every call
+// site. See peer/RendezvousDiscoveryProvider.js#discover/#publish/#unpublish
+// and peer/DiscoveryBootstrap.js#discover/#publishToAll for how the
+// `await` propagates upward exactly one layer at a time, same as it
+// already did for peer/WebRtcPeerConnectionProvider.js's own async
+// signaling.
 export class RendezvousTransport {
     // Publishes `publication` (a peer/RendezvousPublication.js), replacing
     // whatever this transport last had published for the SAME identityId
     // — see peer/LocalRendezvousNetwork.js's own header on why the network
     // never accumulates history, only ever holds "where identityId is
-    // reachable right now." Returns the stored publication.
-    publish(publication) {
+    // reachable right now." Resolves to the stored publication.
+    async publish(publication) {
         throw new Error('RendezvousTransport.publish() must be implemented by a subclass');
     }
 
     // Every currently-fresh publication this transport has for
-    // `identityId` — never an expired one. May throw when the transport
+    // `identityId` — never an expired one. May reject when the transport
     // itself is unreachable; see peer/RendezvousDiscoveryProvider.js#discover
     // for how a caller is expected to degrade, not crash, when it does.
-    lookup(identityId) {
+    async lookup(identityId) {
         throw new Error('RendezvousTransport.lookup() must be implemented by a subclass');
     }
 
-    // Withdraws one publication by its own publicationId. Returns true if
-    // something was actually removed. Never implied by mere expiry — see
-    // peer/RendezvousDiscoveryProvider.js#unpublish.
-    remove(publicationId) {
+    // Withdraws one publication by its own publicationId. Resolves to true
+    // if something was actually removed. Never implied by mere expiry —
+    // see peer/RendezvousDiscoveryProvider.js#unpublish.
+    async remove(publicationId) {
         throw new Error('RendezvousTransport.remove() must be implemented by a subclass');
     }
 }
