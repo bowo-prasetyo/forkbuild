@@ -68,12 +68,32 @@ export class FindPeerUseCase {
     // "Candidate found," never "identity found" — every peer/
     // PeerDiscoveryRecord.js this returns is exactly as untrusted as the
     // one that led here, filtered only by its own (unverified)
-    // identityHint. See this class's own header.
-    search(identityId) {
+    // identityHint. See this class's own header. Async as of 0.2.66 — see
+    // application/PeerSessionManager.js#discoverCandidates's own header.
+    async search(identityId) {
         if (!identityId || typeof identityId !== 'string') {
             throw new Error('FindPeerUseCase: identityId is required');
         }
         return this._peerSessionManager.discoverCandidates(identityId);
+    }
+
+    // 0.2.66 — "make me findable"/"stop being findable," pure delegation
+    // to application/PeerSessionManager.js's own publishSelf()/
+    // stopPublishing() — see that file's own header, including the
+    // one-connection-per-publication caveat inherent to peer/
+    // WebRtcPeerConnectionProvider.js.
+    async publishSelf(options) {
+        if (typeof this._peerSessionManager.publishSelf !== 'function') {
+            return null;
+        }
+        return this._peerSessionManager.publishSelf(options);
+    }
+
+    async stopPublishing() {
+        if (typeof this._peerSessionManager.stopPublishing !== 'function') {
+            return;
+        }
+        return this._peerSessionManager.stopPublishing();
     }
 
     // Attempts a real connection to `record`, expecting the result to

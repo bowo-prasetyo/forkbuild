@@ -18,10 +18,21 @@ import { PeerInvitation } from './PeerInvitation.js';
 // so an anonymous invitation has nothing to publish itself under and stays
 // exactly what it always was — something relayed by hand, never through the
 // rendezvous network.
+//
+// 0.2.66 adds one OPTIONAL field beyond what 0.2.65 shipped: `signature`,
+// an Ed25519 signature (core/RendezvousPublicationEnvelope.js's own
+// getRendezvousPublicationSigningDescriptor()) over the ENTIRE publication
+// — never a credential, still: it proves "whoever holds identityHint's own
+// private key produced this specific PUBLISH," nothing about who actually
+// answers at `endpoint`. A publication with no signature is exactly as
+// valid as it was in 0.2.65 — see peer/RendezvousPublicationSigning.js and
+// identity/LocalAuthorizationVerifier.js#verifyRendezvousPublication for
+// how it is produced and checked; this class itself has no opinion about
+// either, and never refuses to construct an unsigned publication.
 export const DEFAULT_PUBLICATION_TTL_MS = 5 * 60 * 1000; // deliberately shorter than PeerInvitation's own 10-minute default — see peer/RendezvousDiscoveryProvider.js's own header on why rendezvous entries stay short-lived
 
 export class RendezvousPublication {
-    constructor({ publicationId = createId(), invitation, publishedAt = new Date(), expiresAt } = {}) {
+    constructor({ publicationId = createId(), invitation, publishedAt = new Date(), expiresAt, signature = null } = {}) {
         const parsed = invitation instanceof PeerInvitation ? invitation : PeerInvitation.fromJSON(invitation);
         if (!parsed.identityHint) {
             throw new Error('RendezvousPublication: an invitation published to the rendezvous network must carry an identityHint — otherwise nobody could ever LOOKUP it by identity');
@@ -44,6 +55,7 @@ export class RendezvousPublication {
         // own rendezvous-layer ttl AND the underlying invitation, whichever
         // is stricter.
         this._expiresAt = requestedExpiry.getTime() < parsed.expiresAt.getTime() ? requestedExpiry : parsed.expiresAt;
+        this._signature = signature || null;
     }
 
     get publicationId() { return this._publicationId; }
@@ -52,9 +64,25 @@ export class RendezvousPublication {
     get endpoint() { return this._invitation.endpoint; }
     get publishedAt() { return this._publishedAt; }
     get expiresAt() { return this._expiresAt; }
+    get signature() { return this._signature; }
 
     isExpired(now = new Date()) {
         return now.getTime() >= this._expiresAt.getTime();
+    }
+
+    // 0.2.66 — returns a NEW RendezvousPublication, identical in every
+    // other field, carrying `signature`. Never mutates this instance —
+    // the same "signing produces a new object" discipline
+    // application/PresenceSigning.js already established one layer up.
+    // See peer/RendezvousPublicationSigning.js, the only caller.
+    withSignature(signature) {
+        return new RendezvousPublication({
+            publicationId: this._publicationId,
+            invitation: this._invitation,
+            publishedAt: this._publishedAt,
+            expiresAt: this._expiresAt,
+            signature
+        });
     }
 
     toJSON() {
@@ -62,7 +90,8 @@ export class RendezvousPublication {
             publicationId: this._publicationId,
             invitation: this._invitation.toJSON(),
             publishedAt: this._publishedAt.toISOString(),
-            expiresAt: this._expiresAt.toISOString()
+            expiresAt: this._expiresAt.toISOString(),
+            ...(this._signature ? { signature: this._signature } : {})
         };
     }
 
@@ -77,7 +106,8 @@ export class RendezvousPublication {
             publicationId: json.publicationId,
             invitation: PeerInvitation.fromJSON(json.invitation),
             publishedAt: json.publishedAt,
-            expiresAt: json.expiresAt
+            expiresAt: json.expiresAt,
+            signature: json.signature || null
         });
     }
 

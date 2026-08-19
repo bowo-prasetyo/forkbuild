@@ -4252,3 +4252,142 @@ source" — see "A Discovery Source Describes Provenance, Never
 Trustworthiness" (0.2.64) above, unchanged in spirit: a candidate from
 a configured bootstrap provider earns no more trust than one a human
 relayed by hand.
+
+### Rendezvous Can Introduce An Endpoint; It Can Never Establish Identity (0.2.66)
+
+The one-sentence version of this entire milestone, and nothing about
+it is new — it is 0.2.65's own "Rendezvous Distributes Candidates;
+Authentication Establishes Identity," restated because 0.2.66 is
+exactly the milestone where it would be tempting to weaken it. A real
+network transport (`peer/WebSocketRendezvousTransport.js`) sounds more
+"official" than an in-memory `LocalRendezvousNetwork` did, and a
+signed publication (see below) sounds more "verified." Neither is.
+`tests/RealNetworkRendezvous.test.js`'s own flagship makes this the
+literal, load-bearing assertion under test: a publication pointing
+Bob's identityId at Charlie's own, completely genuine, completely
+real WebRTC endpoint costs the attacker nothing, over the real
+transport exactly as it cost nothing over the in-memory one in
+0.2.65's flagship — Charlie authenticates honestly as himself, and
+`application/ConnectToPeerUseCase.js`'s 0.2.62 `expectedIdentityId`
+gate rejects the connection the instant that becomes provable. A
+rendezvous node, real or simulated, malicious or merely broken, can
+prevent discovery (by being unreachable, by refusing to answer, by
+never having anything published) — see "A Rendezvous Lookup
+Degrades; It Never Fails Loud" (0.2.65), unchanged — but it can never
+manufacture a successful impersonation, because nothing it can PUBLISH
+was ever capable of proving identity in the first place. Only
+`peer/PeerAuthenticationSession.js`'s handshake, over a live
+connection, proving possession of a private key, ever does that.
+
+### A Rendezvous Transport Cannot Stay Synchronous (0.2.66)
+
+`peer/RendezvousTransport.js`'s own contract (`publish()`/`lookup()`/
+`remove()`) was synchronous through 0.2.65 because its one concrete
+implementation, `peer/LocalRendezvousNetwork.js`, was an in-memory Map
+— there was never anything to `await`. A real network round trip has
+no such luxury, so 0.2.66 makes the entire contract `async`, and
+propagates that upward exactly one caller at a time, never skipping a
+layer: `peer/RendezvousDiscoveryProvider.js#discover/publish/
+unpublish`, then `peer/DiscoveryBootstrap.js#discover/publishToAll`,
+then `application/DiscoverPeersUseCase.js#discover/publish/unpublish`,
+then `application/PeerSessionManager.js#discoverCandidates/
+publishSelf/stopPublishing`, then `application/FindPeerUseCase.js#search/
+publishSelf/stopPublishing`, finally `ui/views/PeerConnectionsView.js`'s
+own `submitFind()`. `peer/LocalRendezvousNetwork.js` itself needed no
+behavioral change at all — wrapping an already-resolved, purely
+synchronous result in a Promise is free, and every existing test
+exercising it needed only `await` added at each call site, never a
+rewritten assertion. `list()`/`importInvitation()`/`forget()`/
+`onDiscovered()` deliberately stayed synchronous throughout this
+propagation: they only ever read or write a device's own LOCAL cache,
+never the transport, so there was never a real asynchronous boundary
+to cross for them. `peer/DiscoveryBootstrap.js#discover()` goes one
+step further than mechanical propagation: every configured bootstrap
+provider is queried CONCURRENTLY (`Promise.allSettled`, guarding
+against a provider whose `discover()` still throws synchronously
+rather than rejecting — every one built before 0.2.66 does), so asking
+N rendezvous nodes costs roughly the slowest ONE of them, not their
+sum — a real, and previously invisible, latency consequence of
+`discover()` finally doing genuine network I/O.
+
+### A Rendezvous Publication's Signature Is Tamper-Evidence, Never Trust (0.2.66)
+
+`peer/RendezvousPublication.js` gains one optional field, `signature`
+(`core/RendezvousPublicationEnvelope.js#getRendezvousPublicationSigningDescriptor`,
+`peer/RendezvousPublicationSigning.js#signRendezvousPublication`,
+`identity/LocalAuthorizationVerifier.js#verifyRendezvousPublication`,
+a new, deliberately OPTIONAL `SignatureType.RENDEZVOUS_PUBLICATION` —
+optional exactly like `AVATAR_PRESENCE`/`AVATAR_PROFILE`/
+`AVATAR_INTERACTION`, unlike the REQUIRED `PEER_AUTHENTICATION`/
+`FRIENDSHIP`). What it buys is narrow and deliberate: a receiver can
+discard a publication whose signature is present but does not verify,
+or whose signer does not match the `identityHint` it claims to
+publish for — tampering caught ONE LAYER EARLIER than 0.2.65 could
+catch it, before the entry ever becomes a `PeerDiscoveryRecord` at
+all. It does NOT buy trust in the endpoint itself: see "Rendezvous Can
+Introduce An Endpoint; It Can Never Establish Identity" above — a
+publication signed by the genuine holder of `identityHint`'s own key
+still says nothing about who actually answers at the endpoint it
+carries, because signing happens once, at publish time, over data the
+signer controls, while a WebRTC endpoint's own honesty can only ever
+be proven live, per-connection, by
+`peer/PeerAuthenticationSession.js`. This is also why
+`peer/RendezvousPublicationSigning.js#signRendezvousPublication`
+refuses to sign a publication whose `identityHint` is not the signing
+device's own current identity — degrading silently to unsigned rather
+than producing a signature that would misleadingly look like an
+endorsement of someone else's claim. And it is why signing stays
+OPTIONAL at the wire level rather than mandatory: an unsigned
+publication was always exactly as valid a candidate as any other (see
+`peer/RendezvousTransport.js`'s own header — nobody is ever
+authenticated to PUBLISH in the first place), and 0.2.66 does not
+retroactively demand otherwise.
+
+### STUN Is Free Public Infrastructure; TURN Is Transport Infrastructure, Never A Trusted Application Server (0.2.66)
+
+`peer/IceServerConfig.js` gives `peer/WebRtcPeerConnectionProvider.js`'s
+own `iceServers` constructor option (present, unused, since 0.2.51) an
+actual place to be configured from. STUN and TURN are treated
+differently on purpose, not merely for convenience: a STUN server only
+ever answers "what is my own reflexive address" — well-known, public,
+free Internet infrastructure, learning it leaks no more than any
+ordinary outbound connection already would, so `DEFAULT_ICE_SERVERS`
+ships two long-standing public STUN servers so a fresh checkout can
+attempt real NAT traversal with no setup. A TURN relay is categorically
+different: it carries the actual DataChannel bytes when no direct path
+can be found, and real deployments almost always gate it behind
+operator-issued, time-limited credentials. `peer/IceServerConfig.js`
+ships NO default TURN server for the same reason `peer/
+RendezvousConfig.js` ships no default rendezvous URL (see "A Bootstrap
+List Is Configuration, Never An Authority," 0.2.65) — this codebase
+picks no relay operator for every deployment to depend on. And
+whichever path a connection actually takes — direct, or relayed
+through a configured TURN server — is invisible above `peer/
+WebRtcPeerConnectionProvider.js`: `peer/PeerAuthenticationSession.js`'s
+handshake runs identically either way, because it authenticates
+whoever is on the other end of the DataChannel, never how the bytes
+physically got there.
+
+### One Publication Answers At Most One Connection Attempt (0.2.66)
+
+`application/PeerSessionManager.js#publishSelf()` publishes a REAL
+WebRTC offer under this device's own identity, and that inherits
+`peer/WebRtcPeerConnectionProvider.js`'s own one-offer/one-answer
+design exactly as it always has (see that file's own header: there is
+no ambient "listen for anyone" channel, only `createOffer()`'s active
+half and `connect()`'s active half). A publication is therefore
+findable by many, but only ever COMPLETABLE by whichever ONE peer's
+answer reaches `acceptRemoteAnswer()` first — a second peer who
+discovers and tries the same publication after that finds the
+underlying offer already consumed, exactly the same one-shot
+completion `peer/WebRtcPeerConnection.js#acceptRemoteAnswer` has
+always been. This is not a bug this milestone introduces so much as
+one it is the first to make visible: 0.2.50 through 0.2.65 never had
+"publish this offer to an audience of possibly-many," only "hand this
+one offer to ONE specific person out-of-band," where the constraint
+was never observable because there was only ever one intended
+recipient to begin with. `publishSelf()` documents this plainly rather
+than papering over it, and the fix is deliberately NOT attempted here:
+solving many-peers-per-publication means a real signaling relay
+capable of handing out a fresh offer per inbound attempt — a genuinely
+different, harder problem, left to a later milestone.
