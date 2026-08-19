@@ -118,6 +118,36 @@ export class ConversationReadOutbox {
         return sent;
     }
 
+    // 0.2.72 — Conversation Lifecycle & Message Cancellation.
+    //
+    // The identical proactive-withdrawal operation
+    // application/ChatOutbox.js#cancel() adds to the message outbox,
+    // adapted to this store's own two-state vocabulary: a still-PENDING
+    // read acknowledgement for this peer is discarded outright rather
+    // than waiting for a reconnect attempt that may never come, once
+    // application/ChatUseCase.js's own local authorization for this
+    // peer is proactively withdrawn (blocked, or unfriended). A SENT
+    // entry is left untouched — it already reached the wire, and this
+    // store's own header already explains why a receipt genuinely lost
+    // in flight after SENT self-heals rather than needing a replay/ack
+    // loop; there is nothing to recall. Returns the cancelled entry, or
+    // null if there was nothing PENDING to cancel — never throws.
+    cancel(peerIdentityId) {
+        const owner = this._currentOwnerOrNull();
+        if (!owner) {
+            return null;
+        }
+        const all = this._loadAll();
+        const index = all.findIndex((entry) => entry.peerIdentityId === peerIdentityId && entry.state === ReadReceiptOutboxState.PENDING);
+        if (index === -1) {
+            return null;
+        }
+        const cancelled = all[index];
+        all.splice(index, 1);
+        this._saveAll(owner, all);
+        return cancelled;
+    }
+
     _loadAll() {
         const owner = this._currentOwnerOrNull();
         if (!owner) {

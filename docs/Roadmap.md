@@ -2260,6 +2260,132 @@ multi-device read state — unchanged from every prior milestone's own
 list, a read acknowledgement is still sent by, and received on behalf
 of, one local device holding one identity's key.
 
+0.2.72 — Conversation Lifecycle & Message Cancellation — is chosen next
+over voice/audio, deliberately: 0.2.69–0.2.71 built a surprisingly
+sophisticated durable messaging system (an outbox, a conversation
+history, two independent read-state stores) without ever asking what
+happens to any of it once the SOCIAL relationship underneath a
+conversation changes. `application/PeerBlockUseCase.js` (0.2.60) and
+`application/FriendRelationshipUseCase.js#unfriend()` (0.2.60) already
+existed, and `application/ChatUseCase.js#canChat()`/`_requireEligible()`
+already re-checked both, fresh, on every send and every incoming
+message (0.2.61) — but nobody had asked the one question that only
+durability makes meaningful: what happens to a message that is ALREADY
+QUEUED, sitting in `application/ChatOutbox.js`, the instant that
+authorization is withdrawn? 0.2.72 answers it, and, in the course of
+answering it, formalizes a guarantee that was already true but never
+stated as a first-class property of this codebase: social authorization
+controls what may happen NEXT; it never rewrites what already happened.
+
+```text
+0.2.72
+├── core/ChatDeliveryState.js         a FIFTH terminal value,
+│                                      CANCELLED — genuinely distinct
+│                                      from EXPIRED: EXPIRED is a fact
+│                                      about TIME (this device gave up
+│                                      waiting), CANCELLED is a fact
+│                                      about AUTHORIZATION (this
+│                                      device's owner withdrew it)
+├── application/ChatOutbox.js#cancel()          discards every QUEUED
+│                                      (never SENT — already on the
+│                                      wire, beyond recall) entry for
+│                                      one peer immediately, returning
+│                                      what was cancelled so
+│                                      ChatUseCase can mark conversation
+│                                      history CANCELLED
+├── application/ConversationReadOutbox.js#cancel()  the identical
+│                                      operation for a still-PENDING
+│                                      (never SENT) coalesced read
+│                                      acknowledgement
+└── application/ChatUseCase.js        subscribes to
+                                       peerBlockUseCase.onBlockedChanged()/
+                                       friendRelationshipUseCase
+                                       .onRelationshipsChanged() — both
+                                       already existed for UI reactivity
+                                       — and cancels PROACTIVELY, the
+                                       instant canChat() eligibility
+                                       flips false, never waiting for a
+                                       reconnect a permanently-offline
+                                       peer might never attempt; a
+                                       one-time startup reconciliation
+                                       pass catches a block/unfriend
+                                       that happened in a PRIOR session
+                                       with no live subscriber around to
+                                       react to it
+```
+
+The property this milestone cares about most is that NONE of it required
+new enforcement code to protect conversation history, the local read
+marker, or a peer's remote read receipt — `application/ConversationStore.js`
+(0.2.69), `application/ConversationReadTracker.js` (0.2.70), and
+`application/RemoteReadReceiptStore.js` (0.2.71) already only ever
+receive writes from `application/ChatUseCase.js`'s own append/publish/
+ingestion paths, none of which `block()`/`unfriend()` ever call —
+blocking or unfriending Bob was ALREADY structurally incapable of
+deleting Alice's history with him, un-reading an already-read message,
+or erasing Bob's own recorded knowledge that Alice read his messages,
+purely as a consequence of those three stores' own already-established
+write discipline. This milestone's flagship test proves that directly
+rather than merely assuming it, the same way 0.2.69's own security
+flagship proved a property that fell out of keying by identity rather
+than needing new code.
+
+What WAS genuinely missing — the one real gap this milestone closes —
+is that `_attemptFlush()` already re-checking `canChat()` on every
+reconnect (0.2.63) only ever protects a message from being DELIVERED
+after the fact; it does nothing for a peer who never reconnects at all,
+leaving a QUEUED entry to sit, misleadingly, until an unrelated 7-day
+TTL happened to expire it as EXPIRED — a fact about time standing in for
+a fact that was really about a withdrawn relationship.
+`_cancelOutboxFor()` closes that gap PROACTIVELY. Block and unfriend are
+treated identically on purpose — both already revoke the exact same
+`canChat()` eligibility a fresh send is checked against (0.2.61's own
+"Friendship Authorizes A Protocol; It Is Never The Protocol," re-checked
+fresh everywhere), so treating an already-queued message as a special,
+softer case that only a block cancels — while an unfriend leaves it to
+linger — would mean `_attemptFlush()` and the new cancellation path
+disagreeing about the very same question for the very same peer. See
+docs/Principles.md, "Queued Mail Answers To The Same Eligibility Check
+As A Fresh Send, Never A Softer One" (0.2.72).
+
+The flagship test (`tests/ConversationLifecycleAndMessageCancellation.test.js`)
+scripts the scenario this milestone is for: Alice and Bob, friends,
+exchange a delivered, read message; Bob goes offline and Alice queues a
+second one; Alice blocks Bob and the queued message is cancelled
+IMMEDIATELY — no reconnect attempt required — durably marked CANCELLED
+in her own conversation history. Bob genuinely reconnects afterward and
+never receives it. The message Bob sent and Alice already read stays
+exactly as it was — content, delivery state, and Bob's own durable
+record that Alice read it — and a message Bob sends AFTER the block is
+refused outright on Alice's ingestion boundary, never stored. A second
+scenario proves unfriending a peer with a QUEUED message cancels it the
+same way, scripted the one way `FriendRelationshipUseCase#unfriend()`
+actually allows it to happen (it requires a live, authenticated
+connectedPeer, unlike a unilateral block) — Alice's session queues mail
+for an offline Bob and ends before he reconnects; only once he's back
+does she unfriend him, with no live `ChatUseCase` subscribed to react in
+the moment, so a fresh session's own startup reconciliation is what
+actually cancels it. A SECURITY FLAGSHIP scenario proves the identical
+startup-reconciliation path for a block that happened in a prior
+session, and that cancellation is always addressed strictly by
+identity — blocking one peer never touches another peer's own,
+completely independent QUEUED mail.
+
+Deliberately not in 0.2.72, named rather than hidden: any conversation-
+level delete/archive operation — there is still no way to remove a
+conversation as a whole, only individual messages capped by
+`application/ConversationStore.js#MAX_STORED_MESSAGES_PER_PEER`
+(unchanged since 0.2.69); cancelling a SENT-but-not-yet-acknowledged
+entry — it already left this device for the wire, and there is nothing
+left here to recall, only an acknowledgement to wait for or not, exactly
+matching `acknowledge()`'s own SENT-only precondition; retroactively
+un-cancelling a message if the peer is later unblocked or re-friended —
+unblocking restores nothing but the ability to be heard again
+(unchanged since 0.2.60), and unfriending remains just as one-directional
+a terminal action as it always was; and any UI beyond the existing
+Queued/Sent/Delivered/Undelivered label on `ui/views/ChatView.js`'s own
+outgoing bubbles gaining one more case ("Undelivered — cancelled").
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

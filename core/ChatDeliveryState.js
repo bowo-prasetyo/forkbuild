@@ -33,18 +33,41 @@
 //                while it was still QUEUED (or still SENT, waiting on
 //                an ack that never came) — see
 //                core/ChatOutboxEntry.js#isExpired(). A best-effort
-//                outbox, never an infinite-retry one.
+//                outbox, never an infinite-retry one. A fact about
+//                TIME, never about a relationship — see CANCELLED,
+//                below, for the other reason a QUEUED message can
+//                stop waiting.
+//   CANCELLED  — 0.2.72. This device's OWN local authorization for
+//                the recipient was proactively withdrawn — Alice
+//                blocked Bob, or unfriended him — while the message
+//                still sat QUEUED, never SENT. See
+//                application/ChatOutbox.js#cancel()'s own header:
+//                never lazy, never waiting for a reconnect attempt
+//                that a peer who never comes back online would make
+//                impossible to ever reach. A fact about a
+//                RELATIONSHIP, never about time — never confuse this
+//                with EXPIRED, above: an EXPIRED message might well
+//                have reached its recipient if only this device had
+//                stayed online a little longer; a CANCELLED one was
+//                never going to, regardless of timing, because the
+//                sender's own local policy said so. Deliberately
+//                scoped to QUEUED mail only — a SENT entry already
+//                left this device's own outbox and reached the wire;
+//                there is nothing left here to cancel, only an
+//                acknowledgement to wait for or not.
 //
 // Never confuse SENT with DELIVERED, and never confuse EXPIRED (this
-// device gave up) with a peer-side rejection (unfriended, blocked, or
-// simply the wrong identity on reconnect — see
-// application/ChatUseCase.js#_attemptFlush()) — those never produce an
-// outbox entry in the first place; there is nothing here to expire.
+// device gave up on TIME) or CANCELLED (this device gave up on
+// AUTHORIZATION) with a peer-side rejection (the wrong identity on
+// reconnect — see application/ChatUseCase.js#_attemptFlush()) — that
+// case never produces an outbox entry in the first place; there is
+// nothing here to expire or cancel.
 export const ChatDeliveryState = Object.freeze({
     QUEUED: 'QUEUED',
     SENT: 'SENT',
     DELIVERED: 'DELIVERED',
-    EXPIRED: 'EXPIRED'
+    EXPIRED: 'EXPIRED',
+    CANCELLED: 'CANCELLED'
 });
 
 export function isValidChatDeliveryState(value) {

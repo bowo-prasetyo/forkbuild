@@ -152,6 +152,40 @@ export class ChatOutbox {
         return expired;
     }
 
+    // 0.2.72 — Conversation Lifecycle & Message Cancellation.
+    //
+    // Alice's own local authorization for this peer was just
+    // proactively withdrawn (blocked, or unfriended) while mail sat
+    // QUEUED for them — see application/ChatUseCase.js#_cancelOutboxFor(),
+    // the sole caller, invoked the INSTANT block()/unfriend() actually
+    // happens, never lazily on the next reconnect attempt a peer who
+    // never comes back online would make impossible to ever reach. See
+    // core/ChatDeliveryState.js's own header on why CANCELLED and
+    // EXPIRED are kept genuinely distinct facts (authorization vs.
+    // time). Deliberately scoped to QUEUED entries only — a SENT one
+    // already left this device's own outbox and reached the wire;
+    // there is nothing left here to recall, only an acknowledgement to
+    // wait for or not, exactly like `acknowledge()` above only ever
+    // matches a SENT entry, never a QUEUED one. Removes every matching
+    // entry from storage outright (the outbox tracks mail still in
+    // flight, never a message database — see this class's own header),
+    // and returns what was cancelled so a caller can translate that
+    // into a durable CANCELLED mark on the conversation history itself.
+    cancel(peerIdentityId) {
+        const owner = this._currentOwnerOrNull();
+        if (!owner) {
+            return [];
+        }
+        const all = this._loadAll();
+        const cancelled = all.filter((entry) => entry.peerIdentityId === peerIdentityId && entry.state === ChatDeliveryState.QUEUED);
+        if (cancelled.length === 0) {
+            return [];
+        }
+        const cancelledIds = new Set(cancelled.map((entry) => entry.message.messageId));
+        this._saveAll(owner, all.filter((entry) => !(entry.peerIdentityId === peerIdentityId && cancelledIds.has(entry.message.messageId))));
+        return cancelled;
+    }
+
     _transition(peerIdentityId, messageId, transform) {
         const owner = this._requireOwner();
         const all = this._loadAll();
