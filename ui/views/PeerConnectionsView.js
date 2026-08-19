@@ -133,6 +133,27 @@ export default {
         const findPeerUseCase = inject('findPeerUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
+        // 0.2.74 — a signed-in identity that is PASSPHRASE-LOCKED cannot
+        // sign a peer-authentication PROOF any more than it can sign
+        // anything else (identity/LocalIdentityProvider.js's own
+        // _requireAuthenticatedIdentity() refuses both the same way,
+        // peer/PeerAuthenticationSession.js reuses that check unmodified
+        // — see that file's own header). Previously the ONLY way to find
+        // this out was starting a real handshake and watching it fail —
+        // for the offering side, only after the far end's own timeout, up
+        // to DEFAULT_HANDSHAKE_TIMEOUT_MS later, with the reason buried on
+        // a Failed card. This surfaces it up front instead, before either
+        // "Invite Someone" or "Connect to Peer" is even attempted.
+        const isIdentityLocked = ref(false);
+        function refreshLockState() {
+            if (!identityUseCase.isAuthenticated()) {
+                isIdentityLocked.value = false;
+                return;
+            }
+            const identityId = identityUseCase.currentSession().identityId;
+            isIdentityLocked.value = !identityUseCase.isUnlocked(identityId);
+        }
+        refreshLockState();
         const peers = ref(peerSessionManager.listPeers());
         const relationships = ref(isAuthenticated.value ? peerRelationshipUseCase.getRelationships() : []);
         const relationshipError = ref('');
@@ -664,6 +685,7 @@ export default {
         let unsubscribeFriendships = null;
         let unsubscribeBlocked = null;
         let unsubscribeSession = null;
+        let unsubscribeVaultLock = null;
         let unsubscribeReconnectRejected = null;
         let unsubscribeFindRejected = null;
         let tickInterval = null;
@@ -681,7 +703,16 @@ export default {
                 refreshRelationships();
                 refreshFriendships();
                 refreshBlocked();
+                refreshLockState();
             });
+            // Locking/unlocking never fires onSessionChanged — see
+            // application/IdentityUseCase.js's own header: being
+            // authenticated and being unlocked are different questions,
+            // deliberately signaled separately. This is what keeps
+            // isIdentityLocked current if the user unlocks (or a vault
+            // timeout re-locks) their identity on "My Identities" while
+            // this page is still open.
+            unsubscribeVaultLock = identityUseCase.onVaultLockChanged(() => refreshLockState());
             // 0.2.62 — a reconnect that authenticates as someone other
             // than the identity this device expected is never silently
             // dropped: application/ConnectToPeerUseCase.js has already
@@ -710,13 +741,14 @@ export default {
             if (unsubscribeFriendships) unsubscribeFriendships();
             if (unsubscribeBlocked) unsubscribeBlocked();
             if (unsubscribeSession) unsubscribeSession();
+            if (unsubscribeVaultLock) unsubscribeVaultLock();
             if (unsubscribeReconnectRejected) unsubscribeReconnectRejected();
             if (unsubscribeFindRejected) unsubscribeFindRejected();
             if (tickInterval) clearInterval(tickInterval);
         });
 
         return {
-            isAuthenticated, peers, PeerLifecycleState, LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS,
+            isAuthenticated, isIdentityLocked, peers, PeerLifecycleState, LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS,
             connectedFor, shortId, progressionState,
             invitePending, inviteError, pendingInvitation, startInvite, dismissInvitation,
             showAcceptForm, importText, acceptError, acceptReply, submitAcceptInvitation, closeAcceptForm,
@@ -758,11 +790,18 @@ export default {
             </p>
 
             <template v-else>
+                <p v-if="isIdentityLocked" class="identity-unlock-error">
+                    Your identity is locked (see <router-link to="/identity">My Identities</router-link>) —
+                    unlock it with its passphrase first. A locked identity cannot sign the proof a
+                    handshake needs, so inviting or connecting now would only fail once the other side
+                    is waiting on you — for them, only after their own handshake eventually times out.
+                </p>
+
                 <div class="peer-actions">
-                    <button class="action-btn action-btn--primary" :disabled="invitePending" @click="startInvite">
+                    <button class="action-btn action-btn--primary" :disabled="invitePending || isIdentityLocked" @click="startInvite">
                         {{ invitePending ? 'Creating…' : 'Invite Someone' }}
                     </button>
-                    <button class="action-btn action-btn--secondary" @click="showAcceptForm = !showAcceptForm">
+                    <button class="action-btn action-btn--secondary" :disabled="isIdentityLocked" @click="showAcceptForm = !showAcceptForm">
                         Connect to Peer
                     </button>
                 </div>
