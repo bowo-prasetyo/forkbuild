@@ -7,6 +7,7 @@ import { PeerSessionManager } from '../application/PeerSessionManager.js';
 import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
 import { CreateFriendRelationshipUseCase } from '../application/CreateFriendRelationshipUseCase.js';
 import { CreatePeerBlockUseCase } from '../application/CreatePeerBlockUseCase.js';
+import { ChatUseCase } from '../application/ChatUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
@@ -47,6 +48,23 @@ const friendRelationshipUseCase = new CreateFriendRelationshipUseCase().execute(
     connectedPeerRegistry: peerSessionManager.registry,
     peerBlockUseCase
 });
+// 0.2.61 — one app-wide ChatUseCase, same persistence-free reasoning as
+// friendRelationshipUseCase's own wiring but with no storageProvider at
+// all: chat is live-only (see application/LiveConversation.js's own
+// header), so there is nothing here for a Create*UseCase wrapper to
+// hide the way CreateFriendRelationshipUseCase/CreatePeerBlockUseCase
+// hide LocalStorageProvider. Rides the SAME peerMessageBus/registry
+// friendRelationshipUseCase already does, and consults the SAME
+// friendRelationshipUseCase/peerBlockUseCase as its authorization
+// inputs — see application/ChatUseCase.js's own header on why
+// friendship authorizes chat without chat ever becoming part of the
+// friendship protocol itself.
+const chatUseCase = new ChatUseCase(identityProvider, {
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry,
+    friendRelationshipUseCase,
+    peerBlockUseCase
+});
 
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
@@ -54,6 +72,7 @@ app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
 app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
 app.provide('peerBlockUseCase', peerBlockUseCase);
+app.provide('chatUseCase', chatUseCase);
 // 0.2.59 — Peer-Based Avatar Social Transport. The SAME app-wide bus
 // friendRelationshipUseCase already rides, now also provided directly
 // so World View can attach presence/profile/interaction to it — see

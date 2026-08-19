@@ -3789,3 +3789,96 @@ heard from again, and stops there. `tests/FriendshipRevocationAndBlocking.test.j
 own FLAGSHIP B proves the never-friended case directly, on purpose —
 the case where "restores nothing" is easiest to get wrong by silently
 defaulting to FRIEND.
+
+### Chat Is A Protocol Running Over Authenticated Peers, Never A Feature Of The Transport Itself (0.2.61)
+
+`peer/PeerMessageBus.js` has said since 0.2.52 that it does "generic
+transport hygiene... protocol semantics belong to the protocol." 0.2.61
+is the first milestone to build a genuinely NEW, direct, two-party
+protocol on top of that promise rather than another avatar-social
+broadcast: `application/ChatUseCase.js` subscribes to its own namespaced
+channel (`forkbuild:chat`), same as `application/FriendRelationshipUseCase.js`
+(0.2.57) already does, and neither `peer/PeerMessageBus.js` nor
+`peer/PeerConnection.js` gained a single line of chat-specific code.
+Concretely: `peer/PeerMessageBus.js` never contains `if (protocol ===
+'forkbuild:chat')`, chat messages are never distinguished from any
+other protocol's traffic anywhere below `application/ChatUseCase.js`,
+and a message being AUTHENTICATED is necessary but never sufficient for
+it to be treated as chat — see "Friendship Authorizes A Protocol; It Is
+Never The Protocol" below for what else is required.
+
+### Friendship Authorizes A Protocol; It Is Never The Protocol (0.2.61)
+
+`FriendshipState.FRIEND` (0.2.57) was designed as a fact about mutual
+consent, not as permission to do anything specific with it — 0.2.58
+already proved this once, gating avatar-social VISIBILITY on it without
+folding visibility into the friendship protocol itself. 0.2.61 proves
+it again, one layer further: `application/ChatUseCase.js` never sends,
+receives, mutates, or even imports a `core/FriendshipAdvertisement.js`
+— it only ever calls `friendRelationshipUseCase.getState(identityId)`,
+fresh, on every single send and every single incoming message, exactly
+the same "consult a predicate, never cache or special-case it" contract
+`isFriend`/`isBlocked` already established. The rule this makes
+possible is deliberately simple: authenticated peer + not blocked +
+`FriendshipState.FRIEND` -> chat allowed; anything else (anonymous,
+unauthenticated, not yet friends, blocked, disconnected) -> refused.
+Becoming friends grants ELIGIBILITY for chat; it grants nothing else,
+and a future protocol (say, world co-editing invitations) that also
+wants to consult friendship will ask the exact same predicate rather
+than asking chat, or friendship itself, to know anything about it.
+
+### An Authenticated Connection Surviving Unfriend/Block Does Not Mean Chat Survives It (0.2.61)
+
+0.2.60 already established that friendship/blocking and the peer
+connection are independent axes — a block never closes the underlying
+WebRTC connection (`core/PeerBlockRecord.js`'s own header). 0.2.61
+inherits that precedent directly: `application/ChatUseCase.js` never
+asks a connection to close when friendship ends or a block is recorded,
+and never needs to — because both `sendMessage()` and the receiving
+`_handleIncoming()` re-check `isBlocked`/`getState() === FRIEND` FRESH
+on every single message, a connection that stays AUTHENTICATED after
+Alice unfriends Bob (or blocks him) simply stops being usable for chat
+at that instant, on both the sending and the receiving side
+independently, with no separate "close the channel" step required
+anywhere. `tests/PeerChat.test.js`'s own Attack D and Attack E prove
+this directly: the connection's `PeerLifecycleState` is asserted to
+remain `AUTHENTICATED` throughout, while chat itself stops.
+
+### 0.2.61 Ships Live Chat, Not A Message Database (0.2.61)
+
+The deliberate boundary of this milestone: two authenticated friends
+exchange text over a direct connection, and nothing about that exchange
+is written down anywhere. `application/LiveConversation.js` — named
+that, and NOT `ChatHistory`, on purpose — holds a conversation's
+transcript only in memory, only for as long as the owning
+`application/ChatUseCase.js` instance lives, with no `toJSON`/`fromJSON`
+at all. There is no store-and-forward: `peer/PeerMessageBus.js#send()`
+already throws for a peer that is not, right now, AUTHENTICATED, and
+`application/ChatUseCase.js` adds no queue anywhere to catch what that
+throw prevents from being delivered — see `tests/PeerChat.test.js`'s own
+Scenario G. What persistent message history should even mean in a
+decentralized system — who stores it, whether an intermediary can read
+it, how long it lives, whether it survives this device disappearing —
+is a genuinely different, harder question than "can Alice and Bob talk
+right now," deliberately left to a later milestone rather than
+half-answered here.
+
+### A Chat Message's Identity, Its Sequence, And Its Delivery Order Are Three Different Facts (0.2.61)
+
+`core/ChatMessage.js#messageId` exists ONLY for exact-duplicate
+suppression (`core/ChatReplayWindow.js`'s bounded per-sender set),
+completely independent of ordering — replaying a captured, genuinely-
+valid message is rejected by identity alone, regardless of its
+(unchanged) `sequence`. `sequence` itself answers a narrower question
+than it might look like it does: "is this newer than the highest one
+already accepted from this exact sender, in this exact conversation?"
+— never "is this the next number in an unbroken count," and never an
+assumption that delivery itself arrives in order. `core/ChatMessageIngestion.js#resolveIncomingChatMessage()`
+deliberately tolerates gaps (sequence 2 accepted, then sequence 10
+arrives — accepted; nothing between 3 and 9 is ever required or
+reconstructed) for exactly this reason: WebRTC/DataChannel delivery
+happens to be ordered today, but this protocol's own correctness never
+depends on that continuing to be true. Conflating any two of these
+three facts — as, for instance, treating `messageId` as a sequence, or
+`sequence` as a delivery-ordering guarantee — is exactly the mistake
+this file's own header warns against.
