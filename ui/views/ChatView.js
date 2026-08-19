@@ -44,6 +44,20 @@ import { FriendshipState } from '../../core/FriendshipState.js';
 // is a purely local, unsigned, never-transmitted note (see
 // core/ConversationReadMarker.js's own header on why this is never a
 // read RECEIPT); the other participant has no way to observe it.
+//
+// 0.2.71 — the SAME "I looked" moment now ALSO calls
+// `chatUseCase.sendReadReceipt()`, a deliberately separate call to a
+// deliberately separate use case: `peerPresenceUseCase.markRead()`
+// still only ever updates this device's own LOCAL, unsigned marker,
+// exactly as it always did, and has no idea a network acknowledgement
+// exists. `sendReadReceipt()` independently recomputes the same
+// "highest incoming sequence" fact from `chatUseCase`'s own live
+// conversation and queues/transmits it — see
+// application/ChatUseCase.js's own header on why these are two
+// genuinely independent computations, never one derived from the
+// other. Each outgoing bubble now also shows a "Seen" mark once
+// `chatUseCase.getPeerReadThroughSequence()` reports the peer has
+// acknowledged reading that far.
 export default {
     name: 'ChatView',
     setup() {
@@ -70,6 +84,10 @@ export default {
         // alongside `messages`/`peers` below, never a separate polling
         // loop of its own.
         const presence = ref(peerPresenceUseCase.getSummary(peerIdentityId));
+        // 0.2.71 — "through which of MY OWN outgoing sequence numbers has
+        // the peer told me they've read?" Refreshed alongside `presence`
+        // below and on every `chatUseCase.onReadReceipt()` event.
+        const peerReadThroughSequence = ref(chatUseCase.getPeerReadThroughSequence(peerIdentityId));
 
         function shortId(identityId) {
             return identityId ? identityId.slice(-14) : '';
@@ -118,6 +136,11 @@ export default {
         function refreshPresence() {
             peerPresenceUseCase.markRead(peerIdentityId);
             presence.value = peerPresenceUseCase.getSummary(peerIdentityId);
+            // 0.2.71 — a deliberately separate call: see this view's own
+            // header on why the local marker above and the network
+            // acknowledgement below are two independent computations,
+            // never one transmitting the other.
+            chatUseCase.sendReadReceipt(peerIdentityId);
         }
 
         function scrollToBottom() {
@@ -152,6 +175,13 @@ export default {
 
         function deliveryLabel(message) {
             if (message.direction !== 'outgoing' || !message.deliveryState) return '';
+            // 0.2.71 — "Seen" takes priority over "Delivered": the peer
+            // acknowledging they READ this message is strictly stronger
+            // evidence than the transport-level delivery ack alone, and
+            // is only ever reachable once DELIVERED already happened.
+            if (message.deliveryState === 'DELIVERED' && message.sequence <= peerReadThroughSequence.value) {
+                return 'Seen';
+            }
             switch (message.deliveryState) {
                 case 'QUEUED': return 'Queued — will send once they reconnect';
                 case 'SENT': return 'Sent';
@@ -171,6 +201,7 @@ export default {
         let unsubscribeMessages = null;
         let unsubscribeSession = null;
         let unsubscribePresence = null;
+        let unsubscribeReadReceipt = null;
         onMounted(() => {
             refreshPeers();
             refreshMessages();
@@ -185,6 +216,14 @@ export default {
             // not only a new message or a connection change already
             // covered by refreshPeers()/refreshMessages() above.
             unsubscribePresence = peerPresenceUseCase.onChange(() => { presence.value = peerPresenceUseCase.getSummary(peerIdentityId); });
+            // 0.2.71 — a peer's read receipt arriving for THIS
+            // conversation refreshes `peerReadThroughSequence` so
+            // deliveryLabel() can show "Seen" without a manual refresh.
+            unsubscribeReadReceipt = chatUseCase.onReadReceipt((senderPeerIdentityId, readThroughSequence) => {
+                if (senderPeerIdentityId === peerIdentityId) {
+                    peerReadThroughSequence.value = readThroughSequence;
+                }
+            });
             unsubscribeSession = identityUseCase.onSessionChanged(() => {
                 isAuthenticated.value = identityUseCase.isAuthenticated();
             });
@@ -194,6 +233,7 @@ export default {
             if (unsubscribePeers) unsubscribePeers();
             if (unsubscribeMessages) unsubscribeMessages();
             if (unsubscribePresence) unsubscribePresence();
+            if (unsubscribeReadReceipt) unsubscribeReadReceipt();
             if (unsubscribeSession) unsubscribeSession();
         });
 

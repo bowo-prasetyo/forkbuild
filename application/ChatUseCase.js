@@ -6,12 +6,16 @@ import { ChatReplayWindow } from '../core/ChatReplayWindow.js';
 import { resolveIncomingChatMessage } from '../core/ChatMessageIngestion.js';
 import { ChatDeliveryState } from '../core/ChatDeliveryState.js';
 import { toChatDeliveryAck, isValidChatDeliveryAck } from '../core/ChatDeliveryAck.js';
+import { toChatReadReceipt, isValidChatReadReceipt } from '../core/ChatReadReceipt.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LiveConversation } from './LiveConversation.js';
 import { ChatOutbox } from './ChatOutbox.js';
 import { ConversationStore } from './ConversationStore.js';
+import { ConversationReadOutbox } from './ConversationReadOutbox.js';
+import { RemoteReadReceiptStore } from './RemoteReadReceiptStore.js';
 
 const MESSAGE_EVENT = 'ChatMessage';
+const READ_RECEIPT_EVENT = 'ChatReadReceipt';
 
 // A per-instance, in-memory-only StorageProvider — ChatUseCase's own
 // default backend for BOTH `chatOutbox` and `conversationStore` when no
@@ -141,6 +145,66 @@ class EphemeralStorageProvider extends StorageProvider {
 // (`_publishDeliveryState`) now ALSO writes through to the durable
 // store, in the same call, so the two never drift.
 //
+// 0.2.71 — Explicit Read Acknowledgement.
+//
+// `sendReadReceipt()` below is a THIRD, deliberately independent "tell
+// the peer something" operation, alongside `sendMessage()`/`sendOrQueue()`
+// (content) and the automatic delivery-ack machinery (transport). It
+// answers a question 0.2.70's `application/ConversationReadTracker.js`
+// explicitly declined to answer: not "what has THIS device seen" (a
+// local, unsigned, never-transmitted note — see that class's own
+// header) but "what does the OTHER participant know that I have seen."
+// See docs/Principles.md, "A Read Receipt Is Computed Independently
+// From The Local Read Marker, Never Transmitted From It" (0.2.71):
+// `sendReadReceipt()` never reads `ConversationReadTracker` at all — it
+// recomputes "the highest incoming sequence I currently hold for this
+// peer" itself, straight from this class's own `_conversations`, the
+// exact same computation `application/PeerPresenceUseCase.js#markRead()`
+// independently performs against `application/ConversationStore.js` for
+// the local marker. This is deliberate, not an oversight: a local read
+// marker was never "simply transmitted" into a network fact, because no
+// code path anywhere reads one to produce the other.
+//
+// The wire payload, `core/ChatReadReceipt.js`, travels on its own
+// protocol (`READ_PROTOCOL`, `forkbuild:chat-read`) — a separate string
+// from both `DEFAULT_PROTOCOL` and `ACK_PROTOCOL`, the identical
+// reasoning core/ChatDeliveryAck.js's own header already gives for why
+// an acknowledgement never rides the content protocol. `readThroughSequence`
+// is a monotonic high-water mark, exactly like 0.2.70's own read
+// marker, which is what makes it safe to send liberally: `_handleIncomingRead()`
+// applies Math.max on arrival (`application/RemoteReadReceiptStore.js`),
+// so an out-of-order or duplicate receipt is harmless by construction —
+// no replay window is needed for this protocol at all.
+//
+// A read acknowledgement this device cannot deliver immediately is
+// written to `application/ConversationReadOutbox.js` — a FOURTH durable
+// store, deliberately NOT `application/ChatOutbox.js`: that store holds
+// one entry per MESSAGE and prunes on acknowledgement; this one holds
+// at most one entry per PEER and COALESCES on every new value, because
+// "read through 20" already says everything "read through 17, 18, 19,
+// 20" would have — see that class's own header, "A Coalescing Outbox
+// Remembers The Latest Value, Not Every Event." The SAME reconnect-
+// triggered flush this class already wired for the message outbox in
+// 0.2.63 (`_attemptFlush()`, riding `connectedPeerRegistry.onChange()`)
+// now also flushes this one, for the identical reason: "is this
+// identity AUTHENTICATED right now" is the only question either flush
+// ever asks, so the same security property 0.2.63 proved for queued
+// messages — a "reconnect" that genuinely authenticates as the wrong
+// identity can never receive mail addressed to someone else — holds
+// here too, for free, because both outboxes are addressed by
+// peerIdentityId and neither is ever addressed by connection.
+//
+// A Read Marker Is A Local Note And A Read Receipt Is A Network Fact
+// Are Never The Same Object (0.2.71): `core/ConversationReadMarker.js`
+// (0.2.70) stays completely unmodified by this milestone — still never
+// signed, never sent, never read by this class's own ingestion
+// boundary. `core/RemoteReadReceipt.js` is a NEW, separate value object
+// for the opposite-direction question ("what has the PEER told me they
+// have seen of MY OWN messages"), stored in a NEW, separate class
+// (`application/RemoteReadReceiptStore.js`) with zero shared code — see
+// that file's own header on why collapsing the two, despite their
+// structurally identical shape, was considered and rejected.
+//
 // A Reload Continues A Conversation; It Never Starts A New One
 // (0.2.69): the constructor's own `_rehydrateFromStore()` rebuilds
 // every `LiveConversation` this owner has ANY stored history with —
@@ -166,8 +230,11 @@ export class ChatUseCase {
         peerBlockUseCase = null,
         chatOutbox = null,
         conversationStore = null,
+        conversationReadOutbox = null,
+        remoteReadReceiptStore = null,
         protocol = ChatUseCase.DEFAULT_PROTOCOL,
         ackProtocol = ChatUseCase.ACK_PROTOCOL,
+        readProtocol = ChatUseCase.READ_PROTOCOL,
         replayWindow = new ChatReplayWindow()
     } = {}) {
         if (!identityProvider) {
@@ -189,6 +256,7 @@ export class ChatUseCase {
         this._isBlocked = peerBlockUseCase ? (identityId) => peerBlockUseCase.isBlocked(identityId) : () => false;
         this._protocol = protocol;
         this._ackProtocol = ackProtocol;
+        this._readProtocol = readProtocol;
         this._replayWindow = replayWindow;
         // 0.2.63 — see this class's own header, and
         // application/ChatOutbox.js's, for why an injected, durable
@@ -202,6 +270,14 @@ export class ChatUseCase {
         // COMPLETELY SEPARATE default instance from `_outbox` above,
         // never the same storage.
         this._conversationStore = conversationStore || new ConversationStore(new EphemeralStorageProvider(), identityProvider);
+        // 0.2.71 — same posture, for the two new read-acknowledgement
+        // stores — see this class's own header, and
+        // application/ConversationReadOutbox.js's/
+        // application/RemoteReadReceiptStore.js's own. Two SEPARATE
+        // default instances from `_outbox`/`_conversationStore` above and
+        // from each other, never shared storage.
+        this._readOutbox = conversationReadOutbox || new ConversationReadOutbox(new EphemeralStorageProvider(), identityProvider);
+        this._remoteReadReceipts = remoteReadReceiptStore || new RemoteReadReceiptStore(new EphemeralStorageProvider(), identityProvider);
         this._conversations = new Map(); // peerIdentityId -> LiveConversation
         this._nextSequence = new Map(); // peerIdentityId -> last sequence THIS device used
         this._eventBus = new EventBus();
@@ -230,6 +306,7 @@ export class ChatUseCase {
         });
         this._unsubscribeBus = this._bus.subscribe(this._protocol, (payload, meta) => this._handleIncoming(payload, meta));
         this._unsubscribeAckBus = this._bus.subscribe(this._ackProtocol, (payload, meta) => this._handleIncomingAck(payload, meta));
+        this._unsubscribeReadBus = this._bus.subscribe(this._readProtocol, (payload, meta) => this._handleIncomingRead(payload, meta));
     }
 
     // The live, in-memory transcript with one peer — [] if this device
@@ -341,6 +418,57 @@ export class ChatUseCase {
         this._attemptFlush(peerIdentityId);
     }
 
+    // 0.2.71 — Alice's "I looked, and I'm telling Bob" gesture. Computes
+    // "the highest incoming sequence I currently hold for this peer"
+    // straight from this instance's OWN `_conversations`, deliberately
+    // WITHOUT ever consulting `application/ConversationReadTracker.js` —
+    // see this class's own header on why that independence is the whole
+    // point. Never throws: an ineligible peer (blocked, not a friend
+    // anymore) or a peer with nothing incoming yet is simply a no-op,
+    // the same "harmless to call repeatedly" posture
+    // `application/PeerPresenceUseCase.js#markRead()` already
+    // established for the local marker one layer over — this is meant
+    // to be called from the same UI moment (opening/refreshing a
+    // conversation), every time, without a caller needing its own
+    // eligibility or "anything to say" check first.
+    //
+    // The computed value is written to `application/ConversationReadOutbox.js`
+    // (coalescing — see that class's own header) and an immediate flush
+    // is attempted, so the common case — the peer IS online — reaches
+    // them promptly; if not, `_attemptFlush()`'s existing
+    // reconnect-triggered wiring (0.2.63) delivers it once they're back,
+    // coalesced with anything newer by the time that happens.
+    sendReadReceipt(peerIdentityId) {
+        if (!this.canChat(peerIdentityId)) {
+            return null;
+        }
+        const conversation = this._conversations.get(peerIdentityId);
+        if (!conversation) {
+            return null;
+        }
+        const highestIncoming = conversation.messages.reduce(
+            (max, message) => (message.direction === 'incoming' && message.sequence > max ? message.sequence : max),
+            0
+        );
+        if (highestIncoming === 0) {
+            return null;
+        }
+        this._readOutbox.enqueue(peerIdentityId, highestIncoming);
+        this._attemptFlush(peerIdentityId);
+        return highestIncoming;
+    }
+
+    // 0.2.71 — "has the PEER told me they've seen my messages, and
+    // through which sequence?" 0, never null/undefined, for a peer this
+    // device has no receipt from at all — reads straight through to
+    // `application/RemoteReadReceiptStore.js#getReadThroughSequence()`,
+    // never cached, so a UI (see ui/views/ChatView.js) can render a
+    // "Seen" mark under its own outgoing messages without holding a
+    // second copy of this fact.
+    getPeerReadThroughSequence(peerIdentityId) {
+        return this._remoteReadReceipts.getReadThroughSequence(peerIdentityId);
+    }
+
     // Returns an unsubscribe function. Fires `(peerIdentityId, message)`
     // for every message this device sends OR accepts, AND every time an
     // already-appended message's `deliveryState` transitions (0.2.63) —
@@ -349,6 +477,19 @@ export class ChatUseCase {
     // and re-renders whichever conversation is currently open.
     onMessage(callback) {
         const subscription = this._eventBus.subscribe(MESSAGE_EVENT, ({ peerIdentityId, message }) => callback(peerIdentityId, message));
+        return () => subscription.unsubscribe();
+    }
+
+    // 0.2.71 — returns an unsubscribe function. Fires
+    // `(peerIdentityId, readThroughSequence)` every time a NEW,
+    // genuinely-newer read receipt is accepted from a peer — never on a
+    // stale/duplicate/lower one, since `application/RemoteReadReceiptStore.js`
+    // is a monotonic high-water mark and simply has nothing new to
+    // report for those. A UI subscribes once to render "Seen" against
+    // its own outgoing messages, the same pattern `onMessage()` above
+    // already established for content.
+    onReadReceipt(callback) {
+        const subscription = this._eventBus.subscribe(READ_RECEIPT_EVENT, ({ peerIdentityId, readThroughSequence }) => callback(peerIdentityId, readThroughSequence));
         return () => subscription.unsubscribe();
     }
 
@@ -365,9 +506,14 @@ export class ChatUseCase {
             this._unsubscribeAckBus();
             this._unsubscribeAckBus = null;
         }
+        if (this._unsubscribeReadBus) {
+            this._unsubscribeReadBus();
+            this._unsubscribeReadBus = null;
+        }
         // Deliberately does NOT dispose the injected peerMessageBus,
         // connectedPeerRegistry, friendRelationshipUseCase, chatOutbox,
-        // or conversationStore — all shared collaborators that outlive
+        // conversationStore, conversationReadOutbox, or
+        // remoteReadReceiptStore — all shared collaborators that outlive
         // this one protocol's use case, exactly like
         // application/FriendRelationshipUseCase.js's own dispose().
     }
@@ -479,6 +625,51 @@ export class ChatUseCase {
         this._publishDeliveryState(remoteIdentity.identityId, payload.messageId, ChatDeliveryState.DELIVERED);
     }
 
+    // 0.2.71 — the receiving half of core/ChatReadReceipt.js. Applies
+    // the SAME trust gates `_handleIncoming()`/`_handleIncomingAck()`
+    // already established: the claimed `readerIdentity` must match the
+    // connection's own already-proven remoteIdentity, the sender must
+    // not be blocked, the sender must currently be a FRIEND, and
+    // `conversationId` must be the one this device independently
+    // re-derives — never whatever the payload claims. No replay window
+    // is applied or needed: `application/RemoteReadReceiptStore.js#recordReadThrough()`
+    // is itself a monotonic high-water mark, so a stale, duplicate, or
+    // out-of-order receipt is silently absorbed as a no-op rather than
+    // needing to be detected and rejected as a replay — see
+    // core/ChatReadReceipt.js's own header.
+    _handleIncomingRead(payload, meta) {
+        if (!isValidChatReadReceipt(payload)) {
+            return;
+        }
+        const remoteIdentity = meta.connectedPeer && meta.connectedPeer.remoteIdentity;
+        if (!remoteIdentity) {
+            return;
+        }
+        if (payload.readerIdentity !== remoteIdentity.identityId) {
+            return;
+        }
+        if (this._isBlocked(remoteIdentity.identityId)) {
+            return;
+        }
+        if (this._friends.getState(remoteIdentity.identityId) !== FriendshipState.FRIEND) {
+            return;
+        }
+        let myIdentityId;
+        try {
+            myIdentityId = this._identityProvider.getSigningIdentity().id;
+        } catch {
+            return;
+        }
+        if (payload.conversationId !== deriveConversationId(myIdentityId, remoteIdentity.identityId)) {
+            return;
+        }
+        const before = this._remoteReadReceipts.getReadThroughSequence(remoteIdentity.identityId);
+        const updated = this._remoteReadReceipts.recordReadThrough(remoteIdentity.identityId, payload.readThroughSequence);
+        if (updated.readThroughSequence > before) {
+            this._eventBus.publish(READ_RECEIPT_EVENT, { peerIdentityId: remoteIdentity.identityId, readThroughSequence: updated.readThroughSequence });
+        }
+    }
+
     _sendAck(connectedPeer, payload, myIdentityId) {
         const ack = toChatDeliveryAck({
             messageId: payload.messageId,
@@ -521,6 +712,20 @@ export class ChatUseCase {
             this._bus.send(connectedPeer, this._protocol, entry.message);
             this._outbox.markSent(peerIdentityId, entry.message.messageId);
             this._publishDeliveryState(peerIdentityId, entry.message.messageId, ChatDeliveryState.SENT);
+        }
+        // 0.2.71 — the SAME reconnect-triggered moment now also flushes
+        // any coalesced, still-PENDING read acknowledgement for this
+        // peer — see this class's own header on why one flush trigger
+        // correctly serves both outboxes.
+        const pendingReads = this._readOutbox.pending(peerIdentityId);
+        if (pendingReads.length > 0) {
+            const myIdentityId = this._identityProvider.getSigningIdentity().id;
+            const conversationId = deriveConversationId(myIdentityId, peerIdentityId);
+            for (const entry of pendingReads) {
+                const receipt = toChatReadReceipt({ conversationId, readerIdentity: myIdentityId, readThroughSequence: entry.readThroughSequence });
+                this._bus.send(connectedPeer, this._readProtocol, receipt);
+                this._readOutbox.markSent(peerIdentityId, entry.readThroughSequence);
+            }
         }
     }
 
@@ -639,6 +844,11 @@ ChatUseCase.DEFAULT_PROTOCOL = 'forkbuild:chat';
 // purpose — see core/ChatDeliveryAck.js's own header, "Sent Is Not
 // Delivered."
 ChatUseCase.ACK_PROTOCOL = 'forkbuild:chat-delivery-ack';
+
+// 0.2.71 — a THIRD, equally separate protocol string — see
+// core/ChatReadReceipt.js's own header on why a read acknowledgement
+// never rides DEFAULT_PROTOCOL or ACK_PROTOCOL either.
+ChatUseCase.READ_PROTOCOL = 'forkbuild:chat-read';
 
 function replayKey(conversationId, senderIdentity) {
     return `${conversationId}:${senderIdentity}`;
