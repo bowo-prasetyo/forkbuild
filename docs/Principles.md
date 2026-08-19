@@ -4152,3 +4152,103 @@ Every source still produces nothing but `peer/PeerDiscoveryRecord.js`'s
 own untrusted candidate, still required to pass a real
 `peer/PeerAuthenticationSession.js` handshake before it means anything
 at all.
+
+### Rendezvous Distributes Candidates; Authentication Establishes Identity (0.2.65)
+
+The one-sentence version of everything else in this section. 0.2.65
+makes discovery genuinely networked — `peer/RendezvousTransport.js`'s
+real PUBLISH/LOOKUP/REMOVE, not merely a search over what was already
+imported (`peer/LocalPeerDiscoveryProvider.js#discover`, 0.2.64) — and
+changes nothing about which of the three stages is ever allowed to say
+"this is Bob": still only `peer/PeerAuthenticationSession.js`'s
+handshake, gated by `application/ConnectToPeerUseCase.js`'s 0.2.62
+`expectedIdentityId` check. A rendezvous node — even one implemented as
+a real server, one day — is architecturally incapable of vouching for
+an identity; it can only ever hand back candidates, exactly as
+`peer/PeerDiscoveryProvider.js`'s own header established in 0.2.50 for
+a purely local, out-of-band mechanism. Making discovery a real network
+does not change its epistemic status. See `tests/
+DistributedPeerRendezvous.test.js`'s own flagship: a malicious
+publication claiming to be Bob costs the rendezvous LAYER nothing to
+produce and nothing to reject — the cost of rejecting it is paid
+entirely at the authentication layer, unmodified since 0.2.62, the
+instant Charlie honestly authenticates as himself instead.
+
+### A Rendezvous Publication Is Never A Permanent Directory Entry (0.2.65)
+
+`peer/RendezvousPublication.js` wraps nothing but an ordinary
+`peer/PeerInvitation.js` — still never a credential, see that file's
+own header — plus the bookkeeping a rendezvous node needs to expire it.
+Its own `expiresAt` can never outlive the invitation it wraps, no
+matter what ttl a caller requests (`RendezvousPublication.create()`
+takes the STRICTER of the two): a rendezvous layer that could
+outlive its own invitation would let "Bob is reachable here" survive
+longer than the hint that ever justified saying so in the first
+place. `peer/LocalRendezvousNetwork.js` compounds this at the
+transport level by keeping AT MOST ONE live publication per identity —
+a fresh PUBLISH for the same identity simply replaces whatever was
+there, never accumulates beside it — which is what makes "newer
+publication replaces older candidate" fall out of the storage model
+itself, with no separate enforcement code needed. The result: the
+rendezvous network only ever answers "where is X reachable RIGHT NOW,"
+never "here is everywhere X has ever been reachable." A publication
+disappearing — through natural expiry or an explicit `unpublish()`/
+REMOVE — means exactly one thing: "this device currently doesn't know
+a route to that identity." It never means, and is never treated
+anywhere in this codebase as meaning, "that identity no longer
+exists" — see `docs/Principles.md`, "A Discovery Record's Freshness
+Outlives Neither The Identity Nor The Relationship It Might Lead To"
+(0.2.64), which this milestone extends one layer down rather than
+replaces. `core/PeerRelationship.js`, `core/FriendshipRecord.js`, an
+identity, a profile, presence, and chat state are all still
+completely untouched by anything happening at the rendezvous layer.
+
+### A Rendezvous Lookup Degrades; It Never Fails Loud (0.2.65)
+
+`peer/RendezvousDiscoveryProvider.js#discover()` treats a transport
+failure (the rendezvous network is temporarily unreachable) as
+"produced zero fresh results this time," never as a thrown error —
+the call falls back to whatever this device already has cached
+locally and returns that instead. The same posture applies one layer
+down, per entry rather than per call: a single malformed or malicious
+publication a lookup returns (missing fields, garbage in place of a
+real `peer/RendezvousPublication.js`) is caught and skipped in
+`_mergePublication()`, never allowed to abort the rest of the lookup —
+the exact "one bad record rejected and counted, the others go on"
+failure-isolation discipline `spatial/
+DecentralizedSpatialDiscoveryProvider.js` already established for a
+much larger, cryptographically-verified trust pipeline, here applied
+to a deliberately much smaller and entirely UNTRUSTED one. `peer/
+DiscoveryBootstrap.js` repeats this pattern one layer higher still: a
+single configured bootstrap provider throwing during `discover()` is
+caught and skipped, never allowed to fail the fan-out to every other
+configured provider. Three layers, one rule: a network hiccup makes a
+peer HARDER to find, and never, at any layer, makes an
+already-known candidate impossible to use, nor makes a healthy
+source's answer disappear because an unhealthy one nearby failed.
+
+### A Bootstrap List Is Configuration, Never An Authority (0.2.65)
+
+`peer/DiscoveryBootstrap.js` answers 0.2.65's own bootstrap question —
+"how does Alice find the rendezvous network at all, without already
+knowing someone in it?" — by making the answer an explicit, inspectable,
+changeable list (`addBootstrapProvider()`/`removeBootstrapProvider()`),
+never one permanent, hard-coded discovery authority baked into the
+architecture. Nothing about `application/FindPeerUseCase.js` or
+`application/PeerSessionManager.js` needed to change to make this
+possible — both already depended on nothing but the `peer/
+PeerDiscoveryProvider.js` interface (see docs/Principles.md,
+"Discovery Finds A Candidate; It Never Authenticates One," 0.2.50), so
+a `DiscoveryBootstrap` instance, or a bare `peer/
+RendezvousDiscoveryProvider.js`, or the original `peer/
+LocalPeerDiscoveryProvider.js` are all equally valid things to hand
+`PeerSessionManager`'s constructor. This is what leaves the door open
+for LAN, a DHT, QR, NFC, manual invitation, and community-run
+rendezvous nodes to coexist, or replace each other, purely as
+configuration — never as a change to how Alice searches or how a
+result is trusted. And "trusted" stays the operative word: being on
+the bootstrap list only means "this device currently asks this
+source" — see "A Discovery Source Describes Provenance, Never
+Trustworthiness" (0.2.64) above, unchanged in spirit: a candidate from
+a configured bootstrap provider earns no more trust than one a human
+relayed by hand.
