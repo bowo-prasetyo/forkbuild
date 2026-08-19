@@ -2386,6 +2386,110 @@ a terminal action as it always was; and any UI beyond the existing
 Queued/Sent/Delivered/Undelivered label on `ui/views/ChatView.js`'s own
 outgoing bubbles gaining one more case ("Undelivered — cancelled").
 
+0.2.73 — Authenticated Voice / Audio — is the milestone 0.2.66 named and
+deliberately deferred ("voice/video ... a natural later application of
+an authenticated WebRTC channel, not this milestone's") and 0.2.70/0.2.72
+each considered and chose text messaging over instead. It is taken up
+now because the question it answers — "does real-time media need
+anything NEW at the identity/connection/authorization layer, or does it
+only need to correctly reuse what 0.2.49 through 0.2.72 already built?"
+— can finally be answered honestly: identity (0.2.46–0.2.48),
+authenticated peer connections (0.2.49–0.2.51, 0.2.66), protocol
+multiplexing over one connection (0.2.52), friendship and blocking as
+authorization inputs (0.2.57–0.2.60), and proactive revocation of
+already-in-flight state the instant authorization changes (0.2.72) are
+all mature, tested, and — critically — already shaped exactly the way a
+media feature would need them shaped. The answer this milestone proves
+is: reuse only. No new identity primitive, no new connection type, no
+new authorization system.
+
+```text
+0.2.73
+├── peer/WebRtcPeerConnection.js      a SECOND deliberate widening beyond
+│                                      the base PeerConnection interface
+│                                      (mirroring 0.2.51's own role/
+│                                      localSignal precedent):
+│                                      addAudioTrack/removeAudioTrack/
+│                                      renegotiate/applyRemoteOffer/
+│                                      applyRemoteAnswer/onRemoteTrack —
+│                                      all operating on the SAME
+│                                      RTCPeerConnection already carrying
+│                                      peer/PeerMessageBus.js's own
+│                                      DataChannel, never a second one
+├── core/VoiceCallSignal.js           call lifecycle — INVITE/ACCEPT/
+│                                      REJECT/END/BUSY — its own protocol
+│                                      (forkbuild:voice-call), checked by
+│                                      ONE uniform "claimed identity must
+│                                      match the proven connection" rule
+│                                      regardless of type
+├── core/VoiceMediaSignal.js          SDP renegotiation, its own protocol
+│                                      (forkbuild:voice-media), travelling
+│                                      IN-BAND over the same already-
+│                                      authenticated peer/PeerMessageBus.js
+│                                      — no out-of-band signaling channel,
+│                                      because none is needed once a
+│                                      connection already exists
+├── core/VoiceSessionState.js         IDLE/CALLING/RINGING/CONNECTING/
+│                                      ACTIVE/ENDED — deliberately
+│                                      independent of
+│                                      peer/PeerLifecycleState.js, the
+│                                      same "transport/auth/media are
+│                                      three different questions"
+│                                      discipline extended a third time
+├── application/LocalAudioTrackProvider.js  the one place this codebase
+│                                      asks for a real microphone,
+│                                      injected exactly like
+│                                      storage/StorageProvider.js is
+│                                      injected everywhere else
+└── application/VoiceUseCase.js       the orchestrator: reuses
+                                       application/ChatUseCase.js#canChat()'s
+                                       exact eligibility predicate, reuses
+                                       0.2.72's own proactive-cancellation
+                                       shape for mid-call block/unfriend,
+                                       and lets peer/WebRtcPeerConnection.js's
+                                       own `role` (fixed since 0.2.51)
+                                       deterministically decide which side
+                                       ever renegotiates — eliminating SDP
+                                       glare structurally rather than with
+                                       a "polite peer" protocol
+```
+
+Deliberately narrow, per the design doc's own instruction to start with
+"one authenticated peer, one live audio session, ephemeral only": one
+call at a time for the whole device (an INVITE arriving mid-call is
+answered BUSY, never queued or allowed to replace what's in progress);
+local media requested only once a call is actually being placed or
+accepted, never merely rung; muting is purely local device state, never
+transmitted, never smuggled through the presence vocabulary; and
+nothing about a call is ever persisted — no call history, no missed-call
+log — voice stays exactly as ephemeral as presence and connections,
+never acquiring the durability chat earned for itself in 0.2.69–0.2.72.
+
+The flagship test (`tests/AuthenticatedVoice.test.js`) proves the full
+lifecycle end to end over REAL `RTCPeerConnection`/`RTCDataChannel`
+pairs (the same real-network harness `tests/WebRtcPeerTransport.test.js`
+already established) carrying REAL, synthetic (Web Audio
+oscillator-driven) audio tracks — never a mock of WebRTC itself: INVITE
+→ RINGING → ACCEPT → in-band SDP renegotiation over the SAME
+RTCPeerConnection → genuine bidirectional audio on both sides → hang up
+→ the underlying peer connection survives completely untouched. Further
+scenarios prove a rejected call touches no microphone on either side,
+and that voice is gated by chat's own friendship/blocking eligibility
+independently on both the sending and receiving side. A FIRST SECURITY
+FLAGSHIP proves an expected-identity mismatch (0.2.62) means a call is
+never even possible — inherited entirely from an existing guard, zero
+new enforcement code. A SECOND SECURITY FLAGSHIP proves blocking a peer
+mid-call terminates that call immediately, refuses a fresh attempt
+afterward, and leaves the underlying peer connection completely
+untouched throughout.
+
+Deliberately not in 0.2.73, named rather than hidden: group calls or
+any conferencing shape; call recording, history, or any persistence at
+all; video (the design generalizes to it, but this milestone ships
+audio only); a richer device-selection UI beyond a single mute toggle;
+and resolving simultaneous mutual calls between two peers — a real,
+named limitation.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

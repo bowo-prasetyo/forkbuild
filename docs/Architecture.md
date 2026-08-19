@@ -7381,3 +7381,197 @@ unblocked or re-friended (unblocking still restores nothing but the
 ability to be heard again, unchanged since 0.2.60); and any UI beyond
 `ui/views/ChatView.js`'s existing delivery label gaining one more case,
 "Undelivered — cancelled."
+
+### Authenticated Voice / Audio (0.2.73)
+
+0.2.66 named voice as "a natural later application of an authenticated
+WebRTC channel, not this milestone's." 0.2.73 takes it up, and the
+central design question the whole milestone answers is architectural,
+not features: does adding real-time media require anything NEW at the
+identity/connection/authorization layer, or does it only need to
+correctly REUSE what 0.2.49–0.2.72 already built? The answer, proven
+directly rather than assumed, is the latter — voice adds exactly two
+small wire vocabularies and one new application use case; it changes
+NOTHING about identity, discovery, rendezvous, authentication, or the
+message bus.
+
+**Media never establishes peer identity; authenticated peer identity
+authorizes media.** `application/VoiceUseCase.js` never runs its own
+handshake and never touches `peer/PeerAuthenticationSession.js` at all —
+every operation (`startCall()`, `acceptCall()`, incoming-signal handling)
+starts by requiring a `connectedPeer` that is ALREADY, right now,
+`PeerLifecycleState.AUTHENTICATED`, the identical precondition
+`application/ChatUseCase.js#sendMessage()` already enforces. A WebRTC
+media track carries no cryptographic proof of anything — it is exactly
+as untrusted as a raw `RTCDataChannel` byte was before 0.2.49 existed —
+so voice is layered strictly ON TOP of authentication, never beside or
+before it, the same discipline that has held at every layer since
+`peer/PeerConnection.js`'s own original header.
+
+**One logical PeerConnection, never a second one for voice.**
+`peer/WebRtcPeerConnection.js` gains a deliberate second widening beyond
+its base `peer/PeerConnection.js` interface (mirroring the widening
+0.2.51 already made for `role`/`localSignal`/`acceptRemoteAnswer`):
+`addAudioTrack()`/`removeAudioTrack()`/`renegotiate()`/
+`applyRemoteOffer()`/`applyRemoteAnswer()`/`onRemoteTrack()`. These
+attach an audio `RTCRtpTransceiver` to the SAME `RTCPeerConnection`
+already carrying `peer/PeerMessageBus.js`'s DataChannel, and renegotiate
+that ONE connection in place. There is no `VoicePeerConnection` class,
+no second signaling/rendezvous flow, and no second
+`PeerAuthenticationSession` — a call's own audio and a conversation's
+own chat messages are two protocols sharing one transport, exactly like
+chat and presence already share one `peer/PeerMessageBus.js`.
+
+**Renegotiation travels in-band, over the connection it renegotiates.**
+The INITIAL WebRTC handshake (`peer/PeerConnectionOffer.js`/
+`peer/PeerConnectionAnswer.js`, 0.2.51) needs an out-of-band channel and
+a TTL, because no connection exists yet to carry it. A voice
+renegotiation has the opposite shape: the connection already exists,
+is already authenticated, and already has a reliable, ordered channel —
+`peer/PeerMessageBus.js` itself. `core/VoiceMediaSignal.js` is a THIRD,
+independent wire vocabulary (alongside `core/ChatMessage.js` and
+`core/PeerAuthenticationEnvelope.js`) carrying nothing but a `callId`,
+an offer/answer `kind`, and opaque SDP text, riding its own protocol
+(`VoiceUseCase.MEDIA_PROTOCOL`, `forkbuild:voice-media`) — never the
+chat protocol, never the peer-authentication connection's raw message
+stream, and needing no TTL/expiry at all: a stale signal for a call
+that no longer exists is simply ignored because the receiving device no
+longer recognizes its `callId`, never because a timer says so.
+
+**No glare, by construction.** Real WebRTC renegotiation between two
+peers that might BOTH try to renegotiate at once normally needs an
+explicit "polite peer" protocol. `application/VoiceUseCase.js` never
+needs one: exactly ONE side of a call ever creates a renegotiation
+offer — whichever side's connection is `role === 'offerer'`, a fact
+fixed forever at 0.2.51's own original handshake, completely
+independent of who happens to place THIS particular call.
+`_beginMediaNegotiation()` runs on BOTH sides once ACCEPT has been sent
+or received: both sides attach their own local track first (so the
+non-offering side's track is already present before the offerer's
+offer even arrives, producing bidirectional audio in a single
+offer/answer round trip), and only the `role === 'offerer'` side
+actually calls `renegotiate()`/sends an OFFER; the other side waits and
+answers.
+
+**Call lifecycle is its own, deliberately small wire vocabulary.**
+`core/VoiceCallSignal.js` (`VoiceUseCase.CALL_PROTOCOL`,
+`forkbuild:voice-call`) is a closed set — INVITE/ACCEPT/REJECT/END/
+BUSY — checked by ONE uniform rule regardless of type: the message must
+name exactly two identities, one of which is this device's own signing
+identity and the OTHER of which is the SENDING connection's own
+already-proven `remoteIdentity`, never merely whatever the payload
+itself claims. This defeats a forged-sender attack for every signal
+type at once with a single check, the same "claimed identity must match
+the proven connection" discipline `application/ChatUseCase.js#_handleIncoming()`
+already established for chat content.
+
+**Voice reuses chat's own authorization question, never a
+voice-specific trust system.** `application/VoiceUseCase.js#canCall()`
+is deliberately byte-for-byte the same predicate as
+`application/ChatUseCase.js#canChat()` — authenticated, not blocked,
+`FriendshipState.FRIEND` — checked fresh at INVITE, again at ACCEPT
+(eligibility at invite time does not guarantee eligibility at accept
+time), and again, proactively, the instant it changes mid-call: this
+class subscribes to the SAME `peerBlockUseCase.onBlockedChanged()`/
+`friendRelationshipUseCase.onRelationshipsChanged()` events 0.2.72 already
+wired for chat, and the instant a peer with an in-progress call becomes
+ineligible, that call is torn down immediately — mirroring 0.2.72's own
+proactive-cancellation shape exactly, one layer over.
+
+**Voice lifecycle is independent of peer lifecycle.**
+`core/VoiceSessionState.js` (IDLE/CALLING/RINGING/CONNECTING/ACTIVE/
+ENDED) is deliberately its own state machine, never folded into
+`peer/PeerLifecycleState.js` — the identical "transport state and
+authentication state are two different questions" discipline
+`peer/PeerConnection.js`'s own header established for its first two
+axes, extended to a third. Nothing in `application/VoiceUseCase.js` ever
+calls `connectedPeer.close()`; ending a call (`endCall()`, a rejection,
+or a proactive block-triggered termination) only ever tears down local
+media and notifies the peer over the call-signal protocol — the
+underlying connection stays exactly as `AUTHENTICATED` as it was before
+the call happened. The reverse IS handled: if the connection itself
+drops mid-call (closes, fails, or otherwise leaves `AUTHENTICATED`), the
+call is torn down locally as a CONSEQUENCE — there is no channel left
+to carry audio — never because voice chose to end anything.
+
+**One call at a time, per device.** A deliberately narrow scope,
+matching the design doc's own "one authenticated peer, one live audio
+session, ephemeral only": `application/VoiceUseCase.js` tracks at most
+one call, globally, for the whole local device, the same shape an
+ordinary phone has. An INVITE arriving while a call is already in
+progress (with anyone) is answered with `VoiceCallSignalType.BUSY`,
+never silently dropped and never allowed to replace the call already
+under way. Simultaneous mutual calls (two peers calling each other at
+the same moment, before either's INVITE arrives) are not specially
+reconciled — a real, named limitation, not a hidden gap.
+
+**Local media is requested only once a call is actually happening.**
+`application/LocalAudioTrackProvider.js` is the one place this codebase
+asks the platform for a real microphone
+(`navigator.mediaDevices.getUserMedia`), injected into
+`application/VoiceUseCase.js` exactly like `storage/StorageProvider.js`
+is injected everywhere else. Neither placing a call nor merely ringing
+ever touches it — only `startCall()`'s own caller-side negotiation and
+`acceptCall()`'s callee-side acceptance do, at the exact moment a track
+is actually about to be transmitted, proven directly in the flagship
+test by asserting the local audio provider's call count stays zero
+through CALLING/RINGING and becomes exactly one only once ACCEPTED.
+
+**Audio device state stays local.** `setMuted()`/`isMuted()` only ever
+flip `MediaStreamTrack#enabled` on this device's own local track — never
+transmitted, never part of `core/VoiceCallSignal.js` or
+`core/VoiceMediaSignal.js`, and never visible to the peer except as the
+ordinary silence a disabled outgoing track already produces. Presence
+(`core/AvatarPresence.js`, `core/PresenceLifecycleState.js`) is
+completely untouched — a call's own state is never smuggled through the
+presence vocabulary the way the design doc explicitly warned against.
+
+**Voice is ephemeral, exactly like presence and connections — never
+like conversations, relationships, or identity.** Unlike
+`application/ConversationStore.js` (0.2.69), nothing about a call is
+ever written to durable storage — no call history, no call record, no
+"missed call" log. `core/VoiceSessionState.js#ENDED` is a genuinely
+terminal, transient value: `application/VoiceUseCase.js` publishes it
+exactly once and then immediately clears its own `_call` back to
+nothing, the identical "terminal for one connection, never a state
+anything lingers in" shape `peer/PeerAuthenticationState.js#FAILED`
+already established for one connection's own authentication attempt.
+
+The flagship test (`tests/AuthenticatedVoice.test.js`) proves
+`core/VoiceCallSignal.js`/`core/VoiceMediaSignal.js`/
+`core/VoiceSessionState.js` in isolation first, then scripts the full
+scenario end to end over REAL `RTCPeerConnection`/`RTCDataChannel` pairs
+(exactly like `tests/WebRtcPeerTransport.test.js`) carrying REAL,
+synthetic (Web Audio oscillator-driven) audio tracks: INVITE → RINGING →
+ACCEPT → in-band SDP renegotiation over the SAME RTCPeerConnection → a
+genuine, live, bidirectional remote audio track on both sides → muting
+stays purely local → hang up → both devices return to no active call →
+the underlying peer connection is completely untouched throughout
+(still `AUTHENTICATED` after the call ends). Further scenarios prove
+rejecting a call touches no microphone on either side; voice is gated
+by the identical friendship/blocking eligibility chat already uses,
+enforced independently on both the sending and receiving side (a forged
+INVITE from an authenticated-but-not-friend identity never rings). A
+FIRST SECURITY FLAGSHIP proves an expected-identity mismatch (0.2.62)
+means a call to "Bob" is never even possible — with ZERO new
+enforcement code, since Alice never obtains an `AUTHENTICATED`
+`ConnectedPeer` for Bob at all if the connection she opened actually
+authenticates as Charlie. A SECOND SECURITY FLAGSHIP proves blocking a
+peer mid-call terminates that call immediately (never waiting for the
+call to end on its own), refuses a fresh call attempt afterward, and
+leaves the underlying peer connection completely untouched throughout.
+
+Deliberately not in 0.2.73, named rather than hidden: group calls or
+any conferencing shape (the whole design — one call, one device, one
+local track, one remote track — assumes exactly two participants);
+call recording, a call-history/log, or any persistence whatsoever;
+video (the design generalizes to it, but 0.2.73 ships audio only); a
+richer device-selection UI (choosing among multiple microphones/output
+devices, echo cancellation controls, volume metering) — `setMuted()`
+is the entire local-device-state surface this milestone builds;
+resolving simultaneous mutual calls between two peers, a real, known
+gap; and a second, later renegotiation to formally remove the audio
+`m=` line on hangup — ending a call stops and detaches the local track
+immediately and relies on the reliable `END` control signal for
+lifecycle, deliberately never attempting a second SDP round trip just
+to negotiate silence down to nothing.

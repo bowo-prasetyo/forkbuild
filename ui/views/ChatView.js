@@ -2,6 +2,7 @@ import { ref, computed, onMounted, onBeforeUnmount, inject, nextTick } from 'vue
 import { useRoute } from 'vue-router';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { FriendshipState } from '../../core/FriendshipState.js';
+import { VoiceSessionState } from '../../core/VoiceSessionState.js';
 
 // 0.2.61 — Direct Peer Messaging & Live Chat.
 //
@@ -58,6 +59,17 @@ import { FriendshipState } from '../../core/FriendshipState.js';
 // other. Each outgoing bubble now also shows a "Seen" mark once
 // `chatUseCase.getPeerReadThroughSequence()` reports the peer has
 // acknowledged reading that far.
+//
+// 0.2.73 — a "Call" button next to the compose box, reusing the SAME
+// `connectedPeer`/`canChat` gates already computed above (voice requires
+// the identical eligibility chat does — see application/VoiceUseCase.js's
+// own header) plus one new one, `application/VoiceUseCase.js#supportsVoice()`,
+// which is false for anything but a real WebRTC connection. The call bar
+// (incoming banner, or in-progress controls) is deliberately keyed on
+// `activeCall.value.peerIdentityId === peerIdentityId` — application/
+// VoiceUseCase.js tracks at most ONE call for the whole device, so a call
+// with a DIFFERENT peer shows here only as a disabled "Call" button, never
+// as this peer's own call bar.
 export default {
     name: 'ChatView',
     setup() {
@@ -71,6 +83,7 @@ export default {
         const peerBlockUseCase = inject('peerBlockUseCase');
         const chatUseCase = inject('chatUseCase');
         const peerPresenceUseCase = inject('peerPresenceUseCase');
+        const voiceUseCase = inject('voiceUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
         const peers = ref(peerSessionManager.listPeers());
@@ -88,6 +101,13 @@ export default {
         // the peer told me they've read?" Refreshed alongside `presence`
         // below and on every `chatUseCase.onReadReceipt()` event.
         const peerReadThroughSequence = ref(chatUseCase.getPeerReadThroughSequence(peerIdentityId));
+        // 0.2.73 — application/VoiceUseCase.js's own single, device-wide
+        // call snapshot — see this view's own header on why the call bar
+        // only renders for a call whose peerIdentityId matches this route.
+        const activeCall = ref(voiceUseCase ? voiceUseCase.getActiveCall() : null);
+        const isMuted = ref(voiceUseCase ? voiceUseCase.isMuted() : false);
+        const voiceError = ref('');
+        const remoteAudioEl = ref(null);
 
         function shortId(identityId) {
             return identityId ? identityId.slice(-14) : '';
@@ -114,6 +134,25 @@ export default {
         // itself applies — read here purely to decide what the compose
         // box shows; sendMessage() below re-checks everything anyway.
         const canChat = computed(() => chatUseCase.canChat(peerIdentityId));
+        // 0.2.73 — this view's own call bar only ever concerns a call
+        // with THIS route's peer; a call the device has with someone
+        // else is deliberately invisible here beyond disabling "Call".
+        const callForThisPeer = computed(() => (activeCall.value && activeCall.value.peerIdentityId === peerIdentityId) ? activeCall.value : null);
+        const isRinging = computed(() => callForThisPeer.value && callForThisPeer.value.state === VoiceSessionState.RINGING);
+        const isInCallWithThisPeer = computed(() => callForThisPeer.value
+            && [VoiceSessionState.CALLING, VoiceSessionState.CONNECTING, VoiceSessionState.ACTIVE].includes(callForThisPeer.value.state));
+        const canCall = computed(() => Boolean(voiceUseCase) && !activeCall.value && isConnected.value
+            && voiceUseCase.canCall(peerIdentityId) && voiceUseCase.supportsVoice(connectedPeer.value));
+        const callStatusLabel = computed(() => {
+            if (!callForThisPeer.value) return '';
+            switch (callForThisPeer.value.state) {
+                case VoiceSessionState.CALLING: return 'Calling…';
+                case VoiceSessionState.RINGING: return 'Incoming call';
+                case VoiceSessionState.CONNECTING: return 'Connecting…';
+                case VoiceSessionState.ACTIVE: return 'On call';
+                default: return '';
+            }
+        });
 
         const statusLabel = computed(() => {
             if (isBlocked.value) return 'Blocked';
@@ -198,11 +237,64 @@ export default {
 
         const showDetail = ref(false);
 
+        // 0.2.73 — re-reads application/VoiceUseCase.js's own snapshot;
+        // called from every voiceUseCase event, mirroring
+        // refreshPeers()/refreshMessages()'s own "re-derive, never
+        // locally mutate" discipline.
+        function refreshVoice() {
+            if (!voiceUseCase) return;
+            activeCall.value = voiceUseCase.getActiveCall();
+            isMuted.value = voiceUseCase.isMuted();
+            if (remoteAudioEl.value) {
+                const stream = activeCall.value ? voiceUseCase.getRemoteStream(activeCall.value.callId) : null;
+                if (remoteAudioEl.value.srcObject !== stream) {
+                    remoteAudioEl.value.srcObject = stream;
+                }
+            }
+        }
+
+        function call() {
+            voiceError.value = '';
+            try {
+                voiceUseCase.startCall(connectedPeer.value);
+                refreshVoice();
+            } catch (e) {
+                voiceError.value = e.message.replace(/^VoiceUseCase:\s*/, '');
+            }
+        }
+
+        async function acceptIncomingCall() {
+            voiceError.value = '';
+            try {
+                await voiceUseCase.acceptCall(callForThisPeer.value.callId);
+            } catch (e) {
+                voiceError.value = e.message.replace(/^(VoiceUseCase|LocalAudioTrackProvider):\s*/, '');
+            }
+            refreshVoice();
+        }
+
+        function rejectIncomingCall() {
+            voiceUseCase.rejectCall(callForThisPeer.value.callId);
+            refreshVoice();
+        }
+
+        function hangUp() {
+            voiceUseCase.endCall(callForThisPeer.value.callId);
+            refreshVoice();
+        }
+
+        function toggleMute() {
+            voiceUseCase.setMuted(!isMuted.value);
+            isMuted.value = voiceUseCase.isMuted();
+        }
+
         let unsubscribePeers = null;
         let unsubscribeMessages = null;
         let unsubscribeSession = null;
         let unsubscribePresence = null;
         let unsubscribeReadReceipt = null;
+        let unsubscribeVoiceState = null;
+        let unsubscribeIncomingCall = null;
         onMounted(() => {
             refreshPeers();
             refreshMessages();
@@ -228,6 +320,16 @@ export default {
             unsubscribeSession = identityUseCase.onSessionChanged(() => {
                 isAuthenticated.value = identityUseCase.isAuthenticated();
             });
+            // 0.2.73 — every call-state transition (this peer's own, or
+            // any other's — refreshVoice() re-reads the device-wide
+            // snapshot either way, so a call ending with someone else
+            // correctly re-enables this view's own "Call" button too)
+            // and every incoming INVITE refresh the same snapshot.
+            if (voiceUseCase) {
+                refreshVoice();
+                unsubscribeVoiceState = voiceUseCase.onCallStateChanged(() => refreshVoice());
+                unsubscribeIncomingCall = voiceUseCase.onIncomingCall(() => refreshVoice());
+            }
             scrollToBottom();
         });
         onBeforeUnmount(() => {
@@ -236,12 +338,18 @@ export default {
             if (unsubscribePresence) unsubscribePresence();
             if (unsubscribeReadReceipt) unsubscribeReadReceipt();
             if (unsubscribeSession) unsubscribeSession();
+            if (unsubscribeVoiceState) unsubscribeVoiceState();
+            if (unsubscribeIncomingCall) unsubscribeIncomingCall();
         });
 
         return {
             peerIdentityId, isAuthenticated, messages, draft, sendError, messageListEl,
             displayName, shortId, isConnected, isBlocked, isFriend, canChat, statusLabel,
-            send, formatTime, deliveryLabel, presence, showDetail
+            send, formatTime, deliveryLabel, presence, showDetail,
+            // 0.2.73
+            callForThisPeer, isRinging, isInCallWithThisPeer, canCall, callStatusLabel,
+            isMuted, voiceError, remoteAudioEl,
+            call, acceptIncomingCall, rejectIncomingCall, hangUp, toggleMute
         };
     },
     template: `
@@ -255,6 +363,11 @@ export default {
                     <span class="peer-badge" :class="isConnected && isFriend ? 'peer-badge--authenticated' : 'peer-badge--pending'">
                         {{ statusLabel }}
                     </span>
+                    <!-- 0.2.73 -->
+                    <button v-if="!callForThisPeer" type="button" class="action-btn call-btn"
+                            :disabled="!canCall" @click="call" title="Start a voice call">
+                        📞 Call
+                    </button>
                 </header>
                 <p class="identity-mgmt-status">
                     {{ shortId(peerIdentityId) }}
@@ -262,6 +375,23 @@ export default {
                         {{ showDetail ? 'Hide details' : 'Show details' }}
                     </button>
                 </p>
+
+                <!-- 0.2.73 — the device's own single call bar, shown ONLY
+                     when the active call belongs to THIS peer — see this
+                     view's own header. -->
+                <div v-if="callForThisPeer" class="call-bar">
+                    <span class="call-bar-status">{{ callStatusLabel }}</span>
+                    <template v-if="isRinging">
+                        <button type="button" class="action-btn action-btn--primary" @click="acceptIncomingCall">Accept</button>
+                        <button type="button" class="action-btn" @click="rejectIncomingCall">Decline</button>
+                    </template>
+                    <template v-else-if="isInCallWithThisPeer">
+                        <button type="button" class="action-btn" @click="toggleMute">{{ isMuted ? 'Unmute' : 'Mute' }}</button>
+                        <button type="button" class="action-btn call-btn--end" @click="hangUp">Hang Up</button>
+                    </template>
+                    <audio ref="remoteAudioEl" autoplay></audio>
+                </div>
+                <p v-if="voiceError" class="identity-unlock-error">{{ voiceError }}</p>
 
                 <!-- 0.2.70 — the reconciled view: identity/relationship/
                      friendship/connection/conversation are five
