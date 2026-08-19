@@ -19,6 +19,8 @@ import { CreatePeerBlockUseCase } from '../application/CreatePeerBlockUseCase.js
 import { ChatUseCase } from '../application/ChatUseCase.js';
 import { CreateChatOutboxUseCase } from '../application/CreateChatOutboxUseCase.js';
 import { CreateConversationStoreUseCase } from '../application/CreateConversationStoreUseCase.js';
+import { CreateConversationReadTrackerUseCase } from '../application/CreateConversationReadTrackerUseCase.js';
+import { PeerPresenceUseCase } from '../application/PeerPresenceUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
@@ -131,6 +133,24 @@ const chatUseCase = new ChatUseCase(identityProvider, {
     chatOutbox,
     conversationStore
 });
+// 0.2.70 — one app-wide ConversationReadTracker (a THIRD durable store,
+// alongside chatOutbox/conversationStore above, answering "what has
+// this device's owner actually seen" — see application/
+// ConversationReadTracker.js's own header) and one app-wide
+// PeerPresenceUseCase, composing it with the SAME
+// peerRelationshipUseCase/friendRelationshipUseCase/conversationStore/
+// chatOutbox already wired above rather than owning any new source of
+// truth itself — see application/PeerPresenceUseCase.js's own header on
+// why it is a computed reconciliation, never a fourth store.
+const conversationReadTracker = new CreateConversationReadTrackerUseCase().execute(identityProvider);
+const peerPresenceUseCase = new PeerPresenceUseCase({
+    connectedPeerRegistry: peerSessionManager.registry,
+    peerRelationshipUseCase,
+    friendRelationshipUseCase,
+    conversationStore,
+    chatOutbox,
+    conversationReadTracker
+});
 
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
@@ -142,6 +162,7 @@ app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
 app.provide('identityLifecyclePropagationUseCase', identityLifecyclePropagationUseCase);
 app.provide('peerBlockUseCase', peerBlockUseCase);
 app.provide('chatUseCase', chatUseCase);
+app.provide('peerPresenceUseCase', peerPresenceUseCase);
 // 0.2.59 — Peer-Based Avatar Social Transport. The SAME app-wide bus
 // friendRelationshipUseCase already rides, now also provided directly
 // so World View can attach presence/profile/interaction to it — see

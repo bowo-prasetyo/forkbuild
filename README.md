@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.69** — Reliable Offline Conversations
+**Version 0.2.70** — Presence & Conversation Lifecycle
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -1022,6 +1022,44 @@ authenticated connection, never a third party holding mail in between),
 an aggregate conversation-list/inbox UI, read receipts, message editing/
 deletion, attachments, group chat, and multi-device identity semantics.
 
+0.2.70 closes the gap 0.2.69's own durability opened: once a conversation
+and a queued message both survive a reload, the app needed one place
+that reconciles what it actually knows about another participant when
+there's no active connection — identity, a remembered relationship
+(0.2.56), a friendship (0.2.57), whether they're connected right now
+(0.2.50), and the conversation itself (0.2.69) — rather than a UI asking
+five different collaborators separately. `application/
+PeerPresenceUseCase.js` is that reconciliation, and it is deliberately
+NOT a new store: `getSummary()`/`list()` read `ConnectedPeerRegistry`,
+`PeerRelationshipUseCase`, `FriendRelationshipUseCase`,
+`ConversationStore`, and `ChatOutbox` fresh on every call and persist
+nothing, the same "computed, never stored" discipline
+`peer/PeerLifecycleState.js#derivePeerLifecycleState()` already
+established one layer down. The one genuinely new durable piece is
+`application/ConversationReadTracker.js` — a THIRD independent store
+alongside the outbox and the history store, answering "what has this
+device's owner actually seen," backed by `core/ConversationReadMarker.js`'s
+monotonic high-water mark and never signed, transmitted, or read by
+`application/ChatUseCase.js`'s own ingestion boundary — a purely local
+note, deliberately never a read receipt (see docs/Principles.md). A new
+`ui/views/ConversationsView.js` is the aggregate conversation-list UI
+0.2.69 named and declined to build, and `ui/views/ChatView.js` gained a
+"Show details" panel surfacing the same five reconciled facts for the
+conversation currently open. The flagship test
+(`tests/PeerPresenceConversationLifecycle.test.js`) proves presence
+reconciles correctly across a real disconnect/reconnect cycle — offline
+never hides a relationship, friendship, or conversation history, only
+whether the connection itself is live — and a SECURITY FLAGSHIP extends
+0.2.62's own stale-incarnation defense into this new layer: a rejected
+reconnect that genuinely authenticates as the wrong identity, and a
+late, stale event from that already-dead connection, can never corrupt
+the reconciled presence view for the identity actually expected.
+Deliberately not in 0.2.70: read receipts (a signed, transmitted
+acknowledgment is a different protocol from this milestone's purely
+local read marker), a second connection-lifecycle vocabulary alongside
+`peer/PeerLifecycleState.js`, multi-device presence, and typing
+indicators.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1225,6 +1263,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.67  Identity Lifecycle Hardening
 - [x] 0.2.68  Identity Lifecycle Propagation
 - [x] 0.2.69  Reliable Offline Conversations
+- [x] 0.2.70  Presence & Conversation Lifecycle
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 
