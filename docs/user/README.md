@@ -20,6 +20,17 @@ top-level [docs/](..) folder.
    your work, licenses, how forking works (including the automatic
    fork that happens the moment you edit a published creation), and
    browsing the Repository's searchable, sortable, paginated catalog.
+5. **[Identity & Login](05-IdentityAndLogin.md)** — your cryptographic
+   identity, the vault (locking/unlocking), and backing it up with
+   export/import.
+6. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing how
+   you look, controlling who can see you, and seeing (and walking
+   among) everyone else in World View.
+7. **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
+   connecting directly to other people, remembering, friending, and
+   blocking.
+8. **[Chat & Conversations](08-ChatAndConversations.md)** — direct,
+   friends-only messaging, offline delivery, and read receipts.
 
 ## Reference
 
