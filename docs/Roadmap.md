@@ -2490,6 +2490,88 @@ audio only); a richer device-selection UI beyond a single mute toggle;
 and resolving simultaneous mutual calls between two peers — a real,
 named limitation.
 
+0.2.74 — Voice Call Reliability & Lifecycle — deliberately does not widen
+what 0.2.73 shipped; it makes every transition 0.2.73 left implicit
+explicit. The question it answers is the one 0.2.73's own closing named
+rather than hid: "what happens when voice doesn't follow the happy path?"
+INVITE → RINGING → ACCEPT → renegotiation → ACTIVE → hang up already
+worked; an unanswered call, a device already busy, a denied microphone,
+and a failed SDP renegotiation did not each have their own honest,
+distinguishable outcome yet.
+
+```text
+0.2.74
+├── core/VoiceCallEndReason.js        promotes 0.2.73's free-text `reason`
+│                                      strings to a closed, ten-value
+│                                      vocabulary — REJECTED/BUSY/TIMEOUT/
+│                                      MEDIA_FAILED/NEGOTIATION_FAILED/
+│                                      PEER_DISCONNECTED/BLOCKED/
+│                                      UNFRIENDED/LOCAL_HANGUP/
+│                                      REMOTE_HANGUP — deliberately never
+│                                      added to core/VoiceCallSignal.js's
+│                                      own wire shape: an incoming END
+│                                      always maps to REMOTE_HANGUP,
+│                                      never the sender's own private
+│                                      reason for hanging up
+└── application/VoiceUseCase.js       three additions, zero new states:
+    ├── _armRingingTimeout()           a bounded, purely LOCAL ringing
+    │                                  timer per CALLING/RINGING call —
+    │                                  never a network authority; a
+    │                                  firing timer's own END notification
+    │                                  to the peer is a courtesy, never a
+    │                                  requirement for correctness
+    ├── _notifyPeerCallEnded()         factored out of endCall()'s own
+    │                                  0.2.73 body and reused by every
+    │                                  LOCAL "this call is over" decision
+    │                                  (hang up, block/unfriend, ringing
+    │                                  timeout, media/negotiation
+    │                                  failure) — closes 0.2.73's real
+    │                                  gap where a post-ACCEPT failure
+    │                                  left the OTHER side stranded in
+    │                                  CONNECTING forever
+    └── _beginMediaNegotiation()       now tags what it throws as
+                                       MEDIA_FAILED (the LOCAL track
+                                       itself never came) or
+                                       NEGOTIATION_FAILED (the track
+                                       came, but renegotiating it over
+                                       peer/WebRtcPeerConnection.js
+                                       failed) — two distinct failures
+                                       instead of one undifferentiated
+                                       "media error", neither one ever
+                                       touching peer/PeerConnection.js
+```
+
+`core/VoiceSessionState.js` gains no new value — ENDED stays the sole
+terminal state, exactly as 0.2.73 designed it; the STORY of how a call
+stopped now lives entirely in `VoiceCallEndReason`, never in a
+proliferating set of terminal states every consumer would need to handle
+identically anyway. BUSY concurrency — a device already in a call
+refusing a second one, in either direction, without touching the call
+already in progress — turns out to have already been real in 0.2.73;
+0.2.74 only adds the dedicated concurrency test the design doc asked for.
+
+The flagship test (`tests/VoiceCallReliability.test.js`) proves, over the
+SAME real `RTCPeerConnection`/`RTCDataChannel` harness 0.2.73's own
+`tests/AuthenticatedVoice.test.js` established: an unanswered call times
+out locally as TIMEOUT (never REJECTED) without either side ever touching
+a microphone; a device already in a call refuses a second one from BOTH
+directions (placing one itself, or receiving one) while the call already
+in progress stays completely untouched; a denied microphone reports
+MEDIA_FAILED on the failing side and REMOTE_HANGUP (never a fabricated
+reason) on the other; a synthetically failed `renegotiate()` reports
+NEGOTIATION_FAILED the same way; in both failure scenarios the underlying
+peer connection AND an ordinary chat message sent immediately afterward
+over that SAME connection stay completely unaffected; and a connection
+dying mid-call ends it as PEER_DISCONNECTED on both sides with no stale
+survivor, with a fresh reconnection between the same two identities
+beginning at VoiceSession IDLE rather than resurrecting the dead call.
+
+Deliberately not in 0.2.74, named rather than hidden: video, group calls,
+call recording/history/missed-call notifications, a richer
+device-selection UI, and resolving simultaneous mutual calls between two
+peers — every one of 0.2.73's own named limitations stays exactly as
+out of scope as it was left.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49
