@@ -18,6 +18,7 @@ import { CreateIdentityLifecyclePropagationUseCase } from '../application/Create
 import { CreatePeerBlockUseCase } from '../application/CreatePeerBlockUseCase.js';
 import { ChatUseCase } from '../application/ChatUseCase.js';
 import { CreateChatOutboxUseCase } from '../application/CreateChatOutboxUseCase.js';
+import { CreateConversationStoreUseCase } from '../application/CreateConversationStoreUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
@@ -114,16 +115,21 @@ const identityLifecyclePropagationUseCase = new CreateIdentityLifecyclePropagati
 // reconnects (see application/ChatOutbox.js's own header) — so this is
 // now the one Create*UseCase wrapper this file needs for chat, the same
 // shape CreatePeerRelationshipUseCase/CreatePeerBlockUseCase already
-// use to keep ui/ from importing storage/ directly. The live transcript
-// itself (application/LiveConversation.js) is still never persisted —
-// only the outbox is.
+// use to keep ui/ from importing storage/ directly.
+// 0.2.69 — chat also gained a durable, purely local conversation
+// history (application/ConversationStore.js) — a genuinely separate
+// store from the outbox above, wired the exact same way, so a reload
+// continues Alice and Bob's conversation rather than starting a blank
+// one — see application/ChatUseCase.js's own header.
 const chatOutbox = new CreateChatOutboxUseCase().execute(identityProvider);
+const conversationStore = new CreateConversationStoreUseCase().execute(identityProvider);
 const chatUseCase = new ChatUseCase(identityProvider, {
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry,
     friendRelationshipUseCase,
     peerBlockUseCase,
-    chatOutbox
+    chatOutbox,
+    conversationStore
 });
 
 const app = createApp(App);

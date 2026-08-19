@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.68** — Identity Lifecycle Propagation
+**Version 0.2.69** — Reliable Offline Conversations
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -988,6 +988,40 @@ to a peer who is offline right now (unlike `application/ChatOutbox.js`'s
 own reliable-delivery model), and multi-hop relay beyond a device's own
 directly-connected peers.
 
+0.2.69 closes a gap 0.2.61 named on purpose and 0.2.63 explicitly
+declined to reopen: "what persistent message history should even mean
+in a decentralized system." The answer is scoped to the narrowest,
+most defensible case — a PURELY LOCAL, client-side conversation history,
+never a server, relay, or new wire protocol. `core/ConversationEntry.js`
+is the durable half of a live `core/ChatMessage.js` (message,
+peerIdentityId, direction, delivery state — immutable, like `core/
+ChatOutboxEntry.js`), and `application/ConversationStore.js` is a new,
+genuinely SEPARATE durable store from `application/ChatOutbox.js` — same
+per-owner, identity-addressed shape, opposite retention posture (the
+outbox prunes itself the instant a message is acknowledged; this store
+keeps every message, delivered or not, up to a per-peer cap). `ChatUseCase`
+writes through to it on every append and every delivery-state
+transition, and — the load-bearing new piece — rehydrates every
+`LiveConversation` from it on construction, re-seeding each peer's
+outgoing sequence counter from its own stored history so a reload never
+restarts sequence numbering at 1 (which would otherwise make the
+recipient's own unmodified replay window silently reject the next
+message as stale). The security property `application/ChatOutbox.js`
+proved in 0.2.63 — mail queued for Bob is never sent to, or lost via, an
+identity that merely "reconnects" and turns out to be Charlie — extends
+to durable conversation history for free, because both stores are
+addressed to a `peerIdentityId`, never a connection. The flagship test
+(`tests/ReliableOfflineConversations.test.js`) proves a full conversation
+— delivered, then queued-while-offline — survives a simulated reload (a
+brand-new `ChatUseCase` over the same durable storage) with its content,
+delivery state, and outgoing sequence numbering all intact, then re-runs
+the 0.2.62 honest-mismatch attack against the new store specifically.
+Deliberately not in 0.2.69: any server-side mailbox or chat relay
+(offline delivery stays a device's own local outbox waiting for a fresh
+authenticated connection, never a third party holding mail in between),
+an aggregate conversation-list/inbox UI, read receipts, message editing/
+deletion, attachments, group chat, and multi-device identity semantics.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1190,6 +1224,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.66  Real Network Rendezvous & NAT Traversal
 - [x] 0.2.67  Identity Lifecycle Hardening
 - [x] 0.2.68  Identity Lifecycle Propagation
+- [x] 0.2.69  Reliable Offline Conversations
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

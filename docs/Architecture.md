@@ -7025,3 +7025,138 @@ person, a device, or a key" beyond preserving 0.2.67's own
 single-successor-per-predecessor invariant on the receiving side —
 this codebase remains capable of representing more, but deliberately
 does not build a branching successor model now.
+
+### Reliable Offline Conversations (0.2.69)
+
+0.2.61 shipped live chat and deliberately deferred one question on
+purpose: "what persistent message history should even mean in a
+decentralized system — who stores it, whether an intermediary can read
+it, how long it lives, whether it survives this device disappearing."
+0.2.63 extended chat with a durable outbox for OUTGOING mail and
+explicitly declined to reopen that question — `application/
+LiveConversation.js` stayed exactly as ephemeral as 0.2.61 left it, on
+purpose. 0.2.69 finally answers it, for the narrowest, most defensible
+case the question actually has: a conversation's history, kept
+DURABLY, but PURELY LOCALLY — never transmitted, never relayed through
+a third party, never a new wire protocol, never a new trust input. The
+answer extends 0.2.63's own durable outbox rather than redesigning
+chat: `forkbuild:chat`, `forkbuild:chat-delivery-ack`, `core/
+ChatMessage.js`, `core/ChatReplayWindow.js`, and every trust gate in
+`application/ChatUseCase.js#_handleIncoming()` are completely
+unmodified.
+
+**The durable half of a message.** `core/ConversationEntry.js` is to a
+live chat message what `core/ChatOutboxEntry.js` already is to a queued
+one — the durable wrapper application/ConversationStore.js actually
+persists. It carries `message` (a `core/ChatMessage.js`, verbatim,
+never re-validated here), `peerIdentityId`, `direction` (a new, small
+closed vocabulary this file also defines, `ChatMessageDirection` —
+OUTGOING/INCOMING), and `deliveryState` (0.2.63's own nullable,
+four-value vocabulary). Immutable, like `core/ChatOutboxEntry.js` and
+`core/PeerRelationship.js`: a delivery-state transition is always a NEW
+entry (`withDeliveryState()`), never a mutation in place.
+
+**The store.** `application/ConversationStore.js` follows the exact
+"one flat list per LOCAL owner, loaded/created/saved through an
+injected StorageProvider, filtered by peerIdentityId on read" shape
+`application/ChatOutbox.js` already established — but answers a
+genuinely different question, with the opposite retention posture. The
+outbox prunes itself the instant a message is acknowledged or expires
+(0.2.63's own "It Is Not A Message Database"); this store keeps every
+message — delivered or not — up to a per-peer cap
+(`MAX_STORED_MESSAGES_PER_PEER`, 500, storage hygiene rather than a
+real retention policy). The two stores share no code and no storage
+key. `append()` is idempotent by `(peerIdentityId, messageId)` — a
+re-append of an already-stored message is a harmless no-op, which
+matters because `core/ChatReplayWindow.js` (the in-memory duplicate
+detector 0.2.61 built) resets on every reload; without this store's own
+idempotence, a retransmit `application/ChatUseCase.js` no longer
+recognizes as a duplicate could otherwise double-append to a persisted
+transcript. `conversations()` returns one summary per peer with any
+stored history — `{ peerIdentityId, lastEntry }`, most recently active
+first — the read `application/ChatUseCase.js#_rehydrateFromStore()`
+performs at construction, and a future conversation-list UI could read
+identically.
+
+**The write-through.** `application/ChatUseCase.js#_appendMessage()`
+and `#_publishDeliveryState()` — the exact two places this class
+already touched `LiveConversation` — now ALSO call through to
+`ConversationStore` in the same call, for every outgoing send, every
+incoming accepted message, and every delivery-state transition
+(QUEUED/SENT/DELIVERED/EXPIRED alike). Neither store is ever aware of
+the other; `ChatUseCase` is the one place that keeps them in sync, the
+same "one owner writes through, the stores never talk to each other"
+discipline `application/ChatOutbox.js` and `application/
+LiveConversation.js` already kept independent in 0.2.63.
+
+**Rehydration and sequence continuity.** The constructor's new
+`_rehydrateFromStore()` runs before a single peer is attached to the
+bus: for every peer `ConversationStore.conversations()` reports, it
+rebuilds a `LiveConversation` from that peer's full stored history, in
+order — content, direction, and delivery state restored exactly. It
+also re-seeds `_nextSequence` from the highest `sequence` this device
+has ever SENT to that peer (OUTGOING entries only — an incoming
+message's sequence belongs to the sender's own namespace). This closes
+a latent correctness gap persistence would otherwise introduce: without
+it, a fresh `ChatUseCase` instance would restart outgoing sequence
+numbers at 1 after every reload, and the recipient's own unmodified
+`core/ChatReplayWindow.js` — which remembers the highest sequence it
+already accepted from that sender — would silently reject the
+resulting message as stale. This is the concrete mechanism behind "a
+reload continues the same logical conversation": nothing about it
+touches the wire protocol, `core/ChatMessage.js`, or `core/
+ChatReplayWindow.js` at all.
+
+**Security.** `application/ConversationStore.js` inherits 0.2.63's own
+"addressed to an identity, never a connection" property directly —
+every entry carries a `peerIdentityId`, never a connectionId. Combined
+with 0.2.62's `expectedIdentityId` guard, this produces the identical
+security property 0.2.63 already proved for the outbox, now also true
+of durable conversation HISTORY: if Alice queues a message for Bob and
+a later "reconnect" attempt genuinely authenticates as Charlie instead,
+`_attemptFlush()` still only ever operates on CHARLIE's proven
+identityId, which matches no outbox entry and writes nothing into any
+conversation addressed to Charlie — there was never an outbox entry
+addressed to him to flush in the first place. Just as importantly,
+`ConversationStore` is never an authorization mechanism: every write to
+it happens strictly AFTER `_handleIncoming()`'s full six-point ingestion
+boundary already accepted a message. The store never re-checks
+friendship, blocking, sender/connection match, or replay/sequence
+validity, and is never consulted to decide whether to trust anything —
+it only ever records what was already trusted one layer up.
+
+The flagship test (`tests/ReliableOfflineConversations.test.js`) proves
+`core/ConversationEntry.js` and `application/ConversationStore.js` in
+isolation (immutability, JSON round-trip, idempotent append,
+per-owner/per-peer scoping, the cap dropping only the oldest entries of
+the ONE peer that exceeded it), then scripts the design scenario end to
+end over real peer connections: a delivered message, an offline-queued
+second one, a simulated reload (a brand-new `ChatUseCase` over the
+exact same durable storage, zero messages exchanged in between) that
+restores both messages' content and delivery state exactly, a third
+message sent by the reloaded instance whose sequence number correctly
+continues rather than restarting at 1, and a real reconnect that
+flushes the outbox and brings the DURABLE copy — not merely the live
+transcript — to DELIVERED. A second, SECURITY FLAGSHIP scenario re-runs
+0.2.62's own honest-mismatch attack (a "reconnect" that genuinely
+authenticates as Charlie instead of Bob) against the new durable store
+specifically: Bob's queued, durably-recorded message survives
+untouched, and Charlie's own conversation history never receives
+anything.
+
+Deliberately not in 0.2.69: a server-side mailbox, chat relay, or any
+store-and-forward delivery through the rendezvous network — offline
+delivery stays exactly what 0.2.63 already built, a device's own local
+outbox waiting for a fresh authenticated connection, never a third
+party holding mail in between; an aggregate conversation-list/inbox
+view — `getConversations()` now genuinely reflects every persisted
+conversation, but no new route or component was built to surface it,
+to keep this milestone reviewable; read receipts, message editing or
+deletion, attachments, and group chat — none of these were part of
+0.2.61's closed message vocabulary, and none became part of it here;
+persisting `core/ChatReplayWindow.js` itself — it stays the bounded,
+in-memory structure 0.2.61 built, which is what makes
+`ConversationStore#append()`'s idempotence load-bearing rather than
+decorative; and multi-device identity semantics, unchanged from
+0.2.68's own list — a conversation still belongs to one local device
+holding one identity's key.

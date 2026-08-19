@@ -4624,3 +4624,127 @@ This is what keeps propagation from becoming a second, competing
 source of truth about an identity's lifecycle: there is exactly one
 kind of evidence, produced exactly one way, verified exactly one way,
 whether it is read locally or received over the wire.
+
+### A Reload Continues A Conversation; It Never Starts A New One (0.2.69)
+
+`application/LiveConversation.js` (0.2.61) was always in-memory only,
+and 0.2.63 deliberately kept it that way — see "The Outbox Prunes
+Itself; It Is Not A Message Database" (0.2.63). That left an honest gap
+open ever since: reload the page, and every conversation this device
+ever had simply vanished, not because anything was wrong, but because
+nothing durable backed it. `application/ChatUseCase.js#_rehydrateFromStore()`
+closes that gap without touching `LiveConversation` itself at all — it
+stays exactly as ephemeral as 0.2.61 left it, still with no toJSON/
+fromJSON of its own. What changed is what SEEDS it: on construction,
+every `LiveConversation` this owner has any stored history for is
+rebuilt from `application/ConversationStore.js`, in order, BEFORE a
+single peer is even attached to `peer/PeerMessageBus.js`. A reload is
+therefore never "a new conversation that happens to look similar" — it
+is the SAME conversation, continued, the same way `application/
+PeerRelationshipUseCase.js` already ensured a remembered peer survives
+a reload without pretending the old connection is still alive
+(0.2.56).
+
+### Sequence Continuity Is What Makes A Reload Actually Work, Not Merely Look Like It Works (0.2.69)
+
+Restoring displayed message history after a reload is the easy half of
+"a reload continues the conversation." The hard half, easy to miss
+entirely, is this: `application/ChatUseCase.js#sendMessage()`/
+`sendOrQueue()` both mint the next outgoing `sequence` from an
+in-memory `_nextSequence` map — and a fresh `ChatUseCase` instance,
+with no rehydration, would restart that count at 1 on every reload.
+`core/ChatReplayWindow.js` (0.2.61, completely unmodified) rejects
+anything that isn't STRICTLY NEWER than the highest sequence it already
+accepted from that sender. A recipient who already accepted sequence 1,
+2, and 3 from Alice in a prior session would therefore silently reject
+her very next message after Alice reloads and resends starting at 1
+again — not a crash, not a visible error, just a message that
+disappears into a replay-rejection with nothing on either screen to
+explain why. `_rehydrateFromStore()` re-seeds `_nextSequence` from the
+highest sequence found among this device's own OUTGOING stored entries
+for each peer, closing the gap before it can ever manifest. Nothing
+about this required touching `core/ChatMessage.js`, `core/
+ChatReplayWindow.js`, or the wire protocol — the fix lives entirely on
+the sending side, in what a fresh instance assumes about its own prior
+history.
+
+### A Durable Conversation Store Is Addressed To An Identity, Never A Connection (0.2.69)
+
+`core/PeerRelationship.js` (0.2.56) drew this line for persistent
+relationships, and `core/ChatOutboxEntry.js` (0.2.63) drew the
+identical line for queued outgoing mail: an endpoint is exactly as
+ephemeral as the connection it came from, so nothing durable is ever
+keyed by one. `core/ConversationEntry.js` draws the same line a third
+time, for conversation HISTORY: every entry carries a `peerIdentityId`,
+never a connectionId. This is what makes the 0.2.63 security property —
+"if Alice queues mail for Bob and a later reconnect attempt genuinely
+authenticates as Charlie instead, Bob's mail is neither sent to Charlie
+nor lost, because it was never addressed to a connection in the first
+place" — extend to conversation history for free, with no new
+enforcement code: `application/ConversationStore.js` only ever answers
+questions about a peerIdentityId, and a rejected reconnect never
+produces one belonging to the wrong identity.
+
+### A Local History Store Is Never An Authorization Mechanism (0.2.69)
+
+`application/ConversationStore.js` sits entirely on the OUTPUT side of
+`application/ChatUseCase.js`'s trust boundary, never the input side.
+Every write to it — `append()`, `updateDeliveryState()` — is called
+from exactly two places, `_appendMessage()` and `_publishDeliveryState()`,
+and both are only ever reached AFTER `_handleIncoming()`'s full,
+ordered six-point ingestion boundary (well-formed shape, sender matches
+the authenticated connection, not blocked, FRIEND, correct
+conversationId, replay/sequence valid — see that method's own header)
+has already decided a message is genuine, or after `sendMessage()`/
+`sendOrQueue()`'s own `_requireEligible()` gate has already authorized
+an outgoing one. The store itself performs no friendship check, no
+block check, no replay check, and is never consulted by
+`_handleIncoming()` to decide whether to accept anything — it has no
+method that could even be asked. A conversation's durable history is a
+LOG of decisions already made, never a place a decision gets made from;
+this is the same one-way relationship `application/LiveConversation.js`
+already had with `ChatUseCase` in 0.2.61, simply extended to something
+that now also survives a reload.
+
+### Never Reuse A Durable Outbox As A Message Database, Or A Message Database As An Outbox (0.2.69)
+
+`application/ChatOutbox.js` (0.2.63) and `application/ConversationStore.js`
+(0.2.69) look, at a glance, like the same idea twice: both are durable,
+per-owner, `peerIdentityId`-addressed stores of chat-adjacent state
+behind an injected StorageProvider. They are deliberately kept as two
+separate classes with two separate storage keys and zero shared code,
+because they answer two genuinely different questions with two
+genuinely opposite retention postures. The outbox answers "what have I
+sent that I haven't yet confirmed arrived" and prunes itself the
+INSTANT that question is answered — a DELIVERED entry is deleted from
+storage immediately (see "The Outbox Prunes Itself; It Is Not A Message
+Database," 0.2.63), and an expired one is dropped just as completely.
+The conversation store answers "what did we talk about" and keeps
+EVERY message, delivered or not, up to a per-peer cap that exists for
+storage hygiene, never as a retention policy. Collapsing the two into
+one store would force an uncomfortable choice on every entry — prune it
+promptly (and lose conversation history) or keep it forever (and turn
+the outbox into exactly the message database 0.2.63 refused to build)
+— that neither original design intended and this milestone declines to
+introduce.
+
+### Idempotent Local Storage Is What Makes A Bounded, Resettable Replay Window Safe To Leave Alone (0.2.69)
+
+`core/ChatReplayWindow.js` (0.2.61) is bounded and purely in-memory —
+an explicit, accepted trade-off, not an oversight (see this file's own
+precedent for `core/PresenceReplayWindow.js`, "a live presence stream
+is nothing like the rare durable events" a heavier structure was built
+for). 0.2.69 could have "fixed" this by persisting the replay window
+too, so a reload never forgets which messages were already accepted.
+It deliberately does not: the actual failure mode a reset replay window
+produces — a stale retransmit being accepted a second time after a
+reload, purely because the window forgot it once — is already
+completely absorbed by `application/ConversationStore.js#append()`'s
+own idempotence by `(peerIdentityId, messageId)`. The worst case is a
+redundant, silently-discarded write to already-existing durable state,
+never a duplicate entry in a user-visible transcript and never a
+security exposure — the message content was already trusted the FIRST
+time it was accepted, and accepting the identical bytes a second time
+grants nothing new. Fixing a problem that never actually manifests, by
+adding persistence to a component explicitly designed to stay bounded
+and disposable, would have been solving the wrong layer.

@@ -9,18 +9,23 @@ import { toChatDeliveryAck, isValidChatDeliveryAck } from '../core/ChatDeliveryA
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LiveConversation } from './LiveConversation.js';
 import { ChatOutbox } from './ChatOutbox.js';
+import { ConversationStore } from './ConversationStore.js';
 
 const MESSAGE_EVENT = 'ChatMessage';
 
 // A per-instance, in-memory-only StorageProvider — ChatUseCase's own
-// default `chatOutbox` when no durable one is injected, the exact same
-// "always constructible with zero required args, non-durable by
-// default" posture this file's own `replayWindow` default
-// (`new ChatReplayWindow()`) already established one field over. Real
-// app wiring (ui/main.js, via application/CreateChatOutboxUseCase.js)
-// always supplies a genuinely persisted application/ChatOutbox.js
-// instead — see this class's own constructor.
-class EphemeralOutboxStorageProvider extends StorageProvider {
+// default backend for BOTH `chatOutbox` and `conversationStore` when no
+// durable one is injected, the exact same "always constructible with
+// zero required args, non-durable by default" posture this file's own
+// `replayWindow` default (`new ChatReplayWindow()`) already established
+// one field over. Real app wiring (ui/main.js, via
+// application/CreateChatOutboxUseCase.js/CreateConversationStoreUseCase.js)
+// always supplies a genuinely persisted store instead — see this
+// class's own constructor. One class, two independent instances (never
+// shared between the two stores) — see application/ConversationStore.js's
+// own header on why the outbox and the conversation history are never
+// allowed to become the same store.
+class EphemeralStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
     save(name, data) { this._data.set(name, data); }
     load(name) { return this._data.has(name) ? this._data.get(name) : null; }
@@ -118,6 +123,41 @@ class EphemeralOutboxStorageProvider extends StorageProvider {
 // only adds that Bob's ack still goes back regardless, so Alice's
 // outbox entry can reach DELIVERED even on a second, retried
 // transmission of the exact same message.
+//
+// 0.2.69 — Reliable Offline Conversations.
+//
+// application/LiveConversation.js (0.2.61) answers "what does this
+// device's owner see right now" and was always meant to be exactly as
+// durable as this ChatUseCase instance — see that file's own header.
+// 0.2.69 finally answers the question 0.2.61 deliberately deferred
+// ("what persistent message history should even mean") for its
+// narrowest, most defensible case: a PURELY LOCAL record of a
+// conversation this device already had, kept by the new
+// application/ConversationStore.js and NOTHING ELSE — no server, no
+// relay, no wire protocol change, no new trust input (see that file's
+// own header, "This Store Is Never An Authorization Mechanism"). Every
+// place this class already appends to a LiveConversation
+// (`_appendMessage`) or transitions a delivery state
+// (`_publishDeliveryState`) now ALSO writes through to the durable
+// store, in the same call, so the two never drift.
+//
+// A Reload Continues A Conversation; It Never Starts A New One
+// (0.2.69): the constructor's own `_rehydrateFromStore()` rebuilds
+// every `LiveConversation` this owner has ANY stored history with —
+// message content, direction, and delivery state, verbatim — before a
+// single peer is even attached to the bus. `LiveConversation` itself
+// stays exactly as ephemeral as 0.2.61 left it (still no toJSON/
+// fromJSON of its own); it is simply SEEDED, on construction, from
+// durable state one layer down. Rehydration also re-seeds
+// `_nextSequence` from the highest `sequence` this device has ever sent
+// to each peer — without it, a fresh instance would restart outgoing
+// sequence numbers at 1 after every reload, and the recipient's own
+// (unmodified) core/ChatReplayWindow.js would silently reject the
+// resulting message as stale, since it already accepted a higher
+// sequence from this same sender in a prior session. This is the
+// concrete mechanism behind "reconnection continues the same logical
+// conversation" — nothing about it required touching the wire protocol,
+// core/ChatMessage.js, or core/ChatReplayWindow.js at all.
 export class ChatUseCase {
     constructor(identityProvider, {
         peerMessageBus,
@@ -125,6 +165,7 @@ export class ChatUseCase {
         friendRelationshipUseCase,
         peerBlockUseCase = null,
         chatOutbox = null,
+        conversationStore = null,
         protocol = ChatUseCase.DEFAULT_PROTOCOL,
         ackProtocol = ChatUseCase.ACK_PROTOCOL,
         replayWindow = new ChatReplayWindow()
@@ -154,10 +195,21 @@ export class ChatUseCase {
         // outbox is what ui/main.js always supplies, while this
         // in-memory default only ever backs a caller (a test, an
         // ad-hoc composition) that never asked for one.
-        this._outbox = chatOutbox || new ChatOutbox(new EphemeralOutboxStorageProvider(), identityProvider);
+        this._outbox = chatOutbox || new ChatOutbox(new EphemeralStorageProvider(), identityProvider);
+        // 0.2.69 — same posture, for the durable conversation-history
+        // store — see this class's own header and
+        // application/ConversationStore.js's own, and note this is a
+        // COMPLETELY SEPARATE default instance from `_outbox` above,
+        // never the same storage.
+        this._conversationStore = conversationStore || new ConversationStore(new EphemeralStorageProvider(), identityProvider);
         this._conversations = new Map(); // peerIdentityId -> LiveConversation
         this._nextSequence = new Map(); // peerIdentityId -> last sequence THIS device used
         this._eventBus = new EventBus();
+        // 0.2.69 — rebuild every LiveConversation this owner already had,
+        // from durable state, BEFORE a single peer is attached to the bus
+        // below — see this class's own header, "A Reload Continues A
+        // Conversation; It Never Starts A New One."
+        this._rehydrateFromStore();
 
         // Same "attach every already-connected peer, then every future
         // one" discipline application/FriendRelationshipUseCase.js's own
@@ -189,9 +241,11 @@ export class ChatUseCase {
         return conversation ? conversation.messages : [];
     }
 
-    // Every conversation with at least one message this session,
-    // ordered by peerIdentityId for a stable render order — mirrors
-    // every other use case's own getX() list convention.
+    // Every conversation with at least one message — this session OR a
+    // prior one, rehydrated from application/ConversationStore.js at
+    // construction (see `_rehydrateFromStore()`) — ordered by
+    // peerIdentityId for a stable render order, mirroring every other
+    // use case's own getX() list convention.
     getConversations() {
         return Array.from(this._conversations.values()).sort((a, b) => a.peerIdentityId.localeCompare(b.peerIdentityId));
     }
@@ -312,9 +366,9 @@ export class ChatUseCase {
             this._unsubscribeAckBus = null;
         }
         // Deliberately does NOT dispose the injected peerMessageBus,
-        // connectedPeerRegistry, friendRelationshipUseCase, or
-        // chatOutbox — all shared collaborators that outlive this one
-        // protocol's use case, exactly like
+        // connectedPeerRegistry, friendRelationshipUseCase, chatOutbox,
+        // or conversationStore — all shared collaborators that outlive
+        // this one protocol's use case, exactly like
         // application/FriendRelationshipUseCase.js's own dispose().
     }
 
@@ -487,6 +541,37 @@ export class ChatUseCase {
             && peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED) || null;
     }
 
+    // 0.2.69 — rebuilds every LiveConversation this owner has ANY
+    // durable history with, from application/ConversationStore.js,
+    // before this instance does anything else — see this class's own
+    // header, "A Reload Continues A Conversation; It Never Starts A New
+    // One." Also re-seeds `_nextSequence` from the highest `sequence`
+    // this device has ever SENT to each peer (OUTGOING entries only —
+    // an incoming message's sequence belongs to the SENDER's own
+    // namespace, never this device's), so the very next
+    // sendMessage()/sendOrQueue() after a reload continues this
+    // device's own monotonic count rather than restarting it at 1.
+    _rehydrateFromStore() {
+        for (const { peerIdentityId } of this._conversationStore.conversations()) {
+            const entries = this._conversationStore.list(peerIdentityId);
+            if (entries.length === 0) {
+                continue;
+            }
+            const conversation = new LiveConversation({ conversationId: entries[0].message.conversationId, peerIdentityId });
+            this._conversations.set(peerIdentityId, conversation);
+            let highestOutgoingSequence = 0;
+            for (const entry of entries) {
+                conversation.append(entry.message, entry.direction, entry.deliveryState);
+                if (entry.direction === 'outgoing' && entry.message.sequence > highestOutgoingSequence) {
+                    highestOutgoingSequence = entry.message.sequence;
+                }
+            }
+            if (highestOutgoingSequence > 0) {
+                this._nextSequence.set(peerIdentityId, highestOutgoingSequence);
+            }
+        }
+    }
+
     _publishDeliveryState(peerIdentityId, messageId, deliveryState) {
         const conversation = this._conversations.get(peerIdentityId);
         if (!conversation) {
@@ -496,6 +581,12 @@ export class ChatUseCase {
         if (!updated) {
             return;
         }
+        // 0.2.69 — the durable write-through sibling of the in-memory
+        // update above; see application/ConversationStore.js's own
+        // header on why this can never fail to find what LiveConversation
+        // just found (the two are always appended to together, in
+        // `_appendMessage` below).
+        this._conversationStore.updateDeliveryState(peerIdentityId, messageId, deliveryState);
         this._eventBus.publish(MESSAGE_EVENT, { peerIdentityId, message: updated });
     }
 
@@ -506,6 +597,10 @@ export class ChatUseCase {
             this._conversations.set(peerIdentityId, conversation);
         }
         conversation.append(message, direction, deliveryState);
+        // 0.2.69 — the durable write-through sibling of the in-memory
+        // append above, in the exact same call — see this class's own
+        // header, "0.2.69 — Reliable Offline Conversations."
+        this._conversationStore.append(peerIdentityId, message, direction, deliveryState);
         this._eventBus.publish(MESSAGE_EVENT, { peerIdentityId, message: { ...message, direction, deliveryState } });
     }
 
