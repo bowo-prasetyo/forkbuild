@@ -411,6 +411,115 @@ async function runTests() {
     console.log('✓ AvatarPresence signing is untouched, and peer-authentication signatures are domain-separated from it');
 }
 
+// ---------------------------------------------------------------------
+// 9. Handshake timeout: a session that never hears back from its peer
+//    fails LOCALLY once the deadline passes, instead of sitting in
+//    AUTHENTICATING forever — and a handshake that resolves normally
+//    is completely unaffected by the deadline that never fires.
+// ---------------------------------------------------------------------
+{
+    // A minimal fake timer pair, matching tests/PersistenceRecovery.test.js's
+    // own AutosaveScheduler harness: setTimeoutFn records {fn, cleared}
+    // and returns an index as the "handle"; fire() runs whatever is
+    // still un-cleared. Deterministic — no real waiting.
+    function fakeTimers() {
+        const timers = [];
+        return {
+            setTimeoutFn: (fn) => { timers.push({ fn, cleared: false }); return timers.length - 1; },
+            clearTimeoutFn: (idx) => { if (timers[idx]) timers[idx].cleared = true; },
+            fire: () => {
+                const pending = timers.filter((t) => t && !t.cleared);
+                timers.length = 0;
+                pending.forEach((t) => t.fn());
+            },
+            pendingCount: () => timers.filter((t) => t && !t.cleared).length
+        };
+    }
+
+    // 9a. Alice starts, sends her HELLO, and the peer never answers at
+    // all (fakeConnection() records sends but delivers nothing back).
+    // Firing the deadline fails her session with a clear reason; her
+    // own HELLO having gone out is untouched.
+    {
+        const alice = makeDevice('Alice');
+        const timers = fakeTimers();
+        const connection = fakeConnection('conn-handshake-timeout');
+        const session = new PeerAuthenticationSession({
+            connection, identityProvider: alice,
+            setTimeoutFn: timers.setTimeoutFn, clearTimeoutFn: timers.clearTimeoutFn
+        });
+        session.start();
+        assert(session.authenticationState === PeerAuthenticationState.AUTHENTICATING, 'still waiting on a PROOF before the deadline');
+        assert(timers.pendingCount() === 1, 'start() arms exactly one deadline');
+
+        timers.fire();
+        assert(session.authenticationState === PeerAuthenticationState.FAILED, 'a handshake nobody ever answers eventually fails, rather than hanging forever');
+        assert(session.failureReason.includes('timed out'), `failed for the right reason, got: ${session.failureReason}`);
+        assert(session.remoteIdentity === null, 'no remoteIdentity from a timed-out handshake');
+    }
+
+    // 9b. A handshake that fails normally (a malformed PROOF) already
+    // cleared the deadline via _fail() itself — firing whatever timer
+    // callback is still queued afterward must be a no-op, not a second,
+    // redundant _fail() call.
+    {
+        const alice = makeDevice('Alice');
+        const timers = fakeTimers();
+        const connection = fakeConnection('conn-timeout-cleared-on-fail');
+        const session = new PeerAuthenticationSession({
+            connection, identityProvider: alice,
+            setTimeoutFn: timers.setTimeoutFn, clearTimeoutFn: timers.clearTimeoutFn
+        });
+        session.start();
+        session.handleIncomingMessage({ type: 'PROOF', sessionNonce: connection.connectionId }); // malformed — missing fields
+        assert(session.authenticationState === PeerAuthenticationState.FAILED, 'setup: the malformed PROOF already failed the session');
+        assert(timers.pendingCount() === 0, '_fail() clears the still-pending deadline itself');
+
+        timers.fire(); // nothing left to fire; must not throw or change state
+        assert(session.authenticationState === PeerAuthenticationState.FAILED, 'an already-FAILED session is untouched by the (already-cleared) deadline');
+    }
+
+    // 9c. A real, successful two-device handshake over a live transport
+    // clears both sides' deadlines on its own — confirmed the same way
+    // 9b is: nothing pending to fire once AUTHENTICATED.
+    {
+        const network = new LocalPeerNetwork();
+        const alice = makeDevice('Alice');
+        const bob = makeDevice('Bob');
+        const aliceTransport = new LocalPeerConnectionProvider('alice-timeout', network);
+        const bobTransport = new LocalPeerConnectionProvider('bob-timeout', network);
+        let bobIncoming = null;
+        bobTransport.onIncomingConnection((c) => { bobIncoming = c; });
+        const aliceConnection = aliceTransport.connect('bob-timeout');
+        await wait();
+
+        const aliceTimers = fakeTimers();
+        const bobTimers = fakeTimers();
+        const aliceSession = new PeerAuthenticationSession({
+            connection: aliceConnection, identityProvider: alice,
+            setTimeoutFn: aliceTimers.setTimeoutFn, clearTimeoutFn: aliceTimers.clearTimeoutFn
+        });
+        const bobSession = new PeerAuthenticationSession({
+            connection: bobIncoming, identityProvider: bob,
+            setTimeoutFn: bobTimers.setTimeoutFn, clearTimeoutFn: bobTimers.clearTimeoutFn
+        });
+        aliceSession.start();
+        bobSession.start();
+        await wait(10);
+
+        assert(aliceSession.authenticationState === PeerAuthenticationState.AUTHENTICATED, 'setup: alice authenticated normally');
+        assert(bobSession.authenticationState === PeerAuthenticationState.AUTHENTICATED, 'setup: bob authenticated normally');
+        assert(aliceTimers.pendingCount() === 0, "reaching AUTHENTICATED clears alice's own deadline");
+        assert(bobTimers.pendingCount() === 0, "reaching AUTHENTICATED clears bob's own deadline");
+
+        aliceConnection.close();
+        aliceTransport.dispose();
+        bobTransport.dispose();
+    }
+
+    console.log('✓ a handshake nobody answers fails locally after a deadline instead of hanging forever; a real handshake is unaffected by it');
+}
+
 console.log('\nAll peer authentication tests passed.');
 }
 

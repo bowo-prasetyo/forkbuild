@@ -12,6 +12,21 @@ import {
     getPeerAuthenticationSigningDescriptor
 } from '../core/PeerAuthenticationEnvelope.js';
 
+// How long start() waits for a PROOF that answers OUR OWN challenge
+// before giving up. Without this, a handshake that stalls for any
+// reason on the PEER's side — a locked identity, a dropped message, a
+// bug — is invisible to THIS side: _fail() never sends anything over
+// the wire (see this file's own header), so a peer that never replies
+// leaves an otherwise-healthy CONNECTED transport sitting in
+// AUTHENTICATING forever, with no error and nothing to retry. This
+// bounds that: reaching this deadline while still AUTHENTICATING fails
+// the session locally, exactly like any other rejected handshake, so a
+// UI watching authenticationState eventually sees FAILED instead of
+// hanging indefinitely. 20s is generous for real signing + one
+// round-trip over an already-open DataChannel — ordinarily this
+// resolves in well under a second.
+const DEFAULT_HANDSHAKE_TIMEOUT_MS = 20 * 1000;
+
 // 0.2.49 — "Once Alice has a connection to something claiming to be
 // Bob, how does Alice cryptographically establish who Bob is?" This is
 // the answer: a mutual challenge-response handshake layered strictly
@@ -47,6 +62,18 @@ import {
 //      it to FAILED, terminally, for this connection — see peer/
 //      PeerAuthenticationState.js's own header.
 //
+// A rejected HELLO/PROOF fails ONLY the side that rejected it — see
+// _fail() below: it never sends anything back over the wire, on
+// purpose (a real transport carries no "authentication NAK" message
+// type, only HELLO/PROOF). Left unbounded, that silence means a peer
+// still waiting on a PROOF for a handshake that failed (or simply never
+// happened) on the OTHER end would wait forever, on an otherwise
+// perfectly healthy CONNECTED transport, with no error ever surfacing.
+// DEFAULT_HANDSHAKE_TIMEOUT_MS above is what stops that: start() arms a
+// deadline, cleared the moment this session reaches AUTHENTICATED or
+// FAILED on its own, that fails the session locally if neither ever
+// happens in time.
+//
 // Deliberately excluded from this milestone, on purpose (see docs/
 // Roadmap.md's own "No persistent peer trust yet"): nothing here is
 // ever written to storage, nothing survives past this ONE connection,
@@ -57,7 +84,14 @@ import {
 // PeerConnection, proving possession again from nothing, never resuming
 // a prior proof.
 export class PeerAuthenticationSession {
-    constructor({ connection, identityProvider, verifier = new LocalAuthorizationVerifier() } = {}) {
+    constructor({
+        connection,
+        identityProvider,
+        verifier = new LocalAuthorizationVerifier(),
+        handshakeTimeoutMs = DEFAULT_HANDSHAKE_TIMEOUT_MS,
+        setTimeoutFn = null,
+        clearTimeoutFn = null
+    } = {}) {
         if (!connection) {
             throw new Error('PeerAuthenticationSession: connection is required');
         }
@@ -74,6 +108,17 @@ export class PeerAuthenticationSession {
         this._remoteIdentity = null;
         this._failureReason = null;
         this._localChallenge = null;
+
+        // Injectable, like application/AutosaveScheduler.js's own timer
+        // pair, so tests can drive the deadline deterministically instead
+        // of actually waiting on it. `handshakeTimeoutMs: 0` (or any
+        // falsy value) disables the timeout entirely — a real connection
+        // never wants that, but a test isolating something else, with no
+        // intention of ever reaching AUTHENTICATED/FAILED itself, does.
+        this._handshakeTimeoutMs = handshakeTimeoutMs;
+        this._setTimeout = setTimeoutFn || ((fn, ms) => setTimeout(fn, ms));
+        this._clearTimeout = clearTimeoutFn || ((id) => clearTimeout(id));
+        this._handshakeTimer = null;
 
         this._stateListeners = new Set();
 
@@ -112,6 +157,7 @@ export class PeerAuthenticationSession {
         }
         this._localChallenge = Ed25519.bytesToHex(Ed25519.randomSeed());
         this._setState(PeerAuthenticationState.AUTHENTICATING);
+        this._armHandshakeTimeout();
         this._connection.send(toHelloMessage({
             sessionNonce: this._connection.connectionId,
             identityId: localIdentity.id,
@@ -224,6 +270,7 @@ export class PeerAuthenticationSession {
             publicKey: message.publicKey,
             algorithm: 'Ed25519'
         });
+        this._clearHandshakeTimeout();
         this._setState(PeerAuthenticationState.AUTHENTICATED);
     }
 
@@ -232,6 +279,7 @@ export class PeerAuthenticationSession {
             this._remoteIdentity = null;
             this._localChallenge = null;
             this._failureReason = null;
+            this._clearHandshakeTimeout();
             this._setState(PeerAuthenticationState.IDLE);
         }
     }
@@ -239,7 +287,42 @@ export class PeerAuthenticationSession {
     _fail(reason) {
         this._failureReason = reason;
         this._remoteIdentity = null;
+        this._clearHandshakeTimeout();
         this._setState(PeerAuthenticationState.FAILED);
+    }
+
+    // Arms the "give up waiting for a PROOF" deadline — see this file's
+    // own DEFAULT_HANDSHAKE_TIMEOUT_MS header. Only ever fails the
+    // session if it is STILL AUTHENTICATING when the timer fires; if the
+    // handshake already resolved (AUTHENTICATED/FAILED) or the transport
+    // already reset it to IDLE, every one of those paths already cleared
+    // this timer, so this callback firing at all means none of them ran.
+    _armHandshakeTimeout() {
+        this._clearHandshakeTimeout();
+        if (!this._handshakeTimeoutMs) {
+            return;
+        }
+        this._handshakeTimer = this._setTimeout(() => {
+            this._handshakeTimer = null;
+            if (this._state === PeerAuthenticationState.AUTHENTICATING) {
+                this._fail('handshake timed out waiting for the peer to respond');
+            }
+        }, this._handshakeTimeoutMs);
+        // Node's Timeout (unlike a browser's numeric handle) otherwise
+        // keeps the process alive until this fires — harmless for a real
+        // app, but this is a "give up eventually" safety net, never work
+        // the process itself should be kept alive to guarantee, so it is
+        // unref'd wherever that's available (a no-op in a browser).
+        if (this._handshakeTimer && typeof this._handshakeTimer.unref === 'function') {
+            this._handshakeTimer.unref();
+        }
+    }
+
+    _clearHandshakeTimeout() {
+        if (this._handshakeTimer !== null) {
+            this._clearTimeout(this._handshakeTimer);
+            this._handshakeTimer = null;
+        }
     }
 
     _setState(state) {
@@ -250,6 +333,7 @@ export class PeerAuthenticationSession {
     }
 
     dispose() {
+        this._clearHandshakeTimeout();
         this._unsubscribeMessage();
         this._unsubscribeConnectionState();
         this._stateListeners.clear();

@@ -929,6 +929,9 @@ export default {
                             {{ step.label }}
                         </li>
                     </ol>
+                    <p v-if="peer.getLifecycleState() === PeerLifecycleState.FAILED" class="identity-unlock-error">
+                        {{ peer.authenticationSession.failureReason || 'Authentication failed.' }}
+                    </p>
 
                     <label class="peer-alias-field">
                         <span class="form-label">Local alias (never shared)</span>
