@@ -57,6 +57,17 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 // Claim") and this view never conflates the two: a friend request can
 // be sent to, and accepted from, a peer this device has never
 // "Remembered" at all.
+//
+// 0.2.62 adds Reconnect to a Known Peer card that isn't connected right
+// now. It is deliberately NOT a new transport or a remembered address —
+// application/PeerReconnectionUseCase.js walks the exact same
+// invitation dance "Invite Someone"/"Connect to Peer" already do, just
+// scoped to one remembered identityId so the fresh handshake's result
+// is VERIFIED against who this device expects, not merely accepted
+// because someone authenticated. A rejected reconnect (a valid
+// invitation that authenticates as a different identity) is surfaced
+// as an explicit error, never a silently-vanishing card — see
+// reconnectRejectedError below.
 const LIFECYCLE_LABELS = {
     [PeerLifecycleState.CONNECTING]: 'Connecting…',
     [PeerLifecycleState.CONNECTED]: 'Connected — not yet authenticated',
@@ -96,7 +107,7 @@ function formatDuration(ms) {
 }
 
 function stripPrefix(message) {
-    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|FriendRelationshipUseCase|PeerBlockUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
+    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|PeerReconnectionUseCase|FriendRelationshipUseCase|PeerBlockUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
 }
 
 export default {
@@ -105,6 +116,7 @@ export default {
         const identityUseCase = inject('identityUseCase');
         const peerSessionManager = inject('peerSessionManager');
         const peerRelationshipUseCase = inject('peerRelationshipUseCase');
+        const peerReconnectionUseCase = inject('peerReconnectionUseCase');
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
         const peerBlockUseCase = inject('peerBlockUseCase');
 
@@ -184,6 +196,70 @@ export default {
 
         function formatWhen(date) {
             return date instanceof Date ? date.toLocaleString() : '';
+        }
+
+        // --- Reconnect (0.2.62) --------------------------------------------
+        // A "Known Peer" that isn't connected right now (isConnectedNow()
+        // above) gets a Reconnect gesture — the exact same two-step
+        // invitation dance "Invite Someone"/"Connect to Peer" already walk
+        // a FIRST connection through, scoped to one remembered identity via
+        // application/PeerReconnectionUseCase.js so the fresh handshake is
+        // verified against who this device actually expects, not merely
+        // accepted because SOMEONE authenticated. Completing the offering
+        // side's handshake (pasting the far end's reply) reuses the
+        // existing "My Peers" awaitingReply()/startComplete() flow below
+        // unmodified — a reconnect's pending connection is an ordinary
+        // pending ConnectedPeer, nothing more.
+        const reconnectTargetId = ref(null);
+        const reconnectInvitePending = ref(false);
+        const reconnectInviteError = ref('');
+        const reconnectInvitation = reactive({ json: '', expiresAt: null });
+        const reconnectImportText = ref('');
+        const reconnectAcceptError = ref('');
+        const reconnectReply = ref('');
+        const reconnectRejectedError = ref('');
+
+        function toggleReconnect(identityId) {
+            reconnectRejectedError.value = '';
+            if (reconnectTargetId.value === identityId) {
+                reconnectTargetId.value = null;
+                return;
+            }
+            reconnectTargetId.value = identityId;
+            reconnectInviteError.value = '';
+            reconnectAcceptError.value = '';
+            reconnectInvitation.json = '';
+            reconnectInvitation.expiresAt = null;
+            reconnectImportText.value = '';
+            reconnectReply.value = '';
+        }
+
+        async function submitReconnectInvite(identityId) {
+            reconnectInviteError.value = '';
+            reconnectInvitePending.value = true;
+            try {
+                const { invitation } = await peerReconnectionUseCase.reconnectAsInviter(identityId);
+                reconnectInvitation.json = JSON.stringify(invitation.toJSON(), null, 2);
+                reconnectInvitation.expiresAt = invitation.expiresAt;
+            } catch (e) {
+                reconnectInviteError.value = stripPrefix(e.message);
+            } finally {
+                reconnectInvitePending.value = false;
+            }
+        }
+
+        async function submitReconnectAccept(identityId) {
+            reconnectAcceptError.value = '';
+            if (!reconnectImportText.value.trim()) {
+                return;
+            }
+            try {
+                const { reply } = await peerReconnectionUseCase.reconnectViaInvitation(identityId, reconnectImportText.value.trim());
+                reconnectReply.value = reply;
+                reconnectImportText.value = '';
+            } catch (e) {
+                reconnectAcceptError.value = stripPrefix(e.message);
+            }
         }
 
         // --- Friends (0.2.57) ---------------------------------------------
@@ -460,6 +536,7 @@ export default {
         let unsubscribeFriendships = null;
         let unsubscribeBlocked = null;
         let unsubscribeSession = null;
+        let unsubscribeReconnectRejected = null;
         let tickInterval = null;
         onMounted(() => {
             refreshPeers();
@@ -476,6 +553,17 @@ export default {
                 refreshFriendships();
                 refreshBlocked();
             });
+            // 0.2.62 — a reconnect that authenticates as someone other
+            // than the identity this device expected is never silently
+            // dropped: application/ConnectToPeerUseCase.js has already
+            // closed the connection by the time this fires (see
+            // application/PeerReconnectionUseCase.js's own header), so
+            // this is purely explaining what happened, never a chance to
+            // still accept it.
+            unsubscribeReconnectRejected = peerReconnectionUseCase.onReconnectRejected(({ relationship }) => {
+                const label = (relationship && relationship.alias) || (relationship ? shortId(relationship.identityId) : 'the known peer');
+                reconnectRejectedError.value = `Reconnect rejected: the connection authenticated as a different identity than ${label} — it has been closed.`;
+            });
             tickInterval = setInterval(() => { now.value = Date.now(); }, 1000);
         });
         onBeforeUnmount(() => {
@@ -484,6 +572,7 @@ export default {
             if (unsubscribeFriendships) unsubscribeFriendships();
             if (unsubscribeBlocked) unsubscribeBlocked();
             if (unsubscribeSession) unsubscribeSession();
+            if (unsubscribeReconnectRejected) unsubscribeReconnectRejected();
             if (tickInterval) clearInterval(tickInterval);
         });
 
@@ -497,6 +586,9 @@ export default {
             copiedKey, copyText,
             relationships, relationshipError, relationshipFor, isConnectedNow,
             rememberPeer, forgetKnownPeer, updateKnownAlias, formatWhen,
+            reconnectTargetId, reconnectInvitePending, reconnectInviteError, reconnectInvitation,
+            reconnectImportText, reconnectAcceptError, reconnectReply, reconnectRejectedError,
+            toggleReconnect, submitReconnectInvite, submitReconnectAccept,
             FriendshipState, friends, friendshipError, friendStatus, hasPendingIncomingRequest, hasSentRequest,
             sendFriendRequest, acceptFriendRequest, friendDisplayName,
             rejectFriendRequest, cancelFriendRequest, unfriendPeer, unfriendByIdentity, connectedPeerFor,
@@ -688,7 +780,11 @@ export default {
                 A known peer remembers an IDENTITY, never a connection or an address. Reconnecting to a
                 known peer always re-authenticates from nothing before this device treats the result as the
                 same person again — "Connected now" below is read live from My Peers, never stored here.
+                Use <strong>Reconnect</strong> on a peer that isn't connected right now; this device verifies
+                the fresh handshake proves the SAME identity before ever treating it as them again — a valid
+                invitation from someone else is closed, not accepted.
             </p>
+            <p v-if="reconnectRejectedError" class="identity-unlock-error">{{ reconnectRejectedError }}</p>
             <div v-if="relationships.length" class="identity-mgmt-list">
                 <div v-for="relationship in relationships" :key="relationship.identityId" class="identity-mgmt-card">
                     <div class="identity-mgmt-card-header">
@@ -714,6 +810,10 @@ export default {
                     </p>
 
                     <div class="identity-mgmt-actions">
+                        <button v-if="!isConnectedNow(relationship.identityId)"
+                                class="action-btn action-btn--primary" @click="toggleReconnect(relationship.identityId)">
+                            {{ reconnectTargetId === relationship.identityId ? 'Close Reconnect' : 'Reconnect' }}
+                        </button>
                         <button v-if="!isBlockedIdentity(relationship.identityId)"
                                 class="action-btn action-btn--danger" @click="blockIdentity(relationship)">
                             Block
@@ -722,6 +822,52 @@ export default {
                             Unblock
                         </button>
                         <button class="action-btn action-btn--danger" @click="forgetKnownPeer(relationship.identityId)">Forget</button>
+                    </div>
+
+                    <div v-if="reconnectTargetId === relationship.identityId" class="peer-signal-box peer-signal-box--nested">
+                        <p class="form-hint form-hint--neutral">
+                            Reconnecting always starts a brand-new invitation and a brand-new handshake — nothing
+                            about any past connection to {{ relationship.alias || shortId(relationship.identityId) }}
+                            is reused. Either create a fresh invitation to send them, or paste one they already sent you.
+                        </p>
+                        <div class="peer-actions">
+                            <button class="action-btn action-btn--secondary" :disabled="reconnectInvitePending"
+                                    @click="submitReconnectInvite(relationship.identityId)">
+                                {{ reconnectInvitePending ? 'Creating…' : 'Create Invitation' }}
+                            </button>
+                        </div>
+                        <p v-if="reconnectInviteError" class="identity-unlock-error">{{ reconnectInviteError }}</p>
+                        <div v-if="reconnectInvitation.json" class="peer-signal-box peer-signal-box--nested">
+                            <p class="form-hint form-hint--neutral">
+                                Send this to {{ relationship.alias || shortId(relationship.identityId) }}. Once they
+                                reply, find this pending connection in <strong>My Peers</strong> above and paste
+                                their reply there to finish connecting.
+                            </p>
+                            <textarea class="form-input peer-signal-json" rows="5" readonly :value="reconnectInvitation.json"></textarea>
+                            <button class="modal-btn modal-btn--primary"
+                                    @click="copyText(reconnectInvitation.json, 'reconnect-invite-' + relationship.identityId)">
+                                {{ copiedKey === ('reconnect-invite-' + relationship.identityId) ? 'Copied!' : 'Copy Invitation' }}
+                            </button>
+                        </div>
+
+                        <p class="form-hint form-hint--neutral">Or, if they already sent you an invitation:</p>
+                        <textarea v-model="reconnectImportText" class="form-input peer-signal-json" rows="5"
+                                  placeholder="Paste their invitation here"></textarea>
+                        <div class="modal-actions">
+                            <button class="modal-btn modal-btn--primary" @click="submitReconnectAccept(relationship.identityId)">Connect</button>
+                        </div>
+                        <p v-if="reconnectAcceptError" class="identity-unlock-error">{{ reconnectAcceptError }}</p>
+                        <div v-if="reconnectReply" class="peer-signal-box peer-signal-box--nested">
+                            <p class="form-hint form-hint--neutral">
+                                Send this reply back to {{ relationship.alias || shortId(relationship.identityId) }} —
+                                the connection completes once they paste it in.
+                            </p>
+                            <textarea class="form-input peer-signal-json" rows="5" readonly :value="reconnectReply"></textarea>
+                            <button class="modal-btn modal-btn--primary"
+                                    @click="copyText(reconnectReply, 'reconnect-reply-' + relationship.identityId)">
+                                {{ copiedKey === ('reconnect-reply-' + relationship.identityId) ? 'Copied!' : 'Copy Reply' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
