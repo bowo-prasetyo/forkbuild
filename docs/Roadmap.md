@@ -2169,6 +2169,97 @@ holding one identity's key; and typing indicators, which would need
 their own ephemeral, unauthenticated-by-default wire signal this
 milestone never builds.
 
+0.2.71 — Explicit Read Acknowledgement — closes the read-receipt gap
+0.2.70 named and deliberately left open, under one explicit constraint
+carried in from the start: `core/ConversationReadMarker.js` (0.2.70)
+must never simply be transmitted to become a network fact. A local read
+marker answers "what has THIS device seen" — unsigned, never sent, read
+by nobody but the device that wrote it. A read acknowledgement answers
+the genuinely different, genuinely network question "what does the
+OTHER participant know that I have seen" — an authenticated, peer-bound
+claim that must be queryable, delivered even across a disconnect, and
+never derived from the local marker by transmission.
+
+```text
+0.2.71
+├── core/ChatReadReceipt.js              a THIRD, separate wire
+│                                          vocabulary from
+│                                          core/ChatMessage.js and
+│                                          core/ChatDeliveryAck.js — its
+│                                          own protocol
+│                                          (ChatUseCase.READ_PROTOCOL,
+│                                          "forkbuild:chat-read"),
+│                                          carrying a monotonic
+│                                          readThroughSequence high-water
+│                                          mark, never a per-message list
+├── core/ConversationReadOutboxEntry.js  a COALESCING entry — PENDING/
+│   application/ConversationReadOutbox.js  SENT, at most ONE per peer,
+│                                          never accumulated the way
+│                                          application/ChatOutbox.js
+│                                          accumulates per-message
+│                                          entries — "read through 20"
+│                                          already implies everything a
+│                                          lower value would have said
+├── core/RemoteReadReceipt.js            the opposite-direction sibling
+│   application/RemoteReadReceiptStore.js  of core/ConversationReadMarker.js
+│                                          — "what has the PEER told me
+│                                          they've seen of MY OWN
+│                                          messages" — structurally
+│                                          identical shape, deliberately
+│                                          a SEPARATE store, never merged
+└── application/ChatUseCase.js           sendReadReceipt() recomputes
+                                           the local high-water mark
+                                           itself (never reads
+                                           ConversationReadTracker),
+                                           queues/transmits it, and
+                                           _handleIncomingRead() applies
+                                           the SAME connection-proven-
+                                           sender + re-derived-
+                                           conversationId trust gates
+                                           _handleIncoming()/
+                                           _handleIncomingAck() already
+                                           established — no replay
+                                           window needed, since a
+                                           monotonic high-water mark
+                                           absorbs a stale/duplicate
+                                           arrival for free
+```
+
+The flagship test (`tests/MessageReadStateSync.test.js`) scripts the
+scenario this milestone is for: Bob sends three messages; Alice
+receives all three, then goes offline, then marks the conversation
+read — the acknowledgement is durably QUEUED (coalesced to one entry,
+proven by calling it twice), not merely a lucky timing accident.
+Reconnecting flushes it through the SAME reconnect-triggered path
+0.2.63 already wired for the message outbox, and Bob's own,
+independent `RemoteReadReceiptStore` durably records that Alice read
+through sequence 3. A late, stale, lower-valued receipt sent directly
+afterward is absorbed harmlessly with no regression, proving the
+high-water-mark design needs no replay window. A SECURITY FLAGSHIP
+scenario proves two attacks fail: a forged `readerIdentity` (Charlie,
+genuinely and honestly connected to Bob as himself, crafting a receipt
+that CLAIMS to be Alice) is rejected outright and never attributed to
+either party; and a "reconnect" to what Alice hopes is Bob that
+genuinely authenticates as Charlie instead never receives Bob's queued
+acknowledgement — the identical "addressed to an identity, never a
+connection" property 0.2.63 proved for the message outbox, extended
+here for free because `ConversationReadOutbox` is addressed by
+`peerIdentityId` exactly the same way.
+
+Deliberately not in 0.2.71, named rather than hidden: surfacing
+`getPeerReadThroughSequence()` anywhere beyond a "Seen" mark on
+`ui/views/ChatView.js`'s own outgoing bubbles — no new conversation-list
+badge, no read-receipt settings/opt-out (unlike some chat products,
+there is no "read receipts off" toggle here yet); a delivery-vs-read
+distinction finer than "Seen implies Delivered" — this milestone never
+invents a state machine richer than `core/ChatDeliveryState.js`'s
+existing four values plus one derived label; group conversations, which
+this milestone's entire high-water-mark design assumes are still
+genuinely two-party, exactly like every prior chat milestone; and
+multi-device read state — unchanged from every prior milestone's own
+list, a read acknowledgement is still sent by, and received on behalf
+of, one local device holding one identity's key.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

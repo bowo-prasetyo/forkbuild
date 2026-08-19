@@ -20,6 +20,8 @@ import { ChatUseCase } from '../application/ChatUseCase.js';
 import { CreateChatOutboxUseCase } from '../application/CreateChatOutboxUseCase.js';
 import { CreateConversationStoreUseCase } from '../application/CreateConversationStoreUseCase.js';
 import { CreateConversationReadTrackerUseCase } from '../application/CreateConversationReadTrackerUseCase.js';
+import { CreateConversationReadOutboxUseCase } from '../application/CreateConversationReadOutboxUseCase.js';
+import { CreateRemoteReadReceiptStoreUseCase } from '../application/CreateRemoteReadReceiptStoreUseCase.js';
 import { PeerPresenceUseCase } from '../application/PeerPresenceUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
@@ -125,13 +127,26 @@ const identityLifecyclePropagationUseCase = new CreateIdentityLifecyclePropagati
 // one — see application/ChatUseCase.js's own header.
 const chatOutbox = new CreateChatOutboxUseCase().execute(identityProvider);
 const conversationStore = new CreateConversationStoreUseCase().execute(identityProvider);
+// 0.2.71 — chat gained explicit, network read acknowledgement: a
+// coalescing outbox for a read acknowledgement not yet delivered
+// (application/ConversationReadOutbox.js) and a durable record of what
+// each peer has told this device about their own read state
+// (application/RemoteReadReceiptStore.js) — two SEPARATE stores from
+// each other and from conversationReadTracker below, wired the same
+// "own Create*UseCase, ui/ never imports storage/ directly" way — see
+// application/ChatUseCase.js's own header on why a read ACKNOWLEDGEMENT
+// is never simply a transmission of the read TRACKER's local marker.
+const conversationReadOutbox = new CreateConversationReadOutboxUseCase().execute(identityProvider);
+const remoteReadReceiptStore = new CreateRemoteReadReceiptStoreUseCase().execute(identityProvider);
 const chatUseCase = new ChatUseCase(identityProvider, {
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry,
     friendRelationshipUseCase,
     peerBlockUseCase,
     chatOutbox,
-    conversationStore
+    conversationStore,
+    conversationReadOutbox,
+    remoteReadReceiptStore
 });
 // 0.2.70 — one app-wide ConversationReadTracker (a THIRD durable store,
 // alongside chatOutbox/conversationStore above, answering "what has

@@ -4839,3 +4839,64 @@ sequence number to advance to, computed by its one caller,
 `application/PeerPresenceUseCase.js#markRead()` — so it has no way to
 become a second, competing copy of either of the other two stores even
 by accident.
+
+### A Read Receipt Is Computed Independently From The Local Read Marker, Never Transmitted From It (0.2.71)
+
+The instruction that shaped this milestone was explicit: do not make
+`core/ConversationReadMarker.js` (0.2.70) into a network read receipt
+by simply transmitting it. `application/ChatUseCase.js#sendReadReceipt()`
+honors that structurally, not merely by convention — it never reads
+`application/ConversationReadTracker.js` at all. Instead it recomputes
+"the highest incoming sequence I currently hold for this peer" itself,
+straight from its own `_conversations`, which is the EXACT SAME
+computation `application/PeerPresenceUseCase.js#markRead()`
+independently performs against `application/ConversationStore.js` one
+layer over. Two independent computations of one underlying fact, never
+one derived from the other, feeding two genuinely different stores: a
+LOCAL note (`ConversationReadTracker`, unsigned, never transmitted) and
+a NETWORK claim (`application/ConversationReadOutbox.js` ->
+`core/ChatReadReceipt.js`, authenticated by the connection that carries
+it). Nothing in this codebase ever reads a `ConversationReadMarker` to
+produce a `ChatReadReceipt`, so it is not merely undocumented that the
+local marker never becomes the wire payload — there is no code path
+that could make it so even by accident.
+
+### A Coalescing Outbox Remembers The Latest Value, Not Every Event (0.2.71)
+
+`application/ChatOutbox.js` (0.2.63) holds one entry per MESSAGE,
+because every queued message is its own genuine, individually-important
+event. `application/ConversationReadOutbox.js` (0.2.71) is a
+structurally different kind of outbox for a structurally different kind
+of fact: "read through sequence N" already logically implies "read
+through sequence N-1, N-2, ... 1," so there is never anything worth
+queuing alongside it, only something worth REPLACING it. It holds at
+most one entry per peer (`core/ConversationReadOutboxEntry.js`), and
+`enqueue()` coalesces every call into that single entry via the same
+`Math.max`-style monotonic advance every other durable read-state value
+object in this codebase already uses. Ten `markRead`/`sendReadReceipt`
+calls in a row while a peer is offline never produce ten things to
+transmit once they reconnect — they produce exactly one, the latest.
+This is also why the protocol needs no replay window at all
+(`application/ChatUseCase.js#_handleIncomingRead()`): an out-of-order or
+duplicate delivery of a lower-or-equal value is harmless by
+construction on the RECEIVING side too
+(`application/RemoteReadReceiptStore.js`'s own monotonic write), never
+something a receiver needs to detect and reject.
+
+### A Read Marker And A Read Receipt Are Opposite-Direction Facts, Never The Same Store (0.2.71)
+
+`core/ConversationReadMarker.js` (0.2.70) and `core/RemoteReadReceipt.js`
+(0.2.71) are structurally identical — a peerIdentityId plus a monotonic
+high-water-mark sequence — and were deliberately kept as two separate
+classes with two separate durable stores anyway, because they answer
+opposite-direction questions: "what have I seen of the PEER's messages"
+(local, asserted about oneself) versus "what has the PEER told me they
+have seen of MY OWN messages" (a received, trusted claim about oneself,
+written only after `application/ChatUseCase.js`'s own trust gates —
+connection-proven sender, correct re-derived conversationId — already
+accepted it). The same reasoning "A Read Marker Answers A Third
+Question" (above) already gives for keeping the outbox, the history
+store, and the read tracker apart applies here again: collapsing a
+local fact and a network claim into one store, just because their
+shapes happen to match, is exactly the kind of conflation this
+milestone's own founding instruction refused to allow.

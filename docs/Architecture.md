@@ -7159,4 +7159,121 @@ in-memory structure 0.2.61 built, which is what makes
 `ConversationStore#append()`'s idempotence load-bearing rather than
 decorative; and multi-device identity semantics, unchanged from
 0.2.68's own list — a conversation still belongs to one local device
-holding one identity's key.
+of that identity's key.
+
+### Explicit Read Acknowledgement (0.2.71)
+
+0.2.70 gave every device a LOCAL read marker
+(`core/ConversationReadMarker.js`) and named, without building, the
+genuinely different question it deliberately declined to answer: "what
+does the OTHER participant know that I have seen?" 0.2.71 answers that
+question under one explicit constraint carried in from its own design:
+the local marker must never simply be transmitted to become a network
+fact. Doing so structurally — not merely by convention — required a
+completely independent computation on the sending side, and two brand
+new, independent stores.
+
+**The wire protocol.** `core/ChatReadReceipt.js` is a third, separate
+vocabulary from `core/ChatMessage.js` (content) and
+`core/ChatDeliveryAck.js` (transport-level delivery), riding its own
+protocol string (`ChatUseCase.READ_PROTOCOL`,
+`'forkbuild:chat-read'`) — the identical "own protocol, own trust
+boundary" reasoning `core/ChatDeliveryAck.js`'s own header already gave
+in 0.2.63 for why an acknowledgement never rides the content protocol,
+applied a second time. Its one substantive field,
+`readThroughSequence`, is a monotonic high-water mark in the SAME
+per-(conversation, sender) sequence space `core/ChatMessage.js#sequence`
+already defines — never a list of individually-acknowledged message
+ids. That single design choice is what lets the receiving side
+(`application/ChatUseCase.js#_handleIncomingRead()`) apply nothing more
+than a `Math.max` write and skip a replay window entirely: an
+out-of-order or duplicate receipt is absorbed as a harmless no-op by
+construction, not something that needs detecting and rejecting.
+
+**Independent computation, not transmission.** `ChatUseCase.sendReadReceipt()`
+never reads `application/ConversationReadTracker.js`. It recomputes
+"the highest incoming sequence I currently hold for this peer" itself,
+directly from its own live `_conversations` — the exact same
+computation `application/PeerPresenceUseCase.js#markRead()`
+independently performs against `application/ConversationStore.js` for
+the LOCAL marker one layer over. Two callers, two independent
+computations of one underlying fact, feeding two genuinely different
+stores; neither one is ever derived from the other. `ui/views/ChatView.js`
+calls both `peerPresenceUseCase.markRead()` (unchanged since 0.2.70)
+and `chatUseCase.sendReadReceipt()` (new) from the same "I looked"
+moment, as two deliberately separate calls to two deliberately separate
+use cases, rather than either one implying the other.
+
+**A coalescing outbox, not a per-message one.** A read acknowledgement
+that cannot be delivered immediately is queued in
+`application/ConversationReadOutbox.js` — a fourth durable per-owner
+store, structurally unlike `application/ChatOutbox.js` on purpose: it
+holds at most ONE entry per peer (`core/ConversationReadOutboxEntry.js`),
+and every `enqueue()` call coalesces into that single entry via a
+monotonic advance rather than accumulating. "Read through 20" already
+says everything "read through 17, 18, 19, 20" would have, so there is
+never more than one thing worth transmitting per peer at any moment.
+The SAME reconnect-triggered flush 0.2.63 wired for the message outbox
+(`ChatUseCase#_attemptFlush()`, riding `connectedPeerRegistry.onChange()`)
+now also flushes this one, in the same pass, for the identical peer
+identity — no new subscription, no new trigger.
+
+**The opposite-direction store.** `core/RemoteReadReceipt.js` /
+`application/RemoteReadReceiptStore.js` answer "what has the PEER told
+me they've seen of MY OWN messages" — a fifth durable per-owner store,
+structurally identical in shape to `core/ConversationReadMarker.js`
+(peerIdentityId + monotonic sequence) but deliberately kept as a
+completely separate class and storage key, because the two answer
+opposite-direction questions: a local assertion about oneself versus a
+received, trusted claim from someone else. This store has exactly one
+writer, `ChatUseCase#_handleIncomingRead()`, and only ever after the
+claimed `readerIdentity` matches the sending connection's own
+already-proven remoteIdentity, the sender is not blocked, the sender is
+currently a FRIEND, and the `conversationId` is the one this device
+independently re-derives — the identical five-point trust discipline
+`_handleIncoming()`/`_handleIncomingAck()` already established for
+content and for delivery acks, applied a third time.
+
+**Security.** `application/ConversationReadOutbox.js` inherits 0.2.63's
+own "addressed to an identity, never a connection" property directly —
+every entry carries a `peerIdentityId`, never a connectionId. Combined
+with 0.2.62's `expectedIdentityId` guard, this produces the identical
+security property 0.2.63 already proved for the message outbox, now
+also true of queued read acknowledgements: if Alice queues an
+acknowledgement for Bob and a later "reconnect" attempt genuinely
+authenticates as Charlie instead, `_attemptFlush()` still only ever
+operates on CHARLIE's proven identityId, which matches no read-outbox
+entry addressed to Bob — there was never an entry addressed to Charlie
+to flush in the first place.
+
+The flagship test (`tests/MessageReadStateSync.test.js`) proves every
+new core/application class in isolation first (structural validity,
+coalescing, monotonic advance, durability, per-owner scoping), then
+scripts the design scenario end to end over real peer connections: Bob
+sends three messages, Alice receives them, goes offline, and marks the
+conversation read — the acknowledgement is durably queued and coalesced
+(proven by calling `sendReadReceipt()` twice and asserting the outbox
+never grows past one entry) rather than a timing accident. Reconnecting
+flushes it through 0.2.63's existing reconnect-triggered path, and
+Bob's own `RemoteReadReceiptStore` durably records Alice's read-through
+sequence; a late, stale, lower-valued receipt sent directly afterward
+is absorbed harmlessly, proving the design needs no replay window. A
+SECURITY FLAGSHIP scenario proves two attacks fail: a forged
+`readerIdentity` (Charlie, genuinely and honestly connected to Bob as
+himself, crafting a receipt that CLAIMS to be Alice) is rejected
+outright and attributed to neither party; and a "reconnect" that
+genuinely authenticates as Charlie instead of Bob never receives Bob's
+queued acknowledgement, which survives the rejected detour completely
+untouched and is correctly delivered once Bob genuinely reconnects
+afterward.
+
+Deliberately not in 0.2.71: any UI beyond a "Seen" mark on
+`ui/views/ChatView.js`'s own outgoing bubbles (no conversation-list
+badge, no read-receipt opt-out/settings); a delivery-vs-read state
+machine richer than "Seen implies Delivered" layered on top of
+`core/ChatDeliveryState.js`'s existing four values; group conversations
+— this milestone's entire high-water-mark design assumes two parties,
+exactly like every prior chat milestone; and multi-device read state,
+unchanged from every prior milestone's own list — a read acknowledgement
+is still sent by, and received on behalf of, one local device holding
+one identity's key.

@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.70** — Presence & Conversation Lifecycle
+**Version 0.2.71** — Explicit Read Acknowledgement
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -1060,6 +1060,41 @@ local read marker), a second connection-lifecycle vocabulary alongside
 `peer/PeerLifecycleState.js`, multi-device presence, and typing
 indicators.
 
+0.2.71 closes that read-receipt gap under one explicit constraint: the
+local read marker (`core/ConversationReadMarker.js`) must never simply
+be transmitted to become a network fact. `ChatUseCase.sendReadReceipt()`
+instead independently recomputes "the highest incoming sequence I hold
+for this peer" from its own live conversation — the same computation
+`PeerPresenceUseCase.markRead()` already performs for the local marker,
+one layer over, never derived from it — and queues/transmits it as
+`core/ChatReadReceipt.js` on its own protocol
+(`ChatUseCase.READ_PROTOCOL`, `forkbuild:chat-read`), a monotonic
+"read through sequence N" high-water mark rather than a per-message
+list. A message that can't be acknowledged immediately is queued in a
+new, deliberately COALESCING outbox, `application/ConversationReadOutbox.js`
+— at most one entry per peer, replaced rather than accumulated, since
+"read through 20" already implies everything a lower value would have
+said — flushed by the same reconnect-triggered path 0.2.63 already
+built for the message outbox. The receiving side records what a peer
+has confirmed reading of THIS device's own messages in a brand-new,
+opposite-direction store, `application/RemoteReadReceiptStore.js`
+(structurally identical in shape to the local marker, deliberately kept
+as a separate class and storage key), after the exact same
+connection-proven-sender + re-derived-conversationId trust gates every
+other chat payload already passes through — no replay window needed,
+since a monotonic high-water mark absorbs a stale or duplicate arrival
+for free. `ui/views/ChatView.js` now shows "Seen" under an outgoing
+message once the peer's acknowledgement catches up to it. The flagship
+test (`tests/MessageReadStateSync.test.js`) proves the full round trip
+over real peer connections — Bob sends three messages, Alice reads them
+while offline, the coalesced acknowledgement survives the disconnect
+and reaches Bob correctly on reconnect — and a SECURITY FLAGSHIP proves
+a forged reader identity is rejected outright and that a "reconnect"
+which genuinely authenticates as the wrong identity can never receive
+an acknowledgement addressed to someone else. Deliberately not in
+0.2.71: any UI beyond the "Seen" mark, a richer delivery-vs-read state
+machine, group conversations, and multi-device read state.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1264,6 +1299,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.68  Identity Lifecycle Propagation
 - [x] 0.2.69  Reliable Offline Conversations
 - [x] 0.2.70  Presence & Conversation Lifecycle
+- [x] 0.2.71  Explicit Read Acknowledgement
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 
