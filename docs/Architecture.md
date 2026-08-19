@@ -6902,3 +6902,126 @@ record (genuinely signed, by the WRONG identity) is rejected specifically
 on signer mismatch, an unsigned revocation is never tolerated, and
 0.2.48's export/import composes cleanly with revocation without either
 milestone's code needing to change.
+
+### Identity Lifecycle Propagation (0.2.68)
+
+0.2.67 built a signed, verifiable revocation/succession vocabulary and
+then explicitly stopped at the revoking device's own storage. 0.2.68
+answers the question it left open — "how does another device or peer
+learn that an identity has been revoked or succeeded?" — as a new,
+namespaced `peer/PeerMessageBus.js` protocol
+(`'forkbuild:identity-lifecycle'`), never a modification to `peer/
+PeerAuthenticationSession.js` or any existing peer protocol, and never
+a centralized mechanism: there is still no server anywhere in this
+architecture, and no third party ever gains the ability to revoke a
+key it doesn't control.
+
+**Wire shape.** `core/IdentityLifecycleGossip.js` wraps a `kind`
+(`REVOCATION`/`SUCCESSION`) around the EXACT signed record 0.2.67
+already produces — `core/IdentityRevocationEnvelope.js`/`core/
+IdentitySuccessionEnvelope.js`, byte for byte, no new signature type.
+`isValidIdentityLifecycleGossipMessage()` is structural only, the same
+"shape here, signature one layer up" discipline `peer/PeerMessage.js`'s
+own envelope already established — REQUIRED-signature enforcement
+stays exactly where 0.2.67 put it, in `identity/
+LocalAuthorizationVerifier.js#verifyIdentityRevocation()`/
+`verifyIdentitySuccession()`, unmodified.
+
+**The new store.** `core/RemoteIdentityLifecycle.js` is a deliberately
+THIRD concept, kept apart from both `core/IdentityLifecycleState.js`
+("has THIS device's own identity been revoked" — first-person, a
+signing gate) and `core/PeerRelationship.js`/`core/FriendshipRecord.js`
+(durable social records this milestone never mutates): "what has this
+device learned, second-hand and cryptographically verified, about
+ANOTHER identity's lifecycle." Revocation is stored as a permanent,
+first-accepted-wins fact — a second revocation for an already-revoked
+identityId is a no-op, never re-derived. Succession is stored as STATE,
+not an event log (the same distinction 0.2.45 drew between presence and
+avatar interaction) — `withSuccession()` replaces an existing record
+only with a strictly NEWER one (by `declaredAt`) from the SAME
+predecessor, preserving identity/LocalIdentityProvider.js's own
+single-successor-per-predecessor invariant on the receiving side too.
+
+**The use case.** `application/IdentityLifecyclePropagationUseCase.js`
+owns both persistence and transport, the same combined shape
+`application/FriendRelationshipUseCase.js` established in 0.2.57 for
+an identical reason (a lifecycle fact only means something once it
+actually reaches another identity) — but with one load-bearing
+difference from it. A friendship advertisement is a first-person claim,
+so `FriendRelationshipUseCase`'s ingestion boundary binds the claimed
+actor to the specific AUTHENTICATED connection it arrived on. An
+identity-lifecycle record is a THIRD-PARTY RELAY: Charlie, merely
+connected to Bob right now, can legitimately hand Bob a revocation
+Alice signed, without Charlie being Alice or ever having talked to her
+directly. `_handleIncoming()` therefore deliberately never reads
+`meta.connectedPeer.remoteIdentity` — the record's own signature is the
+entire trust boundary, full stop. The matching restraint on the SENDING
+side (`broadcastRevocation`/`broadcastSuccession`, called once, right
+after `identity/LocalIdentityProvider.js#revokeIdentity()`/
+`declareSuccessor()` succeed) is what keeps this from becoming an
+uncontrolled flood: this class only ever broadcasts a record the LOCAL
+owner's own device just produced, never re-broadcasting one it merely
+received — multi-hop relay is real, deliberately deferred future work.
+
+A `knowsIdentity(identityId)` predicate — injected the same way
+`FriendRelationshipUseCase`'s own `isBlocked` is, consulted fresh on
+every incoming message, never cached — is the relevance gate:
+`application/CreateIdentityLifecyclePropagationUseCase.js` wires it, in
+the live app, against the SAME `peerRelationshipUseCase`/
+`friendRelationshipUseCase` already running in `ui/main.js`. A record
+about an identity neither store has ever heard of is dropped before it
+is ever persisted, however cryptographically valid it is — without
+this, any two authenticated peers could grow an unbounded cache of
+lifecycle facts about identities neither has otherwise interacted with.
+
+**Sending side.** `ui/views/IdentityManagementView.js`'s existing
+Declare Successor / Revoke forms (0.2.67, unmodified in shape) each
+gain one additional step: once `application/IdentityUseCase.js`'s
+`declareSuccessor()`/`revokeIdentity()` produces the signed record
+locally, an OPTIONALLY-injected `identityLifecyclePropagationUseCase`
+broadcasts it to whoever is currently authenticated. Propagation is
+purely additive — every 0.2.67 call site behaves identically whether or
+not it is wired, so a test or partial embedding of this view needs
+nothing new to keep working.
+
+**Display side.** `ui/views/PeerConnectionsView.js`'s Known Peers and
+Friends cards each gain one new, purely informational line — "⚠
+Revoked … remembered successor: …" — reading `core/
+RemoteIdentityLifecycle.js` alongside the existing `PeerRelationship`/
+`FriendshipRecord` cards it is shown next to, and never mutating either.
+
+The flagship test (`tests/IdentityLifecyclePropagation.test.js`) runs
+the milestone's own scripted scenario over real peer connections: Alice
+connects to Bob and Charlie, declares a successor and broadcasts it —
+both independently verify and store it — then revokes her original
+identity and broadcasts that too. A fresh connection attempt using the
+revoked identity fails cleanly, on Alice's own side, before Bob or
+Charlie are ever involved (unchanged since 0.2.67 — `identity/
+LocalIdentityProvider.js#_requireAuthenticatedIdentity()` still refuses
+to even produce a signing identity). The successor identity
+authenticates fully independently, and — the property this milestone
+cares about most — `PeerRelationship(A)` and `PeerRelationship(B)`
+remain two distinct records on Bob's device throughout: a verified
+succession link between them never auto-merges one into the other.
+Security blocks prove Charlie cannot manufacture a succession claim for
+an identity whose key he does not hold (rejected on signer mismatch,
+the identical shape 0.2.67's own forged-revocation test already
+proved), that a GENUINE record Charlie merely relays — never having
+been directly connected to its subject at all — IS accepted, and that
+an otherwise perfectly valid record about an identity Bob has never
+known is dropped by the relevance gate regardless of its cryptographic
+validity.
+
+Deliberately not in 0.2.68: durable, retried delivery to a peer who is
+offline right now at the moment of broadcast (unlike `application/
+ChatOutbox.js`'s own reliable-delivery model, 0.2.63); multi-hop/flood
+relay beyond a device's own directly-connected peers; any UI or
+protocol change letting a verified succession link automatically alter
+a `PeerRelationship`/`FriendshipRecord`/chat history (an explicit,
+higher-level migration operation, if it is ever built, is a
+DIFFERENT, later feature); any passphrase/PIN strength policy
+(unchanged gap from 0.2.47); and any answer to "is an identity a
+person, a device, or a key" beyond preserving 0.2.67's own
+single-successor-per-predecessor invariant on the receiving side —
+this codebase remains capable of representing more, but deliberately
+does not build a branching successor model now.

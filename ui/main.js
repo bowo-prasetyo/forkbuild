@@ -14,6 +14,7 @@ import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelation
 import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
 import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
 import { CreateFriendRelationshipUseCase } from '../application/CreateFriendRelationshipUseCase.js';
+import { CreateIdentityLifecyclePropagationUseCase } from '../application/CreateIdentityLifecyclePropagationUseCase.js';
 import { CreatePeerBlockUseCase } from '../application/CreatePeerBlockUseCase.js';
 import { ChatUseCase } from '../application/ChatUseCase.js';
 import { CreateChatOutboxUseCase } from '../application/CreateChatOutboxUseCase.js';
@@ -88,6 +89,20 @@ const friendRelationshipUseCase = new CreateFriendRelationshipUseCase().execute(
     connectedPeerRegistry: peerSessionManager.registry,
     peerBlockUseCase
 });
+// 0.2.68 — one app-wide IdentityLifecyclePropagationUseCase, riding the
+// SAME peerMessageBus/registry every other peer/PeerMessageBus.js
+// protocol here does. `knowsIdentity` is derived from the SAME
+// peerRelationshipUseCase/friendRelationshipUseCase already wired above
+// — see application/CreateIdentityLifecyclePropagationUseCase.js's own
+// header on why: propagation only ever grows a durable local record for
+// an identity this device already remembers as a Known Peer or Friend,
+// never an open, unbounded revocation directory.
+const identityLifecyclePropagationUseCase = new CreateIdentityLifecyclePropagationUseCase().execute(identityProvider, {
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry,
+    peerRelationshipUseCase,
+    friendRelationshipUseCase
+});
 // 0.2.61 — one app-wide ChatUseCase. Rides the SAME peerMessageBus/
 // registry friendRelationshipUseCase already does, and consults the
 // SAME friendRelationshipUseCase/peerBlockUseCase as its authorization
@@ -118,6 +133,7 @@ app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
 app.provide('peerReconnectionUseCase', peerReconnectionUseCase);
 app.provide('findPeerUseCase', findPeerUseCase);
 app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
+app.provide('identityLifecyclePropagationUseCase', identityLifecyclePropagationUseCase);
 app.provide('peerBlockUseCase', peerBlockUseCase);
 app.provide('chatUseCase', chatUseCase);
 // 0.2.59 — Peer-Based Avatar Social Transport. The SAME app-wide bus

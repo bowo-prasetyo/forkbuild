@@ -4543,3 +4543,84 @@ one. Collapsing these into a single mechanism would have made each one
 individually less honest about what it actually guarantees; see this
 file's own "Recovery Is Not Password Recovery" (0.2.48) for the same
 instinct applied one milestone earlier.
+
+### A Relayed Identity Lifecycle Record Is Trusted By Its Own Signature, Never By Who Relayed It (0.2.68)
+
+`application/FriendRelationshipUseCase.js`'s ingestion boundary binds a
+friendship advertisement's claimed actor to the SPECIFIC, already-
+AUTHENTICATED connection it arrived on — a friendship claim is
+first-person ("I did X"), so the relaying connection's proven identity
+IS part of what makes it meaningful. An identity-lifecycle revocation
+or succession record is a fundamentally different kind of claim: it is
+THIRD-PARTY-relayable by construction, because it was never about the
+connection it happens to arrive over. Charlie, merely connected to Bob
+right now, can legitimately hand Bob a revocation Alice signed —
+without Charlie being Alice, without Charlie ever having been directly
+connected to her at all. `application/
+IdentityLifecyclePropagationUseCase.js#_handleIncoming()` deliberately
+never reads `meta.connectedPeer.remoteIdentity`; the record's own
+signature, verified by the exact same `identity/
+LocalAuthorizationVerifier.js` methods 0.2.67 already wrote, is the
+entire trust boundary. Confusing this with friendship's own rule would
+have made a revocation only reachable by identities the revoked
+identity happened to still be directly connected to at the moment of
+revocation — exactly the scenario propagation exists to not depend on.
+
+### Propagation Reaches Identities This Device Already Knows, Never An Open Revocation Directory (0.2.68)
+
+Without a bound, "any two authenticated peers can exchange signed
+lifecycle facts about any identity" would let this protocol grow into
+an unbounded cache of revocations for identities neither side has ever
+otherwise interacted with — a shadow global directory this
+architecture has no server for and no interest in building one of
+implicitly. `application/IdentityLifecyclePropagationUseCase.js`'s
+`knowsIdentity` predicate (wired, in the live app, against the SAME
+`core/PeerRelationship.js`/`core/FriendshipRecord.js` stores every
+other social feature already reads) is the deliberate bound: a
+genuinely, validly signed record about an identity this device has
+never remembered is dropped, not stored "just in case." This is a
+relevance gate, never a trust downgrade — an identity Bob DOES know
+gets exactly the same cryptographic verification either way.
+
+### Identity Lifecycle State Does Not Implicitly Rewrite Unrelated Durable Social State (0.2.68)
+
+Learning that identity A was revoked, or rotated to identity B, is
+information — never, by itself, an instruction to mutate anything else
+this device has on record. `core/RemoteIdentityLifecycle.js` is a
+deliberately separate store from `core/PeerRelationship.js` and `core/
+FriendshipRecord.js`, cross-referenced only for DISPLAY (`ui/views/
+PeerConnectionsView.js`'s "⚠ Revoked" line) exactly the way "Known
+Peers" already cross-references "My Peers" for live connection status.
+Nothing in this milestone deletes a `PeerRelationship`, ends a
+`FriendshipRecord`, merges A's relationship into B's, or otherwise acts
+on this device's behalf because a lifecycle fact arrived. A verified
+succession link between A and B establishes exactly one thing —
+`A -> B` as a cryptographically verifiable identity-lifecycle
+relationship — and nothing about what that should mean to
+`PeerRelationship`, `FriendshipRecord`, a chat history, or any other
+durable application state this codebase has or will ever have. Should
+"Alice rotated, so treat my friendship with A as a friendship with B"
+ever become a real, wanted feature, it is a higher-level, EXPLICIT
+migration operation a person deliberately triggers — never something
+propagation does silently on arrival. See also "Persistent State
+Should Not Be Inferred From Ephemeral Transport State" (0.2.49) — this
+is the same restraint, applied one layer up: durable social state
+should not be inferred from a lifecycle event either, no matter how
+cryptographically certain that event is.
+
+### Propagation Carries A Record, It Does Not Mint A New Claim (0.2.68)
+
+`core/IdentityLifecycleGossip.js`'s wire message is deliberately the
+thinnest possible wrapper — a `kind` discriminator plus the EXACT
+`core/IdentityRevocationEnvelope.js`/`core/IdentitySuccessionEnvelope.js`
+record `identity/LocalIdentityProvider.js` already produced and stored
+locally in 0.2.67, byte for byte. There is no second signature, no
+propagation-specific envelope, and no new `SignatureType` — a gossiped
+REVOCATION is the identical object `identity/
+LocalAuthorizationVerifier.js#verifyIdentityRevocation()` already knew
+how to verify before this milestone existed, merely handed to a peer
+instead of only ever read back off the revoking device's own storage.
+This is what keeps propagation from becoming a second, competing
+source of truth about an identity's lifecycle: there is exactly one
+kind of evidence, produced exactly one way, verified exactly one way,
+whether it is read locally or received over the wire.
