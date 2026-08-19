@@ -43,5 +43,10 @@ app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
 app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
+// 0.2.59 — Peer-Based Avatar Social Transport. The SAME app-wide bus
+// friendRelationshipUseCase already rides, now also provided directly
+// so World View can attach presence/profile/interaction to it — see
+// application/CreateWorldViewUseCase.js.
+app.provide('peerMessageBus', peerMessageBus);
 app.use(router);
 app.mount('#app');
