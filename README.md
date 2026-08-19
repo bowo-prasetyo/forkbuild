@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.71** — Explicit Read Acknowledgement
+**Version 0.2.72** — Conversation Lifecycle & Message Cancellation
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -1095,6 +1095,41 @@ an acknowledgement addressed to someone else. Deliberately not in
 0.2.71: any UI beyond the "Seen" mark, a richer delivery-vs-read state
 machine, group conversations, and multi-device read state.
 
+0.2.72 closes a gap 0.2.69–0.2.71's own durable messaging system left
+open: what happens to a message once the SOCIAL relationship underneath
+a conversation changes? Nothing new protects conversation history, the
+local read marker, or a peer's own remote read receipt — each has
+exactly one writer in `ChatUseCase`, and `block()`/`unfriend()` call
+none of them, so blocking or unfriending was already structurally
+incapable of deleting history, un-reading a message, or erasing a
+peer's record of having read yours. What WAS missing: a message already
+sitting `QUEUED` in `application/ChatOutbox.js` when its recipient's
+eligibility is withdrawn used to sit there, misleadingly, until an
+unrelated 7-day TTL happened to expire it as `EXPIRED` — a fact about
+time standing in for a fact about a withdrawn relationship.
+`core/ChatDeliveryState.js` gains a fifth, genuinely distinct value,
+`CANCELLED`; `ChatOutbox#cancel()`/`ConversationReadOutbox#cancel()`
+discard whatever's still `QUEUED`/`PENDING` for a peer immediately;
+`ChatUseCase` subscribes to `peerBlockUseCase.onBlockedChanged()`/
+`friendRelationshipUseCase.onRelationshipsChanged()` (both already
+existed for UI reactivity) and cancels the instant `canChat()`
+eligibility flips false, never waiting for a reconnect a permanently-
+offline peer might never attempt; a startup reconciliation pass catches
+a block/unfriend that happened in a prior session with no live
+subscriber around. Block and unfriend are treated identically on
+purpose — both already revoke the same `canChat()` a fresh send is
+checked against, so an already-queued message never gets to answer a
+softer question than a new one would. The flagship test
+(`tests/ConversationLifecycleAndMessageCancellation.test.js`) proves a
+blocked peer's queued mail is cancelled immediately and never delivered
+even after a genuine reconnect, while the conversation history and read
+state that already existed survive completely untouched, and a SECURITY
+FLAGSHIP proves startup reconciliation and strict per-identity
+addressing — cancelling one peer's mail never touches another's.
+Deliberately not in 0.2.72: any conversation-level delete/archive
+operation, cancelling an already-SENT entry, and un-cancelling a message
+if a peer is later unblocked or re-friended.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1300,6 +1335,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.69  Reliable Offline Conversations
 - [x] 0.2.70  Presence & Conversation Lifecycle
 - [x] 0.2.71  Explicit Read Acknowledgement
+- [x] 0.2.72  Conversation Lifecycle & Message Cancellation
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

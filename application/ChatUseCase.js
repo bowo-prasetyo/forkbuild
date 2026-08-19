@@ -222,6 +222,61 @@ class EphemeralStorageProvider extends StorageProvider {
 // concrete mechanism behind "reconnection continues the same logical
 // conversation" — nothing about it required touching the wire protocol,
 // core/ChatMessage.js, or core/ChatReplayWindow.js at all.
+//
+// 0.2.72 — Conversation Lifecycle & Message Cancellation.
+//
+// Social authorization controls what may happen NEXT; it never rewrites
+// what already happened. `application/ConversationStore.js` (0.2.69),
+// `application/ConversationReadTracker.js` (0.2.70), and
+// `application/RemoteReadReceiptStore.js` (0.2.71) already, structurally,
+// give this codebase that guarantee for free: nothing block()/unfriend()
+// do anywhere in this file ever deletes a stored message, a local read
+// marker, or a peer's remote read receipt — every write to those three
+// stores happens strictly inside `_appendMessage`/`_publishDeliveryState`/
+// `_handleIncomingRead`, none of which block()/unfriend() ever call. This
+// milestone adds no code to protect that guarantee because there was
+// nothing left unprotected — it only adds a flagship test
+// (tests/ConversationLifecycleAndMessageCancellation.test.js) that proves
+// it directly, the same way 0.2.69's own security flagship proved a
+// property that fell out of keying by identity rather than needing new
+// enforcement code.
+//
+// What WAS genuinely missing is the other half of "authorization at send
+// time is necessary, but not sufficient": a message that entered
+// `application/ChatOutbox.js` while eligible does not stay eligible just
+// because it is already QUEUED. `_attemptFlush()` already re-checks
+// `canChat()` fresh on every reconnect attempt (0.2.63), which already
+// means a blocked or unfriended peer's queued mail can never actually be
+// handed to the wire — but a peer who never reconnects gave that QUEUED
+// entry no opportunity to ever learn that, and it would sit there,
+// misleadingly, until its unrelated 7-day TTL happened to elapse and
+// reported EXPIRED — a fact about time, standing in for a fact that was
+// really about a withdrawn relationship. `_cancelOutboxFor()` below
+// closes that gap PROACTIVELY: this class now subscribes to
+// `peerBlockUseCase.onBlockedChanged()`/`friendRelationshipUseCase
+// .onRelationshipsChanged()` (both already existed for UI reactivity —
+// this is simply a second, independent subscriber) and, the instant a
+// peer's `canChat()` eligibility flips from true to false, cancels
+// whatever is still QUEUED for them in BOTH `application/ChatOutbox.js`
+// and `application/ConversationReadOutbox.js` immediately — never
+// waiting for a reconnect that a permanently-offline peer might never
+// attempt. `_reconcileCancellationsOnStartup()` runs the identical check
+// once, at construction, for the case a block or unfriend happened in a
+// PRIOR session while mail sat QUEUED with no live subscriber around to
+// react to it. See core/ChatDeliveryState.js's own header, "CANCELLED,"
+// for why this is kept a genuinely distinct terminal fact from EXPIRED
+// rather than reusing it: EXPIRED means this device gave up on TIME;
+// CANCELLED means this device gave up on AUTHORIZATION. Deliberately
+// symmetric between block and unfriend, on purpose — both already
+// revoke `canChat()` identically (0.2.61's own "Friendship Authorizes A
+// Protocol; It Is Never The Protocol," re-checked fresh on every send,
+// every incoming message, and every flush), and treating a
+// still-in-flight queued message as a THIRD, special case that survives
+// only an unfriend (never a block) would mean `_attemptFlush()` and
+// `_cancelOutboxFor()` disagreeing about the very same eligibility
+// question for the very same peer — see docs/Principles.md, "Queued
+// Mail Answers To The Same Eligibility Check As A Fresh Send, Never A
+// Softer One" (0.2.72).
 export class ChatUseCase {
     constructor(identityProvider, {
         peerMessageBus,
@@ -286,6 +341,34 @@ export class ChatUseCase {
         // below — see this class's own header, "A Reload Continues A
         // Conversation; It Never Starts A New One."
         this._rehydrateFromStore();
+
+        // 0.2.72 — the two snapshots `_reconcileCancellationsForBlocked()`/
+        // `_reconcileCancellationsForFriends()` diff against on every
+        // subsequent change event — see this class's own header. Seeded
+        // BEFORE the reconciliation pass immediately below, so that pass
+        // reconciles storage against CURRENT eligibility directly rather
+        // than through a synthetic "everything just changed" diff.
+        this._blockedIds = peerBlockUseCase ? new Set(peerBlockUseCase.getBlocked().map((b) => b.identityId)) : new Set();
+        this._friendIds = new Set(friendRelationshipUseCase.getRelationships()
+            .filter((r) => r.status === FriendshipState.FRIEND)
+            .map((r) => r.identityId));
+        // 0.2.72 — a block or unfriend that happened in a PRIOR session,
+        // while mail sat QUEUED with no live subscriber around to react
+        // to it, gets exactly one reconciliation pass here, before this
+        // instance does anything else — see this class's own header.
+        this._reconcileCancellationsOnStartup();
+        // 0.2.72 — both use cases already publish these events purely
+        // for UI reactivity (ui/views/PeerConnectionsView.js); this is
+        // simply a second, independent subscriber that reacts to the
+        // SAME events by proactively cancelling whatever just became
+        // ineligible, rather than waiting for a reconnect that a
+        // permanently-offline peer might never attempt.
+        this._unsubscribeBlocks = peerBlockUseCase
+            ? peerBlockUseCase.onBlockedChanged((blocked) => this._reconcileCancellationsForBlocked(blocked))
+            : null;
+        this._unsubscribeFriends = friendRelationshipUseCase.onRelationshipsChanged
+            ? friendRelationshipUseCase.onRelationshipsChanged((relationships) => this._reconcileCancellationsForFriends(relationships))
+            : null;
 
         // Same "attach every already-connected peer, then every future
         // one" discipline application/FriendRelationshipUseCase.js's own
@@ -510,6 +593,15 @@ export class ChatUseCase {
             this._unsubscribeReadBus();
             this._unsubscribeReadBus = null;
         }
+        // 0.2.72
+        if (this._unsubscribeBlocks) {
+            this._unsubscribeBlocks();
+            this._unsubscribeBlocks = null;
+        }
+        if (this._unsubscribeFriends) {
+            this._unsubscribeFriends();
+            this._unsubscribeFriends = null;
+        }
         // Deliberately does NOT dispose the injected peerMessageBus,
         // connectedPeerRegistry, friendRelationshipUseCase, chatOutbox,
         // conversationStore, conversationReadOutbox, or
@@ -727,6 +819,79 @@ export class ChatUseCase {
                 this._readOutbox.markSent(peerIdentityId, entry.readThroughSequence);
             }
         }
+    }
+
+    // 0.2.72 — reacts to `peerBlockUseCase.onBlockedChanged()`. Diffs the
+    // freshly-published block list against `_blockedIds`: only an
+    // identity NEWLY blocked since the last event triggers cancellation
+    // — an unblock removes an identity from this set but never restores
+    // anything (unchanged from 0.2.60's own "unblocking restores nothing
+    // but the ability to be heard again"), so it correctly triggers no
+    // cancellation at all.
+    _reconcileCancellationsForBlocked(blocked) {
+        const now = new Set(blocked.map((b) => b.identityId));
+        for (const identityId of now) {
+            if (!this._blockedIds.has(identityId)) {
+                this._cancelOutboxFor(identityId);
+            }
+        }
+        this._blockedIds = now;
+    }
+
+    // 0.2.72 — reacts to `friendRelationshipUseCase.onRelationshipsChanged()`.
+    // Diffs the freshly-published relationship list against
+    // `_friendIds`: only an identity that WAS a friend and no longer is
+    // (unfriended by either side, or collapsed to NONE by any other
+    // terminal action) triggers cancellation — a brand-new friendship,
+    // or an identity that was never a friend to begin with, is simply
+    // added to the set with no side effect.
+    _reconcileCancellationsForFriends(relationships) {
+        const now = new Set(relationships.filter((r) => r.status === FriendshipState.FRIEND).map((r) => r.identityId));
+        for (const identityId of this._friendIds) {
+            if (!now.has(identityId)) {
+                this._cancelOutboxFor(identityId);
+            }
+        }
+        this._friendIds = now;
+    }
+
+    // 0.2.72 — the one-time counterpart to the two reactive handlers
+    // above, run once at construction (see this class's own header):
+    // every peer this device currently has ANY QUEUED mail or PENDING
+    // read acknowledgement for, whose `canChat()` eligibility is
+    // already false right now, gets exactly the same cancellation a
+    // live block()/unfriend() event would have produced — covering a
+    // block or unfriend that happened in a prior session with no live
+    // subscriber around to react to it.
+    _reconcileCancellationsOnStartup() {
+        const candidates = new Set([
+            ...this._outbox.list().map((entry) => entry.peerIdentityId),
+            ...this._readOutbox.list().map((entry) => entry.peerIdentityId)
+        ]);
+        for (const peerIdentityId of candidates) {
+            if (!this.canChat(peerIdentityId)) {
+                this._cancelOutboxFor(peerIdentityId);
+            }
+        }
+    }
+
+    // 0.2.72 — the shared cancellation operation both reactive handlers
+    // and the startup reconciliation pass above call: cancels every
+    // still-QUEUED core/ChatOutboxEntry.js for this peer (publishing a
+    // durable CANCELLED mark on the conversation history for each one —
+    // see this class's own `_publishDeliveryState()`, the SAME write-
+    // through EXPIRED already uses in `_attemptFlush()`) and discards
+    // any still-PENDING application/ConversationReadOutbox.js entry —
+    // never anything already SENT in either store, which already left
+    // this device and is beyond recall. Harmless to call for a peer with
+    // nothing queued at all: both `ChatOutbox#cancel()`/
+    // `ConversationReadOutbox#cancel()` are no-ops in that case.
+    _cancelOutboxFor(peerIdentityId) {
+        const cancelled = this._outbox.cancel(peerIdentityId);
+        for (const entry of cancelled) {
+            this._publishDeliveryState(peerIdentityId, entry.message.messageId, ChatDeliveryState.CANCELLED);
+        }
+        this._readOutbox.cancel(peerIdentityId);
     }
 
     _flushIfAuthenticated(connectedPeer) {

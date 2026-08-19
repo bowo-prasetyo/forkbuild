@@ -7277,3 +7277,107 @@ exactly like every prior chat milestone; and multi-device read state,
 unchanged from every prior milestone's own list — a read acknowledgement
 is still sent by, and received on behalf of, one local device holding
 one identity's key.
+
+### Conversation Lifecycle & Message Cancellation (0.2.72)
+
+0.2.69–0.2.71 built a durable outbox, a durable conversation history,
+and two independent durable read-state stores, without ever asking what
+happens to any of it once the SOCIAL relationship underneath a
+conversation changes. `application/PeerBlockUseCase.js` (0.2.60) and
+`FriendRelationshipUseCase#unfriend()` (0.2.60) already existed, and
+`ChatUseCase#canChat()`/`_requireEligible()` already re-checked both
+fresh on every send and every incoming message (0.2.61) — but nobody
+had asked the question only durability makes meaningful: what happens
+to a message that is ALREADY QUEUED in `application/ChatOutbox.js` the
+instant that authorization is withdrawn?
+
+**Nothing new protects history — because nothing needed to.**
+`application/ConversationStore.js` (0.2.69), `application/
+ConversationReadTracker.js` (0.2.70), and `application/
+RemoteReadReceiptStore.js` (0.2.71) each have exactly one writer —
+`ChatUseCase`'s own `_appendMessage()`/`_publishDeliveryState()`/
+`_handleIncomingRead()` — and `block()`/`unfriend()` call none of them.
+Social authorization controls what may happen NEXT; it never rewrites
+what already happened. This milestone's flagship test proves that
+property directly rather than merely assuming it, the same way 0.2.69's
+own security flagship proved a property that fell out of keying by
+identity rather than needing new enforcement code.
+
+**The one real gap: a QUEUED message with no reconnect coming.**
+`_attemptFlush()` already re-checks `canChat()` fresh on every reconnect
+(0.2.63), which already means a blocked or unfriended peer's queued
+mail can never actually reach the wire — but a peer who never
+reconnects gives that entry no opportunity to ever learn it, and it
+would sit QUEUED, misleadingly, until an unrelated 7-day TTL happened
+to expire it as `EXPIRED` — a fact about TIME standing in for a fact
+that was really about a withdrawn RELATIONSHIP. `core/ChatDeliveryState.js`
+gains a fifth value, `CANCELLED`, kept genuinely distinct from `EXPIRED`
+for exactly that reason. `application/ChatOutbox.js#cancel(peerIdentityId)`
+and `application/ConversationReadOutbox.js#cancel(peerIdentityId)` are
+the new proactive operations — scoped to QUEUED/PENDING entries only
+(never SENT — already on the wire, beyond recall, mirroring
+`acknowledge()`'s own SENT-only precondition), removing them from
+storage outright and, for the message outbox, returning what was
+cancelled so `ChatUseCase` can mark the conversation history itself
+`CANCELLED`.
+
+**Proactive, not lazy.** `ChatUseCase` now subscribes to
+`peerBlockUseCase.onBlockedChanged()`/`friendRelationshipUseCase
+.onRelationshipsChanged()` — both already existed purely for UI
+reactivity (`ui/views/PeerConnectionsView.js`); this is simply a second,
+independent subscriber. Diffing each event against a locally-tracked
+snapshot (`_blockedIds`/`_friendIds`) isolates exactly the identity that
+just became newly ineligible — an unblock or a fresh friendship never
+triggers anything, only a NEWLY-blocked or NEWLY-unfriended identity
+does — and `_cancelOutboxFor()` runs immediately, never waiting for that
+peer to reconnect. `_reconcileCancellationsOnStartup()` runs the
+identical check once, at construction, over every peer this device
+currently has ANY QUEUED mail or PENDING read acknowledgement for,
+covering a block or unfriend that happened in a PRIOR session while
+nothing was subscribed to react to it live.
+
+**Block and unfriend are treated identically, on purpose.** Both already
+revoke the exact same `canChat()` eligibility a fresh send is checked
+against — 0.2.61's own "Friendship Authorizes A Protocol; It Is Never
+The Protocol," re-checked fresh everywhere. Treating an already-queued
+message as a third, softer case — cancelled only by a block, left to
+linger through an unfriend — would mean `_attemptFlush()` and the new
+cancellation path disagreeing about the identical eligibility question
+for the identical peer. See docs/Principles.md, "Queued Mail Answers To
+The Same Eligibility Check As A Fresh Send, Never A Softer One." Because
+`FriendRelationshipUseCase#unfriend()` itself requires a currently-
+authenticated `connectedPeer` (a real signed protocol message, unlike a
+unilateral block), the flagship test's unfriend scenario is scripted the
+one way that's actually reachable: a session queues mail for an offline
+peer and ends before he reconnects; only once he's back does the owner
+unfriend him, with no live `ChatUseCase` subscribed in the moment — so a
+fresh session's own startup reconciliation is what actually cancels it,
+proving that path pulls its weight for unfriend too, not only for block.
+
+The flagship test (`tests/ConversationLifecycleAndMessageCancellation.test.js`)
+proves every new method in isolation first (`ChatOutbox#cancel()`:
+QUEUED-only, per-peer, idempotent; `ConversationReadOutbox#cancel()`:
+PENDING-only, per-peer), then scripts the full scenario end to end over
+real peer connections: Alice and Bob, friends, exchange a delivered,
+read message; Bob goes offline and Alice queues a second one; Alice
+blocks Bob and the queued message is cancelled immediately — no
+reconnect required — durably marked `CANCELLED`; Bob genuinely
+reconnects afterward and never receives it; the earlier message and
+Bob's own durable record that Alice read it stay completely untouched;
+and a message Bob sends after the block is refused outright on Alice's
+ingestion boundary, never stored. A second scenario proves unfriending
+a queued message cancels it identically, through the startup-
+reconciliation path described above. A SECURITY FLAGSHIP scenario proves
+the same startup-reconciliation path for a block from a prior session,
+and — the identity-addressing property every durable chat store in this
+codebase has carried since 0.2.63 — that cancelling one peer's mail
+never touches a second, completely independent peer's own QUEUED mail.
+
+Deliberately not in 0.2.72: any conversation-level delete/archive
+operation (still only per-message capping, unchanged since 0.2.69);
+cancelling a SENT-but-unacknowledged entry (already on the wire, beyond
+recall); retroactively un-cancelling a message if a peer is later
+unblocked or re-friended (unblocking still restores nothing but the
+ability to be heard again, unchanged since 0.2.60); and any UI beyond
+`ui/views/ChatView.js`'s existing delivery label gaining one more case,
+"Undelivered — cancelled."

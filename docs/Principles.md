@@ -4900,3 +4900,67 @@ store, and the read tracker apart applies here again: collapsing a
 local fact and a network claim into one store, just because their
 shapes happen to match, is exactly the kind of conflation this
 milestone's own founding instruction refused to allow.
+
+### Social Authorization Controls What May Happen Next; It Never Rewrites What Already Happened (0.2.72)
+
+Blocking or unfriending a peer changes what `application/ChatUseCase.js`
+will do on the NEXT send, the NEXT incoming message, and the NEXT
+reconnect. It never changes what already, genuinely happened.
+`application/ConversationStore.js` (0.2.69), `application/
+ConversationReadTracker.js` (0.2.70), and `application/
+RemoteReadReceiptStore.js` (0.2.71) each have exactly one writer in this
+codebase, and none of those writers is `PeerBlockUseCase#block()` or
+`FriendRelationshipUseCase#unfriend()`. This was already true before
+0.2.72 added a single line of code — the guarantee fell straight out of
+those three stores' own write discipline, established one and two
+milestones earlier for entirely different reasons. What 0.2.72
+contributes is not new enforcement; it is proof, and a name: a message
+already delivered stays delivered, a message already read stays marked
+read, and a peer's own durable record that they saw your message stays
+exactly as durable after you block them as before. Only what has not
+yet happened — an unsent send, an unconfirmed delivery, an unflushed
+queue entry — is ever subject to a change in authorization.
+
+### Queued Mail Answers To The Same Eligibility Check As A Fresh Send, Never A Softer One (0.2.72)
+
+`application/ChatUseCase.js#canChat()` has meant exactly one thing since
+0.2.61: authenticated peer, not locally blocked, and currently a mutual
+FRIEND, checked fresh every time it's asked. 0.2.63 extended that
+discipline to a queued message's own eventual delivery —
+`_attemptFlush()` re-checks `canChat()` before ever handing a QUEUED
+entry to the wire, so a blocked or unfriended peer's mail was already
+structurally incapable of being delivered, well before 0.2.72 existed.
+What 0.2.72 adds is proactivity, not a new rule: `_cancelOutboxFor()`
+answers the identical `canChat()` question `_attemptFlush()` already
+asks, just earlier — the instant authorization is withdrawn, rather
+than waiting for a reconnect a permanently-offline peer might never
+attempt. Block and unfriend are deliberately never distinguished here:
+both already revoke `canChat()` identically, and a message sitting
+QUEUED does not get to answer a softer question than a message about to
+be freshly sent would. Inventing a special case where an already-queued
+message survives an unfriend but not a block — plausible as a product
+choice in the abstract — would mean two different code paths
+(`_attemptFlush()` and the new cancellation path) disagreeing about the
+very same eligibility fact for the very same peer, the exact kind of
+conflation this codebase's own "ask a predicate fresh, never cache or
+special-case it" discipline (0.2.58's `isFriend`, 0.2.60's `isBlocked`,
+0.2.61's `canChat()` itself) has refused since it was first established.
+
+### A Fact About Time And A Fact About Authorization Are Different Terminal States, Never One Reused For The Other (0.2.72)
+
+`core/ChatDeliveryState.js`'s `EXPIRED` (0.2.63) and `CANCELLED` (0.2.72)
+can look, from a UI's distance, like the same thing: a message that
+never reached its recipient. They are answers to different questions.
+`EXPIRED` means this device waited as long as it was willing to
+(`core/ChatOutboxEntry.js`'s own TTL) and the peer simply never came
+back in time — the message MIGHT have been delivered if only this
+device had stayed patient a little longer, or the peer had reconnected
+a little sooner; it is a fact about a clock. `CANCELLED` means this
+device's own owner made a deliberate decision — block or unfriend —
+that the message was never going to be delivered again, REGARDLESS of
+how much longer this device waited or how soon the peer reconnected; it
+is a fact about a relationship. Reusing `EXPIRED` for both, as a first
+sketch of this milestone considered, would have quietly told a user "I
+gave up on time" when the true story was "you told me to stop" — a
+materially different, and more honest, thing to say back to the person
+who made that choice.

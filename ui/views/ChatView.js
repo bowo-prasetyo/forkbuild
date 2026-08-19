@@ -187,6 +187,7 @@ export default {
                 case 'SENT': return 'Sent';
                 case 'DELIVERED': return 'Delivered';
                 case 'EXPIRED': return 'Undelivered — expired';
+                case 'CANCELLED': return 'Undelivered — cancelled';
                 default: return '';
             }
         }
