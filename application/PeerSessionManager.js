@@ -30,6 +30,13 @@ const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in wel
 // Owns Connections, Never What Travels Over Them." Downstream protocols
 // (presence, profile, a future chat) attach to the SAME registry() this
 // class exposes; they never go through this class to do it.
+//
+// 0.2.62 — `createInvitation()`/`acceptInvitation()` accept an optional
+// `expectedIdentityId`, threaded straight through to application/
+// ConnectToPeerUseCase.js unmodified in every other respect. This class
+// still owns nothing about WHAT identity to expect or WHY — see
+// application/PeerReconnectionUseCase.js, the one caller that ever
+// supplies it.
 export class PeerSessionManager {
     constructor({ identityProvider, peerConnectionProvider = new WebRtcPeerConnectionProvider(), discoveryProvider = new LocalPeerDiscoveryProvider() } = {}) {
         if (!identityProvider) {
@@ -55,6 +62,12 @@ export class PeerSessionManager {
     // ConnectedPeerRegistry.js.
     onPeersChanged(callback) { return this.registry.onChange(callback); }
 
+    // 0.2.62 — re-exposes application/ConnectToPeerUseCase.js's own
+    // mismatch signal unmodified. See application/
+    // PeerReconnectionUseCase.js, the one caller that ever supplies
+    // `expectedIdentityId` to createInvitation()/acceptInvitation() below.
+    onIdentityMismatch(callback) { return this._connectToPeerUseCase.onIdentityMismatch(callback); }
+
     // Alice's side of "Invite Someone." Opens a real WebRTC offer,
     // attaches it to 0.2.49 authentication + the registry IMMEDIATELY
     // (so the pending connection shows up in "My Peers" as CONNECTING
@@ -62,9 +75,9 @@ export class PeerSessionManager {
     // for ICE gathering to finish before wrapping the resulting offer as
     // an ordinary 0.2.50 PeerInvitation. Returns once there is something
     // to display and copy — never partway through.
-    async createInvitation({ ttlMs = DEFAULT_INVITATION_TTL_MS } = {}) {
+    async createInvitation({ ttlMs = DEFAULT_INVITATION_TTL_MS, expectedIdentityId = null } = {}) {
         const connection = this._peerConnectionProvider.createOffer({ ttlMs });
-        const connectedPeer = this._connectToPeerUseCase.attach(connection);
+        const connectedPeer = this._connectToPeerUseCase.attach(connection, null, { expectedIdentityId });
         const offer = await waitForLocalSignal(connection, connectedPeer);
         const invitation = this._discoverPeersUseCase.createInvitation({
             endpoint: JSON.stringify(offer.toJSON()),
@@ -81,10 +94,10 @@ export class PeerSessionManager {
     // the invitation, out-of-band — copy/paste, exactly as manual as the
     // invitation itself arrived (see peer/WebRtcPeerConnectionProvider.js's
     // own header) — or the connection never leaves CONNECTING.
-    async acceptInvitation(invitationInput) {
+    async acceptInvitation(invitationInput, { expectedIdentityId = null } = {}) {
         const invitation = parseInvitation(invitationInput);
         const record = this._discoverPeersUseCase.importInvitation(invitation);
-        const connectedPeer = this._connectToPeerUseCase.connect(record);
+        const connectedPeer = this._connectToPeerUseCase.connect(record, { expectedIdentityId });
         const answer = await waitForLocalSignal(connectedPeer.connection, connectedPeer);
         return { connectedPeer, reply: JSON.stringify(answer.toJSON()) };
     }

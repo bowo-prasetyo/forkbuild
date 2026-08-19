@@ -3882,3 +3882,78 @@ depends on that continuing to be true. Conflating any two of these
 three facts — as, for instance, treating `messageId` as a sequence, or
 `sequence` as a delivery-ordering guarantee — is exactly the mistake
 this file's own header warns against.
+
+### A Reconnect Verifies An Identity; It Never Assumes One (0.2.62)
+
+A remembered `core/PeerRelationship.js` (0.2.56) answers "have I proven
+this identity before and chosen to keep a local record of it" — it has
+never, by itself, been a claim about any particular CONNECTION. 0.2.62
+is the first milestone to actually put a second connection next to a
+first one and ask what should happen, and the wrong answer was
+tempting and specific: "this device already knows Bob's identityId; a
+new connection that shows up while Alice is trying to reconnect to Bob
+must BE Bob." `application/ConnectToPeerUseCase.js`'s new
+`expectedIdentityId` refuses that shortcut structurally. The 0.2.49
+handshake runs exactly as it always has — nothing here changes what
+counts as a valid PROOF, and nothing here trusts a connection sooner or
+more easily because a reconnect was requested. Only AFTER a connection
+reaches `PeerLifecycleState.AUTHENTICATED` — the exact same bar every
+other connection already has to clear — is the identity that handshake
+just proved compared against the identity this attempt expected. A
+match changes nothing further; a mismatch closes the connection
+immediately. The rule this produces is deliberately narrow: a
+reconnect never lowers the bar for trusting a connection, it only adds
+one more question to ask once that bar is already cleared. See
+`tests/PeerConnectionResilience.test.js`'s own SECURITY FLAGSHIP, which
+proves the honest case directly — Charlie's invitation authenticates
+completely genuinely, as Charlie, and is rejected anyway, because
+genuine authentication was never the question a reconnect needed
+answered.
+
+### A Rejected Reconnect Is Not A Failed Handshake (0.2.62)
+
+`peer/PeerAuthenticationState.js#FAILED` has meant one thing since
+0.2.49: a HELLO or PROOF that never validated — malformed, wrong
+session, wrong challenge, a signature that doesn't verify. 0.2.62
+deliberately does NOT reuse it for an identity mismatch, even though
+both end with the connection closed. The difference is not cosmetic:
+a handshake FAILURE means this device still doesn't know who, if
+anyone, was on the other end. An `expectedIdentityId` mismatch means
+the opposite — the other end proved, cryptographically, exactly who it
+is; that proof simply wasn't for the identity this attempt was
+expecting. Collapsing the two into one FAILED would throw away
+information a "Reconnect" UI genuinely needs: "nothing answered" and
+"the wrong person answered, and here specifically is who" are different
+facts that deserve different explanations, not a single indistinguishable
+badge. `application/ConnectToPeerUseCase.js#onIdentityMismatch()` is
+the dedicated channel this milestone adds for exactly that second case,
+carrying both the expected and the actual identityId — never merged
+into, and never gating, `peer/PeerAuthenticationState.js` itself.
+
+### Connection Incarnation Was Already Solved; 0.2.62 Only Named It (0.2.62)
+
+The design question "how do we stop a stale event from an OLD
+connection corrupting the state of a NEW one with the same peer"
+sounds like it wants a new identifier — some kind of connection
+generation counter layered on top of everything 0.2.49 through 0.2.61
+already built. It doesn't, because the codebase already had the exact
+right answer, twice over, before 0.2.62 ever asked the question:
+`peer/WebRtcPeerConnectionProvider.js#createOffer()` (0.2.51) already
+mints a fresh, globally-unique `connectionId` for every single
+connection, `application/ConnectedPeerRegistry.js` (0.2.50) already
+keys its entire Map by that id and nothing else, and
+`peer/PeerAuthenticationSession.js` (0.2.49) already binds its own
+HELLO/PROOF `sessionNonce` to that exact same id, specifically so "a
+captured, entirely genuine handshake fails when replayed into a
+different connection." A reconnect's fresh connection gets a fresh
+`connectionId` the same way any two connections ever have; an old
+connection's belated close() event can only ever remove ITS OWN,
+already-stale registry entry, never a different one it has no key for.
+0.2.62 adds no second identifier, no generation counter, and no new
+bookkeeping for this — see `application/PeerReconnectionUseCase.js`'s
+own header for why inventing one would have been exactly the kind of
+"a third thing sitting alongside two real state machines" mistake
+`peer/PeerLifecycleState.js` (0.2.50) already named and rejected once,
+one layer down. `tests/PeerConnectionResilience.test.js`'s own FLAGSHIP
+part 2 proves this holds under an actual stale, belated close() call,
+rather than merely asserting `connectionId` values differ.

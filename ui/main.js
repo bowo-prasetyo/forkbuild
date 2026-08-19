@@ -5,6 +5,7 @@ import { CreateIdentityProviderUseCase } from '../application/CreateIdentityProv
 import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
 import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
+import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
 import { CreateFriendRelationshipUseCase } from '../application/CreateFriendRelationshipUseCase.js';
 import { CreatePeerBlockUseCase } from '../application/CreatePeerBlockUseCase.js';
 import { ChatUseCase } from '../application/ChatUseCase.js';
@@ -25,6 +26,13 @@ const peerSessionManager = new PeerSessionManager({ identityProvider });
 // survive a reload, which peerSessionManager's own registry never does
 // on purpose (see application/ConnectedPeerRegistry.js's own header).
 const peerRelationshipUseCase = new CreatePeerRelationshipUseCase().execute(identityProvider);
+// 0.2.62 — one app-wide PeerReconnectionUseCase, composing the two
+// collaborators above rather than owning any storage of its own: a
+// "Reconnect" gesture on a Known Peer only ever needs the already-wired
+// peerSessionManager (to open the fresh connection) and
+// peerRelationshipUseCase (to know which identity to expect) — see
+// application/PeerReconnectionUseCase.js's own header.
+const peerReconnectionUseCase = new PeerReconnectionUseCase({ peerSessionManager, peerRelationshipUseCase });
 // 0.2.57 — one app-wide peer/PeerMessageBus.js, the shared transport
 // application/FriendRelationshipUseCase.js's own header documents as a
 // collaborator it never owns. This is the FIRST live consumer of
@@ -70,6 +78,7 @@ const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
+app.provide('peerReconnectionUseCase', peerReconnectionUseCase);
 app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
 app.provide('peerBlockUseCase', peerBlockUseCase);
 app.provide('chatUseCase', chatUseCase);
