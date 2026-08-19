@@ -3,13 +3,23 @@
 // itself, because the record's OWN shape never needs to change as new
 // discovery mechanisms are added — only this enum grows.
 //
-// INVITATION is the only mechanism 0.2.50 actually implements (see
-// peer/PeerInvitation.js and peer/LocalPeerDiscoveryProvider.js). LAN,
-// RENDEZVOUS_SERVICE, and DHT are named here, unimplemented, purely so the
-// application layer (application/DiscoverPeersUseCase.js) and any future UI
-// never have to special-case "what kind of discovery was this" beyond
-// reading this field — see docs/Roadmap.md's own "Peer Discovery & Transport
-// Abstraction" for why none of those are built yet.
+// INVITATION is the only mechanism actually implemented through 0.2.64 (see
+// peer/PeerInvitation.js and peer/LocalPeerDiscoveryProvider.js) — a real
+// candidate this device only ever learns about because a human relayed it
+// out-of-band (copy/paste, a shared channel, a QR code). LAN,
+// RENDEZVOUS_SERVICE, and DISTRIBUTED are named here, unimplemented,
+// purely so the application layer (application/DiscoverPeersUseCase.js,
+// application/FindPeerUseCase.js) and any future UI never have to
+// special-case "what kind of discovery was this" beyond reading this
+// field — see docs/Principles.md, "A Discovery Source Describes Provenance,
+// Never Trustworthiness" (0.2.64): a record from a hypothetical future
+// RENDEZVOUS_SERVICE or DISTRIBUTED source is not one bit more trusted than
+// one from INVITATION — every source still produces nothing but an
+// untrusted candidate, still required to pass peer/
+// PeerAuthenticationSession.js's own handshake before it means anything.
 export const PeerDiscoverySource = Object.freeze({
-    INVITATION: 'INVITATION'
+    INVITATION: 'INVITATION',
+    LAN: 'LAN',
+    RENDEZVOUS_SERVICE: 'RENDEZVOUS_SERVICE',
+    DISTRIBUTED: 'DISTRIBUTED'
 });

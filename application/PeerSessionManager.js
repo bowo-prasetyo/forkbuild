@@ -37,6 +37,19 @@ const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in wel
 // still owns nothing about WHAT identity to expect or WHY — see
 // application/PeerReconnectionUseCase.js, the one caller that ever
 // supplies it.
+//
+// 0.2.64 adds a second, genuinely different way a candidate can enter this
+// class's own DiscoverPeersUseCase pool: `importCandidate()` accepts an
+// invitation WITHOUT immediately connecting to it, so it can sit in the
+// pool waiting to be found by `discoverCandidates(identityId)` later —
+// unlike `acceptInvitation()` above, which has always imported and
+// connected in the very same call. `connectToDiscovered()` is what turns
+// one of those already-discovered candidates into an actual connection
+// attempt, walking the exact same WebRTC offer/answer handoff
+// `acceptInvitation()` already does. This class still owns nothing about
+// WHERE identityId came from or whether the candidate's own identityHint
+// agrees with it — see application/FindPeerUseCase.js, the one caller
+// that ever calls these three methods, for that.
 export class PeerSessionManager {
     constructor({ identityProvider, peerConnectionProvider = new WebRtcPeerConnectionProvider(), discoveryProvider = new LocalPeerDiscoveryProvider() } = {}) {
         if (!identityProvider) {
@@ -120,6 +133,51 @@ export class PeerSessionManager {
         }
         await connectedPeer.connection.acceptRemoteAnswer(answer);
         return connectedPeer;
+    }
+
+    // 0.2.64 — imports an invitation into this session's own discovery
+    // pool WITHOUT connecting to it. A candidate added this way is
+    // discoverable by identity (see discoverCandidates() below) at any
+    // later point, exactly like any other peer/PeerDiscoveryRecord.js —
+    // never connected automatically, never treated as anything more than
+    // a candidate until something explicitly calls connectToDiscovered()
+    // on it.
+    importCandidate(invitationInput) {
+        const invitation = parseInvitation(invitationInput);
+        return this._discoverPeersUseCase.importInvitation(invitation);
+    }
+
+    // Every currently-fresh candidate in this session's own pool whose
+    // (untrusted) identityHint matches `identityId` — see application/
+    // DiscoverPeersUseCase.js#discover and peer/
+    // LocalPeerDiscoveryProvider.js#discover's own headers on why this is
+    // a search over ALREADY-imported candidates, never a live network
+    // lookup.
+    discoverCandidates(identityId) {
+        return this._discoverPeersUseCase.discover(identityId);
+    }
+
+    listCandidates() {
+        return this._discoverPeersUseCase.listDiscoveredPeers();
+    }
+
+    forgetCandidate(peerDiscoveryId) {
+        this._discoverPeersUseCase.forgetDiscoveredPeer(peerDiscoveryId);
+    }
+
+    // 0.2.64 — connects to an ALREADY-discovered candidate (see
+    // discoverCandidates() above), rather than importing a fresh
+    // invitation and connecting in the same call the way
+    // acceptInvitation() does. Otherwise identical: the same
+    // ConnectToPeerUseCase#connect() call, the same WebRTC
+    // answer-then-relay handoff, and the same optional
+    // `expectedIdentityId` gate 0.2.62 already built — a mismatch closes
+    // the connection and is reported through this class's own
+    // onIdentityMismatch(), completely unmodified.
+    async connectToDiscovered(discoveryRecord, { expectedIdentityId = null } = {}) {
+        const connectedPeer = this._connectToPeerUseCase.connect(discoveryRecord, { expectedIdentityId });
+        const answer = await waitForLocalSignal(connectedPeer.connection, connectedPeer);
+        return { connectedPeer, reply: JSON.stringify(answer.toJSON()) };
     }
 
     // Closing is the ONLY way a peer ever leaves the registry — see

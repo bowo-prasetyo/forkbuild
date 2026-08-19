@@ -6,6 +6,7 @@ import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
 import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
 import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
+import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
 import { CreateFriendRelationshipUseCase } from '../application/CreateFriendRelationshipUseCase.js';
 import { CreatePeerBlockUseCase } from '../application/CreatePeerBlockUseCase.js';
 import { ChatUseCase } from '../application/ChatUseCase.js';
@@ -34,6 +35,13 @@ const peerRelationshipUseCase = new CreatePeerRelationshipUseCase().execute(iden
 // peerRelationshipUseCase (to know which identity to expect) — see
 // application/PeerReconnectionUseCase.js's own header.
 const peerReconnectionUseCase = new PeerReconnectionUseCase({ peerSessionManager, peerRelationshipUseCase });
+// 0.2.64 — one app-wide FindPeerUseCase, composing the SAME
+// peerSessionManager rather than owning any discovery state of its own:
+// "Find a Peer" only ever needs peerSessionManager's own candidate pool
+// (search) and its connect pipeline (connect, with the searched-for
+// identityId threaded through as expectedIdentityId) — see
+// application/FindPeerUseCase.js's own header.
+const findPeerUseCase = new FindPeerUseCase({ peerSessionManager });
 // 0.2.57 — one app-wide peer/PeerMessageBus.js, the shared transport
 // application/FriendRelationshipUseCase.js's own header documents as a
 // collaborator it never owns. This is the FIRST live consumer of
@@ -85,6 +93,7 @@ app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
 app.provide('peerReconnectionUseCase', peerReconnectionUseCase);
+app.provide('findPeerUseCase', findPeerUseCase);
 app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
 app.provide('peerBlockUseCase', peerBlockUseCase);
 app.provide('chatUseCase', chatUseCase);

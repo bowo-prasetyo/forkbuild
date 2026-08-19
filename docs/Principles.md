@@ -4059,3 +4059,96 @@ this — `LOCAL_ONLY`, `FAILED` — was deliberately left out of
 nothing in this milestone ever transitions to either one; see that
 file's own header. Don't add a state a real transition doesn't need
 just because a design sketch imagined it.
+
+### Discovery Is Untrusted Input; Only Authentication Answers Who (0.2.64)
+
+`peer/PeerDiscoveryProvider.js` already established, in 0.2.50, that
+"Discovery Finds A Candidate; It Never Authenticates One." 0.2.64 adds
+a second way a candidate reaches this device — `discover(identityId)`,
+a search over what's already been imported, rather than only
+`importInvitation()`'s own push — and that second path inherits the
+identical discipline, unchanged: a result is a CANDIDATE, never a
+finding. The three-stage vocabulary the design doc for this milestone
+asked for names it precisely: Discovery ("something claiming to be Bob
+may be reachable here") → Rendezvous ("here is an endpoint worth
+attempting") → Authentication ("this connection actually belongs to
+Bob"). Only the third is ever authoritative. `application/
+FindPeerUseCase.js#connect()` makes this concrete rather than
+aspirational: it always threads the identity ALICE SEARCHED FOR as
+`expectedIdentityId` into `application/ConnectToPeerUseCase.js`'s
+existing 0.2.62 gate, never the candidate record's own `identityHint`
+— so even a maliciously or carelessly mislabeled candidate ("here is
+Bob!" pointing at Charlie's endpoint) is structurally incapable of
+being accepted as Bob. Charlie still authenticates completely
+honestly, as himself; the connection is simply closed the instant that
+becomes provable, exactly the same "the peer proved something real,
+just not what this attempt was for" shape 0.2.62 already established
+for a rejected Reconnect. `tests/PeerIdentityDiscovery.test.js`'s own
+SECURITY FLAGSHIP proves it directly: a forged candidate claiming Bob
+authenticates as Charlie, is rejected and closed on both ends, and
+Bob's own already-remembered relationship is left byte-for-byte
+untouched.
+
+### A Discovery Record's Freshness Outlives Neither The Identity Nor The Relationship It Might Lead To (0.2.64)
+
+A `peer/PeerDiscoveryRecord.js`'s own `expiresAt`/`isExpired()` answers
+one narrow question — "is THIS candidate endpoint still worth
+attempting" — and nothing else. Bob changing networks makes exactly
+one candidate stale; it does not un-know Bob, does not touch any
+`core/PeerRelationship.js` this device already remembered for him, and
+does not affect a `core/FriendshipRecord.js` either. Those three facts
+live at entirely different layers, exactly as 0.2.56's own "Knowing Is
+Not Befriending" already established for a different pair of them —
+0.2.64 only adds a fourth layer (a mere candidate) beneath the two that
+already existed, and keeps it exactly as separable from them.
+Expiry is checked lazily, on read (`peer/LocalPeerDiscoveryProvider.js`'s
+own `_pruneExpired()`), never on a background timer — the identical
+posture `core/ChatOutboxEntry.js`'s own TTL (0.2.63) and
+`peer/PeerInvitation.js`'s own expiry (0.2.50) already established.
+An expired record is unusable, never merely "less preferred": it
+disappears from `list()`/`discover()` entirely rather than sorting to
+the bottom, so nothing downstream has to remember to check its age a
+second time.
+
+### Rediscovering A Candidate Refreshes It; It Never Duplicates It (0.2.64)
+
+`peer/LocalPeerDiscoveryProvider.js#importInvitation()` treats a
+re-import of the SAME candidate (identical `candidateEndpoint` and
+`identityHint`, while the existing record is still fresh) as a refresh
+of that one record — not a second, independent entry sitting beside
+the first. Without this, a pool that simply accumulates every
+invitation it's ever seen would grow forever and would let a UI's
+"Find Someone" results silently duplicate the same candidate under
+different `peerDiscoveryId`s every time it's re-added. A genuinely
+DIFFERENT endpoint claiming the same identity is deliberately NOT
+merged into the existing record, though — see `tests/
+PeerIdentityDiscovery.test.js` — because collapsing those would let a
+later, potentially bogus endpoint silently overwrite an
+earlier-established candidate's own address under this provider's own
+authority, an authority discovery is never supposed to have (see this
+file's own "Discovery Is Untrusted Input" above). Two different claims
+about how to reach the same identity are kept as two separate,
+independently-evaluated candidates — connecting to either is exactly
+as unauthoritative as connecting to one.
+
+### A Discovery Source Describes Provenance, Never Trustworthiness (0.2.64)
+
+`peer/PeerDiscoverySource.js` grows LAN, RENDEZVOUS_SERVICE, and
+DISTRIBUTED alongside the one source 0.2.50 through 0.2.64 actually
+implement, INVITATION — named now, unimplemented, for the same reason
+`core/ChatDeliveryState.js` names DELIVERED before anything could
+produce it yet: so `application/DiscoverPeersUseCase.js`, `application/
+FindPeerUseCase.js`, and any future UI never have to special-case "what
+kind of discovery was this" beyond reading the field. Deliberately not
+built in 0.2.64: an actual LAN broadcast provider, a rendezvous
+service, or a distributed/gossip network — see docs/Roadmap.md-style
+scoping in this milestone's own README.md entry for why. Whichever of
+those eventually ships, none of them earns one bit more trust than
+INVITATION already has: `source` is provenance metadata a UI might
+show a human ("found via invitation" vs. "found via LAN"), never an
+input to `application/ConnectToPeerUseCase.js#_guardExpectedIdentity`
+or to anything else that decides whether a connection is accepted.
+Every source still produces nothing but `peer/PeerDiscoveryRecord.js`'s
+own untrusted candidate, still required to pass a real
+`peer/PeerAuthenticationSession.js` handshake before it means anything
+at all.

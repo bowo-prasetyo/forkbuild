@@ -43,6 +43,16 @@ export class DiscoverPeersUseCase {
         return this._provider.list();
     }
 
+    // 0.2.64 — "search what this device has already discovered for a
+    // specific identity." Pure delegation, exactly like every other
+    // method here: this class has no opinion about how the underlying
+    // provider answers, only that whatever it returns is a candidate,
+    // never a proof — see peer/PeerDiscoveryProvider.js#discover's own
+    // header.
+    discover(identityId) {
+        return this._provider.discover(identityId);
+    }
+
     forgetDiscoveredPeer(peerDiscoveryId) {
         this._provider.forget(peerDiscoveryId);
     }
