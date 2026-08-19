@@ -90,11 +90,25 @@ export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcast
     // `() => false` — a caller that never wires friendship awareness
     // gets EXACTLY 0.2.53's own behavior: FRIENDS still works via
     // authorizedPeerIdentities alone, nothing silently changes.
+    // isBlocked: 0.2.60 addition — the sender-side counterpart to
+    // isFriend's own contract above: a zero-arg-per-call function
+    // `(peerIdentityId) => boolean`, called fresh on every advertise()
+    // for every candidate peer, never cached. Checked FIRST, before
+    // `policy.shouldAdvertiseToPeer()` — see advertise() below and
+    // docs/Principles.md, "Blocking Is An Additional Local
+    // Authorization Gate, Never A Replacement For One" (0.2.60):
+    // blocking a friend still leaves the underlying FRIENDS visibility
+    // policy saying "yes, send it," so the block has to be consulted as
+    // its OWN, independent veto, never folded into the visibility
+    // policy's own `{ isFriend }` context. Defaults to `() => false` —
+    // a caller that never wires blocking gets EXACTLY 0.2.53/0.2.58's
+    // own behavior.
     constructor({
         peerMessageBus,
         connectedPeerRegistry,
         getVisibilityPolicy = () => PresenceVisibilityPolicy.default(),
         isFriend = () => false,
+        isBlocked = () => false,
         protocol = PeerAvatarPresenceBroadcastProvider.DEFAULT_PROTOCOL
     } = {}) {
         super();
@@ -108,6 +122,7 @@ export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcast
         this._registry = connectedPeerRegistry;
         this._getVisibilityPolicy = getVisibilityPolicy;
         this._isFriend = isFriend;
+        this._isBlocked = isBlocked;
         this._protocol = protocol;
 
         // Every peer already connected when this transport is built,
@@ -156,6 +171,14 @@ export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcast
             }
             const peerIdentity = peer.remoteIdentity;
             const peerIdentityId = peerIdentity ? peerIdentity.identityId : null;
+            // 0.2.60 — checked BEFORE the visibility policy, and never
+            // folded into it: see this constructor's own comment on
+            // isBlocked. A blocked peer never receives this
+            // advertisement, full stop, regardless of what
+            // shouldAdvertiseToPeer() would otherwise decide.
+            if (peerIdentityId && this._isBlocked(peerIdentityId)) {
+                continue;
+            }
             const isFriend = peerIdentityId ? Boolean(this._isFriend(peerIdentityId)) : false;
             if (!policy.shouldAdvertiseToPeer(peerIdentityId, { isFriend })) {
                 continue;

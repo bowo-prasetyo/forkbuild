@@ -32,6 +32,8 @@ import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSumma
 import { AvatarMovementController } from './AvatarMovementController.js';
 import { AvatarMovementConstraint } from './AvatarMovementConstraint.js';
 import { PresenceSyncService } from './PresenceSyncService.js';
+import { LocalPresenceStore } from './LocalPresenceStore.js';
+import { PresenceTrustBoundary } from './PresenceTrustBoundary.js';
 import { RemoteAvatarRegistry } from './RemoteAvatarRegistry.js';
 import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
 import { DEFAULT_AVATAR_TEMPLATE_ID } from '../core/AvatarProfile.js';
@@ -39,6 +41,8 @@ import { signAvatarPresenceAdvertisement } from './PresenceSigning.js';
 import { summarizePresenceDiagnostics } from '../core/PresenceDiagnosticsSummary.js';
 import { AvatarInteractionState } from './spatial-state/AvatarInteractionState.js';
 import { AvatarProfileSyncService } from './AvatarProfileSyncService.js';
+import { LocalAvatarProfileStore } from './LocalAvatarProfileStore.js';
+import { AvatarProfileTrustBoundary } from './AvatarProfileTrustBoundary.js';
 import { RemoteAvatarAppearanceRegistry } from './RemoteAvatarAppearanceRegistry.js';
 import { toAvatarProfileAdvertisement } from '../core/AvatarProfileAdvertisement.js';
 import { signAvatarProfileAdvertisement } from './AvatarProfileSigning.js';
@@ -47,6 +51,7 @@ import { AvatarInteractionKind, isValidInteractionKind } from '../core/AvatarInt
 import { canPerformInteraction } from '../core/AvatarInteractionCooldown.js';
 import { computeFacingYawDegrees } from '../core/AvatarFacing.js';
 import { AvatarInteractionSyncService } from './AvatarInteractionSyncService.js';
+import { AvatarInteractionTrustBoundary } from './AvatarInteractionTrustBoundary.js';
 import { toAvatarInteractionAdvertisement } from '../core/AvatarInteractionAdvertisement.js';
 import { signAvatarInteractionAdvertisement } from './AvatarInteractionSigning.js';
 
@@ -145,7 +150,8 @@ export class WorldNavigationSession {
 	    avatarProfileBroadcastProvider = null,
 	    avatarInteractionBroadcastProvider = null,
 	    avatarProfileVisibilityUseCase = null,
-	    hasFriend = null
+	    hasFriend = null,
+	    isBlocked = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -259,6 +265,22 @@ export class WorldNavigationSession {
 	    // coarse gate, unchanged — see core/PresenceVisibilityPolicy.js's
 	    // own shouldAdvertise() header.
 	    this._hasFriend = hasFriend;
+	    // 0.2.60 — OPTIONAL zero-arg-per-call predicate
+	    // `(identityId) => boolean`, the RECEIVER-side counterpart to
+	    // isFriend/hasFriend above: consulted in _setupRemoteAvatars()
+	    // below to build each avatar-social protocol's trust boundary
+	    // with blocking wired in, so a locally-blocked identity's
+	    // presence/profile/interaction claims are rejected at ingestion
+	    // regardless of how cryptographically valid they are — see
+	    // application/PresenceTrustBoundary.js's own `isBlocked` header.
+	    // The SENDER-side gate is a completely separate wiring, one
+	    // layer further out — see application/CreateWorldViewUseCase.js,
+	    // which passes the same predicate straight to each
+	    // presence/PeerAvatarPresenceBroadcastProvider.js's own
+	    // `isBlocked` instead. Absent (null) is the exact pre-0.2.60
+	    // behavior: every trust boundary defaults to `isBlocked: () =>
+	    // false`, nothing silently changes.
+	    this._isBlocked = isBlocked;
 	    this._presenceSyncService = null;
 	    this._remoteAvatarRegistry = null;
 	    this._presencePublishSubscription = null;
@@ -596,7 +618,18 @@ export class WorldNavigationSession {
             return;
         }
         const localAvatarId = this._avatarPresenceSession ? this._avatarPresenceSession.current.avatarId : null;
-        this._presenceSyncService = new PresenceSyncService(this._presenceBroadcastProvider, { localAvatarId });
+        // 0.2.60 — every trust boundary below is built with the SAME
+        // `isBlocked` predicate (defaulting to `() => false` when this
+        // session wasn't given one), each its OWN instance, never
+        // shared — the same "presence-authority, profile-authority, and
+        // interaction-authority stay independently established" posture
+        // application/AvatarProfileTrustBoundary.js's own header already
+        // documents, extended here to blocking.
+        const isBlocked = this._isBlocked || (() => false);
+        this._presenceSyncService = new PresenceSyncService(this._presenceBroadcastProvider, {
+            localAvatarId,
+            store: new LocalPresenceStore({ trustBoundary: new PresenceTrustBoundary({ isBlocked }) })
+        });
 
         // A remote avatar's APPEARANCE is not synchronized at all in
         // 0.2.37 (see the design doc's own scope list) — every remote
@@ -622,7 +655,10 @@ export class WorldNavigationSession {
         // "Appearance And Position Are Different Lifecycles, Never One
         // Message."
         if (this._avatarProfileBroadcastProvider) {
-            this._avatarProfileSyncService = new AvatarProfileSyncService(this._avatarProfileBroadcastProvider, { localAvatarId });
+            this._avatarProfileSyncService = new AvatarProfileSyncService(this._avatarProfileBroadcastProvider, {
+                localAvatarId,
+                store: new LocalAvatarProfileStore({ trustBoundary: new AvatarProfileTrustBoundary({ isBlocked }) })
+            });
             this._remoteAvatarAppearanceRegistry = new RemoteAvatarAppearanceRegistry(
                 this._session, this._avatarProfileSyncService, this._avatarTemplateRegistry,
                 { defaultTemplate, defaultAppearance }
@@ -635,7 +671,10 @@ export class WorldNavigationSession {
         // See docs/Principles.md, "Presence Describes An Avatar's
         // Current State; Interaction Describes An Event That Happened."
         if (this._avatarInteractionBroadcastProvider) {
-            this._avatarInteractionSyncService = new AvatarInteractionSyncService(this._avatarInteractionBroadcastProvider, { localAvatarId });
+            this._avatarInteractionSyncService = new AvatarInteractionSyncService(this._avatarInteractionBroadcastProvider, {
+                localAvatarId,
+                trustBoundary: new AvatarInteractionTrustBoundary({ isBlocked })
+            });
         }
 
         this._remoteAvatarRegistry = new RemoteAvatarRegistry(this._session, {

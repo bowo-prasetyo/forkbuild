@@ -39,16 +39,26 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // for diagnostics (core/PresenceDiagnosticsSummary.js), never silently
 // swapped in.
 export class PresenceTrustBoundary {
+    // 0.2.60 — `isBlocked`: a zero-arg-per-call predicate
+    // `(identityId) => boolean`, consulted immediately after a claim's
+    // signer is established (see evaluate() below) — mirrors
+    // application/FriendRelationshipUseCase.js's own `isBlocked`
+    // contract exactly: called fresh every time, never cached, never
+    // backed by this class importing application/PeerBlockUseCase.js
+    // itself. Defaults to `() => false` — a caller that never wires
+    // blocking gets EXACTLY 0.2.38's own behavior.
     constructor({
         policy = PresenceTrustPolicy.permissive(),
         authorizationVerifier = new LocalAuthorizationVerifier(),
         authorityRegistry = new PresenceAuthorityRegistry(),
-        replayWindow = new PresenceReplayWindow()
+        replayWindow = new PresenceReplayWindow(),
+        isBlocked = () => false
     } = {}) {
         this._policy = policy;
         this._verifier = authorizationVerifier;
         this._authority = authorityRegistry;
         this._replayWindow = replayWindow;
+        this._isBlocked = isBlocked;
     }
 
     get policy() { return this._policy; }
@@ -93,6 +103,24 @@ export class PresenceTrustBoundary {
         // unsigned claim. Never the RAW advertisement.signature.signer
         // read directly — that would trust an unverified assertion.
         const signerId = (verification.signed && verification.valid) ? incomingAdvertisement.signature.signer : null;
+
+        // 0.2.60 — a locally BLOCKED signer is rejected here, BEFORE
+        // authority/replay/equivocation are even consulted: none of
+        // those questions matter once this replica has already decided
+        // it does not want to hear from this identity at all. An
+        // unsigned (signerId === null) claim can never be attributed
+        // with confidence, so it can never be blocked either way — the
+        // same "anonymous claims are outside blocking's reach" gap
+        // presence/PeerAvatarPresenceBroadcastProvider.js's own
+        // sender-side gate accepts too.
+        if (signerId && this._isBlocked(signerId)) {
+            return {
+                accepted: false,
+                observation: TrustObservation.of(TrustStatus.BLOCKED, {
+                    subjectType: 'avatar-presence', subjectId: avatarId, reason: 'signer is locally blocked'
+                })
+            };
+        }
 
         const authorityResult = this._authority.evaluate(avatarId, { ownerIdentity: incomingAdvertisement.ownerIdentity, signerId });
         if (!authorityResult.authorized) {

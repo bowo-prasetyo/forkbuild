@@ -54,16 +54,21 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // conservative than sharing one binding" reasoning
 // application/AvatarProfileTrustBoundary.js's own header already gives.
 export class AvatarInteractionTrustBoundary {
+    // 0.2.60 — `isBlocked`: see application/PresenceTrustBoundary.js's
+    // own constructor comment; identical contract, own instance, never
+    // shared.
     constructor({
         policy = AvatarInteractionTrustPolicy.permissive(),
         authorizationVerifier = new LocalAuthorizationVerifier(),
         authorityRegistry = new PresenceAuthorityRegistry(),
-        replayWindow = new AvatarInteractionReplayWindow()
+        replayWindow = new AvatarInteractionReplayWindow(),
+        isBlocked = () => false
     } = {}) {
         this._policy = policy;
         this._verifier = authorizationVerifier;
         this._authority = authorityRegistry;
         this._replayWindow = replayWindow;
+        this._isBlocked = isBlocked;
     }
 
     get policy() { return this._policy; }
@@ -101,6 +106,17 @@ export class AvatarInteractionTrustBoundary {
             };
         }
         const signerId = (verification.signed && verification.valid) ? incomingAdvertisement.signature.signer : null;
+
+        // 0.2.60 — see application/PresenceTrustBoundary.js's own
+        // evaluate() comment for the full reasoning; identical gate.
+        if (signerId && this._isBlocked(signerId)) {
+            return {
+                accepted: false,
+                observation: TrustObservation.of(TrustStatus.BLOCKED, {
+                    subjectType: 'avatar-interaction', subjectId: avatarId, reason: 'signer is locally blocked'
+                })
+            };
+        }
 
         const authorityResult = this._authority.evaluate(avatarId, { ownerIdentity: incomingAdvertisement.ownerIdentity, signerId });
         if (!authorityResult.authorized) {

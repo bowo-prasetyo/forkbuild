@@ -70,7 +70,18 @@ export class CreateWorldViewUseCase {
     // different facts — see docs/Principles.md, "No Authenticated
     // Peers Is A Population Of Zero, Never An Absent Transport"
     // (0.2.59).
-    execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null } = {}) {
+    //
+    // 0.2.60 — `peerBlockUseCase` supplies the SAME kind of `isBlocked`
+    // predicate every visibility policy/trust boundary already knows
+    // how to consult, mirroring `friendRelationshipUseCase`'s own
+    // wiring exactly: this use case never reads a PeerBlockRecord
+    // itself, only the predicate, passed to BOTH the outbound transport
+    // (each PeerAvatarPresenceBroadcastProvider's own `isBlocked`) and
+    // the inbound one (WorldNavigationSession's own `isBlocked`, which
+    // builds each protocol's trust boundary with it) — see docs/
+    // Principles.md, "Blocking Is Wired Twice, Once Per Direction,
+    // Because Neither Side May Trust The Other To Enforce It" (0.2.60).
+    execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null, peerBlockUseCase = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
@@ -210,6 +221,14 @@ export class CreateWorldViewUseCase {
             ? () => friendRelationshipUseCase.getRelationships().some((relationship) => relationship.isFriend)
             : null;
 
+        // 0.2.60 — see this method's own header above. Absent
+        // (undefined) when no peerBlockUseCase is wired, which is the
+        // exact pre-0.2.60 "nothing is ever blocked" fallback every
+        // transport/trust-boundary already implements on its own.
+        const isBlocked = peerBlockUseCase
+            ? (peerIdentityId) => peerBlockUseCase.isBlocked(peerIdentityId)
+            : undefined;
+
         // Presence's own transport. getVisibilityPolicy reads
         // presenceVisibilityUseCase FRESH on every advertise() (never
         // cached) once one is wired (logged in); absent (logged out),
@@ -221,7 +240,8 @@ export class CreateWorldViewUseCase {
                 peerMessageBus,
                 connectedPeerRegistry,
                 ...(presenceVisibilityUseCase ? { getVisibilityPolicy: () => presenceVisibilityUseCase.getPolicy() } : {}),
-                ...(isFriend ? { isFriend } : {})
+                ...(isFriend ? { isFriend } : {}),
+                ...(isBlocked ? { isBlocked } : {})
             })
             : new LocalAvatarPresenceBroadcastProvider();
         // 0.2.41 — a SEPARATE channel/protocol from presence's own, so a
@@ -240,7 +260,8 @@ export class CreateWorldViewUseCase {
                 getVisibilityPolicy: avatarProfileVisibilityUseCase
                     ? () => avatarProfileVisibilityUseCase.getPolicy()
                     : () => AvatarProfileVisibilityPolicy.default(),
-                ...(isFriend ? { isFriend } : {})
+                ...(isFriend ? { isFriend } : {}),
+                ...(isBlocked ? { isBlocked } : {})
             })
             : new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile');
         // 0.2.45 — Ephemeral Avatar Interaction Synchronization: a
@@ -258,7 +279,8 @@ export class CreateWorldViewUseCase {
                 connectedPeerRegistry,
                 protocol: 'forkbuild:avatar-interaction',
                 ...(presenceVisibilityUseCase ? { getVisibilityPolicy: () => presenceVisibilityUseCase.getPolicy() } : {}),
-                ...(isFriend ? { isFriend } : {})
+                ...(isFriend ? { isFriend } : {}),
+                ...(isBlocked ? { isBlocked } : {})
             })
             : new LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-interaction');
         const avatarTemplateRegistry = new CreateAvatarTemplateRegistryUseCase().execute();
@@ -314,7 +336,13 @@ export class CreateWorldViewUseCase {
                     // taught WorldNavigationSession to consult — see
                     // above for why this is the first caller to
                     // actually supply it.
-                    hasFriend
+                    hasFriend,
+                    // 0.2.60: the RECEIVER-side isBlocked predicate —
+                    // see this method's own header above. undefined
+                    // here (when no peerBlockUseCase was wired) falls
+                    // through to WorldNavigationSession's own `null`
+                    // default, exactly like `hasFriend` above.
+                    isBlocked
                 });
             },
             // Expose the spatial index and content store so the application

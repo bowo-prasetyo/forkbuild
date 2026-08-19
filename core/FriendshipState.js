@@ -1,3 +1,5 @@
+import { isTerminalFriendshipAction } from './FriendshipAction.js';
+
 // 0.2.57 — Decentralized Friend Relationships & Mutual Consent. A
 // single, UI-facing vocabulary for "where does THIS device's
 // relationship with one other identity currently stand," derived the
@@ -7,7 +9,10 @@
 // a third, redundant value alongside the two real ones it summarizes
 // is a mistake this codebase keeps deliberately avoiding.
 //
-//   NONE       -> no signed REQUEST exists in either direction yet.
+//   NONE       -> no signed REQUEST exists in either direction yet —
+//                 or, as of 0.2.60, no longer does: a relationship that
+//                 was rejected, cancelled, or unfriended is NONE again,
+//                 identically to one that never began.
 //   REQUESTED  -> exactly one side has sent a signed REQUEST; the
 //                 other side has not yet answered with a signed
 //                 ACCEPT. Could be THIS device's own outgoing request,
@@ -48,12 +53,25 @@ export const FriendshipState = Object.freeze({
 // Claim": asking is not agreeing, even when both sides happen to ask
 // at once, and an ACCEPT is the only signed evidence this codebase
 // treats as agreement.
+// 0.2.60 — a defensive, second line of defense against a TERMINAL
+// action (REJECT/CANCEL/UNFRIEND) ever surviving alongside non-null
+// evidence in the other direction: core/FriendshipRecord.js#withOutgoingAction/
+// withIncomingAction already collapse BOTH fields to null the instant
+// either one receives a terminal action, so in practice this function
+// is never actually called with one — but deriving NONE unconditionally
+// whenever a terminal action IS present, rather than trusting that
+// invariant blindly, costs nothing and means a future caller who
+// bypasses FriendshipRecord's own setters (or a bug in them) still
+// can't be read back as REQUESTED or FRIEND.
 export function deriveFriendshipState({ outgoing = null, incoming = null } = {}) {
     if (!outgoing && !incoming) {
         return FriendshipState.NONE;
     }
     const outgoingAction = outgoing ? outgoing.action : null;
     const incomingAction = incoming ? incoming.action : null;
+    if (isTerminalFriendshipAction(outgoingAction) || isTerminalFriendshipAction(incomingAction)) {
+        return FriendshipState.NONE;
+    }
     const isFriend =
         (outgoingAction === 'REQUEST' && incomingAction === 'ACCEPT') ||
         (outgoingAction === 'ACCEPT' && incomingAction === 'REQUEST');
