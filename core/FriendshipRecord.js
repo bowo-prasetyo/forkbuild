@@ -1,5 +1,6 @@
 import * as Ed25519 from '../identity/Ed25519.js';
 import { FriendshipState, deriveFriendshipState } from './FriendshipState.js';
+import { isTerminalFriendshipAction } from './FriendshipAction.js';
 
 // 0.2.57 — Decentralized Friend Relationships & Mutual Consent.
 //
@@ -33,6 +34,16 @@ import { FriendshipState, deriveFriendshipState } from './FriendshipState.js';
 // Immutable, like core/PeerRelationship.js and core/AvatarProfile.js —
 // a relationship's recorded actions change rarely and deliberately (one
 // more signed action arrives, in one direction), never in place.
+//
+// 0.2.60 — Friendship Revocation, Blocking & Privacy Withdrawal.
+// `outgoingAction`/`incomingAction` can each now ALSO be a REJECT/
+// CANCEL/UNFRIEND — see withOutgoingAction/withIncomingAction below for
+// the one new rule those bring: recording a TERMINAL action always
+// resets BOTH fields to null, never just the one it was given for. A
+// relationship can therefore go NONE -> REQUESTED -> FRIEND -> NONE
+// (unfriended) -> REQUESTED again (a fresh REQUEST), same as any other
+// two identities who never knew each other — nothing about a past
+// cycle lingers to be replayed against a new one.
 export class FriendshipRecord {
     constructor({
         identityId,
@@ -77,15 +88,37 @@ export class FriendshipRecord {
 
     // Records a fresh action THIS device authored and signed (a
     // REQUEST it is sending, or an ACCEPT it is sending in answer to
-    // an existing incomingAction). Never touches incomingAction.
+    // an existing incomingAction). Never touches incomingAction — UNLESS
+    // `advertisement.action` is TERMINAL (REJECT/CANCEL/UNFRIEND — see
+    // core/FriendshipAction.js#isTerminalFriendshipAction), in which
+    // case BOTH directions collapse to null, exactly like
+    // withIncomingAction's own terminal case below. See this file's own
+    // header on why: a terminal action means "this relationship (or
+    // this pending request) is over, full stop," and leaving the OTHER
+    // direction's now-stale REQUEST/ACCEPT sitting in the record would
+    // let a later, fresh REQUEST cycle silently inherit evidence from a
+    // cycle that already ended — see core/FriendshipAdvertisement.js's
+    // own `inResponseTo` header for the replay this specifically
+    // prevents. The terminal advertisement itself is not retained
+    // either way — once a direction is over, there is nothing further
+    // for this record to prove about it locally.
     withOutgoingAction(advertisement, updatedAt = new Date()) {
+        if (isTerminalFriendshipAction(advertisement.action)) {
+            return new FriendshipRecord({ ...this._fields(), outgoingAction: null, incomingAction: null, updatedAt });
+        }
         return new FriendshipRecord({ ...this._fields(), outgoingAction: advertisement, updatedAt });
     }
 
     // Records a fresh action the OTHER identity authored and signed,
     // ALREADY VERIFIED by the caller (see this class's own header).
-    // Never touches outgoingAction.
+    // Never touches outgoingAction — UNLESS `advertisement.action` is
+    // TERMINAL, in which case both collapse to null; see
+    // withOutgoingAction's own comment above for the full reasoning,
+    // symmetric in both directions.
     withIncomingAction(advertisement, updatedAt = new Date()) {
+        if (isTerminalFriendshipAction(advertisement.action)) {
+            return new FriendshipRecord({ ...this._fields(), outgoingAction: null, incomingAction: null, updatedAt });
+        }
         return new FriendshipRecord({ ...this._fields(), incomingAction: advertisement, updatedAt });
     }
 

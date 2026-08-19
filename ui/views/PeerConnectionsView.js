@@ -3,6 +3,22 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { FriendshipState } from '../../core/FriendshipState.js';
 import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 
+// 0.2.60 — Friendship Revocation, Blocking & Privacy Withdrawal adds:
+//   - Reject/Cancel on a pending request (the terminal counterparts to
+//     Send/Accept, both still on an AUTHENTICATED "My Peers" card only
+//     — see application/FriendRelationshipUseCase.js's own header on
+//     why every friendship gesture requires a live, proven connection
+//     to actually deliver its signed advertisement).
+//   - Unfriend, on a FRIEND — available from "My Peers" when connected,
+//     and from the "Friends" list itself when that friend happens to
+//     be connected right now (cross-referenced the same way
+//     "Connected now" already is).
+//   - Block/Unblock, backed entirely by application/PeerBlockUseCase.js
+//     — a FOURTH, independent list ("Blocked"), never requiring a live
+//     connection at all (see core/PeerBlockRecord.js's own header):
+//     available on any card this device already holds identityId/
+//     publicKey for — My Peers, Known Peers, or Friends alike.
+
 // 0.2.55 — Peer Connections & Rendezvous UI: the first live surface over
 // everything 0.2.49 through 0.2.54 built underneath. Answers the one
 // question the app still had no answer for — "okay, I have an identity,
@@ -80,7 +96,7 @@ function formatDuration(ms) {
 }
 
 function stripPrefix(message) {
-    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|FriendRelationshipUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
+    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|FriendRelationshipUseCase|PeerBlockUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
 }
 
 export default {
@@ -90,6 +106,7 @@ export default {
         const peerSessionManager = inject('peerSessionManager');
         const peerRelationshipUseCase = inject('peerRelationshipUseCase');
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
+        const peerBlockUseCase = inject('peerBlockUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
         const peers = ref(peerSessionManager.listPeers());
@@ -97,6 +114,8 @@ export default {
         const relationshipError = ref('');
         const friendships = ref(isAuthenticated.value ? friendRelationshipUseCase.getRelationships() : []);
         const friendshipError = ref('');
+        const blocked = ref(isAuthenticated.value ? peerBlockUseCase.getBlocked() : []);
+        const blockError = ref('');
         const now = ref(Date.now());
         // Purely local, view-only bookkeeping for "connected duration" —
         // application/ConnectedPeer.js itself has no createdAt, on purpose
@@ -212,6 +231,61 @@ export default {
             }
         }
 
+        // 0.2.60 — the terminal counterpart to acceptFriendRequest:
+        // declines a pending incoming request instead of answering it.
+        function rejectFriendRequest(peer) {
+            friendshipError.value = '';
+            try {
+                friendRelationshipUseCase.rejectFriendRequest(peer);
+            } catch (e) {
+                friendshipError.value = stripPrefix(e.message);
+            }
+        }
+
+        // 0.2.60 — withdraws OUR OWN pending outgoing request.
+        function cancelFriendRequest(peer) {
+            friendshipError.value = '';
+            try {
+                friendRelationshipUseCase.cancelFriendRequest(peer);
+            } catch (e) {
+                friendshipError.value = stripPrefix(e.message);
+            }
+        }
+
+        // 0.2.60 — ends a currently-FRIEND relationship. `peer` must be
+        // a live, AUTHENTICATED ConnectedPeer — see
+        // application/FriendRelationshipUseCase.js#unfriend's own
+        // header: the other side has to actually receive the signed
+        // UNFRIEND for the relationship to end on both devices, not
+        // just this one.
+        function unfriendPeer(peer) {
+            friendshipError.value = '';
+            try {
+                friendRelationshipUseCase.unfriend(peer);
+            } catch (e) {
+                friendshipError.value = stripPrefix(e.message);
+            }
+        }
+
+        // The live, AUTHENTICATED "My Peers" entry for a given
+        // identityId, or null — the same live cross-reference
+        // isConnectedNow() already performs, reused here so the
+        // "Friends" list's own Unfriend button can find a real
+        // ConnectedPeer to send through without duplicating that
+        // lookup's logic.
+        function connectedPeerFor(identityId) {
+            return peers.value.find((p) => p.remoteIdentity
+                && p.remoteIdentity.identityId === identityId
+                && p.getLifecycleState() === PeerLifecycleState.AUTHENTICATED) || null;
+        }
+
+        function unfriendByIdentity(identityId) {
+            const peer = connectedPeerFor(identityId);
+            if (peer) {
+                unfriendPeer(peer);
+            }
+        }
+
         function refreshFriendships(list) {
             friendships.value = list || friendRelationshipUseCase.getRelationships();
         }
@@ -228,6 +302,39 @@ export default {
         }
 
         const friends = computed(() => friendships.value.filter((f) => f.status === FriendshipState.FRIEND));
+
+        // --- Blocked (0.2.60) ---------------------------------------------
+        // Entirely local, never requires a live connection — see
+        // core/PeerBlockRecord.js's own header. Available from any card
+        // this device already holds identityId/publicKey for: an
+        // AUTHENTICATED "My Peers" entry, a Known Peer, or a Friend —
+        // `identity` is duck-typed (identityId/publicKey[/algorithm]),
+        // so all three shapes work unmodified.
+        function isBlockedIdentity(identityId) {
+            return peerBlockUseCase.isBlocked(identityId);
+        }
+
+        function blockIdentity(identity) {
+            blockError.value = '';
+            try {
+                peerBlockUseCase.block(identity);
+            } catch (e) {
+                blockError.value = stripPrefix(e.message);
+            }
+        }
+
+        function unblockIdentity(identityId) {
+            blockError.value = '';
+            try {
+                peerBlockUseCase.unblock(identityId);
+            } catch (e) {
+                blockError.value = stripPrefix(e.message);
+            }
+        }
+
+        function refreshBlocked(list) {
+            blocked.value = list || peerBlockUseCase.getBlocked();
+        }
 
         // --- Invite Someone ---------------------------------------------
         const invitePending = ref(false);
@@ -351,19 +458,23 @@ export default {
         let unsubscribePeers = null;
         let unsubscribeRelationships = null;
         let unsubscribeFriendships = null;
+        let unsubscribeBlocked = null;
         let unsubscribeSession = null;
         let tickInterval = null;
         onMounted(() => {
             refreshPeers();
             refreshRelationships();
             refreshFriendships();
+            refreshBlocked();
             unsubscribePeers = peerSessionManager.onPeersChanged((list) => refreshPeers(list));
             unsubscribeRelationships = peerRelationshipUseCase.onRelationshipsChanged((list) => refreshRelationships(list));
             unsubscribeFriendships = friendRelationshipUseCase.onRelationshipsChanged((list) => refreshFriendships(list));
+            unsubscribeBlocked = peerBlockUseCase.onBlockedChanged((list) => refreshBlocked(list));
             unsubscribeSession = identityUseCase.onSessionChanged(() => {
                 isAuthenticated.value = identityUseCase.isAuthenticated();
                 refreshRelationships();
                 refreshFriendships();
+                refreshBlocked();
             });
             tickInterval = setInterval(() => { now.value = Date.now(); }, 1000);
         });
@@ -371,6 +482,7 @@ export default {
             if (unsubscribePeers) unsubscribePeers();
             if (unsubscribeRelationships) unsubscribeRelationships();
             if (unsubscribeFriendships) unsubscribeFriendships();
+            if (unsubscribeBlocked) unsubscribeBlocked();
             if (unsubscribeSession) unsubscribeSession();
             if (tickInterval) clearInterval(tickInterval);
         });
@@ -386,7 +498,9 @@ export default {
             relationships, relationshipError, relationshipFor, isConnectedNow,
             rememberPeer, forgetKnownPeer, updateKnownAlias, formatWhen,
             FriendshipState, friends, friendshipError, friendStatus, hasPendingIncomingRequest, hasSentRequest,
-            sendFriendRequest, acceptFriendRequest, friendDisplayName
+            sendFriendRequest, acceptFriendRequest, friendDisplayName,
+            rejectFriendRequest, cancelFriendRequest, unfriendPeer, unfriendByIdentity, connectedPeerFor,
+            blocked, blockError, isBlockedIdentity, blockIdentity, unblockIdentity
         };
     },
     template: `
@@ -517,6 +631,9 @@ export default {
                     <p v-else-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && hasSentRequest(peer)" class="form-hint form-hint--neutral">
                         Friend request sent — waiting for them to accept.
                     </p>
+                    <p v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && peer.remoteIdentity && isBlockedIdentity(peer.remoteIdentity.identityId)" class="form-hint form-hint--neutral">
+                        ⛔ Blocked — this device refuses social interaction from this identity.
+                    </p>
 
                     <div class="identity-mgmt-actions">
                         <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && !relationshipFor(peer)"
@@ -535,6 +652,26 @@ export default {
                                 class="action-btn action-btn--primary" @click="acceptFriendRequest(peer)">
                             Accept Friend Request
                         </button>
+                        <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && hasPendingIncomingRequest(peer)"
+                                class="action-btn action-btn--secondary" @click="rejectFriendRequest(peer)">
+                            Reject Friend Request
+                        </button>
+                        <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && hasSentRequest(peer)"
+                                class="action-btn action-btn--secondary" @click="cancelFriendRequest(peer)">
+                            Cancel Friend Request
+                        </button>
+                        <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && friendStatus(peer) === FriendshipState.FRIEND"
+                                class="action-btn action-btn--secondary" @click="unfriendPeer(peer)">
+                            Unfriend
+                        </button>
+                        <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && peer.remoteIdentity && !isBlockedIdentity(peer.remoteIdentity.identityId)"
+                                class="action-btn action-btn--danger" @click="blockIdentity(peer.remoteIdentity)">
+                            Block
+                        </button>
+                        <button v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && peer.remoteIdentity && isBlockedIdentity(peer.remoteIdentity.identityId)"
+                                class="action-btn action-btn--secondary" @click="unblockIdentity(peer.remoteIdentity.identityId)">
+                            Unblock
+                        </button>
                         <button class="action-btn action-btn--secondary" @click="openDetail(peer)">Details</button>
                         <button class="action-btn action-btn--danger" @click="disconnectPeer(peer)">Disconnect</button>
                     </div>
@@ -544,6 +681,7 @@ export default {
 
             <p v-if="relationshipError" class="identity-unlock-error">{{ relationshipError }}</p>
             <p v-if="friendshipError" class="identity-unlock-error">{{ friendshipError }}</p>
+            <p v-if="blockError" class="identity-unlock-error">{{ blockError }}</p>
 
             <h2 class="peer-my-peers-heading">Known Peers</h2>
             <p class="form-hint form-hint--neutral">
@@ -571,7 +709,18 @@ export default {
                                @change="updateKnownAlias(relationship.identityId, $event)" />
                     </label>
 
+                    <p v-if="isBlockedIdentity(relationship.identityId)" class="form-hint form-hint--neutral">
+                        ⛔ Blocked — this device refuses social interaction from this identity.
+                    </p>
+
                     <div class="identity-mgmt-actions">
+                        <button v-if="!isBlockedIdentity(relationship.identityId)"
+                                class="action-btn action-btn--danger" @click="blockIdentity(relationship)">
+                            Block
+                        </button>
+                        <button v-else class="action-btn action-btn--secondary" @click="unblockIdentity(relationship.identityId)">
+                            Unblock
+                        </button>
                         <button class="action-btn action-btn--danger" @click="forgetKnownPeer(relationship.identityId)">Forget</button>
                     </div>
                 </div>
@@ -600,11 +749,56 @@ export default {
                     <p class="identity-mgmt-status">
                         {{ shortId(friend.identityId) }} · friends since {{ formatWhen(friend.updatedAt) }}
                     </p>
+                    <p v-if="isBlockedIdentity(friend.identityId)" class="form-hint form-hint--neutral">
+                        ⛔ Blocked — friendship stands, but this device refuses social interaction from
+                        this identity anyway. Friendship and blocking are independent facts.
+                    </p>
+
+                    <div class="identity-mgmt-actions">
+                        <button v-if="isConnectedNow(friend.identityId)"
+                                class="action-btn action-btn--secondary" @click="unfriendByIdentity(friend.identityId)">
+                            Unfriend
+                        </button>
+                        <span v-else class="form-hint form-hint--neutral">Reconnect to unfriend</span>
+                        <button v-if="!isBlockedIdentity(friend.identityId)"
+                                class="action-btn action-btn--danger" @click="blockIdentity(friend)">
+                            Block
+                        </button>
+                        <button v-else class="action-btn action-btn--secondary" @click="unblockIdentity(friend.identityId)">
+                            Unblock
+                        </button>
+                    </div>
                 </div>
             </div>
             <p v-else class="form-hint form-hint--neutral">
                 No friends yet. Send a friend request from an authenticated peer's card above, or
                 accept one they sent you.
+            </p>
+
+            <h2 class="peer-my-peers-heading">Blocked</h2>
+            <p class="form-hint form-hint--neutral">
+                A blocked identity is never told — see core/PeerBlockRecord.js. Blocking stops this
+                device from sending it presence, profile, or interaction updates, and rejects
+                anything it sends here, regardless of friendship. Unblocking restores only the
+                ability to be heard again — it never recreates a friendship on its own.
+            </p>
+            <div v-if="blocked.length" class="identity-mgmt-list">
+                <div v-for="block in blocked" :key="block.identityId" class="identity-mgmt-card">
+                    <div class="identity-mgmt-card-header">
+                        <span class="identity-mgmt-name">{{ friendDisplayName(block.identityId) }}</span>
+                        <span class="peer-badge peer-badge--pending">Blocked</span>
+                    </div>
+                    <p class="identity-mgmt-status">
+                        {{ shortId(block.identityId) }} · blocked since {{ formatWhen(block.createdAt) }}
+                    </p>
+                    <div class="identity-mgmt-actions">
+                        <button class="action-btn action-btn--secondary" @click="unblockIdentity(block.identityId)">Unblock</button>
+                    </div>
+                </div>
+            </div>
+            <p v-else class="form-hint form-hint--neutral">
+                Nobody is blocked. Use <strong>Block</strong> on a peer, known peer, or friend's card
+                above to stop hearing from them.
             </p>
 
             <div v-if="selectedPeer" role="dialog" aria-label="Peer identity" class="modal-overlay" @click.self="closeDetail">

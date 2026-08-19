@@ -3668,3 +3668,124 @@ its own, independently inspectable gate a message must cross. A
 replica with a local avatar, zero authenticated peers, and Presence:
 PUBLIC is visible to precisely nobody — not hidden, not broadcasting
 into a void, simply not yet connected to anyone who could receive it.
+
+### A Cyclic Consent Vocabulary Needs A Reference, Never Just A Type (0.2.60)
+
+0.2.57 shipped REQUEST/ACCEPT as a one-shot vocabulary — a relationship
+could only ever be asked and answered once — and that fact alone made
+`core/FriendshipAdvertisement.js`'s original replay defenses (bind the
+signer to the claimed actor, bind the whole payload under one signature)
+sufficient: a captured ACCEPT could never be replayed against anything
+but the exact REQUEST it already answered, because no second REQUEST
+between the same two identities could ever exist. 0.2.60 makes the
+vocabulary CYCLIC — unfriend, then request again — and that single
+change reopens the gap: a genuinely valid, once-honestly-produced ACCEPT
+from an ENDED cycle would still cryptographically verify if replayed
+against a brand-new cycle's REQUEST, because actor, subject, action, and
+`sequence` are all IDENTICAL between the two cycles (only the untrusted
+`timestamp` differs). Fixing this by type alone — "an ACCEPT satisfies
+an outstanding REQUEST" — is not enough once more than one REQUEST can
+ever exist between the same two identities over time. `inResponseTo`
+closes it the same way this codebase has closed every reference-based
+replay before: bind the answer to the SPECIFIC INSTANCE it answers, not
+merely to its type. Every terminal action (REJECT/CANCEL/UNFRIEND) needs
+the identical binding, for the identical reason — see
+`tests/FriendshipRevocationAndBlocking.test.js`'s own FLAGSHIP A, which
+proves the attack directly: it captures a genuine cycle-1 ACCEPT, sends
+it against a fresh cycle-2 REQUEST, and confirms it changes nothing.
+
+### Friendship Is Mutual Relationship State; Blocking Is A Unilateral Local Decision (0.2.60)
+
+These read like they could be one axis — "how do I feel about this
+identity" — and 0.2.60 deliberately keeps them two, in two completely
+separate stores (`core/FriendshipRecord.js` vs. `core/PeerBlockRecord.js`),
+because they answer different KINDS of question. Friendship is a claim
+about a RELATIONSHIP: it requires evidence from both sides, is
+meaningless until the other party has actually seen and answered it,
+and is exactly as much Bob's fact as it is Alice's. Blocking is a claim
+about a DEVICE'S OWN BEHAVIOR: it requires nothing from Bob, means
+nothing to Bob (he is never told), and is entirely Alice's own,
+un-negotiable decision about what her own replica will send and accept.
+Collapsing them into one `FriendshipState`-shaped enum (`NONE` /
+`REQUESTED` / `FRIEND` / `BLOCKED`) would force a false choice at the
+exact moment blocking matters most: a currently-FRIEND relationship
+Alice wants to silence without pretending the friendship itself was
+never real. Keeping them separate makes `FRIEND + BLOCKED` an ordinary,
+simultaneously-true combination instead of a contradiction either store
+has to reconcile — see `ui/views/PeerConnectionsView.js`'s own Friends
+list, which renders exactly that combination without any special-casing.
+
+### Blocking Is An Additional Local Authorization Gate, Never A Replacement For One (0.2.60)
+
+Every avatar-social channel already had a trust boundary before 0.2.60:
+signature verification, authority (who may speak for this avatarId),
+replay/staleness rejection. Blocking does not get to skip any of that
+by being "more important" — it is checked strictly AFTER a claim is
+already known to be genuinely, cryptographically valid (see every
+trust boundary's own `evaluate()`: `isBlocked` is consulted right after
+`signerId` is established, never before). A structurally malformed or
+badly-signed claim from a blocked identity is still rejected for being
+malformed or badly signed, not reported as `TrustStatus.BLOCKED` — the
+two failure reasons stay honestly distinct, the same way `UNAUTHORIZED`
+and `INVALID_SIGNATURE` always have. Symmetrically, on the sender side,
+`presence/PeerAvatarPresenceBroadcastProvider.js` checks `isBlocked`
+BEFORE consulting the visibility policy, but never INSTEAD of it —
+blocking a peer doesn't change what FRIENDS/PUBLIC/HIDDEN would
+otherwise decide, it simply vetoes the send to that one peer
+regardless of the answer. Two independent authorization questions,
+checked in a fixed order, neither one ever standing in for the other.
+
+### Blocking Is Wired Twice, Once Per Direction, Because Neither Side May Trust The Other To Enforce It (0.2.60)
+
+`application/CreateWorldViewUseCase.js` wires the SAME `isBlocked`
+predicate to two genuinely different places: each outbound
+`presence/PeerAvatarPresenceBroadcastProvider.js` (never SEND to a
+blocked peer) and `application/WorldNavigationSession.js`'s inbound
+trust boundaries (never ACCEPT from a blocked signer). Neither wiring
+is optional, and neither one is redundant with the other, for the same
+reason 0.2.38 already established that rendering presence and trusting
+presence stay separate concerns: Alice's own sender-side gate protects
+HER bandwidth and HER intent to stop reaching Bob, but it cannot protect
+her from a Bob who — through a modified client, a bug, or simple bad
+faith — keeps sending anyway; only Alice's OWN receiver-side trust
+boundary, evaluated on HER replica, can refuse what actually arrives.
+Symmetrically, the receiver-side gate alone would still let Alice leak
+presence/profile/interaction TO a peer she has blocked, right up until
+he discards it — worse for her privacy than simply never sending it. A
+decentralized system with no server to enforce a block centrally has no
+choice but to duplicate the check on both sides of every connection;
+this is that duplication, deliberate and by design, not an oversight
+that happened to work out twice.
+
+### Blocking Is Silent — Never Announced To The Blocked Identity (0.2.60)
+
+`core/PeerBlockRecord.js` has no `signature` field and
+`application/PeerBlockUseCase.js` has no `peerMessageBus` — not an
+oversight, the entire point. Telling Bob "Alice has blocked you" is
+itself a piece of information Alice may not want to hand him (it invites
+exactly the retaliation or renewed contact blocking exists to prevent),
+and would require the OPPOSITE of what a block is trying to achieve —
+a message deliberately sent TO the identity being cut off. A blocked
+identity simply, silently, stops being sent anything and stops being
+listened to; from Bob's own side, Alice's presence/profile/interaction
+just goes quiet the way it would if she disconnected, and any message
+he keeps sending her is dropped with no error, no rejection notice, and
+no observable difference from her never having received it at all.
+
+### Unblocking Restores Nothing But The Ability To Be Heard Again (0.2.60)
+
+`application/PeerBlockUseCase.js#unblock()` does exactly one thing:
+removes a `core/PeerBlockRecord.js` entry. It never touches
+`core/FriendshipRecord.js`, never re-sends anything, and never
+re-derives any other piece of state — see "Friendship Is Mutual
+Relationship State; Blocking Is A Unilateral Local Decision" above for
+why the two stores were kept separate in the first place. Concretely:
+`BLOCK` then `UNBLOCK` on a stranger leaves friendship at `NONE`, on a
+former friend leaves it at whatever UNFRIEND already left it, and on a
+CURRENT friend leaves it at `FRIEND` — in every case, exactly what it
+already, independently was. Unblocking is the precise inverse of
+block(), nothing more; it hands back eligibility to be sent to and
+heard from again, and stops there. `tests/FriendshipRevocationAndBlocking.test.js`'s
+own FLAGSHIP B proves the never-friended case directly, on purpose —
+the case where "restores nothing" is easiest to get wrong by silently
+defaulting to FRIEND.

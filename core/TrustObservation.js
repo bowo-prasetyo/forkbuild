@@ -32,7 +32,17 @@ export const TrustStatus = Object.freeze({
     // — see core/PresenceReplayWindow.js. A replay is not necessarily
     // hostile (a lossy/duplicating transport redelivers plenty of
     // these honestly) — it is simply never new information.
-    REPLAYED: 'REPLAYED'
+    REPLAYED: 'REPLAYED',
+    // 0.2.60 — Friendship Revocation, Blocking & Privacy Withdrawal.
+    // The signature verified and the signer is genuinely authorized to
+    // speak for this avatarId — this is rejected purely because the
+    // RECEIVING replica has locally blocked that signer. Deliberately
+    // distinct from UNAUTHORIZED: unauthorized means "this signer never
+    // had the right to make this claim, for anyone"; BLOCKED means "this
+    // signer's claims would otherwise be perfectly legitimate — THIS
+    // replica, specifically, has chosen to refuse them anyway." See
+    // core/PeerBlockRecord.js's own header.
+    BLOCKED: 'BLOCKED'
 });
 
 // A status counts as "acceptable by default" only for the two statuses

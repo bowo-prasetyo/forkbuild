@@ -180,11 +180,18 @@ export default {
         const peerSessionManager = inject('peerSessionManager');
         const peerMessageBus = inject('peerMessageBus');
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
+        // 0.2.60 — the SAME app-wide PeerBlockUseCase ui/main.js already
+        // provides for /peers, handed to CreateWorldViewUseCase so it
+        // can derive the isBlocked predicate both the outbound transport
+        // and the inbound trust boundaries consult — see that use
+        // case's own comment.
+        const peerBlockUseCase = inject('peerBlockUseCase');
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
             connectedPeerRegistry: peerSessionManager ? peerSessionManager.registry : null,
-            friendRelationshipUseCase
+            friendRelationshipUseCase,
+            peerBlockUseCase
         });
         const session = worldViewFactory.createSession(registry);
         // Purely a client rendering preference (see docs/Principles.md,

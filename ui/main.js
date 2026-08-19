@@ -6,6 +6,7 @@ import { IdentityUseCase } from '../application/IdentityUseCase.js';
 import { PeerSessionManager } from '../application/PeerSessionManager.js';
 import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
 import { CreateFriendRelationshipUseCase } from '../application/CreateFriendRelationshipUseCase.js';
+import { CreatePeerBlockUseCase } from '../application/CreatePeerBlockUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
@@ -33,9 +34,18 @@ const peerRelationshipUseCase = new CreatePeerRelationshipUseCase().execute(iden
 // the exact same real WebRTC connections this /peers page already
 // authenticates.
 const peerMessageBus = new PeerMessageBus();
+// 0.2.60 — one app-wide PeerBlockUseCase, same persistence reasoning as
+// peerRelationshipUseCase above: a block must survive navigating away
+// from /peers and survive a reload. Built BEFORE friendRelationshipUseCase
+// so its isBlocked predicate can be wired straight into the friendship
+// protocol's own ingestion/send gating (see application/
+// CreateFriendRelationshipUseCase.js) — never a store friendship reads
+// directly.
+const peerBlockUseCase = new CreatePeerBlockUseCase().execute(identityProvider);
 const friendRelationshipUseCase = new CreateFriendRelationshipUseCase().execute(identityProvider, {
     peerMessageBus,
-    connectedPeerRegistry: peerSessionManager.registry
+    connectedPeerRegistry: peerSessionManager.registry,
+    peerBlockUseCase
 });
 
 const app = createApp(App);
@@ -43,6 +53,7 @@ app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
 app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
+app.provide('peerBlockUseCase', peerBlockUseCase);
 // 0.2.59 — Peer-Based Avatar Social Transport. The SAME app-wide bus
 // friendRelationshipUseCase already rides, now also provided directly
 // so World View can attach presence/profile/interaction to it — see

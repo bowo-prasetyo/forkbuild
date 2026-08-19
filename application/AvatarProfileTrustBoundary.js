@@ -51,14 +51,19 @@ import { ReplayGuard } from '../replication/ReplayGuard.js';
 // one the same additive way 0.2.38 added PresenceTrustPolicy, if ever
 // needed.
 export class AvatarProfileTrustBoundary {
+    // 0.2.60 — `isBlocked`: see application/PresenceTrustBoundary.js's
+    // own constructor comment; identical contract, own instance, never
+    // shared.
     constructor({
         authorizationVerifier = new LocalAuthorizationVerifier(),
         authorityRegistry = new PresenceAuthorityRegistry(),
-        replayGuard = new ReplayGuard()
+        replayGuard = new ReplayGuard(),
+        isBlocked = () => false
     } = {}) {
         this._verifier = authorizationVerifier;
         this._authority = authorityRegistry;
         this._replayGuard = replayGuard;
+        this._isBlocked = isBlocked;
     }
 
     // currentAdvertisement: whatever application/LocalAvatarProfileStore.js
@@ -86,6 +91,17 @@ export class AvatarProfileTrustBoundary {
             };
         }
         const signerId = (verification.signed && verification.valid) ? incomingAdvertisement.signature.signer : null;
+
+        // 0.2.60 — see application/PresenceTrustBoundary.js's own
+        // evaluate() comment for the full reasoning; identical gate.
+        if (signerId && this._isBlocked(signerId)) {
+            return {
+                accepted: false,
+                observation: TrustObservation.of(TrustStatus.BLOCKED, {
+                    subjectType: 'avatar-profile', subjectId: avatarId, reason: 'signer is locally blocked'
+                })
+            };
+        }
 
         const authorityResult = this._authority.evaluate(avatarId, { ownerIdentity: incomingAdvertisement.ownerIdentity, signerId });
         if (!authorityResult.authorized) {
