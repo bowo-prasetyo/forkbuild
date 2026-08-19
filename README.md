@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.67** — Identity Lifecycle Hardening
+**Version 0.2.68** — Identity Lifecycle Propagation
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -961,6 +961,33 @@ revoked, trust B instead" to every device or peer that still knows A is
 left to a future milestone, over the same decentralized infrastructure
 this codebase already has — never a central revocation server.
 
+0.2.68 closes exactly that gap, deliberately without turning revocation
+or succession into a centralized mechanism. A new, namespaced
+`peer/PeerMessageBus.js` protocol, `forkbuild:identity-lifecycle`,
+relays the EXACT SAME signed records 0.2.67 already produces —
+`core/IdentityRevocationEnvelope.js`/`core/IdentitySuccessionEnvelope.js`
+— to every currently-authenticated connected peer, verified by the
+EXACT SAME `identity/LocalAuthorizationVerifier.js` methods 0.2.67
+already wrote. The one property worth naming plainly: what makes a
+gossiped record trustworthy is never who relayed it — it is the
+record's own signature. Charlie, connected to Bob, can legitimately
+hand Bob a revocation Alice signed, without Charlie being Alice or ever
+having talked to her directly; the deliberate, documented opposite of
+`application/FriendRelationshipUseCase.js`'s own actor-must-match-
+connection rule. A new relevance gate keeps this from becoming an open
+revocation directory: a record about an identity this device has never
+remembered as a Known Peer or a Friend is dropped regardless of how
+cryptographically valid it is. And — the property the flagship test
+goes out of its way to prove — propagation never becomes authority
+over anything else this device already has on record: after Alice
+rotates identity A to identity B, `PeerRelationship(A)` and
+`PeerRelationship(B)` remain two genuinely distinct records on Bob's
+device, never silently merged just because a verified succession link
+exists between them. Deliberately deferred: durable, retried delivery
+to a peer who is offline right now (unlike `application/ChatOutbox.js`'s
+own reliable-delivery model), and multi-hop relay beyond a device's own
+directly-connected peers.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1162,6 +1189,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.65  Distributed Peer Rendezvous
 - [x] 0.2.66  Real Network Rendezvous & NAT Traversal
 - [x] 0.2.67  Identity Lifecycle Hardening
+- [x] 0.2.68  Identity Lifecycle Propagation
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

@@ -128,6 +128,7 @@ export default {
         const peerRelationshipUseCase = inject('peerRelationshipUseCase');
         const peerReconnectionUseCase = inject('peerReconnectionUseCase');
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
+        const identityLifecyclePropagationUseCase = inject('identityLifecyclePropagationUseCase', null);
         const peerBlockUseCase = inject('peerBlockUseCase');
         const findPeerUseCase = inject('findPeerUseCase');
 
@@ -279,6 +280,17 @@ export default {
         // applies, for the exact same reason: an unauthenticated
         // invitation hint is never eligible to stand in for a proven
         // identity.
+        // 0.2.68 — what THIS device has, second-hand, verified, learned
+        // about `identityId`'s lifecycle (see core/
+        // RemoteIdentityLifecycle.js's own header on why this is a purely
+        // DISPLAY cross-reference, never a mutation of the Known Peer or
+        // Friend record it's shown alongside). Never throws when
+        // propagation isn't wired — mirrors identityLifecyclePropagationUseCase's
+        // own optional-injection guard in ui/views/IdentityManagementView.js.
+        function remoteLifecycleFor(identityId) {
+            return identityLifecyclePropagationUseCase ? identityLifecyclePropagationUseCase.getRemoteLifecycle(identityId) : null;
+        }
+
         function friendshipFor(peer) {
             return peer.remoteIdentity ? friendRelationshipUseCase.getRelationship(peer.remoteIdentity.identityId) : null;
         }
@@ -716,6 +728,7 @@ export default {
             reconnectTargetId, reconnectInvitePending, reconnectInviteError, reconnectInvitation,
             reconnectImportText, reconnectAcceptError, reconnectReply, reconnectRejectedError,
             toggleReconnect, submitReconnectInvite, submitReconnectAccept,
+            remoteLifecycleFor,
             FriendshipState, friends, friendshipError, friendStatus, hasPendingIncomingRequest, hasSentRequest,
             sendFriendRequest, acceptFriendRequest, friendDisplayName,
             rejectFriendRequest, cancelFriendRequest, unfriendPeer, unfriendByIdentity, connectedPeerFor,
@@ -1036,6 +1049,19 @@ export default {
                     <p v-if="isBlockedIdentity(relationship.identityId)" class="form-hint form-hint--neutral">
                         ⛔ Blocked — this device refuses social interaction from this identity.
                     </p>
+                    <p v-if="remoteLifecycleFor(relationship.identityId) && remoteLifecycleFor(relationship.identityId).isRevoked" class="form-hint form-hint--neutral">
+                        <span class="identity-revoked-badge">⚠ Revoked</span> — a signed revocation for this identity
+                        was received and verified.
+                        <template v-if="remoteLifecycleFor(relationship.identityId).successorIdentityId">
+                            Remembered successor: …{{ shortId(remoteLifecycleFor(relationship.identityId).successorIdentityId) }}.
+                        </template>
+                        This is informational only — the Known Peer record above is untouched; nothing about
+                        this identity's past connections or relationship is changed automatically.
+                    </p>
+                    <p v-else-if="remoteLifecycleFor(relationship.identityId) && remoteLifecycleFor(relationship.identityId).successorIdentityId" class="form-hint form-hint--neutral">
+                        A signed successor declaration was received and verified — remembered successor:
+                        …{{ shortId(remoteLifecycleFor(relationship.identityId).successorIdentityId) }}.
+                    </p>
 
                     <div class="identity-mgmt-actions">
                         <button v-if="!isConnectedNow(relationship.identityId)"
@@ -1126,6 +1152,13 @@ export default {
                     <p v-if="isBlockedIdentity(friend.identityId)" class="form-hint form-hint--neutral">
                         ⛔ Blocked — friendship stands, but this device refuses social interaction from
                         this identity anyway. Friendship and blocking are independent facts.
+                    </p>
+                    <p v-if="remoteLifecycleFor(friend.identityId) && remoteLifecycleFor(friend.identityId).isRevoked" class="form-hint form-hint--neutral">
+                        <span class="identity-revoked-badge">⚠ Revoked</span> — friendship stands as a durable local
+                        record, but a signed revocation for this identity was received and verified.
+                        <template v-if="remoteLifecycleFor(friend.identityId).successorIdentityId">
+                            Remembered successor: …{{ shortId(remoteLifecycleFor(friend.identityId).successorIdentityId) }}.
+                        </template>
                     </p>
 
                     <div class="identity-mgmt-actions">

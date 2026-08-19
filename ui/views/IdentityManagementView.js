@@ -29,6 +29,14 @@ export default {
     name: 'IdentityManagementView',
     setup() {
         const identityUseCase = inject('identityUseCase');
+        // 0.2.68 — optional: a test harness or a partial embedding of
+        // this view may not have wired app-wide peer propagation at all
+        // (see ui/main.js). Every call site below guards on it being
+        // present before broadcasting — declareSuccessor()/revokeIdentity()
+        // themselves succeed identically either way; propagation is
+        // purely an ADDITIONAL step layered on top, never a precondition
+        // for the local, 0.2.67 lifecycle operation itself.
+        const identityLifecyclePropagationUseCase = inject('identityLifecyclePropagationUseCase', null);
 
         const identities = ref(identityUseCase.listIdentities());
         const session = ref(identityUseCase.currentSession());
@@ -259,7 +267,10 @@ export default {
                 return;
             }
             try {
-                identityUseCase.declareSuccessor(successorFormId.value, successorIdentityInput.value.trim(), successorPassphrase.value || null);
+                const record = identityUseCase.declareSuccessor(successorFormId.value, successorIdentityInput.value.trim(), successorPassphrase.value || null);
+                if (identityLifecyclePropagationUseCase) {
+                    identityLifecyclePropagationUseCase.broadcastSuccession(record);
+                }
                 cancelDeclareSuccessor();
                 refresh();
             } catch (e) {
@@ -286,11 +297,23 @@ export default {
         }
         function confirmRevoke() {
             try {
-                identityUseCase.revokeIdentity(revokingId.value, {
+                const revokedId = revokingId.value;
+                const record = identityUseCase.revokeIdentity(revokedId, {
                     passphrase: revokePassphrase.value || null,
                     reason: revokeReason.value.trim() || null,
                     successorIdentityId: revokeSuccessor.value.trim() || null
                 });
+                if (identityLifecyclePropagationUseCase) {
+                    identityLifecyclePropagationUseCase.broadcastRevocation(record);
+                    // revokeIdentity({ successorIdentityId }) also produces
+                    // a succession record as a side effect (see
+                    // identity/LocalIdentityProvider.js's own header) —
+                    // broadcast that too, in the same gesture, so peers
+                    // learn "revoked, AND here is the successor" together.
+                    if (record.successorIdentityId) {
+                        identityLifecyclePropagationUseCase.broadcastSuccession(identityUseCase.getSuccessionRecord(revokedId));
+                    }
+                }
                 cancelRevoke();
                 refresh();
             } catch (e) {
