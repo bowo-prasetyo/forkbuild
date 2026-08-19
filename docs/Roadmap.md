@@ -2066,6 +2066,109 @@ duplicate entry in a user-visible transcript; and, unchanged from
 still belongs to one local device holding one identity's key, not to an
 identity that might be authenticated from several devices at once.
 
+0.2.70 — Presence & Conversation Lifecycle — is chosen next over voice/
+audio, deliberately: 0.2.69 made conversation history durable, and
+durability immediately raises a question the app had no single answer
+for — "what does this application know about the other participant when
+there is no active connection?" Before 0.2.69, that question barely
+mattered: `application/LiveConversation.js` was exactly as ephemeral as
+the connection itself, so "offline" and "nothing to show" were nearly
+the same thing. Once a conversation survives a reload and a queued
+message survives a disconnect, they genuinely aren't the same thing
+anymore, and the UI had no single place that reconciled "known" (0.2.56),
+"friended" (0.2.57), "connected right now" (0.2.50), and "has history"
+(0.2.69) into one coherent view of one identity. 0.2.70 closes that gap
+before adding a fifth, heavier protocol (voice) on top of a foundation
+that doesn't yet explain itself — see docs/Principles.md, "Offline Is
+Not Absence: Identity, Relationship, Friendship, And Conversation All
+Outlive The Connection."
+
+```text
+0.2.70
+├── core/ConversationReadMarker.js       peerIdentityId + a monotonic
+│                                          lastReadSequence high-water
+│                                          mark — immutable, never
+│                                          regresses, like every other
+│                                          durable value object here
+├── application/ConversationReadTracker.js  a THIRD durable per-owner
+│                                          store, alongside the outbox
+│                                          (0.2.63) and the history
+│                                          store (0.2.69) — answers "what
+│                                          have I seen," never folded
+│                                          into either
+├── application/PeerPresenceUseCase.js   a COMPUTED reconciliation,
+│                                          never stored — getSummary()/
+│                                          list() read ConnectedPeerRegistry,
+│                                          PeerRelationshipUseCase,
+│                                          FriendRelationshipUseCase,
+│                                          ConversationStore, and
+│                                          ChatOutbox fresh on every call
+├── ui/views/ConversationsView.js        the aggregate conversation-list
+│                                          UI 0.2.69 named and deliberately
+│                                          declined to build, now reading
+│                                          exactly what that milestone
+│                                          pointed at
+└── ui/views/ChatView.js                 a "Show details" panel surfaces
+                                           the same five reconciled facts
+                                           for the one conversation
+                                           currently open, and opening it
+                                           at all is this device's own
+                                           "I looked" gesture (markRead)
+```
+
+The property this milestone cares about most is that NONE of the five
+facts `application/PeerPresenceUseCase.js` reconciles is allowed to
+depend on any of the others: `isConnectedNow` flips to `false` the
+instant `application/ConnectedPeerRegistry.js` says so, while the
+remembered relationship, the friendship, the entire message history, and
+anything still queued in the outbox are completely untouched — see
+docs/Principles.md, "Offline Is Not Absence." The class introduces no
+new durable state of its own beyond one small, one-way write
+(`markRead()`, delegated to `application/ConversationReadTracker.js`,
+itself a genuinely third question from the outbox and the history
+store — see that principle's own header) and deliberately does not
+invent a second connection-lifecycle vocabulary alongside
+`peer/PeerLifecycleState.js` — see docs/Principles.md, "A Peer Presence
+Summary Reconciles Independent Lifetimes; It Is Never A Fourth Store."
+
+The flagship test (`tests/PeerPresenceConversationLifecycle.test.js`)
+scripts the scenario this milestone is for: Alice and Bob become
+friends and exchange a message; Bob's presence view marks it unread
+until he actually opens the conversation. Bob disconnects — his
+presence flips to offline while his remembered relationship,
+friendship, and conversation history all read back completely
+unchanged. Alice queues a second message while he's offline; her own
+presence view shows exactly one message waiting to send. Bob genuinely
+reconnects, the outbox flushes, and presence on both sides reconciles
+back to online with the pending count cleared and the new message
+correctly unread on Bob's side until he looks again. A second, SECURITY
+FLAGSHIP scenario extends 0.2.62's own stale-incarnation defense
+(`tests/PeerConnectionResilience.test.js`) into this new layer: a
+"reconnect" that genuinely authenticates as Charlie instead of Bob is
+rejected and closed exactly as before, and this milestone additionally
+proves that rejection can never flip Bob's own presence to connected,
+never fabricates a presence fact for Charlie, and that a late, stale
+close() event from the already-dead, rejected connection has no further
+effect — Bob's real reconnect afterward still reconciles correctly.
+
+Deliberately not in 0.2.70, named rather than hidden: read receipts — a
+signed, transmitted acknowledgment that the OTHER participant actually
+saw a message is a genuinely different protocol from the purely local,
+unsigned, never-transmitted `core/ConversationReadMarker.js` this
+milestone adds (see docs/Principles.md, "A Read Marker Is A Local Note
+About What THIS Device Has Seen, Never A Receipt Sent To Anyone"), with
+its own authorization, replay, and persistence semantics still to be
+designed; a second connection-lifecycle enum layered over
+`peer/PeerLifecycleState.js` — that file already is the one vocabulary
+for transport/session state, and `isConnectedNow` is the only new fact
+`application/PeerPresenceUseCase.js` needed; multi-device presence
+(a single identity connected from two devices at once, and what
+"online" should even mean then) — unchanged from every prior
+milestone's own list, a conversation still belongs to one local device
+holding one identity's key; and typing indicators, which would need
+their own ephemeral, unauthenticated-by-default wire signal this
+milestone never builds.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

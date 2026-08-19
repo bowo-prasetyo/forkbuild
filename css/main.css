@@ -2946,3 +2946,56 @@ html, body {
 .chat-compose-input {
     flex: 1;
 }
+
+/* 0.2.70 — Presence & Conversation Lifecycle. Reuses .identity-mgmt-*,
+   .peer-badge*, .peer-detail-row, and .form-hint* wholesale — the same
+   card/list language every other social surface already uses — and
+   adds only the unread badge and the chat-detail toggle/panel that are
+   genuinely new. */
+.conversations-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.conversation-summary-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.35rem 0;
+}
+
+.conversation-unread-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(90, 140, 224, 0.18);
+    color: #7aa2f7;
+    white-space: nowrap;
+}
+
+.chat-detail-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 0.5rem;
+    color: #7aa2f7;
+    font-size: 0.78rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.chat-detail-panel {
+    margin: 0.5rem 0 1rem;
+    padding: 0.75rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.chat-detail-panel .identity-mgmt-status {
+    margin: 0.2rem 0;
+}

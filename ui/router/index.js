@@ -9,6 +9,7 @@ import AvatarSettingsView from '../views/AvatarSettingsView.js';
 import IdentityManagementView from '../views/IdentityManagementView.js';
 import PeerConnectionsView from '../views/PeerConnectionsView.js';
 import ChatView from '../views/ChatView.js';
+import ConversationsView from '../views/ConversationsView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -23,6 +24,12 @@ const routes = [
     // Friends list (see ui/views/PeerConnectionsView.js), never a
     // top-nav destination.
     { path: '/chat/:identityId', name: 'chat', component: ChatView },
+    // 0.2.70 — Presence & Conversation Lifecycle. A top-nav destination
+    // (unlike /chat/:identityId above): the one place this app reconciles
+    // identity/relationship/friendship/connection/conversation for every
+    // peer worth showing, independent of whether any of them are online
+    // right now — see application/PeerPresenceUseCase.js's own header.
+    { path: '/conversations', name: 'conversations', component: ConversationsView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 

@@ -32,6 +32,18 @@ import { FriendshipState } from '../../core/FriendshipState.js';
 // straight off the `deliveryState` application/ChatUseCase.js's
 // onMessage() already attaches — this view never talks to
 // application/ChatOutbox.js directly.
+//
+// 0.2.70 — a "Show details" toggle surfaces application/
+// PeerPresenceUseCase.js's own reconciled snapshot (identity/
+// relationship/friendship/connection/conversation, five independent
+// facts, five independent lines — see that class's own header) rather
+// than collapsing all five into the existing `statusLabel` badge, which
+// stays exactly as terse as 0.2.61 left it. Opening this view is also
+// this device's own "I looked" gesture — every mount and every incoming
+// message for this peer calls `peerPresenceUseCase.markRead()`, which
+// is a purely local, unsigned, never-transmitted note (see
+// core/ConversationReadMarker.js's own header on why this is never a
+// read RECEIPT); the other participant has no way to observe it.
 export default {
     name: 'ChatView',
     setup() {
@@ -44,6 +56,7 @@ export default {
         const friendRelationshipUseCase = inject('friendRelationshipUseCase');
         const peerBlockUseCase = inject('peerBlockUseCase');
         const chatUseCase = inject('chatUseCase');
+        const peerPresenceUseCase = inject('peerPresenceUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
         const peers = ref(peerSessionManager.listPeers());
@@ -51,6 +64,12 @@ export default {
         const draft = ref('');
         const sendError = ref('');
         const messageListEl = ref(null);
+        // 0.2.70 — a reconciled snapshot of everything this device knows
+        // about this one identity, independent of connection state — see
+        // application/PeerPresenceUseCase.js's own header. Refreshed
+        // alongside `messages`/`peers` below, never a separate polling
+        // loop of its own.
+        const presence = ref(peerPresenceUseCase.getSummary(peerIdentityId));
 
         function shortId(identityId) {
             return identityId ? identityId.slice(-14) : '';
@@ -86,6 +105,19 @@ export default {
 
         function refreshPeers(list) {
             peers.value = list || peerSessionManager.listPeers();
+            refreshPresence();
+        }
+
+        // 0.2.70 — re-reads the reconciled snapshot, then marks
+        // everything currently stored for this peer as read: this view
+        // being open and rendering `messages` IS "the owner looked," the
+        // same moment `application/PeerPresenceUseCase.js#markRead()`'s
+        // own header describes. Harmless to call repeatedly — marking
+        // read is a monotonic high-water mark (core/
+        // ConversationReadMarker.js), never a toggle.
+        function refreshPresence() {
+            peerPresenceUseCase.markRead(peerIdentityId);
+            presence.value = peerPresenceUseCase.getSummary(peerIdentityId);
         }
 
         function scrollToBottom() {
@@ -98,6 +130,7 @@ export default {
 
         function refreshMessages() {
             messages.value = chatUseCase.getConversation(peerIdentityId);
+            refreshPresence();
             scrollToBottom();
         }
 
@@ -132,9 +165,12 @@ export default {
             return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
+        const showDetail = ref(false);
+
         let unsubscribePeers = null;
         let unsubscribeMessages = null;
         let unsubscribeSession = null;
+        let unsubscribePresence = null;
         onMounted(() => {
             refreshPeers();
             refreshMessages();
@@ -144,6 +180,11 @@ export default {
                     refreshMessages();
                 }
             });
+            // 0.2.70 — a relationship/friendship change (e.g. an
+            // unfriend completed from another tab) reconciles here too,
+            // not only a new message or a connection change already
+            // covered by refreshPeers()/refreshMessages() above.
+            unsubscribePresence = peerPresenceUseCase.onChange(() => { presence.value = peerPresenceUseCase.getSummary(peerIdentityId); });
             unsubscribeSession = identityUseCase.onSessionChanged(() => {
                 isAuthenticated.value = identityUseCase.isAuthenticated();
             });
@@ -152,13 +193,14 @@ export default {
         onBeforeUnmount(() => {
             if (unsubscribePeers) unsubscribePeers();
             if (unsubscribeMessages) unsubscribeMessages();
+            if (unsubscribePresence) unsubscribePresence();
             if (unsubscribeSession) unsubscribeSession();
         });
 
         return {
             peerIdentityId, isAuthenticated, messages, draft, sendError, messageListEl,
             displayName, shortId, isConnected, isBlocked, isFriend, canChat, statusLabel,
-            send, formatTime, deliveryLabel
+            send, formatTime, deliveryLabel, presence, showDetail
         };
     },
     template: `
@@ -173,7 +215,32 @@ export default {
                         {{ statusLabel }}
                     </span>
                 </header>
-                <p class="identity-mgmt-status">{{ shortId(peerIdentityId) }}</p>
+                <p class="identity-mgmt-status">
+                    {{ shortId(peerIdentityId) }}
+                    <button type="button" class="chat-detail-toggle" @click="showDetail = !showDetail">
+                        {{ showDetail ? 'Hide details' : 'Show details' }}
+                    </button>
+                </p>
+
+                <!-- 0.2.70 — the reconciled view: identity/relationship/
+                     friendship/connection/conversation are five
+                     independent facts, shown as five independent lines
+                     rather than collapsed into the one-word statusLabel
+                     badge above — see application/PeerPresenceUseCase.js's
+                     own header on why offline never implies any of the
+                     other four are also gone. -->
+                <div v-if="showDetail" class="peer-detail-row chat-detail-panel">
+                    <p class="identity-mgmt-status">Identity: known ({{ shortId(peerIdentityId) }})</p>
+                    <p class="identity-mgmt-status">Relationship: {{ presence.relationship ? 'remembered' : 'not remembered' }}</p>
+                    <p class="identity-mgmt-status">Friendship: {{ presence.friendshipState }}</p>
+                    <p class="identity-mgmt-status">Connection: {{ presence.isConnectedNow ? 'CONNECTED' : 'DISCONNECTED' }}</p>
+                    <p class="identity-mgmt-status">
+                        Conversation: {{ presence.conversation.messageCount }} message{{ presence.conversation.messageCount === 1 ? '' : 's' }}
+                        <template v-if="presence.conversation.pendingOutboxCount > 0">
+                            · {{ presence.conversation.pendingOutboxCount }} waiting to send
+                        </template>
+                    </p>
+                </div>
 
                 <p v-if="isBlocked" class="form-hint form-hint--neutral">
                     ⛔ This identity is blocked — unblock it from <router-link to="/peers">Peers</router-link> to chat again.

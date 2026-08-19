@@ -4748,3 +4748,94 @@ time it was accepted, and accepting the identical bytes a second time
 grants nothing new. Fixing a problem that never actually manifests, by
 adding persistence to a component explicitly designed to stay bounded
 and disposable, would have been solving the wrong layer.
+
+### Offline Is Not Absence: Identity, Relationship, Friendship, And Conversation All Outlive The Connection (0.2.70)
+
+0.2.56 through 0.2.69 each independently made ONE fact about another
+participant durable — a `PeerRelationship` (0.2.56), a
+`FriendshipRecord` (0.2.57), a conversation's own history (0.2.69) — and
+each of those milestones proved, on its own, that the fact it added
+survives a disconnect. 0.2.70 names the property that falls out of all
+three having done that separately, on purpose, rather than merged into
+one lifecycle: a connection closing is the ONLY thing that becomes
+false. `application/PeerRelationshipUseCase.js` still has the
+relationship. `application/FriendRelationshipUseCase.js` still has the
+friendship. `application/ConversationStore.js` still has every message.
+`application/ChatOutbox.js` still has whatever was queued, waiting for
+exactly this moment to flush. None of those four stores has ever heard
+of `application/ConnectedPeerRegistry.js`, and none of them needs to —
+each already answers its own question correctly regardless of whether
+anyone is connected right now, precisely because none of them was ever
+built to depend on that. `application/PeerPresenceUseCase.js` is the
+first piece of code in this codebase that reads all five facts
+together, and it exists ONLY to make that already-true independence
+visible to a UI in one place — see the next principle.
+
+### A Peer Presence Summary Reconciles Independent Lifetimes; It Is Never A Fourth Store (0.2.70)
+
+The temptation `application/PeerPresenceUseCase.js` was built to resist:
+collapsing identity, relationship, friendship, connection, and
+conversation into one `PeerState` object durable enough to be worth
+caching. This codebase already has a name for what goes wrong when a
+derived summary is stored instead of recomputed —
+`peer/PeerLifecycleState.js#derivePeerLifecycleState()`'s own header:
+"what happens when it disagrees with the two real state machines it's
+supposed to be summarizing?" `PeerPresenceUseCase#getSummary()`/`list()`
+apply the identical discipline one layer up, across five sources
+instead of two: every call reads `ConnectedPeerRegistry`,
+`PeerRelationshipUseCase`, `FriendRelationshipUseCase`,
+`ConversationStore`, and `ChatOutbox` fresh, computes a plain object,
+and stores nothing. There is no cache to invalidate and no snapshot that
+can ever drift out of sync with the sources it summarizes, because
+there is no snapshot at all outside of the single call that just
+returned one. `onChange()` republishes by recomputing from scratch, not
+by patching a stored value. The class also deliberately does NOT
+introduce a second connection-lifecycle vocabulary (CONNECTING /
+AUTHENTICATING / CONNECTED / DISCONNECTED / FAILED) alongside
+`peer/PeerLifecycleState.js` — that file already is the one vocabulary
+for transport/session state, and a summary needs only one new boolean,
+`isConnectedNow`, to say the one new thing worth saying: whether a live,
+AUTHENTICATED `ConnectedPeer` exists for this identity at all.
+
+### A Read Marker Is A Local Note About What THIS Device Has Seen, Never A Receipt Sent To Anyone (0.2.70)
+
+`core/ChatDeliveryAck.js` (0.2.63) already answers "did this message
+reach the recipient's device" — a signed, transmitted, TRANSPORT fact,
+sent back automatically by the recipient's own trust boundary the
+instant it accepts a message, with no human involved at all. Whether a
+human then actually looked at the screen is a genuinely different
+question, and `application/ConversationReadTracker.js` answers only
+that one, only for the device that asks it — `core/
+ConversationReadMarker.js` is never signed, never carried over
+`peer/PeerMessageBus.js`, and never read by
+`application/ChatUseCase.js`'s own ingestion boundary. Bob marking a
+conversation read tells Bob's own device that Bob's own device has seen
+it; Alice has no way to observe that this happened, and no code path
+anywhere in this codebase gives her one. This is a deliberate line, not
+an oversight: a real read RECEIPT — signed evidence, transmitted to the
+other participant, that a specific message was actually seen — is a
+different protocol with its own authorization, replay, and persistence
+semantics, and is explicitly deferred (see docs/Roadmap.md) rather than
+casually implied by a name like "read" that could be mistaken for one.
+
+### A Read Marker Answers A Third Question; It Is Never Folded Into The Outbox Or The History Store (0.2.70)
+
+`application/ChatOutbox.js` (0.2.63) answers "what have I sent that
+hasn't been confirmed delivered" and prunes itself the instant that
+question is answered. `application/ConversationStore.js` (0.2.69)
+answers "what did we talk about" and keeps everything, delivered or
+not. `application/ConversationReadTracker.js` (0.2.70) answers a third
+question neither of those two can: "what have I actually seen." All
+three are durable, all three are per-owner, all three are addressed by
+`peerIdentityId`, and all three could, at a glance, be merged into one
+"chat state" store. They are kept as three separate classes with three
+separate storage keys and zero shared code for the same reason 0.2.69's
+own header already gave for keeping the first two apart: collapsing
+opposite retention postures and genuinely different questions into one
+store forces an uncomfortable compromise none of the three original
+designs intended. The read tracker in particular never reads message
+CONTENT at all — it only ever receives a bare `peerIdentityId` and a
+sequence number to advance to, computed by its one caller,
+`application/PeerPresenceUseCase.js#markRead()` — so it has no way to
+become a second, competing copy of either of the other two stores even
+by accident.
