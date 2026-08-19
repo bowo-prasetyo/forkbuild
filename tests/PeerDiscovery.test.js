@@ -10,6 +10,7 @@ import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { PeerAuthenticationState } from '../peer/PeerAuthenticationState.js';
 import { DiscoverPeersUseCase } from '../application/DiscoverPeersUseCase.js';
 import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
 
 // 0.2.50 — Peer Discovery & Rendezvous.
 //
@@ -280,6 +281,46 @@ let flagshipCleanup;
     assert(derivePeerLifecycleState({ connectionState: PeerConnectionState.CLOSED, authenticationState: PeerAuthenticationState.AUTHENTICATED }) === PeerLifecycleState.CLOSED,
         'transport CLOSED always wins too');
     console.log('✓ PeerLifecycleState: a pure, derived composite over the two REAL 0.2.49 state machines, never a third one');
+}
+
+// ---------------------------------------------------------------------
+// 10. ConnectedPeerRegistry removal is keyed on the connection's own
+//     TRANSPORT state, never on the derived lifecycle value a
+//     notification happens to carry. An authentication-only failure
+//     (peer/PeerAuthenticationSession.js's own handshake timeout among
+//     them) leaves an otherwise-live connection in place — see docs/
+//     user/07-PeerConnectionsAndFriends.md's own "Authenticated (or
+//     Failed)": Failed is meant to be visible, not to flash and vanish
+//     in the same tick it appears. Only the transport itself ending
+//     (CLOSED/FAILED) still removes immediately.
+// ---------------------------------------------------------------------
+{
+    const registry = new ConnectedPeerRegistry();
+    let listener = null;
+    const stubConnection = { transportState: PeerConnectionState.CONNECTED };
+    const stubPeer = {
+        connectionId: 'stub-registry-removal',
+        connection: stubConnection,
+        onStateChange: (cb) => { listener = cb; return () => { listener = null; }; },
+        dispose: () => {}
+    };
+    registry.add(stubPeer);
+    assert(registry.get('stub-registry-removal') === stubPeer, 'setup: present once added');
+
+    // Authentication alone reaches FAILED — the transport underneath is
+    // still perfectly CONNECTED (exactly what a handshake timeout, or
+    // any other authentication-only rejection, looks like).
+    listener(PeerLifecycleState.FAILED);
+    assert(registry.get('stub-registry-removal') === stubPeer, 'an authentication-only FAILED, with the transport still CONNECTED, does not remove the peer');
+    assert(registry.list().length === 1, 'the card stays in "My Peers" so its failureReason is actually visible');
+
+    // NOW the transport itself ends — this must remove it, exactly like
+    // any ordinary close.
+    stubConnection.transportState = PeerConnectionState.CLOSED;
+    listener(PeerLifecycleState.CLOSED);
+    assert(registry.get('stub-registry-removal') === null, 'the transport actually closing still removes the peer');
+    assert(registry.list().length === 0, 'My Peers is empty again once the transport is gone');
+    console.log('✓ ConnectedPeerRegistry: removal follows the transport, not the derived lifecycle — an authentication-only failure stays visible');
 }
 
 console.log('\nAll peer discovery tests passed.');
