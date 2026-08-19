@@ -136,7 +136,9 @@ currently editing:
 - **Placement** — *where* that document sits in shared space, in **World
   Units** (ForkBuild's own coordinate system — not meters, not GPS
   coordinates, just a shared frame every creation is placed in). Click
-  **Move** to give it new X/Y/Z coordinates, or **Focus** to fly there.
+  **Move** to give it new X/Y/Z coordinates directly, or use the ± nudge
+  buttons (1 / 10 / 100 World Units) to shift the current position
+  relatively before confirming. **Focus** flies there.
 
 These are deliberately two separate panels: what a creation *is* and where it
 *sits* are two different questions, and moving a placement never edits the
