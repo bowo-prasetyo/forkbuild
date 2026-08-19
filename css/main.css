@@ -2915,6 +2915,13 @@ html, body {
     margin-left: auto;
 }
 
+.chat-message-delivery {
+    font-size: 0.68rem;
+    color: #707070;
+    flex-basis: 100%;
+    text-align: right;
+}
+
 .chat-compose {
     display: flex;
     gap: 0.6rem;

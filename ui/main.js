@@ -9,6 +9,7 @@ import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.
 import { CreateFriendRelationshipUseCase } from '../application/CreateFriendRelationshipUseCase.js';
 import { CreatePeerBlockUseCase } from '../application/CreatePeerBlockUseCase.js';
 import { ChatUseCase } from '../application/ChatUseCase.js';
+import { CreateChatOutboxUseCase } from '../application/CreateChatOutboxUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
@@ -56,22 +57,27 @@ const friendRelationshipUseCase = new CreateFriendRelationshipUseCase().execute(
     connectedPeerRegistry: peerSessionManager.registry,
     peerBlockUseCase
 });
-// 0.2.61 — one app-wide ChatUseCase, same persistence-free reasoning as
-// friendRelationshipUseCase's own wiring but with no storageProvider at
-// all: chat is live-only (see application/LiveConversation.js's own
-// header), so there is nothing here for a Create*UseCase wrapper to
-// hide the way CreateFriendRelationshipUseCase/CreatePeerBlockUseCase
-// hide LocalStorageProvider. Rides the SAME peerMessageBus/registry
-// friendRelationshipUseCase already does, and consults the SAME
-// friendRelationshipUseCase/peerBlockUseCase as its authorization
+// 0.2.61 — one app-wide ChatUseCase. Rides the SAME peerMessageBus/
+// registry friendRelationshipUseCase already does, and consults the
+// SAME friendRelationshipUseCase/peerBlockUseCase as its authorization
 // inputs — see application/ChatUseCase.js's own header on why
 // friendship authorizes chat without chat ever becoming part of the
 // friendship protocol itself.
+// 0.2.63 — chat gained one genuinely durable piece of state, the local
+// outbox a queued-while-offline message waits in until its recipient
+// reconnects (see application/ChatOutbox.js's own header) — so this is
+// now the one Create*UseCase wrapper this file needs for chat, the same
+// shape CreatePeerRelationshipUseCase/CreatePeerBlockUseCase already
+// use to keep ui/ from importing storage/ directly. The live transcript
+// itself (application/LiveConversation.js) is still never persisted —
+// only the outbox is.
+const chatOutbox = new CreateChatOutboxUseCase().execute(identityProvider);
 const chatUseCase = new ChatUseCase(identityProvider, {
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry,
     friendRelationshipUseCase,
-    peerBlockUseCase
+    peerBlockUseCase,
+    chatOutbox
 });
 
 const app = createApp(App);

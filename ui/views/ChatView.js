@@ -21,6 +21,17 @@ import { FriendshipState } from '../../core/FriendshipState.js';
 // application/PeerBlockUseCase.js, exactly the way this view finds its
 // own ConnectedPeer fresh from peerSessionManager rather than trusting
 // anything the route itself claims.
+//
+// 0.2.63 — the compose box now calls chatUseCase.sendOrQueue(), never
+// sendMessage(): a message typed here is meant to reach the recipient
+// eventually even if they're offline right now, not merely if they
+// happen to be connected THIS instant — see application/ChatUseCase.js's
+// own header. `isConnected` no longer gates the compose box at all;
+// only `canChat` (friend, not blocked) does. Each outgoing bubble shows
+// its own deliveryLabel() (Queued/Sent/Delivered/Undelivered), read
+// straight off the `deliveryState` application/ChatUseCase.js's
+// onMessage() already attaches — this view never talks to
+// application/ChatOutbox.js directly.
 export default {
     name: 'ChatView',
     setup() {
@@ -90,17 +101,30 @@ export default {
             scrollToBottom();
         }
 
+        // 0.2.63 — uses sendOrQueue(), not sendMessage(): a message typed
+        // here is a deliberate, durable "Send," not merely a live one —
+        // see application/ChatUseCase.js's own header, "Send Means Live
+        // Delivery; SendOrQueue Means Deliberate Durability." No
+        // isConnected check gates this anymore; sendOrQueue() itself
+        // decides whether to transmit immediately or queue.
         function send() {
             sendError.value = '';
-            if (!connectedPeer.value) {
-                sendError.value = 'Not connected — reconnect to this peer to chat';
-                return;
-            }
             try {
-                chatUseCase.sendMessage(connectedPeer.value, draft.value);
+                chatUseCase.sendOrQueue(peerIdentityId, draft.value);
                 draft.value = '';
             } catch (e) {
                 sendError.value = e.message.replace(/^ChatUseCase:\s*/, '');
+            }
+        }
+
+        function deliveryLabel(message) {
+            if (message.direction !== 'outgoing' || !message.deliveryState) return '';
+            switch (message.deliveryState) {
+                case 'QUEUED': return 'Queued — will send once they reconnect';
+                case 'SENT': return 'Sent';
+                case 'DELIVERED': return 'Delivered';
+                case 'EXPIRED': return 'Undelivered — expired';
+                default: return '';
             }
         }
 
@@ -134,7 +158,7 @@ export default {
         return {
             peerIdentityId, isAuthenticated, messages, draft, sendError, messageListEl,
             displayName, shortId, isConnected, isBlocked, isFriend, canChat, statusLabel,
-            send, formatTime
+            send, formatTime, deliveryLabel
         };
     },
     template: `
@@ -159,8 +183,8 @@ export default {
                     <router-link to="/peers">Peers</router-link> first.
                 </p>
                 <p v-else-if="!isConnected" class="form-hint form-hint--neutral">
-                    Not connected right now — messages only travel over a live connection; nothing is
-                    queued for later delivery. Reconnect from <router-link to="/peers">Peers</router-link>.
+                    Not connected right now — a message you send will be queued locally and
+                    delivered once they reconnect.
                 </p>
 
                 <div ref="messageListEl" class="chat-message-list">
@@ -170,6 +194,7 @@ export default {
                         <span class="chat-message-author">{{ message.direction === 'outgoing' ? 'You' : displayName() }}</span>
                         <span class="chat-message-body">{{ message.body }}</span>
                         <span class="chat-message-time">{{ formatTime(message.timestamp) }}</span>
+                        <span v-if="deliveryLabel(message)" class="chat-message-delivery">{{ deliveryLabel(message) }}</span>
                     </div>
                 </div>
 
@@ -177,10 +202,10 @@ export default {
 
                 <form class="chat-compose" @submit.prevent="send">
                     <input type="text" class="form-input chat-compose-input" v-model="draft"
-                           :disabled="!canChat || !isConnected"
+                           :disabled="!canChat"
                            placeholder="Type a message…" maxlength="4000" />
                     <button type="submit" class="action-btn action-btn--primary"
-                            :disabled="!canChat || !isConnected || !draft.trim()">
+                            :disabled="!canChat || !draft.trim()">
                         Send
                     </button>
                 </form>

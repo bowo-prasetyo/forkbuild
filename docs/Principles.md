@@ -3957,3 +3957,105 @@ own header for why inventing one would have been exactly the kind of
 one layer down. `tests/PeerConnectionResilience.test.js`'s own FLAGSHIP
 part 2 proves this holds under an actual stale, belated close() call,
 rather than merely asserting `connectionId` values differ.
+
+### Send Means Live Delivery; SendOrQueue Means Deliberate Durability (0.2.63)
+
+0.2.61 already answered "what happens to a message sent to an offline
+peer" once, on purpose: it fails, immediately, with no queue anywhere
+to catch it (`docs/Principles.md`, "0.2.61 Ships Live Chat, Not A
+Message Database"). 0.2.63 does not reopen that answer — it adds a
+SECOND, differently-named operation instead.
+`application/ChatUseCase.js#sendMessage()` is completely unmodified:
+it still requires a real, currently-`AUTHENTICATED` `ConnectedPeer` and
+still throws outright if reachability fails. `#sendOrQueue()` is new
+and addressed to a `peerIdentityId` rather than a connection, because
+there may not be one; it enqueues a durable `core/ChatOutboxEntry.js`
+and attempts an immediate flush in the same call, so the common case
+(the peer IS online) is exactly as prompt as `sendMessage()` always
+was. The design question this settles deliberately: should offline
+delivery be automatic and silent, or an explicit, separately-named
+operation a caller opts into? The codebase chose the second — a
+caller (`ui/views/ChatView.js`'s own compose box) that wants offline
+messages to wait chooses `sendOrQueue()` by name; nothing about
+`sendMessage()`'s own meaning shifted underneath any existing caller
+to make that possible. `tests/OfflineMessagingDeliveryState.test.js`'s
+own Scenario A re-proves `sendMessage()`'s original throw-on-offline
+behavior, byte-for-byte, specifically so a future change to
+`sendOrQueue()` can never accidentally start meaning `sendMessage()`
+too.
+
+### A Durable Outbox Is Addressed To An Identity, Never A Connection (0.2.63)
+
+`core/PeerRelationship.js` (0.2.56) already drew this line for
+persistent relationships: remember an identity, never an endpoint,
+because an endpoint is exactly as ephemeral as the connection it came
+from. `core/ChatOutboxEntry.js` draws the identical line for a queued
+message: it carries a `peerIdentityId`, never a `connectionId` — there
+is structurally nowhere on it for one to go. This is what makes
+`application/ChatUseCase.js#_attemptFlush()`, triggered automatically
+by the exact same `connectedPeerRegistry.onChange()` subscription
+0.2.61 already used to `attach()` every peer to the bus, correct
+without any bespoke "is this still the connection I queued against"
+bookkeeping: the only question it ever asks is "is THIS PROVEN
+IDENTITY `AUTHENTICATED` right now" — never "has this specific
+connection come back." Combined with 0.2.62's own `expectedIdentityId`
+guard, this produces a security property nobody had to write new code
+for: if Alice queues mail for Bob and a later "Reconnect" attempt
+genuinely authenticates as Charlie instead (0.2.62's own honest-
+mismatch scenario), `_attemptFlush()` is invoked with CHARLIE'S proven
+identityId, which matches no outbox entry addressed to Bob — Bob's
+mail is neither sent to Charlie nor lost, purely because it was never
+addressed to a connection in the first place.
+`tests/OfflineMessagingDeliveryState.test.js`'s own SECURITY FLAGSHIP
+proves this directly, immediately followed by the real Bob reconnecting
+and receiving the untouched, still-QUEUED message intact.
+
+### Sent Is Not Delivered (0.2.63)
+
+`core/ChatDeliveryState.js` keeps three facts about a queued message
+genuinely separate, the same discipline `core/ChatMessage.js`'s own
+header already applied to a message's identity/sequence/delivery-order
+split (0.2.61): QUEUED (sitting in `application/ChatOutbox.js`, not yet
+transmitted), SENT (handed to `peer/PeerMessageBus.js#send()` over a
+live connection — the bus ACCEPTED it, nothing more), and DELIVERED (a
+`core/ChatDeliveryAck.js` came back from the recipient's own,
+already-trusted ingestion). The ack is a deliberately SEPARATE wire
+vocabulary and a SEPARATE protocol string
+(`ChatUseCase.ACK_PROTOCOL`), never folded into `core/ChatMessage.js`
+or sent over `forkbuild:chat` — the same "own protocol, own wire
+shape" discipline `application/ChatUseCase.js` itself already used to
+avoid being folded into `peer/PeerMessageBus.js`. The receiving side
+acknowledges every chat message it accepts, a freshly-accepted one and
+an exact, already-seen duplicate alike — see
+`application/ChatUseCase.js#_handleIncoming()` — which is precisely
+what makes a retransmit after a dropped connection harmless without a
+sender-side retry/timeout system of its own:
+`core/ChatReplayWindow.js` (0.2.61, completely unmodified) already
+rejects the duplicate CONTENT; the ack simply still goes back, so a
+sender's outbox entry reaches DELIVERED even on a second transmission
+of the exact same message. Conflating SENT with DELIVERED — treating
+"the bus accepted it" as "the recipient has it" — is exactly the
+mistake this state machine exists to make structurally impossible.
+
+### The Outbox Prunes Itself; It Is Not A Message Database (0.2.63)
+
+`application/LiveConversation.js` (0.2.61) is never durable at all —
+no `toJSON`/`fromJSON`, gone the moment its owning `ChatUseCase`
+instance does. `application/ChatOutbox.js` is the one genuinely new
+piece of DURABLE chat state 0.2.63 introduces, and it is deliberately
+narrow: an entry exists only for as long as a message remains in
+flight. The instant a `core/ChatDeliveryAck.js` lands,
+`ChatOutbox#acknowledge()` deletes the entry from storage rather than
+retaining it DELIVERED forever; an entry whose TTL elapses before that
+ever happens (`core/ChatOutboxEntry.js#isExpired()`) is dropped just
+as completely by `pruneExpired()`, checked lazily on read rather than
+on a background timer, the same lazy-check-on-read posture every other
+TTL in this codebase already uses. Nothing in `application/ChatOutbox.js`
+answers "what did we talk about" — that question still belongs
+entirely to `application/LiveConversation.js`, exactly as ephemeral as
+0.2.61 left it. A state machine that looks natural to add on top of
+this — `LOCAL_ONLY`, `FAILED` — was deliberately left out of
+`core/ChatDeliveryState.js`'s own four-value vocabulary because
+nothing in this milestone ever transitions to either one; see that
+file's own header. Don't add a state a real transition doesn't need
+just because a design sketch imagined it.
