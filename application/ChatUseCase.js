@@ -13,6 +13,7 @@ import { ChatOutbox } from './ChatOutbox.js';
 import { ConversationStore } from './ConversationStore.js';
 import { ConversationReadOutbox } from './ConversationReadOutbox.js';
 import { RemoteReadReceiptStore } from './RemoteReadReceiptStore.js';
+import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
 
 const MESSAGE_EVENT = 'ChatMessage';
 const READ_RECEIPT_EVENT = 'ChatReadReceipt';
@@ -277,6 +278,56 @@ class EphemeralStorageProvider extends StorageProvider {
 // question for the very same peer — see docs/Principles.md, "Queued
 // Mail Answers To The Same Eligibility Check As A Fresh Send, Never A
 // Softer One" (0.2.72).
+//
+// 0.2.79 — Multi-Device Social State Semantics.
+//
+// "Conversation(Alice, Bob)," Never "Conversation(AlicePhone, Bob)" —
+// see docs/Principles.md. Every place this class already keys its OWN
+// business state by "which peer identity is this about" —
+// `_conversations` (the live transcript Map), `application/ChatOutbox.js`,
+// `application/ConversationStore.js`, `application/ConversationReadOutbox.js`,
+// `application/RemoteReadReceiptStore.js`, and every eligibility check
+// (`canChat`/`_requireEligible`) — now keys by the RESOLVED SOCIAL
+// identity of a connected peer, via the new optional `resolveSocialIdentity`
+// collaborator (default: application/SocialIdentityResolver.js#resolveDirectSocialIdentity,
+// byte-identical to every pre-0.2.79 behavior). Real app wiring
+// (ui/main.js) injects application/DeviceAuthorizationPropagationUseCase.js
+// #resolveConnectionIdentity, so Alice's Phone and Alice's Laptop — two
+// independently authenticated connections — both resolve to the SAME
+// business-state bucket (Alice's own parent identityId), rather than each
+// becoming its own separate conversation.
+//
+// The WIRE-level `conversationId` (core/ChatMessage.js#deriveConversationId)
+// and every AUTHENTICATION check in `_handleIncoming`/`_handleIncomingAck`/
+// `_handleIncomingRead` are deliberately UNCHANGED — still derived from,
+// and checked against, the RAW keys the live connection actually
+// authenticated, exactly as 0.2.61 through 0.2.72 already established.
+// Both ends of a connection independently re-derive that value from their
+// own raw keys, so it MUST stay raw on both sides to keep matching; only
+// AFTER that authentication-level verification passes does this class
+// resolve the SOCIAL identity, one layer up, for business-state keying —
+// the identical "authenticate first, resolve social identity strictly
+// after, never fold the two together" discipline application/
+// FriendRelationshipUseCase.js's own 0.2.79 header describes. See
+// application/LiveConversation.js's own header, "`conversationId` is
+// carried for display/debugging only" — a `LiveConversation` bucket
+// shared by two of Alice's devices keeps whichever raw pairing happened
+// to create it first as its own top-level `conversationId`; every
+// individual stored `message`, from either device, still carries its OWN
+// true wire-level `conversationId` and `senderIdentity` untouched — see
+// `message.senderIdentity` for how DEVICE PROVENANCE survives this
+// change with no schema addition at all: it is simply the raw,
+// authenticated key that actually signed that one message, exactly as
+// it always was, sitting alongside a conversation bucket now keyed by
+// the parent it belongs to.
+//
+// A conversation still belongs to one local device holding one
+// identity's key on the SENDING side — this class's own `myIdentityId`
+// (this device's own signing identity) is NEVER resolved by this
+// milestone; only the REMOTE peer's identity ever is. Unifying Alice's
+// OWN several devices into one shared, synchronized view of her own
+// conversations is real, substantial, deliberately deferred future work
+// — see docs/Roadmap.md, 0.2.79, "Deliberately not in 0.2.79."
 export class ChatUseCase {
     constructor(identityProvider, {
         peerMessageBus,
@@ -290,7 +341,8 @@ export class ChatUseCase {
         protocol = ChatUseCase.DEFAULT_PROTOCOL,
         ackProtocol = ChatUseCase.ACK_PROTOCOL,
         readProtocol = ChatUseCase.READ_PROTOCOL,
-        replayWindow = new ChatReplayWindow()
+        replayWindow = new ChatReplayWindow(),
+        resolveSocialIdentity = resolveDirectSocialIdentity
     } = {}) {
         if (!identityProvider) {
             throw new Error('ChatUseCase: identityProvider is required');
@@ -313,6 +365,7 @@ export class ChatUseCase {
         this._ackProtocol = ackProtocol;
         this._readProtocol = readProtocol;
         this._replayWindow = replayWindow;
+        this._resolveSocialIdentity = resolveSocialIdentity;
         // 0.2.63 — see this class's own header, and
         // application/ChatOutbox.js's, for why an injected, durable
         // outbox is what ui/main.js always supplies, while this
@@ -430,7 +483,12 @@ export class ChatUseCase {
     // class's own header.
     sendMessage(connectedPeer, body) {
         const peerIdentity = this._requireAuthenticatedPeer(connectedPeer);
-        this._requireEligible(peerIdentity.identityId);
+        // 0.2.79 — eligibility and business-state bucketing use the
+        // RESOLVED social identity; the wire-level conversationId/sequence
+        // below deliberately stay keyed by the RAW, literally-authenticated
+        // peerIdentity — see this class's own header.
+        const social = this._resolvePeerSocialIdentity(connectedPeer);
+        this._requireEligible(social.identityId);
         const trimmed = typeof body === 'string' ? body.trim() : '';
         if (!trimmed) {
             throw new Error('ChatUseCase: message body must not be empty');
@@ -444,7 +502,7 @@ export class ChatUseCase {
         const message = toChatMessage({ conversationId, senderIdentity: myIdentityId, sequence, body: trimmed });
         this._bus.send(connectedPeer, this._protocol, message);
         this._nextSequence.set(peerIdentity.identityId, sequence);
-        this._appendMessage(peerIdentity.identityId, conversationId, message, 'outgoing');
+        this._appendMessage(social.identityId, conversationId, message, 'outgoing');
         return message;
     }
 
@@ -647,10 +705,16 @@ export class ChatUseCase {
         if (payload.senderIdentity !== remoteIdentity.identityId) {
             return;
         }
-        if (this._isBlocked(remoteIdentity.identityId)) {
+        // 0.2.79 — authentication (above) is unchanged; social identity
+        // resolution happens strictly after it, one layer up — see this
+        // class's own header. Eligibility and business-state bucketing
+        // consult `social.identityId`; the conversationId re-derivation
+        // below deliberately stays keyed by the RAW `remoteIdentity`.
+        const social = this._resolvePeerSocialIdentity(meta.connectedPeer);
+        if (this._isBlocked(social.identityId)) {
             return;
         }
-        if (this._friends.getState(remoteIdentity.identityId) !== FriendshipState.FRIEND) {
+        if (this._friends.getState(social.identityId) !== FriendshipState.FRIEND) {
             return;
         }
         let myIdentityId;
@@ -673,7 +737,7 @@ export class ChatUseCase {
             return;
         }
         this._replayWindow.recordAccepted(key, payload.messageId, payload.sequence);
-        this._appendMessage(remoteIdentity.identityId, payload.conversationId, payload, 'incoming');
+        this._appendMessage(social.identityId, payload.conversationId, payload, 'incoming');
         this._sendAck(meta.connectedPeer, payload, myIdentityId);
     }
 
@@ -710,11 +774,15 @@ export class ChatUseCase {
         if (payload.conversationId !== deriveConversationId(myIdentityId, remoteIdentity.identityId)) {
             return;
         }
-        const entry = this._outbox.acknowledge(remoteIdentity.identityId, payload.messageId);
+        // 0.2.79 — the outbox/delivery-state store is addressed by the
+        // SAME resolved social identity `sendOrQueue()`/`_appendMessage()`
+        // already key by — see this class's own header.
+        const social = this._resolvePeerSocialIdentity(meta.connectedPeer);
+        const entry = this._outbox.acknowledge(social.identityId, payload.messageId);
         if (!entry) {
             return;
         }
-        this._publishDeliveryState(remoteIdentity.identityId, payload.messageId, ChatDeliveryState.DELIVERED);
+        this._publishDeliveryState(social.identityId, payload.messageId, ChatDeliveryState.DELIVERED);
     }
 
     // 0.2.71 — the receiving half of core/ChatReadReceipt.js. Applies
@@ -740,10 +808,12 @@ export class ChatUseCase {
         if (payload.readerIdentity !== remoteIdentity.identityId) {
             return;
         }
-        if (this._isBlocked(remoteIdentity.identityId)) {
+        // 0.2.79 — same resolution ordering as _handleIncoming() above.
+        const social = this._resolvePeerSocialIdentity(meta.connectedPeer);
+        if (this._isBlocked(social.identityId)) {
             return;
         }
-        if (this._friends.getState(remoteIdentity.identityId) !== FriendshipState.FRIEND) {
+        if (this._friends.getState(social.identityId) !== FriendshipState.FRIEND) {
             return;
         }
         let myIdentityId;
@@ -755,10 +825,10 @@ export class ChatUseCase {
         if (payload.conversationId !== deriveConversationId(myIdentityId, remoteIdentity.identityId)) {
             return;
         }
-        const before = this._remoteReadReceipts.getReadThroughSequence(remoteIdentity.identityId);
-        const updated = this._remoteReadReceipts.recordReadThrough(remoteIdentity.identityId, payload.readThroughSequence);
+        const before = this._remoteReadReceipts.getReadThroughSequence(social.identityId);
+        const updated = this._remoteReadReceipts.recordReadThrough(social.identityId, payload.readThroughSequence);
         if (updated.readThroughSequence > before) {
-            this._eventBus.publish(READ_RECEIPT_EVENT, { peerIdentityId: remoteIdentity.identityId, readThroughSequence: updated.readThroughSequence });
+            this._eventBus.publish(READ_RECEIPT_EVENT, { peerIdentityId: social.identityId, readThroughSequence: updated.readThroughSequence });
         }
     }
 
@@ -896,19 +966,29 @@ export class ChatUseCase {
 
     _flushIfAuthenticated(connectedPeer) {
         if (connectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED && connectedPeer.remoteIdentity) {
-            this._attemptFlush(connectedPeer.remoteIdentity.identityId);
+            // 0.2.79 — flushes against the RESOLVED social identity, so a
+            // reconnect from ANY of that identity's authorized devices
+            // correctly flushes mail addressed to the parent — see this
+            // class's own header.
+            const social = this._resolvePeerSocialIdentity(connectedPeer);
+            this._attemptFlush(social.identityId);
         }
     }
 
-    // The live, AUTHENTICATED ConnectedPeer for one identity, or null —
-    // the same lookup ui/views/ChatView.js's own `connectedPeer`
-    // computed already performs, reused here so "is this identity
-    // reachable right now" is answered identically everywhere in this
-    // codebase.
+    // The live, AUTHENTICATED ConnectedPeer whose RESOLVED social
+    // identity is `identityId`, or null — the same lookup
+    // ui/views/ChatView.js's own `connectedPeer` computed already
+    // performs, reused here so "is this identity reachable right now" is
+    // answered identically everywhere in this codebase. 0.2.79 — matches
+    // by resolved identity rather than the raw connection key, so mail
+    // addressed to Alice (the parent) reaches her over WHICHEVER of her
+    // currently-connected, currently-authorized devices this device finds
+    // first — never a fan-out to more than one, just a resolved-identity
+    // lookup in place of a raw-key one.
     _findAuthenticatedPeer(identityId) {
         return this._registry.list().find((peer) => peer.remoteIdentity
-            && peer.remoteIdentity.identityId === identityId
-            && peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED) || null;
+            && peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED
+            && this._resolvePeerSocialIdentity(peer).identityId === identityId) || null;
     }
 
     // 0.2.69 — rebuilds every LiveConversation this owner has ANY
@@ -982,6 +1062,15 @@ export class ChatUseCase {
             throw new Error('ChatUseCase: the peer must be an authenticated connection');
         }
         return connectedPeer.remoteIdentity;
+    }
+
+    // 0.2.79 — resolves `connectedPeer`'s own SOCIAL identity via the
+    // injected `resolveSocialIdentity` collaborator — see this class's own
+    // header. Falls back to the connection's own raw identity defensively
+    // if the resolver ever returns null (it should not, once a live
+    // remoteIdentity is already confirmed present by every caller).
+    _resolvePeerSocialIdentity(connectedPeer) {
+        return this._resolveSocialIdentity(connectedPeer) || resolveDirectSocialIdentity(connectedPeer);
     }
 
     // The exact same "authenticated + not blocked + FRIEND" gate the

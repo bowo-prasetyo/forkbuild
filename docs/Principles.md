@@ -5433,6 +5433,67 @@ hold his own key) and still resolves as unauthorized to represent Alice,
 because genuine authentication of A key was never, by itself, evidence of
 permission to act for a DIFFERENT one.
 
+### Device Authorization Changes Peer Authority, Never Social Identity (0.2.79)
+
+0.2.78 proved `resolvePeerAuthority()` correct but consulted it nowhere.
+0.2.79 wires it into `application/FriendRelationshipUseCase.js`/
+`application/ChatUseCase.js`/`application/VoiceUseCase.js` under one
+governing rule, stated in the design doc that opened this milestone: when
+Alice's Phone and Alice's Laptop are two independently authorized devices
+of one parent identity, a friendship formed over EITHER of them is the
+SAME friendship, a conversation with EITHER of them is the SAME
+conversation, and a block or unfriend on the PARENT identity reaches both
+at once. Authorizing or revoking a device changes which connections are
+recognized as speaking for a social identity — it never creates, splits,
+or duplicates the social relationship itself. See
+`tests/MultiDeviceSocialSemantics.test.js`'s own flagship: Bob's Laptop
+connection is recognized as an authorized device of an already-FRIEND
+identity without the Laptop ever sending its own friend request — proving
+directly that "we should NOT create Alice Laptop <-> Bob = friendship
+#2."
+
+### Resolution Happens Strictly After Authentication, And Only On the Wire's Receiving Half (0.2.79)
+
+Two disciplines, both load-bearing, both discovered the hard way by this
+milestone's own flagship test failing until they were made explicit.
+First: every existing authentication check — a claimed `actorIdentity`,
+`senderIdentity`, or `callerIdentity` matching the live connection's own
+proven key — is completely UNCHANGED by this milestone; social-identity
+resolution (`resolveConnectionIdentity()`) is consulted only AFTER that
+proof already holds, one layer higher, exactly mirroring 0.2.78's own
+"authentication proves a key; authorization proves permission" split.
+Second, and easier to get wrong: a SIGNED WIRE CLAIM addressed to a
+specific connection — a friendship advertisement's `subjectIdentity`, a
+chat message's `conversationId` derivation, an INVITE's `calleeIdentity`
+— must stay addressed to the RAW, literally-authenticated key on BOTH
+ends, never the resolved identity, because the RECEIVING device checks
+that claim against its OWN unresolved local identity (a device is never
+taught to resolve itself — see below), and would otherwise silently
+reject a genuine, correctly-routed message as addressed to someone else.
+Only business-state KEYING — which `FriendshipRecord`, which
+`LiveConversation`, which call record a fact belongs to — resolves;
+everything that travels on the wire or gets checked against "am I the
+one this is for" stays raw.
+
+### A Device Is Never Taught To Resolve Itself (0.2.79)
+
+`resolveConnectionIdentity()` only ever answers "who is on the OTHER end
+of this connection, socially?" — using THIS device's own independently
+verified `DeviceAuthority` records about that OTHER party. No code path
+in this milestone asks a device "which parent identity authorized YOU?" —
+sidestepping entirely the much harder question of how a device would
+even come to trust an answer to that about itself. This is precisely why
+`application/ChatUseCase.js`'s own conversation bucketing can resolve the
+PEER side while the wire-level `conversationId` keeps using this device's
+own `myIdentityId` completely unresolved: a conversation still belongs to
+one local device holding one identity's key on the SENDING side, exactly
+as every milestone from 0.2.69 through 0.2.78 already established — this
+milestone changes how a RECEIVER interprets an incoming connection's
+authority, never how a device signs, addresses, or reasons about its own
+outgoing traffic. Synchronizing what Alice's OWN several devices know
+about each other — and about each other's conversations — is real,
+substantial, and deliberately left to a later milestone (see
+docs/Roadmap.md, 0.2.79, "Proposed, unscheduled follow-on milestones").
 ### Terrain Surface Color Is A Function Of World Coordinates, Never Tile Coordinates (0.2.79)
 
 `core/TerrainSurface.js#surfaceColorAt(seed, x, z)` has no idea a tile
