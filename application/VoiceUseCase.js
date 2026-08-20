@@ -7,6 +7,7 @@ import { VoiceCallSignalType, toVoiceCallSignal, isValidVoiceCallSignal } from '
 import { VoiceMediaSignalKind, toVoiceMediaSignal, isValidVoiceMediaSignal } from '../core/VoiceMediaSignal.js';
 import { LocalAudioTrackProvider } from './LocalAudioTrackProvider.js';
 import { createId } from '../core/createId.js';
+import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
 
 const CALL_STATE_EVENT = 'VoiceCallStateChanged';
 const INCOMING_CALL_EVENT = 'VoiceIncomingCall';
@@ -216,6 +217,50 @@ const DEFAULT_RINGING_TIMEOUT_MS = 45000;
 // letting core/VoiceCallSignal.js carry mute state: media routing, once
 // the stream itself has left this class's hands, is a UI/platform
 // concern, never VoiceSession's.
+//
+// ---- 0.2.79 — Multi-Device Social State Semantics ----------------------
+//
+// canCall()/`_requireEligible()` above already reused application/
+// ChatUseCase.js#canChat()'s own predicate byte-for-byte — 0.2.79 extends
+// that reuse one step further: both now consult the RESOLVED SOCIAL
+// identity of a connected peer, via the same optional `resolveSocialIdentity`
+// collaborator (default: application/SocialIdentityResolver.js#resolveDirectSocialIdentity)
+// application/FriendRelationshipUseCase.js/application/ChatUseCase.js
+// already carry, so Bob's authorization check sees "Alice Identity ->
+// FRIEND -> voice permitted," never "AlicePhone = friend? AliceLaptop =
+// friend?" — see docs/Principles.md, "Device Authorization Changes Peer
+// Authority, Never Social Identity."
+//
+// A `_call` record's own `peerIdentityId` — exposed through
+// `getActiveCall()`, `onIncomingCall()`, `onCallStateChanged()`, and
+// consulted by `_reconcileForBlocked()`/`_reconcileForFriends()` against
+// the SAME resolved-identity block/friend lists — is now that RESOLVED
+// identity too, matching application/ChatUseCase.js's own "peerIdentityId
+// means the parent, not the raw device key" convention exactly.
+//
+// The VoiceSession itself stays exactly as device-local and ephemeral as
+// this class's own header already establishes ("One Call At A Time, Per
+// Device"; "One Logical PeerConnection, Never A Second One For Voice") —
+// 0.2.79 does not change that even slightly. A call record's SEPARATE
+// `remoteConnectionIdentityId` field is the RAW, literally-authenticated
+// key of the one fixed connection this call is bound to for its entire
+// lifetime — used ONLY where a core/VoiceCallSignal.js wire field must
+// match what the OTHER side's own raw connection independently verifies
+// (`acceptCall()`, `rejectCall()`, `_notifyPeerCallEnded()`) — never
+// confused with the resolved `peerIdentityId` used everywhere else. Since
+// a call is always bound to one single, unchanging connection for its
+// whole lifetime, mid-call signal validation (`_handleAccept()`/
+// `_handleRejectOrBusy()`/`_handleEnd()`/`_handleIncomingMedia()`) is free
+// to compare resolved-to-resolved instead — both stay 1:1 correlated for
+// as long as that one connection lives, so either comparison is
+// equally correct; this file consistently picks resolved, matching
+// `peerIdentityId`'s own meaning everywhere else in this class.
+//
+// Ringing every authorized device of a callee at once ("does a call ring
+// AlicePhone AND AliceLaptop simultaneously?") is explicitly NOT this
+// milestone's — see docs/Roadmap.md, 0.2.79, "Deliberately not in 0.2.79."
+// `startCall()` still targets exactly one, explicitly chosen
+// `connectedPeer`, unchanged.
 export class VoiceUseCase {
     constructor(identityProvider, {
         peerMessageBus,
@@ -227,7 +272,8 @@ export class VoiceUseCase {
         mediaProtocol = VoiceUseCase.MEDIA_PROTOCOL,
         ringingTimeoutMs = DEFAULT_RINGING_TIMEOUT_MS,
         setTimeoutFn = null,
-        clearTimeoutFn = null
+        clearTimeoutFn = null,
+        resolveSocialIdentity = resolveDirectSocialIdentity
     } = {}) {
         if (!identityProvider) {
             throw new Error('VoiceUseCase: identityProvider is required');
@@ -246,6 +292,7 @@ export class VoiceUseCase {
         this._registry = connectedPeerRegistry;
         this._friends = friendRelationshipUseCase;
         this._isBlocked = peerBlockUseCase ? (identityId) => peerBlockUseCase.isBlocked(identityId) : () => false;
+        this._resolveSocialIdentity = resolveSocialIdentity;
         this._audio = localAudioTrackProvider;
         this._callProtocol = callProtocol;
         this._mediaProtocol = mediaProtocol;
@@ -426,7 +473,12 @@ export class VoiceUseCase {
     // negotiation completes — see `onCallStateChanged()`.
     startCall(connectedPeer) {
         const peerIdentity = this._requireAuthenticatedPeer(connectedPeer);
-        this._requireEligible(peerIdentity.identityId);
+        // 0.2.79 — eligibility and the call record's own `peerIdentityId`
+        // use the RESOLVED social identity; the wire INVITE's `calleeIdentity`
+        // below deliberately stays keyed by the RAW, literally-authenticated
+        // `peerIdentity` — see this class's own header.
+        const social = this._resolveSocialIdentityForRemote(peerIdentity);
+        this._requireEligible(social.identityId);
         this._requireIdle();
         this._requireMediaCapable(connectedPeer.connection);
 
@@ -434,7 +486,8 @@ export class VoiceUseCase {
         const myIdentityId = this._identityProvider.getSigningIdentity().id;
         this._call = this._createCallRecord({
             callId,
-            peerIdentityId: peerIdentity.identityId,
+            peerIdentityId: social.identityId,
+            remoteConnectionIdentityId: peerIdentity.identityId,
             connectedPeer,
             state: VoiceSessionState.CALLING,
             isCaller: true
@@ -462,7 +515,7 @@ export class VoiceUseCase {
         const call = this._call;
         const myIdentityId = this._identityProvider.getSigningIdentity().id;
         this._bus.send(call.connectedPeer, this._callProtocol, toVoiceCallSignal({
-            callId, type: VoiceCallSignalType.ACCEPT, callerIdentity: call.peerIdentityId, calleeIdentity: myIdentityId
+            callId, type: VoiceCallSignalType.ACCEPT, callerIdentity: call.remoteConnectionIdentityId, calleeIdentity: myIdentityId
         }));
         this._setCallState(call, VoiceSessionState.CONNECTING);
         try {
@@ -488,7 +541,7 @@ export class VoiceUseCase {
         const call = this._call;
         const myIdentityId = this._identityProvider.getSigningIdentity().id;
         this._bus.send(call.connectedPeer, this._callProtocol, toVoiceCallSignal({
-            callId, type: VoiceCallSignalType.REJECT, callerIdentity: call.peerIdentityId, calleeIdentity: myIdentityId
+            callId, type: VoiceCallSignalType.REJECT, callerIdentity: call.remoteConnectionIdentityId, calleeIdentity: myIdentityId
         }));
         this._teardownCall(call, VoiceCallEndReason.REJECTED);
     }
@@ -595,7 +648,12 @@ export class VoiceUseCase {
     }
 
     _handleInvite(payload, meta, remoteIdentity, myIdentityId) {
-        if (this._isBlocked(remoteIdentity.identityId) || this._friends.getState(remoteIdentity.identityId) !== FriendshipState.FRIEND) {
+        // 0.2.79 — eligibility resolves the SOCIAL identity; the wire
+        // BUSY reply below (if this device is already in a call) deliberately
+        // stays keyed by the RAW `remoteIdentity` — see this class's own
+        // header.
+        const social = this._resolveSocialIdentityForRemote(remoteIdentity);
+        if (this._isBlocked(social.identityId) || this._friends.getState(social.identityId) !== FriendshipState.FRIEND) {
             // Silently ignored, mirroring application/ChatUseCase.js
             // #_handleIncoming()'s own precedent — there is no
             // distinguishable rejection an attacker could use to learn
@@ -615,16 +673,21 @@ export class VoiceUseCase {
         }
         this._call = this._createCallRecord({
             callId: payload.callId,
-            peerIdentityId: remoteIdentity.identityId,
+            peerIdentityId: social.identityId,
+            remoteConnectionIdentityId: remoteIdentity.identityId,
             connectedPeer: meta.connectedPeer,
             state: VoiceSessionState.RINGING,
             isCaller: false
         });
-        this._eventBus.publish(INCOMING_CALL_EVENT, { peerIdentityId: remoteIdentity.identityId, callId: payload.callId });
+        this._eventBus.publish(INCOMING_CALL_EVENT, { peerIdentityId: social.identityId, callId: payload.callId });
     }
 
     _handleAccept(payload, remoteIdentity) {
-        if (!this._call || this._call.callId !== payload.callId || !this._call.isCaller || this._call.peerIdentityId !== remoteIdentity.identityId) {
+        // 0.2.79 — resolved-to-resolved comparison; safe and equivalent to
+        // a raw comparison here since a call is bound to one unchanging
+        // connection for its whole lifetime — see this class's own header.
+        const social = this._resolveSocialIdentityForRemote(remoteIdentity);
+        if (!this._call || this._call.callId !== payload.callId || !this._call.isCaller || this._call.peerIdentityId !== social.identityId) {
             return;
         }
         if (this._call.state !== VoiceSessionState.CALLING) {
@@ -652,7 +715,8 @@ export class VoiceUseCase {
     }
 
     _handleRejectOrBusy(payload, remoteIdentity, reason) {
-        if (!this._call || this._call.callId !== payload.callId || this._call.peerIdentityId !== remoteIdentity.identityId) {
+        const social = this._resolveSocialIdentityForRemote(remoteIdentity);
+        if (!this._call || this._call.callId !== payload.callId || this._call.peerIdentityId !== social.identityId) {
             return;
         }
         if (this._call.state !== VoiceSessionState.CALLING) {
@@ -662,7 +726,8 @@ export class VoiceUseCase {
     }
 
     _handleEnd(payload, remoteIdentity) {
-        if (!this._call || this._call.callId !== payload.callId || this._call.peerIdentityId !== remoteIdentity.identityId) {
+        const social = this._resolveSocialIdentityForRemote(remoteIdentity);
+        if (!this._call || this._call.callId !== payload.callId || this._call.peerIdentityId !== social.identityId) {
             return;
         }
         // Deliberately always REMOTE_HANGUP, never inferring the SENDER's
@@ -690,7 +755,8 @@ export class VoiceUseCase {
         if (payload.senderIdentity !== remoteIdentity.identityId) {
             return;
         }
-        if (!this._call || this._call.callId !== payload.callId || this._call.peerIdentityId !== remoteIdentity.identityId) {
+        const social = this._resolveSocialIdentityForRemote(remoteIdentity);
+        if (!this._call || this._call.callId !== payload.callId || this._call.peerIdentityId !== social.identityId) {
             return;
         }
         const call = this._call;
@@ -894,8 +960,11 @@ export class VoiceUseCase {
         }
         try {
             const myIdentityId = this._identityProvider.getSigningIdentity().id;
-            const callerIdentity = call.isCaller ? myIdentityId : call.peerIdentityId;
-            const calleeIdentity = call.isCaller ? call.peerIdentityId : myIdentityId;
+            // 0.2.79 — wire fields use the RAW, literally-authenticated
+            // connection identity (`remoteConnectionIdentityId`), never the
+            // resolved `peerIdentityId` — see this class's own header.
+            const callerIdentity = call.isCaller ? myIdentityId : call.remoteConnectionIdentityId;
+            const calleeIdentity = call.isCaller ? call.remoteConnectionIdentityId : myIdentityId;
             this._bus.send(call.connectedPeer, this._callProtocol, toVoiceCallSignal({
                 callId: call.callId, type: VoiceCallSignalType.END, callerIdentity, calleeIdentity
             }));
@@ -936,9 +1005,9 @@ export class VoiceUseCase {
 
     // ---- call record lifecycle ----------------------------------------
 
-    _createCallRecord({ callId, peerIdentityId, connectedPeer, state, isCaller }) {
+    _createCallRecord({ callId, peerIdentityId, remoteConnectionIdentityId, connectedPeer, state, isCaller }) {
         const call = {
-            callId, peerIdentityId, connectedPeer, state, isCaller,
+            callId, peerIdentityId, remoteConnectionIdentityId, connectedPeer, state, isCaller,
             localTrack: null, remoteTrack: null, remoteStream: null,
             unsubscribePeerState: null, unsubscribeRemoteTrack: null,
             ringingTimer: null,
@@ -1033,6 +1102,18 @@ export class VoiceUseCase {
         if (this._friends.getState(identityId) !== FriendshipState.FRIEND) {
             throw new Error('VoiceUseCase: voice requires a mutual friendship');
         }
+    }
+
+    // 0.2.79 — resolves a bare `peer/PeerIdentity.js`-shaped remoteIdentity
+    // (never a full application/ConnectedPeer.js — see this class's own
+    // header) to its SOCIAL identity via the injected `resolveSocialIdentity`
+    // collaborator. The collaborator's contract only ever reads a
+    // `.remoteIdentity` property, so wrapping a bare remoteIdentity in
+    // `{ remoteIdentity }` here is exactly as valid an input as passing a
+    // real ConnectedPeer — see application/SocialIdentityResolver.js.
+    _resolveSocialIdentityForRemote(remoteIdentity) {
+        const wrapped = { remoteIdentity };
+        return this._resolveSocialIdentity(wrapped) || resolveDirectSocialIdentity(wrapped);
     }
 
     _requireIdle() {

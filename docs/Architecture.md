@@ -8145,3 +8145,154 @@ presence/profile sync remain completely unmodified, each still exactly
 milestone from 0.2.69 through 0.2.71 already carried. See docs/Roadmap.md,
 0.2.78, for the full list of what this establishes versus what it
 deliberately leaves for later.
+
+### Multi-Device Social State Semantics (0.2.79)
+
+0.2.78 proved `resolvePeerAuthority()` correct in isolation but consulted
+it nowhere. 0.2.79 takes up the first of that milestone's own proposed
+follow-ons: wire the device-authority model into social communication —
+friendship, chat, and voice — while still deliberately avoiding full
+multi-device synchronization. The central question, from the design doc
+that opened this milestone: when two devices represent the same parent
+identity, what does it mean for one of those devices to communicate with
+another identity?
+
+**The governing rule: device authorization changes peer authority, never
+social identity.** A friendship formed over ANY of Alice's authorized
+devices is the SAME friendship her OTHER devices already benefit from,
+never a second, per-device relationship; a conversation with Alice stays
+one conversation regardless of which of her devices actually sent each
+message; blocking or unfriending the PARENT identity reaches every one of
+her currently-resolved devices at once. See docs/Principles.md, "Device
+Authorization Changes Peer Authority, Never Social Identity."
+
+**`application/DeviceAuthorizationPropagationUseCase.js` gains
+`resolveConnectionIdentity(connectedPeer)`, the counterpart query to
+0.2.78's own `resolvePeerAuthority()`.** Where that method needs a
+CANDIDATE identityId already in mind ("does this connection represent
+Alice specifically?"), this one answers from scratch: "who IS this
+connection, socially?" — DIRECT (the connection's own proven key) or
+DEVICE (a currently-authorized device of some OTHER, independently
+verified parent identity), always returning a full, self-sufficient
+identity shape including a derived `publicKey` (recovered directly from
+the parent's own did:key via `identity/Ed25519.js#didKeyToPublicKey` — no
+second lookup needed) so a caller can construct a `core/FriendshipRecord.js`/
+`core/PeerBlockRecord.js` for the resolved parent without any further
+round trip. An ambiguous case — this device somehow holding active grants
+from more than one distinct parent for the identical device key, a
+pathological scenario no single honest parent ever produces — resolves
+DIRECT rather than guessing, a named, deliberately conservative edge
+case.
+
+**`application/SocialIdentityResolver.js` (new) is the DEFAULT resolver
+every social use case falls back to** when no real device-authorization
+wiring is injected: `resolveDirectSocialIdentity()` treats a connection's
+own key as its own social identity, DIRECT, full stop — byte-identical to
+every pre-0.2.79 behavior, so every existing test and every caller that
+never opts in keeps working completely unchanged.
+
+**`application/FriendRelationshipUseCase.js`, `application/ChatUseCase.js`,
+and `application/VoiceUseCase.js` each gain an optional `resolveSocialIdentity`
+collaborator**, consulted through a small per-class `_resolvePeerSocialIdentity()`
+helper. Real app wiring (`ui/main.js`) constructs one app-wide
+`DeviceAuthorizationPropagationUseCase` (via the new `application/
+CreateDeviceAuthorizationUseCase.js`, mirroring `CreateFriendRelationshipUseCase.js`'s
+own storage-wrapping shape) and binds `resolveConnectionIdentity` into all
+three — a forward-reference closure (`let deviceAuthorizationUseCase`,
+assigned after `friendRelationshipUseCase` so its own `knowsIdentity` gate
+can consult it) breaks what would otherwise be a construction-order cycle
+between the two.
+
+**Two disciplines keep the resolution correct, both discovered by this
+milestone's own flagship test failing until they were made explicit — see
+docs/Principles.md, "Resolution Happens Strictly After Authentication, And
+Only On the Wire's Receiving Half."** First, resolution happens strictly
+AFTER every existing authentication check, never folded into it. Second,
+and the one an early implementation pass got wrong: a signed WIRE claim
+addressed to a specific connection — `core/FriendshipAdvertisement.js`'s
+own `subjectIdentity`/`actorIdentity`, `core/ChatMessage.js`'s own
+`conversationId` derivation, `core/VoiceCallSignal.js`'s own
+`calleeIdentity`/`callerIdentity` — stays addressed to the RAW,
+literally-authenticated key on BOTH ends; only business-state KEYING
+(which `FriendshipRecord`, which `LiveConversation`, which call record)
+resolves. `application/VoiceUseCase.js`'s own call record grew a
+dedicated `remoteConnectionIdentityId` field for exactly this split — its
+resolved `peerIdentityId` drives eligibility, UI exposure
+(`getActiveCall()`/`onIncomingCall()`/`onCallStateChanged()`), and the SAME
+block/friend reconciliation `application/ChatUseCase.js` already uses,
+while `remoteConnectionIdentityId` is what every outgoing
+`core/VoiceCallSignal.js` wire field actually carries.
+
+**Device provenance survives with zero schema changes.** A
+`FriendshipRecord`'s stored `incomingAction`/`outgoingAction` still
+carries the RAW authenticating device's key as its own `actorIdentity`/
+`subjectIdentity`, even though the record itself is now keyed by the
+resolved parent — "who this relationship is with" and "which specific
+device performed this action" are two independently available facts
+without a second field. `application/ChatUseCase.js` gets the identical
+property for free: `message.senderIdentity` stays the literal, raw,
+authenticated device key on every stored entry, while the `LiveConversation`
+bucket it lives in is now keyed by the resolved parent —
+`application/LiveConversation.js`'s own pre-existing "`conversationId` is
+carried for display/debugging only" already made this safe: a bucket
+shared by two of Alice's devices simply keeps whichever raw pairing
+happened to create it first as its own top-level `conversationId`, while
+every individual message's OWN wire-level `conversationId` stays exactly
+what it always was.
+
+**A device is never taught to resolve ITSELF, only the remote party it is
+connected to.** See docs/Principles.md, "A Device Is Never Taught To
+Resolve Itself": this is what keeps "who authorized me?" — a genuinely
+much harder, still-unsolved question — entirely out of scope.
+`application/ChatUseCase.js`'s own `sendMessage()`/`_handleIncoming()`
+resolve the PEER side only; `myIdentityId` (this device's own signing
+identity) is never resolved, exactly preserving "a conversation still
+belongs to one local device holding one identity's key" on the SENDING
+side, unchanged since 0.2.69.
+
+The flagship test (`tests/MultiDeviceSocialSemantics.test.js`) proves the
+design's own scripted scenario end to end, over real in-process
+`peer/PeerAuthenticationSession.js` handshakes: Alice authorizes two
+devices and broadcasts both grants to Bob (reusing 0.2.78's own proven
+propagation path as setup, not re-testing it); her Phone connects to Bob
+on an independent connection and sends an ordinary friend request — Bob's
+resulting `FriendshipRecord` is keyed to ALICE'S OWN PARENT identity,
+never the Phone's raw key, and there is exactly one such record. Her
+Laptop then connects on a THIRD independent connection, having never sent
+a friend request of its own — and Bob's own eligibility check already
+recognizes it as speaking for an existing friend. Chat messages from the
+Phone, and messages Bob sends back over the Laptop's own connection, land
+in ONE shared conversation, each still carrying its own true device
+provenance. SECURITY FLAGSHIP: Alice revokes the Phone's device
+authorization; the Phone still authenticates completely normally (its key
+is untouched, exactly like 0.2.78's own SECURITY FLAGSHIP B), but a
+further message from it now resolves to its own bare, un-friended raw key
+on Bob's RECEIVING side and is REJECTED — while the Laptop, never
+revoked, remains fully authorized throughout.
+
+Deliberately not in 0.2.79, matching the scope this milestone was given:
+message/conversation synchronization BETWEEN Alice's own several devices
+(each still has its own independent, local view of every conversation),
+shared/propagated read state, multi-device voice ringing (calling "Alice"
+still means calling one, explicitly chosen connection, never fanning out
+to every device at once), a device management UI, a device revocation UI,
+and cross-device presence aggregation. `application/PeerRelationshipUseCase.js`
+("Known Peers") deliberately was NOT taught to resolve social identity —
+remembering a peer stays 0.2.56's own "deliberate act, never automatic,"
+and extending it would mean automatically remembering every device of an
+already-known identity, a real product decision this milestone declines
+to make silently. `application/PeerBlockUseCase.js` stays completely
+untouched as a store — blocking already flows through the SAME `isBlocked`
+predicate every use case above now checks against the RESOLVED identity,
+so blocking Alice's parent identity already blocks every one of her
+currently-resolved devices for free — but the UI gesture of blocking a
+specific live connection (`ui/views/PeerConnectionsView.js#blockIdentity()`)
+still passes whatever raw identity shape a card exposes today, unresolved.
+Also named directly: `application/FriendRelationshipUseCase.js#acceptFriendRequest()`
+has no verb for acknowledging a SECOND device of an already-FRIEND parent
+identity once the first device's ACCEPT is already recorded — a device
+that never independently completes its own request/accept cycle is
+correctly RECOGNIZED by receivers but cannot pass its own local
+`sendMessage()` eligibility check while independently initiating contact.
+See docs/Roadmap.md, 0.2.79, for the full list of what this establishes
+versus what it deliberately leaves for later.

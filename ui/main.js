@@ -15,6 +15,7 @@ import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.
 import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
 import { CreateFriendRelationshipUseCase } from '../application/CreateFriendRelationshipUseCase.js';
 import { CreateIdentityLifecyclePropagationUseCase } from '../application/CreateIdentityLifecyclePropagationUseCase.js';
+import { CreateDeviceAuthorizationUseCase } from '../application/CreateDeviceAuthorizationUseCase.js';
 import { CreatePeerBlockUseCase } from '../application/CreatePeerBlockUseCase.js';
 import { ChatUseCase } from '../application/ChatUseCase.js';
 import { CreateChatOutboxUseCase } from '../application/CreateChatOutboxUseCase.js';
@@ -90,10 +91,33 @@ const peerMessageBus = new PeerMessageBus();
 // CreateFriendRelationshipUseCase.js) — never a store friendship reads
 // directly.
 const peerBlockUseCase = new CreatePeerBlockUseCase().execute(identityProvider);
+// 0.2.79 — one app-wide DeviceAuthorizationPropagationUseCase, the same
+// shared peerMessageBus/registry every other protocol here rides. Its
+// `resolveConnectionIdentity()` is what teaches friendship/chat/voice to
+// recognize an authorized DEVICE connection as speaking for its PARENT
+// identity — see application/FriendRelationshipUseCase.js's/
+// application/ChatUseCase.js's/application/VoiceUseCase.js's own 0.2.79
+// headers. Declared as a forward reference (`let`, assigned below,
+// AFTER friendRelationshipUseCase) so its own `knowsIdentity` gate can
+// consult friendRelationshipUseCase (the same richer gate application/
+// CreateIdentityLifecyclePropagationUseCase.js's own knowsIdentity
+// already uses) WITHOUT a construction-order cycle: `resolveSocialIdentity`
+// below is only ever CALLED later, at runtime, by which point this
+// variable is already assigned — never during friendRelationshipUseCase's
+// own construction.
+let deviceAuthorizationUseCase;
+const resolveSocialIdentity = (connectedPeer) => deviceAuthorizationUseCase.resolveConnectionIdentity(connectedPeer);
 const friendRelationshipUseCase = new CreateFriendRelationshipUseCase().execute(identityProvider, {
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry,
-    peerBlockUseCase
+    peerBlockUseCase,
+    resolveSocialIdentity
+});
+deviceAuthorizationUseCase = new CreateDeviceAuthorizationUseCase().execute(identityProvider, {
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry,
+    peerRelationshipUseCase,
+    friendRelationshipUseCase
 });
 // 0.2.68 — one app-wide IdentityLifecyclePropagationUseCase, riding the
 // SAME peerMessageBus/registry every other peer/PeerMessageBus.js
@@ -147,7 +171,12 @@ const chatUseCase = new ChatUseCase(identityProvider, {
     chatOutbox,
     conversationStore,
     conversationReadOutbox,
-    remoteReadReceiptStore
+    remoteReadReceiptStore,
+    // 0.2.79 — SAME resolver friendRelationshipUseCase already consults,
+    // so a conversation with Alice stays one conversation regardless of
+    // which of her authorized devices actually sent each message — see
+    // application/ChatUseCase.js's own header.
+    resolveSocialIdentity
 });
 // 0.2.70 — one app-wide ConversationReadTracker (a THIRD durable store,
 // alongside chatOutbox/conversationStore above, answering "what has
@@ -182,7 +211,12 @@ const voiceUseCase = new VoiceUseCase(identityProvider, {
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry,
     friendRelationshipUseCase,
-    peerBlockUseCase
+    peerBlockUseCase,
+    // 0.2.79 — SAME resolver chatUseCase/friendRelationshipUseCase already
+    // consult, so Bob's authorization check sees "Alice Identity -> FRIEND
+    // -> voice permitted," never one answer per device — see
+    // application/VoiceUseCase.js's own header.
+    resolveSocialIdentity
 });
 
 const app = createApp(App);
@@ -193,6 +227,7 @@ app.provide('peerReconnectionUseCase', peerReconnectionUseCase);
 app.provide('findPeerUseCase', findPeerUseCase);
 app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
 app.provide('identityLifecyclePropagationUseCase', identityLifecyclePropagationUseCase);
+app.provide('deviceAuthorizationUseCase', deviceAuthorizationUseCase);
 app.provide('peerBlockUseCase', peerBlockUseCase);
 app.provide('chatUseCase', chatUseCase);
 app.provide('peerPresenceUseCase', peerPresenceUseCase);

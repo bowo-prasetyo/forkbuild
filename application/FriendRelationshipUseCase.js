@@ -9,6 +9,7 @@ import {
 } from '../core/FriendshipAdvertisement.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
+import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
 
 const RELATIONSHIPS_CHANGED_EVENT = 'FriendRelationshipsChanged';
 const STORAGE_KEY_PREFIX = 'friend-relationships:';
@@ -45,6 +46,39 @@ const STORAGE_KEY_PREFIX = 'friend-relationships:';
 // (mirroring presence/PeerAvatarPresenceBroadcastProvider.js's own
 // convention exactly) — a future protocol built on the same
 // PeerMessageBus attaches to the identical set of peers, independently.
+//
+// 0.2.79 — Multi-Device Social State Semantics.
+//
+// A FriendshipRecord's `identityId` is now the resolved SOCIAL identity
+// of a connected peer, never necessarily the raw key the live connection
+// itself authenticated as — see `resolveSocialIdentity`, a new optional
+// collaborator (default: application/SocialIdentityResolver.js#resolveDirectSocialIdentity,
+// byte-identical to every pre-0.2.79 behavior) every gesture below and
+// `_handleIncoming` now consult via `_resolvePeerSocialIdentity()`. Real
+// app wiring (ui/main.js) injects application/
+// DeviceAuthorizationPropagationUseCase.js#resolveConnectionIdentity,
+// which recognizes a connection as a currently-authorized DEVICE of some
+// OTHER, parent identity — meaning Alice's Phone and Alice's Laptop, each
+// its own independently-authenticated connection, both resolve to the
+// SAME FriendshipRecord (Alice's own parent identityId), rather than each
+// becoming its own, separate relationship. See docs/Principles.md,
+// "Device Authorization Changes Peer Authority, Never Social Identity."
+//
+// Device provenance is preserved for free, with no schema change: the
+// stored `incomingAction`/`outgoingAction` advertisement itself still
+// carries the RAW authenticating key as `actorIdentity`/`subjectIdentity`
+// (unchanged — that is genuinely who signed it), even though the
+// FriendshipRecord it is attached to is keyed by the resolved PARENT
+// identity. "Who is this relationship with" and "which specific device
+// performed this particular action" are two different, simultaneously
+// available facts, never conflated into one field.
+//
+// Authentication (`remoteIdentity.identityId === payload.actorIdentity`,
+// in `_handleIncoming` below) is completely UNCHANGED by this milestone —
+// it still only ever proves which key signed the wire claim. Resolution
+// happens strictly AFTER that proof, one layer up, exactly the same
+// "authentication first, authorization/social-identity second, never
+// folded together" discipline 0.2.78 itself established.
 export class FriendRelationshipUseCase {
     // 0.2.60 — `isBlocked`: a zero-arg-per-call predicate
     // `(identityId) => boolean`, called fresh on every send AND on
@@ -64,7 +98,8 @@ export class FriendRelationshipUseCase {
         connectedPeerRegistry,
         verifier = new LocalAuthorizationVerifier(),
         protocol = FriendRelationshipUseCase.DEFAULT_PROTOCOL,
-        isBlocked = () => false
+        isBlocked = () => false,
+        resolveSocialIdentity = resolveDirectSocialIdentity
     } = {}) {
         if (!storageProvider) {
             throw new Error('FriendRelationshipUseCase: storageProvider is required');
@@ -85,6 +120,7 @@ export class FriendRelationshipUseCase {
         this._verifier = verifier;
         this._protocol = protocol;
         this._isBlocked = isBlocked;
+        this._resolveSocialIdentity = resolveSocialIdentity;
         this._eventBus = new EventBus();
 
         // Every peer already connected when this use case is built, and
@@ -138,19 +174,26 @@ export class FriendRelationshipUseCase {
     // instant Bob answered. Unblock first.
     sendFriendRequest(connectedPeer) {
         const peerIdentity = this._requireAuthenticatedPeer(connectedPeer);
-        this._requireNotBlocked(peerIdentity.identityId);
+        const social = this._resolvePeerSocialIdentity(connectedPeer);
+        this._requireNotBlocked(social.identityId);
         const owner = this._requireCurrentUsername();
         const all = this._loadAll();
-        const existing = all.find((r) => r.identityId === peerIdentity.identityId);
+        const existing = all.find((r) => r.identityId === social.identityId);
         if (existing && existing.status === FriendshipState.FRIEND) {
             throw new Error('FriendRelationshipUseCase: already friends with this identity');
         }
         if (existing && existing.outgoingAction) {
             throw new Error('FriendRelationshipUseCase: a friend request has already been sent to this identity');
         }
+        // 0.2.79 — `subjectIdentity` is a WIRE field, addressed to the RAW
+        // identity the live connection actually proved — the recipient's
+        // own ingestion checks it against ITS OWN unresolved signing
+        // identity (see `_handleIncoming` below), so it must stay raw even
+        // though the RECORD this device stores is keyed by the resolved
+        // `social.identityId` — see this class's own header.
         const advertisement = this._signAction(FriendshipAction.REQUEST, peerIdentity.identityId);
         this._bus.send(connectedPeer, this._protocol, advertisement);
-        const record = (existing || FriendshipRecord.fromPeerIdentity(peerIdentity)).withOutgoingAction(advertisement);
+        const record = (existing || FriendshipRecord.fromPeerIdentity(social)).withOutgoingAction(advertisement);
         this._saveAll(owner, replaceById(all, record));
         this._publishChange();
         return record;
@@ -169,16 +212,19 @@ export class FriendRelationshipUseCase {
     // own header on why.
     acceptFriendRequest(connectedPeer) {
         const peerIdentity = this._requireAuthenticatedPeer(connectedPeer);
-        this._requireNotBlocked(peerIdentity.identityId);
+        const social = this._resolvePeerSocialIdentity(connectedPeer);
+        this._requireNotBlocked(social.identityId);
         const owner = this._requireCurrentUsername();
         const all = this._loadAll();
-        const existing = all.find((r) => r.identityId === peerIdentity.identityId);
+        const existing = all.find((r) => r.identityId === social.identityId);
         if (!existing || !existing.incomingAction || existing.incomingAction.action !== FriendshipAction.REQUEST) {
             throw new Error('FriendRelationshipUseCase: no pending friend request from this identity');
         }
         if (existing.outgoingAction) {
             throw new Error('FriendRelationshipUseCase: already responded to this identity');
         }
+        // 0.2.79 — RAW wire address, same reasoning as sendFriendRequest()
+        // above.
         const advertisement = this._signAction(FriendshipAction.ACCEPT, peerIdentity.identityId, requestSignatureOf(existing.incomingAction));
         this._bus.send(connectedPeer, this._protocol, advertisement);
         const record = existing.withOutgoingAction(advertisement);
@@ -199,15 +245,18 @@ export class FriendRelationshipUseCase {
     // permanent.
     rejectFriendRequest(connectedPeer) {
         const peerIdentity = this._requireAuthenticatedPeer(connectedPeer);
+        const social = this._resolvePeerSocialIdentity(connectedPeer);
         const owner = this._requireCurrentUsername();
         const all = this._loadAll();
-        const existing = all.find((r) => r.identityId === peerIdentity.identityId);
+        const existing = all.find((r) => r.identityId === social.identityId);
         if (!existing || !existing.incomingAction || existing.incomingAction.action !== FriendshipAction.REQUEST) {
             throw new Error('FriendRelationshipUseCase: no pending friend request from this identity');
         }
         if (existing.outgoingAction) {
             throw new Error('FriendRelationshipUseCase: already responded to this identity');
         }
+        // 0.2.79 — RAW wire address, same reasoning as sendFriendRequest()
+        // above.
         const advertisement = this._signAction(FriendshipAction.REJECT, peerIdentity.identityId, requestSignatureOf(existing.incomingAction));
         this._bus.send(connectedPeer, this._protocol, advertisement);
         const record = existing.withOutgoingAction(advertisement);
@@ -223,15 +272,18 @@ export class FriendRelationshipUseCase {
     // gesture once mutual consent is already proven.
     cancelFriendRequest(connectedPeer) {
         const peerIdentity = this._requireAuthenticatedPeer(connectedPeer);
+        const social = this._resolvePeerSocialIdentity(connectedPeer);
         const owner = this._requireCurrentUsername();
         const all = this._loadAll();
-        const existing = all.find((r) => r.identityId === peerIdentity.identityId);
+        const existing = all.find((r) => r.identityId === social.identityId);
         if (!existing || !existing.outgoingAction || existing.outgoingAction.action !== FriendshipAction.REQUEST) {
             throw new Error('FriendRelationshipUseCase: no pending friend request to cancel');
         }
         if (existing.incomingAction) {
             throw new Error('FriendRelationshipUseCase: this identity has already responded — cancel is no longer possible');
         }
+        // 0.2.79 — RAW wire address, same reasoning as sendFriendRequest()
+        // above.
         const advertisement = this._signAction(FriendshipAction.CANCEL, peerIdentity.identityId, requestSignatureOf(existing.outgoingAction));
         this._bus.send(connectedPeer, this._protocol, advertisement);
         const record = existing.withOutgoingAction(advertisement);
@@ -248,15 +300,18 @@ export class FriendRelationshipUseCase {
     // came from) — see requestSignatureOf() below.
     unfriend(connectedPeer) {
         const peerIdentity = this._requireAuthenticatedPeer(connectedPeer);
+        const social = this._resolvePeerSocialIdentity(connectedPeer);
         const owner = this._requireCurrentUsername();
         const all = this._loadAll();
-        const existing = all.find((r) => r.identityId === peerIdentity.identityId);
+        const existing = all.find((r) => r.identityId === social.identityId);
         if (!existing || existing.status !== FriendshipState.FRIEND) {
             throw new Error('FriendRelationshipUseCase: not currently friends with this identity');
         }
         const originatingRequest = existing.outgoingAction.action === FriendshipAction.REQUEST
             ? existing.outgoingAction
             : existing.incomingAction;
+        // 0.2.79 — RAW wire address, same reasoning as sendFriendRequest()
+        // above.
         const advertisement = this._signAction(FriendshipAction.UNFRIEND, peerIdentity.identityId, requestSignatureOf(originatingRequest));
         this._bus.send(connectedPeer, this._protocol, advertisement);
         const record = existing.withOutgoingAction(advertisement);
@@ -344,16 +399,24 @@ export class FriendRelationshipUseCase {
         if (!this._verifier.verifyFriendshipAdvertisement(payload).valid) {
             return;
         }
-        if (this._isBlocked(payload.actorIdentity)) {
+        // 0.2.79 — `payload.actorIdentity` is now proven AUTHENTICATED
+        // (checked above); the SOCIAL identity this action is recorded
+        // against may be a different, resolved PARENT identity if the
+        // authenticating connection is a verified, currently-authorized
+        // DEVICE of one — see this class's own header. `payload` itself
+        // (still carrying the raw device key as `actorIdentity`) is stored
+        // unchanged as `incomingAction`, so device provenance survives.
+        const social = this._resolvePeerSocialIdentity(meta.connectedPeer);
+        if (this._isBlocked(social.identityId)) {
             return;
         }
 
         const all = this._loadAll();
-        const record = all.find((r) => r.identityId === payload.actorIdentity) || null;
+        const record = all.find((r) => r.identityId === social.identityId) || null;
         if (!_isLegitimateTransition(payload, record)) {
             return;
         }
-        const nextRecord = (record || FriendshipRecord.fromPeerIdentity(remoteIdentity)).withIncomingAction(payload);
+        const nextRecord = (record || FriendshipRecord.fromPeerIdentity(social)).withIncomingAction(payload);
         this._saveAll(owner, replaceById(all, nextRecord));
         this._publishChange();
     }
@@ -373,6 +436,17 @@ export class FriendRelationshipUseCase {
             throw new Error('FriendRelationshipUseCase: the peer must be an authenticated connection');
         }
         return connectedPeer.remoteIdentity;
+    }
+
+    // 0.2.79 — resolves `connectedPeer`'s own SOCIAL identity via the
+    // injected `resolveSocialIdentity` collaborator — see this class's own
+    // header. Always called AFTER `_requireAuthenticatedPeer()` has
+    // already confirmed a live remoteIdentity exists, so a null result
+    // here would only mean a caller-supplied resolver behaving
+    // unexpectedly; falls back to the connection's own raw identity
+    // defensively rather than throwing a second, redundant error.
+    _resolvePeerSocialIdentity(connectedPeer) {
+        return this._resolveSocialIdentity(connectedPeer) || resolveDirectSocialIdentity(connectedPeer);
     }
 
     // 0.2.60 — refuses any gesture that would establish or advance a

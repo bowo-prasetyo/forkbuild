@@ -13,14 +13,21 @@ import { FriendRelationshipUseCase } from './FriendRelationshipUseCase.js';
 // (see ui/main.js), passed straight through the same way: this class
 // derives the `isBlocked` predicate FriendRelationshipUseCase's own
 // constructor consults, never the store itself.
+//
+// 0.2.79 — `resolveSocialIdentity` is passed straight through the
+// identical way: ui/main.js supplies application/
+// DeviceAuthorizationPropagationUseCase.js#resolveConnectionIdentity
+// (bound), and this class never inspects or wraps it — see
+// application/FriendRelationshipUseCase.js's own header.
 export class CreateFriendRelationshipUseCase {
-    execute(identityProvider, { peerMessageBus, connectedPeerRegistry, peerBlockUseCase = null } = {}) {
+    execute(identityProvider, { peerMessageBus, connectedPeerRegistry, peerBlockUseCase = null, resolveSocialIdentity = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const isBlocked = peerBlockUseCase ? (identityId) => peerBlockUseCase.isBlocked(identityId) : undefined;
         return new FriendRelationshipUseCase(storageProvider, identityProvider, {
             peerMessageBus,
             connectedPeerRegistry,
-            ...(isBlocked ? { isBlocked } : {})
+            ...(isBlocked ? { isBlocked } : {}),
+            ...(resolveSocialIdentity ? { resolveSocialIdentity } : {})
         });
     }
 }

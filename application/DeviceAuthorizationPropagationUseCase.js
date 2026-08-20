@@ -8,6 +8,7 @@ import {
 import { isValidDeviceAuthorizationGrant, isValidDeviceAuthorizationRevocation } from '../core/DeviceAuthorizationEnvelope.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
+import * as Ed25519 from '../identity/Ed25519.js';
 
 const AUTHORITY_CHANGED_EVENT = 'DeviceAuthorityChanged';
 const STORAGE_KEY_PREFIX = 'device-authority:';
@@ -160,6 +161,72 @@ export class DeviceAuthorizationPropagationUseCase {
             return { authorized: true, mode: 'DEVICE', deviceIdentityId: remote.identityId };
         }
         return { authorized: false, mode: null };
+    }
+
+    // 0.2.79 — Multi-Device Social State Semantics.
+    //
+    // "Given a live, authenticated connection, what SOCIAL identity should
+    // friendship/chat/voice/blocking treat it as?" The counterpart query
+    // to resolvePeerAuthority() above, which needs a CANDIDATE identityId
+    // already in mind ("does this connection represent Alice specifically?")
+    // — this one instead answers, from scratch, "who IS this connection,
+    // socially?" DIRECT (the connection's own proven key stays exactly
+    // what every social use case has always assumed it is) or DEVICE (this
+    // device has independently verified the connected key is a currently-
+    // authorized device of some OTHER, parent identity) — see
+    // docs/Principles.md, "Device Authorization Changes Peer Authority,
+    // Never Social Identity" (0.2.79). A pure query, safe to call on every
+    // single incoming or outgoing social message; never mutates anything.
+    //
+    // Always returns a full, self-sufficient identity shape —
+    // `{ identityId, publicKey, algorithm, mode, deviceIdentityId }` —
+    // never merely a boolean/mode pair the way resolvePeerAuthority()
+    // returns, a deliberate divergence from that method's own leaner shape:
+    // a caller here (application/FriendRelationshipUseCase.js,
+    // application/ChatUseCase.js, application/VoiceUseCase.js) generally
+    // needs to construct a NEW core/FriendshipRecord.js/core/
+    // PeerBlockRecord.js for the resolved parent identity, which requires
+    // its publicKey — recoverable directly from its did:key identityId
+    // (see identity/Ed25519.js#didKeyToPublicKey), never a second lookup.
+    // `deviceIdentityId` is always the RAW connected key, regardless of
+    // mode — the device-provenance fact a caller wanting to show "sent
+    // from Alice's Phone" alongside "from Alice" reads directly, without
+    // branching on `mode` first.
+    //
+    // Ambiguous is refused, not guessed at: if this device has somehow
+    // independently verified currently-ACTIVE grants from MORE than one
+    // distinct parent identity for the very same device key (a genuinely
+    // pathological case no single honest parent ever produces, since a
+    // keypair belongs to one device — this would mean two UNRELATED
+    // identities each, honestly, claiming the same device key as their
+    // own), this resolves DIRECT rather than picking either parent
+    // arbitrarily — a named, deliberately conservative edge case, not
+    // silently handled either way.
+    resolveConnectionIdentity(connectedPeer) {
+        const remote = connectedPeer && connectedPeer.remoteIdentity;
+        if (!remote) {
+            return null;
+        }
+        const parents = this._loadAll().filter((a) => a.deviceIdentityId === remote.identityId && a.isAuthorized);
+        if (parents.length === 1) {
+            const publicKeyBytes = Ed25519.didKeyToPublicKey(parents[0].identityId);
+            if (publicKeyBytes) {
+                return {
+                    identityId: parents[0].identityId,
+                    publicKey: Ed25519.bytesToHex(publicKeyBytes),
+                    algorithm: 'Ed25519',
+                    mode: 'DEVICE',
+                    deviceIdentityId: remote.identityId
+                };
+            }
+        }
+        return {
+            identityId: remote.identityId,
+            publicKey: remote.publicKey,
+            algorithm: remote.algorithm,
+            mode: 'DIRECT',
+            deviceIdentityId: remote.identityId
+        };
     }
 
     // Returns an unsubscribe function. Fires with every accepted
