@@ -28,8 +28,12 @@ docs/BrickLibrary.md already documents for BrickRegistry:
     registry.register(SomeCommunityStructureLibrary);
 
 StructureRegistry is a catalog: get(id), has(id), getAll(),
-getByCategory(category), search(tags) — byte-for-byte the same contract
-BrickRegistry offers, one rung up.
+getByCategory(category), search(tags), groupByCategory() —
+byte-for-byte the same contract BrickRegistry offers, one rung up.
+groupByCategory() (0.2.84) is the one method BrickRegistry got first
+(0.2.80) — deferred here until the Build Library needed Structures to
+group the same way Bricks already did; getAll(), getByCategory(), and
+search() are unchanged since 0.2.81.
 
 village:house, village:barn, village:well, village:market, village:mill,
 and village:bridge (core/library/VillageLibrary.js) are the current
@@ -60,9 +64,17 @@ application/ForkPublishedWorldUseCase.js already draws for published
 worlds. A forked Document is placed in the World like any other document,
 whenever that becomes a separate, later action.
 
-ui/components/StructureLibraryPanel.js is the one UI surface today: a
-flat list of every registered Structure with a Fork button, wired
+ui/components/BuildLibraryPanel.js (0.2.84; replaces the earlier
+standalone ui/components/StructureLibraryPanel.js) is the UI surface
+today: the Structures tab of the unified "Build Library," grouped by
+category via groupByCategory() above, searchable by name/category/tag,
+each entry showing a small rendered preview (application/
+LibraryPreviewService.js, same BrickRenderer/ThreeBrickFactory pipeline
+every Structure's bricks already render with) and a Fork button, wired
 through EditorSession.forkStructure(structure) (application/
 EditorSession.js) — which forks, then calls the session's own
 openDocument(), the identical path Load and "Fork Published World"
-already use. There is no separate structure-editing mode.
+already use. There is no separate structure-editing mode. Clicking Fork
+is the only action a Structure entry offers — nothing in the Build
+Library ever places a Structure directly into the current document,
+exactly as 0.2.81 established.

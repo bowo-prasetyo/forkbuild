@@ -73,20 +73,35 @@ export class DocumentThumbnailRenderer {
     // application/PreviewService.js) should only invoke this from an
     // idle-scheduled queue, never back-to-back in a tight loop.
     renderDocument(document) {
+        const bricks = [];
+        for (const building of document.world.getBuildings()) {
+            bricks.push(...building.getBricks());
+        }
+        return this.renderBricks(bricks);
+    }
+
+    // 0.2.84 (Building Library & Palette UX) — the same one-shot render
+    // pipeline, for a flat list of core/Brick.js instances that don't
+    // belong to a Document/World at all: a Structure's own `bricks`, or
+    // a single synthetic Brick standing in for one BrickDefinition. Both
+    // a Build Library brick/structure thumbnail and a Document thumbnail
+    // are, underneath, "some bricks, framed and rendered" — this method
+    // is that shared operation; renderDocument() is now a two-line
+    // adapter over it, not a second implementation.
+    renderBricks(bricks) {
         this._clearMeshes();
 
-        for (const building of document.world.getBuildings()) {
-            for (const { mesh } of this._buildingRenderer.renderBricks(building)) {
-                this._scene.add(mesh);
-                this._meshes.push(mesh);
-            }
+        for (const brick of bricks) {
+            const { mesh } = this._buildingRenderer.renderBrick(brick);
+            this._scene.add(mesh);
+            this._meshes.push(mesh);
         }
 
         // The framing decision — position, target, field of view —
         // comes ENTIRELY from core/PreviewCameraFraming.js's pure
         // function; this class only ever applies whatever that
         // function decided, it never makes a framing choice of its own.
-        const bounds = SpatialBounds.fromWorld(document.world, this._registry);
+        const bounds = SpatialBounds.fromBricks(bricks, this._registry);
         const framing = computeThumbnailCamera(bounds);
         this._camera.fov = framing.fovDegrees;
         this._camera.position.set(framing.position.x, framing.position.y, framing.position.z);
