@@ -8036,3 +8036,112 @@ limit; and `renderer/PickingService.js#pickGroundPosition()`, which still
 raycasts the literal `Y = 0` plane for brick placement/picking, completely
 unmodified — brick placement riding the visual terrain surface is a
 separate, unstarted question this milestone does not attempt to answer.
+
+### Multi-Device Identity Semantics (0.2.78)
+
+Five prior milestones — 0.2.67 through 0.2.71 — each named, and each
+deliberately left open, the same question: "is an identity a person, a
+device, or a key?" 0.2.78 answers it, rather than continuing further into
+World View's terrain arc, on the reasoning that voice, presence,
+conversations, and World View are all now live, which makes the gap more
+consequential with every milestone that passes rather than less.
+
+**The answer: an identity stays exactly what it has been since
+0.2.16/0.2.46 — one Ed25519 keypair, one did:key, nothing more.** A
+DEVICE is not a new kind of identity at all — it is just ANOTHER
+`identity/LocalIdentity.js`, generated wherever it happens to live,
+exactly like any identity `createLocalIdentity()` already produces. What
+0.2.78 actually adds is the one genuinely missing concept: a signed,
+revocable AUTHORIZATION LINK from a parent identity to a device's key —
+never a copy of the parent's own private key (0.2.48's export/import
+remains the answer to "move this identity itself to a new primary
+device," completely untouched), and never merely "another connection
+that happens to use the same key." See docs/Principles.md, "Identity
+Authentication Proves A Key; Device Authorization Proves Permission."
+
+**`core/DeviceAuthorizationEnvelope.js` is modeled directly on
+`core/IdentityRevocationEnvelope.js`/`core/IdentitySuccessionEnvelope.js`
+— two REQUIRED-signature record types, GRANT and REVOCATION, signed by
+the PARENT identity only.** The device being authorized never
+counter-signs, the identical asymmetry `IdentitySuccessionEnvelope`
+already established for predecessor/successor: a device proves its own
+key possession the ordinary way, live, the moment it actually connects to
+someone — the grant itself is meaningful the instant the parent produces
+it. `identity/LocalIdentityProvider.js#authorizeDevice()`/
+`revokeDeviceAuthorization()`/`listDeviceAuthorizations()`/
+`getDeviceAuthorization()`/`isDeviceAuthorized()` mirror
+`declareSuccessor()`/`revokeIdentity()`'s own shape exactly, down to
+requiring the signing identity's own key to be unlockable
+(`_resolveOrUnlockSeedHex`) and gating on the parent identity's own
+revocation state — a revoked identity can no longer vouch for any of its
+devices either, the same `_requireAuthenticatedIdentity()` discipline
+0.2.67 already established for ordinary signing. `identity/
+LocalAuthorizationVerifier.js#verifyDeviceAuthorizationGrant()`/
+`verifyDeviceAuthorizationRevocation()` apply the identical REQUIRED-
+signature, signer-must-equal-`identityId` discipline as
+`verifyIdentityRevocation()`/`verifyIdentitySuccession()`.
+
+**`core/DeviceAuthority.js` — the receiver's own independently-verified
+knowledge — is keyed by the PAIR `(identityId, deviceIdentityId)`, never
+merely `identityId`,** because the entire point is telling multiple
+devices under one identity apart from one another, not merely knowing an
+identity has "some" devices. Its `isAuthorized` getter is a plain
+timestamp comparison between the newest grant and newest revocation this
+device has verified — deliberately NOT `core/IdentityRevocationEnvelope.js`'s
+own permanent, one-way latch. See docs/Principles.md, "Device
+Authorization Can Be Re-Granted; Identity Revocation Cannot": losing and
+later regaining a device is an ordinary, recoverable event for the parent
+identity, never the identity's own compromise, so a strictly newer grant
+re-authorizes a device previously revoked.
+
+**`application/DeviceAuthorizationPropagationUseCase.js` is
+`application/IdentityLifecyclePropagationUseCase.js` again, one layer
+over — same namespaced `peer/PeerMessageBus.js` protocol pattern
+(`'forkbuild:device-authorization'`), same "a record is trusted by its
+own signature, never by who relayed it" ingestion boundary, same injected
+`knowsIdentity` relevance gate.** The one genuinely new addition is
+`resolvePeerAuthority(connectedPeer, identityId)`, returning `{
+authorized, mode: 'DIRECT' | 'DEVICE' | null }` — DIRECT when the
+connection's own proven key IS `identityId` (exactly how every peer
+connection has represented an identity since 0.2.49), DEVICE when the
+connection's proven key is a different, independently-verified,
+currently-authorized device of `identityId`, and `{ authorized: false,
+mode: null }` for anything else, with no third, implicit mode. The
+DIRECT/DEVICE naming deliberately echoes `identity/DelegationVerifier.js`'s
+own DIRECT/DELEGATED split as an architectural SHAPE — never its code
+path, since that class answers an unrelated question (publication
+ownership delegation). Not one line under `peer/` changed to make this
+possible: `peer/PeerAuthenticationSession.js`, `peer/PeerIdentity.js`,
+and `application/ConnectedPeer.js#remoteIdentity` all remain exactly what
+they were the day 0.2.49/0.2.50 shipped them.
+
+The flagship test (`tests/MultiDeviceIdentity.test.js`) drives real,
+in-process `peer/PeerAuthenticationSession.js` handshakes over
+`peer/LocalPeerConnectionProvider.js` (the same transport
+`tests/PeerAuthentication.test.js` itself uses) end to end: Alice
+authorizes two devices entirely locally before either ever connects to
+anyone, broadcasts both signed grants to Bob, and each device separately,
+genuinely authenticates to Bob on its own live connection and resolves as
+an authorized DEVICE acting for Alice — two simultaneously live,
+independently authorized devices under one identity. SECURITY FLAGSHIP A
+proves Charlie, an entirely unrelated identity who authenticates
+completely genuinely as himself, is rejected as a representative of
+Alice. SECURITY FLAGSHIP B proves a revoked device authenticates exactly
+as successfully as ever (its key is completely untouched) while its
+authorization to act for the identity is independently, and separately,
+gone — the central property this milestone exists to establish:
+authentication and authorization are two different facts, verified two
+different ways, and neither one implies the other.
+
+Deliberately not in 0.2.78, matching the scope this milestone was
+explicitly given: device synchronization, message fan-out, shared read
+state, multi-device voice ringing, a device management UI, a device
+revocation UI, and cross-device presence aggregation. `resolvePeerAuthority()`
+is proven correct in isolation but consulted by nothing else in this
+codebase yet — `application/PeerRelationshipUseCase.js`,
+`application/ChatUseCase.js`, `application/VoiceUseCase.js`, and every
+presence/profile sync remain completely unmodified, each still exactly
+"one local device holding one identity's key," the unchanged caveat every
+milestone from 0.2.69 through 0.2.71 already carried. See docs/Roadmap.md,
+0.2.78, for the full list of what this establishes versus what it
+deliberately leaves for later.
