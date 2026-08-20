@@ -2,6 +2,7 @@ import { EventBus } from '../core/events/EventBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { FriendshipState } from '../core/FriendshipState.js';
 import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
+import { findLiveConnectedPeers } from './ConnectedIdentityPeers.js';
 
 const PRESENCE_CHANGED_EVENT = 'PeerPresenceChanged';
 
@@ -312,13 +313,14 @@ export class PeerPresenceUseCase {
     // `.filter()`, not a `.find()`, on purpose: Alice's Phone and Laptop
     // can both be live at once, and this is the one place that fact is
     // actually visible rather than collapsed to "the first one found."
+    //
+    // 0.2.86 — now a thin call into application/ConnectedIdentityPeers.js#findLiveConnectedPeers(),
+    // the SAME shared function application/VoiceUseCase.js's own identity-
+    // targeted call fan-out reuses, rather than this class's own private
+    // filter being the only copy of this logic in the codebase — behavior
+    // is byte-identical to before this extraction.
     _liveConnectedPeers(identityId) {
-        return this._registry.list().filter((peer) => {
-            if (!peer.remoteIdentity || peer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED) {
-                return false;
-            }
-            return this._resolvePeerSocialIdentity(peer).identityId === identityId;
-        });
+        return findLiveConnectedPeers(this._registry, this._resolveSocialIdentity, identityId);
     }
 
     // Resolves `connectedPeer`'s own SOCIAL identity via the injected
