@@ -27,6 +27,12 @@ import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { ForkStructureUseCase } from './ForkStructureUseCase.js';
 import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlacementCommand.js';
+import { MoveStructurePlacementCommand } from './commands/MoveStructurePlacementCommand.js';
+import { RotateStructurePlacementCommand } from './commands/RotateStructurePlacementCommand.js';
+import { DuplicateStructurePlacementCommand } from './commands/DuplicateStructurePlacementCommand.js';
+import { StructurePlacementValidator } from './StructurePlacementValidator.js';
+import { SpatialBounds } from '../core/SpatialBounds.js';
+import { Position } from '../core/Position.js';
 
 // Owns the live runtime graph — the render session, World, CommandHistory,
 // ToolManager, InputDispatcher — as one unit, so nothing else has to know
@@ -177,11 +183,24 @@ export class EditorSession {
     // per brick, wrapped in a CompositeCommand, one undo step, selection
     // cleared afterwards. Session state + existing commands only — the
     // action layer that calls this never touches CommandHistory itself.
+    //
+    // 0.2.91 — a structure-placement selection branches to
+    // removeStructurePlacement() instead: "the UI should finally expose
+    // the existing [0.2.90] removal operation" via the SAME
+    // selection.delete action (Delete/Backspace, the sidebar, the
+    // palette) bricks already use, rather than a second delete pathway.
     deleteSelection() {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
         if (selection.isEmpty || !document || !this._commandHistory) {
             return false;
+        }
+        if (selection.isStructurePlacementSelection) {
+            const removed = this.removeStructurePlacement(selection.selectedPlacementId);
+            if (removed) {
+                this._editorContext.clearSelection();
+            }
+            return removed;
         }
         const worldId = document.world.id;
         const commands = selection.items.map((item) => new DeleteBrickCommand({
@@ -227,23 +246,175 @@ export class EditorSession {
     // ---------------------------------------------------------------
     // Transform operations (delegate to the gesture service, exactly
     // as WorldNavigationSession does)
+    //
+    // 0.2.91 — a structure-placement selection branches BEFORE reaching
+    // SpatialEditingService: that service (and TransformSelectionCommand
+    // underneath it) is shaped entirely around brick/group selection
+    // items — SelectionBoundsService, per-brick gesture math — and
+    // deliberately stays that way rather than being widened to also
+    // understand a StructurePlacement. Instead, a placement selection
+    // gets its OWN small commands (MoveStructurePlacementCommand /
+    // RotateStructurePlacementCommand), the exact same "mirrors X one
+    // rung up, as its own small focused thing" precedent 0.2.90 already
+    // set for PlaceStructureCommand vs. PlaceBrickCommand. The SELECTION
+    // model, the ACTION registry (nudge/rotate/delete), and CommandHistory
+    // are the abstractions this reuses; the gesture kernel is not one of
+    // them.
     // ---------------------------------------------------------------
     moveSelection(delta, gestureOptions = {}) {
         if (this._editorContext.tool.activeTool === ToolId.PLACE) {
             return false;
         }
-        return this._gestureService.moveSelection(
-            this._editorContext.selection, delta, gestureOptions
-        );
+        const selection = this._editorContext.selection;
+        if (selection.isStructurePlacementSelection) {
+            return this._moveStructurePlacement(selection.selectedPlacementId, delta);
+        }
+        return this._gestureService.moveSelection(selection, delta, gestureOptions);
     }
 
     rotateSelection(deltaRotation, gestureOptions = {}) {
         if (this._editorContext.tool.activeTool === ToolId.PLACE) {
             return false;
         }
-        return this._gestureService.rotateSelection(
-            this._editorContext.selection, deltaRotation, gestureOptions
+        const selection = this._editorContext.selection;
+        if (selection.isStructurePlacementSelection) {
+            return this._rotateStructurePlacement(selection.selectedPlacementId, deltaRotation);
+        }
+        return this._gestureService.rotateSelection(selection, deltaRotation, gestureOptions);
+    }
+
+    // 0.2.91 — "Duplicate" for a structure-placement selection: a new
+    // StructurePlacement referencing the SAME documentId, never a new
+    // Document (see application/commands/DuplicateStructurePlacementCommand.js's
+    // own header). Returns the new placement's id (truthy) or null.
+    // Deliberately not offered for a brick selection here — copy/paste
+    // already covers that, and this action is gated on
+    // ctx.selectionIsStructurePlacement in the registry (see
+    // application/EditorActionRegistry.js, 'selection.duplicate').
+    duplicateSelection() {
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (!selection.isStructurePlacementSelection || !document || !this._commandHistory) {
+            return null;
+        }
+        const command = new DuplicateStructurePlacementCommand({
+            worldId: document.world.id,
+            placementId: selection.selectedPlacementId
+        });
+        this._commandHistory.execute(command);
+        if (command.executedPlacementId && this._selectionUseCase) {
+            this._selectionUseCase.selectPlacement(command.executedPlacementId);
+        }
+        return command.executedPlacementId;
+    }
+
+    // 0.2.91 — everything a UI panel needs to show "Selected House
+    // Instance": the placement's own id/documentId/position/rotation
+    // plus the referenced Document's title, resolved via the SAME
+    // Recent Documents listing Toolbar's own Place/Load buttons already
+    // read (application/LoadDocumentUseCase.js#listSavedDocuments()) —
+    // no second title-lookup mechanism. Returns null when nothing (or a
+    // non-placement) is selected, or the document/history aren't ready.
+    getSelectedPlacementInfo() {
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (!selection.isStructurePlacementSelection || !document) {
+            return null;
+        }
+        const placement = document.world.getStructurePlacement(selection.selectedPlacementId);
+        if (!placement) {
+            return null;
+        }
+        let title = placement.documentId;
+        if (this._loadDocumentUseCase && typeof this._loadDocumentUseCase.listSavedDocuments === 'function') {
+            const entry = this._loadDocumentUseCase.listSavedDocuments()
+                .find((doc) => doc.id === placement.documentId);
+            if (entry) {
+                title = entry.title;
+            }
+        }
+        return {
+            placementId: placement.id,
+            documentId: placement.documentId,
+            title,
+            position: placement.position,
+            rotation: placement.rotation
+        };
+    }
+
+    // 0.2.91 — "Edit Source Document": reuses the EXISTING loadDocument()
+    // path (Toolbar's own Load button), never a new mutation surface —
+    // "editing a placed structure's bricks should still happen by
+    // opening/editing its Document, not by modifying the instance."
+    editStructurePlacementSource(documentId) {
+        if (!documentId) {
+            return false;
+        }
+        this.loadDocument(documentId);
+        return true;
+    }
+
+    _moveStructurePlacement(placementId, delta) {
+        const document = this._documentManager.document;
+        if (!document || !this._commandHistory) {
+            return false;
+        }
+        const world = document.world;
+        const placement = world.getStructurePlacement(placementId);
+        if (!placement) {
+            return false;
+        }
+        const candidate = new Position(
+            placement.position.x + delta.x,
+            placement.position.y + delta.y,
+            placement.position.z + delta.z
         );
+        if (!this._structurePlacementFits(world, placement, candidate)) {
+            return false;
+        }
+        this._commandHistory.execute(new MoveStructurePlacementCommand({
+            worldId: world.id, placementId, delta
+        }));
+        return true;
+    }
+
+    _rotateStructurePlacement(placementId, deltaRotation) {
+        const document = this._documentManager.document;
+        if (!document || !this._commandHistory) {
+            return false;
+        }
+        const world = document.world;
+        if (!world.getStructurePlacement(placementId)) {
+            return false;
+        }
+        this._commandHistory.execute(new RotateStructurePlacementCommand({
+            worldId: world.id, placementId, deltaRotation
+        }));
+        return true;
+    }
+
+    // Shared by _moveStructurePlacement() and application/tools/SelectionTool.js's
+    // own drag-to-move — "reuse the existing placement-validation
+    // machinery," StructurePlacementValidator, with excludePlacementId
+    // set to the placement's own id so it never collides with itself
+    // (its own header explains why that parameter exists at all).
+    // Gracefully permissive (true) when there's no resolver or the
+    // Document can't be resolved — the same posture StructurePlacementTool
+    // already takes toward a preview it can't validate.
+    _structurePlacementFits(world, placement, candidatePosition) {
+        if (!this._structureResolver) {
+            return true;
+        }
+        const placedWorld = this._structureResolver.resolve(placement.documentId);
+        if (!placedWorld) {
+            return true;
+        }
+        const validator = new StructurePlacementValidator();
+        return validator.canPlace(world, this._registry, this._structureResolver, {
+            localBounds: SpatialBounds.fromWorld(placedWorld, this._registry),
+            position: candidatePosition,
+            excludePlacementId: placement.id
+        });
     }
 
     // ---------------------------------------------------------------
@@ -669,7 +840,10 @@ export class EditorSession {
         this._inputDispatcher = new InputDispatcher(
             this._toolManager,
             (screenX, screenY) => this._session.pick(screenX, screenY),
-            (screenX, screenY) => this._session.pickGround(screenX, screenY)
+            (screenX, screenY) => this._session.pickGround(screenX, screenY),
+            // 0.2.91 — degrades to null when the render session predates
+            // pickPlacement (an older test double), never throws.
+            (screenX, screenY) => (this._session.pickPlacement ? this._session.pickPlacement(screenX, screenY) : null)
         );
         const refreshGizmo = () => this._refreshGizmo();
         this._gizmoSubscriptions = [

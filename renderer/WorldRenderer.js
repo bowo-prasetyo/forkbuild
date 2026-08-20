@@ -1,5 +1,6 @@
 import { BuildingRenderer } from './BuildingRenderer.js';
 import { MeshRegistry } from './MeshRegistry.js';
+import { PlacementMeshRegistry } from './PlacementMeshRegistry.js';
 import { DomainEvent } from '../core/events/Event.js';
 
 // WorldRenderer has no render(world) sweep. It subscribes to the domain
@@ -28,14 +29,17 @@ import { DomainEvent } from '../core/events/Event.js';
 // without any synchronization machinery: there is only ever one
 // authoritative representation of a structure's bricks to draw from.
 //
-// Placement meshes are tracked in their OWN map (`_placementMeshes`,
-// keyed by placementId), deliberately NEVER registered with
-// `meshRegistry`/PickingService — the same Document placed twice (House
-// at A, House at B) would otherwise mint the SAME brick ids twice into a
-// registry keyed by brick id alone. Named, not hidden: this means a
-// placed structure's individual bricks are visible but not yet
-// selectable/pickable — see docs/Roadmap.md, 0.2.91 ("select placed
-// structures"), which is exactly where that capability is planned.
+// Placement meshes are tracked in their OWN registry
+// (`_placementMeshRegistry`, renderer/PlacementMeshRegistry.js, keyed by
+// placementId), deliberately NEVER registered with `meshRegistry` — the
+// same Document placed twice (House at A, House at B) would otherwise
+// mint the SAME brick ids twice into a registry keyed by brick id alone.
+// 0.2.91 gives PickingService its OWN second raycast against this
+// registry instead (application/RenderWorldUseCase.js wires
+// placementMeshRegistry in alongside meshRegistry) — a placed
+// structure's individual bricks are still never individually pickable,
+// but the WHOLE instance now is, resolved via mesh uuid -> placementId
+// rather than mesh uuid -> brickId.
 //
 // `transformMath` composes a placement's rotation with each of its
 // bricks' local positions — injected (mirrors TransformGizmoController's
@@ -64,12 +68,26 @@ export class WorldRenderer {
         this._subscriptions = [];
         this._documentOffsets = new Map();
         this._buildingToDocument = new Map();
-        this._placementMeshes = new Map();
+        // 0.2.91 — was a bare Map(placementId -> meshes[]); now a small
+        // dedicated registry (renderer/PlacementMeshRegistry.js) that
+        // ALSO indexes mesh uuid -> placementId, so PickingService can
+        // resolve a raycast hit on a placement's brick back to the
+        // instance it belongs to — the enabling change for "select the
+        // whole instance." Exposed via its own getter below, mirroring
+        // meshRegistry's own getter exactly.
+        this._placementMeshRegistry = new PlacementMeshRegistry();
         this._placementToDocument = new Map();
     }
 
     get meshRegistry() {
         return this._meshRegistry;
+    }
+
+    // 0.2.91 — read by application/RenderWorldUseCase.js to construct
+    // PickingService with a second, placement-aware mesh source, exactly
+    // the way meshRegistry already is.
+    get placementMeshRegistry() {
+        return this._placementMeshRegistry;
     }
 
     // Event-driven mode (EditorView)
@@ -81,7 +99,14 @@ export class WorldRenderer {
             eventBus.subscribe(DomainEvent.BRICK_REMOVED, ({ brick }) => this._onBrickRemoved(brick)),
             eventBus.subscribe(DomainEvent.BRICK_UPDATED, ({ buildingId, brick }) => this._onBrickUpdated(buildingId, brick)),
             eventBus.subscribe(DomainEvent.STRUCTURE_PLACEMENT_ADDED, ({ placement }) => this._onStructurePlacementAdded(placement)),
-            eventBus.subscribe(DomainEvent.STRUCTURE_PLACEMENT_REMOVED, ({ placement }) => this._onStructurePlacementRemoved(placement))
+            eventBus.subscribe(DomainEvent.STRUCTURE_PLACEMENT_REMOVED, ({ placement }) => this._onStructurePlacementRemoved(placement)),
+            // 0.2.91 — an already-placed instance moved/rotated in
+            // place. There is no incremental per-mesh update here (a
+            // placement can carry many bricks, all of which shift
+            // together): remove and re-render, the same "small World,
+            // simplest correct thing" trade-off _onBuildingAdded/Removed
+            // already make for a whole building.
+            eventBus.subscribe(DomainEvent.STRUCTURE_PLACEMENT_UPDATED, ({ placement }) => this._onStructurePlacementUpdated(placement))
         );
     }
 
@@ -202,6 +227,19 @@ export class WorldRenderer {
         this._placementToDocument.delete(placement.id);
     }
 
+    // 0.2.91 — remove-and-re-render at the placement's (possibly new)
+    // position/rotation. _placementToDocument still names the SAME
+    // containing document (updating a placement never changes which
+    // World it lives in), so the offset/terrain lookup is unaffected —
+    // only the placement's own position/rotation, read fresh off the
+    // `placement` the event carries, changes what gets composed.
+    _onStructurePlacementUpdated(placement) {
+        this._removeStructurePlacementMeshes(placement.id);
+        const documentId = this._placementToDocument.get(placement.id);
+        const offset = this._documentOffsets.get(documentId) || { x: 0, y: 0, z: 0 };
+        this._renderStructurePlacement(placement, offset);
+    }
+
     // Resolves the placement's Document, then renders every one of its
     // Bricks as an ordinary mesh (the same BuildingRenderer/BrickRenderer/
     // BrickRegistry pipeline every other brick in this engine renders
@@ -237,7 +275,7 @@ export class WorldRenderer {
                 meshes.push(mesh);
             }
         }
-        this._placementMeshes.set(placement.id, meshes);
+        this._placementMeshRegistry.set(placement.id, meshes);
     }
 
     _rotateAroundOrigin(point, degrees) {
@@ -248,14 +286,14 @@ export class WorldRenderer {
     }
 
     _removeStructurePlacementMeshes(placementId) {
-        const meshes = this._placementMeshes.get(placementId);
-        if (!meshes) {
+        const meshes = this._placementMeshRegistry.getMeshes(placementId);
+        if (meshes.length === 0) {
             return;
         }
         for (const mesh of meshes) {
             this._renderer.remove(mesh);
         }
-        this._placementMeshes.delete(placementId);
+        this._placementMeshRegistry.delete(placementId);
     }
 
     // 0.2.76 — sampled ONCE per document, at its own placement position

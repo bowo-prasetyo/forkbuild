@@ -15,10 +15,18 @@ import { WorldPosition } from '../core/WorldPosition.js';
 // projected-bounds intersection is future work; center-in-rect is the
 // V0.1 simplification and matches how most editors feel at brick scale.
 export class PickingService {
-    constructor(camera, domElement, meshRegistry) {
+    // placementMeshRegistry (0.2.91, optional) — a second, SEPARATE mesh
+    // source (renderer/PlacementMeshRegistry.js) for pickPlacement()
+    // below. Kept apart from meshRegistry rather than merged into it:
+    // a placed structure's bricks are deliberately never registered
+    // with meshRegistry at all (renderer/WorldRenderer.js's own 0.2.90
+    // header), so ordinary brick picking is completely unaffected by
+    // whether a caller also constructs this with a placement registry.
+    constructor(camera, domElement, meshRegistry, placementMeshRegistry = null) {
         this._camera = camera;
         this._domElement = domElement;
         this._meshRegistry = meshRegistry;
+        this._placementMeshRegistry = placementMeshRegistry;
         this._raycaster = new THREE.Raycaster();
         this._groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     }
@@ -80,6 +88,40 @@ export class PickingService {
             // preferring one category over the other regardless of
             // depth. Every existing caller of pick()/pickRich() reads
             // named fields and simply ignores this one.
+            distance: hit.distance
+        };
+    }
+
+    // 0.2.91 — World Instance Editing & Placement Management. Raycasts
+    // against ONLY the placement mesh registry (a completely separate
+    // mesh set from meshRegistry, see the constructor's own note) and
+    // resolves a hit back to the placementId that owns it — never a
+    // brickId, matching "select the whole instance" exactly. Returns
+    // null when there's no placementMeshRegistry (an older caller, a
+    // test harness that never wires one in) or nothing under the
+    // cursor — the same graceful-absence shape pick()/pickRich() use.
+    pickPlacement(screenX, screenY) {
+        if (!this._placementMeshRegistry) {
+            return null;
+        }
+        const ndc = this._toNormalizedDeviceCoordinates(screenX, screenY);
+        this._raycaster.setFromCamera(ndc, this._camera);
+
+        const meshes = this._placementMeshRegistry.getAllMeshes();
+        const intersections = this._raycaster.intersectObjects(meshes, false);
+        if (intersections.length === 0) {
+            return null;
+        }
+
+        const hit = intersections[0];
+        const placementId = this._placementMeshRegistry.getPlacementId(hit.object.uuid);
+        if (!placementId) {
+            return null;
+        }
+
+        return {
+            placementId,
+            point: new Position(hit.point.x, hit.point.y, hit.point.z),
             distance: hit.distance
         };
     }

@@ -207,6 +207,28 @@ export class World {
         return this._placements.get(id) || null;
     }
 
+    // 0.2.91 — World Instance Editing & Placement Management. Mutates an
+    // EXISTING placement's position and/or rotation in place — the
+    // instance-manipulation counterpart to updateBrick() above. changes:
+    // { position, rotation }. Never touches documentId: moving or
+    // rotating a placement never changes what it references (see
+    // core/StructurePlacement.js's own header). A silent no-op for an
+    // unknown id, the same graceful-absence posture removeStructurePlacement()
+    // already takes.
+    updateStructurePlacement(id, changes) {
+        const placement = this._placements.get(id);
+        if (!placement) {
+            return;
+        }
+        if (changes.position) {
+            placement.position = changes.position;
+        }
+        if (changes.rotation !== undefined) {
+            placement.rotation = changes.rotation;
+        }
+        this._publish(DomainEvent.STRUCTURE_PLACEMENT_UPDATED, { placement });
+    }
+
     getStructurePlacements() {
         return Array.from(this._placements.values());
     }

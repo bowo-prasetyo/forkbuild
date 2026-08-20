@@ -281,18 +281,41 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 feedback.show('Selection cleared');
             })
         }),
+        // 0.2.91 — World Instance Editing & Placement Management.
+        // "Duplicate" only makes sense for a structure-placement
+        // selection today (bricks already have copy/paste) — gated on
+        // ctx.selectionIsStructurePlacement, never on selectionCount
+        // alone.
+        define({
+            id: 'selection.duplicate',
+            label: 'Duplicate',
+            category: 'Selection',
+            shortcut: 'Ctrl/Cmd+D',
+            keys: [{ key: 'd', ctrl: true }],
+            description: 'Duplicate the selected structure placement (same content, a new instance)',
+            enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection && ctx.selectionIsStructurePlacement,
+            disabledReason: (ctx) => {
+                if (!ctx.hasSelection) return 'No selection';
+                if (!ctx.selectionIsStructurePlacement) return 'Only structure placements can be duplicated';
+                return null;
+            },
+            execute: () => surfaceCall('duplicateSelection', 'Duplicate is not available on this surface', (duplicateSelection) => {
+                const newId = duplicateSelection();
+                feedback.show(newId ? 'Duplicated structure' : 'Nothing to duplicate');
+            })
+        }),
         define({
             id: 'selection.delete',
             label: 'Delete Selection',
             category: 'Selection',
             shortcut: 'Del',
             keys: [{ key: 'delete' }, { key: 'backspace' }],
-            description: 'Delete the selected bricks (one undo step)',
+            description: 'Delete the selected bricks, or the selected structure placement (one undo step)',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
             disabledReason: selectionRequired,
             execute: () => surfaceCall('deleteSelection', 'Delete is not available on this surface', (deleteSelection) => {
-                deleteSelection();
-                feedback.show('Deleted selection');
+                const deleted = deleteSelection();
+                feedback.show(deleted !== false ? 'Deleted selection' : 'Nothing to delete');
             })
         }),
 

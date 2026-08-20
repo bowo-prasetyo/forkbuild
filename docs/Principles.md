@@ -5911,3 +5911,54 @@ will need its own explicit answer to "what happens to a placement that
 still references the deleted id" — this graceful-null behavior is a
 reasonable placeholder for that day, not a decision that day's design is
 already made.
+
+### Selecting An Instance Selects Its Spatial Reference, Never Its Content (0.2.91)
+
+A `StructurePlacement` selection is a second KIND of selection item —
+`{ type: 'structure-placement', placementId }` alongside the existing
+`{ type: 'brick', brickId, buildingId }` — never a second selection
+system running alongside `application/editor-state/SelectionState.js`.
+This is the direct consequence of "A Structure Placement References
+Content, It Never Copies It" (0.2.90) applied to selection specifically:
+clicking a placed structure selects the ONE thing that is actually
+editable in place — where it is — never one of its constituent bricks,
+which remain reachable only by editing the referenced Document. Every
+brick-shaped consumer of a selection (`SelectionBoundsService`,
+`SpatialEditingService`, alignment/distribution/numeric-transform)
+neither knows nor needs to know a placement selection exists — a
+placement selection's `brickIds` is always empty, so those surfaces
+correctly see "nothing to operate on" rather than crashing on an
+unfamiliar shape. Move/rotate/duplicate for a placement selection
+deliberately do NOT flow through that brick/group-shaped gesture kernel
+at all; `application/EditorSession.js` branches on
+`selection.isStructurePlacementSelection` before ever reaching it,
+routing to small, dedicated commands
+(`MoveStructurePlacementCommand`/`RotateStructurePlacementCommand`/
+`DuplicateStructurePlacementCommand`) instead — the SELECTION model, the
+ACTION registry, and `CommandHistory` are the abstractions this reuses;
+`SpatialEditingService`'s own per-brick geometry is not one of them, and
+widening it to also understand a whole placed structure would blur
+exactly the distinction this principle exists to keep sharp.
+
+### Duplicating An Instance Is A Spatial Operation; Forking Its Content Is Not (0.2.91)
+
+`application/commands/DuplicateStructurePlacementCommand.js` creates a
+new `StructurePlacement` referencing the exact SAME `documentId` — never
+a new Document, never a call into `application/ForkStructureUseCase.js`.
+This is the same content/spatial-state boundary 0.2.81 drew for forking
+("Forking A Structure Records Provenance, Never A Live Dependency") and
+0.2.90 drew for placing, applied one more time to duplication: House A
+duplicated into House C keeps `documentId(A) === documentId(C)` while
+`placementId(A) !== placementId(C)` — proven directly, by name, in
+`tests/StructureInstanceEditing.test.js`'s own flagship. The
+practical consequence is what makes the distinction real rather than
+academic: editing the House Document afterward is immediately visible
+through BOTH A and C (one authoritative Document,
+`StructureDocumentResolver` resolving fresh for each, exactly as 0.2.90
+already proved for two ordinary placements), while duplicating, moving,
+or rotating either instance never mutates the Document at all. A UI
+surface that wanted "duplicate this structure's bricks into a genuinely
+independent copy" would need to call `ForkStructureUseCase` and then
+place the fork — a different, more expensive operation this command
+deliberately does not conflate with the cheap, purely-spatial "one more
+instance of the same content" it actually performs.

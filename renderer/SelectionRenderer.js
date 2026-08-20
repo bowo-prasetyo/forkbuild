@@ -18,10 +18,21 @@ const NO_HIGHLIGHT_COLOR = 0x000000;
 // sense of a visually independent object — just the simplest thing that
 // looks right. A future pass could replace this with an actual outline
 // mesh layered on top, without SelectionRenderer's public shape changing.
+//
+// 0.2.91 — World Instance Editing & Placement Management. A structure-
+// placement selection highlights EVERY mesh belonging to that instance
+// (renderer/PlacementMeshRegistry.js, optional constructor param), the
+// same emissive technique applied to a whole set of meshes instead of
+// one brick's — "selecting an instance selects its spatial reference,"
+// visually: the WHOLE house glows, never one brick of it. Tracking
+// switched from a Set<brickId> to a Set<mesh> so clear() can unhighlight
+// both categories uniformly without needing two parallel bookkeeping
+// structures.
 export class SelectionRenderer {
-    constructor(meshRegistry) {
+    constructor(meshRegistry, placementMeshRegistry = null) {
         this._meshRegistry = meshRegistry;
-        this._highlightedBrickIds = new Set();
+        this._placementMeshRegistry = placementMeshRegistry;
+        this._highlightedMeshes = new Set();
         this._subscription = null;
     }
 
@@ -40,30 +51,47 @@ export class SelectionRenderer {
     }
 
     highlight(brickId) {
-        const mesh = this._meshRegistry.getMesh(brickId);
-        if (!mesh || !mesh.material || !mesh.material.emissive) {
+        this._highlightMesh(this._meshRegistry.getMesh(brickId));
+    }
+
+    // 0.2.91 — highlights every mesh belonging to one StructurePlacement.
+    highlightPlacement(placementId) {
+        if (!this._placementMeshRegistry) {
             return;
         }
-        mesh.material.emissive.setHex(HIGHLIGHT_COLOR);
-        this._highlightedBrickIds.add(brickId);
+        for (const mesh of this._placementMeshRegistry.getMeshes(placementId)) {
+            this._highlightMesh(mesh);
+        }
     }
 
     clear() {
-        for (const brickId of this._highlightedBrickIds) {
-            const mesh = this._meshRegistry.getMesh(brickId);
+        for (const mesh of this._highlightedMeshes) {
             if (mesh && mesh.material && mesh.material.emissive) {
                 mesh.material.emissive.setHex(NO_HIGHLIGHT_COLOR);
             }
         }
-        this._highlightedBrickIds.clear();
+        this._highlightedMeshes.clear();
+    }
+
+    _highlightMesh(mesh) {
+        if (!mesh || !mesh.material || !mesh.material.emissive) {
+            return;
+        }
+        mesh.material.emissive.setHex(HIGHLIGHT_COLOR);
+        this._highlightedMeshes.add(mesh);
     }
 
     _onSelectionChanged(selection) {
         this.clear();
-        if (!selection.isEmpty) {
-            for (const brickId of selection.brickIds) {
-                this.highlight(brickId);
-            }
+        if (selection.isEmpty) {
+            return;
+        }
+        if (selection.isStructurePlacementSelection) {
+            this.highlightPlacement(selection.selectedPlacementId);
+            return;
+        }
+        for (const brickId of selection.brickIds) {
+            this.highlight(brickId);
         }
     }
 }
