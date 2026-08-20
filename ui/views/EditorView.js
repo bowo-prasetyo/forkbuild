@@ -69,6 +69,9 @@ export default {
                             Place
                         </button>
                     </div>
+                    <p v-if="activeTool === ToolId.PLACE" class="placement-hint">
+                        Hover the ground, R to rotate, click to place.
+                    </p>
                     <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
                     <BuildLibraryPanel
                         :palette-use-case="paletteUseCase"
@@ -355,6 +358,22 @@ export default {
                 if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
                     event.preventDefault();
                     saveDocumentUseCase.execute(documentManager);
+                    return;
+                }
+                // 4.5. Placement mode keeps its own Rotate (0.2.87) —
+                // 'R'/'Shift+R' already name Rotate Clockwise/Counter-
+                // Clockwise in the registry (transform.rotateClockwise/
+                // CounterClockwise), but those are disabled while
+                // placing (editingAllowed() checks ctx.placementMode) —
+                // and step 5's matchShortcut() resolves a key to its
+                // bound action by KEY ALONE, oblivious to enabled(), so
+                // letting this fall through unchanged would silently
+                // swallow the keystroke on a disabled action rather than
+                // ever reaching PlacementTool. Routed to the tool
+                // directly instead, exactly like WorldView's identical
+                // carve-out for the same reason.
+                if (activeTool.value === ToolId.PLACE && event.key.toLowerCase() === 'r') {
+                    editorSession.onKeyDown(event);
                     return;
                 }
                 // 5. Registry-driven editing shortcuts.

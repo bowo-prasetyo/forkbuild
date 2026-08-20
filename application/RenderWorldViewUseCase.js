@@ -155,7 +155,8 @@ export class RenderWorldViewUseCase {
             clearSelection: () => spatialSelectionRenderer.clearSelection(),
             hoverBrick: (brickId) => spatialSelectionRenderer.hover(brickId),
             clearHover: () => spatialSelectionRenderer.clearHover(),
-            showPreview: (definitionId, position, rotation) => spatialPreviewRenderer.show(definitionId, position, rotation),
+            showPreview: (definitionId, position, rotation, valid = true) =>
+                spatialPreviewRenderer.show(definitionId, position, rotation, valid),
             hidePreview: () => spatialPreviewRenderer.hide(),
             showGizmo: (pivot, bounds) => transformGizmoController.show(pivot, bounds),
             hideGizmo: () => transformGizmoController.hide(),

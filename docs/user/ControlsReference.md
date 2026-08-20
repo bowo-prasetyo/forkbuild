@@ -119,6 +119,23 @@ transform.
 | `1` / `2` | Switch Select / Place tool |
 | `Ctrl/Cmd+S` | Save document |
 
+## Placement (both views, Place tool active)
+
+0.2.87 — owned by the active Place tool itself
+(`application/tools/PlacementTool.js` in the Editor,
+`WorldNavigationSession#rotatePlacementPreview()` in World View), not by
+EditorActionRegistry — `R`/`Shift+R` already name Rotate Clockwise/
+Counter-Clockwise for a SELECTION above, disabled while placing, so this
+table is the one deliberate exception to this page's own "registry is
+the source of truth" rule stated at the top.
+
+| Input | Action | Notes |
+|---|---|---|
+| Move the pointer | Preview follows the hovered ground/brick face | tinted red when the position is currently occupied |
+| `R` | Rotate the pending preview +90° | persists across brick switches; resets when you leave Place mode |
+| `Shift+R` | Rotate the pending preview −90° | |
+| Click | Commit the preview as a real Brick | refused at an occupied (red) position |
+
 ## Escape priority
 
 Escape is context-sensitive, in exactly this order:

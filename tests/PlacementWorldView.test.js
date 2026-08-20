@@ -24,6 +24,7 @@ import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.
 import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
 import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 // 0.2.23 — World Placement & Spatial Positioning.
 //
@@ -315,6 +316,129 @@ async function runTests() {
             '16. a 2-arg PublishDocumentUseCase still publishes successfully');
         assert(placementRegistry.findByPublicationId(publication.id).length === 0,
             '16b. and, correctly, creates no placement — it was never given the collaborators to do so');
+    }
+
+    // -------------------------------------------------------------
+    // 17-24. 0.2.87 — World Building Interaction & Placement UX,
+    //        WorldView half (the Editor half — PlacementTool,
+    //        PreviewState, rotation, collision-tinting — is covered
+    //        headlessly in tests/PlacementPreviewUX.test.js, which needs
+    //        no 'three'-dependent import at all; WorldNavigationSession
+    //        pulls in RenderWorldViewUseCase -> renderer/Renderer.js ->
+    //        'three' at module-load time regardless of whether a real
+    //        WebGL context is ever created, so this coverage can only
+    //        run here, through the browser test runner, exactly like
+    //        every other WorldNavigationSession-touching section above).
+    //
+    // Central claim: the placement preview now RENDERS lifted by the
+    // SAME terrain offset renderer/WorldRenderer.js already applies to
+    // this document's own committed bricks (sampled ONCE at the
+    // document's own placement position, never per hover) — but the
+    // committed Brick's own POSITION, read back from World after
+    // commitPlacement(), stays exactly as terrain-blind as it always
+    // was. Terrain is a rendering-time offset, never a placement fact —
+    // see docs/Principles.md, "Terrain Elevation Is A Rendering-Time
+    // Offset, Never A Presence Or Placement Fact," now proven to hold
+    // for BRAND NEW bricks, not just pre-existing ones.
+    // -------------------------------------------------------------
+    {
+        const terrainDoc = makeDocument('Terrain Placement Test');
+        const terrainPublication = publisher.publish(terrainDoc, alice);
+        // An arbitrary, deliberately non-trivial world position — the
+        // exact (120, -80) tests/WorldGroundTerrain.test.js Section D2
+        // already uses for renderer/WorldRenderer.js's own identical
+        // "sampled once at the document's own placement" contract.
+        placePublicationUseCase.execute(terrainPublication.id, new Position(120, 0, -80));
+        const expectedGroundY = terrainHeightAt(DEFAULT_WORLD_SEED, 120, -80);
+
+        const previewCalls = [];
+        const session = new WorldNavigationSession({
+            registry, loadPublicationDocumentUseCase, worldLayoutProvider,
+            saveDocumentUseCase, publishDocumentUseCase, identityProvider: alice,
+            documentCloneService, discoveryProvider, placementRegistry, moveWorldPlacementUseCase
+        });
+        session._session = stubRenderer({
+            showPreview: (definitionId, position, rotation, valid) => {
+                previewCalls.push({ definitionId, position, rotation, valid });
+            },
+            pickGround: () => ({ type: 'ground', position: { x: 122, y: 0, z: -78 } })
+        });
+        session._loadWorld(terrainPublication.documentId);
+        session.setActiveDefinitionId('core:cube');
+
+        session.hover(0, 0); // screen coords are irrelevant — pickGround is stubbed
+        assert(previewCalls.length === 1, '17. hovering ground in placement mode calls showPreview exactly once');
+        const first = previewCalls[0];
+        // (122, -78) world -> (2, 2) local once the document's own (120, -80)
+        // placement offset is subtracted — collision-clear (makeDocument's
+        // one seed brick sits at local (0, 0.5, 0), not here).
+        assert(first.position.x === 122 && first.position.z === -78,
+            '18. the ghost\'s world X/Z is the hovered ground position, unchanged');
+        assert(Math.abs(first.position.y - (0.5 + expectedGroundY)) < 1e-9,
+            '19. FLAGSHIP: the ghost\'s world Y is local-ground (0.5, a core:cube\'s half-height) PLUS the document\'s own terrain offset — sampled at (120, -80), the SAME value renderer/WorldRenderer.js would lift this document\'s real bricks by, never a second independently-computed offset');
+        assert(first.rotation === 0 && first.valid === true,
+            '20. rotation starts at 0 and the position is valid (collision-clear)');
+
+        // Rotate the pending preview — position/terrain-offset unchanged,
+        // only orientation changes, and it happens WITHOUT re-hovering.
+        assert(session.rotatePlacementPreview() === true, '21. rotatePlacementPreview() succeeds while a valid position is hovered');
+        const afterRotate = previewCalls[previewCalls.length - 1];
+        assert(afterRotate.rotation === 90, '22. rotating +90° reaches showPreview immediately, no pointer movement needed');
+        assert(afterRotate.position.x === 122 && Math.abs(afterRotate.position.y - (0.5 + expectedGroundY)) < 1e-9,
+            '23. rotating never changes the ghost\'s position or its terrain offset');
+        session.rotatePlacementPreview(-90);
+        assert(previewCalls[previewCalls.length - 1].rotation === 0, '24. rotating -90° returns to the original orientation');
+
+        // Commit: the terrain offset must NEVER reach the actual Brick —
+        // it stays purely a rendering-time concern. (terrainDoc was
+        // loaded as a published snapshot, so committing — a mutation —
+        // forks it first, 0.2.20's own copy-on-write; the fork inherits
+        // the SAME world position, per _forkForEdit's own comment, so
+        // the terrain offset asserted above still applies identically.)
+        session.commitPlacement();
+        const editedDocumentId = session.getActiveDocumentId();
+        assert(editedDocumentId !== terrainPublication.documentId,
+            '24b. committing into a published snapshot forks it first (0.2.20) — the active document id changes');
+        const buildingAfter = session.getDocument(editedDocumentId).world.getBuildings()[0];
+        const placedBrick = buildingAfter.getBricks().find((b) => b.position.x === 2 && b.position.z === 2);
+        assert(placedBrick, '25. the committed brick exists at its LOCAL position (2, _, 2)');
+        assert(placedBrick.position.y === 0.5,
+            '26. FLAGSHIP: the committed Brick.position.y is exactly 0.5 (local ground) — NOT lifted by the terrain offset the preview rendered with. Terrain is a rendering-time offset, never a placement fact, proven here for a brand-new brick.');
+        assert(placedBrick.rotation === 0, '27. the committed rotation matches what the preview last showed after rotating there and back');
+
+        // Hover the OCCUPIED seed brick's own position: blocked, not hidden.
+        session._session = stubRenderer({
+            showPreview: (definitionId, position, rotation, valid) => {
+                previewCalls.push({ definitionId, position, rotation, valid });
+            },
+            pickGround: () => ({ type: 'ground', position: { x: 120, y: 0, z: -80 } }) // -> local (0, 0.5, 0), the seed brick
+        });
+        previewCalls.length = 0;
+        session.hover(0, 0);
+        assert(previewCalls.length === 1 && previewCalls[0].valid === false,
+            '28. FLAGSHIP: hovering an OCCUPIED position still calls showPreview (the ghost stays visible, tinted invalid by the renderer) rather than hiding — the user sees WHY, instead of a click silently doing nothing');
+        assert(session.getSpatialPlacement().blocked === true,
+            '29. SpatialPlacementState.blocked reflects the same PlacementValidator collision rule commitPlacement() itself enforces — reused, never a second collision system');
+
+        const countBefore = buildingAfter.getBricks().length;
+        const committed = session.commitPlacement();
+        assert(committed === false && buildingAfter.getBricks().length === countBefore,
+            '30. clicking a blocked position is refused — commitPlacement() still re-validates independently of the cached preview flag');
+
+        // Leaving placement mode resets the pending rotation for next time.
+        session.rotatePlacementPreview();
+        session.setActiveDefinitionId(null);
+        session.setActiveDefinitionId('core:cube');
+        session._session = stubRenderer({
+            showPreview: (definitionId, position, rotation, valid) => {
+                previewCalls.push({ definitionId, position, rotation, valid });
+            },
+            pickGround: () => ({ type: 'ground', position: { x: 123, y: 0, z: -77 } })
+        });
+        previewCalls.length = 0;
+        session.hover(0, 0);
+        assert(previewCalls[0].rotation === 0,
+            '31. cancelling placement mode and re-entering it resets the pending rotation back to 0, exactly matching PlacementTool\'s own deactivate() behavior in the Editor');
     }
 
     console.log('✅ All World Placement & Spatial Positioning tests passed.');

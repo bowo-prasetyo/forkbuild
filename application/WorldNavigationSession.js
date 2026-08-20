@@ -12,6 +12,7 @@ import { SpatialPlacementState } from './spatial-state/SpatialPlacementState.js'
 import { PlaceBrickCommand } from './commands/PlaceBrickCommand.js';
 import { CommandHistory } from './CommandHistory.js';
 import { PlacementValidator } from '../core/PlacementValidator.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
 import { TransformSettings } from './TransformSettings.js';
@@ -373,6 +374,20 @@ export class WorldNavigationSession {
         this._spatialEditingContext = SpatialEditingContext.empty();
         this._spatialPlacement = SpatialPlacementState.empty();
         this._activeDefinitionId = null;
+        // 0.2.87 — one shared PlacementValidator instance (stateless,
+        // safe to reuse) rather than commitPlacement()'s own previous
+        // habit of constructing a fresh one inline; the SAME instance
+        // now also backs the hover-time `blocked` check in
+        // _updatePlacementPreview(), so preview and commit can never
+        // disagree about what counts as occupied. `_pendingPlacementRotation`
+        // is this session's own placement-preview orientation — owned
+        // here, not on SpatialPlacementState, because it must survive
+        // across hover updates and brick switches within one placement
+        // session; it resets only when placement mode is actually left
+        // (setActiveDefinitionId(null)), never on every hover or brick
+        // change — see rotatePlacementPreview() below.
+        this._placementValidator = new PlacementValidator();
+        this._pendingPlacementRotation = 0;
         // 0.2.27: two independent concepts that used to be one field —
         // see docs/Principles.md, "Camera Focus, Active Document, and
         // Selection Are Three Different Things."
@@ -1331,6 +1346,14 @@ export class WorldNavigationSession {
         this._activeDefinitionId = definitionId;
         if (!definitionId) {
             this._spatialPlacement = SpatialPlacementState.empty();
+            // 0.2.87 — leaving placement mode resets the pending
+            // orientation; switching bricks WHILE still placing does
+            // not (this method is only reached with a null definitionId
+            // when placement mode actually ends — see cancelPlacement()
+            // and commitPlacement()'s own use of setActiveDefinitionId
+            // is never called on a successful commit, only via explicit
+            // cancellation).
+            this._pendingPlacementRotation = 0;
             this._session.hidePreview();
         }
         this._refreshGizmo();
@@ -1342,6 +1365,34 @@ export class WorldNavigationSession {
 
     isPlacementMode() {
         return this._activeDefinitionId !== null;
+    }
+
+    // 0.2.87 — rotates the PENDING placement preview by `delta` degrees
+    // (default +90, matching PlaceBrickCommand/RotateBrickCommand's own
+    // convention of un-normalized accumulation — see this file's own
+    // header note above _pendingPlacementRotation). Acts on whatever the
+    // most recent hover already resolved (this._spatialPlacement),
+    // exactly like PlacementTool's own onKeyDown() in the Editor: no
+    // re-picking, no CommandHistory entry — rotating before you've
+    // placed anything is Editor/session state, never a domain mutation.
+    // Returns false (a no-op) when there's nothing currently being
+    // hovered to rotate, so callers can skip a redundant UI refresh.
+    rotatePlacementPreview(delta = 90) {
+        if (!this._activeDefinitionId || !this._spatialPlacement || !this._spatialPlacement.valid) {
+            return false;
+        }
+        this._pendingPlacementRotation += delta;
+        this._spatialPlacement = new SpatialPlacementState({
+            valid: this._spatialPlacement.valid,
+            definitionId: this._spatialPlacement.definitionId,
+            position: this._spatialPlacement.position,
+            rotation: this._pendingPlacementRotation,
+            blocked: this._spatialPlacement.blocked,
+            targetDocumentId: this._spatialPlacement.targetDocumentId,
+            targetBuildingId: this._spatialPlacement.targetBuildingId
+        });
+        this._presentPlacementPreview();
+        return true;
     }
 
     isGestureActive() {
@@ -1384,8 +1435,7 @@ export class WorldNavigationSession {
             return false;
         }
         const buildingId = targetBuildingId || buildings[0].id;
-        const validator = new PlacementValidator();
-        if (!validator.canPlace(world, buildingId, placement.position)) {
+        if (!this._placementValidator.canPlace(world, buildingId, placement.position)) {
             return false;
         }
         const command = new PlaceBrickCommand({
@@ -3092,8 +3142,10 @@ export class WorldNavigationSession {
         // preview would show a brick landing in one document while the
         // actual commit lands in another.
         let targetDocumentId = this._activeDocumentId;
+        let targetBuildingId = null;
         if (hitResult.type === 'brick') {
             targetDocumentId = hitResult.documentId;
+            targetBuildingId = hitResult.buildingId;
             const document = this._loadedDocuments.get(targetDocumentId);
             if (document) {
                 const building = document.world.getBuilding(hitResult.buildingId);
@@ -3109,24 +3161,67 @@ export class WorldNavigationSession {
             this._clearPlacementPreview();
             return;
         }
-        const placement = this._placementService.calculateFromHit(
+        const computed = this._placementService.calculateFromHit(
             hitResult,
             this._activeDefinitionId,
             existingBrick,
             layoutOffset,
             { gridSnapEnabled: true, gridSnapSize: 1 }
         );
-        this._spatialPlacement = placement;
-        if (placement.valid) {
-            const worldPos = {
-                x: placement.position.x + layoutOffset.x,
-                y: placement.position.y + layoutOffset.y,
-                z: placement.position.z + layoutOffset.z
-            };
-            this._session.showPreview(placement.definitionId, worldPos, placement.rotation);
-        } else {
-            this._session.hidePreview();
+        if (!computed.valid) {
+            this._clearPlacementPreview();
+            return;
         }
+        // 0.2.87 — the SAME PlacementValidator commitPlacement() itself
+        // uses, run early so the ghost can be shown-but-tinted rather
+        // than silently doing nothing on click. Building resolution
+        // mirrors commitPlacement()'s own fallback exactly (targeted
+        // building, or this document's first building) — see
+        // core/PlacementValidator.js's own header for why exact-position
+        // collision is the whole check, on purpose, for 0.2.87.
+        const targetDocument = this._loadedDocuments.get(targetDocumentId);
+        const resolvedBuildingId = targetBuildingId || targetDocument?.world.getBuildings()[0]?.id || null;
+        const blocked = !resolvedBuildingId
+            || !this._placementValidator.canPlace(targetDocument.world, resolvedBuildingId, computed.position);
+        this._spatialPlacement = new SpatialPlacementState({
+            valid: true,
+            definitionId: computed.definitionId,
+            position: computed.position,
+            rotation: this._pendingPlacementRotation,
+            blocked,
+            targetDocumentId,
+            targetBuildingId: computed.targetBuildingId
+        });
+        this._presentPlacementPreview();
+    }
+
+    // 0.2.87 — the one place that turns this._spatialPlacement into a
+    // world-space showPreview() call, shared by _updatePlacementPreview()
+    // (a fresh hover) and rotatePlacementPreview() (the same position,
+    // a new rotation) so the two can never compute the terrain offset
+    // differently. `terrainHeightAt()` is called directly from
+    // core/TerrainHeightField.js, never through renderer.terrainHeightAt()
+    // — the same discipline application/AvatarTerrainConstraint.js
+    // already established (see its own header) — sampled ONCE at the
+    // TARGET DOCUMENT's own placement position, mirroring
+    // renderer/WorldRenderer.js#_terrainOffsetY() exactly: a whole
+    // building rides the terrain as one rigid unit, so the brick you're
+    // about to add must be lifted by the SAME offset the building's
+    // already-committed bricks render with, never a second,
+    // independently-sampled value. Before this, the ghost sat flush
+    // with the document's local Y=0 plane while the real brick — the
+    // instant it committed — visually jumped by the building's own
+    // terrain lift.
+    _presentPlacementPreview() {
+        const placement = this._spatialPlacement;
+        const layoutOffset = this._getWorldPosition(placement.targetDocumentId) || { x: 0, y: 0, z: 0 };
+        const groundY = terrainHeightAt(DEFAULT_WORLD_SEED, layoutOffset.x, layoutOffset.z);
+        const worldPos = {
+            x: placement.position.x + layoutOffset.x,
+            y: placement.position.y + layoutOffset.y + groundY,
+            z: placement.position.z + layoutOffset.z
+        };
+        this._session.showPreview(placement.definitionId, worldPos, placement.rotation, !placement.blocked);
     }
 
     _clearPlacementPreview() {
@@ -3551,6 +3646,7 @@ export class WorldNavigationSession {
         this._spatialEditingContext = SpatialEditingContext.empty();
         this._spatialPlacement = SpatialPlacementState.empty();
         this._activeDefinitionId = null;
+        this._pendingPlacementRotation = 0;
         this._focusedDocumentId = null;
         this._activeDocumentId = null;
         this._eventBus = null;
