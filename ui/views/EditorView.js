@@ -10,6 +10,7 @@ import { CreatePersistenceUseCase } from '../../application/CreatePersistenceUse
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
+import { StructurePreviewUseCase } from '../../application/StructurePreviewUseCase.js';
 import { CreateLibraryPreviewUseCase } from '../../application/CreateLibraryPreviewUseCase.js';
 import { EditorSession } from '../../application/EditorSession.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
@@ -72,6 +73,9 @@ export default {
                     <p v-if="activeTool === ToolId.PLACE" class="placement-hint">
                         Hover the ground, R to rotate, click to place.
                     </p>
+                    <p v-if="activeTool === ToolId.PLACE_STRUCTURE" class="placement-hint">
+                        Placing "{{ activeStructureTitle }}" — hover the ground, R to rotate, click to place.
+                    </p>
                     <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
                     <BuildLibraryPanel
                         :palette-use-case="paletteUseCase"
@@ -121,10 +125,12 @@ export default {
         const selectionUseCase = new SelectionUseCase(editorContext);
         const paletteUseCase = new PaletteUseCase(registry, editorContext);
         const previewUseCase = new PreviewUseCase(editorContext);
+        // 0.2.90 — Structure Placement & World Instances.
+        const structurePreviewUseCase = new StructurePreviewUseCase(editorContext);
         const { libraryPreviewService } = new CreateLibraryPreviewUseCase().execute(registry);
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
-        const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase } = new CreatePersistenceUseCase().execute();
+        const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase, structureDocumentResolver } = new CreatePersistenceUseCase().execute();
 
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
@@ -145,7 +151,10 @@ export default {
 		    identityProvider,
 		    copySelectionUseCase,  // Pass use case
 		    pasteClipboardUseCase,  // Pass use case
-		    forkStructureUseCase
+		    forkStructureUseCase,
+		    // 0.2.90 — Structure Placement & World Instances.
+		    structureResolver: structureDocumentResolver,
+		    structurePreviewUseCase
 		});
 
 		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
@@ -165,8 +174,13 @@ export default {
 
         const activeTool = ref(editorContext.tool.activeTool);
         const selectionCount = ref(0);
+        // 0.2.90 — Structure Placement & World Instances: mirrors
+        // activeTool's own ref+subscription shape one rung up, so the
+        // placement hint can name what's being placed.
+        const activeStructureTitle = ref(editorContext.activeStructure.title);
         let unsubTool = null;
         let unsubSelection = null;
+        let unsubActiveStructure = null;
 
         function setTool(toolId) {
             editorContext.setActiveTool(toolId);
@@ -282,6 +296,12 @@ export default {
                     selectionCount.value = selection.items.length;
                 }
             );
+            unsubActiveStructure = editorContext.eventBus.subscribe(
+                EditorEvent.ACTIVE_STRUCTURE_CHANGED,
+                ({ title }) => {
+                    activeStructureTitle.value = title;
+                }
+            );
 
             refreshDocumentInfo();
             unsubDocumentState = documentManager.onStateChanged(refreshDocumentInfo);
@@ -372,7 +392,8 @@ export default {
                 // ever reaching PlacementTool. Routed to the tool
                 // directly instead, exactly like WorldView's identical
                 // carve-out for the same reason.
-                if (activeTool.value === ToolId.PLACE && event.key.toLowerCase() === 'r') {
+                if ((activeTool.value === ToolId.PLACE || activeTool.value === ToolId.PLACE_STRUCTURE)
+                    && event.key.toLowerCase() === 'r') {
                     editorSession.onKeyDown(event);
                     return;
                 }
@@ -396,6 +417,9 @@ export default {
             }
             if (unsubSelection) {
                 unsubSelection.unsubscribe();
+            }
+            if (unsubActiveStructure) {
+                unsubActiveStructure.unsubscribe();
             }
             if (unsubDocumentState) {
                 unsubDocumentState();
@@ -422,6 +446,7 @@ export default {
             libraryPreviewService,
             forkStructure,
             activeTool,
+            activeStructureTitle,
             selectionCount,
             actionRegistry,
             getActionContext,

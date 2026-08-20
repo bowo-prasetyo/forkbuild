@@ -24,9 +24,9 @@ import { TransformMath } from './TransformMath.js';
 // carry modifier state down to the gesture transaction (precision mode)
 // and return the service's gesture feedback up to the views.
 export class RenderWorldUseCase {
-    execute(container, eventBus, registry, editorEventBus, { gestureService = null } = {}) {
+    execute(container, eventBus, registry, editorEventBus, { gestureService = null, structureResolver = null } = {}) {
         const renderer = new Renderer(container);
-        const worldRenderer = new WorldRenderer(renderer, registry);
+        const worldRenderer = new WorldRenderer(renderer, registry, undefined, undefined, structureResolver, TransformMath);
         worldRenderer.subscribe(eventBus);
         renderer.start();
         const pickingService = new PickingService(

@@ -5834,3 +5834,80 @@ every water feature") would have meant either an oddly rigid lake that
 tints instead of truly pooling, or a river rendered as a flat raft
 floating disconnected from the terrain beneath it — this principle is
 why the two get different treatment on purpose.
+
+### A Structure Placement References Content, It Never Copies It (0.2.90)
+
+`core/StructurePlacement.js` carries a `documentId`, a `position`, and a
+`rotation` — nothing else. It is the same shape as `core/WorldPlacement.js`
+one rung down (a lightweight spatial REFERENCE, never an owner of the
+content it points at), applied to a Document placed INSIDE another
+Document's own World rather than a Publication placed in shared global
+space. The alternative this principle rules out — copying the referenced
+Document's bricks into the placement, or into the containing World, at
+the moment of placement — was rejected for exactly the reason
+`WorldPlacement`'s own header already gives: it would create a second,
+driftable representation of the same content, requiring synchronization
+machinery (`Document` edited -> somehow propagate to every copy) that
+this codebase has consistently refused to build anywhere else. Instead,
+`application/StructureDocumentResolver.js` resolves a placement's
+`documentId` to its CURRENT content fresh, on every call, straight from
+storage — there is exactly one authoritative representation of a
+structure's bricks (the Document itself) and a placement never holds a
+second one. This is what makes "fork House, place it twice, edit House,
+both placements reflect the edit" true by construction rather than by
+a cache-invalidation strategy: there is no cache to invalidate. It also
+means removing a placement (`RemoveStructurePlacementCommand`) can never
+delete content, and nothing about a Document's own lifecycle needs to
+know how many placements reference it, or whether any do at all — see
+"A Missing Placement Target Is Absence, Not An Error," below, for what
+happens when that reference can no longer be resolved.
+
+### A Structure Placement Transforms Its Content At Render Time, Never At Rest (0.2.90)
+
+A placed structure's bricks are never rewritten into the containing
+World's own coordinate space, and a `StructurePlacement`'s
+`position`/`rotation` are never baked into a second copy of its
+referenced Document's `Brick` positions. `renderer/WorldRenderer.js`
+composes the two — a resolved Brick's LOCAL position, rotated around the
+origin by the placement's own rotation, then translated by the
+placement's own position — fresh, every render, the same rendering-time-
+only posture `docs/Principles.md`'s own "Terrain Elevation Is A
+Rendering-Time Offset, Never A Presence Or Placement Fact" (0.2.76)
+already established for ground height. "The placement transforms the
+entire structure" (the 0.2.90 design conversation's own framing) is
+enforced by this composition happening exactly ONCE, at the placement
+level, never per-brick: every brick in a placed structure is rotated and
+translated by the identical value, so the structure always arrives as
+one rigid unit, upright and undeformed, regardless of what terrain or
+offset the containing document itself sits on. Rotation math is shared,
+not duplicated, with the gizmo/gesture system that already owns it —
+`application/TransformMath.js#rotatePointAroundPivotY()` is injected into
+`WorldRenderer` (mirroring how `application/RenderWorldUseCase.js`
+already injects it into `TransformGizmoController`) rather than
+reimplemented locally, because `renderer/` must never import
+`application/` — see `RenderWorldUseCase.js`'s own header.
+
+### A Missing Placement Target Is Absence, Not An Error (0.2.90)
+
+ForkBuild has no Document deletion feature yet — the only way a
+`StructurePlacement.documentId` can fail to resolve today is a
+placement pointing at an id that was never actually saved, or storage
+being cleared underneath it. Either way, `StructureDocumentResolver#resolve()`
+answers `null`, never throws, and every caller treats that exactly like
+"this placement currently contributes nothing" — `renderer/WorldRenderer.js`
+renders no meshes for it, `application/StructurePlacementValidator.js`
+treats it as contributing no collision, and nothing in the render or
+collision path distinguishes "briefly unresolvable" from "permanently
+gone." This mirrors `core/SpatialOverlap.js`'s own "Overlap Is A Fact;
+Collision Is A Policy Decision" — a missing target is a plain
+observation about the current state of storage, not a validation failure
+this layer needs to react to. The placement itself is left completely
+untouched: removing a `StructurePlacement`
+(`RemoveStructurePlacementCommand`) is the only way to make an
+unresolvable reference disappear, exactly as a dangling reference should
+require an explicit removal, never a side effect of failing to resolve
+it once. When a real Document-deletion feature eventually exists, it
+will need its own explicit answer to "what happens to a placement that
+still references the deleted id" — this graceful-null behavior is a
+reasonable placeholder for that day, not a decision that day's design is
+already made.

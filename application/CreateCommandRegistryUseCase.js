@@ -12,6 +12,8 @@ import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
 import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
 import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
+import { PlaceStructureCommand } from './commands/PlaceStructureCommand.js';
+import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlacementCommand.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
@@ -34,6 +36,11 @@ export class CreateCommandRegistryUseCase {
         registry.register('add-to-group', AddToGroupCommand);
         registry.register('remove-from-group', RemoveFromGroupCommand);
         registry.register('duplicate-group', DuplicateGroupCommand);
+        // 0.2.90 — Structure Placement & World Instances. Placements
+        // inherit undo/redo, persistence, and replay the same way group
+        // commands did in 0.1.43 — nothing about CommandHistory changed.
+        registry.register('place-structure', PlaceStructureCommand);
+        registry.register('remove-structure-placement', RemoveStructurePlacementCommand);
         return registry;
     }
 }

@@ -7,6 +7,7 @@ import { AutosaveDocumentUseCase } from './AutosaveDocumentUseCase.js';
 import { RecoverDocumentUseCase } from './RecoverDocumentUseCase.js';
 import { DiscardRecoveryUseCase } from './DiscardRecoveryUseCase.js';
 import { CheckRecoveryUseCase } from './CheckRecoveryUseCase.js';
+import { StructureDocumentResolver } from './StructureDocumentResolver.js';
 
 // Builds the concrete storage backend AND the recovery stack, so ui/
 // never imports storage/ or persistence/ directly. As of 0.2.6 the
@@ -28,7 +29,14 @@ export class CreatePersistenceUseCase {
             autosaveDocumentUseCase: new AutosaveDocumentUseCase(recoveryStore, storageProvider),
             recoverDocumentUseCase: new RecoverDocumentUseCase(recoveryStore),
             discardRecoveryUseCase: new DiscardRecoveryUseCase(recoveryStore),
-            checkRecoveryUseCase: new CheckRecoveryUseCase(recoveryStore, storageProvider)
+            checkRecoveryUseCase: new CheckRecoveryUseCase(recoveryStore, storageProvider),
+            // 0.2.90 — Structure Placement & World Instances. Read-only
+            // resolution of "what does this documentId currently
+            // contain," shared by StructurePlacementTool (collision/
+            // preview) and renderer/WorldRenderer.js (rendering placed
+            // instances) — see its own header for why it's a sibling of
+            // loadDocumentUseCase rather than a wrapper around it.
+            structureDocumentResolver: new StructureDocumentResolver(storageProvider)
         };
     }
 }

@@ -254,6 +254,15 @@ html, body {
     gap: 0.15rem;
 }
 
+/* 0.2.90 — each Recent Documents entry is now a row: Load (the
+   pre-existing button, unchanged) plus Place, the structure-placement
+   entry point (Toolbar.js#place()). */
+.toolbar-recent-dropdown-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .toolbar-recent-dropdown-item {
     display: flex;
     align-items: center;
@@ -267,6 +276,25 @@ html, body {
     text-align: left;
     cursor: pointer;
     font-size: 0.85rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.toolbar-recent-dropdown-place {
+    flex-shrink: 0;
+    padding: 0.35rem 0.55rem;
+    background: transparent;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    color: #a0a0a0;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+.toolbar-recent-dropdown-place:hover {
+    background: #262626;
+    border-color: #4caf7d;
+    color: #ffffff;
 }
 
 .toolbar-recent-dropdown-item:hover {

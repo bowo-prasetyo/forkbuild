@@ -26,6 +26,7 @@ import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { ForkStructureUseCase } from './ForkStructureUseCase.js';
+import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlacementCommand.js';
 
 // Owns the live runtime graph — the render session, World, CommandHistory,
 // ToolManager, InputDispatcher — as one unit, so nothing else has to know
@@ -60,7 +61,14 @@ export class EditorSession {
         identityProvider = null,
         copySelectionUseCase = null,    // <--- ADD
         pasteClipboardUseCase = null,    // <--- ADD
-        forkStructureUseCase = new ForkStructureUseCase()
+        forkStructureUseCase = new ForkStructureUseCase(),
+        // 0.2.90 — Structure Placement & World Instances. Both optional
+        // so an EditorSession built without them (older call sites,
+        // test harnesses that never enter PLACE_STRUCTURE mode) keeps
+        // working — StructurePlacementTool already degrades gracefully
+        // when either is missing (its own header explains why).
+        structureResolver = null,
+        structurePreviewUseCase = null
     }) {
         this._registry = registry;
         this._editorContext = editorContext;
@@ -73,6 +81,8 @@ export class EditorSession {
         this._copySelectionUseCase = copySelectionUseCase;
         this._pasteClipboardUseCase = pasteClipboardUseCase;
         this._forkStructureUseCase = forkStructureUseCase;
+        this._structureResolver = structureResolver;
+        this._structurePreviewUseCase = structurePreviewUseCase;
 
         this._container = null;
         this._session = null;
@@ -499,6 +509,50 @@ export class EditorSession {
         return true;
     }
 
+    // 0.2.90 — Structure Placement & World Instances. Enters
+    // PLACE_STRUCTURE mode targeting `documentId` — the "put this
+    // already-created structure here" entry point, wired from Toolbar's
+    // existing Recent Documents list (a Place button beside Load).
+    // Deliberately does NOT load/open `documentId` as the current
+    // document — placing is a spatial operation on the CURRENTLY OPEN
+    // document, exactly the separation ForkStructureUseCase's own
+    // header draws between forking (a content operation) and placing (a
+    // spatial one). Refuses to target the currently open document
+    // itself — see core/StructurePlacement.js's own header on why a
+    // Document referencing itself isn't rejected at the domain level,
+    // but there's no legitimate reason for THIS entry point to offer it.
+    // Returns false (and does nothing) if documentId is falsy or matches
+    // the open document, so callers can wire this straight to a UI
+    // action without a guard.
+    placeDocument(documentId, title = null) {
+        if (!documentId) {
+            return false;
+        }
+        const document = this._documentManager.document;
+        if (document && document.world.id === documentId) {
+            return false;
+        }
+        this._editorContext.setActiveStructure(documentId, title);
+        this._editorContext.setActiveTool(ToolId.PLACE_STRUCTURE);
+        return true;
+    }
+
+    // Mirrors deleteSelection()'s shape for a single StructurePlacement
+    // — one RemoveStructurePlacementCommand, one undo step. Never
+    // touches the referenced Document (RemoveStructurePlacementCommand's
+    // own header explains why).
+    removeStructurePlacement(placementId) {
+        const document = this._documentManager.document;
+        if (!placementId || !document || !this._commandHistory) {
+            return false;
+        }
+        this._commandHistory.execute(new RemoveStructurePlacementCommand({
+            worldId: document.world.id,
+            placementId
+        }));
+        return true;
+    }
+
     onPointerDown(event) {
         if (event.button === 0 && this._session
             && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
@@ -584,13 +638,16 @@ export class EditorSession {
         this._teardown();
         this._editorContext.clearSelection();
         this._previewUseCase.hide();
+        if (this._structurePreviewUseCase) {
+            this._structurePreviewUseCase.hide();
+        }
         const eventBus = new CreateEventBusUseCase().execute();
         this._session = new RenderWorldUseCase().execute(
             this._container,
             eventBus,
             this._registry,
             this._editorContext.eventBus,
-            { gestureService: this._gestureService }
+            { gestureService: this._gestureService, structureResolver: this._structureResolver }
         );
         const world = populateWorldFn(eventBus);
         this._commandHistory = new CommandHistory({ world });
@@ -602,7 +659,10 @@ export class EditorSession {
             editorContext: this._editorContext,
             selectionUseCase: this._selectionUseCase,
             previewUseCase: this._previewUseCase,
-            commandHistory: this._commandHistory
+            commandHistory: this._commandHistory,
+            // 0.2.90 — read by StructurePlacementTool only.
+            structureResolver: this._structureResolver,
+            structurePreviewUseCase: this._structurePreviewUseCase
         };
         this._toolManager = new ToolManager(this._toolRegistry, toolContext, this._editorContext);
         this._toolManager.start();
