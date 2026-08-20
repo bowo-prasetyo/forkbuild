@@ -61,6 +61,17 @@ export class StructurePlacement {
     get position() { return this._position; }
     get rotation() { return this._rotation; }
 
+    // 0.2.91 — World Instance Editing & Placement Management. Setters
+    // mirror core/Brick.js's own position/rotation setters exactly: a
+    // StructurePlacement is document state that CAN change in place
+    // (moved, rotated) without becoming a new identity — the same way a
+    // Brick's position/rotation change without minting a new Brick id.
+    // Only core/World.js#updateStructurePlacement() ever calls these;
+    // nothing about documentId (the content reference) is settable —
+    // moving or rotating an instance never touches what it references.
+    set position(position) { this._position = position; }
+    set rotation(rotation) { this._rotation = rotation; }
+
     toJSON() {
         return {
             id: this._id,

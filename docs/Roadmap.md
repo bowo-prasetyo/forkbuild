@@ -4767,6 +4767,289 @@ one of these was named in the design conversation and ruled out
 specifically to keep this milestone what it set out to be — the data
 model and reliable rendering of instances — not because of scheduling.
 
+0.2.91 — World Instance Editing & Placement Management — is the
+milestone 0.2.90 named and deliberately postponed by its own closing
+paragraph: "moving, rotating, duplicating, or deleting an ALREADY-PLACED
+instance through the viewport... selecting or picking an individual
+brick that belongs to a placed structure... both are exactly '0.2.91 —
+World Editing / Placement Management,' sequenced deliberately AFTER this
+milestone establishes the data model and reliable rendering first." That
+sequencing paid off directly: every command, validator, and rendering
+seam this milestone needed already existed — `StructureDocumentResolver`,
+`StructurePlacementValidator` (already accepting `excludePlacementId`,
+unused until now), `PlacementPositionService#calculateStructureGround()`,
+`StructurePreviewState`/`StructurePreviewUseCase` — 0.2.91 is almost
+entirely new SMALL pieces composed with those, not a redesign of any of
+them.
+
+```text
+0.2.91
+├── core/StructurePlacement.js                  + position/rotation
+│                                                 setters, mirroring
+│                                                 core/Brick.js's own —
+│                                                 an instance CAN move/
+│                                                 rotate in place without
+│                                                 minting a new identity
+├── core/World.js                               + updateStructurePlacement()
+│                                                 — mutates position/
+│                                                 rotation in place,
+│                                                 mirrors updateBrick()
+├── core/events/Event.js                        + STRUCTURE_PLACEMENT_UPDATED
+│                                                 (0.2.90 deliberately had
+│                                                 none — this is exactly
+│                                                 where it was named)
+├── application/editor-state/SelectionState.js  + a second item kind,
+│                                                 { type: 'structure-
+│                                                 placement', placementId },
+│                                                 alongside the existing
+│                                                 brick kind — the SAME
+│                                                 selection abstraction,
+│                                                 never a parallel one;
+│                                                 isStructurePlacementSelection/
+│                                                 selectedPlacementId
+├── application/SelectionUseCase.js             + selectPlacement()
+├── application/commands/MoveStructurePlacementCommand.js     NEW — mirrors
+│   application/commands/RotateStructurePlacementCommand.js   NEW   MoveBrickCommand/
+│                                                               RotateBrickCommand
+│                                                               one rung up
+├── application/commands/DuplicateStructurePlacementCommand.js NEW — same
+│                                                 documentId, new
+│                                                 placementId, never a
+│                                                 new Document; mirrors
+│                                                 DuplicateGroupCommand's
+│                                                 identity bookkeeping
+├── application/CreateCommandRegistryUseCase.js registers all three
+├── renderer/PlacementMeshRegistry.js            NEW — placementId <->
+│                                                 meshes, mesh uuid ->
+│                                                 placementId — the
+│                                                 enabling change for
+│                                                 "select the whole
+│                                                 instance"
+├── renderer/WorldRenderer.js                   placement meshes now
+│                                                 tracked in
+│                                                 placementMeshRegistry
+│                                                 (exposed via getter);
+│                                                 STRUCTURE_PLACEMENT_UPDATED
+│                                                 removes and re-renders
+│                                                 at the new transform
+├── renderer/PickingService.js                  + pickPlacement() — a
+│                                                 SECOND, separate
+│                                                 raycast against
+│                                                 placement meshes only,
+│                                                 resolving to
+│                                                 placementId, never
+│                                                 merged with brick
+│                                                 picking
+├── renderer/SelectionRenderer.js               highlights every mesh of
+│                                                 a selected instance
+│                                                 (optional
+│                                                 placementMeshRegistry
+│                                                 param), tracking
+│                                                 switched from
+│                                                 Set<brickId> to
+│                                                 Set<mesh> to unify both
+│                                                 categories
+├── renderer/StructurePreviewRenderer.js        NEW — the real 3D ghost
+│                                                 0.2.90 deferred by name;
+│                                                 subscribes to
+│                                                 STRUCTURE_PREVIEW_CHANGED,
+│                                                 reused for BOTH placing
+│                                                 a new structure and
+│                                                 dragging an
+│                                                 already-placed one
+├── application/InputDispatcher.js              + pickedPlacement (a
+│                                                 second, optional,
+│                                                 always-disjoint pick)
+├── application/RenderWorldUseCase.js           wires placementMeshRegistry
+│                                                 into PickingService/
+│                                                 SelectionRenderer, and
+│                                                 StructurePreviewRenderer
+│                                                 into the render pipeline
+├── application/tools/SelectionTool.js          click selects a
+│                                                 placement whole;
+│                                                 clicking the
+│                                                 ALREADY-selected
+│                                                 instance again begins a
+│                                                 ground-snapped,
+│                                                 collision-checked drag;
+│                                                 R/Shift+R rotate it;
+│                                                 Delete removes it —
+│                                                 headless, no 'three'
+│                                                 import
+├── application/EditorSession.js                moveSelection()/
+│                                                 rotateSelection()/
+│                                                 deleteSelection() branch
+│                                                 for a placement
+│                                                 selection BEFORE
+│                                                 reaching
+│                                                 SpatialEditingService
+│                                                 (deliberately never
+│                                                 widened to understand
+│                                                 placements); +
+│                                                 duplicateSelection(),
+│                                                 getSelectedPlacementInfo(),
+│                                                 editStructurePlacementSource()
+├── application/EditorActionContext.js          + selectionIsStructurePlacement
+├── application/EditorActionRegistry.js         + 'selection.duplicate'
+│                                                 (Ctrl/Cmd+D); existing
+│                                                 nudge/rotate/delete
+│                                                 actions now correctly
+│                                                 drive a placement
+│                                                 selection too, for free
+├── ui/components/StructureInstancePanel.js     NEW — "Selected House
+│                                                 Instance": Rotate ↻/↺,
+│                                                 Duplicate, Delete, and
+│                                                 "Edit Source Document"
+│                                                 — deliberately NOT "Edit
+│                                                 Bricks"
+├── ui/components/EditingSidebar.js             Selection section reads
+│                                                 "1 structure instance
+│                                                 selected," gains a
+│                                                 Duplicate button when
+│                                                 one is
+├── ui/views/EditorView.js                      wiring, a "drag to move"
+│                                                 hint while a placement
+│                                                 is selected
+├── css/main.css                                .structure-instance-*
+└── tests/StructureInstanceEditing.test.js      NEW — headless: core/ +
+     tests/StructureInstanceRendering.test.js    application/, no 'three'
+                                                 anywhere in the import
+                                                 graph; NEW — real
+                                                 Three.js meshes and
+                                                 raycasting, no WebGL/
+                                                 browser required, mirrors
+                                                 tests/WorldEntityInteraction.test.js's
+                                                 own camera/raycast
+                                                 technique
+```
+
+The load-bearing decision, settled before any code the same way 0.2.90's
+own content/spatial-state/provenance split was: a structure-placement
+selection is a SECOND KIND of selection item, not a second selection
+system. `application/editor-state/SelectionState.js` already modeled
+selection as a list of typed items; 0.2.91 simply adds a type the list
+already knew how to hold. Every consumer that only cares about bricks
+(`SelectionState#brickIds`, `SelectionBoundsService`,
+`SpatialEditingService`, the alignment/distribution/numeric-transform
+panels) is completely unaffected — a placement selection's `brickIds` is
+always empty, so those surfaces correctly see "nothing to align" rather
+than crashing on an item shape they don't understand. The one place that
+DOES need to know the difference —
+`application/EditorSession.js#moveSelection()`/`rotateSelection()`/
+`deleteSelection()` — branches explicitly at the top of each method,
+before reaching `SpatialEditingService`, rather than teaching that
+service (and the `TransformSelectionCommand`/`SelectionBoundsService`
+machinery underneath it, both shaped entirely around brick/group
+geometry) a third selection kind. This is the same "mirrors X one rung
+up, as its own small focused thing" precedent 0.2.90 already set for
+`PlaceStructureCommand` vs. `PlaceBrickCommand` — a placement's move/
+rotate/duplicate get their OWN small commands
+(`MoveStructurePlacementCommand`/`RotateStructurePlacementCommand`/
+`DuplicateStructurePlacementCommand`), reusing the SELECTION model, the
+ACTION registry, and `CommandHistory` — never the brick-shaped gesture
+kernel underneath them. The practical payoff of branching at the action
+layer rather than the tool layer: the existing nudge actions (arrow
+keys, PgUp/PgDn), `transform.rotateClockwise`/`CounterClockwise` (R/
+Shift+R), and `selection.delete` (Delete/Backspace) all correctly drive a
+placement selection with ZERO new wiring in `ui/views/EditorView.js` —
+they already called `session.moveSelection()`/`rotateSelection()`/
+`deleteSelection()`, and those methods now know what to do with either
+selection kind.
+
+Picking a placement is a genuinely separate raycast, never a widened
+brick one, for the identical reason 0.2.90's own mesh-tracking discussion
+gives: a placement's bricks are deliberately never registered with
+`meshRegistry` at all (the same House placed twice would mint the same
+brick ids twice into a registry keyed by brick id alone).
+`renderer/PlacementMeshRegistry.js` is `meshRegistry`'s placement-shaped
+sibling — mesh uuid -> placementId instead of mesh uuid -> brickId —
+and `renderer/PickingService.js#pickPlacement()` raycasts against ONLY
+that registry's meshes, resolving a hit back to a placementId, never a
+brickId. `application/InputDispatcher.js` computes `pickedPlacement`
+alongside the existing `pickedBrick`, unconditionally, the same "every
+tool gets a complete uniform snapshot" discipline it already applied to
+`pickedBrick`/`worldPosition`. Because the two mesh sets are disjoint by
+construction, there is no ambiguity to resolve between them — a screen
+position either hits an ordinary brick, a placement's brick, or nothing.
+
+Terrain-aware movement reuses the EXACT ground-snap math
+`StructurePlacementTool` already established for placing a NEW structure
+(`PlacementPositionService#calculateStructureGround()`) rather than
+inventing a second one: `application/tools/SelectionTool.js` recognizes a
+second pointer-down on the ALREADY-selected instance as the start of a
+drag, recomputes a ground-snapped candidate position on every pointer
+move, and validates it via the SAME `StructurePlacementValidator` 0.2.90
+built for collision — now finally exercising the `excludePlacementId`
+parameter that validator kept since 0.2.90 "for symmetry... so 0.2.91's
+move/duplicate work doesn't need a second signature," per that
+milestone's own header. Releasing over a valid position commits exactly
+ONE `MoveStructurePlacementCommand` for the whole drag (one undo step,
+not one per pointer-move frame); releasing over an invalid one simply
+cancels, exactly like `StructurePlacementTool` refusing to commit a
+blocked preview. The rigid-unit rule from 0.2.76 holds throughout: only
+X/Z ever move during a drag, Y stays whatever it already was, terrain
+elevation is applied at render time only, never baked into the
+placement's own position.
+
+The real 3D ghost is the one deliberate 0.2.90 omission this milestone
+closes, and it is REUSED, not duplicated, across both callers that need
+one: placing a brand-new structure (`StructurePlacementTool`, unchanged
+since 0.2.90 except that its preview now actually renders) and dragging
+an already-placed instance (`SelectionTool`'s own drag-to-move, new this
+milestone). Both simply call
+`StructurePreviewUseCase#show()`/`hide()`; `renderer/StructurePreviewRenderer.js`
+has no idea which caller it was, and doesn't need to. It composes each
+ghost brick's local position/rotation with the preview's own position/
+rotation exactly the way `WorldRenderer#_renderStructurePlacement()`
+composes a COMMITTED placement — the ghost is a preview of that exact
+transform, not a separate approximation of it — and tints red on
+`preview.valid === false`, the same convention the ordinary brick ghost
+(`renderer/PreviewRenderer.js`) already established.
+
+`tests/StructureInstanceEditing.test.js`'s FLAGSHIP (Section I) proves
+the milestone's own suggested scenario end to end: fork House, place
+instances A and B, select A, move A, rotate A, duplicate A into C, rotate
+A again (so it visibly diverges from the copy it just produced), delete
+B, save, reload. A survives, B does not, C exists;
+`documentId(A) === documentId(C)` while `placementId(A) !== placementId(C)`;
+A and C end up at different positions AND different rotations; the House
+Document's own brick count is untouched by any of it. Then, the specific
+claim the design conversation asked to be proven directly: editing House
+and saving reaches BOTH A and C (one authoritative Document, no copies,
+exactly like 0.2.90's own flagship already proved for two ordinary
+placements) while neither A's nor C's own position/rotation moves so
+much as a unit — content identity and spatial instance identity are
+genuinely different questions, and this milestone answers only the
+second one for editing operations, never the first.
+`tests/StructureInstanceRendering.test.js`'s own flagship (Section G)
+proves the same scenario at the rendering level: a real raycast picks a
+placement's brick and resolves the correct placementId, selecting it
+highlights the whole instance, dragging shows a live ghost alongside the
+still-rendered original, and committing re-renders the instance at its
+new transform while remaining correctly pickable there.
+
+Deliberately not in 0.2.91, named rather than hidden: a full interactive
+translate/rotate GIZMO for a placement (arrows/rings rendered in the
+viewport, drag-by-axis) — 0.2.91 gives instances click-to-select,
+click-and-drag-to-move (ground plane only, not per-axis), and keyboard
+rotate/nudge instead, deliberately reusing the EXISTING placement-preview
+infrastructure rather than building a second interactive-manipulation
+subsystem alongside `TransformGizmoController`/`SpatialEditingService`
+(0.1.46's own, brick/group-shaped one); a numeric transform panel for a
+placement selection (`application/NumericTransformPanel.js` stays
+brick/group-shaped, same reasoning); recursively resolving a placed
+structure's OWN StructurePlacements (still exactly the "don't recurse
+indefinitely" boundary 0.2.90 drew — `StructureDocumentResolver` stays
+ONE level of indirection); World View wiring for instance editing (0.2.90
+already scoped placement CREATION to the Editor only; 0.2.91 keeps that
+boundary rather than widening it in the same milestone that's supposed to
+be about making the Editor's own loop excellent); and oriented/mesh-level
+collision for the drag (still translate-only AABB, `excludePlacementId`
+changes WHICH placement is excluded from the check, not HOW the check
+itself works). Every one of these was named in the design conversation
+and ruled out specifically to keep this milestone what it set out to be —
+closing exactly the gap 0.2.90 named — not because of scheduling.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

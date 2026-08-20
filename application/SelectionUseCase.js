@@ -34,6 +34,16 @@ export class SelectionUseCase {
         this._editorContext.setSelection(new SelectionState({ items }));
     }
 
+    // 0.2.91 — World Instance Editing & Placement Management. Replaces
+    // the selection with exactly one structure-placement item — a
+    // placement selection is always whole-instance and exclusive, never
+    // additive with a brick selection (see SelectionState's own header).
+    selectPlacement(placementId) {
+        this._editorContext.setSelection(
+            new SelectionState({ items: [{ type: 'structure-placement', placementId }] })
+        );
+    }
+
     clear() {
         this._editorContext.clearSelection();
     }

@@ -17,21 +17,32 @@
 //       modifiers: { ctrl, shift, alt, meta },
 //       screenPosition: { x, y },
 //       worldPosition,            // core/Position | null — ground-plane hit
-//       pickedBrick                // { brickId, buildingId } | null
+//       pickedBrick,               // { brickId, buildingId } | null
+//       pickedPlacement            // { placementId, point } | null (0.2.91)
 //   }
 //
-// Both pickedBrick and worldPosition are always computed, regardless of
-// which one a given tool ends up using — InputDispatcher only normalizes
-// and computes, it never decides what a tool should do with the result.
-// That's a conscious trade-off: two raycasts per pointer move instead of
-// one, in exchange for every tool receiving a complete, uniform snapshot
-// of "what's under the cursor" rather than InputDispatcher guessing which
-// half a given tool cares about.
+// pickedBrick, pickedPlacement, and worldPosition are always computed,
+// regardless of which one a given tool ends up using — InputDispatcher
+// only normalizes and computes, it never decides what a tool should do
+// with the result. That's a conscious trade-off: extra raycasts per
+// pointer move instead of one, in exchange for every tool receiving a
+// complete, uniform snapshot of "what's under the cursor" rather than
+// InputDispatcher guessing which part a given tool cares about.
+//
+// pickPlacement (0.2.91, optional) — a SEPARATE raycast against
+// StructurePlacement meshes (renderer/PlacementMeshRegistry.js), never
+// merged into pickedBrick: a placement's bricks are never registered
+// with the ordinary brick mesh registry at all (renderer/WorldRenderer.js's
+// 0.2.90 header), so the two picks are always disjoint in practice.
+// Optional so a caller/test harness that never wires one in (an older
+// call site, or a surface that has no placements at all) simply always
+// gets pickedPlacement: null, never a thrown error.
 export class InputDispatcher {
-    constructor(toolManager, pick, pickGround) {
+    constructor(toolManager, pick, pickGround, pickPlacement = null) {
         this._toolManager = toolManager;
         this._pick = pick;
         this._pickGround = pickGround;
+        this._pickPlacement = pickPlacement;
     }
 
     dispatchPointerMove(rawEvent) {
@@ -67,7 +78,8 @@ export class InputDispatcher {
             modifiers: this._toModifiers(rawEvent),
             screenPosition,
             worldPosition: this._pickGround(screenPosition.x, screenPosition.y),
-            pickedBrick: this._pick(screenPosition.x, screenPosition.y)
+            pickedBrick: this._pick(screenPosition.x, screenPosition.y),
+            pickedPlacement: this._pickPlacement ? this._pickPlacement(screenPosition.x, screenPosition.y) : null
         };
     }
 
