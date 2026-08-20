@@ -7692,3 +7692,201 @@ peers, and any PERSISTED device preference — `_preferredInputDeviceId`
 lives only in `VoiceUseCase`'s own memory for the lifetime of the page,
 exactly as ephemeral as every other piece of voice state has been since
 0.2.73.
+
+### World Ground & Terrain Foundation (0.2.76)
+
+0.2.76 steps outside the voice arc entirely. World View's camera has
+been free to roam wherever `application/SpatialCameraController.js`
+sends it since 0.2.23 — `focusDocument()`, `moveCamera()`, following an
+avatar — and documents land potentially hundreds of units apart
+(`core/DeterministicGridPlacement.js`'s own `GRID_SPACING = 40`,
+multiplied out across however many publications a replica has placed).
+`renderer/GridHelper.js` was the only thing resembling "ground" World
+View ever had: one fixed 100×100 wireframe grid centered on the origin.
+Anywhere past it, a building or an avatar renders in literal empty
+space — the world had no guaranteed spatial reference. The invariant
+this milestone establishes: the active camera always has a
+deterministic, visible ground representation beneath the world.
+
+**Terrain is a pure function of world coordinates and a shared world
+seed — never persisted state, never random.** `core/TerrainHeightField.js#terrainHeightAt(seed, x, z)`
+takes no input beyond its own three arguments and calls neither
+`Math.random()` nor `Date.now()` anywhere. Three fractal octaves — a
+very-low-frequency, large-amplitude "continental" term that dominates,
+a mid-frequency "hills" term, and a small high-frequency "surface
+detail" term, each decorrelated from the others by its own hashed seed
+offset — are summed after independent bilinear value-noise sampling, so
+the result reads as geography (large-scale continuity, gentle slopes)
+rather than spiky per-vertex noise. The hash itself
+(`hash2D()`) is a from-scratch, dependency-free 32-bit integer avalanche
+built only from `Math.imul`/bitwise operations, which the JS spec
+guarantees behave identically on every engine — the same portability
+posture `identity/Ed25519.js` already established for this codebase's
+other from-scratch primitives. `DEFAULT_WORLD_SEED` is ONE hardcoded
+constant shared by the entire live World View today, deliberately not a
+per-`World`/per-`Document` field — introducing one would be a real
+Document/World schema change (a new persisted field, migration
+fixtures, the whole apparatus docs/Architecture.md's own
+schema-versioning sections already document for every prior field
+addition), and a single shared constant already satisfies the one
+invariant 0.2.76 actually needs: every replica's camera sees the same
+ground everywhere, forever, without storing a single sampled height
+anywhere. `TERRAIN_HEIGHT_BOUND` (the sum of the three octaves' own
+amplitudes) is exported so nothing downstream has to re-derive a
+vertical bound from `OCTAVES` by hand.
+
+**Terrain tiling is deliberately its own module, never a reuse of
+`core/SpatialCell.js`.** `core/TerrainTiling.js` answers "which 40-unit
+ground tiles does the renderer need loaded around this point" — a
+purely local, purely presentational question with nothing to do with
+`SpatialIndexRoot`/`SpatialIndexManifest` or decentralized discovery.
+`core/SpatialCell.js`'s own 100-unit cells answer a categorically
+different question (which discovery bucket does a `PlacementRecord`
+fall into) at a different scale, for a different consumer
+(`spatial/SpatialIndexBuilder.js`). Conflating the two would make a
+rendering decision silently depend on a decentralized-systems constant
+it has no business touching, and vice versa — see docs/Principles.md,
+"A Spatial Query Is Authoritative Over Placement, Not A Local-Cache
+Scan," the same discipline extended here in the opposite direction.
+`tilesWithinRadius()` returns tiles in a fixed, deterministic sort order
+(by `tx` then `tz`) specifically so two callers computing the same
+radius around the same center get an identical ARRAY, element for
+element — not merely an identical set in whatever order a `Map`
+happened to iterate it — which is what makes revisiting a camera
+position after roaming away reproduce byte-identical streaming
+behavior.
+
+**`renderer/TerrainStreamingController.js` owns only the load/unload
+DECISION; `renderer/TerrainTileMesh.js` owns only building the mesh —
+the same core-decides/renderer-builds split `renderer/WorldRenderer.js`/
+`renderer/BuildingRenderer.js`/`renderer/ThreeBrickFactory.js` already
+established for bricks.** The controller is constructed with a `sink`
+(anything with `add()`/`remove()` — in production
+`renderer/SceneManager.js`, in tests a plain fake `Set`) and a
+`tileFactory(tx, tz)` callback, and does nothing but diff "what tiles
+does `tilesWithinRadius()` say should be loaded around the camera right
+now" against "what's currently in `_loadedTiles`," removing what fell
+out and adding what's newly in range. This is what makes the whole
+load/unload/determinism/perf-skip behavior unit-testable
+(`tests/WorldGroundTerrain.test.js`, Section C) without a real Three.js
+scene or WebGL context at all — exactly the posture every other
+renderer-adjacent test in this codebase already takes (see
+`tests/ForkRenderSync.test.js`'s own comment: "WorldRenderer never
+touches [WebGL] directly"). A movement threshold
+(`updateThreshold`, a quarter of a tile by default) skips the diff
+entirely on sub-threshold camera jitter — `OrbitControls`' own damping
+inertia, or hand tremor — so a stationary-ish camera doesn't re-run a
+full tile diff every single render frame for zero visible change.
+`renderer/TerrainTileMesh.js` itself is deliberately untested directly,
+the same posture `ThreeBrickFactory`/`GridHelper`/`Lights` already have:
+it just displaces a `THREE.PlaneGeometry`'s vertices by
+`terrainHeightAt()` samples and calls `computeVertexNormals()`, real
+Three.js glue with no independent logic worth mocking Three.js to
+verify.
+
+**`renderer/Renderer.js` wires terrain in ALONGSIDE `GridHelper`, never
+replacing it, and exposes the one shared elevation query point.**
+`GridHelper` stays exactly what it always was — the Editor's precise,
+origin-relative snapping reference, byte-for-byte unchanged — because
+this file's own header already lists "grid" as part of the
+visualization pipeline it owns; terrain is simply the next item in that
+same list, a new camera-following solid ground layered underneath both
+Editor and World View since both share one `Renderer` instance
+(`application/RenderWorldUseCase.js` and
+`application/RenderWorldViewUseCase.js` both construct one). The
+constructor forces an initial `update()` (there's nothing to diff
+against yet) and `_renderFrame()` ticks the controller every frame off
+`this._cameraController.camera.position` — the SAME camera position
+`CameraController` itself already owns, never a second, independently
+tracked copy. `terrainHeightAt(x, z)` is a two-line pass-through to
+`core/TerrainHeightField.js` with the fixed `DEFAULT_WORLD_SEED` — the
+ONE shared query point `renderer/WorldRenderer.js` and
+`application/RenderWorldViewUseCase.js` both call, never a second,
+independently-computed terrain function anywhere else in the renderer
+layer.
+
+**Ground placement for buildings and avatars is a RENDERING-time
+offset, applied once, never a domain/state change.**
+`renderer/WorldRenderer.js#_terrainOffsetY(x, z)` is consulted at every
+one of the four brick-placement sites (`addWorld`, `_onBuildingAdded`,
+`_onBrickAdded`, `_onBrickUpdated`), but sampled exactly ONCE per
+document — at that document's own placement/offset position — never
+once per brick: a whole building rides the terrain as one rigid unit at
+its own ground level, never tilted or deformed brick-by-brick as if
+terrain height varied across its own footprint. It is feature-detected
+(`typeof this._renderer.terrainHeightAt === 'function'`), not a hard
+dependency on `renderer/Renderer.js` — every pre-0.2.76 test in this
+codebase constructs `WorldRenderer` with a plain `{ add, remove }` fake
+"low-level renderer" (see `tests/ForkRenderSync.test.js`'s own comment)
+that has no `terrainHeightAt()` at all, and every one of those keeps
+behaving exactly as it did before this milestone, `groundY` simply 0 —
+the same graceful-absence posture every other optional collaborator in
+this codebase already follows (`WorldNavigationSession`'s constructor is
+full of exactly this pattern). `application/RenderWorldViewUseCase.js`'s
+own `withGroundElevation()` does the equivalent for avatars: it adds
+`renderer.terrainHeightAt(x, z)` on top of whatever
+`AvatarPresence.position.y` already means (ground level = 0, plus
+whatever transient jump offset `core/AvatarMovementSimulation.js`
+computed — completely untouched by this milestone) immediately before
+handing the position to `renderer/AvatarVisual.js#setPose()`, for the
+local avatar (`setLocalAvatar`/`updateLocalAvatarPresence`) and every
+remote one (`setRemoteAvatar`/`updateRemoteAvatarPresence`) alike.
+Nothing here is ever written back to `AvatarPresence`,
+`core/WorldPlacement.js`, or any `Document` — a building's or avatar's
+actual domain position after 0.2.76 is byte-identical to what it was
+before; only WHERE the already-existing mesh/visual gets drawn shifts.
+See docs/Principles.md, "Terrain Elevation Is A Rendering-Time Offset,
+Never A Presence Or Placement Fact."
+
+**Placement and picking geometry stay exactly the fixed Y=0 plane they
+always were.** `renderer/PickingService.js#pickGroundPosition()` still
+raycasts a literal `THREE.Plane(0, 1, 0, 0)`, never the terrain mesh —
+brick placement preview, snapping, and the avatar's own collision/
+movement ground plane (`core/AvatarCollision.js`,
+`core/AvatarMovementSimulation.js`, both completely unmodified this
+milestone) are unaffected by how high or low the terrain visually
+happens to sit at that coordinate. Terrain tiles are also never
+registered in `renderer/MeshRegistry.js`, so `PickingService#pick()`/
+`pickRich()`/`pickInRectangle()` — all scoped to
+`meshRegistry.getAllMeshes()` — can never accidentally raycast-hit a
+terrain tile instead of a brick or return one from a marquee selection.
+Physics, walking-on-slopes, and any change to how the avatar's own
+vertical ground plane is computed are explicitly out of scope — see the
+design doc's own instruction to keep ground CONTINUITY and terrain
+GENERATION separate from a physics/collision project.
+
+The flagship test (`tests/WorldGroundTerrain.test.js`) proves the design
+doc's own scripted scenario end to end: entering World View at the
+origin already has ground loaded (never an empty scene); walking the
+camera across forty large strides — crossing dozens of terrain-tile
+boundaries, thousands of units from the origin — never once leaves the
+tile directly beneath the camera unloaded; the fake sink's own object
+count exactly matches `TerrainStreamingController`'s internal
+bookkeeping throughout the entire journey (no leaked, no orphaned tile
+object); and returning toward the origin reloads the exact same
+starting tile with an elevation, independently recomputed from
+`core/TerrainHeightField.js` directly, that is byte-identical to what it
+was before the journey began — "same world seed + same coordinates ->
+same terrain," proven exactly the way it would need to hold for a
+genuinely distributed World View. Earlier sections isolate each layer:
+Section A proves `terrainHeightAt()`'s determinism, boundedness, and
+1-unit-step continuity in isolation; Section B proves
+`tilesWithinRadius()`'s deterministic ordering and monotonic growth;
+Section C proves the streaming controller's load/unload diffing,
+determinism on revisit, and movement-threshold perf skip against a fake
+sink; and Section D proves `WorldRenderer`'s backward-compatible
+graceful absence (a fake renderer with no `terrainHeightAt()` behaves
+exactly as every pre-0.2.76 test already expects) alongside its
+whole-building rigid lift, sampled once per document and never per
+brick.
+
+Deliberately not in 0.2.76, named rather than hidden: any collision or
+physics change whatsoever; a per-`World`/per-`Document` terrain seed;
+vegetation, rocks, water, biome transitions, or any visual layer beyond
+bare elevation and a single ground material; erosion/hydraulic
+simulation or any generation method beyond closed-form layered noise;
+and walking/vehicle physics of any kind. Every one of these was named in
+the design doc's own list and ruled out specifically because ground
+continuity and terrain generation were kept deliberately separate from
+turning a rendering fix into a large procedural-world project, not
+because of scheduling.

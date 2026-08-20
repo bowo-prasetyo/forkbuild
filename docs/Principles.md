@@ -5231,3 +5231,55 @@ own boundary already warns against elsewhere in this document — a
 capability answering a question a different layer already owns the
 answer to. This is the one piece of 0.2.75 that adds no application-layer
 code at all; the restraint IS the design.
+
+### Terrain Is A Pure Function Of World Coordinates And A World Seed, Never Persisted State (0.2.76)
+
+`core/TerrainHeightField.js#terrainHeightAt(seed, x, z)` calls neither
+`Math.random()` nor `Date.now()`, reads no module-level mutable state,
+and touches no storage — its output depends on nothing but its own three
+arguments. That single property is what lets 0.2.76 promise "the ground
+never runs out no matter how far you roam" without a database of sampled
+heights growing behind it: `Terrain = f(seed, x, z)`, computed fresh
+every time a tile is built, never `Terrain = lookup(x, z)` against
+anything written down. Two replicas, or the same replica revisiting a
+position after roaming thousands of units away, compute the byte-
+identical elevation at the byte-identical coordinate, because both are
+evaluating the same closed-form function of the same public
+`DEFAULT_WORLD_SEED` constant — proven directly in
+`tests/WorldGroundTerrain.test.js`'s own flagship, which recomputes a
+fixed coordinate's height independently before and after an entire
+scripted journey across the world and asserts the two values are
+identical. `DEFAULT_WORLD_SEED` is deliberately ONE hardcoded constant
+shared by the whole live World View today, not a field on `core/World.js`
+or `core/Document.js` — see docs/Architecture.md, 0.2.76, for why a
+per-World seed would be a real schema change this milestone didn't reach
+for, and why one shared constant already satisfies the invariant this
+milestone actually needed.
+
+### Terrain Elevation Is A Rendering-Time Offset, Never A Presence Or Placement Fact (0.2.76)
+
+A building's `core/WorldPlacement.js` position and an avatar's
+`core/AvatarPresence.js#position` both mean exactly what they meant
+before 0.2.76 — ground level is `y = 0`, plus whatever the domain layer
+itself adds (a jump's transient offset, a document's own layout Y). This
+milestone never touches either. Instead, `renderer/WorldRenderer.js` and
+`application/RenderWorldViewUseCase.js` each add
+`renderer.terrainHeightAt(x, z)` to a mesh's/visual's Y position at the
+moment it is actually drawn — after every domain computation has already
+happened, immediately before the result reaches Three.js — and the
+addition is never written back anywhere a domain object could observe
+it. This is the same "renderer combines inputs it never modifies"
+discipline `docs/Principles.md`'s own "An Avatar's Location Comes From
+Presence, Never From The Avatar Itself" already established for 0.2.35's
+avatar rendering, extended to a second input (terrain) instead of just
+one (presence): `AvatarVisual.setPose()` receives a position that has
+already been terrain-adjusted by its CALLER, and has no idea terrain
+exists at all. One consequence worth naming directly:
+`core/AvatarCollision.js`, `core/AvatarMovementSimulation.js`, and
+`renderer/PickingService.js#pickGroundPosition()` all still reason about
+a flat `y = 0` ground plane, completely unaware that the world now
+visually undulates beneath it — collision, movement, and brick placement
+are a deliberately separate, unstarted question (see docs/Roadmap.md,
+0.2.76's own "Deliberately not in 0.2.76"), and conflating "where
+something visually sits" with "where physics/picking says it is" would
+have quietly turned a rendering milestone into a physics one.

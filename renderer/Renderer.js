@@ -4,6 +4,9 @@ import { CameraController } from './CameraController.js';
 import { Lights } from './Lights.js';
 import { GridHelper } from './GridHelper.js';
 import { AnimationLoop } from './AnimationLoop.js';
+import { TerrainStreamingController } from './TerrainStreamingController.js';
+import { buildTerrainTileMesh } from './TerrainTileMesh.js';
+import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 const SKY_COLOR = 0x87ceeb;
 
@@ -30,6 +33,27 @@ export class Renderer {
 
         this._lights = new Lights(this._sceneManager);
         this._grid = new GridHelper(this._sceneManager);
+
+        // 0.2.76 — World Ground & Terrain Foundation. Lives alongside
+        // GridHelper rather than replacing it: GridHelper stays the
+        // Editor's precise, origin-relative snapping reference,
+        // completely unchanged; terrain is the new, camera-following
+        // SOLID ground underneath both Editor and World View — see
+        // docs/Roadmap.md, 0.2.76, and core/TerrainHeightField.js's own
+        // header. terrainHeightAt() below is the ONE shared query point
+        // every ground-placement site in this codebase reads from
+        // (renderer/WorldRenderer.js for buildings,
+        // application/RenderWorldViewUseCase.js for avatars) — never a
+        // second, independently-computed terrain function anywhere else.
+        this._terrainStreaming = new TerrainStreamingController(
+            this._sceneManager,
+            (tx, tz) => buildTerrainTileMesh(tx, tz, DEFAULT_WORLD_SEED)
+        );
+        this._terrainStreaming.update(
+            this._cameraController.camera.position.x,
+            this._cameraController.camera.position.z,
+            true
+        );
 
         // 0.2.36 — a generic per-frame hook, deliberately NOT
         // avatar-specific (Renderer "owns the visualization pipeline
@@ -73,6 +97,16 @@ export class Renderer {
         this._cameraController.resetView();
     }
 
+    // 0.2.76 — deterministic ground elevation at world (x, z). A thin
+    // pass-through to core/TerrainHeightField.js's own pure function
+    // with this renderer's fixed DEFAULT_WORLD_SEED — see that file's
+    // header for why one shared seed, and docs/Principles.md, "Terrain
+    // Elevation Is A Rendering-Time Offset, Never A Presence Or
+    // Placement Fact," for how callers are expected to use the result.
+    terrainHeightAt(x, z) {
+        return computeTerrainHeightAt(DEFAULT_WORLD_SEED, x, z);
+    }
+
     // Registers `callback(deltaSeconds)` to run once per render frame,
     // real elapsed seconds since the previous frame. Returns an
     // unsubscribe function, the same shape every EventBus subscription
@@ -93,6 +127,7 @@ export class Renderer {
     dispose() {
         this.stop();
         this._frameListeners.clear();
+        this._terrainStreaming.dispose();
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
@@ -101,6 +136,7 @@ export class Renderer {
 
     _renderFrame(deltaSeconds) {
         this._cameraController.update();
+        this._terrainStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }

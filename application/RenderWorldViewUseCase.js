@@ -92,6 +92,22 @@ export class RenderWorldViewUseCase {
             }
         });
 
+        // 0.2.76 — avatar ground placement: a purely RENDERING-time lift
+        // added on top of whatever AvatarPresence.position.y already
+        // means (ground level = 0, plus a transient jump offset —
+        // core/AvatarMovementSimulation.js is completely untouched by
+        // this milestone) — never written back to AvatarPresence, never
+        // touching movement/collision. See docs/Principles.md, "Terrain
+        // Elevation Is A Rendering-Time Offset, Never A Presence Or
+        // Placement Fact."
+        function withGroundElevation(position) {
+            return {
+                x: position.x,
+                y: position.y + renderer.terrainHeightAt(position.x, position.z),
+                z: position.z
+            };
+        }
+
         return {
             pick: (screenX, screenY) => pickingService.pickRich(screenX, screenY),
             pickGround: (screenX, screenY) => {
@@ -168,7 +184,7 @@ export class RenderWorldViewUseCase {
                 const visual = ensureLocalAvatarVisual();
                 localAvatarId = presence.avatarId;
                 visual.setAppearance(template, appearance);
-                visual.setPose(presence.position, presence.rotation);
+                visual.setPose(withGroundElevation(presence.position), presence.rotation);
                 visual.setAnimation(presence.animation);
                 if (localAvatarVisible) {
                     renderer.add(visual.root);
@@ -184,7 +200,7 @@ export class RenderWorldViewUseCase {
                 if (!localAvatarVisual) {
                     return;
                 }
-                localAvatarVisual.setPose(presence.position, presence.rotation);
+                localAvatarVisual.setPose(withGroundElevation(presence.position), presence.rotation);
                 localAvatarVisual.setAnimation(presence.animation);
             },
             // 0.2.44 — see renderer/AvatarVisual.js's own header: a
@@ -263,7 +279,7 @@ export class RenderWorldViewUseCase {
                     }
                 }
                 visual.setAppearance(template, appearance);
-                visual.setPose(presenceLike.position, presenceLike.rotation);
+                visual.setPose(withGroundElevation(presenceLike.position), presenceLike.rotation);
                 visual.setAnimation(presenceLike.animation);
             },
             // The cheap per-frame path — pose/animation only, never
@@ -275,7 +291,7 @@ export class RenderWorldViewUseCase {
                 if (!visual) {
                     return;
                 }
-                visual.setPose(presenceLike.position, presenceLike.rotation);
+                visual.setPose(withGroundElevation(presenceLike.position), presenceLike.rotation);
                 visual.setAnimation(presenceLike.animation);
             },
             // 0.2.41 — the remote-avatar counterpart to
