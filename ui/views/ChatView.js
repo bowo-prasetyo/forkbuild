@@ -1,6 +1,5 @@
 import { ref, computed, onMounted, onBeforeUnmount, inject, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
-import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { FriendshipState } from '../../core/FriendshipState.js';
 import { VoiceSessionState } from '../../core/VoiceSessionState.js';
 import { VoiceCallEndReason } from '../../core/VoiceCallEndReason.js';
@@ -127,7 +126,6 @@ export default {
         const voiceUseCase = inject('voiceUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
-        const peers = ref(peerSessionManager.listPeers());
         const messages = ref(chatUseCase.getConversation(peerIdentityId));
         const draft = ref('');
         const sendError = ref('');
@@ -175,12 +173,16 @@ export default {
         }
 
         // The live, AUTHENTICATED ConnectedPeer for this identity, or
-        // null — never cached, always re-derived from the SAME live
-        // "My Peers" list ui/views/PeerConnectionsView.js's own
-        // connectedPeerFor() already reads the identical way from.
-        const connectedPeer = computed(() => peers.value.find((p) => p.remoteIdentity
-            && p.remoteIdentity.identityId === peerIdentityId
-            && p.getLifecycleState() === PeerLifecycleState.AUTHENTICATED) || null);
+        // null — 0.2.85: now resolved through `application/
+        // PeerPresenceUseCase.js#findConnectedPeer()`, the SAME place
+        // `ui/views/PeerConnectionsView.js`'s own `connectedPeerFor()`
+        // resolves from, so a connection from an authorized DEVICE of
+        // this peer (not just their own literal key) counts here too.
+        // A plain ref, not a computed — `findConnectedPeer()` reads the
+        // live registry directly rather than `peers.value`, so it is
+        // refreshed explicitly alongside `presence` in refreshPresence()
+        // below rather than via a reactive dependency on `peers`.
+        const connectedPeer = ref(peerPresenceUseCase.findConnectedPeer(peerIdentityId));
 
         const isConnected = computed(() => connectedPeer.value !== null);
         const isBlocked = computed(() => peerBlockUseCase.isBlocked(peerIdentityId));
@@ -223,8 +225,11 @@ export default {
             return isConnected.value ? 'Online · Friend' : 'Offline · Friend';
         });
 
-        function refreshPeers(list) {
-            peers.value = list || peerSessionManager.listPeers();
+        // 0.2.85 — no longer stores the raw peer list itself (nothing
+        // reads it any more now that connectedPeer/isConnected resolve
+        // through peerPresenceUseCase instead) — this is purely the
+        // "a connection changed somewhere, re-derive presence" trigger.
+        function refreshPeers() {
             refreshPresence();
         }
 
@@ -238,6 +243,9 @@ export default {
         function refreshPresence() {
             peerPresenceUseCase.markRead(peerIdentityId);
             presence.value = peerPresenceUseCase.getSummary(peerIdentityId);
+            // 0.2.85 — refreshed alongside presence itself, from the
+            // same SocialIdentity-resolved lookup.
+            connectedPeer.value = peerPresenceUseCase.findConnectedPeer(peerIdentityId);
             // 0.2.71 — a deliberately separate call: see this view's own
             // header on why the local marker above and the network
             // acknowledgement below are two independent computations,
@@ -430,7 +438,7 @@ export default {
         onMounted(() => {
             refreshPeers();
             refreshMessages();
-            unsubscribePeers = peerSessionManager.onPeersChanged((list) => refreshPeers(list));
+            unsubscribePeers = peerSessionManager.onPeersChanged(() => refreshPeers());
             unsubscribeMessages = chatUseCase.onMessage((senderPeerIdentityId) => {
                 if (senderPeerIdentityId === peerIdentityId) {
                     refreshMessages();

@@ -5647,3 +5647,38 @@ INHERITANCE of any kind: there is no `Village House -> inherits ->
 Alice House -> inherits -> Alice House v2` chain where editing an
 ancestor could ever ripple into a descendant. Every fork's parent is a
 label, not a relationship a later mutation could ever traverse.
+
+### Identity Presence Is An Aggregate Of Authorized Device Observations, Never A Fourth Store (0.2.85)
+
+`application/PeerPresenceUseCase.js` already treated `isConnectedNow` as
+computed, never stored (0.2.70's own "A Peer Presence Summary
+Reconciles Independent Lifetimes; It Is Never A Fourth Store"). 0.2.85
+extends that same discipline across MULTIPLE simultaneously-live
+connections instead of one: `_liveConnectedPeers(identityId)` is a
+`.filter()`, never a `.find()`, over every currently-AUTHENTICATED
+`ConnectedPeer` whose RESOLVED social identity (`resolveConnectionIdentity()`,
+0.2.79) matches. "Alice is online" is true iff that list is non-empty —
+an aggregate over however many of her authorized devices this local
+device currently observes as reachable, recomputed fresh on every call,
+never cached as a single boolean that could drift. Three genuinely
+different questions stay genuinely different: Connection Presence (one
+`ConnectedPeer`'s own `getLifecycleState()`), Device Presence (one live
+connection resolved to one specific authorized device), and Identity
+Presence (at least one live, authorized device of the whole identity) —
+collapsing any two of these into one is exactly the mistake this
+principle exists to name. A stale disconnect on one of several live
+connections therefore never flips presence by itself — only the LAST
+one does — and a revoked device's connection stops contributing to its
+PARENT's presence the instant `resolveConnectionIdentity()` itself stops
+recognizing it (the connection stays genuinely authenticated throughout;
+only which identity it counts toward changes), with no separate
+revocation check anywhere in this class. Deliberately NOT gossiped or
+synchronized between Alice's own devices — each observer (Bob, or any
+other peer) derives what it currently knows entirely from its own live
+connections, exactly as `docs/Principles.md`'s own "Discovery Finds A
+Candidate; It Never Authenticates One" already keeps observation and
+authority as separate axes one layer down. And deliberately NOT reused
+for delivery-target selection: `application/ChatUseCase.js#_findAuthenticatedPeer()`
+still picks exactly one device to send to (a `.find()`, unchanged) —
+presence aggregation answers "is anyone home," never "which one do I
+talk to," and the two stay two different questions on purpose.

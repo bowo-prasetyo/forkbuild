@@ -131,6 +131,12 @@ export default {
         const identityLifecyclePropagationUseCase = inject('identityLifecyclePropagationUseCase', null);
         const peerBlockUseCase = inject('peerBlockUseCase');
         const findPeerUseCase = inject('findPeerUseCase');
+        // 0.2.85 — the SAME resolved-social-identity lookup application/
+        // PeerPresenceUseCase.js already exposes, so a Known Peer/Friend
+        // connected from an authorized DEVICE (not just their own literal
+        // key) is recognized here too — see isConnectedNow()/
+        // connectedPeerFor() below.
+        const peerPresenceUseCase = inject('peerPresenceUseCase');
 
         const isAuthenticated = ref(identityUseCase.isAuthenticated());
         // 0.2.74 — a signed-in identity that is PASSPHRASE-LOCKED cannot
@@ -197,12 +203,13 @@ export default {
 
         // "Is this known peer connected right now?" is never stored on
         // the relationship itself — see core/PeerRelationshipStatus.js's
-        // own header — it is derived, fresh, from the SAME live `peers`
-        // list "My Peers" already renders above.
+        // own header — it is derived, fresh, from application/
+        // PeerPresenceUseCase.js#isIdentityOnline() (0.2.85: the
+        // Identity Presence aggregate — true if ANY currently-authorized
+        // device of this identity has a live connection, not only one
+        // whose own key happens to equal identityId directly).
         function isConnectedNow(identityId) {
-            return peers.value.some((p) => p.remoteIdentity
-                && p.remoteIdentity.identityId === identityId
-                && p.getLifecycleState() === PeerLifecycleState.AUTHENTICATED);
+            return peerPresenceUseCase.isIdentityOnline(identityId);
         }
 
         function rememberPeer(peer) {
@@ -388,15 +395,14 @@ export default {
         }
 
         // The live, AUTHENTICATED "My Peers" entry for a given
-        // identityId, or null — the same live cross-reference
-        // isConnectedNow() already performs, reused here so the
-        // "Friends" list's own Unfriend button can find a real
+        // identityId, or null — 0.2.85: application/
+        // PeerPresenceUseCase.js#findConnectedPeer(), the same resolved-
+        // identity lookup isConnectedNow() above now uses, reused here so
+        // the "Friends" list's own Unfriend button can find a real
         // ConnectedPeer to send through without duplicating that
         // lookup's logic.
         function connectedPeerFor(identityId) {
-            return peers.value.find((p) => p.remoteIdentity
-                && p.remoteIdentity.identityId === identityId
-                && p.getLifecycleState() === PeerLifecycleState.AUTHENTICATED) || null;
+            return peerPresenceUseCase.findConnectedPeer(identityId);
         }
 
         function unfriendByIdentity(identityId) {
