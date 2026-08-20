@@ -2978,6 +2978,25 @@ html, body {
     color: #e05a5a;
 }
 
+/* 0.2.75 — Voice UX & Device Controls. Reuses the .call-bar/.action-btn
+   language wholesale; adds only the device pickers and the microphone-
+   problem note that are genuinely new. */
+.call-device-select {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #1a1a1a;
+    color: inherit;
+    max-width: 11rem;
+}
+
+.call-bar-note {
+    font-size: 0.8rem;
+    color: #c9a227;
+    margin-top: 0.4rem;
+}
+
 /* 0.2.70 — Presence & Conversation Lifecycle. Reuses .identity-mgmt-*,
    .peer-badge*, .peer-detail-row, and .form-hint* wholesale — the same
    card/list language every other social surface already uses — and

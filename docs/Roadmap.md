@@ -2572,6 +2572,91 @@ device-selection UI, and resolving simultaneous mutual calls between two
 peers — every one of 0.2.73's own named limitations stays exactly as
 out of scope as it was left.
 
+0.2.75 — Voice UX & Device Controls — is the one item 0.2.73 and 0.2.74
+BOTH named and BOTH deferred verbatim: "a richer device-selection UI
+beyond a single mute toggle." With the call STATE MACHINE now hardened
+(0.2.74), this milestone improves the human-facing media experience
+without touching that machine at all — no new VoiceSessionState, no new
+VoiceCallSignalType, no new VoiceMediaSignalKind.
+
+```text
+0.2.75
+├── application/LocalAudioTrackProvider.js  two additions to the one
+│                                      existing platform-audio boundary:
+│                                      listInputDevices() (a plain
+│                                      enumerateDevices() pass-through)
+│                                      and an optional deviceId on
+│                                      getLocalAudioTrack() — never a
+│                                      second boundary, never an output-
+│                                      device method (see below)
+├── peer/WebRtcPeerConnection.js      one addition: replaceAudioTrack(),
+│                                      reusing RTCRtpSender#replaceTrack()
+│                                      — the exact swap-not-second-attach
+│                                      precedent addAudioTrack()'s own
+│                                      0.2.73 header already named. No SDP
+│                                      offer/answer round trip, no
+│                                      `role === 'offerer'` question
+└── application/VoiceUseCase.js       three additions, zero new states:
+    ├── setInputDevice()/getInputDevice()/  a STANDING local preference,
+    │   listInputDevices()                  settable in or out of a
+    │                                        call; mid-call it live-
+    │                                        switches via
+    │                                        _switchInputDevice(), which
+    │                                        only ever commits the
+    │                                        preference once the switch
+    │                                        actually succeeds
+    └── onMicrophoneUnavailable()      fires when this device's own local
+                                        track ends UNEXPECTEDLY (device
+                                        unplugged, permission revoked) AND
+                                        one automatic fallback to the
+                                        platform default also fails —
+                                        purely informational; the call
+                                        itself is NEVER torn down by a
+                                        local media problem alone
+```
+
+Three deliberate architectural boundaries, each reused from an existing
+0.2.73/0.2.74 precedent rather than invented fresh: device selection
+(like muting before it) is local state, never a wire fact — no field
+anywhere on `core/VoiceCallSignal.js`/`core/VoiceMediaSignal.js` changed,
+proven directly by sniffing the peer's own raw incoming messages during a
+live switch. A mid-call switch reuses `RTCRtpSender#replaceTrack()`
+rather than a second renegotiation, so `VoiceSessionState` never leaves
+ACTIVE for the duration of a switch. And a local media problem — the
+`_handleLocalTrackEnded()` case, mirroring 0.2.74's own "a local
+microphone failure is never a peer or connection failure" discipline —
+is answered with an automatic one-shot fallback attempt and a purely
+informational event, never a `VoiceCallEndReason`; `peer/PeerConnection.js`
+is untouched either way. Output-device selection (which SPEAKER plays the
+remote party's audio) deliberately never reaches `VoiceUseCase` at all —
+`ui/views/ChatView.js` calls a chosen `<audio>` element's own
+`setSinkId()` directly, the same "UI/platform concern, not VoiceSession's"
+boundary the design doc drew for it.
+
+The flagship test (`tests/VoiceUXAndDeviceControls.test.js`) proves, over
+the SAME real `RTCPeerConnection`/`RTCDataChannel` harness 0.2.73/0.2.74's
+own files established: muting produces zero bytes on the wire Bob
+actually receives; a live microphone switch mid-call replaces the local
+track with zero additional call-signal/media-signal messages and
+`VoiceSessionState` staying ACTIVE throughout, with chat still delivering
+normally right afterward; choosing a device before any call exists only
+records a preference, applied the first time a track is ever acquired;
+an unexpectedly-ended local track (the OS/browser's own device-loss
+signal) triggers exactly one automatic fallback and never tears the call
+down; a fallback that ALSO fails fires `onMicrophoneUnavailable()` once
+while the call keeps running, still endable normally afterward by an
+ordinary hang up; and a failed mid-call switch leaves the call and the
+still-live old track completely untouched, never partially applied.
+
+Deliberately not in 0.2.75, named rather than hidden: video, group calls,
+call recording/history/missed-call notifications, echo-cancellation/
+volume-metering controls, resolving simultaneous mutual calls between two
+peers, and any persisted device preference (this device's own chosen
+microphone lives only in `VoiceUseCase`'s own memory for the lifetime of
+the page, exactly as ephemeral as the rest of voice) — every limitation
+0.2.73/0.2.74 named beyond "a richer device-selection UI" stays exactly
+as out of scope as it was left.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

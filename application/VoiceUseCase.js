@@ -10,6 +10,9 @@ import { createId } from '../core/createId.js';
 
 const CALL_STATE_EVENT = 'VoiceCallStateChanged';
 const INCOMING_CALL_EVENT = 'VoiceIncomingCall';
+// 0.2.75 — see this class's own header, "A Local Media Problem Never
+// Ends A Call By Itself."
+const MICROPHONE_UNAVAILABLE_EVENT = 'VoiceMicrophoneUnavailable';
 
 // How long CALLING/RINGING is allowed to sit unanswered before this
 // device gives up on its own — see this class's own header, "Ringing Is
@@ -163,6 +166,56 @@ const DEFAULT_RINGING_TIMEOUT_MS = 45000;
 // already existed in 0.2.73 — see tests/VoiceCallReliability.test.js for
 // the concurrency proof the design doc asked for. Nothing in this file
 // changed to make BUSY "real"; it already was.
+//
+// ---- 0.2.75 — Voice UX & Device Controls -------------------------------
+//
+// Device Selection Is Local State, Not Peer Protocol State. Exactly like
+// `setMuted()`'s own 0.2.73 precedent, `setInputDevice()` below never
+// produces a wire message — core/VoiceCallSignal.js and
+// core/VoiceMediaSignal.js gain nothing from this milestone. The peer
+// simply hears whichever microphone this device happens to be using; it
+// has no more business knowing WHICH one than it does knowing whether
+// this side is muted by flipping `enabled` versus by physically covering
+// the mic.
+//
+// A Live Device Switch Reuses RTCRtpSender#replaceTrack(), Never A
+// Second Renegotiation. `setInputDevice()` mid-call goes through
+// `_switchInputDevice()`, which calls the SAME
+// peer/WebRtcPeerConnection.js#replaceAudioTrack() a caller would use to
+// swap in a different track — see that method's own header. No SDP
+// offer/answer round trip happens, no `role === 'offerer'` question is
+// ever asked, and VoiceSessionState never leaves ACTIVE (or CONNECTING)
+// for the duration of a switch — a device change is invisible to
+// core/VoiceSessionState.js by construction, exactly as
+// docs/Roadmap.md's own 0.2.75 design doc asked: "same PeerConnection,
+// same authenticated identity, same VoiceSession."
+//
+// A Local Media Problem Never Ends A Call By Itself. If the currently
+// attached local track ends on its own — the OS/browser's own signal
+// that a device disappeared (unplugged, revoked permission, the app lost
+// exclusive access) — `_handleLocalTrackEnded()` below does NOT tear the
+// call down. It attempts exactly one automatic fallback to the
+// platform's own default input device (mirroring an ordinary phone
+// quietly falling back to its built-in mic when a Bluetooth headset
+// drops); if THAT also fails, the call stays exactly as it was
+// (ACTIVE/CONNECTING, peer/PeerConnection.js untouched) and this device
+// simply transmits no audio until the owner picks a working device —
+// `onMicrophoneUnavailable()` is a purely informational signal for a UI
+// to show, never a VoiceCallEndReason, because nothing here decided the
+// call was over. See core/VoiceCallEndReason.js's own header on why
+// MEDIA_FAILED stays reserved for a failure at CALL-START/ACCEPT time —
+// a mid-call device loss is a genuinely different situation with a
+// genuinely different, non-fatal response.
+//
+// Output Device Selection Never Enters This Class. Choosing which
+// SPEAKER plays the remote party's audio is a fact about this device's
+// own audio hardware, never about the call — `getRemoteStream()`'s
+// existing `MediaStream` is already everything a UI needs to bind an
+// `<audio>` element's `setSinkId()` to a chosen output device directly.
+// Adding an `setOutputDevice()` here would be the same mistake as
+// letting core/VoiceCallSignal.js carry mute state: media routing, once
+// the stream itself has left this class's hands, is a UI/platform
+// concern, never VoiceSession's.
 export class VoiceUseCase {
     constructor(identityProvider, {
         peerMessageBus,
@@ -198,6 +251,13 @@ export class VoiceUseCase {
         this._mediaProtocol = mediaProtocol;
         this._eventBus = new EventBus();
         this._call = null; // see this class's own header, "One Call At A Time, Per Device."
+        // 0.2.75 — this device's own chosen input device, null meaning
+        // "the platform's default." Deliberately OUTLIVES any one call —
+        // set via setInputDevice() at any time, even with no call in
+        // progress — and is simply the deviceId _beginMediaNegotiation()
+        // reads the NEXT time a track is acquired, exactly like an
+        // ordinary phone's own "preferred microphone" setting.
+        this._preferredInputDeviceId = null;
         // 0.2.74 — see this class's own header, "Ringing Is Bounded By
         // Local Policy, Never By The Network." Timer functions are
         // injectable purely so a test can use a short real delay without
@@ -293,6 +353,68 @@ export class VoiceUseCase {
         if (this._call && this._call.localTrack) {
             this._call.localTrack.enabled = !muted;
         }
+    }
+
+    // 0.2.75 — "what input devices could setInputDevice() below choose
+    // among?" A plain pass-through to
+    // application/LocalAudioTrackProvider.js#listInputDevices() — this
+    // class adds no vocabulary of its own, exactly like supportsVoice()
+    // adds no vocabulary beyond what peer/WebRtcPeerConnection.js already
+    // answers.
+    listInputDevices() {
+        return this._audio.listInputDevices ? this._audio.listInputDevices() : Promise.resolve([]);
+    }
+
+    // This device's own currently PREFERRED input device — null means
+    // "platform default." Reflects the preference regardless of whether
+    // a call is in progress; see this class's own header, "Device
+    // Selection Is Local State, Not Peer Protocol State."
+    getInputDevice() {
+        return this._preferredInputDeviceId;
+    }
+
+    // Alice's "change my microphone" gesture — safe to call at ANY time,
+    // in or out of a call. Outside a call, or before this call's own
+    // local track has been acquired yet (still CALLING/RINGING), this
+    // only ever records the preference for `_beginMediaNegotiation()` to
+    // read later. Mid-call (CONNECTING/ACTIVE, a local track already
+    // attached), it performs a LIVE switch via `_switchInputDevice()` —
+    // see this class's own header on why that never renegotiates and
+    // never ends the call on failure. Resolves once the switch (if any)
+    // completes; rejects with whatever `application/
+    // LocalAudioTrackProvider.js#getLocalAudioTrack()` itself threw for
+    // the NEW device, leaving the call exactly as it was before this call
+    // — never partially switched, never torn down.
+    async setInputDevice(deviceId) {
+        const normalized = deviceId || null;
+        if (this._call && this._call.localTrack) {
+            // Committed to `_preferredInputDeviceId` only AFTER the live
+            // switch actually succeeds — a device this platform just
+            // refused must never silently become the STANDING preference
+            // a future call would try (and fail) again; see this
+            // method's own header, "leaving the call exactly as it was
+            // before this call."
+            await this._switchInputDevice(this._call, normalized);
+            this._preferredInputDeviceId = normalized;
+        } else {
+            // No live track to probe against yet — this is genuinely
+            // just bookkeeping for whenever _beginMediaNegotiation() next
+            // runs, exactly like choosing a device before a call exists
+            // at all. Whether it actually works is answered honestly at
+            // THAT moment (MEDIA_FAILED), never guessed at here.
+            this._preferredInputDeviceId = normalized;
+        }
+    }
+
+    // Returns an unsubscribe function. Fires `(callId, peerIdentityId)`
+    // when this device's own local track ended on its own AND the
+    // automatic fallback to the platform default also failed — see this
+    // class's own header, "A Local Media Problem Never Ends A Call By
+    // Itself." Purely informational; the call this callId names is still
+    // exactly whatever VoiceSessionState it already was.
+    onMicrophoneUnavailable(callback) {
+        const subscription = this._eventBus.subscribe(MICROPHONE_UNAVAILABLE_EVENT, ({ callId, peerIdentityId }) => callback(callId, peerIdentityId));
+        return () => subscription.unsubscribe();
     }
 
     // Alice's "Call" gesture. `connectedPeer` MUST be a real, currently
@@ -611,11 +733,16 @@ export class VoiceUseCase {
     async _beginMediaNegotiation(call) {
         let track;
         try {
-            track = await this._audio.getLocalAudioTrack();
+            // 0.2.75 — reads this device's own current PREFERENCE, set at
+            // any point (before or during this call) via setInputDevice()
+            // — see that method's own header.
+            track = await this._audio.getLocalAudioTrack(this._preferredInputDeviceId);
         } catch (e) {
             throw this._taggedVoiceError(e, VoiceCallEndReason.MEDIA_FAILED);
         }
         call.localTrack = track;
+        call.inputDeviceId = this._preferredInputDeviceId;
+        this._wireLocalTrackEnded(call, track);
         try {
             call.connectedPeer.connection.addAudioTrack(track);
             if (call.connectedPeer.connection.role === 'offerer') {
@@ -637,6 +764,89 @@ export class VoiceUseCase {
             e.voiceReason = reason;
         }
         return e;
+    }
+
+    // ---- device switching (0.2.75) -------------------------------------
+
+    // The one place a local track is actually swapped out from under an
+    // in-progress call — used by both the deliberate `setInputDevice()`
+    // gesture and the automatic fallback `_handleLocalTrackEnded()`
+    // attempts below. Acquires the NEW track first, before touching
+    // anything about the call — if acquisition itself fails, `call` is
+    // left completely as it was (old track still attached, still
+    // transmitting) and the rejection simply propagates to the caller.
+    // See this class's own header, "A Live Device Switch Reuses
+    // RTCRtpSender#replaceTrack(), Never A Second Renegotiation."
+    async _switchInputDevice(call, deviceId) {
+        const newTrack = await this._audio.getLocalAudioTrack(deviceId);
+        // Preserves whatever mute state THIS call was already in — a
+        // device switch is never itself an unmute, exactly like
+        // application/VoiceUseCase.js#setMuted()'s own local-only
+        // contract would otherwise be silently bypassed by switching to
+        // a fresh, always-enabled track.
+        newTrack.enabled = call.localTrack ? call.localTrack.enabled : true;
+        try {
+            await call.connectedPeer.connection.replaceAudioTrack(newTrack);
+        } catch (e) {
+            // The NEW track was already acquired but never actually put
+            // to use — release it here rather than leaking it (and the
+            // device's own "in use" indicator) while `call` stays exactly
+            // as it was on its OLD track.
+            this._audio.releaseTrack(newTrack);
+            throw e;
+        }
+        const oldTrack = call.localTrack;
+        this._unwireLocalTrackEnded(call);
+        call.localTrack = newTrack;
+        call.inputDeviceId = deviceId;
+        this._wireLocalTrackEnded(call, newTrack);
+        if (oldTrack) {
+            this._audio.releaseTrack(oldTrack);
+        }
+    }
+
+    // Wires this device's own OS/browser-level "this track just died"
+    // signal — a real `MediaStreamTrack` fires `ended` when its
+    // underlying device disappears (unplugged, permission revoked,
+    // exclusive access lost to another app), completely independent of
+    // anything application/LocalAudioTrackProvider.js#releaseTrack()
+    // itself does when THIS class is the one stopping the track
+    // deliberately (see `_unwireLocalTrackEnded()` below, always called
+    // first in every path that retires a track on purpose).
+    _wireLocalTrackEnded(call, track) {
+        const handler = () => this._handleLocalTrackEnded(call, track);
+        track.addEventListener('ended', handler);
+        call.localTrackEndedTrack = track;
+        call.localTrackEndedHandler = handler;
+    }
+
+    _unwireLocalTrackEnded(call) {
+        if (call.localTrackEndedTrack && call.localTrackEndedHandler) {
+            call.localTrackEndedTrack.removeEventListener('ended', call.localTrackEndedHandler);
+        }
+        call.localTrackEndedTrack = null;
+        call.localTrackEndedHandler = null;
+    }
+
+    // See this class's own header, "A Local Media Problem Never Ends A
+    // Call By Itself." `endedTrack` is compared against `call.localTrack`
+    // (not merely `this._call === call`) because a track this method's
+    // own earlier fallback already SUPERSEDED can still fire its own late
+    // `ended` event — that stale event must never re-trigger a SECOND
+    // fallback attempt on a track nobody is using anymore.
+    async _handleLocalTrackEnded(call, endedTrack) {
+        if (this._call !== call || call.localTrack !== endedTrack) {
+            return;
+        }
+        try {
+            await this._switchInputDevice(call, null);
+        } catch {
+            // No replacement device is available at all — the call is
+            // deliberately left exactly as it is (see this class's own
+            // header); only a local, informational signal fires so a UI
+            // can tell the owner their microphone disappeared.
+            this._eventBus.publish(MICROPHONE_UNAVAILABLE_EVENT, { callId: call.callId, peerIdentityId: call.peerIdentityId });
+        }
     }
 
     // ---- social-authorization reconciliation (mirrors 0.2.72) --------
@@ -731,7 +941,12 @@ export class VoiceUseCase {
             callId, peerIdentityId, connectedPeer, state, isCaller,
             localTrack: null, remoteTrack: null, remoteStream: null,
             unsubscribePeerState: null, unsubscribeRemoteTrack: null,
-            ringingTimer: null
+            ringingTimer: null,
+            // 0.2.75 — see this class's own header on device controls.
+            // `inputDeviceId` mirrors `this._preferredInputDeviceId` at
+            // the moment this call's own track was last (re)acquired —
+            // `null` until _beginMediaNegotiation() runs at all.
+            inputDeviceId: null, localTrackEndedTrack: null, localTrackEndedHandler: null
         };
         if (state === VoiceSessionState.CALLING || state === VoiceSessionState.RINGING) {
             this._armRingingTimeout(call);
@@ -774,6 +989,12 @@ export class VoiceUseCase {
 
     _unwireCall(call) {
         this._clearRingingTimeout(call);
+        // 0.2.75 — deliberately BEFORE releasing/stopping the track
+        // below: this call is ending on PURPOSE, so the track's own
+        // `ended` event (which `releaseTrack()`/`removeAudioTrack()` are
+        // about to trigger) must never be mistaken for the unexpected
+        // device loss `_handleLocalTrackEnded()` exists to catch.
+        this._unwireLocalTrackEnded(call);
         if (call.unsubscribePeerState) call.unsubscribePeerState();
         if (call.unsubscribeRemoteTrack) call.unsubscribeRemoteTrack();
         if (typeof call.connectedPeer.connection.removeAudioTrack === 'function') {

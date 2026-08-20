@@ -90,6 +90,27 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // VoiceUseCase.js tracks at most ONE call for the whole device, so a call
 // with a DIFFERENT peer shows here only as a disabled "Call" button, never
 // as this peer's own call bar.
+//
+// 0.2.75 — Voice UX & Device Controls. Three additions, all presentation
+// over application/VoiceUseCase.js's own 0.2.75 surface, never a new
+// state machine of their own:
+// (1) the Hang Up button reads "Cancel" while CALLING (an outgoing call
+//     nobody has answered yet) and "Hang Up" once media is actually
+//     attached — endCall() itself is unchanged; only the LABEL is derived
+//     from `callForThisPeer.value.state`, per the design doc's own
+//     instruction not to invent new VoiceSessionState values for UI
+//     presentation;
+// (2) a microphone picker and (if `<audio>#setSinkId` exists in this
+//     browser) a speaker picker appear once `hasMediaAttached` — the
+//     microphone one calls `voiceUseCase.setInputDevice()`, the speaker
+//     one calls `remoteAudioEl.value.setSinkId()` DIRECTLY and never
+//     touches voiceUseCase at all, exactly matching that file's own
+//     header, "Output Device Selection Never Enters This Class";
+// (3) `voiceUseCase.onMicrophoneUnavailable()` surfaces a small, dismissible-
+//     by-refresh banner ("your microphone disappeared") without ever
+//     touching `callForThisPeer`/`isInCallWithThisPeer` — the call bar
+//     keeps showing exactly the same controls throughout, because the
+//     call itself never ended.
 export default {
     name: 'ChatView',
     setup() {
@@ -128,6 +149,21 @@ export default {
         const isMuted = ref(voiceUseCase ? voiceUseCase.isMuted() : false);
         const voiceError = ref('');
         const remoteAudioEl = ref(null);
+        // 0.2.75 — Voice UX & Device Controls. `inputDevices`/`outputDevices`
+        // are refreshed once media is actually attached (see
+        // refreshInputDevices()/refreshOutputDevices() below) rather than
+        // eagerly on mount — enumerateDevices() needs no permission, but
+        // there is nothing useful to pick a device FOR until a call
+        // reaches CONNECTING/ACTIVE. `selectedInputDeviceId` mirrors
+        // application/VoiceUseCase.js#getInputDevice() (this device's own
+        // STANDING preference); `selectedOutputDeviceId` is pure UI state
+        // — see this view's own header on why output selection never
+        // reaches voiceUseCase at all.
+        const inputDevices = ref([]);
+        const outputDevices = ref([]);
+        const selectedInputDeviceId = ref('');
+        const selectedOutputDeviceId = ref('');
+        const micProblem = ref('');
 
         function shortId(identityId) {
             return identityId ? identityId.slice(-14) : '';
@@ -161,6 +197,13 @@ export default {
         const isRinging = computed(() => callForThisPeer.value && callForThisPeer.value.state === VoiceSessionState.RINGING);
         const isInCallWithThisPeer = computed(() => callForThisPeer.value
             && [VoiceSessionState.CALLING, VoiceSessionState.CONNECTING, VoiceSessionState.ACTIVE].includes(callForThisPeer.value.state));
+        // 0.2.75 — see this view's own header, item (1)/(2). Neither of
+        // these is a new lifecycle concept — both are pure derivations of
+        // the SAME `callForThisPeer.value.state` isInCallWithThisPeer
+        // above already reads.
+        const isOutgoingRinging = computed(() => callForThisPeer.value && callForThisPeer.value.state === VoiceSessionState.CALLING);
+        const hasMediaAttached = computed(() => callForThisPeer.value
+            && [VoiceSessionState.CONNECTING, VoiceSessionState.ACTIVE].includes(callForThisPeer.value.state));
         const canCall = computed(() => Boolean(voiceUseCase) && !activeCall.value && isConnected.value
             && voiceUseCase.canCall(peerIdentityId) && voiceUseCase.supportsVoice(connectedPeer.value));
         const callStatusLabel = computed(() => {
@@ -271,6 +314,13 @@ export default {
                     remoteAudioEl.value.srcObject = stream;
                 }
             }
+            // 0.2.75 — the call bar (and any device problem it was
+            // showing) is entirely about a call THIS peer is in; once
+            // that's no longer true, both reset rather than lingering
+            // stale until the next call happens to overwrite them.
+            if (!callForThisPeer.value) {
+                micProblem.value = '';
+            }
         }
 
         function call() {
@@ -287,6 +337,10 @@ export default {
             voiceError.value = '';
             try {
                 await voiceUseCase.acceptCall(callForThisPeer.value.callId);
+                // 0.2.75 — media is only actually attached once
+                // acceptCall() resolves; listing devices any earlier
+                // would show a picker with nothing yet to act on.
+                await Promise.all([refreshInputDevices(), refreshOutputDevices()]);
             } catch (e) {
                 voiceError.value = e.message.replace(/^(VoiceUseCase|LocalAudioTrackProvider):\s*/, '');
             }
@@ -308,6 +362,63 @@ export default {
             isMuted.value = voiceUseCase.isMuted();
         }
 
+        // 0.2.75 — "what could setInputDevice() below choose among?" A
+        // plain call to application/VoiceUseCase.js's own pass-through;
+        // this view invents no device vocabulary of its own.
+        async function refreshInputDevices() {
+            if (!voiceUseCase) return;
+            inputDevices.value = await voiceUseCase.listInputDevices();
+            selectedInputDeviceId.value = voiceUseCase.getInputDevice() || '';
+        }
+
+        // 0.2.75 — deliberately calls `navigator.mediaDevices` DIRECTLY,
+        // never through voiceUseCase — see this view's own header and
+        // application/VoiceUseCase.js's own header, "Output Device
+        // Selection Never Enters This Class." Degrades to an empty list
+        // (no picker shown) in a browser without device enumeration.
+        async function refreshOutputDevices() {
+            if (!navigator.mediaDevices || typeof navigator.mediaDevices.enumerateDevices !== 'function') {
+                outputDevices.value = [];
+                return;
+            }
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            outputDevices.value = devices.filter((d) => d.kind === 'audiooutput').map((d) => ({ deviceId: d.deviceId, label: d.label }));
+        }
+
+        async function changeInputDevice(event) {
+            const deviceId = event.target.value || null;
+            voiceError.value = '';
+            try {
+                await voiceUseCase.setInputDevice(deviceId);
+            } catch (e) {
+                voiceError.value = e.message.replace(/^(VoiceUseCase|LocalAudioTrackProvider):\s*/, '');
+            }
+            // Re-reads the STANDING preference regardless of success —
+            // on failure this restores the dropdown to whatever device is
+            // actually still attached, per application/VoiceUseCase.js
+            // #setInputDevice()'s own "never partially switched" contract.
+            selectedInputDeviceId.value = voiceUseCase.getInputDevice() || '';
+        }
+
+        // A speaker choice is only ever meaningful once `<audio
+        // ref="remoteAudioEl">` actually exists AND this browser supports
+        // `setSinkId()` — both feature-detected here rather than assumed;
+        // see this view's own header on why this never touches
+        // voiceUseCase at all.
+        async function changeOutputDevice(event) {
+            const deviceId = event.target.value || '';
+            if (!remoteAudioEl.value || typeof remoteAudioEl.value.setSinkId !== 'function') {
+                return;
+            }
+            voiceError.value = '';
+            try {
+                await remoteAudioEl.value.setSinkId(deviceId);
+                selectedOutputDeviceId.value = deviceId;
+            } catch {
+                voiceError.value = 'Could not switch to that speaker.';
+            }
+        }
+
         let unsubscribePeers = null;
         let unsubscribeMessages = null;
         let unsubscribeSession = null;
@@ -315,6 +426,7 @@ export default {
         let unsubscribeReadReceipt = null;
         let unsubscribeVoiceState = null;
         let unsubscribeIncomingCall = null;
+        let unsubscribeMicrophoneUnavailable = null;
         onMounted(() => {
             refreshPeers();
             refreshMessages();
@@ -355,9 +467,27 @@ export default {
                     if (state === VoiceSessionState.ENDED && info && info.peerIdentityId === peerIdentityId) {
                         voiceError.value = VOICE_END_REASON_MESSAGE[info.reason] || '';
                     }
+                    // 0.2.75 — the CALLER side only ever reaches
+                    // CONNECTING/ACTIVE asynchronously, once the callee
+                    // accepts — this is the one moment call() itself
+                    // cannot refresh device lists from directly (unlike
+                    // acceptIncomingCall(), which awaits its own
+                    // acceptance). ACTIVE only — CONNECTING still has no
+                    // remote stream yet, and refreshing twice in a row is
+                    // pure waste.
+                    if (state === VoiceSessionState.ACTIVE && info && info.peerIdentityId === peerIdentityId) {
+                        refreshInputDevices();
+                        refreshOutputDevices();
+                    }
                     refreshVoice();
                 });
                 unsubscribeIncomingCall = voiceUseCase.onIncomingCall(() => refreshVoice());
+                // 0.2.75 — see this view's own header, item (3).
+                unsubscribeMicrophoneUnavailable = voiceUseCase.onMicrophoneUnavailable((callId, peerId) => {
+                    if (callForThisPeer.value && callForThisPeer.value.callId === callId && peerId === peerIdentityId) {
+                        micProblem.value = 'Your microphone disappeared — the call continues without your audio.';
+                    }
+                });
             }
             scrollToBottom();
         });
@@ -369,6 +499,7 @@ export default {
             if (unsubscribeSession) unsubscribeSession();
             if (unsubscribeVoiceState) unsubscribeVoiceState();
             if (unsubscribeIncomingCall) unsubscribeIncomingCall();
+            if (unsubscribeMicrophoneUnavailable) unsubscribeMicrophoneUnavailable();
         });
 
         return {
@@ -378,7 +509,11 @@ export default {
             // 0.2.73
             callForThisPeer, isRinging, isInCallWithThisPeer, canCall, callStatusLabel,
             isMuted, voiceError, remoteAudioEl,
-            call, acceptIncomingCall, rejectIncomingCall, hangUp, toggleMute
+            call, acceptIncomingCall, rejectIncomingCall, hangUp, toggleMute,
+            // 0.2.75
+            isOutgoingRinging, hasMediaAttached, inputDevices, outputDevices,
+            selectedInputDeviceId, selectedOutputDeviceId, micProblem,
+            changeInputDevice, changeOutputDevice
         };
     },
     template: `
@@ -415,11 +550,26 @@ export default {
                         <button type="button" class="action-btn" @click="rejectIncomingCall">Decline</button>
                     </template>
                     <template v-else-if="isInCallWithThisPeer">
-                        <button type="button" class="action-btn" @click="toggleMute">{{ isMuted ? 'Unmute' : 'Mute' }}</button>
-                        <button type="button" class="action-btn call-btn--end" @click="hangUp">Hang Up</button>
+                        <!-- 0.2.75 — device pickers only once media is
+                             actually attached; see this view's own header. -->
+                        <template v-if="hasMediaAttached">
+                            <select v-if="inputDevices.length" class="call-device-select" v-model="selectedInputDeviceId"
+                                    @change="changeInputDevice" title="Microphone">
+                                <option value="">System default mic</option>
+                                <option v-for="d in inputDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Microphone' }}</option>
+                            </select>
+                            <select v-if="outputDevices.length" class="call-device-select" v-model="selectedOutputDeviceId"
+                                    @change="changeOutputDevice" title="Speaker">
+                                <option value="">System default speaker</option>
+                                <option v-for="d in outputDevices" :key="d.deviceId" :value="d.deviceId">{{ d.label || 'Speaker' }}</option>
+                            </select>
+                            <button type="button" class="action-btn" @click="toggleMute">{{ isMuted ? 'Unmute' : 'Mute' }}</button>
+                        </template>
+                        <button type="button" class="action-btn call-btn--end" @click="hangUp">{{ isOutgoingRinging ? 'Cancel' : 'Hang Up' }}</button>
                     </template>
                     <audio ref="remoteAudioEl" autoplay></audio>
                 </div>
+                <p v-if="micProblem" class="call-bar-note">{{ micProblem }}</p>
                 <p v-if="voiceError" class="identity-unlock-error">{{ voiceError }}</p>
 
                 <!-- 0.2.70 — the reconciled view: identity/relationship/
