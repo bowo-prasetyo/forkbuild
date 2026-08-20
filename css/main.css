@@ -323,6 +323,21 @@ html, body {
     letter-spacing: 0.04em;
 }
 
+.palette-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.palette-category {
+    margin: 0.4rem 0 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #707070;
+    text-transform: capitalize;
+    letter-spacing: 0.03em;
+}
+
 .palette-list {
     list-style: none;
     margin: 0;

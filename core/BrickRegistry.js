@@ -37,4 +37,24 @@ export class BrickRegistry {
             query.some((tag) => definition.tags.includes(tag))
         );
     }
+
+    // Ordered [{ category, definitions }] for palette rendering, grouped
+    // in first-seen order — the same shape
+    // application/EditorActionRegistry.js#groupByCategory() already
+    // established for the Command Palette. 0.2.80 adds this because a
+    // flat list of fifteen definitions across eleven categories is
+    // meaningfully harder to scan than four; getAll() and getByCategory()
+    // stay exactly as they were for every other caller.
+    groupByCategory() {
+        const groups = [];
+        const indexByCategory = new Map();
+        for (const definition of this.getAll()) {
+            if (!indexByCategory.has(definition.category)) {
+                indexByCategory.set(definition.category, groups.length);
+                groups.push({ category: definition.category, definitions: [] });
+            }
+            groups[indexByCategory.get(definition.category)].definitions.push(definition);
+        }
+        return groups;
+    }
 }

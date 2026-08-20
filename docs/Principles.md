@@ -5494,3 +5494,107 @@ outgoing traffic. Synchronizing what Alice's OWN several devices know
 about each other — and about each other's conversations — is real,
 substantial, and deliberately left to a later milestone (see
 docs/Roadmap.md, 0.2.79, "Proposed, unscheduled follow-on milestones").
+### Terrain Surface Color Is A Function Of World Coordinates, Never Tile Coordinates (0.2.79)
+
+`core/TerrainSurface.js#surfaceColorAt(seed, x, z)` has no idea a tile
+grid exists at all — the same discipline `core/TerrainHeightField.js#
+terrainHeightAt(seed, x, z)` already established for elevation in 0.2.76,
+extended to color. This is what makes two neighboring
+`renderer/TerrainStreamingController.js` tiles — streamed in
+independently, on whatever frame the camera happened to approach them —
+agree exactly at their shared edge without any coordination between them:
+both sample `surfaceColorAt()` at the identical world `(x, z)`, so both
+get the identical answer, proven directly in
+`tests/TerrainSurfaceColor.test.js` at the exact vertex resolution
+`renderer/TerrainTileMesh.js` samples at, for every segment count tested.
+A function of `(tileX, tileZ)` instead would have let two adjacent tiles
+land on different sides of a classification threshold and disagree at
+their shared edge, exposing the streaming grid as a visible checkerboard
+exactly where 0.2.76 worked hardest to make the ground continuous. The
+low-frequency brightness variation layered on top follows the identical
+rule for the identical reason: it is sampled from `surfaceColorAt()`'s own
+continuous world-coordinate noise lattice, never from anything keyed by
+which tile a vertex happens to belong to.
+
+### Terrain Surface Color Is Deliberately Restrained; Buildings And Avatars Are The Visual Focus (0.2.79)
+
+`core/TerrainSurface.js#SURFACE_PALETTE` is low-saturation and mid-value
+by deliberate choice — a soft pale green, a muted warm brown, a light
+neutral gray, a soft blue — never the saturated "game grass"/"game water"
+tones a more decorative terrain system might reach for. Terrain's job in
+World View is background, context, depth, and geography; a building's or
+an avatar's own materials are the actual visual focus, and a loudly
+saturated ground would compete with them for attention rather than
+support it. This same restraint governs every other visual choice this
+milestone makes: the low-frequency brightness variation
+`core/TerrainSurface.js#variationAt()` applies is a single shared
+lightness offset across all three color channels, never an independent
+per-channel one, so terrain reads as "the same grass, gently lit
+differently" rather than a dithered checkerboard that exposes the
+underlying noise function; and "higher terrain -> lighter vegetation tone"
+is a continuous blend within the existing GRASS category, never a new,
+more elaborate `SURFACE_CATEGORY` that would over-model one color nuance
+as if it were a distinct kind of ground. WATER/SOIL/ROCK/GRASS are visual
+surface-color categories only — a WATER-classified coordinate looks like a
+lake; it is not one, and nothing in this milestone simulates water,
+vegetation, or geology (see docs/Roadmap.md, 0.2.79's own "Deliberately
+not in 0.2.79").
+
+### A Brick Is A Primitive, Never A Preassembled Structure (0.2.80)
+
+`core/BrickDefinition.js` describes a small reusable geometric building
+block — a shape, a bounding box, a category, a description — and nothing
+in 0.2.80's eleven new definitions is allowed to describe more than that.
+`core:wall_1x3` is a wall SEGMENT, not a "House Wall"; `core:roof_hip` is
+a roof CAP, not a "Cottage Roof"; `core:arch` is an archway BLOCK, not a
+"Gate" or a "Bridge." The moment a brick definition starts encoding a
+specific building's identity rather than a general shape, the primitive
+vocabulary stops being reusable and starts being an ever-growing catalog
+of one-off nouns — `HOUSE_BRICK`, `BARN_BRICK`, `BRIDGE_BRICK` — that
+would need to keep expanding forever to cover every conceivable
+structure, instead of composing a fixed, small vocabulary into an
+unbounded number of them. The intended ladder stays exactly
+`Brick -> Building -> Structure`; nothing in this milestone lets a brick
+skip a rung of it. A future forkable structure library composes bricks
+into buildings and buildings into structures — it does not need, and must
+never be given, brick definitions that have already done a structure's
+job for it.
+
+### A Brick's Bounding Box Is An Approximation Contract, Not A Shape Description (0.2.80)
+
+`BrickDefinition#width/height/depth` was already an axis-aligned bounding
+box before 0.2.80 — `core/AvatarCollision.js` and
+`application/SelectionBoundsService.js` both read it that way from the
+moment each was written — but every brick using it was symmetric enough
+(a cube, a slope, a plate, a window pane) that the gap between "true
+shape" and "bounding box" was never visually exercised. 0.2.80's
+`core:stair`, `core:arch`, `core:roof_hip`, and `core:column` are all
+genuinely non-box meshes, and every one of them still collides and
+selects as its own rectangular bounding box — an avatar can stand "inside"
+the empty space under a stair's own overhang, or "inside" an arch's own
+open passage, and still be treated as colliding with the brick, exactly
+the same restraint `core/AvatarCollision.js`'s own 0.2.42 header already
+named as deliberate ("a box is a good enough capsule"), now extended to
+built geometry instead of only avatars. This was a conscious choice, not
+an oversight discovered too late to fix: a `BrickDefinition`'s
+width/height/depth is a contract about placement and collision space, not
+a promise that the rendered mesh fills every corner of it.
+
+### A Mesh Factory's Own Orientation Belongs On The Geometry, Never On mesh.rotation (0.2.80)
+
+`renderer/BrickRenderer.js#createMesh()` has, since 0.1.5, unconditionally
+SET `mesh.rotation.y` from the brick's own placement rotation on every
+call — never added to whatever a factory left there. That was invisible
+as a rule until `core:roof_hip` needed a fixed 45° orientation to align a
+four-segment `ConeGeometry`'s naturally diamond-shaped footprint with a
+rectangular brick's own bounding box. The correct place for that fixed
+orientation is `geometry.rotateY(Math.PI / 4)`, called once inside the
+factory, baked permanently into the geometry's own vertices — never
+`mesh.rotation.y`, which `BrickRenderer` will overwrite the instant the
+brick is actually placed and rendered with its own, entirely independent
+placement rotation. A factory that mixed the two would work by accident
+in isolation (e.g. a unit test calling the factory directly) and silently
+break the moment the same mesh reached `BrickRenderer` — the kind of bug
+that is invisible until the exact two code paths that never talk to each
+other both run, which is precisely why the rule is named here rather than
+left to be rediscovered.
