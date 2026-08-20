@@ -31,6 +31,7 @@ import { distanceBetween, isWithinRadius } from '../core/SpatialQuery.js';
 import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSummary.js';
 import { AvatarMovementController } from './AvatarMovementController.js';
 import { AvatarMovementConstraint } from './AvatarMovementConstraint.js';
+import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
 import { PresenceSyncService } from './PresenceSyncService.js';
 import { LocalPresenceStore } from './LocalPresenceStore.js';
 import { PresenceTrustBoundary } from './PresenceTrustBoundary.js';
@@ -544,7 +545,8 @@ export class WorldNavigationSession {
         // optional collaborator in this file already follows.
         this._avatarMovementController = new AvatarMovementController(
             this._avatarPresenceSession,
-            this._buildAvatarMovementConstraint()
+            this._buildAvatarMovementConstraint(),
+            this._buildAvatarTerrainConstraint()
         );
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {
@@ -594,6 +596,23 @@ export class WorldNavigationSession {
             getWorldPosition: (documentId) => this._getWorldPosition(documentId),
             brickRegistry: this._registry
         });
+    }
+
+    // 0.2.77 — builds the LOCAL avatar's terrain-slope constraint.
+    // Unlike _buildAvatarMovementConstraint() above, this needs no
+    // state from this session at all: terrain is a pure function of
+    // (seed, x, z), always computable for any coordinate regardless of
+    // which documents happen to be streamed in nearby, so there is no
+    // "currently available to this replica" concept to wire up here —
+    // see application/AvatarTerrainConstraint.js's own header.
+    // AvatarTerrainConstraint's own constructor defaults (the same
+    // shared DEFAULT_WORLD_SEED every other terrain query point in
+    // this codebase reads, and a fixed default walkable-slope limit)
+    // are exactly what a real session wants, so nothing is passed
+    // here — always built, unconditionally, the same posture
+    // _buildAvatarMovementConstraint() already established.
+    _buildAvatarTerrainConstraint() {
+        return new AvatarTerrainConstraint();
     }
 
     // -----------------------------------------------------------------

@@ -5283,3 +5283,73 @@ are a deliberately separate, unstarted question (see docs/Roadmap.md,
 0.2.76's own "Deliberately not in 0.2.76"), and conflating "where
 something visually sits" with "where physics/picking says it is" would
 have quietly turned a rendering milestone into a physics one.
+
+### The Terrain Height Field Is The Shared Authority; The Renderer Is An Adapter, Not The Owner (0.2.77)
+
+0.2.76 gave `renderer/Renderer.js` a `terrainHeightAt(x, z)` method, and
+every 0.2.76 caller (building/avatar rendering) reached it through the
+renderer because rendering was the only consumer that existed yet. That
+was always a thin pass-through to `core/TerrainHeightField.js`'s own pure
+`terrainHeightAt(seed, x, z)` — never a second, renderer-owned
+computation — but with only one consumer, the distinction between "the
+renderer happens to be how you reach terrain" and "the renderer IS
+terrain" was never tested. 0.2.77 tests it: `application/
+AvatarTerrainConstraint.js` needs the exact same elevation function for
+movement, and it imports `core/TerrainHeightField.js` directly, never
+`renderer.terrainHeightAt()` — proving the pure function was always the
+real shared authority, and the renderer was always just its first
+adapter. This is why `AvatarTerrainConstraint` has no Three.js dependency
+and no Renderer collaborator at all: a movement constraint that could
+only be evaluated by asking a WebGL renderer "what is the ground here"
+would have quietly made rendering a prerequisite for movement, exactly
+backwards from how every other domain computation in this codebase stays
+independent of how (or whether) it is ever drawn. Any FUTURE consumer —
+physics, AI pathing, a minimap, a server-side simulation with no renderer
+at all — reaches the same one function the same way, never through
+whatever happens to be drawing pixels this millisecond.
+
+### Terrain Walkability Is A Movement Constraint, Never A Physics Slope (0.2.77)
+
+`core/TerrainWalkability.js#isWalkableSlope()` answers exactly one
+question — is this candidate horizontal step's slope within a walkable
+limit — and nothing else. There is no sliding along a rejected slope, no
+downhill acceleration, no force, no momentum carried from one tick to the
+next because of terrain. A blocked step is simply not taken; the avatar
+stays exactly where it already stood (Y still passes through from the
+kinematic result, so a jump or fall already in progress is never
+cancelled by a horizontal rejection — see `application/
+AvatarTerrainConstraint.js#apply()`'s own header). This mirrors
+`docs/Principles.md`'s own "Movement Is Kinematic, Not Physically
+Simulated (0.2.36)" and extends 0.2.42's "Collision Is A Constraint
+Applied To Movement, Never Part Of The Movement Simulation Itself" one
+step further: where 0.2.42 constrains movement against discrete obstacle
+geometry (bricks), 0.2.77 constrains it against a continuous height
+field, using the identical shape — a pure `{ position, blocked }` result
+consulted by `application/AvatarMovementController.js` exactly the way
+`{ position, collided }` already was, applied second, on top of whatever
+building collision already resolved. Deliberately NOT attempted: physical
+sliding along a slope's contour, downhill momentum, terrain deformation,
+or any other physics-engine concept the design doc explicitly ruled out —
+see docs/Roadmap.md, 0.2.77's own "Deliberately not in 0.2.77."
+
+### Terrain Requires No Streaming Concept; Collision Does (0.2.77)
+
+`application/AvatarMovementConstraint.js` (0.2.42) exists largely to
+answer "which obstacles are currently loaded near the avatar" — a real
+question, because brick geometry only exists in a replica's memory once
+some document has actually streamed in. `application/
+AvatarTerrainConstraint.js` (0.2.77) has no equivalent question to
+answer: `core/TerrainHeightField.js#terrainHeightAt(seed, x, z)` is a
+pure function of its own arguments, computable for ANY coordinate whether
+or not anything is "loaded" there at all — see `core/
+TerrainHeightField.js`'s own header. This is why `AvatarTerrainConstraint`
+takes no `loadedDocuments`, no `getWorldPosition`, and no query radius: it
+needs nothing from `WorldNavigationSession`'s own streaming state, and
+`WorldNavigationSession._buildAvatarTerrainConstraint()` builds one
+unconditionally, with zero session-specific wiring, unlike its
+`_buildAvatarMovementConstraint()` neighbor. A local avatar's terrain
+walkability is therefore never bounded by "what this replica happened to
+stream in" the way its building collision explicitly is (see "The Local
+Avatar Is Constrained By Collision Geometry Currently Available To This
+Replica, Never By The Entire World," 0.2.42) — terrain is everywhere,
+always, by construction.
