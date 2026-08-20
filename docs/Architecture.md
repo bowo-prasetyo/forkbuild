@@ -8384,3 +8384,138 @@ still doesn't require a wall behind it — placement stays the single
 real, textured, or bevelled materials — every new factory is still a flat
 `MeshStandardMaterial` color, matching `renderer/ThreeBrickFactory.js`'s
 own "still placeholder shapes" posture since 0.1.5.
+
+### Forkable Structure Library (0.2.81)
+
+0.2.80 answered "what can a person actually place?"; 0.2.81 answers the
+question it deliberately deferred: "how does a person start from
+something already assembled, without that something being a different
+KIND of thing than what they end up editing?" The design conversation's
+own refinement, made before any code existed, is the entire architectural
+spine of this milestone: **a structure should be a normal ForkBuild
+artifact that happens to be reusable as a template.** Not a library-side
+special case, not a runtime-copy mechanism, not a second content model —
+the conceptual flow is `BrickDefinitions -> Brick instances -> Structure
+-> Library Structure -> FORK -> User-owned Structure -> Edit freely`,
+where every arrow after "Library Structure" lands on exactly the same
+kind of object (a Document) every other ForkBuild artifact already is.
+
+**`core/Structure.js` is pure data, one rung up from `core/
+BrickDefinition.js`.** `{ id, name, category, tags, description, bricks
+}` — `bricks` is a flat array of ordinary `core/Brick.js` instances,
+positioned in the Structure's own local space, exactly the way a
+`Building`'s bricks already are. There is deliberately no fourth stored
+field for dimensions/bounds: `core/SpatialBounds.js` gains
+`fromBricks(bricks, registry)`, and its existing `fromWorld(world,
+registry)` is refactored down to two lines — flatten every Building's
+bricks, then call `fromBricks()` — so a Structure's bounds are computed
+the IDENTICAL way a World's always were, never a second, potentially
+stale, cached number. `core/StructureRegistry.js` is `core/
+BrickRegistry.js`'s own `register()/get()/has()/getAll()/
+getByCategory()/search()` contract, byte-for-byte, aimed at Structures
+instead of BrickDefinitions — `application/CreateStructureRegistryUseCase.js`
+mirrors `application/CreateBrickRegistryUseCase.js` line for line.
+
+**`core/library/VillageLibrary.js` is the first, deliberately curated
+Structure library — six structures, each proving a different corner of
+0.2.80's expanded vocabulary**: House (`wall_1x3`/`slab_4x4`/`roof_hip`/
+`door`/`window_large`/`window_small`, plus a `stair` entry step and a
+`cube` chimney), Barn (`block_2x2`/`beam`/`roof_hip`), Well
+(`cube`/`column`/`arch`), Market (`column`/`beam`/`roof_hip`/`trim`),
+Mill (`block_2x2`/`roof_hip`/`window_small`), and Bridge
+(`slab_4x4`/`beam`/`arch`). Every brick any of the six places is one of
+`core/library/CoreLibrary.js`'s 15 ORDINARY definitions — nothing here
+registers a new `definitionId`, nothing here adds a mesh factory, and
+`tests/ForkableStructureLibrary.test.js`'s Section A asserts this
+directly (every `brick.definitionId` a Village structure uses resolves
+in the live `BrickRegistry`), not merely by construction. See
+docs/Principles.md, "A Structure Is The Next Rung On The Brick Ladder,
+Not An Escape From It."
+
+**`application/ForkStructureUseCase.js` is deliberately the smallest
+version of what `application/ForkPublishedWorldUseCase.js` already does
+one rung up, for a whole published World.** A built-in library Structure
+is local, static data — not a Publication, no snapshot, no signature to
+verify — so this use case goes straight from `Structure` to `Document`:
+build a fresh `World`/`Building`, place a BRAND NEW `Brick` for every
+one of the source Structure's bricks (same `definitionId`/`position`/
+`rotation`, a freshly minted `id` — never the library's own `Brick`
+object), and wrap it in a `Document` whose metadata carries the
+Structure's own name/description as title/description and a new field,
+`parentStructureId`. `core/DocumentMetadata.js` gains that field
+additively, independent of the existing `parentDocumentId` — a fork of
+a published World and a fork of a library Structure are two different
+provenance questions, recorded in two different fields, never conflated.
+Because every Brick in a fork is a fresh instance, a Structure's own
+bricks are structurally unreachable from anywhere a fork's edits could
+touch them — not a convention callers must respect, an invariant the
+object graph itself enforces. See docs/Principles.md, "Forking A
+Structure Records Provenance, Never A Live Dependency."
+
+**`EditorSession.forkStructure(structure)` is the entire integration
+surface, and it is three lines.** Fork via `ForkStructureUseCase`, then
+call `this.openDocument(forkedDocument)` — the SAME method Load and
+World View's own "Fork Published World" already call. There is no
+`StructureBuilder`, `StructureEngine`, `StructureRuntime`, or
+`StructureCompiler` — forking a structure returns the user to the
+existing brick editor, with the existing placement, selection,
+transform, undo/redo, and Save, because a forked Structure IS an
+ordinary Document the moment `ForkStructureUseCase` finishes running.
+`ui/components/StructureLibraryPanel.js` (new) lists every registered
+Structure with a Fork button, sitting in the Editor sidebar next to the
+existing Brick Palette — deliberately dumb, no core/ or renderer/
+imports, mirroring `ui/components/BrickPalette.js`'s own shape one rung
+up, minus BrickPalette's active-selection subscription (a Structure
+library's contents don't change at runtime any more than a brick
+library's definitions do). `DocumentInfoPanel` grows one more
+conditional row, "Forked from Structure," reading
+`document.metadata.parentStructureId`, styled and gated exactly like the
+existing "Forked from" row for `parentDocumentId`.
+
+World placement is deliberately untouched: `ForkStructureUseCase` never
+creates a `WorldPlacement` — forking is a content operation, placing is
+a spatial operation, the identical separation
+`ForkPublishedWorldUseCase` already draws for published worlds. Nothing
+in the Structure/Document data model prevents the SAME forked Document
+from eventually being placed more than once (a `WorldPlacement` already
+only ever references a `publicationId`, never owns content) — this
+milestone simply doesn't exercise that, matching the design
+conversation's own "don't implement multiple placements yet, but the
+data model shouldn't accidentally prohibit it."
+
+The flagship test (`tests/ForkableStructureLibrary.test.js`) runs the
+design conversation's own scripted scenario end to end: load Village
+House from the registry, verify its bricks, fork it, confirm a fresh
+document identity with identical initial geometry, modify the fork (move
+a brick, delete a brick, rename the document), save through
+`SaveDocumentUseCase`, reload through `LoadDocumentUseCase`, confirm the
+fork survives exactly as modified, confirm Village House's own
+`toJSON()` is still byte-for-byte identical to a snapshot taken before
+any fork existed, and confirm a SECOND, independent fork taken after the
+first one's edits gets the Structure's pristine original content —
+proving provenance without live dependency directly, not merely by
+absence of a wired-up mechanism. Five more sections cover registry
+contents, `Structure`'s own serialization purity, `ForkStructureUseCase`'s
+identity guarantees in isolation, `EditorSession.forkStructure()`'s
+delegation (`openDocument()` stubbed so the test proves the WIRING
+without spinning up a live Three.js render session), and all six Village
+structures rendering through the completely unmodified `BrickRenderer`/
+`ThreeBrickFactory` pipeline.
+
+Deliberately not in 0.2.81: community or published structure libraries,
+or any decentralized discovery for them (the design conversation's own
+explicit deferral — establish built-in-library-to-fork first, design
+community libraries once that foundation is proven); template
+inheritance of any kind (`Village House -> inherits -> Alice House`) —
+every fork is a new, independent artifact whose parent is recorded
+provenance, never a live relationship; multiple `WorldPlacement`s of one
+forked Structure's Document (the data model allows it, nothing here
+tests it); non-box collision or brick-specific placement rules for the
+Village structures' own bricks (unchanged since 0.2.80); grouping the
+Structure Library panel by category (`StructureRegistry#getByCategory()`
+exists and is tested; a `groupByCategory()` doesn't, matching
+`BrickRegistry`'s own pre-0.2.80 shape — six structures in one library
+don't yet need it); and any structure-library entry point from World
+View — 0.2.81 deliberately stays inside the Editor's existing New/Load
+surface rather than adding a second fork entry point to World View's
+already-larger navigation/placement session.

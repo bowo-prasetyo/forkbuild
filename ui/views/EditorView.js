@@ -1,6 +1,8 @@
 import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../../application/CreateStructureRegistryUseCase.js';
+import { ForkStructureUseCase } from '../../application/ForkStructureUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
 import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
 import { CreateDocumentManagerUseCase } from '../../application/CreateDocumentManagerUseCase.js';
@@ -27,6 +29,7 @@ import { UpdateDocumentMetadataUseCase } from '../../application/UpdateDocumentM
 import { computeLifecycleStatus, describeLifecycleStatus } from '../../application/DocumentLifecycleStatus.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
+import StructureLibraryPanel from '../components/StructureLibraryPanel.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
@@ -39,7 +42,7 @@ const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, Sidebar, EditingSidebar, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog },
+    components: { Toolbar, Sidebar, EditingSidebar, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog, StructureLibraryPanel },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -68,6 +71,7 @@ export default {
                     </div>
                     <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
                     <Sidebar :palette-use-case="paletteUseCase" />
+                    <StructureLibraryPanel :structures="structures" @fork="forkStructure" />
                     <EditingSidebar
                         :registry="actionRegistry"
                         :get-context="getActionContext"
@@ -103,6 +107,8 @@ export default {
         const viewport = ref(null);
 
         const registry = new CreateBrickRegistryUseCase().execute();
+        const structureRegistry = new CreateStructureRegistryUseCase().execute();
+        const forkStructureUseCase = new ForkStructureUseCase();
         const editorContext = new CreateEditorContextUseCase().execute();
         const selectionUseCase = new SelectionUseCase(editorContext);
         const paletteUseCase = new PaletteUseCase(registry, editorContext);
@@ -129,8 +135,21 @@ export default {
 		    loadDocumentUseCase,
 		    identityProvider,
 		    copySelectionUseCase,  // Pass use case
-		    pasteClipboardUseCase  // Pass use case
+		    pasteClipboardUseCase,  // Pass use case
+		    forkStructureUseCase
 		});
+
+		// 0.2.81 — Forkable Structure Library. The registry's contents
+		// never change at runtime (same reasoning as paletteUseCase's own
+		// brick definitions), so this is read once, not subscribed to.
+		const structures = ref(structureRegistry.getAll());
+
+		function forkStructure(structure) {
+		    const forked = editorSession.forkStructure(structure);
+		    if (forked) {
+		        feedback.show(`Forked "${structure.name}" — now editing your own copy`);
+		    }
+		}
 
         const activeTool = ref(editorContext.tool.activeTool);
         const selectionCount = ref(0);
@@ -196,6 +215,7 @@ export default {
                 author: document.metadata.author,
                 license: document.metadata.license,
                 parentDocumentId: document.metadata.parentDocumentId,
+                parentStructureId: document.metadata.parentStructureId,
                 status,
                 statusLabel: describeLifecycleStatus(status, { dirty: state.dirty }),
                 dirty: state.dirty,
@@ -370,6 +390,8 @@ export default {
             loadDocumentUseCase,
             editorSession,
             publishDocumentUseCase,
+            structures,
+            forkStructure,
             activeTool,
             selectionCount,
             actionRegistry,

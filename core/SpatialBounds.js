@@ -58,27 +58,42 @@ export class SpatialBounds {
 
     // Calculates the local AABB from a World's bricks using definition
     // dimensions from the registry. Returns a default 1x1x1 bounds if
-    // the world is empty.
+    // the world is empty. A thin wrapper over fromBricks() (0.2.81) —
+    // a World's bounds have always just been "every brick in every
+    // building," flattened.
     static fromWorld(world, registry) {
+        const bricks = [];
+        for (const building of world.getBuildings()) {
+            bricks.push(...building.getBricks());
+        }
+        return SpatialBounds.fromBricks(bricks, registry);
+    }
+
+    // 0.2.81: extracted from fromWorld() so anything that owns a flat
+    // list of Bricks in one local coordinate space — not just a World's
+    // Buildings — can get the same AABB math. core/Structure.js is the
+    // first other caller: a Structure's "dimensions" are deliberately
+    // never stored (see core/Structure.js's own header), computed fresh
+    // here instead, the same way a World's bounds always were. Returns
+    // a default 1x1x1 bounds if `bricks` is empty.
+    static fromBricks(bricks, registry) {
         let minX = Infinity, minY = Infinity, minZ = Infinity;
         let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
         let hasBricks = false;
 
-        for (const building of world.getBuildings()) {
-            for (const brick of building.getBricks()) {
-                hasBricks = true;
-                const def = registry ? registry.get(brick.definitionId) : null;
-                const w = def ? def.width : 1;
-                const h = def ? def.height : 1;
-                const d = def ? def.depth : 1;
+        for (const brick of bricks) {
+            hasBricks = true;
+            const def = registry ? registry.get(brick.definitionId) : null;
+            const w = def ? def.width : 1;
+            const h = def ? def.height : 1;
+            const d = def ? def.depth : 1;
 
-                minX = Math.min(minX, brick.position.x - w / 2);
-                maxX = Math.max(maxX, brick.position.x + w / 2);
-                minY = Math.min(minY, brick.position.y - h / 2);
-                maxY = Math.max(maxY, brick.position.y + h / 2);
-                minZ = Math.min(minZ, brick.position.z - d / 2);
-                maxZ = Math.max(maxZ, brick.position.z + d / 2);
-            }
+            minX = Math.min(minX, brick.position.x - w / 2);
+            maxX = Math.max(maxX, brick.position.x + w / 2);
+            minY = Math.min(minY, brick.position.y - h / 2);
+            maxY = Math.max(maxY, brick.position.y + h / 2);
+            minZ = Math.min(minZ, brick.position.z - d / 2);
+            maxZ = Math.max(maxZ, brick.position.z + d / 2);
         }
 
         if (!hasBricks) {

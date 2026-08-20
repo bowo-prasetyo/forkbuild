@@ -17,6 +17,9 @@ transform bricks, and how to organize your build with groups.
 │ Brick │ │
 │ Palette │ │
 │ │ │
+│ Village │ │
+│ Library │ │
+│ │ │
 │ Groups │ │
 └──────────────┴─────────────────────────────────────────────┘
 </pre>
@@ -26,6 +29,12 @@ transform bricks, and how to organize your build with groups.
 - **Toolbar** — save, publish, start a new creation, and reopen recent ones.
 - **Tools** — switch between **Select** (`1`) and **Place** (`2`).
 - **Brick Palette** — the bricks you can build with.
+- **Village Library** — six ready-made structures (House, Barn, Well,
+  Market, Mill, Bridge). Click **Fork** on one to start a brand-new
+  creation of your own, already containing that structure — the exact
+  same bricks, editable with every tool in this guide. Forking never
+  changes the library's own copy: fork House ten times and each one is
+  its own independent creation from the moment you click Fork.
 - **Groups** — organize bricks into named collections.
 
 > **Tip:** Press `Ctrl/Cmd+K` anywhere to open the **Command Palette** — a
