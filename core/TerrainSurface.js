@@ -63,8 +63,12 @@ const GRASS_HIGHLAND = Object.freeze({ r: 0.67, g: 0.75, b: 0.58 });
 // absolute elevation — if core/TerrainHeightField.js's OCTAVES amplitude
 // ever changes, these scale with it automatically instead of silently
 // drifting out of the field's actual range.
-const WATER_LEVEL = -TERRAIN_HEIGHT_BOUND * 0.5;
-const HIGHLAND_ELEVATION = TERRAIN_HEIGHT_BOUND * 0.5;
+// Exported (0.2.88) so core/TerrainEcology.js can classify BEACH/HIGHLAND
+// zones against the EXACT same water level and highland elevation this
+// file already uses for WATER/GRASS-highland-tint — one shared threshold,
+// never two independently-tuned copies that could silently drift apart.
+export const WATER_LEVEL = -TERRAIN_HEIGHT_BOUND * 0.5;
+export const HIGHLAND_ELEVATION = TERRAIN_HEIGHT_BOUND * 0.5;
 
 // Slope is measured exactly the way core/TerrainWalkability.js measures
 // a movement step — rise over a small fixed horizontal run — sampled in
