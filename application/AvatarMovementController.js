@@ -34,12 +34,24 @@ import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 // This class still owns "when do we simulate a tick and publish
 // presence"; it never touches a Brick, a Document, or a WorldPlacement
 // itself.
+//
+// 0.2.77 — `terrainConstraint` (optional, same posture) sits right
+// after `movementConstraint` in the same pipeline: given where the
+// avatar IS and where it would go AFTER building collision already
+// resolved, it returns whether that horizontal step is walkable —
+// see application/AvatarTerrainConstraint.js. Applied second,
+// deliberately: building collision decides what geometry blocks
+// passage at all, terrain walkability decides whether the remaining
+// candidate step is too steep to climb. Same reasoning that keeps
+// `movementConstraint` optional applies here — a controller built
+// without one behaves exactly as it did before this milestone.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
-    constructor(avatarPresenceSession, movementConstraint = null) {
+    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._movementConstraint = movementConstraint;
+        this._terrainConstraint = terrainConstraint;
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
@@ -48,6 +60,10 @@ export class AvatarMovementController {
         // AvatarPresence itself (see docs/Principles.md, "Collided Is
         // Movement Information, Not An Animation Vocabulary").
         this._collided = false;
+        // 0.2.77 — same transient, never-part-of-AvatarPresence
+        // posture as `_collided` above, for the terrain-slope
+        // equivalent.
+        this._blockedBySlope = false;
     }
 
     // Returns true when `key` is one this controller understands (so
@@ -118,6 +134,17 @@ export class AvatarMovementController {
             this._collided = constrained.collided;
         }
 
+        // 0.2.77 — applied AFTER building collision, on whatever
+        // position collision already resolved to: building geometry
+        // decides what blocks passage at all, terrain slope decides
+        // whether the remaining candidate step is too steep to climb.
+        this._blockedBySlope = false;
+        if (this._terrainConstraint) {
+            const terrainResult = this._terrainConstraint.apply(currentPosition, finalPosition);
+            finalPosition = terrainResult.position;
+            this._blockedBySlope = terrainResult.blocked;
+        }
+
         const positionChanged = !samePosition(finalPosition, current.position);
         const rotationChanged = Math.abs(result.rotationY - currentRotationY) > EPSILON;
         const animationChanged = result.animation !== current.animation;
@@ -139,6 +166,16 @@ export class AvatarMovementController {
     // other internal logic reads.
     isCollided() {
         return this._collided;
+    }
+
+    // 0.2.77 — whether the MOST RECENT tick's desired movement was
+    // altered because the candidate step's slope exceeded what's
+    // walkable. Same posture as isCollided() above: transient,
+    // recomputed fresh every tick, never persisted, never part of
+    // AvatarPresence. A debug/UI surface, not something any other
+    // internal logic reads.
+    isBlockedBySlope() {
+        return this._blockedBySlope;
     }
 
     // 0.2.44 — whether the player is CURRENTLY holding any directional

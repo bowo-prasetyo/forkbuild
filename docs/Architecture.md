@@ -7890,3 +7890,149 @@ the design doc's own list and ruled out specifically because ground
 continuity and terrain generation were kept deliberately separate from
 turning a rendering fix into a large procedural-world project, not
 because of scheduling.
+
+### Terrain-Aware Avatar Grounding & Movement (0.2.77)
+
+0.2.76 gave World View a real ground; 0.2.77 asks the one question that
+milestone deliberately left open: how does the avatar's own MOVEMENT
+model relate to that ground? The investigation this milestone starts
+with, before writing any code, is what `AvatarPresence.position.y`
+actually means — and 0.2.76's own docs/Principles.md entry, "Terrain
+Elevation Is A Rendering-Time Offset, Never A Presence Or Placement
+Fact," already answers it: `y = 0` is ground level, plus whatever
+transient offset a jump adds; terrain is summed in ONLY at the moment a
+mesh/visual is actually drawn, by the renderer, never written back
+anywhere a domain object could read it. That single fact reframes the
+whole milestone: there is no Y-coordinate divergence bug to fix — the
+avatar's RENDERED position already tracks terrain continuously, because
+`application/RenderWorldViewUseCase.js#withGroundElevation()` recomputes
+the offset fresh every frame from whatever X/Z the avatar currently
+occupies. The real, narrower gap is that nothing in the MOVEMENT pipeline
+had ever asked "is this candidate step too steep to climb" — an avatar
+could walk up a rendered cliff face exactly as freely as it could cross
+flat ground, because terrain was never consulted before a step was
+taken, only after, for drawing.
+
+**`core/TerrainWalkability.js` is pure slope geometry, with no idea
+terrain, a seed, or a world coordinate even exist.** `isWalkableSlope
+(fromHeight, toHeight, horizontalDistance, maxSlope)` takes exactly the
+three numbers it needs and nothing more — the same "core deals with
+geometry/math, application supplies the data" split `core/
+AvatarCollision.js` already established for building collision (0.2.42),
+applied one level further out. This is what lets the exact
+walkable/unwalkable boundary be proven with synthetic heights in
+`tests/AvatarTerrainWalkability.test.js`'s Section A, rather than
+requiring a search through real generated terrain for a coordinate
+steep enough to exercise it — real terrain, by 0.2.76's own design
+("reads as geography, never spiky noise"), essentially never gets that
+steep. `DEFAULT_MAX_WALKABLE_SLOPE` (0.75, roughly 37 degrees) is a
+single shared constant, the same "one hardcoded default, not a
+per-World knob" posture `DEFAULT_WORLD_SEED` already established.
+
+**`application/AvatarTerrainConstraint.js` is the application-layer
+adapter, mirroring `application/AvatarMovementConstraint.js`'s own
+split exactly.** It supplies real world coordinates and the real
+terrain field to `core/TerrainWalkability.js`'s pure math — reading
+`core/TerrainHeightField.js#terrainHeightAt(seed, x, z)` DIRECTLY,
+never through `renderer.terrainHeightAt()`. That renderer method has
+always been a two-line pass-through to the same pure function (see
+0.2.76's own architecture entry above); 0.2.77 simply calls the
+function it was already wrapping, which is what proves the pure
+function — not the renderer — was always the real shared authority. See
+docs/Principles.md, "The Terrain Height Field Is The Shared Authority;
+The Renderer Is An Adapter, Not The Owner." A consequence worth stating
+plainly: `AvatarTerrainConstraint` has no Three.js dependency and no
+Renderer collaborator at all, so it stays exactly as headlessly
+testable as `AvatarMovementConstraint` already was, and works
+identically in a context with no WebGL scene whatsoever. `apply
+(position, desiredPosition)` returns `{ position, blocked }` — the
+identical shape `AvatarMovementConstraint.apply()` already returns as
+`{ position, collided }` — and Y always passes through from
+`desiredPosition` unchanged, blocked or not: a horizontal rejection must
+never also cancel a jump or fall already in progress. `heightAt` is an
+injectable override (defaulting to the real terrain field) purely so
+tests can substitute a deliberately engineered cliff.
+
+**Unlike building collision, terrain needs no "currently loaded"
+streaming concept at all.** `application/AvatarMovementConstraint.js`
+exists largely to answer "which obstacles are actually streamed into
+this replica's memory right now" — a real question, since brick
+geometry only exists once some document has streamed in. `core/
+TerrainHeightField.js#terrainHeightAt()` is a pure function of `(seed,
+x, z)`, computable for ANY coordinate whether or not anything is loaded
+there. `AvatarTerrainConstraint`'s constructor therefore takes no
+`loadedDocuments`, no `getWorldPosition`, and no query radius, and
+`WorldNavigationSession._buildAvatarTerrainConstraint()` builds one with
+zero session-specific wiring — `new AvatarTerrainConstraint()`, full
+stop — unlike its `_buildAvatarMovementConstraint()` neighbor, which
+threads through `_loadedDocuments`/`_getWorldPosition`/`_registry`. See
+docs/Principles.md, "Terrain Requires No Streaming Concept; Collision
+Does."
+
+**`application/AvatarMovementController.js` gains one new optional
+collaborator, `terrainConstraint`, applied SECOND — after building
+collision, on top of whatever position collision already resolved to.**
+The pipeline reads, in order: pure kinematics
+(`core/AvatarMovementSimulation.js`, untouched) produces a proposed
+position; `movementConstraint` (if wired) resolves it against loaded
+building geometry; `terrainConstraint` (if wired) then evaluates the
+SLOPE of that already-collision-resolved step and either lets it through
+or reverts X/Z back to the avatar's current position. This ordering is
+deliberate and directly tested (`tests/AvatarTerrainWalkability.test.js`,
+Section C): building geometry decides what blocks passage at all,
+terrain slope decides whether the remaining candidate step is too steep
+— never the other way around, and never evaluated against the RAW,
+pre-collision kinematic proposal. `isBlockedBySlope()` joins
+`isCollided()` as transient, per-tick movement information — recomputed
+fresh every tick, never sticky, never appearing on `AvatarPresence`'s own
+JSON shape, the identical "movement information is not presence" or
+animation-vocabulary boundary docs/Principles.md already drew for
+collision in 0.2.42 ("Collided Is Movement Information, Not An Animation
+Vocabulary").
+
+**No physical sliding, no downhill momentum — a blocked step is simply
+not taken.** Where building collision performs an axis-separated SWEEP
+that lets the avatar slide along a wall's face, `AvatarTerrainConstraint`
+does the deliberately simpler thing the design doc asked for: the WHOLE
+candidate horizontal step is rejected outright when its slope exceeds the
+limit, never partially resolved or redirected along the slope's contour.
+See docs/Principles.md, "Terrain Walkability Is A Movement Constraint,
+Never A Physics Slope." This keeps 0.2.77 exactly what it set out to be —
+terrain-AWARE locomotion, not a physics engine — matching the design
+doc's own explicit exclusion list: no rigid-body physics, no gravity
+simulation beyond 0.2.36's existing jump/fall kinematics, no vehicles, no
+terrain deformation, no physics networking.
+
+The flagship test (`tests/AvatarTerrainWalkability.test.js`) proves the
+design doc's own scripted scenario end to end: the avatar starts grounded
+at the origin; a long, meandering walk (holding forward, turning
+periodically) across REAL default-seed generated terrain never triggers
+a slope block and never produces a discontinuous jump in position — this
+world's geography is walkable by design; facing a deliberately engineered
+cliff (the same synthetic-height injection Sections B-D already use, since
+real terrain has no reliably-steep-enough coordinate to test against) and
+holding forward is rejected outright, the avatar never crossing the
+unwalkable boundary; `AvatarPresence`'s own JSON shape stays exactly what
+0.2.33/0.2.37 established, `AvatarProfile` and every document/storage key
+remain byte-identical throughout; and two completely independent
+`AvatarTerrainConstraint` instances, sharing only the same default world
+seed and coordinating nothing between them, compute the byte-identical
+walkability decision for the same step — 0.2.76's own "same seed + same
+coordinates -> same terrain" property, restated for a movement DECISION
+rather than a raw elevation sample, with no terrain synchronization ever
+required between replicas.
+
+Deliberately not in 0.2.77, matching the design doc's own list: rigid-body
+physics, gravity simulation beyond what 0.2.36 already has, vehicles,
+physical sliding/downhill momentum along a rejected slope, terrain
+deformation, and physics networking of any kind. Also out of scope:
+`AvatarPresence`'s wire shape, trust, or replay handling (untouched — a
+terrain block is purely local movement information, exactly like
+`isCollided()`); building placement or building/terrain interaction
+(0.2.76's whole-building rigid lift is exactly as it was — "what happens
+when a building spans a steep slope" remains its own, unstarted
+question); a per-`World`/per-`Document` terrain seed or walkable-slope
+limit; and `renderer/PickingService.js#pickGroundPosition()`, which still
+raycasts the literal `Y = 0` plane for brick placement/picking, completely
+unmodified — brick placement riding the visual terrain surface is a
+separate, unstarted question this milestone does not attempt to answer.
