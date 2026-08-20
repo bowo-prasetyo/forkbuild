@@ -11,5 +11,16 @@ export const DomainEvent = Object.freeze({
     // concern exactly like bricks and buildings.
     GROUP_ADDED: 'GroupAdded',
     GROUP_REMOVED: 'GroupRemoved',
-    GROUP_UPDATED: 'GroupUpdated'
+    GROUP_UPDATED: 'GroupUpdated',
+    // 0.2.90 — a StructurePlacement is document state exactly like a
+    // Building or a Group, so its lifecycle publishes the same way.
+    // 0.2.91 — World Instance Editing & Placement Management adds
+    // STRUCTURE_PLACEMENT_UPDATED: an already-placed instance can now be
+    // moved/rotated in place (core/World.js#updateStructurePlacement()),
+    // exactly the BRICK_UPDATED precedent for a Brick's own
+    // position/rotation — never a remove+re-add, so the placement's id
+    // (and anything referencing it, like a selection) survives the edit.
+    STRUCTURE_PLACEMENT_ADDED: 'StructurePlacementAdded',
+    STRUCTURE_PLACEMENT_REMOVED: 'StructurePlacementRemoved',
+    STRUCTURE_PLACEMENT_UPDATED: 'StructurePlacementUpdated'
 });

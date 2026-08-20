@@ -6,6 +6,18 @@
 // Shift-click and additive marquee (union — adding an already-selected
 // brick changes nothing). Both are session state changes; neither is
 // ever a history entry.
+//
+// 0.2.91 — World Instance Editing & Placement Management extends the
+// item shape with a second kind: { type: 'structure-placement',
+// placementId }, alongside the existing { type: 'brick', brickId,
+// buildingId }. This is deliberately the SAME selection abstraction, not
+// a parallel "structure selection system" — per the design conversation:
+// "Selecting an instance selects its spatial reference, not its
+// constituent content." A placement selection is always exactly one
+// item: selecting a placement never mixes with a brick selection, the
+// same way a placed structure's individual bricks are never individually
+// pickable (renderer/WorldRenderer.js's own 0.2.90 header) — see
+// isStructurePlacementSelection/selectedPlacementId below.
 export class SelectionState {
     constructor({ brickId = null, buildingId = null, items = null } = {}) {
         const rawItems = items
@@ -14,7 +26,9 @@ export class SelectionState {
         const seen = new Set();
         this._items = [];
         for (const item of rawItems) {
-            const key = `${item.buildingId}:${item.brickId}`;
+            const key = item.type === 'structure-placement'
+                ? `structure-placement:${item.placementId}`
+                : `${item.buildingId}:${item.brickId}`;
             if (seen.has(key)) {
                 continue;
             }
@@ -30,6 +44,19 @@ export class SelectionState {
     get isEmpty() { return this._items.length === 0; }
     get isSingle() { return this._items.length === 1; }
     get brickIds() { return this._items.filter((item) => item.type === 'brick').map((item) => item.brickId); }
+
+    // 0.2.91 — true only for a single, whole-instance selection. A
+    // placement selection is deliberately never part of a mixed or
+    // multi-item selection (see the class header above), so checking
+    // isSingle here is the whole rule, not a simplification of a richer
+    // one.
+    get isStructurePlacementSelection() {
+        return this.isSingle && this._items[0].type === 'structure-placement';
+    }
+
+    get selectedPlacementId() {
+        return this.isStructurePlacementSelection ? this._items[0].placementId : null;
+    }
 
     toggle(brickIdOrObj, buildingId) {
         let bId, bldId;

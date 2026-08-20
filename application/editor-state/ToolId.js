@@ -7,5 +7,12 @@
 // the two must not collide on the same identifier.
 export const ToolId = Object.freeze({
     SELECT: 'select',
-    PLACE: 'place'
+    PLACE: 'place',
+    // 0.2.90 — a separate tool from PLACE rather than a mode switch on
+    // PlacementTool itself: placing a Document reference (a whole,
+    // possibly-multi-brick structure) and placing one Brick are
+    // different enough operations (different preview shape, different
+    // command, different collision check) to earn their own small,
+    // focused Tool class — see application/tools/StructurePlacementTool.js.
+    PLACE_STRUCTURE: 'place-structure'
 });

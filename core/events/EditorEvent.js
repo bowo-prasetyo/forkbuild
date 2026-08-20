@@ -19,5 +19,9 @@ export const EditorEvent = Object.freeze({
     ACTIVE_BRICK_CHANGED: 'ActiveBrickChanged',
     CAMERA_STATE_CHANGED: 'CameraStateChanged',
     SETTINGS_CHANGED: 'SettingsChanged',
-    PREVIEW_CHANGED: 'PreviewChanged'
+    PREVIEW_CHANGED: 'PreviewChanged',
+    // 0.2.90 — Structure Placement & World Instances. Mirror the brick
+    // palette's own ACTIVE_BRICK_CHANGED/PREVIEW_CHANGED pair one rung up.
+    ACTIVE_STRUCTURE_CHANGED: 'ActiveStructureChanged',
+    STRUCTURE_PREVIEW_CHANGED: 'StructurePreviewChanged'
 });

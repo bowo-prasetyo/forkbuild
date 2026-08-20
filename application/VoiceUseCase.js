@@ -8,6 +8,7 @@ import { VoiceMediaSignalKind, toVoiceMediaSignal, isValidVoiceMediaSignal } fro
 import { LocalAudioTrackProvider } from './LocalAudioTrackProvider.js';
 import { createId } from '../core/createId.js';
 import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
+import { findLiveConnectedPeers } from './ConnectedIdentityPeers.js';
 
 const CALL_STATE_EVENT = 'VoiceCallStateChanged';
 const INCOMING_CALL_EVENT = 'VoiceIncomingCall';
@@ -261,6 +262,108 @@ const DEFAULT_RINGING_TIMEOUT_MS = 45000;
 // milestone's — see docs/Roadmap.md, 0.2.79, "Deliberately not in 0.2.79."
 // `startCall()` still targets exactly one, explicitly chosen
 // `connectedPeer`, unchanged.
+//
+// ---- 0.2.86 — Multi-Device Voice Ringing -------------------------------
+//
+// "When Bob calls Alice's identity, how should Alice's authorized devices
+// participate in ringing?" `startCallToIdentity()` below is the new
+// entrypoint that answers this — Bob addresses the call SOCIALLY, to
+// Alice's identity, and this class fans it out to every device-level
+// candidate connection currently reachable, exactly the way 0.2.85's own
+// `application/PeerPresenceUseCase.js` already discovers "every live,
+// authorized connection of this identity" — reused here verbatim via the
+// shared `application/ConnectedIdentityPeers.js#findLiveConnectedPeers()`
+// rather than re-derived, per this class's own design doc: "VoiceUseCase
+// should not start duplicating ConnectedPeerRegistry + resolveSocialIdentity()
+// + authorization checks — it should consume a clean existing
+// abstraction."
+//
+// Do Not Create A Multi-Device VoiceSession. `_call` stays EXACTLY the
+// single record it always was — this milestone does not turn it into a
+// tree. During the fan-out window (CALLING, before any candidate has
+// answered), `call.connectedPeer` is simply `null` and `call.candidates`
+// (a Map of connectionId -> still-ringing candidate) holds the ephemeral,
+// per-connection ringing attempts instead. The INSTANT one candidate
+// accepts, `_lockCallToCandidate()` collapses that back down to the
+// ORIGINAL single-connection shape every other method in this file
+// already assumes (`call.connectedPeer` set, `call.candidates` empty) —
+// every other candidate is sent a best-effort cancellation (the SAME
+// `VoiceCallSignalType.END` a normal hangup already uses; see below on
+// why no new wire vocabulary was needed at all) and unsubscribed. From
+// that point on, an identity-targeted call is, structurally,
+// indistinguishable from a `startCall(connectedPeer)` one — media
+// negotiation, mute, device switching, and teardown are all completely
+// unaware this call ever had more than one candidate.
+//
+// First Acceptance Wins. Two candidates racing to accept is resolved by
+// whichever ACCEPT this device's own event loop processes first —
+// `_lockCallToCandidate()` is the one and only place that decision is
+// made, and it is idempotent by construction: once `call.connectedPeer`
+// is set, a SECOND accept arriving from a losing candidate is recognized
+// in `_handleAccept()` (its `remoteIdentity` no longer matches the
+// already-locked `call.remoteConnectionIdentityId`) and answered with a
+// direct cancellation, never mistaken for accepting the SAME call twice.
+//
+// One Identity, At Most One Active Call — Reusing BUSY, Never A New
+// Reason. 0.2.74 already gave BUSY a real, distinct meaning ("I
+// structurally cannot accept a second call right now"); 0.2.86 leans on
+// it again rather than inventing an identity-level variant. Each
+// candidate device still only ever answers BUSY for ITSELF (unchanged —
+// see `_handleInvite()`, still deliberately untouched by this milestone).
+// What's new is on the CALLER's side: the instant ANY one candidate
+// replies BUSY, `_handleRejectOrBusy()` treats that as authoritative for
+// the WHOLE identity — cancelling every other still-ringing candidate and
+// ending the caller's own call as BUSY — rather than waiting to hear from
+// the rest. This is a best-effort, LOCAL judgment, not a distributed
+// guarantee: an idle candidate device genuinely CAN briefly enter RINGING
+// before this device's own cancellation reaches it, precisely because
+// Alice's own devices never talk to each other directly and this
+// codebase deliberately does not introduce a cross-device voice-busy
+// broadcast to close that gap — see docs/Roadmap.md, 0.2.86, and this
+// class's own long-standing "Ringing Is Bounded By Local Policy, Never By
+// The Network" (0.2.74). A REJECT from one candidate, by contrast, is
+// scoped to that one device only — the call keeps ringing on any other
+// still-live candidate, exactly like a real phone system, and only ends
+// as REJECTED once every candidate has individually declined.
+//
+// Revocation Falls Out Of The Existing Model, No Second Mechanism Added.
+// `_handleAccept()`/`_handleRejectOrBusy()` both resolve the replying
+// connection's SOCIAL identity fresh, on every message, via the exact
+// same `_resolveSocialIdentityForRemote()` this class has used since
+// 0.2.79. If Alice revokes a still-ringing candidate's authorization
+// mid-call, that candidate's own connection stops resolving to Alice's
+// identity the moment this device's own `resolveSocialIdentity` learns of
+// the revocation — its `social.identityId` no longer equals
+// `call.peerIdentityId`, so an ACCEPT/BUSY/REJECT it sends afterward is
+// silently ignored, precisely like a message from a stranger would be.
+// No new revocation check, no new event subscription, no new store — see
+// docs/Roadmap.md, 0.2.86, "Revocation should naturally fall out of the
+// existing model."
+//
+// Disconnect Cleanup, No Resurrection On Reconnect. Each still-ringing
+// candidate carries its OWN temporary `onStateChange` subscription (see
+// `_createCallRecord()`'s `candidateConnectedPeers` branch) — losing ONE
+// candidate mid-ring (`_handleCandidateDisconnected()`) only ever removes
+// that one entry; the call itself only ends (PEER_DISCONNECTED) once
+// EVERY candidate is gone. A candidate device reconnecting afterward gets
+// an entirely NEW connection with no memory of the old call record —
+// exactly 0.2.74's own "old VoiceSession != new PeerConnection
+// incarnation" rule, unchanged and unextended by this milestone.
+//
+// No New VoiceSessionState, No New VoiceCallEndReason, No New Wire
+// Vocabulary. Every scenario above is expressed entirely through the
+// existing CALLING/RINGING/CONNECTING/ACTIVE/ENDED state machine, the
+// existing REJECTED/BUSY/TIMEOUT/PEER_DISCONNECTED/LOCAL_HANGUP/
+// REMOTE_HANGUP vocabulary, and the existing INVITE/ACCEPT/REJECT/END/BUSY
+// signals — see docs/Roadmap.md, 0.2.86, "Do not introduce a new
+// NO_DEVICE_ANSWERED state unless a real product requirement emerges."
+//
+// The Callee Side Needed Zero Changes. `_handleInvite()`, `acceptCall()`,
+// and `rejectCall()` are byte-for-byte what 0.2.73 through 0.2.79 already
+// built — a device receiving one of possibly several fanned-out INVITEs
+// (all sharing the SAME callId, minted once by the caller) has no idea
+// it's part of a fan-out at all, and needs none: it just runs its own
+// ordinary single-connection RINGING lifecycle, exactly as it always has.
 export class VoiceUseCase {
     constructor(identityProvider, {
         peerMessageBus,
@@ -498,6 +601,51 @@ export class VoiceUseCase {
         return callId;
     }
 
+    // 0.2.86 — "Alice is a whole identity, not one connection." Bob's
+    // "Call" gesture aimed at a SOCIAL identity rather than one explicitly
+    // chosen connectedPeer — see this class's own header. Discovers every
+    // currently live, currently authorized, voice-capable device of
+    // `identityId` (`_liveVoiceCandidates()`) and rings ALL of them at
+    // once, sharing one callId and one local call record for the whole
+    // identity throughout — never a `startCall()` per candidate. Resolves
+    // with the new callId once every INVITE has been sent; throws
+    // synchronously, exactly like `startCall()`'s own precondition checks,
+    // if there is currently no reachable candidate at all to ring.
+    startCallToIdentity(identityId) {
+        this._requireEligible(identityId);
+        this._requireIdle();
+        const candidates = this._liveVoiceCandidates(identityId);
+        if (candidates.length === 0) {
+            throw new Error('VoiceUseCase: no reachable device for this identity');
+        }
+
+        const callId = createId();
+        const myIdentityId = this._identityProvider.getSigningIdentity().id;
+        this._call = this._createCallRecord({
+            callId,
+            peerIdentityId: identityId,
+            candidateConnectedPeers: candidates,
+            state: VoiceSessionState.CALLING,
+            isCaller: true
+        });
+        for (const candidate of candidates) {
+            this._bus.send(candidate, this._callProtocol, toVoiceCallSignal({
+                callId, type: VoiceCallSignalType.INVITE, callerIdentity: myIdentityId, calleeIdentity: candidate.remoteIdentity.identityId
+            }));
+        }
+        return callId;
+    }
+
+    // 0.2.86 — the identity-level counterpart to `canCall()` + `supportsVoice()`
+    // combined: "can Bob place an identity-targeted call to Alice RIGHT
+    // NOW?" True iff the ordinary eligibility gate passes AND at least one
+    // of Alice's currently-live devices is reachable over a voice-capable
+    // connection. A UI gating a single "Call" button per conversation
+    // reads this instead of re-deriving `_liveVoiceCandidates()` itself.
+    canCallIdentity(identityId) {
+        return this.canCall(identityId) && this._liveVoiceCandidates(identityId).length > 0;
+    }
+
     // Bob's "Accept" gesture, in response to an onIncomingCall() event.
     // Acquires this device's own local audio track (the FIRST moment
     // 0.2.73 ever touches a microphone on the callee's side — see this
@@ -635,11 +783,11 @@ export class VoiceUseCase {
             case VoiceCallSignalType.INVITE:
                 return this._handleInvite(payload, meta, remoteIdentity, myIdentityId);
             case VoiceCallSignalType.ACCEPT:
-                return this._handleAccept(payload, remoteIdentity);
+                return this._handleAccept(payload, remoteIdentity, meta);
             case VoiceCallSignalType.REJECT:
-                return this._handleRejectOrBusy(payload, remoteIdentity, VoiceCallEndReason.REJECTED);
+                return this._handleRejectOrBusy(payload, remoteIdentity, VoiceCallEndReason.REJECTED, meta);
             case VoiceCallSignalType.BUSY:
-                return this._handleRejectOrBusy(payload, remoteIdentity, VoiceCallEndReason.BUSY);
+                return this._handleRejectOrBusy(payload, remoteIdentity, VoiceCallEndReason.BUSY, meta);
             case VoiceCallSignalType.END:
                 return this._handleEnd(payload, remoteIdentity);
             default:
@@ -682,18 +830,46 @@ export class VoiceUseCase {
         this._eventBus.publish(INCOMING_CALL_EVENT, { peerIdentityId: social.identityId, callId: payload.callId });
     }
 
-    _handleAccept(payload, remoteIdentity) {
+    _handleAccept(payload, remoteIdentity, meta) {
         // 0.2.79 — resolved-to-resolved comparison; safe and equivalent to
         // a raw comparison here since a call is bound to one unchanging
         // connection for its whole lifetime — see this class's own header.
+        // 0.2.86 — this fresh resolution is also what makes a mid-ring
+        // revocation "just work" (see this class's own header,
+        // "Revocation Falls Out Of The Existing Model"): a candidate whose
+        // authorization was just revoked no longer resolves to
+        // `call.peerIdentityId` at all, so its ACCEPT is silently ignored
+        // exactly like a stranger's would be.
         const social = this._resolveSocialIdentityForRemote(remoteIdentity);
         if (!this._call || this._call.callId !== payload.callId || !this._call.isCaller || this._call.peerIdentityId !== social.identityId) {
             return;
         }
-        if (this._call.state !== VoiceSessionState.CALLING) {
-            return;
-        }
         const call = this._call;
+        if (call.connectedPeer) {
+            // Already locked onto one connection — either an ordinary
+            // `startCall()` (locked from the start) or an identity-
+            // targeted call a PRIOR accept already won. An ACCEPT
+            // arriving now from a DIFFERENT connection is a losing
+            // candidate in the "first acceptance wins" race — see this
+            // class's own header — and gets a direct cancellation rather
+            // than being silently dropped, so it doesn't sit RINGING
+            // forever believing nobody ever answered.
+            if (call.remoteConnectionIdentityId !== remoteIdentity.identityId) {
+                this._sendEndTo(call, meta.connectedPeer, remoteIdentity.identityId);
+                return;
+            }
+            if (call.state !== VoiceSessionState.CALLING) {
+                return;
+            }
+        } else {
+            // 0.2.86 — not yet locked: an identity-targeted call's fan-out
+            // is still in progress. The FIRST accept among the still-
+            // ringing candidates wins; see `_lockCallToCandidate()`.
+            if (call.state !== VoiceSessionState.CALLING || !call.candidates || !call.candidates.has(meta.connectedPeer.connectionId)) {
+                return;
+            }
+            this._lockCallToCandidate(call, meta.connectedPeer, remoteIdentity.identityId);
+        }
         this._setCallState(call, VoiceSessionState.CONNECTING);
         // `call` is captured here, deliberately never re-read off
         // `this._call` inside the async continuation below — by the time
@@ -714,15 +890,40 @@ export class VoiceUseCase {
         });
     }
 
-    _handleRejectOrBusy(payload, remoteIdentity, reason) {
+    _handleRejectOrBusy(payload, remoteIdentity, reason, meta) {
+        // 0.2.86 — same fresh resolution as `_handleAccept()`; a
+        // revoked candidate's REJECT/BUSY is silently ignored too.
         const social = this._resolveSocialIdentityForRemote(remoteIdentity);
         if (!this._call || this._call.callId !== payload.callId || this._call.peerIdentityId !== social.identityId) {
             return;
         }
-        if (this._call.state !== VoiceSessionState.CALLING) {
+        const call = this._call;
+        if (call.state !== VoiceSessionState.CALLING) {
             return;
         }
-        this._teardownCall(this._call, reason);
+        if (call.connectedPeer) {
+            // Ordinary single-target call, unchanged since 0.2.74.
+            this._teardownCall(call, reason);
+            return;
+        }
+        // 0.2.86 — still fanning out to multiple candidates; a reply from
+        // one candidate never unilaterally speaks for the others, EXCEPT
+        // BUSY — see this class's own header, "One Identity, At Most One
+        // Active Call."
+        if (!call.candidates || !call.candidates.has(meta.connectedPeer.connectionId)) {
+            return;
+        }
+        this._removeCandidate(call, meta.connectedPeer);
+        if (reason === VoiceCallEndReason.BUSY) {
+            this._cancelRemainingCandidates(call);
+            this._teardownCall(call, VoiceCallEndReason.BUSY);
+            return;
+        }
+        // REJECTED from one device only ends the whole call once EVERY
+        // candidate has individually declined — the others keep ringing.
+        if (call.candidates.size === 0) {
+            this._teardownCall(call, VoiceCallEndReason.REJECTED);
+        }
     }
 
     _handleEnd(payload, remoteIdentity) {
@@ -954,18 +1155,42 @@ export class VoiceUseCase {
     // try/catch. Silently skipped if the connection is no longer
     // AUTHENTICATED — there is nobody left to tell, and local teardown
     // happens regardless either way.
+    //
+    // 0.2.86 — now notifies EVERY connection this call ever touched: the
+    // one locked `connectedPeer` (unchanged, exactly as before) AND, for
+    // an identity-targeted call still fanning out, every still-ringing
+    // `candidate` — see this class's own header, "Disconnect Cleanup, No
+    // Resurrection On Reconnect."
     _notifyPeerCallEnded(call) {
-        if (call.connectedPeer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED) {
+        if (call.connectedPeer) {
+            this._sendEndTo(call, call.connectedPeer, call.remoteConnectionIdentityId);
+        }
+        if (call.candidates) {
+            for (const entry of call.candidates.values()) {
+                this._sendEndTo(call, entry.connectedPeer, entry.connectedPeer.remoteIdentity.identityId);
+            }
+        }
+    }
+
+    // 0.2.86 — the actual best-effort "tell them the call is over" send,
+    // extracted from `_notifyPeerCallEnded()`'s original 0.2.74 body so it
+    // can ALSO be reused to cancel a single losing/superseded candidate
+    // (`_cancelRemainingCandidates()`, `_handleAccept()`'s losing-race
+    // branch) without duplicating the identical "only if still
+    // AUTHENTICATED, swallow a race on the send itself" try/catch a third
+    // time.
+    _sendEndTo(call, connectedPeer, remoteRawIdentityId) {
+        if (connectedPeer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED) {
             return;
         }
         try {
             const myIdentityId = this._identityProvider.getSigningIdentity().id;
             // 0.2.79 — wire fields use the RAW, literally-authenticated
-            // connection identity (`remoteConnectionIdentityId`), never the
-            // resolved `peerIdentityId` — see this class's own header.
-            const callerIdentity = call.isCaller ? myIdentityId : call.remoteConnectionIdentityId;
-            const calleeIdentity = call.isCaller ? call.remoteConnectionIdentityId : myIdentityId;
-            this._bus.send(call.connectedPeer, this._callProtocol, toVoiceCallSignal({
+            // connection identity, never the resolved `peerIdentityId` —
+            // see this class's own header.
+            const callerIdentity = call.isCaller ? myIdentityId : remoteRawIdentityId;
+            const calleeIdentity = call.isCaller ? remoteRawIdentityId : myIdentityId;
+            this._bus.send(connectedPeer, this._callProtocol, toVoiceCallSignal({
                 callId: call.callId, type: VoiceCallSignalType.END, callerIdentity, calleeIdentity
             }));
         } catch {
@@ -1005,11 +1230,22 @@ export class VoiceUseCase {
 
     // ---- call record lifecycle ----------------------------------------
 
-    _createCallRecord({ callId, peerIdentityId, remoteConnectionIdentityId, connectedPeer, state, isCaller }) {
+    // 0.2.86 — `connectedPeer` (the ORIGINAL, 0.2.73 shape: this call is
+    // locked onto exactly one connection from the moment it's created —
+    // still exactly how `startCall()` and the callee's own `_handleInvite()`
+    // both create their call records, byte-identical to before this
+    // milestone) and `candidateConnectedPeers` (NEW: an identity-targeted
+    // call still fanning out — see `startCallToIdentity()`) are mutually
+    // exclusive. Exactly one of the two branches below ever runs.
+    _createCallRecord({ callId, peerIdentityId, remoteConnectionIdentityId = null, connectedPeer = null, candidateConnectedPeers = null, state, isCaller }) {
         const call = {
             callId, peerIdentityId, remoteConnectionIdentityId, connectedPeer, state, isCaller,
             localTrack: null, remoteTrack: null, remoteStream: null,
             unsubscribePeerState: null, unsubscribeRemoteTrack: null,
+            // 0.2.86 — populated only while an identity-targeted call is
+            // still fanning out; empty/cleared the instant one candidate
+            // is locked in — see `_lockCallToCandidate()`.
+            candidates: null,
             ringingTimer: null,
             // 0.2.75 — see this class's own header on device controls.
             // `inputDeviceId` mirrors `this._preferredInputDeviceId` at
@@ -1020,6 +1256,25 @@ export class VoiceUseCase {
         if (state === VoiceSessionState.CALLING || state === VoiceSessionState.RINGING) {
             this._armRingingTimeout(call);
         }
+        if (connectedPeer) {
+            this._wireLockedConnection(call, connectedPeer);
+        } else if (candidateConnectedPeers) {
+            call.candidates = new Map();
+            for (const candidate of candidateConnectedPeers) {
+                this._addCandidate(call, candidate);
+            }
+        }
+        this._publishCallState(call);
+        return call;
+    }
+
+    // 0.2.86 — wires the TWO subscriptions a locked (single-connection)
+    // call has always needed since 0.2.73: "the connection itself died"
+    // (PEER_DISCONNECTED) and "the remote party's audio track arrived"
+    // (ACTIVE). Extracted verbatim from `_createCallRecord()`'s own
+    // original body so `_lockCallToCandidate()` below can wire the exact
+    // same pair the moment a fan-out call locks onto its winning candidate.
+    _wireLockedConnection(call, connectedPeer) {
         call.unsubscribePeerState = connectedPeer.onStateChange((lifecycleState) => {
             if (lifecycleState !== PeerLifecycleState.AUTHENTICATED && this._call === call) {
                 this._teardownCall(call, VoiceCallEndReason.PEER_DISCONNECTED);
@@ -1033,8 +1288,92 @@ export class VoiceUseCase {
             call.remoteStream = stream;
             this._setCallState(call, VoiceSessionState.ACTIVE);
         });
-        this._publishCallState(call);
-        return call;
+    }
+
+    // ---- identity-targeted fan-out (0.2.86) -----------------------------
+
+    // Every currently live, currently authorized, VOICE-CAPABLE connection
+    // of `identityId` — reuses the exact same discovery
+    // application/PeerPresenceUseCase.js#isIdentityOnline()/findConnectedPeer()
+    // already build on (application/ConnectedIdentityPeers.js#findLiveConnectedPeers()),
+    // narrowed by `supportsVoice()` so a non-media-capable connection
+    // (e.g. peer/LocalPeerConnectionProvider.js's in-process fake) is
+    // never rung. See this class's own header.
+    _liveVoiceCandidates(identityId) {
+        return findLiveConnectedPeers(this._registry, this._resolveSocialIdentity, identityId)
+            .filter((peer) => this.supportsVoice(peer));
+    }
+
+    // Registers ONE still-ringing candidate on a fan-out call: a temporary
+    // `onStateChange` subscription that removes just this candidate (never
+    // the whole call) if its connection drops before it ever answers — see
+    // `_handleCandidateDisconnected()` and this class's own header,
+    // "Disconnect Cleanup, No Resurrection On Reconnect."
+    _addCandidate(call, connectedPeer) {
+        const unsubscribeStateChange = connectedPeer.onStateChange((lifecycleState) => {
+            if (lifecycleState !== PeerLifecycleState.AUTHENTICATED) {
+                this._handleCandidateDisconnected(call, connectedPeer);
+            }
+        });
+        call.candidates.set(connectedPeer.connectionId, { connectedPeer, unsubscribeStateChange });
+    }
+
+    // Removes one candidate from a still-fanning-out call's ringing set —
+    // used whether it left because it declined/was busy, was cancelled as
+    // a losing candidate, or simply disconnected. Always unsubscribes its
+    // temporary state-change listener first.
+    _removeCandidate(call, connectedPeer) {
+        const entry = call.candidates.get(connectedPeer.connectionId);
+        if (!entry) {
+            return;
+        }
+        if (entry.unsubscribeStateChange) {
+            entry.unsubscribeStateChange();
+        }
+        call.candidates.delete(connectedPeer.connectionId);
+    }
+
+    // Best-effort cancels every candidate STILL ringing (optionally except
+    // one — the winner, when called from `_lockCallToCandidate()`) — see
+    // this class's own header, "First Acceptance Wins" and "One Identity,
+    // At Most One Active Call."
+    _cancelRemainingCandidates(call, exceptConnectionId = null) {
+        for (const entry of Array.from(call.candidates.values())) {
+            if (entry.connectedPeer.connectionId === exceptConnectionId) {
+                continue;
+            }
+            this._sendEndTo(call, entry.connectedPeer, entry.connectedPeer.remoteIdentity.identityId);
+            this._removeCandidate(call, entry.connectedPeer);
+        }
+    }
+
+    // A candidate connection dropped WHILE the call is still fanning out
+    // (never yet locked). Removing just this one candidate is enough
+    // UNLESS it was the last one left — see this class's own header,
+    // "What happens if a device disappears while ringing?"
+    _handleCandidateDisconnected(call, connectedPeer) {
+        if (this._call !== call || call.connectedPeer || !call.candidates || !call.candidates.has(connectedPeer.connectionId)) {
+            return;
+        }
+        this._removeCandidate(call, connectedPeer);
+        if (call.candidates.size === 0) {
+            this._teardownCall(call, VoiceCallEndReason.PEER_DISCONNECTED);
+        }
+    }
+
+    // The FIRST accepting candidate wins — collapses a still-fanning-out
+    // call down to the exact same single-connection shape `startCall()`
+    // has always produced: cancels every OTHER still-ringing candidate,
+    // clears the (now-empty) candidate set, and wires the winning
+    // connection exactly like `_createCallRecord()`'s own locked-from-the-
+    // start path always has. See this class's own header, "Do Not Create
+    // A Multi-Device VoiceSession."
+    _lockCallToCandidate(call, connectedPeer, remoteConnectionIdentityId) {
+        this._cancelRemainingCandidates(call, connectedPeer.connectionId);
+        this._removeCandidate(call, connectedPeer);
+        call.connectedPeer = connectedPeer;
+        call.remoteConnectionIdentityId = remoteConnectionIdentityId;
+        this._wireLockedConnection(call, connectedPeer);
     }
 
     _setCallState(call, state) {
@@ -1066,7 +1405,21 @@ export class VoiceUseCase {
         this._unwireLocalTrackEnded(call);
         if (call.unsubscribePeerState) call.unsubscribePeerState();
         if (call.unsubscribeRemoteTrack) call.unsubscribeRemoteTrack();
-        if (typeof call.connectedPeer.connection.removeAudioTrack === 'function') {
+        // 0.2.86 — an identity-targeted call ending while still fanning
+        // out (a ringing timeout, an explicit hangup, block/unfriend —
+        // all before anyone accepted) has no locked `connectedPeer` to
+        // notify through the block below, only whatever candidates are
+        // still ringing; `_notifyPeerCallEnded()` (called by every one of
+        // those paths already) tells them, this just unsubscribes their
+        // temporary listeners so a later disconnect can never fire into a
+        // call that's already gone.
+        if (call.candidates) {
+            for (const entry of call.candidates.values()) {
+                if (entry.unsubscribeStateChange) entry.unsubscribeStateChange();
+            }
+            call.candidates.clear();
+        }
+        if (call.connectedPeer && typeof call.connectedPeer.connection.removeAudioTrack === 'function') {
             call.connectedPeer.connection.removeAudioTrack();
         }
         if (call.localTrack) {

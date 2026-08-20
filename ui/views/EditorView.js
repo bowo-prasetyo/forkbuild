@@ -10,6 +10,8 @@ import { CreatePersistenceUseCase } from '../../application/CreatePersistenceUse
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
+import { StructurePreviewUseCase } from '../../application/StructurePreviewUseCase.js';
+import { CreateLibraryPreviewUseCase } from '../../application/CreateLibraryPreviewUseCase.js';
 import { EditorSession } from '../../application/EditorSession.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
 import { EditorEvent } from '../../core/events/EditorEvent.js';
@@ -17,8 +19,9 @@ import { EditorActionRegistry, createStandardActions } from '../../application/E
 import { EditorActionContext } from '../../application/EditorActionContext.js';
 import { InputRouter } from '../../application/InputRouter.js';
 import Toolbar from '../components/Toolbar.js';
-import Sidebar from '../components/Sidebar.js';
+import BuildLibraryPanel from '../components/BuildLibraryPanel.js';
 import EditingSidebar from '../components/EditingSidebar.js';
+import StructureInstancePanel from '../components/StructureInstancePanel.js';
 import CommandPalette from '../components/CommandPalette.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
@@ -29,7 +32,6 @@ import { UpdateDocumentMetadataUseCase } from '../../application/UpdateDocumentM
 import { computeLifecycleStatus, describeLifecycleStatus } from '../../application/DocumentLifecycleStatus.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
-import StructureLibraryPanel from '../components/StructureLibraryPanel.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
@@ -42,7 +44,7 @@ const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, Sidebar, EditingSidebar, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog, StructureLibraryPanel },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -69,14 +71,37 @@ export default {
                             Place
                         </button>
                     </div>
+                    <p v-if="activeTool === ToolId.PLACE" class="placement-hint">
+                        Hover the ground, R to rotate, click to place.
+                    </p>
+                    <p v-if="activeTool === ToolId.PLACE_STRUCTURE" class="placement-hint">
+                        Placing "{{ activeStructureTitle }}" — hover the ground, R to rotate, click to place.
+                    </p>
+                    <p v-if="activeTool === ToolId.SELECT && selectedPlacementInfo" class="placement-hint">
+                        Selected "{{ selectedPlacementInfo.title }}" — drag to move, R to rotate.
+                    </p>
                     <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
-                    <Sidebar :palette-use-case="paletteUseCase" />
-                    <StructureLibraryPanel :structures="structures" @fork="forkStructure" />
+                    <StructureInstancePanel
+                        v-if="selectedPlacementInfo"
+                        :info="selectedPlacementInfo"
+                        @rotate="rotateSelectedPlacement"
+                        @duplicate="duplicateSelectedPlacement"
+                        @delete="deleteSelectedPlacement"
+                        @edit-source="editSelectedPlacementSource"
+                    />
+                    <BuildLibraryPanel
+                        :palette-use-case="paletteUseCase"
+                        :structure-groups="structureGroups"
+                        :preview-service="libraryPreviewService"
+                        @place="setTool(ToolId.PLACE)"
+                        @fork="forkStructure"
+                    />
                     <EditingSidebar
                         :registry="actionRegistry"
                         :get-context="getActionContext"
                         :ui="actionUi"
                         :selection-count="selectionCount"
+                        :is-structure-placement-selection="selectionIsStructurePlacement"
                         :apply-numeric="applyNumericTransform"
                         :align="alignSelection"
                         :distribute="distributeSelection"
@@ -113,9 +138,12 @@ export default {
         const selectionUseCase = new SelectionUseCase(editorContext);
         const paletteUseCase = new PaletteUseCase(registry, editorContext);
         const previewUseCase = new PreviewUseCase(editorContext);
+        // 0.2.90 — Structure Placement & World Instances.
+        const structurePreviewUseCase = new StructurePreviewUseCase(editorContext);
+        const { libraryPreviewService } = new CreateLibraryPreviewUseCase().execute(registry);
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
-        const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase } = new CreatePersistenceUseCase().execute();
+        const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase, structureDocumentResolver } = new CreatePersistenceUseCase().execute();
 
         const identityUseCase = inject('identityUseCase');
         const identityProvider = identityUseCase.provider;
@@ -136,13 +164,19 @@ export default {
 		    identityProvider,
 		    copySelectionUseCase,  // Pass use case
 		    pasteClipboardUseCase,  // Pass use case
-		    forkStructureUseCase
+		    forkStructureUseCase,
+		    // 0.2.90 — Structure Placement & World Instances.
+		    structureResolver: structureDocumentResolver,
+		    structurePreviewUseCase
 		});
 
-		// 0.2.81 — Forkable Structure Library. The registry's contents
-		// never change at runtime (same reasoning as paletteUseCase's own
-		// brick definitions), so this is read once, not subscribed to.
-		const structures = ref(structureRegistry.getAll());
+		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
+		// (Building Library & Palette UX) via
+		// core/StructureRegistry.js#groupByCategory(). The registry's
+		// contents never change at runtime (same reasoning as
+		// paletteUseCase's own brick definitions), so this is read
+		// once, not subscribed to.
+		const structureGroups = ref(structureRegistry.groupByCategory());
 
 		function forkStructure(structure) {
 		    const forked = editorSession.forkStructure(structure);
@@ -153,8 +187,21 @@ export default {
 
         const activeTool = ref(editorContext.tool.activeTool);
         const selectionCount = ref(0);
+        // 0.2.90 — Structure Placement & World Instances: mirrors
+        // activeTool's own ref+subscription shape one rung up, so the
+        // placement hint can name what's being placed.
+        const activeStructureTitle = ref(editorContext.activeStructure.title);
+        // 0.2.91 — World Instance Editing & Placement Management: mirrors
+        // selectionCount's own ref+subscription shape, so the sidebar's
+        // registry-gated actions (selection.duplicate) and the
+        // "Selected House Instance" panel can react to a placement
+        // selection the same way everything else here reacts to
+        // SELECTION_CHANGED.
+        const selectionIsStructurePlacement = ref(false);
+        const selectedPlacementInfo = ref(null);
         let unsubTool = null;
         let unsubSelection = null;
+        let unsubActiveStructure = null;
 
         function setTool(toolId) {
             editorContext.setActiveTool(toolId);
@@ -170,6 +217,39 @@ export default {
 
         function applyNumericTransform(intent, options) {
             editorSession.applyNumericTransform(intent, options);
+        }
+
+        // ------------------ 0.2.91 structure instance manipulation ------
+
+        function rotateSelectedPlacement(deltaRotation) {
+            editorSession.rotateSelection(deltaRotation);
+        }
+
+        function duplicateSelectedPlacement() {
+            const newId = editorSession.duplicateSelection();
+            if (newId) {
+                feedback.show('Duplicated structure');
+            }
+        }
+
+        function deleteSelectedPlacement() {
+            if (editorSession.deleteSelection()) {
+                feedback.show('Deleted structure instance');
+            }
+        }
+
+        // "Edit Source Document" — deliberately never mutates the
+        // instance; it opens the referenced Document through the exact
+        // same loadDocument() path Toolbar's Load button already uses.
+        // See docs/Roadmap.md, 0.2.91: "do not offer 'Edit Bricks' as an
+        // instance mutation... instead, Instance -> Edit Source Document."
+        function editSelectedPlacementSource() {
+            const info = selectedPlacementInfo.value;
+            if (!info) {
+                return;
+            }
+            editorSession.editStructurePlacementSource(info.documentId);
+            feedback.show(`Editing "${info.title}"`);
         }
 
         // ------------------------- 0.1.50 action surface ----------------
@@ -244,7 +324,8 @@ export default {
             session: editorSession,
             selectionCount: selectionCount.value,
             paletteOpen: paletteOpen.value,
-            activeTool: activeTool.value
+            activeTool: activeTool.value,
+            selectionIsStructurePlacement: selectionIsStructurePlacement.value
         });
         function closePalette() {
             paletteOpen.value = false;
@@ -268,6 +349,16 @@ export default {
                 EditorEvent.SELECTION_CHANGED,
                 ({ selection }) => {
                     selectionCount.value = selection.items.length;
+                    selectionIsStructurePlacement.value = !!selection.isStructurePlacementSelection;
+                    selectedPlacementInfo.value = selection.isStructurePlacementSelection
+                        ? editorSession.getSelectedPlacementInfo()
+                        : null;
+                }
+            );
+            unsubActiveStructure = editorContext.eventBus.subscribe(
+                EditorEvent.ACTIVE_STRUCTURE_CHANGED,
+                ({ title }) => {
+                    activeStructureTitle.value = title;
                 }
             );
 
@@ -348,6 +439,23 @@ export default {
                     saveDocumentUseCase.execute(documentManager);
                     return;
                 }
+                // 4.5. Placement mode keeps its own Rotate (0.2.87) —
+                // 'R'/'Shift+R' already name Rotate Clockwise/Counter-
+                // Clockwise in the registry (transform.rotateClockwise/
+                // CounterClockwise), but those are disabled while
+                // placing (editingAllowed() checks ctx.placementMode) —
+                // and step 5's matchShortcut() resolves a key to its
+                // bound action by KEY ALONE, oblivious to enabled(), so
+                // letting this fall through unchanged would silently
+                // swallow the keystroke on a disabled action rather than
+                // ever reaching PlacementTool. Routed to the tool
+                // directly instead, exactly like WorldView's identical
+                // carve-out for the same reason.
+                if ((activeTool.value === ToolId.PLACE || activeTool.value === ToolId.PLACE_STRUCTURE)
+                    && event.key.toLowerCase() === 'r') {
+                    editorSession.onKeyDown(event);
+                    return;
+                }
                 // 5. Registry-driven editing shortcuts.
                 const action = InputRouter.matchShortcut(event, actionRegistry);
                 if (action) {
@@ -368,6 +476,9 @@ export default {
             }
             if (unsubSelection) {
                 unsubSelection.unsubscribe();
+            }
+            if (unsubActiveStructure) {
+                unsubActiveStructure.unsubscribe();
             }
             if (unsubDocumentState) {
                 unsubDocumentState();
@@ -390,10 +501,18 @@ export default {
             loadDocumentUseCase,
             editorSession,
             publishDocumentUseCase,
-            structures,
+            structureGroups,
+            libraryPreviewService,
             forkStructure,
             activeTool,
+            activeStructureTitle,
             selectionCount,
+            selectionIsStructurePlacement,
+            selectedPlacementInfo,
+            rotateSelectedPlacement,
+            duplicateSelectedPlacement,
+            deleteSelectedPlacement,
+            editSelectedPlacementSource,
             actionRegistry,
             getActionContext,
             actionUi,

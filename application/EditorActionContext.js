@@ -21,7 +21,13 @@ export class EditorActionContext {
         gestureActive = false,
         paletteOpen = false,
         activeTool = null,
-        capabilities = null // NEW: explicit capability boundary (0.2.4)
+        capabilities = null, // NEW: explicit capability boundary (0.2.4)
+        // 0.2.91 — World Instance Editing & Placement Management: true
+        // when the current selection is exactly one StructurePlacement
+        // (SelectionState#isStructurePlacementSelection). Gates
+        // 'selection.duplicate' — duplicating an instance makes sense;
+        // duplicating a brick selection is already copy/paste's job.
+        selectionIsStructurePlacement = false
     } = {}) {
         this._selectionCount = selectionCount;
         this._clipboardCount = clipboardCount;
@@ -35,6 +41,7 @@ export class EditorActionContext {
         this._paletteOpen = paletteOpen;
         this._activeTool = activeTool;
         this._capabilities = capabilities;
+        this._selectionIsStructurePlacement = selectionIsStructurePlacement;
     }
 
     get selectionCount() { return this._selectionCount; }
@@ -53,15 +60,24 @@ export class EditorActionContext {
     get hasGroups() { return this._groups.length > 0; }
     get hasSelectedGroup() { return this._selectedGroupId !== null; }
     get clipboardEmpty() { return this._clipboardCount === 0; }
-    get placementMode() { return this._activeTool === 'place'; }
+    // 0.2.90: PLACE_STRUCTURE is gated exactly like PLACE — editing
+    // shortcuts (align, distribute, numeric transform, move/rotate
+    // selection) stay disabled while either placement mode is active,
+    // the same "one hardcoded 'place'" spot 0.1.50 already used for the
+    // brick ghost.
+    get placementMode() { return this._activeTool === 'place' || this._activeTool === 'place-structure'; }
     get capabilities() { return this._capabilities; }
+    get selectionIsStructurePlacement() { return this._selectionIsStructurePlacement; }
 
     // session: EditorSession or WorldNavigationSession. selectionCount /
     // paletteOpen / activeTool come from the host view, which already
     // tracks them reactively. Everything else is duck-typed off the
     // session: undo/redo metadata may live on the session itself or on
     // its exposed commandHistory — both are tried, in that order.
-    static capture({ session = null, selectionCount = 0, paletteOpen = false, activeTool = null } = {}) {
+    static capture({
+        session = null, selectionCount = 0, paletteOpen = false, activeTool = null,
+        selectionIsStructurePlacement = false
+    } = {}) {
         const call = (name, fallback) => {
             if (session && typeof session[name] === 'function') {
                 try {
@@ -104,7 +120,8 @@ export class EditorActionContext {
             undoLabel: historyCall('getUndoLabel', null),
             redoLabel: historyCall('getRedoLabel', null),
             gestureActive: call('isGestureActive', false),
-            capabilities // NEW
+            capabilities, // NEW
+            selectionIsStructurePlacement
         });
     }
 }

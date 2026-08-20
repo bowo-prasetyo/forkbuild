@@ -88,6 +88,22 @@ export default {
             recentQuery.value = '';
         }
 
+        // 0.2.90 — Structure Placement & World Instances. "Place" is the
+        // sibling action to "Load" on the exact same Recent Documents
+        // entry: Load REPLACES the current document with this one; Place
+        // adds a StructurePlacement REFERENCING it to the document
+        // that's already open, without leaving it. See
+        // application/EditorSession.js#placeDocument()'s own header for
+        // why this deliberately doesn't open `doc.id`.
+        function place(doc) {
+            const placed = props.editorSession.placeDocument(doc.id, doc.title);
+            recentOpen.value = false;
+            recentQuery.value = '';
+            if (placed) {
+                report(`Placing "${doc.title}" — click the ground to place, R to rotate`);
+            }
+        }
+
         function refresh() {
             dirty.value = props.documentManager.state.dirty;
             recentDocuments.value = props.loadDocumentUseCase.listSavedDocuments();
@@ -139,7 +155,7 @@ export default {
             dirty, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
             recentOpen, recentQuery, toggleRecent, formatModified,
             searchThreshold: SEARCH_THRESHOLD,
-            save, createNew, load, publish
+            save, createNew, load, place, publish
         };
     },
     template: `
@@ -175,15 +191,26 @@ export default {
                             autofocus
                         />
                         <div class="toolbar-recent-dropdown-list">
-                            <button
+                            <div
                                 v-for="doc in filteredRecentDocuments"
                                 :key="doc.id"
-                                class="toolbar-recent-dropdown-item"
-                                @click="load(doc.id)"
+                                class="toolbar-recent-dropdown-row"
                             >
-                                <span class="toolbar-recent-dropdown-title">{{ doc.title }}</span>
-                                <span class="toolbar-recent-dropdown-date">{{ formatModified(doc.modified) }}</span>
-                            </button>
+                                <button
+                                    class="toolbar-recent-dropdown-item"
+                                    @click="load(doc.id)"
+                                >
+                                    <span class="toolbar-recent-dropdown-title">{{ doc.title }}</span>
+                                    <span class="toolbar-recent-dropdown-date">{{ formatModified(doc.modified) }}</span>
+                                </button>
+                                <button
+                                    class="toolbar-recent-dropdown-place"
+                                    title="Place this document as a structure in the current World"
+                                    @click="place(doc)"
+                                >
+                                    Place
+                                </button>
+                            </div>
                             <p v-if="filteredRecentDocuments.length === 0" class="toolbar-recent-dropdown-empty">
                                 No documents match "{{ recentQuery }}"
                             </p>

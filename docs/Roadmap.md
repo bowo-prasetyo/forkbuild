@@ -3833,6 +3833,1388 @@ FriendRelationshipUseCase at all), but does not solve it. Also
 unscheduled: a "My Devices" UI surfacing sync status, and any
 supersession of the low-tech, out-of-band portable-grant handoff
 adoptOwnDeviceGrant() now consumes.
+0.2.84 — Building Library & Palette UX — chosen next over adding more
+brick/structure content, on the reasoning the design conversation
+insisted on: the vocabulary just crossed the threshold where a flat
+interface stops scaling (15 BrickDefinitions across 12 categories, 6
+Structures across 4), so the right next milestone is making that
+already-real content browsable, not growing it further before the UI
+that shows it can absorb the growth. Deliberately a UX/navigation
+milestone, not another brick or structure-model redesign: nothing about
+`BrickDefinition`, `Structure`, `BrickRegistry`/`StructureRegistry`'s
+existing methods, `ForkStructureUseCase`, or `PaletteUseCase` changes.
+
+```text
+0.2.84
+├── core/StructureRegistry.js          groupByCategory() — additive,
+│                                        same [{ category, ... }] shape
+│                                        BrickRegistry's own has had
+│                                        since 0.2.80
+├── application/LibraryPreviewService.js   a smaller sibling of
+│                                        PreviewService.js — lazy,
+│                                        cached by kind-qualified key,
+│                                        idle-queued, cancellable —
+│                                        for static in-memory content
+│                                        instead of loaded Publications
+├── application/CreateLibraryPreviewUseCase.js  constructs one per
+│                                        Editor session
+├── renderer/DocumentThumbnailRenderer.js   renderDocument() split into
+│                                        a two-line adapter over the
+│                                        new renderBricks(bricks) —
+│                                        the shared frame-and-render
+│                                        operation a Document, a
+│                                        Structure's bricks, or one
+│                                        synthetic Brick all need alike
+├── ui/components/BuildLibraryPanel.js  (new) Bricks/Structures tabs,
+│                                        same-tab search, category
+│                                        groups, previews — replaces:
+├── ui/components/Sidebar.js            (deleted)
+├── ui/components/BrickPalette.js       (deleted)
+├── ui/components/StructureLibraryPanel.js  (deleted)
+└── ui/components/BuildLibraryPreview.js  (new) the small per-entry
+                                         thumbnail, lazy/cancellable via
+                                         IntersectionObserver — the same
+                                         pattern PublicationPreview.js
+                                         already established one rung
+                                         down
+```
+
+The one real design question was whether Bricks and Structures should
+merge into one undifferentiated list now that they're browsed the same
+way. They don't: `BuildLibraryPanel` is a tab switcher, not a merged
+catalog, because the two things a click DOES stay genuinely different —
+selecting a brick still only ever calls
+`PaletteUseCase#selectDefinition()` (unchanged since 0.1.9), while
+forking a structure still only ever produces a brand-new Document via
+`EditorSession.forkStructure()` (unchanged since 0.2.81). The one
+genuinely new behavior: selecting a brick now also emits `'place'`,
+which `EditorView.js` wires to `editorContext.setActiveTool(ToolId.PLACE)`
+— choosing a brick and being ready to place it collapses to one click,
+where it previously took a second click on the separate Place tool
+button. Nothing about a structure's Fork button changed at all.
+
+The preview pipeline is the one piece that touches rendering, and it
+was built to reuse, not reinvent: `DocumentThumbnailRenderer`'s
+existing camera-framing/render/`toDataURL()` sequence didn't change,
+only what feeds it — `renderBricks(bricks)` accepts any flat brick
+array, so a Structure's own `bricks` or a synthetic single-`Brick`
+standing in for one `BrickDefinition` reach the exact same
+`BrickRenderer`/`ThreeBrickFactory` pipeline every World View mesh and
+every existing Document thumbnail already renders through. A brick or
+structure's preview is therefore a genuine picture of what it actually
+contains, never a second hand-drawn icon set that could drift from the
+real geometry. `LibraryPreviewService` deliberately doesn't reuse
+`PreviewService` itself — a `BrickDefinition`/`Structure` is already
+resident, static, in-memory data with its own stable id, so there is no
+`loadPublicationDocumentUseCase` step or `contentHash` to key against;
+forcing that shape onto a job that has neither would be borrowing
+complexity that doesn't apply, not sharing it.
+
+The flagship-shaped closing section of `tests/BuildLibraryUX.test.js`
+proves the one invariant this milestone must never blur: selecting a
+brick (`PaletteUseCase#selectDefinition()`) never touches the active
+tool by itself, and forking a structure (`EditorSession#forkStructure()`)
+never touches the active brick selection — Place and Fork stay two
+structurally independent actions, only found the same new way. Earlier
+sections cover `StructureRegistry#groupByCategory()` against the real
+VillageLibrary (first-seen category order, matching
+`BrickRegistry`'s own contract byte-for-byte), the search/filter rule
+(`matches()`/`normalize()`, exported from `BuildLibraryPanel.js` and
+tested directly rather than through a mounted Vue component — the same
+boundary `CommandPalette.js`'s own tests already draw), and
+`LibraryPreviewService`'s lazy/cached/cancellable/never-retries-a-failed-
+renderer behavior with a fake renderer, matching
+`tests/PreviewService.test.js`'s own established convention of never
+exercising real WebGL from the headless suite.
+
+Deliberately not in 0.2.84, named rather than hidden: any change to
+`BrickDefinition`, `Structure`, or either registry's existing methods;
+favorites or recently-used entries; drag-and-drop; any community/
+marketplace structure or brick library browsing; and a Build Library
+entry point from World View — Bricks and Structures stay exactly where
+0.2.80/0.2.81 already put them, the Editor sidebar, on purpose. 0.2.85
+(proposed) resumes the multi-device/social arc.
+
+0.2.85 — Multi-Device Presence Semantics — is exactly the milestone
+0.2.84's own closing line named, and the one 0.2.79's own "Proposed,
+unscheduled follow-on milestones" list named twice: "what does 'online'
+mean once 'Alice' could be several simultaneously live, independently
+observed devices" (0.2.78's own "Multi-Writer Presence," restated with
+0.2.79's resolution vocabulary available to build it on). 0.2.78 proved
+the cryptographic model (`resolvePeerAuthority()`); 0.2.79 taught
+friendship, chat, and voice to resolve a live connection to its social
+identity instead of its raw key. `application/PeerPresenceUseCase.js`
+(0.2.70) was the one social surface 0.2.79 never reached — it kept
+matching `peer.remoteIdentity.identityId === identityId` directly, so
+"Alice is online" could not see a connection from her Phone or Laptop
+at all, only one whose own key happened to equal her parent identity's
+directly.
+
+```text
+0.2.85
+└── application/PeerPresenceUseCase.js   gains an optional
+                                          resolveSocialIdentity
+                                          collaborator (default:
+                                          resolveDirectSocialIdentity,
+                                          byte-identical to 0.2.70
+                                          through 0.2.84's own
+                                          behavior) — the SAME 0.2.79
+                                          pattern FriendRelationshipUseCase/
+                                          ChatUseCase/VoiceUseCase
+                                          already established, closing
+                                          the one 0.2.79-era gap
+```
+
+No new file, no new store — this milestone is entirely a change inside
+one already-existing class plus wiring it correctly at the two places
+that were silently duplicating its own raw-key logic instead of
+reading through it. `_liveConnectedPeers(identityId)` (replacing the
+old `_liveConnectedPeer`, singular) is a `.filter()` over every
+currently-AUTHENTICATED `ConnectedPeer` whose RESOLVED social identity
+matches — never a `.find()` — because Alice's Phone and Laptop being
+simultaneously live is the expected case this class must model, not an
+edge case to collapse away. `getSummary()`'s `isConnectedNow` is true
+iff that list is non-empty; two new fields,
+`connectedDeviceCount`/`connectedDeviceIdentityIds`, expose the
+aggregate itself — additive data the underlying model now carries so a
+later UX milestone can decide whether to surface it, while every
+existing consumer of `isConnectedNow` (`ui/views/ConversationsView.js`,
+`ui/views/ChatView.js`'s own "Online · Friend" label) needs zero
+changes, exactly matching the design conversation's own instruction to
+establish the semantics before expanding the UI. Two new public
+methods, `findConnectedPeer(identityId)` (the single-best-match
+counterpart to `application/ChatUseCase.js#_findAuthenticatedPeer()`,
+for a caller that needs one real connection to act through — e.g.
+`ui/views/ChatView.js`'s own voice-call gate) and `isIdentityOnline(identityId)`
+(the aggregate boolean on its own), replace two duplicated raw-key
+derivations this milestone found and fixed rather than leaving in
+place: `ui/views/ChatView.js`'s own `connectedPeer` computed and
+`ui/views/PeerConnectionsView.js`'s own `isConnectedNow()`/
+`connectedPeerFor()` — three separate re-implementations of the same
+raw-match logic `PeerPresenceUseCase` itself already had a
+(multi-device-blind) copy of, now collapsed to one.
+
+Revocation needed no new code at all: `resolveConnectionIdentity()`
+already re-derives `core/DeviceAuthority.js#isAuthorized` fresh, never
+cached, on every call — the moment a revocation is verified and
+applied, a revoked device's connection simply stops resolving to its
+parent identity, and `_liveConnectedPeers()` stops counting it on its
+very next call. The revoked connection does not vanish; it resolves to
+its OWN bare, un-authorized raw identity instead, still genuinely
+online as itself — proven directly in the security flagship below, the
+same "authentication and social authority remain independent facts"
+property 0.2.78/0.2.79's own security flagships already established,
+now extended to presence.
+
+The flagship test (`tests/MultiDevicePresenceSemantics.test.js`) reuses
+`tests/MultiDeviceSocialSemantics.test.js`'s own harness verbatim (real
+`LocalIdentityProvider` instances standing in for physically distinct
+devices, real `peer/PeerAuthenticationSession.js` handshakes, a real
+`DeviceAuthorizationPropagationUseCase`), extended with a full presence
+stack, and runs the design conversation's own scripted scenario:
+Alice's Phone and Laptop both connect and authorize — Bob observes
+Alice online with `connectedDeviceCount` 2; the Phone disconnects —
+Alice stays online, count drops to 1; the Laptop disconnects too —
+Alice goes offline, `isConnectedNow: false`, `lifecycleState: null`;
+the Laptop reconnects — online again. A SECURITY FLAGSHIP section:
+Phone and Laptop both online, Alice revokes the Laptop mid-session —
+Alice remains online (Phone, untouched), `connectedDeviceCount` drops
+by exactly one, and the Laptop's own connection is separately,
+honestly online AS ITSELF. A third section proves two simultaneous
+connections from the literal SAME device never inflate
+`connectedDeviceCount` past 1, and closing one of the two never drops
+presence while the other survives — the stale-disconnect-event case the
+design conversation asked for directly. A fourth section proves that
+omitting `resolveSocialIdentity` entirely keeps every existing behavior
+byte-identical to pre-0.2.85 — DIRECT-only, the same regression
+guarantee every other 0.2.79-era caller's own test suite already
+establishes for itself.
+
+Deliberately not in 0.2.85, matching the design conversation's own
+explicit scope: no `PresenceStore` of any kind — presence stays exactly
+as ephemeral and uncached as it always was, computed fresh from
+`application/ConnectedPeerRegistry.js` on every call; no device-level
+UI (`connectedDeviceCount`/`connectedDeviceIdentityIds` are present in
+the data model, read by nothing yet — "Bob: ● Online" stays one line,
+unchanged); no presence gossip or synchronization between Alice's own
+devices — each observer derives what it currently knows purely from its
+own live connections, never from what another of Alice's devices
+claims to have observed; and no voice/ringing changes — 0.2.86
+(proposed, "Multi-Device Voice Ringing") is the next milestone that
+actually needs this one's resolution vocabulary for "which of Alice's
+reachable devices should ring."
+
+0.2.86 — Multi-Device Voice Ringing — is that next milestone, and the
+point where the whole 0.2.78→0.2.85 arc finally interacts in one place:
+device authorization decides WHO may answer for Alice, social identity
+resolution decides WHICH connections count as hers, presence decides
+WHICH of them are reachable right now, and voice finally ACTS on all
+three at once instead of requiring a caller to already have one
+specific `ConnectedPeer` in hand.
+
+```text
+0.2.86
+├── application/ConnectedIdentityPeers.js   NEW — findLiveConnectedPeers(),
+│                                            application/PeerPresenceUseCase.js's
+│                                            own 0.2.85 `_liveConnectedPeers()`
+│                                            filter, extracted verbatim so
+│                                            VoiceUseCase can reuse the
+│                                            IDENTICAL query rather than
+│                                            re-deriving it
+├── application/PeerPresenceUseCase.js      _liveConnectedPeers() becomes a
+│                                            thin call into the shared
+│                                            function above — behavior
+│                                            byte-identical to 0.2.85
+└── application/VoiceUseCase.js             startCallToIdentity(identityId),
+                                             canCallIdentity(identityId)
+```
+
+The question the design conversation opened with — "how does a caller
+currently discover the concrete authenticated connections belonging to
+a social identity?" — is answered by NOT answering it twice.
+`application/PeerPresenceUseCase.js#_liveConnectedPeers()` already was
+exactly this query; 0.2.86 lifts it into `application/
+ConnectedIdentityPeers.js#findLiveConnectedPeers(registry,
+resolveSocialIdentity, identityId)`, a small, stateless, pure function,
+and has BOTH `PeerPresenceUseCase` and `VoiceUseCase` call it — never a
+new dependency between the two classes, and never a second, drifting
+copy of "authenticated + resolves to this identity" logic. `VoiceUseCase`
+narrows it one step further with its own `_liveVoiceCandidates()`,
+filtering to connections `supportsVoice()` already recognizes as media-
+capable (excluding `peer/LocalPeerConnectionProvider.js`'s in-process
+fake, exactly like `startCall()`'s own `_requireMediaCapable()` always
+has).
+
+`startCallToIdentity(identityId)` is the new entrypoint the design
+conversation asked for: it rings EVERY currently-live, currently-
+authorized, voice-capable device of `identityId` at once, sharing ONE
+`callId` and ONE local call record for the whole identity throughout —
+never a `VoiceSession` per device. The trap the design conversation
+named explicitly is avoided by construction: `_call.connectedPeer` is
+simply `null` during the fan-out window, with a new `_call.candidates`
+(a `Map<connectionId, { connectedPeer, unsubscribeStateChange }>`)
+holding the ephemeral, per-connection ringing attempts instead. The
+INSTANT one candidate accepts, `_lockCallToCandidate()` collapses the
+record back down to the exact single-connection shape `startCall()` has
+produced since 0.2.73 — cancelling every other still-ringing candidate
+(reusing the ordinary `VoiceCallSignalType.END` a hangup already sends;
+no new wire vocabulary of any kind was needed) and wiring the winning
+connection through the SAME `_wireLockedConnection()` helper
+`_createCallRecord()` itself now uses. From that point on, media
+negotiation, mute, device switching, and teardown are completely
+unaware the call ever had more than one candidate — proving the design
+conversation's own "there is still only one call."
+
+Three concurrency questions the design conversation asked for explicit
+answers to, all resolved without a single new `VoiceSessionState` or
+`VoiceCallEndReason` value:
+
+- **First acceptance wins.** Whichever ACCEPT this device's own event
+  loop processes first wins, via `_lockCallToCandidate()`. A second,
+  losing candidate's ACCEPT — whether it was already cancelled or the
+  race is still in flight — is recognized in `_handleAccept()` (its
+  `remoteIdentity` no longer matches the now-locked
+  `call.remoteConnectionIdentityId`) and answered with a direct
+  cancellation, so it never sits believing nobody ever answered.
+- **One identity, at most one active call.** Each candidate device still
+  only ever answers `BUSY` for ITSELF — `_handleInvite()` needed zero
+  changes. What's new is on the CALLER's side: `_handleRejectOrBusy()`
+  now treats a `BUSY` from ANY one candidate as authoritative for the
+  WHOLE identity, cancelling every other still-ringing candidate rather
+  than waiting to hear from them. This is named honestly as a
+  best-effort, LOCAL judgment, not a distributed guarantee — Alice's own
+  devices never talk to each other directly, and 0.2.86 deliberately
+  does not introduce a cross-device voice-busy broadcast to close that
+  gap, matching 0.2.74's own "Ringing Is Bounded By Local Policy, Never
+  By The Network." A `REJECT`, by contrast, is scoped to that one
+  device only — the call keeps ringing on any other live candidate, and
+  only ends as `REJECTED` once every candidate has individually
+  declined, the way a real multi-handset phone behaves.
+- **Revocation needs no new mechanism.** `_handleAccept()`/
+  `_handleRejectOrBusy()` already resolved the replying connection's
+  social identity FRESH on every message (0.2.79's own discipline). If
+  Alice revokes a still-ringing candidate mid-call, that candidate's
+  connection simply stops resolving to `call.peerIdentityId` the moment
+  this device's own resolver learns of it — its ACCEPT/BUSY/REJECT is
+  then silently ignored, indistinguishable from a stranger's. No new
+  revocation check, no new subscription, no new store, exactly matching
+  the design conversation's own instruction not to add a second
+  revocation mechanism.
+
+Disconnect cleanup reuses 0.2.74's own "old VoiceSession != new
+PeerConnection incarnation" rule unextended: each still-ringing
+candidate carries its own temporary `onStateChange` subscription
+(`_addCandidate()`); losing one only removes that one entry
+(`_handleCandidateDisconnected()`), and the call itself only ends
+(`PEER_DISCONNECTED`) once every candidate is gone. A candidate
+reconnecting afterward is an entirely new connection with no memory of
+the old call record — there is no resurrection path to accidentally
+build, because nothing here ever looks backward from a NEW connection to
+an OLD call.
+
+The one UI surface this milestone actually rewires:
+`ui/views/ChatView.js`'s "Call" button now calls
+`voiceUseCase.startCallToIdentity(peerIdentityId)` instead of
+`voiceUseCase.startCall(connectedPeer.value)`, and its `canCall` gate
+reads the new `voiceUseCase.canCallIdentity(identityId)` — "is at least
+one of this peer's currently-reachable devices voice-capable" — instead
+of requiring the one `connectedPeer` this view happened to resolve to
+itself be voice-capable. The call bar's own presentation
+(`callForThisPeer`, `isRinging`, `callStatusLabel`, mute/device
+controls) needed zero changes: a locked-in multi-device call looks,
+from that computed's perspective, identical to any other call the
+moment it reaches CONNECTING/ACTIVE.
+
+The flagship test (`tests/MultiDeviceVoiceRinging.test.js`) runs the
+design conversation's own scripted scenario over REAL WebRTC connections
+(mirroring `tests/VoiceCallReliability.test.js`'s own harness) layered
+with a real `DeviceAuthorizationPropagationUseCase` per device (mirroring
+`tests/MultiDevicePresenceSemantics.test.js`'s own harness) — the first
+test file in this codebase to combine both: (1) fan-out — Alice's Phone
+and Laptop both authorized and reachable, Bob calls Alice's identity,
+both ring; (2) first acceptance wins — the Laptop accepts, the call goes
+ACTIVE on the Laptop, and the Phone's own ringing call is independently
+observed to end (not merely "not selected") as the caller's cancellation
+arrives; (3) one identity, at most one call — with the Laptop now
+ACTIVE with Bob, Charlie calls Alice and receives BUSY without the
+Laptop's existing call being disturbed, and the Phone settles back to
+IDLE rather than being left in a stale RINGING state; (4) revocation
+mid-ring — Alice revokes the Laptop while both devices are ringing a
+NEW call, and the Laptop can no longer accept as Alice, while the Phone
+still can; (5) disconnect tolerance — one candidate disconnecting while
+ringing leaves the other candidate's own ringing state untouched; (6) no
+resurrection — the disconnected candidate reconnects on a brand-new
+connection and is confirmed idle, never rejoining the old call.
+
+Deliberately not in 0.2.86, matching the design conversation's own
+explicit scope: no new `VoiceSessionState` or `VoiceCallEndReason` value
+(`NO_DEVICE_ANSWERED` and similar stay unscheduled unless a real product
+need emerges); no cross-device voice-busy synchronization between
+Alice's own devices — the BUSY-cancels-the-rest behavior above is a
+best-effort caller-side judgment, not a guarantee, and closing that gap
+for real would mean Alice's own devices gaining a channel to talk to
+each other directly, a materially bigger feature left for later; no UI
+surfacing of WHICH device is ringing or WHICH device answered (the call
+bar shows exactly what it always has — one call, one status label); and
+no changes to `core/VoiceCallSignal.js` or `core/VoiceMediaSignal.js` —
+every scenario above is expressed entirely through the existing wire
+vocabulary.
+
+0.2.87 — World Building Interaction & Placement UX — returns to the
+World/Building side after 0.2.78→0.2.86's identity/social/voice arc,
+deliberately WITHOUT adding another brick or structure: the design
+conversation's own framing was that the vocabulary (15 `BrickDefinition`s,
+6 `Structure`s, a unified Build Library) had outgrown the interaction
+model placing it uses, so this milestone makes the EXISTING primitives
+pleasant to place rather than growing the library further.
+
+```text
+0.2.87
+├── application/tools/PlacementTool.js          onKeyDown() rotates the
+│                                                 pending preview; hover
+│                                                 now also computes
+│                                                 collision validity
+├── application/PreviewUseCase.js               show() gains a 4th
+│                                                 `valid` argument
+├── application/editor-state/PreviewState.js    + `valid` field
+├── application/spatial-state/SpatialPlacementState.js  + `blocked` field,
+│                                                 kept independent of the
+│                                                 pre-existing `valid`
+├── application/WorldNavigationSession.js       rotatePlacementPreview(),
+│                                                 _presentPlacementPreview()
+│                                                 (terrain offset + the
+│                                                 new `blocked` check),
+│                                                 _updatePlacementPreview()
+│                                                 now resolves blocked/
+│                                                 targetDocumentId eagerly
+├── application/RenderWorldViewUseCase.js       showPreview() threads the
+│                                                 new `valid` argument
+├── renderer/PreviewRenderer.js                 terrain-offset fallback
+│                                                 (mirrors WorldRenderer's
+│                                                 own) + red/valid tint
+├── renderer/SpatialPreviewRenderer.js          red/valid tint only — no
+│                                                 terrain awareness added
+│                                                 here on purpose
+├── ui/views/EditorView.js                      'R' carve-out before the
+│                                                 registry + a placement
+│                                                 hint
+├── ui/views/WorldView.js                       'R' carve-out (mirrors
+│                                                 its own Escape one),
+│                                                 blocked panel styling
+├── css/main.css                                .spatial-panel--blocked,
+│                                                 .editing-hint--blocked
+├── tests/PlacementPreviewUX.test.js            NEW — Editor-side,
+│                                                 genuinely headless (no
+│                                                 'three' in its import
+│                                                 graph at all)
+└── tests/PlacementWorldView.test.js            +8 sections — WorldView-
+     tests/WorldGroundTerrain.test.js            side, +1 section —
+                                                  PreviewRenderer's own
+                                                  terrain/tint behavior
+```
+
+The one genuine architectural gap the design conversation identified
+turned out to be narrower, and more concrete, than "terrain doesn't
+participate in placement" first suggested. `renderer/WorldRenderer.js`
+already lifted every COMMITTED brick by a terrain offset sampled once at
+its own document's placement position (0.2.76) — rigid-whole-building,
+never per-brick, exactly the principle docs/Principles.md already named.
+What it never touched was the GHOST: `renderer/PreviewRenderer.js` and
+`renderer/SpatialPreviewRenderer.js` positioned the preview using the
+raw local Y with no offset at all, so a brick's ghost sat flush with the
+document's local Y=0 plane right up until the click — at which point the
+just-committed real brick visually "jumped" by whatever the document's
+own terrain offset happened to be. 0.2.87 closes exactly that gap and
+nothing more: `application/WorldNavigationSession.js#_presentPlacementPreview()`
+now calls `core/TerrainHeightField.js#terrainHeightAt()` directly (never
+through `renderer.terrainHeightAt()` — the same discipline
+`application/AvatarTerrainConstraint.js` established in 0.2.77), sampled
+at the TARGET DOCUMENT's own placement position, and adds it to the
+preview's world Y before calling `showPreview()`. `renderer/PreviewRenderer.js`
+(the Editor's ghost, which has no `WorldPlacement`/document offset of its
+own to look up) gets the identical fallback `renderer/WorldRenderer.js`
+already silently applied to every Editor-mode committed brick since
+0.2.76 — sampling ground at the origin — via the same duck-typed
+`typeof renderer.terrainHeightAt === 'function'` guard, for the same
+backward-compatibility reason (tests construct it with a plain
+`{ add, remove }` fake). Critically, `PlaceBrickCommand`'s own `position`
+— what actually reaches `Brick.position` and gets persisted — is
+completely untouched by any of this: the terrain offset is computed
+fresh, every call, purely for `showPreview()`'s world-space argument, and
+never written back into `SpatialPlacementState`/`PreviewState`'s own
+position field. `tests/PlacementWorldView.test.js`'s new flagship section
+proves this directly: after `commitPlacement()`, the read-back
+`Brick.position.y` is exactly the LOCAL ground value (0.5 for a
+`core:cube`), never the lifted value the preview rendered with a moment
+earlier — see docs/Principles.md, "Terrain Elevation Is A Rendering-Time
+Offset, Never A Presence Or Placement Fact," now proven for a BRAND NEW
+brick, not only pre-existing ones.
+
+Rotation follows the exact shape the design conversation asked for:
+`PreviewState`/`SpatialPlacementState` already HAD a `rotation` field
+since 0.1.13/0.2.24 — nothing new needed there — but nothing before
+0.2.87 ever set it to anything but a hardcoded `0`. `PlacementTool`
+(Editor) now owns a small `_rotation` accumulator, incremented/decremented
+by its own `onKeyDown()` ('R' / Shift+R, exactly matching
+`RotateBrickCommand`'s own un-normalized accumulation convention — no
+`% 360` anywhere, Three.js normalizes for rendering and
+`PlaceBrickCommand` stores whatever it's handed either way), and reused
+on every subsequent hover until `deactivate()` (leaving Place mode, not
+switching bricks) resets it back to 0 — so orienting once and placing a
+row of the same or a DIFFERENT brick keeps the orientation, matching the
+design conversation's own "orient once, place a row" workflow.
+`WorldNavigationSession#rotatePlacementPreview()` is the identical
+capability for World View, acting on the ALREADY-hovered
+`SpatialPlacementState` rather than re-picking, and resetting the same
+way via `setActiveDefinitionId(null)`. Neither path touches
+`CommandHistory` — rotating a preview that hasn't been placed yet is
+Editor/session state, never a domain mutation — and both are proven,
+by the flagship sections in `tests/PlacementPreviewUX.test.js` and
+`tests/PlacementWorldView.test.js`, to leave the COMMITTED
+`Brick.rotation` byte-identical to whatever the preview last showed.
+
+Wiring 'R' turned up one small, real, pre-existing input-routing gap
+worth naming rather than working around silently: `EditorView.js`/
+`WorldView.js`'s own registry-driven keyboard step
+(`InputRouter.matchShortcut()`) resolves a keystroke to its bound action
+by KEY ALONE, not by whether that action is currently `enabled()` — so
+'R' already matched `transform.rotateClockwise` (bound to 'R' since
+0.1.50) even while placement mode made that action `enabled() === false`,
+and the code returned immediately afterward regardless, meaning the
+keystroke was silently swallowed rather than ever reaching whichever
+tool might have wanted it. `WorldView.js` already carved out its own
+placement-mode Escape ahead of the registry for exactly this class of
+conflict; 0.2.87 adds an identical 'R' carve-out to both views, ahead of
+step 5, rather than changing `EditorActionRegistry.execute()`'s own
+enabled-gating semantics (which plenty of OTHER, unrelated shortcuts
+correctly rely on).
+
+Collision reuses `core/PlacementValidator.js` completely unchanged — the
+one deliberate scope boundary the design conversation asked for
+("Would this brick overlap an existing brick?", not a second geometric
+collision system). What's new is WHEN it's asked: previously only at
+commit time (a click on an occupied cell silently did nothing);
+`PlacementTool.onPointerMove()` and
+`WorldNavigationSession#_updatePlacementPreview()` now also ask it on
+every hover, and thread the answer through as a new, independent field —
+`PreviewState.valid` (Editor) / `SpatialPlacementState.blocked` (World
+View), deliberately NOT reusing `SpatialPlacementState`'s own
+pre-existing `valid` (which already meant "a real target was resolved at
+all," unchanged since 0.2.27) — so the two questions ("is there anything
+here to place" vs. "is this occupied") stay independent and the preview
+can stay VISIBLE, tinted red, at a blocked position rather than
+disappearing as if there were nothing there. `renderer/PreviewRenderer.js`/
+`renderer/SpatialPreviewRenderer.js` both tint the ghost's own true
+brick color to a flat red when invalid and restore it exactly on the
+next valid hover — never a second ghost material, never touching
+geometry. `onPointerDown()`/`commitPlacement()` still independently
+re-validate before committing (never trusting the cached hover flag) —
+unchanged defensive posture, now simply also informative one hover
+earlier.
+
+Terrain slope needed no code at all: `Brick.rotation` has always been a
+single Y-axis scalar (0.1.5) — there has never been a code path that
+tilts a brick off-upright — so "a brick placed on a hillside stays
+upright, never auto-conforms to the slope" was already an invariant of
+the data model, not a gap this milestone needed to close. Grid snapping
+is untouched (`PlacementPositionService` — same `Math.round(x/size)*size`
+it always was); no brick-to-brick magnetic attachment, no architectural
+alignment assistance, and no AI building assistance were added, matching
+the design conversation's own explicit "pleasant to place, not a CAD
+system" scope. `core/PlacementValidator.js`, `core/Brick.js`,
+`core/BrickDefinition.js`, `BrickRegistry`/`StructureRegistry`, and every
+existing Place/Fork distinction 0.2.84 established are completely
+unchanged — placing a Structure repeatedly into a document remains
+explicitly out of scope, still named (unscheduled) as its own future
+"Structure Placement / World Instances" milestone below, never smuggled
+in here.
+
+`tests/PlacementPreviewUX.test.js` is new and deliberately free of any
+`renderer/`-side or `WorldNavigationSession` import — `PlacementTool`
+never touches Three.js at all — so, unlike almost everything else in
+this suite, it runs as a genuine standalone Node script with no browser
+test runner required; its flagship proves the committed `Brick.rotation`
+matches the preview exactly across a rotate/switch-brick/place sequence,
+and that hovering an occupied cell shows (not hides) an invalid preview
+that a click then correctly refuses. `tests/PlacementWorldView.test.js`'s
+new sections extend its existing `WorldNavigationSession` harness with
+the WorldView-side counterpart, including the one scenario that only
+exists there: committing into a still-published document forks it first
+(0.2.20, unrelated to this milestone but exercised along the way), and
+the fork inherits the exact same world position — and therefore the
+exact same terrain offset — as its published source.
+`tests/WorldGroundTerrain.test.js` gains a new section testing
+`PreviewRenderer` directly against a fake terrain-bearing renderer,
+alongside its own pre-existing `WorldRenderer` coverage, so the two
+siblings' terrain-offset behavior is proven consistent in one place.
+
+Deliberately not in 0.2.87, named rather than hidden: sophisticated
+surface/magnetic snapping, architectural alignment assistance, and AI
+building assistance (explicitly out of scope per the design
+conversation); mesh-level/geometric collision for non-box bricks (arch,
+roof, stair) — `PlacementValidator` stays exact-position-match only, the
+same scope boundary docs/Roadmap.md's own "Geometric Collision Is A
+Later Question" already drew for world-placement overlap; automatic
+per-brick terrain conformance of any kind; placing a Structure repeatedly
+into a document (Structure Placement / World Instances, below, remains
+its own future milestone); and any change to `EditorActionRegistry`'s
+own enabled-gating semantics — the 'R' conflict is resolved by carving
+placement mode out ahead of the registry in both views, exactly matching
+the precedent `WorldView.js` already set for Escape, not by teaching the
+registry itself to skip disabled matches (a change that would ripple
+into every other shortcut, not just this one).
+
+0.2.88 — Deterministic World Ecology — returns to the environmental arc
+0.2.76→0.2.79 opened (elevation, walkability, surface color) and 0.2.80→
+0.2.87 deliberately set aside to build vocabulary, a library, and
+placement UX first. The world has had solid, walkable, colored ground
+since 0.2.79; it has never had anything growing on it. The design
+conversation that proposed this milestone settled one architectural
+question before any code: vegetation and natural features must be
+DERIVED from terrain, exactly the way `core/TerrainSurface.js` is derived
+from `core/TerrainHeightField.js`, never a second independent system that
+happens to share a seed. "Same world seed + same coordinates -> same
+terrain" (0.2.76) becomes "-> same ecology -> same trees," with nothing
+new ever persisted to make that true.
+
+```text
+0.2.88
+├── core/TerrainEcology.js         a THIRD pure function of the identical
+│                                   (seed, x, z) triple — ecologyZoneAt()
+│                                   consults surfaceCategoryAt() and layers
+│                                   two independent low-frequency noise
+│                                   fields (moisture, cultivation) on top,
+│                                   classifying flat/moderate ground into
+│                                   WATER / BEACH / ROCK / HIGHLAND /
+│                                   FOREST / FIELD / GRASSLAND;
+│                                   ecologyGroundColorAt() layers a sand
+│                                   tint (BEACH) or a furrow-row tint
+│                                   (FIELD) onto surfaceColorAt()'s own
+│                                   unchanged output
+└── core/NaturalFeatureField.js    naturalFeaturesInRegion() places trees
+                                    on a fixed, jittered lattice —
+                                    forestDensityAt() (its own independent
+                                    noise field) thresholded PERMISSIVELY
+                                    in FOREST and RESTRICTIVELY in
+                                    GRASSLAND, so cover fades from dense to
+                                    sparse-and-scattered instead of
+                                    stopping at a hard edge
+```
+
+`renderer/NaturalFeatureTileMesh.js` turns one tile's worth of
+`naturalFeaturesInRegion()` output into two `THREE.InstancedMesh`
+objects (trunks, canopies) — stylized, low-poly, muted-green cones over
+brown cylinders, deliberately never a detailed tree asset that would
+visually compete with a building. `renderer/Renderer.js` gains a SECOND
+instance of the exact same `renderer/TerrainStreamingController.js`
+class already streaming ground — not a new streaming system, not a
+`VegetationStreamingController` — sharing the identical tile grid and
+radius, differing only in what its `tileFactory` builds. Vegetation
+loads and unloads with the ground it grows on, by construction.
+`renderer/TerrainTileMesh.js`'s one-line change — sampling
+`ecologyGroundColorAt()` instead of `surfaceColorAt()` directly — is the
+only edit to an existing rendering file; `core/TerrainHeightField.js`,
+`core/TerrainSurface.js`, `core/TerrainTiling.js`,
+`core/TerrainWalkability.js`, and `renderer/TerrainStreamingController.js`
+are all completely untouched.
+
+The one design principle this milestone answers to: **the world
+generates nature; users create architecture.** A generated tree is never
+a `Document` -> `Brick`; there is no `TreeRecord`, no per-tree
+persistence, nothing a fork or a replica could ever disagree about
+because nothing is ever stored. `naturalFeaturesInRegion(seed, minX,
+minZ, maxX, maxZ)` recomputes its answer from nothing but its own
+arguments every time it's called — content-addressed by geography, the
+same posture `core/TerrainHeightField.js`'s own header established for
+elevation in 0.2.76, now extended two layers further. This is also why
+tile-aligned queries never duplicate or drop a tree at a shared edge:
+`TREE_LATTICE_SPACING` (4) divides `TERRAIN_TILE_SIZE` (40) exactly, so
+no lattice cell can ever straddle two tiles, and jitter is confined to
+the interior of its own cell.
+
+Grass is deliberately NOT an object list. The design conversation was
+explicit that per-blade grass objects would be "a rendering disaster" —
+grass stays exactly what it already was as of 0.2.79, a ground-color
+treatment, with GRASSLAND simply one more zone `ecologyGroundColorAt()`
+passes through unchanged. Fields are a ground-cover zone with a subtle
+furrow tint, never simulated agriculture — no crop growth, no seasons,
+no yield. Rivers are explicitly deferred: lakes fall out of the existing
+WATER classification for free, but a real river needs drainage/flow
+reasoning `core/TerrainHeightField.js`'s closed-form noise has no way to
+answer, and the design conversation chose not to force that architecture
+into a milestone about vegetation.
+
+`tests/TerrainEcology.test.js` proves determinism, zone/color
+correlation with the terrain underneath (every WATER/ROCK zone mirrors
+`surfaceCategoryAt()` exactly; BEACH sits only in a narrow band above
+`WATER_LEVEL`; FOREST/FIELD/GRASSLAND sit only below `HIGHLAND_ELEVATION`
+on GRASS surface), continuity with no seam at 11 exact tile boundaries,
+layering (untinted zones pass `surfaceColorAt()` through byte-identical;
+tinted zones differ but stay close), and a FLAGSHIP replica-determinism
+walk. `tests/NaturalFeatureField.test.js` proves the tile-partition
+guarantee directly (the sum of trees found tile-by-tile over a 4x4 tile
+region exactly equals the count found querying the whole region in one
+call — no gap, no double-count), that FOREST hosts trees at more than
+double GRASSLAND's rate over the same wide scan, that every feature's own
+Y matches `terrainHeightAt()` exactly, and a FLAGSHIP proving a tile ring
+streamed forward and streamed in reverse order discovers byte-identical
+trees — streaming/tile-load order never changes the natural world.
+
+Deliberately not in 0.2.88, named rather than hidden: rivers, hydrology,
+drainage/flow simulation (a real future "Water & Hydrology" milestone,
+should the resulting world warrant one); tree collision, removal,
+ownership, or any interaction at all — a tree is visual natural scenery,
+never a persistent editable object a user can select, move, or fork;
+grass blades or any other per-instance ground-cover object; simulated
+agriculture, crop growth, or seasons; weather, snow, erosion; wind or any
+tree animation; a second `FEATURE_TYPE` beyond `TREE` (rocks, bushes,
+deadwood); a per-World/per-Document ecology (today's thresholds are the
+one shared ecology every document's terrain uses, the same posture
+`DEFAULT_WORLD_SEED` and `SURFACE_PALETTE` already established);
+consulting `core/TerrainEcology.js` from `core/TerrainWalkability.js` or
+`application/AvatarTerrainConstraint.js` (walkability stays exactly the
+slope-only decision 0.2.77 established); and Structure Placement / World
+Instances, still its own future milestone, untouched here. Every one of
+these was named in the design conversation and ruled out specifically to
+keep this a small, restrained ecological-classification-and-placement
+milestone — not because of scheduling.
+
+0.2.89 — World Water & Hydrology Foundation — is the milestone 0.2.88's
+own closing line named explicitly rather than deferred vaguely: "rivers,
+hydrology, drainage/flow simulation (a real future 'Water & Hydrology'
+milestone, should the resulting world warrant one)." The world gained
+solid, walkable, colored, ecologically zoned ground across 0.2.76→0.2.88;
+its lakes were always a side effect of `WATER_LEVEL` classification, and
+it had no rivers at all. The design conversation that proposed this
+milestone settled the same architectural question 0.2.88 settled for
+ecology, one level further: hydrology must be DERIVED from terrain,
+never a second independent system, and — the one new distinction this
+milestone adds — never a real drainage-ACCUMULATION simulation either,
+because summing how much upstream area drains through a point requires
+an unbounded upstream trace that cannot be answered as a bounded local
+function of `(seed, x, z)` without either persisting a drainage network
+(forbidden) or an unworkable per-query cost. "Same world seed + same
+coordinates -> same terrain -> same hydrology" stays true by staying
+bounded and local, not by simulating the real thing.
+
+```text
+0.2.89
+└── core/Hydrology.js               a FOURTH pure function of the
+                                      identical (seed, x, z) triple,
+                                      sibling to core/TerrainEcology.js
+                                      (both consult core/TerrainSurface.js
+                                      directly — no import cycle, no
+                                      ordering dependency between "what
+                                      grows here" and "where does water
+                                      flow"):
+                                        flowDirectionAt()       real,
+                                          local steepest-descent
+                                          drainage direction — "which
+                                          neighboring location does
+                                          water flow toward"
+                                        riverChannelDistanceAt() /
+                                        isRiverAt()             a
+                                          domain-warped noise band,
+                                          gated to flat GRASS ground
+                                          below HIGHLAND_ELEVATION,
+                                          biased (never hard-gated)
+                                          toward locally lower
+                                          cross-sections
+                                        hydrologyFeatureAt()    LAKE
+                                          (mirrors SURFACE_CATEGORY.WATER
+                                          exactly) / RIVER / NONE
+                                        hydrologyGroundColorAt() layers a
+                                          river tint onto
+                                          ecologyGroundColorAt()'s own
+                                          unchanged output, exactly the
+                                          way that function itself layers
+                                          BEACH/FIELD tints onto
+                                          surfaceColorAt()
+```
+
+A lake and a river are deliberately represented two DIFFERENT ways,
+named explicitly rather than left as an unexplained asymmetry — see
+docs/Principles.md, "A Lake Is Rendered Geometry; A River Is Ground
+Color (0.2.89)." A lake is still water: it genuinely sits at one
+constant elevation (`LAKE_SURFACE_HEIGHT`, exactly `WATER_LEVEL`,
+re-exported rather than re-derived) regardless of how the lakebed rises
+and falls beneath it, which only real flat geometry can express.
+`renderer/WaterTileMesh.js` builds that geometry per tile using a "sink
+every dry vertex below ground" trick — a vertex is placed at
+`LAKE_SURFACE_HEIGHT` where the ground beneath it is WATER, or several
+units below the actual terrain surface otherwise, so an ordinary opaque-
+terrain depth test hides it everywhere the lake doesn't reach, with zero
+seam-handling code and zero new streaming machinery: every vertex is
+still placed from nothing but its own world `(x, z)`, the same
+"continuous world coordinates, never tile coordinates" discipline every
+other tile mesh in this codebase already follows. A river, by contrast,
+is flowing water threaded across sloped, varied terrain a single flat
+plane could never follow convincingly — it stays exactly what a beach or
+a field already is, a ground-color TINT `renderer/TerrainTileMesh.js`
+picks up via one-line change (`hydrologyGroundColorAt()` instead of
+`ecologyGroundColorAt()`), needing no geometry, no streaming, and no
+seam-handling of its own because it inherits all three from the ground
+it's painted on.
+
+`renderer/Renderer.js` gains a THIRD instance of the exact same
+`renderer/TerrainStreamingController.js` class already streaming ground
+and vegetation — not a new streaming system, not a
+`WaterStreamingController` — sharing the identical tile grid and radius,
+differing only in what its `tileFactory` builds. `core/NaturalFeatureField.js`
+gains one small addition on top: a tree that already qualified on zone
+and density can still be vetoed by `isRiverAt()`, checked last, so a
+generated tree is never planted in the exact channel a river has already
+claimed — proven directly in `tests/NaturalFeatureField.test.js`'s own
+new section, a wide scan asserting zero river-standing trees.
+
+`tests/Hydrology.test.js` proves determinism, feature/color correlation
+with the terrain underneath (every LAKE mirrors `surfaceCategoryAt()`
+WATER exactly and never appears anywhere else; every RIVER sits only on
+GRASS surface below `HIGHLAND_ELEVATION`), continuity with no seam at 13
+exact tile boundaries, layering (untinted ground passes
+`ecologyGroundColorAt()` through byte-identical; river-tinted ground
+differs but stays close), that `flowDirectionAt()` genuinely points
+downhill in over 95% of non-flat samples, and a FLAGSHIP replica-
+determinism walk across feature, color, AND flow direction together.
+
+Deliberately not in 0.2.89, named rather than hidden: real flow-
+ACCUMULATION hydrology (how much upstream area drains through a point) —
+this is not "not implemented yet," it is structurally impossible to
+answer as a bounded local function of `(seed, x, z)` without persisting
+a drainage network, which core/TerrainHeightField.js's own header already
+forbids; guaranteed river-to-lake connectivity (today's channel bands and
+lake depressions are two independently-generated fields that often
+coincide but are never forced to); rainfall simulation, fluid particles,
+real-time water physics, erosion, or seasonal flooding; swimming or any
+avatar movement state tied to water — `core/TerrainWalkability.js` and
+`application/AvatarTerrainConstraint.js` stay exactly the slope-only
+decision 0.2.77 established, untouched here; water blocking or otherwise
+constraining construction/placement; a per-World/per-Document hydrology
+(today's thresholds are the one shared hydrology every document's terrain
+uses, the same posture `DEFAULT_WORLD_SEED` and `SURFACE_PALETTE` already
+established); and wiring `core/TerrainEcology.js`'s own `ecologyZoneAt()`/
+`moistureAt()` to consult `core/Hydrology.js` (a plausible FUTURE
+milestone — ecology genuinely growing lusher near real water — not this
+one; Hydrology stays Ecology's sibling, not its dependent, for now).
+Every one of these was named in the design conversation and ruled out
+specifically to keep this a small, restrained, honestly-scoped hydrology
+FOUNDATION — not because of scheduling.
+
+0.2.90 — Structure Placement & World Instances — is the milestone named
+and deliberately postponed by BOTH 0.2.81 ("Forking a Structure does NOT
+create a WorldPlacement — forking is a content operation, placing is a
+spatial operation... whenever that becomes a separate, later action")
+and 0.2.87 ("placing a Structure repeatedly into a document remains
+explicitly out of scope, still named (unscheduled) as its own future
+'Structure Placement / World Instances' milestone"). 0.2.76→0.2.89 spent
+nine milestones building a complete deterministic environmental stack —
+terrain, walkability, surface color, brick vocabulary, a forkable
+Structure Library, placement UX, ecology, hydrology — deliberately
+without ever letting a Structure be PLACED more than once, or placed at
+all outside the Editor's own single-document brick-by-brick loop. The
+design conversation that proposed this milestone settled the one
+question that decides everything else about it before any code: a
+StructurePlacement is a spatial REFERENCE to a Document, exactly the
+shape `core/WorldPlacement.js` already established for a whole
+Publication placed in shared global space, one rung down — never a copy
+of its bricks, never a special immutable game object, never template
+inheritance.
+
+```text
+0.2.90
+├── core/StructurePlacement.js                  NEW — id, documentId,
+│                                                 position, rotation; pure
+│                                                 data, mirrors
+│                                                 core/WorldPlacement.js one
+│                                                 rung down (a Document
+│                                                 placed inside another
+│                                                 Document's own World,
+│                                                 rather than a Publication
+│                                                 placed in shared global
+│                                                 space)
+├── core/World.js                               + placements Map,
+│                                                 addStructurePlacement()/
+│                                                 removeStructurePlacement()/
+│                                                 getStructurePlacement(s)(),
+│                                                 toJSON()/fromJSON()
+│                                                 (backward-compatible,
+│                                                 mirrors 0.1.43's groups
+│                                                 field exactly)
+├── core/events/Event.js                        + STRUCTURE_PLACEMENT_ADDED/
+│                                                 REMOVED (no _UPDATED — a
+│                                                 placement is only ever
+│                                                 added whole or removed
+│                                                 whole in 0.2.90)
+├── application/StructureDocumentResolver.js     NEW — documentId -> World,
+│                                                 resolved FRESH from
+│                                                 storage every call, null
+│                                                 (never throws) when
+│                                                 unresolvable
+├── application/StructurePlacementValidator.js   NEW — conservative,
+│                                                 translate-only AABB
+│                                                 collision (SpatialBounds,
+│                                                 rotation deliberately
+│                                                 ignored, matching
+│                                                 SpatialBounds.js's own V1
+│                                                 posture) against ordinary
+│                                                 bricks AND other
+│                                                 placements
+├── application/commands/PlaceStructureCommand.js         NEW — mirrors
+│   application/commands/RemoveStructurePlacementCommand.js NEW — mirrors
+│                                                 PlaceBrickCommand/
+│                                                 DeleteBrickCommand one
+│                                                 rung up
+├── application/CreateCommandRegistryUseCase.js registers 'place-structure'/
+│                                                 'remove-structure-placement'
+├── application/PlacementPositionService.js     + calculateStructureGround()
+│                                                 — ground-snap X/Z, Y stays
+│                                                 exactly 0 (no BrickDefinition
+│                                                 to rest on; the whole
+│                                                 structure stays rigid)
+├── application/editor-state/ActiveStructureState.js      NEW — mirrors
+│   application/editor-state/StructurePreviewState.js     NEW — mirrors
+│                                                 ActiveBrickState/PreviewState
+│                                                 one rung up
+├── application/StructurePreviewUseCase.js      NEW — show()/hide(), mirrors
+│                                                 PreviewUseCase
+├── application/editor-state/ToolId.js          + PLACE_STRUCTURE
+├── core/events/EditorEvent.js                  + ACTIVE_STRUCTURE_CHANGED/
+│                                                 STRUCTURE_PREVIEW_CHANGED
+├── application/EditorContext.js                + activeStructure/
+│                                                 structurePreview state
+├── application/tools/StructurePlacementTool.js NEW — a SEPARATE Tool from
+│                                                 PlacementTool (different
+│                                                 target, different
+│                                                 validator, different
+│                                                 command), sharing only
+│                                                 PlacementPositionService's
+│                                                 ground-snap math
+├── application/CreateToolRegistryUseCase.js    registers PLACE_STRUCTURE
+├── application/EditorSession.js                + structureResolver/
+│                                                 structurePreviewUseCase
+│                                                 deps, placeDocument(),
+│                                                 removeStructurePlacement()
+├── application/EditorActionContext.js          placementMode widened to
+│                                                 cover PLACE_STRUCTURE too
+├── application/CreatePersistenceUseCase.js     + structureDocumentResolver
+├── application/RenderWorldUseCase.js           + structureResolver and
+│   application/RenderWorldViewUseCase.js         TransformMath threaded
+│                                                 into WorldRenderer
+├── renderer/WorldRenderer.js                   renders/removes
+│                                                 StructurePlacements in
+│                                                 BOTH subscribe() (Editor)
+│                                                 and addWorld() (World
+│                                                 View) modes; its OWN
+│                                                 non-pickable mesh tracking,
+│                                                 never meshRegistry
+├── ui/components/Toolbar.js                    Recent Documents gains a
+│                                                 Place button beside the
+│                                                 pre-existing Load button
+├── ui/views/EditorView.js                      wiring, a placement hint,
+│                                                 the 'R' key carve-out
+│                                                 widened to PLACE_STRUCTURE
+├── css/main.css                                .toolbar-recent-dropdown-row/
+│                                                 -place
+└── tests/StructurePlacement.test.js            NEW — headless: core/ +
+     tests/StructurePlacementRendering.test.js    application/, no 'three'
+                                                 anywhere in the import
+                                                 graph (StructurePlacementTool
+                                                 never touches Three.js,
+                                                 exactly like PlacementTool);
+                                                 NEW — renderer/WorldRenderer.js
+                                                 specifically, using the
+                                                 same "real WorldRenderer,
+                                                 fake low-level renderer"
+                                                 technique
+                                                 tests/ForkRenderSync.test.js
+                                                 established
+```
+
+The central architectural distinction, settled before any code and
+enforced structurally throughout: CONTENT (a Document — what the
+building IS), SPATIAL STATE (a StructurePlacement — where it IS), and
+PROVENANCE (`DocumentMetadata.parentStructureId`, unchanged since 0.2.81
+— where it originally came FROM) are three different questions, and
+0.2.90 answers only the middle one. `core/StructurePlacement.js` carries
+nothing but `documentId`/`position`/`rotation` — no bricks, no cached
+bounds, no snapshot of the referenced Document's content at placement
+time. `application/StructureDocumentResolver.js` is the whole mechanism
+behind "edit the Document, every placement reflects it": it reads FRESH
+from storage on every single call, so there is exactly one authoritative
+representation of a structure's bricks to draw from, never a second one
+that could drift out of sync. `renderer/WorldRenderer.js`'s
+`_renderStructurePlacement()` composes a resolved Brick's LOCAL position
+— rotated around the origin by the placement's own rotation via
+`application/TransformMath.js#rotatePointAroundPivotY()` (injected, the
+same way `application/RenderWorldUseCase.js` already injects it into
+`TransformGizmoController`, never imported — `renderer/` must never
+depend on `application/`), then translated by the placement's own
+position — and only THEN applies the containing document's own
+offset/terrain groundY, the identical rigid-whole-building lift 0.2.76
+established for ordinary bricks. "The placement transforms the entire
+structure" holds because this composition happens exactly once per
+placement, never per brick: every brick in a placed House arrives
+rotated and translated by the identical amount, upright, undeformed,
+riding the terrain as one rigid unit — see docs/Principles.md, "A
+Structure Placement Transforms Its Content At Render Time, Never At
+Rest."
+
+Multiple placements of the SAME Document is where the feature earns its
+name. `renderer/WorldRenderer.js` tracks placement meshes in their OWN
+map, `_placementMeshes` (keyed by `placementId`), deliberately never
+registered with `meshRegistry`/`PickingService` — the same House placed
+twice would otherwise mint the identical Brick ids twice into a registry
+keyed by brick id alone, corrupting picking for both instances. This is
+named, not hidden: a placed structure's individual bricks are visible
+but not yet selectable, movable, or deletable one at a time — see "0.2.91
+— World Editing / Placement Management," below, which is exactly where
+that capability belongs. `tests/StructurePlacementRendering.test.js`
+proves the no-collision claim directly: the same Document placed at two
+different positions renders two independent, correctly positioned mesh
+sets, and `worldRenderer.meshRegistry.getAllMeshes()` never grows by
+more than the ordinary (non-placed) bricks in the scene.
+
+Collision reuses the exact spatial abstraction the design conversation
+asked for — "Use the same spatial abstraction already used for building
+collision... initially, conservative bounds are perfectly reasonable" —
+rather than inventing a second geometric system.
+`application/StructurePlacementValidator.js` computes the candidate
+structure's AABB via the ALREADY-existing `core/SpatialBounds.js#fromWorld()`
+(0.2.81), translates it by the candidate position, and checks it against
+every existing brick's own bounds AND every existing placement's own
+resolved-and-translated bounds — deliberately translate-only, never
+rotated, matching `SpatialBounds.js`'s own declared V1 simplification for
+whole-World bounds ("Rotation and scale are not applied to the bounds in
+V1"). This is conservative (a rotated structure's true footprint is
+usually smaller than its axis-aligned box) rather than permissive, the
+same posture `core/PlacementValidator.js` already takes toward exact-cell
+brick collision — real oriented/mesh-level collision is future work, not
+a gap 0.2.90 introduces. `StructurePlacementTool` asks this validator on
+every hover (never trusting a cached flag at commit time, same discipline
+0.2.87 established for ordinary bricks), and a blocked preview simply
+refuses to commit — proven directly in `tests/StructurePlacement.test.js`'s
+own Section G.
+
+The interaction surface deliberately reuses the SIMPLEST possible entry
+point rather than inventing a document browser: `ui/components/Toolbar.js`'s
+pre-existing Recent Documents dropdown (0.1.20B) gains one new button,
+Place, right beside the pre-existing Load — Load REPLACES the current
+document with the selected one; Place adds a StructurePlacement
+REFERENCING it to whatever document is already open, without leaving it.
+`application/EditorSession.js#placeDocument()` refuses to target the
+currently open document itself (there is no legitimate reason for this
+entry point to offer placing a document inside itself, even though
+`StructureDocumentResolver`'s one-level-of-indirection resolution would
+handle it without an infinite loop if it ever happened some other way —
+see below). `application/tools/StructurePlacementTool.js` is a
+deliberately SEPARATE `Tool` subclass from `PlacementTool`, not a mode
+flag on it: what's being placed (a Document reference vs. a
+BrickDefinition lookup), what decides validity (AABB
+`StructurePlacementValidator` vs. exact-cell `PlacementValidator`), and
+what gets committed (`PlaceStructureCommand` vs. `PlaceBrickCommand`)
+diverge at nearly every step; ground-snap math via
+`PlacementPositionService#calculateStructureGround()` is the one thing
+genuinely shared, so that's the only thing that is. Rotation follows the
+exact "orient once, place a row" workflow 0.2.87 established for bricks —
+'R'/Shift+R rotate the pending placement in 90° increments, the rotation
+persists across repeated placements until `deactivate()`, and the tool
+stays active after a successful commit rather than snapping back to
+Select, so "place House at A, place House at B, rotate B" is one
+continuous gesture, not three separate tool switches.
+
+0.2.90 deliberately does NOT give the structure-placement preview a full
+multi-brick 3D ghost the way `renderer/PreviewRenderer.js` gives an
+ordinary brick — there is no `StructurePreviewRenderer`.
+`application/editor-state/StructurePreviewState.js` carries
+`visible`/`documentId`/`title`/`position`/`rotation`/`valid`, exactly the
+information `PreviewState` already carries for a brick, but 0.2.90 only
+spends it on `ui/views/EditorView.js`'s text placement hint ("Placing
+'House' — hover the ground, R to rotate, click to place"), tinted
+implicitly by `valid` the same way the hint text already exists for
+ordinary Place mode. A full instanced ghost mesh is real, useful, future
+work — it is exactly the kind of visual richness "0.2.91 — World Editing
+/ Placement Management" is for, per the design conversation's own
+sequencing: "First establish the data model and reliable rendering of
+instances; then build a rich manipulation UX around it."
+
+`tests/StructurePlacement.test.js`'s FLAGSHIP (Section H) proves the
+milestone's own suggested scenario end to end at the domain/application
+level: fork House from the Village Library, place it at A and at B with
+different positions AND different rotations, save the containing World,
+reload it — both placements survive with their own independent
+position/rotation, both still reference the SAME House document. Editing
+House and saving is immediately visible resolving through EITHER
+placement (one authoritative Document, no copies, proven by asserting
+identical brick counts through both). Removing placement A leaves the
+House Document and placement B completely untouched — proven by
+resolving the House document again afterward and finding it unchanged.
+`tests/StructurePlacementRendering.test.js`'s own flagship (Section G)
+proves the same scenario at the rendering level: two House instances at
+different positions and rotations render as two independent, correctly
+transformed sets of meshes, sharing the same terrain-lifted groundY
+because they belong to the same containing document.
+
+Deliberately not in 0.2.90, named rather than hidden: moving, rotating,
+duplicating, or deleting an ALREADY-PLACED instance through the viewport
+(there is no interactive gizmo/selection surface for a StructurePlacement
+at all yet — a placement's position/rotation are fixed the moment
+`PlaceStructureCommand` commits them); selecting or picking an
+individual brick that belongs to a placed structure (deliberately kept
+out of `meshRegistry`/`PickingService`, per the mesh-tracking discussion
+above) — both are exactly "0.2.91 — World Editing / Placement
+Management," below, sequenced deliberately AFTER this milestone
+establishes the data model and reliable rendering first; a full
+multi-brick 3D ghost preview (StructurePreviewState/StructurePreviewUseCase
+exist and are spent on text feedback only, per their own header above);
+World View wiring for creating NEW placements (Toolbar's Place button is
+Editor-only, matching the pre-existing precedent that Forking a Structure
+is also Editor-only per docs/StructureLibrary.md) or for RENDERING
+placements inside OTHER users' streamed/published documents
+(`application/RenderWorldViewUseCase.js` threads `structureResolver`
+through for API symmetry, but no World View bootstrap constructs a real
+one — resolving against decentralized/published content is a materially
+different resolution path than the local-storage-by-documentId one
+`StructureDocumentResolver` implements, and nothing in this milestone's
+own flagship exercises it); recursively resolving a placed structure's
+OWN StructurePlacements (a structure containing a placement of another
+structure) — `StructureDocumentResolver` is deliberately ONE level of
+indirection only, which is also what keeps resolution cycle-free by
+construction, even for a placement that (accidentally or deliberately)
+references its own containing document; real Document-deletion semantics
+for a Document that still has placements referencing it (ForkBuild has
+no Document-deletion feature AT ALL yet — `StructureDocumentResolver`'s
+graceful-null-on-missing behavior is a reasonable placeholder for that
+future day, not a decision that day's design is already made — see
+docs/Principles.md, "A Missing Placement Target Is Absence, Not An
+Error"); and oriented/mesh-level collision (`StructurePlacementValidator`
+stays translate-only AABB, the same V1 simplification
+`core/SpatialBounds.js` already declared for whole-World bounds). Every
+one of these was named in the design conversation and ruled out
+specifically to keep this milestone what it set out to be — the data
+model and reliable rendering of instances — not because of scheduling.
+
+0.2.91 — World Instance Editing & Placement Management — is the
+milestone 0.2.90 named and deliberately postponed by its own closing
+paragraph: "moving, rotating, duplicating, or deleting an ALREADY-PLACED
+instance through the viewport... selecting or picking an individual
+brick that belongs to a placed structure... both are exactly '0.2.91 —
+World Editing / Placement Management,' sequenced deliberately AFTER this
+milestone establishes the data model and reliable rendering first." That
+sequencing paid off directly: every command, validator, and rendering
+seam this milestone needed already existed — `StructureDocumentResolver`,
+`StructurePlacementValidator` (already accepting `excludePlacementId`,
+unused until now), `PlacementPositionService#calculateStructureGround()`,
+`StructurePreviewState`/`StructurePreviewUseCase` — 0.2.91 is almost
+entirely new SMALL pieces composed with those, not a redesign of any of
+them.
+
+```text
+0.2.91
+├── core/StructurePlacement.js                  + position/rotation
+│                                                 setters, mirroring
+│                                                 core/Brick.js's own —
+│                                                 an instance CAN move/
+│                                                 rotate in place without
+│                                                 minting a new identity
+├── core/World.js                               + updateStructurePlacement()
+│                                                 — mutates position/
+│                                                 rotation in place,
+│                                                 mirrors updateBrick()
+├── core/events/Event.js                        + STRUCTURE_PLACEMENT_UPDATED
+│                                                 (0.2.90 deliberately had
+│                                                 none — this is exactly
+│                                                 where it was named)
+├── application/editor-state/SelectionState.js  + a second item kind,
+│                                                 { type: 'structure-
+│                                                 placement', placementId },
+│                                                 alongside the existing
+│                                                 brick kind — the SAME
+│                                                 selection abstraction,
+│                                                 never a parallel one;
+│                                                 isStructurePlacementSelection/
+│                                                 selectedPlacementId
+├── application/SelectionUseCase.js             + selectPlacement()
+├── application/commands/MoveStructurePlacementCommand.js     NEW — mirrors
+│   application/commands/RotateStructurePlacementCommand.js   NEW   MoveBrickCommand/
+│                                                               RotateBrickCommand
+│                                                               one rung up
+├── application/commands/DuplicateStructurePlacementCommand.js NEW — same
+│                                                 documentId, new
+│                                                 placementId, never a
+│                                                 new Document; mirrors
+│                                                 DuplicateGroupCommand's
+│                                                 identity bookkeeping
+├── application/CreateCommandRegistryUseCase.js registers all three
+├── renderer/PlacementMeshRegistry.js            NEW — placementId <->
+│                                                 meshes, mesh uuid ->
+│                                                 placementId — the
+│                                                 enabling change for
+│                                                 "select the whole
+│                                                 instance"
+├── renderer/WorldRenderer.js                   placement meshes now
+│                                                 tracked in
+│                                                 placementMeshRegistry
+│                                                 (exposed via getter);
+│                                                 STRUCTURE_PLACEMENT_UPDATED
+│                                                 removes and re-renders
+│                                                 at the new transform
+├── renderer/PickingService.js                  + pickPlacement() — a
+│                                                 SECOND, separate
+│                                                 raycast against
+│                                                 placement meshes only,
+│                                                 resolving to
+│                                                 placementId, never
+│                                                 merged with brick
+│                                                 picking
+├── renderer/SelectionRenderer.js               highlights every mesh of
+│                                                 a selected instance
+│                                                 (optional
+│                                                 placementMeshRegistry
+│                                                 param), tracking
+│                                                 switched from
+│                                                 Set<brickId> to
+│                                                 Set<mesh> to unify both
+│                                                 categories
+├── renderer/StructurePreviewRenderer.js        NEW — the real 3D ghost
+│                                                 0.2.90 deferred by name;
+│                                                 subscribes to
+│                                                 STRUCTURE_PREVIEW_CHANGED,
+│                                                 reused for BOTH placing
+│                                                 a new structure and
+│                                                 dragging an
+│                                                 already-placed one
+├── application/InputDispatcher.js              + pickedPlacement (a
+│                                                 second, optional,
+│                                                 always-disjoint pick)
+├── application/RenderWorldUseCase.js           wires placementMeshRegistry
+│                                                 into PickingService/
+│                                                 SelectionRenderer, and
+│                                                 StructurePreviewRenderer
+│                                                 into the render pipeline
+├── application/tools/SelectionTool.js          click selects a
+│                                                 placement whole;
+│                                                 clicking the
+│                                                 ALREADY-selected
+│                                                 instance again begins a
+│                                                 ground-snapped,
+│                                                 collision-checked drag;
+│                                                 R/Shift+R rotate it;
+│                                                 Delete removes it —
+│                                                 headless, no 'three'
+│                                                 import
+├── application/EditorSession.js                moveSelection()/
+│                                                 rotateSelection()/
+│                                                 deleteSelection() branch
+│                                                 for a placement
+│                                                 selection BEFORE
+│                                                 reaching
+│                                                 SpatialEditingService
+│                                                 (deliberately never
+│                                                 widened to understand
+│                                                 placements); +
+│                                                 duplicateSelection(),
+│                                                 getSelectedPlacementInfo(),
+│                                                 editStructurePlacementSource()
+├── application/EditorActionContext.js          + selectionIsStructurePlacement
+├── application/EditorActionRegistry.js         + 'selection.duplicate'
+│                                                 (Ctrl/Cmd+D); existing
+│                                                 nudge/rotate/delete
+│                                                 actions now correctly
+│                                                 drive a placement
+│                                                 selection too, for free
+├── ui/components/StructureInstancePanel.js     NEW — "Selected House
+│                                                 Instance": Rotate ↻/↺,
+│                                                 Duplicate, Delete, and
+│                                                 "Edit Source Document"
+│                                                 — deliberately NOT "Edit
+│                                                 Bricks"
+├── ui/components/EditingSidebar.js             Selection section reads
+│                                                 "1 structure instance
+│                                                 selected," gains a
+│                                                 Duplicate button when
+│                                                 one is
+├── ui/views/EditorView.js                      wiring, a "drag to move"
+│                                                 hint while a placement
+│                                                 is selected
+├── css/main.css                                .structure-instance-*
+└── tests/StructureInstanceEditing.test.js      NEW — headless: core/ +
+     tests/StructureInstanceRendering.test.js    application/, no 'three'
+                                                 anywhere in the import
+                                                 graph; NEW — real
+                                                 Three.js meshes and
+                                                 raycasting, no WebGL/
+                                                 browser required, mirrors
+                                                 tests/WorldEntityInteraction.test.js's
+                                                 own camera/raycast
+                                                 technique
+```
+
+The load-bearing decision, settled before any code the same way 0.2.90's
+own content/spatial-state/provenance split was: a structure-placement
+selection is a SECOND KIND of selection item, not a second selection
+system. `application/editor-state/SelectionState.js` already modeled
+selection as a list of typed items; 0.2.91 simply adds a type the list
+already knew how to hold. Every consumer that only cares about bricks
+(`SelectionState#brickIds`, `SelectionBoundsService`,
+`SpatialEditingService`, the alignment/distribution/numeric-transform
+panels) is completely unaffected — a placement selection's `brickIds` is
+always empty, so those surfaces correctly see "nothing to align" rather
+than crashing on an item shape they don't understand. The one place that
+DOES need to know the difference —
+`application/EditorSession.js#moveSelection()`/`rotateSelection()`/
+`deleteSelection()` — branches explicitly at the top of each method,
+before reaching `SpatialEditingService`, rather than teaching that
+service (and the `TransformSelectionCommand`/`SelectionBoundsService`
+machinery underneath it, both shaped entirely around brick/group
+geometry) a third selection kind. This is the same "mirrors X one rung
+up, as its own small focused thing" precedent 0.2.90 already set for
+`PlaceStructureCommand` vs. `PlaceBrickCommand` — a placement's move/
+rotate/duplicate get their OWN small commands
+(`MoveStructurePlacementCommand`/`RotateStructurePlacementCommand`/
+`DuplicateStructurePlacementCommand`), reusing the SELECTION model, the
+ACTION registry, and `CommandHistory` — never the brick-shaped gesture
+kernel underneath them. The practical payoff of branching at the action
+layer rather than the tool layer: the existing nudge actions (arrow
+keys, PgUp/PgDn), `transform.rotateClockwise`/`CounterClockwise` (R/
+Shift+R), and `selection.delete` (Delete/Backspace) all correctly drive a
+placement selection with ZERO new wiring in `ui/views/EditorView.js` —
+they already called `session.moveSelection()`/`rotateSelection()`/
+`deleteSelection()`, and those methods now know what to do with either
+selection kind.
+
+Picking a placement is a genuinely separate raycast, never a widened
+brick one, for the identical reason 0.2.90's own mesh-tracking discussion
+gives: a placement's bricks are deliberately never registered with
+`meshRegistry` at all (the same House placed twice would mint the same
+brick ids twice into a registry keyed by brick id alone).
+`renderer/PlacementMeshRegistry.js` is `meshRegistry`'s placement-shaped
+sibling — mesh uuid -> placementId instead of mesh uuid -> brickId —
+and `renderer/PickingService.js#pickPlacement()` raycasts against ONLY
+that registry's meshes, resolving a hit back to a placementId, never a
+brickId. `application/InputDispatcher.js` computes `pickedPlacement`
+alongside the existing `pickedBrick`, unconditionally, the same "every
+tool gets a complete uniform snapshot" discipline it already applied to
+`pickedBrick`/`worldPosition`. Because the two mesh sets are disjoint by
+construction, there is no ambiguity to resolve between them — a screen
+position either hits an ordinary brick, a placement's brick, or nothing.
+
+Terrain-aware movement reuses the EXACT ground-snap math
+`StructurePlacementTool` already established for placing a NEW structure
+(`PlacementPositionService#calculateStructureGround()`) rather than
+inventing a second one: `application/tools/SelectionTool.js` recognizes a
+second pointer-down on the ALREADY-selected instance as the start of a
+drag, recomputes a ground-snapped candidate position on every pointer
+move, and validates it via the SAME `StructurePlacementValidator` 0.2.90
+built for collision — now finally exercising the `excludePlacementId`
+parameter that validator kept since 0.2.90 "for symmetry... so 0.2.91's
+move/duplicate work doesn't need a second signature," per that
+milestone's own header. Releasing over a valid position commits exactly
+ONE `MoveStructurePlacementCommand` for the whole drag (one undo step,
+not one per pointer-move frame); releasing over an invalid one simply
+cancels, exactly like `StructurePlacementTool` refusing to commit a
+blocked preview. The rigid-unit rule from 0.2.76 holds throughout: only
+X/Z ever move during a drag, Y stays whatever it already was, terrain
+elevation is applied at render time only, never baked into the
+placement's own position.
+
+The real 3D ghost is the one deliberate 0.2.90 omission this milestone
+closes, and it is REUSED, not duplicated, across both callers that need
+one: placing a brand-new structure (`StructurePlacementTool`, unchanged
+since 0.2.90 except that its preview now actually renders) and dragging
+an already-placed instance (`SelectionTool`'s own drag-to-move, new this
+milestone). Both simply call
+`StructurePreviewUseCase#show()`/`hide()`; `renderer/StructurePreviewRenderer.js`
+has no idea which caller it was, and doesn't need to. It composes each
+ghost brick's local position/rotation with the preview's own position/
+rotation exactly the way `WorldRenderer#_renderStructurePlacement()`
+composes a COMMITTED placement — the ghost is a preview of that exact
+transform, not a separate approximation of it — and tints red on
+`preview.valid === false`, the same convention the ordinary brick ghost
+(`renderer/PreviewRenderer.js`) already established.
+
+`tests/StructureInstanceEditing.test.js`'s FLAGSHIP (Section I) proves
+the milestone's own suggested scenario end to end: fork House, place
+instances A and B, select A, move A, rotate A, duplicate A into C, rotate
+A again (so it visibly diverges from the copy it just produced), delete
+B, save, reload. A survives, B does not, C exists;
+`documentId(A) === documentId(C)` while `placementId(A) !== placementId(C)`;
+A and C end up at different positions AND different rotations; the House
+Document's own brick count is untouched by any of it. Then, the specific
+claim the design conversation asked to be proven directly: editing House
+and saving reaches BOTH A and C (one authoritative Document, no copies,
+exactly like 0.2.90's own flagship already proved for two ordinary
+placements) while neither A's nor C's own position/rotation moves so
+much as a unit — content identity and spatial instance identity are
+genuinely different questions, and this milestone answers only the
+second one for editing operations, never the first.
+`tests/StructureInstanceRendering.test.js`'s own flagship (Section G)
+proves the same scenario at the rendering level: a real raycast picks a
+placement's brick and resolves the correct placementId, selecting it
+highlights the whole instance, dragging shows a live ghost alongside the
+still-rendered original, and committing re-renders the instance at its
+new transform while remaining correctly pickable there.
+
+Deliberately not in 0.2.91, named rather than hidden: a full interactive
+translate/rotate GIZMO for a placement (arrows/rings rendered in the
+viewport, drag-by-axis) — 0.2.91 gives instances click-to-select,
+click-and-drag-to-move (ground plane only, not per-axis), and keyboard
+rotate/nudge instead, deliberately reusing the EXISTING placement-preview
+infrastructure rather than building a second interactive-manipulation
+subsystem alongside `TransformGizmoController`/`SpatialEditingService`
+(0.1.46's own, brick/group-shaped one); a numeric transform panel for a
+placement selection (`application/NumericTransformPanel.js` stays
+brick/group-shaped, same reasoning); recursively resolving a placed
+structure's OWN StructurePlacements (still exactly the "don't recurse
+indefinitely" boundary 0.2.90 drew — `StructureDocumentResolver` stays
+ONE level of indirection); World View wiring for instance editing (0.2.90
+already scoped placement CREATION to the Editor only; 0.2.91 keeps that
+boundary rather than widening it in the same milestone that's supposed to
+be about making the Editor's own loop excellent); and oriented/mesh-level
+collision for the drag (still translate-only AABB, `excludePlacementId`
+changes WHICH placement is excluded from the check, not HOW the check
+itself works). Every one of these was named in the design conversation
+and ruled out specifically to keep this milestone what it set out to be —
+closing exactly the gap 0.2.90 named — not because of scheduling.
 
 ## 0.1.50 — What shipped
 

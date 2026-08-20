@@ -5728,3 +5728,317 @@ never by writing one into the other, and never as a stored fourth fact
 competing with either for authority. Laptop reading a message never
 moves Phone's own local marker; what moves is only what Phone's derived,
 identity-level VIEW reports, and only because Laptop told it so.
+### Identity Presence Is An Aggregate Of Authorized Device Observations, Never A Fourth Store (0.2.85)
+
+`application/PeerPresenceUseCase.js` already treated `isConnectedNow` as
+computed, never stored (0.2.70's own "A Peer Presence Summary
+Reconciles Independent Lifetimes; It Is Never A Fourth Store"). 0.2.85
+extends that same discipline across MULTIPLE simultaneously-live
+connections instead of one: `_liveConnectedPeers(identityId)` is a
+`.filter()`, never a `.find()`, over every currently-AUTHENTICATED
+`ConnectedPeer` whose RESOLVED social identity (`resolveConnectionIdentity()`,
+0.2.79) matches. "Alice is online" is true iff that list is non-empty —
+an aggregate over however many of her authorized devices this local
+device currently observes as reachable, recomputed fresh on every call,
+never cached as a single boolean that could drift. Three genuinely
+different questions stay genuinely different: Connection Presence (one
+`ConnectedPeer`'s own `getLifecycleState()`), Device Presence (one live
+connection resolved to one specific authorized device), and Identity
+Presence (at least one live, authorized device of the whole identity) —
+collapsing any two of these into one is exactly the mistake this
+principle exists to name. A stale disconnect on one of several live
+connections therefore never flips presence by itself — only the LAST
+one does — and a revoked device's connection stops contributing to its
+PARENT's presence the instant `resolveConnectionIdentity()` itself stops
+recognizing it (the connection stays genuinely authenticated throughout;
+only which identity it counts toward changes), with no separate
+revocation check anywhere in this class. Deliberately NOT gossiped or
+synchronized between Alice's own devices — each observer (Bob, or any
+other peer) derives what it currently knows entirely from its own live
+connections, exactly as `docs/Principles.md`'s own "Discovery Finds A
+Candidate; It Never Authenticates One" already keeps observation and
+authority as separate axes one layer down. And deliberately NOT reused
+for delivery-target selection: `application/ChatUseCase.js#_findAuthenticatedPeer()`
+still picks exactly one device to send to (a `.find()`, unchanged) —
+presence aggregation answers "is anyone home," never "which one do I
+talk to," and the two stay two different questions on purpose.
+
+### Ecology Is A Third Pure Function Layered On Terrain, Never A New Ground Truth (0.2.88)
+
+`core/TerrainEcology.js#ecologyZoneAt(seed, x, z)` does not invent a
+second opinion about the world's geography — it CONSULTS
+`core/TerrainSurface.js#surfaceCategoryAt()` (itself already a function
+of `core/TerrainHeightField.js#terrainHeightAt()`) and layers two more
+independent, low-frequency noise fields on top. This is the same
+"second pure function of the identical (seed, x, z) triple" discipline
+`core/TerrainSurface.js`'s own header established relative to
+`core/TerrainHeightField.js` in 0.2.79, now extended one layer further:
+`TerrainHeightField` answers "how high," `TerrainSurface` answers "what
+does it look like," `TerrainEcology` answers "what kind of environment is
+this." Every zone boundary therefore correlates with the terrain
+underneath by construction rather than by convention — WATER and ROCK
+zones mirror `surfaceCategoryAt()` exactly, HIGHLAND shares the identical
+`HIGHLAND_ELEVATION` threshold `surfaceColorAt()` already tints GRASS
+lighter at (imported, never re-derived), and BEACH is a narrow band
+against the same `WATER_LEVEL`. A world where the ecology map looked like
+it was painted independently of the terrain map — a forest floating over
+a lake, a beach on a cliff — would mean this principle had been violated;
+`tests/TerrainEcology.test.js`'s own Section B exists specifically to
+catch that class of bug by scanning hundreds of coordinates and asserting
+the correlation holds everywhere, not merely at a few hand-picked spots.
+
+### Natural Features Are Sampled, Never Stored (0.2.88)
+
+`core/NaturalFeatureField.js#naturalFeaturesInRegion(seed, minX, minZ,
+maxX, maxZ)` has no equivalent of a `TreeRecord` anywhere in this
+codebase, and never will while this principle holds: every tree it
+returns is recomputed from a fixed, jittered lattice keyed on nothing but
+`(seed, x, z)`, the same "content-addressed by geography" posture
+`core/TerrainHeightField.js`'s own header established for elevation in
+0.2.76 — `Terrain = f(seed, x, z)`, never `Terrain = lookup(x, z)` —
+applied here to WHAT grows somewhere instead of how high it stands. This
+is what makes a forest safe to stream in and out thousands of times
+across a session without ever writing a single byte: two replicas, or
+the same replica returning to a position after roaming thousands of
+units away, recompute the byte-identical tree at the byte-identical
+position, because both are pure functions of their own arguments and
+nothing else. It is also the structural reason a generated tree can never
+accidentally become a `Document` -> `Brick` the way a user's house is:
+there is no persistence layer a tree could be promoted into even by
+accident, because `naturalFeaturesInRegion()` never writes anywhere in
+the first place. `tests/NaturalFeatureField.test.js`'s own FLAGSHIP
+proves this directly — a ring of tiles streamed in ascending order and
+the identical ring streamed in descending order discover byte-identical
+trees, because tile LOAD ORDER was never an input to the computation to
+begin with.
+
+### Tree Density Is Independent Of The Zone That Gates It, So Cover Fades Instead Of Stopping (0.2.88)
+
+`core/NaturalFeatureField.js#forestDensityAt()` is deliberately its OWN
+noise field, decorrelated from `core/TerrainEcology.js#moistureAt()` —
+the field that decided whether a coordinate is FOREST or GRASSLAND in
+the first place. If tree placement simply reused moisture directly, the
+zone boundary and the tree-density boundary would be the same line
+twice: a forest would stop exactly where the FOREST zone stops, a hard
+edge no amount of jitter could soften. Instead, `naturalFeaturesInRegion()`
+thresholds `forestDensityAt()` PERMISSIVELY inside FOREST (most
+qualifying lattice cells host a tree — dense cover) and RESTRICTIVELY
+inside GRASSLAND (only the density field's own local peaks qualify —
+sparse, scattered fringe trees), against a zone boundary that itself
+stays a hard line. The visible result is a forest that thins into
+scattered trees before giving way to open grassland, rather than a wall
+of trees ending in a straight edge — proven directly in
+`tests/NaturalFeatureField.test.js`'s own Section C, which asserts
+FOREST's tree rate exceeds GRASSLAND's by more than double over the same
+wide scan, and that GRASSLAND's rate is nonzero rather than a hard
+cutoff.
+
+### Hydrology Is A Fourth Pure Function Layered On Terrain, Sibling To Ecology, Never A New Ground Truth (0.2.89)
+
+`core/Hydrology.js` answers "where does water actually collect and
+flow," a genuinely different question from `core/TerrainEcology.js`'s
+"what kind of natural environment is this" — and, like `TerrainEcology`,
+it does not invent a second opinion about the world's geography to
+answer it. It CONSULTS `core/TerrainSurface.js#surfaceCategoryAt()`
+directly (LAKE mirrors `SURFACE_CATEGORY.WATER` exactly) and layers its
+own independent, low-frequency noise field on top for RIVER, the same
+"second/third/fourth pure function of the identical `(seed, x, z)`
+triple" discipline `core/TerrainSurface.js`'s own header established in
+0.2.79 and `core/TerrainEcology.js`'s own header extended in 0.2.88, now
+extended one layer further. The deliberate architectural choice is that
+`Hydrology` is Ecology's SIBLING, not its dependent: both consult
+`TerrainSurface` independently rather than `Hydrology` importing
+`TerrainEcology` or vice versa, so there is no import cycle and no
+ordering dependency between "what grows here" and "where does water
+flow." A river coordinate is therefore guaranteed, by construction, to
+sit only on the same GRASS-surface, below-`HIGHLAND_ELEVATION` ground the
+flat ecology zones already occupy — a river cutting across ROCK or
+appearing above `HIGHLAND_ELEVATION` would mean this principle had been
+violated; `tests/Hydrology.test.js`'s own Section B exists specifically
+to catch that class of bug by scanning thousands of coordinates and
+asserting the correlation holds everywhere.
+
+### A River Is A Bounded, Local Channel Field, Never A Global Drainage Simulation (0.2.89)
+
+Real hydrological flow accumulation — how much upstream area drains
+through a given point — cannot be answered as a bounded local function
+of `(seed, x, z)`. Computing it exactly requires summing contributions
+from an UNBOUNDED upstream area, which for a procedurally infinite world
+means either persisting a drainage network somewhere (forbidden by the
+same posture `core/TerrainHeightField.js`'s own header established for
+elevation: `Terrain = f(seed, x, z)`, never `Terrain = lookup(x, z)`) or
+an unworkable per-query cost that would fall apart the moment a
+per-vertex, per-frame streaming renderer tried to call it. `core/Hydrology.js#isRiverAt()`
+is therefore not an approximation of real flow accumulation that will
+someday be replaced with the real thing — it is a deliberately different
+KIND of function: a domain-warped noise band (the standard "fake a
+winding river without simulating one" technique) gated to the same
+lowland ground the flat ecology zones occupy and biased, never hard-
+gated, toward locally lower cross-sections via a continuous
+`valleyFactorAt()` multiplier. This is why `core/Hydrology.js` exports
+`flowDirectionAt()` — a genuinely real, local, steepest-descent gradient
+sample — as its OWN separate, honestly-scoped primitive, deliberately
+never used to trace or accumulate a river's path: using it that way would
+reintroduce the exact unbounded-cost problem this principle exists to
+avoid. `tests/Hydrology.test.js`'s own Section E proves `flowDirectionAt()`
+genuinely points downhill; Section B proves the channel field stays
+correlated with the terrain underneath despite being a different kind of
+computation, not a lesser one.
+
+### A Lake Is Rendered Geometry; A River Is Ground Color (0.2.89)
+
+`core/Hydrology.js` deliberately represents its two water features two
+different ways, and the difference is not an oversight — it follows
+directly from what each one physically is. A lake is STILL water: it
+genuinely sits at one constant elevation regardless of how the lakebed
+beneath it rises and falls, which only real flat geometry can express —
+`renderer/WaterTileMesh.js` builds exactly that, a per-tile plane held at
+`LAKE_SURFACE_HEIGHT` (`core/Hydrology.js`'s own re-export of
+`WATER_LEVEL`, never a re-derived copy) wherever the ground below is
+WATER, and several units beneath the actual terrain surface everywhere
+else — an ordinary opaque-terrain depth test hides the sunk vertices with
+zero seam-handling code, because every vertex is still placed from
+nothing but its own world `(x, z)`, the same "continuous world
+coordinates, never tile coordinates" discipline every sibling tile mesh
+in this codebase already follows. A river is FLOWING water threaded
+across sloped, varied terrain — a single flat plane could never follow
+that convincingly without becoming its own small hydraulic simulation, so
+it stays exactly what `core/TerrainEcology.js`'s own BEACH sand tint and
+FIELD furrow tint already are: a ground-color treatment,
+`core/Hydrology.js#hydrologyGroundColorAt()` layered onto
+`ecologyGroundColorAt()`'s own unchanged output, needing no geometry, no
+separate streaming, and no seam-handling of its own because it inherits
+all three from the ground it's painted on. Reaching for one
+representation everywhere ("give every water feature a mesh" or "tint
+every water feature") would have meant either an oddly rigid lake that
+tints instead of truly pooling, or a river rendered as a flat raft
+floating disconnected from the terrain beneath it — this principle is
+why the two get different treatment on purpose.
+
+### A Structure Placement References Content, It Never Copies It (0.2.90)
+
+`core/StructurePlacement.js` carries a `documentId`, a `position`, and a
+`rotation` — nothing else. It is the same shape as `core/WorldPlacement.js`
+one rung down (a lightweight spatial REFERENCE, never an owner of the
+content it points at), applied to a Document placed INSIDE another
+Document's own World rather than a Publication placed in shared global
+space. The alternative this principle rules out — copying the referenced
+Document's bricks into the placement, or into the containing World, at
+the moment of placement — was rejected for exactly the reason
+`WorldPlacement`'s own header already gives: it would create a second,
+driftable representation of the same content, requiring synchronization
+machinery (`Document` edited -> somehow propagate to every copy) that
+this codebase has consistently refused to build anywhere else. Instead,
+`application/StructureDocumentResolver.js` resolves a placement's
+`documentId` to its CURRENT content fresh, on every call, straight from
+storage — there is exactly one authoritative representation of a
+structure's bricks (the Document itself) and a placement never holds a
+second one. This is what makes "fork House, place it twice, edit House,
+both placements reflect the edit" true by construction rather than by
+a cache-invalidation strategy: there is no cache to invalidate. It also
+means removing a placement (`RemoveStructurePlacementCommand`) can never
+delete content, and nothing about a Document's own lifecycle needs to
+know how many placements reference it, or whether any do at all — see
+"A Missing Placement Target Is Absence, Not An Error," below, for what
+happens when that reference can no longer be resolved.
+
+### A Structure Placement Transforms Its Content At Render Time, Never At Rest (0.2.90)
+
+A placed structure's bricks are never rewritten into the containing
+World's own coordinate space, and a `StructurePlacement`'s
+`position`/`rotation` are never baked into a second copy of its
+referenced Document's `Brick` positions. `renderer/WorldRenderer.js`
+composes the two — a resolved Brick's LOCAL position, rotated around the
+origin by the placement's own rotation, then translated by the
+placement's own position — fresh, every render, the same rendering-time-
+only posture `docs/Principles.md`'s own "Terrain Elevation Is A
+Rendering-Time Offset, Never A Presence Or Placement Fact" (0.2.76)
+already established for ground height. "The placement transforms the
+entire structure" (the 0.2.90 design conversation's own framing) is
+enforced by this composition happening exactly ONCE, at the placement
+level, never per-brick: every brick in a placed structure is rotated and
+translated by the identical value, so the structure always arrives as
+one rigid unit, upright and undeformed, regardless of what terrain or
+offset the containing document itself sits on. Rotation math is shared,
+not duplicated, with the gizmo/gesture system that already owns it —
+`application/TransformMath.js#rotatePointAroundPivotY()` is injected into
+`WorldRenderer` (mirroring how `application/RenderWorldUseCase.js`
+already injects it into `TransformGizmoController`) rather than
+reimplemented locally, because `renderer/` must never import
+`application/` — see `RenderWorldUseCase.js`'s own header.
+
+### A Missing Placement Target Is Absence, Not An Error (0.2.90)
+
+ForkBuild has no Document deletion feature yet — the only way a
+`StructurePlacement.documentId` can fail to resolve today is a
+placement pointing at an id that was never actually saved, or storage
+being cleared underneath it. Either way, `StructureDocumentResolver#resolve()`
+answers `null`, never throws, and every caller treats that exactly like
+"this placement currently contributes nothing" — `renderer/WorldRenderer.js`
+renders no meshes for it, `application/StructurePlacementValidator.js`
+treats it as contributing no collision, and nothing in the render or
+collision path distinguishes "briefly unresolvable" from "permanently
+gone." This mirrors `core/SpatialOverlap.js`'s own "Overlap Is A Fact;
+Collision Is A Policy Decision" — a missing target is a plain
+observation about the current state of storage, not a validation failure
+this layer needs to react to. The placement itself is left completely
+untouched: removing a `StructurePlacement`
+(`RemoveStructurePlacementCommand`) is the only way to make an
+unresolvable reference disappear, exactly as a dangling reference should
+require an explicit removal, never a side effect of failing to resolve
+it once. When a real Document-deletion feature eventually exists, it
+will need its own explicit answer to "what happens to a placement that
+still references the deleted id" — this graceful-null behavior is a
+reasonable placeholder for that day, not a decision that day's design is
+already made.
+
+### Selecting An Instance Selects Its Spatial Reference, Never Its Content (0.2.91)
+
+A `StructurePlacement` selection is a second KIND of selection item —
+`{ type: 'structure-placement', placementId }` alongside the existing
+`{ type: 'brick', brickId, buildingId }` — never a second selection
+system running alongside `application/editor-state/SelectionState.js`.
+This is the direct consequence of "A Structure Placement References
+Content, It Never Copies It" (0.2.90) applied to selection specifically:
+clicking a placed structure selects the ONE thing that is actually
+editable in place — where it is — never one of its constituent bricks,
+which remain reachable only by editing the referenced Document. Every
+brick-shaped consumer of a selection (`SelectionBoundsService`,
+`SpatialEditingService`, alignment/distribution/numeric-transform)
+neither knows nor needs to know a placement selection exists — a
+placement selection's `brickIds` is always empty, so those surfaces
+correctly see "nothing to operate on" rather than crashing on an
+unfamiliar shape. Move/rotate/duplicate for a placement selection
+deliberately do NOT flow through that brick/group-shaped gesture kernel
+at all; `application/EditorSession.js` branches on
+`selection.isStructurePlacementSelection` before ever reaching it,
+routing to small, dedicated commands
+(`MoveStructurePlacementCommand`/`RotateStructurePlacementCommand`/
+`DuplicateStructurePlacementCommand`) instead — the SELECTION model, the
+ACTION registry, and `CommandHistory` are the abstractions this reuses;
+`SpatialEditingService`'s own per-brick geometry is not one of them, and
+widening it to also understand a whole placed structure would blur
+exactly the distinction this principle exists to keep sharp.
+
+### Duplicating An Instance Is A Spatial Operation; Forking Its Content Is Not (0.2.91)
+
+`application/commands/DuplicateStructurePlacementCommand.js` creates a
+new `StructurePlacement` referencing the exact SAME `documentId` — never
+a new Document, never a call into `application/ForkStructureUseCase.js`.
+This is the same content/spatial-state boundary 0.2.81 drew for forking
+("Forking A Structure Records Provenance, Never A Live Dependency") and
+0.2.90 drew for placing, applied one more time to duplication: House A
+duplicated into House C keeps `documentId(A) === documentId(C)` while
+`placementId(A) !== placementId(C)` — proven directly, by name, in
+`tests/StructureInstanceEditing.test.js`'s own flagship. The
+practical consequence is what makes the distinction real rather than
+academic: editing the House Document afterward is immediately visible
+through BOTH A and C (one authoritative Document,
+`StructureDocumentResolver` resolving fresh for each, exactly as 0.2.90
+already proved for two ordinary placements), while duplicating, moving,
+or rotating either instance never mutates the Document at all. A UI
+surface that wanted "duplicate this structure's bricks into a genuinely
+independent copy" would need to call `ForkStructureUseCase` and then
+place the fork — a different, more expensive operation this command
+deliberately does not conflate with the cheap, purely-spatial "one more
+instance of the same content" it actually performs.

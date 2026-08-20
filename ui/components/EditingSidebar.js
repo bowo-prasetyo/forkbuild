@@ -20,6 +20,11 @@ export default {
         getContext: { type: Function, required: true },
         ui: { type: Object, default: () => ({}) },
         selectionCount: { type: Number, default: 0 },
+        // 0.2.91 — World Instance Editing & Placement Management: true
+        // when the selection is exactly one StructurePlacement, so the
+        // Selection section's copy and Duplicate button reflect "an
+        // instance" rather than always assuming bricks.
+        isStructurePlacementSelection: { type: Boolean, default: false },
         applyNumeric: { type: Function, required: true },
         align: { type: Function, required: true },
         distribute: { type: Function, required: true }
@@ -101,6 +106,9 @@ export default {
                     No bricks selected.<br />
                     Select bricks to transform, align, distribute, or edit numerically.
                 </p>
+                <p v-else-if="isStructurePlacementSelection" :style="{ margin: '0', color: '#b0b0b0', fontSize: '12px' }">
+                    1 structure instance selected
+                </p>
                 <p v-else :style="{ margin: '0', color: '#b0b0b0', fontSize: '12px' }">
                     {{ context.selectionCount }} brick(s) selected
                 </p>
@@ -119,6 +127,21 @@ export default {
                         :title="isDisabled('selection.clear') ? reasonFor('selection.clear') : 'Clear the selection'"
                         @click="run('selection.clear')"
                     >Clear</button>
+                    <button
+                        v-if="isStructurePlacementSelection"
+                        type="button"
+                        :style="buttonStyle()"
+                        :disabled="isDisabled('selection.duplicate')"
+                        :title="isDisabled('selection.duplicate') ? reasonFor('selection.duplicate') : 'Duplicate this instance'"
+                        @click="run('selection.duplicate')"
+                    >Duplicate</button>
+                    <button
+                        type="button"
+                        :style="buttonStyle()"
+                        :disabled="isDisabled('selection.delete')"
+                        :title="isDisabled('selection.delete') ? reasonFor('selection.delete') : 'Delete the selection'"
+                        @click="run('selection.delete')"
+                    >Delete</button>
                 </div>
             </div>
 

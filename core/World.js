@@ -1,5 +1,6 @@
 import { Building } from './Building.js';
 import { Group } from './Group.js';
+import { StructurePlacement } from './StructurePlacement.js';
 import { DomainEvent } from './events/Event.js';
 import { createId } from './createId.js';
 
@@ -14,6 +15,7 @@ export class World {
         this._id = id;
         this._buildings = new Map();
         this._groups = new Map();
+        this._placements = new Map();
         this._metadata = metadata;
         this._eventBus = eventBus;
     }
@@ -179,12 +181,65 @@ export class World {
         return removed;
     }
 
+    // -----------------------------------------------------------------
+    // Structure placements (0.2.90) — document state, mediated exactly
+    // like buildings and groups above. A StructurePlacement never owns
+    // bricks (core/StructurePlacement.js's own header); World only ever
+    // stores the reference + position/rotation, never the referenced
+    // Document's content.
+    // -----------------------------------------------------------------
+
+    addStructurePlacement(placement) {
+        this._placements.set(placement.id, placement);
+        this._publish(DomainEvent.STRUCTURE_PLACEMENT_ADDED, { placement });
+    }
+
+    removeStructurePlacement(id) {
+        const placement = this._placements.get(id);
+        if (!placement) {
+            return;
+        }
+        this._placements.delete(id);
+        this._publish(DomainEvent.STRUCTURE_PLACEMENT_REMOVED, { placement });
+    }
+
+    getStructurePlacement(id) {
+        return this._placements.get(id) || null;
+    }
+
+    // 0.2.91 — World Instance Editing & Placement Management. Mutates an
+    // EXISTING placement's position and/or rotation in place — the
+    // instance-manipulation counterpart to updateBrick() above. changes:
+    // { position, rotation }. Never touches documentId: moving or
+    // rotating a placement never changes what it references (see
+    // core/StructurePlacement.js's own header). A silent no-op for an
+    // unknown id, the same graceful-absence posture removeStructurePlacement()
+    // already takes.
+    updateStructurePlacement(id, changes) {
+        const placement = this._placements.get(id);
+        if (!placement) {
+            return;
+        }
+        if (changes.position) {
+            placement.position = changes.position;
+        }
+        if (changes.rotation !== undefined) {
+            placement.rotation = changes.rotation;
+        }
+        this._publish(DomainEvent.STRUCTURE_PLACEMENT_UPDATED, { placement });
+    }
+
+    getStructurePlacements() {
+        return Array.from(this._placements.values());
+    }
+
     toJSON() {
         return {
             id: this._id,
             metadata: this._metadata,
             buildings: this.getBuildings().map((building) => building.toJSON()),
-            groups: this.getGroups().map((group) => group.toJSON())
+            groups: this.getGroups().map((group) => group.toJSON()),
+            placements: this.getStructurePlacements().map((placement) => placement.toJSON())
         };
     }
 
@@ -196,6 +251,10 @@ export class World {
         // Worlds serialized before 0.1.43 have no groups field.
         for (const groupJson of json.groups || []) {
             world.addGroup(Group.fromJSON(groupJson));
+        }
+        // Worlds serialized before 0.2.90 have no placements field.
+        for (const placementJson of json.placements || []) {
+            world.addStructurePlacement(StructurePlacement.fromJSON(placementJson));
         }
         return world;
     }
