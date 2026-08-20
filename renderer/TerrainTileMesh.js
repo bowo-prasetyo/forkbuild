@@ -1,13 +1,23 @@
 import * as THREE from 'three';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
+import { surfaceColorAt } from '../core/TerrainSurface.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 
-// The renderer-side counterpart to core/TerrainHeightField.js: it knows
-// nothing about WHAT elevation a coordinate has, only how to turn one
-// tile coordinate into a displaced-plane Three.js mesh from that pure
-// function — the same split renderer/ThreeBrickFactory.js already
+// The renderer-side counterpart to core/TerrainHeightField.js and
+// core/TerrainSurface.js: it knows nothing about WHAT elevation or
+// surface a coordinate has, only how to turn one tile coordinate into a
+// displaced, colored-per-vertex Three.js mesh from those two pure
+// functions — the same split renderer/ThreeBrickFactory.js already
 // establishes for bricks (core/BrickRegistry decides what a definitionId
 // IS; ThreeBrickFactory only ever builds the mesh for it).
+//
+// Surface color is sampled per vertex at that vertex's own WORLD (x, z)
+// — never at the tile's (tx, tz) — the same "continuous world
+// coordinates, not tile coordinates" discipline elevation already uses
+// just above it. That is what keeps two neighboring tiles' shared edge
+// vertices the exact same color: both compute surfaceColorAt() at the
+// identical world coordinate, independent of which tile happened to
+// stream in first. See core/TerrainSurface.js's own header.
 //
 // Deliberately untested directly, same posture as ThreeBrickFactory/
 // BrickRenderer/GridHelper/Lights — see
@@ -15,7 +25,6 @@ import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 // load/unload ORCHESTRATION is unit-tested (with a fake tile factory)
 // while the real Three.js geometry-building glue here isn't.
 const TILE_SEGMENTS = 12; // vertices per edge = TILE_SEGMENTS + 1
-const TERRAIN_COLOR = 0x5c8a4a;
 
 export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
     const geometry = new THREE.PlaneGeometry(tileSize, tileSize, TILE_SEGMENTS, TILE_SEGMENTS);
@@ -23,15 +32,25 @@ export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE)
 
     const center = tileCenter(tx, tz, tileSize);
     const position = geometry.attributes.position;
+    const colors = new Float32Array(position.count * 3);
     for (let i = 0; i < position.count; i++) {
         const worldX = center.x + position.getX(i);
         const worldZ = center.z + position.getZ(i);
         position.setY(i, terrainHeightAt(seed, worldX, worldZ));
+
+        const color = surfaceColorAt(seed, worldX, worldZ);
+        colors[i * 3] = color.r;
+        colors[i * 3 + 1] = color.g;
+        colors[i * 3 + 2] = color.b;
     }
     position.needsUpdate = true;
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.computeVertexNormals();
 
-    const material = new THREE.MeshStandardMaterial({ color: TERRAIN_COLOR });
+    // vertexColors: true, no material.color override — the per-vertex
+    // buffer set above is the ONLY source of terrain color, never a flat
+    // material tint layered on top of it.
+    const material = new THREE.MeshStandardMaterial({ vertexColors: true });
     const mesh = new THREE.Mesh(geometry, material);
     // Vertex Y already holds the ABSOLUTE world elevation (sampled at
     // worldX/worldZ above), so the mesh's own position.y stays 0 — only

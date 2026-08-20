@@ -3124,6 +3124,129 @@ simultaneous position claims from two authorized devices of the same
 identity are resolved, a genuinely harder problem than anything else this
 list names.
 
+0.2.79 — Terrain Surface & Natural Color — is chosen next over continuing
+further into Multi-Device Social State, deliberately: 0.2.76/0.2.77 gave
+World View a ground that exists and can be walked on, but that ground has
+looked like exactly one thing since the day it shipped — a single flat
+`0x5c8a4a` green, the same color whether a coordinate sits in a depression,
+on a gentle slope, or on the steepest exposed terrain this world generates.
+Multi-Device Social State is a real, larger arc (teaching
+`PeerRelationshipUseCase`/`ChatUseCase`/`VoiceUseCase`/presence sync to
+actually consult `resolvePeerAuthority()`) that deserves its own
+uninterrupted milestone rather than being reached for as a placeholder
+between environmental work. The goal: give the deterministic terrain a
+subtle, natural visual identity while ensuring buildings and avatars
+remain the visual focus — an environmental-RENDERING milestone, never a
+new terrain or gameplay system.
+
+```text
+0.2.79
+└── core/TerrainSurface.js             a SECOND pure function of the
+                                        identical (seed, x, z) triple
+                                        core/TerrainHeightField.js already
+                                        takes — surfaceCategoryAt() derives
+                                        a WATER/SOIL/ROCK/GRASS
+                                        classification from elevation and
+                                        local slope alone; surfaceColorAt()
+                                        turns that into a soft, muted
+                                        {r, g, b} color, blended lighter for
+                                        higher-elevation GRASS and given a
+                                        low-frequency, low-contrast
+                                        brightness variation — all of it a
+                                        function of CONTINUOUS world
+                                        coordinates, never tile coordinates
+```
+
+`renderer/TerrainTileMesh.js` is the only other file this milestone
+touches: each vertex, already sampling `terrainHeightAt(seed, worldX,
+worldZ)` for its Y position, now also samples `surfaceColorAt(seed,
+worldX, worldZ)` into a per-vertex color buffer, and the tile's material
+switches from a single flat `MeshStandardMaterial({ color })` to
+`MeshStandardMaterial({ vertexColors: true })`. Nothing else changes:
+`core/TerrainHeightField.js` (elevation), `core/TerrainWalkability.js`
+(movement), `core/TerrainTiling.js` (streaming math), and
+`renderer/TerrainStreamingController.js` (load/unload) are all completely
+untouched — this is a rendering-layer addition, not a terrain-system
+rewrite.
+
+The one design principle every other decision in this milestone serves:
+buildings and avatars win. `SURFACE_PALETTE` is deliberately low-
+saturation, mid-value — a soft pale green, a muted warm brown, a light
+neutral gray, a soft blue — never the saturated "game grass"/"game water"
+tones that would make the ground compete with a building's or an avatar's
+own, more saturated materials for visual attention. See docs/Principles.md,
+"Terrain Surface Color Is Deliberately Restrained; Buildings And Avatars
+Are The Visual Focus."
+
+Classification is derived, never assigned: `surfaceCategoryAt()` reads
+`terrainHeightAt(seed, x, z)` and a 1-unit finite-difference slope sample
+(the same rise-over-run measurement `core/TerrainWalkability.js` already
+uses for movement, applied here to classification instead) and answers
+WATER for a low depression, ROCK/SOIL for exposed steep ground (ROCK
+steeper than SOIL), and GRASS otherwise — the exact
+`flat/moderate elevation -> grassland`, `low depression -> water/lake`,
+`exposed steep terrain -> soil/rock` mapping the design conversation asked
+for, with thresholds expressed as fractions of `TERRAIN_HEIGHT_BOUND` so
+they scale automatically rather than drifting out of range if the height
+field's own octave amplitudes ever change. "Higher terrain -> lighter/
+different vegetation tone" is deliberately NOT a fifth category — it is a
+continuous brightness blend applied only within GRASS, since a whole new
+`SURFACE_CATEGORY` for one color nuance would over-model what is really
+just a gradient.
+
+The most important continuity property, restated for color: surface color
+is a function of WORLD coordinates, never tile coordinates.
+`surfaceColorAt(seed, worldX, worldZ)` has no idea a tile grid exists at
+all, so two neighboring `renderer/TerrainStreamingController.js` tiles —
+streamed in independently, on whatever frame the camera happened to
+approach them — compute the byte-identical color at their shared edge
+vertex, with zero coordination between them. This is the same "pure
+function of continuous coordinates, not a grid cell" discipline
+`core/TerrainHeightField.js` already established for elevation in 0.2.76,
+extended to color; without it, streaming tiles in and out could make the
+tile grid visible as a checkerboard the instant two adjacent tiles
+happened to land on different sides of a threshold.
+
+The flagship test (`tests/TerrainSurfaceColor.test.js`) proves the design
+doc's own scripted scenario end to end, across five sections: determinism,
+boundedness, and category completeness (a wide coordinate scan reaches all
+four `SURFACE_CATEGORY` values, never fewer); classification actually
+tracks elevation and slope (every WATER coordinate found sits strictly
+lower than every GRASS coordinate in the same scan; ROCK/SOIL coordinates
+are, on average, markedly steeper than GRASS ones; the highest-elevation
+GRASS coordinate found is visibly lighter than the lowest); continuity
+with no visible seam anywhere, including at 41 different exact
+terrain-tile boundaries, and — at the precise resolution
+`renderer/TerrainTileMesh.js` samples at — the shared edge vertex between
+two adjacent tiles gets the byte-identical color from either tile's own
+independent vertex loop, for every segment count tested; replica
+determinism (two independent "replicas" sharing only the world seed
+compute byte-identical categories and colors across a 61-point path); and
+a full FLAGSHIP walk across many tile boundaries that returns to its
+starting coordinates and reproduces byte-identical elevation, category,
+and color throughout.
+
+Deliberately not in 0.2.79, named rather than hidden: water simulation,
+swimming, rivers, shorelines, vegetation objects, trees, grass meshes,
+weather, seasons, snow simulation, erosion, a real biome simulation, or
+any large terrain-texture asset — WATER/SOIL/ROCK/GRASS are visual
+surface-color categories, never the systems those words usually name (a
+WATER-classified tile looks like a lake; it is not one). Also deliberately
+out of scope: a per-World/per-Document surface palette or classification
+(today's `SURFACE_PALETTE` and thresholds are the one shared look every
+document's terrain uses, the same posture `DEFAULT_WORLD_SEED` already
+established); consulting `core/TerrainSurface.js` from
+`core/TerrainWalkability.js` or `application/AvatarTerrainConstraint.js`
+(walkability stays exactly the slope-only decision 0.2.77 established —
+SOIL/ROCK mean "this looks like exposed dirt/stone," never "this is
+unwalkable"); `renderer/PickingService.js#pickGroundPosition()` (still
+raycasts the literal `Y = 0` plane, completely untouched); and any
+per-vertex texture map, normal map, or triplanar detail beyond flat vertex
+color. Every one of these was named in the design conversation and ruled
+out specifically to keep this a small, restrained rendering milestone —
+"visual surface classification," never "water simulation" — not because
+of scheduling.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49
