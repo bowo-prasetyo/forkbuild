@@ -3878,6 +3878,162 @@ claims to have observed; and no voice/ringing changes — 0.2.86
 actually needs this one's resolution vocabulary for "which of Alice's
 reachable devices should ring."
 
+0.2.86 — Multi-Device Voice Ringing — is that next milestone, and the
+point where the whole 0.2.78→0.2.85 arc finally interacts in one place:
+device authorization decides WHO may answer for Alice, social identity
+resolution decides WHICH connections count as hers, presence decides
+WHICH of them are reachable right now, and voice finally ACTS on all
+three at once instead of requiring a caller to already have one
+specific `ConnectedPeer` in hand.
+
+```text
+0.2.86
+├── application/ConnectedIdentityPeers.js   NEW — findLiveConnectedPeers(),
+│                                            application/PeerPresenceUseCase.js's
+│                                            own 0.2.85 `_liveConnectedPeers()`
+│                                            filter, extracted verbatim so
+│                                            VoiceUseCase can reuse the
+│                                            IDENTICAL query rather than
+│                                            re-deriving it
+├── application/PeerPresenceUseCase.js      _liveConnectedPeers() becomes a
+│                                            thin call into the shared
+│                                            function above — behavior
+│                                            byte-identical to 0.2.85
+└── application/VoiceUseCase.js             startCallToIdentity(identityId),
+                                             canCallIdentity(identityId)
+```
+
+The question the design conversation opened with — "how does a caller
+currently discover the concrete authenticated connections belonging to
+a social identity?" — is answered by NOT answering it twice.
+`application/PeerPresenceUseCase.js#_liveConnectedPeers()` already was
+exactly this query; 0.2.86 lifts it into `application/
+ConnectedIdentityPeers.js#findLiveConnectedPeers(registry,
+resolveSocialIdentity, identityId)`, a small, stateless, pure function,
+and has BOTH `PeerPresenceUseCase` and `VoiceUseCase` call it — never a
+new dependency between the two classes, and never a second, drifting
+copy of "authenticated + resolves to this identity" logic. `VoiceUseCase`
+narrows it one step further with its own `_liveVoiceCandidates()`,
+filtering to connections `supportsVoice()` already recognizes as media-
+capable (excluding `peer/LocalPeerConnectionProvider.js`'s in-process
+fake, exactly like `startCall()`'s own `_requireMediaCapable()` always
+has).
+
+`startCallToIdentity(identityId)` is the new entrypoint the design
+conversation asked for: it rings EVERY currently-live, currently-
+authorized, voice-capable device of `identityId` at once, sharing ONE
+`callId` and ONE local call record for the whole identity throughout —
+never a `VoiceSession` per device. The trap the design conversation
+named explicitly is avoided by construction: `_call.connectedPeer` is
+simply `null` during the fan-out window, with a new `_call.candidates`
+(a `Map<connectionId, { connectedPeer, unsubscribeStateChange }>`)
+holding the ephemeral, per-connection ringing attempts instead. The
+INSTANT one candidate accepts, `_lockCallToCandidate()` collapses the
+record back down to the exact single-connection shape `startCall()` has
+produced since 0.2.73 — cancelling every other still-ringing candidate
+(reusing the ordinary `VoiceCallSignalType.END` a hangup already sends;
+no new wire vocabulary of any kind was needed) and wiring the winning
+connection through the SAME `_wireLockedConnection()` helper
+`_createCallRecord()` itself now uses. From that point on, media
+negotiation, mute, device switching, and teardown are completely
+unaware the call ever had more than one candidate — proving the design
+conversation's own "there is still only one call."
+
+Three concurrency questions the design conversation asked for explicit
+answers to, all resolved without a single new `VoiceSessionState` or
+`VoiceCallEndReason` value:
+
+- **First acceptance wins.** Whichever ACCEPT this device's own event
+  loop processes first wins, via `_lockCallToCandidate()`. A second,
+  losing candidate's ACCEPT — whether it was already cancelled or the
+  race is still in flight — is recognized in `_handleAccept()` (its
+  `remoteIdentity` no longer matches the now-locked
+  `call.remoteConnectionIdentityId`) and answered with a direct
+  cancellation, so it never sits believing nobody ever answered.
+- **One identity, at most one active call.** Each candidate device still
+  only ever answers `BUSY` for ITSELF — `_handleInvite()` needed zero
+  changes. What's new is on the CALLER's side: `_handleRejectOrBusy()`
+  now treats a `BUSY` from ANY one candidate as authoritative for the
+  WHOLE identity, cancelling every other still-ringing candidate rather
+  than waiting to hear from them. This is named honestly as a
+  best-effort, LOCAL judgment, not a distributed guarantee — Alice's own
+  devices never talk to each other directly, and 0.2.86 deliberately
+  does not introduce a cross-device voice-busy broadcast to close that
+  gap, matching 0.2.74's own "Ringing Is Bounded By Local Policy, Never
+  By The Network." A `REJECT`, by contrast, is scoped to that one
+  device only — the call keeps ringing on any other live candidate, and
+  only ends as `REJECTED` once every candidate has individually
+  declined, the way a real multi-handset phone behaves.
+- **Revocation needs no new mechanism.** `_handleAccept()`/
+  `_handleRejectOrBusy()` already resolved the replying connection's
+  social identity FRESH on every message (0.2.79's own discipline). If
+  Alice revokes a still-ringing candidate mid-call, that candidate's
+  connection simply stops resolving to `call.peerIdentityId` the moment
+  this device's own resolver learns of it — its ACCEPT/BUSY/REJECT is
+  then silently ignored, indistinguishable from a stranger's. No new
+  revocation check, no new subscription, no new store, exactly matching
+  the design conversation's own instruction not to add a second
+  revocation mechanism.
+
+Disconnect cleanup reuses 0.2.74's own "old VoiceSession != new
+PeerConnection incarnation" rule unextended: each still-ringing
+candidate carries its own temporary `onStateChange` subscription
+(`_addCandidate()`); losing one only removes that one entry
+(`_handleCandidateDisconnected()`), and the call itself only ends
+(`PEER_DISCONNECTED`) once every candidate is gone. A candidate
+reconnecting afterward is an entirely new connection with no memory of
+the old call record — there is no resurrection path to accidentally
+build, because nothing here ever looks backward from a NEW connection to
+an OLD call.
+
+The one UI surface this milestone actually rewires:
+`ui/views/ChatView.js`'s "Call" button now calls
+`voiceUseCase.startCallToIdentity(peerIdentityId)` instead of
+`voiceUseCase.startCall(connectedPeer.value)`, and its `canCall` gate
+reads the new `voiceUseCase.canCallIdentity(identityId)` — "is at least
+one of this peer's currently-reachable devices voice-capable" — instead
+of requiring the one `connectedPeer` this view happened to resolve to
+itself be voice-capable. The call bar's own presentation
+(`callForThisPeer`, `isRinging`, `callStatusLabel`, mute/device
+controls) needed zero changes: a locked-in multi-device call looks,
+from that computed's perspective, identical to any other call the
+moment it reaches CONNECTING/ACTIVE.
+
+The flagship test (`tests/MultiDeviceVoiceRinging.test.js`) runs the
+design conversation's own scripted scenario over REAL WebRTC connections
+(mirroring `tests/VoiceCallReliability.test.js`'s own harness) layered
+with a real `DeviceAuthorizationPropagationUseCase` per device (mirroring
+`tests/MultiDevicePresenceSemantics.test.js`'s own harness) — the first
+test file in this codebase to combine both: (1) fan-out — Alice's Phone
+and Laptop both authorized and reachable, Bob calls Alice's identity,
+both ring; (2) first acceptance wins — the Laptop accepts, the call goes
+ACTIVE on the Laptop, and the Phone's own ringing call is independently
+observed to end (not merely "not selected") as the caller's cancellation
+arrives; (3) one identity, at most one call — with the Laptop now
+ACTIVE with Bob, Charlie calls Alice and receives BUSY without the
+Laptop's existing call being disturbed, and the Phone settles back to
+IDLE rather than being left in a stale RINGING state; (4) revocation
+mid-ring — Alice revokes the Laptop while both devices are ringing a
+NEW call, and the Laptop can no longer accept as Alice, while the Phone
+still can; (5) disconnect tolerance — one candidate disconnecting while
+ringing leaves the other candidate's own ringing state untouched; (6) no
+resurrection — the disconnected candidate reconnects on a brand-new
+connection and is confirmed idle, never rejoining the old call.
+
+Deliberately not in 0.2.86, matching the design conversation's own
+explicit scope: no new `VoiceSessionState` or `VoiceCallEndReason` value
+(`NO_DEVICE_ANSWERED` and similar stay unscheduled unless a real product
+need emerges); no cross-device voice-busy synchronization between
+Alice's own devices — the BUSY-cancels-the-rest behavior above is a
+best-effort caller-side judgment, not a guarantee, and closing that gap
+for real would mean Alice's own devices gaining a channel to talk to
+each other directly, a materially bigger feature left for later; no UI
+surfacing of WHICH device is ringing or WHICH device answered (the call
+bar shows exactly what it always has — one call, one status label); and
+no changes to `core/VoiceCallSignal.js` or `core/VoiceMediaSignal.js` —
+every scenario above is expressed entirely through the existing wire
+vocabulary.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

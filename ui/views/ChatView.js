@@ -110,6 +110,18 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 //     touching `callForThisPeer`/`isInCallWithThisPeer` — the call bar
 //     keeps showing exactly the same controls throughout, because the
 //     call itself never ended.
+//
+// 0.2.86 — Multi-Device Voice Ringing. `call()` now places an IDENTITY-
+// targeted call (`voiceUseCase.startCallToIdentity(peerIdentityId)`)
+// instead of dialing the one `connectedPeer` this view happened to have
+// resolved, and `canCall` gates on `voiceUseCase.canCallIdentity()` —
+// "is at least one of this peer's currently-reachable devices voice-
+// capable" — rather than requiring `connectedPeer` itself to be one. The
+// call bar's own presentation is completely unaffected: a locked-in
+// multi-device call is, from `callForThisPeer`'s perspective, identical
+// to any other call once it reaches CONNECTING/ACTIVE — see
+// application/VoiceUseCase.js's own 0.2.86 header, "Do Not Create A
+// Multi-Device VoiceSession."
 export default {
     name: 'ChatView',
     setup() {
@@ -206,8 +218,13 @@ export default {
         const isOutgoingRinging = computed(() => callForThisPeer.value && callForThisPeer.value.state === VoiceSessionState.CALLING);
         const hasMediaAttached = computed(() => callForThisPeer.value
             && [VoiceSessionState.CONNECTING, VoiceSessionState.ACTIVE].includes(callForThisPeer.value.state));
-        const canCall = computed(() => Boolean(voiceUseCase) && !activeCall.value && isConnected.value
-            && voiceUseCase.canCall(peerIdentityId) && voiceUseCase.supportsVoice(connectedPeer.value));
+        // 0.2.86 — "can Bob reach Alice's IDENTITY right now," not merely
+        // "is THIS ONE connectedPeer voice-capable" — see
+        // application/VoiceUseCase.js#canCallIdentity()'s own header. A UI
+        // gate on the identity, matching call()'s own new
+        // startCallToIdentity() gesture below.
+        const canCall = computed(() => Boolean(voiceUseCase) && !activeCall.value
+            && voiceUseCase.canCallIdentity(peerIdentityId));
         const callStatusLabel = computed(() => {
             if (!callForThisPeer.value) return '';
             switch (callForThisPeer.value.state) {
@@ -334,7 +351,13 @@ export default {
         function call() {
             voiceError.value = '';
             try {
-                voiceUseCase.startCall(connectedPeer.value);
+                // 0.2.86 — identity-targeted: rings every one of
+                // peerIdentityId's currently reachable, voice-capable
+                // devices at once, never just the ONE connection
+                // `connectedPeer` happens to name — see
+                // application/VoiceUseCase.js#startCallToIdentity()'s own
+                // header.
+                voiceUseCase.startCallToIdentity(peerIdentityId);
                 refreshVoice();
             } catch (e) {
                 voiceError.value = e.message.replace(/^VoiceUseCase:\s*/, '');
