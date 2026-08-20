@@ -5433,10 +5433,12 @@ hold his own key) and still resolves as unauthorized to represent Alice,
 because genuine authentication of A key was never, by itself, evidence of
 permission to act for a DIFFERENT one.
 
-### Device Authorization Changes Peer Authority, Never Social Identity (0.2.79)
+### Device Authorization Changes Peer Authority, Never Social Identity (0.2.82)
+
+Recorded as 0.2.82 — see docs/Roadmap.md, 0.2.82, "Numbering note."
 
 0.2.78 proved `resolvePeerAuthority()` correct but consulted it nowhere.
-0.2.79 wires it into `application/FriendRelationshipUseCase.js`/
+0.2.82 wires it into `application/FriendRelationshipUseCase.js`/
 `application/ChatUseCase.js`/`application/VoiceUseCase.js` under one
 governing rule, stated in the design doc that opened this milestone: when
 Alice's Phone and Alice's Laptop are two independently authorized devices
@@ -5452,7 +5454,7 @@ identity without the Laptop ever sending its own friend request — proving
 directly that "we should NOT create Alice Laptop <-> Bob = friendship
 #2."
 
-### Resolution Happens Strictly After Authentication, And Only On the Wire's Receiving Half (0.2.79)
+### Resolution Happens Strictly After Authentication, And Only On the Wire's Receiving Half (0.2.82)
 
 Two disciplines, both load-bearing, both discovered the hard way by this
 milestone's own flagship test failing until they were made explicit.
@@ -5475,7 +5477,7 @@ Only business-state KEYING — which `FriendshipRecord`, which
 everything that travels on the wire or gets checked against "am I the
 one this is for" stays raw.
 
-### A Device Is Never Taught To Resolve Itself (0.2.79)
+### A Device Is Never Taught To Resolve Itself, Except Reflexively Against Itself (0.2.82; narrowed 0.2.83)
 
 `resolveConnectionIdentity()` only ever answers "who is on the OTHER end
 of this connection, socially?" — using THIS device's own independently
@@ -5493,7 +5495,19 @@ authority, never how a device signs, addresses, or reasons about its own
 outgoing traffic. Synchronizing what Alice's OWN several devices know
 about each other — and about each other's conversations — is real,
 substantial, and deliberately left to a later milestone (see
-docs/Roadmap.md, 0.2.79, "Proposed, unscheduled follow-on milestones").
+docs/Roadmap.md, 0.2.82, "Proposed, unscheduled follow-on milestones").
+
+0.2.83 answers that later-milestone question, but keeps this principle's
+OWN spirit intact rather than overturning it: `resolveOwnSocialIdentity()`
+is not a device asking a THIRD PARTY "who am I" (still nowhere in this
+codebase) — it is a device consulting its OWN already-adopted, already-
+signed grant record, the identical durable evidence
+`resolveConnectionIdentity()` already trusts when the SAME fact is about
+someone else. Nothing here lets a device assert an identity for itself
+that it cannot produce a signed grant for; the reflexive query is exactly
+as evidence-gated as the other-directed one, applied to one more
+`(identityId, deviceIdentityId)` pair than before.
+
 ### Terrain Surface Color Is A Function Of World Coordinates, Never Tile Coordinates (0.2.79)
 
 `core/TerrainSurface.js#surfaceColorAt(seed, x, z)` has no idea a tile
@@ -5648,6 +5662,72 @@ Alice House -> inherits -> Alice House v2` chain where editing an
 ancestor could ever ripple into a descendant. Every fork's parent is a
 label, not a relationship a later mutation could ever traverse.
 
+### Conversation Synchronization Is A Protocol Between A Device And Itself, Never A Wider Chat Feature (0.2.83)
+
+`application/DeviceConversationSyncUseCase.js` runs strictly ALONGSIDE
+`application/ChatUseCase.js`'s own `forkbuild:chat` protocol, on its own
+namespaced wire channel, never folded into it. Bob's own `ChatUseCase`
+never subscribes to `forkbuild:device-conversation-sync` at all — the
+protocol only ever runs between two connections that BOTH resolve to the
+SAME identity (see "Sibling Eligibility Is A Symmetric Identity
+Comparison," below). Nothing this protocol does ever produces a
+`core/ChatDeliveryAck.js` or a `core/ChatReadReceipt.js` on the wire:
+those remain exactly what 0.2.63/0.2.71 built them to be, an
+acknowledgement between this device and the PEER who actually sent
+something, never between this device and one of its own siblings. A
+message a sibling already held converges through the SAME idempotent
+`application/ConversationStore.js#append()` every ordinary received
+message already goes through — sync introduces no second notion of
+"accepted."
+
+### Sibling Eligibility Is A Symmetric Identity Comparison, Never A Device Allowlist (0.2.83)
+
+Whether two connected devices may exchange conversation state is decided
+by one comparison, re-derived fresh on every connection and every
+incoming envelope, never cached and never stored as its own fact:
+`resolveConnectionIdentity(peer).identityId === resolveOwnSocialIdentity().identityId`.
+No list of "known sibling device IDs" exists anywhere in this codebase —
+eligibility is computed, every time, from the same
+`core/DeviceAuthority.js` records `application/DeviceAuthorizationPropagationUseCase.js`
+already independently verifies for every other purpose. This is what
+makes revocation isolation free rather than a second mechanism to build
+and keep correct: a revoked device's resolution simply stops matching,
+on both the revoking device (which now also self-applies its own
+authored fact immediately — see below) and the revoked one, the instant
+either has learned of it, through the completely unmodified 0.2.78/0.2.82
+gossip path.
+
+### A Device That Authors A Grant Never Waits For Its Own Broadcast To Come Back To Believe It (0.2.83)
+
+Before this milestone, `broadcastAuthorization()`/`broadcastRevocation()`
+only ever pushed a record OUTWARD — the authoring device's own
+`DeviceAuthority` list never reflected a fact it had itself just
+produced, because nothing fed its own gossip subscription from its own
+outgoing send. That was harmless while `resolvePeerAuthority()`/
+`resolveConnectionIdentity()` were only ever consulted about OTHER
+devices by THIRD parties (0.2.78/0.2.82's own tests never needed the
+author to evaluate its own authored fact). This milestone's own sibling-
+eligibility check does need exactly that, so both methods now ALSO
+self-apply their record to the author's own local view, in the same
+call — never re-verified (the identityProvider that just produced the
+signature has no reason to doubt it), only freshness-compared and stored
+through the identical `_applyGrant`/`_applyRevocation` tail the gossip
+path itself uses.
+
+### Per-Device Local Read State And Identity-Observed Read State Are Never The Same Fact (0.2.83)
+
+`application/ConversationReadTracker.js` (0.2.70) answers "what has THIS
+device's owner actually looked at, on THIS screen" and stays completely
+unmodified by this milestone — a sibling's report is never written into
+it. `application/SiblingReadStateStore.js` (new) answers a genuinely
+different, third-party question: "what has one of my OTHER devices told
+me about ITS OWN read position." `DeviceConversationSyncUseCase#getIdentityObservedReadSequence()`
+is the one place these two are ever combined, and even there only by
+taking `Math.max()` of two independently-read values on every call —
+never by writing one into the other, and never as a stored fourth fact
+competing with either for authority. Laptop reading a message never
+moves Phone's own local marker; what moves is only what Phone's derived,
+identity-level VIEW reports, and only because Laptop told it so.
 ### Identity Presence Is An Aggregate Of Authorized Device Observations, Never A Fourth Store (0.2.85)
 
 `application/PeerPresenceUseCase.js` already treated `isConnectedNow` as

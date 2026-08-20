@@ -70,6 +70,23 @@ const STORAGE_KEY_PREFIX = 'device-authority:';
 // proves the authorization chain is sound; teaching every existing
 // social/voice/presence feature to actually CONSULT resolvePeerAuthority()
 // is real, substantial, deliberately deferred future work.
+// 0.2.83 — Multi-Device Conversation & Read-State Synchronization.
+//
+// Adds the one query 0.2.78/0.2.82 deliberately never needed:
+// resolveOwnSocialIdentity(), the reflexive counterpart to
+// resolveConnectionIdentity() (0.2.82) — "who am I, socially," not
+// merely "who is the other party." application/
+// DeviceConversationSyncUseCase.js is the one caller, using both queries
+// together to decide whether a connected peer is a SIBLING device of
+// this one (see that class's own header). Answering "who am I" required
+// one small, honest new capability this class never had a reason to
+// build before: a device's own first-person adoption of the portable
+// grant record naming it (`adoptOwnDeviceGrant`), and this device's own
+// authored grants/revocations becoming immediately visible to ITSELF
+// (`broadcastAuthorization`/`broadcastRevocation` now self-apply, not
+// merely broadcast) — see each method's own header below. Nothing about
+// `resolvePeerAuthority()`/`resolveConnectionIdentity()`/`_handleGrant`/
+// `_handleRevocation`'s own gossip-trust behavior changes at all.
 export class DeviceAuthorizationPropagationUseCase {
     constructor(storageProvider, identityProvider, {
         peerMessageBus,
@@ -118,18 +135,105 @@ export class DeviceAuthorizationPropagationUseCase {
     // IdentityLifecyclePropagationUseCase.js#broadcastRevocation()
     // already applies. Returns the number of peers it was actually sent
     // to.
+    // 0.2.83 — beyond handing the record to every currently-authenticated
+    // peer, ALSO applies it to this device's OWN local DeviceAuthority
+    // view — see this class's own 0.2.83 header, "A device that
+    // authors a grant never had to wait for its own broadcast to come
+    // back to believe it." Never re-verified (this device's own
+    // identityProvider just produced the signature); freshness-compared
+    // and stored exactly like an incoming, gossip-verified one.
     broadcastAuthorization(record) {
         if (!isValidDeviceAuthorizationGrant(record) || !record.signature) {
             throw new Error('DeviceAuthorizationPropagationUseCase: broadcastAuthorization requires a signed device authorization grant');
         }
-        return this._broadcast(toDeviceAuthorizationGossipMessage(DeviceAuthorizationGossipKind.GRANT, record));
+        const sent = this._broadcast(toDeviceAuthorizationGossipMessage(DeviceAuthorizationGossipKind.GRANT, record));
+        this._applyGrant(record);
+        return sent;
     }
 
     broadcastRevocation(record) {
         if (!isValidDeviceAuthorizationRevocation(record) || !record.signature) {
             throw new Error('DeviceAuthorizationPropagationUseCase: broadcastRevocation requires a signed device authorization revocation');
         }
-        return this._broadcast(toDeviceAuthorizationGossipMessage(DeviceAuthorizationGossipKind.REVOCATION, record));
+        const sent = this._broadcast(toDeviceAuthorizationGossipMessage(DeviceAuthorizationGossipKind.REVOCATION, record));
+        this._applyRevocation(record);
+        return sent;
+    }
+
+    // 0.2.83 — Multi-Device Conversation & Read-State Synchronization.
+    //
+    // The first-person counterpart to everything else in this class: not
+    // "what have I learned about SOME OTHER identity's devices" but "has
+    // anyone told ME I am one of THEIRS." A device's own copy of the
+    // portable grant record naming it — handed to it out of band, the
+    // exact same low-tech handoff 0.2.78 already named and left
+    // unbuilt (see docs/Roadmap.md, 0.2.78, "a device authorization's
+    // portable grant record is, for now, exactly as low-tech as 0.2.48's
+    // own exported identity package, meant to be handed to the device it
+    // names out of band") — is adopted here, ONCE, so this device can
+    // answer resolveOwnSocialIdentity() below without ever needing a
+    // second, independent "who am I" mechanism: it is stored in the
+    // EXACT SAME core/DeviceAuthority.js list every other grant/
+    // revocation this class tracks already lives in, keyed by the same
+    // (identityId, deviceIdentityId) pair — this device's OWN record is
+    // structurally indistinguishable from one it learned about some
+    // other identity's device, except that `deviceIdentityId` happens to
+    // be this device's own.
+    //
+    // Requires the record's OWN signature to verify (never tolerated
+    // unsigned, same as `_handleGrant`) AND requires `deviceIdentityId`
+    // to equal this device's own currently-authenticated identity —
+    // adopting a grant that names someone else's device is refused, not
+    // silently accepted as a curiosity. Deliberately skips the
+    // `knowsIdentity` relevance gate `_handleGrant` applies to gossip: a
+    // fact about MY OWN device authorization is always relevant to me.
+    adoptOwnDeviceGrant(record) {
+        if (!isValidDeviceAuthorizationGrant(record) || !record.signature) {
+            throw new Error('DeviceAuthorizationPropagationUseCase: adoptOwnDeviceGrant requires a signed device authorization grant');
+        }
+        if (!this._verifier.verifyDeviceAuthorizationGrant(record).valid) {
+            throw new Error('DeviceAuthorizationPropagationUseCase: adoptOwnDeviceGrant requires a validly signed grant');
+        }
+        const myIdentityId = this._myIdentityIdOrNull();
+        if (!myIdentityId || record.deviceIdentityId !== myIdentityId) {
+            throw new Error('DeviceAuthorizationPropagationUseCase: adoptOwnDeviceGrant requires a grant naming this device\'s own identity');
+        }
+        this._applyGrant(record);
+        return this.getDeviceAuthority(record.identityId, myIdentityId);
+    }
+
+    // "Once I have a live, authenticated connection, what parent identity
+    // do I MYSELF resolve as, socially?" — the reflexive counterpart to
+    // resolveConnectionIdentity() below, which only ever resolves the
+    // REMOTE party. DIRECT if this device holds no active adopted grant
+    // naming itself (this device's own currently-authenticated identity
+    // IS the parent/root identity, exactly like resolveDirectSocialIdentity()
+    // treats every connection before any device authorization exists at
+    // all) — DEVICE if exactly one active adopted grant does. Ambiguous
+    // (more than one distinct parent has, somehow, honestly granted this
+    // exact device key) is refused the identical conservative way
+    // resolveConnectionIdentity() refuses it below: falls back to DIRECT
+    // rather than guessing which parent to believe.
+    //
+    // This is the query application/DeviceConversationSyncUseCase.js
+    // consults, alongside resolveConnectionIdentity(), to decide whether
+    // a connected peer is a SIBLING device of this one: eligible iff
+    // `resolveConnectionIdentity(peer).identityId === resolveOwnSocialIdentity().identityId`
+    // — both sides of that comparison re-derived fresh, never cached, so
+    // a later revocation this device independently learns of (via the
+    // ORDINARY gossip path — no separate "am I revoked" channel needed;
+    // see `_handleRevocation` below, unchanged) is reflected the very
+    // next time either query is asked.
+    resolveOwnSocialIdentity() {
+        const myIdentityId = this._myIdentityIdOrNull();
+        if (!myIdentityId) {
+            return null;
+        }
+        const ownGrants = this._loadAll().filter((a) => a.deviceIdentityId === myIdentityId && a.isAuthorized);
+        if (ownGrants.length === 1) {
+            return { identityId: ownGrants[0].identityId, mode: 'DEVICE', deviceIdentityId: myIdentityId };
+        }
+        return { identityId: myIdentityId, mode: 'DIRECT', deviceIdentityId: myIdentityId };
     }
 
     // Every (identityId, deviceIdentityId) fact the current local owner
@@ -303,6 +407,28 @@ export class DeviceAuthorizationPropagationUseCase {
         if (!this._knowsIdentity(record.identityId)) {
             return;
         }
+        this._applyGrant(record);
+    }
+
+    _handleRevocation(record) {
+        if (!this._verifier.verifyDeviceAuthorizationRevocation(record).valid) {
+            return;
+        }
+        if (!this._knowsIdentity(record.identityId)) {
+            return;
+        }
+        this._applyRevocation(record);
+    }
+
+    // 0.2.83 — the shared "record this already-trusted grant/revocation"
+    // tail both the gossip path (`_handleGrant`/`_handleRevocation`
+    // above, AFTER verification and the relevance gate) and this
+    // device's own first-person paths (`broadcastAuthorization`/
+    // `broadcastRevocation`'s self-application, `adoptOwnDeviceGrant`)
+    // share — see this class's own 0.2.83 header. Never itself checks a
+    // signature or relevance; every caller has already decided this
+    // record is worth believing before reaching here.
+    _applyGrant(record) {
         const owner = this._currentUsernameOrNull();
         if (!owner) {
             return;
@@ -317,13 +443,7 @@ export class DeviceAuthorizationPropagationUseCase {
         this._publishChange();
     }
 
-    _handleRevocation(record) {
-        if (!this._verifier.verifyDeviceAuthorizationRevocation(record).valid) {
-            return;
-        }
-        if (!this._knowsIdentity(record.identityId)) {
-            return;
-        }
+    _applyRevocation(record) {
         const owner = this._currentUsernameOrNull();
         if (!owner) {
             return;
@@ -336,6 +456,14 @@ export class DeviceAuthorizationPropagationUseCase {
         const base = existing || new DeviceAuthority({ identityId: record.identityId, deviceIdentityId: record.deviceIdentityId });
         this._saveAll(owner, replaceByPair(all, base.withRevocation(record)));
         this._publishChange();
+    }
+
+    _myIdentityIdOrNull() {
+        try {
+            return this._identityProvider.getSigningIdentity().id;
+        } catch {
+            return null;
+        }
     }
 
     _loadAll() {

@@ -26,6 +26,8 @@ import { CreateRemoteReadReceiptStoreUseCase } from '../application/CreateRemote
 import { PeerPresenceUseCase } from '../application/PeerPresenceUseCase.js';
 import { VoiceUseCase } from '../application/VoiceUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { CreateSiblingReadStateStoreUseCase } from '../application/CreateSiblingReadStateStoreUseCase.js';
+import { DeviceConversationSyncUseCase } from '../application/DeviceConversationSyncUseCase.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -203,6 +205,31 @@ const peerPresenceUseCase = new PeerPresenceUseCase({
     resolveSocialIdentity
 });
 
+// 0.2.83 — one app-wide DeviceConversationSyncUseCase, closing the gap
+// 0.2.78/0.2.82 both named and deliberately left open: Alice's own
+// several devices each still hold their own independent, local
+// conversationStore/conversationReadTracker — this is the ONE new
+// protocol that lets them converge, riding the SAME peerMessageBus/
+// registry every other protocol here does, and consulting the SAME
+// deviceAuthorizationUseCase#resolveConnectionIdentity()/
+// resolveOwnSocialIdentity() that already teach friendship/chat/voice to
+// recognize an authorized device — see application/
+// DeviceConversationSyncUseCase.js's own header. A SEPARATE durable store
+// from conversationReadTracker (application/SiblingReadStateStore.js,
+// wired the same "own Create*UseCase, ui/ never imports storage/
+// directly" way every other durable per-owner store here already uses):
+// this device's own local read marker and what a SIBLING has reported
+// about ITSELF are never the same fact.
+const siblingReadStateStore = new CreateSiblingReadStateStoreUseCase().execute(identityProvider);
+const deviceConversationSyncUseCase = new DeviceConversationSyncUseCase({
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry,
+    deviceAuthorization: deviceAuthorizationUseCase,
+    chatUseCase,
+    conversationReadTracker,
+    siblingReadStateStore
+});
+
 // 0.2.73 — one app-wide VoiceUseCase. Rides the SAME peerMessageBus/
 // registry every other peer/PeerMessageBus.js protocol here does, and
 // consults the SAME friendRelationshipUseCase/peerBlockUseCase chatUseCase
@@ -237,6 +264,7 @@ app.provide('deviceAuthorizationUseCase', deviceAuthorizationUseCase);
 app.provide('peerBlockUseCase', peerBlockUseCase);
 app.provide('chatUseCase', chatUseCase);
 app.provide('peerPresenceUseCase', peerPresenceUseCase);
+app.provide('deviceConversationSyncUseCase', deviceConversationSyncUseCase);
 app.provide('voiceUseCase', voiceUseCase);
 // 0.2.59 — Peer-Based Avatar Social Transport. The SAME app-wide bus
 // friendRelationshipUseCase already rides, now also provided directly

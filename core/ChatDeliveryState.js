@@ -73,3 +73,39 @@ export const ChatDeliveryState = Object.freeze({
 export function isValidChatDeliveryState(value) {
     return Object.values(ChatDeliveryState).includes(value);
 }
+
+// 0.2.83 — Multi-Device Conversation & Read-State Synchronization.
+//
+// A synced copy of an outgoing message (application/
+// DeviceConversationSyncUseCase.js) can arrive carrying a delivery state
+// this device's own copy of the same message has already moved past —
+// two devices independently tracking the SAME message's own journey
+// (QUEUED -> SENT -> DELIVERED) will observe it at different points in
+// time, and sync must never let an older observation overwrite a newer
+// one. A total order over the four states a message can actually still
+// be found in when synced (never CANCELLED — see this file's own header
+// on why a cancellation is scoped to QUEUED mail that never left THIS
+// device's own outbox, so it has nothing to say about a sibling's copy):
+// QUEUED < SENT < DELIVERED, and EXPIRED is treated as terminal, exactly
+// like DELIVERED — both mean "nothing more will happen to this message,"
+// even though only one of them is the happy path.
+const ADVANCEMENT_RANK = Object.freeze({
+    [ChatDeliveryState.QUEUED]: 1,
+    [ChatDeliveryState.SENT]: 2,
+    [ChatDeliveryState.DELIVERED]: 3,
+    [ChatDeliveryState.EXPIRED]: 3,
+    [ChatDeliveryState.CANCELLED]: 3
+});
+
+export function isDeliveryStateAdvancement(from, to) {
+    if (to === null || !isValidChatDeliveryState(to)) {
+        return false;
+    }
+    if (from === null) {
+        return true;
+    }
+    if (!isValidChatDeliveryState(from)) {
+        return true;
+    }
+    return ADVANCEMENT_RANK[to] > ADVANCEMENT_RANK[from];
+}
