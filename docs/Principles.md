@@ -5478,3 +5478,62 @@ surface-color categories only — a WATER-classified coordinate looks like a
 lake; it is not one, and nothing in this milestone simulates water,
 vegetation, or geology (see docs/Roadmap.md, 0.2.79's own "Deliberately
 not in 0.2.79").
+
+### A Brick Is A Primitive, Never A Preassembled Structure (0.2.80)
+
+`core/BrickDefinition.js` describes a small reusable geometric building
+block — a shape, a bounding box, a category, a description — and nothing
+in 0.2.80's eleven new definitions is allowed to describe more than that.
+`core:wall_1x3` is a wall SEGMENT, not a "House Wall"; `core:roof_hip` is
+a roof CAP, not a "Cottage Roof"; `core:arch` is an archway BLOCK, not a
+"Gate" or a "Bridge." The moment a brick definition starts encoding a
+specific building's identity rather than a general shape, the primitive
+vocabulary stops being reusable and starts being an ever-growing catalog
+of one-off nouns — `HOUSE_BRICK`, `BARN_BRICK`, `BRIDGE_BRICK` — that
+would need to keep expanding forever to cover every conceivable
+structure, instead of composing a fixed, small vocabulary into an
+unbounded number of them. The intended ladder stays exactly
+`Brick -> Building -> Structure`; nothing in this milestone lets a brick
+skip a rung of it. A future forkable structure library composes bricks
+into buildings and buildings into structures — it does not need, and must
+never be given, brick definitions that have already done a structure's
+job for it.
+
+### A Brick's Bounding Box Is An Approximation Contract, Not A Shape Description (0.2.80)
+
+`BrickDefinition#width/height/depth` was already an axis-aligned bounding
+box before 0.2.80 — `core/AvatarCollision.js` and
+`application/SelectionBoundsService.js` both read it that way from the
+moment each was written — but every brick using it was symmetric enough
+(a cube, a slope, a plate, a window pane) that the gap between "true
+shape" and "bounding box" was never visually exercised. 0.2.80's
+`core:stair`, `core:arch`, `core:roof_hip`, and `core:column` are all
+genuinely non-box meshes, and every one of them still collides and
+selects as its own rectangular bounding box — an avatar can stand "inside"
+the empty space under a stair's own overhang, or "inside" an arch's own
+open passage, and still be treated as colliding with the brick, exactly
+the same restraint `core/AvatarCollision.js`'s own 0.2.42 header already
+named as deliberate ("a box is a good enough capsule"), now extended to
+built geometry instead of only avatars. This was a conscious choice, not
+an oversight discovered too late to fix: a `BrickDefinition`'s
+width/height/depth is a contract about placement and collision space, not
+a promise that the rendered mesh fills every corner of it.
+
+### A Mesh Factory's Own Orientation Belongs On The Geometry, Never On mesh.rotation (0.2.80)
+
+`renderer/BrickRenderer.js#createMesh()` has, since 0.1.5, unconditionally
+SET `mesh.rotation.y` from the brick's own placement rotation on every
+call — never added to whatever a factory left there. That was invisible
+as a rule until `core:roof_hip` needed a fixed 45° orientation to align a
+four-segment `ConeGeometry`'s naturally diamond-shaped footprint with a
+rectangular brick's own bounding box. The correct place for that fixed
+orientation is `geometry.rotateY(Math.PI / 4)`, called once inside the
+factory, baked permanently into the geometry's own vertices — never
+`mesh.rotation.y`, which `BrickRenderer` will overwrite the instant the
+brick is actually placed and rendered with its own, entirely independent
+placement rotation. A factory that mixed the two would work by accident
+in isolation (e.g. a unit test calling the factory directly) and silently
+break the moment the same mesh reached `BrickRenderer` — the kind of bug
+that is invisible until the exact two code paths that never talk to each
+other both run, which is precisely why the rule is named here rather than
+left to be rediscovered.

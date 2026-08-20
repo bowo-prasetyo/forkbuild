@@ -8271,3 +8271,116 @@ exposed dirt/stone," never "this is unwalkable");
 `renderer/PickingService.js#pickGroundPosition()`, still raycasting the
 literal `Y = 0` plane, completely unmodified; and any per-vertex texture
 map, normal map, or triplanar detail beyond flat vertex color.
+
+### Expanded Brick Vocabulary (0.2.80)
+
+0.1.5 gave ForkBuild four brick primitives — cube, 45° slope, 2x4 plate,
+small window — and nothing added a fifth until now. 0.2.80 adds eleven
+more, one per category a design conversation about a future forkable
+structure library asked for first: structural, wall, floor, roof, stairs,
+column, beam, arch, window, door, decorative. The milestone's entire
+architectural burden is carried by one question, asked and re-answered
+for every new id: is `core/BrickDefinition.js` still ADEQUATE to describe
+this shape as pure metadata, with no change to `core/Brick.js`,
+`core/documentSchema.js`, or `serializer/DocumentSchemaMigrator.js`? It
+is — a `BrickDefinition` was already `{ id, name, category, thumbnail,
+defaultRotation, tags, description, width, height, depth }` before this
+milestone touched it, and every one of the eleven new shapes, however
+visually different its actual mesh, is still fully described by that
+same shape. `core/Brick.js` itself needed zero changes: it has never
+carried geometry, only `{ id, definitionId, position, rotation }`, so a
+document referencing `core:arch` is exactly as serializable as one
+referencing `core:cube` always was.
+
+**The width/height/depth on a `BrickDefinition` is an axis-aligned
+bounding box, not a literal shape description — and that was already
+true before 0.2.80, just never exercised by a shape this different from
+a box.** `core/AvatarCollision.js` and `application/SelectionBoundsService.js`
+both already read `definition.width/height/depth` as a brick's AABB for
+collision and selection purposes, the same "a box is a good enough
+capsule" restraint 0.2.42 established for avatar collision against
+world geometry. `core:stair`, `core:arch`, `core:roof_hip`, and
+`core:column` all render as genuinely non-box meshes — a stepped
+extrusion, a frame with a semicircular opening, a rotated pyramid, a
+cylinder — but all four still collide and select as their own bounding
+box, exactly like every brick before them. This milestone did not widen
+that approximation; it simply asked more of it than the original four,
+symmetric shapes ever needed to.
+
+**`renderer/ThreeBrickFactory.js` gains eleven new mesh factories, still
+one function per definitionId, still looked up from one `Map` — the
+exact pattern its own 0.1.5 header comment already documented as the
+seam a future library's renderer-side factories would use.** Seven are
+plain `BoxGeometry` at new dimensions (`core:block_2x2`, `core:wall_1x3`,
+`core:slab_4x4`, `core:beam`, `core:window_large`, `core:door`,
+`core:trim`) — no new code path, just `boxMeshFactory()` called again
+with different numbers. `core:column` is a `CylinderGeometry`.
+`core:roof_hip` is a four-radial-segment `ConeGeometry` — deliberately
+chosen because `radialSegments: 4` produces a genuine square pyramid, not
+a smooth cone — rotated 45° about Y so its flat sides align with a
+rectangular footprint instead of ConeGeometry's own default orientation
+(vertices ON the axes, i.e. a diamond footprint). `core:stair` and
+`core:arch` are each built from exactly one `THREE.Shape` (a stepped
+ascending profile for the stair; a rectangular frame with a faceted,
+semicircular-topped `THREE.Path` hole for the arch) passed through one
+`THREE.ExtrudeGeometry` call — a single mesh, a single definitionId,
+never a hidden multi-brick assembly wearing one id's clothing. See
+docs/Principles.md, "A Brick Is A Primitive, Never A Preassembled
+Structure."
+
+**A factory's own fixed orientation belongs on the GEOMETRY, never on
+`mesh.rotation` — a distinction that had never mattered before
+`core:roof_hip` needed one.** `renderer/BrickRenderer.js#createMesh()`
+unconditionally SETS `mesh.rotation.y` from the brick's own placement
+rotation on every call: `mesh.rotation.y = brick.rotation * (Math.PI /
+180)`. A factory that left its own 45° cone alignment on `mesh.rotation`
+instead of baking it into the geometry via `geometry.rotateY(Math.PI /
+4)` would have that alignment silently overwritten the instant the brick
+was actually placed and rendered — the geometry itself is rotated once,
+at mesh-construction time, precisely so `BrickRenderer`'s own rotation
+assignment stays the single, sole source of a placed brick's visible
+orientation, exactly as it already was for the original four (all
+symmetric enough that this distinction never surfaced until now).
+
+**`core/BrickRegistry.js#groupByCategory()` is new, everything else on
+the registry is unchanged.** It returns an ordered `[{ category,
+definitions }]`, grouped in first-seen order — deliberately the same
+shape `application/EditorActionRegistry.js#groupByCategory()` already
+established for the Command Palette, reused as an architectural pattern
+rather than reinvented. `get()`, `has()`, `getAll()`, `getByCategory()`,
+and `search()` are all byte-for-byte the same methods 0.1.5 shipped.
+`application/PaletteUseCase.js` gains one matching passthrough,
+`getGroupedDefinitions()`; `ui/components/BrickPalette.js` renders that
+grouping as labeled sections instead of one flat list of fifteen items —
+genuinely needed for the first time since the original four definitions
+all shared a single `'primitive'` category. `ui/views/WorldView.js`'s
+own spatial-placement `<select>` is untouched; a flat `<option>` list
+handles fifteen entries without difficulty.
+
+The flagship test (`tests/ExpandedBrickVocabulary.test.js`) proves both
+halves of the milestone's own claim in one scripted scenario: create a
+document, place one instance of all fifteen brick types at once, render
+every one of them, save, reload, render again, and confirm identical
+brick types, identical per-type rendered geometry (checked against each
+mesh's own `computeBoundingBox()`, not merely assumed), and a
+byte-identical re-serialization of the reloaded document against the
+original save. A dedicated section runs `tests/SchemaMigration.test.js`'s
+own pre-0.2.0 historical fixtures through the new, fifteen-definition
+registry and confirms they still resolve, validate, and round-trip
+byte-identically — "the existing four brick types remain completely
+backward compatible" proven directly, not merely assumed because nothing
+appeared to change.
+
+Deliberately not in 0.2.80: a forkable structure library, curated
+village/town assemblies, or any "fork this prefab" flow — the design
+conversation's own next milestone, deliberately sequenced after this one
+so it has a real vocabulary to compose rather than reaching for a
+`HOUSE_BRICK`-style shortcut; a second, community, or medieval/space/
+city-namespaced brick library exercising the namespace machinery
+`docs/BrickIDs.md` already documents; non-box collision geometry for the
+new, genuinely non-box shapes; brick-specific placement rules (a door
+still doesn't require a wall behind it — placement stays the single
+"is this exact position already occupied" check 0.1.14 established); and
+real, textured, or bevelled materials — every new factory is still a flat
+`MeshStandardMaterial` color, matching `renderer/ThreeBrickFactory.js`'s
+own "still placeholder shapes" posture since 0.1.5.
