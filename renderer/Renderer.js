@@ -6,6 +6,7 @@ import { GridHelper } from './GridHelper.js';
 import { AnimationLoop } from './AnimationLoop.js';
 import { TerrainStreamingController } from './TerrainStreamingController.js';
 import { buildTerrainTileMesh } from './TerrainTileMesh.js';
+import { buildNaturalFeatureTileMesh } from './NaturalFeatureTileMesh.js';
 import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 const SKY_COLOR = 0x87ceeb;
@@ -50,6 +51,27 @@ export class Renderer {
             (tx, tz) => buildTerrainTileMesh(tx, tz, DEFAULT_WORLD_SEED)
         );
         this._terrainStreaming.update(
+            this._cameraController.camera.position.x,
+            this._cameraController.camera.position.z,
+            true
+        );
+
+        // 0.2.88 — Deterministic World Ecology. A SECOND, independent
+        // instance of the exact same TerrainStreamingController class
+        // just used for ground above — never a new streaming/tiling
+        // system of its own. Vegetation shares the ground's tile grid and
+        // load/unload orchestration entirely by construction (same
+        // TERRAIN_TILE_SIZE, same DEFAULT_STREAMING_RADIUS default), and
+        // differs only in what tileFactory builds: trees instead of
+        // colored ground. See core/NaturalFeatureField.js's own header
+        // for why natural features are recomputed per tile, never
+        // persisted, and renderer/NaturalFeatureTileMesh.js's own header
+        // for the trunk/canopy instancing this factory produces.
+        this._vegetationStreaming = new TerrainStreamingController(
+            this._sceneManager,
+            (tx, tz) => buildNaturalFeatureTileMesh(tx, tz, DEFAULT_WORLD_SEED)
+        );
+        this._vegetationStreaming.update(
             this._cameraController.camera.position.x,
             this._cameraController.camera.position.z,
             true
@@ -128,6 +150,7 @@ export class Renderer {
         this.stop();
         this._frameListeners.clear();
         this._terrainStreaming.dispose();
+        this._vegetationStreaming.dispose();
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
@@ -137,6 +160,7 @@ export class Renderer {
     _renderFrame(deltaSeconds) {
         this._cameraController.update();
         this._terrainStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
+        this._vegetationStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }

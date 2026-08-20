@@ -4238,6 +4238,121 @@ the precedent `WorldView.js` already set for Escape, not by teaching the
 registry itself to skip disabled matches (a change that would ripple
 into every other shortcut, not just this one).
 
+0.2.88 — Deterministic World Ecology — returns to the environmental arc
+0.2.76→0.2.79 opened (elevation, walkability, surface color) and 0.2.80→
+0.2.87 deliberately set aside to build vocabulary, a library, and
+placement UX first. The world has had solid, walkable, colored ground
+since 0.2.79; it has never had anything growing on it. The design
+conversation that proposed this milestone settled one architectural
+question before any code: vegetation and natural features must be
+DERIVED from terrain, exactly the way `core/TerrainSurface.js` is derived
+from `core/TerrainHeightField.js`, never a second independent system that
+happens to share a seed. "Same world seed + same coordinates -> same
+terrain" (0.2.76) becomes "-> same ecology -> same trees," with nothing
+new ever persisted to make that true.
+
+```text
+0.2.88
+├── core/TerrainEcology.js         a THIRD pure function of the identical
+│                                   (seed, x, z) triple — ecologyZoneAt()
+│                                   consults surfaceCategoryAt() and layers
+│                                   two independent low-frequency noise
+│                                   fields (moisture, cultivation) on top,
+│                                   classifying flat/moderate ground into
+│                                   WATER / BEACH / ROCK / HIGHLAND /
+│                                   FOREST / FIELD / GRASSLAND;
+│                                   ecologyGroundColorAt() layers a sand
+│                                   tint (BEACH) or a furrow-row tint
+│                                   (FIELD) onto surfaceColorAt()'s own
+│                                   unchanged output
+└── core/NaturalFeatureField.js    naturalFeaturesInRegion() places trees
+                                    on a fixed, jittered lattice —
+                                    forestDensityAt() (its own independent
+                                    noise field) thresholded PERMISSIVELY
+                                    in FOREST and RESTRICTIVELY in
+                                    GRASSLAND, so cover fades from dense to
+                                    sparse-and-scattered instead of
+                                    stopping at a hard edge
+```
+
+`renderer/NaturalFeatureTileMesh.js` turns one tile's worth of
+`naturalFeaturesInRegion()` output into two `THREE.InstancedMesh`
+objects (trunks, canopies) — stylized, low-poly, muted-green cones over
+brown cylinders, deliberately never a detailed tree asset that would
+visually compete with a building. `renderer/Renderer.js` gains a SECOND
+instance of the exact same `renderer/TerrainStreamingController.js`
+class already streaming ground — not a new streaming system, not a
+`VegetationStreamingController` — sharing the identical tile grid and
+radius, differing only in what its `tileFactory` builds. Vegetation
+loads and unloads with the ground it grows on, by construction.
+`renderer/TerrainTileMesh.js`'s one-line change — sampling
+`ecologyGroundColorAt()` instead of `surfaceColorAt()` directly — is the
+only edit to an existing rendering file; `core/TerrainHeightField.js`,
+`core/TerrainSurface.js`, `core/TerrainTiling.js`,
+`core/TerrainWalkability.js`, and `renderer/TerrainStreamingController.js`
+are all completely untouched.
+
+The one design principle this milestone answers to: **the world
+generates nature; users create architecture.** A generated tree is never
+a `Document` -> `Brick`; there is no `TreeRecord`, no per-tree
+persistence, nothing a fork or a replica could ever disagree about
+because nothing is ever stored. `naturalFeaturesInRegion(seed, minX,
+minZ, maxX, maxZ)` recomputes its answer from nothing but its own
+arguments every time it's called — content-addressed by geography, the
+same posture `core/TerrainHeightField.js`'s own header established for
+elevation in 0.2.76, now extended two layers further. This is also why
+tile-aligned queries never duplicate or drop a tree at a shared edge:
+`TREE_LATTICE_SPACING` (4) divides `TERRAIN_TILE_SIZE` (40) exactly, so
+no lattice cell can ever straddle two tiles, and jitter is confined to
+the interior of its own cell.
+
+Grass is deliberately NOT an object list. The design conversation was
+explicit that per-blade grass objects would be "a rendering disaster" —
+grass stays exactly what it already was as of 0.2.79, a ground-color
+treatment, with GRASSLAND simply one more zone `ecologyGroundColorAt()`
+passes through unchanged. Fields are a ground-cover zone with a subtle
+furrow tint, never simulated agriculture — no crop growth, no seasons,
+no yield. Rivers are explicitly deferred: lakes fall out of the existing
+WATER classification for free, but a real river needs drainage/flow
+reasoning `core/TerrainHeightField.js`'s closed-form noise has no way to
+answer, and the design conversation chose not to force that architecture
+into a milestone about vegetation.
+
+`tests/TerrainEcology.test.js` proves determinism, zone/color
+correlation with the terrain underneath (every WATER/ROCK zone mirrors
+`surfaceCategoryAt()` exactly; BEACH sits only in a narrow band above
+`WATER_LEVEL`; FOREST/FIELD/GRASSLAND sit only below `HIGHLAND_ELEVATION`
+on GRASS surface), continuity with no seam at 11 exact tile boundaries,
+layering (untinted zones pass `surfaceColorAt()` through byte-identical;
+tinted zones differ but stay close), and a FLAGSHIP replica-determinism
+walk. `tests/NaturalFeatureField.test.js` proves the tile-partition
+guarantee directly (the sum of trees found tile-by-tile over a 4x4 tile
+region exactly equals the count found querying the whole region in one
+call — no gap, no double-count), that FOREST hosts trees at more than
+double GRASSLAND's rate over the same wide scan, that every feature's own
+Y matches `terrainHeightAt()` exactly, and a FLAGSHIP proving a tile ring
+streamed forward and streamed in reverse order discovers byte-identical
+trees — streaming/tile-load order never changes the natural world.
+
+Deliberately not in 0.2.88, named rather than hidden: rivers, hydrology,
+drainage/flow simulation (a real future "Water & Hydrology" milestone,
+should the resulting world warrant one); tree collision, removal,
+ownership, or any interaction at all — a tree is visual natural scenery,
+never a persistent editable object a user can select, move, or fork;
+grass blades or any other per-instance ground-cover object; simulated
+agriculture, crop growth, or seasons; weather, snow, erosion; wind or any
+tree animation; a second `FEATURE_TYPE` beyond `TREE` (rocks, bushes,
+deadwood); a per-World/per-Document ecology (today's thresholds are the
+one shared ecology every document's terrain uses, the same posture
+`DEFAULT_WORLD_SEED` and `SURFACE_PALETTE` already established);
+consulting `core/TerrainEcology.js` from `core/TerrainWalkability.js` or
+`application/AvatarTerrainConstraint.js` (walkability stays exactly the
+slope-only decision 0.2.77 established); and Structure Placement / World
+Instances, still its own future milestone, untouched here. Every one of
+these was named in the design conversation and ruled out specifically to
+keep this a small, restrained ecological-classification-and-placement
+milestone — not because of scheduling.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

@@ -5682,3 +5682,73 @@ for delivery-target selection: `application/ChatUseCase.js#_findAuthenticatedPee
 still picks exactly one device to send to (a `.find()`, unchanged) —
 presence aggregation answers "is anyone home," never "which one do I
 talk to," and the two stay two different questions on purpose.
+
+### Ecology Is A Third Pure Function Layered On Terrain, Never A New Ground Truth (0.2.88)
+
+`core/TerrainEcology.js#ecologyZoneAt(seed, x, z)` does not invent a
+second opinion about the world's geography — it CONSULTS
+`core/TerrainSurface.js#surfaceCategoryAt()` (itself already a function
+of `core/TerrainHeightField.js#terrainHeightAt()`) and layers two more
+independent, low-frequency noise fields on top. This is the same
+"second pure function of the identical (seed, x, z) triple" discipline
+`core/TerrainSurface.js`'s own header established relative to
+`core/TerrainHeightField.js` in 0.2.79, now extended one layer further:
+`TerrainHeightField` answers "how high," `TerrainSurface` answers "what
+does it look like," `TerrainEcology` answers "what kind of environment is
+this." Every zone boundary therefore correlates with the terrain
+underneath by construction rather than by convention — WATER and ROCK
+zones mirror `surfaceCategoryAt()` exactly, HIGHLAND shares the identical
+`HIGHLAND_ELEVATION` threshold `surfaceColorAt()` already tints GRASS
+lighter at (imported, never re-derived), and BEACH is a narrow band
+against the same `WATER_LEVEL`. A world where the ecology map looked like
+it was painted independently of the terrain map — a forest floating over
+a lake, a beach on a cliff — would mean this principle had been violated;
+`tests/TerrainEcology.test.js`'s own Section B exists specifically to
+catch that class of bug by scanning hundreds of coordinates and asserting
+the correlation holds everywhere, not merely at a few hand-picked spots.
+
+### Natural Features Are Sampled, Never Stored (0.2.88)
+
+`core/NaturalFeatureField.js#naturalFeaturesInRegion(seed, minX, minZ,
+maxX, maxZ)` has no equivalent of a `TreeRecord` anywhere in this
+codebase, and never will while this principle holds: every tree it
+returns is recomputed from a fixed, jittered lattice keyed on nothing but
+`(seed, x, z)`, the same "content-addressed by geography" posture
+`core/TerrainHeightField.js`'s own header established for elevation in
+0.2.76 — `Terrain = f(seed, x, z)`, never `Terrain = lookup(x, z)` —
+applied here to WHAT grows somewhere instead of how high it stands. This
+is what makes a forest safe to stream in and out thousands of times
+across a session without ever writing a single byte: two replicas, or
+the same replica returning to a position after roaming thousands of
+units away, recompute the byte-identical tree at the byte-identical
+position, because both are pure functions of their own arguments and
+nothing else. It is also the structural reason a generated tree can never
+accidentally become a `Document` -> `Brick` the way a user's house is:
+there is no persistence layer a tree could be promoted into even by
+accident, because `naturalFeaturesInRegion()` never writes anywhere in
+the first place. `tests/NaturalFeatureField.test.js`'s own FLAGSHIP
+proves this directly — a ring of tiles streamed in ascending order and
+the identical ring streamed in descending order discover byte-identical
+trees, because tile LOAD ORDER was never an input to the computation to
+begin with.
+
+### Tree Density Is Independent Of The Zone That Gates It, So Cover Fades Instead Of Stopping (0.2.88)
+
+`core/NaturalFeatureField.js#forestDensityAt()` is deliberately its OWN
+noise field, decorrelated from `core/TerrainEcology.js#moistureAt()` —
+the field that decided whether a coordinate is FOREST or GRASSLAND in
+the first place. If tree placement simply reused moisture directly, the
+zone boundary and the tree-density boundary would be the same line
+twice: a forest would stop exactly where the FOREST zone stops, a hard
+edge no amount of jitter could soften. Instead, `naturalFeaturesInRegion()`
+thresholds `forestDensityAt()` PERMISSIVELY inside FOREST (most
+qualifying lattice cells host a tree — dense cover) and RESTRICTIVELY
+inside GRASSLAND (only the density field's own local peaks qualify —
+sparse, scattered fringe trees), against a zone boundary that itself
+stays a hard line. The visible result is a forest that thins into
+scattered trees before giving way to open grassland, rather than a wall
+of trees ending in a straight edge — proven directly in
+`tests/NaturalFeatureField.test.js`'s own Section C, which asserts
+FOREST's tree rate exceeds GRASSLAND's by more than double over the same
+wide scan, and that GRASSLAND's rate is nonzero rather than a hard
+cutoff.

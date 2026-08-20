@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
-import { surfaceColorAt } from '../core/TerrainSurface.js';
+import { ecologyGroundColorAt } from '../core/TerrainEcology.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 
 // The renderer-side counterpart to core/TerrainHeightField.js and
@@ -15,9 +15,16 @@ import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 // — never at the tile's (tx, tz) — the same "continuous world
 // coordinates, not tile coordinates" discipline elevation already uses
 // just above it. That is what keeps two neighboring tiles' shared edge
-// vertices the exact same color: both compute surfaceColorAt() at the
-// identical world coordinate, independent of which tile happened to
+// vertices the exact same color: both compute ecologyGroundColorAt() at
+// the identical world coordinate, independent of which tile happened to
 // stream in first. See core/TerrainSurface.js's own header.
+//
+// 0.2.88 — samples core/TerrainEcology.js#ecologyGroundColorAt() rather
+// than core/TerrainSurface.js#surfaceColorAt() directly: the ecology
+// layer starts from that exact same surfaceColorAt() result and adds a
+// BEACH sand tint or FIELD row tint on top for the two zones with a
+// genuinely distinct look, passing every other zone's color through
+// completely unchanged. See core/TerrainEcology.js's own header.
 //
 // Deliberately untested directly, same posture as ThreeBrickFactory/
 // BrickRenderer/GridHelper/Lights — see
@@ -38,7 +45,7 @@ export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE)
         const worldZ = center.z + position.getZ(i);
         position.setY(i, terrainHeightAt(seed, worldX, worldZ));
 
-        const color = surfaceColorAt(seed, worldX, worldZ);
+        const color = ecologyGroundColorAt(seed, worldX, worldZ);
         colors[i * 3] = color.r;
         colors[i * 3 + 1] = color.g;
         colors[i * 3 + 2] = color.b;
