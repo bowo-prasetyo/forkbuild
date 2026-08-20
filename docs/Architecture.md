@@ -8145,3 +8145,129 @@ presence/profile sync remain completely unmodified, each still exactly
 milestone from 0.2.69 through 0.2.71 already carried. See docs/Roadmap.md,
 0.2.78, for the full list of what this establishes versus what it
 deliberately leaves for later.
+
+### Terrain Surface & Natural Color (0.2.79)
+
+0.2.76/0.2.77 gave World View a ground that exists and can be walked on,
+but it has looked like exactly one flat `0x5c8a4a` green since the day it
+shipped, no matter what a coordinate's elevation or slope actually is.
+0.2.79 answers a narrower, deliberately restrained question: what does
+this coordinate's ground LOOK like — never "what IS it," in any simulated
+sense. The one design principle every decision below serves: buildings and
+avatars win. Terrain provides background, context, depth, geography;
+`core/TerrainSurface.js`'s own `SURFACE_PALETTE` is deliberately
+low-saturation and mid-value specifically so it never competes with a
+building's or an avatar's own, more saturated materials for visual
+attention.
+
+**`core/TerrainSurface.js` is a SECOND pure function of the identical
+`(seed, x, z)` triple `core/TerrainHeightField.js#terrainHeightAt()`
+already takes — a different question about the same coordinate, never a
+second ground-truth source.** `surfaceCategoryAt(seed, x, z)` reads the
+real elevation at that coordinate plus a 1-unit finite-difference slope
+sample — the identical rise-over-run measurement
+`core/TerrainWalkability.js` already uses for movement, reused here for
+classification instead of a movement decision — and answers exactly one
+of four `SURFACE_CATEGORY` values: WATER for a low depression (elevation
+below a fraction of `TERRAIN_HEIGHT_BOUND`), ROCK or SOIL for exposed
+steep ground (evaluated in that order, ROCK requiring the steeper slope),
+and GRASS otherwise, the common case. Water always wins over slope, and
+slope always wins over elevation — a fixed evaluation order, so one
+coordinate can never read as two different categories depending on which
+check happened to run first. Thresholds are expressed as fractions of
+`TERRAIN_HEIGHT_BOUND` and calibrated against this world's own actual
+slope distribution (0.2.76's octaves are deliberately gentle — "reads as
+geography, never spiky noise" — so real terrain's steepest 1-unit slope
+anywhere is well under `core/TerrainWalkability.js`'s own
+`DEFAULT_MAX_WALKABLE_SLOPE`), rather than a hardcoded absolute elevation
+or an arbitrary slope constant that could silently stop matching the
+field's real range.
+
+**`surfaceColorAt(seed, x, z)` turns that classification into a soft
+`{r, g, b}` color in `[0, 1]` — THREE.Color's own native range — through
+exactly two additional, deliberately restrained steps.** For GRASS only,
+the base color is blended toward a lighter `GRASS_HIGHLAND` tone as a
+continuous function of elevation — "higher terrain -> lighter/different
+vegetation tone," deliberately NOT a fifth `SURFACE_CATEGORY` (a whole new
+category for one color gradient would be over-modeling a nuance as if it
+were a distinct kind of ground). Every category then receives a single
+shared brightness offset from a second, independent low-frequency hash
+lattice — its own small `hash2D()`/`variationNoise()` pair, deliberately
+NOT importing `core/TerrainHeightField.js`'s private noise internals, the
+same "small dedicated pure module" split `core/TerrainTiling.js`'s own
+header already justifies relative to `core/SpatialCell.js` — decorrelated
+from elevation by a distinct seed offset, so lighter/darker patches never
+visibly track hills or valleys. The offset is applied EQUALLY to all three
+channels (a lightness variation, never an independent per-channel one),
+low frequency and low amplitude by construction, so terrain reads as "the
+same grass, gently lit differently," never a dithered checkerboard that
+would expose the underlying noise function.
+
+**The most important continuity property, restated for color: surface
+color is a function of CONTINUOUS world coordinates, never tile
+coordinates — `surfaceColorAt()` has no idea a tile grid exists at all.**
+This is the same discipline `core/TerrainHeightField.js` already
+established for elevation in 0.2.76, extended to color, and it is what
+makes two neighboring `renderer/TerrainStreamingController.js` tiles —
+streamed in independently, on whatever frame the camera happened to
+approach them — agree exactly at their shared edge without any
+coordination between them: both sample `surfaceColorAt()` at the identical
+world `(x, z)`, so both get the identical answer. Without this, a
+tile-coordinate-keyed color function could make two adjacent tiles
+disagree the moment they landed on different sides of a classification
+threshold, exposing the streaming grid as a visible checkerboard exactly
+where 0.2.76 worked hardest to make the ground continuous. See
+docs/Principles.md, "Terrain Surface Color Is A Function Of World
+Coordinates, Never Tile Coordinates."
+
+**`renderer/TerrainTileMesh.js` is the only other file this milestone
+touches, and the change is additive, not structural.** Each vertex, which
+already samples `terrainHeightAt(seed, worldX, worldZ)` for its Y
+position, now ALSO samples `surfaceColorAt(seed, worldX, worldZ)` into a
+`THREE.BufferAttribute` color buffer set on the same geometry, and the
+material changes from a single flat `MeshStandardMaterial({ color:
+0x5c8a4a })` to `MeshStandardMaterial({ vertexColors: true })` — no
+`material.color` override, so the per-vertex buffer is the ONLY source of
+terrain color, never a flat tint layered on top of it. `core/
+TerrainHeightField.js`, `core/TerrainWalkability.js`, `core/
+TerrainTiling.js`, and `renderer/TerrainStreamingController.js` are all
+completely untouched: this milestone adds a new pure classification/color
+module and one small renderer-glue change, never a terrain-system rewrite.
+
+The flagship test (`tests/TerrainSurfaceColor.test.js`) proves the design
+doc's own scripted scenario end to end, entirely without a Three.js
+dependency (matching `core/TerrainSurface.js`'s own pure-function
+posture): a wide coordinate scan reaches all four `SURFACE_CATEGORY`
+values, never fewer; every WATER coordinate found sits strictly lower than
+every GRASS coordinate in the same scan, and ROCK/SOIL coordinates are, on
+average, markedly steeper than GRASS ones — classification genuinely
+tracks elevation/slope, never assigned independent of them; a 1-unit step
+anywhere never produces more than a small color change, including at 41
+different exact terrain-tile boundaries, proving no boundary is more
+discontinuous than the interior of a tile; at the precise vertex
+resolution `renderer/TerrainTileMesh.js` samples at, the shared edge
+vertex between two adjacent tiles computes the byte-identical color from
+either tile's own independent vertex loop, for every segment count tested
+— the property that actually prevents a visible tile seam; two independent
+"replicas" sharing only the world seed compute byte-identical categories
+and colors across a 61-point path; and a full walk across many tile
+boundaries that returns to its starting coordinates reproduces
+byte-identical elevation, classification, and color throughout — 0.2.76's
+own "same seed + same coordinates -> same terrain" property, now proven
+for full surface appearance rather than raw elevation alone.
+
+Deliberately not in 0.2.79, matching the design conversation's own list:
+water simulation, swimming, rivers, shorelines, vegetation objects, trees,
+grass meshes, weather, seasons, snow simulation, erosion, a real biome
+simulation, and any large terrain-texture asset — WATER/SOIL/ROCK/GRASS
+are visual surface-color categories, never the systems those words usually
+name. Also out of scope: a per-`World`/per-`Document` surface palette or
+classification (today's `SURFACE_PALETTE` is the one shared look every
+document's terrain uses, matching `DEFAULT_WORLD_SEED`'s own posture);
+consulting `core/TerrainSurface.js` from `core/TerrainWalkability.js` or
+`application/AvatarTerrainConstraint.js` (walkability remains exactly the
+slope-only decision 0.2.77 established — SOIL/ROCK mean "this looks like
+exposed dirt/stone," never "this is unwalkable");
+`renderer/PickingService.js#pickGroundPosition()`, still raycasting the
+literal `Y = 0` plane, completely unmodified; and any per-vertex texture
+map, normal map, or triplanar detail beyond flat vertex color.

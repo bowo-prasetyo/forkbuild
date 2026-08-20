@@ -5432,3 +5432,49 @@ FLAGSHIP A: Charlie's connection is completely genuine (he really does
 hold his own key) and still resolves as unauthorized to represent Alice,
 because genuine authentication of A key was never, by itself, evidence of
 permission to act for a DIFFERENT one.
+
+### Terrain Surface Color Is A Function Of World Coordinates, Never Tile Coordinates (0.2.79)
+
+`core/TerrainSurface.js#surfaceColorAt(seed, x, z)` has no idea a tile
+grid exists at all — the same discipline `core/TerrainHeightField.js#
+terrainHeightAt(seed, x, z)` already established for elevation in 0.2.76,
+extended to color. This is what makes two neighboring
+`renderer/TerrainStreamingController.js` tiles — streamed in
+independently, on whatever frame the camera happened to approach them —
+agree exactly at their shared edge without any coordination between them:
+both sample `surfaceColorAt()` at the identical world `(x, z)`, so both
+get the identical answer, proven directly in
+`tests/TerrainSurfaceColor.test.js` at the exact vertex resolution
+`renderer/TerrainTileMesh.js` samples at, for every segment count tested.
+A function of `(tileX, tileZ)` instead would have let two adjacent tiles
+land on different sides of a classification threshold and disagree at
+their shared edge, exposing the streaming grid as a visible checkerboard
+exactly where 0.2.76 worked hardest to make the ground continuous. The
+low-frequency brightness variation layered on top follows the identical
+rule for the identical reason: it is sampled from `surfaceColorAt()`'s own
+continuous world-coordinate noise lattice, never from anything keyed by
+which tile a vertex happens to belong to.
+
+### Terrain Surface Color Is Deliberately Restrained; Buildings And Avatars Are The Visual Focus (0.2.79)
+
+`core/TerrainSurface.js#SURFACE_PALETTE` is low-saturation and mid-value
+by deliberate choice — a soft pale green, a muted warm brown, a light
+neutral gray, a soft blue — never the saturated "game grass"/"game water"
+tones a more decorative terrain system might reach for. Terrain's job in
+World View is background, context, depth, and geography; a building's or
+an avatar's own materials are the actual visual focus, and a loudly
+saturated ground would compete with them for attention rather than
+support it. This same restraint governs every other visual choice this
+milestone makes: the low-frequency brightness variation
+`core/TerrainSurface.js#variationAt()` applies is a single shared
+lightness offset across all three color channels, never an independent
+per-channel one, so terrain reads as "the same grass, gently lit
+differently" rather than a dithered checkerboard that exposes the
+underlying noise function; and "higher terrain -> lighter vegetation tone"
+is a continuous blend within the existing GRASS category, never a new,
+more elaborate `SURFACE_CATEGORY` that would over-model one color nuance
+as if it were a distinct kind of ground. WATER/SOIL/ROCK/GRASS are visual
+surface-color categories only — a WATER-classified coordinate looks like a
+lake; it is not one, and nothing in this milestone simulates water,
+vegetation, or geology (see docs/Roadmap.md, 0.2.79's own "Deliberately
+not in 0.2.79").
