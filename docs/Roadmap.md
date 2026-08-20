@@ -3124,7 +3124,7 @@ simultaneous position claims from two authorized devices of the same
 identity are resolved, a genuinely harder problem than anything else this
 list names.
 
-0.2.79 — Multi-Device Social State Semantics — takes up exactly the first
+0.2.82 — Multi-Device Social State Semantics — takes up exactly the first
 of 0.2.78's own proposed follow-ons, deliberately over Device Management UI
 or Multi-Writer Presence: "wire the new device-authority model into social
 communication, but still avoid full multi-device synchronization." The
@@ -3132,8 +3132,20 @@ central question: when two devices represent the same parent identity,
 what does it mean for one of those devices to communicate with another
 identity?
 
+Numbering note: this milestone shipped (commit-tagged, and in its own
+source headers) as "0.2.79," chosen before 0.2.79 — Terrain Surface &
+Natural Color, below, had already claimed that number on a parallel
+branch. Both merged, producing two milestones both labeled 0.2.79. It is
+recorded here as 0.2.82 — its actual position once every milestone that
+landed before it (0.2.79 Terrain, 0.2.80 Bricks, 0.2.81 Forkable
+Structure Library) is accounted for — so docs/Roadmap.md itself stays an
+unambiguous sequence going forward. Source comments, test filenames, and
+commit messages that still say "0.2.79" for this milestone are historical
+artifacts, not re-labeled retroactively; this entry is the authoritative
+correction.
+
 ```text
-0.2.79
+0.2.82
 ├── application/DeviceAuthorizationPropagationUseCase.js
 │     gains resolveConnectionIdentity(connectedPeer) — the counterpart
 │     query to 0.2.78's own resolvePeerAuthority(): given a live,
@@ -3146,7 +3158,7 @@ identity?
 ├── application/SocialIdentityResolver.js (new)
 │     the DEFAULT resolver — resolveDirectSocialIdentity() — every social
 │     use case falls back to when no real device-authorization wiring is
-│     injected, byte-identical to every pre-0.2.79 behavior
+│     injected, byte-identical to every pre-0.2.82 behavior
 ├── application/FriendRelationshipUseCase.js
 │     every gesture (send/accept/reject/cancel/unfriend) and its own
 │     ingestion boundary now resolve a connected peer's SOCIAL identity
@@ -3187,7 +3199,7 @@ social identity.** Friendship, chat eligibility, and voice eligibility all
 now ask "does the RESOLVED identity behind this connection have
 permission?" — never "does THIS SPECIFIC KEY have permission?" See
 docs/Principles.md, "Device Authorization Changes Peer Authority, Never
-Social Identity" (0.2.79).
+Social Identity" (0.2.82).
 
 Three deliberate architectural boundaries, each named so the next
 milestone doesn't have to rediscover them:
@@ -3248,7 +3260,7 @@ SECURITY FLAGSHIP B), but a further message from it now resolves to its
 own bare, un-friended raw key on Bob's RECEIVING side and is REJECTED —
 while the Laptop, never revoked, remains fully authorized throughout.
 
-Deliberately not in 0.2.79, named rather than hidden, matching the
+Deliberately not in 0.2.82, named rather than hidden, matching the
 explicit "should still avoid full multi-device synchronization" scope
 this milestone was given: message/conversation synchronization BETWEEN
 Alice's own several devices (each still has its own independent, local
@@ -3666,6 +3678,161 @@ entry point from World View, alongside the Editor — 0.2.81 deliberately
 returns the user to the Editor's own "New/Load Document" surface, not a
 second fork entry point layered onto World View's already-larger
 navigation/placement session.
+
+0.2.83 — Multi-Device Conversation & Read-State Synchronization — takes
+up the gap 0.2.78 first named and 0.2.82 deliberately left standing:
+"message/conversation synchronization BETWEEN Alice's own several
+devices... each still has its own independent, local view." 0.2.82
+taught a THIRD PARTY (Bob) to resolve any of Alice's authorized devices
+to one shared conversation; it never asked whether Alice's OWN devices
+know about each other's messages at all. They don't — Alice's Phone and
+Alice's Laptop are two completely independent application/ChatUseCase.js
+instances, each with its own disjoint local storage. This milestone
+answers "do those devices actually behave like two devices of the same
+identity, or merely two devices that happen to address the same
+conversation," deliberately scoped to conversation content and read
+state only — never presence, never voice.
+
+```text
+0.2.83
+├── core/ConversationSyncEnvelope.js           the wire vocabulary for a
+│                                                NEW, separate protocol,
+│                                                forkbuild:device-conversation-sync
+│                                                — MESSAGES (a batch of
+│                                                one device's own stored
+│                                                entries for one
+│                                                conversation) and
+│                                                READ_STATE (one device's
+│                                                own local read marker)
+├── core/SiblingReadMarker.js /
+│   application/SiblingReadStateStore.js        "what has each of my OWN
+│                                                sibling devices told me
+│                                                about ITS OWN read
+│                                                position" — a SIXTH
+│                                                durable per-owner store,
+│                                                never written into
+│                                                application/ConversationReadTracker.js
+├── application/DeviceAuthorizationPropagationUseCase.js
+│     gains resolveOwnSocialIdentity() — the reflexive counterpart to
+│     0.2.82's own resolveConnectionIdentity(): "who am I, socially,"
+│     not merely "who is the other party" — plus adoptOwnDeviceGrant()
+│     (a device's own first-person adoption of the portable grant record
+│     naming it, the out-of-band handoff 0.2.78 named and left unbuilt)
+│     and self-application of an authored grant/revocation to the
+│     author's own local view (broadcastAuthorization()/
+│     broadcastRevocation() previously only pushed outward)
+├── application/ChatUseCase.js
+│     gains ingestSyncedEntry() — the ONE trusted entrypoint for a
+│     message this device learned from a sibling's already-trusted copy,
+│     idempotent by (peerIdentityId, messageId), never re-validating
+│     senderIdentity/conversationId/friendship the way _handleIncoming()
+│     does for wire content — plus getStoredEntries()/
+│     getStoredConversationPeerIds() for the sync protocol to read from
+└── application/DeviceConversationSyncUseCase.js (new)
+      the protocol itself: full-state push to a newly-eligible sibling
+      connection, a live reactive push for one already connected,
+      explicit pushReadState(), and getIdentityObservedReadSequence() —
+      the derived MAX of this device's own local marker and every
+      sibling's reported position, never a fourth stored fact
+```
+
+The answer this milestone commits to: **every device is an independent
+durable replica; there is no primary, no master, no cloud mailbox.** This
+protocol only ever pushes a device's OWN already-stored state at a
+sibling, never pulls or asks — two devices that have been apart converge
+through ordinary, repeated, idempotent pushes. See
+docs/Principles.md, "Conversation Synchronization Is A Protocol Between A
+Device And Itself, Never A Wider Chat Feature" (0.2.83).
+
+Message identity needed no redesign: core/ChatMessage.js#toChatMessage's
+own `messageId` was already a fresh UUID per message, globally unique
+independent of which device produced it (see application/createId.js) —
+exactly the property this milestone's own design conversation asked to
+verify BEFORE building synchronization on top of it, and it was already
+true.
+
+The security boundary is one symmetric comparison, re-derived fresh on
+every connection and every incoming envelope, never cached:
+`resolveConnectionIdentity(peer).identityId === resolveOwnSocialIdentity().identityId`
+— "does the identity I independently resolve the OTHER party to be match
+the identity I independently resolve MYSELF to be?" Because both sides
+read straight from application/DeviceAuthorizationPropagationUseCase.js's
+own core/DeviceAuthority.js records, which a later revocation updates the
+instant it is learned through the completely unmodified 0.2.78/0.2.82
+gossip path, revocation isolation falls out for free — no code anywhere
+in the new protocol asks "has this device been revoked"; ineligibility
+IS what a revoked device's own resolution now produces, on BOTH the
+revoking device (which now also self-applies its own authored revocation
+immediately, needing no round trip to learn its own fact) and the
+revoked device (which learns the same way any third party always did).
+A revoked device's own key remains completely functional throughout —
+0.2.78's own SECURITY FLAGSHIP B, unchanged — only its standing to
+exchange conversation state with its former sibling is gone.
+
+Per-device local read state and identity-observed read state are kept as
+two genuinely different facts, never collapsed into one: Laptop reading a
+message advances ONLY Laptop's own application/ConversationReadTracker.js
+marker; Phone's own marker is completely untouched. What
+`getIdentityObservedReadSequence()` answers — "what does Alice's identity
+consider read" — is a purely derived maximum across the two, recomputed
+fresh on every call, never its own fourth stored fact competing with
+either of the other two for authority. See
+docs/Principles.md, "Per-Device Local Read State And Identity-Observed
+Read State Are Never The Same Fact" (0.2.83).
+
+The flagship test (`tests/MultiDeviceConversationSync.test.js`) proves the
+design's own scripted scenario end to end, over real in-process
+peer/PeerAuthenticationSession.js handshakes: Alice's Phone (holding her
+primary identity directly) chats with Bob while her Laptop (a separately-
+keyed, granted device) is completely offline; the Laptop connects
+directly to the Phone, adopts its own portable grant, and converges on
+the FULL two-message conversation purely through sync, having never
+exchanged a single message with Bob itself; a third message from Bob,
+arriving while the Laptop is ALREADY connected, reaches it reactively,
+not only at the next reconnect; re-syncing identical state changes
+nothing (`Sync(S, S) = S`); the Laptop reads the latest message and the
+test asserts, in the same breath, that the Laptop's own local marker
+advanced, the Phone's own local marker did NOT, and the Phone's derived
+`getIdentityObservedReadSequence()` correctly reflects the Laptop's
+report as its max. **SECURITY FLAGSHIP**: Phone revokes the Laptop; both
+devices independently and immediately refuse to treat the other as a
+sibling (the Phone needing no round trip to learn its own just-authored
+fact); a further Phone-to-Bob message never reaches the Laptop; the
+Laptop's connection remains genuinely authenticated throughout; the
+Phone keeps chatting with Bob completely normally.
+
+Deliberately not in 0.2.83, named rather than hidden: presence
+synchronization (0.2.78's own "Multi-Writer Presence," restated — what
+"online" means once "Alice" could be several simultaneously live devices
+— remains unscheduled) and multi-device voice ringing (calling "Alice"
+still means calling one, explicitly chosen connection) — see this
+milestone's own design conversation, "Do not synchronize presence yet"
+and "Don't synchronize voice yet." Also deliberately absent: a real
+incremental/delta sync protocol — every eligible reconnect, and every
+locally-observed change on an already-connected sibling, resends the
+FULL relevant state (batched under core/ConversationSyncEnvelope.js's own
+SYNC_MESSAGES_BATCH_SIZE), the same "resend everything, let idempotency
+absorb the redundancy" posture 0.2.41's own periodic profile republish
+already chose over computing a precise diff — a genuinely harder
+optimization, deliberately left for whenever conversation volume makes
+full-state resync actually expensive; the identical redundancy this
+creates when a synced-in message's own reactive re-push reaches a
+sibling that already held it (one extra, harmless round trip absorbed by
+application/ConversationStore.js's own dedup, never suppressed by
+tracking message provenance) is named rather than engineered away, for
+the same reason. A general "N devices" topology was considered and is
+already structurally supported (eligibility is a pairwise comparison,
+consulted for every connection independently) but only ever exercised
+with two devices in this milestone's own flagship. Cross-device
+FRIENDSHIP acknowledgment remains exactly the gap 0.2.82 named: a device
+that never independently completes its OWN friend-request/accept cycle
+still cannot pass its OWN local sendMessage()/sendReadReceipt()
+eligibility check when INITIATING contact — this milestone's own sync
+protocol sidesteps it entirely (sibling eligibility never consults
+FriendRelationshipUseCase at all), but does not solve it. Also
+unscheduled: a "My Devices" UI surfacing sync status, and any
+supersession of the low-tech, out-of-band portable-grant handoff
+adoptOwnDeviceGrant() now consumes.
 
 ## 0.1.50 — What shipped
 

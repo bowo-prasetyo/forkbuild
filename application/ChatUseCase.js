@@ -7,6 +7,8 @@ import { resolveIncomingChatMessage } from '../core/ChatMessageIngestion.js';
 import { ChatDeliveryState } from '../core/ChatDeliveryState.js';
 import { toChatDeliveryAck, isValidChatDeliveryAck } from '../core/ChatDeliveryAck.js';
 import { toChatReadReceipt, isValidChatReadReceipt } from '../core/ChatReadReceipt.js';
+import { isDeliveryStateAdvancement } from '../core/ChatDeliveryState.js';
+import { isValidChatMessageDirection } from '../core/ConversationEntry.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LiveConversation } from './LiveConversation.js';
 import { ChatOutbox } from './ChatOutbox.js';
@@ -608,6 +610,74 @@ export class ChatUseCase {
     // second copy of this fact.
     getPeerReadThroughSequence(peerIdentityId) {
         return this._remoteReadReceipts.getReadThroughSequence(peerIdentityId);
+    }
+
+    // 0.2.83 — the durable-history read side application/
+    // DeviceConversationSyncUseCase.js reads from to build an outgoing
+    // sync batch — every stored entry for one conversation bucket
+    // (oldest first, mirroring getOutbox()'s own ordering), or every
+    // bucket this device has ANY stored history in at all. Deliberately
+    // a THIN pass-through to `this._conversationStore` rather than a
+    // second copy of what it holds — see application/ConversationStore.js's
+    // own header on why nothing in this codebase reaches into it
+    // directly except through ChatUseCase.
+    getStoredEntries(peerIdentityId) {
+        return this._conversationStore.list(peerIdentityId).sort((a, b) => a.message.sequence - b.message.sequence);
+    }
+
+    getStoredConversationPeerIds() {
+        return this._conversationStore.conversations().map((c) => c.peerIdentityId);
+    }
+
+    // 0.2.83 — Multi-Device Conversation & Read-State Synchronization.
+    //
+    // The ONE trusted ingestion entrypoint for a message this device
+    // learned about NOT from `_handleIncoming()`'s own wire-content trust
+    // gate, but from a SIBLING device's own already-trusted copy of it —
+    // see application/DeviceConversationSyncUseCase.js's own header for
+    // the (different, narrower) trust boundary that protocol applies
+    // BEFORE ever calling this. This method itself trusts its caller
+    // completely and re-validates nothing about senderIdentity,
+    // conversationId, or friendship — it is not a second `_handleIncoming`,
+    // it is what `_handleIncoming`/`_appendMessage` already do, exposed
+    // for a caller outside this class that has already done its OWN,
+    // equally real, trust work one layer down.
+    //
+    // Idempotent by (peerIdentityId, message.messageId), exactly like
+    // application/ConversationStore.js#append() already guarantees —
+    // applying the same synced entry any number of times converges to
+    // the same state (`Sync(S, S) = S`, see docs/Roadmap.md, 0.2.83). A
+    // genuinely new message is appended to BOTH the durable store and the
+    // live, in-memory transcript (firing the same MESSAGE_EVENT a locally
+    // sent or received message fires, so an open ChatView re-renders
+    // either way); a message this device already held is never
+    // re-appended to the live transcript a second time (which would
+    // duplicate it on screen) — instead, if the synced copy's own
+    // deliveryState is a genuine ADVANCEMENT over what this device
+    // already recorded (core/ChatDeliveryState.js#isDeliveryStateAdvancement,
+    // never a regression), that advancement is applied through the exact
+    // same `_publishDeliveryState()` a live delivery ack already uses.
+    // Deliberately does NOT send a core/ChatDeliveryAck.js, a
+    // core/ChatReadReceipt.js, or anything else back onto the WIRE — see
+    // docs/Principles.md, "Conversation Synchronization Is A Protocol
+    // Between A Device And Itself, Never A Wider Chat Feature" (0.2.83):
+    // only the device that genuinely received a message live from its
+    // sender ever acknowledges it to THAT sender.
+    ingestSyncedEntry(peerIdentityId, message, direction, deliveryState = null) {
+        if (!peerIdentityId || typeof peerIdentityId !== 'string') {
+            return;
+        }
+        if (!isValidChatMessage(message) || !isValidChatMessageDirection(direction)) {
+            return;
+        }
+        const existing = this._conversationStore.list(peerIdentityId).find((entry) => entry.message.messageId === message.messageId);
+        if (!existing) {
+            this._appendMessage(peerIdentityId, message.conversationId, message, direction, deliveryState);
+            return;
+        }
+        if (isDeliveryStateAdvancement(existing.deliveryState, deliveryState)) {
+            this._publishDeliveryState(peerIdentityId, message.messageId, deliveryState);
+        }
     }
 
     // Returns an unsubscribe function. Fires `(peerIdentityId, message)`
