@@ -2,6 +2,7 @@ import { EventBus } from '../core/events/EventBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { FriendshipState } from '../core/FriendshipState.js';
 import { VoiceSessionState } from '../core/VoiceSessionState.js';
+import { VoiceCallEndReason } from '../core/VoiceCallEndReason.js';
 import { VoiceCallSignalType, toVoiceCallSignal, isValidVoiceCallSignal } from '../core/VoiceCallSignal.js';
 import { VoiceMediaSignalKind, toVoiceMediaSignal, isValidVoiceMediaSignal } from '../core/VoiceMediaSignal.js';
 import { LocalAudioTrackProvider } from './LocalAudioTrackProvider.js';
@@ -9,6 +10,11 @@ import { createId } from '../core/createId.js';
 
 const CALL_STATE_EVENT = 'VoiceCallStateChanged';
 const INCOMING_CALL_EVENT = 'VoiceIncomingCall';
+
+// How long CALLING/RINGING is allowed to sit unanswered before this
+// device gives up on its own — see this class's own header, "Ringing Is
+// Bounded By Local Policy, Never By The Network" (0.2.74).
+const DEFAULT_RINGING_TIMEOUT_MS = 45000;
 
 // 0.2.73 — Authenticated Voice / Audio.
 //
@@ -98,6 +104,65 @@ const INCOMING_CALL_EVENT = 'VoiceIncomingCall';
 // ordinary silence a disabled outgoing track already produces. See
 // docs/Principles.md, "Audio Device State Is Never Presence, Never A
 // Wire Fact" (0.2.73).
+//
+// ---- 0.2.74 — Voice Call Reliability & Lifecycle -----------------------
+//
+// Ringing Is Bounded By Local Policy, Never By The Network.
+// CALLING and RINGING are no longer states a device can sit in forever —
+// `_armRingingTimeout()` starts a plain local timer (DEFAULT_RINGING_TIMEOUT_MS)
+// the instant either state is entered, and `_onRingingTimeout()` tears the
+// call down locally with `VoiceCallEndReason.TIMEOUT` if nothing else
+// resolves it first. Per the design doc: the timeout is each device's OWN
+// decision, never an authority the network hands down — Alice's timer
+// firing and Bob's timer firing are two completely independent local
+// events; whichever fires first best-effort notifies the other side (see
+// `_notifyPeerCallEnded()` below) purely as a courtesy, not because either
+// side needed permission to give up.
+//
+// Reasons Are Local Judgments, Never Transmitted Facts. core/
+// VoiceCallEndReason.js replaces 0.2.73's free-text `reason` strings with a
+// closed, documented vocabulary — but it is deliberately NOT added to
+// core/VoiceCallSignal.js's own wire shape. An incoming END always means
+// exactly one thing on the wire — "this call is over" — and this class
+// always maps it to `VoiceCallEndReason.REMOTE_HANGUP` regardless of
+// whether the sender's own local reason was a deliberate hangup, their own
+// ringing timeout, or their own media/negotiation failure. This is a
+// deliberate choice, not a missing feature: REJECTED and BUSY already have
+// their own explicit, honest signal types precisely because those ARE
+// facts the sender chooses to disclose; a reason is never inferred or
+// guessed at from an ordinary END.
+//
+// A Call Failure Always Tells The Other Side — Never Leaves Them Hanging In
+// CONNECTING. 0.2.73 had a real gap here: if `_beginMediaNegotiation()`
+// failed AFTER `acceptCall()` had already sent ACCEPT (or symmetrically,
+// after `_handleIncomingMedia()` had already started applying a remote
+// offer/answer), the failing side tore its own call down locally but never
+// told the other side — which would sit in CONNECTING indefinitely, mic
+// potentially already attached, waiting for a renegotiation SDP that would
+// never arrive. Every MEDIA_FAILED/NEGOTIATION_FAILED teardown below now
+// calls `_notifyPeerCallEnded()` first, exactly like `endCall()`'s own
+// existing hangup notification — the SAME END signal, reused, never a new
+// wire type.
+//
+// Local Microphone Failure Is Never Confused With Peer Rejection Or A Dead
+// Connection. `_beginMediaNegotiation()` tags whatever it throws with
+// `VoiceCallEndReason.MEDIA_FAILED` if the failure happened acquiring the
+// LOCAL track (application/LocalAudioTrackProvider.js — no microphone, a
+// permission prompt denied) and `NEGOTIATION_FAILED` if it happened after,
+// applying/creating SDP over `peer/WebRtcPeerConnection.js`. Neither one
+// ever closes, nor even touches, the underlying peer/PeerConnection.js —
+// see this class's own existing header, "Voice Lifecycle Is Independent
+// Of Peer Lifecycle" — 0.2.74 only sharpens WHICH failure is being
+// reported, never widens what a voice failure is allowed to do to the
+// connection carrying it.
+//
+// BUSY Was Already Real; 0.2.74 Only Gives It A Dedicated Test.
+// `_requireIdle()` (refusing a SECOND call this device places while
+// already in one) and `_handleInvite()`'s own `VoiceCallSignalType.BUSY`
+// reply (refusing a call this device RECEIVES while already in one) both
+// already existed in 0.2.73 — see tests/VoiceCallReliability.test.js for
+// the concurrency proof the design doc asked for. Nothing in this file
+// changed to make BUSY "real"; it already was.
 export class VoiceUseCase {
     constructor(identityProvider, {
         peerMessageBus,
@@ -106,7 +171,10 @@ export class VoiceUseCase {
         peerBlockUseCase = null,
         localAudioTrackProvider = new LocalAudioTrackProvider(),
         callProtocol = VoiceUseCase.CALL_PROTOCOL,
-        mediaProtocol = VoiceUseCase.MEDIA_PROTOCOL
+        mediaProtocol = VoiceUseCase.MEDIA_PROTOCOL,
+        ringingTimeoutMs = DEFAULT_RINGING_TIMEOUT_MS,
+        setTimeoutFn = null,
+        clearTimeoutFn = null
     } = {}) {
         if (!identityProvider) {
             throw new Error('VoiceUseCase: identityProvider is required');
@@ -130,6 +198,14 @@ export class VoiceUseCase {
         this._mediaProtocol = mediaProtocol;
         this._eventBus = new EventBus();
         this._call = null; // see this class's own header, "One Call At A Time, Per Device."
+        // 0.2.74 — see this class's own header, "Ringing Is Bounded By
+        // Local Policy, Never By The Network." Timer functions are
+        // injectable purely so a test can use a short real delay without
+        // touching global timer semantics — mirrors
+        // application/AutosaveScheduler.js's own identical precedent.
+        this._ringingTimeoutMs = ringingTimeoutMs;
+        this._setTimeout = setTimeoutFn || ((fn, ms) => setTimeout(fn, ms));
+        this._clearTimeout = clearTimeoutFn || ((id) => clearTimeout(id));
 
         this._blockedIds = peerBlockUseCase ? new Set(peerBlockUseCase.getBlocked().map((b) => b.identityId)) : new Set();
         this._friendIds = new Set(friendRelationshipUseCase.getRelationships()
@@ -270,7 +346,12 @@ export class VoiceUseCase {
         try {
             await this._beginMediaNegotiation(call);
         } catch (e) {
-            this._teardownCall(call, 'media error');
+            // 0.2.74 — Alice already received our ACCEPT and is sitting in
+            // CONNECTING expecting a renegotiation SDP that will now never
+            // arrive; tell her the call is over rather than leaving her
+            // hanging — see this class's own header.
+            this._notifyPeerCallEnded(call);
+            this._teardownCall(call, e && e.voiceReason ? e.voiceReason : VoiceCallEndReason.NEGOTIATION_FAILED);
             throw e;
         }
     }
@@ -287,7 +368,7 @@ export class VoiceUseCase {
         this._bus.send(call.connectedPeer, this._callProtocol, toVoiceCallSignal({
             callId, type: VoiceCallSignalType.REJECT, callerIdentity: call.peerIdentityId, calleeIdentity: myIdentityId
         }));
-        this._teardownCall(call, 'rejected');
+        this._teardownCall(call, VoiceCallEndReason.REJECTED);
     }
 
     // Either party's "Hang Up" gesture, valid in any non-terminal call
@@ -302,21 +383,8 @@ export class VoiceUseCase {
             return;
         }
         const call = this._call;
-        if (call.connectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED) {
-            const myIdentityId = this._identityProvider.getSigningIdentity().id;
-            const callerIdentity = call.isCaller ? myIdentityId : call.peerIdentityId;
-            const calleeIdentity = call.isCaller ? call.peerIdentityId : myIdentityId;
-            try {
-                this._bus.send(call.connectedPeer, this._callProtocol, toVoiceCallSignal({
-                    callId, type: VoiceCallSignalType.END, callerIdentity, calleeIdentity
-                }));
-            } catch {
-                // The connection dropped between the check above and
-                // this send — nothing left to notify; local teardown
-                // below still happens regardless.
-            }
-        }
-        this._teardownCall(call, 'ended');
+        this._notifyPeerCallEnded(call);
+        this._teardownCall(call, VoiceCallEndReason.LOCAL_HANGUP);
     }
 
     // Returns an unsubscribe function. Fires `(peerIdentityId, callId)`
@@ -329,9 +397,9 @@ export class VoiceUseCase {
 
     // Returns an unsubscribe function. Fires `(callId, state, info)` on
     // every VoiceSessionState transition of the currently tracked call —
-    // `info` is `{ peerIdentityId, reason }`, `reason` populated only for
-    // ENDED (e.g. 'rejected', 'busy', 'ended', 'peer disconnected',
-    // 'blocked', 'unfriended', 'media error').
+    // `info` is `{ peerIdentityId, reason }`, `reason` a
+    // core/VoiceCallEndReason.js value, populated only for ENDED (0.2.74 —
+    // see that file's own header for the full, closed vocabulary).
     onCallStateChanged(callback) {
         const subscription = this._eventBus.subscribe(CALL_STATE_EVENT, ({ callId, state, info }) => callback(callId, state, info));
         return () => subscription.unsubscribe();
@@ -394,9 +462,9 @@ export class VoiceUseCase {
             case VoiceCallSignalType.ACCEPT:
                 return this._handleAccept(payload, remoteIdentity);
             case VoiceCallSignalType.REJECT:
-                return this._handleRejectOrBusy(payload, remoteIdentity, 'rejected');
+                return this._handleRejectOrBusy(payload, remoteIdentity, VoiceCallEndReason.REJECTED);
             case VoiceCallSignalType.BUSY:
-                return this._handleRejectOrBusy(payload, remoteIdentity, 'busy');
+                return this._handleRejectOrBusy(payload, remoteIdentity, VoiceCallEndReason.BUSY);
             case VoiceCallSignalType.END:
                 return this._handleEnd(payload, remoteIdentity);
             default:
@@ -450,7 +518,15 @@ export class VoiceUseCase {
         // down the WRONG call. `_teardownCall()`'s own `this._call ===
         // call` guard is what makes tearing down an already-superseded
         // `call` object here safe no matter what.
-        this._beginMediaNegotiation(call).catch(() => this._teardownCall(call, 'media error'));
+        this._beginMediaNegotiation(call).catch((e) => {
+            // 0.2.74 — Alice (the caller/offerer) is the one who will
+            // create the actual renegotiation offer; if OUR OWN track
+            // acquisition or addAudioTrack() failed here on the answerer
+            // side before an offer even arrived, Alice has no other way to
+            // learn the call is over — see this class's own header.
+            this._notifyPeerCallEnded(call);
+            this._teardownCall(call, e && e.voiceReason ? e.voiceReason : VoiceCallEndReason.NEGOTIATION_FAILED);
+        });
     }
 
     _handleRejectOrBusy(payload, remoteIdentity, reason) {
@@ -467,7 +543,10 @@ export class VoiceUseCase {
         if (!this._call || this._call.callId !== payload.callId || this._call.peerIdentityId !== remoteIdentity.identityId) {
             return;
         }
-        this._teardownCall(this._call, 'ended by peer');
+        // Deliberately always REMOTE_HANGUP, never inferring the SENDER's
+        // own reason — see this class's own header, "Reasons Are Local
+        // Judgments, Never Transmitted Facts" (0.2.74).
+        this._teardownCall(this._call, VoiceCallEndReason.REMOTE_HANGUP);
     }
 
     // core/VoiceMediaSignal.js's own trust boundary — deliberately
@@ -500,9 +579,17 @@ export class VoiceUseCase {
                 this._bus.send(call.connectedPeer, this._mediaProtocol, toVoiceMediaSignal({
                     callId: call.callId, kind: VoiceMediaSignalKind.ANSWER, sdp: answerSdp, senderIdentity: myIdentityId
                 }));
-            }).catch(() => this._teardownCall(call, 'media error'));
+            }).catch(() => {
+                // 0.2.74 — the offerer is waiting for an ANSWER that will
+                // now never come; see this class's own header.
+                this._notifyPeerCallEnded(call);
+                this._teardownCall(call, VoiceCallEndReason.NEGOTIATION_FAILED);
+            });
         } else {
-            connection.applyRemoteAnswer(payload.sdp).catch(() => this._teardownCall(call, 'media error'));
+            connection.applyRemoteAnswer(payload.sdp).catch(() => {
+                this._notifyPeerCallEnded(call);
+                this._teardownCall(call, VoiceCallEndReason.NEGOTIATION_FAILED);
+            });
         }
     }
 
@@ -514,19 +601,42 @@ export class VoiceUseCase {
     // so a `role === 'answerer'` side already has its track attached
     // BEFORE the offerer's offer even arrives, producing bidirectional
     // audio in a single offer/answer round trip.
+    //
+    // 0.2.74 — whatever this rejects with is tagged `.voiceReason`, either
+    // MEDIA_FAILED (the LOCAL track itself never came) or
+    // NEGOTIATION_FAILED (the track came, but attaching/renegotiating it
+    // over the connection failed) — see this class's own header, "Local
+    // Microphone Failure Is Never Confused With Peer Rejection Or A Dead
+    // Connection."
     async _beginMediaNegotiation(call) {
-        const track = await this._audio.getLocalAudioTrack();
-        call.localTrack = track;
-        call.connectedPeer.connection.addAudioTrack(track);
-        if (call.connectedPeer.connection.role === 'offerer') {
-            const offerSdp = await call.connectedPeer.connection.renegotiate();
-            const myIdentityId = this._identityProvider.getSigningIdentity().id;
-            this._bus.send(call.connectedPeer, this._mediaProtocol, toVoiceMediaSignal({
-                callId: call.callId, kind: VoiceMediaSignalKind.OFFER, sdp: offerSdp, senderIdentity: myIdentityId
-            }));
+        let track;
+        try {
+            track = await this._audio.getLocalAudioTrack();
+        } catch (e) {
+            throw this._taggedVoiceError(e, VoiceCallEndReason.MEDIA_FAILED);
         }
-        // `role === 'answerer'` does nothing further here — it waits for
-        // _handleIncomingMedia() to deliver the offerer's OFFER.
+        call.localTrack = track;
+        try {
+            call.connectedPeer.connection.addAudioTrack(track);
+            if (call.connectedPeer.connection.role === 'offerer') {
+                const offerSdp = await call.connectedPeer.connection.renegotiate();
+                const myIdentityId = this._identityProvider.getSigningIdentity().id;
+                this._bus.send(call.connectedPeer, this._mediaProtocol, toVoiceMediaSignal({
+                    callId: call.callId, kind: VoiceMediaSignalKind.OFFER, sdp: offerSdp, senderIdentity: myIdentityId
+                }));
+            }
+            // `role === 'answerer'` does nothing further here — it waits
+            // for _handleIncomingMedia() to deliver the offerer's OFFER.
+        } catch (e) {
+            throw this._taggedVoiceError(e, VoiceCallEndReason.NEGOTIATION_FAILED);
+        }
+    }
+
+    _taggedVoiceError(e, reason) {
+        if (e && typeof e === 'object') {
+            e.voiceReason = reason;
+        }
+        return e;
     }
 
     // ---- social-authorization reconciliation (mirrors 0.2.72) --------
@@ -535,7 +645,7 @@ export class VoiceUseCase {
         const now = new Set(blocked.map((b) => b.identityId));
         for (const identityId of now) {
             if (!this._blockedIds.has(identityId)) {
-                this._terminateIfInCallWith(identityId, 'blocked');
+                this._terminateIfInCallWith(identityId, VoiceCallEndReason.BLOCKED);
             }
         }
         this._blockedIds = now;
@@ -545,7 +655,7 @@ export class VoiceUseCase {
         const now = new Set(relationships.filter((r) => r.status === FriendshipState.FRIEND).map((r) => r.identityId));
         for (const identityId of this._friendIds) {
             if (!now.has(identityId)) {
-                this._terminateIfInCallWith(identityId, 'unfriended');
+                this._terminateIfInCallWith(identityId, VoiceCallEndReason.UNFRIENDED);
             }
         }
         this._friendIds = now;
@@ -554,20 +664,64 @@ export class VoiceUseCase {
     _terminateIfInCallWith(peerIdentityId, reason) {
         if (this._call && this._call.peerIdentityId === peerIdentityId) {
             const call = this._call;
-            if (call.connectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED) {
-                try {
-                    const myIdentityId = this._identityProvider.getSigningIdentity().id;
-                    const callerIdentity = call.isCaller ? myIdentityId : call.peerIdentityId;
-                    const calleeIdentity = call.isCaller ? call.peerIdentityId : myIdentityId;
-                    this._bus.send(call.connectedPeer, this._callProtocol, toVoiceCallSignal({
-                        callId: call.callId, type: VoiceCallSignalType.END, callerIdentity, calleeIdentity
-                    }));
-                } catch {
-                    // Best-effort — local teardown below happens regardless.
-                }
-            }
+            this._notifyPeerCallEnded(call);
             this._teardownCall(call, reason);
         }
+    }
+
+    // 0.2.74 — best-effort "this call is over" notification, factored out
+    // of endCall()'s own original 0.2.73 body: every path that decides
+    // LOCALLY that a call is ending (an explicit hang up, a block/unfriend,
+    // a ringing timeout, a media/negotiation failure) uses this SAME
+    // helper to tell the peer, rather than each duplicating the identical
+    // "only if still AUTHENTICATED, swallow a race on the send itself"
+    // try/catch. Silently skipped if the connection is no longer
+    // AUTHENTICATED — there is nobody left to tell, and local teardown
+    // happens regardless either way.
+    _notifyPeerCallEnded(call) {
+        if (call.connectedPeer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED) {
+            return;
+        }
+        try {
+            const myIdentityId = this._identityProvider.getSigningIdentity().id;
+            const callerIdentity = call.isCaller ? myIdentityId : call.peerIdentityId;
+            const calleeIdentity = call.isCaller ? call.peerIdentityId : myIdentityId;
+            this._bus.send(call.connectedPeer, this._callProtocol, toVoiceCallSignal({
+                callId: call.callId, type: VoiceCallSignalType.END, callerIdentity, calleeIdentity
+            }));
+        } catch {
+            // The connection dropped between the check above and this
+            // send — nothing left to notify; local teardown happens
+            // regardless.
+        }
+    }
+
+    // ---- ringing timeout ------------------------------------------------
+
+    // See this class's own header, "Ringing Is Bounded By Local Policy,
+    // Never By The Network." Armed the instant a call enters CALLING or
+    // RINGING (from _createCallRecord() below) and disarmed the instant it
+    // leaves either state — see _setCallState()/_unwireCall() below.
+    _armRingingTimeout(call) {
+        call.ringingTimer = this._setTimeout(() => this._onRingingTimeout(call), this._ringingTimeoutMs);
+    }
+
+    _clearRingingTimeout(call) {
+        if (call.ringingTimer) {
+            this._clearTimeout(call.ringingTimer);
+            call.ringingTimer = null;
+        }
+    }
+
+    _onRingingTimeout(call) {
+        if (this._call !== call) {
+            return;
+        }
+        // A courtesy, not an authority — see this class's own header.
+        // Whichever side's timer fires first tells the other; the other
+        // side's own timer would have fired independently regardless.
+        this._notifyPeerCallEnded(call);
+        this._teardownCall(call, VoiceCallEndReason.TIMEOUT);
     }
 
     // ---- call record lifecycle ----------------------------------------
@@ -576,11 +730,15 @@ export class VoiceUseCase {
         const call = {
             callId, peerIdentityId, connectedPeer, state, isCaller,
             localTrack: null, remoteTrack: null, remoteStream: null,
-            unsubscribePeerState: null, unsubscribeRemoteTrack: null
+            unsubscribePeerState: null, unsubscribeRemoteTrack: null,
+            ringingTimer: null
         };
+        if (state === VoiceSessionState.CALLING || state === VoiceSessionState.RINGING) {
+            this._armRingingTimeout(call);
+        }
         call.unsubscribePeerState = connectedPeer.onStateChange((lifecycleState) => {
             if (lifecycleState !== PeerLifecycleState.AUTHENTICATED && this._call === call) {
-                this._teardownCall(call, 'peer disconnected');
+                this._teardownCall(call, VoiceCallEndReason.PEER_DISCONNECTED);
             }
         });
         call.unsubscribeRemoteTrack = connectedPeer.connection.onRemoteTrack((track, stream) => {
@@ -596,6 +754,12 @@ export class VoiceUseCase {
     }
 
     _setCallState(call, state) {
+        // 0.2.74 — any state transition means this call is no longer
+        // sitting in CALLING/RINGING, so whatever ringing timer was armed
+        // for it is no longer relevant, regardless of which state it's
+        // transitioning TO — see _createCallRecord()'s own comment on why
+        // only CALLING/RINGING ever arm one in the first place.
+        this._clearRingingTimeout(call);
         call.state = state;
         this._publishCallState(call);
     }
@@ -609,6 +773,7 @@ export class VoiceUseCase {
     }
 
     _unwireCall(call) {
+        this._clearRingingTimeout(call);
         if (call.unsubscribePeerState) call.unsubscribePeerState();
         if (call.unsubscribeRemoteTrack) call.unsubscribeRemoteTrack();
         if (typeof call.connectedPeer.connection.removeAudioTrack === 'function') {

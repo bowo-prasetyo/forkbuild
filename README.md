@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.73** — Authenticated Voice / Audio
+**Version 0.2.74** — Voice Call Reliability & Lifecycle
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -1169,6 +1169,42 @@ call recording or history, video, a richer device-selection UI, and
 resolving simultaneous mutual calls (two peers calling each other at
 once) — a real, named limitation, not a hidden gap.
 
+0.2.74 does not widen voice's scope — it makes every transition 0.2.73 left
+implicit explicit, per its own "a failure of an optional capability must
+never invalidate the authenticated peer session that carries it." A bounded
+local ringing timeout (`application/VoiceUseCase.js#_armRingingTimeout()`)
+now ends an unanswered CALLING/RINGING call as `TIMEOUT` on its own, each
+side's timer independent of the network and of the other side's — never an
+authority the wire hands down, only a courtesy END notification to whoever
+gets there first. `core/VoiceCallEndReason.js` promotes 0.2.73's free-text
+`reason` strings into a closed, ten-value vocabulary — REJECTED and BUSY
+stay genuine, disclosed facts; TIMEOUT, MEDIA_FAILED, NEGOTIATION_FAILED,
+PEER_DISCONNECTED, BLOCKED, UNFRIENDED, and LOCAL_HANGUP are each device's
+own local judgment; an ordinary incoming END always maps to REMOTE_HANGUP,
+deliberately never inferring the sender's own private reason for hanging up
+— reasons are local judgments, never transmitted facts. A local microphone
+failure (MEDIA_FAILED) and a failed SDP renegotiation (NEGOTIATION_FAILED)
+are now two distinct, separately-tagged failures rather than one
+undifferentiated "media error" — and 0.2.73's real gap here is closed: a
+failure that used to strand the OTHER side in CONNECTING forever now always
+best-effort notifies them via the same END signal an ordinary hang up
+already uses. BUSY concurrency — a device already in a call refusing a
+second one, in either direction, without touching the call already in
+progress — turns out to have already been real in 0.2.73; 0.2.74 only adds
+the dedicated concurrency test the design doc asked for. The flagship test
+(`tests/VoiceCallReliability.test.js`) proves an unanswered call times out
+locally without ever touching a microphone, a busy device refuses a second
+call from either direction with the original call completely untouched, a
+denied-microphone failure and a failed renegotiation each report their own
+precise reason while the underlying peer connection AND a same-connection
+chat message both stay completely unaffected, and a connection dying
+mid-call ends it as PEER_DISCONNECTED with no stale survivor — with a fresh
+reconnection between the same two identities beginning at VoiceSession IDLE
+rather than resurrecting the dead call. Deliberately not in 0.2.74: video,
+group calls, call history/missed-call notifications, richer device-
+selection UX, and resolving simultaneous mutual calls — all still exactly
+as out of scope as 0.2.73 left them.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1376,6 +1412,7 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.71  Explicit Read Acknowledgement
 - [x] 0.2.72  Conversation Lifecycle & Message Cancellation
 - [x] 0.2.73  Authenticated Voice / Audio
+- [x] 0.2.74  Voice Call Reliability & Lifecycle
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 

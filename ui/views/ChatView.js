@@ -3,6 +3,26 @@ import { useRoute } from 'vue-router';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { FriendshipState } from '../../core/FriendshipState.js';
 import { VoiceSessionState } from '../../core/VoiceSessionState.js';
+import { VoiceCallEndReason } from '../../core/VoiceCallEndReason.js';
+
+// 0.2.74 — a call that ends for a reason the person placing/receiving it
+// would not otherwise notice (BUSY/TIMEOUT/REJECTED/a media or
+// negotiation failure) says so, briefly, through the SAME `voiceError`
+// line startCall()/acceptCall() already use for a synchronous refusal —
+// never a second notification mechanism. LOCAL_HANGUP/REMOTE_HANGUP/
+// PEER_DISCONNECTED/BLOCKED/UNFRIENDED say nothing here: the call bar
+// disappearing IS the explanation for an ordinary hangup or a connection
+// dying, exactly as it already did in 0.2.73. Heavier voice UX (a proper
+// toast, a "missed call" affordance) is real future work — see
+// docs/Roadmap.md's own 0.2.75 "Voice UX / Device Controls" milestone;
+// this stays exactly as small as reusing the existing `voiceError` line.
+const VOICE_END_REASON_MESSAGE = Object.freeze({
+    [VoiceCallEndReason.REJECTED]: 'Call declined.',
+    [VoiceCallEndReason.BUSY]: 'They’re already on another call.',
+    [VoiceCallEndReason.TIMEOUT]: 'No answer.',
+    [VoiceCallEndReason.MEDIA_FAILED]: 'Couldn’t access your microphone.',
+    [VoiceCallEndReason.NEGOTIATION_FAILED]: 'Call failed to connect.'
+});
 
 // 0.2.61 — Direct Peer Messaging & Live Chat.
 //
@@ -327,7 +347,16 @@ export default {
             // and every incoming INVITE refresh the same snapshot.
             if (voiceUseCase) {
                 refreshVoice();
-                unsubscribeVoiceState = voiceUseCase.onCallStateChanged(() => refreshVoice());
+                unsubscribeVoiceState = voiceUseCase.onCallStateChanged((callId, state, info) => {
+                    // 0.2.74 — see VOICE_END_REASON_MESSAGE's own header.
+                    // Only surfaced for a call that was with THIS route's
+                    // peer — a call ending elsewhere never overwrites this
+                    // view's own voiceError.
+                    if (state === VoiceSessionState.ENDED && info && info.peerIdentityId === peerIdentityId) {
+                        voiceError.value = VOICE_END_REASON_MESSAGE[info.reason] || '';
+                    }
+                    refreshVoice();
+                });
                 unsubscribeIncomingCall = voiceUseCase.onIncomingCall(() => refreshVoice());
             }
             scrollToBottom();

@@ -5095,3 +5095,72 @@ happened is real future work this milestone deliberately does not
 attempt — voice stays exactly as ephemeral as the presence and
 connection layers it is built on, never quietly acquiring the
 durability chat earned for itself in 0.2.69–0.2.72.
+
+### Ringing Is Bounded By Local Policy, Never By The Network (0.2.74)
+
+Every OTHER bounded wait this codebase has ever built —
+`application/PeerSessionManager.js`'s own signaling timeout,
+`application/AutosaveScheduler.js`'s own debounce — is a purely local
+decision, never something the remote side is consulted about or could
+override. `application/VoiceUseCase.js#_armRingingTimeout()` extends the
+identical discipline to CALLING/RINGING: each device starts its OWN timer
+the instant it enters either state, and tears its OWN call down as
+`VoiceCallEndReason.TIMEOUT` if the timer fires first — regardless of
+whatever the OTHER device's own timer, ringtone, or human is doing. The
+best-effort END notification a firing timer sends is a courtesy, proven
+by construction to never be required for correctness: the OTHER side's own
+independent timer would eventually reach the identical conclusion on its
+own, with or without that notification ever arriving.
+
+### Reasons Are Local Judgments, Never Transmitted Facts (0.2.74)
+
+`core/VoiceCallEndReason.js` closes the free-text `reason` string 0.2.73
+left open, but deliberately stops short of adding it to
+`core/VoiceCallSignal.js`'s own wire shape. This is the same restraint
+`core/AvatarPresenceAdvertisement.js` already showed by carrying no
+sender-claimed timestamp (0.2.37's own header: presence lifecycle is
+"derived purely from elapsed time on the RECEIVER's own clock, never a
+stored fact") — a value only the RECEIVER is positioned to judge honestly
+should never be accepted as a claim from the SENDER instead.
+`VoiceCallSignalType.END` means exactly one thing on the wire, "this call
+is over," and `application/VoiceUseCase.js#_handleEnd()` always maps it to
+`VoiceCallEndReason.REMOTE_HANGUP` — never MEDIA_FAILED, never TIMEOUT,
+never anything the sender would have to self-report and this side would
+have to simply trust. REJECTED and BUSY remain the two exceptions, and
+deliberately so: they are not reasons inferred from a generic signal, but
+their OWN dedicated, honest `VoiceCallSignalType` values a sender chooses
+to send.
+
+### A Call Failure Always Tells The Other Side (0.2.74)
+
+0.2.73 had a real, if narrow, hole: a media/negotiation failure after
+ACCEPT had already been exchanged tore down the FAILING side's own call
+but left the OTHER side stranded in CONNECTING, its own microphone
+potentially already attached, waiting on a renegotiation SDP that would
+now never arrive. `application/VoiceUseCase.js#_notifyPeerCallEnded()` —
+factored out of `endCall()`'s own original 0.2.73 body, and now reused by
+every LOCAL decision that a call is over (a hang up, a block/unfriend, a
+ringing timeout, a media/negotiation failure) — closes it: every one of
+those paths tells the peer via the SAME `VoiceCallSignalType.END` an
+ordinary hang up already uses, never a new wire type invented for the
+occasion. The peer never learns WHY (see this file's own "Reasons Are
+Local Judgments" above) — only that there is nothing left to wait for.
+
+### A Local Microphone Failure Is Never A Peer Or Connection Failure (0.2.74)
+
+`application/VoiceUseCase.js#_beginMediaNegotiation()` now tags whatever
+it throws with either `VoiceCallEndReason.MEDIA_FAILED` (this device's own
+`application/LocalAudioTrackProvider.js#getLocalAudioTrack()` itself threw
+— no microphone, a denied permission prompt) or `NEGOTIATION_FAILED` (the
+track came, but attaching or renegotiating it over
+`peer/WebRtcPeerConnection.js` failed). Neither one closes, or even
+touches, `peer/PeerConnection.js` — the SAME boundary 0.2.73's own "Voice
+Lifecycle Is Independent Of Peer Lifecycle" already drew, sharpened one
+level further: a voice failure is now precise about WHICH of voice's own
+two failure-prone steps (acquire locally, then negotiate remotely) is
+actually responsible, without ever widening what either failure is allowed
+to do to the connection carrying it. `tests/VoiceCallReliability.test.js`
+proves both directly — a denied microphone and a synthetically failed
+`renegotiate()` each report their own precise reason while the underlying
+peer connection, and an ordinary chat message riding the SAME connection
+immediately afterward, both stay completely unaffected.
