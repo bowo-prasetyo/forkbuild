@@ -7,6 +7,7 @@ import { AnimationLoop } from './AnimationLoop.js';
 import { TerrainStreamingController } from './TerrainStreamingController.js';
 import { buildTerrainTileMesh } from './TerrainTileMesh.js';
 import { buildNaturalFeatureTileMesh } from './NaturalFeatureTileMesh.js';
+import { buildWaterTileMesh } from './WaterTileMesh.js';
 import { terrainHeightAt as computeTerrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 const SKY_COLOR = 0x87ceeb;
@@ -72,6 +73,29 @@ export class Renderer {
             (tx, tz) => buildNaturalFeatureTileMesh(tx, tz, DEFAULT_WORLD_SEED)
         );
         this._vegetationStreaming.update(
+            this._cameraController.camera.position.x,
+            this._cameraController.camera.position.z,
+            true
+        );
+
+        // 0.2.89 — World Water & Hydrology Foundation. A THIRD instance
+        // of the exact same TerrainStreamingController class, following
+        // the identical precedent 0.2.88 set for vegetation just above —
+        // never a new streaming system, never a WaterStreamingController.
+        // Water shares the ground's tile grid and load/unload
+        // orchestration by construction, differing only in what its
+        // tileFactory builds: a flat lake plane (renderer/WaterTileMesh.js)
+        // instead of colored ground or trees. Rivers need no streamed
+        // geometry of their own — they are a ground-color tint
+        // core/Hydrology.js#hydrologyGroundColorAt() already layers into
+        // the SAME terrain tile mesh above, so they load and unload with
+        // the ground exactly like every other ground-color treatment
+        // already does.
+        this._waterStreaming = new TerrainStreamingController(
+            this._sceneManager,
+            (tx, tz) => buildWaterTileMesh(tx, tz, DEFAULT_WORLD_SEED)
+        );
+        this._waterStreaming.update(
             this._cameraController.camera.position.x,
             this._cameraController.camera.position.z,
             true
@@ -151,6 +175,7 @@ export class Renderer {
         this._frameListeners.clear();
         this._terrainStreaming.dispose();
         this._vegetationStreaming.dispose();
+        this._waterStreaming.dispose();
         window.removeEventListener('resize', this._onResize);
         this._cameraController.dispose();
         this._container.removeChild(this._webglRenderer.domElement);
@@ -161,6 +186,7 @@ export class Renderer {
         this._cameraController.update();
         this._terrainStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         this._vegetationStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
+        this._waterStreaming.update(this._cameraController.camera.position.x, this._cameraController.camera.position.z);
         for (const listener of this._frameListeners) {
             listener(deltaSeconds);
         }

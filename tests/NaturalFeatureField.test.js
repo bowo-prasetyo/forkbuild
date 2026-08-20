@@ -2,6 +2,7 @@ import {
     naturalFeaturesInRegion, forestDensityAt, FEATURE_TYPE, TREE_LATTICE_SPACING
 } from '../core/NaturalFeatureField.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from '../core/TerrainEcology.js';
+import { isRiverAt } from '../core/Hydrology.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTiling.js';
 
@@ -197,6 +198,24 @@ async function runTests() {
         const d1 = forestDensityAt(DEFAULT_WORLD_SEED, 55.5, -66.6);
         const d2 = forestDensityAt(DEFAULT_WORLD_SEED, 55.5, -66.6);
         assert(d1 === d2 && d1 >= 0 && d1 < 1, '24. forestDensityAt() is deterministic and stays within [0, 1)');
+    }
+
+    // -------------------------------------------------------------
+    // Section F: 0.2.89 — no tree ever stands in a river channel
+    // -------------------------------------------------------------
+    {
+        // A wide scan, not cherry-picked coordinates — the same
+        // discipline every other correlation check in this file already
+        // follows. isRiverAt() is checked independently at each tree's
+        // OWN recorded position, never trusted from the tree object
+        // itself (there is no such field on it).
+        const features = naturalFeaturesInRegion(DEFAULT_WORLD_SEED, -2000, -2000, 2000, 2000);
+        assert(features.length > 0, '25. Setup: this wide a scan finds trees to check');
+        let riverTreesFound = 0;
+        for (const f of features) {
+            if (isRiverAt(DEFAULT_WORLD_SEED, f.x, f.z)) riverTreesFound++;
+        }
+        assert(riverTreesFound === 0, `26. core/Hydrology.js's river veto holds over a wide scan: no tree stands in a river channel (found ${riverTreesFound})`);
     }
 
     console.log('✅ All Deterministic World Ecology (NaturalFeatureField) tests passed.');

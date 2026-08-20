@@ -5752,3 +5752,85 @@ of trees ending in a straight edge — proven directly in
 FOREST's tree rate exceeds GRASSLAND's by more than double over the same
 wide scan, and that GRASSLAND's rate is nonzero rather than a hard
 cutoff.
+
+### Hydrology Is A Fourth Pure Function Layered On Terrain, Sibling To Ecology, Never A New Ground Truth (0.2.89)
+
+`core/Hydrology.js` answers "where does water actually collect and
+flow," a genuinely different question from `core/TerrainEcology.js`'s
+"what kind of natural environment is this" — and, like `TerrainEcology`,
+it does not invent a second opinion about the world's geography to
+answer it. It CONSULTS `core/TerrainSurface.js#surfaceCategoryAt()`
+directly (LAKE mirrors `SURFACE_CATEGORY.WATER` exactly) and layers its
+own independent, low-frequency noise field on top for RIVER, the same
+"second/third/fourth pure function of the identical `(seed, x, z)`
+triple" discipline `core/TerrainSurface.js`'s own header established in
+0.2.79 and `core/TerrainEcology.js`'s own header extended in 0.2.88, now
+extended one layer further. The deliberate architectural choice is that
+`Hydrology` is Ecology's SIBLING, not its dependent: both consult
+`TerrainSurface` independently rather than `Hydrology` importing
+`TerrainEcology` or vice versa, so there is no import cycle and no
+ordering dependency between "what grows here" and "where does water
+flow." A river coordinate is therefore guaranteed, by construction, to
+sit only on the same GRASS-surface, below-`HIGHLAND_ELEVATION` ground the
+flat ecology zones already occupy — a river cutting across ROCK or
+appearing above `HIGHLAND_ELEVATION` would mean this principle had been
+violated; `tests/Hydrology.test.js`'s own Section B exists specifically
+to catch that class of bug by scanning thousands of coordinates and
+asserting the correlation holds everywhere.
+
+### A River Is A Bounded, Local Channel Field, Never A Global Drainage Simulation (0.2.89)
+
+Real hydrological flow accumulation — how much upstream area drains
+through a given point — cannot be answered as a bounded local function
+of `(seed, x, z)`. Computing it exactly requires summing contributions
+from an UNBOUNDED upstream area, which for a procedurally infinite world
+means either persisting a drainage network somewhere (forbidden by the
+same posture `core/TerrainHeightField.js`'s own header established for
+elevation: `Terrain = f(seed, x, z)`, never `Terrain = lookup(x, z)`) or
+an unworkable per-query cost that would fall apart the moment a
+per-vertex, per-frame streaming renderer tried to call it. `core/Hydrology.js#isRiverAt()`
+is therefore not an approximation of real flow accumulation that will
+someday be replaced with the real thing — it is a deliberately different
+KIND of function: a domain-warped noise band (the standard "fake a
+winding river without simulating one" technique) gated to the same
+lowland ground the flat ecology zones occupy and biased, never hard-
+gated, toward locally lower cross-sections via a continuous
+`valleyFactorAt()` multiplier. This is why `core/Hydrology.js` exports
+`flowDirectionAt()` — a genuinely real, local, steepest-descent gradient
+sample — as its OWN separate, honestly-scoped primitive, deliberately
+never used to trace or accumulate a river's path: using it that way would
+reintroduce the exact unbounded-cost problem this principle exists to
+avoid. `tests/Hydrology.test.js`'s own Section E proves `flowDirectionAt()`
+genuinely points downhill; Section B proves the channel field stays
+correlated with the terrain underneath despite being a different kind of
+computation, not a lesser one.
+
+### A Lake Is Rendered Geometry; A River Is Ground Color (0.2.89)
+
+`core/Hydrology.js` deliberately represents its two water features two
+different ways, and the difference is not an oversight — it follows
+directly from what each one physically is. A lake is STILL water: it
+genuinely sits at one constant elevation regardless of how the lakebed
+beneath it rises and falls, which only real flat geometry can express —
+`renderer/WaterTileMesh.js` builds exactly that, a per-tile plane held at
+`LAKE_SURFACE_HEIGHT` (`core/Hydrology.js`'s own re-export of
+`WATER_LEVEL`, never a re-derived copy) wherever the ground below is
+WATER, and several units beneath the actual terrain surface everywhere
+else — an ordinary opaque-terrain depth test hides the sunk vertices with
+zero seam-handling code, because every vertex is still placed from
+nothing but its own world `(x, z)`, the same "continuous world
+coordinates, never tile coordinates" discipline every sibling tile mesh
+in this codebase already follows. A river is FLOWING water threaded
+across sloped, varied terrain — a single flat plane could never follow
+that convincingly without becoming its own small hydraulic simulation, so
+it stays exactly what `core/TerrainEcology.js`'s own BEACH sand tint and
+FIELD furrow tint already are: a ground-color treatment,
+`core/Hydrology.js#hydrologyGroundColorAt()` layered onto
+`ecologyGroundColorAt()`'s own unchanged output, needing no geometry, no
+separate streaming, and no seam-handling of its own because it inherits
+all three from the ground it's painted on. Reaching for one
+representation everywhere ("give every water feature a mesh" or "tint
+every water feature") would have meant either an oddly rigid lake that
+tints instead of truly pooling, or a river rendered as a flat raft
+floating disconnected from the terrain beneath it — this principle is
+why the two get different treatment on purpose.
