@@ -6,7 +6,8 @@ import { describeLicense } from '../../application/LicenseLabels.js';
 // getDocumentInfo()-equivalent produces:
 //
 //   { title, description, author, license, parentDocumentId,
-//     statusLabel, dirty, editable, editabilityNotice }
+//     parentStructureId, statusLabel, dirty, editable,
+//     editabilityNotice }
 //
 // Deliberately dumb: no session/use-case imports, no mutation. It
 // renders `info` and emits 'edit-metadata' when the caller should open
@@ -57,6 +58,10 @@ export default {
             <div class="info-row" v-if="info.parentDocumentId">
                 <span class="info-label">Forked from</span>
                 <span class="info-value">{{ shortId(info.parentDocumentId) }}</span>
+            </div>
+            <div class="info-row" v-if="info.parentStructureId">
+                <span class="info-label">Forked from Structure</span>
+                <span class="info-value">{{ info.parentStructureId }}</span>
             </div>
 
             <p

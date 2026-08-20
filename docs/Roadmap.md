@@ -3538,6 +3538,135 @@ out because "a wider PRIMITIVE vocabulary, fully backward compatible"
 was the entire, deliberately narrow claim this milestone set out to
 prove.
 
+0.2.81 — Forkable Structure Library — answers the question 0.2.80
+deliberately deferred, with one refinement the design conversation
+insisted on before implementation started: "a structure should be a
+normal ForkBuild artifact that happens to be reusable as a template,"
+never a special immutable game object with its own runtime-copy
+mechanism. That keeps the "Fork" in ForkBuild meaningful — a Structure
+is not a new kind of thing bolted alongside Document, it is the same
+kind of thing (a named collection of bricks) at library scale, and
+forking one produces exactly the artifact forking a published World
+already produces: an ordinary, independent Document, opened through the
+SAME editor.
+
+```text
+0.2.81
+├── core/Structure.js              id, name, category, tags,
+│                                    description, bricks — pure data,
+│                                    no stored bounds/dimensions
+├── core/StructureRegistry.js      register/get/has/getAll/
+│                                    getByCategory/search — byte-for-
+│                                    byte BrickRegistry's own contract
+├── core/library/VillageLibrary.js  six curated Structures — House,
+│                                    Barn, Well, Market, Mill, Bridge —
+│                                    composed entirely of 0.2.80's 15
+│                                    ordinary core:* bricks
+└── application/ForkStructureUseCase.js  Structure -> new Document,
+                                     fresh identities throughout,
+                                     metadata.parentStructureId records
+                                     provenance
+```
+
+The minimum concept, per the design conversation: `Structure = identity
++ metadata + bricks`, with dimensions/bounds deliberately NOT a fourth
+stored field — `core/SpatialBounds.js` gains `fromBricks(bricks,
+registry)`, extracted from its own existing `fromWorld()` (which is now
+a two-line wrapper over it), so a Structure's bounds are derived exactly
+the way a World's always were, never cached data that could drift from
+the bricks that actually define it. There is no `HOUSE_BRICK` and no
+`StructureBuilder`/`StructureEngine`/`StructureRuntime`/
+`StructureCompiler` subsystem — `VillageLibrary`'s six Structures are
+built from nothing but `new Structure({ ..., bricks: [...] })` and
+ordinary `new Brick({ definitionId: 'core:wall_1x3', ... })` calls, the
+same primitives `core/library/CoreLibrary.js` itself is built from one
+rung down. See docs/Principles.md, "A Structure Is The Next Rung On The
+Brick Ladder, Not An Escape From It."
+
+`ForkStructureUseCase` is deliberately the smallest possible version of
+what `application/ForkPublishedWorldUseCase.js` already does for a whole
+published World: no Publication, no snapshot, no signature to verify — a
+built-in library Structure is local, static data, not published content
+— straight from Structure to Document. Every Brick placed into the fork
+is a BRAND NEW instance (same definitionId/position/rotation, a freshly
+minted id), never one of the library's own Brick objects, so nothing
+about editing a fork can ever reach back and mutate the library — the
+same "strip every instance id, let it regenerate" identity rule
+`DocumentCloneService` already established for document-to-document
+forks, applied one rung up. `core/DocumentMetadata.js` gains
+`parentStructureId`, additive and independent of `parentDocumentId` —
+answerable to a different question ("what Structure was this forked
+from" vs. "what Document was this cloned from") — never a live
+dependency: nothing about a fork's editing, saving, or reloading ever
+reads from or writes back to the Structure it came from, and forking the
+same Structure again later always reproduces its ORIGINAL content,
+completely unaffected by anything an earlier fork did to its own copy.
+See docs/Principles.md, "Forking A Structure Records Provenance, Never A
+Live Dependency."
+
+`EditorSession.forkStructure(structure)` is the entire integration
+surface: fork, then call the session's own `openDocument()` — the
+IDENTICAL path Load and "Fork Published World" already use. There is no
+second editing system, no structure-specific viewport, no separate save
+flow; a forked Village House is edited with the exact same brick
+placement, selection, transform, undo/redo, and Save that every other
+document already has. `ui/components/StructureLibraryPanel.js` is the
+one new UI surface — a flat list of the registered Structures with a
+Fork button, sitting in the Editor sidebar alongside the existing Brick
+Palette — and `DocumentInfoPanel` grows one more conditional row,
+"Forked from Structure," mirroring the existing "Forked from" row
+exactly. World placement is deliberately untouched: forking a Structure
+produces a Document, never a WorldPlacement — placing that Document
+somewhere in the World remains the separate, later action it already was
+for every other document, and the data model doesn't prohibit placing
+the same forked Structure's Document more than once, even though nothing
+in this milestone exercises that.
+
+The flagship test (`tests/ForkableStructureLibrary.test.js`) proves the
+design conversation's own scripted scenario end to end: load Village
+House from the registry, verify its bricks, fork it, confirm a fresh
+document identity with identical initial geometry, modify the fork (move
+a brick, delete a brick, rename the document), save, reload, confirm the
+fork stays exactly as modified — and confirm Village House itself is
+still byte-for-byte identical to its pre-fork snapshot, AND that a
+second, independent fork taken after the first was edited gets the
+Structure's pristine original content, never the first fork's edits.
+Five more sections cover the rest: registry contents (six structures,
+every brick a real, already-registered `core:*` id — the architectural
+invariant the whole milestone rests on), `Structure`'s own
+serialization purity, `ForkStructureUseCase`'s identity guarantees in
+isolation, `EditorSession.forkStructure()`'s delegation (fork, then
+`openDocument()`, verified without spinning up a live Three.js render
+session — completely out of scope for what this test is proving), and
+all six Village structures rendering through the unmodified
+`BrickRenderer`/`ThreeBrickFactory` pipeline every ordinary brick
+already uses.
+
+Deliberately not in 0.2.81, named rather than hidden: community/
+published structure libraries, or any decentralized discovery for them —
+the design conversation's own explicit deferral, "establish Built-in
+library -> Fork -> Independent user artifact, then design community
+libraries properly later"; multiple WorldPlacements of one forked
+Structure's Document (the data model doesn't prohibit it — a Document is
+placed by `WorldPlacement`, same as any other — but nothing here builds
+or tests it); template inheritance of any kind (`Village House ->
+inherits -> Alice House -> inherits -> Alice House v2`) — every fork is
+a new, independent artifact whose parent is recorded provenance, never a
+live relationship, exactly `docs/Principles.md`'s existing "A published
+snapshot is never mutated in place" reasoning extended to structures;
+brick-specific placement rules or non-box collision for the Village
+structures' own bricks (unchanged since 0.2.80 — a `core:roof_hip` or
+`core:arch` inside a Structure collides exactly as it always did);
+grouping the Structure Library panel by category (six structures in one
+built-in library don't yet need it — `StructureRegistry#getByCategory()`
+exists and is tested, `groupByCategory()` does not, matching
+`BrickRegistry`'s own pre-0.2.80 shape before fifteen definitions across
+eleven categories actually demanded it); and a `StructureLibraryPanel`
+entry point from World View, alongside the Editor — 0.2.81 deliberately
+returns the user to the Editor's own "New/Load Document" surface, not a
+second fork entry point layered onto World View's already-larger
+navigation/placement session.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

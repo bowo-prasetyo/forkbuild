@@ -20,6 +20,17 @@ export class DocumentMetadata {
         protocolVersion = PROTOCOL_VERSION,
         engineVersion = DEFAULT_ENGINE_VERSION,
         parentDocumentId = null,
+        // 0.2.81: independent of parentDocumentId — a fork of a
+        // PUBLISHED WORLD (ForkPublishedWorldUseCase/DocumentCloneService)
+        // sets parentDocumentId; a fork of a LIBRARY STRUCTURE
+        // (application/ForkStructureUseCase.js) sets parentStructureId
+        // instead. A document can carry either, both (if that ever
+        // becomes a real flow), or neither — they are two different
+        // provenance questions ("what document was this cloned from" vs
+        // "what library structure was this forked from"), never
+        // conflated into one field. See docs/Principles.md, "Forking A
+        // Structure Records Provenance, Never A Live Dependency."
+        parentStructureId = null,
         license = null
     } = {}) {
         this._title = title;
@@ -30,6 +41,7 @@ export class DocumentMetadata {
         this._protocolVersion = protocolVersion;
         this._engineVersion = engineVersion;
         this._parentDocumentId = parentDocumentId;
+        this._parentStructureId = parentStructureId;
         this._license = license instanceof License ? license : (license ? License.fromJSON(license) : new License());
     }
 
@@ -41,6 +53,7 @@ export class DocumentMetadata {
     get protocolVersion() { return this._protocolVersion; }
     get engineVersion() { return this._engineVersion; }
     get parentDocumentId() { return this._parentDocumentId; }
+    get parentStructureId() { return this._parentStructureId; }
     get license() { return this._license; }
 
     // 0.2.21: title/description become directly editable (Document
@@ -69,6 +82,7 @@ export class DocumentMetadata {
             protocolVersion: this._protocolVersion,
             engineVersion: this._engineVersion,
             parentDocumentId: this._parentDocumentId,
+            parentStructureId: this._parentStructureId,
             license: this._license.toJSON()
         };
     }
@@ -89,6 +103,9 @@ export class DocumentMetadata {
             protocolVersion: json.protocolVersion,
             engineVersion: json.engineVersion,
             parentDocumentId: json.parentDocumentId || null,
+            // Pre-0.2.81 documents have no `parentStructureId` field —
+            // same tolerant-default treatment as parentDocumentId.
+            parentStructureId: json.parentStructureId || null,
             license: json.license ? License.fromJSON(json.license) : null
         });
     }

@@ -5598,3 +5598,52 @@ break the moment the same mesh reached `BrickRenderer` — the kind of bug
 that is invisible until the exact two code paths that never talk to each
 other both run, which is precisely why the rule is named here rather than
 left to be rediscovered.
+
+### A Structure Is The Next Rung On The Brick Ladder, Not An Escape From It (0.2.81)
+
+0.2.80 named the ladder explicitly: `Brick -> Building -> Structure`,
+and warned that a future forkable structure library "does not need, and
+must never be given, brick definitions that have already done a
+structure's job for it." 0.2.81 is that future milestone, and the
+warning held: `core/Structure.js` is `{ id, name, category, tags,
+description, bricks }`, where `bricks` is a flat array of nothing but
+ordinary `core/Brick.js` instances referencing ordinary, already-
+registered `core:*` definitionIds. `village:house` is not a `HOUSE`
+brick wearing a Structure's clothing — it is `wall_1x3` × 15 + `door` ×
+1 + `window_large` × 1 + `window_small` × 2 + `slab_4x4` × 1 +
+`roof_hip` × 4 + `stair` × 1 + `cube` × 1, exactly the way an actual
+building would be assembled brick by brick in the editor. Nothing about
+`Structure` is privileged: it cannot be placed directly into a World,
+rendered directly, or referenced by a `Brick`'s own `definitionId` — the
+only thing you can ever do with a Structure is fork it into a `Document`,
+at which point it stops being a Structure at all and becomes the same
+kind of thing every other editable document already is. A Structure is
+where composition ends and a Building's own bricks are handed to
+`ForkStructureUseCase`; it is never a shortcut past composition.
+
+### Forking A Structure Records Provenance, Never A Live Dependency (0.2.81)
+
+`document.metadata.parentStructureId` (set once, by
+`ForkStructureUseCase`, at the moment a fork is created) answers "what
+Structure did this Document start as" — a historical fact, recorded the
+same way `parentDocumentId` already records "what Document was this
+cloned from." Neither field is ever consulted again after the fork is
+created: editing a fork never reads from the Structure it came from,
+saving a fork never writes back to it, and reloading a fork never
+re-resolves it against the library's current state. This is enforced
+structurally, not by convention — `ForkStructureUseCase` places a BRAND
+NEW `Brick` instance for every one of the source Structure's bricks
+(same `definitionId`/`position`/`rotation`, a freshly minted `id`), so
+the library's own `Brick` objects are never handed to, or reachable
+from, the fork's own `Building`. Forking the SAME Structure again,
+after an earlier fork has been edited beyond recognition, always
+reproduces the Structure's ORIGINAL, pristine content — proven directly
+in `tests/ForkableStructureLibrary.test.js`'s flagship, not merely
+assumed from the absence of a wired-up mutation path. This is the
+Structure-scale instance of the same discipline `docs/Principles.md`'s
+"A published snapshot is never mutated in place" (0.2.20) already
+established for published Worlds, and deliberately rules out template
+INHERITANCE of any kind: there is no `Village House -> inherits ->
+Alice House -> inherits -> Alice House v2` chain where editing an
+ancestor could ever ripple into a descendant. Every fork's parent is a
+label, not a relationship a later mutation could ever traverse.

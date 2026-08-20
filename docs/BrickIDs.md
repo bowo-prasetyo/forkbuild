@@ -28,3 +28,16 @@ medieval:roof_red
 space:laser
 
 city:streetlight
+
+0.2.81 — Forkable Structure Library adds a second, parallel namespace
+for Structures (core/Structure.js), one rung up from bricks — same
+"library:name" shape, its own id space, never colliding with a brick id:
+
+village:house
+village:barn
+village:well
+village:market
+village:mill
+village:bridge
+
+See docs/StructureLibrary.md.

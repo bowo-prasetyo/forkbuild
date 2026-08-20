@@ -25,6 +25,7 @@ import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
+import { ForkStructureUseCase } from './ForkStructureUseCase.js';
 
 // Owns the live runtime graph — the render session, World, CommandHistory,
 // ToolManager, InputDispatcher — as one unit, so nothing else has to know
@@ -58,7 +59,8 @@ export class EditorSession {
         loadDocumentUseCase,
         identityProvider = null,
         copySelectionUseCase = null,    // <--- ADD
-        pasteClipboardUseCase = null    // <--- ADD
+        pasteClipboardUseCase = null,    // <--- ADD
+        forkStructureUseCase = new ForkStructureUseCase()
     }) {
         this._registry = registry;
         this._editorContext = editorContext;
@@ -70,6 +72,7 @@ export class EditorSession {
         this._identityProvider = identityProvider;
         this._copySelectionUseCase = copySelectionUseCase;
         this._pasteClipboardUseCase = pasteClipboardUseCase;
+        this._forkStructureUseCase = forkStructureUseCase;
 
         this._container = null;
         this._session = null;
@@ -476,6 +479,24 @@ export class EditorSession {
             this._documentManager.newDocument(newDocument);
             return world;
         });
+    }
+
+    // 0.2.81 — Forkable Structure Library. Forks `structure` (a
+    // core/Structure.js instance, typically from the StructureRegistry)
+    // into a brand-new, independent Document via ForkStructureUseCase,
+    // then opens it through the SAME openDocument() path a published-
+    // world fork or a Load already uses — there is no separate
+    // "structure editing mode." The library Structure itself is never
+    // touched; see application/ForkStructureUseCase.js's own header.
+    // Returns false (and does nothing) if `structure` is falsy, so
+    // callers can wire this straight to a UI action without a guard.
+    forkStructure(structure) {
+        if (!structure) {
+            return false;
+        }
+        const forkedDocument = this._forkStructureUseCase.execute(structure, this._identityProvider);
+        this.openDocument(forkedDocument);
+        return true;
     }
 
     onPointerDown(event) {
