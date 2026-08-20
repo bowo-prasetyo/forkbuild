@@ -6,7 +6,7 @@ An open-source, browser-based, decentralized building platform. Creations are st
 
 ## Current Status
 
-**Version 0.2.74** — Voice Call Reliability & Lifecycle
+**Version 0.2.76** — World Ground & Terrain Foundation
 
 0.2.16 gave every immutable object an answer to "who authorized
 this?" (Ed25519 signing identities, signed publications / placement
@@ -1205,6 +1205,60 @@ group calls, call history/missed-call notifications, richer device-
 selection UX, and resolving simultaneous mutual calls — all still exactly
 as out of scope as 0.2.73 left them.
 
+0.2.75 closes the one gap 0.2.73 and 0.2.74 both named verbatim: "a richer
+device-selection UI beyond a single mute toggle." Device choice is local
+state, never wire state — `setInputDevice()` follows `setMuted()`'s own
+0.2.73 precedent exactly, proven by sniffing the OTHER side's raw incoming
+messages during a live switch (zero additional bytes). A mid-call
+microphone switch reuses `RTCRtpSender#replaceTrack()` rather than a
+second SDP negotiation, so `VoiceSessionState` never leaves ACTIVE for the
+duration of a switch — a device change is invisible to the call state
+machine by construction. An unexpectedly-ended local track (the device
+itself disappearing, not a script calling `stop()`) triggers exactly one
+automatic fallback to the platform default; if that also fails,
+`onMicrophoneUnavailable()` fires as a purely informational signal and the
+call keeps running, never torn down by a local media problem alone.
+Output-device selection (which speaker plays the remote party) never
+reaches `VoiceUseCase` at all — `ui/views/ChatView.js` calls the bound
+`<audio>` element's own `setSinkId()` directly, a UI/platform concern the
+call layer has no business knowing about. Deliberately not in 0.2.75:
+video, group calls, call recording/history, echo-cancellation/volume-
+metering controls, resolving simultaneous mutual calls, and any persisted
+device preference — every limitation 0.2.73/0.2.74 named beyond "a richer
+device-selection UI" stays exactly as out of scope as it was left.
+
+0.2.76 — World Ground & Terrain Foundation — leaves the voice arc behind
+and closes a gap that had nothing to do with calling: World View's camera
+can roam anywhere, and documents land potentially hundreds of units
+apart, but the only thing resembling "ground" was a single fixed 100×100
+wireframe grid centered on the origin — past it, buildings and avatars
+rendered in literal empty space. `core/TerrainHeightField.js#terrainHeightAt(seed, x, z)`
+is a pure, deterministic, seeded elevation function (three layered
+octaves — continental shape, hills, surface detail — so the result reads
+as geography, never spiky noise); `core/TerrainTiling.js` computes which
+40-unit tiles belong around a point, in deterministic order;
+`renderer/TerrainStreamingController.js` keeps a ring of those tiles
+loaded around wherever the camera currently is, unit-tested against a
+fake sink with no real Three.js scene involved; and `renderer/Renderer.js`
+ticks it every frame and exposes `terrainHeightAt(x, z)` as the one shared
+ground-elevation query point both `renderer/WorldRenderer.js` (buildings,
+sampled once per document — a whole building rides the terrain as one
+rigid unit, never deformed per brick) and
+`application/RenderWorldViewUseCase.js` (avatars) read from. Everything
+about this is a RENDERING-time offset only: `AvatarPresence`,
+`WorldPlacement`, movement, and collision are all completely untouched —
+the avatar's own ground plane stays the fixed Y=0 plane 0.2.36/0.2.42
+already established, and brick placement/picking still raycasts that same
+literal plane, never the terrain mesh. The flagship test
+(`tests/WorldGroundTerrain.test.js`) walks the camera across dozens of
+tile boundaries, thousands of units from the origin, proving the ground
+tile beneath it is never missing, then returns toward the origin and
+proves the exact same tile and the exact same elevation reappear — "same
+world seed + same coordinates -> same terrain," reproducible across any
+replica. Deliberately not in 0.2.76: any collision/physics change, a
+per-World/per-Document terrain seed, vegetation/water/biomes, erosion
+simulation, and walking/vehicle physics of any kind.
+
 ## Features
 
 - **Command Surface (0.1.50)** — One action registry driving shortcuts, the command palette (Ctrl/Cmd+K), and the sidebar; consistent feedback; disabled states with reasons; empty-state guidance.
@@ -1413,6 +1467,8 @@ Open `index.html` in a modern browser. No build step is required. Press **Ctrl/C
 - [x] 0.2.72  Conversation Lifecycle & Message Cancellation
 - [x] 0.2.73  Authenticated Voice / Audio
 - [x] 0.2.74  Voice Call Reliability & Lifecycle
+- [x] 0.2.75  Voice UX & Device Controls
+- [x] 0.2.76  World Ground & Terrain Foundation
 
 Nested Groups remains optional and is not on the roadmap yet — the flat-group model has proven sufficient through 0.1.50. Automatic collision resolution (silently relocating onto a free cell), geometric/bounds-based collision detection, box selection/collision geometry/polygon regions/spatial clustering in the location browser, fully wiring the decentralized spatial index as the World View's actual document-resolution backend ("spatial streaming/index integration," proposed, not started — 0.2.30 already connects its trust/diagnostics vocabulary as an optional, additive source), an indexed metadata representation for description search at real decentralized scale, license/tag filters, cross-page grouping, and infinite scroll (deliberately not implemented — see docs/Principles.md) are similarly deferred until real usage shows each is actually needed — see docs/Roadmap.md. (A real, immutable, content-addressed publication preview is no longer on this list — 0.2.32 concluded a signed preview was never the right design; see docs/Principles.md, "Previews Are Derived Client State.")
 
