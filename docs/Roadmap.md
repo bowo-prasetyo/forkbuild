@@ -4474,6 +4474,299 @@ Every one of these was named in the design conversation and ruled out
 specifically to keep this a small, restrained, honestly-scoped hydrology
 FOUNDATION — not because of scheduling.
 
+0.2.90 — Structure Placement & World Instances — is the milestone named
+and deliberately postponed by BOTH 0.2.81 ("Forking a Structure does NOT
+create a WorldPlacement — forking is a content operation, placing is a
+spatial operation... whenever that becomes a separate, later action")
+and 0.2.87 ("placing a Structure repeatedly into a document remains
+explicitly out of scope, still named (unscheduled) as its own future
+'Structure Placement / World Instances' milestone"). 0.2.76→0.2.89 spent
+nine milestones building a complete deterministic environmental stack —
+terrain, walkability, surface color, brick vocabulary, a forkable
+Structure Library, placement UX, ecology, hydrology — deliberately
+without ever letting a Structure be PLACED more than once, or placed at
+all outside the Editor's own single-document brick-by-brick loop. The
+design conversation that proposed this milestone settled the one
+question that decides everything else about it before any code: a
+StructurePlacement is a spatial REFERENCE to a Document, exactly the
+shape `core/WorldPlacement.js` already established for a whole
+Publication placed in shared global space, one rung down — never a copy
+of its bricks, never a special immutable game object, never template
+inheritance.
+
+```text
+0.2.90
+├── core/StructurePlacement.js                  NEW — id, documentId,
+│                                                 position, rotation; pure
+│                                                 data, mirrors
+│                                                 core/WorldPlacement.js one
+│                                                 rung down (a Document
+│                                                 placed inside another
+│                                                 Document's own World,
+│                                                 rather than a Publication
+│                                                 placed in shared global
+│                                                 space)
+├── core/World.js                               + placements Map,
+│                                                 addStructurePlacement()/
+│                                                 removeStructurePlacement()/
+│                                                 getStructurePlacement(s)(),
+│                                                 toJSON()/fromJSON()
+│                                                 (backward-compatible,
+│                                                 mirrors 0.1.43's groups
+│                                                 field exactly)
+├── core/events/Event.js                        + STRUCTURE_PLACEMENT_ADDED/
+│                                                 REMOVED (no _UPDATED — a
+│                                                 placement is only ever
+│                                                 added whole or removed
+│                                                 whole in 0.2.90)
+├── application/StructureDocumentResolver.js     NEW — documentId -> World,
+│                                                 resolved FRESH from
+│                                                 storage every call, null
+│                                                 (never throws) when
+│                                                 unresolvable
+├── application/StructurePlacementValidator.js   NEW — conservative,
+│                                                 translate-only AABB
+│                                                 collision (SpatialBounds,
+│                                                 rotation deliberately
+│                                                 ignored, matching
+│                                                 SpatialBounds.js's own V1
+│                                                 posture) against ordinary
+│                                                 bricks AND other
+│                                                 placements
+├── application/commands/PlaceStructureCommand.js         NEW — mirrors
+│   application/commands/RemoveStructurePlacementCommand.js NEW — mirrors
+│                                                 PlaceBrickCommand/
+│                                                 DeleteBrickCommand one
+│                                                 rung up
+├── application/CreateCommandRegistryUseCase.js registers 'place-structure'/
+│                                                 'remove-structure-placement'
+├── application/PlacementPositionService.js     + calculateStructureGround()
+│                                                 — ground-snap X/Z, Y stays
+│                                                 exactly 0 (no BrickDefinition
+│                                                 to rest on; the whole
+│                                                 structure stays rigid)
+├── application/editor-state/ActiveStructureState.js      NEW — mirrors
+│   application/editor-state/StructurePreviewState.js     NEW — mirrors
+│                                                 ActiveBrickState/PreviewState
+│                                                 one rung up
+├── application/StructurePreviewUseCase.js      NEW — show()/hide(), mirrors
+│                                                 PreviewUseCase
+├── application/editor-state/ToolId.js          + PLACE_STRUCTURE
+├── core/events/EditorEvent.js                  + ACTIVE_STRUCTURE_CHANGED/
+│                                                 STRUCTURE_PREVIEW_CHANGED
+├── application/EditorContext.js                + activeStructure/
+│                                                 structurePreview state
+├── application/tools/StructurePlacementTool.js NEW — a SEPARATE Tool from
+│                                                 PlacementTool (different
+│                                                 target, different
+│                                                 validator, different
+│                                                 command), sharing only
+│                                                 PlacementPositionService's
+│                                                 ground-snap math
+├── application/CreateToolRegistryUseCase.js    registers PLACE_STRUCTURE
+├── application/EditorSession.js                + structureResolver/
+│                                                 structurePreviewUseCase
+│                                                 deps, placeDocument(),
+│                                                 removeStructurePlacement()
+├── application/EditorActionContext.js          placementMode widened to
+│                                                 cover PLACE_STRUCTURE too
+├── application/CreatePersistenceUseCase.js     + structureDocumentResolver
+├── application/RenderWorldUseCase.js           + structureResolver and
+│   application/RenderWorldViewUseCase.js         TransformMath threaded
+│                                                 into WorldRenderer
+├── renderer/WorldRenderer.js                   renders/removes
+│                                                 StructurePlacements in
+│                                                 BOTH subscribe() (Editor)
+│                                                 and addWorld() (World
+│                                                 View) modes; its OWN
+│                                                 non-pickable mesh tracking,
+│                                                 never meshRegistry
+├── ui/components/Toolbar.js                    Recent Documents gains a
+│                                                 Place button beside the
+│                                                 pre-existing Load button
+├── ui/views/EditorView.js                      wiring, a placement hint,
+│                                                 the 'R' key carve-out
+│                                                 widened to PLACE_STRUCTURE
+├── css/main.css                                .toolbar-recent-dropdown-row/
+│                                                 -place
+└── tests/StructurePlacement.test.js            NEW — headless: core/ +
+     tests/StructurePlacementRendering.test.js    application/, no 'three'
+                                                 anywhere in the import
+                                                 graph (StructurePlacementTool
+                                                 never touches Three.js,
+                                                 exactly like PlacementTool);
+                                                 NEW — renderer/WorldRenderer.js
+                                                 specifically, using the
+                                                 same "real WorldRenderer,
+                                                 fake low-level renderer"
+                                                 technique
+                                                 tests/ForkRenderSync.test.js
+                                                 established
+```
+
+The central architectural distinction, settled before any code and
+enforced structurally throughout: CONTENT (a Document — what the
+building IS), SPATIAL STATE (a StructurePlacement — where it IS), and
+PROVENANCE (`DocumentMetadata.parentStructureId`, unchanged since 0.2.81
+— where it originally came FROM) are three different questions, and
+0.2.90 answers only the middle one. `core/StructurePlacement.js` carries
+nothing but `documentId`/`position`/`rotation` — no bricks, no cached
+bounds, no snapshot of the referenced Document's content at placement
+time. `application/StructureDocumentResolver.js` is the whole mechanism
+behind "edit the Document, every placement reflects it": it reads FRESH
+from storage on every single call, so there is exactly one authoritative
+representation of a structure's bricks to draw from, never a second one
+that could drift out of sync. `renderer/WorldRenderer.js`'s
+`_renderStructurePlacement()` composes a resolved Brick's LOCAL position
+— rotated around the origin by the placement's own rotation via
+`application/TransformMath.js#rotatePointAroundPivotY()` (injected, the
+same way `application/RenderWorldUseCase.js` already injects it into
+`TransformGizmoController`, never imported — `renderer/` must never
+depend on `application/`), then translated by the placement's own
+position — and only THEN applies the containing document's own
+offset/terrain groundY, the identical rigid-whole-building lift 0.2.76
+established for ordinary bricks. "The placement transforms the entire
+structure" holds because this composition happens exactly once per
+placement, never per brick: every brick in a placed House arrives
+rotated and translated by the identical amount, upright, undeformed,
+riding the terrain as one rigid unit — see docs/Principles.md, "A
+Structure Placement Transforms Its Content At Render Time, Never At
+Rest."
+
+Multiple placements of the SAME Document is where the feature earns its
+name. `renderer/WorldRenderer.js` tracks placement meshes in their OWN
+map, `_placementMeshes` (keyed by `placementId`), deliberately never
+registered with `meshRegistry`/`PickingService` — the same House placed
+twice would otherwise mint the identical Brick ids twice into a registry
+keyed by brick id alone, corrupting picking for both instances. This is
+named, not hidden: a placed structure's individual bricks are visible
+but not yet selectable, movable, or deletable one at a time — see "0.2.91
+— World Editing / Placement Management," below, which is exactly where
+that capability belongs. `tests/StructurePlacementRendering.test.js`
+proves the no-collision claim directly: the same Document placed at two
+different positions renders two independent, correctly positioned mesh
+sets, and `worldRenderer.meshRegistry.getAllMeshes()` never grows by
+more than the ordinary (non-placed) bricks in the scene.
+
+Collision reuses the exact spatial abstraction the design conversation
+asked for — "Use the same spatial abstraction already used for building
+collision... initially, conservative bounds are perfectly reasonable" —
+rather than inventing a second geometric system.
+`application/StructurePlacementValidator.js` computes the candidate
+structure's AABB via the ALREADY-existing `core/SpatialBounds.js#fromWorld()`
+(0.2.81), translates it by the candidate position, and checks it against
+every existing brick's own bounds AND every existing placement's own
+resolved-and-translated bounds — deliberately translate-only, never
+rotated, matching `SpatialBounds.js`'s own declared V1 simplification for
+whole-World bounds ("Rotation and scale are not applied to the bounds in
+V1"). This is conservative (a rotated structure's true footprint is
+usually smaller than its axis-aligned box) rather than permissive, the
+same posture `core/PlacementValidator.js` already takes toward exact-cell
+brick collision — real oriented/mesh-level collision is future work, not
+a gap 0.2.90 introduces. `StructurePlacementTool` asks this validator on
+every hover (never trusting a cached flag at commit time, same discipline
+0.2.87 established for ordinary bricks), and a blocked preview simply
+refuses to commit — proven directly in `tests/StructurePlacement.test.js`'s
+own Section G.
+
+The interaction surface deliberately reuses the SIMPLEST possible entry
+point rather than inventing a document browser: `ui/components/Toolbar.js`'s
+pre-existing Recent Documents dropdown (0.1.20B) gains one new button,
+Place, right beside the pre-existing Load — Load REPLACES the current
+document with the selected one; Place adds a StructurePlacement
+REFERENCING it to whatever document is already open, without leaving it.
+`application/EditorSession.js#placeDocument()` refuses to target the
+currently open document itself (there is no legitimate reason for this
+entry point to offer placing a document inside itself, even though
+`StructureDocumentResolver`'s one-level-of-indirection resolution would
+handle it without an infinite loop if it ever happened some other way —
+see below). `application/tools/StructurePlacementTool.js` is a
+deliberately SEPARATE `Tool` subclass from `PlacementTool`, not a mode
+flag on it: what's being placed (a Document reference vs. a
+BrickDefinition lookup), what decides validity (AABB
+`StructurePlacementValidator` vs. exact-cell `PlacementValidator`), and
+what gets committed (`PlaceStructureCommand` vs. `PlaceBrickCommand`)
+diverge at nearly every step; ground-snap math via
+`PlacementPositionService#calculateStructureGround()` is the one thing
+genuinely shared, so that's the only thing that is. Rotation follows the
+exact "orient once, place a row" workflow 0.2.87 established for bricks —
+'R'/Shift+R rotate the pending placement in 90° increments, the rotation
+persists across repeated placements until `deactivate()`, and the tool
+stays active after a successful commit rather than snapping back to
+Select, so "place House at A, place House at B, rotate B" is one
+continuous gesture, not three separate tool switches.
+
+0.2.90 deliberately does NOT give the structure-placement preview a full
+multi-brick 3D ghost the way `renderer/PreviewRenderer.js` gives an
+ordinary brick — there is no `StructurePreviewRenderer`.
+`application/editor-state/StructurePreviewState.js` carries
+`visible`/`documentId`/`title`/`position`/`rotation`/`valid`, exactly the
+information `PreviewState` already carries for a brick, but 0.2.90 only
+spends it on `ui/views/EditorView.js`'s text placement hint ("Placing
+'House' — hover the ground, R to rotate, click to place"), tinted
+implicitly by `valid` the same way the hint text already exists for
+ordinary Place mode. A full instanced ghost mesh is real, useful, future
+work — it is exactly the kind of visual richness "0.2.91 — World Editing
+/ Placement Management" is for, per the design conversation's own
+sequencing: "First establish the data model and reliable rendering of
+instances; then build a rich manipulation UX around it."
+
+`tests/StructurePlacement.test.js`'s FLAGSHIP (Section H) proves the
+milestone's own suggested scenario end to end at the domain/application
+level: fork House from the Village Library, place it at A and at B with
+different positions AND different rotations, save the containing World,
+reload it — both placements survive with their own independent
+position/rotation, both still reference the SAME House document. Editing
+House and saving is immediately visible resolving through EITHER
+placement (one authoritative Document, no copies, proven by asserting
+identical brick counts through both). Removing placement A leaves the
+House Document and placement B completely untouched — proven by
+resolving the House document again afterward and finding it unchanged.
+`tests/StructurePlacementRendering.test.js`'s own flagship (Section G)
+proves the same scenario at the rendering level: two House instances at
+different positions and rotations render as two independent, correctly
+transformed sets of meshes, sharing the same terrain-lifted groundY
+because they belong to the same containing document.
+
+Deliberately not in 0.2.90, named rather than hidden: moving, rotating,
+duplicating, or deleting an ALREADY-PLACED instance through the viewport
+(there is no interactive gizmo/selection surface for a StructurePlacement
+at all yet — a placement's position/rotation are fixed the moment
+`PlaceStructureCommand` commits them); selecting or picking an
+individual brick that belongs to a placed structure (deliberately kept
+out of `meshRegistry`/`PickingService`, per the mesh-tracking discussion
+above) — both are exactly "0.2.91 — World Editing / Placement
+Management," below, sequenced deliberately AFTER this milestone
+establishes the data model and reliable rendering first; a full
+multi-brick 3D ghost preview (StructurePreviewState/StructurePreviewUseCase
+exist and are spent on text feedback only, per their own header above);
+World View wiring for creating NEW placements (Toolbar's Place button is
+Editor-only, matching the pre-existing precedent that Forking a Structure
+is also Editor-only per docs/StructureLibrary.md) or for RENDERING
+placements inside OTHER users' streamed/published documents
+(`application/RenderWorldViewUseCase.js` threads `structureResolver`
+through for API symmetry, but no World View bootstrap constructs a real
+one — resolving against decentralized/published content is a materially
+different resolution path than the local-storage-by-documentId one
+`StructureDocumentResolver` implements, and nothing in this milestone's
+own flagship exercises it); recursively resolving a placed structure's
+OWN StructurePlacements (a structure containing a placement of another
+structure) — `StructureDocumentResolver` is deliberately ONE level of
+indirection only, which is also what keeps resolution cycle-free by
+construction, even for a placement that (accidentally or deliberately)
+references its own containing document; real Document-deletion semantics
+for a Document that still has placements referencing it (ForkBuild has
+no Document-deletion feature AT ALL yet — `StructureDocumentResolver`'s
+graceful-null-on-missing behavior is a reasonable placeholder for that
+future day, not a decision that day's design is already made — see
+docs/Principles.md, "A Missing Placement Target Is Absence, Not An
+Error"); and oriented/mesh-level collision (`StructurePlacementValidator`
+stays translate-only AABB, the same V1 simplification
+`core/SpatialBounds.js` already declared for whole-World bounds). Every
+one of these was named in the design conversation and ruled out
+specifically to keep this milestone what it set out to be — the data
+model and reliable rendering of instances — not because of scheduling.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

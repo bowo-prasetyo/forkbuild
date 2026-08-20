@@ -19,9 +19,24 @@ import { AvatarVisual } from '../renderer/AvatarVisual.js';
 // identical definitions. As of 0.1.47 the pointer move/up functions
 // carry modifier state down (precision mode) and gesture feedback up.
 export class RenderWorldViewUseCase {
-    execute(container, registry, eventBus = null, { gestureService = null } = {}) {
+    execute(container, registry, eventBus = null, { gestureService = null, structureResolver = null } = {}) {
         const renderer = new Renderer(container);
-        const worldRenderer = new WorldRenderer(renderer, registry);
+        // 0.2.90 — structureResolver is threaded through for symmetry
+        // with RenderWorldUseCase and so WorldRenderer's own placement-
+        // rendering path is uniform across both modes (see its header),
+        // but no World View bootstrap wires a real one yet: resolving a
+        // structure placement against DECENTRALIZED/published content
+        // (application/PublicationContentCache.js et al.) is a
+        // different resolution path than the local-storage-by-
+        // documentId one application/StructureDocumentResolver.js
+        // implements, and nothing in 0.2.90's own flagship exercises
+        // it. Named and deferred, not silently dropped — a null
+        // resolver here means World View renders a placed structure's
+        // OWN document (if it happens to be open) fine, but skips
+        // placements inside any OTHER document it streams in, exactly
+        // the same graceful-absence behavior a missing resolver already
+        // has everywhere else.
+        const worldRenderer = new WorldRenderer(renderer, registry, undefined, undefined, structureResolver, TransformMath);
         if (eventBus) {
             worldRenderer.subscribe(eventBus);
         }

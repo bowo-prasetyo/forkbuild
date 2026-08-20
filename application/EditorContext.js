@@ -6,6 +6,8 @@ import { ToolState } from './editor-state/ToolState.js';
 import { ActiveBrickState } from './editor-state/ActiveBrickState.js';
 import { EditorSettings } from './editor-state/EditorSettings.js';
 import { PreviewState } from './editor-state/PreviewState.js';
+import { ActiveStructureState } from './editor-state/ActiveStructureState.js';
+import { StructurePreviewState } from './editor-state/StructurePreviewState.js';
 
 // EditorContext holds transient editor state — not domain state. Nothing
 // here belongs to a World and nothing here should ever be serialized into
@@ -25,6 +27,8 @@ export class EditorContext {
         this._cameraState = new CameraState();
         this._preview = PreviewState.hidden();
         this._settings = new EditorSettings();
+        this._activeStructure = new ActiveStructureState();
+        this._structurePreview = StructurePreviewState.hidden();
     }
 
     get eventBus() {
@@ -87,6 +91,26 @@ export class EditorContext {
     setSettings(settings) {
         this._settings = settings;
         this._publish(EditorEvent.SETTINGS_CHANGED, { settings });
+    }
+
+    // ------------------------------------------------- 0.2.90 structure placement
+
+    get activeStructure() {
+        return this._activeStructure;
+    }
+
+    setActiveStructure(documentId, title = null) {
+        this._activeStructure = new ActiveStructureState(documentId, title);
+        this._publish(EditorEvent.ACTIVE_STRUCTURE_CHANGED, { documentId, title });
+    }
+
+    get structurePreview() {
+        return this._structurePreview;
+    }
+
+    setStructurePreview(structurePreview) {
+        this._structurePreview = structurePreview;
+        this._publish(EditorEvent.STRUCTURE_PREVIEW_CHANGED, { structurePreview });
     }
 
     _publish(eventType, payload) {

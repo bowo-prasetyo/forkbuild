@@ -53,7 +53,12 @@ export class EditorActionContext {
     get hasGroups() { return this._groups.length > 0; }
     get hasSelectedGroup() { return this._selectedGroupId !== null; }
     get clipboardEmpty() { return this._clipboardCount === 0; }
-    get placementMode() { return this._activeTool === 'place'; }
+    // 0.2.90: PLACE_STRUCTURE is gated exactly like PLACE — editing
+    // shortcuts (align, distribute, numeric transform, move/rotate
+    // selection) stay disabled while either placement mode is active,
+    // the same "one hardcoded 'place'" spot 0.1.50 already used for the
+    // brick ghost.
+    get placementMode() { return this._activeTool === 'place' || this._activeTool === 'place-structure'; }
     get capabilities() { return this._capabilities; }
 
     // session: EditorSession or WorldNavigationSession. selectionCount /

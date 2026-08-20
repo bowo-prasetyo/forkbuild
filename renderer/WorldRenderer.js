@@ -18,19 +18,54 @@ import { DomainEvent } from '../core/events/Event.js';
 // alongside this in RenderWorldUseCase) can resolve raycast hits back to
 // brick/building ids without WorldRenderer needing to know PickingService
 // exists.
+//
+// 0.2.90 — Structure Placement & World Instances. A StructurePlacement
+// (core/StructurePlacement.js) is rendered by resolving its documentId
+// FRESH, every add, through `structureResolver`
+// (application/StructureDocumentResolver.js) — never a snapshot copied
+// into the World at placement time. This is what makes "edit the
+// referenced Document, every placement reflects it on next load" true
+// without any synchronization machinery: there is only ever one
+// authoritative representation of a structure's bricks to draw from.
+//
+// Placement meshes are tracked in their OWN map (`_placementMeshes`,
+// keyed by placementId), deliberately NEVER registered with
+// `meshRegistry`/PickingService — the same Document placed twice (House
+// at A, House at B) would otherwise mint the SAME brick ids twice into a
+// registry keyed by brick id alone. Named, not hidden: this means a
+// placed structure's individual bricks are visible but not yet
+// selectable/pickable — see docs/Roadmap.md, 0.2.91 ("select placed
+// structures"), which is exactly where that capability is planned.
+//
+// `transformMath` composes a placement's rotation with each of its
+// bricks' local positions — injected (mirrors TransformGizmoController's
+// own transformMath injection in application/RenderWorldUseCase.js /
+// RenderWorldViewUseCase.js) rather than imported, because renderer/
+// must never depend on application/ (see RenderWorldUseCase.js's own
+// header). A placement with rotation 0 (the common case) never needs it
+// at all; one with a nonzero rotation and no injected transformMath
+// (an old caller, a minimal test fake) degrades to translating without
+// rotating — the same graceful-absence posture `terrainHeightAt` already
+// gets below, never a thrown error.
 export class WorldRenderer {
     constructor(
         renderer,
         registry,
         buildingRenderer = new BuildingRenderer(registry),
-        meshRegistry = new MeshRegistry()
+        meshRegistry = new MeshRegistry(),
+        structureResolver = null,
+        transformMath = null
     ) {
         this._renderer = renderer;
         this._buildingRenderer = buildingRenderer;
         this._meshRegistry = meshRegistry;
+        this._structureResolver = structureResolver;
+        this._transformMath = transformMath;
         this._subscriptions = [];
         this._documentOffsets = new Map();
         this._buildingToDocument = new Map();
+        this._placementMeshes = new Map();
+        this._placementToDocument = new Map();
     }
 
     get meshRegistry() {
@@ -44,7 +79,9 @@ export class WorldRenderer {
             eventBus.subscribe(DomainEvent.BUILDING_REMOVED, ({ building }) => this._onBuildingRemoved(building)),
             eventBus.subscribe(DomainEvent.BRICK_ADDED, ({ buildingId, brick }) => this._onBrickAdded(buildingId, brick)),
             eventBus.subscribe(DomainEvent.BRICK_REMOVED, ({ brick }) => this._onBrickRemoved(brick)),
-            eventBus.subscribe(DomainEvent.BRICK_UPDATED, ({ buildingId, brick }) => this._onBrickUpdated(buildingId, brick))
+            eventBus.subscribe(DomainEvent.BRICK_UPDATED, ({ buildingId, brick }) => this._onBrickUpdated(buildingId, brick)),
+            eventBus.subscribe(DomainEvent.STRUCTURE_PLACEMENT_ADDED, ({ placement }) => this._onStructurePlacementAdded(placement)),
+            eventBus.subscribe(DomainEvent.STRUCTURE_PLACEMENT_REMOVED, ({ placement }) => this._onStructurePlacementRemoved(placement))
         );
     }
 
@@ -75,6 +112,10 @@ export class WorldRenderer {
                 this._addBrickMesh(brickId, documentId, building.id, mesh);
             }
         }
+        for (const placement of world.getStructurePlacements()) {
+            this._placementToDocument.set(placement.id, documentId);
+            this._renderStructurePlacement(placement, offset);
+        }
     }
 
     // Remove every mesh belonging to a specific world. Called during
@@ -87,6 +128,10 @@ export class WorldRenderer {
             for (const brick of building.getBricks()) {
                 this._removeBrickMesh(brick.id);
             }
+        }
+        for (const placement of world.getStructurePlacements()) {
+            this._placementToDocument.delete(placement.id);
+            this._removeStructurePlacementMeshes(placement.id);
         }
     }
 
@@ -137,6 +182,80 @@ export class WorldRenderer {
             brick.position.z + offset.z
         );
         mesh.rotation.y = brick.rotation * (Math.PI / 180);
+    }
+
+    // 0.2.90 — mirrors _onBuildingAdded's own offset lookup exactly:
+    // `_placementToDocument` is only ever populated by addWorld() (World
+    // View's imperative mode), so an event-driven WorldRenderer
+    // (EditorView, which never calls addWorld) always falls through to
+    // the {0,0,0} default here — the same implicit "there is only ever
+    // one document, at the origin" assumption every other event handler
+    // in this class already makes.
+    _onStructurePlacementAdded(placement) {
+        const documentId = this._placementToDocument.get(placement.id);
+        const offset = this._documentOffsets.get(documentId) || { x: 0, y: 0, z: 0 };
+        this._renderStructurePlacement(placement, offset);
+    }
+
+    _onStructurePlacementRemoved(placement) {
+        this._removeStructurePlacementMeshes(placement.id);
+        this._placementToDocument.delete(placement.id);
+    }
+
+    // Resolves the placement's Document, then renders every one of its
+    // Bricks as an ordinary mesh (the same BuildingRenderer/BrickRenderer/
+    // BrickRegistry pipeline every other brick in this engine renders
+    // through — never a special "structure instance" mesh factory),
+    // composed with this placement's own position/rotation and then the
+    // CONTAINING document's offset/terrain groundY — "the placement
+    // transforms the entire structure," per the design conversation:
+    // one rigid unit, rotated and translated as a whole, never per-brick.
+    // A silent no-op if there's no resolver or the Document can't be
+    // resolved (StructureDocumentResolver's own header explains why that
+    // is absence, not an error).
+    _renderStructurePlacement(placement, offset) {
+        if (!this._structureResolver) {
+            return;
+        }
+        const placedWorld = this._structureResolver.resolve(placement.documentId);
+        if (!placedWorld) {
+            return;
+        }
+        const groundY = this._terrainOffsetY(offset.x, offset.z);
+        const meshes = [];
+        for (const building of placedWorld.getBuildings()) {
+            for (const brick of building.getBricks()) {
+                const localPoint = this._rotateAroundOrigin(brick.position, placement.rotation);
+                const { mesh } = this._buildingRenderer.renderBrick(brick);
+                mesh.position.set(
+                    localPoint.x + placement.position.x + offset.x,
+                    localPoint.y + placement.position.y + offset.y + groundY,
+                    localPoint.z + placement.position.z + offset.z
+                );
+                mesh.rotation.y = (brick.rotation + placement.rotation) * (Math.PI / 180);
+                this._renderer.add(mesh);
+                meshes.push(mesh);
+            }
+        }
+        this._placementMeshes.set(placement.id, meshes);
+    }
+
+    _rotateAroundOrigin(point, degrees) {
+        if (!degrees || !this._transformMath) {
+            return point;
+        }
+        return this._transformMath.rotatePointAroundPivotY(point, { x: 0, y: 0, z: 0 }, degrees);
+    }
+
+    _removeStructurePlacementMeshes(placementId) {
+        const meshes = this._placementMeshes.get(placementId);
+        if (!meshes) {
+            return;
+        }
+        for (const mesh of meshes) {
+            this._renderer.remove(mesh);
+        }
+        this._placementMeshes.delete(placementId);
     }
 
     // 0.2.76 — sampled ONCE per document, at its own placement position
