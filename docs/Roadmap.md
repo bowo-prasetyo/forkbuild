@@ -3667,6 +3667,108 @@ returns the user to the Editor's own "New/Load Document" surface, not a
 second fork entry point layered onto World View's already-larger
 navigation/placement session.
 
+0.2.84 — Building Library & Palette UX — chosen next over adding more
+brick/structure content, on the reasoning the design conversation
+insisted on: the vocabulary just crossed the threshold where a flat
+interface stops scaling (15 BrickDefinitions across 12 categories, 6
+Structures across 4), so the right next milestone is making that
+already-real content browsable, not growing it further before the UI
+that shows it can absorb the growth. Deliberately a UX/navigation
+milestone, not another brick or structure-model redesign: nothing about
+`BrickDefinition`, `Structure`, `BrickRegistry`/`StructureRegistry`'s
+existing methods, `ForkStructureUseCase`, or `PaletteUseCase` changes.
+
+```text
+0.2.84
+├── core/StructureRegistry.js          groupByCategory() — additive,
+│                                        same [{ category, ... }] shape
+│                                        BrickRegistry's own has had
+│                                        since 0.2.80
+├── application/LibraryPreviewService.js   a smaller sibling of
+│                                        PreviewService.js — lazy,
+│                                        cached by kind-qualified key,
+│                                        idle-queued, cancellable —
+│                                        for static in-memory content
+│                                        instead of loaded Publications
+├── application/CreateLibraryPreviewUseCase.js  constructs one per
+│                                        Editor session
+├── renderer/DocumentThumbnailRenderer.js   renderDocument() split into
+│                                        a two-line adapter over the
+│                                        new renderBricks(bricks) —
+│                                        the shared frame-and-render
+│                                        operation a Document, a
+│                                        Structure's bricks, or one
+│                                        synthetic Brick all need alike
+├── ui/components/BuildLibraryPanel.js  (new) Bricks/Structures tabs,
+│                                        same-tab search, category
+│                                        groups, previews — replaces:
+├── ui/components/Sidebar.js            (deleted)
+├── ui/components/BrickPalette.js       (deleted)
+├── ui/components/StructureLibraryPanel.js  (deleted)
+└── ui/components/BuildLibraryPreview.js  (new) the small per-entry
+                                         thumbnail, lazy/cancellable via
+                                         IntersectionObserver — the same
+                                         pattern PublicationPreview.js
+                                         already established one rung
+                                         down
+```
+
+The one real design question was whether Bricks and Structures should
+merge into one undifferentiated list now that they're browsed the same
+way. They don't: `BuildLibraryPanel` is a tab switcher, not a merged
+catalog, because the two things a click DOES stay genuinely different —
+selecting a brick still only ever calls
+`PaletteUseCase#selectDefinition()` (unchanged since 0.1.9), while
+forking a structure still only ever produces a brand-new Document via
+`EditorSession.forkStructure()` (unchanged since 0.2.81). The one
+genuinely new behavior: selecting a brick now also emits `'place'`,
+which `EditorView.js` wires to `editorContext.setActiveTool(ToolId.PLACE)`
+— choosing a brick and being ready to place it collapses to one click,
+where it previously took a second click on the separate Place tool
+button. Nothing about a structure's Fork button changed at all.
+
+The preview pipeline is the one piece that touches rendering, and it
+was built to reuse, not reinvent: `DocumentThumbnailRenderer`'s
+existing camera-framing/render/`toDataURL()` sequence didn't change,
+only what feeds it — `renderBricks(bricks)` accepts any flat brick
+array, so a Structure's own `bricks` or a synthetic single-`Brick`
+standing in for one `BrickDefinition` reach the exact same
+`BrickRenderer`/`ThreeBrickFactory` pipeline every World View mesh and
+every existing Document thumbnail already renders through. A brick or
+structure's preview is therefore a genuine picture of what it actually
+contains, never a second hand-drawn icon set that could drift from the
+real geometry. `LibraryPreviewService` deliberately doesn't reuse
+`PreviewService` itself — a `BrickDefinition`/`Structure` is already
+resident, static, in-memory data with its own stable id, so there is no
+`loadPublicationDocumentUseCase` step or `contentHash` to key against;
+forcing that shape onto a job that has neither would be borrowing
+complexity that doesn't apply, not sharing it.
+
+The flagship-shaped closing section of `tests/BuildLibraryUX.test.js`
+proves the one invariant this milestone must never blur: selecting a
+brick (`PaletteUseCase#selectDefinition()`) never touches the active
+tool by itself, and forking a structure (`EditorSession#forkStructure()`)
+never touches the active brick selection — Place and Fork stay two
+structurally independent actions, only found the same new way. Earlier
+sections cover `StructureRegistry#groupByCategory()` against the real
+VillageLibrary (first-seen category order, matching
+`BrickRegistry`'s own contract byte-for-byte), the search/filter rule
+(`matches()`/`normalize()`, exported from `BuildLibraryPanel.js` and
+tested directly rather than through a mounted Vue component — the same
+boundary `CommandPalette.js`'s own tests already draw), and
+`LibraryPreviewService`'s lazy/cached/cancellable/never-retries-a-failed-
+renderer behavior with a fake renderer, matching
+`tests/PreviewService.test.js`'s own established convention of never
+exercising real WebGL from the headless suite.
+
+Deliberately not in 0.2.84, named rather than hidden: any change to
+`BrickDefinition`, `Structure`, or either registry's existing methods;
+favorites or recently-used entries; drag-and-drop; any community/
+marketplace structure or brick library browsing; and a Build Library
+entry point from World View — Bricks and Structures stay exactly where
+0.2.80/0.2.81 already put them, the Editor sidebar, on purpose. 0.2.85
+(proposed) resumes the multi-device/social arc.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

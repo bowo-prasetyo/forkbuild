@@ -13,10 +13,11 @@ startup:
     registry.register(MedievalLibrary);
 
 BrickRegistry is a catalog, not just a lookup: get(id), has(id),
-getAll(), getByCategory(category), search(tags). The Brick Palette
-(application/PaletteUseCase.js, ui/components/BrickPalette.js) is built
-entirely on getAll() today; getByCategory() and search() exist for when
-the palette needs grouping/filtering as libraries multiply.
+getAll(), getByCategory(category), search(tags), groupByCategory().
+The Brick Palette (application/PaletteUseCase.js) is built entirely on
+getAll()/groupByCategory() today; getByCategory() and search() exist
+for when a caller needs grouping/filtering by a single category or tag
+set directly.
 
 The renderer never imports a library directly. It asks the registry for a
 brick's definition, then asks renderer/ThreeBrickFactory.js to build the
@@ -50,3 +51,15 @@ BrickRegistry#groupByCategory() (0.2.80) groups getAll()'s contents by
 category in first-seen order — [{ category, definitions }] — for the
 Brick Palette to render as sections now that eleven categories exist;
 getAll(), getByCategory(), and search() are all unchanged.
+
+0.2.84 (Building Library & Palette UX) replaces the standalone Brick
+Palette UI with ui/components/BuildLibraryPanel.js — a single "Build
+Library" panel that tabs between Bricks and Structures, adds a
+same-tab text search over name/category/tags on top of
+groupByCategory()'s existing grouping, and renders a small rendered
+preview per definition via application/LibraryPreviewService.js
+(reusing the exact BrickRenderer/ThreeBrickFactory mesh pipeline every
+brick already renders with, never a hand-drawn icon set). Nothing
+about BrickRegistry, BrickDefinition, or PaletteUseCase changed —
+clicking a brick still only ever calls
+PaletteUseCase#selectDefinition(), exactly as it always has.

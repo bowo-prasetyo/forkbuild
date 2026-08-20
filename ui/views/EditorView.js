@@ -10,6 +10,7 @@ import { CreatePersistenceUseCase } from '../../application/CreatePersistenceUse
 import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
+import { CreateLibraryPreviewUseCase } from '../../application/CreateLibraryPreviewUseCase.js';
 import { EditorSession } from '../../application/EditorSession.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
 import { EditorEvent } from '../../core/events/EditorEvent.js';
@@ -17,7 +18,7 @@ import { EditorActionRegistry, createStandardActions } from '../../application/E
 import { EditorActionContext } from '../../application/EditorActionContext.js';
 import { InputRouter } from '../../application/InputRouter.js';
 import Toolbar from '../components/Toolbar.js';
-import Sidebar from '../components/Sidebar.js';
+import BuildLibraryPanel from '../components/BuildLibraryPanel.js';
 import EditingSidebar from '../components/EditingSidebar.js';
 import CommandPalette from '../components/CommandPalette.js';
 import ActionFeedback from '../components/ActionFeedback.js';
@@ -29,7 +30,6 @@ import { UpdateDocumentMetadataUseCase } from '../../application/UpdateDocumentM
 import { computeLifecycleStatus, describeLifecycleStatus } from '../../application/DocumentLifecycleStatus.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
-import StructureLibraryPanel from '../components/StructureLibraryPanel.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
@@ -42,7 +42,7 @@ const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, Sidebar, EditingSidebar, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog, StructureLibraryPanel },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -70,8 +70,13 @@ export default {
                         </button>
                     </div>
                     <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
-                    <Sidebar :palette-use-case="paletteUseCase" />
-                    <StructureLibraryPanel :structures="structures" @fork="forkStructure" />
+                    <BuildLibraryPanel
+                        :palette-use-case="paletteUseCase"
+                        :structure-groups="structureGroups"
+                        :preview-service="libraryPreviewService"
+                        @place="setTool(ToolId.PLACE)"
+                        @fork="forkStructure"
+                    />
                     <EditingSidebar
                         :registry="actionRegistry"
                         :get-context="getActionContext"
@@ -113,6 +118,7 @@ export default {
         const selectionUseCase = new SelectionUseCase(editorContext);
         const paletteUseCase = new PaletteUseCase(registry, editorContext);
         const previewUseCase = new PreviewUseCase(editorContext);
+        const { libraryPreviewService } = new CreateLibraryPreviewUseCase().execute(registry);
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
         const { saveDocumentUseCase, loadDocumentUseCase, forkDocumentUseCase } = new CreatePersistenceUseCase().execute();
@@ -139,10 +145,13 @@ export default {
 		    forkStructureUseCase
 		});
 
-		// 0.2.81 — Forkable Structure Library. The registry's contents
-		// never change at runtime (same reasoning as paletteUseCase's own
-		// brick definitions), so this is read once, not subscribed to.
-		const structures = ref(structureRegistry.getAll());
+		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
+		// (Building Library & Palette UX) via
+		// core/StructureRegistry.js#groupByCategory(). The registry's
+		// contents never change at runtime (same reasoning as
+		// paletteUseCase's own brick definitions), so this is read
+		// once, not subscribed to.
+		const structureGroups = ref(structureRegistry.groupByCategory());
 
 		function forkStructure(structure) {
 		    const forked = editorSession.forkStructure(structure);
@@ -390,7 +399,8 @@ export default {
             loadDocumentUseCase,
             editorSession,
             publishDocumentUseCase,
-            structures,
+            structureGroups,
+            libraryPreviewService,
             forkStructure,
             activeTool,
             selectionCount,

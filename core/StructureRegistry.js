@@ -45,4 +45,26 @@ export class StructureRegistry {
             query.some((tag) => structure.tags.includes(tag))
         );
     }
+
+    // Ordered [{ category, structures }] — byte-for-byte the grouping
+    // shape core/BrickRegistry.js#groupByCategory() already established
+    // (first-seen category order). 0.2.81 deliberately deferred this
+    // ("six structures in one built-in library don't yet need it" — see
+    // docs/Roadmap.md); 0.2.84 (Building Library & Palette UX) is the
+    // first caller that needs Bricks and Structures to browse the same
+    // way, so this closes that gap the same way `getAll()`,
+    // `getByCategory()`, and `search()` always have — additively, with
+    // no change to Structure's own stored shape.
+    groupByCategory() {
+        const groups = [];
+        const indexByCategory = new Map();
+        for (const structure of this.getAll()) {
+            if (!indexByCategory.has(structure.category)) {
+                indexByCategory.set(structure.category, groups.length);
+                groups.push({ category: structure.category, structures: [] });
+            }
+            groups[indexByCategory.get(structure.category)].structures.push(structure);
+        }
+        return groups;
+    }
 }

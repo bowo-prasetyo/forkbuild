@@ -8669,3 +8669,68 @@ don't yet need it); and any structure-library entry point from World
 View — 0.2.81 deliberately stays inside the Editor's existing New/Load
 surface rather than adding a second fork entry point to World View's
 already-larger navigation/placement session.
+
+0.2.84 — Building Library & Palette UX — answers the question 0.2.81
+deliberately deferred (grouping the Structure panel by category), and
+goes one step further than that deferral asked: once the Editor sidebar
+had two separately-invented catalog panels — `BrickPalette` (grouped
+since 0.2.80) sitting beside `StructureLibraryPanel` (flat since 0.2.81)
+— growing either vocabulary further meant growing an inconsistency
+between them, not just a longer list. `core/StructureRegistry.js` gains
+`groupByCategory()`, byte-for-byte the same `[{ category, items }]`
+shape `BrickRegistry`'s own has had since 0.2.80 — additive, no change
+to `Structure`'s stored fields. `ui/components/BuildLibraryPanel.js`
+(new) replaces both `ui/components/Sidebar.js`/`BrickPalette.js` and
+`StructureLibraryPanel.js` (all three deleted, not merely superseded)
+with one panel: a Bricks/Structures tab switcher over the exact same
+underlying `PaletteUseCase`/`StructureRegistry` data those components
+already rendered, plus a same-tab text search (`matches()`/`normalize()`,
+exported and tested directly — the same "logic lives in something
+headlessly testable, the component is a thin visual layer over it"
+convention `CommandPalette`'s `EditorActionRegistry.findMatching()`
+already established, one file smaller here since that's genuinely all
+the rule is) and a small rendered preview per entry.
+
+The preview is the one genuinely new rendering-adjacent piece:
+`renderer/DocumentThumbnailRenderer.js#renderDocument()` — previously
+one method that flattened a Document's bricks, framed a camera, and
+rendered — is split so the frame-and-render half
+(`renderBricks(bricks)`) stands alone, and `renderDocument()` becomes a
+two-line adapter over it. That split is what lets
+`application/LibraryPreviewService.js` (new, a deliberately smaller
+sibling of `application/PreviewService.js` — lazy renderer, cached,
+idle-scheduled queue, cancellable, the same four properties, minus
+`PreviewService`'s own async "load a Publication's document by
+contentHash" step, since a `BrickDefinition`/`Structure` is already
+resident static data with a stable id of its own) hand a synthetic
+single-`Brick` array (for one `BrickDefinition`) or a `Structure`'s own
+`bricks` straight to the unmodified `BrickRenderer`/`ThreeBrickFactory`
+pipeline, cached by a kind-qualified key (`"brick:" + id` /
+`"structure:" + id`, so a brick and a structure that happened to share a
+raw id string can never collide) — never a hand-drawn icon set, never a
+second visual language for what the World View and every other document
+thumbnail already render the same content as.
+
+The one behavior genuinely new to clicking, not merely how catalog
+entries are found: `BuildLibraryPanel` selecting a brick still only ever
+calls `PaletteUseCase#selectDefinition()` (unchanged since 0.1.9), and
+now additionally emits `'place'`, which `EditorView.js` wires straight
+to `editorContext.setActiveTool(ToolId.PLACE)` — so choosing a brick and
+being able to place it are one click, where they previously required a
+second, separate click on the Place tool button. Forking a structure is
+completely unchanged: the panel emits `'fork'`, `EditorView.js` still
+calls `EditorSession.forkStructure()` exactly as 0.2.81 wired it, opening
+a brand-new Document through the same `openDocument()` path — Place and
+Fork are asserted to stay structurally independent directly in
+`tests/BuildLibraryUX.test.js`'s own flagship-shaped closing section:
+selecting a brick never touches the active tool by itself, and forking a
+structure never touches the active brick selection.
+
+Deliberately not in 0.2.84: any change to `BrickDefinition`, `Structure`,
+`BrickRegistry`'s or `StructureRegistry`'s existing methods,
+`ForkStructureUseCase`, or `PaletteUseCase` — every underlying use case
+this milestone builds on keeps its exact pre-0.2.84 contract; favorites/
+recently-used entries; drag-and-drop; any community/marketplace library
+browsing; and a World View entry point for either Bricks or Structures —
+the Build Library stays exactly where 0.2.80/0.2.81 already put it, the
+Editor sidebar, on purpose.
