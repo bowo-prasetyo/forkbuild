@@ -214,6 +214,28 @@ export class WebRtcPeerConnection extends PeerConnection {
         return this._audioSender;
     }
 
+    // 0.2.75 — Voice UX & Device Controls. Swaps WHICH local track the
+    // already-attached `_audioSender` transmits, via
+    // `RTCRtpSender#replaceTrack()` — deliberately NOT a second
+    // `addAudioTrack()`/`removeAudioTrack()`/`renegotiate()` sequence.
+    // `addAudioTrack()`'s own header already named this precedent when
+    // it first shipped in 0.2.73: "a caller that wants to swap tracks...
+    // uses the returned RTCRtpSender's own `replaceTrack()`." A device
+    // switch is exactly that caller. `replaceTrack()` changes only which
+    // MediaStreamTrack feeds an EXISTING `m=audio` section — never its
+    // presence, direction, or codec negotiation — so no SDP offer/answer
+    // round trip is needed at all, and application/VoiceUseCase.js never
+    // has to ask "am I the offerer" the way it must for
+    // renegotiate()/applyRemoteOffer(). Throws if no audio track is
+    // attached yet — this is a SWAP, not a first attach; a caller with no
+    // call in progress has nothing to swap.
+    replaceAudioTrack(track) {
+        if (!this._audioSender) {
+            throw new Error('WebRtcPeerConnection: no audio track is attached to replace');
+        }
+        return this._audioSender.replaceTrack(track);
+    }
+
     // The mirror of addAudioTrack() — detaches and stops whatever local
     // audio track was attached. A no-op if none was ever attached
     // (harmless to call from application/VoiceUseCase.js's own teardown

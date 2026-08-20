@@ -5164,3 +5164,70 @@ proves both directly — a denied microphone and a synthetically failed
 `renegotiate()` each report their own precise reason while the underlying
 peer connection, and an ordinary chat message riding the SAME connection
 immediately afterward, both stay completely unaffected.
+
+### Device Selection Is Local State, Not Peer Protocol State (0.2.75)
+
+`application/VoiceUseCase.js#setMuted()`'s own 0.2.73 precedent — a
+local `MediaStreamTrack#enabled` flip, never transmitted, never folded
+into `core/VoiceCallSignal.js` or `core/VoiceMediaSignal.js` — extends
+unchanged to `setInputDevice()`. The peer hears whichever microphone this
+device happens to be using and has no more business knowing WHICH one
+than it does knowing whether silence on the line means "muted" or "the
+room is quiet." `tests/VoiceUXAndDeviceControls.test.js`'s own flagship
+proves this by sniffing the raw messages the OTHER side's connection
+actually receives during both a mute and a live mid-call device switch:
+zero additional messages either time — not merely "VoiceUseCase's public
+surface never mentions the wire," but the wire itself, observed directly.
+
+### A Live Device Switch Reuses RTCRtpSender#replaceTrack(), Never A Second Renegotiation (0.2.75)
+
+`peer/WebRtcPeerConnection.js#addAudioTrack()`'s own 0.2.73 header named
+this precedent before this milestone existed to use it: "a caller that
+wants to swap tracks... uses the returned RTCRtpSender's own
+`replaceTrack()`, not a second `addAudioTrack()`." `replaceAudioTrack()`
+changes only WHICH `MediaStreamTrack` feeds an already-negotiated
+`m=audio` section — never its presence, direction, or codec negotiation —
+so no SDP offer/answer round trip is needed, and
+`application/VoiceUseCase.js` never has to ask "am I the offerer" the way
+`renegotiate()`/`applyRemoteOffer()` must. `core/VoiceSessionState.js`
+never leaves ACTIVE for the duration of a switch: a device change is
+invisible to the call state machine by construction, not by convention —
+there is no `SWITCHING` state to forget to handle, because nothing about
+the call's own lifecycle is actually in flux while it happens.
+
+### A Local Media Problem Never Ends A Call By Itself (0.2.75)
+
+0.2.74 already drew this line at the moment a call STARTS — a denied
+microphone or a failed renegotiation each get their own honest
+`VoiceCallEndReason`, but neither ever touches `peer/PeerConnection.js`.
+0.2.75 extends the identical restraint to a device disappearing MID-CALL:
+`application/VoiceUseCase.js#_handleLocalTrackEnded()` reacts to a real
+`MediaStreamTrack`'s own `ended` event (the browser's own signal that the
+underlying device is gone — never something a script's own `stop()` call
+fires, a real distinction `tests/VoiceUXAndDeviceControls.test.js` has to
+work around by dispatching the event directly, since a synthetic
+Web-Audio track has no real hardware to lose) with exactly one automatic
+fallback attempt to the platform default. If THAT also fails, the call is
+left exactly as it was — still whatever `VoiceSessionState` it already
+was, `peer/PeerConnection.js` still `AUTHENTICATED` — and
+`onMicrophoneUnavailable()` fires as a purely informational signal, never
+a `VoiceCallEndReason`, because nothing here decided the call was over.
+Only an explicit hang up, block, unfriend, or peer disconnect — the SAME
+closed set 0.2.74 already established — ever actually ends a call; a
+local device going away was deliberately left off that list.
+
+### Output Device Selection Never Enters VoiceSession (0.2.75)
+
+Choosing which SPEAKER plays the remote party's audio is a fact about
+this device's own audio hardware, never about the call. Once
+`application/VoiceUseCase.js#getRemoteStream()` hands a UI its
+`MediaStream` — unchanged since 0.2.73 — routing that stream to a chosen
+output device is entirely a UI/platform concern: `ui/views/ChatView.js`
+calls the bound `<audio>` element's own `setSinkId()` directly and
+`application/VoiceUseCase.js` never even learns an output device was
+chosen, let alone which one. Adding a `setOutputDevice()` to
+`VoiceUseCase` would repeat the exact mistake `core/AvatarPresence.js`'s
+own boundary already warns against elsewhere in this document — a
+capability answering a question a different layer already owns the
+answer to. This is the one piece of 0.2.75 that adds no application-layer
+code at all; the restraint IS the design.
