@@ -5353,3 +5353,82 @@ stream in" the way its building collision explicitly is (see "The Local
 Avatar Is Constrained By Collision Geometry Currently Available To This
 Replica, Never By The Entire World," 0.2.42) — terrain is everywhere,
 always, by construction.
+
+### Identity Authentication Proves A Key; Device Authorization Proves Permission (0.2.78)
+
+`peer/PeerAuthenticationSession.js`'s handshake has answered exactly one
+question since 0.2.49 — "who is holding this key, right now, on this
+connection" — and 0.2.78 changes nothing about it: not one line under
+`peer/` was touched. A device authorization
+(`core/DeviceAuthorizationEnvelope.js`, `identity/
+LocalIdentityProvider.js#authorizeDevice()`) answers a completely
+different, narrower question layered strictly on top: "did some OTHER
+identity give this key permission to act on its behalf." A connection
+that authenticates successfully has proven possession of a key and
+nothing more — it has proven nothing whatsoever about permission, which
+is why `application/DeviceAuthorizationPropagationUseCase.js#resolvePeerAuthority()`
+is a separate, independent query, never a side effect of reaching
+`PeerLifecycleState.AUTHENTICATED`. Conflating the two would mean any two
+people who happen to both be online could, by definition, act for each
+other — the exact "one identity = one connection" shortcut docs/Roadmap.md
+named as a danger from 0.2.67 onward. See `tests/MultiDeviceIdentity.test.js`'s
+SECURITY FLAGSHIP B: a revoked device authenticates exactly as
+successfully as it always could (its key is untouched) while its
+authorization to act for the parent identity is independently, and
+completely separately, gone.
+
+### A Device Authorization Grant Is Signed By The Parent, Never Counter-Signed By The Device (0.2.78)
+
+The same asymmetry `core/IdentitySuccessionEnvelope.js` already
+established for successor declarations, extended here on purpose:
+`identity/LocalIdentityProvider.js#authorizeDevice()` signs with the
+PARENT identity's own key only. The device being authorized never
+counter-signs the grant, because it never needs to — a device proves its
+own key possession the ordinary way, live, the moment it actually
+connects to someone, exactly like any other identity always has (see
+"Identity Authentication Proves A Key; Device Authorization Proves
+Permission," above). A grant is therefore meaningful the instant the
+parent produces it, even for a device that doesn't exist yet or hasn't
+finished being set up — the identical property `declareSuccessor()`
+already relies on ("Alice can name a successor she generated on a
+brand-new device she hasn't even finished setting up yet, as long as she
+already knows its public identity").
+
+### Device Authorization Can Be Re-Granted; Identity Revocation Cannot (0.2.78)
+
+`identity/IdentityRevocationEnvelope.js`'s own revocation is a permanent,
+one-way latch — once REVOKED, an identity stays REVOKED forever, and
+`docs/Principles.md`'s own "Revocation Is Permanent, Never A State A
+Later Event Reverses" is exactly why: an identity that could be
+"un-revoked" would make revocation meaningless as a security signal. A
+device authorization is a different kind of fact, and 0.2.78 deliberately
+does NOT reuse that same permanent latch: `core/DeviceAuthority.js#isAuthorized`
+is a plain timestamp comparison between the most recent grant and the
+most recent revocation this device has independently verified, so a
+strictly newer grant re-authorizes a device previously revoked. Losing a
+device (a phone is stolen, then recovered; a laptop is reformatted and
+re-set-up) is an ordinary, recoverable event for the PARENT identity,
+never the identity's own compromise — collapsing the two into one
+permanent latch would force Alice to rotate her entire identity every
+time she merely wanted to take a device back off her authorized list and
+later put it back on.
+
+### A Connection Represents An Identity Either Directly Or Through One Verified Device Authorization, Never By Assumption (0.2.78)
+
+`application/DeviceAuthorizationPropagationUseCase.js#resolvePeerAuthority()`
+gives an explicit, two-mode answer — deliberately reusing `identity/
+DelegationVerifier.js`'s own DIRECT/DELEGATED vocabulary as an
+architectural shape, though never its code path (that class answers a
+completely different question, publication ownership delegation): DIRECT
+means the live connection's own proven key IS `identityId`, exactly as
+every peer connection has represented an identity since 0.2.49; DEVICE
+means the connection's proven key is a DIFFERENT key that this device has
+independently verified `identityId` authorized, and that authorization
+has not since been superseded by a newer revocation. There is
+deliberately no third, implicit mode — a connection that is neither is
+simply `{ authorized: false, mode: null }`, never defaulted to
+"probably fine." See `tests/MultiDeviceIdentity.test.js`'s SECURITY
+FLAGSHIP A: Charlie's connection is completely genuine (he really does
+hold his own key) and still resolves as unauthorized to represent Alice,
+because genuine authentication of A key was never, by itself, evidence of
+permission to act for a DIFFERENT one.

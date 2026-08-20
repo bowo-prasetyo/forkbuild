@@ -15,11 +15,18 @@ import * as IdentityRecovery from './IdentityRecovery.js';
 import { IdentityLifecycleState } from '../core/IdentityLifecycleState.js';
 import { toIdentityRevocationRecord, getIdentityRevocationSigningDescriptor } from '../core/IdentityRevocationEnvelope.js';
 import { toIdentitySuccessionRecord, getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
+import {
+    toDeviceAuthorizationGrant,
+    getDeviceAuthorizationGrantSigningDescriptor,
+    toDeviceAuthorizationRevocation,
+    getDeviceAuthorizationRevocationSigningDescriptor
+} from '../core/DeviceAuthorizationEnvelope.js';
 
 const IDENTITIES_INDEX_KEY = 'local-identities';
 const IDENTITY_KEY_PREFIX = 'local-identity-key:';
 const IDENTITY_REVOCATION_PREFIX = 'local-identity-revocation:';
 const IDENTITY_SUCCESSION_PREFIX = 'local-identity-succession:';
+const DEVICE_AUTHORIZATIONS_PREFIX = 'local-device-authorizations:';
 const SESSION_KEY = 'local-session';
 const LEGACY_STORAGE_KEY = 'local-identity';
 const PROVIDER_ID = 'local';
@@ -104,6 +111,20 @@ const PROVIDER_ID = 'local';
 // point everyone who still has it at a named successor. See
 // docs/Principles.md, "Backup, Recovery, Rotation, And Revocation Are
 // Four Different Questions."
+//
+// 0.2.67 through 0.2.71 each named, and deliberately left open, one
+// more question: "is an identity a person, a device, or a key?" 0.2.78
+// answers it — see this class's own "0.2.78: device authorization"
+// section below. An identity remains exactly one keypair, unchanged. A
+// device is not a new kind of identity at all — it is just ANOTHER
+// LocalIdentity, wherever it happens to live. `authorizeDevice()`/
+// `revokeDeviceAuthorization()` add the one genuinely new concept: a
+// signed, revocable AUTHORIZATION LINK from a parent identity to a
+// device's key, completely separate from peer/
+// PeerAuthenticationSession.js's own handshake (which only ever proves
+// possession of A key, never permission to act for a DIFFERENT one) —
+// see docs/Principles.md, "Identity Authentication Proves A Key;
+// Device Authorization Proves Permission."
 export class LocalIdentityProvider extends IdentityProvider {
     constructor(storageProvider, {
         pbkdf2Iterations = KeyEncryption.DEFAULT_ITERATIONS,
@@ -619,6 +640,149 @@ export class LocalIdentityProvider extends IdentityProvider {
 
     getSuccessionRecord(identityId) {
         return this._storageProvider.load(IDENTITY_SUCCESSION_PREFIX + identityId) || null;
+    }
+
+    // --- 0.2.78: device authorization ------------------------------------
+    //
+    // "Is an identity a person, a device, or a key?" — the question
+    // 0.2.67 through 0.2.71 each named and deliberately left open (see
+    // docs/Roadmap.md). The answer: an identity stays exactly what it
+    // has been since 0.2.46 — one keypair. A DEVICE is not a new kind of
+    // identity; it is just ANOTHER LocalIdentity, generated wherever it
+    // lives, exactly like any identity createLocalIdentity() already
+    // produces. What's new is this section: a signed, revocable
+    // AUTHORIZATION LINK from a parent identity to a device's key,
+    // completely independent of whether this device ever holds the
+    // device's own private key at all (identityId only needs to KNOW the
+    // device's public identity to authorize it — the same "Alice can
+    // name a successor she hasn't finished setting up yet, as long as
+    // she already knows its public identity" property declareSuccessor()
+    // above already established).
+    //
+    // authorizeDevice() signs with identityId's OWN key (this device
+    // must be able to unlock it — same passphrase discipline as
+    // declareSuccessor()/revokeIdentity()), producing a portable,
+    // signed core/DeviceAuthorizationEnvelope.js grant record — meant to
+    // be handed to the device it names (out of band, exactly like
+    // 0.2.48's exported identity package) and/or gossiped to peers who
+    // already know identityId (application/
+    // DeviceAuthorizationPropagationUseCase.js). Calling it again for a
+    // device identityId already authorized simply re-signs a fresh grant
+    // (a later authorizedAt), which is also how a previously revoked
+    // device is re-authorized — see core/DeviceAuthorizationEnvelope.js's
+    // own header on why that's a deliberate, safe difference from
+    // identity revocation's own permanent, one-way latch.
+    authorizeDevice(identityId, deviceIdentityId, devicePublicKey, { deviceLabel = null, passphrase = null } = {}) {
+        const identity = this.getLocalIdentity(identityId);
+        if (!identity) {
+            throw new Error('LocalIdentityProvider: cannot authorize a device, no local identity with id ' + identityId);
+        }
+        if (!deviceIdentityId || typeof deviceIdentityId !== 'string') {
+            throw new Error('LocalIdentityProvider: deviceIdentityId is required to authorize a device');
+        }
+        if (deviceIdentityId === identityId) {
+            throw new Error('LocalIdentityProvider: an identity cannot authorize itself as its own device');
+        }
+        const devicePublicKeyBytes = Ed25519.didKeyToPublicKey(deviceIdentityId);
+        if (!devicePublicKeyBytes || Ed25519.bytesToHex(devicePublicKeyBytes) !== devicePublicKey) {
+            throw new Error('LocalIdentityProvider: deviceIdentityId does not match devicePublicKey');
+        }
+        const seedHex = this._resolveOrUnlockSeedHex(identity, passphrase);
+        const record = toDeviceAuthorizationGrant({
+            identityId: identity.identityId,
+            deviceIdentityId,
+            devicePublicKey,
+            deviceLabel,
+            authorizedAt: new Date().toISOString()
+        });
+        const signedRecord = this._signEnvelope(record, getDeviceAuthorizationGrantSigningDescriptor(record), identity.identityId, seedHex);
+        const authorizations = this._loadDeviceAuthorizations(identityId);
+        const existing = authorizations.find((entry) => entry.deviceIdentityId === deviceIdentityId);
+        if (existing) {
+            existing.grant = signedRecord;
+        } else {
+            authorizations.push({ deviceIdentityId, grant: signedRecord, revocation: null });
+        }
+        this._saveDeviceAuthorizations(identityId, authorizations);
+        return signedRecord;
+    }
+
+    // Withdraws a grant already made above — identityId must again be
+    // able to unlock its own key (revocation, like authorization, is
+    // only ever self-attested by the PARENT, never by the device or by
+    // anyone else — see core/DeviceAuthorizationEnvelope.js's own
+    // header). Refuses a device that was never authorized in the first
+    // place; revoking an already-revoked device is a no-op that simply
+    // re-signs a fresher revocation timestamp.
+    revokeDeviceAuthorization(identityId, deviceIdentityId, { passphrase = null } = {}) {
+        const identity = this.getLocalIdentity(identityId);
+        if (!identity) {
+            throw new Error('LocalIdentityProvider: cannot revoke a device authorization, no local identity with id ' + identityId);
+        }
+        const authorizations = this._loadDeviceAuthorizations(identityId);
+        const existing = authorizations.find((entry) => entry.deviceIdentityId === deviceIdentityId);
+        if (!existing) {
+            throw new Error('LocalIdentityProvider: no device authorization on file for ' + deviceIdentityId);
+        }
+        const seedHex = this._resolveOrUnlockSeedHex(identity, passphrase);
+        const record = toDeviceAuthorizationRevocation({
+            identityId: identity.identityId,
+            deviceIdentityId,
+            revokedAt: new Date().toISOString()
+        });
+        const signedRecord = this._signEnvelope(record, getDeviceAuthorizationRevocationSigningDescriptor(record), identity.identityId, seedHex);
+        existing.revocation = signedRecord;
+        this._saveDeviceAuthorizations(identityId, authorizations);
+        return signedRecord;
+    }
+
+    // Every device identityId has ever authorized, most-recently-updated
+    // first — never exposes anything beyond what the signed grant/
+    // revocation records themselves already carry.
+    listDeviceAuthorizations(identityId) {
+        return this._loadDeviceAuthorizations(identityId)
+            .map((entry) => this._toDeviceAuthorizationView(entry))
+            .sort((a, b) => new Date(b.grant.authorizedAt).getTime() - new Date(a.grant.authorizedAt).getTime());
+    }
+
+    getDeviceAuthorization(identityId, deviceIdentityId) {
+        const entry = this._loadDeviceAuthorizations(identityId).find((e) => e.deviceIdentityId === deviceIdentityId);
+        return entry ? this._toDeviceAuthorizationView(entry) : null;
+    }
+
+    // Authorized RIGHT NOW: a grant is on file, it is not superseded by
+    // a later revocation (see core/DeviceAuthority.js's own timestamp-
+    // comparison rule, mirrored here for the LOCAL/authoring side), and
+    // the parent identity itself has not been revoked — an identity
+    // that can no longer sign anything (see _requireAuthenticatedIdentity()
+    // below) can no longer vouch for any of its devices either.
+    isDeviceAuthorized(identityId, deviceIdentityId) {
+        if (this.isRevoked(identityId)) {
+            return false;
+        }
+        const view = this.getDeviceAuthorization(identityId, deviceIdentityId);
+        return Boolean(view && view.isAuthorized);
+    }
+
+    _toDeviceAuthorizationView(entry) {
+        const isAuthorized = Boolean(entry.grant) && (!entry.revocation
+            || new Date(entry.grant.authorizedAt).getTime() > new Date(entry.revocation.revokedAt).getTime());
+        return {
+            deviceIdentityId: entry.deviceIdentityId,
+            devicePublicKey: entry.grant.devicePublicKey,
+            deviceLabel: entry.grant.deviceLabel,
+            grant: entry.grant,
+            revocation: entry.revocation,
+            isAuthorized
+        };
+    }
+
+    _loadDeviceAuthorizations(identityId) {
+        return this._storageProvider.load(DEVICE_AUTHORIZATIONS_PREFIX + identityId) || [];
+    }
+
+    _saveDeviceAuthorizations(identityId, authorizations) {
+        this._storageProvider.save(DEVICE_AUTHORIZATIONS_PREFIX + identityId, authorizations);
     }
 
     // Shared by declareSuccessor() and revokeIdentity()'s own optional

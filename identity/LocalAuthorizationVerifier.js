@@ -7,6 +7,10 @@ import { getFriendshipSigningDescriptor } from '../core/FriendshipAdvertisement.
 import { getRendezvousPublicationSigningDescriptor } from '../core/RendezvousPublicationEnvelope.js';
 import { getIdentityRevocationSigningDescriptor } from '../core/IdentityRevocationEnvelope.js';
 import { getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
+import {
+    getDeviceAuthorizationGrantSigningDescriptor,
+    getDeviceAuthorizationRevocationSigningDescriptor
+} from '../core/DeviceAuthorizationEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -319,6 +323,65 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getIdentitySuccessionSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.2.78 — like verifyIdentityRevocation()/verifyIdentitySuccession()
+    // above, a device authorization grant is NEVER tolerated unsigned:
+    // see core/DeviceAuthorizationEnvelope.js's own header on why only
+    // the PARENT identity's own key can ever produce a meaningful one.
+    // The signer MUST equal the record's own `identityId` — a grant is
+    // pointless unless the identity it claims authorizes the device is
+    // provably the one that signed it. Deliberately does NOT check
+    // whether `deviceIdentityId` is a real, live, currently-connected
+    // peer at all — that is a completely separate question, answered by
+    // whoever is holding a live peer/PeerConnection.js, never by this
+    // structural signature check (see application/
+    // DeviceAuthorizationPropagationUseCase.js's own header).
+    verifyDeviceAuthorizationGrant(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no device authorization grant' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a device authorization grant must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.identityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the authorizing identityId' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getDeviceAuthorizationGrantSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.2.78 — the same REQUIRED-signature discipline, withdrawing a
+    // grant already made above: the signer MUST equal the record's own
+    // `identityId`, the same parent-only asymmetry.
+    verifyDeviceAuthorizationRevocation(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no device authorization revocation' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a device authorization revocation must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.identityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the authorizing identityId' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getDeviceAuthorizationRevocationSigningDescriptor(record), record.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).

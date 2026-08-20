@@ -103,7 +103,26 @@ export const SignatureType = Object.freeze({
     // signed by the PREDECESSOR only; the successor never counter-signs
     // (see that file's own header for why). See core/
     // IdentitySuccessionEnvelope.js's getIdentitySuccessionSigningDescriptor().
-    IDENTITY_SUCCESSION: 'identity-succession'
+    IDENTITY_SUCCESSION: 'identity-succession',
+    // 0.2.78 — a REQUIRED signature (never optional, like PEER_AUTHENTICATION/
+    // FRIENDSHIP/IDENTITY_REVOCATION/IDENTITY_SUCCESSION above), over a
+    // device authorization grant (core/DeviceAuthorizationEnvelope.js's
+    // wire shape). Proves "identity A itself authorized deviceKey B to
+    // act on its behalf" — signed by the PARENT identity only; the
+    // device never counter-signs, the same asymmetry IDENTITY_SUCCESSION
+    // already established for predecessor/successor. Answers a
+    // deliberately narrower question than PEER_AUTHENTICATION does:
+    // PEER_AUTHENTICATION proves "who is holding this key, right now, on
+    // this connection"; DEVICE_AUTHORIZATION_GRANT proves "this key was
+    // given permission to act for that OTHER identity" — see docs/
+    // Principles.md, "Identity Authentication Proves A Key; Device
+    // Authorization Proves Permission." See core/
+    // DeviceAuthorizationEnvelope.js's getDeviceAuthorizationGrantSigningDescriptor().
+    DEVICE_AUTHORIZATION_GRANT: 'device-authorization-grant',
+    // 0.2.78 — the same REQUIRED discipline, withdrawing a grant already
+    // made under DEVICE_AUTHORIZATION_GRANT above. See core/
+    // DeviceAuthorizationEnvelope.js's getDeviceAuthorizationRevocationSigningDescriptor().
+    DEVICE_AUTHORIZATION_REVOCATION: 'device-authorization-revocation'
 });
 
 export class Signature {
