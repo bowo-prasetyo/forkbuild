@@ -7,11 +7,15 @@ import {
 } from '../core/TerrainTiling.js';
 import { TerrainStreamingController } from '../renderer/TerrainStreamingController.js';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
+import { PreviewRenderer } from '../renderer/PreviewRenderer.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
+import { PreviewState } from '../application/editor-state/PreviewState.js';
+import { EventBus } from '../core/events/EventBus.js';
+import { EditorEvent } from '../core/events/EditorEvent.js';
 
 // 0.2.76 — World Ground & Terrain Foundation.
 //
@@ -305,6 +309,89 @@ async function runTests() {
         assert(heightAtOriginBefore === heightAtOriginAfter, '36. FLAGSHIP: the terrain height at a fixed coordinate is byte-identical before and after an entire journey across the world — reproducible across any replica, exactly as the design doc requires for a potentially distributed World View');
 
         controller.dispose();
+    }
+
+    // -------------------------------------------------------------
+    // Section F: renderer/PreviewRenderer.js — 0.2.87 addition. Before
+    // this, the placement GHOST rendered flush with the flat local Y=0
+    // plane while the REAL committed brick (Section D3, just above) got
+    // lifted by terrainHeightAt(0, 0) — a visible "jump" the instant the
+    // user clicked. The ghost must get the EXACT SAME offset, via the
+    // exact same duck-typed fallback.
+    // -------------------------------------------------------------
+    {
+        class FakeColor {
+            constructor(value) { this.value = value; }
+            clone() { return new FakeColor(this.value); }
+            copy(other) { this.value = other.value; return this; }
+            set(value) { this.value = value; return this; }
+        }
+        class FakeMaterial {
+            constructor(color) { this.color = new FakeColor(color); this.transparent = false; this.opacity = 1; }
+            clone() { return new FakeMaterial(this.color.value); }
+        }
+        class FakeMesh {
+            constructor(color) {
+                this.material = new FakeMaterial(color);
+                this.position = { x: 0, y: 0, z: 0, set(x, y, z) { this.x = x; this.y = y; this.z = z; } };
+                this.rotation = { y: 0 };
+                this.userData = {};
+            }
+        }
+        const TRUE_COLOR = 0x4caf7d;
+        const fakeBrickFactory = { createMesh: () => new FakeMesh(TRUE_COLOR) };
+
+        const meshes = new Set();
+        const fakeRenderer = {
+            add: (m) => meshes.add(m),
+            remove: (m) => meshes.delete(m),
+            terrainHeightAt: (x, z) => (x === 0 && z === 0 ? 4.25 : 0)
+        };
+        const previewRenderer = new PreviewRenderer(fakeRenderer, fakeBrickFactory);
+        const bus = new EventBus();
+        previewRenderer.subscribe(bus);
+
+        bus.publish(EditorEvent.PREVIEW_CHANGED, {
+            preview: new PreviewState({ visible: true, definitionId: 'core:cube', position: new Position(1, 0.5, 2), rotation: 90, valid: true })
+        });
+        const mesh = Array.from(meshes)[0];
+        assert(mesh, '37. showing a preview adds a ghost mesh to the renderer');
+        assert(mesh.position.x === 1 && mesh.position.z === 2,
+            '38. the ghost sits at the preview\'s own X/Z, unchanged');
+        assert(mesh.position.y === 0.5 + 4.25,
+            '39. FLAGSHIP: the ghost\'s Y is lifted by the SAME terrainHeightAt(0, 0) fallback Section D3 proved every committed Editor-mode brick already gets — the ghost and the real brick can never visually disagree again');
+        assert(mesh.rotation.y === 90 * (Math.PI / 180), '40. rotation still converts degrees to radians exactly as before');
+        assert(mesh.material.color.value === TRUE_COLOR, '41. a valid preview keeps the brick\'s own true color — never a second, fake-looking ghost material');
+
+        bus.publish(EditorEvent.PREVIEW_CHANGED, {
+            preview: new PreviewState({ visible: true, definitionId: 'core:cube', position: new Position(1, 0.5, 2), rotation: 90, valid: false })
+        });
+        assert(mesh.material.color.value === 0xe05252,
+            '42. FLAGSHIP: an invalid (occupied) preview tints the SAME mesh red instead of hiding it — the user sees why a click would do nothing');
+
+        bus.publish(EditorEvent.PREVIEW_CHANGED, {
+            preview: new PreviewState({ visible: true, definitionId: 'core:cube', position: new Position(1, 0.5, 2), rotation: 90, valid: true })
+        });
+        assert(mesh.material.color.value === TRUE_COLOR,
+            '43. becoming valid again (e.g. hovering off the occupied cell) restores the brick\'s true color exactly — no residual tint');
+
+        bus.publish(EditorEvent.PREVIEW_CHANGED, { preview: PreviewState.hidden() });
+        assert(meshes.size === 0, '44. hiding the preview removes the ghost mesh entirely');
+
+        // A renderer without terrainHeightAt() (every pre-0.2.76 fake, and
+        // every existing PreviewRenderer-adjacent test) behaves exactly as
+        // it always did — no ground lift, matching Section D1's own claim
+        // for WorldRenderer.
+        const meshes2 = new Set();
+        const legacyRenderer = { add: (m) => meshes2.add(m), remove: (m) => meshes2.delete(m) };
+        const previewRenderer2 = new PreviewRenderer(legacyRenderer, fakeBrickFactory);
+        const bus2 = new EventBus();
+        previewRenderer2.subscribe(bus2);
+        bus2.publish(EditorEvent.PREVIEW_CHANGED, {
+            preview: new PreviewState({ visible: true, definitionId: 'core:cube', position: new Position(0, 0.5, 0), valid: true })
+        });
+        assert(Array.from(meshes2)[0].position.y === 0.5,
+            '45. a renderer without terrainHeightAt() applies no ground offset at all — backward compatible with every pre-0.2.87 caller');
     }
 
     console.log('✅ All World Ground & Terrain Foundation tests passed.');

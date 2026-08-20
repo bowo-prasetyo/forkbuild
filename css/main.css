@@ -2322,6 +2322,23 @@ html, body {
     color: #9b59b6;
 }
 
+/* 0.2.87 — the hovered position is occupied (core/PlacementValidator.js);
+   the panel stays visible, tinted red, rather than disappearing, so
+   the user sees WHY clicking won't do anything. */
+.spatial-panel--placement.spatial-panel--blocked {
+    border-color: #e05252;
+}
+
+.spatial-panel--placement.spatial-panel--blocked h4,
+.spatial-panel--placement.spatial-panel--blocked .spatial-type {
+    color: #e05252;
+}
+
+.editing-hint--blocked {
+    color: #e05252;
+    font-weight: 500;
+}
+
 .placement-controls {
     display: flex;
     flex-direction: column;

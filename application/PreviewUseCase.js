@@ -8,12 +8,13 @@ export class PreviewUseCase {
         this._editorContext = editorContext;
     }
 
-    show(definitionId, position, rotation = 0) {
+    show(definitionId, position, rotation = 0, valid = true) {
         this._editorContext.setPreview(new PreviewState({
             visible: true,
             definitionId,
             position,
-            rotation
+            rotation,
+            valid
         }));
     }
 

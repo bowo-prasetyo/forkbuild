@@ -4034,6 +4034,210 @@ no changes to `core/VoiceCallSignal.js` or `core/VoiceMediaSignal.js` —
 every scenario above is expressed entirely through the existing wire
 vocabulary.
 
+0.2.87 — World Building Interaction & Placement UX — returns to the
+World/Building side after 0.2.78→0.2.86's identity/social/voice arc,
+deliberately WITHOUT adding another brick or structure: the design
+conversation's own framing was that the vocabulary (15 `BrickDefinition`s,
+6 `Structure`s, a unified Build Library) had outgrown the interaction
+model placing it uses, so this milestone makes the EXISTING primitives
+pleasant to place rather than growing the library further.
+
+```text
+0.2.87
+├── application/tools/PlacementTool.js          onKeyDown() rotates the
+│                                                 pending preview; hover
+│                                                 now also computes
+│                                                 collision validity
+├── application/PreviewUseCase.js               show() gains a 4th
+│                                                 `valid` argument
+├── application/editor-state/PreviewState.js    + `valid` field
+├── application/spatial-state/SpatialPlacementState.js  + `blocked` field,
+│                                                 kept independent of the
+│                                                 pre-existing `valid`
+├── application/WorldNavigationSession.js       rotatePlacementPreview(),
+│                                                 _presentPlacementPreview()
+│                                                 (terrain offset + the
+│                                                 new `blocked` check),
+│                                                 _updatePlacementPreview()
+│                                                 now resolves blocked/
+│                                                 targetDocumentId eagerly
+├── application/RenderWorldViewUseCase.js       showPreview() threads the
+│                                                 new `valid` argument
+├── renderer/PreviewRenderer.js                 terrain-offset fallback
+│                                                 (mirrors WorldRenderer's
+│                                                 own) + red/valid tint
+├── renderer/SpatialPreviewRenderer.js          red/valid tint only — no
+│                                                 terrain awareness added
+│                                                 here on purpose
+├── ui/views/EditorView.js                      'R' carve-out before the
+│                                                 registry + a placement
+│                                                 hint
+├── ui/views/WorldView.js                       'R' carve-out (mirrors
+│                                                 its own Escape one),
+│                                                 blocked panel styling
+├── css/main.css                                .spatial-panel--blocked,
+│                                                 .editing-hint--blocked
+├── tests/PlacementPreviewUX.test.js            NEW — Editor-side,
+│                                                 genuinely headless (no
+│                                                 'three' in its import
+│                                                 graph at all)
+└── tests/PlacementWorldView.test.js            +8 sections — WorldView-
+     tests/WorldGroundTerrain.test.js            side, +1 section —
+                                                  PreviewRenderer's own
+                                                  terrain/tint behavior
+```
+
+The one genuine architectural gap the design conversation identified
+turned out to be narrower, and more concrete, than "terrain doesn't
+participate in placement" first suggested. `renderer/WorldRenderer.js`
+already lifted every COMMITTED brick by a terrain offset sampled once at
+its own document's placement position (0.2.76) — rigid-whole-building,
+never per-brick, exactly the principle docs/Principles.md already named.
+What it never touched was the GHOST: `renderer/PreviewRenderer.js` and
+`renderer/SpatialPreviewRenderer.js` positioned the preview using the
+raw local Y with no offset at all, so a brick's ghost sat flush with the
+document's local Y=0 plane right up until the click — at which point the
+just-committed real brick visually "jumped" by whatever the document's
+own terrain offset happened to be. 0.2.87 closes exactly that gap and
+nothing more: `application/WorldNavigationSession.js#_presentPlacementPreview()`
+now calls `core/TerrainHeightField.js#terrainHeightAt()` directly (never
+through `renderer.terrainHeightAt()` — the same discipline
+`application/AvatarTerrainConstraint.js` established in 0.2.77), sampled
+at the TARGET DOCUMENT's own placement position, and adds it to the
+preview's world Y before calling `showPreview()`. `renderer/PreviewRenderer.js`
+(the Editor's ghost, which has no `WorldPlacement`/document offset of its
+own to look up) gets the identical fallback `renderer/WorldRenderer.js`
+already silently applied to every Editor-mode committed brick since
+0.2.76 — sampling ground at the origin — via the same duck-typed
+`typeof renderer.terrainHeightAt === 'function'` guard, for the same
+backward-compatibility reason (tests construct it with a plain
+`{ add, remove }` fake). Critically, `PlaceBrickCommand`'s own `position`
+— what actually reaches `Brick.position` and gets persisted — is
+completely untouched by any of this: the terrain offset is computed
+fresh, every call, purely for `showPreview()`'s world-space argument, and
+never written back into `SpatialPlacementState`/`PreviewState`'s own
+position field. `tests/PlacementWorldView.test.js`'s new flagship section
+proves this directly: after `commitPlacement()`, the read-back
+`Brick.position.y` is exactly the LOCAL ground value (0.5 for a
+`core:cube`), never the lifted value the preview rendered with a moment
+earlier — see docs/Principles.md, "Terrain Elevation Is A Rendering-Time
+Offset, Never A Presence Or Placement Fact," now proven for a BRAND NEW
+brick, not only pre-existing ones.
+
+Rotation follows the exact shape the design conversation asked for:
+`PreviewState`/`SpatialPlacementState` already HAD a `rotation` field
+since 0.1.13/0.2.24 — nothing new needed there — but nothing before
+0.2.87 ever set it to anything but a hardcoded `0`. `PlacementTool`
+(Editor) now owns a small `_rotation` accumulator, incremented/decremented
+by its own `onKeyDown()` ('R' / Shift+R, exactly matching
+`RotateBrickCommand`'s own un-normalized accumulation convention — no
+`% 360` anywhere, Three.js normalizes for rendering and
+`PlaceBrickCommand` stores whatever it's handed either way), and reused
+on every subsequent hover until `deactivate()` (leaving Place mode, not
+switching bricks) resets it back to 0 — so orienting once and placing a
+row of the same or a DIFFERENT brick keeps the orientation, matching the
+design conversation's own "orient once, place a row" workflow.
+`WorldNavigationSession#rotatePlacementPreview()` is the identical
+capability for World View, acting on the ALREADY-hovered
+`SpatialPlacementState` rather than re-picking, and resetting the same
+way via `setActiveDefinitionId(null)`. Neither path touches
+`CommandHistory` — rotating a preview that hasn't been placed yet is
+Editor/session state, never a domain mutation — and both are proven,
+by the flagship sections in `tests/PlacementPreviewUX.test.js` and
+`tests/PlacementWorldView.test.js`, to leave the COMMITTED
+`Brick.rotation` byte-identical to whatever the preview last showed.
+
+Wiring 'R' turned up one small, real, pre-existing input-routing gap
+worth naming rather than working around silently: `EditorView.js`/
+`WorldView.js`'s own registry-driven keyboard step
+(`InputRouter.matchShortcut()`) resolves a keystroke to its bound action
+by KEY ALONE, not by whether that action is currently `enabled()` — so
+'R' already matched `transform.rotateClockwise` (bound to 'R' since
+0.1.50) even while placement mode made that action `enabled() === false`,
+and the code returned immediately afterward regardless, meaning the
+keystroke was silently swallowed rather than ever reaching whichever
+tool might have wanted it. `WorldView.js` already carved out its own
+placement-mode Escape ahead of the registry for exactly this class of
+conflict; 0.2.87 adds an identical 'R' carve-out to both views, ahead of
+step 5, rather than changing `EditorActionRegistry.execute()`'s own
+enabled-gating semantics (which plenty of OTHER, unrelated shortcuts
+correctly rely on).
+
+Collision reuses `core/PlacementValidator.js` completely unchanged — the
+one deliberate scope boundary the design conversation asked for
+("Would this brick overlap an existing brick?", not a second geometric
+collision system). What's new is WHEN it's asked: previously only at
+commit time (a click on an occupied cell silently did nothing);
+`PlacementTool.onPointerMove()` and
+`WorldNavigationSession#_updatePlacementPreview()` now also ask it on
+every hover, and thread the answer through as a new, independent field —
+`PreviewState.valid` (Editor) / `SpatialPlacementState.blocked` (World
+View), deliberately NOT reusing `SpatialPlacementState`'s own
+pre-existing `valid` (which already meant "a real target was resolved at
+all," unchanged since 0.2.27) — so the two questions ("is there anything
+here to place" vs. "is this occupied") stay independent and the preview
+can stay VISIBLE, tinted red, at a blocked position rather than
+disappearing as if there were nothing there. `renderer/PreviewRenderer.js`/
+`renderer/SpatialPreviewRenderer.js` both tint the ghost's own true
+brick color to a flat red when invalid and restore it exactly on the
+next valid hover — never a second ghost material, never touching
+geometry. `onPointerDown()`/`commitPlacement()` still independently
+re-validate before committing (never trusting the cached hover flag) —
+unchanged defensive posture, now simply also informative one hover
+earlier.
+
+Terrain slope needed no code at all: `Brick.rotation` has always been a
+single Y-axis scalar (0.1.5) — there has never been a code path that
+tilts a brick off-upright — so "a brick placed on a hillside stays
+upright, never auto-conforms to the slope" was already an invariant of
+the data model, not a gap this milestone needed to close. Grid snapping
+is untouched (`PlacementPositionService` — same `Math.round(x/size)*size`
+it always was); no brick-to-brick magnetic attachment, no architectural
+alignment assistance, and no AI building assistance were added, matching
+the design conversation's own explicit "pleasant to place, not a CAD
+system" scope. `core/PlacementValidator.js`, `core/Brick.js`,
+`core/BrickDefinition.js`, `BrickRegistry`/`StructureRegistry`, and every
+existing Place/Fork distinction 0.2.84 established are completely
+unchanged — placing a Structure repeatedly into a document remains
+explicitly out of scope, still named (unscheduled) as its own future
+"Structure Placement / World Instances" milestone below, never smuggled
+in here.
+
+`tests/PlacementPreviewUX.test.js` is new and deliberately free of any
+`renderer/`-side or `WorldNavigationSession` import — `PlacementTool`
+never touches Three.js at all — so, unlike almost everything else in
+this suite, it runs as a genuine standalone Node script with no browser
+test runner required; its flagship proves the committed `Brick.rotation`
+matches the preview exactly across a rotate/switch-brick/place sequence,
+and that hovering an occupied cell shows (not hides) an invalid preview
+that a click then correctly refuses. `tests/PlacementWorldView.test.js`'s
+new sections extend its existing `WorldNavigationSession` harness with
+the WorldView-side counterpart, including the one scenario that only
+exists there: committing into a still-published document forks it first
+(0.2.20, unrelated to this milestone but exercised along the way), and
+the fork inherits the exact same world position — and therefore the
+exact same terrain offset — as its published source.
+`tests/WorldGroundTerrain.test.js` gains a new section testing
+`PreviewRenderer` directly against a fake terrain-bearing renderer,
+alongside its own pre-existing `WorldRenderer` coverage, so the two
+siblings' terrain-offset behavior is proven consistent in one place.
+
+Deliberately not in 0.2.87, named rather than hidden: sophisticated
+surface/magnetic snapping, architectural alignment assistance, and AI
+building assistance (explicitly out of scope per the design
+conversation); mesh-level/geometric collision for non-box bricks (arch,
+roof, stair) — `PlacementValidator` stays exact-position-match only, the
+same scope boundary docs/Roadmap.md's own "Geometric Collision Is A
+Later Question" already drew for world-placement overlap; automatic
+per-brick terrain conformance of any kind; placing a Structure repeatedly
+into a document (Structure Placement / World Instances, below, remains
+its own future milestone); and any change to `EditorActionRegistry`'s
+own enabled-gating semantics — the 'R' conflict is resolved by carving
+placement mode out ahead of the registry in both views, exactly matching
+the precedent `WorldView.js` already set for Escape, not by teaching the
+registry itself to skip disabled matches (a change that would ripple
+into every other shortcut, not just this one).
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

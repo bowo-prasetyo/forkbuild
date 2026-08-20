@@ -603,7 +603,11 @@ export default {
                     valid: placement.valid,
                     definitionId: placement.definitionId,
                     position: placement.position,
-                    rotation: placement.rotation
+                    rotation: placement.rotation,
+                    // 0.2.87 — "occupied" per PlacementValidator, distinct
+                    // from `valid` (which just means a real target was
+                    // found at all) — see SpatialPlacementState's own header.
+                    blocked: placement.blocked
                 };
             } else {
                 spatialPlacement.value = null;
@@ -954,6 +958,24 @@ export default {
             // 4. Placement mode keeps its own Escape (exit placement).
             if (activeTool.value === 'place' && event.key === 'Escape') {
                 setTool('select');
+                return;
+            }
+            // 4.5. Placement mode keeps its own Rotate too (0.2.87) —
+            // same reasoning as Escape just above: 'R'/'Shift+R' already
+            // name Rotate Clockwise/Counter-Clockwise in the registry
+            // (transform.rotateClockwise/CounterClockwise), but those
+            // are disabled while placing (editingAllowed() checks
+            // ctx.placementMode) — and matchShortcut() below resolves a
+            // key to its bound action by KEY ALONE, oblivious to
+            // enabled(), so falling through to step 5 unchanged would
+            // silently swallow the keystroke on a disabled action rather
+            // than ever reaching placement. Handled here instead, before
+            // the registry ever sees it.
+            if (activeTool.value === 'place' && event.key.toLowerCase() === 'r') {
+                if (session.rotatePlacementPreview(event.shiftKey ? -90 : 90)) {
+                    event.preventDefault();
+                    refreshSpatialUI();
+                }
                 return;
             }
             // 5. Registry-driven editing shortcuts.
@@ -1499,15 +1521,22 @@ export default {
                     @interact="performAvatarInteraction"
                 />
 
-                <div v-if="spatialPlacement" class="spatial-panel spatial-panel--placement">
+                <div
+                    v-if="spatialPlacement"
+                    :class="['spatial-panel', 'spatial-panel--placement', { 'spatial-panel--blocked': spatialPlacement.blocked }]"
+                >
                     <h4>Placement Preview</h4>
                     <p class="spatial-type">{{ spatialPlacement.definitionId }}</p>
                     <p class="spatial-pos">
                         {{ spatialPlacement.position.x.toFixed(2) }},
                         {{ spatialPlacement.position.y.toFixed(2) }},
                         {{ spatialPlacement.position.z.toFixed(2) }}
+                        · {{ spatialPlacement.rotation % 360 }}°
                     </p>
-                    <p class="editing-hint">Click to place • Escape to switch to Select</p>
+                    <p v-if="spatialPlacement.blocked" class="editing-hint editing-hint--blocked">
+                        Occupied — can't place here
+                    </p>
+                    <p v-else class="editing-hint">Click to place • R to rotate • Escape to switch to Select</p>
                 </div>
 
                 <div class="world-view-section">
@@ -1541,7 +1570,7 @@ export default {
                             </option>
                         </select>
                         <p class="placement-hint">
-                            Hover over ground or a brick face, then click to place.
+                            Hover over ground or a brick face, R to rotate, then click to place.
                         </p>
                     </div>
                 </div>
