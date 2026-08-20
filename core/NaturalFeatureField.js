@@ -33,6 +33,7 @@
 
 import { terrainHeightAt } from './TerrainHeightField.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
+import { isRiverAt } from './Hydrology.js';
 
 export const FEATURE_TYPE = Object.freeze({
     TREE: 'TREE'
@@ -158,6 +159,15 @@ function featureForCell(seed, cellX, cellZ) {
 
     const density = forestDensityAt(seed, x, z);
     if (density < threshold) return null;
+
+    // 0.2.89 — a river veto layered on top of ecology's own zone/density
+    // decision, the same "final check before returning" shape a GRASSLAND
+    // cell already survives via its own restrictive threshold. A tree
+    // that qualified on zone and density alone can still stand in the
+    // exact channel core/Hydrology.js#isRiverAt() has already claimed for
+    // flowing water — checked last, and only here, so a river never has
+    // to be reasoned about anywhere else in this file.
+    if (isRiverAt(seed, x, z)) return null;
 
     const rotationY = hash2D(seed + ROTATION_SEED_OFFSET, cellX, cellZ) * Math.PI * 2;
     const scale = 0.7 + hash2D(seed + SCALE_SEED_OFFSET, cellX, cellZ) * 0.6; // [0.7, 1.3)

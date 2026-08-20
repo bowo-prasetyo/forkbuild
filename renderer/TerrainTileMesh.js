@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { terrainHeightAt } from '../core/TerrainHeightField.js';
-import { ecologyGroundColorAt } from '../core/TerrainEcology.js';
+import { hydrologyGroundColorAt } from '../core/Hydrology.js';
 import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 
 // The renderer-side counterpart to core/TerrainHeightField.js and
@@ -26,12 +26,26 @@ import { TERRAIN_TILE_SIZE, tileCenter } from '../core/TerrainTiling.js';
 // genuinely distinct look, passing every other zone's color through
 // completely unchanged. See core/TerrainEcology.js's own header.
 //
+// 0.2.89 — samples core/Hydrology.js#hydrologyGroundColorAt() instead,
+// the next layer up: it starts from that exact same ecologyGroundColorAt()
+// result and blends in a river tint on top, passing every other
+// coordinate through completely unchanged. Still surfaces flat lake
+// water as ordinary blue ground color here (unchanged from 0.2.79) —
+// renderer/WaterTileMesh.js is what gives a lake actual flat water-plane
+// geometry, layered as a separate streamed tile alongside this one. See
+// core/Hydrology.js's own header.
+//
 // Deliberately untested directly, same posture as ThreeBrickFactory/
 // BrickRenderer/GridHelper/Lights — see
 // renderer/TerrainStreamingController.js's own header for why the
 // load/unload ORCHESTRATION is unit-tested (with a fake tile factory)
 // while the real Three.js geometry-building glue here isn't.
-const TILE_SEGMENTS = 12; // vertices per edge = TILE_SEGMENTS + 1
+// Exported (0.2.89) so renderer/WaterTileMesh.js builds its own water
+// plane at the EXACT same per-tile vertex resolution as the ground it
+// sits above/beneath — two independently-built tile meshes sampling the
+// same world (x, z) grid, never two different resolutions that could
+// drift apart at a shared tile edge.
+export const TILE_SEGMENTS = 12; // vertices per edge = TILE_SEGMENTS + 1
 
 export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE) {
     const geometry = new THREE.PlaneGeometry(tileSize, tileSize, TILE_SEGMENTS, TILE_SEGMENTS);
@@ -45,7 +59,7 @@ export function buildTerrainTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE)
         const worldZ = center.z + position.getZ(i);
         position.setY(i, terrainHeightAt(seed, worldX, worldZ));
 
-        const color = ecologyGroundColorAt(seed, worldX, worldZ);
+        const color = hydrologyGroundColorAt(seed, worldX, worldZ);
         colors[i * 3] = color.r;
         colors[i * 3 + 1] = color.g;
         colors[i * 3 + 2] = color.b;

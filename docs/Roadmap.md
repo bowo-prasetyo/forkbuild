@@ -4353,6 +4353,127 @@ these was named in the design conversation and ruled out specifically to
 keep this a small, restrained ecological-classification-and-placement
 milestone — not because of scheduling.
 
+0.2.89 — World Water & Hydrology Foundation — is the milestone 0.2.88's
+own closing line named explicitly rather than deferred vaguely: "rivers,
+hydrology, drainage/flow simulation (a real future 'Water & Hydrology'
+milestone, should the resulting world warrant one)." The world gained
+solid, walkable, colored, ecologically zoned ground across 0.2.76→0.2.88;
+its lakes were always a side effect of `WATER_LEVEL` classification, and
+it had no rivers at all. The design conversation that proposed this
+milestone settled the same architectural question 0.2.88 settled for
+ecology, one level further: hydrology must be DERIVED from terrain,
+never a second independent system, and — the one new distinction this
+milestone adds — never a real drainage-ACCUMULATION simulation either,
+because summing how much upstream area drains through a point requires
+an unbounded upstream trace that cannot be answered as a bounded local
+function of `(seed, x, z)` without either persisting a drainage network
+(forbidden) or an unworkable per-query cost. "Same world seed + same
+coordinates -> same terrain -> same hydrology" stays true by staying
+bounded and local, not by simulating the real thing.
+
+```text
+0.2.89
+└── core/Hydrology.js               a FOURTH pure function of the
+                                      identical (seed, x, z) triple,
+                                      sibling to core/TerrainEcology.js
+                                      (both consult core/TerrainSurface.js
+                                      directly — no import cycle, no
+                                      ordering dependency between "what
+                                      grows here" and "where does water
+                                      flow"):
+                                        flowDirectionAt()       real,
+                                          local steepest-descent
+                                          drainage direction — "which
+                                          neighboring location does
+                                          water flow toward"
+                                        riverChannelDistanceAt() /
+                                        isRiverAt()             a
+                                          domain-warped noise band,
+                                          gated to flat GRASS ground
+                                          below HIGHLAND_ELEVATION,
+                                          biased (never hard-gated)
+                                          toward locally lower
+                                          cross-sections
+                                        hydrologyFeatureAt()    LAKE
+                                          (mirrors SURFACE_CATEGORY.WATER
+                                          exactly) / RIVER / NONE
+                                        hydrologyGroundColorAt() layers a
+                                          river tint onto
+                                          ecologyGroundColorAt()'s own
+                                          unchanged output, exactly the
+                                          way that function itself layers
+                                          BEACH/FIELD tints onto
+                                          surfaceColorAt()
+```
+
+A lake and a river are deliberately represented two DIFFERENT ways,
+named explicitly rather than left as an unexplained asymmetry — see
+docs/Principles.md, "A Lake Is Rendered Geometry; A River Is Ground
+Color (0.2.89)." A lake is still water: it genuinely sits at one
+constant elevation (`LAKE_SURFACE_HEIGHT`, exactly `WATER_LEVEL`,
+re-exported rather than re-derived) regardless of how the lakebed rises
+and falls beneath it, which only real flat geometry can express.
+`renderer/WaterTileMesh.js` builds that geometry per tile using a "sink
+every dry vertex below ground" trick — a vertex is placed at
+`LAKE_SURFACE_HEIGHT` where the ground beneath it is WATER, or several
+units below the actual terrain surface otherwise, so an ordinary opaque-
+terrain depth test hides it everywhere the lake doesn't reach, with zero
+seam-handling code and zero new streaming machinery: every vertex is
+still placed from nothing but its own world `(x, z)`, the same
+"continuous world coordinates, never tile coordinates" discipline every
+other tile mesh in this codebase already follows. A river, by contrast,
+is flowing water threaded across sloped, varied terrain a single flat
+plane could never follow convincingly — it stays exactly what a beach or
+a field already is, a ground-color TINT `renderer/TerrainTileMesh.js`
+picks up via one-line change (`hydrologyGroundColorAt()` instead of
+`ecologyGroundColorAt()`), needing no geometry, no streaming, and no
+seam-handling of its own because it inherits all three from the ground
+it's painted on.
+
+`renderer/Renderer.js` gains a THIRD instance of the exact same
+`renderer/TerrainStreamingController.js` class already streaming ground
+and vegetation — not a new streaming system, not a
+`WaterStreamingController` — sharing the identical tile grid and radius,
+differing only in what its `tileFactory` builds. `core/NaturalFeatureField.js`
+gains one small addition on top: a tree that already qualified on zone
+and density can still be vetoed by `isRiverAt()`, checked last, so a
+generated tree is never planted in the exact channel a river has already
+claimed — proven directly in `tests/NaturalFeatureField.test.js`'s own
+new section, a wide scan asserting zero river-standing trees.
+
+`tests/Hydrology.test.js` proves determinism, feature/color correlation
+with the terrain underneath (every LAKE mirrors `surfaceCategoryAt()`
+WATER exactly and never appears anywhere else; every RIVER sits only on
+GRASS surface below `HIGHLAND_ELEVATION`), continuity with no seam at 13
+exact tile boundaries, layering (untinted ground passes
+`ecologyGroundColorAt()` through byte-identical; river-tinted ground
+differs but stays close), that `flowDirectionAt()` genuinely points
+downhill in over 95% of non-flat samples, and a FLAGSHIP replica-
+determinism walk across feature, color, AND flow direction together.
+
+Deliberately not in 0.2.89, named rather than hidden: real flow-
+ACCUMULATION hydrology (how much upstream area drains through a point) —
+this is not "not implemented yet," it is structurally impossible to
+answer as a bounded local function of `(seed, x, z)` without persisting
+a drainage network, which core/TerrainHeightField.js's own header already
+forbids; guaranteed river-to-lake connectivity (today's channel bands and
+lake depressions are two independently-generated fields that often
+coincide but are never forced to); rainfall simulation, fluid particles,
+real-time water physics, erosion, or seasonal flooding; swimming or any
+avatar movement state tied to water — `core/TerrainWalkability.js` and
+`application/AvatarTerrainConstraint.js` stay exactly the slope-only
+decision 0.2.77 established, untouched here; water blocking or otherwise
+constraining construction/placement; a per-World/per-Document hydrology
+(today's thresholds are the one shared hydrology every document's terrain
+uses, the same posture `DEFAULT_WORLD_SEED` and `SURFACE_PALETTE` already
+established); and wiring `core/TerrainEcology.js`'s own `ecologyZoneAt()`/
+`moistureAt()` to consult `core/Hydrology.js` (a plausible FUTURE
+milestone — ecology genuinely growing lusher near real water — not this
+one; Hydrology stays Ecology's sibling, not its dependent, for now).
+Every one of these was named in the design conversation and ruled out
+specifically to keep this a small, restrained, honestly-scoped hydrology
+FOUNDATION — not because of scheduling.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49
