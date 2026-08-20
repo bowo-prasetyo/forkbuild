@@ -1,6 +1,7 @@
 import { EventBus } from '../core/events/EventBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { FriendshipState } from '../core/FriendshipState.js';
+import { resolveDirectSocialIdentity } from './SocialIdentityResolver.js';
 
 const PRESENCE_CHANGED_EVENT = 'PeerPresenceChanged';
 
@@ -56,6 +57,62 @@ const PRESENCE_CHANGED_EVENT = 'PeerPresenceChanged';
 // is the one new fact worth naming, and `isConnectedNow: false` says
 // exactly that without minting a redundant DISCONNECTED value nothing
 // else in this codebase would ever produce or consume.
+//
+// 0.2.85 — Multi-Device Presence Semantics.
+//
+// 0.2.78/0.2.79 already answered "once Bob has a live, authenticated
+// connection, who does it represent?" (`application/
+// DeviceAuthorizationPropagationUseCase.js#resolveConnectionIdentity()`)
+// for friendship/chat/voice — this class was the one 0.2.79-era social
+// surface that never took the same `resolveSocialIdentity` collaborator,
+// so it kept matching a connection's RAW authenticated key against
+// `identityId` even after every other social use case had moved on to
+// resolved identity. That meant "Alice is online" here literally could
+// not see a live connection from an authorized DEVICE of Alice's — only
+// a connection whose own key happened to equal Alice's parent identity
+// directly. This milestone closes that gap the same way every other
+// 0.2.79 caller already did: an optional `resolveSocialIdentity`
+// collaborator (default: `application/SocialIdentityResolver.js#resolveDirectSocialIdentity`,
+// byte-identical to 0.2.70 through 0.2.84's own behavior for anyone who
+// never wires device authorization), consulted fresh on every call,
+// never cached.
+//
+// Three concepts this class now keeps genuinely distinct, none of them
+// a new store, all of them derived exactly like `isConnectedNow` always
+// was — see docs/Principles.md, "Identity Presence Is An Aggregate Of
+// Authorized Device Observations, Never A Fourth Store":
+//   Connection Presence — one `ConnectedPeer`'s own
+//     `getLifecycleState() === AUTHENTICATED`. Unchanged since 0.2.50.
+//   Device Presence     — one live, AUTHENTICATED connection whose
+//     RESOLVED social identity's `deviceIdentityId` names one specific
+//     authorized device. `_liveConnectedPeers()` below is this, as a
+//     list.
+//   Identity Presence   — `isConnectedNow`: true iff AT LEAST ONE
+//     currently-live, currently-authorized device of this identity is
+//     reachable — `_liveConnectedPeers(identityId).length > 0`. Never a
+//     single connection's own liveness, and never collapsed into a
+//     single boolean cached anywhere: a stale disconnect on one of
+//     several live connections simply shrinks the list, it never flips
+//     this to false on its own, and a revoked device's connection
+//     stops resolving to this identity at all the moment
+//     `resolveConnectionIdentity()` itself stops recognizing it — no
+//     separate revocation check needed here.
+//
+// Multiple simultaneously-live connections for one identity are the
+// expected case, not an edge case: `_liveConnectedPeers()` is a
+// `.filter()`, never a `.find()` — Alice's Phone and Laptop can both be
+// live at once, and `connectedDeviceCount`/`connectedDeviceIdentityIds`
+// below expose that aggregate WITHOUT the UI needing to change at all
+// (`isConnectedNow` stays one boolean; see `ui/views/ChatView.js`'s own
+// unchanged "Online · Friend" label). Deliberately NOT synchronized
+// between Alice's own devices, and deliberately no fan-out delivery
+// logic lives here — this class only ever answers what THIS local
+// device currently observes, the same "each observer derives what it
+// currently knows" boundary `application/ChatUseCase.js#_findAuthenticatedPeer()`
+// already draws for picking ONE device to deliver to (still a `.find()`,
+// unchanged, and deliberately NOT rebuilt on top of this class's own
+// aggregate — delivery-target selection and presence aggregation stay
+// two different questions).
 export class PeerPresenceUseCase {
     constructor({
         connectedPeerRegistry,
@@ -63,7 +120,8 @@ export class PeerPresenceUseCase {
         friendRelationshipUseCase,
         conversationStore,
         chatOutbox,
-        conversationReadTracker
+        conversationReadTracker,
+        resolveSocialIdentity = resolveDirectSocialIdentity
     } = {}) {
         if (!connectedPeerRegistry || typeof connectedPeerRegistry.list !== 'function' || typeof connectedPeerRegistry.onChange !== 'function') {
             throw new Error('PeerPresenceUseCase: a ConnectedPeerRegistry is required');
@@ -89,6 +147,7 @@ export class PeerPresenceUseCase {
         this._conversations = conversationStore;
         this._outbox = chatOutbox;
         this._readTracker = conversationReadTracker;
+        this._resolveSocialIdentity = resolveSocialIdentity;
         this._eventBus = new EventBus();
 
         // Republish on every source this summary is built from EXCEPT
@@ -112,7 +171,14 @@ export class PeerPresenceUseCase {
     getSummary(identityId) {
         const relationship = this._relationships.getRelationship(identityId);
         const friendshipState = this._friends.getState(identityId);
-        const connectedPeer = this._liveConnectedPeer(identityId);
+        // 0.2.85 — every currently-live, currently-authorized device of
+        // `identityId`, never just the first one — see this class's own
+        // header on why `isConnectedNow` is an aggregate, not a single
+        // connection's own liveness.
+        const liveConnectedPeers = this._liveConnectedPeers(identityId);
+        const connectedDeviceIdentityIds = Array.from(new Set(
+            liveConnectedPeers.map((peer) => this._resolvePeerSocialIdentity(peer).deviceIdentityId)
+        ));
         const entries = this._conversations.list(identityId);
         const lastReadSequence = this._readTracker.getLastReadSequence(identityId);
         const unreadCount = entries.filter((entry) => entry.direction === 'incoming' && entry.message.sequence > lastReadSequence).length;
@@ -125,8 +191,16 @@ export class PeerPresenceUseCase {
             relationship,
             alias: relationship ? relationship.alias : null,
             friendshipState,
-            isConnectedNow: connectedPeer !== null,
-            lifecycleState: connectedPeer ? connectedPeer.getLifecycleState() : null,
+            isConnectedNow: liveConnectedPeers.length > 0,
+            lifecycleState: liveConnectedPeers.length > 0 ? PeerLifecycleState.AUTHENTICATED : null,
+            // 0.2.85 — how many, and which, of identityId's authorized
+            // devices this local device currently observes as reachable
+            // — additive data the underlying model now carries so a
+            // later UX milestone can decide whether to surface it; today
+            // no UI reads either field, `isConnectedNow` stays the one
+            // boolean every existing surface already renders.
+            connectedDeviceCount: connectedDeviceIdentityIds.length,
+            connectedDeviceIdentityIds,
             conversation: {
                 messageCount: entries.length,
                 lastActivityAt,
@@ -134,6 +208,29 @@ export class PeerPresenceUseCase {
                 pendingOutboxCount: this._outbox.list(identityId).length
             }
         };
+    }
+
+    // 0.2.85 — the one live, AUTHENTICATED connection whose RESOLVED
+    // social identity is `identityId`, or null. For a caller that needs
+    // an actual `ConnectedPeer` to act through (e.g. `ui/views/ChatView.js`'s
+    // own voice-call gate, which needs a real connection to test
+    // `voiceUseCase.supportsVoice()` against) — never a fan-out, exactly
+    // the same "first matching device, never more than one" contract
+    // `application/ChatUseCase.js#_findAuthenticatedPeer()` already
+    // established; this is the ONE place that logic now lives for
+    // presence-adjacent UI, so `ui/views/ChatView.js` and `ui/views/
+    // PeerConnectionsView.js` no longer each re-derive it with their own
+    // raw-key match.
+    findConnectedPeer(identityId) {
+        return this._liveConnectedPeers(identityId)[0] || null;
+    }
+
+    // 0.2.85 — the Identity Presence boolean on its own, for a caller
+    // that only needs "online or not" (e.g. a peer-list badge) without
+    // the rest of getSummary()'s relationship/friendship/conversation
+    // work.
+    isIdentityOnline(identityId) {
+        return this._liveConnectedPeers(identityId).length > 0;
     }
 
     // Every identity this device has ANY reason to show on a
@@ -210,10 +307,28 @@ export class PeerPresenceUseCase {
         // application/ChatUseCase.js's own dispose().
     }
 
-    _liveConnectedPeer(identityId) {
-        return this._registry.list().find((peer) => peer.remoteIdentity
-            && peer.remoteIdentity.identityId === identityId
-            && peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED) || null;
+    // 0.2.85 — every live, AUTHENTICATED connection whose RESOLVED
+    // social identity matches `identityId`, in registry order. A
+    // `.filter()`, not a `.find()`, on purpose: Alice's Phone and Laptop
+    // can both be live at once, and this is the one place that fact is
+    // actually visible rather than collapsed to "the first one found."
+    _liveConnectedPeers(identityId) {
+        return this._registry.list().filter((peer) => {
+            if (!peer.remoteIdentity || peer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED) {
+                return false;
+            }
+            return this._resolvePeerSocialIdentity(peer).identityId === identityId;
+        });
+    }
+
+    // Resolves `connectedPeer`'s own SOCIAL identity via the injected
+    // `resolveSocialIdentity` collaborator — the exact same fallback
+    // shape `application/ChatUseCase.js#_resolvePeerSocialIdentity()`
+    // already established, mirrored here rather than imported so this
+    // class still never depends on ChatUseCase itself (see this file's
+    // own header on why presence takes no ChatUseCase dependency).
+    _resolvePeerSocialIdentity(connectedPeer) {
+        return this._resolveSocialIdentity(connectedPeer) || resolveDirectSocialIdentity(connectedPeer);
     }
 
     _publishChange() {

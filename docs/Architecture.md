@@ -8734,3 +8734,68 @@ recently-used entries; drag-and-drop; any community/marketplace library
 browsing; and a World View entry point for either Bricks or Structures —
 the Build Library stays exactly where 0.2.80/0.2.81 already put it, the
 Editor sidebar, on purpose.
+
+0.2.85 — Multi-Device Presence Semantics — closes the one 0.2.79-era gap
+0.2.79's own "Proposed, unscheduled follow-on milestones" list named
+directly: `application/PeerPresenceUseCase.js` (0.2.70) was the one
+social surface `application/DeviceAuthorizationPropagationUseCase.js#resolveConnectionIdentity()`
+was never wired into, so "is Alice online" matched a connection's raw
+authenticated key only, unable to see a live connection from an
+authorized DEVICE of hers at all. Gains one optional constructor
+collaborator, `resolveSocialIdentity` (default:
+`application/SocialIdentityResolver.js#resolveDirectSocialIdentity`,
+byte-identical to every pre-0.2.85 caller), the exact same pattern
+`FriendRelationshipUseCase`/`ChatUseCase`/`VoiceUseCase` already
+established in 0.2.79 — no new class, no new store.
+
+The one substantive change: `_liveConnectedPeer(identityId)`
+(singular, a `.find()`) becomes `_liveConnectedPeers(identityId)`
+(plural, a `.filter()`) over every currently-AUTHENTICATED
+`ConnectedPeer` whose resolved social identity matches. `isConnectedNow`
+is true iff that list is non-empty — Identity Presence as a genuine
+aggregate over however many of an identity's authorized devices this
+local device currently observes as reachable, never a single
+connection's own liveness collapsed into one boolean. Two additive
+fields on `getSummary()`'s return shape, `connectedDeviceCount`/
+`connectedDeviceIdentityIds`, carry that aggregate into the data model
+without requiring any UI change — every existing consumer of
+`isConnectedNow` keeps working unmodified, per the design conversation's
+own "establish the semantics before expanding the UI" instruction. Two
+new public methods, `findConnectedPeer(identityId)` and
+`isIdentityOnline(identityId)`, become the ONE place this resolution
+now lives for presence-adjacent UI: `ui/views/ChatView.js`'s own
+`connectedPeer` (previously a raw-key-matching computed) and
+`ui/views/PeerConnectionsView.js`'s own `isConnectedNow()`/
+`connectedPeerFor()` (previously two more independent raw-key
+derivations) are rewired to call through it instead of each keeping
+their own copy of the same, now-stale logic. `ui/main.js` gains the one
+line that was missing entirely: `PeerPresenceUseCase`'s construction
+now receives the SAME `resolveSocialIdentity` closure `friendRelationshipUseCase`/
+`chatUseCase`/`voiceUseCase` already do.
+
+Revocation requires no new enforcement code: `resolveConnectionIdentity()`
+already re-derives `core/DeviceAuthority.js#isAuthorized` fresh, never
+cached, so a revoked device's connection simply stops resolving to its
+parent identity on the very next call — it resolves to its own bare,
+un-authorized raw identity instead (still genuinely, separately
+online, as itself; revocation never touches key possession). The
+flagship test (`tests/MultiDevicePresenceSemantics.test.js`) reuses
+`tests/MultiDeviceSocialSemantics.test.js`'s own real multi-device
+harness (`LocalIdentityProvider` per device, real
+`PeerAuthenticationSession` handshakes) to prove: two-device
+aggregation and disconnect tolerance (a stale disconnect on one of
+several live devices never flips presence — only the last one does); a
+security flagship (revoking one device drops it from the count while
+the other, untouched, keeps the identity online, and the revoked
+device's own connection stays honestly online as itself); multiple
+simultaneous connections from the literal same device never inflating
+`connectedDeviceCount`; and that omitting `resolveSocialIdentity`
+entirely reproduces byte-identical pre-0.2.85 behavior.
+
+Deliberately not in 0.2.85: any new durable `PresenceStore` (presence
+stays exactly as ephemeral and uncached as `application/ConnectedPeerRegistry.js`
+itself); any device-level UI (the new fields exist in the data model,
+read by nothing yet); presence gossip/synchronization between one
+identity's own devices; and any voice/ringing change — 0.2.86
+(proposed) is what actually needs this milestone's resolution
+vocabulary to decide which of Alice's reachable devices should ring.

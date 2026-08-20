@@ -3769,6 +3769,115 @@ entry point from World View — Bricks and Structures stay exactly where
 0.2.80/0.2.81 already put them, the Editor sidebar, on purpose. 0.2.85
 (proposed) resumes the multi-device/social arc.
 
+0.2.85 — Multi-Device Presence Semantics — is exactly the milestone
+0.2.84's own closing line named, and the one 0.2.79's own "Proposed,
+unscheduled follow-on milestones" list named twice: "what does 'online'
+mean once 'Alice' could be several simultaneously live, independently
+observed devices" (0.2.78's own "Multi-Writer Presence," restated with
+0.2.79's resolution vocabulary available to build it on). 0.2.78 proved
+the cryptographic model (`resolvePeerAuthority()`); 0.2.79 taught
+friendship, chat, and voice to resolve a live connection to its social
+identity instead of its raw key. `application/PeerPresenceUseCase.js`
+(0.2.70) was the one social surface 0.2.79 never reached — it kept
+matching `peer.remoteIdentity.identityId === identityId` directly, so
+"Alice is online" could not see a connection from her Phone or Laptop
+at all, only one whose own key happened to equal her parent identity's
+directly.
+
+```text
+0.2.85
+└── application/PeerPresenceUseCase.js   gains an optional
+                                          resolveSocialIdentity
+                                          collaborator (default:
+                                          resolveDirectSocialIdentity,
+                                          byte-identical to 0.2.70
+                                          through 0.2.84's own
+                                          behavior) — the SAME 0.2.79
+                                          pattern FriendRelationshipUseCase/
+                                          ChatUseCase/VoiceUseCase
+                                          already established, closing
+                                          the one 0.2.79-era gap
+```
+
+No new file, no new store — this milestone is entirely a change inside
+one already-existing class plus wiring it correctly at the two places
+that were silently duplicating its own raw-key logic instead of
+reading through it. `_liveConnectedPeers(identityId)` (replacing the
+old `_liveConnectedPeer`, singular) is a `.filter()` over every
+currently-AUTHENTICATED `ConnectedPeer` whose RESOLVED social identity
+matches — never a `.find()` — because Alice's Phone and Laptop being
+simultaneously live is the expected case this class must model, not an
+edge case to collapse away. `getSummary()`'s `isConnectedNow` is true
+iff that list is non-empty; two new fields,
+`connectedDeviceCount`/`connectedDeviceIdentityIds`, expose the
+aggregate itself — additive data the underlying model now carries so a
+later UX milestone can decide whether to surface it, while every
+existing consumer of `isConnectedNow` (`ui/views/ConversationsView.js`,
+`ui/views/ChatView.js`'s own "Online · Friend" label) needs zero
+changes, exactly matching the design conversation's own instruction to
+establish the semantics before expanding the UI. Two new public
+methods, `findConnectedPeer(identityId)` (the single-best-match
+counterpart to `application/ChatUseCase.js#_findAuthenticatedPeer()`,
+for a caller that needs one real connection to act through — e.g.
+`ui/views/ChatView.js`'s own voice-call gate) and `isIdentityOnline(identityId)`
+(the aggregate boolean on its own), replace two duplicated raw-key
+derivations this milestone found and fixed rather than leaving in
+place: `ui/views/ChatView.js`'s own `connectedPeer` computed and
+`ui/views/PeerConnectionsView.js`'s own `isConnectedNow()`/
+`connectedPeerFor()` — three separate re-implementations of the same
+raw-match logic `PeerPresenceUseCase` itself already had a
+(multi-device-blind) copy of, now collapsed to one.
+
+Revocation needed no new code at all: `resolveConnectionIdentity()`
+already re-derives `core/DeviceAuthority.js#isAuthorized` fresh, never
+cached, on every call — the moment a revocation is verified and
+applied, a revoked device's connection simply stops resolving to its
+parent identity, and `_liveConnectedPeers()` stops counting it on its
+very next call. The revoked connection does not vanish; it resolves to
+its OWN bare, un-authorized raw identity instead, still genuinely
+online as itself — proven directly in the security flagship below, the
+same "authentication and social authority remain independent facts"
+property 0.2.78/0.2.79's own security flagships already established,
+now extended to presence.
+
+The flagship test (`tests/MultiDevicePresenceSemantics.test.js`) reuses
+`tests/MultiDeviceSocialSemantics.test.js`'s own harness verbatim (real
+`LocalIdentityProvider` instances standing in for physically distinct
+devices, real `peer/PeerAuthenticationSession.js` handshakes, a real
+`DeviceAuthorizationPropagationUseCase`), extended with a full presence
+stack, and runs the design conversation's own scripted scenario:
+Alice's Phone and Laptop both connect and authorize — Bob observes
+Alice online with `connectedDeviceCount` 2; the Phone disconnects —
+Alice stays online, count drops to 1; the Laptop disconnects too —
+Alice goes offline, `isConnectedNow: false`, `lifecycleState: null`;
+the Laptop reconnects — online again. A SECURITY FLAGSHIP section:
+Phone and Laptop both online, Alice revokes the Laptop mid-session —
+Alice remains online (Phone, untouched), `connectedDeviceCount` drops
+by exactly one, and the Laptop's own connection is separately,
+honestly online AS ITSELF. A third section proves two simultaneous
+connections from the literal SAME device never inflate
+`connectedDeviceCount` past 1, and closing one of the two never drops
+presence while the other survives — the stale-disconnect-event case the
+design conversation asked for directly. A fourth section proves that
+omitting `resolveSocialIdentity` entirely keeps every existing behavior
+byte-identical to pre-0.2.85 — DIRECT-only, the same regression
+guarantee every other 0.2.79-era caller's own test suite already
+establishes for itself.
+
+Deliberately not in 0.2.85, matching the design conversation's own
+explicit scope: no `PresenceStore` of any kind — presence stays exactly
+as ephemeral and uncached as it always was, computed fresh from
+`application/ConnectedPeerRegistry.js` on every call; no device-level
+UI (`connectedDeviceCount`/`connectedDeviceIdentityIds` are present in
+the data model, read by nothing yet — "Bob: ● Online" stays one line,
+unchanged); no presence gossip or synchronization between Alice's own
+devices — each observer derives what it currently knows purely from its
+own live connections, never from what another of Alice's devices
+claims to have observed; and no voice/ringing changes — 0.2.86
+(proposed, "Multi-Device Voice Ringing") is the next milestone that
+actually needs this one's resolution vocabulary for "which of Alice's
+reachable devices should ring."
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

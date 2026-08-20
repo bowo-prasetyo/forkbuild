@@ -187,6 +187,11 @@ const chatUseCase = new ChatUseCase(identityProvider, {
 // chatOutbox already wired above rather than owning any new source of
 // truth itself — see application/PeerPresenceUseCase.js's own header on
 // why it is a computed reconciliation, never a fourth store.
+// 0.2.85 — the SAME resolveSocialIdentity resolver friendRelationshipUseCase/
+// chatUseCase/voiceUseCase already consult, so "Alice is online" sees a
+// live connection from any of her authorized devices, never just one
+// whose raw key happens to equal her own — see application/
+// PeerPresenceUseCase.js's own header.
 const conversationReadTracker = new CreateConversationReadTrackerUseCase().execute(identityProvider);
 const peerPresenceUseCase = new PeerPresenceUseCase({
     connectedPeerRegistry: peerSessionManager.registry,
@@ -194,7 +199,8 @@ const peerPresenceUseCase = new PeerPresenceUseCase({
     friendRelationshipUseCase,
     conversationStore,
     chatOutbox,
-    conversationReadTracker
+    conversationReadTracker,
+    resolveSocialIdentity
 });
 
 // 0.2.73 — one app-wide VoiceUseCase. Rides the SAME peerMessageBus/
