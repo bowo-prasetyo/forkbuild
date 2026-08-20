@@ -3247,6 +3247,123 @@ out specifically to keep this a small, restrained rendering milestone —
 "visual surface classification," never "water simulation" — not because
 of scheduling.
 
+0.2.80 — Expanded Brick Vocabulary — is chosen next over jumping straight
+to a forkable structure library, deliberately: the design conversation
+that proposed both agreed the vocabulary has to exist before it's worth
+composing. Four primitives (cube, slope, plate, small window) can build a
+box with a roof; they cannot express a wall tall enough to feel like a
+room, a column, a beam, a stair, a door, or an arch. 0.2.76–0.2.79 spent
+four milestones making the NATURAL world (terrain: elevation, walkability,
+surface color) into something with real visual and physical identity; the
+BUILT world had not grown a single new primitive since 0.1.5. This
+milestone answers one question only — "what can a person actually place?"
+— and deliberately defers the second, harder question the same
+conversation raised, a reusable/forkable structure library, to its own
+future milestone once the vocabulary below exists for it to compose.
+
+```text
+0.2.80
+└── core/library/CoreLibrary.js   eleven new BrickDefinitions — still
+                                    pure metadata (id, category, tags,
+                                    description, width/height/depth) —
+                                    one per category the design
+                                    conversation asked for: structural,
+                                    wall, floor, roof, stairs, column,
+                                    beam, arch, window, door, decorative
+```
+
+Every new definition is answerable to the same question 0.1.5 already
+asked of the original four: is this a PRIMITIVE, or is it secretly a
+preassembled structure wearing a primitive's clothing? `core:wall_1x3` is
+a wall SEGMENT, not a "House Wall"; `core:roof_hip` is a roof CAP, not a
+"Cottage Roof"; `core:arch` is an archway BLOCK, not a "Gate." A brick
+composes into a building; a building composes into a structure. Nothing
+in this milestone lets a brick skip that ladder — see docs/Principles.md,
+"A Brick Is A Primitive, Never A Preassembled Structure."
+
+The one deliberate architectural test this milestone existed to pass: can
+fifteen definitions instead of four be added WITHOUT touching
+`core/Brick.js`, `core/documentSchema.js`, or
+`serializer/DocumentSchemaMigrator.js`? They can — a `Brick` is still
+nothing but `{ id, definitionId, position, rotation }`, exactly as
+0.1.5 defined it, and every one of the eleven new ids is just another
+string a `Brick` can carry. `core/BrickRegistry.js` gains one new method,
+`groupByCategory()` — an ordered `[{ category, definitions }]` view for
+the palette, mirroring `application/EditorActionRegistry.js#groupByCategory()`'s
+own shape exactly — but `get()`, `has()`, `getAll()`, `getByCategory()`,
+and `search()` are all byte-for-byte unchanged. `renderer/ThreeBrickFactory.js`
+gains eleven new mesh factories, still one factory function per
+definitionId, still looked up from one `Map`: seven are plain
+`BoxGeometry` at new dimensions, `core:column` is a `CylinderGeometry`,
+`core:roof_hip` is a four-segment `ConeGeometry` (rotated 45° so its flat
+sides align with a rectangular footprint instead of its default diamond
+orientation), and `core:stair`/`core:arch` are each a single
+`THREE.Shape`/`ExtrudeGeometry` — a stepped profile and a rectangular
+frame with a faceted semicircular opening, respectively. Every factory
+still returns exactly one `THREE.Mesh`; a "stair" or an "arch" is one
+mesh, one definitionId, never a hidden multi-brick assembly. Any factory
+needing a fixed orientation bakes it into the GEOMETRY via
+`geometry.rotateY()`, never into `mesh.rotation` — `renderer/BrickRenderer.js`
+unconditionally SETS `mesh.rotation.y` from the brick's own placement
+rotation on every `createMesh()` call, so anything a factory left on
+`mesh.rotation` would simply be overwritten the moment the brick is
+actually placed.
+
+`ui/components/BrickPalette.js` renders `groupByCategory()`'s output as
+labeled sections instead of one flat list of fifteen items — the same
+motivation `application/EditorActionRegistry.js#groupByCategory()`
+already had for the Command Palette, now genuinely needed here for the
+first time since the original four definitions all shared one category.
+`ui/views/WorldView.js`'s own spatial placement `<select>` is untouched —
+a flat `<option>` list handles fifteen entries without difficulty, and
+grouping it is left for whenever that surface's own design gets revisited.
+
+The flagship test (`tests/ExpandedBrickVocabulary.test.js`) proves the
+design conversation's own scripted scenario end to end: create a
+document, place one instance of all fifteen brick types — original four
+and new eleven — at once, render every one of them, save, reload,
+render again, and confirm identical brick types, identical per-type mesh
+geometry, and a byte-identical re-serialization of the reloaded document
+against the original save. A dedicated backward-compatibility section
+runs the exact pre-0.2.0 historical fixtures `tests/SchemaMigration.test.js`
+already established (`PRE_GROUPS_DOCUMENT`, `GROUPS_DOCUMENT`,
+`CURRENT_DOCUMENT`) through the NEW, fifteen-definition registry and
+confirms they still resolve, validate, and round-trip byte-identically —
+the existing four brick types remain completely backward compatible, not
+merely asserted to be. Every one of the fifteen definitions' bounding-box
+claims is checked against its actual rendered geometry (via
+`computeBoundingBox()`), catching a silent fallback to the factory's
+generic 1x1x1 box for any id that failed to register a real factory —
+`core/AvatarCollision.js` and `application/SelectionBoundsService.js`
+both already treat a definition's width/height/depth as its true
+collision/selection AABB, so a mismatched factory would have silently
+broken collision and selection for that brick without this check.
+
+Deliberately not in 0.2.80, named rather than hidden: any FORKABLE
+STRUCTURE LIBRARY, curated village/town assemblies, or a "fork this
+prefab" flow — that is the design conversation's own next milestone,
+0.2.81, deliberately sequenced after this one so it has a real vocabulary
+to compose rather than reaching for a `HOUSE_BRICK`-style shortcut; a
+second, community, or medieval/space/city-namespaced brick library (the
+namespace machinery `docs/BrickIDs.md` already documents, still
+unexercised by a second real library); non-box collision geometry for the
+new shapes (`core:stair`/`core:arch`/`core:roof_hip`/`core:column` all
+still collide as their own axis-aligned bounding box, exactly the "a box
+is a good enough capsule" restraint 0.2.42 already established for
+avatars, now extended to bricks with genuinely non-box silhouettes);
+brick-specific placement rules (a door doesn't require a wall behind it,
+a roof cap doesn't require a compatible footprint below it — placement
+stays exactly the single "is this exact position already occupied" check
+0.1.14 established); real, textured, or bevelled materials (every new
+factory is a flat `MeshStandardMaterial` color, matching the "still
+placeholder shapes" posture `renderer/ThreeBrickFactory.js`'s own header
+comment has carried since 0.1.5); and grouping `ui/views/WorldView.js`'s
+own placement `<select>` by category, left for that surface's own future
+revisit. None of these were ruled out for being hard — they were ruled
+out because "a wider PRIMITIVE vocabulary, fully backward compatible"
+was the entire, deliberately narrow claim this milestone set out to
+prove.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49
