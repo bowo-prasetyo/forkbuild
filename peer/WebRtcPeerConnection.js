@@ -9,6 +9,39 @@ const DATA_CHANNEL_LABEL = 'forkbuild-peer';
 // listeners — see close()'s own comment for why this exists at all.
 const CLOSE_SENTINEL = '__forkbuild_webrtc_close__';
 
+// 0.3.6 — bounds _waitForIceGatheringComplete() below, which previously
+// had NO internal timeout at all: it waited on the browser's own
+// `iceGatheringState` reaching 'complete', however long that took,
+// however many configured `iceServers` entries it took to get there.
+// Discovered the hard way — see peer/IceServerConfig.js's own 0.3.4/
+// 0.3.5 history: a SINGLE ICE server that never resolves (neither a
+// candidate nor an error — a silently dropped connection attempt,
+// "blackholed" rather than refused) blocks EVERY offer and answer this
+// class ever produces, for as long as application/PeerSessionManager.js's
+// own outer SIGNAL_TIMEOUT_MS allows (30s) — one bad entry in
+// DEFAULT_ICE_SERVERS was enough to break "Invite Someone" and "Be
+// Discoverable" entirely, for every connection, regardless of how many
+// OTHER configured servers answered instantly. On a healthy network,
+// real gathering across several STUN/TURN servers ordinarily finishes
+// in low single-digit seconds; this is deliberately generous room
+// above that, not a tight budget.
+//
+// Whatever candidates HAVE been gathered by this deadline are used
+// exactly as-is — this is not a new failure mode, just an earlier
+// snapshot of the same `_gatheredCandidates` array
+// `iceGatheringState: 'complete'` would eventually have captured
+// anyway. A real WebRTC connection routinely succeeds on a SUBSET of
+// candidates (that is the entire premise of trickle ICE, which this
+// class's SDP already advertises support for — see `_beginOffer`'s own
+// `a=ice-options:trickle` line — even though this class itself sends
+// one complete signal rather than trickling candidates over time). If
+// literally zero candidates were gathered by the deadline, nothing
+// about how that failure surfaces changes: the resulting connection
+// attempt still fails at the normal ICE connectivity-check stage,
+// exactly like it always would have — see
+// _handleIceConnectionStateChange()'s own 'failed' handling.
+const ICE_GATHERING_TIMEOUT_MS = 8000;
+
 // 0.2.51 — a real, two-different-browser-sessions peer/PeerConnection.js:
 // one RTCPeerConnection plus one RTCDataChannel, wired to the exact same
 // send()/onMessage()/onStateChange()/close() contract
@@ -69,7 +102,7 @@ const CLOSE_SENTINEL = '__forkbuild_webrtc_close__';
 // never waiting on `_waitForIceGatheringComplete()` the way the INITIAL
 // handshake must.
 export class WebRtcPeerConnection extends PeerConnection {
-    constructor({ connectionId, role, iceServers = [], remoteOffer = null, ttlMs, now = new Date(), RTCPeerConnectionImpl = globalThis.RTCPeerConnection } = {}) {
+    constructor({ connectionId, role, iceServers = [], remoteOffer = null, ttlMs, now = new Date(), RTCPeerConnectionImpl = globalThis.RTCPeerConnection, iceGatheringTimeoutMs = ICE_GATHERING_TIMEOUT_MS } = {}) {
         super();
         if (!connectionId || typeof connectionId !== 'string') {
             throw new Error('WebRtcPeerConnection: connectionId is required');
@@ -87,6 +120,7 @@ export class WebRtcPeerConnection extends PeerConnection {
         this._connectionId = connectionId;
         this._role = role;
         this._ttlMs = ttlMs;
+        this._iceGatheringTimeoutMs = iceGatheringTimeoutMs;
         this._transportState = PeerConnectionState.CONNECTING;
         this._localSignal = null;
         this._answerAccepted = false;
@@ -442,17 +476,31 @@ export class WebRtcPeerConnection extends PeerConnection {
         // hiccups is not treated as terminal here.
     }
 
+    // 0.3.6 — bounded by `_iceGatheringTimeoutMs` (see
+    // ICE_GATHERING_TIMEOUT_MS's own header for why this exists at
+    // all): resolves the MOMENT EITHER happens first — real
+    // `iceGatheringState: 'complete'`, or the timeout — never both,
+    // never neither. Whichever settles first tears down the other's
+    // listener/timer so this never fires twice or leaks.
     _waitForIceGatheringComplete() {
         if (this._peerConnection.iceGatheringState === 'complete') {
             return Promise.resolve();
         }
         return new Promise((resolve) => {
+            let settled = false;
+            const settle = () => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timeout);
+                this._peerConnection.removeEventListener('icegatheringstatechange', check);
+                resolve();
+            };
             const check = () => {
                 if (this._peerConnection.iceGatheringState === 'complete') {
-                    this._peerConnection.removeEventListener('icegatheringstatechange', check);
-                    resolve();
+                    settle();
                 }
             };
+            const timeout = setTimeout(settle, this._iceGatheringTimeoutMs);
             this._peerConnection.addEventListener('icegatheringstatechange', check);
         });
     }
