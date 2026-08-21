@@ -8,7 +8,7 @@ import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvid
 import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTransport.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
-import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
+import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { CreatePeerRelationshipUseCase } from '../application/CreatePeerRelationshipUseCase.js';
 import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
@@ -42,6 +42,19 @@ const identityUseCase = new IdentityUseCase(identityProvider);
 // discoveryBootstrap starts actually asking it on every discover() and
 // publishSelf(), with zero changes anywhere else in this file.
 const peerConnectionProvider = new WebRtcPeerConnectionProvider({ iceServers: DEFAULT_ICE_SERVERS });
+// 0.3.7 — enriches `peerConnectionProvider`'s iceServers in the
+// BACKGROUND with this deployment's live Metered TURN credentials
+// (peer/IceServerConfig.js#fetchIceServers) — deliberately NEVER
+// awaited here: app startup must never depend on a third-party HTTP
+// endpoint responding at all, let alone quickly (the exact "never
+// block on a network call this codebase doesn't control" discipline
+// peer/WebRtcPeerConnection.js's own 0.3.6 ICE-gathering timeout
+// applies one layer down). Every connection created before this
+// resolves simply uses DEFAULT_ICE_SERVERS, exactly like today;
+// fetchIceServers() itself never throws and never hangs past its own
+// bounded timeout, so this is a pure best-effort upgrade, not a
+// dependency anything else here waits on.
+fetchIceServers().then((iceServers) => peerConnectionProvider.setIceServers(iceServers));
 const discoveryBootstrap = new DiscoveryBootstrap({
     bootstrapProviders: DEFAULT_RENDEZVOUS_URLS.map((url) => new RendezvousDiscoveryProvider({
         transport: new WebSocketRendezvousTransport({ url }),
