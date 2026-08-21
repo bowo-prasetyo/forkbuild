@@ -160,6 +160,31 @@ export default {
             isIdentityLocked.value = !identityUseCase.isUnlocked(identityId);
         }
         refreshLockState();
+
+        // 0.3.8 — "Your Identity," reactive to the same onSessionChanged()
+        // isAuthenticated already tracks above. Exists because the ONLY
+        // identity string ever shown elsewhere in this app — here, in
+        // Known Peers/Friends/Blocked cards, in My Identities — is
+        // shortId()'s own truncated LAST 14 CHARACTERS, deliberately
+        // legible for telling cards apart at a glance, never meant to be
+        // copied and shared as a whole identity. "Be Discoverable"'s own
+        // publication and "Find Someone"'s own LOOKUP both key on the
+        // FULL identityId — the `did:key:...` the "Find Someone" input's
+        // own placeholder already asks for — so without a full-ID display
+        // SOMEWHERE, "be discoverable enough for someone else to actually
+        // find you" had no working path through this UI at all: a person
+        // could only ever hand out the shortened display string, which a
+        // real search() — application/DiscoverPeersUseCase.js's own exact
+        // string match — will never match.
+        const myIdentityId = computed(() => {
+            if (!isAuthenticated.value) return null;
+            try {
+                return identityUseCase.currentSession().identityId;
+            } catch {
+                return null;
+            }
+        });
+
         const peers = ref(peerSessionManager.listPeers());
         const relationships = ref(isAuthenticated.value ? peerRelationshipUseCase.getRelationships() : []);
         const relationshipError = ref('');
@@ -754,7 +779,7 @@ export default {
         });
 
         return {
-            isAuthenticated, isIdentityLocked, peers, PeerLifecycleState, LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS,
+            isAuthenticated, isIdentityLocked, myIdentityId, peers, PeerLifecycleState, LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS,
             connectedFor, shortId, progressionState,
             invitePending, inviteError, pendingInvitation, startInvite, dismissInvitation,
             showAcceptForm, importText, acceptError, acceptReply, submitAcceptInvitation, closeAcceptForm,
@@ -892,6 +917,19 @@ export default {
                         A publication answers at most one incoming connection — publish again once someone
                         connects if you want to be found for a next one.
                     </p>
+                    <div v-if="myIdentityId" class="peer-signal-box peer-signal-box--nested">
+                        <p class="form-hint form-hint--neutral">
+                            <strong>Your Identity</strong> — this is what "Be Discoverable" publishes under,
+                            and what someone needs to paste into their own <strong>Find Someone</strong> to
+                            find you. It is NOT the shortened …{{ shortId(myIdentityId) }} shown elsewhere in
+                            this app for telling cards apart at a glance — that shortened form will never
+                            match a real search.
+                        </p>
+                        <textarea class="form-input peer-signal-json" rows="2" readonly :value="myIdentityId" @click="$event.target.select()"></textarea>
+                        <button class="modal-btn modal-btn--primary" @click="copyText(myIdentityId, 'my-identity')">
+                            {{ copiedKey === 'my-identity' ? 'Copied!' : 'Copy Your Identity' }}
+                        </button>
+                    </div>
                     <p v-if="publishError" class="identity-unlock-error">{{ publishError }}</p>
                     <div class="modal-actions">
                         <button class="modal-btn modal-btn--primary" :disabled="publishPending" @click="togglePublish">
