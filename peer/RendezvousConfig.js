@@ -17,4 +17,16 @@
 // peer/WebSocketRendezvousTransport.js URLs here (or wires their own
 // list straight into ui/main.js without touching this file at all; this
 // module is a convenience default, never a required seam).
-export const DEFAULT_RENDEZVOUS_URLS = [];
+//
+// 0.3.3 — this deployment's own operator-configured rendezvous node:
+// server/rendezvous-worker/ (a Cloudflare Worker + Durable Object)
+// deployed to Cloudflare's *.workers.dev, implementing exactly the
+// PUBLISH/LOOKUP/REMOVE protocol peer/WebSocketRendezvousTransport.js
+// documents — see that folder's own README.md for how it was deployed
+// and how to replace or remove it. `wss://`, not `https://`: this is
+// the same host the Worker already answers plain HTTP health checks
+// on, just addressed as the WebSocket endpoint
+// peer/WebSocketRendezvousTransport.js actually opens a connection to.
+export const DEFAULT_RENDEZVOUS_URLS = [
+    'wss://forkbuild-rendezvous.prazjp.workers.dev'
+];
