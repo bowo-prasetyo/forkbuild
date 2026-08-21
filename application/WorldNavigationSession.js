@@ -76,6 +76,27 @@ const RETRY_DELAYS = [2000, 5000, 10000];
 // up on a fire-and-forget transport with no request/response — the
 // same "eventual" half of "eventually consistent presentation state."
 const PROFILE_REPUBLISH_INTERVAL_MS = 15000;
+// 0.3.1 — how often the local avatar's PRESENCE re-advertises even
+// when it hasn't moved. Unlike PROFILE_REPUBLISH_INTERVAL_MS above,
+// this has to stay comfortably UNDER a receiver's own
+// application/LocalPresenceStore.js staleAfterMs/absentAfterMs
+// freshness window (2500ms/6000ms by default) — those are judged
+// purely from wall-clock time since the last ACCEPTED advertisement
+// (core/PresenceFreshness.js), and 0.2.37 deliberately never
+// published one at all while idle ("an idle local avatar never
+// reaches this line, so it publishes nothing"). That was fine when
+// STALE/ABSENT only fed a diagnostic label, but it means a replica
+// that is standing perfectly still — not gone, just not moving — is
+// pruned out of every OTHER replica's Nearby Avatars / World View
+// rendering a few seconds later, which reads as "they vanished."
+// Republishing the CURRENT, UNCHANGED presence on this cadence keeps
+// `sequence` advancing (see AvatarPresence.next()'s own header — a
+// resend of the same sequence is rejected as stale/duplicate by
+// core/PresenceIngestion.js, so this only works because
+// AvatarPresenceSession.update() always bumps it) purely so every
+// receiver's `receivedAt` keeps refreshing — nothing about the
+// avatar's actual position, rotation, or animation changes.
+const PRESENCE_HEARTBEAT_INTERVAL_MS = 2000;
 
 // 0.2.29 — defaults for the two location-browser entry points.
 // DEFAULT_EXPLORE_RADIUS matches the design doc's own example ("radius
@@ -397,6 +418,14 @@ export class WorldNavigationSession {
 	    // which deliberately makes the very FIRST frame tick publish
 	    // immediately — no separate bootstrap call needed.
 	    this._lastProfilePublishAt = 0;
+	    // 0.3.1 — reused by BOTH the onPresenceChanged subscription
+	    // (refreshed on every accepted movement update) and the
+	    // periodic heartbeat check in the avatar movement frame
+	    // subscription — see PRESENCE_HEARTBEAT_INTERVAL_MS's own
+	    // comment and _setupLocalAvatar() below. Same "0 means never
+	    // yet published" bootstrap posture as `_lastProfilePublishAt`
+	    // above.
+	    this._lastPresenceUpdateAt = 0;
 	    // 0.2.39 — World Entity Interaction & Selection. See the
 	    // "Avatar Interaction" section below for the full picture.
 	    // `_avatarInteraction` is deliberately its OWN state slice,
@@ -823,6 +852,13 @@ export class WorldNavigationSession {
                 const advertisement = toAvatarPresenceAdvertisement(presence);
                 this._presenceSyncService.publish(signAvatarPresenceAdvertisement(advertisement, this._identityProvider));
             }
+            // 0.3.1 — refreshed on EVERY accepted presence update,
+            // movement-driven or heartbeat-driven alike (this
+            // subscription fires for both — see the heartbeat tick
+            // below), so PRESENCE_HEARTBEAT_INTERVAL_MS only ever
+            // measures genuine idle time since the last one, exactly
+            // like `_lastProfilePublishAt`'s own bookkeeping.
+            this._lastPresenceUpdateAt = Date.now();
         });
 
         // 0.2.36 — Local Avatar Movement. The controller owns raw key
@@ -861,6 +897,31 @@ export class WorldNavigationSession {
                 // happening).
                 if (this._avatarProfileSyncService && now - this._lastProfilePublishAt >= PROFILE_REPUBLISH_INTERVAL_MS) {
                     this._publishLocalAvatarProfile(this._avatarProfileUseCase.getProfile(), now);
+                }
+                // 0.3.1 — periodic presence HEARTBEAT: republishes the
+                // CURRENT, UNCHANGED presence once the local avatar has
+                // been idle for PRESENCE_HEARTBEAT_INTERVAL_MS — see
+                // that constant's own comment for why an idle-but-still-
+                // present avatar otherwise ages into STALE/ABSENT on
+                // every OTHER replica's receiving end. Movement's own
+                // tick() above already published (and refreshed
+                // `_lastPresenceUpdateAt`, via the onPresenceChanged
+                // subscription both paths share) if anything actually
+                // changed this frame, so this only ever fires while
+                // genuinely idle — never a second publish for the same
+                // movement. Routed through AvatarPresenceSession.update()
+                // rather than a bespoke resend, so it advances `sequence`
+                // exactly like a real movement would (a raw resend of
+                // the same sequence is rejected as stale/duplicate — see
+                // core/PresenceIngestion.js) and reaches every other
+                // subscriber of onPresenceChanged identically.
+                if (this._avatarPresenceSession && now - this._lastPresenceUpdateAt >= PRESENCE_HEARTBEAT_INTERVAL_MS) {
+                    const current = this._avatarPresenceSession.current;
+                    this._avatarPresenceSession.update({
+                        position: current.position,
+                        rotation: current.rotation,
+                        animation: current.animation
+                    });
                 }
             });
         }
@@ -4428,6 +4489,7 @@ export class WorldNavigationSession {
         this._avatarControlModeActive = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
+        this._lastPresenceUpdateAt = 0;
         this._avatarInteraction = AvatarInteractionState.empty();
         this._followedRemoteAvatarId = null;
         this._lastFollowedRemotePosition = null;
