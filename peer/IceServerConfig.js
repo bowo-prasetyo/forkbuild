@@ -41,15 +41,36 @@
 // this app's own account/quota. Issued as a NON-expiring credential in
 // the Metered dashboard, so — unlike a short-lived one — it keeps
 // working indefinitely without a runtime refresh; if it's ever rotated
-// or revoked, replace the four `standard.relay.metered.ca` entries below
-// with the new iceServers JSON Metered's dashboard shows for the new
+// or revoked, replace the `standard.relay.metered.ca` entries below with
+// the new iceServers JSON Metered's dashboard shows for the new
 // credential.
+//
+// 0.3.4 — removed the two `?transport=tcp` entries (TURN/80 and
+// TURNS/443) 0.3.2 originally included. Diagnosed live via
+// chrome://webrtc-internals against a real "Invite Someone" attempt:
+// application/PeerSessionManager.js's own createInvitation() waits for
+// iceGatheringState to reach 'complete' before it will hand back a
+// local signal at all (no trickle ICE — see that file's own
+// SIGNAL_TIMEOUT_MS comment), so ONE entry that never resolves —
+// success OR failure — blocks gathering, and therefore every single
+// invitation/publish, for the full 30-second timeout. The three
+// remaining (UDP-based) Metered entries below all failed FAST
+// (STUN/TURN error code 701, "host lookup received error," all within
+// the same second) on the reporting network — harmless, since a fast
+// failure still lets gathering complete — but the two `transport=tcp`
+// entries never produced a candidate OR an error at all; a plain
+// `http://standard.relay.metered.ca` browser request confirmed the
+// same TCP connection attempt hangs indefinitely rather than failing,
+// consistent with the destination silently dropping the TCP handshake
+// (a "blackhole," typically ISP/routing-level) rather than refusing
+// it. Left the three UDP-based entries in place — they cost nothing
+// when they fail fast, and may well work from a different network's
+// path to Metered's infrastructure even though they didn't from this
+// one.
 export const DEFAULT_ICE_SERVERS = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun.relay.metered.ca:80' },
     { urls: 'turn:standard.relay.metered.ca:80', username: '66ee7f7cc14c8806d21649b5', credential: 'goxC5WNaPGZLxddX' },
-    { urls: 'turn:standard.relay.metered.ca:80?transport=tcp', username: '66ee7f7cc14c8806d21649b5', credential: 'goxC5WNaPGZLxddX' },
-    { urls: 'turn:standard.relay.metered.ca:443', username: '66ee7f7cc14c8806d21649b5', credential: 'goxC5WNaPGZLxddX' },
-    { urls: 'turns:standard.relay.metered.ca:443?transport=tcp', username: '66ee7f7cc14c8806d21649b5', credential: 'goxC5WNaPGZLxddX' }
+    { urls: 'turn:standard.relay.metered.ca:443', username: '66ee7f7cc14c8806d21649b5', credential: 'goxC5WNaPGZLxddX' }
 ];
