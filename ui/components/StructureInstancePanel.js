@@ -21,18 +21,106 @@
 // the one UX distinction the design conversation called out by name:
 // editing a placed structure's content always happens by editing its
 // Document, never by touching the instance.
+//
+// 0.2.92 — World Instance Transform UX adds the numeric inspector the
+// milestone asked for: exact X/Z/rotation TARGETS, applied via
+// EditorSession#applyPlacementTransform() — the same delta-shaped
+// Move/RotateStructurePlacementCommand pair the interactive gizmo and
+// keyboard nudges already use, never a fourth mutation path. Y is
+// deliberately NOT an editable field here — it is read-only "Ground Y",
+// the terrain elevation at the placement's current (X, Z), because this
+// engine's placement model is ground-anchored (see
+// docs/Principles.md, "A Placement's Elevation Is Never A Gizmo Or
+// Numeric Target"). The fields track `info` live (this is a property
+// inspector, not a "next operation" scratch pad like
+// ui/components/NumericTransformPanel.js) so dragging the gizmo, nudging
+// with the keyboard, or clicking Rotate all show up here immediately.
 export default {
     name: 'StructureInstancePanel',
     props: {
         info: { type: Object, required: true }
     },
-    emits: ['rotate', 'duplicate', 'delete', 'edit-source'],
+    emits: ['rotate', 'duplicate', 'delete', 'edit-source', 'apply-transform'],
+    data() {
+        return {
+            x: 0,
+            z: 0,
+            rotation: 0
+        };
+    },
+    computed: {
+        groundYDisplay() {
+            return Number.isFinite(this.info.groundY) ? this.info.groundY.toFixed(1) : '—';
+        }
+    },
+    watch: {
+        info: {
+            immediate: true,
+            handler(info) {
+                if (!info) return;
+                this.x = round1(info.position.x);
+                this.z = round1(info.position.z);
+                this.rotation = round1(info.rotation);
+            }
+        }
+    },
+    methods: {
+        applyTransform() {
+            const x = Number(this.x);
+            const z = Number(this.z);
+            const rotation = Number(this.rotation);
+            if (!Number.isFinite(x) || !Number.isFinite(z) || !Number.isFinite(rotation)) {
+                return;
+            }
+            this.$emit('apply-transform', { x, z, rotation });
+        },
+        onFieldKeydown(event) {
+            if (event.key === 'Enter') {
+                event.stopPropagation();
+                this.applyTransform();
+            }
+        }
+    },
     template: `
         <div class="structure-instance-panel">
             <h4 class="structure-instance-heading">Selected: {{ info.title }}</h4>
             <p class="structure-instance-hint">
-                Drag in the viewport to move. Arrow keys / PgUp / PgDn nudge.
+                Drag in the viewport — or the arrows/ring on the gizmo — to move
+                and rotate. Arrow keys / PgUp / PgDn nudge.
             </p>
+
+            <div class="structure-instance-transform">
+                <div class="structure-instance-transform-row">
+                    <label class="form-field structure-instance-field">
+                        <span class="form-label">X</span>
+                        <input
+                            type="number" step="1" class="form-input"
+                            v-model.number="x" @keydown="onFieldKeydown"
+                        />
+                    </label>
+                    <label class="form-field structure-instance-field">
+                        <span class="form-label">Z</span>
+                        <input
+                            type="number" step="1" class="form-input"
+                            v-model.number="z" @keydown="onFieldKeydown"
+                        />
+                    </label>
+                </div>
+                <p class="structure-instance-ground-y" title="Elevation is terrain-derived — never a manual target">
+                    Ground Y: {{ groundYDisplay }}
+                </p>
+                <label class="form-field structure-instance-field">
+                    <span class="form-label">Rotation °</span>
+                    <input
+                        type="number" step="15" class="form-input"
+                        v-model.number="rotation" @keydown="onFieldKeydown"
+                    />
+                </label>
+                <button type="button" class="structure-instance-btn structure-instance-apply" @click="applyTransform">
+                    Apply
+                </button>
+            </div>
+
             <div class="structure-instance-actions">
                 <button type="button" class="structure-instance-btn" title="Rotate +90°" @click="$emit('rotate', 90)">Rotate ↻</button>
                 <button type="button" class="structure-instance-btn" title="Rotate −90°" @click="$emit('rotate', -90)">Rotate ↺</button>
@@ -45,3 +133,7 @@ export default {
         </div>
     `
 };
+
+function round1(value) {
+    return Math.round((Number(value) || 0) * 10) / 10;
+}

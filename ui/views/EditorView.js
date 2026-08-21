@@ -88,6 +88,7 @@ export default {
                         @duplicate="duplicateSelectedPlacement"
                         @delete="deleteSelectedPlacement"
                         @edit-source="editSelectedPlacementSource"
+                        @apply-transform="applySelectedPlacementTransform"
                     />
                     <BuildLibraryPanel
                         :palette-use-case="paletteUseCase"
@@ -221,8 +222,37 @@ export default {
 
         // ------------------ 0.2.91 structure instance manipulation ------
 
+        // 0.2.92 — World Instance Transform UX. selectedPlacementInfo only
+        // ever refreshes automatically on SELECTION_CHANGED (see the
+        // subscription below) — moving/rotating the SAME still-selected
+        // placement (a keyboard nudge, a gizmo drag, Rotate, Apply) never
+        // fires that event. Now that the panel shows LIVE X/Z/Rotation
+        // numbers (0.2.91's panel only showed static title text, so this
+        // staleness was invisible before), every one of those paths calls
+        // this afterward so the inspector never shows a stale number.
+        function refreshSelectedPlacementInfo() {
+            if (editorContext.selection.isStructurePlacementSelection) {
+                selectedPlacementInfo.value = editorSession.getSelectedPlacementInfo();
+            }
+        }
+
         function rotateSelectedPlacement(deltaRotation) {
             editorSession.rotateSelection(deltaRotation);
+            refreshSelectedPlacementInfo();
+        }
+
+        // The numeric inspector's Apply — see
+        // application/EditorSession.js#applyPlacementTransform() for why
+        // this is exactly Move/RotateStructurePlacementCommand under the
+        // hood, never a third mutation path.
+        function applySelectedPlacementTransform(payload) {
+            const result = editorSession.applyPlacementTransform(payload);
+            refreshSelectedPlacementInfo();
+            if (result.blocked) {
+                feedback.show('That position is occupied — X/Z left unchanged');
+            } else if (result.moved || result.rotated) {
+                feedback.show('Updated instance transform');
+            }
         }
 
         function duplicateSelectedPlacement() {
@@ -398,12 +428,22 @@ export default {
                 editorSession.onPointerMove(event);
             };
             viewport.value.addEventListener('pointermove', onPointerMove);
+            // 0.2.92 — refreshSelectedPlacementInfo() runs after EVERY
+            // pointer-up/key-down, not just the ones that obviously moved
+            // something: a gizmo drag commits inside
+            // editorSession.onPointerUp() itself (SelectionTool's own
+            // click-drag does too), and a keyboard nudge/rotate/delete
+            // commits inside editorSession.onKeyDown() — neither surfaces
+            // back through a return value or SELECTION_CHANGED. The
+            // refresh is cheap and a no-op unless a placement is
+            // currently selected (see its own definition above).
             onPointerUp = (event) => {
                 editorSession.onPointerUp(event);
+                refreshSelectedPlacementInfo();
             };
             window.addEventListener('pointerup', onPointerUp);
 
-            onKeyDown = (event) => {
+            const handleKeyDown = (event) => {
                 // 1. Text inputs own their keys; Escape blurs them.
                 if (InputRouter.isTextInputTarget(event.target)) {
                     if (event.key === 'Escape') {
@@ -467,6 +507,10 @@ export default {
                 // 6. Everything else falls through to tools.
                 editorSession.onKeyDown(event);
             };
+            onKeyDown = (event) => {
+                handleKeyDown(event);
+                refreshSelectedPlacementInfo();
+            };
             window.addEventListener('keydown', onKeyDown);
         });
 
@@ -513,6 +557,7 @@ export default {
             duplicateSelectedPlacement,
             deleteSelectedPlacement,
             editSelectedPlacementSource,
+            applySelectedPlacementTransform,
             actionRegistry,
             getActionContext,
             actionUi,

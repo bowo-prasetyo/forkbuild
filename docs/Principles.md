@@ -6041,4 +6041,64 @@ surface that wanted "duplicate this structure's bricks into a genuinely
 independent copy" would need to call `ForkStructureUseCase` and then
 place the fork — a different, more expensive operation this command
 deliberately does not conflate with the cheap, purely-spatial "one more
+instance of the same House."
+
+### The Interactive Gizmo Dispatches By Selection Kind; It Never Merges Two Gesture Kernels Into One (0.2.92)
+
+`renderer/TransformGizmoController.js` holds exactly one `gestureService`
+reference for its whole lifetime — it was built in 0.1.46 around a single
+brick/group-shaped kernel, `application/SpatialEditingService.js`, and
+has no idea a `StructurePlacement` exists. 0.2.91 explicitly declined to
+widen that kernel ("Selecting An Instance Selects Its Spatial Reference,
+Never Its Content," just above) rather than blur the content/instance
+boundary the whole 0.2.90 design rests on. So when this milestone gives a
+placement selection the SAME interactive arrows/pad/ring gizmo a brick
+selection already has, the two gesture kernels still don't merge:
+`application/StructurePlacementGestureService.js` is a second,
+independent implementation of the identical narrow 5-method contract
+(`begin/preview/commit/cancelTransformGesture` + `getGestureFeedback`),
+and `application/GizmoGestureRouter.js` is the one new piece of
+machinery — a pure per-call dispatcher, `selection.isStructurePlacementSelection
+? placement : brick`, that lets `TransformGizmoController` keep believing
+it only ever talks to one gesture service. Neither kernel is modified;
+neither knows the other or the router exists. The renderer-facing gizmo
+visuals (`renderer/TransformGizmoRenderer.js`) are reused completely
+unchanged — they were already selection-agnostic, anchored to nothing
+more than `{ pivot, bounds }`, which is exactly why this milestone did
+not need to touch them at all.
+
+The same split shows up one layer up: `application/EditorSession.js`
+still resolves "where does the gizmo go" through
+`TransformGizmoUseCase` for a brick/group selection (untouched, exactly
+the 0.1.46 use case it always was) and through
+`StructurePlacementGestureService#getSelectionBounds()` for a placement
+selection (`_resolveGizmoPresentation()`) — two resolution paths behind
+one small `if`, not a widened `TransformGizmoUseCase`.
+
+### A Placement's Elevation Is Never A Gizmo Or Numeric Target (0.2.92)
+
+`application/PlacementPositionService.js#calculateStructureGround()`
+already established, in 0.2.90, that a `StructurePlacement`'s local Y
+stays exactly 0 (or whatever it already is) forever — terrain elevation
+is composed on top at RENDER time only (`renderer/WorldRenderer.js`),
+never baked into the placement's own stored position (see "A Structure
+Placement Transforms Its Content At Render Time, Never At Rest," 0.2.90).
+0.2.92's two new interaction surfaces both honor that rule structurally,
+not by convention:
+`StructurePlacementGestureService#previewTransformGesture()` reads
+`transform.translation.x`/`.z` and *discards* `.y` unconditionally — the
+gizmo's Y-axis handle is drawn (the shared `TransformGizmoRenderer` has
+no idea a placement rather than a brick is selected) but produces no
+effect when dragged for a placement, by construction, not by hiding or
+disabling the handle. And `StructureInstancePanel`'s numeric inspector
+never offers a Y field to type into at all — only X, Z, and rotation are
+editable; Y is rendered as a read-only "Ground Y: 14.7," computed fresh
+via `core/TerrainHeightField.js#terrainHeightAt()` (the exact pure
+function every other ground-placement site in this engine already calls)
+at the placement's CURRENT (x, z), never stored on the placement and
+never a value either surface can set. A future milestone that wanted
+genuine vertical placement (floating structures, stacked platforms) would
+need to say so explicitly and change this rule on purpose — it cannot
+happen by accident through either interaction surface this milestone
+adds.
 instance of the same content" it actually performs.

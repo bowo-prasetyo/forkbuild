@@ -3326,3 +3326,44 @@ html, body {
     border-color: #9b59b6;
     color: #ffffff;
 }
+
+/* 0.2.92 — World Instance Transform UX: the numeric X/Z/rotation
+   inspector inside StructureInstancePanel. Reuses .form-field/.form-
+   label/.form-input (ui/components/MetadataEditorDialog.js's own
+   convention) with tighter spacing so it fits the narrow editor
+   sidebar. */
+.structure-instance-transform {
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid #242424;
+}
+
+.structure-instance-transform-row {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.structure-instance-field {
+    margin-bottom: 0.4rem;
+    flex: 1;
+}
+
+.structure-instance-field .form-label {
+    margin-bottom: 0.15rem;
+    font-size: 0.7rem;
+}
+
+.structure-instance-field .form-input {
+    padding: 0.3rem 0.4rem;
+    font-size: 0.8rem;
+}
+
+.structure-instance-ground-y {
+    margin: 0 0 0.4rem;
+    color: #707070;
+    font-size: 0.72rem;
+}
+
+.structure-instance-apply {
+    width: 100%;
+}
