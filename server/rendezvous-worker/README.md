@@ -62,13 +62,18 @@ current Bindings UI.
 2. Open your new worker → **Edit code** (Quick Edit). Delete the
    starter code, paste in the full contents of `worker.js`, and
    deploy.
-3. Go to your worker's **Settings → Bindings → Add binding → Durable
-   Object Namespace**.
-   - Binding name: **exactly** `RENDEZVOUS_NODE` (worker.js reads
+3. Go to your worker's **Settings → Bindings → Add → Durable Object**
+   (Cloudflare's dashboard wording has shifted over time — if you see
+   "Durable Object Namespace" instead, or a visual "Bindings" canvas
+   rather than a plain form, it's the same thing; pick whichever one
+   is offered).
+   - **Variable name:** **exactly** `RENDEZVOUS_NODE` (worker.js reads
      `env.RENDEZVOUS_NODE` — a typo here means the worker responds
      with an explicit "binding not configured" error rather than
      silently misbehaving, so it'll be obvious if this doesn't match).
-   - Class name: `RendezvousNode` (the class `worker.js` exports).
+   - **Durable Object namespace:** create a new one (or select an
+     existing empty one) and set its **Class name** to
+     `RendezvousNode` — the class `worker.js` exports.
    - If the dashboard asks about a migration/new class, confirm it's
      a **new** class — this is the first time it's ever existed.
 4. Save, and redeploy if prompted.
