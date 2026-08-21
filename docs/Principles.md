@@ -6259,3 +6259,97 @@ byte-identical, and two independently-constructed sessions loading the
 SAME world state produce the SAME `getWorldLocations()` list and the
 SAME final framing for the SAME location, with nothing route- or
 timing-dependent about either result.
+
+### World Mutation Requires Explicit Document Editing Authority (0.2.95)
+
+0.2.93's own framing was "Selection In World View Does Not Imply
+Editing Authority." 0.2.95 states the positive form of the same rule:
+World View mutation REQUIRES explicit document editing authority, asked
+fresh, of the actual Document being touched, every single time. Not
+once at session construction, not once at login, not once per World —
+`application/WorldAuthorizationService.js#resolveAccess(document)` is a
+pure function of (this Document, whoever is asking right now), called
+again at every real mutation attempt. That is what makes revocation
+(device or, later, any richer authority model) take effect on the very
+next attempt with no cache to invalidate and no session to rebuild —
+see "Device Authorization Changes Peer Authority, Never Social
+Identity" (0.2.79) and "A Connection Represents An Identity Either
+Directly Or Through One Verified Device Authorization, Never By
+Assumption" (0.2.78) for the same "ask again, never remember" posture
+applied to a different question.
+
+The architectural rule underneath, worth stating in one line because
+every future editing feature has to keep obeying it:
+
+```text
+UI -> UseCase -> Authorization -> Command -> Document
+```
+
+never
+
+```text
+UI -> "if owner then enable button" -> World mutation
+```
+
+A UI is free to READ `canEditDocument()`/`getWorldAccessLevel()` to
+decide whether to even show a move/rotate/delete affordance — that is
+good, ordinary UX, not a violation of this rule. What the rule forbids
+is a UI decision being the ONLY gate: `application/SpatialEditingService.js`'s
+own mutation methods (`beginTransformGesture`/`_executeLayoutOperation`/
+`_executeForSelection`/`moveBrick`/`rotateBrick`/`deleteBrick`) all
+re-consult authorization themselves, so a caller that skips the UI
+entirely — a test, a script, a future automation, a bug — gets the
+identical answer a button click would have. See
+`tests/WorldEditingAuthorization.test.js`, Section G, "even bypassing
+the UI entirely: call straight into SpatialEditingService."
+
+### Ownership Is A Cryptographic Identity Fact, Never A Free-Text Label, When One Is Available (0.2.95)
+
+`DocumentMetadata.author` has been a plain string since 0.1.17 — chosen
+at login, never verified, never bound to a key. That was harmless while
+nothing but display ever read it. It stops being harmless the moment
+"does this viewer own this Document" becomes an authorization decision:
+two people who both typed the display name "Alice" would otherwise both
+look like the owner. `DocumentMetadata.authorIdentityId` records the
+SAME fact with the strength authorization actually needs — a did:key,
+resolved from `identityProvider.getSigningIdentity()` at
+document-creation time by every site that already stamped `author`
+(`application/CreateDocumentManagerUseCase.js`, `ForkDocumentUseCase.js`,
+`ForkPublishedWorldUseCase.js`, `ForkStructureUseCase.js`, via the one
+shared `identity/resolveSigningIdentityId.js` lookup).
+
+Never a replacement for `author` — display still reads the label, and a
+pre-0.2.95 document (or one saved by a provider with no cryptographic
+surface at all) simply has no `authorIdentityId`.
+`WorldAuthorizationService` degrades to comparing the legacy label in
+that case, exactly the "validate strictly on write, degrade gracefully
+on read" posture 0.2.34 established for `AvatarProfile.appearance` —
+but the degrade is a courtesy for content that predates the stronger
+fact existing, never a fallback path a caller can reach AFTER a strong
+comparison has already been made and has already failed. Typing
+someone else's display name never grants their authority once a
+Document records a real owner identity.
+
+### Authorization Composes With Device Resolution; It Never Reimplements It (0.2.95)
+
+`WorldAuthorizationService` answers exactly one question — "given who
+is looking, what may they do with THIS Document" — and refuses to
+answer a second one it doesn't need to: "which physical device is this,
+and does it speak for someone else." That second question already has
+an owner, `application/DeviceAuthorizationPropagationUseCase.js`
+(0.2.78/0.2.83), and `resolveOwnSocialIdentity()` already answers it
+correctly, including revocation. `WorldAuthorizationService`'s optional
+`resolveSocialIdentity` collaborator is nothing more than that exact
+method, handed through — never re-implemented, never re-verified,
+never cached independently. The consequence is structural, not a
+behavior anyone had to code: Alice's Laptop and Alice's Phone both
+resolve to her own `identityId` while her Phone's device authorization
+is active, so both get `EDIT` on a World she owns with zero
+device-aware code inside `WorldAuthorizationService` itself; the moment
+that authorization is revoked, `resolveOwnSocialIdentity()` falls back
+to the Phone's own bare signing identity (see 0.2.83's own header), and
+`WorldAuthorizationService` loses `EDIT` for it on the very next call —
+not because it noticed a revocation, but because it asked the same
+question again and got a different, equally honest answer. See "Device
+Authorization Changes Peer Authority, Never Social Identity" (0.2.79)
+for the same compositional instinct applied to friendship/chat/voice.

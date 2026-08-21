@@ -3,6 +3,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 
 // Forks a library Structure (core/Structure.js) into a new, independent,
 // editable Document — the 0.2.81 flagship operation. Deliberately the
@@ -62,6 +63,8 @@ export class ForkStructureUseCase {
             title: structure.name,
             description: structure.description,
             author: currentUser ? currentUser.username : null,
+            // 0.2.95 — see core/DocumentMetadata.js's own comment.
+            authorIdentityId: resolveSigningIdentityId(identityProvider),
             created: new Date(),
             modified: new Date(),
             parentStructureId: structure.id

@@ -59,6 +59,7 @@ import { signAvatarInteractionAdvertisement } from './AvatarInteractionSigning.j
 import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from './WorldLocationDirectory.js';
 import { CameraFocusAnimator } from './CameraFocusAnimator.js';
 import { computeCompassHeading } from '../core/CompassHeading.js';
+import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -190,7 +191,17 @@ export class WorldNavigationSession {
 	    // placement's raw documentId instead of its title (see
 	    // getSavedDocumentTitle() below) — never throws either way.
 	    structureResolver = null,
-	    loadDocumentUseCase = null
+	    loadDocumentUseCase = null,
+	    // 0.2.95 — World Editing Authorization Foundation. Optional,
+	    // the same "enforce/offer only when the collaborator is
+	    // actually wired" posture every other optional collaborator in
+	    // this constructor already follows: a session built without one
+	    // (every pre-0.2.95 caller, and every existing test) treats
+	    // every loaded document as editable, exactly the pre-0.2.95
+	    // behavior — see canEditDocument()/canReadDocument() below. Real
+	    // wiring wraps application/WorldAuthorizationService.js — see
+	    // application/CreateWorldViewUseCase.js.
+	    worldAuthorizationService = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -393,6 +404,9 @@ export class WorldNavigationSession {
 	    this._structureResolver = structureResolver;
 	    this._loadDocumentUseCase = loadDocumentUseCase;
 
+	    // 0.2.95 — see the constructor's own comment above.
+	    this._worldAuthorizationService = worldAuthorizationService;
+
 	    this._container = null;
 	    this._session = null;
         this._spatialCameraController = null;
@@ -405,7 +419,11 @@ export class WorldNavigationSession {
             this,
             this._commandHistories,
             this._registry,
-            this._transformSettings
+            this._transformSettings,
+            // 0.2.95 — the ONE seam every real mutation chokepoint in
+            // SpatialEditingService now consults — see that class's own
+            // constructor comment.
+            (documentId) => this.canEditDocument(documentId)
         );
         this._gizmoUseCase = new TransformGizmoUseCase(this._editingService);
         this._failedLoads = new Map();
@@ -516,7 +534,11 @@ export class WorldNavigationSession {
             this,
             this._commandHistories,
             this._registry,
-            this._transformSettings
+            this._transformSettings,
+            // 0.2.95 — the ONE seam every real mutation chokepoint in
+            // SpatialEditingService now consults — see that class's own
+            // constructor comment.
+            (documentId) => this.canEditDocument(documentId)
         );
         this._gizmoUseCase = new TransformGizmoUseCase(this._editingService);
         this._session = new RenderWorldViewUseCase().execute(
@@ -2396,6 +2418,54 @@ export class WorldNavigationSession {
 
     getDocumentPosition(documentId) {
         return this._getWorldPosition(documentId);
+    }
+
+    // -----------------------------------------------------------------
+    // World Editing Authorization (0.2.95)
+    // -----------------------------------------------------------------
+    //
+    // Three public queries, deliberately never a fourth "isOwner" or a
+    // role name — see core/WorldAccessLevel.js and application/
+    // WorldAuthorizationService.js's own headers. A session built
+    // without a worldAuthorizationService (every pre-0.2.95 caller)
+    // treats every loaded document as fully editable — the EXACT
+    // pre-0.2.95 behavior, unchanged — which is also why
+    // getWorldAccessLevel() falls back to EDIT rather than NONE for a
+    // documentId this session cannot resolve at all: an unresolvable
+    // id under the graceful-absence default must never look MORE
+    // restrictive than simply having no gate wired, or a caller that
+    // never asked for authorization at all would start seeing spurious
+    // denials the moment a documentId typo or a not-yet-streamed-in
+    // document is looked up. When a real worldAuthorizationService IS
+    // wired, an unresolvable documentId instead denies (see
+    // canEditDocument/canReadDocument below) — there is no Document to
+    // ask the service about, and "no Document" is never editable or
+    // readable by construction.
+    getWorldAccessLevel(documentId) {
+        if (!this._worldAuthorizationService) {
+            return WorldAccessLevel.EDIT;
+        }
+        const document = this.getDocument(documentId);
+        return this._worldAuthorizationService.resolveAccess(document);
+    }
+
+    // The gate every real mutation chokepoint in
+    // application/SpatialEditingService.js consults (wired at
+    // construction — see start()/the constructor above), and safe to
+    // call directly from a UI surface that wants to reflect (never
+    // decide) whether an edit affordance should even be offered.
+    canEditDocument(documentId) {
+        if (!this._worldAuthorizationService) {
+            return true;
+        }
+        return this._worldAuthorizationService.canEdit(this.getDocument(documentId));
+    }
+
+    canReadDocument(documentId) {
+        if (!this._worldAuthorizationService) {
+            return true;
+        }
+        return this._worldAuthorizationService.canRead(this.getDocument(documentId));
     }
 
     // 0.2.93 — resolves a StructurePlacement's referenced documentId to

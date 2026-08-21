@@ -28,6 +28,7 @@ import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPre
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { AvatarProfileVisibilityPolicy } from '../core/AvatarProfileVisibilityPolicy.js';
 import { FriendshipState } from '../core/FriendshipState.js';
+import { WorldAuthorizationService } from './WorldAuthorizationService.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -83,7 +84,20 @@ export class CreateWorldViewUseCase {
     // builds each protocol's trust boundary with it) — see docs/
     // Principles.md, "Blocking Is Wired Twice, Once Per Direction,
     // Because Neither Side May Trust The Other To Enforce It" (0.2.60).
-    execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null, peerBlockUseCase = null } = {}) {
+    // 0.2.95 — `deviceAuthorizationPropagationUseCase` is the SAME
+    // app-wide DeviceAuthorizationPropagationUseCase ui/main.js already
+    // builds for friendship/chat/voice (0.2.78/0.2.79/0.2.83) —
+    // threaded through only so worldAuthorizationService below can
+    // resolve `resolveOwnSocialIdentity()`, the reflexive query that
+    // makes EDIT authority follow the CURRENTLY-AUTHENTICATED device's
+    // own resolved parent identity rather than its bare, per-device
+    // signing key. Optional: a caller that doesn't wire one (any
+    // pre-0.2.95 test) gets ownership resolved from identityProvider's
+    // own signing identity directly — correct for the common single-
+    // device case, just unaware that a second device could ever speak
+    // for the same identity. See application/WorldAuthorizationService.js's
+    // own header.
+    execute(identityProvider = null, { peerMessageBus = null, connectedPeerRegistry = null, friendRelationshipUseCase = null, peerBlockUseCase = null, deviceAuthorizationPropagationUseCase = null } = {}) {
         const storageProvider = new LocalStorageProvider();
         const contentStore = new LocalContentStore(storageProvider);
         const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
@@ -246,6 +260,24 @@ export class CreateWorldViewUseCase {
             ? (peerIdentityId) => peerBlockUseCase.isBlocked(peerIdentityId)
             : undefined;
 
+        // 0.2.95 — World Editing Authorization Foundation. One
+        // app-scoped WorldAuthorizationService, built here (never
+        // per-document, never per-selection) so its decision is
+        // consulted fresh on every mutation attempt rather than
+        // snapshotted at session-construction time — see that class's
+        // own header. `resolveSocialIdentity` reuses the SAME
+        // resolveOwnSocialIdentity() 0.2.83 already built for "who am I,
+        // socially" (never a new device-resolution mechanism);
+        // `isBlocked` reuses the SAME predicate this method already
+        // derives for the avatar trust boundaries above.
+        const worldAuthorizationService = new WorldAuthorizationService({
+            identityProvider,
+            resolveSocialIdentity: deviceAuthorizationPropagationUseCase
+                ? () => deviceAuthorizationPropagationUseCase.resolveOwnSocialIdentity()
+                : null,
+            isBlocked: isBlocked || null
+        });
+
         // Presence's own transport. getVisibilityPolicy reads
         // presenceVisibilityUseCase FRESH on every advertise() (never
         // cached) once one is wired (logged in); absent (logged out),
@@ -362,7 +394,10 @@ export class CreateWorldViewUseCase {
                     isBlocked,
                     // 0.2.93: World View Instance Inspection — see above.
                     structureResolver: structureDocumentResolver,
-                    loadDocumentUseCase
+                    loadDocumentUseCase,
+                    // 0.2.95: World Editing Authorization Foundation —
+                    // see above.
+                    worldAuthorizationService
                 });
             },
             // Expose the spatial index and content store so the application

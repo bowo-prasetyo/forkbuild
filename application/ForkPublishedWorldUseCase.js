@@ -1,6 +1,7 @@
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentCloneService } from './DocumentCloneService.js';
 import { LoadPublishedSnapshotUseCase } from './LoadPublishedSnapshotUseCase.js';
+import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 
 // Forks a Published World into a new editable Document (0.2.8).
 //
@@ -76,6 +77,9 @@ export class ForkPublishedWorldUseCase {
         return this._documentCloneService.execute(sourceDocument, {
             title: `Fork of ${sourceTitle}`,
             author: currentUser ? currentUser.username : null,
+            // 0.2.95 — see ForkDocumentUseCase.js's own comment: the
+            // forker becomes the new owner.
+            authorIdentityId: resolveSigningIdentityId(identityProvider),
             parentDocumentId: sourceDocument.world.id
         });
     }

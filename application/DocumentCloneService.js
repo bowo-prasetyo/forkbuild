@@ -33,7 +33,16 @@ export class DocumentCloneService {
     // correctly. Defaults to null (no live updates) so callers that
     // genuinely don't have a session-level bus yet (e.g. a document
     // about to be serialized straight back to storage) are unaffected.
-    execute(sourceDocument, { title = null, description = undefined, author = undefined, parentDocumentId = undefined, license = undefined, eventBus = null } = {}) {
+    // 0.2.95 — `authorIdentityId` travels alongside `author` with the
+    // exact same "explicit option > source value" precedence: a caller
+    // that resolved a real signing identity for the new owner passes it
+    // explicitly (every fork call site does); omitting it falls back to
+    // the SOURCE document's own authorIdentityId, which is only ever
+    // correct for a same-owner clone (there is none today — every
+    // caller of this method is a fork/duplicate, which always passes
+    // its own resolved value or `null`) — never silently defaults to
+    // undefined the way a forgotten field would.
+    execute(sourceDocument, { title = null, description = undefined, author = undefined, authorIdentityId = undefined, parentDocumentId = undefined, license = undefined, eventBus = null } = {}) {
         if (!sourceDocument) throw new Error('DocumentCloneService: no source document');
 
         const worldJson = sourceDocument.world.toJSON();
@@ -57,6 +66,7 @@ export class DocumentCloneService {
             // license, not reset to empty just because the ids are new.
             description: description === undefined ? sourceDocument.metadata.description : description,
             author: author === undefined ? sourceDocument.metadata.author : author,
+            authorIdentityId: authorIdentityId === undefined ? sourceDocument.metadata.authorIdentityId : authorIdentityId,
             created: new Date(),
             modified: new Date(),
             parentDocumentId: parentDocumentId === undefined ? sourceDocument.world.id : parentDocumentId,
