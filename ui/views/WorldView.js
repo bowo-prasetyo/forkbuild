@@ -271,8 +271,19 @@ export default {
         // isLocalAvatarVisible() above: this view never decides
         // movement/camera-follow behavior itself, it only reflects and
         // toggles what the session already owns.
-        const avatarControlMode = ref(false);
-        const followAvatar = ref(false);
+        //
+        // 0.3.1 — default ON (both used to default off): entering
+        // World View with a local avatar overwhelmingly means "I want
+        // to walk around," so the common case now needs zero clicks.
+        // Still just an explicit client preference, not a hidden
+        // behavior change — both checkboxes remain visible, unchecking
+        // either still works exactly as before, and WorldNavigationSession
+        // itself still constructs with both off (see
+        // _avatarControlModeActive/_followAvatarEnabled) until this
+        // view's onMounted actually applies these defaults to the
+        // session below.
+        const avatarControlMode = ref(true);
+        const followAvatar = ref(true);
         // 0.2.37 — a pure client rendering preference, exactly like
         // showMyAvatar, but deliberately NOT gated on hasLocalAvatar:
         // a logged-out viewer can still see other participants' avatars
@@ -1491,6 +1502,17 @@ export default {
             session.navigateToDocument(initialDocumentId);
             refreshSpatialUI();
             hasLocalAvatar.value = session.hasLocalAvatar();
+            // 0.3.1 — apply the two now-default-on avatar toggles to
+            // the session itself once a local avatar actually exists
+            // (matching the checkboxes' own :disabled="!hasLocalAvatar"
+            // gate — nothing to control/follow without one).
+            // session.start() above is what makes hasLocalAvatar true,
+            // so this is the earliest point the session can honor
+            // either preference.
+            if (hasLocalAvatar.value) {
+                session.setAvatarControlMode(avatarControlMode.value);
+                session.setFollowAvatar(followAvatar.value);
+            }
 
             viewport.value.addEventListener('pointerdown', onPointerDown);
             viewport.value.addEventListener('pointermove', onPointerMove);
