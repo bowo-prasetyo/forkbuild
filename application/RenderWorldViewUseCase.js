@@ -9,6 +9,7 @@ import { TransformGizmoController } from '../renderer/TransformGizmoController.j
 import { TransformMath } from './TransformMath.js';
 import { AvatarRenderer } from '../renderer/AvatarRenderer.js';
 import { AvatarVisual } from '../renderer/AvatarVisual.js';
+import { RemoteSpatialPresenceRenderer } from '../renderer/RemoteSpatialPresenceRenderer.js';
 
 // World View's render wiring. Exposes the same narrow gizmo surface
 // RenderWorldUseCase does — one shared TransformGizmoController design,
@@ -67,6 +68,18 @@ export class RenderWorldViewUseCase {
             worldRenderer.placementMeshRegistry
         );
         const spatialPreviewRenderer = new SpatialPreviewRenderer(renderer);
+        // 0.3.0 — Collaborative Spatial Presence: a remote participant's
+        // OWN camera, never a document/placement fact — see that
+        // class's own header. Reuses the SAME meshRegistry/
+        // placementMeshRegistry spatialSelectionRenderer already reads,
+        // and the SAME terrain-elevation convention
+        // withGroundElevation()/renderer.terrainHeightAt() already
+        // established for avatars, below.
+        const remoteSpatialPresenceRenderer = new RemoteSpatialPresenceRenderer(
+            worldRenderer.meshRegistry,
+            worldRenderer.placementMeshRegistry,
+            (x, z) => renderer.terrainHeightAt(x, z)
+        );
         const transformGizmoRenderer = new TransformGizmoRenderer(renderer);
         const transformGizmoController = new TransformGizmoController({
             camera: renderer.camera,
@@ -378,6 +391,39 @@ export class RenderWorldViewUseCase {
                 visual.dispose();
                 remoteAvatarVisuals.delete(avatarId);
             },
+            // 0.3.0 — Collaborative Spatial Presence. `presence` is
+            // `{ identityId, label, position: {x,z}|null, heading:
+            // number|null, selection: WorldSpatialSelection|null,
+            // activity: string|null }` — see
+            // renderer/RemoteSpatialPresenceRenderer.js's own header.
+            // Passing a presence with no `position` removes the marker
+            // entirely, exactly like a remote avatar that stops being
+            // present — never left frozen at a stale location. Scene
+            // add/remove happens HERE, once per newly-seen deviceId,
+            // mirroring setRemoteAvatar's own "create lazily, update
+            // cheaply" shape.
+            setRemoteSpatialPresence: (deviceId, presence) => {
+                if (!presence || !presence.position) {
+                    const existing = remoteSpatialPresenceRenderer.getObject(deviceId);
+                    if (existing) {
+                        renderer.remove(existing);
+                    }
+                    remoteSpatialPresenceRenderer.removePresence(deviceId);
+                    return;
+                }
+                const alreadyTracked = remoteSpatialPresenceRenderer.trackedDeviceIds().includes(deviceId);
+                const object = remoteSpatialPresenceRenderer.setPresence(deviceId, presence);
+                if (object && !alreadyTracked) {
+                    renderer.add(object);
+                }
+            },
+            removeRemoteSpatialPresence: (deviceId) => {
+                const existing = remoteSpatialPresenceRenderer.getObject(deviceId);
+                if (existing) {
+                    renderer.remove(existing);
+                }
+                remoteSpatialPresenceRenderer.removePresence(deviceId);
+            },
             // A pure client rendering preference, exactly like
             // setLocalAvatarVisible — never touches presence sync or
             // the known-remote-avatar set, only which already-built
@@ -405,6 +451,13 @@ export class RenderWorldViewUseCase {
                     visual.dispose();
                 }
                 remoteAvatarVisuals.clear();
+                for (const deviceId of remoteSpatialPresenceRenderer.trackedDeviceIds()) {
+                    const object = remoteSpatialPresenceRenderer.getObject(deviceId);
+                    if (object) {
+                        renderer.remove(object);
+                    }
+                }
+                remoteSpatialPresenceRenderer.dispose();
                 renderer.dispose();
             }
         };

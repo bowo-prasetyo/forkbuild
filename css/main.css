@@ -3632,3 +3632,51 @@ html, body {
 .structure-instance-apply {
     width: 100%;
 }
+
+/* 0.3.0 — ui/components/WorldCollaboratorIndicator.js: deliberately as
+   understated as .world-presence-indicator above — a compact list, never
+   its own panel, and never competing visually with the World itself. */
+.world-collaborator-indicator {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-width: 260px;
+}
+
+.world-collaborator-indicator-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(31, 31, 31, 0.75);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    font-size: 0.76rem;
+    color: #b0b0b0;
+}
+
+.world-collaborator-indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.world-collaborator-indicator-name {
+    color: #e0e0e0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-collaborator-indicator-activity {
+    color: #909090;
+}
+
+.world-collaborator-indicator-devices {
+    color: #707070;
+}

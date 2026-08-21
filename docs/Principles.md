@@ -6640,3 +6640,75 @@ maintained accounting of either fact. Building `WorldViewMembersPanel`
 and a hypothetical `EditorMembersPanel` as two separate implementations
 would have been the one mistake this milestone's own design
 conversation warned against by name.
+
+### Collaborative Spatial Presence Is Ephemeral Observation, Never World Content (0.3.0)
+
+`core/WorldSpatialPresenceAdvertisement.js` carries a remote
+participant's camera position, heading, selection, and activity — and,
+like `core/AvatarPresence.js` and `core/WorldPresenceAdvertisement.js`
+before it, is never passed to a `StorageProvider`, never signed, never
+folded into a `World`, a `Document`, a `Command`, undo/redo, or a
+`WorldOperationEnvelope`. If Bob disconnects, Bob disappears — the World
+document a replica holds stays byte-identical whether or not Bob, or
+anyone else, was ever spatially present in it; `tests/CollaborativeSpatialPresence.test.js`'s
+own flagship proves this directly by comparing `document.toJSON()`
+before and after the entire scenario. `application/WorldSpatialPresenceUseCase.js`
+computes its roster from live, authenticated connections only, exactly
+`WorldPresenceUseCase#getRoster()`'s own 0.2.98 discipline — a
+disconnected device's last-known position is pruned, never left behind
+as a stale ghost.
+
+This also means `activity` — `core/WorldSpatialActivity.js`'s own
+IDLE/WALKING/INSPECTING/BUILDING/MOVING_STRUCTURE/ROTATING_STRUCTURE
+vocabulary — is never authorization, extending 0.2.98's own "being
+online is not the same as being authorized to edit" one rung further:
+seeing "Bob — Building" must never mean Bob currently holds EDIT
+authority. `application/WorldAuthorizationService.js` remains the sole
+authority on that question, and revoking Bob's grant never gates his
+spatial presence at all — his camera, heading, and selection keep
+flowing exactly as before, proven directly in the flagship's own Section
+C. And `activity` is always DERIVED, never authored: `deriveWorldSpatialActivity()`
+is a pure function of a session's own already-existing gizmo/selection/
+movement state, never a free-text or user-typed field a remote claim
+could forge into something a receiver misreads as an editing signal.
+
+### Remote Selection Observation Is Never Local Editing Selection (0.3.0)
+
+`core/WorldSpatialSelection.js` is deliberately NOT
+`application/spatial-state/SpatialSelectionState.js` — see docs/Principles.md,
+"UI Selection Must Never Imply Editing Authority (0.2.95)." A remote
+participant's selection implies even less authority than a local one:
+`WorldSpatialSelection` shares no type, and no code path, with
+`SpatialSelectionState`, `application/SpatialEditingService.js`, the
+transform gizmo pipeline, or any `application/commands/` class. Nothing
+in `application/WorldSpatialPresenceUseCase.js` or
+`renderer/RemoteSpatialPresenceRenderer.js` imports any of them. This is
+the milestone's own defining security assertion, stated directly in its
+flagship: remote spatial presence can never enter a mutation path —
+there is no accidental `remote selection -> SelectionTool -> Command`
+route for a future refactor to stumble into, because the two "selection"
+concepts were never the same type to begin with.
+
+### A Compass Heading's LABEL Stays Local; Raw Camera Orientation May Now Travel As Ephemeral Presence (0.3.0 amends 0.2.94)
+
+0.2.94 established "A Compass Heading Is Computed From Camera
+Orientation, Never Stored Or Broadcast" — true at the time because no
+presence transport for it existed yet, and still true today in the
+narrower sense that mattered: there has never been, and still is no,
+`compassHeading` LABEL field in a `Document`, a `WorldPlacement`, or any
+presence/profile advertisement. `WorldNavigationSession#getCompassHeading()`
+still re-runs `core/CompassHeading.js#computeCompassHeading()` fresh on
+every call, completely unchanged. What 0.3.0 adds is narrower than it
+might first appear: `core/WorldSpatialPresenceAdvertisement.js`'s own
+`heading` field carries a raw camera-orientation float in DEGREES, using
+`core/CompassHeading.js`'s own fixed convention — the same category of
+ephemeral, connection-scoped fact `position` already is, describing a
+REMOTE replica's own camera, never a shared World fact. A receiver
+computes its OWN "N"/"NE"/… label from it locally, on receipt, through
+`core/CompassHeading.js#resolveCompassLabel()` — the identical pure
+function, never a wire-transmitted string. The distinction 0.2.94 drew
+— "a compass reading is ephemeral and locally-derived, never a fact
+other replicas need to agree on" — holds exactly as before; 0.3.0 merely
+gives one MORE replica's own local orientation a transport to travel
+over, unsigned and unpersisted, on the way to becoming another
+replica's own locally-computed reading of it.

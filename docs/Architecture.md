@@ -8916,3 +8916,100 @@ read by nothing yet); presence gossip/synchronization between one
 identity's own devices; and any voice/ringing change — 0.2.86
 (proposed) is what actually needs this milestone's resolution
 vocabulary to decide which of Alice's reachable devices should ring.
+
+### Collaborative Spatial Presence (0.3.0)
+
+0.2.95 through 0.2.99 gave collaboration a full security and UI
+substrate — ownership, propagation, ordering/conflict resolution,
+membership, and a real Members panel — but a collaborator was only ever
+a row: "Bob · Editor · Online." 0.3.0 makes collaboration spatially
+visible with one new, THIRD protocol,
+`forkbuild:world-spatial-presence`, structured as closely as possible
+after `application/WorldPresenceUseCase.js` (0.2.98) itself:
+
+```text
+application/WorldSpatialPresenceUseCase.js
+    #enterWorld / #updateSpatial / #leaveWorld
+        ↓
+core/WorldSpatialPresenceAdvertisement.js   (unsigned wire shape)
+        ↓
+core/PresenceIngestion.js#resolveIncomingPresence()   (reused unmodified)
+        ↓
+#getSpatialRoster()  →  [{ identityId, devices: [...] }]
+```
+
+The one genuinely new mechanism is throttling: `updateSpatial()`
+distinguishes a SELECTION or ACTIVITY change (broadcast immediately —
+`core/WorldSpatialSelection.js`/`core/WorldSpatialActivity.js`) from a
+POSITION/HEADING-only change (rate-limited to roughly 10-15 updates a
+second). A throttled update that isn't sent immediately is never
+stranded: `_scheduleFlush()` guarantees exactly one pending flush per
+World, firing whatever is CURRENTLY the latest local state once the
+throttle window closes — so a camera that moves once and then stops is
+still eventually seen at its true resting position, with no dependency
+on a follow-up call that may never come. `sequence` is a plain,
+per-CONNECTION monotonic counter, never a wall-clock timestamp;
+ingestion reuses `core/PresenceIngestion.js#resolveIncomingPresence()`
+completely unmodified — the exact "newest sequence wins, gaps need no
+special handling" rule 0.2.37 already built for avatar movement.
+
+`application/WorldNavigationSession.js` gains a third optional
+collaborator (`worldSpatialPresenceUseCase`), mirroring
+`worldPresenceUseCase`'s own `enterWorldPresence`/`leaveWorldPresence`/
+`getWorldPresenceRoster`/`onWorldPresenceChanged` shape exactly, plus
+one new call a UI drives on a fast interval,
+`syncWorldSpatialPresence(documentId)` — the ONE place local
+gizmo/selection/movement state (`this._editingService.transformGizmoState`,
+`this._spatialSelection`, `this._avatarMovementController.hasMovementInput()`)
+becomes a network fact, via `core/WorldSpatialActivity.js#deriveWorldSpatialActivity()`.
+This class also drives its own render facade directly on every roster
+change (`_applySpatialPresenceRoster()` calling
+`this._session.setRemoteSpatialPresence()`/`removeRemoteSpatialPresence()`)
+— the identical "application layer drives its own renderer" shape
+`application/RemoteAvatarRegistry.js` already established for remote
+avatars; `ui/views/WorldView.js` never touches
+`renderer/RemoteSpatialPresenceRenderer.js` directly, and only ever
+calls `enterWorldSpatialPresence`/`syncWorldSpatialPresence`/
+`leaveWorldSpatialPresence` on the same active-document lifecycle
+`_syncWorldPresence()` (0.2.99) already follows.
+
+`renderer/RemoteSpatialPresenceRenderer.js` keeps every marker
+deliberately subtle — a small colored cone (hue deterministically
+derived from `identityId`, so the same identity always reads as the
+same color with zero coordination), a faint canvas-texture name/activity
+label, and (only when a selection is actually reported) a translucent
+`THREE.Box3Helper` outline computed directly from the SAME
+`meshRegistry`/`placementMeshRegistry`
+`renderer/SpatialSelectionRenderer.js` already reads — re-expressed
+relative to the marker's own group origin, the identical "pivot-relative
+bounds" translation `renderer/TransformGizmoRenderer.js` already uses,
+so the outline never double-applies the group's own world-position
+offset. `ui/components/WorldCollaboratorIndicator.js` is the 2D
+counterpart — one row per identity, the MOST noteworthy activity across
+that identity's own live devices (mirroring `WorldPresenceUseCase#getRoster()`'s
+own "EDITING beats EXPLORING" precedent, extended to the richer
+vocabulary).
+
+Device aggregation continues 0.2.98's own rule one rung further:
+`getSpatialRoster()` groups by resolved social identity but — unlike the
+coarser roster, which only ever needed a count — keeps every device's
+own independent position/heading/selection/activity, because two of
+Bob's devices are frequently in genuinely different places. The flagship
+(`tests/CollaborativeSpatialPresence.test.js`) proves this directly:
+Bob's Desktop and Tablet remain independently visible with different
+positions under the SAME resolved identity; a rapid burst of
+position-only updates collapses to its final value; revoking Bob's edit
+grant never gates his spatial presence at all (proven against a real
+`WorldAuthorizationService` read); disconnecting Bob prunes his presence
+immediately; two independent replicas (Alice and Charlie), each with
+their own direct connection to Bob, converge on the byte-identical
+roster; and `document.toJSON()` is byte-identical before and after the
+entire scenario. `core/WorldSpatialSelection.js` shares no type with
+`application/spatial-state/SpatialSelectionState.js` — asserted directly
+in the flagship's own Section D, the milestone's defining security
+property: remote spatial presence can never enter a mutation path.
+
+Deliberately not in 0.3.0: remote manipulation, remote commands, locks,
+chat integration, comments, persistent cursors, CRDT/OT, server
+authority, voice integration, collaborative undo/redo, and automatic
+conflict avoidance.
