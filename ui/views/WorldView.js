@@ -20,6 +20,9 @@ import AvatarInfoPanel from '../components/AvatarInfoPanel.js';
 import NearbyAvatarsPanel from '../components/NearbyAvatarsPanel.js';
 import CompassIndicator from '../components/CompassIndicator.js';
 import LocationsPanel from '../components/LocationsPanel.js';
+import WorldMembersPanel from '../components/WorldMembersPanel.js';
+import WorldPresenceIndicator from '../components/WorldPresenceIndicator.js';
+import { buildWorldCollaborationRoster } from '../components/WorldCollaborationRoster.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -50,7 +53,8 @@ export default {
         PlacementInfoPanel, PlacementEditorDialog,
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
         AvatarInfoPanel, NearbyAvatarsPanel,
-        CompassIndicator, LocationsPanel
+        CompassIndicator, LocationsPanel,
+        WorldMembersPanel, WorldPresenceIndicator
     },
     setup() {
         const route = useRoute();
@@ -170,6 +174,24 @@ export default {
         const compassHeading = ref(null);
         const showLocationsPanel = ref(false);
         const worldLocations = ref([]);
+        // 0.2.99 — World Collaboration UX. `worldMembers`/
+        // `worldPresenceRoster` are the RAW facts session.
+        // listWorldMembers()/getWorldPresenceRoster() already return for
+        // whichever document is currently ACTIVE (session.
+        // getActiveDocumentId()) — re-read on every refreshSpatialUI()
+        // tick AND on every live onWorldMembershipChanged/
+        // onWorldPresenceChanged notification (see _syncWorldPresence()
+        // below), never cached across a document switch.
+        // `worldCollaborationRoster` (below, computed) is the ONE place
+        // they're joined into rows a panel can render — see
+        // ui/components/WorldCollaborationRoster.js's own header.
+        const showMembersPanel = ref(false);
+        const worldMembers = ref([]);
+        const worldPresenceRoster = ref([]);
+        const isActiveWorldOwner = ref(false);
+        // identityId currently mid-grant/mid-revoke, or null — see
+        // grantWorldMember()/revokeWorldMember() below.
+        const collaborationPendingIdentityId = ref(null);
         const availableDefinitions = ref([]);
         const selectedDefinitionId = ref(null);
         const activeTool = ref('select');
@@ -207,6 +229,14 @@ export default {
         // check can recognize an authorized device as speaking for its
         // parent identity — see that use case's own comment.
         const deviceAuthorizationUseCase = inject('deviceAuthorizationUseCase');
+        // 0.2.99 — the SAME app-wide PeerRelationshipUseCase ui/main.js
+        // already provides for /peers and ConversationsView's own alias
+        // resolution, injected here ONLY for display purposes — a known
+        // alias for a World Member's raw identityId, exactly the same
+        // `alias || shortId(identityId)` degradation ConversationsView
+        // already uses. Never consulted for authorization; see
+        // resolveIdentityDisplayName() below.
+        const peerRelationshipUseCase = inject('peerRelationshipUseCase');
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
@@ -254,6 +284,14 @@ export default {
         let pointerStart = null;
         let isDragging = false;
         let feedbackTimer = null;
+        // 0.2.99 — which documentId, if any, this replica currently
+        // holds World Presence for, and the live subscriptions attached
+        // to it — see _syncWorldPresence() below. Plain (non-reactive)
+        // bookkeeping, mirroring spatialInterval's own pattern above;
+        // nothing in the template ever reads these directly.
+        let presentWorldDocumentId = null;
+        let unsubscribeWorldPresence = null;
+        let unsubscribeWorldMembership = null;
 
         availableDefinitions.value = registry.getAll();
         if (availableDefinitions.value.length > 0) {
@@ -671,6 +709,15 @@ export default {
                 router.replace({ path: `/world/${activeId}` });
             }
 
+            // 0.2.99 — World Collaboration UX. Presence/membership track
+            // the SAME active document Save/Publish/Edit Metadata above
+            // already operate on — see _syncWorldPresence()'s own
+            // header. A no-op when activeId hasn't actually changed
+            // since the last tick, so this never re-enters presence (or
+            // re-subscribes) on every 3-second poll.
+            _syncWorldPresence(activeId);
+            isActiveWorldOwner.value = activeId ? session.isWorldOwner(activeId) : false;
+
             // 0.2.27: the camera's own target, kept and shown
             // separately from the active document above — see
             // docs/Principles.md, "Camera Focus, Active Document, and
@@ -687,6 +734,144 @@ export default {
                 const focusedDoc = docs.find((d) => d.world.id === focusedId);
                 const focusedPub = pubMap.get(focusedId);
                 focusedDocumentTitle.value = focusedDoc?.metadata?.title || focusedPub?.title || 'Untitled';
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 0.2.99 — World Collaboration UX
+        // -----------------------------------------------------------------
+        //
+        // Presence is scoped to the ACTIVE document — the same one
+        // Save/Publish/Edit Metadata already act on — never the merely
+        // FOCUSED (camera) document; see docs/Principles.md, "Camera
+        // Focus, Active Document, and Selection Are Three Different
+        // Things." Entering presence for a World you're only looking at,
+        // without ever making it the active document, would announce
+        // "here" for a document nobody upstream considers current.
+        //
+        // A no-op unless the active document actually changed since the
+        // last call — session.enterWorldPresence()/onWorldPresenceChanged()
+        // etc. are all graceful no-ops with no worldPresenceUseCase
+        // wired anyway, but re-subscribing every 3-second poll tick
+        // would still be wasteful churn even then.
+        function _syncWorldPresence(activeId) {
+            if (activeId === presentWorldDocumentId) {
+                return;
+            }
+            if (presentWorldDocumentId) {
+                session.leaveWorldPresence(presentWorldDocumentId);
+            }
+            if (unsubscribeWorldPresence) {
+                unsubscribeWorldPresence();
+                unsubscribeWorldPresence = null;
+            }
+            if (unsubscribeWorldMembership) {
+                unsubscribeWorldMembership();
+                unsubscribeWorldMembership = null;
+            }
+            presentWorldDocumentId = activeId || null;
+            refreshCollaborationRoster(presentWorldDocumentId);
+            if (!presentWorldDocumentId) {
+                return;
+            }
+            session.enterWorldPresence(presentWorldDocumentId);
+            // Live updates: a GOSSIPED grant/revocation, or another
+            // participant's presence changing, refreshes the roster the
+            // moment it arrives — never only on the next 3-second poll.
+            // See WorldNavigationSession#onWorldMembershipChanged()/
+            // onWorldPresenceChanged()'s own headers.
+            unsubscribeWorldMembership = session.onWorldMembershipChanged(presentWorldDocumentId, () => {
+                worldMembers.value = session.listWorldMembers(presentWorldDocumentId);
+            });
+            unsubscribeWorldPresence = session.onWorldPresenceChanged(presentWorldDocumentId, (roster) => {
+                worldPresenceRoster.value = roster;
+            });
+        }
+
+        function refreshCollaborationRoster(documentId) {
+            if (!documentId) {
+                worldMembers.value = [];
+                worldPresenceRoster.value = [];
+                return;
+            }
+            worldMembers.value = session.listWorldMembers(documentId);
+            worldPresenceRoster.value = session.getWorldPresenceRoster(documentId);
+        }
+
+        // Resolves a friendly label for a raw identityId — PRESENTATION
+        // ONLY, exactly ui/views/ConversationsView.js's own
+        // `alias || shortId(identityId)` degradation, reused rather than
+        // reinvented: a known PeerRelationship's alias first, then the
+        // fallback label the caller already has on hand (the World's own
+        // `author` username for the owner row), then a short identityId,
+        // never a thrown error or an empty string.
+        function resolveIdentityDisplayName(identityId, fallbackLabel = null) {
+            if (!identityId) {
+                return fallbackLabel || 'Unknown';
+            }
+            const relationship = peerRelationshipUseCase && typeof peerRelationshipUseCase.getRelationship === 'function'
+                ? peerRelationshipUseCase.getRelationship(identityId)
+                : null;
+            if (relationship && relationship.alias) {
+                return relationship.alias;
+            }
+            if (fallbackLabel) {
+                return fallbackLabel;
+            }
+            return identityId.length > 14 ? '…' + identityId.slice(-12) : identityId;
+        }
+
+        function openMembersPanel() {
+            if (activeDocumentInfo.value) {
+                refreshCollaborationRoster(activeDocumentInfo.value.documentId);
+            }
+            showMembersPanel.value = true;
+        }
+
+        function closeMembersPanel() {
+            showMembersPanel.value = false;
+        }
+
+        // Grant/Revoke — see ui/components/WorldMembersPanel.js's own
+        // header: this is the "UI affordance -> application
+        // authorization -> signed membership operation -> gossip" chain
+        // the design conversation asked to remain untouched. Feedback is
+        // phased exactly as the design conversation specified: an
+        // immediate "Granting…"/"Revoking…" (collaborationPendingIdentityId,
+        // rendered inline by WorldMembersPanel), then either a success
+        // message or the SAME error a denied mutation anywhere else in
+        // this view already surfaces via feedback.show().
+        function grantWorldMember(identityId) {
+            const documentId = activeDocumentInfo.value ? activeDocumentInfo.value.documentId : null;
+            if (!documentId || !identityId) {
+                return;
+            }
+            collaborationPendingIdentityId.value = identityId;
+            try {
+                session.grantWorldEdit(documentId, identityId);
+                feedback.show('Grant propagated — now an Editor');
+            } catch (err) {
+                feedback.show(err.message);
+            } finally {
+                collaborationPendingIdentityId.value = null;
+                refreshCollaborationRoster(documentId);
+            }
+        }
+
+        function revokeWorldMember(identityId) {
+            const documentId = activeDocumentInfo.value ? activeDocumentInfo.value.documentId : null;
+            if (!documentId || !identityId) {
+                return;
+            }
+            collaborationPendingIdentityId.value = identityId;
+            try {
+                session.revokeWorldEdit(documentId, identityId);
+                feedback.show('Revocation propagated — now Read only');
+            } catch (err) {
+                feedback.show(err.message);
+            } finally {
+                collaborationPendingIdentityId.value = null;
+                refreshCollaborationRoster(documentId);
             }
         }
 
@@ -792,6 +977,37 @@ export default {
         // Worlds lists — no separate diagnostic call needed for that
         // distinction.
         const catalogEmpty = computed(() => allPublications.value.length === 0);
+
+        // 0.2.99 — World Collaboration UX. The ONE join point — see
+        // ui/components/WorldCollaborationRoster.js's own header — kept
+        // as a computed() so it's always derived fresh from
+        // worldMembers/worldPresenceRoster/isActiveWorldOwner/
+        // activeDocumentInfo, never a copy that could drift from them.
+        // `displayName` is resolved here, at the VIEW layer, exactly the
+        // same "presentation concern, not the session's own minimal
+        // shape" precedent nearbyAvatars already established (0.2.43).
+        const worldCollaborationRoster = computed(() => {
+            const ownerIdentityId = activeDocumentInfo.value ? activeDocumentInfo.value.authorIdentityId : null;
+            const ownerLabel = activeDocumentInfo.value ? activeDocumentInfo.value.author : null;
+            return buildWorldCollaborationRoster({
+                ownerIdentityId,
+                isViewerOwner: isActiveWorldOwner.value,
+                members: worldMembers.value,
+                presence: worldPresenceRoster.value
+            }).map((row) => ({
+                ...row,
+                displayName: resolveIdentityDisplayName(row.identityId, row.identityId === ownerIdentityId ? ownerLabel : null)
+            }));
+        });
+
+        // "👥 N online" — every OTHER participant currently present
+        // (worldPresenceRoster, one entry per distinct identity — see
+        // application/WorldPresenceUseCase.js#getRoster()'s own device
+        // aggregation) plus the current viewer themself, whenever a
+        // World is actually active — see WorldPresenceIndicator's own
+        // header on why this view computes the count rather than the
+        // indicator counting anything itself.
+        const worldOnlineCount = computed(() => worldPresenceRoster.value.length + (activeDocumentInfo.value ? 1 : 0));
 
         // 0.2.28: `options` is WorldSearchPanel's emitted
         // { text, center?, radius? } — passed straight through, since
@@ -1239,6 +1455,17 @@ export default {
             viewport.value.removeEventListener('pointerup', onPointerUp);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
+            // 0.2.99 — session.dispose() below already leaves EVERY
+            // World this session holds presence for (it iterates its own
+            // _presentWorldDocumentIds — see WorldNavigationSession's
+            // dispose()), so only the view's own live subscriptions need
+            // tearing down here.
+            if (unsubscribeWorldPresence) {
+                unsubscribeWorldPresence();
+            }
+            if (unsubscribeWorldMembership) {
+                unsubscribeWorldMembership();
+            }
             session.dispose();
         });
 
@@ -1317,6 +1544,15 @@ export default {
             openLocationsPanel,
             closeLocationsPanel,
             focusLocationFromPanel,
+            showMembersPanel,
+            worldCollaborationRoster,
+            worldOnlineCount,
+            isActiveWorldOwner,
+            collaborationPendingIdentityId,
+            openMembersPanel,
+            closeMembersPanel,
+            grantWorldMember,
+            revokeWorldMember,
             availableDefinitions,
             selectedDefinitionId,
             activeTool,
@@ -1394,6 +1630,16 @@ export default {
                     <CompassIndicator :heading="compassHeading" />
                     <button class="action-btn" @click="goHome">Home</button>
                     <button class="action-btn" @click="openLocationsPanel">Locations</button>
+                </div>
+                <!-- 0.2.99 — World Collaboration UX. Deliberately
+                     subtle, exactly like the compass above: the World
+                     itself stays visually dominant. Both the indicator
+                     and the explicit "Members" button open the SAME
+                     panel — see docs/Principles.md, "The UI Displays
+                     Authorization; It Never Decides It (0.2.99)." -->
+                <div v-if="activeDocumentInfo" class="world-view-actions world-view-actions--collaboration">
+                    <WorldPresenceIndicator :online-count="worldOnlineCount" @open="openMembersPanel" />
+                    <button class="action-btn" @click="openMembersPanel">Members</button>
                 </div>
                 <!-- 0.2.29: browse the world by camera position, without
                      already knowing a document's name or typing raw
@@ -1823,6 +2069,15 @@ export default {
                 :locations="worldLocations"
                 @focus="focusLocationFromPanel"
                 @cancel="closeLocationsPanel"
+            />
+            <WorldMembersPanel
+                v-if="showMembersPanel"
+                :roster="worldCollaborationRoster"
+                :is-owner="isActiveWorldOwner"
+                :pending-identity-id="collaborationPendingIdentityId"
+                @grant="grantWorldMember"
+                @revoke="revokeWorldMember"
+                @cancel="closeMembersPanel"
             />
         </div>
     `

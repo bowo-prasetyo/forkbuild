@@ -5776,6 +5776,13 @@ first place).
          ├── multi-device composition: a grant follows the identity
          ├── WorldPresenceUseCase: forkbuild:world-presence, ephemeral
          └── canEdit always recomputed, never read off a remote claim
+    ↓
+0.2.99  World Collaboration UX                           ✓
+         ├── WorldCollaborationRoster: the ONE application-to-UI join
+         ├── WorldMembersPanel: roster + owner-only Grant/Revoke
+         ├── WorldPresenceIndicator: compact "N online," never a map
+         ├── online ≠ authorized, rendered as two independent facts
+         └── zero new application/core state — pure reflection
 ```
 
 0.2.93 is the hinge between them: it establishes, structurally rather
@@ -6701,3 +6708,230 @@ onward to a third identity ("Bob invites Charlie") is a real, different
 question this milestone does not answer, left for whenever a genuine
 need for it emerges rather than spending this milestone's own scope
 speculatively.
+
+## World Collaboration UX
+
+0.2.99 — World Collaboration UX — answers the question 0.2.98's own
+closing paragraph named and deliberately left unbuilt: "any UI surface
+for granting/revoking membership or displaying a presence roster."
+0.2.95 through 0.2.98 built the entire chain — ownership, device-aware
+authorization, signed membership grants, and live presence — entirely
+in the application/core layers, tested directly against real
+authenticated peer connections, with `ui/views/WorldView.js` never once
+consulting `WorldAccessLevel`, `isWorldOwner()`, or
+`getWorldPresenceRoster()`. This milestone closes that gap, and only
+that gap:
+
+```text
+0.2.99
+├── ui/components/WorldCollaborationRoster.js     NEW — the ONE seam
+│                                                  between 0.2.98's
+│                                                  application layer and
+│                                                  every Collaboration UI
+│                                                  component this
+│                                                  milestone adds.
+│                                                  buildWorldCollaborationRoster()
+│                                                  joins
+│                                                  listWorldMembers() +
+│                                                  getWorldPresenceRoster()
+│                                                  (both unmodified) into
+│                                                  one row per
+│                                                  participating
+│                                                  identity — access
+│                                                  (owner/editor/read-only),
+│                                                  online, deviceCount,
+│                                                  activity, canManage.
+│                                                  A pure function: no
+│                                                  Vue, no DOM, no
+│                                                  network — testable,
+│                                                  and reusable UNCHANGED
+│                                                  by a future Editor
+│                                                  collaboration surface,
+│                                                  exactly the design
+│                                                  conversation's own
+│                                                  "don't build
+│                                                  WorldViewMembersPanel/
+│                                                  EditorMembersPanel as
+│                                                  two independent
+│                                                  implementations."
+├── ui/components/WorldMembersPanel.js            NEW — the Members
+│                                                  panel: one row per
+│                                                  identity, Grant/Revoke
+│                                                  offered ONLY where
+│                                                  `row.canManage` says
+│                                                  so — a presentation
+│                                                  fact already decided
+│                                                  by
+│                                                  buildWorldCollaborationRoster()
+│                                                  from `isWorldOwner()`,
+│                                                  never re-decided here.
+│                                                  A "Grant Edit to a new
+│                                                  identity" form covers
+│                                                  a subject with no
+│                                                  existing row at all.
+├── ui/components/WorldPresenceIndicator.js       NEW — "👥 N online,"
+│                                                  deliberately as
+│                                                  understated as
+│                                                  CompassIndicator
+│                                                  (0.2.94) — a single
+│                                                  glanceable fact, never
+│                                                  its own roster.
+│                                                  Clicking it opens the
+│                                                  SAME WorldMembersPanel
+│                                                  a "Members" toolbar
+│                                                  button also opens —
+│                                                  one collaboration
+│                                                  surface, two entry
+│                                                  points.
+├── application/WorldNavigationSession.js         + `authorIdentityId`
+│                                                  on getDocumentInfo()'s
+│                                                  return shape (purely
+│                                                  additive, null for a
+│                                                  pre-0.2.95 document —
+│                                                  the SAME degrade-
+│                                                  gracefully-on-read
+│                                                  discipline every other
+│                                                  metadata field here
+│                                                  already follows) and
+│                                                  a new
+│                                                  onWorldMembershipChanged()
+│                                                  delegate, mirroring
+│                                                  onWorldPresenceChanged()
+│                                                  exactly — so a
+│                                                  GOSSIPED grant/
+│                                                  revocation (Charlie
+│                                                  observing Alice grant
+│                                                  Bob, say) updates the
+│                                                  panel the moment it
+│                                                  arrives, not merely on
+│                                                  the next poll.
+└── ui/views/WorldView.js                         MODIFIED — presence is
+                                                   entered/left against
+                                                   the ACTIVE document
+                                                   only (the same one
+                                                   Save/Publish/Edit
+                                                   Metadata already
+                                                   operate on — never the
+                                                   merely FOCUSED camera
+                                                   document, see
+                                                   docs/Principles.md,
+                                                   "Camera Focus, Active
+                                                   Document, and
+                                                   Selection Are Three
+                                                   Different Things").
+                                                   grantWorldMember()/
+                                                   revokeWorldMember()
+                                                   call
+                                                   session.grantWorldEdit()/
+                                                   revokeWorldEdit()
+                                                   directly — the SAME
+                                                   "UI affordance ->
+                                                   application
+                                                   authorization -> signed
+                                                   membership operation ->
+                                                   gossip -> every replica
+                                                   independently
+                                                   verifies" chain 0.2.98
+                                                   already established,
+                                                   completely untouched.
+```
+
+The architectural rule this milestone exists to enforce, worth stating
+once here the way 0.2.95's own header states its rule:
+
+```text
+UI
+ ↓
+WorldNavigationSession
+ ↓
+WorldMembershipUseCase / WorldPresenceUseCase / WorldAuthorizationService
+```
+
+never
+
+```text
+UI -> if currentUser === owner -> grant()
+```
+
+`WorldMembersPanel`'s Grant/Revoke buttons are gated by `row.canManage`
+— itself computed from `WorldNavigationSession#isWorldOwner()` — purely
+so the AFFORDANCE isn't offered to someone who couldn't use it anyway.
+Nothing about that gate is load-bearing: a caller that invoked
+`session.grantWorldEdit()` directly, bypassing the panel entirely,
+would be refused by `WorldMembershipUseCase#_requireOwnerIdentity()`
+exactly the same way — see docs/Principles.md, "The UI Displays
+Authorization; It Never Decides It (0.2.99)."
+
+Presence is rendered the way 0.2.98's own header insists on:
+online/offline and access level are two INDEPENDENT facts, never
+merged. Revoking an identity's EDIT grant never touches their
+`deviceCount` or online badge — a row can be, and often is, "Editor ·
+Offline" (a grant on file, nobody currently connected) or "Read only ·
+Online · 2 devices" (a revoked or never-granted identity, still
+present) at the same time. Device aggregation is per ROW, never per
+device: "Bob · 2 devices," never "Bob's Laptop"/"Bob's Tablet" shown as
+two independent people — that aggregation happened one layer down, in
+`WorldPresenceUseCase#getRoster()` (0.2.98), unmodified here.
+
+The flagship (`tests/WorldCollaborationUX.test.js`) is deliberately an
+application-to-UI COMPOSITION flagship, not a second security one —
+0.2.98's own flagship (`tests/WorldMembership.test.js`) already proved
+the cryptography. Section A proves `buildWorldCollaborationRoster()` in
+isolation: ownership labeling, the owner's own row correctly shown
+online even though presence structurally never reports one's own
+participation, an offline editor ("David") correctly distinguished
+from a never-granted-but-present passerby ("Charlie"), device
+aggregation surviving a revocation, `canManage` restricted to the true
+owner, sort order, and the graceful-degraded case (no owner known, no
+membership/presence wired at all) collapsing to an empty roster rather
+than a thrown error. Section B is the true flagship, run against a
+REAL authenticated peer network and the REAL `WorldMembershipUseCase`/
+`WorldPresenceUseCase`/`WorldCommandPropagationUseCase`: Alice owns
+World A; Bob and Charlie both start Read only and Online; Alice grants
+Bob EDIT and his row becomes Editor while staying Online; Bob's second
+device (Tablet) joins and his `deviceCount` becomes 2 while he's still
+Editor; Alice revokes Bob and his row becomes Read only · Online · 2
+devices — proven against BOTH of Bob's live connections, neither ever
+disconnected; and, finally, a UI-level attempt to mutate World state as
+the now-revoked Bob is still rejected `NOT_AUTHORIZED` by the real
+`WorldCommandPropagationUseCase`, completely independent of anything
+this milestone's own composition function computed — proof the panel
+only ever reflects authorization, never decides it.
+
+Deliberately not in 0.2.99, named rather than hidden: remote cursors,
+colored user indicators, selection sharing, live "Bob is moving House"
+indicators beyond the closed EXPLORING/EDITING vocabulary 0.2.98
+already established, a persistent "membership state machine" (the
+existing `WorldEditAuthority`/gossip protocol remains the ONLY source
+of truth — this milestone adds no new persisted state anywhere), a
+second, independent Editor-only implementation of any of these
+components (World View and a future Editor collaboration surface are
+meant to share `WorldCollaborationRoster`/`WorldMembersPanel`
+unchanged, per this milestone's own header), and an editor delegating
+their own EDIT authority onward to a third identity (still 0.2.98's own
+named, unanswered question). Also deliberately left as a stated, real
+limitation rather than papered over: the CURRENT viewer's own presence
+is never reported by `getWorldPresenceRoster()` (0.2.98, unmodified —
+"the roster of every OTHER... participant"), so a non-owner viewer's
+own row is never specially marked "you"; only the owner's own row gets
+that treatment, via `isWorldOwner()` rather than a presence lookup that
+structurally cannot answer it — see `WorldCollaborationRoster.js`'s own
+header.
+
+```text
+0.2.98  Shared World Membership & Collaborative Presence ✓
+             │
+             ▼
+0.2.99  World Collaboration UX                           ✓
+             ├── Members panel
+             ├── Presence roster
+             ├── Grant/Revoke controls
+             ├── Online/device aggregation
+             └── one shared composition, ready for World View AND Editor
+             │
+             ▼
+0.3.0   Collaborative Cursors & Remote Selection
+             │
+             ▼
+0.3.1   Rich Collaborative Editing UX
+```

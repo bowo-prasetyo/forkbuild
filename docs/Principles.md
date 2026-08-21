@@ -6600,3 +6600,43 @@ zero need to ever disconnect him, the identical "revocation is an
 authorization gate, never a connection-teardown event" discipline 0.2.78
 established for device revocation, now extended to presence display
 itself.
+
+### The UI Displays Authorization; It Never Decides It (0.2.99)
+
+`ui/components/WorldMembersPanel.js` offers Grant/Revoke buttons and
+`ui/components/WorldPresenceIndicator.js` reports who is online, but
+neither component — nor `ui/views/WorldView.js` hosting them — ever
+decides whether a grant should succeed. Every fact a Collaboration UI
+component renders was already decided one layer down:
+`WorldNavigationSession#isWorldOwner()`/`canEditDocument()` (0.2.95,
+0.2.98), `WorldMembershipUseCase#grantEdit()`/`revokeEdit()` (0.2.98,
+re-verifying ownership fresh on every call), and
+`WorldPresenceUseCase#getRoster()`'s own locally-recomputed `canEdit`
+(0.2.98). `ui/components/WorldCollaborationRoster.js#buildWorldCollaborationRoster()`'s
+`canManage` flag governs only whether a BUTTON is offered — never
+whether a click succeeds. A caller that invoked
+`session.grantWorldEdit()` directly, skipping the panel entirely, gets
+refused by `WorldMembershipUseCase#_requireOwnerIdentity()` exactly the
+same way a forged owner-only gossip message already was in 0.2.98's own
+flagship. See docs/Roadmap.md, 0.2.99, for the full chain: "UI ->
+WorldNavigationSession -> WorldMembershipUseCase/WorldPresenceUseCase/
+WorldAuthorizationService," never "UI -> if currentUser === owner ->
+grant()."
+
+### A Collaboration UI Component Is Shared, Never Duplicated, Between World View And A Future Editor Surface (0.2.99)
+
+`ui/components/WorldCollaborationRoster.js`'s `buildWorldCollaborationRoster()`
+is a pure function — no Vue, no DOM, no network, no storage — precisely
+so it can be consumed unchanged by any future collaboration surface
+`application/EditorSession.js` grows, the same way `ui/components/WorldMembersPanel.js`
+and `ui/components/WorldPresenceIndicator.js` are themselves generic
+Vue components rather than `WorldView`-specific markup. The instinct
+this continues is 0.2.93's own: "Selection In World View Does Not Imply
+Editing Authority" established that World View could observe a World's
+content without any capacity to change it; this milestone establishes
+the parallel guarantee for collaboration state — observing WHO may
+edit, and who is here, never itself implies a second, independently
+maintained accounting of either fact. Building `WorldViewMembersPanel`
+and a hypothetical `EditorMembersPanel` as two separate implementations
+would have been the one mistake this milestone's own design
+conversation warned against by name.
