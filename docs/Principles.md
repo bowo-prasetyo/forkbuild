@@ -6712,3 +6712,73 @@ other replicas need to agree on" — holds exactly as before; 0.3.0 merely
 gives one MORE replica's own local orientation a transport to travel
 over, unsigned and unpersisted, on the way to becoming another
 replica's own locally-computed reading of it.
+
+### A Spatial Anchor Is A Presentation Decision, Never Remote Authority (0.3.1)
+
+`core/WorldSpatialAnchor.js#deriveWorldSpatialAnchor()` turns a 0.3.0
+observation (position, heading, selection, activity) into a proximity
+tier, a view-cone visibility flag, a presentation mode, and a contextual
+activity phrase — and every one of those is a decision about how
+something ALREADY true gets DRAWN, never a new fact about what a remote
+participant may do. A `WorldSpatialAnchor` is never persisted, never
+signed, never broadcast, and is not itself a new wire format:
+`core/WorldSpatialAnchor.js` imports nothing from `peer/` or any
+`application/*PropagationUseCase.js`, and nothing it computes is
+reachable from `application/WorldSpatialPresenceUseCase.js`'s own
+ingestion path — the third protocol 0.3.0 introduced
+(`forkbuild:world-spatial-presence`) remains the only one; this
+milestone adds no fourth. Concretely: a collaborator who is FAR away or
+outside the viewer's own view cone is presented more quietly
+(`WorldSpatialPresentationMode.MARKER_ONLY`/`HIDDEN`) — this changes
+nothing about what THAT collaborator can see or do; it only changes what
+THIS viewer's own renderer happens to draw. Extending
+`docs/Principles.md`'s own "Collaborative Spatial Presence Is Ephemeral
+Observation, Never World Content (0.3.0)" one rung further: a spatial
+anchor is ephemeral PRESENTATION, computed fresh on every roster refresh
+from whatever the underlying 0.3.0 observation currently says, never
+cached as a separate fact a later refresh could drift away from.
+
+A remote selection's contextual label follows the identical restraint.
+`WorldNavigationSession#_resolveSpatialContextualLabel()` resolves a
+`WorldSpatialSelection` of kind `'placement'` to the referenced
+document's OWN saved title, through the exact
+`getStructurePlacement()`/`getSavedDocumentTitle()` steps
+`application/EditorSession.js#getSelectedPlacementInfo()` already uses
+for a LOCAL selection — never a second, remote-only naming scheme, and
+never something the remote participant supplies directly (the wire
+carries only `documentId`/`placementId`, exactly as 0.3.0 always did;
+the TITLE is looked up locally, by the RECEIVER, from its own saved
+documents). A selection of kind `'brick'` resolves to no label — see
+"Remote Selection Observation Is Never Local Editing Selection (0.3.0)"
+— rather than inventing a name `core/Building.js` has no field for.
+
+### Follow Is Local Camera Navigation, Never A Shared Camera (0.3.1)
+
+`WorldNavigationSession#focusCollaborator(deviceId)` reads a
+collaborator's LAST KNOWN spatial position, once, and moves the
+CALLER's own camera toward it through the identical
+`_beginCameraFocus()`/`LOCATION_FOCUS_OFFSET` machinery
+`focusLocation()` (0.2.94, "World View Navigation Operates On Spatial
+Observation, Never On Document Mutation") already established — no
+second camera-movement mechanism, and the same deterministic glide path
+every other focus call in this codebase already produces. This is
+deliberately NOT a subscription: there is no persistent "currently
+following Bob" mode anywhere in this codebase to track, disable, toggle,
+or synchronize. A second click on "Follow" simply reads Bob's position
+again, wherever he now is, and re-focuses once more — exactly like
+clicking a Locations-panel entry a second time re-focuses wherever that
+placement now sits, never a live tether that keeps re-centering on its
+own.
+
+The other half of this principle matters just as much: Bob's own
+replica has absolutely no way to learn that Alice followed him.
+`focusCollaborator()` sends nothing over any wire — it is a purely LOCAL
+read of `getWorldSpatialPresenceRoster()`'s own already-received roster,
+followed by a purely LOCAL camera call. There is no
+`forkbuild:world-spatial-presence` message, no fourth protocol, and no
+new field anywhere that could tell a followed collaborator "someone is
+watching you" — extending "Collaborative Spatial Presence Is Ephemeral
+Observation, Never World Content (0.3.0)" with the same discipline
+applied to navigation: observing where someone is, and choosing to look
+there yourself, changes nothing about what they broadcast or how they
+broadcast it.

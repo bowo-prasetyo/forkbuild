@@ -10,6 +10,7 @@ import { TransformMath } from './TransformMath.js';
 import { AvatarRenderer } from '../renderer/AvatarRenderer.js';
 import { AvatarVisual } from '../renderer/AvatarVisual.js';
 import { RemoteSpatialPresenceRenderer } from '../renderer/RemoteSpatialPresenceRenderer.js';
+import { WorldSpatialPresentationMode } from '../core/WorldSpatialAnchor.js';
 
 // World View's render wiring. Exposes the same narrow gizmo surface
 // RenderWorldUseCase does — one shared TransformGizmoController design,
@@ -403,7 +404,13 @@ export class RenderWorldViewUseCase {
             // mirroring setRemoteAvatar's own "create lazily, update
             // cheaply" shape.
             setRemoteSpatialPresence: (deviceId, presence) => {
-                if (!presence || !presence.position) {
+                // 0.3.1 — a HIDDEN presentation mode (outside the
+                // viewer's own view cone — core/WorldSpatialAnchor.js)
+                // removes the marker from the scene exactly like no
+                // position at all always has; see that file's own
+                // header, "outside the current camera/world view -> no
+                // 3D marker."
+                if (!presence || !presence.position || presence.presentationMode === WorldSpatialPresentationMode.HIDDEN) {
                     const existing = remoteSpatialPresenceRenderer.getObject(deviceId);
                     if (existing) {
                         renderer.remove(existing);

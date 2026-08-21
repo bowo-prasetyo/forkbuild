@@ -63,6 +63,7 @@ import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
 import { deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
+import { deriveWorldSpatialAnchor } from '../core/WorldSpatialAnchor.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -2940,23 +2941,41 @@ export class WorldNavigationSession {
     // last rendered for `documentId`, so a device that dropped out (its
     // owner disconnected, or explicitly left) is removed from the scene
     // rather than left behind as a stale marker.
+    //
+    // 0.3.1 — Collaborative Spatial Awareness. Each device's raw 0.3.0
+    // observation is turned into a `WorldSpatialAnchor` (core/WorldSpatialAnchor.js)
+    // BEFORE it ever reaches the renderer: this session's OWN camera
+    // position/heading (already read for syncWorldSpatialPresence() just
+    // above) becomes the anchor's viewer, and this device's own selection
+    // is resolved to a contextual label ("House") through
+    // _resolveSpatialContextualLabel() below. The renderer/UI never do
+    // this derivation themselves — see that file's own header, "a pure
+    // function of a WorldSpatialPresenceUseCase observation plus the
+    // VIEWER's own local camera state."
     _applySpatialPresenceRoster(documentId, roster, resolveDisplayName) {
         if (!this._session || typeof this._session.setRemoteSpatialPresence !== 'function') {
             return;
         }
+        const viewerPosition = this.getCameraPosition();
+        const viewerHeading = this.getCompassHeading();
         const seen = new Set();
         for (const group of roster) {
             const label = resolveDisplayName ? resolveDisplayName(group.identityId) : this._shortIdentityLabel(group.identityId);
             for (const device of group.devices) {
                 seen.add(device.deviceId);
-                this._session.setRemoteSpatialPresence(device.deviceId, {
+                const anchor = deriveWorldSpatialAnchor({
+                    deviceId: device.deviceId,
                     identityId: group.identityId,
                     label,
                     position: device.position,
                     heading: device.heading,
                     selection: device.selection,
-                    activity: device.activity
+                    activity: device.activity,
+                    contextualLabel: this._resolveSpatialContextualLabel(device.selection),
+                    viewerPosition: viewerPosition ? { x: viewerPosition.x, z: viewerPosition.z } : null,
+                    viewerHeadingDegrees: viewerHeading ? viewerHeading.degrees : null
                 });
+                this._session.setRemoteSpatialPresence(device.deviceId, anchor);
             }
         }
         const previouslyRendered = this._spatialPresenceRenderedDevices.get(documentId) || new Set();
@@ -2973,6 +2992,91 @@ export class WorldNavigationSession {
             return '?';
         }
         return `${identityId.replace(/^did:key:/, '').slice(0, 6)}…`;
+    }
+
+    // 0.3.1 — Collaborative Spatial Awareness. "What is this remote
+    // selection actually pointing at, in words" — the ONE place a
+    // `WorldSpatialSelection` (0.3.0's read-only observation type) is
+    // ever turned into display text. Reuses getSavedDocumentTitle()'s
+    // own already-existing lookup rather than inventing a second one; a
+    // placement selection resolves through `document.world.getStructurePlacement()`
+    // to find WHICH document it references (exactly
+    // application/EditorSession.js#getSelectedPlacementInfo()'s own
+    // step, generalized to any loaded document rather than only the
+    // active one, since a remote participant's selection can live in any
+    // World this session has open). A brick selection has no comparable
+    // name to show — core/Building.js carries no title field at all
+    // (see that file's own header) — so it deliberately resolves to
+    // null, which describeSpatialActivity() already treats as "no
+    // contextual target," falling back to the exact plain phrase 0.3.0
+    // always showed ("Building", never "Building undefined"). Returns
+    // null, never throws, for an empty selection, an unresolvable
+    // placement (deleted, or in a document this replica hasn't loaded),
+    // or no loadDocumentUseCase wired at all.
+    _resolveSpatialContextualLabel(selection) {
+        if (!selection || selection.isEmpty || selection.kind !== 'placement') {
+            return null;
+        }
+        const hostDocument = this.getDocument(selection.documentId);
+        if (!hostDocument) {
+            return null;
+        }
+        const placement = hostDocument.world.getStructurePlacement(selection.placementId);
+        if (!placement) {
+            return null;
+        }
+        return this.getSavedDocumentTitle(placement.documentId);
+    }
+
+    // The public counterpart to _resolveSpatialContextualLabel() above —
+    // a UI (ui/views/WorldView.js) passes THIS straight to
+    // buildSpatialCollaboratorRows()'s own `resolveSelectionLabel` option
+    // rather than reaching into a private method, exactly the same
+    // "public wrapper around an internal derivation" shape
+    // resolveIdentityDisplayName()/getSavedDocumentTitle() already are.
+    resolveSpatialSelectionLabel(selection) {
+        return this._resolveSpatialContextualLabel(selection);
+    }
+
+    // 0.3.1 — Collaborative Spatial Awareness. The Follow-only navigation
+    // counterpart to focusLocation()/focusDocument(): moves the camera
+    // toward a collaborator's LAST KNOWN spatial position, once, through
+    // the exact same _beginCameraFocus()/LOCATION_FOCUS_OFFSET machinery
+    // 0.2.94's own Locations panel already established — no second
+    // camera-movement mechanism. Deliberately NOT a subscription: this
+    // reads whatever getWorldSpatialPresenceRoster() reports RIGHT NOW
+    // and never looks again — see docs/Principles.md, "Follow Is Local
+    // Camera Navigation, Never A Shared Camera (0.3.1)." A second call
+    // (e.g. a UI's own "Follow" button clicked again later) simply
+    // focuses wherever that collaborator now is; there is no persistent
+    // "currently following" mode, no live tether, and nothing is ever
+    // sent to the collaborator's own replica — their client has no way
+    // to know this was ever called. Searches every World this session is
+    // currently spatially present in (ordinarily just the one active
+    // World View is showing) rather than requiring a caller to also name
+    // a documentId. Returns false (a no-op) for a deviceId with no
+    // currently-known position — a stale roster row, or one that
+    // disconnected between the click and this call — never throws.
+    focusCollaborator(deviceId) {
+        for (const documentId of this._presentSpatialWorldDocumentIds) {
+            const roster = this.getWorldSpatialPresenceRoster(documentId);
+            for (const group of roster) {
+                const device = group.devices.find((candidate) => candidate.deviceId === deviceId);
+                if (device && device.position) {
+                    const groundY = terrainHeightAt(DEFAULT_WORLD_SEED, device.position.x, device.position.z);
+                    this._beginCameraFocus({
+                        position: {
+                            x: device.position.x + LOCATION_FOCUS_OFFSET.x,
+                            y: groundY + LOCATION_FOCUS_OFFSET.y,
+                            z: device.position.z + LOCATION_FOCUS_OFFSET.z
+                        },
+                        target: { x: device.position.x, y: groundY, z: device.position.z }
+                    });
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // 0.2.93 — resolves a StructurePlacement's referenced documentId to

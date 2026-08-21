@@ -863,11 +863,24 @@ export default {
             });
             spatialCollaboratorRows.value = buildSpatialCollaboratorRows(
                 session.getWorldSpatialPresenceRoster(presentSpatialWorldDocumentId),
-                { resolveDisplayName: resolveIdentityDisplayName }
+                { resolveDisplayName: resolveIdentityDisplayName, resolveSelectionLabel: (selection) => session.resolveSpatialSelectionLabel(selection) }
             );
             unsubscribeWorldSpatialPresence = session.onWorldSpatialPresenceChanged(presentSpatialWorldDocumentId, (roster) => {
-                spatialCollaboratorRows.value = buildSpatialCollaboratorRows(roster, { resolveDisplayName: resolveIdentityDisplayName });
+                spatialCollaboratorRows.value = buildSpatialCollaboratorRows(roster, {
+                    resolveDisplayName: resolveIdentityDisplayName,
+                    resolveSelectionLabel: (selection) => session.resolveSpatialSelectionLabel(selection)
+                });
             });
+        }
+
+        // 0.3.1 — Collaborative Spatial Awareness. The host view's own
+        // handler for WorldCollaboratorIndicator's `follow` emit — see
+        // that component's own header, "this component only ever emits
+        // which primaryDeviceId was clicked." session.focusCollaborator()
+        // is the ONE call that actually moves the camera; nothing here
+        // sends anything to anyone.
+        function followCollaborator(deviceId) {
+            session.focusCollaborator(deviceId);
         }
 
         // Resolves a friendly label for a raw identityId — PRESENTATION
@@ -1653,6 +1666,7 @@ export default {
             worldCollaborationRoster,
             worldOnlineCount,
             spatialCollaboratorRows,
+            followCollaborator,
             isActiveWorldOwner,
             collaborationPendingIdentityId,
             openMembersPanel,
@@ -1753,7 +1767,7 @@ export default {
                      own in-scene markers — see
                      ui/components/WorldCollaboratorIndicator.js's own
                      header. -->
-                <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" />
+                <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" @follow="followCollaborator" />
                 <!-- 0.2.29: browse the world by camera position, without
                      already knowing a document's name or typing raw
                      coordinates — see docs/Principles.md, "Exploring A
