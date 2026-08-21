@@ -5721,7 +5721,7 @@ actually exercises for the first time.
 
 Deliberately not in 0.2.93, named rather than hidden: move, rotate,
 duplicate, or delete a placement from World View (the whole point —
-0.2.94 is where an authorization layer, not a missing feature, decides
+0.2.95 is where an authorization layer, not a missing feature, decides
 whether that should ever be possible, and for whom); hover-highlighting
 a placement before it's clicked (click-to-select only — the design
 conversation's own scope, kept deliberately small); a combined World
@@ -5746,19 +5746,20 @@ first place).
 0.2.91  World Instance Editing & Placement Management  ✓
 0.2.92  World Instance Transform UX                    ✓
 0.2.93  World View Instance Inspection                 ✓
+0.2.94  World View Location & Navigation               ✓
     ↓
-0.2.94  World Editing Authorization
+0.2.95  World Editing Authorization
          ├── social identity as authorization subject
          ├── device-aware authorization
          └── mutation boundary
     ↓
-0.2.95  Shared World Collaboration
+0.2.96  Shared World Collaboration
          └── only after authorization semantics are solid
 ```
 
 0.2.93 is the hinge between them: it establishes, structurally rather
 than by convention, that World View can look at a World's structures
-without any capacity to change them — the exact boundary 0.2.94's
+without any capacity to change them — the exact boundary 0.2.95's
 authorization layer needs to already exist before "who is allowed to
 edit" becomes a meaningful question to ask. Alice viewing Bob's World and
 picking his House today gets exactly what she'd get picking her own —
@@ -5769,3 +5770,38 @@ has no mutation surface to guard, so the eventual "is Alice authorized to
 move this?" check has exactly one place to live — the Editor's own
 existing command path — rather than three places editing could have
 quietly crept into by accident.
+
+0.2.94 deliberately lands BETWEEN inspection and authorization rather
+than after collaboration: a world worth authorizing edits on is a world
+worth being able to find your way around first. Bricks, structures,
+ecology, and hydrology (0.2.76 through 0.2.93) had all made the World
+richer to look at; none of them had made it any easier to get back to a
+specific place in it once the camera wandered off, or to tell which way
+you were even facing. 0.2.94 closes that gap with exactly four additions
+— none of them an editing capability, all of them read-only navigation:
+
+```text
+World View
+ ├── walk / look / select / inspect     (existing)
+ ├── focus a WorldLocation               (new — Locations panel)
+ ├── return to the world's Home framing  (new — Home action)
+ ├── read the camera's compass heading   (new — CompassIndicator)
+ └── glide, never jump, between framings (new — CameraFocusAnimator)
+          │
+          ↓
+       READ ONLY, exactly as 0.2.93 left it
+```
+
+`core/WorldLocation.js` is deliberately NOT a new persisted concept — see
+docs/Principles.md, "A World Location Is Read From Existing Identity,
+Never A New Store (0.2.94)": every location is derived, on demand, from
+a `StructurePlacement`'s own identity or the world's fixed origin, never
+a location database. `focusLocation()`/`goHome()` glide the camera there
+through `application/CameraFocusAnimator.js`, a pure interpolation
+function riding the same per-frame tick avatar movement already uses —
+see "A Camera Focus Never Jumps; It Interpolates Through A Deterministic
+Path (0.2.94)." None of this touches `_activeDocumentId`, selection, or
+any document/placement/CommandHistory state — see "World View Navigation
+Operates On Spatial Observation, Never On Document Mutation (0.2.94)",
+the same read/write boundary 0.2.93 established for selection, now
+extended to navigation itself.

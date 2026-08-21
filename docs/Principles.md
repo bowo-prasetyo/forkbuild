@@ -6147,10 +6147,115 @@ authorization decision — there is no permission check anywhere in this
 milestone's code, on purpose. Alice inspecting Bob's World sees exactly
 what she'd see inspecting her own, because World View has no mutation
 surface to guard yet. That is what makes the eventual question "is Alice
-AUTHORIZED to move this?" (0.2.94) attachable to one clean seam later —
+AUTHORIZED to move this?" (0.2.95) attachable to one clean seam later —
 the Editor's own existing command path — rather than requiring a future
 milestone to first find and close editing affordances that quietly crept
 into World View by accident. See also "Observation Does Not Imply
 Authority, And Interaction Does Not Imply Control" (0.2.44), the same
 shape applied to avatar gestures rather than spatial selection.
-instance of the same content" it actually performs.
+
+### A World Location Is Read From Existing Identity, Never A New Store (0.2.94)
+
+World View Location & Navigation adds a Locations panel and a `Home`
+action without adding a location database. `core/WorldLocation.js` is
+never persisted, never has its own id-minting scheme, and is never
+written by anything other than `application/WorldLocationDirectory.js#list()`
+— every instance is DERIVED, on the fly, from identity that already
+exists for an unrelated reason: a `StructurePlacement`'s own `id` and
+`position` (0.2.90) for a `STRUCTURE` location, or the world's fixed
+origin for the one `ORIGIN` location. Deleting the `StructurePlacement`
+a location was built from means the next `list()` call simply no longer
+produces it — there is no dangling row to clean up, because there was
+never a row, only a read.
+
+This is why `core/WorldLocationKind.js` ships with exactly two kinds
+instead of the fuller `LANDMARK`/`SETTLEMENT`/`NATURAL_FEATURE`
+vocabulary the design conversation named. Both of those additional kinds
+would require either fabricating identity that doesn't exist (a
+"landmark" for one arbitrary tree-density sample among the deterministic
+infinity `core/NaturalFeatureField.js` can produce — see that file's own
+"sampled, never stored" framing) or standing up the persistent location
+store this milestone explicitly declined to build. Extending the kind
+vocabulary later is additive — a new derivation function feeding the
+same `list()` — never a breaking change to what already exists.
+
+### A Camera Focus Never Jumps; It Interpolates Through A Deterministic Path (0.2.94)
+
+Every pre-0.2.94 camera move in this codebase (`focusDocument`,
+`focusTarget`, `focusSelection`) applies its target `CameraState` in a
+single synchronous write — correct, but a visible jump-cut once the
+world is large enough that "Home" or "Focus" can cover hundreds of World
+Units in one call. `application/CameraFocusAnimator.js` is a pure
+function of `(from, to, durationMs, elapsedMs)` — no clock, no renderer,
+no session state — that WorldNavigationSession's own frame tick
+(`_tickCameraFocus`, riding the exact `onAnimationFrame` loop avatar
+movement and profile republishing already use) samples once per frame
+and hands straight to `SpatialCameraController#applyFraming()`. The
+determinism guarantee is exactly TerrainHeightField's own shape, carried
+one layer up: the SAME `(from, to, durationMs)` produces the SAME
+framing at the SAME `elapsedMs`, on any replica, independent of frame
+rate — which is what lets two independent replicas that both call
+`focusLocation(sameId)` land on the identical FINAL framing, even though
+their frame-by-frame paths there depend on each replica's own render
+loop timing.
+
+Deliberately NOT collision-aware: the interpolation is a straight-line
+eased lerp between two framings, not a navmesh route that swerves around
+terrain or a building in between. "Never jumps" means the camera passes
+through a continuous path of intermediate positions, not that the path
+never clips geometry — true camera collision avoidance is exactly the
+physics-shaped complexity the design conversation named and deliberately
+postponed. `focusDocument`/`focusTarget`/`moveCamera` keep their
+original pre-0.2.94 instant-apply behavior unchanged, on purpose — this
+milestone adds animated navigation as new entry points
+(`focusLocation`/`goHome`), it does not retrofit every existing camera
+call with motion those callers, and their tests, never asked for.
+
+### A Compass Heading Is Computed From Camera Orientation, Never Stored Or Broadcast (0.2.94)
+
+`core/CompassHeading.js#computeCompassHeading()` takes nothing but the
+camera's current position and target and returns `{ degrees, label }` or
+`null` — the exact "pure function, nothing persisted" shape
+`core/AvatarFacing.js#computeFacingYawDegrees()` already established for
+avatar facing, whose angle convention this reuses outright (0° faces
++Z, 90° faces +X) rather than inventing a second one a caller would have
+to convert between. `WorldNavigationSession#getCompassHeading()` re-runs
+it fresh on every call; there is no `compassHeading` field anywhere in a
+`Document`, a `WorldPlacement`, or any presence/profile advertisement —
+a compass reading is exactly as ephemeral and locally-derived as
+`_followAvatarIfEnabled`'s notion of "which way is the avatar facing,"
+and for the same reason: it describes THIS replica's own camera, never
+a fact about the shared world other replicas need to agree on.
+
+"North" is `core/CompassHeading.js`'s own fixed reference direction
+(+Z), not a real-world bearing — this is a synthetic `(seed, x, z)`
+terrain (`core/TerrainHeightField.js`) with no geography to be north OF.
+Choosing +Z as the label origin costs nothing and buys a stable,
+document-independent reference frame for the compass to read against,
+regardless of where the camera currently is or which World is loaded.
+
+### World View Navigation Operates On Spatial Observation, Never On Document Mutation (0.2.94)
+
+`getWorldLocations()`, `focusLocation()`, `goHome()`, and
+`getCompassHeading()` join `focusDocument()`/`focusSelection()`/
+`moveCamera()` as READ and CAMERA-ONLY operations — none of them touch
+`_activeDocumentId`, `_spatialSelection`, `_spatialInspection`, a
+`Document`, a `CommandHistory`, or any placement. `focusLocation()`
+in particular resolves a `WorldLocation` and moves the camera toward it
+without ever calling `setActiveDocument()` the way `focusDocument()`'s
+own default does — extending 0.2.27's "Camera Focus, Active Document,
+and Selection Are Three Different Things" with a FOURTH: Location.
+Focusing "the House" is never the same operation as making the House's
+Document the active editing target, exactly as focusing a search result
+was never the same as selecting it (0.2.29).
+
+This is the same boundary 0.2.93 drew for selection, extended to
+navigation: World View gained a Locations panel and a Home action
+without gaining a single new mutation surface. The flagship
+(`tests/WorldViewLocationNavigation.test.js`) proves it structurally,
+not just by convention — a `focusLocation()`/`goHome()` round trip
+leaves the World document, the placement, and `CommandHistory`
+byte-identical, and two independently-constructed sessions loading the
+SAME world state produce the SAME `getWorldLocations()` list and the
+SAME final framing for the SAME location, with nothing route- or
+timing-dependent about either result.

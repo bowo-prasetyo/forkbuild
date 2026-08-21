@@ -56,6 +56,9 @@ import { AvatarInteractionSyncService } from './AvatarInteractionSyncService.js'
 import { AvatarInteractionTrustBoundary } from './AvatarInteractionTrustBoundary.js';
 import { toAvatarInteractionAdvertisement } from '../core/AvatarInteractionAdvertisement.js';
 import { signAvatarInteractionAdvertisement } from './AvatarInteractionSigning.js';
+import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from './WorldLocationDirectory.js';
+import { CameraFocusAnimator } from './CameraFocusAnimator.js';
+import { computeCompassHeading } from '../core/CompassHeading.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -112,6 +115,27 @@ const GESTURE_DURATION_MS = 1800;
 // looking" default without pretending to know anything about that
 // document's actual size/shape.
 const AVATAR_SPAWN_OFFSET = { x: 3, y: 0, z: 3 };
+
+// 0.2.94 — World View Location & Navigation. HOME_CAMERA_FRAMING is
+// deliberately NOT a fresh invention: it is exactly
+// renderer/CameraState.js's own DEFAULT_POSITION/DEFAULT_TARGET
+// ((10,10,10) looking at the origin) — the framing every World View
+// session already starts from before any focusDocument()/navigateToDocument()
+// call ever runs. Reusing it (rather than picking a new "home" framing)
+// is what makes goHome() actually mean "the world's conventional
+// starting area" per the design conversation, instead of a third,
+// independently-chosen camera pose nothing else in the codebase agrees
+// with. LOCATION_FOCUS_OFFSET is the STRUCTURE-kind counterpart —
+// reused from focusSelection()'s own placement-focus offset (see
+// focusSelection() below), so focusing a location and focusing the
+// current inspection selection land on the exact same framing for the
+// exact same target. CAMERA_FOCUS_DURATION_MS is short on purpose: long
+// enough to read as a deliberate glide rather than a jump-cut, short
+// enough that repeated navigation (hopping through a Locations list)
+// never feels sluggish.
+const HOME_CAMERA_FRAMING = { position: { x: 10, y: 10, z: 10 }, target: { x: 0, y: 0, z: 0 } };
+const LOCATION_FOCUS_OFFSET = { x: 12, y: 12, z: 12 };
+const CAMERA_FOCUS_DURATION_MS = 900;
 
 // 0.1.46: gizmo wiring. 0.1.47: precision + modifier plumbing + gesture
 // feedback; keyboard transforms route through the gesture transaction.
@@ -465,6 +489,18 @@ export class WorldNavigationSession {
         // after a guarded call is simpler than wiring a new EventBus
         // topic for something that fires at most once per interaction.
         this._pendingForkNotice = null;
+
+        // 0.2.94 — World View Location & Navigation. `_worldLocationDirectory`
+        // is stateless and cheap to construct once, reused for every
+        // getWorldLocations()/focusLocation() call — see
+        // WorldLocationDirectory's own header for why it never needs
+        // rebuilding. `_activeCameraFocus` is null whenever no
+        // goHome()/focusLocation() animation is currently in flight;
+        // otherwise `{ animator, startedAt }`, advanced once per render
+        // frame by `_tickCameraFocus` (wired in start(), see below).
+        this._worldLocationDirectory = new WorldLocationDirectory(this);
+        this._activeCameraFocus = null;
+        this._cameraFocusFrameSubscription = null;
     }
 
     get transformSettings() {
@@ -503,6 +539,72 @@ export class WorldNavigationSession {
         // must already exist by the time that subscription is wired.
         this._setupRemoteAvatars();
         this._setupLocalAvatar();
+        this._setupCameraFocusAnimation();
+    }
+
+    // 0.2.94 — advances any in-flight goHome()/focusLocation() animation
+    // once per render frame, the same frame loop every other time-based
+    // concern in this file already rides (avatar movement, presence
+    // republish). Absent entirely when the render facade doesn't
+    // support onAnimationFrame (a minimal test double) — a session
+    // without frame ticking simply applies every camera focus
+    // instantly, see _beginCameraFocus() below, the same
+    // graceful-absence posture every other optional frame-driven
+    // feature in this file already follows.
+    _setupCameraFocusAnimation() {
+        if (typeof this._session.onAnimationFrame !== 'function') {
+            return;
+        }
+        this._cameraFocusFrameSubscription = this._session.onAnimationFrame(() => {
+            this._tickCameraFocus(Date.now());
+        });
+    }
+
+    // Applies `framing` to the camera right now, then either starts an
+    // animated glide toward it (when this session can actually tick
+    // frames) or — the graceful-absence case, e.g. a test session built
+    // without start()/onAnimationFrame support — applies it instantly,
+    // exactly like every pre-0.2.94 focus call already did. Either way
+    // the FINAL framing is the same deterministic value for the same
+    // target; only whether the camera visibly glides there differs.
+    _beginCameraFocus(framing) {
+        if (!this._spatialCameraController) {
+            return;
+        }
+        if (!this._cameraFocusFrameSubscription) {
+            this._spatialCameraController.applyFraming(framing);
+            return;
+        }
+        const current = this._spatialCameraController.getSpatialCameraState();
+        this._activeCameraFocus = {
+            // Explicit {x,y,z} copies, never the WorldPosition instances
+            // themselves — CameraFocusAnimator spreads its `from`/`to`
+            // inputs (`{ ...from.position }`), and WorldPosition's x/y/z
+            // are prototype getters that a plain object spread would
+            // silently drop, leaving an animator with no coordinates at
+            // all. See core/WorldPosition.js.
+            animator: new CameraFocusAnimator({
+                from: {
+                    position: { x: current.position.x, y: current.position.y, z: current.position.z },
+                    target: { x: current.target.x, y: current.target.y, z: current.target.z }
+                },
+                to: framing,
+                durationMs: CAMERA_FOCUS_DURATION_MS
+            }),
+            startedAt: Date.now()
+        };
+    }
+
+    _tickCameraFocus(now) {
+        if (!this._activeCameraFocus || !this._spatialCameraController) {
+            return;
+        }
+        const { animator, startedAt } = this._activeCameraFocus;
+        const state = animator.stateAt(now - startedAt);
+        this._spatialCameraController.applyFraming(state);
+        if (state.complete) {
+            this._activeCameraFocus = null;
+        }
     }
 
     // -----------------------------------------------------------------
@@ -1627,6 +1729,74 @@ export class WorldNavigationSession {
 
     navigateToDocument(documentId) {
         return this.focusDocument(documentId);
+    }
+
+    // 0.2.94 — every currently-navigable WorldLocation: the world's
+    // fixed Origin, plus one entry per StructurePlacement across every
+    // currently LOADED document. See WorldLocationDirectory's own
+    // header for exactly what "currently loaded" does and doesn't
+    // include. Purely a query — never mutates selection, focus, or the
+    // active document.
+    getWorldLocations() {
+        return this._worldLocationDirectory.list();
+    }
+
+    // 0.2.94 — the Locations-panel counterpart to focusDocument()/
+    // focusSelection(): moves the camera toward a WorldLocation's own
+    // position with a deterministic offset (LOCATION_FOCUS_OFFSET for a
+    // STRUCTURE location, or the fixed HOME_CAMERA_FRAMING for ORIGIN —
+    // see those constants' own comments for why each is what it is),
+    // smoothly when this session can animate (see _beginCameraFocus()).
+    // Deliberately never touches `_activeDocumentId`/selection/
+    // inspection — see docs/Principles.md, "Navigation Never Implies
+    // Editing (0.2.27)," which this milestone's Locations panel keeps
+    // exactly as true as every prior navigation entry point. Returns
+    // false (a no-op) for an unknown locationId, e.g. a stale panel
+    // entry whose StructurePlacement was since deleted or unloaded —
+    // never throws.
+    focusLocation(locationId) {
+        const location = this._worldLocationDirectory.find(locationId);
+        if (!location) {
+            return false;
+        }
+        if (location.isOrigin) {
+            this._beginCameraFocus(HOME_CAMERA_FRAMING);
+            return true;
+        }
+        const { x, y, z } = location.position;
+        this._beginCameraFocus({
+            position: { x: x + LOCATION_FOCUS_OFFSET.x, y: y + LOCATION_FOCUS_OFFSET.y, z: z + LOCATION_FOCUS_OFFSET.z },
+            target: { x, y, z }
+        });
+        return true;
+    }
+
+    // 0.2.94 — "Home": returns the camera to the world's one
+    // conventional starting framing, regardless of how far the camera
+    // has since wandered. Exactly `focusLocation(ORIGIN_LOCATION_ID)`,
+    // exposed under its own name because "Home" is the one destination
+    // the design conversation calls out as needing no Locations-panel
+    // lookup at all — a single always-available action. Never changes
+    // `_activeDocumentId` or any document/placement state — the world
+    // itself is completely unaffected; only the camera moves.
+    goHome() {
+        return this.focusLocation(ORIGIN_LOCATION_ID);
+    }
+
+    // 0.2.94 — a pure, derived orientation reading for a compass
+    // indicator: "which way is the camera currently looking," computed
+    // fresh from the camera's own position/target (core/CompassHeading.js)
+    // every time this is called — never cached, never a stored fact.
+    // Returns null before start() has ever been called (no camera
+    // controller yet) or when the camera's position and target
+    // currently coincide (no meaningful heading — see
+    // computeCompassHeading's own comment).
+    getCompassHeading() {
+        if (!this._spatialCameraController) {
+            return null;
+        }
+        const state = this._spatialCameraController.getSpatialCameraState();
+        return computeCompassHeading(state.position, state.target);
     }
 
     moveCamera(delta) {
@@ -3720,6 +3890,11 @@ export class WorldNavigationSession {
             this._remoteAvatarFrameSubscription();
             this._remoteAvatarFrameSubscription = null;
         }
+        if (this._cameraFocusFrameSubscription) {
+            this._cameraFocusFrameSubscription();
+            this._cameraFocusFrameSubscription = null;
+        }
+        this._activeCameraFocus = null;
         if (this._presenceSyncService) {
             this._presenceSyncService.dispose();
             this._presenceSyncService = null;
