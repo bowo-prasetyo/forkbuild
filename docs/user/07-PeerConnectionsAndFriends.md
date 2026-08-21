@@ -32,7 +32,13 @@ information through some channel you already trust (chat, email, in person):
 - **Be Discoverable** — publishes your own identity to a rendezvous network
   so someone who already knows your identity ID can find and connect to you
   without a direct invitation. One publication answers one connection
-  attempt — republish to be found again.
+  attempt — republish to be found again. Opening this panel also shows
+  **Your Identity** — your full ID, with a **Copy** button — which is what
+  you actually need to send someone for **Find Someone** to work. It's
+  deliberately different from the shortened `…last14chars` shown elsewhere
+  in this app (on peer cards, Known Peers, Friends) — that shortened form
+  is only for telling entries apart at a glance and will never match a
+  real search.
 
 Whichever path you use, a peer's card shows its progress through the same
 steps: **Rendezvous discovered → WebRTC connecting → Peer connected →
