@@ -5216,6 +5216,247 @@ itself works). Every one of these was named in the design conversation
 and ruled out specifically to keep this milestone what it set out to be —
 closing exactly the gap 0.2.90 named — not because of scheduling.
 
+0.2.92 — World Instance Transform UX — is the milestone 0.2.91's own
+closing notes named twice, by name, and deliberately postponed: "a full
+interactive translate/rotate GIZMO for a placement" and "a numeric
+transform panel for a placement selection." 0.2.90 gave a placed
+structure a data model; 0.2.91 gave it a complete first-class editing
+LIFECYCLE — select, move (click-drag, ground-snapped), rotate (keyboard),
+duplicate, delete, a real 3D preview — all through
+`MoveStructurePlacementCommand`/`RotateStructurePlacementCommand`, never
+touching the referenced Document. What 0.2.91 explicitly left undone was
+the INTERACTION quality of that lifecycle: no visible arrows/ring to grab
+in the viewport, no way to type an exact target position, keyboard and a
+somewhat blunt click-then-drag the only ways in. The design conversation
+that proposed this milestone settled its scope narrowly on purpose: close
+that interaction gap, keep the command architecture exactly as it is, and
+do not let the Editor's newfound polish quietly turn into a second World
+View milestone.
+
+```text
+0.2.92
+├── application/StructurePlacementGestureService.js  NEW — the
+│                                                 StructurePlacement
+│                                                 counterpart to
+│                                                 SpatialEditingService's
+│                                                 own gesture transaction
+│                                                 (0.1.46), one rung up —
+│                                                 NOT a widening of that
+│                                                 class (0.2.91 already
+│                                                 ruled that out by name).
+│                                                 Implements the exact
+│                                                 same 5-method contract
+│                                                 TransformGizmoController
+│                                                 already calls
+│                                                 (begin/preview/commit/
+│                                                 cancelTransformGesture +
+│                                                 getGestureFeedback).
+│                                                 Never mutates World
+│                                                 mid-gesture — drives
+│                                                 StructurePreviewUseCase's
+│                                                 ghost instead, exactly
+│                                                 like SelectionTool's own
+│                                                 0.2.91 click-drag —
+│                                                 then commits via
+│                                                 Move/RotateStructure-
+│                                                 PlacementCommand on
+│                                                 release, validated by
+│                                                 the SAME
+│                                                 StructurePlacementValidator
+│                                                 0.2.90/0.2.91 already
+│                                                 use. Y is discarded from
+│                                                 every translation —
+│                                                 elevation is terrain-
+│                                                 derived, never a gizmo
+│                                                 target (see
+│                                                 docs/Principles.md).
+├── application/GizmoGestureRouter.js            NEW — the ONE new piece
+│                                                 of shared machinery: a
+│                                                 pure per-call dispatcher
+│                                                 so the single
+│                                                 TransformGizmoController
+│                                                 instance a render
+│                                                 session builds can drive
+│                                                 EITHER gesture kernel
+│                                                 depending on
+│                                                 selection.isStructure-
+│                                                 PlacementSelection.
+│                                                 renderer/TransformGizmo-
+│                                                 Controller.js and
+│                                                 renderer/TransformGizmo-
+│                                                 Renderer.js are BOTH
+│                                                 completely unchanged —
+│                                                 they were already
+│                                                 selection-agnostic,
+│                                                 anchored to nothing more
+│                                                 than { pivot, bounds }.
+├── application/EditorSession.js                 + a second gesture
+│                                                 service instance, the
+│                                                 router as the ONE thing
+│                                                 handed to
+│                                                 RenderWorldUseCase,
+│                                                 isGestureActive() checks
+│                                                 BOTH services,
+│                                                 _resolveGizmoPresentation()
+│                                                 branches to the
+│                                                 placement service's own
+│                                                 getSelectionBounds()
+│                                                 instead of widening
+│                                                 TransformGizmoUseCase,
+│                                                 getSelectedPlacementInfo()
+│                                                 gains a `groundY` field
+│                                                 (terrainHeightAt() at
+│                                                 the placement's current
+│                                                 x/z, read-only), and the
+│                                                 new applyPlacementTransform()
+│                                                 — absolute X/Z/rotation
+│                                                 targets translated into
+│                                                 the SAME
+│                                                 Move/RotateStructure-
+│                                                 PlacementCommand pair
+│                                                 moveSelection()/
+│                                                 rotateSelection() already
+│                                                 produce
+├── ui/components/StructureInstancePanel.js      + the numeric inspector
+│                                                 the design conversation
+│                                                 asked for: X/Z number
+│                                                 fields, a read-only
+│                                                 "Ground Y: 14.7," a
+│                                                 rotation field, one
+│                                                 Apply button. Tracks the
+│                                                 selected placement's
+│                                                 LIVE position/rotation
+│                                                 (a property inspector,
+│                                                 not a "next operation"
+│                                                 scratch pad like
+│                                                 NumericTransformPanel) —
+│                                                 which only mattered once
+│                                                 this milestone gave the
+│                                                 panel numbers to keep
+│                                                 honest
+├── ui/views/EditorView.js                       + refreshSelectedPlacementInfo(),
+│                                                 called after every
+│                                                 pointer-up/key-down/
+│                                                 Rotate/Apply — a
+│                                                 pre-existing staleness
+│                                                 (selectedPlacementInfo
+│                                                 only ever refreshed on
+│                                                 SELECTION_CHANGED) that
+│                                                 was invisible while the
+│                                                 panel showed no numbers,
+│                                                 and stopped being
+│                                                 invisible the moment it
+│                                                 did
+└── tests/StructureInstanceTransformUX.test.js   NEW — gesture-service
+                                                  unit coverage, router
+                                                  dispatch, EditorSession
+                                                  wiring, and a FLAGSHIP:
+                                                  keyboard move/rotate vs.
+                                                  a SIMULATED gizmo drag
+                                                  (the exact TransformMath
+                                                  primitives the real
+                                                  controller calls, per
+                                                  tests/InteractiveGizmo.
+                                                  test.js's own
+                                                  convention) commit
+                                                  BYTE-IDENTICAL
+                                                  positions/rotations
+                                                  through the IDENTICAL
+                                                  command-type sequence
+```
+
+The load-bearing decision, settled before any code the same way 0.2.90's
+and 0.2.91's own were: the interactive gizmo must dispatch between two
+independent gesture kernels, never merge them. `SpatialEditingService`
+is shaped entirely around per-brick geometry — `TransformSelectionCommand`,
+`SelectionBoundsService`, initial-transform snapshots keyed by
+`{ buildingId, brickId }` — and 0.2.91 already drew the line ("Selecting
+An Instance Selects Its Spatial Reference, Never Its Content") against
+teaching it to also understand a whole placed structure.
+`TransformGizmoController`, though, was built in 0.1.46 around exactly
+one `gestureService` reference for its entire lifetime. Reconciling
+those two facts is the whole job of `GizmoGestureRouter`: a small object
+implementing the identical 5-method contract the controller already
+calls, dispatching per call — not once at gizmo-show time — to whichever
+of `SpatialEditingService` or the new `StructurePlacementGestureService`
+actually understands the current selection. Neither underlying kernel
+changes; neither knows the other exists. The controller keeps believing
+it talks to one gesture service, because as far as it can tell, it does.
+
+The second load-bearing decision was about WHEN a placement's real
+position changes during a drag: never, until release. `StructurePlacement-
+GestureService#previewTransformGesture()` computes a candidate position,
+validates it with the same conservative AABB `StructurePlacementValidator`
+0.2.90/0.2.91 already use, and drives `StructurePreviewUseCase`'s ghost —
+exactly the architecture `application/tools/SelectionTool.js`'s own
+0.2.91 click-drag already established, reused rather than reinvented for
+a second interaction path. The real `StructurePlacement` is completely
+untouched until `commitTransformGesture()` — a deliberate DIVERGENCE from
+how `SpatialEditingService` previews a BRICK drag (it mutates brick
+positions directly, then reverts on cancel), because a placement's
+preview was already a ghost mesh, not the placement itself, and there was
+no reason to introduce a second mutation-and-revert dance where one
+already existed. Both interaction paths — the 0.2.91 click-drag and this
+milestone's gizmo — now leave `World` untouched mid-gesture and validate
+the SAME candidate the SAME way before ever calling
+`MoveStructurePlacementCommand`/`RotateStructurePlacementCommand`. The UI
+never becomes a second authority over what a valid placement is.
+
+The numeric inspector settles a smaller but equally deliberate question:
+what happens to Y. The design conversation was explicit that a placement's
+elevation should stay terrain-derived, not become an arbitrary target a
+user can type a number into — "don't encourage arbitrary vertical
+floating structures if the product's current model is ground placement."
+So the panel shows Ground Y as a read-only fact, computed the same way
+the renderer already computes it, and the gizmo's own Y-axis handle —
+drawn by the shared, selection-agnostic `TransformGizmoRenderer` — simply
+produces no effect for a placement selection, because
+`StructurePlacementGestureService` discards the Y component of every
+translation before it ever reaches a candidate position. Nothing renders
+differently; nothing needs to. See docs/Principles.md, "A Placement's
+Elevation Is Never A Gizmo Or Numeric Target."
+
+The flagship test earns its name by proving the thing that actually
+matters architecturally: keyboard-driven move/rotate and a SIMULATED
+gizmo drag — built from the exact `TransformMath.projectDeltaOntoAxis()`/
+`rotationDeltaFromPoints()` primitives the real `TransformGizmoController`
+computes between raycasts, the same convention
+`tests/InteractiveGizmo.test.js` already established for bricks — commit
+BYTE-IDENTICAL positions and rotations through the IDENTICAL
+`move-structure-placement`/`rotate-structure-placement` command-type
+sequence. Collision refuses both equally. Undo restores both equally.
+`documentId`/`placementId` and the referenced House Document survive a
+full save/reload untouched by any of it. That is the concrete meaning of
+"the interactive gizmo doesn't become a second mutation path merely for
+mouse interaction" — not an aspiration in a design conversation, but an
+assertion a test enforces.
+
+Deliberately not in 0.2.92, named rather than hidden: World View wiring
+for instance editing (0.2.90 scoped placement CREATION to the Editor
+only; 0.2.91 kept that boundary; this milestone keeps it a third time —
+establishing the reusable transform machinery first, exactly as the
+design conversation asked, so a later milestone can deliberately decide
+what World View gets rather than inheriting it as an accident of this
+one); oriented/mesh-level collision for the gizmo drag (still
+translate-only AABB — the gizmo asks the SAME
+`StructurePlacementValidator` the click-drag and keyboard paths already
+ask, unchanged); a combined single-undo-step command for a numeric Apply
+that changes both position and rotation (two independent
+Move/RotateStructurePlacementCommand executions today, exactly the
+granularity the keyboard/Rotate-button pair already had — a
+`CompositeCommand` wrapper is a plausible future refinement, not a gap
+this milestone needed to close); recursively resolving a placed
+structure's own StructurePlacements (still the "don't recurse
+indefinitely" boundary 0.2.90 drew); and any authorization/permission
+model for who may transform a placement (the design conversation raised
+it explicitly and just as explicitly deferred it — "make sure the
+commands remain cleanly callable through an eventual authorization
+boundary," which they already are: UI → EditorSession → Command → World,
+with no permission check anywhere in rendering or UI code to unwind
+later). Every one of these was named and ruled out specifically to keep
+this milestone what it set out to be — the reusable transform machinery,
+built once, correctly — not because of scheduling.
+
 ## 0.1.50 — What shipped
 
 Discoverability and consistency for the accumulated 0.1.42–0.1.49

@@ -33,6 +33,9 @@ import { DuplicateStructurePlacementCommand } from './commands/DuplicateStructur
 import { StructurePlacementValidator } from './StructurePlacementValidator.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { Position } from '../core/Position.js';
+import { StructurePlacementGestureService } from './StructurePlacementGestureService.js';
+import { GizmoGestureRouter } from './GizmoGestureRouter.js';
+import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 // Owns the live runtime graph — the render session, World, CommandHistory,
 // ToolManager, InputDispatcher — as one unit, so nothing else has to know
@@ -105,6 +108,23 @@ export class EditorSession {
             this._transformSettings
         );
         this._gizmoUseCase = new TransformGizmoUseCase(this._gestureService);
+        // 0.2.92 — World Instance Transform UX. A structure-placement
+        // selection gets its OWN gesture service (never widens
+        // SpatialEditingService — see that class's own 0.2.91 header),
+        // and a small router so the ONE TransformGizmoController this
+        // session constructs (application/RenderWorldUseCase.js) can
+        // drive either kind of selection through the SAME shared visual
+        // gizmo. See application/StructurePlacementGestureService.js and
+        // application/GizmoGestureRouter.js for the full reasoning.
+        this._placementGestureService = new StructurePlacementGestureService({
+            getWorld: () => (this._documentManager.document ? this._documentManager.document.world : null),
+            getCommandHistory: () => this._commandHistory,
+            registry,
+            structureResolver: this._structureResolver,
+            structurePreviewUseCase: this._structurePreviewUseCase,
+            transformSettings: this._transformSettings
+        });
+        this._gizmoGestureRouter = new GizmoGestureRouter(this._gestureService, this._placementGestureService);
         this._gizmoSubscriptions = [];
         this._clipboardState = null;
         this._selectedGroupId = null;
@@ -120,8 +140,15 @@ export class EditorSession {
         return this._transformSettings;
     }
 
+    // 0.2.92 — checks BOTH gesture services: a placement drag now sets
+    // this._placementGestureService's own gizmo state active, exactly
+    // parallel to how a brick drag sets this._gestureService's. Neither
+    // service can be active while the other is (the gizmo controller
+    // only ever drives one drag at a time), so this is simply "is either
+    // one mid-gesture right now."
     isGestureActive() {
-        return this._gestureService.transformGizmoState.active;
+        return this._gestureService.transformGizmoState.active
+            || this._placementGestureService.transformGizmoState.active;
     }
 
     // -------------------------------- 0.1.50 consolidated editing surface
@@ -338,8 +365,67 @@ export class EditorSession {
             documentId: placement.documentId,
             title,
             position: placement.position,
-            rotation: placement.rotation
+            rotation: placement.rotation,
+            // 0.2.92 — the numeric inspector's read-only elevation
+            // display (docs/Principles.md, "A Placement's Elevation Is
+            // Never A Gizmo Or Numeric Target"). Computed fresh, the same
+            // pure function renderer/WorldRenderer.js's own
+            // _renderStructurePlacement() calls at render time — never a
+            // stored fact, never editable here.
+            groundY: terrainHeightAt(DEFAULT_WORLD_SEED, placement.position.x, placement.position.z)
         };
+    }
+
+    // 0.2.92 — World Instance Transform UX. The numeric inspector's
+    // counterpart to dragging the gizmo: absolute X/Z/rotation TARGETS
+    // for the selected placement, translated into the exact same
+    // delta-shaped calls moveSelection()/rotateSelection() already make
+    // — no third mutation path, per the design conversation ("Don't
+    // create a second mutation path merely for mouse interaction" — the
+    // same rule applies to a numeric one). `x`/`z`/`rotation` are each
+    // optional; omitting one leaves that axis unchanged. Y is
+    // deliberately not a parameter — see getSelectedPlacementInfo()'s own
+    // `groundY` note just above.
+    //
+    // Returns { moved, blocked, rotated }: `moved`/`rotated` report
+    // whether that half of the request actually changed anything (a
+    // no-op target commits nothing, same as everywhere else in this
+    // engine); `blocked` distinguishes "X/Z were requested but the
+    // target position collides with something" from "nothing was
+    // requested" so the UI can say which.
+    applyPlacementTransform({ x = null, z = null, rotation = null } = {}) {
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (!selection.isStructurePlacementSelection || !document) {
+            return { moved: false, blocked: false, rotated: false };
+        }
+        const placementId = selection.selectedPlacementId;
+        const placement = document.world.getStructurePlacement(placementId);
+        if (!placement) {
+            return { moved: false, blocked: false, rotated: false };
+        }
+
+        let moved = false;
+        let blocked = false;
+        if (x !== null || z !== null) {
+            const targetX = x !== null ? Number(x) : placement.position.x;
+            const targetZ = z !== null ? Number(z) : placement.position.z;
+            const delta = { x: targetX - placement.position.x, y: 0, z: targetZ - placement.position.z };
+            if (delta.x !== 0 || delta.z !== 0) {
+                moved = this._moveStructurePlacement(placementId, delta);
+                blocked = !moved;
+            }
+        }
+
+        let rotated = false;
+        if (rotation !== null) {
+            const deltaRotation = Number(rotation) - placement.rotation;
+            if (deltaRotation !== 0) {
+                rotated = this._rotateStructurePlacement(placementId, deltaRotation);
+            }
+        }
+
+        return { moved, blocked, rotated };
     }
 
     // 0.2.91 — "Edit Source Document": reuses the EXISTING loadDocument()
@@ -818,7 +904,10 @@ export class EditorSession {
             eventBus,
             this._registry,
             this._editorContext.eventBus,
-            { gestureService: this._gestureService, structureResolver: this._structureResolver }
+            // 0.2.92 — the router, not the brick service directly, so the
+            // interactive gizmo also works for a structure-placement
+            // selection. See application/GizmoGestureRouter.js.
+            { gestureService: this._gizmoGestureRouter, structureResolver: this._structureResolver }
         );
         const world = populateWorldFn(eventBus);
         this._commandHistory = new CommandHistory({ world });
@@ -882,19 +971,38 @@ export class EditorSession {
         if (!this._session) {
             return;
         }
-        if (this._gestureService.transformGizmoState.active) {
+        if (this.isGestureActive()) {
             return;
         }
         if (this._editorContext.tool.activeTool === ToolId.PLACE) {
             this._session.hideGizmo();
             return;
         }
-        const presentation = this._gizmoUseCase.resolvePresentation(this._editorContext.selection);
+        const presentation = this._resolveGizmoPresentation(this._editorContext.selection);
         if (!presentation) {
             this._session.hideGizmo();
             return;
         }
         this._session.showGizmo(presentation.pivot, presentation.bounds);
+    }
+
+    // 0.2.92 — the presentation-resolution counterpart to
+    // GizmoGestureRouter: a structure-placement selection is anchored
+    // via StructurePlacementGestureService#getSelectionBounds() (the
+    // whole placed structure's resolved bounds), never through
+    // TransformGizmoUseCase — which stays exactly the brick/group-shaped
+    // use case it always was (see its own header). Same { pivot, bounds }
+    // shape either way, so _refreshGizmo() above never needs to know
+    // which kind of selection it just resolved.
+    _resolveGizmoPresentation(selection) {
+        if (!selection || selection.isEmpty) {
+            return null;
+        }
+        if (selection.isStructurePlacementSelection) {
+            const bounds = this._placementGestureService.getSelectionBounds(selection);
+            return bounds ? { bounds, pivot: { ...bounds.center } } : null;
+        }
+        return this._gizmoUseCase.resolvePresentation(selection);
     }
 
     _toKeyEvent(event) {
