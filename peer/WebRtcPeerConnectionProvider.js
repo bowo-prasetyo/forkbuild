@@ -40,10 +40,17 @@ import { createId } from '../core/createId.js';
 // layered on top exactly as it already is for every other transport, may
 // ever say who is actually on the other end.
 export class WebRtcPeerConnectionProvider extends PeerConnectionProvider {
-    constructor({ iceServers = [], RTCPeerConnectionImpl = globalThis.RTCPeerConnection } = {}) {
+    // 0.3.6 — `iceGatheringTimeoutMs`, passed straight through to every
+    // WebRtcPeerConnection this provider creates, same optional-override
+    // posture as `iceServers`/`RTCPeerConnectionImpl` already have —
+    // undefined here simply means each connection falls back to
+    // peer/WebRtcPeerConnection.js's own ICE_GATHERING_TIMEOUT_MS
+    // default. See that constant's own header for why it exists.
+    constructor({ iceServers = [], RTCPeerConnectionImpl = globalThis.RTCPeerConnection, iceGatheringTimeoutMs } = {}) {
         super();
         this._iceServers = iceServers;
         this._RTCPeerConnectionImpl = RTCPeerConnectionImpl;
+        this._iceGatheringTimeoutMs = iceGatheringTimeoutMs;
         this._connections = new Map(); // connectionId -> WebRtcPeerConnection
         this._incomingListeners = new Set();
     }
@@ -63,6 +70,7 @@ export class WebRtcPeerConnectionProvider extends PeerConnectionProvider {
             role: 'offerer',
             iceServers: this._iceServers,
             RTCPeerConnectionImpl: this._RTCPeerConnectionImpl,
+            iceGatheringTimeoutMs: this._iceGatheringTimeoutMs,
             ...(ttlMs ? { ttlMs } : {})
         });
         this._connections.set(connection.connectionId, connection);
@@ -87,7 +95,8 @@ export class WebRtcPeerConnectionProvider extends PeerConnectionProvider {
             role: 'answerer',
             iceServers: this._iceServers,
             remoteOffer: offer,
-            RTCPeerConnectionImpl: this._RTCPeerConnectionImpl
+            RTCPeerConnectionImpl: this._RTCPeerConnectionImpl,
+            iceGatheringTimeoutMs: this._iceGatheringTimeoutMs
         });
         this._connections.set(connection.connectionId, connection);
         return connection;
