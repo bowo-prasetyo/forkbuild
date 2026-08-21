@@ -63,6 +63,23 @@ export class SpatialCameraController {
         });
     }
 
+    // 0.2.94 — the public counterpart to _applyToRenderer(), for a
+    // caller that already has a concrete {position, target} framing to
+    // show RIGHT NOW rather than one of this class's own offset
+    // formulas (focusDocument/focusTarget). The one real caller is
+    // WorldNavigationSession's camera-focus animation frame tick
+    // (application/CameraFocusAnimator.js) — each tick computes an
+    // intermediate framing and hands it straight here, unchanged, so
+    // there remains exactly one place ({@link _applyToRenderer}) that
+    // ever writes a CameraState to the renderer.
+    applyFraming({ position, target }) {
+        this._applyToRenderer(new SpatialCameraState({
+            position: new WorldPosition(position.x, position.y, position.z),
+            target: new WorldPosition(target.x, target.y, target.z),
+            mode: 'orbit'
+        }));
+    }
+
     _applyToRenderer(spatialState) {
         const current = this._renderSession.getCameraState();
         this._renderSession.setCameraState(new CameraState({

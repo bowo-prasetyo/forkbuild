@@ -1679,6 +1679,135 @@ html, body {
     margin-top: 0.4rem;
 }
 
+/* 0.2.94 — World View Location & Navigation: the compass + Home +
+   Locations row. Sits directly under the camera coordinate readout,
+   same placement logic as world-view-actions--explore above — these
+   act on "where the camera is/is going," not the world in general. */
+.world-view-actions--navigation {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+}
+
+.compass-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #909090;
+}
+
+.compass-indicator-dial {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #3a3a3a;
+    background: #1a1a1a;
+    flex-shrink: 0;
+}
+
+.compass-indicator-tick {
+    position: absolute;
+    font-size: 0.55rem;
+    color: #707070;
+    line-height: 1;
+}
+
+.compass-indicator-tick--n { top: 1px; left: 50%; transform: translateX(-50%); }
+.compass-indicator-tick--s { bottom: 1px; left: 50%; transform: translateX(-50%); }
+.compass-indicator-tick--e { right: 1px; top: 50%; transform: translateY(-50%); }
+.compass-indicator-tick--w { left: 1px; top: 50%; transform: translateY(-50%); }
+
+/* The needle rotates around the dial's own center; its transform-origin
+   stays the dial's midpoint regardless of the needle element's own
+   height, so a heading of 0deg always points to the N tick above. */
+.compass-indicator-needle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 10px;
+    margin-left: -1px;
+    margin-top: -10px;
+    background: #4caf7d;
+    transform-origin: 50% 10px;
+}
+
+.compass-indicator--unknown .compass-indicator-needle {
+    background: #4a4a4a;
+}
+
+.compass-indicator-label {
+    font-family: monospace;
+    font-size: 0.75rem;
+}
+
+/* 0.2.94 — ui/components/LocationsPanel.js: same modal convention as
+   WorldLocationBrowser just above, minus the diagnostics banner and
+   radius form — a WorldLocation list is never a spatial-region query. */
+.locations-panel-hint {
+    margin: 0 0 0.85rem;
+    font-size: 0.82rem;
+    color: #909090;
+    line-height: 1.5;
+}
+
+.locations-panel-empty {
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+.locations-panel-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.locations-panel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.locations-panel-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.locations-panel-item-title {
+    font-size: 0.88rem;
+    color: #e0e0e0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.locations-panel-item-kind {
+    font-size: 0.72rem;
+    color: #707070;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.locations-panel-item-position {
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: #707070;
+}
+
 /* 0.2.29: ui/components/WorldLocationBrowser.js — same modal
    convention as LocationDocumentsDialog, extended with a re-query
    radius form and a result list that (unlike LocationDocumentsDialog's

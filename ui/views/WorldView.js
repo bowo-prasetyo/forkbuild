@@ -18,6 +18,8 @@ import LocationDocumentsDialog from '../components/LocationDocumentsDialog.js';
 import WorldLocationBrowser from '../components/WorldLocationBrowser.js';
 import AvatarInfoPanel from '../components/AvatarInfoPanel.js';
 import NearbyAvatarsPanel from '../components/NearbyAvatarsPanel.js';
+import CompassIndicator from '../components/CompassIndicator.js';
+import LocationsPanel from '../components/LocationsPanel.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -47,7 +49,8 @@ export default {
         DocumentInfoPanel, MetadataEditorDialog,
         PlacementInfoPanel, PlacementEditorDialog,
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
-        AvatarInfoPanel, NearbyAvatarsPanel
+        AvatarInfoPanel, NearbyAvatarsPanel,
+        CompassIndicator, LocationsPanel
     },
     setup() {
         const route = useRoute();
@@ -155,6 +158,18 @@ export default {
         const spatialEditingContext = ref(null);
         const spatialPlacement = ref(null);
         const cameraPosition = ref(null);
+        // 0.2.94 — World View Location & Navigation. `compassHeading`
+        // mirrors `cameraPosition`'s own refresh cadence exactly (both
+        // set inside refreshSpatialUI() below) — a pure, derived
+        // orientation readout for CompassIndicator, never polled or
+        // computed independently. `showLocationsPanel`/`worldLocations`
+        // back the Locations dialog: the location LIST is re-read fresh
+        // every time the panel opens (session.getWorldLocations() is a
+        // cheap, always-current query — see WorldLocationDirectory's
+        // own header), never cached across opens.
+        const compassHeading = ref(null);
+        const showLocationsPanel = ref(false);
+        const worldLocations = ref([]);
         const availableDefinitions = ref([]);
         const selectedDefinitionId = ref(null);
         const activeTool = ref('select');
@@ -508,6 +523,9 @@ export default {
             });
 
             cameraPosition.value = state.cameraPosition;
+            // 0.2.94 — re-read alongside cameraPosition on the exact
+            // same cadence; see compassHeading's own ref comment.
+            compassHeading.value = session.getCompassHeading();
 
             // 0.2.38 — see the ref's own comment above.
             if (typeof session.getRemoteAvatarDiagnostics === 'function') {
@@ -703,6 +721,37 @@ export default {
 
         function focusSelection() {
             session.focusSelection();
+            refreshSpatialUI();
+        }
+
+        // -----------------------------------------------------------------
+        // 0.2.94 — World View Location & Navigation
+        // -----------------------------------------------------------------
+        //
+        // Deliberately separate from focusWorld() above: Home and
+        // Locations never load a document, never touch the route, and
+        // never change the active/editing document — see
+        // WorldNavigationSession#focusLocation/goHome's own comments.
+        // refreshSpatialUI() still runs after each so the coordinate
+        // readout and compass reflect the destination immediately,
+        // matching every other navigation action in this file, even
+        // though the camera itself keeps gliding for a few more frames.
+        function goHome() {
+            session.goHome();
+            refreshSpatialUI();
+        }
+
+        function openLocationsPanel() {
+            worldLocations.value = session.getWorldLocations().map((loc) => loc.toJSON());
+            showLocationsPanel.value = true;
+        }
+
+        function closeLocationsPanel() {
+            showLocationsPanel.value = false;
+        }
+
+        function focusLocationFromPanel(locationId) {
+            session.focusLocation(locationId);
             refreshSpatialUI();
         }
 
@@ -1254,6 +1303,13 @@ export default {
             spatialEditingContext,
             spatialPlacement,
             cameraPosition,
+            compassHeading,
+            showLocationsPanel,
+            worldLocations,
+            goHome,
+            openLocationsPanel,
+            closeLocationsPanel,
+            focusLocationFromPanel,
             availableDefinitions,
             selectedDefinitionId,
             activeTool,
@@ -1321,6 +1377,17 @@ export default {
                 <p v-if="cameraPosition" class="world-view-coords">
                     Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
+                <!-- 0.2.94 — World View Location & Navigation. Purely
+                     read-only orientation + navigation: the compass is
+                     never clickable, and Home/Locations only ever move
+                     the camera — see docs/Principles.md, "World View
+                     Navigation Operates On Spatial Observation, Never
+                     On Document Mutation (0.2.94)." -->
+                <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
+                    <CompassIndicator :heading="compassHeading" />
+                    <button class="action-btn" @click="goHome">Home</button>
+                    <button class="action-btn" @click="openLocationsPanel">Locations</button>
+                </div>
                 <!-- 0.2.29: browse the world by camera position, without
                      already knowing a document's name or typing raw
                      coordinates — see docs/Principles.md, "Exploring A
@@ -1743,6 +1810,12 @@ export default {
                 @select="selectLocationBrowserResult"
                 @inspect="inspectLocationBrowserResult"
                 @cancel="closeLocationBrowser"
+            />
+            <LocationsPanel
+                v-if="showLocationsPanel"
+                :locations="worldLocations"
+                @focus="focusLocationFromPanel"
+                @cancel="closeLocationsPanel"
             />
         </div>
     `
