@@ -1808,6 +1808,142 @@ html, body {
     color: #707070;
 }
 
+/* 0.2.99 — ui/components/WorldPresenceIndicator.js: deliberately as
+   understated as .compass-indicator above — a single glanceable fact,
+   never its own panel. */
+.world-presence-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #b0b0b0;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.world-presence-indicator:hover {
+    border-color: #3a3a3a;
+    color: #e0e0e0;
+}
+
+.world-presence-indicator-count {
+    color: #e0e0e0;
+    font-weight: 600;
+}
+
+/* 0.2.99 — ui/components/WorldMembersPanel.js: same modal convention
+   as .locations-panel above. `access` styling is a thin left border
+   only — never a role badge system, matching core/WorldAccessLevel.js's
+   own closed NONE/READ/EDIT vocabulary (there is no fourth "collaborator"
+   look to invent). */
+.world-members-panel-hint {
+    margin: 0 0 0.85rem;
+    font-size: 0.82rem;
+    color: #909090;
+    line-height: 1.5;
+}
+
+.world-members-panel-empty {
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+.world-members-panel-list {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 45vh;
+    overflow-y: auto;
+}
+
+.world-members-panel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-left: 3px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+.world-members-panel-item--owner {
+    border-left-color: #4caf7d;
+}
+
+.world-members-panel-item--editor {
+    border-left-color: #5a9bd8;
+}
+
+.world-members-panel-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.world-members-panel-item-name {
+    font-size: 0.88rem;
+    color: #e0e0e0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-members-panel-item-meta {
+    font-size: 0.72rem;
+    color: #909090;
+}
+
+.world-members-panel-online {
+    color: #4caf7d;
+}
+
+.world-members-panel-offline {
+    color: #707070;
+}
+
+.world-members-panel-item-actions {
+    flex-shrink: 0;
+}
+
+.world-members-panel-pending {
+    font-size: 0.78rem;
+    color: #909090;
+    font-style: italic;
+}
+
+.world-members-panel-grant-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.world-members-panel-grant-form label {
+    font-size: 0.78rem;
+    color: #909090;
+}
+
+.world-members-panel-grant-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.world-members-panel-grant-row input {
+    flex: 1;
+    min-width: 0;
+}
+
 /* 0.2.29: ui/components/WorldLocationBrowser.js — same modal
    convention as LocationDocumentsDialog, extended with a re-query
    radius form and a result list that (unlike LocationDocumentsDialog's

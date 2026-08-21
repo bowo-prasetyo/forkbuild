@@ -2619,6 +2619,21 @@ export class WorldNavigationSession {
         return this._worldMembershipUseCase.listMembers(documentId);
     }
 
+    // 0.2.99 — World Collaboration UX. Thin delegation mirroring
+    // onWorldPresenceChanged() below exactly — a UI Members panel
+    // wants to reflect a GOSSIPED grant/revocation (one this replica
+    // didn't itself issue, e.g. Charlie observing Alice grant Bob) the
+    // moment it arrives, not only after its own next poll. Returns a
+    // no-op unsubscribe when no worldMembershipUseCase is wired, the
+    // same graceful-absence contract every subscription method here
+    // already follows.
+    onWorldMembershipChanged(documentId, callback) {
+        if (!this._worldMembershipUseCase) {
+            return () => {};
+        }
+        return this._worldMembershipUseCase.onMembershipChanged(documentId, callback);
+    }
+
     // -----------------------------------------------------------------
     // World Presence (0.2.98)
     // -----------------------------------------------------------------
@@ -2790,6 +2805,14 @@ export class WorldNavigationSession {
             title: doc.metadata.title || 'Untitled',
             description: doc.metadata.description || '',
             author: doc.metadata.author,
+            // 0.2.99 — World Collaboration UX. The SAME cryptographic
+            // fact WorldAuthorizationService/WorldMembershipUseCase
+            // already key ownership off (core/DocumentMetadata.js's own
+            // 0.2.95 field), exposed here purely so a Members panel can
+            // label the owner's row without re-deriving ownership
+            // itself — null for a pre-0.2.95 document, exactly like
+            // `author` degrades gracefully everywhere else.
+            authorIdentityId: doc.metadata.authorIdentityId || null,
             license: doc.metadata.license,
             parentDocumentId: doc.metadata.parentDocumentId,
             status,
