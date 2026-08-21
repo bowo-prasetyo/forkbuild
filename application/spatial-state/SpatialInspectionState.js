@@ -7,12 +7,14 @@ export class SpatialInspectionState {
         documentId = null,
         buildingId = null,
         brickId = null,
+        placementId = null,
         data = null
     } = {}) {
         this._type = type;
         this._documentId = documentId;
         this._buildingId = buildingId;
         this._brickId = brickId;
+        this._placementId = placementId;
         this._data = data;
     }
 
@@ -30,6 +32,12 @@ export class SpatialInspectionState {
 
     get brickId() {
         return this._brickId;
+    }
+
+    // 0.2.93 — World View Instance Inspection: the placementId of a
+    // resolved StructurePlacement, mirroring buildingId/brickId above.
+    get placementId() {
+        return this._placementId;
     }
 
     get data() {

@@ -6101,4 +6101,56 @@ genuine vertical placement (floating structures, stacked platforms) would
 need to say so explicitly and change this rule on purpose — it cannot
 happen by accident through either interaction surface this milestone
 adds.
+
+### Selection In World View Does Not Imply Editing Authority (0.2.93)
+
+World View gained the ability to pick a `StructurePlacement` — a THIRD
+raycast target set, alongside brick and avatar picking
+(`renderer/PickingService.js#pickPlacement()`, wired into World View's
+own `PickingService` for the first time this milestone) — without
+gaining any way to move, rotate, duplicate, or delete one. That is not a
+missing feature; it is the point. `application/spatial-state/
+SpatialSelectionState.js#placement()` mints a selection whose `items`
+array is ALWAYS EMPTY, and that single fact is the entire mechanism, not
+merely a convention: `application/SelectionBoundsService.js#calculate()`
+returns `null` for an item-less selection, so `TransformGizmoUseCase#
+resolvePresentation()` never shows a gizmo for it; `application/
+SpatialEditingService.js#getEditingContext()` falls through to
+`SpatialEditingContext.empty()` for the same reason, so `WorldNavigationSession`'s
+`moveSelection()`/`rotateSelection()`/`deleteSelection()` all return
+`false` before a command is ever considered. Neither file was taught a
+`placement` selection exists; each one simply sees a selection with
+nothing to operate on, which is exactly the "select → inspect, never
+select → manipulate" posture the design conversation asked World View to
+hold, as distinct from the Editor's "select → manipulate" — see 0.2.27's
+own "Camera Focus, Active Document, and Selection Are Three Different
+Things" for the same instinct applied to a different pair of concepts.
+
+The read-only surface a placement selection DOES get —
+`application/SpatialInspectionService.js#_inspectPlacement()` — is
+deliberately shaped nothing like `StructureInstancePanel`'s numeric
+inspector: plain data only (title, source document id/title, local and
+world position, rotation, groundY), no input field, no Apply button, no
+Y target. The one authorized way out is `Open Source`
+(`ui/views/WorldView.js#openStructureSource()`), which does not edit
+anything itself — it leaves World View entirely and reuses the Editor's
+existing `/editor?load=<id>` route, the same one `ui/components/
+PublicationCatalog.js` already uses to open a document. Editing a placed
+structure's content always happens by opening its Document in the
+Editor, never by touching the instance from World View, extending
+0.2.91's own "editing a placed structure's bricks should still happen by
+editing its Document, not by touching the instance" one layer further
+out — the instance now isn't touchable from World View at all.
+
+This boundary is deliberately UI/selection-shaped today, not an
+authorization decision — there is no permission check anywhere in this
+milestone's code, on purpose. Alice inspecting Bob's World sees exactly
+what she'd see inspecting her own, because World View has no mutation
+surface to guard yet. That is what makes the eventual question "is Alice
+AUTHORIZED to move this?" (0.2.94) attachable to one clean seam later —
+the Editor's own existing command path — rather than requiring a future
+milestone to first find and close editing affordances that quietly crept
+into World View by accident. See also "Observation Does Not Imply
+Authority, And Interaction Does Not Imply Control" (0.2.44), the same
+shape applied to avatar gestures rather than spatial selection.
 instance of the same content" it actually performs.

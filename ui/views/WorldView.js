@@ -706,6 +706,25 @@ export default {
             refreshSpatialUI();
         }
 
+        // 0.2.93 — "Open Source": reuses the EXISTING /editor?load=<id>
+        // route ui/components/PublicationCatalog.js and every forked-
+        // document link already use to open a document in the Editor —
+        // never a second navigation mechanism, and never a mutation
+        // World View performs itself. This is the ONE escape hatch out
+        // of World View's otherwise strictly read-only instance
+        // inspection (see docs/Principles.md, "Selection In World View
+        // Does Not Imply Editing Authority") — editing a placed
+        // structure's bricks always happens by opening its Document in
+        // the Editor, exactly like application/EditorSession.js#
+        // editStructurePlacementSource() already established for the
+        // Editor's own StructureInstancePanel.
+        function openStructureSource(documentId) {
+            if (!documentId) {
+                return;
+            }
+            router.push({ path: '/editor', query: { load: documentId } });
+        }
+
         // -----------------------------------------------------------------
         // 0.2.26: World Navigation & Spatial Discovery UX
         // -----------------------------------------------------------------
@@ -1249,6 +1268,7 @@ export default {
             onBrickSelectionChange,
             focusWorld,
             focusSelection,
+            openStructureSource,
             alignSelection,
             distributeSelection,
             applyNumericTransform,
@@ -1482,6 +1502,53 @@ export default {
                             <span class="inspection-value">{{ spatialInspection.worldAuthor }}</span>
                         </div>
                     </div>
+                    <!-- 0.2.93 — World View Instance Inspection. Every
+                         field here is read-only display: no input, no
+                         gizmo, no numeric target. The one action is
+                         "Open Source" below, which leaves World View
+                         entirely and opens the Editor's own,
+                         already-established Load path — see
+                         application/SpatialInspectionService.js's own
+                         comment on why this is the ENTIRE World View
+                         surface for a placed instance. -->
+                    <div v-if="spatialInspection.type === 'placement'" class="inspection-fields">
+                        <div class="inspection-row">
+                            <span class="inspection-label">Source</span>
+                            <span class="inspection-value">{{ spatialInspection.sourceTitle }}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Local Pos</span>
+                            <span class="inspection-value">
+                                {{ spatialInspection.localPosition.x.toFixed(2) }},
+                                {{ spatialInspection.localPosition.y.toFixed(2) }},
+                                {{ spatialInspection.localPosition.z.toFixed(2) }}
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">World Pos</span>
+                            <span class="inspection-value">
+                                {{ spatialInspection.worldPosition.x.toFixed(2) }},
+                                {{ spatialInspection.worldPosition.y.toFixed(2) }},
+                                {{ spatialInspection.worldPosition.z.toFixed(2) }}
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Rotation</span>
+                            <span class="inspection-value">{{ spatialInspection.rotation }}°</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Ground Y</span>
+                            <span class="inspection-value">{{ spatialInspection.groundY.toFixed(2) }}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">World</span>
+                            <span class="inspection-value">{{ spatialInspection.worldTitle }}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <span class="inspection-label">Author</span>
+                            <span class="inspection-value">{{ spatialInspection.worldAuthor }}</span>
+                        </div>
+                    </div>
                     <div class="inspection-actions">
                         <button
                             v-if="spatialInspection.documentId"
@@ -1496,6 +1563,14 @@ export default {
                             @click="focusSelection"
                         >
                             Focus Brick
+                        </button>
+                        <button
+                            v-if="spatialInspection.type === 'placement'"
+                            class="action-btn action-btn--primary"
+                            title="Open the referenced Document in the Editor"
+                            @click="openStructureSource(spatialInspection.sourceDocumentId)"
+                        >
+                            Open Source
                         </button>
                     </div>
                 </div>

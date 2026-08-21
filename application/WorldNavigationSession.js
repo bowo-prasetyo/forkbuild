@@ -153,7 +153,20 @@ export class WorldNavigationSession {
 	    avatarInteractionBroadcastProvider = null,
 	    avatarProfileVisibilityUseCase = null,
 	    hasFriend = null,
-	    isBlocked = null
+	    isBlocked = null,
+	    // 0.2.93 — World View Instance Inspection. Both optional, the
+	    // same "enforce/offer only when the collaborator is actually
+	    // wired" posture every other optional collaborator in this
+	    // constructor already follows: a session built without
+	    // structureResolver simply never RENDERS a StructurePlacement at
+	    // all (renderer/WorldRenderer.js's own 0.2.90 header — this was
+	    // already true before this milestone; see
+	    // application/CreateWorldViewUseCase.js for the real wiring), and
+	    // one built without loadDocumentUseCase falls back to showing a
+	    // placement's raw documentId instead of its title (see
+	    // getSavedDocumentTitle() below) — never throws either way.
+	    structureResolver = null,
+	    loadDocumentUseCase = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -352,6 +365,10 @@ export class WorldNavigationSession {
 	    // that detail available again, on demand, without re-querying).
 	    this._lastDiscoveryDiagnosticsRaw = null;
 
+	    // 0.2.93 — see the constructor's own comment above.
+	    this._structureResolver = structureResolver;
+	    this._loadDocumentUseCase = loadDocumentUseCase;
+
 	    this._container = null;
 	    this._session = null;
         this._spatialCameraController = null;
@@ -470,7 +487,13 @@ export class WorldNavigationSession {
             container,
             this._registry,
             this._eventBus,
-            { gestureService: this._editingService }
+            // 0.2.93 — structureResolver threaded through so World View
+            // actually RENDERS a StructurePlacement's content (and can
+            // therefore pick/inspect it) — see this class's own
+            // constructor comment and renderer/WorldRenderer.js's 0.2.90
+            // header. Still gracefully absent (null) for any caller that
+            // doesn't wire one, exactly as before this milestone.
+            { gestureService: this._editingService, structureResolver: this._structureResolver }
         );
         this._spatialCameraController = new SpatialCameraController(this._session);
         this._inspectionService = new SpatialInspectionService(this);
@@ -1701,14 +1724,63 @@ export class WorldNavigationSession {
 	    const avatarHit = typeof this._session.pickAvatar === 'function'
 	        ? this._session.pickAvatar(screenX, screenY)
 	        : null;
+	    // 0.2.93 — World View Instance Inspection: a THIRD, separate
+	    // raycast target set (renderer/PlacementMeshRegistry.js, via
+	    // PickingService#pickPlacement()) — a StructurePlacement's own
+	    // meshes are never registered with the brick mesh registry (see
+	    // renderer/WorldRenderer.js's own 0.2.90 header), so resolving a
+	    // hit on one needs its own test, folded into the same
+	    // nearest-wins comparison avatarHit already uses against
+	    // brickHit. Optional: a render facade that doesn't support it
+	    // (an older test double) simply never resolves a placement hit —
+	    // the same graceful-absence posture avatarHit already has.
+	    const placementHit = typeof this._session.pickPlacement === 'function'
+	        ? this._session.pickPlacement(screenX, screenY)
+	        : null;
 
-	    if (avatarHit && (!brickHit || avatarHit.distance < brickHit.distance)) {
+	    if (avatarHit
+	        && (!brickHit || avatarHit.distance < brickHit.distance)
+	        && (!placementHit || avatarHit.distance < placementHit.distance)) {
 	        this._setAvatarInteraction(AvatarInteractionState.avatar(avatarHit.avatarId));
 	        this._setSpatialSelection(SpatialSelectionState.empty());
 	        this._session.clearSelection();
 	        this._session.clearHover();
 	        this._refreshGizmo();
 	        return this._avatarInteraction;
+	    }
+
+	    // 0.2.93 — a StructurePlacement instance: SELECT, never EDIT. See
+	    // docs/Principles.md, "Selection In World View Does Not Imply
+	    // Editing Authority" — this branch only ever sets selection +
+	    // inspection state and drives a whole-instance highlight; it
+	    // never reaches SpatialEditingService, and never shows the
+	    // transform gizmo (a `placement` selection's `items` array is
+	    // always empty — see SpatialSelectionState's own header — so
+	    // SelectionBoundsService#calculate() returns null for it, and
+	    // TransformGizmoUseCase#resolvePresentation(), called from
+	    // _refreshGizmo() below, hides the gizmo accordingly. No
+	    // special-casing needed in either of those files). `toggle`/
+	    // `additive` are meaningless here (there is no multi-placement-
+	    // selection concept) and are simply ignored, exactly like the
+	    // avatar branch above.
+	    if (placementHit && (!brickHit || placementHit.distance < brickHit.distance)) {
+	        const hostDocumentId = this._resolvePlacementHostDocumentId(placementHit.placementId);
+	        if (hostDocumentId) {
+	            this._setAvatarInteraction(AvatarInteractionState.empty());
+	            this._setSpatialSelection(SpatialSelectionState.placement({
+	                documentId: hostDocumentId,
+	                placementId: placementHit.placementId
+	            }));
+	            this._session.clearSelection();
+	            if (typeof this._session.selectPlacement === 'function') {
+	                this._session.selectPlacement(placementHit.placementId);
+	            }
+	            this._session.clearHover();
+	            this._refreshInspection();
+	            this._refreshEditingContext();
+	            this._refreshGizmo();
+	            return this._spatialSelection;
+	        }
 	    }
 
 	    if (brickHit) {
@@ -2154,6 +2226,26 @@ export class WorldNavigationSession {
 
     getDocumentPosition(documentId) {
         return this._getWorldPosition(documentId);
+    }
+
+    // 0.2.93 — resolves a StructurePlacement's referenced documentId to
+    // a human title via the SAME saved-document listing
+    // application/EditorSession.js#getSelectedPlacementInfo() already
+    // reads (application/LoadDocumentUseCase.js#listSavedDocuments()) —
+    // no second title-lookup mechanism. Falls back to the raw
+    // documentId when there's no loadDocumentUseCase wired, or no
+    // matching saved entry (e.g. content authored on a different
+    // device/replica this replica has never saved locally) — the same
+    // graceful-absence shape getSelectedPlacementInfo() already
+    // established, never a thrown error.
+    getSavedDocumentTitle(documentId) {
+        if (this._loadDocumentUseCase && typeof this._loadDocumentUseCase.listSavedDocuments === 'function') {
+            const entry = this._loadDocumentUseCase.listSavedDocuments().find((doc) => doc.id === documentId);
+            if (entry) {
+                return entry.title;
+            }
+        }
+        return documentId;
     }
 
     // -----------------------------------------------------------------
@@ -3040,6 +3132,27 @@ export class WorldNavigationSession {
 	    this._refreshEditingContext();
 	    this._refreshInspection();
 	}
+
+    // 0.2.93 — renderer/PlacementMeshRegistry.js is keyed by placementId
+    // alone, with no documentId of its own (see its own header) —
+    // PickingService#pickPlacement() therefore only ever returns a bare
+    // placementId, never which document it lives in. World View can
+    // have MANY documents streamed in at once, each with zero or more
+    // StructurePlacements, so a hit has to be resolved back to whichever
+    // loaded document's World actually contains it. placementId is
+    // minted per-instance (core/StructurePlacement.js, createId()),
+    // never reused across placements, so the first match is the only
+    // match. Returns null in the (defensive, shouldn't happen in
+    // practice) case that the hit outlived its document — e.g. the
+    // document streamed out between the raycast and this lookup.
+    _resolvePlacementHostDocumentId(placementId) {
+        for (const [documentId, document] of this._loadedDocuments) {
+            if (document.world.getStructurePlacement(placementId)) {
+                return documentId;
+            }
+        }
+        return null;
+    }
 
     _resolveMarqueeDocumentId(hits) {
         const firstHit = (hits || []).find((hit) => hit && hit.documentId);
