@@ -6,6 +6,8 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LoadPublicationDocumentUseCase } from './LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from './SaveDocumentUseCase.js';
+import { LoadDocumentUseCase } from './LoadDocumentUseCase.js';
+import { StructureDocumentResolver } from './StructureDocumentResolver.js';
 import { PublishDocumentUseCase } from './PublishDocumentUseCase.js';
 import { PlacePublicationUseCase } from './PlacePublicationUseCase.js';
 import { MoveWorldPlacementUseCase } from './MoveWorldPlacementUseCase.js';
@@ -120,6 +122,21 @@ export class CreateWorldViewUseCase {
             storageProvider
         );
         const saveDocumentUseCase = new SaveDocumentUseCase(storageProvider);
+        // 0.2.93 — World View Instance Inspection. Both read from the
+        // SAME local storageProvider ui/views/EditorView.js's own
+        // CreatePersistenceUseCase already builds its equivalents from
+        // (application/CreatePersistenceUseCase.js) — the local-editing,
+        // same-replica scenario the milestone's flagship exercises.
+        // structureDocumentResolver is what makes World View actually
+        // RENDER (and therefore pick/inspect) a StructurePlacement at
+        // all — see renderer/WorldRenderer.js's own 0.2.90 header;
+        // before this it was always null here. loadDocumentUseCase
+        // resolves a placement's referenced document to a human title
+        // for the inspection panel (WorldNavigationSession#
+        // getSavedDocumentTitle()) — never used to LOAD a document into
+        // this session itself, only to look up its saved title.
+        const structureDocumentResolver = new StructureDocumentResolver(storageProvider);
+        const loadDocumentUseCase = new LoadDocumentUseCase(storageProvider);
         const publishDocumentUseCase = new PublishDocumentUseCase(
             publisherProvider,
             identityProvider,
@@ -342,7 +359,10 @@ export class CreateWorldViewUseCase {
                     // here (when no peerBlockUseCase was wired) falls
                     // through to WorldNavigationSession's own `null`
                     // default, exactly like `hasFriend` above.
-                    isBlocked
+                    isBlocked,
+                    // 0.2.93: World View Instance Inspection — see above.
+                    structureResolver: structureDocumentResolver,
+                    loadDocumentUseCase
                 });
             },
             // Expose the spatial index and content store so the application

@@ -44,14 +44,27 @@ export class RenderWorldViewUseCase {
         const pickingService = new PickingService(
             renderer.camera,
             renderer.domElement,
-            worldRenderer.meshRegistry
+            worldRenderer.meshRegistry,
+            // 0.2.93 — a second, separate mesh source so a placement can
+            // be picked back to its placementId, never a brickId. See
+            // renderer/PickingService.js's own constructor note and
+            // renderer/WorldRenderer.js's 0.2.90 header on why this
+            // stays a distinct registry rather than merged in. Mirrors
+            // application/RenderWorldUseCase.js's identical wiring for
+            // the Editor.
+            worldRenderer.placementMeshRegistry
         );
         // 0.2.39 — a completely separate raycast target set from
         // pickingService above; see docs/Principles.md, "Avatars Are
         // Never Document Selection."
         const avatarPickingService = new AvatarPickingService(renderer.camera, renderer.domElement);
         const spatialSelectionRenderer = new SpatialSelectionRenderer(
-            worldRenderer.meshRegistry
+            worldRenderer.meshRegistry,
+            // 0.2.93 — enables selectPlacement() below: the World View
+            // counterpart to renderer/SelectionRenderer.js's own
+            // highlightPlacement(), reusing the SAME PlacementMeshRegistry
+            // instance pickingService just picked against.
+            worldRenderer.placementMeshRegistry
         );
         const spatialPreviewRenderer = new SpatialPreviewRenderer(renderer);
         const transformGizmoRenderer = new TransformGizmoRenderer(renderer);
@@ -129,6 +142,12 @@ export class RenderWorldViewUseCase {
                 const pos = pickingService.pickGroundPosition(screenX, screenY);
                 return pos ? { type: 'ground', position: pos } : null;
             },
+            // 0.2.93 — resolves a screen position to { placementId,
+            // point, distance } | null, completely independent of
+            // pick()'s brick raycast — mirrors
+            // application/RenderWorldUseCase.js's identical Editor-side
+            // surface.
+            pickPlacement: (screenX, screenY) => pickingService.pickPlacement(screenX, screenY),
             // 0.2.39 — a completely separate pickable set from pick()
             // above: only avatar roots CURRENTLY IN THE SCENE (never a
             // hidden local avatar, never a remote avatar hidden by
@@ -167,6 +186,10 @@ export class RenderWorldViewUseCase {
             removeWorld: (world, documentId) => worldRenderer.removeWorld(world, documentId),
             selectBrick: (brickId) => spatialSelectionRenderer.select(brickId),
             selectBricks: (brickIds, primaryBrickId = null) => spatialSelectionRenderer.selectMany(brickIds, primaryBrickId),
+            // 0.2.93 — highlights every mesh of ONE StructurePlacement,
+            // the whole-instance-glow World View counterpart to
+            // selectBrick/selectBricks above. Pass null to clear it.
+            selectPlacement: (placementId) => spatialSelectionRenderer.selectPlacement(placementId),
             clearSelection: () => spatialSelectionRenderer.clearSelection(),
             hoverBrick: (brickId) => spatialSelectionRenderer.hover(brickId),
             clearHover: () => spatialSelectionRenderer.clearHover(),

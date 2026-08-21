@@ -5529,3 +5529,243 @@ Kernel → 0.1.45 Selection/Group Surface → 0.1.46 Pointer Gizmo →
 set feel like one product. 0.1.51 (Stability / Performance /
 Large-Document Hardening) and 0.1.52 (Protocol & Persistence
 Hardening) follow before 0.2 Publishing & Multiplayer.
+
+0.2.93 — World View Instance Inspection — is a deliberate change of
+direction rather than another construction feature on top of 0.2.90→
+0.2.92's Build Library → Place → Select → Move/Rotate → Gizmo/Numeric →
+Duplicate/Delete progression. Every one of those milestones scoped World
+View wiring for instance EDITING out by name ("0.2.90 already scoped
+placement CREATION to the Editor only; 0.2.91 kept that boundary; this
+milestone keeps it a third time") — but never gave World View any way to
+even SELECT a placed instance at all, editable or not. That's the actual
+gap this milestone closes, and closes narrowly: World View can now pick
+and inspect a `StructurePlacement`, read-only, with exactly one action
+(`Open Source`, into the Editor) — never move, rotate, duplicate, or
+delete. The design conversation's framing: exploring a world and editing
+a world are different postures (`select → inspect` vs. `select →
+manipulate`), and World View should say so structurally, not just by
+omitting buttons a later milestone could accidentally add back.
+
+```text
+0.2.93
+├── application/spatial-state/SpatialSelectionState.js  + SpatialSelectionState
+│                                                 .placement({ documentId,
+│                                                 placementId }) — a FOURTH
+│                                                 selection kind, mirroring
+│                                                 application/editor-state/
+│                                                 SelectionState.js's own
+│                                                 'structure-placement' item
+│                                                 (0.2.91) one layer up.
+│                                                 documentId is the HOST
+│                                                 world, never the
+│                                                 placement's own referenced
+│                                                 documentId. Its `items`
+│                                                 array is ALWAYS EMPTY —
+│                                                 the load-bearing decision,
+│                                                 see below.
+├── application/spatial-state/SpatialInspectionState.js + placementId,
+│                                                 mirroring buildingId/
+│                                                 brickId
+├── application/SpatialInspectionService.js      + _inspectPlacement() —
+│                                                 the ENTIRE World View
+│                                                 surface a placement
+│                                                 selection gets: title,
+│                                                 source document id/title,
+│                                                 local + world position,
+│                                                 rotation, groundY — all
+│                                                 read-only plain data, no
+│                                                 numeric target, no Y
+│                                                 field, nothing resembling
+│                                                 StructureInstancePanel's
+│                                                 Apply button. groundY is
+│                                                 sampled at the CONTAINING
+│                                                 document's own world
+│                                                 offset — the exact value
+│                                                 renderer/WorldRenderer.js
+│                                                 already renders with —
+│                                                 never the placement's own
+│                                                 local x/z.
+├── application/WorldNavigationSession.js       + structureResolver/
+│                                                 loadDocumentUseCase
+│                                                 (constructor, both
+│                                                 optional); + pick() now
+│                                                 also raycasts a THIRD
+│                                                 target set (placementHit),
+│                                                 nearest-wins against
+│                                                 brick/avatar exactly like
+│                                                 avatarHit already does
+│                                                 against brickHit; routes
+│                                                 a placement hit to a
+│                                                 read-only selection,
+│                                                 never SpatialEditingService;
+│                                                 + getSavedDocumentTitle();
+│                                                 + _resolvePlacementHost-
+│                                                 DocumentId() — a placement
+│                                                 hit only ever returns a
+│                                                 bare placementId
+│                                                 (renderer/
+│                                                 PlacementMeshRegistry.js
+│                                                 has no documentId of its
+│                                                 own), resolved against
+│                                                 every currently-loaded
+│                                                 document since World View,
+│                                                 unlike the Editor, can
+│                                                 have many streamed in at
+│                                                 once.
+├── application/RenderWorldViewUseCase.js       PickingService now built
+│                                                 with WorldRenderer's own
+│                                                 placementMeshRegistry
+│                                                 (previously omitted here
+│                                                 — World View could not
+│                                                 pick a placement at all
+│                                                 before this milestone);
+│                                                 + pickPlacement()/
+│                                                 selectPlacement() on the
+│                                                 returned facade, mirroring
+│                                                 application/
+│                                                 RenderWorldUseCase.js's
+│                                                 identical Editor-side pair
+├── renderer/SpatialSelectionRenderer.js        + selectPlacement() — a
+│                                                 SECOND, independent
+│                                                 highlight track alongside
+│                                                 the existing brick one,
+│                                                 mutually exclusive with
+│                                                 it (selecting one clears
+│                                                 the other; clear()/
+│                                                 clearSelection() clear
+│                                                 both) — the World View
+│                                                 counterpart to renderer/
+│                                                 SelectionRenderer.js's own
+│                                                 highlightPlacement() (the
+│                                                 Editor's 0.2.91 equivalent)
+├── application/CreateWorldViewUseCase.js       + wires a real
+│                                                 StructureDocumentResolver
+│                                                 (previously always null
+│                                                 here — see renderer/
+│                                                 WorldRenderer.js's own
+│                                                 0.2.90 header: a null
+│                                                 resolver means a
+│                                                 StructurePlacement never
+│                                                 RENDERS at all) and a
+│                                                 LoadDocumentUseCase, both
+│                                                 from the SAME local
+│                                                 storageProvider the
+│                                                 Editor's own
+│                                                 CreatePersistenceUseCase
+│                                                 already reads
+├── ui/views/WorldView.js                       + a `placement` branch in
+│                                                 the existing inspection
+│                                                 panel (the SAME
+│                                                 spatial-panel--inspection
+│                                                 container brick/ground
+│                                                 selections already use —
+│                                                 never a second panel
+│                                                 system); + openStructureSource()
+│                                                 — router.push({ path:
+│                                                 '/editor', query: { load
+│                                                 } }), the EXACT route
+│                                                 ui/components/
+│                                                 PublicationCatalog.js
+│                                                 already uses to open a
+│                                                 document in the Editor
+└── tests/WorldViewInstanceInspection.test.js   NEW — selection-state
+                                                  shape, highlight
+                                                  mutual-exclusivity,
+                                                  inspection data,
+                                                  nearest-hit routing,
+                                                  the read-only guarantee
+                                                  (move/rotate/delete all
+                                                  remain false, zero
+                                                  CommandHistory entries),
+                                                  and the flagship below
+```
+
+The load-bearing decision, settled before any code the same way every
+prior structure-placement milestone's own was: a `placement` selection's
+`items` array is ALWAYS EMPTY. That single fact is what keeps this
+milestone's read-only guarantee true by construction rather than by
+discipline. `application/SelectionBoundsService.js#calculate()` iterates
+`selection.items` and returns `null` the moment there are none to
+iterate — so `TransformGizmoUseCase#resolvePresentation()` never shows a
+gizmo for a placement selection, with no `selection.type === 'placement'`
+check added to either file. `application/SpatialEditingService.js#
+getEditingContext()` falls through its `brick`/`bricks`/`ground` branches
+straight to `SpatialEditingContext.empty()` for the same reason — so
+`moveSelection()`/`rotateSelection()`/`deleteSelection()` on
+`WorldNavigationSession` all return `false` before ever reaching a
+command. Nothing in either file had to be taught that a `placement`
+selection exists; it simply looks, from their point of view, like a
+selection with nothing in it — which is exactly the outcome the design
+conversation asked for ("no move, no rotate, no duplicate, no delete, no
+gizmo, no numeric editing... yet").
+
+The flagship (`tests/WorldViewInstanceInspection.test.js`, Section E)
+runs the scenario named explicitly: a real `DocumentManager`+
+`SaveDocumentUseCase` round trip creates and saves "My House"; a second
+World document places it and is saved too; a `WorldNavigationSession` —
+built with no `identityProvider`, no `avatarPresenceSession`, no
+`presenceBroadcastProvider`, and `start()` never called — loads the
+World and picks the House. Inspection reflects the exact placementId,
+the REAL source documentId and title, exact position/rotation, and a
+deterministic groundY. `moveSelection`/`rotateSelection`/`deleteSelection`
+all no-op; the World document's own placement is byte-identical
+afterward; zero `CommandHistory` entries were ever created — proving
+selection in World View is purely local UI state, never a network
+message, never a document/placement/presence mutation. Then the House is
+edited (a second brick added) and re-saved, and the SAME placement is
+re-rendered through `WorldRenderer` + the SAME `StructureDocumentResolver`
+World View itself uses: it now renders both bricks — `WorldPlacement →
+Document → CURRENT content`, never a frozen copy, exactly the relationship
+0.2.90 established and this milestone's World View rendering now
+actually exercises for the first time.
+
+Deliberately not in 0.2.93, named rather than hidden: move, rotate,
+duplicate, or delete a placement from World View (the whole point —
+0.2.94 is where an authorization layer, not a missing feature, decides
+whether that should ever be possible, and for whom); hover-highlighting
+a placement before it's clicked (click-to-select only — the design
+conversation's own scope, kept deliberately small); a combined World
+View/Editor selection model (WorldNavigationSession's `SpatialSelectionState`
+and EditorSession's `SelectionState` remain two separate classes with a
+parallel `placement`/`structure-placement` shape, exactly the
+relationship every other selection kind between the two sessions already
+has — unifying them was never asked for and would blur a distinction
+0.2.27 drew on purpose: World View and the Editor are different
+postures); and any authorization/permission model for who may even
+INSPECT a placement (the design conversation was explicit: "do not
+implement that authorization in 0.2.93," only make sure the UI never
+implies inspection grants editing authority — which it structurally
+cannot, since there is no editing path for World View to guard in the
+first place).
+
+## The World Is Becoming Durable, Forkable, Socially Owned Content
+
+```text
+0.2.89  World Water & Hydrology Foundation             ✓
+0.2.90  Structure Placement & World Instances          ✓
+0.2.91  World Instance Editing & Placement Management  ✓
+0.2.92  World Instance Transform UX                    ✓
+0.2.93  World View Instance Inspection                 ✓
+    ↓
+0.2.94  World Editing Authorization
+         ├── social identity as authorization subject
+         ├── device-aware authorization
+         └── mutation boundary
+    ↓
+0.2.95  Shared World Collaboration
+         └── only after authorization semantics are solid
+```
+
+0.2.93 is the hinge between them: it establishes, structurally rather
+than by convention, that World View can look at a World's structures
+without any capacity to change them — the exact boundary 0.2.94's
+authorization layer needs to already exist before "who is allowed to
+edit" becomes a meaningful question to ask. Alice viewing Bob's World and
+picking his House today gets exactly what she'd get picking her own —
+read-only inspection, `Open Source` gated by nothing but the Editor's
+existing Load path. That is not yet an authorization decision (0.2.93
+deliberately makes none), but it is the shape one attaches to: World View
+has no mutation surface to guard, so the eventual "is Alice authorized to
+move this?" check has exactly one place to live — the Editor's own
+existing command path — rather than three places editing could have
+quietly crept into by accident.

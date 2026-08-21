@@ -8,12 +8,30 @@
 //   addBrick(hit)       -> union-add brick (Shift-click, additive marquee)
 // Selection gestures produce ZERO history entries — selection is session
 // state, never a document mutation.
+//
+// 0.2.93 — World View Instance Inspection adds a FOURTH kind, `placement`
+// (static placement() below), mirroring application/editor-state/
+// SelectionState.js's own `structure-placement` item — "selecting an
+// instance selects its spatial reference, not its constituent content."
+// Deliberately kept OUT of the `items` array machinery above (which is
+// brick-shaped: dedup keys off buildingId:brickId, every item forced to
+// `type: 'brick'`) — a placement selection is always exactly one
+// reference, never mixed with a brick selection, so it gets its own
+// ctor field, the same way `position` already does for a ground
+// selection. The empty `items` array this produces is not an oversight:
+// it is what makes SelectionBoundsService#calculate() return null for a
+// placement selection, which is what keeps the transform gizmo and every
+// SpatialEditingService mutation (move/rotate/delete) a no-op for it
+// with no special-casing needed anywhere in that pipeline — see
+// docs/Principles.md, "Selection In World View Does Not Imply Editing
+// Authority."
 export class SpatialSelectionState {
     constructor({
         type = null,
         documentId = null,
         buildingId = null,
         brickId = null,
+        placementId = null,
         position = null,
         items = null
     } = {}) {
@@ -21,6 +39,7 @@ export class SpatialSelectionState {
         this._documentId = documentId;
         this._buildingId = buildingId;
         this._brickId = brickId;
+        this._placementId = placementId;
         this._position = position;
         if (items) {
             const seen = new Set();
@@ -53,6 +72,14 @@ export class SpatialSelectionState {
     get isEmpty() { return this.type === null; }
     get isSingle() { return this._items.length === 1; }
     get brickIds() { return this._items.filter((item) => item.type === 'brick').map((item) => item.brickId); }
+
+    // 0.2.93 — mirrors application/editor-state/SelectionState.js's own
+    // isStructurePlacementSelection/selectedPlacementId exactly, one
+    // rung up: World View picking (WorldNavigationSession#pick()) reads
+    // these two to know whether to route a hit through the read-only
+    // inspection path instead of the brick/ground one.
+    get isStructurePlacementSelection() { return this.type === 'placement'; }
+    get placementId() { return this._placementId; }
 
     includesBrick(buildingId, brickId) {
         return this._items.some((item) => item.type === 'brick' && item.buildingId === buildingId && item.brickId === brickId);
@@ -134,6 +161,16 @@ export class SpatialSelectionState {
 
     static ground(position) {
         return new SpatialSelectionState({ type: 'ground', position });
+    }
+
+    // 0.2.93 — a single StructurePlacement instance, picked whole (see
+    // this class's own header). `documentId` is the HOST document — the
+    // World that CONTAINS the placement — never the placement's own
+    // `documentId` (the Document it references); that distinction
+    // matters because World View can have many documents streamed in at
+    // once, each with its own StructurePlacements.
+    static placement({ documentId, placementId }) {
+        return new SpatialSelectionState({ type: 'placement', documentId, placementId });
     }
 
     _itemsFromLegacy({ type, buildingId, brickId }) {
