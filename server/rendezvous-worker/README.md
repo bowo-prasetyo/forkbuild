@@ -12,20 +12,24 @@ Once deployed, you'll have a `wss://…` URL to add to
 main app, which is what actually turns on **Be Discoverable** / **Find
 Someone** in ForkBuild's Peers panel.
 
-## Before you start: why this isn't a plain "paste in Quick Edit" deploy
+## Before you start: use the CLI, not the dashboard
 
 Unlike a stateless worker (e.g. the p2pcf tutorial's worker, or a
 plain TURN-credential proxy), this worker needs a **Durable Object**
-binding to hold rendezvous state across connections. Cloudflare's
-browser-based "Quick Edit" editor can upload the *code*, but wiring up
-a brand-new Durable Object class generally needs an explicit
-migration — something the CLI (`wrangler`) does for you automatically
-on first deploy, and which the dashboard *may* also support today
-under **Settings → Bindings → Add → Durable Object Namespace** (this
-has been added to the dashboard, but exact steps can shift between
-Cloudflare UI updates). **The CLI path below is the reliable one** —
-use it unless you're already comfortable poking around the dashboard's
-current Bindings UI.
+binding to hold rendezvous state across connections — and as of early
+2026, Cloudflare's dashboard has **no way to create a brand-new
+Durable Object namespace at all**, on any plan (this is a confirmed,
+current dashboard gap, not a free-tier restriction — see
+[this Cloudflare Community thread](https://community.cloudflare.com/t/durable-objects-create-namespace-button-still-missing-on-paid-plan-2026/875596),
+where even paid-plan users hit the exact same missing "Create
+namespace" button). The dashboard's "Add binding → Durable Object"
+form can only *select* a namespace that already exists — it can't make
+the first one for you.
+
+**So skip Option B below and go straight to Option A (Wrangler CLI)**
+— it creates the namespace as part of a normal deploy, with no
+dashboard step involved. Option B is kept here only in case Cloudflare
+fixes this gap later.
 
 ## Option A — Wrangler CLI (recommended)
 
@@ -54,7 +58,12 @@ current Bindings UI.
    (Edit `name = "forkbuild-rendezvous"` in `wrangler.toml` first if
    you want a different name in that URL — it's cosmetic only.)
 
-## Option B — Dashboard only (no CLI)
+## Option B — Dashboard only (currently blocked — see above)
+
+**As of early 2026 this path dead-ends at step 3**: the dashboard can
+bind to an existing Durable Object namespace but cannot create a new
+one, so there is nothing to select. Left here for when Cloudflare
+fixes that; use Option A until then.
 
 1. **Workers & Pages → Create → Create Worker.** Give it any name, use
    the "Hello World" starter, deploy it (you'll overwrite the code
@@ -62,13 +71,18 @@ current Bindings UI.
 2. Open your new worker → **Edit code** (Quick Edit). Delete the
    starter code, paste in the full contents of `worker.js`, and
    deploy.
-3. Go to your worker's **Settings → Bindings → Add binding → Durable
-   Object Namespace**.
-   - Binding name: **exactly** `RENDEZVOUS_NODE` (worker.js reads
+3. Go to your worker's **Settings → Bindings → Add → Durable Object**
+   (Cloudflare's dashboard wording has shifted over time — if you see
+   "Durable Object Namespace" instead, or a visual "Bindings" canvas
+   rather than a plain form, it's the same thing; pick whichever one
+   is offered).
+   - **Variable name:** **exactly** `RENDEZVOUS_NODE` (worker.js reads
      `env.RENDEZVOUS_NODE` — a typo here means the worker responds
      with an explicit "binding not configured" error rather than
      silently misbehaving, so it'll be obvious if this doesn't match).
-   - Class name: `RendezvousNode` (the class `worker.js` exports).
+   - **Durable Object namespace:** create a new one (or select an
+     existing empty one) and set its **Class name** to
+     `RendezvousNode` — the class `worker.js` exports.
    - If the dashboard asks about a migration/new class, confirm it's
      a **new** class — this is the first time it's ever existed.
 4. Save, and redeploy if prompted.
