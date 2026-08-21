@@ -50,13 +50,32 @@ import { TransformAlignment } from './TransformAlignment.js';
 // input) create zero history entries — the transformsEqual discipline,
 // unchanged since 0.1.38.
 export class SpatialEditingService {
-    constructor(session, commandHistories, brickRegistry = null, transformSettings = new TransformSettings()) {
+    // 0.2.95 — World Editing Authorization Foundation. `canEditDocument`
+    // is the ONE clean seam docs/Principles.md, "Selection In World
+    // View Does Not Imply Editing Authority (0.2.93)" already named as
+    // where this question would attach: `(documentId) => boolean`,
+    // consulted at every real mutation chokepoint below
+    // (beginTransformGesture, _executeLayoutOperation,
+    // _executeForSelection, moveBrick/rotateBrick/deleteBrick) — never
+    // re-derived per method, and never trusted from a cached selection
+    // state, so a caller that bypasses getEditingContext() entirely and
+    // invokes a mutation method directly gets the same answer a UI
+    // click would have. Defaults to `() => true`, the exact pre-0.2.95
+    // "always editable" behavior — every existing positional call site
+    // (application/EditorSession.js's own construction, and every test
+    // that builds this class with 3 or 4 arguments) is therefore
+    // completely unaffected; only a caller that explicitly wires a
+    // REAL predicate (application/WorldNavigationSession.js, backed by
+    // application/WorldAuthorizationService.js) gets a gate that can
+    // ever say no.
+    constructor(session, commandHistories, brickRegistry = null, transformSettings = new TransformSettings(), canEditDocument = () => true) {
         this._session = session;
         this._commandHistories = commandHistories;
         this._boundsService = new SelectionBoundsService(brickRegistry);
         this._transformSettings = transformSettings;
         this._gizmoState = TransformGizmoState.idle();
         this._gestureFeedback = null;
+        this._canEditDocument = typeof canEditDocument === 'function' ? canEditDocument : () => true;
     }
 
     get transformGizmoState() { return this._gizmoState; }
@@ -88,6 +107,18 @@ export class SpatialEditingService {
         if (!document) {
             return SpatialEditingContext.empty();
         }
+        // 0.2.95 — authorization gate. A selection in a document this
+        // viewer cannot edit simply looks, from here on, like a
+        // selection with nothing to operate on — the exact same
+        // load-bearing technique 0.2.93 used for a placement selection's
+        // always-empty `items` array (see that milestone's own header):
+        // nothing downstream (SelectionBoundsService, TransformGizmoUseCase,
+        // WorldNavigationSession's own move/rotate/delete) had to be
+        // taught a new "unauthorized" concept, because there is nothing
+        // here for it to see.
+        if (!this._canEditDocument(selection.documentId)) {
+            return SpatialEditingContext.empty();
+        }
         if (selection.type === 'brick' || selection.type === 'bricks') {
             return new SpatialEditingContext({
                 type: selection.isSingle ? 'brick' : 'bricks',
@@ -111,6 +142,10 @@ export class SpatialEditingService {
     moveBrick(documentId, buildingId, brickId, delta) {
         const document = this._session.getDocument(documentId);
         if (!document) {
+            return false;
+        }
+        // 0.2.95 — see beginTransformGesture's own comment above.
+        if (!this._canEditDocument(documentId)) {
             return false;
         }
         const world = document.world;
@@ -138,6 +173,10 @@ export class SpatialEditingService {
         if (!document) {
             return false;
         }
+        // 0.2.95 — see beginTransformGesture's own comment above.
+        if (!this._canEditDocument(documentId)) {
+            return false;
+        }
         const world = document.world;
         const history = this._commandHistories.get(world.id);
         if (!history) {
@@ -161,6 +200,10 @@ export class SpatialEditingService {
     deleteBrick(documentId, buildingId, brickId) {
         const document = this._session.getDocument(documentId);
         if (!document) {
+            return false;
+        }
+        // 0.2.95 — see beginTransformGesture's own comment above.
+        if (!this._canEditDocument(documentId)) {
             return false;
         }
         const world = document.world;
@@ -252,6 +295,9 @@ export class SpatialEditingService {
         if (this._gizmoState.active) return false;
         const document = this._session.getDocument(selection.documentId);
         if (!document) return false;
+        // 0.2.95 — the alignSelection/distributeSelection chokepoint.
+        // See beginTransformGesture's own comment above.
+        if (!this._canEditDocument(selection.documentId)) return false;
         const world = document.world;
         const history = this._commandHistories.get(world.id);
         if (!history) return false;
@@ -358,6 +404,14 @@ export class SpatialEditingService {
         if (!selection || selection.isEmpty || selection.type === 'ground') return null;
         const document = this._session.getDocument(selection.documentId);
         if (!document) return null;
+        // 0.2.95 — the real mutation chokepoint for moveSelection/
+        // rotateSelection/applyNumericTransform AND the interactive
+        // gizmo drag (gizmoPointerDown routes here too) — see this
+        // class's own constructor comment. getEditingContext() already
+        // refuses to hand out a non-empty context for a document this
+        // predicate rejects, but this check does not trust that a
+        // caller went through getEditingContext() at all.
+        if (!this._canEditDocument(selection.documentId)) return null;
         const bounds = this._boundsService.calculate(selection, document);
         if (!bounds) return null;
         const initialTransforms = this._captureTransforms(document.world, selection.items);
@@ -545,6 +599,9 @@ export class SpatialEditingService {
         if (!selection || selection.isEmpty || selection.type === 'ground') return false;
         const document = this._session.getDocument(selection.documentId);
         if (!document) return false;
+        // 0.2.95 — the deleteSelection chokepoint. See
+        // beginTransformGesture's own comment above.
+        if (!this._canEditDocument(selection.documentId)) return false;
         const world = document.world;
         const history = this._commandHistories.get(world.id);
         if (!history) return false;

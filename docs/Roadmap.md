@@ -5748,7 +5748,7 @@ first place).
 0.2.93  World View Instance Inspection                 ✓
 0.2.94  World View Location & Navigation               ✓
     ↓
-0.2.95  World Editing Authorization
+0.2.95  World Editing Authorization                    ✓
          ├── social identity as authorization subject
          ├── device-aware authorization
          └── mutation boundary
@@ -5805,3 +5805,249 @@ any document/placement/CommandHistory state — see "World View Navigation
 Operates On Spatial Observation, Never On Document Mutation (0.2.94)",
 the same read/write boundary 0.2.93 established for selection, now
 extended to navigation itself.
+
+0.2.95 — World Editing Authorization Foundation — answers the question
+0.2.93 deliberately left open ("this boundary is deliberately
+UI/selection-shaped today, not an authorization decision") without
+touching what that boundary actually LOOKS like: World View still has
+no way to move, rotate, duplicate, or delete a `StructurePlacement`.
+What changes is WHY that's true. Before this milestone, a placement
+selection was un-editable because its `items` array is always empty —
+a UI-shaped fact. After this milestone, an ordinary brick/building
+selection — the OTHER, older mutation surface World View has always
+quietly carried since before structures/placements existed — is
+ALSO un-editable, for a real reason: nobody had ever been asked whether
+they were allowed to touch it.
+
+```text
+0.2.95
+├── core/WorldAccessLevel.js                     NEW — the closed
+│                                                 NONE/READ/EDIT
+│                                                 vocabulary and its
+│                                                 total order. Not a
+│                                                 role system: no
+│                                                 EDITOR/ADMIN/
+│                                                 MODERATOR anywhere.
+├── application/WorldAuthorizationService.js      NEW — resolveAccess(document)
+│                                                 -> WorldAccessLevel,
+│                                                 + canRead()/canEdit().
+│                                                 Ownership resolved by
+│                                                 CRYPTOGRAPHIC identity
+│                                                 first (authorIdentityId),
+│                                                 degrading to the
+│                                                 legacy `author` label
+│                                                 ONLY when neither side
+│                                                 has a strong identity
+│                                                 to compare. Blocking
+│                                                 (reusing the SAME
+│                                                 isBlocked predicate
+│                                                 every other trust
+│                                                 boundary in this
+│                                                 codebase already
+│                                                 consults) is checked
+│                                                 before ownership.
+│                                                 Multi-device: an
+│                                                 optional
+│                                                 resolveSocialIdentity()
+│                                                 collaborator reuses
+│                                                 0.2.83's own
+│                                                 resolveOwnSocialIdentity()
+│                                                 verbatim — this class
+│                                                 never re-implements
+│                                                 device resolution, it
+│                                                 only ever asks.
+├── identity/resolveSigningIdentityId.js          NEW — the one tolerant
+│                                                 lookup (did:key off an
+│                                                 IdentityProvider, never
+│                                                 throws) every
+│                                                 document-creation site
+│                                                 below now shares.
+├── core/DocumentMetadata.js                      + authorIdentityId —
+│                                                 the SAME fact `author`
+│                                                 already recorded,
+│                                                 stated with the
+│                                                 strength authorization
+│                                                 actually needs. Purely
+│                                                 additive: a pre-0.2.95
+│                                                 document simply has
+│                                                 none, and
+│                                                 WorldAuthorizationService
+│                                                 degrades to the label
+│                                                 comparison for it —
+│                                                 the same "validate
+│                                                 strictly on write,
+│                                                 degrade gracefully on
+│                                                 read" posture 0.2.34
+│                                                 established. No schema/
+│                                                 protocol version bump —
+│                                                 the same precedent
+│                                                 parentStructureId
+│                                                 (0.2.81) already set.
+├── application/DocumentCloneService.js,          + authorIdentityId,
+│   CreateDocumentManagerUseCase.js,              resolved via
+│   ForkDocumentUseCase.js,                       resolveSigningIdentityId(),
+│   ForkPublishedWorldUseCase.js,                 threaded alongside
+│   ForkStructureUseCase.js                       `author` at every one
+│                                                 of the four sites that
+│                                                 already set it. Forking
+│                                                 ALWAYS stamps the
+│                                                 FORKER as the new
+│                                                 owner, never the
+│                                                 source's — ownership
+│                                                 is never inherited,
+│                                                 only content is.
+├── application/SpatialEditingService.js          + a `canEditDocument`
+│                                                 predicate (5th ctor
+│                                                 arg, default `() =>
+│                                                 true` — every existing
+│                                                 positional call site,
+│                                                 EditorSession's own
+│                                                 included, is completely
+│                                                 unaffected), consulted
+│                                                 at getEditingContext()
+│                                                 AND every REAL mutation
+│                                                 chokepoint directly:
+│                                                 beginTransformGesture()
+│                                                 (gates move/rotate/
+│                                                 numeric-input/the
+│                                                 interactive gizmo, all
+│                                                 four at once),
+│                                                 _executeLayoutOperation()
+│                                                 (align/distribute),
+│                                                 _executeForSelection()
+│                                                 (delete), and the
+│                                                 direct moveBrick()/
+│                                                 rotateBrick()/
+│                                                 deleteBrick() single-
+│                                                 target methods. The ONE
+│                                                 clean seam 0.2.93's own
+│                                                 header already named.
+├── application/WorldNavigationSession.js         + worldAuthorizationService
+│                                                 (optional ctor
+│                                                 collaborator, same
+│                                                 graceful-absence
+│                                                 posture as every other
+│                                                 one here) +
+│                                                 getWorldAccessLevel()/
+│                                                 canReadDocument()/
+│                                                 canEditDocument() —
+│                                                 public queries a UI MAY
+│                                                 consult to reflect
+│                                                 authorization, never
+│                                                 the thing that decides
+│                                                 it; wires a bound
+│                                                 `(documentId) =>
+│                                                 this.canEditDocument(documentId)`
+│                                                 into SpatialEditingService
+│                                                 at construction.
+├── application/CreateWorldViewUseCase.js         + builds ONE
+│                                                 WorldAuthorizationService,
+│                                                 wiring identityProvider,
+│                                                 the SAME isBlocked
+│                                                 predicate already
+│                                                 derived from
+│                                                 peerBlockUseCase for
+│                                                 the avatar trust
+│                                                 boundaries, and (new)
+│                                                 an optional
+│                                                 deviceAuthorizationPropagationUseCase's
+│                                                 resolveOwnSocialIdentity()
+│                                                 for multi-device
+│                                                 resolution
+├── ui/views/WorldView.js                         + injects the SAME
+│                                                 app-wide
+│                                                 deviceAuthorizationUseCase
+│                                                 ui/main.js already
+│                                                 provides for /peers,
+│                                                 threaded through to
+│                                                 CreateWorldViewUseCase
+└── tests/WorldEditingAuthorization.test.js       NEW — vocabulary,
+                                                    service, metadata,
+                                                    the SpatialEditingService
+                                                    seam in isolation,
+                                                    fork-stamps-the-forker,
+                                                    and the flagship below
+```
+
+The load-bearing decision, worth stating the way 0.2.93's own was: the
+predicate lives in `application/SpatialEditingService.js`, not in
+`application/WorldNavigationSession.js`. Every mutation method
+`WorldNavigationSession` exposes (`moveSelection`/`rotateSelection`/
+`deleteSelection`/`alignSelection`/`distributeSelection`/
+`applyNumericTransform`) is a thin wrapper that ultimately calls into
+`SpatialEditingService`, and `SpatialEditingService` is ALSO exactly
+what `application/EditorSession.js` builds its own gesture service from
+— so the same class this milestone gates is already the single, shared
+mutation kernel behind both surfaces. Gating it there, rather than
+duplicating a check in `WorldNavigationSession` alone, means a caller
+that skips `WorldNavigationSession`'s own wrapper methods entirely and
+calls `session._editingService.moveSelection(...)` directly gets
+refused just the same — the flagship test does exactly this, proving
+the gate lives BELOW the UI, not merely behind it. `EditorSession`
+itself passes no predicate at all (the default `() => true`), because
+this milestone draws no new boundary around the Editor's own documents —
+every document the Editor opens already comes from the current user's
+own local storage; there is no "Bob opens Alice's document in the
+Editor" scenario for 0.2.95 to guard against yet.
+
+The flagship (`tests/WorldEditingAuthorization.test.js`, Section G)
+runs the exact scenario the design conversation asked for: Alice owns a
+World and gets `EDIT`; Bob resolves to a different cryptographic
+identity and gets `READ` — he can still select and inspect the House,
+but `moveSelection`/`rotateSelection`/`deleteSelection`/`alignSelection`/
+`applyNumericTransform` are all no-ops, the World is byte-identical
+before and after every attempt, zero `CommandHistory` entries were ever
+created, and a direct call into `SpatialEditingService` bypassing every
+session-level wrapper is STILL refused; Charlie is blocked and gets
+`NONE` on both axes. A second scenario proves the multi-device story:
+Alice's Phone, resolved as a currently-authorized DEVICE of her own
+parent identity (reusing 0.2.83's `resolveOwnSocialIdentity()`
+verbatim), inherits full `EDIT` and can actually move the brick; the
+identical physical device, once its authorization is revoked (modeled
+exactly the way `resolveOwnSocialIdentity()` itself falls back to
+DIRECT once a grant is gone), loses `EDIT` and keeps `READ` — with zero
+code in `WorldAuthorizationService` aware a revocation happened at all,
+because it never caches an answer; it only ever asks the same question
+again.
+
+Deliberately not in 0.2.95, named rather than hidden: collaborative
+editing, remote edit commands, edit locking, conflict resolution,
+shared-world cursors, a permissions UI, and — explicitly — the
+`WorldEditorRole`/`WorldAdminRole`/`WorldModeratorRole` vocabulary the
+design conversation warned against building before a real collaborative
+use case demands it; `core/WorldAccessLevel.js` stays a flat
+NONE/READ/EDIT on purpose. World View still cannot move, rotate,
+duplicate, or delete a `StructurePlacement` — that boundary is
+unchanged from 0.2.93, and this milestone deliberately does not lift
+it; 0.2.95 closes a DIFFERENT, older gap (raw brick/building mutation)
+while leaving placement mutation exactly as absent as it already was,
+so that whenever 0.2.96 or a later milestone DOES wire a placement
+mutation path, it inherits the SAME `canEditDocument` gate for free
+rather than needing its own. Also deliberately not closed: the group
+membership methods (`createGroupFromSelection`/`addSelectionToSelectedGroup`/
+`removeSelectionFromSelectedGroup`/`renameGroup`/`duplicateGroup`/
+`deleteGroup`) and `pasteClipboard()`, all of which still resolve their
+target document only through the pre-0.2.20 fork-on-write mechanism
+(`_ensureEditableSelection`/`_ensureEditableDocumentId`), never through
+`WorldAuthorizationService` — named here as a real, existing gap rather
+than papered over, and left for a future milestone precisely because
+closing it well means deciding what a GROUP operation on a World nobody
+owns should even mean, a design question of its own, not a mechanical
+copy of this milestone's brick-transform gate. And, per the design
+conversation's own instruction, authorization does not gate WHICH
+documents stream into World View at all — `canRead`/`canEdit` answer
+"what may this viewer do," never "should this viewer have been shown
+this in the first place"; that remains entirely a discovery/streaming
+question, unchanged.
+
+Finally, the distinction the design conversation asked to be preserved
+explicitly stays preserved, structurally: moving a `StructurePlacement`
+INSTANCE inside a World (a `WorldAuthorizationService.canEdit(worldDocument)`
+question — still unreachable today, see above) and opening its
+REFERENCED Document to edit the structure's own bricks (an entirely
+separate `WorldAuthorizationService.canEdit(structureDocument)` question,
+answered fresh against a DIFFERENT Document, the moment the Editor's
+own Load path opens it) were never merged into one decision. Nothing in
+this milestone had to enforce that separation on purpose — it falls out
+for free from `resolveAccess(document)` always taking the specific
+Document being asked about, never a World-wide or session-wide answer.

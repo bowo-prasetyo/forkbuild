@@ -1,6 +1,7 @@
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentCloneService } from './DocumentCloneService.js';
 import { License } from '../core/License.js';
+import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 
 // Creates a new Document derived from an existing one. The source is
 // loaded from storage by its world id (publication.documentId), then
@@ -76,6 +77,12 @@ export class ForkDocumentUseCase {
         return this._documentCloneService.execute(sourceDocument, {
             title: `Fork of ${sourceTitle}`,
             author: currentUser ? currentUser.username : null,
+            // 0.2.95 — see core/DocumentMetadata.js's own comment: the
+            // FORKER becomes the new owner, never the source document's
+            // original author, so this is resolved fresh here rather
+            // than falling through DocumentCloneService's own
+            // source-value default.
+            authorIdentityId: resolveSigningIdentityId(identityProvider),
             parentDocumentId: sourceDocument.world.id,
             license: derivativeLicense
         });

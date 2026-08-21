@@ -201,12 +201,19 @@ export default {
         // and the inbound trust boundaries consult — see that use
         // case's own comment.
         const peerBlockUseCase = inject('peerBlockUseCase');
+        // 0.2.95 — the SAME app-wide DeviceAuthorizationPropagationUseCase
+        // ui/main.js already provides for /peers, handed to
+        // CreateWorldViewUseCase so World View's own editing-authority
+        // check can recognize an authorized device as speaking for its
+        // parent identity — see that use case's own comment.
+        const deviceAuthorizationUseCase = inject('deviceAuthorizationUseCase');
         const registry = new CreateBrickRegistryUseCase().execute();
         const worldViewFactory = new CreateWorldViewUseCase().execute(identityUseCase.provider, {
             peerMessageBus,
             connectedPeerRegistry: peerSessionManager ? peerSessionManager.registry : null,
             friendRelationshipUseCase,
-            peerBlockUseCase
+            peerBlockUseCase,
+            deviceAuthorizationPropagationUseCase: deviceAuthorizationUseCase
         });
         const session = worldViewFactory.createSession(registry);
         // Purely a client rendering preference (see docs/Principles.md,

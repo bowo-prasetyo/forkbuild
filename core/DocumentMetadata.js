@@ -31,6 +31,36 @@ export class DocumentMetadata {
         // conflated into one field. See docs/Principles.md, "Forking A
         // Structure Records Provenance, Never A Live Dependency."
         parentStructureId = null,
+        // 0.2.95 — World Editing Authorization Foundation. `author`
+        // (above) has always been a free-text attribution stamp —
+        // `currentUser.username`, a plain label, chosen at login,
+        // never cryptographically bound to anything (see identity/
+        // LocalIdentityProvider.js#sign(), "Honest about what it is:
+        // an attribution stamp, not a proof"). That was fine when
+        // nothing consulted it except display. It stops being fine the
+        // moment `application/WorldAuthorizationService.js` needs to
+        // answer "does this viewer OWN this Document" as an actual
+        // authorization decision — two people who both typed the
+        // display name "Alice" would otherwise both look like the
+        // owner. `authorIdentityId` is the SAME fact `author` records,
+        // stated with the strength authorization actually needs: the
+        // did:key identity (identity/Ed25519.js) of whoever held the
+        // signing key at save time, when that key was available at
+        // all (see application/CreateDocumentManagerUseCase.js,
+        // ForkDocumentUseCase.js, ForkPublishedWorldUseCase.js,
+        // ForkStructureUseCase.js — the four sites that set `author`
+        // now also set this alongside it). Never a REPLACEMENT for
+        // `author`: display still reads the label; only ownership
+        // decisions read this field, and only when it's present — a
+        // document saved before 0.2.95, or by a provider with no
+        // crypto surface, simply has none, and WorldAuthorizationService
+        // degrades to comparing `author` by label instead, the same
+        // "validate strictly on write, degrade gracefully on read"
+        // posture 0.2.34 already established for a different field.
+        // See docs/Principles.md, "Ownership Is A Cryptographic
+        // Identity Fact, Never A Free-Text Label, When One Is
+        // Available (0.2.95)."
+        authorIdentityId = null,
         license = null
     } = {}) {
         this._title = title;
@@ -42,12 +72,14 @@ export class DocumentMetadata {
         this._engineVersion = engineVersion;
         this._parentDocumentId = parentDocumentId;
         this._parentStructureId = parentStructureId;
+        this._authorIdentityId = authorIdentityId || null;
         this._license = license instanceof License ? license : (license ? License.fromJSON(license) : new License());
     }
 
     get title() { return this._title; }
     get description() { return this._description; }
     get author() { return this._author; }
+    get authorIdentityId() { return this._authorIdentityId; }
     get created() { return this._created; }
     get modified() { return this._modified; }
     get protocolVersion() { return this._protocolVersion; }
@@ -83,6 +115,7 @@ export class DocumentMetadata {
             engineVersion: this._engineVersion,
             parentDocumentId: this._parentDocumentId,
             parentStructureId: this._parentStructureId,
+            authorIdentityId: this._authorIdentityId,
             license: this._license.toJSON()
         };
     }
@@ -106,6 +139,10 @@ export class DocumentMetadata {
             // Pre-0.2.81 documents have no `parentStructureId` field —
             // same tolerant-default treatment as parentDocumentId.
             parentStructureId: json.parentStructureId || null,
+            // Pre-0.2.95 documents have no `authorIdentityId` field —
+            // same tolerant-default treatment; see the constructor's
+            // own 0.2.95 comment for what reading `null` here means.
+            authorIdentityId: json.authorIdentityId || null,
             license: json.license ? License.fromJSON(json.license) : null
         });
     }
