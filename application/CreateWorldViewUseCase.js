@@ -32,6 +32,7 @@ import { FriendshipState } from '../core/FriendshipState.js';
 import { WorldAuthorizationService } from './WorldAuthorizationService.js';
 import { WorldMembershipUseCase } from './WorldMembershipUseCase.js';
 import { WorldPresenceUseCase } from './WorldPresenceUseCase.js';
+import { WorldSpatialPresenceUseCase } from './WorldSpatialPresenceUseCase.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -444,6 +445,23 @@ export class CreateWorldViewUseCase {
                         }
                     })
                     : null;
+                // 0.3.0 — Collaborative Spatial Presence. Same peer-stack
+                // gate as worldPresenceUseCase above, and the SAME
+                // deviceAuthorizationPropagationUseCase — see
+                // application/WorldSpatialPresenceUseCase.js's own
+                // header for why identity is resolved exactly the same
+                // device-aware way its coarser 0.2.98 sibling already
+                // does. Deliberately does NOT reuse worldPresenceUseCase
+                // itself — a separate protocol, a separate use case, a
+                // separate optional collaborator, so a caller can wire
+                // one without the other with no coupling either way.
+                const worldSpatialPresenceUseCase = (peerMessageBus && connectedPeerRegistry && deviceAuthorizationPropagationUseCase)
+                    ? new WorldSpatialPresenceUseCase({
+                        peerMessageBus,
+                        connectedPeerRegistry,
+                        deviceAuthorization: deviceAuthorizationPropagationUseCase
+                    })
+                    : null;
                 const session = new WorldNavigationSession({
                     registry,
                     loadPublicationDocumentUseCase,
@@ -512,7 +530,9 @@ export class CreateWorldViewUseCase {
                     // 0.2.98: Shared World Membership & Collaborative
                     // Presence — see above.
                     worldMembershipUseCase,
-                    worldPresenceUseCase
+                    worldPresenceUseCase,
+                    // 0.3.0: Collaborative Spatial Presence — see above.
+                    worldSpatialPresenceUseCase
                 });
                 sessionRef = session;
                 return session;

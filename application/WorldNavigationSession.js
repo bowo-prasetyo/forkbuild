@@ -61,6 +61,8 @@ import { CameraFocusAnimator } from './CameraFocusAnimator.js';
 import { computeCompassHeading } from '../core/CompassHeading.js';
 import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
+import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
+import { deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -236,7 +238,15 @@ export class WorldNavigationSession {
 	    // without one simply never advertises or observes presence at
 	    // all.
 	    worldMembershipUseCase = null,
-	    worldPresenceUseCase = null
+	    worldPresenceUseCase = null,
+	    // 0.3.0 — Collaborative Spatial Presence. OPTIONAL, the exact
+	    // same "enforce/offer only when the collaborator is actually
+	    // wired" posture worldPresenceUseCase above already follows — a
+	    // session built without one (every pre-0.3.0 caller, and every
+	    // existing test) simply never advertises or observes spatial
+	    // presence at all; see enterWorldSpatialPresence()/
+	    // syncWorldSpatialPresence()/leaveWorldSpatialPresence() below.
+	    worldSpatialPresenceUseCase = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -461,6 +471,31 @@ export class WorldNavigationSession {
 	    // relying solely on the eventual connection-drop pruning every
 	    // OTHER replica's own WorldPresenceUseCase already performs.
 	    this._presentWorldDocumentIds = new Set();
+
+	    // 0.3.0 — see the constructor's own comment above.
+	    this._worldSpatialPresenceUseCase = worldSpatialPresenceUseCase;
+	    // Worlds this session has explicitly entered SPATIAL presence
+	    // for — mirrors `_presentWorldDocumentIds` above, one rung
+	    // further: dispose() broadcasts an honest LEAVE for each. A
+	    // SEPARATE set from `_presentWorldDocumentIds` on purpose — a
+	    // caller may enter coarse presence without ever syncing spatial
+	    // presence (or vice versa); the two protocols never assume one
+	    // implies the other.
+	    this._presentSpatialWorldDocumentIds = new Set();
+	    // documentId -> unsubscribe function for this session's own
+	    // internal onSpatialPresenceChanged() listener — see
+	    // enterWorldSpatialPresence()/leaveWorldSpatialPresence() below.
+	    // This is what drives `this._session.setRemoteSpatialPresence()`
+	    // automatically, the identical "application layer drives its own
+	    // render facade" shape application/RemoteAvatarRegistry.js
+	    // already established for avatars — WorldView.js never touches
+	    // the renderer directly for this any more than it does for
+	    // remote avatars.
+	    this._spatialPresenceRenderSubscriptions = new Map();
+	    // documentId -> Set(deviceId) currently rendered, so a device
+	    // that drops out of a later roster snapshot can be explicitly
+	    // removed from the scene rather than left as a stale marker.
+	    this._spatialPresenceRenderedDevices = new Map();
 
 	    this._container = null;
 	    this._session = null;
@@ -2692,6 +2727,193 @@ export class WorldNavigationSession {
         return this._worldPresenceUseCase.onPresenceChanged(documentId, callback);
     }
 
+    // -----------------------------------------------------------------
+    // World Spatial Presence (0.3.0)
+    // -----------------------------------------------------------------
+    //
+    // Declares this replica SPATIALLY present in `documentId` — see
+    // application/WorldSpatialPresenceUseCase.js's own header. A no-op
+    // when no worldSpatialPresenceUseCase is wired, the exact
+    // graceful-absence contract enterWorldPresence() above already
+    // follows. `resolveDisplayName`, if given, is an OPTIONAL
+    // `(identityId) => string` this session threads straight through to
+    // every remote marker it renders for THIS World — the same
+    // presentation-only resolution WorldView.js's own
+    // resolveIdentityDisplayName() already performs for the Members
+    // panel (ui/components/WorldMembersPanel.js), never duplicated or
+    // reinvented here. Absent, a short truncated identityId is shown
+    // instead — never a thrown error.
+    enterWorldSpatialPresence(documentId, { resolveDisplayName = null } = {}) {
+        if (!this._worldSpatialPresenceUseCase) {
+            return;
+        }
+        const cameraPosition = this.getCameraPosition();
+        const heading = this.getCompassHeading();
+        this._worldSpatialPresenceUseCase.enterWorld(documentId, {
+            position: cameraPosition ? { x: cameraPosition.x, z: cameraPosition.z } : null,
+            heading: heading ? heading.degrees : null
+        });
+        this._presentSpatialWorldDocumentIds.add(documentId);
+        this._startSpatialPresenceRendering(documentId, typeof resolveDisplayName === 'function' ? resolveDisplayName : null);
+    }
+
+    // The one call a UI drives on a fast interval (see ui/views/WorldView.js)
+    // while this World is the active one — reads this session's OWN
+    // already-existing camera/selection/gizmo/movement state and
+    // forwards it. This is the ONE place local interaction state becomes
+    // a network fact — see core/WorldSpatialActivity.js's own header:
+    // `activity` is always DERIVED here, never something a caller passes
+    // in directly. A no-op for a World this session hasn't entered
+    // spatial presence for.
+    syncWorldSpatialPresence(documentId) {
+        if (!this._worldSpatialPresenceUseCase || !this._presentSpatialWorldDocumentIds.has(documentId)) {
+            return;
+        }
+        const cameraPosition = this.getCameraPosition();
+        const heading = this.getCompassHeading();
+        const selection = this._resolveWorldSpatialSelection(documentId);
+        const gizmoState = this._editingService.transformGizmoState;
+        const activity = deriveWorldSpatialActivity({
+            gizmoActive: gizmoState.active,
+            gizmoMode: gizmoState.mode,
+            hasSelection: !selection.isEmpty,
+            canEdit: this.canEditDocument(documentId),
+            isMoving: Boolean(this._avatarMovementController && this._avatarMovementController.hasMovementInput())
+        });
+        this._worldSpatialPresenceUseCase.updateSpatial(documentId, {
+            position: cameraPosition ? { x: cameraPosition.x, z: cameraPosition.z } : undefined,
+            heading: heading ? heading.degrees : undefined,
+            selection,
+            activity
+        });
+    }
+
+    leaveWorldSpatialPresence(documentId) {
+        if (!this._worldSpatialPresenceUseCase) {
+            return;
+        }
+        this._worldSpatialPresenceUseCase.leaveWorld(documentId);
+        this._presentSpatialWorldDocumentIds.delete(documentId);
+        this._stopSpatialPresenceRendering(documentId);
+    }
+
+    // Every device-level entry currently spatially present in
+    // `documentId` — see WorldSpatialPresenceUseCase#getSpatialRoster()'s
+    // own header for the exact shape. An empty array, never a throw,
+    // when no worldSpatialPresenceUseCase is wired.
+    getWorldSpatialPresenceRoster(documentId) {
+        if (!this._worldSpatialPresenceUseCase) {
+            return [];
+        }
+        return this._worldSpatialPresenceUseCase.getSpatialRoster(documentId);
+    }
+
+    onWorldSpatialPresenceChanged(documentId, callback) {
+        if (!this._worldSpatialPresenceUseCase) {
+            return () => {};
+        }
+        return this._worldSpatialPresenceUseCase.onSpatialPresenceChanged(documentId, callback);
+    }
+
+    // Reads this session's own LOCAL editing selection
+    // (`_spatialSelection`, application/spatial-state/SpatialSelectionState.js)
+    // and translates it into the read-only observation shape
+    // core/WorldSpatialSelection.js defines — see that file's own
+    // header on why the two are never the same type. Only ever reflects
+    // a selection that belongs to THIS World (never a different loaded
+    // document this replica also happens to have open) and only its
+    // World-View-relevant kinds (brick, structure placement) — a ground
+    // click or ordinary multi-brick marquee simply reports no selection,
+    // exactly like a placement selection already suppresses the
+    // transform gizmo (see SpatialSelectionState's own header).
+    _resolveWorldSpatialSelection(documentId) {
+        const selection = this._spatialSelection;
+        if (!selection || selection.isEmpty || selection.documentId !== documentId) {
+            return WorldSpatialSelection.none();
+        }
+        if (selection.isStructurePlacementSelection) {
+            return WorldSpatialSelection.placement({ documentId, placementId: selection.placementId });
+        }
+        if (selection.isSingle && selection.type === 'brick') {
+            return WorldSpatialSelection.brick({ documentId, buildingId: selection.buildingId, brickId: selection.brickId });
+        }
+        return WorldSpatialSelection.none();
+    }
+
+    // 0.3.0 — the application-layer render driver, the identical shape
+    // application/RemoteAvatarRegistry.js already established for remote
+    // avatars: THIS class reacts to a presence-sync event and calls its
+    // own render facade (`this._session`) directly — WorldView.js never
+    // touches renderer/RemoteSpatialPresenceRenderer.js, or even knows
+    // it exists. A no-op (never throws) before this._session exists yet
+    // (start() hasn't been called) — the subscription is still recorded,
+    // so a start() that happens later doesn't need this called again.
+    _startSpatialPresenceRendering(documentId, resolveDisplayName) {
+        if (this._spatialPresenceRenderSubscriptions.has(documentId)) {
+            return;
+        }
+        this._spatialPresenceRenderedDevices.set(documentId, new Set());
+        const unsubscribe = this._worldSpatialPresenceUseCase.onSpatialPresenceChanged(documentId, (roster) => {
+            this._applySpatialPresenceRoster(documentId, roster, resolveDisplayName);
+        });
+        this._spatialPresenceRenderSubscriptions.set(documentId, unsubscribe);
+        this._applySpatialPresenceRoster(documentId, this._worldSpatialPresenceUseCase.getSpatialRoster(documentId), resolveDisplayName);
+    }
+
+    _stopSpatialPresenceRendering(documentId) {
+        const unsubscribe = this._spatialPresenceRenderSubscriptions.get(documentId);
+        if (unsubscribe) {
+            unsubscribe();
+            this._spatialPresenceRenderSubscriptions.delete(documentId);
+        }
+        const rendered = this._spatialPresenceRenderedDevices.get(documentId);
+        if (rendered && this._session && typeof this._session.removeRemoteSpatialPresence === 'function') {
+            for (const deviceId of rendered) {
+                this._session.removeRemoteSpatialPresence(deviceId);
+            }
+        }
+        this._spatialPresenceRenderedDevices.delete(documentId);
+    }
+
+    // Diffs the freshly-fetched roster against whatever this session
+    // last rendered for `documentId`, so a device that dropped out (its
+    // owner disconnected, or explicitly left) is removed from the scene
+    // rather than left behind as a stale marker.
+    _applySpatialPresenceRoster(documentId, roster, resolveDisplayName) {
+        if (!this._session || typeof this._session.setRemoteSpatialPresence !== 'function') {
+            return;
+        }
+        const seen = new Set();
+        for (const group of roster) {
+            const label = resolveDisplayName ? resolveDisplayName(group.identityId) : this._shortIdentityLabel(group.identityId);
+            for (const device of group.devices) {
+                seen.add(device.deviceId);
+                this._session.setRemoteSpatialPresence(device.deviceId, {
+                    identityId: group.identityId,
+                    label,
+                    position: device.position,
+                    heading: device.heading,
+                    selection: device.selection,
+                    activity: device.activity
+                });
+            }
+        }
+        const previouslyRendered = this._spatialPresenceRenderedDevices.get(documentId) || new Set();
+        for (const deviceId of previouslyRendered) {
+            if (!seen.has(deviceId)) {
+                this._session.removeRemoteSpatialPresence(deviceId);
+            }
+        }
+        this._spatialPresenceRenderedDevices.set(documentId, seen);
+    }
+
+    _shortIdentityLabel(identityId) {
+        if (typeof identityId !== 'string' || identityId.length === 0) {
+            return '?';
+        }
+        return `${identityId.replace(/^did:key:/, '').slice(0, 6)}…`;
+    }
+
     // 0.2.93 — resolves a StructurePlacement's referenced documentId to
     // a human title via the SAME saved-document listing
     // application/EditorSession.js#getSelectedPlacementInfo() already
@@ -4180,6 +4402,16 @@ export class WorldNavigationSession {
             }
         }
         this._presentWorldDocumentIds.clear();
+        // 0.3.0 — the identical honest-LEAVE discipline, one rung
+        // further: also tears down this session's own render-driving
+        // subscriptions and removes every marker it ever added to the
+        // scene, so a disposed session leaves no stale Object3Ds behind.
+        if (this._worldSpatialPresenceUseCase) {
+            for (const documentId of Array.from(this._presentSpatialWorldDocumentIds)) {
+                this.leaveWorldSpatialPresence(documentId);
+            }
+        }
+        this._presentSpatialWorldDocumentIds.clear();
         if (this._avatarProfileSubscription) {
             this._avatarProfileSubscription();
             this._avatarProfileSubscription = null;

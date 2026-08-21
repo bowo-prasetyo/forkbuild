@@ -7,6 +7,6 @@
 // vice versa.
 export const VERSION = {
     major: 0,
-    minor: 2,
-    patch: 45
+    minor: 3,
+    patch: 0
 };

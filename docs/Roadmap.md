@@ -6928,10 +6928,213 @@ header.
              ├── Grant/Revoke controls
              ├── Online/device aggregation
              └── one shared composition, ready for World View AND Editor
-             │
-             ▼
-0.3.0   Collaborative Cursors & Remote Selection
-             │
-             ▼
-0.3.1   Rich Collaborative Editing UX
 ```
+
+## Collaborative Spatial Presence
+
+0.3.0 — Collaborative Spatial Presence — answers the question 0.2.99's
+own closing paragraph named and deliberately left unbuilt: "remote
+cursors, colored user indicators, selection sharing, live 'Bob is
+moving House' indicators." 0.2.95 through 0.2.99 built the entire chain
+collaboration needed structurally — ownership, propagation, ordering/
+conflict resolution, membership, and a real UI on top of all of it —
+but a collaborator, however real, has so far only ever been a row in a
+panel: "Bob · Editor · Online." This milestone makes collaboration
+SPATIALLY VISIBLE, without introducing a second editing or
+synchronization system:
+
+```text
+0.3.0
+├── core/
+│   ├── WorldSpatialActivity.js              NEW — a SECOND, richer
+│   │                                        activity vocabulary than
+│   │                                        WorldPresenceActivity's own
+│   │                                        closed EXPLORING/EDITING
+│   │                                        pair (0.2.98) — IDLE,
+│   │                                        WALKING, INSPECTING,
+│   │                                        BUILDING, MOVING_STRUCTURE,
+│   │                                        ROTATING_STRUCTURE.
+│   │                                        deriveWorldSpatialActivity()
+│   │                                        is the ONE place it is ever
+│   │                                        chosen — a pure function of
+│   │                                        local gizmo/selection/
+│   │                                        movement state, never
+│   │                                        something a user types.
+│   ├── WorldSpatialSelection.js             NEW — a read-only, remote-
+│   │                                        OBSERVATION selection value
+│   │                                        object. Deliberately NOT
+│   │                                        SpatialSelectionState — see
+│   │                                        docs/Principles.md, "UI
+│   │                                        Selection Must Never Imply
+│   │                                        Editing Authority (0.2.95)";
+│   │                                        a remote selection implies
+│   │                                        even less.
+│   └── WorldSpatialPresenceAdvertisement.js NEW — the unsigned wire
+│                                            shape of a THIRD, separate
+│                                            protocol,
+│                                            `forkbuild:world-spatial-
+│                                            presence`. Carries a plain
+│                                            per-CONNECTION monotonic
+│                                            `sequence` — never a
+│                                            wall-clock timestamp used
+│                                            for correctness.
+├── application/
+│   ├── WorldSpatialPresenceUseCase.js       NEW — structured as closely
+│   │                                        as possible after
+│   │                                        WorldPresenceUseCase.js
+│   │                                        itself (0.2.98): computed
+│   │                                        from live, authenticated
+│   │                                        connections, never
+│   │                                        persisted, device-aware
+│   │                                        identity resolution
+│   │                                        unchanged. The one genuinely
+│   │                                        new mechanism: THROTTLING —
+│   │                                        selection/activity changes
+│   │                                        broadcast immediately;
+│   │                                        position/heading changes are
+│   │                                        rate-limited to roughly
+│   │                                        10-15/second, with a
+│   │                                        trailing flush so a camera
+│   │                                        that moves once and stops is
+│   │                                        still eventually seen at its
+│   │                                        true resting position.
+│   └── WorldNavigationSession.js            MODIFIED — a THIRD optional
+│                                            collaborator
+│                                            (`worldSpatialPresenceUseCase`),
+│                                            mirroring worldPresenceUseCase's
+│                                            own enter/leave/roster/
+│                                            onChanged shape exactly, plus
+│                                            one new call
+│                                            (`syncWorldSpatialPresence`)
+│                                            a UI drives on a fast
+│                                            interval — the ONE place
+│                                            local interaction state
+│                                            becomes a network fact. This
+│                                            class also DRIVES ITS OWN
+│                                            render facade on every
+│                                            roster change, the identical
+│                                            "application layer drives
+│                                            its own renderer" shape
+│                                            application/RemoteAvatarRegistry.js
+│                                            already established for
+│                                            avatars — ui/views/WorldView.js
+│                                            never touches the renderer
+│                                            for this any more than it
+│                                            does for remote avatars.
+├── renderer/
+│   └── RemoteSpatialPresenceRenderer.js     NEW — a small, deliberately
+│                                            SUBTLE per-device marker
+│                                            (a colored cone, a faint
+│                                            name/activity label, an
+│                                            optional translucent
+│                                            selection-bounds outline) —
+│                                            never a second avatar body.
+│                                            The World itself stays the
+│                                            star.
+└── ui/components/
+    └── WorldCollaboratorIndicator.js        NEW — the 2D counterpart:
+                                             "Bob — Building," one row
+                                             per identity, deliberately
+                                             as understated as
+                                             WorldPresenceIndicator
+                                             (0.2.99).
+```
+
+The architectural rule this milestone exists to enforce, worth stating
+once here the way every collaboration milestone since 0.2.95 has stated
+its own:
+
+```text
+Collaborative spatial presence is ephemeral observation, never World content.
+```
+
+If Bob disconnects, Bob disappears — not "Bob's last position remains
+stored in the World." There is no `WorldSpatialPresence` field anywhere
+in a `World`, a `Document`, a `Command`, undo/redo, or
+`WorldOperationEnvelope` — the flagship test proves the World document
+is byte-identical before and after the entire scenario. And, just as
+important: `activity` is never authorization. Seeing "Bob — Building"
+must never mean "Bob is authorized to edit" — `application/
+WorldAuthorizationService.js` remains the sole authority, re-derived
+fresh, completely independent of anything a spatial presence
+advertisement claims. Revoking Bob's edit grant never gates his spatial
+presence at all — his camera, heading, and selection keep flowing
+exactly as before, because "where is Bob looking" and "may Bob edit"
+have never been the same question.
+
+Device aggregation continues exactly as 0.2.98 established it, one rung
+further: `getSpatialRoster()` groups by resolved SOCIAL identity, but —
+unlike the coarse roster, which only ever needed a `deviceCount` — this
+one keeps every device's own independent position/heading/selection/
+activity, because Bob's Desktop and Bob's Tablet are frequently in
+genuinely different places. A caller decides whether to show "Bob" once
+or "Bob · Desktop"/"Bob · Tablet" separately; this layer only ever hands
+back the honest, ungrouped per-device facts.
+
+The flagship (`tests/CollaborativeSpatialPresence.test.js`) is run
+against a REAL authenticated peer network: Alice and Bob, both
+authorized editors of the same World, converge live on each other's
+camera position and heading (throttled) and selection/activity
+(immediate, never throttled); a rapid burst of camera movement collapses
+to its final value, never a stale intermediate one; Bob's second,
+authorized device joins and both his devices remain independently
+visible with genuinely different positions; Alice revokes Bob's edit
+grant and his spatial presence keeps flowing unaffected, proving
+activity is never authorization; disconnecting Bob removes his presence
+entirely, pruned like every other live-connection-derived fact in this
+codebase; two independent replicas (Alice and Charlie), each with their
+own direct connection to Bob, converge on the byte-identical roster with
+no dependency on each other; and the World document itself is
+byte-identical before and after the entire scenario.
+
+Deliberately not in 0.3.0, named rather than hidden: remote manipulation,
+remote commands, locks, chat integration, comments, persistent cursors,
+CRDT/OT, server authority, voice integration, collaborative undo/redo,
+automatic conflict avoidance, and any World View mutation driven by a
+remote participant's own spatial presence. The defining security
+assertion this milestone's own flagship states explicitly: remote
+spatial presence can never enter a mutation path — `WorldSpatialSelection`
+shares no type, and no code path, with `SpatialSelectionState`,
+`SpatialEditingService`, or any `application/commands/` class.
+
+```text
+0.2.98  Shared World Membership & Collaborative Presence ✓
+             │
+             ▼
+0.2.99  World Collaboration UX                           ✓
+             │
+             ▼
+0.3.0   Collaborative Spatial Presence                   ✓
+             ├── Remote camera position & heading (throttled)
+             ├── Remote selection (immediate, observation-only)
+             ├── Device-aware markers, never a second avatar
+             ├── A derived, closed activity vocabulary
+             └── Ephemeral — the World stays byte-identical throughout
+```
+
+This closes the ladder the 0.2.x series spent building:
+
+```text
+BRICK
+  ↓
+STRUCTURE
+  ↓
+WORLD
+  ↓
+WORLD INSTANCE
+  ↓
+WORLD AUTHORIZATION
+  ↓
+WORLD SYNCHRONIZATION
+  ↓
+WORLD COLLABORATION
+  ↓
+WORLD SPATIAL PRESENCE
+```
+
+The 0.2.x series was largely about making the World itself structurally
+complete and synchronizable. What comes after 0.3.0 — the experience of
+multiple humans inhabiting and building the same deterministic world
+together, beyond merely seeing where one another are looking — remains
+open and unscheduled, a deliberate stopping point rather than an
+arbitrary version bump.

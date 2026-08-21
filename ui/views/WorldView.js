@@ -22,6 +22,7 @@ import CompassIndicator from '../components/CompassIndicator.js';
 import LocationsPanel from '../components/LocationsPanel.js';
 import WorldMembersPanel from '../components/WorldMembersPanel.js';
 import WorldPresenceIndicator from '../components/WorldPresenceIndicator.js';
+import WorldCollaboratorIndicator, { buildSpatialCollaboratorRows } from '../components/WorldCollaboratorIndicator.js';
 import { buildWorldCollaborationRoster } from '../components/WorldCollaborationRoster.js';
 
 const DRAG_THRESHOLD_PX = 6;
@@ -54,7 +55,7 @@ export default {
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
         AvatarInfoPanel, NearbyAvatarsPanel,
         CompassIndicator, LocationsPanel,
-        WorldMembersPanel, WorldPresenceIndicator
+        WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator
     },
     setup() {
         const route = useRoute();
@@ -192,6 +193,16 @@ export default {
         // identityId currently mid-grant/mid-revoke, or null — see
         // grantWorldMember()/revokeWorldMember() below.
         const collaborationPendingIdentityId = ref(null);
+        // 0.3.0 — Collaborative Spatial Presence. `spatialCollaboratorRows`
+        // is buildSpatialCollaboratorRows()'s own output — ONE row per
+        // identity, resolved through the SAME resolveIdentityDisplayName()
+        // this view already uses for worldCollaborationRoster below.
+        // Refreshed on every live onWorldSpatialPresenceChanged
+        // notification (see _syncWorldSpatialPresence() below), never
+        // polled — spatial presence already updates far more often than
+        // refreshSpatialUI()'s own 3-second cadence would be worth
+        // reading on a timer.
+        const spatialCollaboratorRows = ref([]);
         const availableDefinitions = ref([]);
         const selectedDefinitionId = ref(null);
         const activeTool = ref('select');
@@ -292,6 +303,17 @@ export default {
         let presentWorldDocumentId = null;
         let unsubscribeWorldPresence = null;
         let unsubscribeWorldMembership = null;
+        // 0.3.0 — the SAME bookkeeping shape, one rung further, for
+        // SPATIAL presence — see _syncWorldSpatialPresence() below.
+        // `spatialPresenceSyncInterval` is a SEPARATE, much faster timer
+        // than `spatialInterval` above: coarse presence/membership only
+        // need to be re-read every few seconds, but a moving camera
+        // needs to be pushed at up to "10-15 updates/second" (see
+        // application/WorldSpatialPresenceUseCase.js's own header) — a
+        // single shared interval would force one cadence on both.
+        let presentSpatialWorldDocumentId = null;
+        let unsubscribeWorldSpatialPresence = null;
+        let spatialPresenceSyncInterval = null;
 
         availableDefinitions.value = registry.getAll();
         if (availableDefinitions.value.length > 0) {
@@ -716,6 +738,9 @@ export default {
             // since the last tick, so this never re-enters presence (or
             // re-subscribes) on every 3-second poll.
             _syncWorldPresence(activeId);
+            // 0.3.0 — the SAME active-document tracking, one protocol
+            // further — see _syncWorldSpatialPresence()'s own header.
+            _syncWorldSpatialPresence(activeId);
             isActiveWorldOwner.value = activeId ? session.isWorldOwner(activeId) : false;
 
             // 0.2.27: the camera's own target, kept and shown
@@ -796,6 +821,42 @@ export default {
             }
             worldMembers.value = session.listWorldMembers(documentId);
             worldPresenceRoster.value = session.getWorldPresenceRoster(documentId);
+        }
+
+        // 0.3.0 — Collaborative Spatial Presence. Mirrors
+        // _syncWorldPresence() above exactly, one protocol further: a
+        // no-op unless the active document actually changed, tears down
+        // the previous World's spatial presence and subscription before
+        // entering the new one. session.enterWorldSpatialPresence()/
+        // leaveWorldSpatialPresence()/onWorldSpatialPresenceChanged()
+        // are all graceful no-ops with no worldSpatialPresenceUseCase
+        // wired — see application/WorldNavigationSession.js's own header.
+        function _syncWorldSpatialPresence(activeId) {
+            if (activeId === presentSpatialWorldDocumentId) {
+                return;
+            }
+            if (presentSpatialWorldDocumentId) {
+                session.leaveWorldSpatialPresence(presentSpatialWorldDocumentId);
+            }
+            if (unsubscribeWorldSpatialPresence) {
+                unsubscribeWorldSpatialPresence();
+                unsubscribeWorldSpatialPresence = null;
+            }
+            presentSpatialWorldDocumentId = activeId || null;
+            spatialCollaboratorRows.value = [];
+            if (!presentSpatialWorldDocumentId) {
+                return;
+            }
+            session.enterWorldSpatialPresence(presentSpatialWorldDocumentId, {
+                resolveDisplayName: (identityId) => resolveIdentityDisplayName(identityId)
+            });
+            spatialCollaboratorRows.value = buildSpatialCollaboratorRows(
+                session.getWorldSpatialPresenceRoster(presentSpatialWorldDocumentId),
+                { resolveDisplayName: resolveIdentityDisplayName }
+            );
+            unsubscribeWorldSpatialPresence = session.onWorldSpatialPresenceChanged(presentSpatialWorldDocumentId, (roster) => {
+                spatialCollaboratorRows.value = buildSpatialCollaboratorRows(roster, { resolveDisplayName: resolveIdentityDisplayName });
+            });
         }
 
         // Resolves a friendly label for a raw identityId — PRESENTATION
@@ -1442,10 +1503,28 @@ export default {
                 session.updateSpatialView();
                 refreshSpatialUI();
             }, 3000);
+
+            // 0.3.0 — Collaborative Spatial Presence. A SEPARATE, much
+            // faster interval than spatialInterval above — see
+            // _syncWorldSpatialPresence()'s own header on why the two
+            // cadences must stay independent. session.syncWorldSpatialPresence()
+            // itself does the actual throttling decision (immediate for
+            // selection/activity, at most once per ~90ms for position/
+            // heading — see application/WorldSpatialPresenceUseCase.js's
+            // own header); calling it every 100ms here just guarantees a
+            // fresh read of the camera/selection/gizmo state is always
+            // available to throttle FROM. A no-op whenever no World is
+            // currently spatially present.
+            spatialPresenceSyncInterval = setInterval(() => {
+                if (presentSpatialWorldDocumentId) {
+                    session.syncWorldSpatialPresence(presentSpatialWorldDocumentId);
+                }
+            }, 100);
         });
 
         onBeforeUnmount(() => {
             clearInterval(spatialInterval);
+            clearInterval(spatialPresenceSyncInterval);
             if (feedbackTimer) {
                 clearTimeout(feedbackTimer);
             }
@@ -1455,16 +1534,20 @@ export default {
             viewport.value.removeEventListener('pointerup', onPointerUp);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
-            // 0.2.99 — session.dispose() below already leaves EVERY
-            // World this session holds presence for (it iterates its own
-            // _presentWorldDocumentIds — see WorldNavigationSession's
-            // dispose()), so only the view's own live subscriptions need
-            // tearing down here.
+            // 0.2.99/0.3.0 — session.dispose() below already leaves
+            // EVERY World this session holds coarse OR spatial presence
+            // for (it iterates its own _presentWorldDocumentIds AND
+            // _presentSpatialWorldDocumentIds — see
+            // WorldNavigationSession's own dispose()), so only the
+            // view's own live subscriptions need tearing down here.
             if (unsubscribeWorldPresence) {
                 unsubscribeWorldPresence();
             }
             if (unsubscribeWorldMembership) {
                 unsubscribeWorldMembership();
+            }
+            if (unsubscribeWorldSpatialPresence) {
+                unsubscribeWorldSpatialPresence();
             }
             session.dispose();
         });
@@ -1547,6 +1630,7 @@ export default {
             showMembersPanel,
             worldCollaborationRoster,
             worldOnlineCount,
+            spatialCollaboratorRows,
             isActiveWorldOwner,
             collaborationPendingIdentityId,
             openMembersPanel,
@@ -1641,6 +1725,13 @@ export default {
                     <WorldPresenceIndicator :online-count="worldOnlineCount" @open="openMembersPanel" />
                     <button class="action-btn" @click="openMembersPanel">Members</button>
                 </div>
+
+                <!-- 0.3.0 — Collaborative Spatial Presence. The 2D
+                     counterpart to renderer/RemoteSpatialPresenceRenderer.js's
+                     own in-scene markers — see
+                     ui/components/WorldCollaboratorIndicator.js's own
+                     header. -->
+                <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" />
                 <!-- 0.2.29: browse the world by camera position, without
                      already knowing a document's name or typing raw
                      coordinates — see docs/Principles.md, "Exploring A
