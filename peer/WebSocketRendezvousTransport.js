@@ -24,9 +24,15 @@ import { createId } from '../core/createId.js';
 // The server on the other end of `url` is intentionally as "stupid" as
 // peer/LocalRendezvousNetwork.js's own in-memory Map: identityId maps to
 // one current publication, expiring on its own, nothing else — this class
-// ships no reference server, only the CLIENT half of a small wire
+// ships no reference server ITSELF, only the CLIENT half of a small wire
 // protocol any server that wants to be found by this codebase can
 // implement (see the wire protocol description below).
+//
+// 0.3.3 — a real, deployable reference server implementing exactly this
+// protocol now exists at server/rendezvous-worker/ (a Cloudflare Worker +
+// Durable Object) — optional operator infrastructure, same as
+// peer/RendezvousConfig.js's own "configures their own" posture; nothing
+// above or below this comment changed to make that true.
 //
 // Wire protocol (JSON frames over one WebSocket connection, request/
 // response correlated by `requestId` — WebSocket itself has no built-in
