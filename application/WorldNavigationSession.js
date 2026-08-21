@@ -201,7 +201,25 @@ export class WorldNavigationSession {
 	    // behavior — see canEditDocument()/canReadDocument() below. Real
 	    // wiring wraps application/WorldAuthorizationService.js — see
 	    // application/CreateWorldViewUseCase.js.
-	    worldAuthorizationService = null
+	    worldAuthorizationService = null,
+	    // 0.2.97 — Shared World Ordering & Conflict Resolution. Closes
+	    // the composition gap 0.2.96 explicitly left open (see
+	    // application/WorldCommandPropagationUseCase.js's own header):
+	    // "broadcastCommand()/onOperationApplied() are not yet threaded
+	    // into WorldNavigationSession." Optional, the same
+	    // "enforce/offer only when the collaborator is actually wired"
+	    // posture worldAuthorizationService above already follows — a
+	    // session built without one (every pre-0.2.97 caller, and every
+	    // existing test) behaves exactly as before: purely local
+	    // editing, nothing ever broadcast. When wired, every
+	    // application/CommandHistory.js this session creates or
+	    // replaces is registered with it — see _registerCommandHistory()
+	    // below — so a FORWARD local mutation (execute(), never
+	    // undo()/redo() — see application/WorldCommandPropagationUseCase.js#
+	    // attachCommandHistory()'s own header) is broadcast to every
+	    // authenticated peer with zero additional wiring at any of this
+	    // file's many mutation call sites.
+	    worldCommandPropagation = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -407,6 +425,17 @@ export class WorldNavigationSession {
 	    // 0.2.95 — see the constructor's own comment above.
 	    this._worldAuthorizationService = worldAuthorizationService;
 
+	    // 0.2.97 — see the constructor's own comment above.
+	    // `_commandHistoryUnsubscribes` mirrors `_commandHistories`
+	    // key-for-key: whenever a CommandHistory for a worldId is
+	    // replaced or removed (fork, clone, historical restoration,
+	    // unload — see _registerCommandHistory()/_unregisterCommandHistory()
+	    // below), the OLD subscription is torn down first, so a stale
+	    // CommandHistory instance never keeps broadcasting after this
+	    // session has moved on from it.
+	    this._worldCommandPropagation = worldCommandPropagation;
+	    this._commandHistoryUnsubscribes = new Map();
+
 	    this._container = null;
 	    this._session = null;
         this._spatialCameraController = null;
@@ -523,6 +552,46 @@ export class WorldNavigationSession {
 
     get transformSettings() {
         return this._transformSettings;
+    }
+
+    // 0.2.97 — the ONE place a CommandHistory ever enters
+    // `_commandHistories`. Every call site that used to write
+    // `this._commandHistories.set(worldId, history)` directly now
+    // calls this instead, so wiring a `worldCommandPropagation`
+    // collaborator into the constructor makes EVERY existing mutation
+    // pathway (placement, gesture commit, paste, fork, clone,
+    // historical restoration, document-metadata touch) broadcast
+    // automatically — none of those call sites themselves changed.
+    // Replacing an existing history for the same worldId (fork/clone/
+    // restoreHistoryAt all do this — a fresh CommandHistory instance
+    // taking over the same live World) tears down the OLD subscription
+    // first, exactly like every other "replace, don't leak" pattern in
+    // this file.
+    _registerCommandHistory(worldId, history) {
+        this._unregisterCommandHistory(worldId);
+        this._commandHistories.set(worldId, history);
+        if (this._worldCommandPropagation) {
+            const unsubscribe = this._worldCommandPropagation.attachCommandHistory({
+                worldDocumentId: worldId,
+                commandHistory: history
+            });
+            this._commandHistoryUnsubscribes.set(worldId, unsubscribe);
+        }
+        return history;
+    }
+
+    // The mirror of _registerCommandHistory() above — every existing
+    // `this._commandHistories.delete(worldId)` call site now calls
+    // this instead, so a CommandHistory this session no longer owns
+    // (unloaded, superseded by a fork) stops broadcasting immediately
+    // rather than leaking a subscription to a detached World.
+    _unregisterCommandHistory(worldId) {
+        const unsubscribe = this._commandHistoryUnsubscribes.get(worldId);
+        if (unsubscribe) {
+            unsubscribe();
+            this._commandHistoryUnsubscribes.delete(worldId);
+        }
+        this._commandHistories.delete(worldId);
     }
 
     start(container) {
@@ -1595,7 +1664,7 @@ export class WorldNavigationSession {
         let history = this._commandHistories.get(world.id);
         if (!history) {
             history = new CommandHistory({ world });
-            this._commandHistories.set(world.id, history);
+            this._registerCommandHistory(world.id, history);
         }
         history.execute(command);
         this._spatialPlacement = SpatialPlacementState.empty();
@@ -2556,7 +2625,7 @@ export class WorldNavigationSession {
         let history = this._commandHistories.get(id);
         if (!history) {
             history = new CommandHistory({ world: doc.world });
-            this._commandHistories.set(id, history);
+            this._registerCommandHistory(id, history);
         }
         history.markUnsaved();
         return id;
@@ -3085,7 +3154,7 @@ export class WorldNavigationSession {
         this._loadedDocuments.set(forkId, fork);
         const history = new CommandHistory({ world: fork.world });
         history.markUnsaved();
-        this._commandHistories.set(forkId, history);
+        this._registerCommandHistory(forkId, history);
 
         // The fork inherits the source's position permanently: it is
         // not discoverable (never published), so the layout/discovery
@@ -3106,7 +3175,7 @@ export class WorldNavigationSession {
         // elsewhere still resolves it byte-for-byte unchanged), but
         // this session now works against the fork exclusively.
         this._loadedDocuments.delete(sourceDocumentId);
-        this._commandHistories.delete(sourceDocumentId);
+        this._unregisterCommandHistory(sourceDocumentId);
         this._publishedDocumentIds.delete(sourceDocumentId);
 
         this._remapReferencesAfterFork(sourceDocumentId, sourceDoc, forkId, fork);
@@ -3320,7 +3389,7 @@ export class WorldNavigationSession {
         const layoutPos = this._worldLayoutProvider.getPosition(documentId);
         this._session.addWorld(document.world, documentId, layoutPos);
         if (!this._commandHistories.has(document.world.id)) {
-            this._commandHistories.set(document.world.id, new CommandHistory({ world: document.world }));
+            this._registerCommandHistory(document.world.id, new CommandHistory({ world: document.world }));
         }
     }
 
@@ -3345,7 +3414,7 @@ export class WorldNavigationSession {
         }
         const document = this._loadedDocuments.get(documentId);
         if (document) {
-            this._commandHistories.delete(document.world.id);
+            this._unregisterCommandHistory(document.world.id);
         }
         if (document && this._session) {
             this._session.removeWorld(document.world, documentId);
@@ -3662,7 +3731,7 @@ export class WorldNavigationSession {
 	
 	    // 3. Update session state
 	    this._loadedDocuments.set(docId, restoredDocument);
-	    this._commandHistories.set(restoredWorld.id, restoredHistory);
+	    this._registerCommandHistory(restoredWorld.id, restoredHistory);
 	
 	    // 4. Retire the old history
 	    if (!this._retiredHistories) this._retiredHistories = new Map();
@@ -3739,8 +3808,8 @@ export class WorldNavigationSession {
 	    
 	    const history = new CommandHistory({ world: clone.world });
 	    history.markUnsaved(); // <--- ADD THIS LINE (matches forkDocument behavior)
-	    
-	    this._commandHistories.set(clone.world.id, history);
+
+	    this._registerCommandHistory(clone.world.id, history);
 	    if (this._session) this._session.addWorld(clone.world, clone.world.id, this._worldLayoutProvider.getPosition(clone.world.id));
 	    return clone.world.id;
 	}
@@ -3758,7 +3827,7 @@ export class WorldNavigationSession {
 	    this._loadedDocuments.set(fork.world.id, fork);
 	    const history = new CommandHistory({ world: fork.world });
 	    history.markUnsaved();
-	    this._commandHistories.set(fork.world.id, history);
+	    this._registerCommandHistory(fork.world.id, history);
 	    if (this._session) this._session.addWorld(fork.world, fork.world.id, this._worldLayoutProvider.getPosition(fork.world.id));
 	    // An explicit "Fork" action means the person wants to work on
 	    // the fork next — camera AND active document both move to it,
@@ -3995,6 +4064,10 @@ export class WorldNavigationSession {
         this._editingService = null;
         this._gizmoUseCase = null;
         this._placementService = null;
+        for (const unsubscribe of this._commandHistoryUnsubscribes.values()) {
+            unsubscribe();
+        }
+        this._commandHistoryUnsubscribes.clear();
         this._commandHistories.clear();
         this._loadedDocuments.clear();
         this._failedLoads.clear();

@@ -6439,3 +6439,90 @@ identityId into the envelope — the mismatch is caught at the cheapest,
 earliest possible point, before any World is even resolved, before
 authorization is even asked. "I am Alice" is data an attacker fully
 controls; "this connection's own proven key" is not.
+
+### Ordering Is A Deterministic Total Order, Never Wall-Clock Time (0.2.97)
+
+`core/LogicalClock.js` is a Lamport logical clock, not a timestamp.
+Two replicas' system clocks are never assumed to agree — not
+approximately, not "close enough for a game" — because a wall-clock
+comparison would make convergence depend on something no protocol in
+this codebase controls: whether Alice's laptop and Bob's phone happen to
+have synchronized NTP. `core/WorldOperationOrder.js#compareWorldOperations()`
+instead orders by `(logicalClock, operationId)` — a scalar the sending
+replica advances on every operation it authors and raises on every
+operation it accepts from someone else, plus the operation's own already
+globally-unique id (`application/commands/Command.js`'s own `createId()`)
+as a tie-breaker for genuinely concurrent operations. Two distinct
+operations can never compare equal under this order, which is what makes
+it a TOTAL order, not merely a causal (partial, vector-clock) one: this
+milestone never needs to answer "did A happen-before B," only "which of
+these two does every replica agree comes first" — a strictly weaker,
+sufficient question core/CausalStamp.js's own richer vector-clock
+machinery (0.2.18, built for a different object — PlacementRecord) was
+never the right tool for here. See `replication/WorldConflictResolver.js`'s
+own header for what this order is used for.
+
+### A Conflict Resolver Reorders Commands; It Never Reinvents Them (0.2.97)
+
+`replication/WorldConflictResolver.js` is neither a CRDT nor an
+operational-transform function — the design conversation was explicit
+that 0.2.97 should stay "deliberately modest" and reach for neither
+unless a real need demanded it, and none did. Every `application/
+commands/Command.js` subclass keeps meaning exactly what it already
+means; the resolver's entire vocabulary is the same two methods every
+command has always implemented — `execute()` and `undo()` — called in a
+different SEQUENCE than the order operations happened to arrive in, never
+with different SEMANTICS. Reconciling an out-of-order operation undoes
+the already-applied "tail" (operations canonically after the new one,
+LIFO — the identical order `application/CommandHistory.js#undo()`
+already uses for its own stack), inserts the new operation, and replays
+the tail forward. This works, with zero command-specific code, only
+because every command in this codebase was ALREADY required to be safely
+re-executable after `undo()` — `CommandHistory#redo()` has depended on
+that same property since 0.1.37. The conflict-resolution guarantee this
+milestone adds costs nothing new of that kind; it only asks WHEN the
+existing contract gets exercised.
+
+### Delete Is Terminal — A Stated Conflict Policy, Not An Accident Of Arrival Order (0.2.97)
+
+Given a delta-based Move/RotateStructurePlacementCommand always composes
+(two concurrent moves of the same placement simply add), the one command
+pair in this codebase that genuinely cannot both "win" is delete versus
+modify: `RemoveStructurePlacementCommand#execute()` and every Move/
+RotateStructurePlacementCommand's own `execute()` both already REQUIRE
+their target to exist, throwing otherwise — a precondition this
+milestone never relaxed. `replication/WorldConflictResolver.js#_tryApply()`
+catches exactly that one failure mode during ordered replay and records
+the operation SUPERSEDED, then keeps going. The consequence, worked out
+once here rather than left to be discovered by an assertion: in EITHER
+canonical order, the delete's own effect always survives. If the delete
+is canonically first, the modify simply finds nothing there. If the
+modify is canonically first, it genuinely applies — and is then removed
+out from under it when the delete replays on top. Nothing in this
+codebase resurrects a removed target except its own explicit `undo()`
+(never invoked automatically by anything but a LATER, still-canonically-
+earlier operation's own rebase). This is a chosen policy, matching the
+design conversation's own instruction ("the system needs an explicit
+rule rather than accidentally depending on arrival order"), not a
+side-effect an implementer happened to notice.
+
+### The Composition Gap Is Closed Through The Existing Event, Never A New Call Site (0.2.97)
+
+0.2.96 left `WorldCommandPropagationUseCase#broadcastCommand()` fully
+built and tested, but wired into nothing — `application/
+WorldNavigationSession.js` has upward of a dozen places that create or
+replace a `CommandHistory`. Rather than adding a `propagation.broadcastCommand()`
+call at each of those sites (a change that would need to be
+independently remembered and kept correct at every one, forever),
+`WorldCommandPropagationUseCase#attachCommandHistory()` subscribes ONCE
+to `application/CommandHistory.js`'s own, already-existing
+`COMMAND_EXECUTED` event — the identical event every other consumer of a
+CommandHistory already reacts to. `WorldNavigationSession` funnels every
+`CommandHistory` it creates through one new private chokepoint,
+`_registerCommandHistory()`, mirroring the "one seam, not N call sites"
+discipline `application/SpatialEditingService.js#canEditDocument`
+already established for 0.2.95's authorization gate. The result: a
+future mutation chokepoint this file grows never has to remember to
+broadcast anything — it inherits propagation for free the moment it
+routes through a registered `CommandHistory`, the same way it already
+inherits undo/redo, persistence, and replay.

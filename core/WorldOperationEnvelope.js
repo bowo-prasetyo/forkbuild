@@ -49,6 +49,22 @@
 //                        SAME `application/commands/CommandRegistry.js`
 //                        every local undo/redo/replay path already uses —
 //                        no second serialization format.
+//   logicalClock      — 0.2.97: the sending replica's own Lamport clock
+//                        value at the moment this operation was
+//                        authored (core/LogicalClock.js), the causal/
+//                        logical component of the deterministic total
+//                        order every replica uses to converge
+//                        regardless of arrival order (core/
+//                        WorldOperationOrder.js). OPTIONAL for
+//                        validation purposes only — a pre-0.2.97
+//                        envelope (or a caller that never wired
+//                        ordering) carries none, and degrades to 0 the
+//                        exact same "graceful degrade on read" way
+//                        core/WorldOperationOrder.js#worldOperationSortKey()
+//                        already documents; every envelope
+//                        `application/WorldCommandPropagationUseCase.js#
+//                        broadcastCommand()` actually SENDS carries a
+//                        real one.
 export const WorldOperationKind = Object.freeze({
     OPERATION: 'OPERATION'
 });
@@ -59,7 +75,7 @@ export function isValidWorldOperationKind(value) {
 
 export const MAX_WORLD_SYNC_ID_LENGTH = 512;
 
-export function toWorldOperationEnvelope({ operationId, worldDocumentId, authorIdentityId, command }) {
+export function toWorldOperationEnvelope({ operationId, worldDocumentId, authorIdentityId, command, logicalClock }) {
     if (!operationId || typeof operationId !== 'string') {
         throw new Error('toWorldOperationEnvelope: operationId is required');
     }
@@ -77,7 +93,12 @@ export function toWorldOperationEnvelope({ operationId, worldDocumentId, authorI
         operationId,
         worldDocumentId,
         authorIdentityId,
-        command
+        command,
+        // 0.2.97 — see this file's own header. Absent/non-integer input
+        // degrades to 0 rather than throwing: ordering is new metadata
+        // layered onto an otherwise-unchanged 0.2.96 envelope, never a
+        // second required field a pre-0.2.97 caller must learn about.
+        logicalClock: Number.isInteger(logicalClock) && logicalClock >= 0 ? logicalClock : 0
     };
 }
 
@@ -92,5 +113,11 @@ export function isValidWorldOperationEnvelope(value) {
         && Boolean(value.command)
         && typeof value.command === 'object'
         && !Array.isArray(value.command)
-        && typeof value.command.type === 'string' && value.command.type.length > 0;
+        && typeof value.command.type === 'string' && value.command.type.length > 0
+        // 0.2.97 — OPTIONAL: absent (undefined) is a valid, pre-0.2.97-
+        // shaped envelope; a value that IS present must be a
+        // non-negative integer — a malformed logicalClock (negative,
+        // fractional, a string) is refused exactly like every other
+        // malformed field above, never silently coerced.
+        && (value.logicalClock === undefined || (Number.isInteger(value.logicalClock) && value.logicalClock >= 0));
 }

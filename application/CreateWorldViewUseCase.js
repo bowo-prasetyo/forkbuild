@@ -20,6 +20,7 @@ import { DocumentCloneService } from './DocumentCloneService.js';
 import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
+import { WorldCommandPropagationUseCase } from './WorldCommandPropagationUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { SearchWorldUseCase } from './SearchWorldUseCase.js';
 import { CreateAvatarPresenceSessionUseCase } from './CreateAvatarPresenceSessionUseCase.js';
@@ -158,9 +159,13 @@ export class CreateWorldViewUseCase {
             initialPlacementStrategy
         );
 
-        const replayDocumentUseCase = new ReplayDocumentUseCase(
-            new CreateCommandRegistryUseCase().execute()
-        );
+        // 0.2.97 — shared with the new worldCommandPropagation wiring
+        // below (createSession()): the SAME registry both reconstructs
+        // a replayed command AND reconstructs one received over the
+        // network — one vocabulary, never two independently-maintained
+        // ones.
+        const commandRegistry = new CreateCommandRegistryUseCase().execute();
+        const replayDocumentUseCase = new ReplayDocumentUseCase(commandRegistry);
         const restoreHistoryStateUseCase = new RestoreHistoryStateUseCase(
             replayDocumentUseCase
         );
@@ -336,7 +341,45 @@ export class CreateWorldViewUseCase {
 
         return {
             createSession(registry) {
-                return new WorldNavigationSession({
+                // 0.2.97 — Shared World Ordering & Conflict Resolution.
+                // Closes the composition gap 0.2.96 explicitly left
+                // open (see application/WorldCommandPropagationUseCase.js's
+                // own header): every OTHER collaborator this method
+                // builds is created here, before the session exists;
+                // `resolveWorldDocument` cannot be — it needs to ask
+                // the session ITSELF "what do you currently have loaded
+                // for this id," the same live, mutable answer
+                // WorldNavigationSession#getDocument() already gives
+                // every other caller. `sessionRef` is assigned exactly
+                // once, right after construction, below — the resolver
+                // closure is only ever CALLED later, at runtime, by
+                // which point it is already set, the identical
+                // construction-order pattern this file's own
+                // `resolveSocialIdentity` (see this method's own header)
+                // already uses for deviceAuthorizationPropagationUseCase.
+                //
+                // Gated on the SAME `usePeerTransport`-shaped condition
+                // as every other real-peer-transport collaborator above
+                // — a caller that doesn't wire a full peer stack (most
+                // existing tests, and any headless use) gets `null`,
+                // the exact pre-0.2.97 "purely local editing, nothing
+                // ever broadcast" behavior WorldNavigationSession's own
+                // constructor comment documents.
+                let sessionRef = null;
+                const worldCommandPropagation = (identityProvider && peerMessageBus && connectedPeerRegistry && deviceAuthorizationPropagationUseCase)
+                    ? new WorldCommandPropagationUseCase({
+                        peerMessageBus,
+                        connectedPeerRegistry,
+                        deviceAuthorization: deviceAuthorizationPropagationUseCase,
+                        identityProvider,
+                        commandRegistry,
+                        resolveWorldDocument: (worldDocumentId) => (sessionRef ? sessionRef.getDocument(worldDocumentId) : null),
+                        // 0.2.60 — the SAME predicate every other trust
+                        // boundary this method builds already consults.
+                        isBlocked: isBlocked || null
+                    })
+                    : null;
+                const session = new WorldNavigationSession({
                     registry,
                     loadPublicationDocumentUseCase,
                     worldLayoutProvider,
@@ -397,8 +440,13 @@ export class CreateWorldViewUseCase {
                     loadDocumentUseCase,
                     // 0.2.95: World Editing Authorization Foundation —
                     // see above.
-                    worldAuthorizationService
+                    worldAuthorizationService,
+                    // 0.2.97: Shared World Ordering & Conflict
+                    // Resolution — see above.
+                    worldCommandPropagation
                 });
+                sessionRef = session;
+                return session;
             },
             // Expose the spatial index and content store so the application
             // layer can construct spatial use cases for the UI to consume.

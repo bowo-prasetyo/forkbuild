@@ -4,12 +4,16 @@ import { ReplayGuard } from '../replication/ReplayGuard.js';
 import { WorldAuthorizationService } from './WorldAuthorizationService.js';
 import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
+import { CommandHistoryEvent } from './events/CommandHistoryEvent.js';
 import {
     toWorldOperationEnvelope,
     isValidWorldOperationEnvelope
 } from '../core/WorldOperationEnvelope.js';
+import { WorldOperationOrdering } from '../replication/WorldOperationOrdering.js';
+import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
 
 const OPERATION_APPLIED_EVENT = 'WorldOperationApplied';
+const OPERATION_SUPERSEDED_EVENT = 'WorldOperationSuperseded';
 const OPERATION_REJECTED_EVENT = 'WorldOperationRejected';
 
 export const WorldOperationRejectionReason = Object.freeze({
@@ -21,6 +25,13 @@ export const WorldOperationRejectionReason = Object.freeze({
     WORLD_MISMATCH: 'WORLD_MISMATCH',
     UNKNOWN_COMMAND: 'UNKNOWN_COMMAND',
     DUPLICATE: 'DUPLICATE',
+    // 0.2.97 — no longer produced by this class. An execute() failure
+    // during ordered replay is now recognized as legitimate
+    // supersession (replication/WorldConflictResolver.js's own
+    // WorldOperationOutcome.SUPERSEDED, surfaced through
+    // onOperationSuperseded() below), never a rejection — the operation
+    // WAS accepted; it simply lost the ordering race. Retained here so
+    // any existing reference to this value stays valid.
     EXECUTION_FAILED: 'EXECUTION_FAILED'
 });
 
@@ -29,10 +40,19 @@ export const WorldOperationRejectionReason = Object.freeze({
 // 0.2.95 answered "who may edit this World." This class answers the next
 // question the design conversation asked, deliberately narrower than it
 // sounds: "how does an authorized edit made on ONE replica become the
-// SAME durable World mutation on another AUTHORIZED replica" — never
-// "how do two replicas converge on a concurrently-edited World" (that is
-// 0.2.97's question, explicitly out of scope here — see this file's own
-// header on single-authoritative-operation propagation).
+// SAME durable World mutation on another AUTHORIZED replica."
+//
+// 0.2.97 — Shared World Ordering & Conflict Resolution — answers the
+// question this file's own 0.2.96 header once left explicitly out of
+// scope: "how do two replicas converge on a concurrently-edited World."
+// Steps 1-5 below (authentication, identity, authorization, ReplayGuard
+// idempotency) are completely UNCHANGED; only step 6 changed — ordering
+// (replication/WorldOperationOrdering.js) and conflict resolution
+// (replication/WorldConflictResolver.js) sit BETWEEN "the operation is
+// accepted" and "Command.execute() runs," exactly the pipeline
+// docs/Roadmap.md, 0.2.97 describes:
+//
+//   WorldCommandPropagationUseCase -> OperationOrdering -> ConflictResolver -> Command.execute()
 //
 // The unit of propagation is never a World/Document snapshot — it is one
 // already-executed `application/commands/Command.js` instance, serialized
@@ -84,10 +104,22 @@ export const WorldOperationRejectionReason = Object.freeze({
 //                                      per worldDocumentId — a duplicate
 //                                      is recognized and produces NO
 //                                      second mutation)
-//   6. apply the operation           — `command.execute({ world:
-//                                      document.world })`, called
-//                                      DIRECTLY — never through the
-//                                      receiver's own `application/
+//   6. order, then apply             — 0.2.97: this replica's own
+//                                      WorldOperationOrdering first
+//                                      folds the envelope's logicalClock
+//                                      into this replica's Lamport clock
+//                                      (`observeRemote`), then the
+//                                      envelope is handed to
+//                                      WorldConflictResolver#applyRemote(),
+//                                      which reconciles it into the
+//                                      canonical per-World operation log
+//                                      — undoing/redoing whatever that
+//                                      requires — and is the thing that
+//                                      actually calls `command.execute({
+//                                      world: document.world })`,
+//                                      possibly more than once across a
+//                                      rebase, DIRECTLY — never through
+//                                      the receiver's own `application/
 //                                      CommandHistory.js`. A remote
 //                                      operation is durable World state
 //                                      the instant it is applied, but it
@@ -96,7 +128,11 @@ export const WorldOperationRejectionReason = Object.freeze({
 //                                      — see docs/Roadmap.md, 0.2.96,
 //                                      "Bob receives Alice's edit and
 //                                      presses Undo" — Bob's Undo must
-//                                      only ever unwind Bob's OWN commands.
+//                                      only ever unwind Bob's OWN
+//                                      commands. See replication/
+//                                      WorldConflictResolver.js's own
+//                                      header for the full 0.2.97
+//                                      ordering/conflict mechanism.
 //
 // Revocation isolation falls out for free, exactly the way 0.2.83's own
 // sibling-eligibility check already established: nothing here ever asks
@@ -127,6 +163,19 @@ export class WorldCommandPropagationUseCase {
         persistWorldDocument = null,
         isBlocked = null,
         replayGuard = new ReplayGuard(),
+        // 0.2.97 — see this file's own header. Both default-constructed,
+        // the same "always something real, never a null collaborator
+        // to null-check" posture `replayGuard` above already
+        // established: a caller that doesn't inject one still gets
+        // genuine, deterministic ordering/conflict resolution, just
+        // with fresh, per-instance state (correct for the common "one
+        // process, one WorldCommandPropagationUseCase" case). Injectable
+        // ONLY so tests can share one WorldOperationOrdering/
+        // WorldConflictResolver across collaborators, or reset one for
+        // a specific scenario — never a hint that a real deployment
+        // needs to construct these itself.
+        ordering = new WorldOperationOrdering(),
+        conflictResolver = new WorldConflictResolver(),
         protocol = WorldCommandPropagationUseCase.DEFAULT_PROTOCOL
     } = {}) {
         if (!peerMessageBus || typeof peerMessageBus.send !== 'function' || typeof peerMessageBus.subscribe !== 'function' || typeof peerMessageBus.attach !== 'function') {
@@ -156,6 +205,8 @@ export class WorldCommandPropagationUseCase {
         this._persistWorldDocument = typeof persistWorldDocument === 'function' ? persistWorldDocument : null;
         this._isBlocked = typeof isBlocked === 'function' ? isBlocked : null;
         this._replayGuard = replayGuard;
+        this._ordering = ordering;
+        this._conflictResolver = conflictResolver;
         this._protocol = protocol;
         this._eventBus = new EventBus();
 
@@ -198,8 +249,22 @@ export class WorldCommandPropagationUseCase {
             operationId: command.id,
             worldDocumentId,
             authorIdentityId,
-            command: command.toJSON()
+            command: command.toJSON(),
+            // 0.2.97 — stamp THIS replica's own next Lamport tick. See
+            // replication/WorldOperationOrdering.js#stampLocal()'s own
+            // header: always strictly greater than every value this
+            // replica has produced or observed so far, which is exactly
+            // what makes recordLocal() below always a plain append.
+            logicalClock: this._ordering.stampLocal()
         });
+        // 0.2.97 — record this ALREADY-EXECUTED command's canonical
+        // position in the SAME per-World log a remote operation is
+        // reconciled against, so a later-arriving, canonically-earlier
+        // remote operation correctly rebases around it — see
+        // replication/WorldConflictResolver.js#recordLocal()'s own
+        // header. Idempotent: a retransmit of the identical operationId
+        // (below) is a no-op here.
+        this._conflictResolver.recordLocal({ worldDocumentId, envelope, command });
         for (const peer of this._authenticatedPeers()) {
             this._bus.send(peer, this._protocol, envelope);
         }
@@ -212,6 +277,48 @@ export class WorldCommandPropagationUseCase {
     // replica newly applied. Never fires for a duplicate.
     onOperationApplied(callback) {
         const subscription = this._eventBus.subscribe(OPERATION_APPLIED_EVENT, ({ worldDocumentId, command, authorIdentityId }) => callback(worldDocumentId, command, authorIdentityId));
+        return () => subscription.unsubscribe();
+    }
+
+    // 0.2.97 — Returns an unsubscribe function. Fires `(worldDocumentId,
+    // command, authorIdentityId)`, the identical shape onOperationApplied()
+    // above fires, for every ACCEPTED remote operation that lost the
+    // ordering race — see replication/WorldConflictResolver.js's own
+    // header, "delete vs. modify." This is NOT a rejection: the
+    // operation passed every authorization/idempotency check steps 1-5
+    // already run, and its position in the canonical per-World log is
+    // permanent — it simply had no effect on the World at that
+    // position. A caller that only ever wired onOperationApplied() before
+    // 0.2.97 is completely unaffected: this is a NEW, additive event,
+    // never a renamed or narrowed one.
+    onOperationSuperseded(callback) {
+        const subscription = this._eventBus.subscribe(OPERATION_SUPERSEDED_EVENT, ({ worldDocumentId, command, authorIdentityId }) => callback(worldDocumentId, command, authorIdentityId));
+        return () => subscription.unsubscribe();
+    }
+
+    // 0.2.97 — closes the composition gap 0.2.96 explicitly left open
+    // (see this file's own header): subscribes to a CommandHistory's
+    // OWN `application/events/CommandHistoryEvent.js#COMMAND_EXECUTED`
+    // event — the SAME event application/CommandHistory.js already
+    // publishes for every other consumer, never a second recording
+    // mechanism — and broadcasts every FORWARD, newly-authored command
+    // it fires for. Deliberately narrower than "every CommandHistory
+    // event": undo()/redo() publish COMMAND_UNDONE/COMMAND_REDONE,
+    // neither of which this method ever listens to — local undo/redo
+    // propagation is explicit non-goal of this milestone (see
+    // docs/Roadmap.md, 0.2.97, "what I would explicitly NOT do"), kept
+    // separate from the ordering/conflict-resolution question this file
+    // otherwise answers. Returns an unsubscribe function.
+    attachCommandHistory({ worldDocumentId, commandHistory }) {
+        if (!worldDocumentId || typeof worldDocumentId !== 'string') {
+            throw new Error('WorldCommandPropagationUseCase.attachCommandHistory(): worldDocumentId is required');
+        }
+        if (!commandHistory || !commandHistory.eventBus || typeof commandHistory.eventBus.subscribe !== 'function') {
+            throw new Error('WorldCommandPropagationUseCase.attachCommandHistory(): a real CommandHistory is required');
+        }
+        const subscription = commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, ({ command }) => {
+            this.broadcastCommand({ worldDocumentId, command });
+        });
         return () => subscription.unsubscribe();
     }
 
@@ -315,23 +422,38 @@ export class WorldCommandPropagationUseCase {
         // about to throw (a malformed-but-well-typed operation is not
         // silently eligible for endless retry).
         this._replayGuard.recordAccepted(payload.operationId, payload.worldDocumentId);
-        // Step 6 — apply. Deliberately `command.execute()` directly,
-        // never `commandHistory.execute()` — see this file's own header,
-        // "never pushed onto this replica's own undo/redo stack."
-        try {
-            command.execute({ world: document.world });
-        } catch {
-            this._reject(WorldOperationRejectionReason.EXECUTION_FAILED, payload);
-            return;
-        }
+        // Step 6 — order, then apply. See this file's own header and
+        // replication/WorldConflictResolver.js's own header for the full
+        // 0.2.97 mechanism. `observeRemote` folds Alice's own causal
+        // knowledge into Bob's clock BEFORE the operation is reconciled,
+        // exactly the standard Lamport-clock discipline (core/
+        // LogicalClock.js's own header). `command.execute()`/`.undo()`
+        // are still called DIRECTLY against `document.world`, still
+        // NEVER through the receiver's own `application/CommandHistory.js`
+        // — see this file's own header, "never pushed onto this
+        // replica's own undo/redo stack." A rebase may execute/undo
+        // MORE than just this one command (any already-applied
+        // operation canonically ordered after it) — always persisted
+        // together below, since the World may have changed even when
+        // THIS operation itself was superseded.
+        this._ordering.observeRemote(payload.logicalClock);
+        const outcome = this._conflictResolver.applyRemote({
+            worldDocumentId: payload.worldDocumentId,
+            envelope: payload,
+            command,
+            world: document.world
+        });
         if (this._persistWorldDocument) {
             this._persistWorldDocument(payload.worldDocumentId, document);
         }
-        this._eventBus.publish(OPERATION_APPLIED_EVENT, {
-            worldDocumentId: payload.worldDocumentId,
-            command,
-            authorIdentityId: social.identityId
-        });
+        this._eventBus.publish(
+            outcome === WorldOperationOutcome.APPLIED ? OPERATION_APPLIED_EVENT : OPERATION_SUPERSEDED_EVENT,
+            {
+                worldDocumentId: payload.worldDocumentId,
+                command,
+                authorIdentityId: social.identityId
+            }
+        );
     }
 }
 

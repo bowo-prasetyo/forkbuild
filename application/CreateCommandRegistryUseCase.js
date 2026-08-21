@@ -17,6 +17,7 @@ import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlace
 import { MoveStructurePlacementCommand } from './commands/MoveStructurePlacementCommand.js';
 import { RotateStructurePlacementCommand } from './commands/RotateStructurePlacementCommand.js';
 import { DuplicateStructurePlacementCommand } from './commands/DuplicateStructurePlacementCommand.js';
+import { SetStructurePlacementTransformCommand } from './commands/SetStructurePlacementTransformCommand.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
@@ -50,6 +51,9 @@ export class CreateCommandRegistryUseCase {
         registry.register('move-structure-placement', MoveStructurePlacementCommand);
         registry.register('rotate-structure-placement', RotateStructurePlacementCommand);
         registry.register('duplicate-structure-placement', DuplicateStructurePlacementCommand);
+        // 0.2.97 — the ABSOLUTE counterpart to move/rotate's own
+        // relative deltas — see that command's own header.
+        registry.register('set-structure-placement-transform', SetStructurePlacementTransformCommand);
         return registry;
     }
 }
