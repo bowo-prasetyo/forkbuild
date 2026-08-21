@@ -6353,3 +6353,89 @@ not because it noticed a revocation, but because it asked the same
 question again and got a different, equally honest answer. See "Device
 Authorization Changes Peer Authority, Never Social Identity" (0.2.79)
 for the same compositional instinct applied to friendship/chat/voice.
+
+### World Synchronization Is A Command Protocol, Never A Document Sync Channel (0.2.96)
+
+`application/WorldCommandPropagationUseCase.js` never transmits a World,
+a Document, or a placement list — the unit of propagation is exactly one
+already-executed `application/commands/Command.js` instance, serialized
+`command.toJSON()` the identical way `application/CommandHistory.js`'s
+own persistence/replay already does, and reconstructed on the receiving
+side through the SAME `application/commands/CommandRegistry.js`. This is
+not an optimization; it is what keeps "local durable state" and
+"replicated mutation" two genuinely different things rather than one
+periodically overwriting the other. A protocol that instead shipped
+`world.toJSON()` around would make "Bob just received Alice's whole
+World" indistinguishable from "Bob's own in-progress edits got silently
+replaced," and would make 0.2.97's eventual conflict-resolution work
+strictly harder: there would be no operation boundary left to reason
+about, only two competing snapshots. See "A Peer Connection Transports
+Messages; It Does Not Interpret Them" (0.2.52) for the same instinct —
+a wire protocol carries the smallest true fact, never a convenient bulk
+substitute for it — applied one layer up, to what "the smallest true
+fact" even IS for a World.
+
+`forkbuild:world-sync` is its own protocol string, exactly the way
+`forkbuild:device-conversation-sync` (0.2.83) is a SEPARATE protocol from
+`forkbuild:chat`, never a new message kind riding either it or
+`forkbuild:chat`/`forkbuild:device-authorization`. Chat is message-
+oriented, durable-conversation, delivery/read-state shaped; World
+synchronization is document-oriented, durable-spatial-state, mutation-
+operation shaped. Folding one into the other's wire vocabulary would
+couple two protocols with genuinely different failure and ordering
+semantics for no reason beyond convenience.
+
+### A Remote Operation Is Durable World State; It Is Never A Local Undo-Stack Entry (0.2.96)
+
+`WorldCommandPropagationUseCase#_handleIncoming()` applies an accepted
+remote operation with `command.execute({ world: document.world })`
+directly — never `commandHistory.execute(command)`. The distinction
+matters the moment two replicas are both live: if Bob's own `Undo`
+could unwind a mutation Alice made on her replica, pressing it would not
+restore Bob's own prior state at all, it would silently fight Alice for
+control of a fact Bob never touched himself. `application/CommandHistory.js`
+remains exactly what 0.1.37 built it to be — one replica's own local
+editing session, undo/redo, and save-point tracking — and
+`replication/ReplayGuard.js` (never `CommandHistory`) is what makes a
+remote operation idempotent. A World document mutated by a remote
+operation is genuinely, durably different afterward — this is not a
+preview, a draft, or a pending change — it is simply never something
+THIS replica's own undo gesture is allowed to reach for. See
+`tests/WorldCommandPropagation.test.js`, Section C, "his own local
+undo/redo history for World A is STILL completely empty," asserted both
+immediately after acceptance and again after every later operation in
+the flagship, including the refused ones.
+
+### Authorization For A World Operation Is Asked About One Specific World, Never "Authorized Somewhere" (0.2.96)
+
+The same discipline `WorldAuthorizationService#resolveAccess(document)`
+already enforces for a local UI click — it takes the specific Document
+being asked about, never a session-wide or World-wide answer (see
+"Ownership Is A Cryptographic Identity Fact..." above, and 0.2.95's own
+closing note on why placement-instance and referenced-structure
+authorization were never merged into one decision) — extends unchanged
+across the network. `WorldCommandPropagationUseCase` resolves the LOCAL
+Document for the envelope's own `worldDocumentId` and asks
+`WorldAuthorizationService` about THAT Document specifically; an
+identity with real `EDIT` on one World carries no authority whatsoever
+onto a different `worldDocumentId`, even one arriving over the exact
+same already-authenticated connection in the exact same session. See
+`tests/WorldCommandPropagation.test.js`, Section C, "Alice's real EDIT
+authority on World A grants her nothing on World B."
+
+### The Claimed Author Of An Operation Is Never Trusted Ahead Of The Connection That Carried It (0.2.96)
+
+`application/ChatUseCase.js#_handleIncoming()` established the two-step
+pattern in 0.2.63: first, the claim in the payload must equal the RAW
+key this specific, already-authenticated connection proved during its
+handshake; only then does social/device identity resolution ever run.
+`WorldCommandPropagationUseCase` applies the identical two steps, never
+collapsed into one: `envelope.authorIdentityId` is compared against
+`connectedPeer.remoteIdentity.identityId` BEFORE
+`resolveConnectionIdentity()` is even consulted. Charlie's own
+authenticated connection, carrying Charlie's own cryptographically-proven
+key, cannot make an operation authored by "Alice" merely by writing her
+identityId into the envelope — the mismatch is caught at the cheapest,
+earliest possible point, before any World is even resolved, before
+authorization is even asked. "I am Alice" is data an attacker fully
+controls; "this connection's own proven key" is not.
