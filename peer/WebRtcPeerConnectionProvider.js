@@ -55,6 +55,21 @@ export class WebRtcPeerConnectionProvider extends PeerConnectionProvider {
         this._incomingListeners = new Set();
     }
 
+    // 0.3.7 — lets an already-constructed provider's `iceServers` be
+    // replaced in place, for exactly one reason: peer/IceServerConfig.js's
+    // own fetchIceServers() runs in the BACKGROUND, after this provider
+    // already exists and the app has already started — see that
+    // function's own header and ui/main.js's one call site. Every
+    // connection created BEFORE this call keeps whatever iceServers it
+    // was already built with (an RTCPeerConnection's own ICE
+    // configuration is fixed at construction, same as any real WebRTC
+    // implementation); only createOffer()/connect() calls AFTER this
+    // one see the new list — this._iceServers is read fresh at the top
+    // of each, never cached anywhere else.
+    setIceServers(iceServers) {
+        this._iceServers = Array.isArray(iceServers) ? iceServers : [];
+    }
+
     // Alice's side: mints a fresh connectionId, opens an RTCPeerConnection,
     // and returns the WebRtcPeerConnection immediately — its
     // `localSignal` (a peer/PeerConnectionOffer.js) is null until ICE

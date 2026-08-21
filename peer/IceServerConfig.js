@@ -81,3 +81,95 @@ export const DEFAULT_ICE_SERVERS = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' }
 ];
+
+// 0.3.7 — fetchIceServers(): the dynamic counterpart to the static
+// DEFAULT_ICE_SERVERS above, pulling this deployment's Metered TURN
+// credentials from Metered's own REST API at runtime instead of
+// hard-coding them — Metered's dashboard geo-routes this endpoint's
+// response to whoever calls it, so it can hand back a better-routed
+// relay than a fixed hostname would for any given caller. This is
+// deliberately SAFE to try now in a way it wasn't before 0.3.6: with
+// _waitForIceGatheringComplete() bounded (see that constant's own
+// header), a server this returns that turns out to be unreachable from
+// some caller's network costs that caller, at most, the bounded
+// timeout — never the total, indefinite "Invite Someone"/"Be
+// Discoverable" breakage 0.3.4/0.3.5's own history documents. That
+// history is exactly why this function NEVER throws and NEVER blocks
+// indefinitely itself, on top of the downstream ICE-gathering
+// protection: a slow or failing fetch degrades to `fallback`
+// (DEFAULT_ICE_SERVERS by default) within `timeoutMs`, exactly the same
+// "network is harder to find, never impossible to use what was already
+// known" posture peer/RendezvousDiscoveryProvider.js already holds for
+// a failed rendezvous lookup.
+//
+// The API key below is the per-credential, "credential scoped" key
+// Metered's own dashboard shows for exactly this REST call — see
+// peer/IceServerConfig.js's own 0.3.2 comment above for why this is
+// the safe-for-client-code kind, never the account Secret Key (which
+// must never appear in this repo at all).
+//
+// Deliberately NOT called anywhere in this module itself, and NOT
+// wired into DEFAULT_ICE_SERVERS — see ui/main.js for the one call
+// site, which fires this in the BACKGROUND after the app has already
+// started with the static defaults, then hands the result to
+// WebRtcPeerConnectionProvider#setIceServers() for every FUTURE
+// connection. Startup itself never waits on this — see that file's own
+// comment on why.
+const METERED_TURN_ENDPOINT = 'https://forkbuild.metered.live/api/v1/turn/credentials';
+const METERED_API_KEY = '8308c13202a5fa9b92d42de15e3d83df68ad';
+const FETCH_ICE_SERVERS_TIMEOUT_MS = 5000;
+
+export async function fetchIceServers({
+    endpoint = METERED_TURN_ENDPOINT,
+    apiKey = METERED_API_KEY,
+    fallback = DEFAULT_ICE_SERVERS,
+    fetchImpl = globalThis.fetch,
+    timeoutMs = FETCH_ICE_SERVERS_TIMEOUT_MS
+} = {}) {
+    if (typeof fetchImpl !== 'function' || !apiKey) {
+        return fallback;
+    }
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timeout = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+    try {
+        const response = await fetchImpl(
+            `${endpoint}?apiKey=${encodeURIComponent(apiKey)}`,
+            controller ? { signal: controller.signal } : {}
+        );
+        if (!response.ok) {
+            return fallback;
+        }
+        const fetched = await response.json();
+        if (!Array.isArray(fetched) || fetched.length === 0) {
+            return fallback;
+        }
+        // Merged, not replaced — Google's public STUN stays in the mix
+        // as a baseline that doesn't depend on Metered's own
+        // availability, exactly the same "never one baked-in
+        // authority, but never fewer options than before" reasoning
+        // DEFAULT_ICE_SERVERS's own header already applies. Duplicate
+        // `urls` (unlikely, but harmless either way) are skipped rather
+        // than gathered twice.
+        return dedupeIceServers([...fetched, ...fallback]);
+    } catch {
+        // Timeout (via the AbortController above), a network failure, a
+        // non-JSON response — all the same outcome: degrade to
+        // `fallback`, never throw, never leave a caller waiting past
+        // `timeoutMs`.
+        return fallback;
+    } finally {
+        if (timeout) clearTimeout(timeout);
+    }
+}
+
+function dedupeIceServers(iceServers) {
+    const seen = new Set();
+    const result = [];
+    for (const entry of iceServers) {
+        const key = JSON.stringify(entry && entry.urls);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        result.push(entry);
+    }
+    return result;
+}
