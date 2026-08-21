@@ -10,11 +10,12 @@ top-level [docs/](..) folder.
 1. **[Getting Started](01-GettingStarted.md)** — open the app, log in,
    and place your first brick.
 2. **[The Editor](02-TheEditor.md)** — the building toolkit: tools,
-   selection, transforms, groups, and a creation's title/description/
-   license.
+   selection, transforms, groups, placing reusable structure instances,
+   and a creation's title/description/license.
 3. **[World View](03-WorldView.md)** — the shared 3D space every
-   published creation lives in: flying around, searching and exploring
-   to find things, inspecting and editing in place, and the operation
+   published creation lives in: flying around, orienting yourself and
+   finding places, searching and exploring to find things, inspecting
+   bricks and placed structures, editing in place, and the operation
    timeline.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** — sharing
    your work, licenses, how forking works (including the automatic

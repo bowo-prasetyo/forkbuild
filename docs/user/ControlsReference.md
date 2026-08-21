@@ -38,6 +38,18 @@ Not keyboard shortcuts, but the World View's own way of finding things — see
 | A result's **Select** | Make it the active document, without moving the camera |
 | A result's **Inspect** | Expand a read-only summary in place |
 
+## Orientation & Navigation (World View)
+
+Purely camera navigation — none of these load a document, change
+selection, or edit anything. See
+[World View](03-WorldView.md#orientation-and-locations).
+
+| Control | Action |
+|---|---|
+| Compass indicator | Read-only heading readout — never clickable |
+| **Home** | Reset the camera to the default view |
+| **Locations** | Open a list of Home plus every structure known this session, each with a **Focus** button |
+
 ## Selection
 
 | Input | Action | Notes |
@@ -85,6 +97,22 @@ Not keyboard shortcuts, but the World View's own way of finding things — see
 Available in the sidebar's Transform section and through the palette.
 Alignment needs **2+ bricks**; distribution needs **3+**. Both operate
 on the whole selection bounds in **world axes** and commit one command.
+
+## Structure Instances (Editor)
+
+A **structure instance** places a whole saved document as a single,
+selectable unit — see [The Editor](02-TheEditor.md#structures-placing-and-editing-instances).
+
+| Input | Action | Notes |
+|---|---|---|
+| Toolbar **Recent** dropdown, a document's **Place** button | Enter Place-Structure mode targeting that document | sibling to that entry's **Load** button |
+| `R` / `Shift+R` while placing | Rotate the pending instance ±90° | same placement-preview keys as a brick |
+| Click a placed instance (Select tool) | Select it as one unit, distinct from a brick selection | |
+| Drag in the viewport, or the gizmo | Move / rotate the instance | |
+| `Ctrl/Cmd+D` | Duplicate — places another instance of the same document | only enabled for a structure-instance selection |
+| Instance panel **X / Z / Rotation** fields, then Apply | Set an exact position/heading | Y (elevation) is always terrain-derived, never a target |
+| Instance panel **Edit Source Document** | Open the referenced document to change its bricks | every instance updates, since an instance is a live reference |
+| `Delete` / `Backspace` | Remove the instance | never touches the referenced document |
 
 ## Groups
 
