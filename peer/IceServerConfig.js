@@ -46,31 +46,38 @@
 // credential.
 //
 // 0.3.4 — removed the two `?transport=tcp` entries (TURN/80 and
-// TURNS/443) 0.3.2 originally included. Diagnosed live via
-// chrome://webrtc-internals against a real "Invite Someone" attempt:
-// application/PeerSessionManager.js's own createInvitation() waits for
-// iceGatheringState to reach 'complete' before it will hand back a
-// local signal at all (no trickle ICE — see that file's own
-// SIGNAL_TIMEOUT_MS comment), so ONE entry that never resolves —
-// success OR failure — blocks gathering, and therefore every single
-// invitation/publish, for the full 30-second timeout. The three
-// remaining (UDP-based) Metered entries below all failed FAST
-// (STUN/TURN error code 701, "host lookup received error," all within
-// the same second) on the reporting network — harmless, since a fast
-// failure still lets gathering complete — but the two `transport=tcp`
-// entries never produced a candidate OR an error at all; a plain
-// `http://standard.relay.metered.ca` browser request confirmed the
-// same TCP connection attempt hangs indefinitely rather than failing,
-// consistent with the destination silently dropping the TCP handshake
-// (a "blackhole," typically ISP/routing-level) rather than refusing
-// it. Left the three UDP-based entries in place — they cost nothing
-// when they fail fast, and may well work from a different network's
-// path to Metered's infrastructure even though they didn't from this
-// one.
+// TURNS/443) 0.3.2 originally included, after diagnosing live via
+// chrome://webrtc-internals that they never produced a candidate OR an
+// error at all — see that milestone's own now-superseded comment
+// (still in git history) for the detail. Turned out to be one step in
+// a longer story — see 0.3.5 below.
+//
+// 0.3.5 — ALL FIVE Metered entries removed; back to Google-STUN-only,
+// the exact config that was already known to work before any of this.
+// After 0.3.4's fix, a repeat "Invite Someone" attempt on the SAME
+// reporting network STILL hit the full 30-second
+// PeerSessionManager.SIGNAL_TIMEOUT_MS, even though every remaining
+// entry had individually failed FAST (sub-second) in the previous
+// webrtc-internals capture. That inconsistency — an entry that fails
+// fast once and then apparently stalls the next time — means this
+// network's path to Metered's infrastructure is not reliably
+// well-behaved even when it isn't outright blackholed, and
+// application/PeerSessionManager.js's own createInvitation() has no
+// tolerance for that: it waits for EVERY configured ICE server to
+// either produce a candidate or a hard error (iceGatheringState ===
+// 'complete', no trickle ICE — see SIGNAL_TIMEOUT_MS's own comment),
+// so a single flaky entry is exactly as costly as a single dead one.
+// Chasing individual Metered entries one at a time had diminishing
+// returns; this restores the one combination already proven reliable
+// (see 0.2.66's own header) rather than continuing to guess. Real TURN
+// relay support — from Metered or elsewhere — remains a legitimate
+// thing a deployment can add here (see this file's own header on why
+// that's safe to configure directly), just not able to be revalidated
+// as reliable from the network this was tested against. If reinstating
+// it, prefer testing incrementally (one entry, a real "Invite Someone"
+// attempt, a fresh webrtc-internals capture) over adding several at
+// once — this file's own git history is a case study in why.
 export const DEFAULT_ICE_SERVERS = [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun.relay.metered.ca:80' },
-    { urls: 'turn:standard.relay.metered.ca:80', username: '66ee7f7cc14c8806d21649b5', credential: 'goxC5WNaPGZLxddX' },
-    { urls: 'turn:standard.relay.metered.ca:443', username: '66ee7f7cc14c8806d21649b5', credential: 'goxC5WNaPGZLxddX' }
+    { urls: 'stun:stun1.l.google.com:19302' }
 ];
