@@ -92,7 +92,17 @@ export const WorldOperationRejectionReason = Object.freeze({
 //                                      always "authorized for THIS World"
 //                                      (see docs/Roadmap.md, 0.2.96,
 //                                      "Alice can edit World A / Alice
-//                                      cannot therefore edit World B")
+//                                      cannot therefore edit World B").
+//                                      0.2.98: also consults an OPTIONAL
+//                                      `resolveWorldEditGrant`, so a
+//                                      genuinely different, independent
+//                                      identity Alice has GRANTED EDIT
+//                                      (application/WorldMembershipUseCase.js)
+//                                      is authorized too — never a
+//                                      second, weaker authorization
+//                                      path, the exact same
+//                                      WorldAuthorizationService,
+//                                      unmodified in every other respect.
 //   5. verify the operation          — worldId cross-check (the SERIALIZED
 //                                      command's own `worldId`, when it
 //                                      declares one, must agree with the
@@ -162,6 +172,17 @@ export class WorldCommandPropagationUseCase {
         resolveWorldDocument,
         persistWorldDocument = null,
         isBlocked = null,
+        // 0.2.98 — Shared World Membership & Collaborative Presence.
+        // Optional `(worldDocumentId, identityId) => boolean`, the SAME
+        // shape application/WorldMembershipUseCase.js#hasActiveGrant()
+        // already exposes — threaded straight into the throwaway
+        // WorldAuthorizationService step 4 below builds, so a
+        // NON-OWNER holding a signed World edit grant can propagate
+        // operations exactly like the owner's own devices always could.
+        // Absent (null) is the exact pre-0.2.98 behavior: only the
+        // World's own owner (and that owner's authorized devices) may
+        // ever author an accepted remote operation.
+        resolveWorldEditGrant = null,
         replayGuard = new ReplayGuard(),
         // 0.2.97 — see this file's own header. Both default-constructed,
         // the same "always something real, never a null collaborator
@@ -204,6 +225,7 @@ export class WorldCommandPropagationUseCase {
         this._resolveWorldDocument = resolveWorldDocument;
         this._persistWorldDocument = typeof persistWorldDocument === 'function' ? persistWorldDocument : null;
         this._isBlocked = typeof isBlocked === 'function' ? isBlocked : null;
+        this._resolveWorldEditGrant = typeof resolveWorldEditGrant === 'function' ? resolveWorldEditGrant : null;
         this._replayGuard = replayGuard;
         this._ordering = ordering;
         this._conflictResolver = conflictResolver;
@@ -391,9 +413,10 @@ export class WorldCommandPropagationUseCase {
         }
         const authorization = new WorldAuthorizationService({
             resolveSocialIdentity: () => social,
-            isBlocked: this._isBlocked
+            isBlocked: this._isBlocked,
+            resolveWorldEditGrant: this._resolveWorldEditGrant
         });
-        const access = authorization.resolveAccess(document);
+        const access = authorization.resolveAccess(document, payload.worldDocumentId);
         if (access !== WorldAccessLevel.EDIT) {
             this._reject(
                 access === WorldAccessLevel.NONE ? WorldOperationRejectionReason.BLOCKED : WorldOperationRejectionReason.NOT_AUTHORIZED,

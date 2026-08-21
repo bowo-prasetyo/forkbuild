@@ -5769,8 +5769,13 @@ first place).
          ├── local mutations enter the SAME canonical log
          └── composition gap closed: WorldNavigationSession broadcasts
     ↓
-0.2.98  Collaborative World Presence
-         └── who else is currently editing/exploring this World
+0.2.98  Shared World Membership & Collaborative Presence ✓
+         ├── WorldEditAuthorizationEnvelope: signed GRANT/REVOCATION
+         ├── WorldMembershipUseCase: owner-only issuance, gossiped
+         ├── WorldAuthorizationService: EDIT via ownership OR grant
+         ├── multi-device composition: a grant follows the identity
+         ├── WorldPresenceUseCase: forkbuild:world-presence, ephemeral
+         └── canEdit always recomputed, never read off a remote claim
 ```
 
 0.2.93 is the hinge between them: it establishes, structurally rather
@@ -6425,3 +6430,274 @@ Alice-and-Bob-both-own-it scenario the architecture doesn't yet allow. A
 genuine multi-owner/collaborator model is exactly the kind of feature
 0.2.98's own "Collaborative World Presence" question would need to
 confront, not one this milestone quietly assumed into existence.
+
+0.2.98 — Shared World Membership & Collaborative Presence — answers the
+question 0.2.97 named and deliberately left open: given that 0.2.96/
+0.2.97 already let a network of ONE owner's own devices safely converge
+concurrent edits, how does a SECOND, genuinely independent identity
+legitimately gain that same standing? And, only once that question has a
+real answer, a second question that would otherwise be premature: who
+else is currently here?
+
+```text
+0.2.98
+├── core/WorldEditAuthorizationEnvelope.js       NEW — the signed
+│                                                 GRANT/REVOCATION wire
+│                                                 shape a World's OWNER
+│                                                 uses to give ANOTHER
+│                                                 identity EDIT authority
+│                                                 over exactly one World.
+│                                                 Modeled directly on
+│                                                 core/DeviceAuthorizationEnvelope.js
+│                                                 (0.2.78) — the GRANTING
+│                                                 identity signs alone,
+│                                                 the subject never
+│                                                 counter-signs — but
+│                                                 answers a deliberately
+│                                                 NARROWER question: "may
+│                                                 this identity edit THIS
+│                                                 World," never "may this
+│                                                 key act as me,
+│                                                 everywhere."
+├── core/WorldEditAuthority.js                    NEW — the local,
+│                                                 reconciled record per
+│                                                 (worldDocumentId,
+│                                                 subjectIdentityId) pair
+│                                                 — core/DeviceAuthority.js's
+│                                                 own shape, one layer
+│                                                 over: `isAuthorized` is
+│                                                 a timestamp comparison
+│                                                 between the latest
+│                                                 grant and revocation,
+│                                                 never a one-way latch —
+│                                                 a revoked identity CAN
+│                                                 be re-granted.
+├── application/WorldMembershipUseCase.js         NEW — grantEdit()/
+│                                                 revokeEdit()/
+│                                                 hasActiveGrant()/
+│                                                 listMembers(), a gossip
+│                                                 protocol
+│                                                 (forkbuild:world-
+│                                                 membership) structurally
+│                                                 identical to
+│                                                 DeviceAuthorizationPropagationUseCase
+│                                                 (0.2.78): trusted by a
+│                                                 record's OWN signature
+│                                                 alone, never by who
+│                                                 relayed it. The one
+│                                                 genuinely NEW check
+│                                                 device authorization
+│                                                 never needed: every
+│                                                 accepted grant/
+│                                                 revocation's
+│                                                 `grantingIdentityId` is
+│                                                 verified, fresh, against
+│                                                 the World's own
+│                                                 `metadata.authorIdentityId`
+│                                                 — a perfectly, honestly
+│                                                 self-signed grant from
+│                                                 anyone OTHER than the
+│                                                 World's true owner is
+│                                                 refused structurally, on
+│                                                 every replica. See docs/
+│                                                 Principles.md, "Only The
+│                                                 World's Own True Owner
+│                                                 May Ever Issue A
+│                                                 Membership Grant."
+├── application/WorldAuthorizationService.js      MODIFIED — resolveAccess()/
+│                                                 canEdit()/canRead() now
+│                                                 accept an OPTIONAL
+│                                                 second `worldDocumentId`
+│                                                 argument and consult an
+│                                                 OPTIONAL
+│                                                 `resolveWorldEditGrant`
+│                                                 collaborator: a non-
+│                                                 owner holding an active
+│                                                 grant for THIS specific
+│                                                 World now resolves
+│                                                 EDIT, exactly the "Alice
+│                                                 can edit World A / Alice
+│                                                 cannot therefore edit
+│                                                 World B" discipline
+│                                                 already applied to
+│                                                 ownership, unchanged in
+│                                                 every other respect.
+│                                                 New `isOwner()` — the
+│                                                 narrower "am I the
+│                                                 TRUE owner" check
+│                                                 WorldMembershipUseCase
+│                                                 itself relies on; holding
+│                                                 a grant never confers
+│                                                 the authority to grant
+│                                                 it onward. core/
+│                                                 WorldAccessLevel.js's own
+│                                                 NONE/READ/EDIT
+│                                                 vocabulary is completely
+│                                                 UNCHANGED — no EDITOR/
+│                                                 COLLABORATOR level, on
+│                                                 purpose.
+├── application/WorldCommandPropagationUseCase.js MODIFIED — its own
+│                                                 receiving-side
+│                                                 WorldAuthorizationService
+│                                                 now threads
+│                                                 `resolveWorldEditGrant`
+│                                                 too, so a non-owner's
+│                                                 operations propagate
+│                                                 exactly like the
+│                                                 owner's always could —
+│                                                 zero changes to its own
+│                                                 six-step trust chain,
+│                                                 ordering, or conflict
+│                                                 resolution.
+├── core/WorldPresenceActivity.js                 NEW — the closed
+│                                                 EXPLORING/EDITING
+│                                                 vocabulary a presence
+│                                                 advertisement's
+│                                                 `activity` is expressed
+│                                                 in — a self-reported UI
+│                                                 hint, never itself an
+│                                                 authorization claim.
+├── core/WorldPresenceAdvertisement.js            NEW — the
+│                                                 forkbuild:world-presence
+│                                                 wire shape. Permanently
+│                                                 UNSIGNED — the same
+│                                                 reasoning core/
+│                                                 AvatarPresence.js already
+│                                                 gives: identity comes
+│                                                 from the live,
+│                                                 authenticated connection
+│                                                 it travels over, never
+│                                                 from a claim on the
+│                                                 wire.
+└── application/WorldPresenceUseCase.js           NEW — enterWorld()/
+                                                  setActivity()/
+                                                  leaveWorld()/
+                                                  getRoster(). Presence is
+                                                  COMPUTED from currently
+                                                  live, authenticated
+                                                  connections, never
+                                                  PERSISTED — see docs/
+                                                  Principles.md, "World
+                                                  Presence Is Computed
+                                                  From Live, Authorized
+                                                  Connections, Never
+                                                  Persisted." Identity is
+                                                  resolved device-aware,
+                                                  through the SAME
+                                                  DeviceAuthorizationPropagationUseCase#
+                                                  resolveConnectionIdentity()
+                                                  every other protocol
+                                                  already uses, so Bob's
+                                                  Desktop and Tablet roll
+                                                  up into ONE roster entry
+                                                  with `deviceCount: 2`.
+                                                  Each entry's `canEdit`
+                                                  is ALWAYS recomputed
+                                                  locally through
+                                                  WorldAuthorizationService/
+                                                  WorldMembershipUseCase —
+                                                  NEVER read off the
+                                                  remote party's own
+                                                  self-reported activity —
+                                                  see docs/Principles.md,
+                                                  "Being Online Is Not The
+                                                  Same As Being Authorized
+                                                  To Edit."
+```
+
+The security chain a remote World operation already followed (0.2.96/
+0.2.97, restated in that milestone's own header) gains exactly one new
+rung, and only one:
+
+```text
+authenticated key
+      ↓
+device authorization
+      ↓
+social identity
+      ↓
+World membership          <- NEW (0.2.98): ownership OR an active grant
+      ↓
+EDIT?
+      ↓
+operation ordering
+      ↓
+conflict resolution
+      ↓
+Command.execute()
+```
+
+`application/WorldNavigationSession.js` gains a thin, purely delegating
+surface — `isWorldOwner()`, `grantWorldEdit()`/`revokeWorldEdit()`/
+`listWorldMembers()`, `enterWorldPresence()`/`refreshWorldPresenceActivity()`/
+`leaveWorldPresence()`/`getWorldPresenceRoster()`/`onWorldPresenceChanged()`
+— every one of them a graceful no-op (or, for the two mutating grant
+calls, a thrown error naming exactly why) when no `worldMembershipUseCase`/
+`worldPresenceUseCase` was wired, the identical "enforce/offer only when
+the collaborator is actually wired" posture `worldAuthorizationService`/
+`worldCommandPropagation` themselves already established in 0.2.95/0.2.97.
+`application/CreateWorldViewUseCase.js` wires both, peer-stack-gated
+exactly like `worldCommandPropagation` already is, and closes one small
+construction-order knot: `worldAuthorizationService` is built ONCE,
+app-scoped, before any session exists, while `worldMembershipUseCase`
+needs a session's own `getDocument()` to check ownership — resolved with
+the identical "assign a mutable box after construction, read it later
+from a closure" trick `worldCommandPropagation`'s own `resolveWorldDocument`
+already uses for `sessionRef`.
+
+The flagship (`tests/WorldMembership.test.js`) runs the scenario this
+milestone was scoped around, precisely:
+
+Alice owns World A; Bob starts READ-only, and an operation he tries to
+broadcast is rejected `NOT_AUTHORIZED`. Bob attempts to forge a
+perfectly, honestly self-signed grant — naming himself as the granting
+identity for Charlie — and it is refused on Alice's own replica, not
+because the signature is invalid (it is entirely valid; Bob really did
+sign it) but because Bob is not World A's true owner. Alice grants Bob
+EDIT; Bob's operation now propagates and applies on Alice's replica
+exactly like an owner's always could; Charlie, also connected to Alice,
+observes the same grant as a bystander (a grant is not private between
+owner and subject — only its ISSUANCE is restricted). Bob, holding EDIT,
+tries to grant Charlie access himself and is refused — holding a grant
+never confers the authority to grant it onward. Bob's Tablet, an
+authorized DEVICE of Bob's own identity (0.2.78's own composition,
+completely unmodified), inherits the SAME EDIT authority with zero
+additional wiring — the grant follows Bob's identity, not one specific
+device. Alice revokes Bob; both Bob's Desktop and Tablet immediately lose
+EDIT, and neither live WebRTC connection is ever disconnected to make
+that true. Alice re-grants Bob afterward, proving a revoked identity can
+be re-granted, the same discipline device authorization itself already
+established.
+
+Then presence: Bob enters World A EXPLORING; Alice's roster shows exactly
+one entry naming Bob, one device, `canEdit: false`. Alice grants Bob
+EDIT; Bob updates his own advertised activity to EDITING; Alice's roster
+reflects both the new activity AND `canEdit: true` — recomputed locally,
+never trusted from Bob's own claim. Bob's Tablet joins too: the roster
+stays at exactly ONE entry for Bob, with `deviceCount: 2`. Alice revokes
+Bob: `canEdit` flips to `false` immediately while `deviceCount` stays at
+2 — "being online is not the same as being authorized to edit," proven
+structurally rather than merely asserted. Bob's Tablet disconnects: the
+roster prunes to `deviceCount: 1`, with no explicit "goodbye" message
+ever required. Bob leaves explicitly: the roster empties.
+
+Deliberately not in 0.2.98, named rather than hidden: remote cursors,
+colored user indicators, selection sharing, live "Bob is moving House"
+indicators, chat integration, comments, edit locks, CRDTs/OT, a server-
+side authoritative World, group/role hierarchies beyond the closed
+NONE/READ/EDIT vocabulary, anonymous editing, and any change to World
+View's own mutation surface (still unchanged since 0.2.93/0.2.95 — this
+milestone answers WHO may edit a World once granted, never WHAT editing
+looks like). Also deliberately left unbuilt: any UI surface for granting/
+revoking membership or displaying a presence roster — exactly like
+0.2.95 through 0.2.97 before it, this milestone stays entirely in the
+application/core layers, tested directly against real authenticated peer
+connections; `ui/views/WorldView.js` does not yet consult
+`WorldAccessLevel`, `isWorldOwner()`, or `getWorldPresenceRoster()` at
+all, a gap already just as true before this milestone as after it. And,
+worth stating plainly: only the World's OWNER may grant or revoke
+membership in 0.2.98 — an editor delegating their own EDIT authority
+onward to a third identity ("Bob invites Charlie") is a real, different
+question this milestone does not answer, left for whenever a genuine
+need for it emerges rather than spending this milestone's own scope
+speculatively.

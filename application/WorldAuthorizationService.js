@@ -78,20 +78,39 @@ import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.j
 // every other trust boundary in this codebase already takes — though
 // in practice nobody blocks themselves, so this rarely fires for an
 // owner in honest operation.
+//
+// 0.2.98 — Shared World Membership & Collaborative Presence. Adds the
+// one question 0.2.95 through 0.2.97 deliberately never needed: "if the
+// viewer is NOT the owner, do they hold a signed World edit grant?"
+// `resolveWorldEditGrant`, when supplied, is `(worldDocumentId,
+// identityId) => boolean` — deliberately the SAME shape
+// application/WorldMembershipUseCase.js#hasActiveGrant() already
+// exposes, never re-implemented here. Callers thread the OPTIONAL
+// second `worldDocumentId` argument through resolveAccess()/canEdit()/
+// canRead() ONLY when they actually know which World they're asking
+// about (application/WorldNavigationSession.js does, via its own
+// `documentId`; application/WorldCommandPropagationUseCase.js does, via
+// the envelope's own `worldDocumentId`) — a caller that omits it (every
+// pre-0.2.98 call site, and any caller that only has a bare Document)
+// gets EXACTLY the pre-0.2.98 behavior: ownership only, membership
+// grants never consulted. Consistent with every other optional
+// collaborator in this class: absent `resolveWorldEditGrant` means
+// "no membership model wired," never "everyone is a member."
 export class WorldAuthorizationService {
-    constructor({ identityProvider = null, resolveSocialIdentity = null, isBlocked = null } = {}) {
+    constructor({ identityProvider = null, resolveSocialIdentity = null, isBlocked = null, resolveWorldEditGrant = null } = {}) {
         this._identityProvider = identityProvider;
         this._resolveSocialIdentity = resolveSocialIdentity;
         this._isBlocked = isBlocked;
+        this._resolveWorldEditGrant = resolveWorldEditGrant;
     }
 
-    // Document | null -> WorldAccessLevel. Never throws — an absent
-    // Document, an absent viewer, an absent collaborator all degrade to
-    // the most conservative answer they can (NONE for no document, READ
-    // for an unresolvable-but-not-blocked viewer), exactly the
-    // graceful-absence posture every optional collaborator in this
-    // codebase already follows.
-    resolveAccess(document) {
+    // Document | null, worldDocumentId | null -> WorldAccessLevel. Never
+    // throws — an absent Document, an absent viewer, an absent
+    // collaborator all degrade to the most conservative answer they can
+    // (NONE for no document, READ for an unresolvable-but-not-blocked
+    // viewer), exactly the graceful-absence posture every optional
+    // collaborator in this codebase already follows.
+    resolveAccess(document, worldDocumentId = null) {
         if (!document || !document.metadata) {
             return WorldAccessLevel.NONE;
         }
@@ -99,19 +118,48 @@ export class WorldAuthorizationService {
         if (viewer.identityId && this._isBlocked && this._isBlocked(viewer.identityId)) {
             return WorldAccessLevel.NONE;
         }
-        return this._isOwner(document, viewer) ? WorldAccessLevel.EDIT : WorldAccessLevel.READ;
+        if (this._isOwner(document, viewer)) {
+            return WorldAccessLevel.EDIT;
+        }
+        // 0.2.98 — a non-owner may still hold a signed World edit grant
+        // for THIS specific World. Never consulted without a
+        // worldDocumentId to scope it to (see this class's own header):
+        // a grant is only ever meaningful about one exact World, the
+        // same "Alice can edit World A / Alice cannot therefore edit
+        // World B" discipline ownership itself already enforces.
+        if (worldDocumentId && viewer.identityId && typeof this._resolveWorldEditGrant === 'function'
+            && this._resolveWorldEditGrant(worldDocumentId, viewer.identityId)) {
+            return WorldAccessLevel.EDIT;
+        }
+        return WorldAccessLevel.READ;
     }
 
     // Convenience booleans — the shape SpatialEditingService/
     // WorldNavigationSession actually consult at each mutation
     // chokepoint, never re-deriving the ordering resolveAccess() above
     // already settled.
-    canRead(document) {
-        return this.resolveAccess(document) !== WorldAccessLevel.NONE;
+    canRead(document, worldDocumentId = null) {
+        return this.resolveAccess(document, worldDocumentId) !== WorldAccessLevel.NONE;
     }
 
-    canEdit(document) {
-        return this.resolveAccess(document) === WorldAccessLevel.EDIT;
+    canEdit(document, worldDocumentId = null) {
+        return this.resolveAccess(document, worldDocumentId) === WorldAccessLevel.EDIT;
+    }
+
+    // 0.2.98 — "is the CURRENT viewer this exact Document's
+    // cryptographic (or legacy-label) owner?" — narrower than canEdit(),
+    // which a membership grant can also satisfy. This is the gate
+    // application/WorldMembershipUseCase.js consults before letting
+    // anyone grant/revoke membership on a World: holding a grant never
+    // confers the authority to issue further grants — only ownership
+    // does. Never itself consults `resolveWorldEditGrant` or
+    // `isBlocked` — ownership is a structural fact about the Document,
+    // independent of either.
+    isOwner(document) {
+        if (!document || !document.metadata) {
+            return false;
+        }
+        return this._isOwner(document, this._resolveViewer());
     }
 
     // "Given who is looking right now" — resolved FRESH on every call,

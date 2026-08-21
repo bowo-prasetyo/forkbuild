@@ -122,7 +122,24 @@ export const SignatureType = Object.freeze({
     // 0.2.78 — the same REQUIRED discipline, withdrawing a grant already
     // made under DEVICE_AUTHORIZATION_GRANT above. See core/
     // DeviceAuthorizationEnvelope.js's getDeviceAuthorizationRevocationSigningDescriptor().
-    DEVICE_AUTHORIZATION_REVOCATION: 'device-authorization-revocation'
+    DEVICE_AUTHORIZATION_REVOCATION: 'device-authorization-revocation',
+    // 0.2.98 — a REQUIRED signature (never optional, the same discipline
+    // as DEVICE_AUTHORIZATION_GRANT above), over a World edit membership
+    // grant (core/WorldEditAuthorizationEnvelope.js's wire shape). Proves
+    // "identity A itself granted identity B EDIT authority over World
+    // W" — a deliberately NARROWER claim than DEVICE_AUTHORIZATION_GRANT:
+    // a device authorization says "this key may act for me, everywhere";
+    // a World edit grant says "this OTHER identity may edit exactly this
+    // ONE World," and never implies anything about who may act as whom.
+    // Signed by the GRANTING identity only; the subject never
+    // counter-signs. See core/WorldEditAuthorizationEnvelope.js's
+    // getWorldEditAuthorizationGrantSigningDescriptor().
+    WORLD_EDIT_AUTHORIZATION_GRANT: 'world-edit-authorization-grant',
+    // 0.2.98 — the same REQUIRED discipline, withdrawing a grant already
+    // made under WORLD_EDIT_AUTHORIZATION_GRANT above. See core/
+    // WorldEditAuthorizationEnvelope.js's
+    // getWorldEditAuthorizationRevocationSigningDescriptor().
+    WORLD_EDIT_AUTHORIZATION_REVOCATION: 'world-edit-authorization-revocation'
 });
 
 export class Signature {

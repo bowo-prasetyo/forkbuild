@@ -6526,3 +6526,77 @@ future mutation chokepoint this file grows never has to remember to
 broadcast anything — it inherits propagation for free the moment it
 routes through a registered `CommandHistory`, the same way it already
 inherits undo/redo, persistence, and replay.
+
+### A World Edit Grant Is A Signed Capability About One World, Never A Role And Never A Second Kind Of Ownership (0.2.98)
+
+`core/WorldEditAuthorizationEnvelope.js`/`application/WorldMembershipUseCase.js`
+close the gap 0.2.97 named and deliberately left open: `WorldAuthorizationService`
+granted `EDIT` to exactly one cryptographic owner (plus, transparently,
+that owner's own authorized devices). A World edit grant does not widen
+`core/WorldAccessLevel.js`'s own closed `NONE`/`READ`/`EDIT` vocabulary —
+there is no `EDITOR` or `COLLABORATOR` level anywhere in this codebase,
+and this milestone does not add one. Instead, a grant is a fact ABOUT a
+viewer, checked the same way `authorIdentityId` itself already is: given
+who is asking, about which exact World, do they hold `EDIT`? A grant is
+scoped to exactly one `(worldDocumentId, subjectIdentityId)` pair — Bob
+holding a grant on Alice's World A says nothing whatsoever about World B,
+the identical "Alice can edit World A / Alice cannot therefore edit World
+B" discipline ownership itself already enforced for a SINGLE owner's own
+devices, now extended to a second, independent identity. Holding a grant
+never confers the authority to grant it onward, either — only the
+World's own owner may ever call `WorldMembershipUseCase#grantEdit()`
+successfully; see the next principle for how that is enforced against a
+dishonest sender, not merely a well-behaved local caller.
+
+### Only The World's Own True Owner May Ever Issue A Membership Grant — Checked Structurally, On Every Replica, Against A Forged Claim (0.2.98)
+
+`WorldMembershipUseCase` is a gossip protocol, structurally identical to
+`application/DeviceAuthorizationPropagationUseCase.js`'s own: a record is
+trusted by its OWN signature alone, never by who relayed it. Device
+authorization never needed to ask "is the signer allowed to make this
+claim" beyond "does it hold the key it claims to" — any identity may
+authorize any device to act for ITSELF. A World edit grant is different,
+and needs a second, genuinely new check: `grantingIdentityId` must equal
+`worldDocumentId`'s own `metadata.authorIdentityId`, verified fresh
+against the receiver's OWN locally-known World document on every
+accepted grant/revocation — never merely against what the record itself
+claims, and never trusted because the record is validly self-signed. A
+perfectly legitimate, honestly-self-signed grant — Bob's own key,
+properly signing a claim that Bob himself grants Charlie access to
+Alice's World — is refused on every replica that knows Alice's World,
+because `grantingIdentityId` (Bob) does not match that World's real
+owner (Alice). Structural signature validity and "did the right party
+issue this" are two different checks, and this milestone never conflates
+them.
+
+### World Presence Is Computed From Live, Authorized Connections, Never Persisted (0.2.98)
+
+`core/WorldPresenceAdvertisement.js` is permanently unsigned, the exact
+same posture `core/AvatarPresence.js` already established and for the
+identical reason: nothing here is meant to be believed or relied on
+beyond the single, currently-live, mutually-authenticated peer
+connection it travels over. `application/WorldPresenceUseCase.js` never
+writes a `WorldPresence` row to any `StorageProvider` — a participant's
+presence in a World is answered fresh, on every `getRoster()` call, by
+intersecting this replica's last-known advertisements against its OWN
+`ConnectedPeerRegistry`'s CURRENT authenticated list. A disconnected
+peer's entries are pruned the moment its connection drops; nothing needs
+to tell the roster that participant left, the same way nothing needs to
+tell a `RemoteAvatarRegistry` an avatar's movement stopped arriving.
+
+### Being Online Is Not The Same As Being Authorized To Edit — A Presence Roster's `canEdit` Is Always Recomputed, Never Read Off A Remote Claim (0.2.98)
+
+`core/WorldPresenceActivity.js`'s own `EDITING`/`EXPLORING` value is a
+self-reported UI hint a remote participant advertises about themselves —
+it is never treated as proof of anything. `WorldPresenceUseCase#getRoster()`
+always recomputes each entry's `canEdit` LOCALLY, through the same
+ownership/grant check `application/WorldAuthorizationService.js` and
+`application/WorldMembershipUseCase.js` already answer, never by trusting
+whatever activity string arrived on the wire. Revoking Bob's World edit
+grant while his WebRTC connection stays perfectly alive therefore changes
+what the very next `getRoster()` call reports for him — `canEdit` flips
+to `false` immediately, `deviceCount` stays exactly what it was — with
+zero need to ever disconnect him, the identical "revocation is an
+authorization gate, never a connection-teardown event" discipline 0.2.78
+established for device revocation, now extended to presence display
+itself.

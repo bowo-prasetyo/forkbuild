@@ -30,6 +30,8 @@ import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPrese
 import { AvatarProfileVisibilityPolicy } from '../core/AvatarProfileVisibilityPolicy.js';
 import { FriendshipState } from '../core/FriendshipState.js';
 import { WorldAuthorizationService } from './WorldAuthorizationService.js';
+import { WorldMembershipUseCase } from './WorldMembershipUseCase.js';
+import { WorldPresenceUseCase } from './WorldPresenceUseCase.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -275,12 +277,26 @@ export class CreateWorldViewUseCase {
         // socially" (never a new device-resolution mechanism);
         // `isBlocked` reuses the SAME predicate this method already
         // derives for the avatar trust boundaries above.
+        // 0.2.98 — Shared World Membership & Collaborative Presence.
+        // `worldMembershipUseCaseRef` is a MUTABLE box, assigned once
+        // `createSession()` below actually constructs a real
+        // WorldMembershipUseCase — the identical "assigned after
+        // construction, read later by a closure at call time" pattern
+        // this method's own `sessionRef` (see createSession() below)
+        // already establishes for `resolveWorldDocument`. Needed
+        // because worldMembershipUseCase's OWN `resolveWorldDocument`
+        // needs a session to already exist, while worldAuthorizationService
+        // is built here, once, BEFORE any session does.
+        const worldMembershipUseCaseRef = { current: null };
         const worldAuthorizationService = new WorldAuthorizationService({
             identityProvider,
             resolveSocialIdentity: deviceAuthorizationPropagationUseCase
                 ? () => deviceAuthorizationPropagationUseCase.resolveOwnSocialIdentity()
                 : null,
-            isBlocked: isBlocked || null
+            isBlocked: isBlocked || null,
+            resolveWorldEditGrant: (worldDocumentId, viewerIdentityId) => worldMembershipUseCaseRef.current
+                ? worldMembershipUseCaseRef.current.hasActiveGrant(worldDocumentId, viewerIdentityId)
+                : false
         });
 
         // Presence's own transport. getVisibilityPolicy reads
@@ -366,6 +382,19 @@ export class CreateWorldViewUseCase {
                 // ever broadcast" behavior WorldNavigationSession's own
                 // constructor comment documents.
                 let sessionRef = null;
+                // 0.2.98 — same peer-stack gate as worldCommandPropagation
+                // below, and the SAME `resolveWorldDocument` closure
+                // shape (calling back into `sessionRef` at runtime, not
+                // at construction time — see this method's own comment
+                // on worldCommandPropagation).
+                const worldMembershipUseCase = (identityProvider && peerMessageBus && connectedPeerRegistry)
+                    ? new WorldMembershipUseCase(new LocalStorageProvider(), identityProvider, {
+                        peerMessageBus,
+                        connectedPeerRegistry,
+                        resolveWorldDocument: (worldDocumentId) => (sessionRef ? sessionRef.getDocument(worldDocumentId) : null)
+                    })
+                    : null;
+                worldMembershipUseCaseRef.current = worldMembershipUseCase;
                 const worldCommandPropagation = (identityProvider && peerMessageBus && connectedPeerRegistry && deviceAuthorizationPropagationUseCase)
                     ? new WorldCommandPropagationUseCase({
                         peerMessageBus,
@@ -376,7 +405,43 @@ export class CreateWorldViewUseCase {
                         resolveWorldDocument: (worldDocumentId) => (sessionRef ? sessionRef.getDocument(worldDocumentId) : null),
                         // 0.2.60 — the SAME predicate every other trust
                         // boundary this method builds already consults.
-                        isBlocked: isBlocked || null
+                        isBlocked: isBlocked || null,
+                        // 0.2.98 — see worldAuthorizationService's own
+                        // wiring above: the SAME predicate, so a
+                        // non-owner holding a signed World edit grant
+                        // can propagate operations over the network too.
+                        resolveWorldEditGrant: worldMembershipUseCase
+                            ? (worldDocumentId, viewerIdentityId) => worldMembershipUseCase.hasActiveGrant(worldDocumentId, viewerIdentityId)
+                            : null
+                    })
+                    : null;
+                // 0.2.98 — same peer-stack gate, and the SAME
+                // deviceAuthorizationPropagationUseCase every other
+                // device-aware collaborator here already shares.
+                // `resolveCanEdit(worldDocumentId, identityId)` asks a
+                // DIFFERENT question than worldAuthorizationService's own
+                // canEdit() — "can THIS OTHER participant edit," never
+                // "can the CURRENT viewer edit" — so it re-derives
+                // ownership/grant status directly rather than
+                // misapplying the viewer-centric service: owner by raw
+                // `authorIdentityId` (the same comparison
+                // application/WorldMembershipUseCase.js#_requireOwnerIdentity()
+                // itself makes), OR an active membership grant.
+                const worldPresenceUseCase = (peerMessageBus && connectedPeerRegistry && deviceAuthorizationPropagationUseCase)
+                    ? new WorldPresenceUseCase({
+                        peerMessageBus,
+                        connectedPeerRegistry,
+                        deviceAuthorization: deviceAuthorizationPropagationUseCase,
+                        resolveCanEdit: (worldDocumentId, identityId) => {
+                            const document = sessionRef ? sessionRef.getDocument(worldDocumentId) : null;
+                            if (!document || !document.metadata || !identityId) {
+                                return false;
+                            }
+                            if (document.metadata.authorIdentityId && document.metadata.authorIdentityId === identityId) {
+                                return true;
+                            }
+                            return Boolean(worldMembershipUseCase && worldMembershipUseCase.hasActiveGrant(worldDocumentId, identityId));
+                        }
                     })
                     : null;
                 const session = new WorldNavigationSession({
@@ -443,7 +508,11 @@ export class CreateWorldViewUseCase {
                     worldAuthorizationService,
                     // 0.2.97: Shared World Ordering & Conflict
                     // Resolution — see above.
-                    worldCommandPropagation
+                    worldCommandPropagation,
+                    // 0.2.98: Shared World Membership & Collaborative
+                    // Presence — see above.
+                    worldMembershipUseCase,
+                    worldPresenceUseCase
                 });
                 sessionRef = session;
                 return session;
