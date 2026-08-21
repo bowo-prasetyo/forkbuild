@@ -5753,8 +5753,16 @@ first place).
          ├── device-aware authorization
          └── mutation boundary
     ↓
-0.2.96  Shared World Collaboration
-         └── only after authorization semantics are solid
+0.2.96  Shared World Command Propagation                ✓
+         ├── World operation envelope
+         ├── dedicated forkbuild:world-sync protocol
+         ├── authorization-aware replication
+         ├── idempotent application
+         ├── multi-device operation identity
+         └── remote operations excluded from undo
+    ↓
+0.2.97  Concurrent World Editing
+         └── ordering, conflict resolution, replica convergence
 ```
 
 0.2.93 is the hinge between them: it establishes, structurally rather
@@ -6051,3 +6059,163 @@ own Load path opens it) were never merged into one decision. Nothing in
 this milestone had to enforce that separation on purpose — it falls out
 for free from `resolveAccess(document)` always taking the specific
 Document being asked about, never a World-wide or session-wide answer.
+
+## Shared World Command Propagation
+
+0.2.96 — Shared World Command Propagation — answers the question 0.2.95
+made askable but did not touch: given that a replica now knows WHO may
+edit a World, how does an edit one authorized replica actually makes
+become the SAME durable mutation on another authorized replica? The
+design conversation was explicit that this should come BEFORE World View
+gains any mutation surface of its own — the harder, more fundamental
+problem is safe propagation between replicas that already share a mutation
+kernel (`UI -> UseCase -> Authorization -> Command -> World`), not adding
+a second place to trigger it.
+
+```text
+0.2.96
+├── core/WorldOperationEnvelope.js               NEW — the closed wire
+│                                                 shape one already-
+│                                                 executed Command
+│                                                 travels in:
+│                                                 operationId (==
+│                                                 command.id), worldDocumentId,
+│                                                 authorIdentityId (the
+│                                                 sending DEVICE's own raw
+│                                                 key), command
+│                                                 (command.toJSON()).
+│                                                 Never a World/Document
+│                                                 snapshot.
+├── application/WorldCommandPropagationUseCase.js NEW — the protocol,
+│                                                 riding its own
+│                                                 `forkbuild:world-sync`
+│                                                 channel, strictly
+│                                                 alongside
+│                                                 `forkbuild:chat`/
+│                                                 `forkbuild:device-
+│                                                 conversation-sync`,
+│                                                 never folded into
+│                                                 either. broadcastCommand()
+│                                                 sends to every currently
+│                                                 AUTHENTICATED peer with
+│                                                 no opinion on who should
+│                                                 accept it — the receiver
+│                                                 decides, never the
+│                                                 sender.
+├── replication/ReplayGuard.js                   REUSED, unmodified — the
+│                                                 SAME "have I already
+│                                                 accepted this" question
+│                                                 it already answers for
+│                                                 every other immutable
+│                                                 object, now scoped per
+│                                                 (worldDocumentId,
+│                                                 operationId). A
+│                                                 retransmitted operation
+│                                                 is recognized and
+│                                                 produces NO second
+│                                                 mutation.
+├── application/commands/CommandRegistry.js       REUSED, unmodified — the
+│                                                 SAME serialization
+│                                                 format `application/
+│                                                 CommandHistory.js`'s own
+│                                                 persistence/replay
+│                                                 already uses reconstructs
+│                                                 the command on the
+│                                                 receiving side. No
+│                                                 second wire format for
+│                                                 "what a mutation is."
+└── application/WorldAuthorizationService.js      REUSED, unmodified — the
+                                                 receiver constructs a
+                                                 throwaway instance whose
+                                                 `resolveSocialIdentity`
+                                                 returns the CONNECTION's
+                                                 own resolved identity
+                                                 (never the envelope's
+                                                 claimed one) and asks the
+                                                 exact same
+                                                 `resolveAccess(document)`
+                                                 question 0.2.95 already
+                                                 answers for a local UI
+                                                 click. A World's
+                                                 authorization gate never
+                                                 had to learn there was a
+                                                 network on the other side
+                                                 of it.
+```
+
+The security chain, re-derived fresh on every incoming envelope, mirrors
+`application/ChatUseCase.js#_handleIncoming()`'s own ordered gate one rung
+further:
+
+```text
+authenticated connection (peer/PeerMessageBus.js — AUTHENTICATED already)
+        ↓
+claimed authorIdentityId == this connection's OWN proven key
+        ↓  (never merely what the payload claims — "I am Alice" is
+        ↓   never, on its own, sufficient)
+resolve SOCIAL identity (DeviceAuthorizationPropagationUseCase#
+        ↓ resolveConnectionIdentity() — DIRECT or DEVICE, the SAME
+        ↓ multi-device resolution 0.2.95 already consumes)
+resolve World EDIT authority for THIS worldDocumentId specifically
+        ↓ (WorldAuthorizationService, reused — "authorized somewhere" is
+        ↓  never sufficient; it must be authorized for THIS World)
+verify the operation (worldId cross-check + CommandRegistry
+        ↓ deserialization + ReplayGuard idempotency)
+apply the operation (command.execute({ world }) DIRECTLY — never through
+                      the receiver's own CommandHistory)
+```
+
+Revocation isolation falls out for free, exactly the way 0.2.83's own
+sibling-eligibility check already established: nothing in
+`WorldCommandPropagationUseCase` ever asks "has this device been
+revoked" — `resolveConnectionIdentity()` itself stops resolving a revoked
+device to its former parent's identityId the instant the revocation is
+learned, through the completely unmodified 0.2.78/0.2.82 gossip path, so
+the authorization step simply starts asking about a different,
+unauthorized identity and denies it the ordinary way.
+
+The flagship (`tests/WorldCommandPropagation.test.js`, Section C) runs the
+scenario the design conversation asked for, against real authenticated
+`peer/PeerConnection.js` connections, not fakes: Alice and Bob each hold
+independent replicas of the same World; Alice moves a brick locally and
+broadcasts it; Bob's replica converges to the identical mutation, and his
+OWN `CommandHistory` for that World stays completely empty throughout —
+proving the local/remote mutation distinction structurally, the same way
+0.2.93 proved selection was UI-only. Alice retransmits the exact same
+operation and Bob's world is byte-identical, the retransmit explicitly
+recognized and rejected as `DUPLICATE`. Alice's Phone, authorized as her
+device, moves the brick too, and the applied event correctly names ALICE
+as author, never the Phone's own raw key; the moment Alice revokes the
+Phone, the identical physical device's next operation is refused
+`NOT_AUTHORIZED` and the World is untouched — zero code aware a
+revocation happened at all. Alice's real EDIT authority on World A grants
+her nothing on World B, which Bob owns: rejected `NOT_AUTHORIZED`. An
+operation naming a World Bob has no local replica of at all is refused
+`UNKNOWN_WORLD`, never silently creates one. And Charlie, a completely
+unrelated identity with his own real authenticated connection to Bob,
+cannot make himself Alice merely by writing her identityId into the
+envelope — his connection's own cryptographically-proven key doesn't
+match, and the forged operation is rejected `IDENTITY_MISMATCH` before
+authorization is even consulted.
+
+Deliberately not in 0.2.96, named rather than hidden: concurrent/
+conflicting edits, operation ordering, conflict resolution, replica
+convergence beyond "the same sequence of operations, applied once each"
+(all explicitly 0.2.97's question — the design conversation's own
+"single-authoritative-operation propagation" scope restriction, chosen
+precisely so this milestone never has to become a distributed-systems
+rewrite); World View mutation (unchanged from 0.2.93/0.2.95 — this
+milestone puts a network boundary around the EXISTING mutation kernel, it
+does not add a second place to trigger it); locks, presence of editors,
+remote cursors, and any permissions/role UI. Also deliberately left as a
+named, real gap rather than papered over: `WorldCommandPropagationUseCase`
+is a complete, independently tested protocol unit — exactly like
+`application/DeviceConversationSyncUseCase.js` was in 0.2.83 — but this
+milestone does not thread `broadcastCommand()`/`onOperationApplied()`
+into `application/WorldNavigationSession.js`'s own per-World
+`CommandHistory` map or into `ui/main.js`'s boot sequence; connecting the
+kernel to that session's many existing mutation chokepoints, and
+triggering a live re-render when a remote operation lands, is a UI-
+composition-root change with no isolated test surface of its own, and is
+the next connection point a follow-up increment makes, not a redesign
+this one needs.
