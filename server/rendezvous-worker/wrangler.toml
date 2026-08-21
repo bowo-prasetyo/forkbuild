@@ -1,0 +1,39 @@
+# 0.3.3 — Wrangler configuration for the ForkBuild rendezvous worker
+# (see worker.js and this folder's own README.md). This is the
+# RECOMMENDED deployment path — see README.md for why the dashboard's
+# own "Quick Edit" flow (no CLI at all) is more finicky for a Worker
+# that needs a Durable Object binding, unlike a plain stateless worker.
+#
+# `name` becomes part of your worker's default *.workers.dev URL
+# (https://<name>.<your-subdomain>.workers.dev) — change it to whatever
+# you like before deploying; nothing in worker.js depends on this
+# value.
+name = "forkbuild-rendezvous"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# The Durable Object binding worker.js reads as `env.RENDEZVOUS_NODE`.
+# `class_name` must match the exported class name in worker.js exactly
+# (`RendezvousNode`) — Wrangler uses this to find which class in your
+# script IS the Durable Object.
+[[durable_objects.bindings]]
+name = "RENDEZVOUS_NODE"
+class_name = "RendezvousNode"
+
+# Durable Objects require an explicit migration the FIRST time a class
+# is introduced (and again if you ever rename/remove one) — this tells
+# Cloudflare "RendezvousNode is a brand-new Durable Object class,
+# starting from nothing." Never edit this after your first deploy;
+# see Cloudflare's own Durable Objects migration docs if you later add
+# or rename classes.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RendezvousNode"]
+
+# Optional — see worker.js's own parseAllowedOrigins() and this
+# folder's README.md. Uncomment and edit to restrict which web origins
+# may open a rendezvous connection at all. Leave commented out (the
+# default) to allow any origin, matching peer/RendezvousConfig.js's own
+# "empty means unrestricted" default posture one layer up.
+# [vars]
+# ALLOWED_ORIGINS = "https://your-forkbuild-deployment.example"
