@@ -5761,8 +5761,16 @@ first place).
          ├── multi-device operation identity
          └── remote operations excluded from undo
     ↓
-0.2.97  Concurrent World Editing
-         └── ordering, conflict resolution, replica convergence
+0.2.97  Shared World Ordering & Conflict Resolution     ✓
+         ├── Lamport logical clock, never wall-clock time
+         ├── deterministic total order (logicalClock, operationId)
+         ├── ConflictResolver: reorder/rebase, never CRDT/OT
+         ├── delete is terminal, stated policy not accident
+         ├── local mutations enter the SAME canonical log
+         └── composition gap closed: WorldNavigationSession broadcasts
+    ↓
+0.2.98  Collaborative World Presence
+         └── who else is currently editing/exploring this World
 ```
 
 0.2.93 is the hinge between them: it establishes, structurally rather
@@ -6219,3 +6227,201 @@ triggering a live re-render when a remote operation lands, is a UI-
 composition-root change with no isolated test surface of its own, and is
 the next connection point a follow-up increment makes, not a redesign
 this one needs.
+
+## Shared World Ordering & Conflict Resolution
+
+0.2.97 — Shared World Ordering & Conflict Resolution — answers the
+question 0.2.96 named and deliberately left open: given that an
+authorized operation now reaches every replica, what happens when TWO
+authorized replicas edit the same World at nearly the same time? The
+central invariant this milestone establishes:
+
+```text
+Every authorized replica that receives the SAME set of valid World
+operations eventually derives the SAME World state, regardless of
+arrival order or retransmission order.
+```
+
+The design conversation was explicit about keeping the solution modest:
+no CRDTs, no operational transforms, no locks, and no server authority.
+Instead, every operation already carries enough metadata (0.2.96's own
+envelope, extended) to establish a deterministic TOTAL order, and one
+new reconciliation stage sits between "the operation is accepted" and
+"`Command.execute()` runs" — the pipeline the design conversation itself
+asked for:
+
+```text
+WorldCommandPropagationUseCase -> OperationOrdering -> ConflictResolver -> Command.execute()
+```
+
+```text
+0.2.97
+├── core/LogicalClock.js                    NEW — a Lamport logical
+│                                            clock, deliberately NOT
+│                                            wall-clock time. tick()
+│                                            mints the next value for a
+│                                            LOCAL operation; observe(n)
+│                                            folds a REMOTE operation's
+│                                            clock into this replica's
+│                                            own, never minting a value
+│                                            by itself.
+├── core/WorldOperationOrder.js             NEW — the deterministic
+│                                            TOTAL order: compare by
+│                                            logicalClock first,
+│                                            operationId second (already
+│                                            globally unique, so no two
+│                                            distinct operations ever
+│                                            compare equal). A scalar
+│                                            clock, not core/CausalStamp.js's
+│                                            own vector-clock machinery
+│                                            (0.2.18) — this question
+│                                            only ever needs "which one
+│                                            do all replicas agree comes
+│                                            first," never "happened
+│                                            before vs. concurrent."
+├── core/WorldOperationEnvelope.js          EXTENDED — one new, OPTIONAL
+│                                            field, `logicalClock`. A
+│                                            pre-0.2.97 envelope with
+│                                            none degrades to 0, the
+│                                            same graceful-degrade-on-
+│                                            read discipline 0.2.34/0.2.95
+│                                            already established.
+├── replication/WorldOperationOrdering.js   NEW — the OperationOrdering
+│                                            stage: owns ONE LogicalClock
+│                                            per replica PROCESS,
+│                                            answering exactly two
+│                                            questions — stampLocal()
+│                                            for an outgoing operation,
+│                                            observeRemote() for an
+│                                            incoming one.
+├── replication/WorldConflictResolver.js    NEW — the ConflictResolver
+│                                            stage: one canonical,
+│                                            totally-ordered, per-World
+│                                            operation log. Reconciling
+│                                            an out-of-order operation
+│                                            REBASES — undo the
+│                                            already-applied tail (LIFO,
+│                                            the same order
+│                                            CommandHistory's own undo()
+│                                            already uses), insert,
+│                                            apply, redo the tail in
+│                                            canonical order. Every
+│                                            Command keeps meaning
+│                                            exactly what it already
+│                                            means; execute()/undo() are
+│                                            the ONLY methods this class
+│                                            ever calls.
+├── application/commands/SetStructurePlacementTransformCommand.js
+│                                            NEW — the ABSOLUTE
+│                                            counterpart to Move/Rotate
+│                                            StructurePlacementCommand's
+│                                            own relative deltas, so a
+│                                            genuine "two concurrent
+│                                            edits target the same exact
+│                                            final value" conflict is
+│                                            expressible at all (a delta
+│                                            command always composes,
+│                                            never truly "loses").
+└── application/WorldCommandPropagationUseCase.js
+                                             MODIFIED — steps 1-5
+                                             (authentication, identity,
+                                             authorization, ReplayGuard
+                                             idempotency) are completely
+                                             UNCHANGED. Step 6 now routes
+                                             through ordering + conflict
+                                             resolution instead of a bare
+                                             command.execute(). Gains
+                                             attachCommandHistory() (see
+                                             below) and
+                                             onOperationSuperseded().
+```
+
+Conflict semantics fall out of the mechanism rather than being
+hand-coded per command type:
+
+```text
+independent edits (different targets)   → commute freely, no reordering
+same-object edits (two moves)           → both compose, in canonical order
+same-property edits (two rotations)     → identical reasoning
+same-object ABSOLUTE conflict           → the CANONICALLY LATER SET wins,
+                                            deterministically, regardless
+                                            of arrival order
+delete vs. modify                       → DELETE IS TERMINAL: a modify
+                                            canonically after a delete
+                                            fails its own precondition
+                                            (the target is gone) and is
+                                            recorded SUPERSEDED, never a
+                                            rejection — the operation WAS
+                                            accepted, it just lost the
+                                            ordering race. In EITHER
+                                            canonical order the final
+                                            result is "deleted," because
+                                            nothing in this codebase
+                                            resurrects a removed target
+                                            except its own undo.
+```
+
+The flagship (`tests/SharedWorldConflictResolution.test.js`) is built in
+five layers. Section A proves the ordering primitives in isolation.
+Section B proves `WorldConflictResolver` in isolation — independent
+edits, a same-object ABSOLUTE conflict with the SAME deterministic
+winner whichever operation arrives first, delete-is-terminal in BOTH
+canonical orders, idempotent duplicates, and a three-operation cascading
+reorder. Section C is the true flagship: a fixed set of six operations
+against a three-placement World — two independent moves, a delete, a
+modify canonically stranded behind that delete, and two competing
+absolute SETs on the same placement — replayed in 300 random arrival
+orders, EVERY SINGLE ONE converging on the byte-identical serialized
+World, with the too-late modify never once counted as applied. Section D
+runs the same guarantee over a REAL authenticated peer network — Alice's
+Laptop and Phone (an authorized device, 0.2.95's own multi-device model,
+since this milestone's authorization layer grants EDIT to one owner and
+that owner's devices, never two independent owners) editing concurrently
+and converging, including a genuine delete-vs-modify race neither side
+saw coming; a third device, the Tablet, joins in a full mesh (no
+relay exists in this protocol) and all three converge on a same-object
+conflict. Section E closes the literal gap 0.2.96 named: a real
+`WorldNavigationSession`, built with a `worldCommandPropagation`
+collaborator, broadcasts a local `moveSelection()` automatically —
+zero manual `broadcastCommand()` call anywhere in the test — and
+proves `undo()` is never broadcast.
+
+Closing the composition gap: every one of `WorldNavigationSession`'s
+several `CommandHistory`-creating call sites (placement, gesture commit,
+paste, fork, clone, historical restoration, document-metadata touch) now
+goes through one new private chokepoint,
+`_registerCommandHistory()`/`_unregisterCommandHistory()`, which —
+ONLY when a `worldCommandPropagation` collaborator was actually wired —
+calls `WorldCommandPropagationUseCase#attachCommandHistory()`, itself a
+plain subscription to `application/CommandHistory.js`'s own existing
+`COMMAND_EXECUTED` event, the SAME event every other consumer already
+uses. `application/CreateWorldViewUseCase.js` now builds a real
+`WorldCommandPropagationUseCase` whenever a full peer stack is available
+(the exact `usePeerTransport`-shaped gate every other real-transport
+collaborator in that file already uses), resolving `resolveWorldDocument`
+against the session's own `getDocument()` the moment the session exists.
+A caller that doesn't wire a peer stack (every pre-0.2.97 test, and any
+headless use) gets the exact pre-0.2.97 behavior: purely local editing,
+nothing ever broadcast.
+
+Deliberately not in 0.2.97, named rather than hidden: collaborative
+cursors, editor presence indicators, locks, a permissions UI, World View
+mutation (still unchanged since 0.2.93/0.2.95), CRDTs/OT, a
+server-side authoritative World, chat-based synchronization,
+structure-library synchronization, recursive structure collaboration,
+automatic "merge" of arbitrary geometry, and undo/redo of remote
+operations — a remote operation is still never pushed onto the
+receiver's own undo/redo stack (0.2.96, unchanged), and a LOCAL undo/redo
+is never itself broadcast (see `attachCommandHistory()`'s own header:
+only `COMMAND_EXECUTED` is ever listened to). Also deliberately left
+named rather than closed: two genuinely DIFFERENT people co-owning and
+concurrently editing the SAME World — `WorldAuthorizationService`
+(0.2.95, unmodified) still grants `EDIT` to exactly one cryptographic
+owner plus that owner's own authorized devices, never a second,
+independent identity; this milestone's own flagship therefore proves
+convergence across Alice's Laptop/Phone/Tablet, the realistic scenario
+the CURRENT authorization model actually supports, not a hypothetical
+Alice-and-Bob-both-own-it scenario the architecture doesn't yet allow. A
+genuine multi-owner/collaborator model is exactly the kind of feature
+0.2.98's own "Collaborative World Presence" question would need to
+confront, not one this milestone quietly assumed into existence.
