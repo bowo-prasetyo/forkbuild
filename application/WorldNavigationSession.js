@@ -60,6 +60,7 @@ import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from './WorldLocationDirec
 import { CameraFocusAnimator } from './CameraFocusAnimator.js';
 import { computeCompassHeading } from '../core/CompassHeading.js';
 import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
+import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -219,7 +220,23 @@ export class WorldNavigationSession {
 	    // attachCommandHistory()'s own header) is broadcast to every
 	    // authenticated peer with zero additional wiring at any of this
 	    // file's many mutation call sites.
-	    worldCommandPropagation = null
+	    worldCommandPropagation = null,
+	    // 0.2.98 — Shared World Membership & Collaborative Presence.
+	    // Both OPTIONAL, the same "enforce/offer only when the
+	    // collaborator is actually wired" posture worldAuthorizationService/
+	    // worldCommandPropagation above already follow. `worldMembershipUseCase`
+	    // (application/WorldMembershipUseCase.js) is what
+	    // grantWorldEdit()/revokeWorldEdit()/listWorldMembers() below
+	    // delegate to — a session built without one (every pre-0.2.98
+	    // caller) simply has no membership model: canEditDocument() falls
+	    // back to ownership alone, exactly the pre-0.2.98 behavior.
+	    // `worldPresenceUseCase` (application/WorldPresenceUseCase.js) is
+	    // what enterWorldPresence()/leaveWorldPresence()/
+	    // getWorldPresenceRoster() below delegate to — a session built
+	    // without one simply never advertises or observes presence at
+	    // all.
+	    worldMembershipUseCase = null,
+	    worldPresenceUseCase = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -435,6 +452,15 @@ export class WorldNavigationSession {
 	    // session has moved on from it.
 	    this._worldCommandPropagation = worldCommandPropagation;
 	    this._commandHistoryUnsubscribes = new Map();
+
+	    // 0.2.98 — see the constructor's own comment above.
+	    this._worldMembershipUseCase = worldMembershipUseCase;
+	    this._worldPresenceUseCase = worldPresenceUseCase;
+	    // Worlds this session has explicitly entered presence for — so
+	    // dispose() can broadcast an honest LEAVE for each rather than
+	    // relying solely on the eventual connection-drop pruning every
+	    // OTHER replica's own WorldPresenceUseCase already performs.
+	    this._presentWorldDocumentIds = new Set();
 
 	    this._container = null;
 	    this._session = null;
@@ -2515,7 +2541,7 @@ export class WorldNavigationSession {
             return WorldAccessLevel.EDIT;
         }
         const document = this.getDocument(documentId);
-        return this._worldAuthorizationService.resolveAccess(document);
+        return this._worldAuthorizationService.resolveAccess(document, documentId);
     }
 
     // The gate every real mutation chokepoint in
@@ -2523,18 +2549,132 @@ export class WorldNavigationSession {
     // construction — see start()/the constructor above), and safe to
     // call directly from a UI surface that wants to reflect (never
     // decide) whether an edit affordance should even be offered.
+    //
+    // 0.2.98 — now also threads `documentId` through to
+    // WorldAuthorizationService, so a NON-OWNER holding a signed World
+    // edit grant (application/WorldMembershipUseCase.js) is recognized
+    // here too, not merely by application/WorldCommandPropagationUseCase.js's
+    // own receiving side — the exact same authorization answer,
+    // consulted from both the LOCAL mutation chokepoint and the network
+    // one.
     canEditDocument(documentId) {
         if (!this._worldAuthorizationService) {
             return true;
         }
-        return this._worldAuthorizationService.canEdit(this.getDocument(documentId));
+        return this._worldAuthorizationService.canEdit(this.getDocument(documentId), documentId);
     }
 
     canReadDocument(documentId) {
         if (!this._worldAuthorizationService) {
             return true;
         }
-        return this._worldAuthorizationService.canRead(this.getDocument(documentId));
+        return this._worldAuthorizationService.canRead(this.getDocument(documentId), documentId);
+    }
+
+    // -----------------------------------------------------------------
+    // World Membership (0.2.98)
+    // -----------------------------------------------------------------
+    //
+    // "Am I this exact World's own cryptographic owner?" — the gate
+    // application/WorldMembershipUseCase.js itself already enforces
+    // before honoring grantWorldEdit()/revokeWorldEdit() below; exposed
+    // here too so a UI can decide whether to even OFFER a "manage
+    // collaborators" affordance, the identical "reflect, never decide"
+    // relationship canEditDocument() already has with
+    // SpatialEditingService's own enforcement.
+    isWorldOwner(documentId) {
+        if (!this._worldAuthorizationService) {
+            return false;
+        }
+        return this._worldAuthorizationService.isOwner(this.getDocument(documentId));
+    }
+
+    // Grants `subjectIdentityId` EDIT authority over `documentId` —
+    // throws exactly when application/WorldMembershipUseCase.js#grantEdit()
+    // itself would (not wired, not this World's owner, or a malformed
+    // subject). See that class's own header for the full security
+    // model.
+    grantWorldEdit(documentId, subjectIdentityId) {
+        if (!this._worldMembershipUseCase) {
+            throw new Error('WorldNavigationSession: no worldMembershipUseCase is wired — World membership grants are unavailable');
+        }
+        return this._worldMembershipUseCase.grantEdit(documentId, subjectIdentityId);
+    }
+
+    revokeWorldEdit(documentId, subjectIdentityId) {
+        if (!this._worldMembershipUseCase) {
+            throw new Error('WorldNavigationSession: no worldMembershipUseCase is wired — World membership grants are unavailable');
+        }
+        return this._worldMembershipUseCase.revokeEdit(documentId, subjectIdentityId);
+    }
+
+    // Every membership fact this replica currently holds for `documentId`
+    // — an empty array, never a throw, when no worldMembershipUseCase is
+    // wired (the same graceful-absence posture every other optional
+    // collaborator in this class already follows).
+    listWorldMembers(documentId) {
+        if (!this._worldMembershipUseCase) {
+            return [];
+        }
+        return this._worldMembershipUseCase.listMembers(documentId);
+    }
+
+    // -----------------------------------------------------------------
+    // World Presence (0.2.98)
+    // -----------------------------------------------------------------
+    //
+    // Declares this replica present in `documentId`. `activity` defaults
+    // to a fresh canEditDocument() read — see core/WorldPresenceActivity.js's
+    // own header on why this is only ever a self-reported UI HINT,
+    // never itself an authorization claim. A no-op when no
+    // worldPresenceUseCase is wired (every pre-0.2.98 caller, and any
+    // headless/local-only use).
+    enterWorldPresence(documentId, activity = null) {
+        if (!this._worldPresenceUseCase) {
+            return;
+        }
+        const resolvedActivity = activity || (this.canEditDocument(documentId) ? WorldPresenceActivity.EDITING : WorldPresenceActivity.EXPLORING);
+        this._worldPresenceUseCase.enterWorld(documentId, resolvedActivity);
+        this._presentWorldDocumentIds.add(documentId);
+    }
+
+    // Re-derives this replica's own advertised activity from a FRESH
+    // canEditDocument() read — the call a session makes after a World
+    // edit grant it holds changes (granted or revoked), so its own
+    // presence stays honest without waiting for a peer to notice on
+    // their own. A no-op for a World this session never entered
+    // presence for.
+    refreshWorldPresenceActivity(documentId) {
+        if (!this._worldPresenceUseCase || !this._presentWorldDocumentIds.has(documentId)) {
+            return;
+        }
+        this._worldPresenceUseCase.setActivity(documentId, this.canEditDocument(documentId) ? WorldPresenceActivity.EDITING : WorldPresenceActivity.EXPLORING);
+    }
+
+    leaveWorldPresence(documentId) {
+        if (!this._worldPresenceUseCase) {
+            return;
+        }
+        this._worldPresenceUseCase.leaveWorld(documentId);
+        this._presentWorldDocumentIds.delete(documentId);
+    }
+
+    // The roster of every OTHER participant currently present in
+    // `documentId` — see application/WorldPresenceUseCase.js#getRoster()'s
+    // own header for the exact shape. An empty array, never a throw,
+    // when no worldPresenceUseCase is wired.
+    getWorldPresenceRoster(documentId) {
+        if (!this._worldPresenceUseCase) {
+            return [];
+        }
+        return this._worldPresenceUseCase.getRoster(documentId);
+    }
+
+    onWorldPresenceChanged(documentId, callback) {
+        if (!this._worldPresenceUseCase) {
+            return () => {};
+        }
+        return this._worldPresenceUseCase.onPresenceChanged(documentId, callback);
     }
 
     // 0.2.93 — resolves a StructurePlacement's referenced documentId to
@@ -4006,6 +4146,17 @@ export class WorldNavigationSession {
 	}
 	
     dispose() {
+        // 0.2.98 — an honest LEAVE for every World presence was entered
+        // for, rather than relying solely on the eventual connection-
+        // drop pruning every OTHER replica's own WorldPresenceUseCase
+        // performs — see application/WorldPresenceUseCase.js's own
+        // header.
+        if (this._worldPresenceUseCase) {
+            for (const documentId of this._presentWorldDocumentIds) {
+                this._worldPresenceUseCase.leaveWorld(documentId);
+            }
+        }
+        this._presentWorldDocumentIds.clear();
         if (this._avatarProfileSubscription) {
             this._avatarProfileSubscription();
             this._avatarProfileSubscription = null;

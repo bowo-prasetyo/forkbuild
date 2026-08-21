@@ -11,6 +11,10 @@ import {
     getDeviceAuthorizationGrantSigningDescriptor,
     getDeviceAuthorizationRevocationSigningDescriptor
 } from '../core/DeviceAuthorizationEnvelope.js';
+import {
+    getWorldEditAuthorizationGrantSigningDescriptor,
+    getWorldEditAuthorizationRevocationSigningDescriptor
+} from '../core/WorldEditAuthorizationEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -382,6 +386,64 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getDeviceAuthorizationRevocationSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.2.98 — like verifyDeviceAuthorizationGrant() above, a World edit
+    // authorization grant is NEVER tolerated unsigned: see core/
+    // WorldEditAuthorizationEnvelope.js's own header on why only the
+    // GRANTING identity's own key can ever produce a meaningful one. The
+    // signer MUST equal the record's own `grantingIdentityId` — a grant
+    // is pointless unless the identity it claims grants EDIT is provably
+    // the one that signed it. This is STRUCTURAL verification only —
+    // whether `grantingIdentityId` is actually THIS World's owner is a
+    // separate question application/WorldMembershipUseCase.js answers by
+    // consulting the World document itself, never here (this class has
+    // no notion of "a World" at all).
+    verifyWorldEditAuthorizationGrant(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no world edit authorization grant' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a world edit authorization grant must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.grantingIdentityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the granting identity' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getWorldEditAuthorizationGrantSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.2.98 — the same REQUIRED-signature discipline, withdrawing a
+    // grant already made above: the signer MUST equal the record's own
+    // `grantingIdentityId`, the same granting-identity-only asymmetry.
+    verifyWorldEditAuthorizationRevocation(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no world edit authorization revocation' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a world edit authorization revocation must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.grantingIdentityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the granting identity' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getWorldEditAuthorizationRevocationSigningDescriptor(record), record.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).
