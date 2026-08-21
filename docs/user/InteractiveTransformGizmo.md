@@ -1,10 +1,13 @@
-=== FILE: ./docs/user/InteractiveTransformGizmo.md ===
 # Interactive Transform Gizmo
 
 *New in 0.1.46.* Whenever bricks are selected — in the Editor or in the
 World View — a gizmo appears at the selection's pivot. Dragging its
 handles moves or rotates the selection with a live preview; releasing
-commits the change as **one undo step**.
+commits the change as **one undo step**. Selecting a single
+[structure instance](02-TheEditor.md#structures-placing-and-editing-instances)
+in the Editor shows the exact same gizmo, with one difference: the green
+Y-axis handle is inert. A placement's elevation always follows the terrain
+underneath it — it's never a handle you drag or a value you type.
 
 ## The gizmo
 

@@ -27,6 +27,24 @@ Right under your camera's coordinates you'll also find two buttons,
 **Explore Here** and **What's Here?** — see [Finding worlds](#finding-worlds)
 below.
 
+The ground itself is generated the same way for everyone from a shared seed
+— grass, beach, rock, forest and farmland, lakes and winding rivers all
+follow the terrain's own elevation and moisture, not a random placement.
+It's scenery: nothing about it is editable, and it looks identical no matter
+who's looking at it or when.
+
+## Orientation and Locations
+
+Next to your camera coordinates, a small **compass** shows which way you're
+facing (it's read-only — it never moves the camera). Two buttons sit beside
+it:
+
+- **Home** resets the camera to the default view.
+- **Locations** opens a list of every place this session currently knows
+  about — **Home**, plus every structure — each with one **Focus** button.
+  Like Search and Explore Here/What's Here?, this only ever moves the
+  camera; it never loads, selects, or edits anything.
+
 ## Camera vs. Editing
 
 The header shows two things that can genuinely differ:
@@ -113,7 +131,7 @@ When a placement's info panel tells you other documents share its exact
 position, click **View** to open **Documents Here** — a plain list of
 everyone at that spot, each with its own **Focus** button.
 
-## Inspecting a brick
+## Inspecting a brick — or a placed structure
 
 Click any brick to open the **Inspection** panel, which tells you:
 
@@ -124,6 +142,16 @@ Click any brick to open the **Inspection** panel, which tells you:
 
 Use **Focus Brick** to zoom right in, or **Focus World** to jump to that
 creation's home position.
+
+Click a **placed structure** (an instance of a whole document, dropped into
+a creation from the Editor — see
+[The Editor](02-TheEditor.md#structures-placing-and-editing-instances)) and
+the same panel shows what it references instead: its source document's
+title, local and world position, rotation, ground elevation, and the
+containing world's title and author. This is read-only in World View —
+there's no gizmo, no numeric field, nothing to drag. Click **Open Source**
+to jump into the Editor and edit the referenced document's bricks directly;
+every instance of it, wherever it's placed, reflects that edit.
 
 ## Document Information and Placement
 
@@ -151,6 +179,14 @@ see a warning listing who's there before you're asked to confirm — sharing a
 location is allowed (a courtyard scene and the building around it can
 legitimately sit in the same place), ForkBuild just makes sure you see it
 first.
+
+### Placements you don't own
+
+If a placement belongs to someone else, the Placement panel shows
+**🔒 Placed by &lt;name&gt; — you can view this placement but not move it**
+and the **Move** button is disabled. You can still **Focus** it, inspect it,
+and — subject to the usual fork-on-edit rule — edit the document sitting at
+that placement; only *where it sits in shared space* is theirs to move.
 
 ## Building in World View
 
