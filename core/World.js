@@ -1,6 +1,7 @@
 import { Building } from './Building.js';
 import { Group } from './Group.js';
 import { StructurePlacement } from './StructurePlacement.js';
+import { WorldLandmark } from './WorldLandmark.js';
 import { DomainEvent } from './events/Event.js';
 import { createId } from './createId.js';
 
@@ -16,6 +17,7 @@ export class World {
         this._buildings = new Map();
         this._groups = new Map();
         this._placements = new Map();
+        this._landmarks = new Map();
         this._metadata = metadata;
         this._eventBus = eventBus;
     }
@@ -233,13 +235,62 @@ export class World {
         return Array.from(this._placements.values());
     }
 
+    // -----------------------------------------------------------------
+    // Landmarks (0.3.7) — named, persistent points worth remembering.
+    // A WorldLandmark is SEMANTIC: a human-meaningful label attached to
+    // a position. Multiple landmarks can coexist; they do not partition
+    // space or conflict. Deleting a landmark does NOT delete any nearby
+    // structures, placements, or other content — curation organizes
+    // content; it does not own content. See core/WorldLandmark.js.
+    // -----------------------------------------------------------------
+
+    addLandmark(landmark) {
+        this._landmarks.set(landmark.id, landmark);
+        this._publish(DomainEvent.LANDMARK_ADDED, { landmark });
+    }
+
+    removeLandmark(id) {
+        const landmark = this._landmarks.get(id);
+        if (!landmark) {
+            return;
+        }
+        this._landmarks.delete(id);
+        this._publish(DomainEvent.LANDMARK_REMOVED, { landmark });
+    }
+
+    getLandmark(id) {
+        return this._landmarks.get(id) || null;
+    }
+
+    getLandmarks() {
+        return Array.from(this._landmarks.values());
+    }
+
+    updateLandmark(id, changes) {
+        const landmark = this._landmarks.get(id);
+        if (!landmark) {
+            return;
+        }
+        if (changes.title !== undefined) {
+            landmark._title = changes.title;
+        }
+        if (changes.description !== undefined) {
+            landmark._description = changes.description;
+        }
+        if (changes.position !== undefined) {
+            landmark._position = changes.position;
+        }
+        this._publish(DomainEvent.LANDMARK_UPDATED, { landmark });
+    }
+
     toJSON() {
         return {
             id: this._id,
             metadata: this._metadata,
             buildings: this.getBuildings().map((building) => building.toJSON()),
             groups: this.getGroups().map((group) => group.toJSON()),
-            placements: this.getStructurePlacements().map((placement) => placement.toJSON())
+            placements: this.getStructurePlacements().map((placement) => placement.toJSON()),
+            landmarks: this.getLandmarks().map((landmark) => landmark.toJSON())
         };
     }
 
@@ -255,6 +306,10 @@ export class World {
         // Worlds serialized before 0.2.90 have no placements field.
         for (const placementJson of json.placements || []) {
             world.addStructurePlacement(StructurePlacement.fromJSON(placementJson));
+        }
+        // Worlds serialized before 0.3.7 have no landmarks field.
+        for (const landmarkJson of json.landmarks || []) {
+            world.addLandmark(WorldLandmark.fromJSON(landmarkJson));
         }
         return world;
     }
