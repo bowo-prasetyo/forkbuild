@@ -36,9 +36,8 @@ who's looking at it or when.
 ## Orientation and Locations
 
 Next to your camera coordinates, a small **compass** shows which way you're
-facing (it's read-only — it never moves the camera). The compass now includes
-contextual markers for nearby structures and terrain features. Two buttons sit
-beside it:
+facing (it's read-only — it never moves the camera). Two buttons sit beside
+it:
 
 - **Home** resets the camera to the default view.
 - **Locations** opens a list of every place this session currently knows
@@ -46,10 +45,11 @@ beside it:
   Like Search and Explore Here/What's Here?, this only ever moves the
   camera; it never loads, selects, or edits anything.
 
-As you move through the world, you'll see contextual descriptions like
-"**Forest · near House**" or "**Grassland · 120m from Origin**" derived from
-your position, the terrain ecology, and nearby structures. This information
-is computed on-the-fly from the world seed — nothing is stored.
+The compass shows cardinal directions (N, E, S, W) and your current heading
+in degrees. As you move through the world, the terrain around you is
+generated deterministically from the world seed — grass, beach, rock, forest
+and farmland, lakes and winding rivers all follow the terrain's own elevation
+and moisture.
 
 ## Camera vs. Editing
 
