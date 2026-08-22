@@ -7147,3 +7147,55 @@ than collapsing it into shared icons on one list: World / Structures /
 Landmarks are three separate, clearly labeled sections, and only the
 Landmarks section ever offers Add/Edit/Remove — Structures and World
 stay exactly as read-only here as 0.2.94 first made them.
+
+### Curation Organizes Content; It Does Not Own Content (0.3.8)
+
+`core/WorldCurationContext.js` groups a World's existing landmarks,
+structures, and collaborators into `PlaceContext`s by spatial proximity
+alone — a landmark acts as the "nucleus" a nearby `StructurePlacement`
+or collaborator gets grouped under, purely because `derivePlaceContexts()`
+found it within a fixed radius on this particular call. No group
+membership is ever stored: there is no `PlaceContext` id in `World#toJSON()`,
+no "which area a structure belongs to" field anywhere a `StructurePlacement`
+or `WorldLandmark` carries. Deleting the landmark a group formed around
+does not delete the structures that happened to be near it; moving a
+structure across a distance boundary does not require updating any
+membership list, because there never was one to update — the next
+`derivePlaceContexts()` call simply groups differently. This is the same
+"derived, never stored" discipline 0.3.6 established for exploration and
+0.3.7 deliberately carved an exception out of for landmarks themselves —
+curation takes that landmark content and one further ORGANIZES it,
+without becoming a second place that content can be edited from.
+`WorldNavigationSession#getPlaceContexts()`/`focusPlace()` are thin reads
+over this derivation, exactly the "takes session state, calls back into
+existing collections, never a second source of truth" shape 0.3.6 and
+0.3.7 both already used.
+
+### Exploration Guides Attention, Never Ownership or Mutation (0.3.9)
+
+`core/WorldWelcomeContext.js` composes everything the spatial-content
+ladder up to 0.3.8 already produces — a World's terrain/ecology,
+structures, landmarks, derived `PlaceContext`s, and live collaborator
+presence — into a single arrival-time reading: "I just entered this
+World; what should I look at, and why." A `WorldWelcomeContext` and its
+`WorldExplorationSuggestion`s are, like `WorldSpatialContext` (0.3.6) and
+`PlaceContext` (0.3.8) before them, DERIVED and EPHEMERAL — recomputed
+fresh from `deriveWorldWelcomeContext()` on every call, never persisted,
+never part of `World#toJSON()`. No `World.welcomeMessage`, `visitCount`,
+`lastVisited`, or `recommendedLocation` field exists or ever should:
+those would make the World remember something ABOUT a viewer's visit,
+which is a different concept entirely from describing what the World
+already contains. Choosing a suggested destination is exactly
+`focusLocation()`/`focusPlace()`; following an active collaborator is
+exactly `focusCollaborator()` — 0.3.9 introduces no third way to move
+the camera, and per 0.3.2's own "Camera Navigation Is Never Avatar
+Movement" boundary, never teleports the avatar either. This milestone is
+also where product language deliberately steps in front of architectural
+language: a newcomer sees "Places," "Landmarks," "Buildings," "People,"
+never `StructurePlacement`, `WorldSpatialPresence`, or
+`WorldCurationContext` — the architecture underneath is exactly as
+described above, just never the vocabulary shown. And, as important as
+what this milestone composes, is what it deliberately excludes: no
+quests, objectives, XP, achievements, rewards, NPC guides, or scripted
+missions. Suggestions point at content collaborators already created —
+they never tell a newcomer what they are supposed to do.

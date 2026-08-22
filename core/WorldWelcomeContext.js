@@ -230,33 +230,26 @@ export function deriveWorldWelcomeContext({
         throw new Error('deriveWorldWelcomeContext requires a world');
     }
     
-    // Find nearby landmarks
+    // Find nearby landmarks. With no position given, include all of
+    // them (distance unranked) rather than filtering by proximity.
     const nearbyLandmarks = [];
     for (const landmark of landmarks) {
-        if (position) {
-            const distance = distanceXZ(position, landmark.position);
-            if (distance !== null && distance <= WELCOME_CONTEXT_RADIUS) {
-                nearbyLandmarks.push({
-                    id: landmark.id,
-                    title: landmark.title,
-                    position: landmark.position,
-                    distance: Math.round(distance * 10) / 10
-                });
-            } else if (!position) {
-                // If no position given, include all landmarks
-                nearbyLandmarks.push({
-                    id: landmark.id,
-                    title: landmark.title,
-                    position: landmark.position,
-                    distance: null
-                });
-            }
-        } else {
+        if (!position) {
             nearbyLandmarks.push({
                 id: landmark.id,
                 title: landmark.title,
                 position: landmark.position,
                 distance: null
+            });
+            continue;
+        }
+        const distance = distanceXZ(position, landmark.position);
+        if (distance !== null && distance <= WELCOME_CONTEXT_RADIUS) {
+            nearbyLandmarks.push({
+                id: landmark.id,
+                title: landmark.title,
+                position: landmark.position,
+                distance: Math.round(distance * 10) / 10
             });
         }
     }

@@ -462,7 +462,7 @@ console.log('Section D — FLAGSHIP: Full arrival and exploration scenario');
 // ---------------------------------------------------------------------
 // Section E — Exploration suggestions prioritize correctly
 // ---------------------------------------------------------------------
-console.log('Section E — Exploration suggestion prioritization
+console.log('Section E — Exploration suggestion prioritization');
 
 {
     const world = new World({ id: 'test-world' });

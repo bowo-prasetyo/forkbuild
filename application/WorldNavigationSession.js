@@ -73,6 +73,7 @@ import { deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
 import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
 import { deriveWorldSpatialAnchor } from '../core/WorldSpatialAnchor.js';
 import { derivePlaceContexts, findNearestLandmark, describeLocation } from '../core/WorldCurationContext.js';
+import { deriveWorldWelcomeContext } from '../core/WorldWelcomeContext.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -2087,13 +2088,55 @@ export class WorldNavigationSession {
         return this._worldLocationDirectory.list();
     }
 
+    // Every OTHER collaborator currently spatially present across every
+    // World this session has entered (`_presentSpatialWorldDocumentIds`),
+    // flattened to one row per identity: `{ identityId, label, position,
+    // activity, activityTarget }`. The shared collaborator source both
+    // getPlaceContexts() (0.3.8) and getWelcomeContext() (0.3.9) derive
+    // from — the roster itself stays grouped by identity with one entry
+    // per DEVICE (see WorldSpatialPresenceUseCase#getSpatialRoster()'s
+    // own header), so this picks each identity's first device that
+    // currently reports a position and skips identities with none.
+    // `resolveDisplayName`, if given, is the same optional
+    // `(identityId) => string` callers already thread through
+    // enterWorldSpatialPresence() for spatial marker rendering — absent,
+    // falls back to the same short truncated identityId
+    // _applySpatialPresenceRoster() uses. Never throws; an empty array
+    // when no World has been spatially entered yet.
+    _getPresentCollaborators(resolveDisplayName) {
+        const collaborators = [];
+        const seen = new Set();
+        for (const documentId of this._presentSpatialWorldDocumentIds) {
+            const roster = this.getWorldSpatialPresenceRoster(documentId);
+            for (const group of roster) {
+                if (seen.has(group.identityId)) {
+                    continue;
+                }
+                const device = group.devices.find((candidate) => candidate.position);
+                if (!device) {
+                    continue;
+                }
+                seen.add(group.identityId);
+                collaborators.push({
+                    identityId: group.identityId,
+                    label: typeof resolveDisplayName === 'function' ? resolveDisplayName(group.identityId) : this._shortIdentityLabel(group.identityId),
+                    position: device.position,
+                    activity: device.activity,
+                    activityTarget: this._resolveSpatialContextualLabel(device.selection)
+                });
+            }
+        }
+        return collaborators;
+    }
+
     // 0.3.8 — Collaborative World Curation. Returns derived place
     // contexts based on spatial proximity to landmarks. Each context
     // includes the landmark, nearby structures, nearby landmarks, and
     // nearby collaborators. Purely derived — never persisted, never
     // authoritative. See core/WorldCurationContext.js for the grouping
-    // logic and radius constants.
-    getPlaceContexts() {
+    // logic and radius constants. `resolveDisplayName` is optional — see
+    // _getPresentCollaborators() above.
+    getPlaceContexts(resolveDisplayName) {
         const landmarks = [];
         const structurePlacements = [];
         const structureTitles = new Map();
@@ -2109,12 +2152,7 @@ export class WorldNavigationSession {
             }
         }
 
-        const collaborators = this.getSpatialCollaborators().map((c) => ({
-            identityId: c.identityId,
-            label: c.label,
-            position: c.position,
-            activity: c.activity
-        }));
+        const collaborators = this._getPresentCollaborators(resolveDisplayName);
 
         return derivePlaceContexts({
             landmarks,
@@ -2182,6 +2220,54 @@ export class WorldNavigationSession {
             target: { x, y, z }
         });
         return true;
+    }
+
+    // 0.3.9 — World Welcome & Guided Exploration. Derives a
+    // WorldWelcomeContext for the active document's World: the same
+    // landmark/structure collection getPlaceContexts() above gathers,
+    // the live spatial presence roster (_getPresentCollaborators()), and
+    // the avatar's own position (falling back to the camera's, for a
+    // viewer with no avatar movement controller wired). Purely derived —
+    // never persisted, never mutates the World, introduces no new
+    // storage. See core/WorldWelcomeContext.js for the derivation itself
+    // and docs/Principles.md, "Exploration Guides Attention, Never
+    // Ownership or Mutation (0.3.9)." `resolveDisplayName` is optional —
+    // see _getPresentCollaborators() above. Returns null when there is
+    // no active document to welcome the viewer into.
+    getWelcomeContext(resolveDisplayName) {
+        const activeDocumentId = this.getActiveDocumentId();
+        const activeDocument = activeDocumentId ? this.getDocument(activeDocumentId) : null;
+        if (!activeDocument) {
+            return null;
+        }
+
+        const landmarks = [];
+        const structurePlacements = [];
+        const structureTitles = new Map();
+        for (const document of this.getLoadedDocuments()) {
+            const world = document.world;
+            for (const landmark of world.getWorldLandmarks()) {
+                landmarks.push(landmark);
+            }
+            for (const placement of world.getStructurePlacements()) {
+                structurePlacements.push(placement);
+                structureTitles.set(placement.documentId, this.getSavedDocumentTitle(placement.documentId));
+            }
+        }
+
+        const collaborators = this._getPresentCollaborators(resolveDisplayName);
+        const position = this.getAvatarPosition() || this.getCameraPosition();
+        const placeContexts = derivePlaceContexts({ landmarks, structurePlacements, structureTitles, collaborators });
+
+        return deriveWorldWelcomeContext({
+            world: activeDocument.world,
+            position,
+            landmarks,
+            structurePlacements,
+            structureTitles,
+            collaborators,
+            placeContexts
+        });
     }
 
     // 0.2.94 — the Locations-panel counterpart to focusDocument()/
