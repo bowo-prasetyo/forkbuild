@@ -1732,6 +1732,19 @@ export default {
     },
     template: `
         <div class="world-view">
+            <!-- 0.2.94/0.3.6 — Navigation HUD: camera coordinates
+                 and compass as a floating overlay on the main
+                 viewport, positioned at top-right below Logout button.
+                 Transparent background ensures the World scenery
+                 remains dominant. -->
+            <div v-if="cameraPosition" class="world-view-nav-hud">
+                <p class="world-view-nav-hud-coords">
+                    {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
+                </p>
+                <div class="world-view-nav-hud-compass">
+                    <CompassIndicator :heading="compassHeading" />
+                </div>
+            </div>
             <div class="world-view-overlay">
                 <h2>{{ title }}</h2>
                 <p
@@ -1776,16 +1789,9 @@ export default {
                      viewport for better visibility while keeping the
                      view uncluttered. Transparent background ensures
                      the World scenery remains dominant. -->
-                <div v-if="cameraPosition" class="world-view-nav-hud">
-                    <p class="world-view-nav-hud-coords">
-                        {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
-                    </p>
-                    <div class="world-view-nav-hud-compass">
-                        <CompassIndicator :heading="compassHeading" />
-                    </div>
-                </div>
-                <!-- Home and Locations buttons moved below for better organization -->
-                <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation" style="margin-top: 0.5rem;">
+            </div>
+            <!-- Home and Locations buttons moved below for better organization -->
+            <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation" style="margin-top: 0.5rem;">
                     <button class="action-btn" @click="goHome">Home</button>
                     <button class="action-btn" @click="openLocationsPanel">Locations</button>
                 </div>
