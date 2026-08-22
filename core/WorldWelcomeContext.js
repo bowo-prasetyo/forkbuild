@@ -191,6 +191,7 @@ export class WorldWelcomeContext {
                 identityId: c.identityId,
                 label: c.label,
                 activity: c.activity,
+                deviceId: c.deviceId,
                 distance: c.distance
             })),
             suggestedDestinations: this._suggestedDestinations.map(s => s.toJSON()),
@@ -301,6 +302,11 @@ export function deriveWorldWelcomeContext({
                     label: collab.label,
                     activity: collab.activity,
                     position: collab.position,
+                    // Carried through, unfiltered, so a "Follow" action
+                    // built from a suggestion/row can call
+                    // focusCollaborator(deviceId) directly — see
+                    // application/WorldNavigationSession.js#_getPresentCollaborators().
+                    deviceId: collab.deviceId,
                     distance: Math.round(distance * 10) / 10
                 });
             }
@@ -310,6 +316,7 @@ export function deriveWorldWelcomeContext({
                 label: collab.label,
                 activity: collab.activity,
                 position: collab.position,
+                deviceId: collab.deviceId,
                 distance: null
             });
         }

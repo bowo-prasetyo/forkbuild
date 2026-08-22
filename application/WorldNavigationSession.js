@@ -2122,7 +2122,12 @@ export class WorldNavigationSession {
                     label: typeof resolveDisplayName === 'function' ? resolveDisplayName(group.identityId) : this._shortIdentityLabel(group.identityId),
                     position: device.position,
                     activity: device.activity,
-                    activityTarget: this._resolveSpatialContextualLabel(device.selection)
+                    activityTarget: this._resolveSpatialContextualLabel(device.selection),
+                    // Carried through so a "Follow" affordance built on
+                    // top of this row (see core/WorldWelcomeContext.js's
+                    // nearby-collaborator shape) can call
+                    // focusCollaborator(deviceId) directly.
+                    deviceId: device.deviceId
                 });
             }
         }
