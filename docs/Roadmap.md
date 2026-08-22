@@ -7335,8 +7335,171 @@ WORLD SPATIAL AWARENESS
 
 The 0.2.x series was largely about making the World itself structurally
 complete and synchronizable; 0.3.0 and 0.3.1 made a collaborator's
-presence in it visible and legible. What comes next — the experience of
-multiple humans actually BUILDING the same deterministic world together,
-beyond seeing where one another are looking and what that means —
-remains open and unscheduled, a deliberate stopping point rather than an
-arbitrary version bump.
+presence in it visible and legible. What comes next is not another
+collaboration protocol — it is 0.3.2: the experience of INHABITING the
+world this whole ladder has been built to hold.
+
+## 0.3.2 — Avatar & Camera Experience
+
+Three deliberately separate pieces, each with its own single conceptual
+question, none folded into the others:
+
+```text
+0.3.2   Avatar & Camera Experience
+             ├── Fix: Avatar Control Mode no longer silently resets
+             ├── Camera Perspective — First Person / Third Person / Bird's-Eye
+             └── Step-Up Movement — the avatar can climb a low brick
+```
+
+### Why this milestone, now
+
+The 0.2.x series made the World structurally complete; 0.3.0/0.3.1 made
+a collaborator's presence in it visible. But a player's own relationship
+with their avatar had accumulated one real UX bug (a checkbox that
+silently unchecked itself), and the camera had only ever had one mode
+(free orbit) since 0.1.x, while the avatar had only ever been able to
+walk on a perfectly flat plane since 0.2.36 — any brick, however short,
+was a full wall. As the World becomes spatially richer (terrain since
+0.2.76, structures throughout the 0.2.x series, other participants
+since 0.3.0), those three gaps stop being small: they are what stands
+between "a spatially rich shared World exists" and "a person actually
+feels like they are IN it." This milestone closes exactly those three
+gaps, no more.
+
+### Fix: Avatar Control Mode no longer silently resets
+
+`ui/views/WorldView.js#onWindowBlur()` used to release held movement
+keys by calling `session.setAvatarControlMode(false)` — which, as a
+side effect, silently unchecked "Control My Avatar" itself. A user who
+alt-tabbed, or had a DevTools breakpoint fire, would come back to WASD
+simply not working, with no indication why. The fix is
+`WorldNavigationSession#releaseAvatarMovementKeys()`: it releases the
+keys (exactly what the mode-disabling call already did as a side
+effect) without ever touching `_avatarControlModeActive`. No new
+persistence machinery was invented — the fix is the removal of an
+unintended reset, exactly the shape docs/Principles.md's new entry
+describes. See "User-Controlled Avatar Mode Is Persistent Local
+Interaction State, Not A Transient Gesture (0.3.2)" and
+`tests/AvatarControlPersistence.test.js`.
+
+### Camera Perspective
+
+`core/CameraPerspective.js` introduces three named perspectives — First
+Person, Third Person, Bird's-Eye — each a pure, deterministic function
+of an avatar's position and facing, producing the same `{ position,
+target }` framing shape every camera-focus caller in this codebase
+already exchanges. Deliberately three, not a general free-form camera
+rig: each answers a distinct, useful question (walking/social presence;
+seeing your own character while building; understanding a whole
+settlement or observing collaborative activity from above).
+
+No new camera-movement mechanism was built to support this. A
+perspective's framing reaches the screen through the exact same
+`SpatialCameraController#applyFraming()` write path
+`_beginCameraFocus()`/`focusLocation()`/`focusCollaborator()` already
+share — a perspective simply changes WHAT framing those existing call
+sites compute, never HOW a framing gets applied. Following your own
+avatar and following a collaborator both automatically honor whatever
+perspective is currently selected; both continue to work exactly as
+before when no perspective is selected (`null` — "Free," the ordinary
+orbit camera this codebase has always had). A perspective is purely
+local UI/navigation state: never persisted, never signed, never
+broadcast to any collaborator — Alice's choice of Bird's-Eye tells Bob
+nothing and changes nothing about what he sees. See
+docs/Principles.md's two new entries on this and
+`tests/CameraPerspective.test.js`.
+
+### Step-Up Movement
+
+Since 0.2.36, the avatar has walked a perfectly flat plane at `Y=0`;
+since 0.2.42, ANY brick sitting on that plane — even a single thin
+`plate_2x4`, 0.25 units tall — has been a full, impassable wall, because
+building collision never distinguished "a wall" from "a curb." 0.3.2
+introduces the smallest useful concept that fixes this without becoming
+a physics engine: a brick whose own top face is within
+`DEFAULT_MAX_STEP_HEIGHT` (0.6 world units — roughly one low brick) of
+the avatar's current support height is a STEP, not a WALL. Building
+collision excludes it from the obstacle list entirely; a new,
+application-layer `AvatarStepConstraint` then snaps the avatar's `Y`
+onto its top face once the horizontal step is taken. A brick taller
+than that limit is unaffected — still a genuine wall, exactly as before.
+
+The one piece of core kinematics that changed:
+`core/AvatarMovementSimulation.js`'s formerly hardcoded `GROUND_Y=0`
+constant became an injectable `groundHeight` parameter, still just a
+plain number with no idea what a brick is, defaulting to exactly `0` —
+byte-for-byte the same behavior as before this milestone for every
+caller that never mentions it. Deliberately NOT generalized to real
+terrain elevation this milestone — see docs/Principles.md, "Step-Up
+Movement Builds On The Flat Walking Plane; It Does Not Replace It
+(0.3.2)" for why that would be a much larger, separate change. No
+momentum, no climbing animation, no rigid-body engine, no gravity beyond
+what jumping already had. See `tests/AvatarStepUpMovement.test.js`.
+
+### Deliberately staged, not attempted here
+
+Named rather than hidden, and deliberately left for a later milestone:
+
+- **Sloped/stepped brick geometry.** Every brick primitive today is
+  still a plain box (`core/BrickDefinition.js` — width/height/depth
+  only); `core/BrickWalkability.js#walkableTopAt()` is written as the
+  seam a future non-box primitive would specialize, not a claim that
+  one exists yet.
+- **Stair traversal as its own concept**, and **general terrain-
+  following** (the avatar walking up and down real hills rather than a
+  flat plane with brick steps on it).
+- **Falling off a ledge under gravity.** A too-large step DOWN is
+  blocked, symmetric with a too-large step up — this milestone
+  deliberately does not distinguish "can't climb up" from "can't
+  survive falling off," matching the exact same restraint 0.2.77 already
+  applied to steep terrain.
+- **Smooth perspective transitions**, **remote avatar climbing
+  animation**, and **sharing a camera perspective as spatial
+  presence** — all named, none started.
+
+A future milestone (Walkable Structures) can pick up sloped/stepped
+geometry and stair traversal directly on top of `core/BrickWalkability.js`'s
+own seam; a further one (World Navigation) can pick up smoother
+perspective transitions and terrain-following once real usage shows
+either is actually needed — see the "one conceptual question per
+milestone" discipline this file has followed since 0.2.x.
+
+```text
+0.3.0   Collaborative Spatial Presence                   ✓
+             │
+             ▼
+0.3.1   Collaborative Spatial Awareness                  ✓
+             │
+             ▼
+0.3.2   Avatar & Camera Experience                       ✓
+             ├── Fix: Avatar Control Mode no longer silently resets
+             ├── Camera Perspective — a local offset, not a new camera system
+             └── Step-Up Movement — a deterministic height constraint, never physics
+```
+
+> **0.3.0 — Where are they?**
+> **0.3.1 — What does their presence mean?**
+> **0.3.2 — How do I inhabit this world?**
+
+The architectural rule this milestone leaves standing, restated the way
+every milestone since 0.2.95 has restated its own:
+
+```text
+Camera
+  ↓
+"What do I see?"     — local perception, never shared, never persisted
+Avatar
+  ↓
+"What am I doing?"   — local agency, constrained by collision/terrain/step
+Commands
+  ↓
+"What changed in the shared World?"
+World
+  ↓
+"What is true for everyone?"
+```
+
+Multiple humans actually BUILDING the same deterministic world
+together, and moving through what they build (stairs, slopes, real
+terrain-following), remain the next open questions — unscheduled, not
+forgotten.

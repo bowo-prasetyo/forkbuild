@@ -33,6 +33,8 @@ import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSumma
 import { AvatarMovementController } from './AvatarMovementController.js';
 import { AvatarMovementConstraint } from './AvatarMovementConstraint.js';
 import { AvatarTerrainConstraint } from './AvatarTerrainConstraint.js';
+import { AvatarStepConstraint } from './AvatarStepConstraint.js';
+import { DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
 import { PresenceSyncService } from './PresenceSyncService.js';
 import { LocalPresenceStore } from './LocalPresenceStore.js';
 import { PresenceTrustBoundary } from './PresenceTrustBoundary.js';
@@ -59,6 +61,7 @@ import { signAvatarInteractionAdvertisement } from './AvatarInteractionSigning.j
 import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from './WorldLocationDirectory.js';
 import { CameraFocusAnimator } from './CameraFocusAnimator.js';
 import { computeCompassHeading } from '../core/CompassHeading.js';
+import { CameraPerspective, isValidCameraPerspective, computeCameraFraming } from '../core/CameraPerspective.js';
 import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
@@ -343,6 +346,14 @@ export class WorldNavigationSession {
 	    this._avatarControlModeActive = false;
 	    this._followAvatarEnabled = false;
 	    this._lastAvatarFollowPosition = null;
+	    // 0.3.2 — Camera Perspective. `null` means "off" — the free/orbit
+	    // camera this session has always had, completely unchanged. Purely
+	    // LOCAL UI/navigation state, exactly like `_followAvatarEnabled`
+	    // above: never persisted, never signed, never broadcast to any
+	    // collaborator — see docs/Principles.md, "Camera Perspective Is
+	    // Local Perception, Never Shared Reality (0.3.2)." See
+	    // setCameraPerspective() below.
+	    this._cameraPerspective = null;
 	    // 0.2.37 — Decentralized Avatar Presence Synchronization.
 	    // `presenceBroadcastProvider` and `avatarTemplateRegistry` are
 	    // both OPTIONAL, same posture as everything else avatar-related
@@ -875,7 +886,8 @@ export class WorldNavigationSession {
         this._avatarMovementController = new AvatarMovementController(
             this._avatarPresenceSession,
             this._buildAvatarMovementConstraint(),
-            this._buildAvatarTerrainConstraint()
+            this._buildAvatarTerrainConstraint(),
+            this._buildAvatarStepConstraint()
         );
         this._lastAvatarFollowPosition = this._avatarPresenceSession.current.position;
         if (typeof this._session.onAnimationFrame === 'function') {
@@ -948,7 +960,16 @@ export class WorldNavigationSession {
         return new AvatarMovementConstraint({
             loadedDocuments: this._loadedDocuments,
             getWorldPosition: (documentId) => this._getWorldPosition(documentId),
-            brickRegistry: this._registry
+            brickRegistry: this._registry,
+            // 0.3.2 — the SAME DEFAULT_MAX_STEP_HEIGHT
+            // _buildAvatarStepConstraint() below builds its own
+            // constraint with: a single shared constant, so a brick
+            // this class excludes from horizontal collision as
+            // "climbable" and the brick AvatarStepConstraint actually
+            // climbs are always talking about the exact same height
+            // threshold, never two constants that could quietly drift
+            // apart.
+            maxStepHeight: DEFAULT_MAX_STEP_HEIGHT
         });
     }
 
@@ -967,6 +988,25 @@ export class WorldNavigationSession {
     // _buildAvatarMovementConstraint() already established.
     _buildAvatarTerrainConstraint() {
         return new AvatarTerrainConstraint();
+    }
+
+    // 0.3.2 — builds the LOCAL avatar's Step-Up Movement constraint,
+    // from exactly the same already-owned state
+    // _buildAvatarMovementConstraint() above reads (`_loadedDocuments`,
+    // `_getWorldPosition`, `_registry`) — collision and step-up are
+    // both entirely DERIVED from the same streamed-in geometry, never
+    // a second, separately-tracked obstacle set. Always built,
+    // unconditionally, same posture as both constraints above: an
+    // empty `_loadedDocuments` simply means no brick ever offers a
+    // step, and terrain alone (a pure function of seed/x/z) decides
+    // support height — the exact same graceful-absence behavior as if
+    // this constraint were never wired at all.
+    _buildAvatarStepConstraint() {
+        return new AvatarStepConstraint({
+            loadedDocuments: this._loadedDocuments,
+            getWorldPosition: (documentId) => this._getWorldPosition(documentId),
+            brickRegistry: this._registry
+        });
     }
 
     // -----------------------------------------------------------------
@@ -1404,6 +1444,21 @@ export class WorldNavigationSession {
     _followAvatarIfEnabled(presence) {
         const previous = this._lastAvatarFollowPosition;
         this._lastAvatarFollowPosition = presence.position;
+        // 0.3.2 — a selected Camera Perspective takes over camera
+        // placement on every presence update, superseding the plain
+        // delta-preserving follow below: a perspective's whole point is
+        // a FIXED offset relative to the avatar (eye height, behind-
+        // and-above, straight overhead), never "whatever offset the
+        // user happened to leave the orbit camera at." See
+        // core/CameraPerspective.js and docs/Principles.md, "Camera
+        // Perspective Determines An Offset; It Never Replaces The
+        // Camera Machinery (0.3.2)." Runs regardless of
+        // `_followAvatarEnabled` — selecting a perspective IS a
+        // stronger, always-on form of following your own avatar.
+        if (this._cameraPerspective && this._spatialCameraController) {
+            this._applyCameraPerspectiveFraming(presence.position, presence.rotation ? presence.rotation.y : null);
+            return;
+        }
         if (!this._followAvatarEnabled || !this._spatialCameraController || !previous) {
             return;
         }
@@ -1416,6 +1471,20 @@ export class WorldNavigationSession {
             return;
         }
         this._spatialCameraController.moveCamera(delta);
+    }
+
+    // Applies `perspective`'s deterministic offset around `position`/
+    // `headingDegrees` directly (never through _beginCameraFocus()'s
+    // glide-once animator — that machinery is for a discrete, one-shot
+    // user action like clicking a Locations-panel entry; a perspective
+    // re-frames every single presence update, so applying it instantly
+    // each tick already IS continuous, smooth tracking, exactly like
+    // moveCamera() above already is for plain Follow Avatar).
+    _applyCameraPerspectiveFraming(position, headingDegrees) {
+        const framing = computeCameraFraming(this._cameraPerspective, position, headingDegrees);
+        if (framing) {
+            this._spatialCameraController.applyFraming(framing);
+        }
     }
 
     // Whether Avatar Control Mode currently captures W/A/S/D/Shift/
@@ -1434,6 +1503,24 @@ export class WorldNavigationSession {
     setAvatarControlMode(active) {
         this._avatarControlModeActive = Boolean(active);
         if (!this._avatarControlModeActive && this._avatarMovementController) {
+            this._avatarMovementController.releaseAll();
+        }
+    }
+
+    // 0.3.2 — Avatar Control Mode is persistent LOCAL INTERACTION STATE,
+    // never a transient gesture: once the user explicitly turns it on
+    // it stays on until they explicitly turn it off again — see
+    // docs/Principles.md, "User-Controlled Avatar Mode Is Persistent
+    // Local Interaction State (0.3.2)." This method exists precisely so
+    // a caller with a legitimate reason to release held keys (a window
+    // blur swallowing a keyup — see ui/views/WorldView.js's own
+    // onWindowBlur) never has to reach for setAvatarControlMode(false)
+    // to do it: that would silently uncheck the mode itself, which is a
+    // hidden state transition the user never asked for. Releasing keys
+    // and disabling the mode are two different things — this is the
+    // one that only ever does the first.
+    releaseAvatarMovementKeys() {
+        if (this._avatarMovementController) {
             this._avatarMovementController.releaseAll();
         }
     }
@@ -1486,6 +1573,45 @@ export class WorldNavigationSession {
             // exclusive. See followAvatarId() below.
             this._stopFollowingRemoteAvatarInternal();
         }
+    }
+
+    // 0.3.2 — the CURRENT Camera Perspective, or `null` while the
+    // camera is free/orbit (every pre-0.3.2 World View behavior,
+    // completely unchanged). Purely local UI/navigation state — see
+    // this._cameraPerspective's own constructor comment.
+    getCameraPerspective() {
+        return this._cameraPerspective;
+    }
+
+    // Sets the active Camera Perspective (one of core/CameraPerspective.js's
+    // CameraPerspective values), or clears it back to the free/orbit
+    // camera with `null`. Rejects anything else (returns false,
+    // changes nothing) rather than silently accepting an unrecognized
+    // value — the same "degrade gracefully, never corrupt state" rule
+    // every other setter in this file already follows.
+    //
+    // Turning a perspective ON immediately re-frames toward the local
+    // avatar's CURRENT position/facing, right now — never waits for
+    // the next movement tick, so choosing "Bird's-Eye" while standing
+    // still still actually moves the camera. Turning a perspective OFF
+    // (`null`) deliberately does NOT snap the camera anywhere: the
+    // free/orbit camera simply resumes from wherever the perspective
+    // last left it, the same "removing an unintended reset is the fix,
+    // never inventing a second one" discipline this milestone's own
+    // avatar-control-mode fix applies. Never touches `_followAvatarEnabled`
+    // — the two are independent, but only one can ever actually be
+    // steering the camera at once (see _followAvatarIfEnabled: a set
+    // perspective always wins).
+    setCameraPerspective(perspective) {
+        if (perspective !== null && !isValidCameraPerspective(perspective)) {
+            return false;
+        }
+        this._cameraPerspective = perspective;
+        if (perspective && this._avatarPresenceSession) {
+            const presence = this._avatarPresenceSession.current;
+            this._applyCameraPerspectiveFraming(presence.position, presence.rotation ? presence.rotation.y : null);
+        }
+        return true;
     }
 
     // 0.2.39 — the camera-follows-a-REMOTE-avatar counterpart to
@@ -3064,7 +3190,27 @@ export class WorldNavigationSession {
                 const device = group.devices.find((candidate) => candidate.deviceId === deviceId);
                 if (device && device.position) {
                     const groundY = terrainHeightAt(DEFAULT_WORLD_SEED, device.position.x, device.position.z);
-                    this._beginCameraFocus({
+                    // 0.3.2 — a selected Camera Perspective decides
+                    // Follow's offset too, exactly as
+                    // docs/Principles.md, "Camera Perspective
+                    // Determines An Offset; It Never Replaces The
+                    // Camera Machinery (0.3.2)" describes: Bob in
+                    // third-person shows him ahead of the camera; the
+                    // same Follow in first-person approaches through
+                    // his own eyes instead. Still the exact same
+                    // _beginCameraFocus() glide-once call either way —
+                    // only the FRAMING handed to it differs. Falls
+                    // back to the original fixed LOCATION_FOCUS_OFFSET
+                    // box exactly as before whenever no perspective is
+                    // selected.
+                    const framing = this._cameraPerspective
+                        ? computeCameraFraming(
+                            this._cameraPerspective,
+                            { x: device.position.x, y: groundY, z: device.position.z },
+                            device.heading
+                        )
+                        : null;
+                    this._beginCameraFocus(framing || {
                         position: {
                             x: device.position.x + LOCATION_FOCUS_OFFSET.x,
                             y: groundY + LOCATION_FOCUS_OFFSET.y,
@@ -4593,6 +4739,7 @@ export class WorldNavigationSession {
         this._avatarControlModeActive = false;
         this._followAvatarEnabled = false;
         this._lastAvatarFollowPosition = null;
+        this._cameraPerspective = null;
         this._lastPresenceUpdateAt = 0;
         this._avatarInteraction = AvatarInteractionState.empty();
         this._followedRemoteAvatarId = null;

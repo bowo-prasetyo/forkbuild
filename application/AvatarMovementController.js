@@ -45,13 +45,28 @@ import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 // candidate step is too steep to climb. Same reasoning that keeps
 // `movementConstraint` optional applies here — a controller built
 // without one behaves exactly as it did before this milestone.
+//
+// 0.3.2 — `stepConstraint` (optional, same posture again) sits LAST,
+// after `terrainConstraint` — see application/AvatarStepConstraint.js's
+// own header for the full pipeline reasoning. It also changes ONE
+// thing earlier in this method: with a stepConstraint wired, this
+// class reads the avatar's CURRENT support height (stepConstraint.
+// supportHeightAt()) before simulating at all, and feeds it to both
+// simulateAvatarMovement() (as `groundHeight`, so gravity/landing
+// resolve against whatever surface the avatar already stands on, not
+// an absolute Y=0 plane) and movementConstraint.apply() (as
+// `supportHeight`, so a climbable low brick never blocks horizontal
+// passage in the first place — see AvatarMovementConstraint's own
+// 0.3.2 comment). A controller built without a stepConstraint computes
+// none of this and behaves exactly as it did before this milestone.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
-    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null) {
+    constructor(avatarPresenceSession, movementConstraint = null, terrainConstraint = null, stepConstraint = null) {
         this._avatarPresenceSession = avatarPresenceSession;
         this._movementConstraint = movementConstraint;
         this._terrainConstraint = terrainConstraint;
+        this._stepConstraint = stepConstraint;
         this._keys = { forward: false, backward: false, left: false, right: false, running: false, jumpHeld: false };
         this._verticalVelocity = 0;
         this._grounded = true;
@@ -64,6 +79,8 @@ export class AvatarMovementController {
         // posture as `_collided` above, for the terrain-slope
         // equivalent.
         this._blockedBySlope = false;
+        // 0.3.2 — same posture again, for the step-height equivalent.
+        this._blockedByStepHeight = false;
     }
 
     // Returns true when `key` is one this controller understands (so
@@ -111,13 +128,25 @@ export class AvatarMovementController {
         const currentRotationY = current.rotation.y || 0;
         const currentPosition = { x: current.position.x, y: current.position.y, z: current.position.z };
 
+        // 0.3.2 — read BEFORE simulating: "what surface is the avatar
+        // CURRENTLY standing on," so simulateAvatarMovement()'s own
+        // gravity/landing resolve against it rather than an absolute
+        // Y=0 plane. `undefined` when no stepConstraint is wired —
+        // simulateAvatarMovement() defaults `groundHeight` to its own
+        // original flat-plane constant in that case, so behavior is
+        // unchanged from before this milestone.
+        const currentSupportHeight = this._stepConstraint
+            ? this._stepConstraint.supportHeightAt(currentPosition.x, currentPosition.z)
+            : undefined;
+
         const result = simulateAvatarMovement({
             position: currentPosition,
             rotationY: currentRotationY,
             verticalVelocity: this._verticalVelocity,
             grounded: this._grounded,
             movementState,
-            deltaSeconds
+            deltaSeconds,
+            groundHeight: currentSupportHeight
         });
         this._verticalVelocity = result.verticalVelocity;
         this._grounded = result.grounded;
@@ -129,7 +158,9 @@ export class AvatarMovementController {
         let finalPosition = result.position;
         this._collided = false;
         if (this._movementConstraint) {
-            const constrained = this._movementConstraint.apply(currentPosition, result.position);
+            const constrained = this._movementConstraint.apply(currentPosition, result.position, {
+                supportHeight: currentSupportHeight
+            });
             finalPosition = constrained.position;
             this._collided = constrained.collided;
         }
@@ -143,6 +174,21 @@ export class AvatarMovementController {
             const terrainResult = this._terrainConstraint.apply(currentPosition, finalPosition);
             finalPosition = terrainResult.position;
             this._blockedBySlope = terrainResult.blocked;
+        }
+
+        // 0.3.2 — applied LAST: decides the avatar's final Y (snapped
+        // onto whatever surface — terrain or a brick's own top — the
+        // resolved X/Z actually landed on) and whether stepping onto/
+        // off that surface is within reach at all. See
+        // application/AvatarStepConstraint.js's own header for why
+        // this runs after both collision and slope.
+        this._blockedByStepHeight = false;
+        if (this._stepConstraint) {
+            const stepResult = this._stepConstraint.apply(currentPosition, finalPosition, {
+                grounded: result.grounded
+            });
+            finalPosition = stepResult.position;
+            this._blockedByStepHeight = stepResult.blocked;
         }
 
         const positionChanged = !samePosition(finalPosition, current.position);
@@ -176,6 +222,16 @@ export class AvatarMovementController {
     // internal logic reads.
     isBlockedBySlope() {
         return this._blockedBySlope;
+    }
+
+    // 0.3.2 — whether the MOST RECENT tick's desired movement was
+    // altered because the candidate step's height change exceeded what
+    // Step-Up Movement allows. Same posture as isCollided()/
+    // isBlockedBySlope() above: transient, recomputed fresh every
+    // tick, never persisted, never part of AvatarPresence. A debug/UI
+    // surface, not something any other internal logic reads.
+    isBlockedByStepHeight() {
+        return this._blockedByStepHeight;
     }
 
     // 0.2.44 — whether the player is CURRENTLY holding any directional

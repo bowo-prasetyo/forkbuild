@@ -45,11 +45,22 @@ export class AvatarMovementConstraint {
     // core/AvatarMovementSimulation.js); 12 leaves ample margin
     // without forcing every frame to walk every brick of every
     // streamed-in building, however far away.
-    constructor({ loadedDocuments, getWorldPosition, brickRegistry, queryRadius = DEFAULT_QUERY_RADIUS } = {}) {
+    //
+    // 0.3.2 — `maxStepHeight` (default 0, meaning "off," the exact
+    // pre-0.3.2 behavior) is the ONLY thing that changes here for Step-
+    // Up Movement: see apply()'s own header for why a climbable brick
+    // is excluded from the obstacle list entirely, rather than this
+    // class growing any opinion about WHAT to do once it's excluded —
+    // that decision (accept the step, snap Y up onto the brick's top)
+    // belongs entirely to application/AvatarStepConstraint.js, applied
+    // afterward in application/AvatarMovementController.js's own
+    // pipeline.
+    constructor({ loadedDocuments, getWorldPosition, brickRegistry, queryRadius = DEFAULT_QUERY_RADIUS, maxStepHeight = 0 } = {}) {
         this._loadedDocuments = loadedDocuments;
         this._getWorldPosition = getWorldPosition;
         this._brickRegistry = brickRegistry;
         this._queryRadius = queryRadius;
+        this._maxStepHeight = maxStepHeight;
     }
 
     // `position` — the avatar's position BEFORE this tick's movement.
@@ -59,8 +70,23 @@ export class AvatarMovementConstraint {
     // ground/gravity stays entirely the simulation's own concern (see
     // core/AvatarCollision.js's own header) — only X/Z are ever
     // constrained here.
-    apply(position, desiredPosition) {
-        const obstacles = this._collectObstacles(position);
+    //
+    // 0.3.2 — `supportHeight` (optional, the avatar's OWN current
+    // support height — see application/AvatarStepConstraint.js#
+    // supportHeightAt()) is what makes Step-Up Movement possible at
+    // all: a brick whose OWN top face sits within `maxStepHeight` of
+    // `supportHeight` is excluded from the obstacle list below, so
+    // horizontal resolution treats it as though it were never there —
+    // the avatar simply walks onto its footprint, exactly like walking
+    // onto bare ground. Whether that step is then actually TAKEN (and
+    // Y snapped onto the brick's own top) is decided afterward, by
+    // AvatarStepConstraint — this class only ever decides what
+    // BLOCKS horizontal passage, never what the resulting Y should be.
+    // Omitting `supportHeight` (every caller before 0.3.2, and any
+    // caller built with the default `maxStepHeight: 0`) excludes
+    // nothing at all — identical behavior to every pre-0.3.2 release.
+    apply(position, desiredPosition, { supportHeight } = {}) {
+        const obstacles = this._collectObstacles(position, supportHeight);
         if (obstacles.length === 0) {
             return { position: desiredPosition, collided: false };
         }
@@ -76,11 +102,12 @@ export class AvatarMovementConstraint {
         };
     }
 
-    _collectObstacles(position) {
+    _collectObstacles(position, supportHeight) {
         const obstacles = [];
         if (!this._loadedDocuments || !this._getWorldPosition) {
             return obstacles;
         }
+        const canStep = this._maxStepHeight > 0 && Number.isFinite(supportHeight);
         for (const [documentId, document] of this._loadedDocuments) {
             const worldPosition = this._getWorldPosition(documentId);
             if (!worldPosition) continue;
@@ -101,6 +128,21 @@ export class AvatarMovementConstraint {
                     if (!definition) continue;
                     const worldAabb = translateAabb(brickAabb(brick.position, definition), worldPosition);
                     if (flatAabbDistance(worldAabb, position) > this._queryRadius) continue;
+                    // 0.3.2 — a LOW brick (its own top within
+                    // maxStepHeight of the avatar's current support
+                    // height) is a step, not a wall: it never enters
+                    // the obstacle list at all, so resolveHorizontalMovement()
+                    // lets the avatar walk straight onto its footprint.
+                    // A brick sitting BELOW the avatar's own support
+                    // height by more than maxStepHeight (e.g. one it's
+                    // already standing beside, chest-high) is NOT
+                    // excluded by this check alone — it must also not
+                    // be a ceiling above the avatar's reach; the plain
+                    // `worldAabb.max.y - supportHeight` difference
+                    // already captures both directions symmetrically,
+                    // matching core/BrickWalkability.js#isStepClimbable's
+                    // own convention.
+                    if (canStep && Math.abs(worldAabb.max.y - supportHeight) <= this._maxStepHeight) continue;
                     obstacles.push(worldAabb);
                 }
             }

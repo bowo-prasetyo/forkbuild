@@ -6782,3 +6782,125 @@ Observation, Never World Content (0.3.0)" with the same discipline
 applied to navigation: observing where someone is, and choosing to look
 there yourself, changes nothing about what they broadcast or how they
 broadcast it.
+
+### User-Controlled Avatar Mode Is Persistent Local Interaction State, Not A Transient Gesture (0.3.2)
+
+`WorldNavigationSession#isAvatarControlModeActive()` changes for exactly
+one reason: the user explicitly called `setAvatarControlMode()`. Nothing
+else — not camera movement, not a World View render tick, not remote
+presence arriving, not a selection change, not focus navigation, not
+following a collaborator, not any other interaction mode entering or
+leaving — is ever allowed to flip it. Before this milestone, a window
+losing focus (alt-tab, a DevTools breakpoint, another app stealing
+focus) silently unchecked "Control My Avatar" by calling
+`setAvatarControlMode(false)` — a real, legitimate concern (a keyup the
+browser never delivers must not leave the avatar "stuck" walking
+forever) solved the wrong way, by conflating two different actions:
+releasing held keys, and disabling the mode itself.
+
+The fix is `WorldNavigationSession#releaseAvatarMovementKeys()` — it
+calls straight through to `AvatarMovementController#releaseAll()`
+(exactly the same release `setAvatarControlMode(false)` already
+triggers as a side effect) without touching
+`_avatarControlModeActive` at all. `ui/views/WorldView.js#onWindowBlur()`
+calls this instead of `setAvatarControlMode(false)`: a held key still
+cleanly releases the instant focus is lost, but the checkbox stays
+checked, and WASD simply resumes working the moment the window regains
+focus — no re-click required. Note this is the SAME shape every other
+0.3.2 fix in this file follows: find the unintended reset and remove it,
+never invent a second persistence mechanism to paper over it.
+
+`tests/AvatarControlPersistence.test.js` is the regression: it drives a
+session through movement, a Camera Perspective change, a plain location
+focus, remote presence arriving, a render/selection-adjacent call,
+Follow-a-collaborator, and Home — twice, once starting enabled and once
+starting disabled — and asserts the mode never moves except at the two
+explicit `setAvatarControlMode()` calls that bookend each run.
+
+### Camera Perspective Determines An Offset; It Never Replaces The Camera Machinery (0.3.2)
+
+`core/CameraPerspective.js` answers exactly one question: given an
+avatar's position and facing, where should a first-person/third-person/
+bird's-eye camera sit, and what should it look at? It is a pure
+function — no Three.js, no session, no renderer — that returns a
+`{ position, target }` framing exactly like `core/PreviewCameraFraming.js`
+already does for structure previews.
+
+That framing reaches the screen through the exact same, single write
+path every camera-focus caller in this codebase already shares:
+`application/SpatialCameraController.js#applyFraming()`. A perspective
+is never a second camera controller, never a second Three.js camera,
+and never a parallel code path alongside `focusLocation()`/
+`focusCollaborator()`/`_beginCameraFocus()` — it is a NEW WAY TO COMPUTE
+THE FRAMING those existing entry points already hand to the same
+machinery. Concretely: `WorldNavigationSession#_followAvatarIfEnabled()`
+computes a perspective's framing fresh on every avatar presence update
+and calls `applyFraming()` directly (continuous per-tick application
+already reads as smooth tracking, the same way plain Follow Avatar's own
+`moveCamera()` call already does); `focusCollaborator()` computes a
+perspective's framing once, from a collaborator's last-known position,
+and hands it to the identical `_beginCameraFocus()` glide `focusLocation()`
+itself uses. No third camera-movement mechanism was introduced to make
+Camera Perspective possible.
+
+### Camera Perspective Is Local Perception, Never Shared Reality (0.3.2)
+
+`WorldNavigationSession#getCameraPerspective()`/`setCameraPerspective()`
+are purely local UI/navigation state — never persisted, never signed,
+never broadcast, and never read by any `application/*PropagationUseCase.js`
+or `WorldSpatialPresenceUseCase`. Alice choosing Bird's-Eye view tells
+Bob nothing, changes nothing about what Bob's own client renders, and
+never touches `AvatarPresence`, `AvatarProfile`, or any
+`WorldSpatialPresenceAdvertisement`. This extends "Collaborative Spatial
+Presence Is Ephemeral Observation, Never World Content (0.3.0)" one step
+further: not only is observing someone else's presence never authority
+over them, but choosing HOW to look at the world yourself is not even
+observation worth reporting. The camera is local perception; the avatar
+is local agency; the World is shared reality — and a perspective is
+purely the first of those three.
+
+### Step-Up Movement Is A Deterministic Height Constraint, Never A Physics Climb (0.3.2)
+
+`core/BrickWalkability.js#isStepClimbable()` answers one question with
+one comparison: is the height difference between two support surfaces
+within `MAX_STEP_HEIGHT`? There is no momentum, no climbing animation
+curve, no partial ascent partway up a tall obstacle, no rigid-body
+engine, and no gravity simulation beyond what
+`core/AvatarMovementSimulation.js` already had for jumping. A step within
+range is taken in full, in a single tick; a step beyond range is simply
+never taken — the avatar stops at the edge, exactly the same "rejected
+outright, never physically slid or accelerated" posture "Terrain
+Walkability Is A Movement Constraint, Never A Physics Slope (0.2.77)"
+already established for slope, restated here for a vertical rise instead
+of a rise/run ratio. `application/AvatarStepConstraint.js` is the
+application-layer collaborator that supplies the real, currently-loaded
+brick geometry this pure comparison is applied to — the same
+core/application split this codebase has used for every other movement
+constraint since 0.2.42.
+
+### Step-Up Movement Builds On The Flat Walking Plane; It Does Not Replace It (0.3.2)
+
+`core/AvatarMovementSimulation.js#simulateAvatarMovement()` has always
+walked the avatar on a flat plane at a fixed ground height (`GROUND_Y`,
+originally hardcoded to 0). 0.3.2 generalizes that single constant into
+an injectable `groundHeight` parameter — still just a plain number, with
+no idea what a brick or a document is — so a grounded avatar can snap to
+a brick's own top face instead of an absolute world origin. Every caller
+that never mentions `groundHeight` (every pre-0.3.2 call site, and every
+test that predates this milestone) defaults to exactly `0`: the
+identical flat plane this function has always assumed.
+
+Deliberately NOT generalized further, this milestone, into following
+`core/TerrainHeightField.js`'s own real, hilly elevation: doing so would
+make the avatar start climbing every gentle slope its feet currently
+walk straight through, a much larger behavior change than "step onto a
+brick" and well outside this milestone's own scope. `application/AvatarStepConstraint.js#supportHeightAt()`
+therefore answers "what brick, if any, is directly beneath this point"
+against a flat baseline, never against real terrain elevation —
+`application/AvatarTerrainConstraint.js`'s own real-terrain slope check
+remains the only place real terrain height influences movement at all,
+and it still only ever BLOCKS a step, never snaps `Y` to it. Building on
+the flat plane rather than replacing it is what keeps this milestone
+additive: every controller and constraint built without a
+`stepConstraint` wired behaves exactly as it did before this milestone,
+byte for byte.

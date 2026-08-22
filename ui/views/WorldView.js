@@ -24,6 +24,7 @@ import WorldMembersPanel from '../components/WorldMembersPanel.js';
 import WorldPresenceIndicator from '../components/WorldPresenceIndicator.js';
 import WorldCollaboratorIndicator, { buildSpatialCollaboratorRows } from '../components/WorldCollaboratorIndicator.js';
 import { buildWorldCollaborationRoster } from '../components/WorldCollaborationRoster.js';
+import { CameraPerspective } from '../../core/CameraPerspective.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -284,6 +285,13 @@ export default {
         // session below.
         const avatarControlMode = ref(true);
         const followAvatar = ref(true);
+        // 0.3.2 — Camera Perspective. Mirrors session.getCameraPerspective()
+        // exactly the same way avatarControlMode/followAvatar mirror
+        // their own session getters above: this view never decides the
+        // camera's framing itself, only reflects and toggles what the
+        // session already owns. `null` is "Free" — the ordinary orbit
+        // camera every World View has always had.
+        const cameraPerspective = ref(null);
         // 0.2.37 — a pure client rendering preference, exactly like
         // showMyAvatar, but deliberately NOT gated on hasLocalAvatar:
         // a logged-out viewer can still see other participants' avatars
@@ -1415,6 +1423,21 @@ export default {
             blurCheckbox(event);
         }
 
+        // 0.3.2 — the Camera Perspective selector. `perspective` is
+        // either one of core/CameraPerspective.js's CameraPerspective
+        // values or `null` ("Free" — clicking the already-active
+        // choice again clears it back to the ordinary orbit camera).
+        // session.setCameraPerspective() is the one place that decides
+        // what actually happens; this handler just reflects whatever
+        // it accepted (it can reject an invalid value, though the
+        // fixed set of buttons below never offers one).
+        function setCameraPerspective(perspective) {
+            const next = cameraPerspective.value === perspective ? null : perspective;
+            if (session.setCameraPerspective(next)) {
+                cameraPerspective.value = next;
+            }
+        }
+
         // 0.2.39 — "Follow" on the Avatar Info panel. Deliberately
         // separate from toggleFollowAvatar above: this follows
         // whichever REMOTE avatar is currently the interaction target,
@@ -1502,11 +1525,19 @@ export default {
         // every held key here is what stops that from leaving the
         // avatar "stuck" walking forever, exactly the scenario the
         // design doc calls out.
+        //
+        // 0.3.2 — deliberately releases keys ONLY, never the mode
+        // itself. This used to also call session.setAvatarControlMode(false)
+        // (silently unchecking "Control My Avatar"), which was exactly
+        // the kind of hidden state transition docs/Principles.md now
+        // names and forbids: the user explicitly turned control mode
+        // on, and a window losing focus is not the user explicitly
+        // turning it back off. See WorldNavigationSession.releaseAvatarMovementKeys —
+        // the checkbox stays checked, WASD simply resumes working the
+        // instant the window regains focus, with no held-over stuck
+        // key from before the blur.
         function onWindowBlur() {
-            if (avatarControlMode.value) {
-                session.setAvatarControlMode(false);
-                avatarControlMode.value = false;
-            }
+            session.releaseAvatarMovementKeys();
         }
 
         onMounted(() => {
@@ -1596,6 +1627,9 @@ export default {
             toggleShowMyAvatar,
             avatarControlMode,
             followAvatar,
+            cameraPerspective,
+            CameraPerspective,
+            setCameraPerspective,
             showOtherAvatars,
             remoteAvatarDiagnostics,
             toggleAvatarControlMode,
@@ -1857,6 +1891,47 @@ export default {
                     <p v-if="!hasLocalAvatar" class="form-hint form-hint--neutral">
                         Log in and create an avatar (My Avatar) to appear here.
                     </p>
+                    <!-- 0.3.2 — Camera Perspective: a fixed offset
+                         around the local avatar (eye height, behind-
+                         and-above, straight overhead), never a second
+                         camera-movement mechanism — see
+                         core/CameraPerspective.js. Clicking the
+                         already-active button clears back to "Free,"
+                         the ordinary orbit camera. Purely local; never
+                         shared with a collaborator. -->
+                    <div class="world-view-camera-perspective">
+                        <span class="world-view-camera-perspective-label">Camera</span>
+                        <div class="world-view-camera-perspective-buttons">
+                            <button
+                                type="button"
+                                class="action-btn"
+                                :class="{ 'action-btn--active': !cameraPerspective }"
+                                :disabled="!hasLocalAvatar"
+                                @click="setCameraPerspective(null)"
+                            >Free</button>
+                            <button
+                                type="button"
+                                class="action-btn"
+                                :class="{ 'action-btn--active': cameraPerspective === CameraPerspective.FIRST_PERSON }"
+                                :disabled="!hasLocalAvatar"
+                                @click="setCameraPerspective(CameraPerspective.FIRST_PERSON)"
+                            >First Person</button>
+                            <button
+                                type="button"
+                                class="action-btn"
+                                :class="{ 'action-btn--active': cameraPerspective === CameraPerspective.THIRD_PERSON }"
+                                :disabled="!hasLocalAvatar"
+                                @click="setCameraPerspective(CameraPerspective.THIRD_PERSON)"
+                            >Third Person</button>
+                            <button
+                                type="button"
+                                class="action-btn"
+                                :class="{ 'action-btn--active': cameraPerspective === CameraPerspective.BIRD_EYE }"
+                                :disabled="!hasLocalAvatar"
+                                @click="setCameraPerspective(CameraPerspective.BIRD_EYE)"
+                            >Bird's-Eye</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="world-view-section world-view-section--search">
