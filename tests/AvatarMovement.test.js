@@ -248,6 +248,55 @@ async function runTests() {
         assert(result.position.y >= 0, '26. y never goes below ground level');
         assert(result.position.y < 100, '27. y stays within a reasonable vertical bound even for an extreme vertical velocity');
     }
+    {
+        // 0.3.2 — `groundHeight`: omitted entirely (every pre-0.3.2
+        // caller, and every test above this one), the flat Y=0 plane
+        // is exactly what it always was.
+        const result = simulateAvatarMovement({
+            position: { x: 0, y: 0, z: 0 }, rotationY: 0, verticalVelocity: 0, grounded: true,
+            movementState: AvatarMovementState.idle(), deltaSeconds: 0.5
+        });
+        assert(result.position.y === 0, '27a. omitting groundHeight keeps the original flat Y=0 plane');
+    }
+    {
+        // A non-zero groundHeight is where a GROUNDED avatar snaps to
+        // — standing on a brick's own top face, not the absolute
+        // world origin.
+        const result = simulateAvatarMovement({
+            position: { x: 0, y: 3, z: 0 }, rotationY: 0, verticalVelocity: 0, grounded: true,
+            movementState: AvatarMovementState.idle(), deltaSeconds: 0.5, groundHeight: 3
+        });
+        assert(result.position.y === 3, '27b. a grounded avatar snaps to the given groundHeight, never back to Y=0');
+    }
+    {
+        // Falling toward a raised groundHeight lands ON it, not
+        // through it to Y=0.
+        const result = simulateAvatarMovement({
+            position: { x: 0, y: 5, z: 0 }, rotationY: 0, verticalVelocity: 0, grounded: false,
+            movementState: AvatarMovementState.idle(), deltaSeconds: 1, groundHeight: 3
+        });
+        assert(result.position.y >= 3, '27c. falling toward a raised groundHeight never overshoots past it toward Y=0');
+    }
+    {
+        // The "reasonable vertical bounds" clamp shifts WITH
+        // groundHeight — an extreme upward velocity still clamps to a
+        // bound relative to the surface the avatar stands on, not an
+        // absolute Y=8 that would sit BELOW a tall groundHeight.
+        const result = simulateAvatarMovement({
+            position: { x: 0, y: 10, z: 0 }, rotationY: 0, verticalVelocity: 1000, grounded: false,
+            movementState: AvatarMovementState.idle(), deltaSeconds: 1, groundHeight: 10
+        });
+        assert(result.position.y >= 10, '27d. the vertical clamp never pulls the avatar below its own groundHeight');
+    }
+    {
+        // NaN/non-finite groundHeight degrades to the original flat
+        // plane rather than propagating NaN through position.y.
+        const result = simulateAvatarMovement({
+            position: { x: 0, y: 0, z: 0 }, rotationY: 0, verticalVelocity: 0, grounded: true,
+            movementState: AvatarMovementState.idle(), deltaSeconds: 0.5, groundHeight: NaN
+        });
+        assert(result.position.y === 0, '27e. a non-finite groundHeight degrades gracefully to the flat Y=0 plane, never NaN');
+    }
 
     // -------------------------------------------------------------
     // Section C — application/AvatarMovementController

@@ -37,16 +37,34 @@ const GROUND_Y = 0;
 // at any sane deltaSeconds never get near this.
 const MAX_STEP_PER_TICK = 2; // world units
 const MAX_DELTA_SECONDS = 0.25; // seconds — clamps a single tick's dt
-const MAX_Y = 8; // world units — "reasonable vertical bounds"
+const MAX_Y = 8; // world units — "reasonable vertical bounds" ABOVE whatever surface the avatar stands on
 
+// 0.3.2 — `groundHeight` (world Y) is what the avatar snaps to/falls
+// toward while grounded, and the floor of its "reasonable vertical
+// bounds" clamp. Defaults to the ORIGINAL flat-plane constant, so every
+// existing caller that never passes it (this file's own pre-0.3.2
+// callers, and every test that never mentions ground height at all)
+// gets byte-for-byte the same behavior as before this milestone: a
+// single, permanently flat GROUND_Y = 0 plane. A caller that DOES pass
+// one (application/AvatarMovementController.js, once an
+// application/AvatarStepConstraint.js is wired) is supplying "the
+// support height directly beneath the avatar's CURRENT position" —
+// see that class's own header — so gravity/landing/the jump's own
+// apex all resolve relative to whatever surface (terrain or a brick
+// top) the avatar actually stands on, never an absolute world
+// constant. This file still has no idea what a brick or a document
+// is: `groundHeight` is just a number, exactly like every other
+// parameter here.
 export function simulateAvatarMovement({
     position,
     rotationY = 0,
     verticalVelocity = 0,
     grounded = true,
     movementState,
-    deltaSeconds
+    deltaSeconds,
+    groundHeight = GROUND_Y
 }) {
+    const floorY = Number.isFinite(groundHeight) ? groundHeight : GROUND_Y;
     const dt = sanitizeDeltaSeconds(deltaSeconds);
 
     // Turn first, then step along the NEW facing — an ordinary
@@ -77,23 +95,25 @@ export function simulateAvatarMovement({
 
     let y;
     if (nextGrounded) {
-        // Grounded: the avatar walks on the flat Y=0 plane. Snapping
-        // to GROUND_Y outright (rather than integrating toward it)
-        // means any drift can never accumulate while walking — see
+        // Grounded: the avatar walks on whatever flat surface
+        // `floorY` names (Y=0 by default, exactly as before 0.3.2; a
+        // brick's own top once application/AvatarStepConstraint.js is
+        // wired). Snapping outright (rather than integrating toward
+        // it) means any drift can never accumulate while walking — see
         // "no NaN/Infinity, reasonable vertical bounds" in the design
         // doc's own test list.
-        y = GROUND_Y;
+        y = floorY;
         nextVerticalVelocity = 0;
     } else {
         nextVerticalVelocity -= GRAVITY * dt;
-        y = sanitizeNumber(position.y, GROUND_Y) + nextVerticalVelocity * dt;
-        if (y <= GROUND_Y) {
-            y = GROUND_Y;
+        y = sanitizeNumber(position.y, floorY) + nextVerticalVelocity * dt;
+        if (y <= floorY) {
+            y = floorY;
             nextVerticalVelocity = 0;
             nextGrounded = true;
         }
     }
-    y = clamp(y, GROUND_Y, MAX_Y);
+    y = clamp(y, floorY, floorY + MAX_Y);
 
     const nextPosition = {
         x: sanitizeNumber(sanitizeNumber(position.x, 0) + dx, position.x),

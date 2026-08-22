@@ -9121,3 +9121,146 @@ server-mediated presence, a fourth network protocol, and true
 camera-frustum culling (matched to the renderer's actual FOV/aspect/
 near-far planes, rather than `isWithinViewCone()`'s own wide legibility
 heuristic).
+
+## 0.3.2 — Avatar & Camera Experience
+
+Three independent fixes/features, deliberately kept separate rather than
+folded into one giant change: a UX bugfix (Avatar Control Mode no longer
+silently resets), a new local camera concept (Camera Perspective), and a
+new local movement concept (Step-Up Movement). None of the three
+introduces a new network protocol, a new persisted field, or a new
+collaboration surface — every one of them is either a pure local
+UX/interaction fix or additive, optional movement/camera machinery built
+entirely on top of what 0.2.36 (Local Avatar Movement), 0.2.42 (Avatar-
+World Collision), 0.2.77 (Terrain-Aware Grounding), and 0.2.94 (World
+View Navigation) already established.
+
+### Fix: Avatar Control Mode no longer silently resets
+
+`ui/views/WorldView.js#onWindowBlur()` used to call
+`session.setAvatarControlMode(false)` to release a key the browser might
+never deliver a keyup for (alt-tab, a DevTools breakpoint) — which also,
+as a side effect, unchecked "Control My Avatar" itself. The fix is a new
+method, `WorldNavigationSession#releaseAvatarMovementKeys()`, that calls
+straight through to `AvatarMovementController#releaseAll()` WITHOUT
+touching `_avatarControlModeActive`. `onWindowBlur()` now calls that
+instead. See docs/Principles.md, "User-Controlled Avatar Mode Is
+Persistent Local Interaction State, Not A Transient Gesture (0.3.2)" and
+`tests/AvatarControlPersistence.test.js`.
+
+### `core/CameraPerspective.js` — Camera Perspective
+
+A pure enum (`FIRST_PERSON`/`THIRD_PERSON`/`BIRD_EYE`) plus one function,
+`computeCameraFraming(perspective, avatarPosition, headingDegrees)`,
+returning a `{ position, target }` framing — no Three.js, no session,
+exactly the same shape `core/PreviewCameraFraming.js` already
+established for structure previews. `headingDegrees` reuses
+`core/AvatarFacing.js`'s own yaw convention (0° faces +Z, 90° faces +X)
+so it accepts an `AvatarPresence.rotation.y` or a remote device's own
+`heading` directly, with no unit conversion anywhere.
+
+```text
+CameraPerspective
+        ↓
+computeCameraFraming(perspective, position, heading)
+        ↓
+{ position, target }
+        ↓
+SpatialCameraController#applyFraming()   <- the ONE existing write path
+        ↓
+renderer/CameraController.js
+```
+
+`WorldNavigationSession` adds `_cameraPerspective` (`null` by default —
+the ordinary free/orbit camera, completely unchanged), plus
+`getCameraPerspective()`/`setCameraPerspective()`. Two existing call
+sites now consult it instead of their own fixed offset:
+
+- `_followAvatarIfEnabled(presence)` — when a perspective is set, it
+  computes a fresh framing on every avatar presence update and calls
+  `applyFraming()` directly, superseding the plain delta-preserving
+  `moveCamera()` path (still used when no perspective is selected).
+  Setting a perspective also immediately re-frames toward the avatar's
+  CURRENT position, never waiting for the next movement tick.
+- `focusCollaborator(deviceId)` — when a perspective is set, the
+  collaborator's own `heading` (already carried on
+  `WorldSpatialPresenceAdvertisement` since 0.3.0) feeds
+  `computeCameraFraming()` instead of the fixed `LOCATION_FOCUS_OFFSET`
+  box; the framing still reaches the camera through the exact same
+  `_beginCameraFocus()` glide 0.2.94 established.
+
+Turning a perspective back off (`null`) never snaps the camera anywhere
+— the free/orbit camera simply resumes from wherever the perspective
+last left it. Never persisted, signed, or broadcast — see
+docs/Principles.md's two new 0.3.2 entries on this. `ui/views/WorldView.js`
+gains a small button group ("Free"/"First Person"/"Third Person"/
+"Bird's-Eye") in the existing Avatar panel, gated on `hasLocalAvatar`
+exactly like every other avatar toggle there. See
+`tests/CameraPerspective.test.js`.
+
+### Step-Up Movement
+
+Every brick primitive this codebase defines (`core/BrickDefinition.js`
+— width/height/depth only) is a plain flat-topped box, so "the walkable
+surface at a point" reduces to "the box's own top face, if the point
+falls inside its footprint." `core/BrickWalkability.js` provides exactly
+that: `walkableTopAt(worldAabb, x, z)` (a brick's own top face, or
+`null` outside its footprint) and `isStepClimbable(fromHeight, toHeight,
+maxStepHeight)` (a plain, symmetric height-difference check, mirroring
+`core/TerrainWalkability.js#isWalkableSlope()`'s own "rejected outright,
+never physically slid" posture). `DEFAULT_MAX_STEP_HEIGHT` is 0.6 world
+units — roughly one low brick.
+
+`application/AvatarStepConstraint.js` is the application-layer
+collaborator (same split as `AvatarMovementConstraint`/
+`AvatarTerrainConstraint`): its `supportHeightAt(x, z)` returns the
+higher of a flat baseline (0 — the walking plane every pre-0.3.2 avatar
+already stood on, deliberately NOT real terrain elevation, see
+docs/Principles.md) and any currently-loaded brick's own top face
+covering that point — the topmost surface wins, so standing on a stack
+reports the stack's own top, never the ground beneath it.
+
+Three pieces changed to let a step actually happen, each backward
+compatible when its new parameter is omitted:
+
+```text
+AvatarMovementController#tick()
+   │
+   ├─ 1. read currentSupportHeight = stepConstraint.supportHeightAt(current x/z)
+   │
+   ├─ 2. simulateAvatarMovement({ ..., groundHeight: currentSupportHeight })
+   │        core/AvatarMovementSimulation.js's own former hardcoded
+   │        GROUND_Y is now an injectable parameter (default 0 — unchanged)
+   │
+   ├─ 3. movementConstraint.apply(current, desired, { supportHeight })
+   │        AvatarMovementConstraint excludes a brick from the
+   │        obstacle list entirely when its own top is within
+   │        maxStepHeight of supportHeight — a climbable brick is a
+   │        step, never a wall
+   │
+   ├─ 4. terrainConstraint.apply(current, resolved)      — unchanged
+   │
+   └─ 5. stepConstraint.apply(current, resolved, { grounded })
+            snaps Y onto the resolved X/Z's own actual support height;
+            blocks the step outright (reverts X/Z) if the height
+            change exceeds maxStepHeight; passes straight through,
+            untouched, while airborne (a jump can still land on a
+            brick from above)
+```
+
+`WorldNavigationSession#_buildAvatarStepConstraint()` wires this from
+the exact same already-owned state `_buildAvatarMovementConstraint()`
+reads (`_loadedDocuments`, `_getWorldPosition`, `_registry`) — no second,
+separately-tracked obstacle set — and both constraints share the one
+`DEFAULT_MAX_STEP_HEIGHT` constant, so "a brick collision excludes as
+climbable" and "a brick the step constraint actually climbs" can never
+quietly disagree. A controller/constraint built without a
+`stepConstraint`/`maxStepHeight` wired at all behaves exactly as it did
+before this milestone. See `tests/AvatarStepUpMovement.test.js`.
+
+Deliberately not in 0.3.2, named rather than hidden: sloped or stepped
+brick geometry (every primitive is still a box), stair traversal as a
+distinct concept, falling off a ledge under gravity (a too-large step
+DOWN is blocked, symmetric with a too-large step up, never a fall), and
+any rigid-body/physics engine. These remain named, unscheduled future
+work — see docs/Roadmap.md.
