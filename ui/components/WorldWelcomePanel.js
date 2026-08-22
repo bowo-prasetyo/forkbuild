@@ -1,3 +1,5 @@
+import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
+
 // 0.3.9 — World Welcome & Guided Exploration.
 //
 // The presentation layer for core/WorldWelcomeContext.js: a newcomer's
@@ -59,22 +61,7 @@ export default {
     emits: ['explore', 'dismiss'],
     computed: {
         lastVisitedLabel() {
-            if (!this.returning || typeof this.lastVisitedAt !== 'number') {
-                return null;
-            }
-            const elapsedMs = Date.now() - this.lastVisitedAt;
-            if (elapsedMs < 0) {
-                return null;
-            }
-            const dayMs = 24 * 60 * 60 * 1000;
-            const elapsedDays = Math.floor(elapsedMs / dayMs);
-            if (elapsedDays <= 0) {
-                return 'today';
-            }
-            if (elapsedDays === 1) {
-                return 'yesterday';
-            }
-            return `${elapsedDays} days ago`;
+            return this.returning ? formatRelativeVisit(this.lastVisitedAt) : null;
         },
         suggestions() {
             if (!this.context || !Array.isArray(this.context.suggestedDestinations)) {
