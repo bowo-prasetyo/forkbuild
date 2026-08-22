@@ -7503,3 +7503,498 @@ Multiple humans actually BUILDING the same deterministic world
 together, and moving through what they build (stairs, slopes, real
 terrain-following), remain the next open questions — unscheduled, not
 forgotten.
+
+## 0.3.3 — Walkable Structures
+
+0.3.2 established the first, smallest instance of a much bigger
+question — "how does the avatar understand the surfaces the building
+system creates?" — and deliberately answered only the flat-box case:
+
+```text
+flat ground
+    +
+low box top
+    ↓
+step-up movement
+```
+
+But `core:stair`, `core:slope_45`, and every other primitive this
+codebase's own brick vocabulary already defines (`docs/StructureLibrary.md`)
+visually imply far richer traversal than a flat top face. Before this
+milestone, the building system understood a stair as "a stepped block
+for changes in elevation" while avatar movement understood it as "a
+1x1x1 box" — the same brick, two contradictory answers depending on
+which system you asked:
+
+```text
+Building system
+    ↓
+"This is a stair."
+
+Avatar movement
+    ↓
+"This is a box."
+```
+
+0.3.3 closes that gap with one new abstraction, `core/WalkableSurface.js`,
+and two flagship shapes built on it: stairs (climbed tread by tread)
+and 45° slopes (a continuous ramp). It deliberately stays a
+GENERALIZATION of 0.3.2's own seam — `core/BrickWalkability.js#walkableTopAt()`,
+named at the time as exactly the specialization point a future
+milestone would need — never a rewrite of it.
+
+```text
+0.3.3   Walkable Structures
+             ├── core/WalkableSurface.js — the surface abstraction itself
+             ├── Stairs — the flagship: climbed tread by tread, deterministically
+             └── Slopes — a continuous ramp, never discretized into fake steps
+```
+
+### Why this milestone, now
+
+0.3.2 made the avatar's own control and camera feel right, and let it
+step onto a single low brick. But every OTHER shape the brick
+vocabulary already offers — a stair, a slope, a slab, a plate — still
+behaved identically to an ordinary box the moment an avatar tried to
+walk on one: either a flat top at the brick's own overall height, or
+(for anything taller than `DEFAULT_MAX_STEP_HEIGHT`) a solid,
+un-enterable wall. A structure built FROM these primitives — a house
+with a staircase to an upper floor, a bridge, a tower with a stair to
+its own roof — could be built, seen, and edited, but never actually
+inhabited the way it visually promised. This milestone is what makes a
+`StructurePlacement` genuinely walkable, not merely visible:
+
+```text
+outside
+   ↓
+door
+   ↓
+floor
+   ↓
+stairs
+   ↓
+upper floor
+```
+
+without inventing any new concept of "building interior" — the avatar
+simply walks on real surfaces, the same way it already walks on the
+ground.
+
+### `core/WalkableSurface.js` — the surface abstraction
+
+The central architectural distinction this file exists to protect,
+restated as its own principle in docs/Principles.md:
+
+> **Collision asks "what occupies this space?"**
+> **Walkability asks "where may an avatar stand and move?"**
+
+`core/SpatialBounds.js` and `core/AvatarCollision.js` keep answering the
+first question, entirely unchanged — building/placement collision stays
+exactly the conservative AABB overlap test it always was. Reusing that
+same AABB for the second question is exactly the trap this milestone
+avoids: a slope's AABB is a plain box; nothing about a box can answer
+"what is the actual support height at this specific (x, z)?" the way a
+real ramp needs to.
+
+```text
+Brick geometry
+       │
+       ├── core/SpatialBounds.js / core/AvatarCollision.js
+       │       ↓
+       │   placement collision — unchanged
+       │
+       └── core/WalkableSurface.js
+               ↓
+          avatar traversal — new
+```
+
+`resolveWalkableSurfaceAt(brickGeometry, x, z)` returns a minimal
+`WalkableSurface` — `{ height, normal, kind }`, `kind` one of
+`WalkableSurfaceKind.FLAT` / `SLOPE` / `STEP` — or `null` outside the
+brick's own footprint, the identical "no surface here, never a surface
+at height zero" convention `walkableTopAt()` already established. FLAT
+delegates straight back to that exact function — an ordinary box's own
+walkable height is unchanged, byte for byte, from 0.3.2. Only two
+primitives get a directional profile, via a small, explicit
+`definitionId -> shapeKind` lookup (`walkableSurfaceKindFor()`) —
+deliberately NOT a new field on `core/BrickDefinition.js` itself, which
+would be a schema/serialization change touching every existing document
+for a concept only two primitives need so far.
+
+### Stairs — the flagship
+
+`core:stair` ascends along its own LOCAL +X axis in
+`DEFAULT_STAIR_STEP_COUNT` (4) discrete treads — the exact same profile
+`renderer/ThreeBrickFactory.js#stairMeshFactory()` already extrudes into
+a mesh, now hoisted into one shared constant both files read, so the
+treads a player SEES and the treads an avatar actually CLIMBS can never
+quietly disagree on how many there are. The movement system never
+learns the brick is "specifically a stair":
+
+```text
+candidate movement
+       ↓
+WalkableSurface
+       ↓
+support height
+       ↓
+AvatarStepConstraint (unchanged since 0.3.2)
+```
+
+`application/AvatarStepConstraint.js#supportHeightAt()` already took the
+max walkable height across every loaded brick at a point; it now reads
+that per-point height from `resolveWalkableSurfaceAt()` instead of
+`walkableTopAt()` directly, so a stair's own tread height at (x, z)
+naturally flows through the exact same pipeline 0.3.2 built. Each
+individual riser (0.25 world units, well under
+`DEFAULT_MAX_STEP_HEIGHT`) is climbed exactly like 0.3.2's own low-brick
+step — one deterministic height constraint per tick, no momentum, no
+climbing animation, no partial ascent.
+
+The one genuinely new wiring problem stairs (and slopes) raise:
+`application/AvatarMovementConstraint.js` used to decide whether a brick
+blocks horizontal passage at all by comparing its own OVERALL peak
+height (`worldAabb.max.y`) against the avatar's current support height
+— correct for a flat box, wrong for a stair, whose front tread and back
+tread are nowhere near the same height. A stair's own peak (1.0) is far
+past `DEFAULT_MAX_STEP_HEIGHT` (0.6), so that single scalar comparison
+would have made the ENTIRE staircase an impassable wall, blocking the
+avatar before it ever reached the first, perfectly climbable step. The
+fix: a directional shape (STEP or SLOPE) is now excluded from horizontal
+collision UNCONDITIONALLY once stepping is enabled — exactly like a low
+flat brick already was — and `AvatarStepConstraint`'s own per-tick
+height-DELTA check becomes the only gate deciding whether any specific
+approach is actually climbable. Walking straight at a stair's own tall
+back face (skipping every lower tread) is still genuinely blocked —
+the single-tick height jump from bare ground to the top tread exceeds
+`maxStepHeight` exactly like 0.3.2's own too-tall-cube case — it is
+simply blocked by the step check now, never by a brick-wide wall check.
+
+### Slopes
+
+`core:slope_45` ramps continuously from 0 to its own full height across
+its footprint — rise/run = 1, a genuine 45°, read from the brick's own
+actual width/height rather than hardcoded, so a future differently-
+proportioned slope gets a correct ramp for free. The design doc's own
+instruction was explicit: NOT a sequence of tiny simulated steps.
+`resolveWalkableSurfaceAt()` instead provides the deterministic support
+height directly:
+
+```text
+candidate X/Z
+     ↓
+walkable surface query
+     ↓
+support Y
+     ↓
+movement accepted
+```
+
+so a slope costs the movement pipeline nothing beyond what a stair
+already does — the same `supportHeightAt()`/`isStepClimbable()` pair,
+applied to a continuous function instead of a discretized one. A
+`WalkableSurface`'s own `normal` is computed properly for a slope (a
+real, tilted unit vector) and carried on the result, but nothing in
+this milestone's movement pipeline reads it — no slope-dependent walk
+speed, exactly as scoped below.
+
+### Deliberately staged, not attempted here
+
+Named rather than hidden, matching the exact restraint 0.3.2 applied to
+this very milestone:
+
+- **Falling off a ledge under gravity.** Walking off the top of a stair
+  or a slope with nothing beyond it remains a blocked step DOWN,
+  symmetric with a blocked step up — never a fall. Once a `WalkableSurface`
+  genuinely stops existing beneath the avatar's feet mid-stride, that is
+  a substantially different movement model (fall velocity, landing,
+  collision during descent, edge detection) — its own future milestone.
+- **Jumping, crouching, ladders, arbitrary/wall/hand-over-hand climbing.**
+  This milestone is named Walkable Structures, deliberately not "Avatar
+  Climbing" — what it actually establishes is a deterministic
+  support-surface model, not a climbing mechanic.
+- **Dynamic physics, moving platforms, animated stairs, remote avatar
+  physics, network interpolation of avatars.**
+- **Slope-dependent movement speed**, despite `WalkableSurface` now
+  carrying a real `normal` — deliberately unread by anything this
+  milestone touches.
+- **Collision against arbitrary mesh geometry** — every walkable profile
+  here is still a closed-form function over a brick's own
+  width/height/depth, never a general triangle-mesh raycast.
+- **Terrain/brick surface convergence.** `TerrainWalkability` (real
+  hills) and `WalkableSurface` (bricks) remain deliberately separate
+  authorities, exactly as 0.2.77 and 0.3.2 left them — they could
+  converge conceptually into one shared "support surface" abstraction
+  later, but not before there is a concrete requirement forcing it.
+
+```text
+0.3.0   Collaborative Spatial Presence                   ✓
+             │
+             ▼
+0.3.1   Collaborative Spatial Awareness                  ✓
+             │
+             ▼
+0.3.2   Avatar & Camera Experience                       ✓
+             │
+             ▼
+0.3.3   Walkable Structures                               ✓
+             ├── core/WalkableSurface.js — walkability generalized beyond a flat top face
+             ├── Stairs — climbed tread by tread, deterministically
+             └── Slopes — a continuous ramp, never discretized
+```
+
+> **0.3.0 — Where are they?**
+> **0.3.1 — What does their presence mean?**
+> **0.3.2 — How do I inhabit this world?**
+> **0.3.3 — Where can I stand and walk?**
+
+The architectural rule this milestone leaves standing:
+
+```text
+Collision
+  ↓
+"What occupies this space?"     — core/SpatialBounds.js, core/AvatarCollision.js
+Walkability
+  ↓
+"Where may an avatar stand?"    — core/WalkableSurface.js
+Commands
+  ↓
+"What changed in the shared World?"
+World
+  ↓
+"What is true for everyone?"
+```
+
+Vertical navigation (falling, jumping, landing) and multiple humans
+actually building the same deterministic world together remain the next
+open questions — unscheduled, not forgotten.
+
+## 0.3.4 — Vertical World Navigation
+
+0.3.3 built the shared geometric truth — `core/WalkableSurface.js` — that
+answers "where may an avatar stand?" for flat ground, a brick's own top
+face, a stair tread, or a slope's own ramp, alike. It deliberately left
+one question unanswered, named rather than hidden in its own "Deliberately
+staged, not attempted here" list:
+
+```text
+What happens when a WalkableSurface
+genuinely stops existing beneath
+the avatar's feet mid-stride?
+```
+
+Through 0.3.3, the answer was: nothing happens, because it can't. A step
+DOWN beyond `DEFAULT_MAX_STEP_HEIGHT` was symmetric with a step UP beyond
+it — both simply blocked, X/Z reverted, the avatar stopped at the edge as
+if it had walked into a wall. Walking off the top of a stair, a slope, or
+a raised platform with nothing beyond it was, quite literally, impossible
+— not because the avatar couldn't fall, but because the movement pipeline
+never let it try.
+
+0.3.4 answers that question:
+
+```text
+0.3.3 established              0.3.4 establishes
+
+Where can I stand?             What happens when support changes?
+        ↓                               ↓
+WalkableSurface                 jump / fall / land
+        ↓
+What is my support height?
+```
+
+### Why this milestone, now
+
+0.3.3 made the distinction between collision geometry ("what occupies
+this space?") and walkable geometry ("where may an avatar stand?")
+mature enough that jumping/falling finally has somewhere real to land —
+literally. A house with an upper floor and a staircase could be built,
+climbed, and stood on since 0.3.3, but walking off its own edge was
+blocked like a wall, not survived like a fall:
+
+```text
+             avatar
+                ↓
+        ┌─────────────┐
+        │   platform  │
+        └─────────────┘
+                       ↓
+                       ↓
+────────────────────────────
+             ground
+```
+
+0.3.4 is what makes that drop actually happen.
+
+### The one new concept: `core/AvatarVerticalState.js`
+
+A small, closed vocabulary — `SUPPORTED` / `RISING` / `FALLING` —
+deliberately NOT a second physics bookkeeping system. Jump/gravity
+kinematics (`verticalVelocity`, `grounded`) have lived in
+`core/AvatarMovementSimulation.js` since 0.2.36; `AvatarVerticalState` is
+a pure, stateless LABEL read off those exact two values, the same
+"derive, never duplicate" discipline `core/WorldSpatialActivity.js`
+already established for a different question:
+
+```text
+grounded === true             -> SUPPORTED
+grounded === false, v > 0     -> RISING
+grounded === false, v <= 0    -> FALLING
+```
+
+Same "deterministic, no random numbers, no renderer dependence, no
+wall-clock dependence" contract every kinematic file in this codebase
+already keeps: identical input + identical World + identical initial
+avatar state produces an identical trajectory, tick for tick — proven
+directly in `tests/AvatarVerticalNavigation.test.js`'s own determinism
+flagship phase.
+
+### Falling — the actual change
+
+Jumping and gravity already existed, since 0.2.36 — `core/AvatarMovementSimulation.js`
+has integrated `verticalVelocity` against gravity and snapped a grounded
+avatar onto its own `groundHeight` from the very first avatar-movement
+milestone. What 0.3.4 actually adds lives one layer up, in
+`application/AvatarStepConstraint.js#apply()`: the two directions of a
+too-large height delta, treated identically through 0.3.3, now diverge:
+
+```text
+toHeight - fromHeight >  maxStepHeight   -> still BLOCKED (a wall)
+toHeight - fromHeight < -maxStepHeight   -> now FALLING (a ledge)
+```
+
+A wall is real geometry actively occupying space; a ledge is the ABSENCE
+of a supporting surface — exactly what gravity, already sitting one
+layer down, exists to answer. When a grounded step reports `falling`,
+`application/AvatarMovementController.js` flips its own `grounded`
+bookkeeping to `false` for the very next tick — nothing else changes.
+The existing gravity integration in `core/AvatarMovementSimulation.js`
+takes it from there, using `application/AvatarStepConstraint.js#supportHeightAt()`
+— the SAME function a walking step has always snapped onto — as the
+landing surface, recomputed fresh every tick from wherever the avatar
+currently is:
+
+```text
+WalkableSurface
+       │
+       ├── walking    -> snap onto it
+       ├── stepping   -> snap onto it
+       └── landing    -> integrate gravity down onto it
+```
+
+One geometric truth, three consumers. A falling avatar lands on a
+stair's own tread or a slope's own ramp exactly as precisely as it would
+have snapped onto either while walking — proven in
+`tests/AvatarVerticalNavigation.test.js`'s own edge-case section, where a
+fall is deliberately engineered to land mid-ramp on a slope, and the
+landed height is asserted to equal `resolveWalkableSurfaceAt()`'s own
+per-point answer, never a brick's flat bounding-box maximum.
+
+### Jumping — already there, unchanged
+
+Space has jumped avatars into the air since 0.2.36, grounded-only (no
+double-jump, no air control): `SUPPORTED + Space -> RISING`; `RISING`
+or `FALLING + Space -> nothing`. 0.3.4 changes nothing about this —
+it is simply the other half of the SUPPORTED/RISING/FALLING picture
+this milestone finally names.
+
+### `core/WorldSpatialActivity.js` — one tiny vocabulary extension
+
+`JUMPING`/`FALLING` join the existing `IDLE`/`WALKING`/`INSPECTING`/
+`BUILDING`/`MOVING_STRUCTURE`/`ROTATING_STRUCTURE` set, derived from the
+local avatar's own `AvatarVerticalState` exactly the way every other
+value in that vocabulary is derived from local interaction state — never
+authorization, never something a participant types. `core/AvatarAnimationState.js`
+is deliberately left untouched: its existing `JUMPING` value already
+covers the whole airborne rendering experience, and splitting it into a
+separate falling pose is a presentation decision for whenever a real
+animation is built, not a byproduct of this milestone's own vocabulary
+work.
+
+### Remote avatars: deliberately unchanged
+
+`jump velocity`, `gravity state`, `fall state`, and `landing state` join
+nothing in the spatial-presence protocol. A remote replica still only
+ever observes `position`, `heading`, `selection`, and `activity` — if Bob
+falls off a roof, Alice eventually sees Bob's position change through the
+exact same presence mechanism 0.3.0 already built. Local physics stays
+local; spatial presence stays observation. See docs/Principles.md, "Local
+Physics Is Local; Spatial Presence Is Observation (0.3.4)."
+
+### Deliberately excluded
+
+Named rather than hidden, the same restraint every milestone since
+0.2.x has applied to its own scope:
+
+- **Crouching, swimming, ladders, wall/hand-over-hand climbing.**
+- **Double jump, air dash, air control.** Space still only ever jumps
+  from `SUPPORTED` — this milestone's own explicit, deliberate boundary.
+- **Moving platforms, elevators, animated stairs.** `WalkableSurface`
+  stays a pure function of static brick geometry.
+- **A physics engine, rigid bodies, ragdolls.** `verticalVelocity`
+  remains the one signed scalar this codebase has carried since
+  0.2.36 — no momentum beyond it, no collision response, no impulses.
+- **Network-authoritative avatar physics, persistent avatar velocity,
+  replicated physics state.** See "Remote avatars," above.
+- **Camera shake, head bob, landing animation, cinematic effects.**
+  Camera Perspective (0.3.2) already follows the avatar's own position
+  through a fall/jump for free — First Person, Third Person, and
+  Bird's-Eye all read whatever position `AvatarPresence` reports, with
+  no changes needed here. Presentation polish is explicitly later work;
+  this milestone is about making the underlying trajectory correct
+  first.
+
+```text
+0.3.0   Collaborative Spatial Presence                   ✓
+             │
+             ▼
+0.3.1   Collaborative Spatial Awareness                  ✓
+             │
+             ▼
+0.3.2   Avatar & Camera Experience                       ✓
+             │
+             ▼
+0.3.3   Walkable Structures                               ✓
+             │
+             ▼
+0.3.4   Vertical World Navigation                         ✓
+             ├── core/AvatarVerticalState.js — SUPPORTED/RISING/FALLING, derived not duplicated
+             ├── Falling — a step DOWN beyond maxStepHeight now falls, never blocks
+             ├── Landing — the SAME WalkableSurface a walking step snaps onto
+             └── WorldSpatialActivity — JUMPING/FALLING, one tiny vocabulary extension
+```
+
+> **0.3.0 — Where are they?**
+> **0.3.1 — What does their presence mean?**
+> **0.3.2 — How do I inhabit this world?**
+> **0.3.3 — Where can I stand and walk?**
+> **0.3.4 — What happens when support changes?**
+
+The architectural rule this milestone leaves standing:
+
+```text
+Collision
+  ↓
+"What occupies this space?"     — core/SpatialBounds.js, core/AvatarCollision.js
+Walkability
+  ↓
+"Where may an avatar stand?"    — core/WalkableSurface.js
+Vertical motion
+  ↓
+"What happens when support changes?" — core/AvatarVerticalState.js,
+                                        core/AvatarMovementSimulation.js
+Commands
+  ↓
+"What changed in the shared World?"
+World
+  ↓
+"What is true for everyone?"
+```
+
+This is also, deliberately, where the avatar-mechanics thread of this
+roadmap pauses. A user can now inhabit the world, switch perspective,
+walk onto structures, climb stairs and slopes, jump, fall, and land —
+the basic vertical model is complete. The next open question returns to
+the social side of ForkBuild: multiple humans actually building the same
+deterministic World together, and observing what their collaborators are
+doing while they do it — unscheduled, not forgotten.

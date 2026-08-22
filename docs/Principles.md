@@ -6904,3 +6904,166 @@ the flat plane rather than replacing it is what keeps this milestone
 additive: every controller and constraint built without a
 `stepConstraint` wired behaves exactly as it did before this milestone,
 byte for byte.
+
+### Walkability Is Not Collision (0.3.3)
+
+`core/SpatialBounds.js` and `core/AvatarCollision.js` answer one
+question: does this geometry overlap that geometry? `core/WalkableSurface.js`
+answers a different one: where may an avatar stand and move? They may
+share the same underlying brick geometry, but they are not the same
+question, and this codebase never lets one quietly become the other.
+Reusing an AABB for walkability is the trap this principle names
+outright: a slope's AABB is a plain box, and nothing about a box's own
+min/max corners can answer "what is the actual support height at this
+specific (x, z)?" — the question every sloped or stepped surface
+genuinely needs answered. `core/WalkableSurface.js` therefore never
+widens, reuses, or is read by anything `core/SpatialBounds.js` or
+`core/AvatarCollision.js` already own; placement collision stays exactly
+the conservative AABB test it always was, and this codebase's own
+collision system never gradually grows into an accidental physics
+engine just because a slope needed a real height function somewhere.
+The split is structural, not cosmetic:
+
+```text
+Collision
+  ↓
+"What occupies this space?"
+
+Walkability
+  ↓
+"Where may an avatar stand and move?"
+```
+
+### A Directional Walkable Shape Generalizes Its Own Seam, Never Reuses A Flat One (0.3.3)
+
+`core/BrickWalkability.js#walkableTopAt()` was named, at the time of
+0.3.2, as exactly the seam a future non-box primitive would specialize
+— not a claim that one existed yet. `core/WalkableSurface.js` is that
+specialization, and it is deliberately built ON TOP of the existing
+seam rather than beside or instead of it: an ordinary flat-topped brick
+(`WalkableSurfaceKind.FLAT`) still resolves through `walkableTopAt()`
+directly, byte for byte unchanged from 0.3.2. Only a genuinely
+directional shape (`STEP`, `SLOPE`) gets a new, local-space profile —
+and even then, that profile is evaluated in the brick's own LOCAL
+coordinate space, honoring `Brick.rotation`, because which way a stair
+climbs or a slope rises IS the entire reason it is a stair or a slope,
+not a box. `core/AvatarCollision.js#brickAabb()`'s own "ignore
+`Brick.rotation`" simplification, documented since 0.2.42 for collision,
+is untouched by this — a flat brick's own footprint test still makes
+that same simplification, because a flat top face has no direction to
+get wrong in the first place.
+
+### A Per-Tick Height Delta Can Replace A Brick-Wide Wall Check, Once Something Downstream Is Equipped To Police It (0.3.3)
+
+`application/AvatarMovementConstraint.js` decided, since 0.3.2, whether
+a brick blocks horizontal passage by comparing its own overall PEAK
+height against the avatar's current support height — correct for a
+flat box, where the peak IS the only height that exists. A stair or a
+slope has no single peak worth comparing: its near edge and far edge
+can differ by the brick's own full height. 0.3.3 resolves this not by
+teaching `AvatarMovementConstraint` to understand tread/ramp geometry
+itself, but by recognizing that `application/AvatarStepConstraint.js`
+already runs a per-tick, per-point height-DELTA check downstream of
+it — so a directional shape is excluded from horizontal collision
+UNCONDITIONALLY (once stepping is enabled at all), and the step
+constraint's own existing `isStepClimbable()` check becomes the only
+gate deciding whether any specific tick's approach is actually
+climbable. This is not a special case bolted onto collision — it is a
+recognition that two constraints already running in sequence
+(`docs/Architecture.md`'s own five-stage 0.3.2 pipeline) can jointly
+answer a question neither could answer alone, without either one
+growing new knowledge of the other's domain. With stepping OFF entirely,
+this carve-out vanishes completely — there is no downstream check left
+to police the approach, so a directional shape reverts to being a
+genuine, full-height wall, exactly as it always was pre-0.3.2.
+
+### Falling Still Asks WalkableSurface The Same Question Walking Always Has (0.3.4)
+
+`core/WalkableSurface.js` was built, in 0.3.3, to be the one shared
+geometric truth every consumer of "where may an avatar stand?" reads —
+walking, stepping onto a low brick, and climbing a stair tread or a
+slope's own ramp. 0.3.4 adds a fourth consumer, landing, without adding
+a second surface concept for it to consult. `application/AvatarStepConstraint.js#supportHeightAt()`
+— unchanged since 0.3.3 — is both what a walking step snaps onto AND
+what a falling avatar's own gravity integration lands on, recomputed
+fresh every tick from wherever the avatar currently is:
+
+```text
+WalkableSurface
+       │
+       ├── walking    -> snap onto it
+       ├── stepping   -> snap onto it
+       └── landing    -> integrate gravity down onto it
+```
+
+This is why a falling avatar lands correctly on a stair's own tread or a
+slope's own ramp, mid-surface, with no special "falling geometry" code
+path anywhere: `core/AvatarMovementSimulation.js`'s own gravity
+integration was already parameterized on `groundHeight` since 0.3.2 (to
+support Step-Up Movement); 0.3.4 never had to teach it what a stair or a
+slope is, because it was never taught what a flat plane or a brick's top
+face was either — `groundHeight` has always just been a number, supplied
+fresh each tick by whichever surface `application/AvatarStepConstraint.js`
+resolves for the avatar's own current (x, z). Falling is not a new
+geometric question; it is gravity finally being allowed to ask the same
+old one.
+
+### A Ledge Is An Absence Of Support; A Wall Is Occupied Geometry — They Stop Being The Same Kind Of Blocked (0.3.4)
+
+Through 0.3.3, `application/AvatarStepConstraint.js#apply()` treated any
+height delta beyond `maxStepHeight` identically, regardless of
+direction: blocked, X/Z reverted, exactly like walking into a wall. That
+symmetry was always a deliberately named simplification (see 0.3.3's own
+"Falling off a ledge under gravity" entry in docs/Roadmap.md), never a
+claim that a ledge and a wall were genuinely the same obstacle. They
+aren't. A wall — a step UP beyond `maxStepHeight` — is real geometry
+actively occupying the space the avatar wants to enter; a ledge — a step
+DOWN beyond `maxStepHeight` — is the ABSENCE of a supporting surface,
+which is exactly the question gravity (`core/AvatarMovementSimulation.js`,
+unchanged since 0.2.36) already exists to answer. 0.3.4 is the milestone
+where that distinction finally gets acted on: stepping UP beyond range
+remains genuinely blocked; stepping DOWN beyond range is now accepted
+horizontally and reported as falling, handing the vertical question off
+to gravity instead of pretending the ledge was never there. Symmetry
+in `core/BrickWalkability.js#isStepClimbable()` itself is untouched —
+it still answers one honest question ("is this delta small enough to
+walk, in either direction?") — the asymmetry belongs entirely to what
+`AvatarStepConstraint` does with a `false` answer, never to the pure
+math producing it.
+
+### Avatar Vertical State Is Derived, Never A Second Physics Bookkeeping (0.3.4)
+
+`core/AvatarVerticalState.js`'s SUPPORTED/RISING/FALLING vocabulary adds
+no new mutable state anywhere in this codebase. `grounded` and
+`verticalVelocity` have been the only vertical-motion bookkeeping
+`core/AvatarMovementSimulation.js` and `application/AvatarMovementController.js`
+carry since 0.2.36; `deriveAvatarVerticalState()` is a pure, stateless
+read of exactly those two values, the same "derive, never duplicate"
+discipline `core/WorldSpatialActivity.js#deriveWorldSpatialActivity()`
+already established for a completely different question in 0.3.0. A
+vocabulary is not a physics engine — naming SUPPORTED/RISING/FALLING
+makes the avatar's own trajectory legible (to tests, to a future UI, to
+`core/WorldSpatialActivity.js`'s own new JUMPING/FALLING cases) without
+adding a single new place that trajectory could disagree with itself.
+
+### Local Physics Is Local; Spatial Presence Is Observation (0.3.4)
+
+Falling and jumping gained a real trajectory in 0.3.4 — `verticalVelocity`,
+`grounded`, `AvatarVerticalState` — and NONE of it joins the
+spatial-presence protocol `core/WorldSpatialPresenceAdvertisement.js`
+carries between replicas. A remote participant never learns Bob's
+vertical velocity, which of SUPPORTED/RISING/FALLING he is in, or
+anything else about how his fall is being simulated — only his
+`position`, once it changes, exactly like every other movement since
+0.3.0. If Bob jumps off a roof, Alice eventually sees Bob's position
+update through the ordinary presence mechanism; she never receives a
+physics state to replay or reconcile against her own. This is a
+deliberate boundary, not an oversight: turning spatial presence into a
+physics-synchronization channel would couple every replica's rendering
+to a shared simulation clock this codebase has never had and does not
+need. `core/WorldSpatialActivity.js`'s own new JUMPING/FALLING values are
+the one place vertical motion becomes visible to a collaborator at
+all — a COSMETIC label, derived locally, exactly like every other
+`WorldSpatialActivity` value already is, carrying no velocity, no
+gravity state, and no claim of authority over what Bob's own client
+does next.
