@@ -29,4 +29,10 @@ export const DomainEvent = Object.freeze({
     LANDMARK_ADDED: 'LandmarkAdded',
     LANDMARK_REMOVED: 'LandmarkRemoved',
     LANDMARK_UPDATED: 'LandmarkUpdated'
+    // 0.3.7 — World Landmarks & Personal Waypoints: explicit, persistent
+    // World content. A WorldLandmark's lifecycle is a domain concern
+    // exactly like StructurePlacement above.
+    WORLD_LANDMARK_ADDED: 'WorldLandmarkAdded',
+    WORLD_LANDMARK_REMOVED: 'WorldLandmarkRemoved',
+    WORLD_LANDMARK_UPDATED: 'WorldLandmarkUpdated'
 });

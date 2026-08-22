@@ -41,9 +41,37 @@ it:
 
 - **Home** resets the camera to the default view.
 - **Locations** opens a list of every place this session currently knows
-  about — **Home**, plus every structure — each with one **Focus** button.
-  Like Search and Explore Here/What's Here?, this only ever moves the
-  camera; it never loads, selects, or edits anything.
+  about, grouped into **World**, **Structures**, and **Landmarks** — each
+  with one **Focus** button. Like Search and Explore Here/What's Here?,
+  Focus only ever moves the camera; it never loads, selects, or edits
+  anything.
+
+The compass shows cardinal directions (N, E, S, W) and your current heading
+in degrees, plus small dots for nearby structures, collaborators, and
+landmarks — hover one for its label, or check the readable list underneath
+the compass. As you move through the world, the terrain around you is
+generated deterministically from the world seed — grass, beach, rock, forest
+and farmland, lakes and winding rivers all follow the terrain's own elevation
+and moisture.
+
+### Landmarks — marking a place worth remembering
+
+Unlike a structure (a placed building you or someone else built) or a
+compass reading (derived fresh from where you're standing), a **landmark**
+is something you deliberately create: a named point — "Old Bridge," "Great
+View" — with an optional description, placed exactly where your avatar is
+currently standing.
+
+If you have EDIT access to the World you're in, the **Locations** panel's
+Landmarks section shows a **+ Add Landmark** button. Give it a title (and
+optionally a description) and click **Place Here** — it appears immediately
+for you and, moments later, for every other collaborator in the same World,
+on the compass, in their own Locations panel, and as a navigable
+destination. Anyone with EDIT access can rename, redescribe, or remove any
+landmark in the World, not only the person who created it — landmarks are
+World content, governed by the same collaboration permissions as everything
+else you build together, never a personal, private pin only you can see or
+touch.
 
 ## Camera vs. Editing
 
@@ -190,7 +218,27 @@ that placement; only *where it sits in shared space* is theirs to move.
 
 ## Building in World View
 
-World View isn't just for looking — you can build here too.
+World View isn't just for looking — you can build here too, alongside other
+builders who are present in the same world.
+
+### Collaborative building
+
+When multiple people are building in the same world:
+
+- **See other builders** — their avatars appear in the world with display names
+  and activity indicators (e.g., "**Bob — Building House**").
+- **Real-time updates** — bricks placed by others appear immediately as the
+  world operations propagate.
+- **No conflicts** — if two people edit the same structure simultaneously,
+  deterministic ordering ensures the world converges to a consistent state.
+- **Ephemeral activity feed** — a local panel shows recent operations
+  ("Bob placed Block 2×2", "Alice rotated House") to help you understand
+  changes even when they happen outside your current view. This feed is
+  temporary and not persisted.
+
+> **Presence describes activity; commands establish shared reality.**
+> Spatial presence helps you understand what others are doing, but only
+> world operations actually change the shared environment.
 
 1. Click the **Place** tool in the overlay.
 2. Pick a brick type from the dropdown.

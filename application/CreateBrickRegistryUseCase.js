@@ -11,3 +11,8 @@ export class CreateBrickRegistryUseCase {
         return registry;
     }
 }
+
+// Convenience function for tests that need a ready-to-use registry
+export function createBrickRegistry() {
+    return new CreateBrickRegistryUseCase().execute();
+}

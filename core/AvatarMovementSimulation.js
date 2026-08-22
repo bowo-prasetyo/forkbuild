@@ -1,4 +1,5 @@
 import { AvatarAnimationState } from './AvatarAnimationState.js';
+import { deriveAvatarVerticalState } from './AvatarVerticalState.js';
 
 // 0.2.36 — deterministic, Three.js-free kinematics: given where the
 // avatar IS (position/rotationY, plus the small bit of physics-only
@@ -55,6 +56,21 @@ const MAX_Y = 8; // world units — "reasonable vertical bounds" ABOVE whatever 
 // constant. This file still has no idea what a brick or a document
 // is: `groundHeight` is just a number, exactly like every other
 // parameter here.
+//
+// 0.3.4 — Vertical World Navigation. The gravity/jump kinematics below
+// are UNCHANGED — they have integrated `verticalVelocity` against
+// `groundHeight` and snapped a grounded avatar onto it since 0.2.36/0.3.2
+// alike. What's new this milestone lives one layer up, in
+// application/AvatarStepConstraint.js: whether a grounded avatar's next
+// tick is still "standing on something" at all is now a real geometric
+// question (falling off a ledge), not merely "block the step and stay
+// put" — see that class's own 0.3.4 header. This file only gained one
+// thing: `result.verticalState`, a read-only label
+// (core/AvatarVerticalState.js) over the exact same
+// `grounded`/`verticalVelocity` this function already tracked —
+// SUPPORTED while grounded, RISING while airborne and still ascending,
+// FALLING once gravity is winning. No new physics, no new mutable
+// state.
 export function simulateAvatarMovement({
     position,
     rotationY = 0,
@@ -126,6 +142,7 @@ export function simulateAvatarMovement({
         rotationY: nextRotationY,
         verticalVelocity: nextVerticalVelocity,
         grounded: nextGrounded,
+        verticalState: deriveAvatarVerticalState({ grounded: nextGrounded, verticalVelocity: nextVerticalVelocity }),
         animation: resolveAnimationState({
             moving: movementState.forwardAxis !== 0,
             running: movementState.running,

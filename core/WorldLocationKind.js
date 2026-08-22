@@ -1,7 +1,8 @@
 // 0.2.94 — World View Location & Navigation.
+// 0.3.7 — World Landmarks & Personal Waypoints: added LANDMARK kind.
 //
 // The closed vocabulary for what a WorldLocation (core/WorldLocation.js)
-// actually IS. Deliberately narrow: only the two kinds this milestone
+// actually IS. Deliberately narrow: only the kinds this milestone
 // can back with a real, derivable position ship here.
 //
 //   ORIGIN    — the world's one conventional starting point, (0,0,0).
@@ -10,20 +11,15 @@
 //               id/position already have durable identity (see
 //               StructurePlacement's own header) — a naturally
 //               navigable destination with nothing new to invent.
-//
-// LANDMARK, SETTLEMENT, and NATURAL_FEATURE — named in the design
-// conversation as the eventual richer vocabulary once natural features
-// (core/NaturalFeatureField.js, core/Hydrology.js) grow their own
-// derivable identity — are deliberately NOT here yet. Adding them today
-// would mean either fabricating a fake "landmark" for every tree/lake
-// sample point (there is no such durable identity to name — see
-// core/NaturalFeatureField.js's own "sampled, never stored" framing) or
-// standing up a persistent location database this milestone explicitly
-// chose not to build. See docs/Principles.md, "A World Location Is
-// Read From Existing Identity, Never A New Store (0.2.94)."
+//   LANDMARK  — an explicit core/WorldLandmark.js instance, created by
+//               users to mark a place of interest. Unlike ORIGIN and
+//               STRUCTURE, a LANDMARK is not derived from other state;
+//               it IS the stored state — see docs/Principles.md,
+//               "A Landmark Is World Content, Not Spatial Presence (0.3.7)".
 export const WorldLocationKind = Object.freeze({
     ORIGIN: 'origin',
-    STRUCTURE: 'structure'
+    STRUCTURE: 'structure',
+    LANDMARK: 'landmark'
 });
 
 export function isValidWorldLocationKind(kind) {

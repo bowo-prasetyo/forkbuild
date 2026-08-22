@@ -250,6 +250,18 @@ export class World {
     }
 
     removeLandmark(id) {
+    // World Landmarks (0.3.7) — explicit, persistent World content.
+    // Unlike StructurePlacement (a reference to external Document state),
+    // a WorldLandmark IS the stored state — a named point users create
+    // to mark places of interest. See core/WorldLandmark.js's own header.
+    // -----------------------------------------------------------------
+
+    addWorldLandmark(landmark) {
+        this._landmarks.set(landmark.id, landmark);
+        this._publish(DomainEvent.WORLD_LANDMARK_ADDED, { landmark });
+    }
+
+    removeWorldLandmark(id) {
         const landmark = this._landmarks.get(id);
         if (!landmark) {
             return;
@@ -267,6 +279,18 @@ export class World {
     }
 
     updateLandmark(id, changes) {
+        this._publish(DomainEvent.WORLD_LANDMARK_REMOVED, { landmark });
+    }
+
+    getWorldLandmark(id) {
+        return this._landmarks.get(id) || null;
+    }
+
+    getWorldLandmarks() {
+        return Array.from(this._landmarks.values());
+    }
+
+    updateWorldLandmark(id, updates) {
         const landmark = this._landmarks.get(id);
         if (!landmark) {
             return;
@@ -281,6 +305,13 @@ export class World {
             landmark._position = changes.position;
         }
         this._publish(DomainEvent.LANDMARK_UPDATED, { landmark });
+        if (updates.title !== undefined) {
+            landmark.setTitle(updates.title);
+        }
+        if (updates.description !== undefined) {
+            landmark.setDescription(updates.description);
+        }
+        this._publish(DomainEvent.WORLD_LANDMARK_UPDATED, { landmark });
     }
 
     toJSON() {
@@ -291,6 +322,7 @@ export class World {
             groups: this.getGroups().map((group) => group.toJSON()),
             placements: this.getStructurePlacements().map((placement) => placement.toJSON()),
             landmarks: this.getLandmarks().map((landmark) => landmark.toJSON())
+            landmarks: this.getWorldLandmarks().map((landmark) => landmark.toJSON())
         };
     }
 
@@ -310,6 +342,7 @@ export class World {
         // Worlds serialized before 0.3.7 have no landmarks field.
         for (const landmarkJson of json.landmarks || []) {
             world.addLandmark(WorldLandmark.fromJSON(landmarkJson));
+            world.addWorldLandmark(WorldLandmark.fromJSON(landmarkJson));
         }
         return world;
     }

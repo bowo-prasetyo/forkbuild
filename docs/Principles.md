@@ -6904,3 +6904,246 @@ the flat plane rather than replacing it is what keeps this milestone
 additive: every controller and constraint built without a
 `stepConstraint` wired behaves exactly as it did before this milestone,
 byte for byte.
+
+### Walkability Is Not Collision (0.3.3)
+
+`core/SpatialBounds.js` and `core/AvatarCollision.js` answer one
+question: does this geometry overlap that geometry? `core/WalkableSurface.js`
+answers a different one: where may an avatar stand and move? They may
+share the same underlying brick geometry, but they are not the same
+question, and this codebase never lets one quietly become the other.
+Reusing an AABB for walkability is the trap this principle names
+outright: a slope's AABB is a plain box, and nothing about a box's own
+min/max corners can answer "what is the actual support height at this
+specific (x, z)?" — the question every sloped or stepped surface
+genuinely needs answered. `core/WalkableSurface.js` therefore never
+widens, reuses, or is read by anything `core/SpatialBounds.js` or
+`core/AvatarCollision.js` already own; placement collision stays exactly
+the conservative AABB test it always was, and this codebase's own
+collision system never gradually grows into an accidental physics
+engine just because a slope needed a real height function somewhere.
+The split is structural, not cosmetic:
+
+```text
+Collision
+  ↓
+"What occupies this space?"
+
+Walkability
+  ↓
+"Where may an avatar stand and move?"
+```
+
+### A Directional Walkable Shape Generalizes Its Own Seam, Never Reuses A Flat One (0.3.3)
+
+`core/BrickWalkability.js#walkableTopAt()` was named, at the time of
+0.3.2, as exactly the seam a future non-box primitive would specialize
+— not a claim that one existed yet. `core/WalkableSurface.js` is that
+specialization, and it is deliberately built ON TOP of the existing
+seam rather than beside or instead of it: an ordinary flat-topped brick
+(`WalkableSurfaceKind.FLAT`) still resolves through `walkableTopAt()`
+directly, byte for byte unchanged from 0.3.2. Only a genuinely
+directional shape (`STEP`, `SLOPE`) gets a new, local-space profile —
+and even then, that profile is evaluated in the brick's own LOCAL
+coordinate space, honoring `Brick.rotation`, because which way a stair
+climbs or a slope rises IS the entire reason it is a stair or a slope,
+not a box. `core/AvatarCollision.js#brickAabb()`'s own "ignore
+`Brick.rotation`" simplification, documented since 0.2.42 for collision,
+is untouched by this — a flat brick's own footprint test still makes
+that same simplification, because a flat top face has no direction to
+get wrong in the first place.
+
+### A Per-Tick Height Delta Can Replace A Brick-Wide Wall Check, Once Something Downstream Is Equipped To Police It (0.3.3)
+
+`application/AvatarMovementConstraint.js` decided, since 0.3.2, whether
+a brick blocks horizontal passage by comparing its own overall PEAK
+height against the avatar's current support height — correct for a
+flat box, where the peak IS the only height that exists. A stair or a
+slope has no single peak worth comparing: its near edge and far edge
+can differ by the brick's own full height. 0.3.3 resolves this not by
+teaching `AvatarMovementConstraint` to understand tread/ramp geometry
+itself, but by recognizing that `application/AvatarStepConstraint.js`
+already runs a per-tick, per-point height-DELTA check downstream of
+it — so a directional shape is excluded from horizontal collision
+UNCONDITIONALLY (once stepping is enabled at all), and the step
+constraint's own existing `isStepClimbable()` check becomes the only
+gate deciding whether any specific tick's approach is actually
+climbable. This is not a special case bolted onto collision — it is a
+recognition that two constraints already running in sequence
+(`docs/Architecture.md`'s own five-stage 0.3.2 pipeline) can jointly
+answer a question neither could answer alone, without either one
+growing new knowledge of the other's domain. With stepping OFF entirely,
+this carve-out vanishes completely — there is no downstream check left
+to police the approach, so a directional shape reverts to being a
+genuine, full-height wall, exactly as it always was pre-0.3.2.
+
+### Falling Still Asks WalkableSurface The Same Question Walking Always Has (0.3.4)
+
+`core/WalkableSurface.js` was built, in 0.3.3, to be the one shared
+geometric truth every consumer of "where may an avatar stand?" reads —
+walking, stepping onto a low brick, and climbing a stair tread or a
+slope's own ramp. 0.3.4 adds a fourth consumer, landing, without adding
+a second surface concept for it to consult. `application/AvatarStepConstraint.js#supportHeightAt()`
+— unchanged since 0.3.3 — is both what a walking step snaps onto AND
+what a falling avatar's own gravity integration lands on, recomputed
+fresh every tick from wherever the avatar currently is:
+
+```text
+WalkableSurface
+       │
+       ├── walking    -> snap onto it
+       ├── stepping   -> snap onto it
+       └── landing    -> integrate gravity down onto it
+```
+
+This is why a falling avatar lands correctly on a stair's own tread or a
+slope's own ramp, mid-surface, with no special "falling geometry" code
+path anywhere: `core/AvatarMovementSimulation.js`'s own gravity
+integration was already parameterized on `groundHeight` since 0.3.2 (to
+support Step-Up Movement); 0.3.4 never had to teach it what a stair or a
+slope is, because it was never taught what a flat plane or a brick's top
+face was either — `groundHeight` has always just been a number, supplied
+fresh each tick by whichever surface `application/AvatarStepConstraint.js`
+resolves for the avatar's own current (x, z). Falling is not a new
+geometric question; it is gravity finally being allowed to ask the same
+old one.
+
+### A Ledge Is An Absence Of Support; A Wall Is Occupied Geometry — They Stop Being The Same Kind Of Blocked (0.3.4)
+
+Through 0.3.3, `application/AvatarStepConstraint.js#apply()` treated any
+height delta beyond `maxStepHeight` identically, regardless of
+direction: blocked, X/Z reverted, exactly like walking into a wall. That
+symmetry was always a deliberately named simplification (see 0.3.3's own
+"Falling off a ledge under gravity" entry in docs/Roadmap.md), never a
+claim that a ledge and a wall were genuinely the same obstacle. They
+aren't. A wall — a step UP beyond `maxStepHeight` — is real geometry
+actively occupying the space the avatar wants to enter; a ledge — a step
+DOWN beyond `maxStepHeight` — is the ABSENCE of a supporting surface,
+which is exactly the question gravity (`core/AvatarMovementSimulation.js`,
+unchanged since 0.2.36) already exists to answer. 0.3.4 is the milestone
+where that distinction finally gets acted on: stepping UP beyond range
+remains genuinely blocked; stepping DOWN beyond range is now accepted
+horizontally and reported as falling, handing the vertical question off
+to gravity instead of pretending the ledge was never there. Symmetry
+in `core/BrickWalkability.js#isStepClimbable()` itself is untouched —
+it still answers one honest question ("is this delta small enough to
+walk, in either direction?") — the asymmetry belongs entirely to what
+`AvatarStepConstraint` does with a `false` answer, never to the pure
+math producing it.
+
+### Avatar Vertical State Is Derived, Never A Second Physics Bookkeeping (0.3.4)
+
+`core/AvatarVerticalState.js`'s SUPPORTED/RISING/FALLING vocabulary adds
+no new mutable state anywhere in this codebase. `grounded` and
+`verticalVelocity` have been the only vertical-motion bookkeeping
+`core/AvatarMovementSimulation.js` and `application/AvatarMovementController.js`
+carry since 0.2.36; `deriveAvatarVerticalState()` is a pure, stateless
+read of exactly those two values, the same "derive, never duplicate"
+discipline `core/WorldSpatialActivity.js#deriveWorldSpatialActivity()`
+already established for a completely different question in 0.3.0. A
+vocabulary is not a physics engine — naming SUPPORTED/RISING/FALLING
+makes the avatar's own trajectory legible (to tests, to a future UI, to
+`core/WorldSpatialActivity.js`'s own new JUMPING/FALLING cases) without
+adding a single new place that trajectory could disagree with itself.
+
+### Local Physics Is Local; Spatial Presence Is Observation (0.3.4)
+
+Falling and jumping gained a real trajectory in 0.3.4 — `verticalVelocity`,
+`grounded`, `AvatarVerticalState` — and NONE of it joins the
+spatial-presence protocol `core/WorldSpatialPresenceAdvertisement.js`
+carries between replicas. A remote participant never learns Bob's
+vertical velocity, which of SUPPORTED/RISING/FALLING he is in, or
+anything else about how his fall is being simulated — only his
+`position`, once it changes, exactly like every other movement since
+0.3.0. If Bob jumps off a roof, Alice eventually sees Bob's position
+update through the ordinary presence mechanism; she never receives a
+physics state to replay or reconcile against her own. This is a
+deliberate boundary, not an oversight: turning spatial presence into a
+physics-synchronization channel would couple every replica's rendering
+to a shared simulation clock this codebase has never had and does not
+need. `core/WorldSpatialActivity.js`'s own new JUMPING/FALLING values are
+the one place vertical motion becomes visible to a collaborator at
+all — a COSMETIC label, derived locally, exactly like every other
+`WorldSpatialActivity` value already is, carrying no velocity, no
+gravity state, and no claim of authority over what Bob's own client
+does next.
+
+### Exploration Is Derived From Place, Not Stored As Place (0.3.6)
+
+`core/WorldSpatialContext.js`'s `deriveSpatialContext()` answers "what is
+around me right now" from nothing but a position, a seed, the currently
+loaded documents' own `StructurePlacement`s, and whatever collaborator
+roster `WorldNavigationSession#getWorldSpatialPresenceRoster()` already
+reports — every one of those a value this codebase already computed for
+an unrelated reason (terrain ecology/hydrology since 0.2.76-0.2.89,
+placements since 0.2.90, spatial presence since 0.3.0/0.3.1). No new
+World state is introduced to represent "Alice is standing in the
+forest," and none is needed: the same `(seed, x, z)` always derives the
+same terrain zone and hydrology feature on any replica, and the same
+loaded `World` always derives the same nearby structures, so two
+independent replicas agree on a viewer's spatial context without either
+one persisting or transmitting it. This is deliberately narrower than it
+sounds — `WorldSpatialContext` answers "what is here," never "what did I
+discover" or "what have I visited"; a durable per-user discovery/
+achievement history is a different feature entirely, one this milestone
+does not build, because mixing the two would turn a pure read into a
+write path (see `application/WorldSpatialContextService.js`'s own
+header). `WorldNavigationSession#getAvatarPosition()`/`getWorldSeed()`
+(0.3.6) are the only new session-level surface this required — thin
+reads over state (`_avatarPresenceSession`, the same `DEFAULT_WORLD_SEED`
+every terrain query already shares) the session already held, exactly
+the "takes `session`, calls back into it, never a second source of
+truth" shape `application/WorldLocationDirectory.js` established in
+0.2.94. Camera movement in response to a derived context — focusing a
+structure, following a collaborator — still goes exclusively through
+`focusLocation()`/`followAvatarId()` and `SpatialCameraController`; a
+richer sense of "where am I" never grows a second way to move the
+camera there.
+
+### A Landmark Is World Content, Not Spatial Presence (0.3.7)
+
+0.3.6 drew a hard line at "exploration is derived, never stored" — but
+named its own limit plainly: nothing that milestone built lets anyone
+leave a durable mark on a World. `core/WorldLandmark.js` is the
+deliberate exception, and it is exactly that: an EXCEPTION, not a
+loosening of 0.3.6's own rule. A `WorldLandmark` is not derived from
+anything else the World already holds (contrast `core/WorldLocation.js`,
+read fresh from a `StructurePlacement`'s own identity every time) — it
+IS stored state, created by `application/commands/
+CreateWorldLandmarkCommand.js`, persisted in `World#toJSON()`'s own
+`landmarks` array, and propagated exactly like a `Group` or a
+`StructurePlacement`: an ordinary `Command` executed through
+`CommandHistory`, picked up by `WorldCommandPropagationUseCase`'s
+existing `attachCommandHistory()` subscription with zero landmark-
+specific wiring anywhere in the sync path. Editing authority is the
+existing World membership model, never a new `LandmarkOwner`/ACL
+concept — `authorIdentityId` records provenance only; anyone holding
+EDIT on the World may rename, redescribe, or remove any landmark in it,
+the same `WorldNavigationSession#canEditDocument()` gate every other
+mutation chokepoint already consults. A landmark's position is X/Z
+LOCAL to its containing World, exactly like `StructurePlacement`'s own —
+`application/WorldLocationDirectory.js#_landmarkLocationsFor()` applies
+the World's layout offset for display, and
+`WorldNavigationSession#createLandmarkHere()` subtracts that same offset
+from the avatar's own absolute position when creating one, the two
+exact inverses of each other.
+
+### Derived Place Describes the World; Landmarks Deliberately Modify Its Meaning (0.3.7)
+
+The companion boundary to the principle above, stated from the other
+side: `core/WorldSpatialContext.js` (0.3.6) and `core/WorldLandmark.js`
+(0.3.7) now sit side by side in the same "what's around me" surfaces —
+`WorldSpatialContextService`'s `nearbyStructures`/`nearbyLandmarks`, the
+compass's contextual markers, the Locations panel — and it would be easy
+to let them blur into one flat "stuff nearby" list. They stay two
+different questions on purpose. Exploration (terrain zone, hydrology,
+nearby structures) answers "what IS here" — a fact about the World any
+two replicas derive identically from nothing but position and seed, and
+a fact no one authored. A landmark answers "what does this place MEAN
+to someone" — a human chose to stand here and say "Old Bridge, nice view
+of the river," and that choice is content, not geometry.
+`ui/components/LocationsPanel.js` keeps the distinction visible rather
+than collapsing it into shared icons on one list: World / Structures /
+Landmarks are three separate, clearly labeled sections, and only the
+Landmarks section ever offers Add/Edit/Remove — Structures and World
+stay exactly as read-only here as 0.2.94 first made them.
