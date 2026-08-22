@@ -6,6 +6,7 @@ import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase
 import { EditorActionRegistry, createStandardActions } from '../../application/EditorActionRegistry.js';
 import { EditorActionContext } from '../../application/EditorActionContext.js';
 import { InputRouter } from '../../application/InputRouter.js';
+import { WorldSpatialContextService } from '../../application/WorldSpatialContextService.js';
 import EditingSidebar from '../components/EditingSidebar.js';
 import CommandPalette from '../components/CommandPalette.js';
 import ActionFeedback from '../components/ActionFeedback.js';
@@ -174,6 +175,10 @@ export default {
         // cheap, always-current query — see WorldLocationDirectory's
         // own header), never cached across opens.
         const compassHeading = ref(null);
+        // 0.3.6 — World Discovery & Exploration. Spatial context for
+        // current location (terrain zone, hydrology feature, nearby structures,
+        // nearby collaborators) derived deterministically from position + world.
+        const spatialContext = ref(null);
         const showLocationsPanel = ref(false);
         const worldLocations = ref([]);
         // 0.2.99 — World Collaboration UX. `worldMembers`/
@@ -258,6 +263,11 @@ export default {
             deviceAuthorizationPropagationUseCase: deviceAuthorizationUseCase
         });
         const session = worldViewFactory.createSession(registry);
+        // 0.3.6 — World Discovery & Exploration. Spatial context service
+        // derives location descriptions, nearby structures, and collaborator
+        // positions from the viewer's current position and deterministic
+        // world environment (terrain ecology, hydrology, structures).
+        const spatialContextService = new WorldSpatialContextService(session);
         // Purely a client rendering preference (see docs/Principles.md,
         // "Avatar Visibility Is A Client Rendering Preference, Not
         // Avatar State") — never persisted, never affects
@@ -612,6 +622,11 @@ export default {
             // 0.2.94 — re-read alongside cameraPosition on the exact
             // same cadence; see compassHeading's own ref comment.
             compassHeading.value = session.getCompassHeading();
+            
+            // 0.3.6 — World Discovery & Exploration. Derive spatial context
+            // (terrain zone, hydrology feature, nearby structures, collaborators)
+            // from current camera position for contextual location descriptions.
+            spatialContext.value = spatialContextService.getCurrentContext();
 
             // 0.2.38 — see the ref's own comment above.
             if (typeof session.getRemoteAvatarDiagnostics === 'function') {
@@ -2279,13 +2294,32 @@ export default {
                  and compass as a floating overlay on the main
                  viewport, positioned at top-right below Logout button.
                  Transparent background ensures the World scenery
-                 remains dominant. -->
+                 remains dominant. Now includes contextual location
+                 description, nearby structures, and collaborator markers. -->
             <div v-if="cameraPosition" class="world-view-nav-hud">
                 <p class="world-view-nav-hud-coords">
                     {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
                 <div class="world-view-nav-hud-compass">
                     <CompassIndicator :heading="compassHeading" />
+                </div>
+                <!-- 0.3.6 — Contextual location description -->
+                <div v-if="spatialContext && spatialContext.description" class="world-view-nav-context">
+                    {{ spatialContext.description }}
+                </div>
+                <!-- 0.3.6 — Nearby structure markers on compass -->
+                <div v-if="spatialContext && spatialContext.nearbyStructures && spatialContext.nearbyStructures.length > 0" class="world-view-nav-markers">
+                    <div v-for="structure in spatialContext.nearbyStructures.slice(0, 3)" :key="structure.id" class="world-view-nav-marker">
+                        <span class="marker-direction">{{ structure.direction }}</span>
+                        <span class="marker-label">{{ structure.title }} ({{ structure.distance }}m)</span>
+                    </div>
+                </div>
+                <!-- 0.3.6 — Nearby collaborator markers -->
+                <div v-if="spatialContext && spatialContext.nearbyCollaborators && spatialContext.nearbyCollaborators.length > 0" class="world-view-nav-markers">
+                    <div v-for="collab in spatialContext.nearbyCollaborators.slice(0, 3)" :key="collab.identityId" class="world-view-nav-marker collaborator">
+                        <span class="marker-direction">{{ collab.direction }}</span>
+                        <span class="marker-label">{{ collab.displayName }} ({{ collab.distance }}m)</span>
+                    </div>
                 </div>
             </div>
         </div>
