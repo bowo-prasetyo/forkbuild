@@ -7251,3 +7251,52 @@ as 0.2.95 established, and never consults
 having previously edited — a World does not mean a since-revoked grant
 is still honored on return; membership is always re-checked against
 CURRENT World state, never inferred from local history.
+
+### Copying Composes A Blueprint; Forking Creates One (0.4.0)
+
+0.2.81 established Fork: `ForkStructureUseCase` turns a library
+`Structure` into a brand-new, independent `Document`, recording
+`metadata.parentStructureId` as provenance. 0.4.0 (Structure Composition
+& Blueprint Library) adds the other verb a reusable-content architecture
+was always missing: Copy. `CopyStructureIntoDocumentUseCase` turns the
+same kind of `Structure` into bricks inserted straight into the
+CURRENTLY OPEN Document — no new Document, no provenance field, no
+`WorldPlacement`. The two use cases read the same input (a `Structure`)
+and deliberately produce two structurally different kinds of output:
+
+    Fork:  Structure --fork--> new independent Document   (provenance)
+    Copy:  Structure --copy--> current Document's own bricks (composition)
+
+Neither is a variant of the other, and nothing about Copy replaces or
+deprecates Fork — a user who wants to keep editing House on its own
+still forks it, exactly as 0.2.81 already offered; a user assembling
+House + Well + Barn into one larger blueprint now copies each into the
+document they're already building, without ever leaving it or losing
+undo. `ui/components/BuildLibraryPanel.js` offers both actions on every
+structure entry side by side ("Copy Into Document" and "Fork As New
+Document") specifically so the distinction is visible at the point of
+choice, never buried in a menu.
+
+Composition never introduces a second command class to do it: see
+`application/CopyStructureIntoDocumentUseCase.js`'s own header for why
+it produces an ordinary `PasteBricksCommand` (0.1.42) — the exact "one
+command, many bricks" shape composing many bricks in one atomic,
+undoable, replicable step already needed — rather than a parallel
+`PasteStructureCommand` that would duplicate execute()/undo()/toJSON()
+logic already written, tested, and registered in `CommandRegistry` for
+no behavioral difference. A Structure is simply another SOURCE of paste
+items, the same relationship `PasteClipboardUseCase` already has to a
+copied selection.
+
+A Blueprint (the umbrella term for reusable content this milestone
+names) is composed by Copy but never redefined by it: a Structure stays
+exactly what `core/Structure.js` has always said it is — pure data, no
+world placement, no terrain — and Copying one into a Document changes
+only that Document's own bricks. The library a Structure comes from
+stays a source, never a dependency: nothing about a copied brick
+remembers, needs, or depends on the Structure or the library it came
+from ever existing again, the same "provenance only, never a live
+dependency" discipline 0.2.81 already established for Fork, applied
+here to its logical conclusion — Copy doesn't even keep provenance,
+because composing a blueprint was never a claim about where each piece
+originated, only about what the current blueprint now contains.

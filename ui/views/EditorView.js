@@ -3,6 +3,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../../application/CreateStructureRegistryUseCase.js';
 import { ForkStructureUseCase } from '../../application/ForkStructureUseCase.js';
+import { CopyStructureIntoDocumentUseCase } from '../../application/CopyStructureIntoDocumentUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
 import { CreateToolRegistryUseCase } from '../../application/CreateToolRegistryUseCase.js';
 import { CreateDocumentManagerUseCase } from '../../application/CreateDocumentManagerUseCase.js';
@@ -96,6 +97,7 @@ export default {
                         :preview-service="libraryPreviewService"
                         @place="setTool(ToolId.PLACE)"
                         @fork="forkStructure"
+                        @copy="copyStructureIntoDocument"
                     />
                     <EditingSidebar
                         :registry="actionRegistry"
@@ -135,6 +137,7 @@ export default {
         const registry = new CreateBrickRegistryUseCase().execute();
         const structureRegistry = new CreateStructureRegistryUseCase().execute();
         const forkStructureUseCase = new ForkStructureUseCase();
+        const copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase();
         const editorContext = new CreateEditorContextUseCase().execute();
         const selectionUseCase = new SelectionUseCase(editorContext);
         const paletteUseCase = new PaletteUseCase(registry, editorContext);
@@ -166,6 +169,7 @@ export default {
 		    copySelectionUseCase,  // Pass use case
 		    pasteClipboardUseCase,  // Pass use case
 		    forkStructureUseCase,
+		    copyStructureIntoDocumentUseCase,
 		    // 0.2.90 — Structure Placement & World Instances.
 		    structureResolver: structureDocumentResolver,
 		    structurePreviewUseCase
@@ -183,6 +187,14 @@ export default {
 		    const forked = editorSession.forkStructure(structure);
 		    if (forked) {
 		        feedback.show(`Forked "${structure.name}" — now editing your own copy`);
+		    }
+		}
+
+		// 0.4.0 — Structure Composition & Blueprint Library.
+		function copyStructureIntoDocument(structure) {
+		    const copied = editorSession.copyStructureIntoDocument(structure);
+		    if (copied) {
+		        feedback.show(`Copied "${structure.name}" into this document`);
 		    }
 		}
 
@@ -548,6 +560,7 @@ export default {
             structureGroups,
             libraryPreviewService,
             forkStructure,
+            copyStructureIntoDocument,
             activeTool,
             activeStructureTitle,
             selectionCount,

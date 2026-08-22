@@ -26,6 +26,7 @@ import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { ForkStructureUseCase } from './ForkStructureUseCase.js';
+import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUseCase.js';
 import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlacementCommand.js';
 import { MoveStructurePlacementCommand } from './commands/MoveStructurePlacementCommand.js';
 import { RotateStructurePlacementCommand } from './commands/RotateStructurePlacementCommand.js';
@@ -71,6 +72,8 @@ export class EditorSession {
         copySelectionUseCase = null,    // <--- ADD
         pasteClipboardUseCase = null,    // <--- ADD
         forkStructureUseCase = new ForkStructureUseCase(),
+        // 0.4.0 — Structure Composition & Blueprint Library.
+        copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase(),
         // 0.2.90 — Structure Placement & World Instances. Both optional
         // so an EditorSession built without them (older call sites,
         // test harnesses that never enter PLACE_STRUCTURE mode) keeps
@@ -90,6 +93,7 @@ export class EditorSession {
         this._copySelectionUseCase = copySelectionUseCase;
         this._pasteClipboardUseCase = pasteClipboardUseCase;
         this._forkStructureUseCase = forkStructureUseCase;
+        this._copyStructureIntoDocumentUseCase = copyStructureIntoDocumentUseCase;
         this._structureResolver = structureResolver;
         this._structurePreviewUseCase = structurePreviewUseCase;
 
@@ -763,6 +767,46 @@ export class EditorSession {
         }
         const forkedDocument = this._forkStructureUseCase.execute(structure, this._identityProvider);
         this.openDocument(forkedDocument);
+        return true;
+    }
+
+    // 0.4.0 — Structure Composition & Blueprint Library. Copies
+    // `structure`'s bricks into the CURRENTLY OPEN Document's own
+    // (single, per CreateEmptyWorldUseCase's "one building per world" V0.1
+    // simplification) building, as ONE PasteBricksCommand via
+    // CopyStructureIntoDocumentUseCase — see that use case's own header
+    // for why composing reuses PasteBricksCommand instead of a parallel
+    // command class. Mirrors paste() immediately above it: same
+    // "document + commandHistory must exist, document must have a
+    // building" guard, same execute-through-CommandHistory path, so
+    // undo/redo, replay, and CommandRegistry serialization all work for
+    // free. Unlike paste()'s clipboard, positioning is NOT a fixed
+    // per-call cascade — CopyStructureIntoDocumentUseCase places the
+    // copy past whatever the document already contains, so composing
+    // House + Well + Barn into one blueprint never overlaps without the
+    // caller picking coordinates. Returns false (and does nothing) if
+    // `structure` is falsy or there's nothing to copy into, so callers
+    // can wire this straight to a UI action without a guard.
+    copyStructureIntoDocument(structure) {
+        if (!structure || !this._copyStructureIntoDocumentUseCase || !this._documentManager.document || !this._commandHistory) {
+            return false;
+        }
+        const document = this._documentManager.document;
+        const world = document.world;
+        const buildings = world.getBuildings();
+        if (buildings.length === 0) {
+            return false;
+        }
+        const command = this._copyStructureIntoDocumentUseCase.execute(structure, {
+            worldId: world.id,
+            buildingId: buildings[0].id,
+            world,
+            registry: this._registry
+        });
+        if (!command) {
+            return false;
+        }
+        this._commandHistory.execute(command);
         return true;
     }
 

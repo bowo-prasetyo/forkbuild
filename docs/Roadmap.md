@@ -7998,3 +7998,126 @@ the basic vertical model is complete. The next open question returns to
 the social side of ForkBuild: multiple humans actually building the same
 deterministic World together, and observing what their collaborators are
 doing while they do it — unscheduled, not forgotten.
+
+(0.3.5 through 0.3.10 shipped next — Curated Discovery, World Exploration
+& Landmarks, Recommended Places, World Welcome & Guided Exploration, and
+World Persistence & Return — each documented in its own commit and, for
+the durable/ephemeral and curation-vs-ownership distinctions they
+established, in docs/Principles.md.)
+
+## 0.4.0 — Structure Composition & Blueprint Library
+
+Every milestone since 0.2.81 (Forkable Structure Library) answered "how
+do people REUSE existing content" with exactly one verb: Fork — a
+library Structure, or any Document, becomes a brand-new, independent
+Document. That is genuinely the right operation when a user wants House
+as their own thing to keep editing. It is the wrong operation when a
+user wants House AND Well AND Barn arranged together into one larger
+blueprint — forking each separately produces three unrelated documents,
+never one composed village.
+
+0.4.0 adds the missing verb: Copy. Copying a Structure inserts its
+bricks directly into the document a user already has open, as one
+undoable step, so a village, a farmstead, or any larger composition can
+be assembled from smaller reusable pieces without ever leaving the
+document being built. See docs/Principles.md, "Copying Composes A
+Blueprint; Forking Creates One (0.4.0)," and docs/StructureLibrary.md,
+"Copying a Structure Into the Current Document."
+
+### What shipped
+
+- `application/CopyStructureIntoDocumentUseCase.js` — Structure bricks
+  in, one `PasteBricksCommand` (0.1.42) out. Deliberately reuses that
+  existing command rather than introducing a parallel
+  `PasteStructureCommand`: PasteBricksCommand already IS "one command,
+  many bricks," already serializes through `CommandRegistry`, and
+  already has replication/replay coverage via
+  `tests/DocumentCloning.test.js` and `tests/Grouping.test.js` — a
+  second command class for the identical shape would buy nothing.
+- `EditorSession.copyStructureIntoDocument(structure)` — mirrors
+  `paste()`'s own guard and single-execute() shape one rung over.
+- Composition Offset — deterministic, not manual. An empty document
+  keeps a copied Structure's own untranslated local geometry (so
+  copying House into a blank document is byte-identical to forking
+  House); a document that already has content gets the new Structure
+  appended just past its current occupied footprint along X, using the
+  same derived-bounds math (`core/SpatialBounds.js`) `core/Structure.js`
+  already relies on for itself. Composing several structures never
+  requires picking coordinates by hand and never overlaps.
+- `ui/components/BuildLibraryPanel.js` — every structure entry now
+  offers two clearly distinct actions, Copy Into Document and Fork As
+  New Document, side by side, so the architectural distinction is
+  visible at the point of choice rather than buried in a menu.
+- `tests/BlueprintComposition.test.js` — the flagship: copy into an
+  empty document, compose a second structure alongside it with no
+  overlap, undo/redo each copy as one atomic step (including bringing
+  back the SAME brick ids on redo), the produced command round-trips
+  through the shared `CommandRegistry` with no special-casing, and a
+  composed document survives an ordinary `ForkDocumentUseCase` fork
+  with every brick reproduced exactly.
+
+### Fork vs. Copy
+
+    Fork:  Structure --fork--> new independent Document   (provenance)
+    Copy:  Structure --copy--> current Document's own bricks (composition)
+
+Neither replaces the other. A user who wants to keep editing House on
+its own still forks it, exactly as 0.2.81 already offered. Copying
+carries no provenance field at all — the instant a copied brick lands,
+it is an ordinary brick in the current document, indistinguishable from
+one placed by hand. Composition is about what the current blueprint now
+contains, never about where each piece came from.
+
+### Deliberately excluded
+
+Named rather than hidden, the same restraint every milestone in this
+document applies to its own scope:
+
+- **An interactive ghost-preview placement flow for Copy** — drag,
+  rotate, and click-to-commit before the bricks land, mirroring
+  `application/tools/StructurePlacementTool.js`'s own 0.2.90 UX one rung
+  over. 0.4.0 is the composition mechanic and its deterministic default
+  placement; an interactive positioning UI for it is later work.
+- **A larger built-in structure library.** The six Village structures
+  from 0.2.81 are unchanged. Composition is far more useful with more
+  categories and more structures per category to compose FROM, but
+  growing that vocabulary is a content pass, not an architecture change
+  — later work, sized on its own.
+- **A User Blueprint Library** ("Save As Blueprint" from the current
+  document, alongside the built-in Village Library) and **generated
+  preview thumbnails/metadata** for it. Both need Copy to exist first;
+  neither is this milestone.
+- **Blueprint Packs** (import/export a collection of structures as a
+  unit) — depends on a User Blueprint Library existing first.
+- **Composition provenance** (recording which copied bricks came from
+  which Structure, for future tooling like "select the original copied
+  group") — no consumer needs it yet, and core/Structure.js's own
+  bricks carry no such field to preserve; adding one now would be
+  speculative.
+
+```text
+0.3.4   Vertical World Navigation                         ✓
+             │
+             ▼
+   (0.3.5 – 0.3.10: Curated Discovery, World Exploration & Landmarks,
+    Recommended Places, World Welcome & Guided Exploration,
+    World Persistence & Return)                           ✓
+             │
+             ▼
+0.4.0   Structure Composition & Blueprint Library          ✓
+             ├── CopyStructureIntoDocumentUseCase — Structure -> one PasteBricksCommand
+             ├── Composition Offset — deterministic, overlap-free placement
+             └── BuildLibraryPanel — Copy Into Document beside Fork As New Document
+```
+
+> **0.2.81 — How do I reuse a Structure I didn't build?**
+> **0.4.0 — How do I combine several into something bigger?**
+
+This is the first milestone since the 0.3.x avatar/social arc where the
+answer changes the roadmap's own next chapter rather than continuing an
+already-open thread: 0.2.x asked how people inhabit and collaborate in a
+World; 0.3.x asked how people experience and return to one; 0.4.x asks
+how people create increasingly sophisticated reusable content — a User
+Blueprint Library, generated previews, and Blueprint Packs are the
+natural next steps this milestone deliberately leaves open, not
+forgotten.
