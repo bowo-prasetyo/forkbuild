@@ -9013,3 +9013,111 @@ Deliberately not in 0.3.0: remote manipulation, remote commands, locks,
 chat integration, comments, persistent cursors, CRDT/OT, server
 authority, voice integration, collaborative undo/redo, and automatic
 conflict avoidance.
+
+### Collaborative Spatial Awareness (0.3.1)
+
+0.3.0 made a collaborator's raw position/heading/selection/activity
+observable; every marker rendered identically regardless of how far away
+that collaborator was, which way the viewer's own camera was pointed, or
+what a selection actually pointed at. 0.3.1 adds exactly one new derived
+layer between that observation and the renderer — never a new protocol,
+never a new persisted fact:
+
+```text
+core/WorldSpatialAnchor.js
+
+  distanceXZ(viewerPosition, position)
+        ↓
+  deriveProximityTier(distance)              → NEAR | MID | FAR
+        ↓                                        (12 / 30 unit thresholds)
+  isWithinViewCone(viewerPosition, viewerHeadingDegrees, position)
+        ↓                                        (140° default, reusing
+        ↓                                         core/AvatarFacing.js#
+        ↓                                         computeFacingYawDegrees()
+        ↓                                         for the bearing)
+  derivePresentationMode(tier, visible)       → HIDDEN | MARKER_ONLY |
+        ↓                                        MARKER_ABBREVIATED |
+        ↓                                        MARKER_FULL
+  describeSpatialActivity(activity, contextualLabel)
+        ↓                                        → "Building House" /
+        ↓                                          "Building" / "Here"
+  new WorldSpatialAnchor({ ... })
+```
+
+`deriveWorldSpatialAnchor()` is the one entry point, and it stays exactly
+as pure as `deriveWorldSpatialActivity()` (0.3.0) already was — plain
+numbers and strings in, a `WorldSpatialAnchor` value object out, no
+THREE.js object, no World lookup, nothing a remote participant can
+influence beyond the position/heading/selection/activity 0.3.0 already
+lets them report. `isWithinViewCone()` deliberately reuses
+`core/AvatarFacing.js`'s own bearing formula and `core/CompassHeading.js`'s
+own 0°-faces-+Z convention rather than a second angle system, and is a
+generous 140°-wide legibility heuristic, not a literal render-frustum
+test (no aspect ratio, no near/far planes) — named and documented as
+exactly that.
+
+`application/WorldNavigationSession.js#_applySpatialPresenceRoster()` is
+where the derivation actually happens: this session's OWN camera
+position/heading (already read for `syncWorldSpatialPresence()`) becomes
+the anchor's viewer for every device in the freshly-fetched roster, and
+each device's `WorldSpatialSelection` is resolved to a contextual label
+through `_resolveSpatialContextualLabel()` — a placement selection
+resolves through `document.world.getStructurePlacement()` to find which
+document it references, then `getSavedDocumentTitle()`, the SAME two
+steps `application/EditorSession.js#getSelectedPlacementInfo()` already
+takes for a LOCAL placement selection, generalized to any loaded
+document rather than only the active one. A brick selection resolves to
+no label at all — `core/Building.js` carries no title field — so
+`describeSpatialActivity()` falls back to the exact plain phrase 0.3.0
+always showed.
+
+`renderer/RemoteSpatialPresenceRenderer.js#setPresence()` now redraws a
+marker's label canvas in place on every call (`drawLabelSprite()`,
+factored out of the one-shot `buildLabelSprite()` 0.3.0 built) rather
+than only at first creation — activity/selection changes far more often
+than a name does. What it draws depends entirely on the anchor's own
+`presentationMode`: MARKER_FULL shows the full name plus
+`activityLabel`; MARKER_ABBREVIATED shows `abbreviateIdentityLabel()`'s
+truncated name and nothing else; MARKER_ONLY hides the label sprite
+entirely, leaving just the cone; HIDDEN removes the marker from the
+scene the same way a missing position always has —
+`application/RenderWorldViewUseCase.js`'s own facade checks
+`presentationMode === WorldSpatialPresentationMode.HIDDEN` alongside its
+pre-existing `!presence.position` check so the THREE.js object is
+actually removed from the scene graph, not just internally disposed.
+`ui/components/WorldCollaboratorIndicator.js` picks the SAME
+`activityLabel` for its 2D row text — one shared derivation, never a
+second wording — and gains a "Follow" button that only ever emits which
+`primaryDeviceId` was clicked; `ui/views/WorldView.js` is the one that
+calls `session.focusCollaborator(deviceId)`.
+
+`focusCollaborator()` is local camera navigation, full stop — it reads a
+collaborator's current position from `getWorldSpatialPresenceRoster()`
+ONCE and calls the exact same `_beginCameraFocus()`/
+`LOCATION_FOCUS_OFFSET` machinery `focusLocation()` (0.2.94) already
+uses. There is no subscription, no "currently following" mode, and
+nothing is ever sent to the followed collaborator's own replica — their
+client has no way to learn the call happened. A second click simply
+focuses wherever that collaborator now is.
+
+The flagship (`tests/CollaborativeSpatialAwareness.test.js`) proves the
+pure tier/view-cone/presentation-mode derivations in isolation; that a
+remote StructurePlacement selection resolves to its real saved title
+through `getSavedDocumentTitle()`; that the resulting activity label
+reads "Building House" the moment the selection resolves and falls back
+to plain wording the instant it doesn't; that `focusCollaborator()`
+glides the camera toward a collaborator's last-known position through
+`focusLocation()`'s own deterministic path while that collaborator's own
+document, placement, and `CommandHistory` stay completely untouched; and
+reaffirms 0.3.0's own defining security property one layer higher —
+nothing a `WorldSpatialAnchor` computes ever reaches
+`SpatialSelectionState`, `SpatialEditingService`, or any
+`application/commands/` class.
+
+Deliberately not in 0.3.1: remote editing, remote cursors that can
+manipulate objects, locks, collaborative undo/redo, persistent
+annotations attached to a marker, voice integration, CRDT/OT,
+server-mediated presence, a fourth network protocol, and true
+camera-frustum culling (matched to the renderer's actual FOV/aspect/
+near-far planes, rather than `isWithinViewCone()`'s own wide legibility
+heuristic).

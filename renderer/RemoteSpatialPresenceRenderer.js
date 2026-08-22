@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { WorldSpatialPresentationMode, abbreviateIdentityLabel } from '../core/WorldSpatialAnchor.js';
 
 const MARKER_HEIGHT = 1.9; // roughly eye height — reads as "a camera is here," not a full avatar
 const OUTLINE_COLOR_FALLBACK = 0xffffff;
@@ -24,18 +25,37 @@ function colorForIdentity(identityId) {
     return new THREE.Color(`hsl(${hashHue(identityId)}, 70%, 55%)`);
 }
 
-function buildLabelSprite(text, colorCss) {
+// 0.3.1 — extended to a SECOND, optional line: `secondaryText` draws a
+// smaller, dimmer row beneath `primaryText` — the contextual activity
+// ("Building House") this milestone adds alongside the name 0.3.0 always
+// drew alone. Unlike 0.3.0's own one-shot construction, this is now
+// re-run on every setPresence() call (see that method below) rather than
+// only once at marker creation — a remote participant's activity/
+// selection changes far more often than their name does, and the label
+// must keep up.
+function drawLabelSprite(ctx, canvas, primaryText, secondaryText, colorCss) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillRect(0, canvas.height * 0.4, canvas.width, canvas.height * 0.6);
+    ctx.textAlign = 'center';
+    if (primaryText) {
+        ctx.fillStyle = colorCss;
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText(primaryText, canvas.width / 2, canvas.height * (secondaryText ? 0.62 : 0.78));
+    }
+    if (secondaryText) {
+        ctx.fillStyle = 'rgba(230, 230, 230, 0.85)';
+        ctx.font = '17px sans-serif';
+        ctx.fillText(secondaryText, canvas.width / 2, canvas.height * 0.86);
+    }
+}
+
+function buildLabelSprite(primaryText, secondaryText, colorCss) {
     const canvas = document.createElement('canvas');
     canvas.width = LABEL_WIDTH;
     canvas.height = LABEL_HEIGHT;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, LABEL_WIDTH, LABEL_HEIGHT);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-    ctx.fillRect(0, LABEL_HEIGHT * 0.55, LABEL_WIDTH, LABEL_HEIGHT * 0.45);
-    ctx.fillStyle = colorCss;
-    ctx.font = 'bold 22px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(text, LABEL_WIDTH / 2, LABEL_HEIGHT * 0.78);
+    drawLabelSprite(ctx, canvas, primaryText, secondaryText, colorCss);
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     const material = new THREE.SpriteMaterial({ map: texture, depthTest: false, transparent: true });
@@ -85,18 +105,27 @@ export class RemoteSpatialPresenceRenderer {
         this._entries = new Map(); // deviceId -> { group, marker, label, outline, sprite }
     }
 
-    // `presence`: { identityId, label, position: {x,z}|null, heading:
+    // `presence`: a `core/WorldSpatialAnchor.js` (or, for a caller that
+    // hasn't derived one, a plain object shaped like its own getters) —
+    // { identityId, label, activityLabel, position: {x,z}|null, heading:
     // number|null, selection: WorldSpatialSelection|null, activity:
-    // string|null }. A null/undefined position removes the marker
-    // entirely (nothing to draw yet) rather than leaving it frozen at a
-    // stale origin.
+    // string|null, presentationMode: string|undefined }. A null/undefined
+    // position removes the marker entirely (nothing to draw yet) rather
+    // than leaving it frozen at a stale origin — and, 0.3.1, so does a
+    // `presentationMode` of HIDDEN: outside the viewer's own view cone
+    // means no 3D marker at all, exactly like no position ever did. An
+    // absent `presentationMode` (a caller that never derived an anchor)
+    // defaults to MARKER_FULL — the exact pre-0.3.1 behavior, unchanged.
     setPresence(deviceId, presence) {
-        if (!presence || !presence.position) {
+        const mode = presence ? (presence.presentationMode || WorldSpatialPresentationMode.MARKER_FULL) : null;
+        if (!presence || !presence.position || mode === WorldSpatialPresentationMode.HIDDEN) {
             this.removePresence(deviceId);
             return;
         }
         let entry = this._entries.get(deviceId);
         const color = colorForIdentity(presence.identityId || deviceId);
+        const labelColorCss = `hsl(${hashHue(presence.identityId || deviceId)}, 70%, 70%)`;
+        const { primaryText, secondaryText } = this._resolveLabelText(presence, mode);
         if (!entry) {
             const group = new THREE.Group();
             const marker = new THREE.Mesh(
@@ -106,11 +135,22 @@ export class RemoteSpatialPresenceRenderer {
             marker.position.y = MARKER_HEIGHT;
             marker.rotation.x = Math.PI / 2; // tip points along -Z by default, matches heading 0 == +Z convention via yaw below
             group.add(marker);
-            const { sprite } = buildLabelSprite(presence.label || '', `hsl(${hashHue(presence.identityId || deviceId)}, 70%, 70%)`);
+            const { sprite, canvas, ctx } = buildLabelSprite(primaryText, secondaryText, labelColorCss);
             group.add(sprite);
-            entry = { group, marker, sprite, outline: null };
+            entry = { group, marker, sprite, canvas, ctx, outline: null };
             this._entries.set(deviceId, entry);
+        } else {
+            // 0.3.1 — unlike the marker/outline below, the label's text
+            // (name/activity/contextual target) can change every single
+            // roster refresh without the marker's own IDENTITY changing —
+            // redraw the SAME canvas/texture in place rather than
+            // rebuilding the sprite.
+            drawLabelSprite(entry.ctx, entry.canvas, primaryText, secondaryText, labelColorCss);
+            entry.sprite.material.map.needsUpdate = true;
         }
+        // MARKER_ONLY (far away) shows the cone with no label at all —
+        // this milestone's own "far away -> marker only" rule.
+        entry.sprite.visible = mode !== WorldSpatialPresentationMode.MARKER_ONLY;
         const groundY = this._terrainHeightAt(presence.position.x, presence.position.z);
         entry.group.position.set(presence.position.x, groundY, presence.position.z);
         if (Number.isFinite(presence.heading)) {
@@ -121,6 +161,25 @@ export class RemoteSpatialPresenceRenderer {
         }
         this._applySelectionOutline(entry, presence.selection, color);
         return entry.group;
+    }
+
+    // 0.3.1 — the ONE place presentationMode decides what TEXT a label
+    // actually draws; everything else about the marker (position,
+    // heading, selection outline) is unaffected by tier. MARKER_FULL
+    // shows the full name plus `activityLabel` (already contextual —
+    // see core/WorldSpatialAnchor.js#describeSpatialActivity()) exactly
+    // like 0.3.0 showed the name alone; MARKER_ABBREVIATED shows a
+    // shortened name and nothing else; MARKER_ONLY draws no text (the
+    // sprite is hidden entirely just above) — a caller that reaches this
+    // mode never even pays for a fillText() call.
+    _resolveLabelText(presence, mode) {
+        if (mode === WorldSpatialPresentationMode.MARKER_ONLY) {
+            return { primaryText: '', secondaryText: '' };
+        }
+        if (mode === WorldSpatialPresentationMode.MARKER_ABBREVIATED) {
+            return { primaryText: abbreviateIdentityLabel(presence.label || ''), secondaryText: '' };
+        }
+        return { primaryText: presence.label || '', secondaryText: presence.activityLabel || '' };
     }
 
     // Every currently-tracked marker's root Object3D — the caller (see

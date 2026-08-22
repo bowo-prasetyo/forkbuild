@@ -3680,3 +3680,24 @@ html, body {
 .world-collaborator-indicator-devices {
     color: #707070;
 }
+
+/* 0.3.1 — ui/components/WorldCollaboratorIndicator.js's own Follow
+   action: local camera navigation only, so it stays as understated as
+   the row it lives in — a plain text-weight button, never a call-to-
+   action style that could read as something more than "move my own
+   camera over there." */
+.world-collaborator-indicator-follow {
+    margin-left: auto;
+    padding: 0.1rem 0.4rem;
+    background: transparent;
+    border: 1px solid #3a3a3a;
+    border-radius: 3px;
+    color: #909090;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.world-collaborator-indicator-follow:hover {
+    color: #e0e0e0;
+    border-color: #4caf7d;
+}

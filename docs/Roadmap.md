@@ -7112,7 +7112,206 @@ shares no type, and no code path, with `SpatialSelectionState`,
              └── Ephemeral — the World stays byte-identical throughout
 ```
 
-This closes the ladder the 0.2.x series spent building:
+## Collaborative Spatial Awareness
+
+0.3.1 — Collaborative Spatial Awareness — answers a narrower question
+than 0.3.0 asked, deliberately ordered right after it: 0.3.0 answers
+"where are my collaborators and what are they doing"; this milestone
+answers "what does their presence MEAN in the World around me." A
+collaborator has, up to this point, always rendered exactly the same way
+regardless of how far away they are, which way the viewer's own camera
+is pointed, or what their selection is actually pointing AT — a name and
+a bare activity word, "Bob — Building," identical whether Bob is three
+units away or three hundred, in full view or entirely behind the viewer.
+This milestone makes that observation spatially meaningful, without
+introducing a second editing or synchronization system, and — the one
+rule every section below exists to enforce — without ever letting
+remote presence resemble local authority:
+
+```text
+0.3.1
+├── core/
+│   └── WorldSpatialAnchor.js                NEW — a small, pure,
+│                                            RENDERING-oriented value
+│                                            derived from a 0.3.0
+│                                            observation plus the
+│                                            VIEWER's own local camera
+│                                            state: a proximity tier
+│                                            (NEAR/MID/FAR from a plain
+│                                            X/Z distance), a view-cone
+│                                            visibility check (reusing
+│                                            core/AvatarFacing.js's own
+│                                            bearing formula and
+│                                            core/CompassHeading.js's own
+│                                            angle convention — never a
+│                                            THREE.js frustum), a
+│                                            presentation mode derived
+│                                            from both, and a contextual
+│                                            activity phrase
+│                                            ("Building House," not just
+│                                            "Building") built from an
+│                                            OPTIONAL, externally-resolved
+│                                            selection-target label.
+│                                            Deliberately layered
+│                                            AFTER WorldSpatialPresence,
+│                                            never a replacement for it:
+│
+│                                            WorldSpatialPresence (0.3.0)
+│                                                      │
+│                                                      ▼
+│                                            WorldSpatialAnchor (0.3.1)
+│                                                      │
+│                                                      ▼
+│                                              Renderer / UI
+├── application/
+│   └── WorldNavigationSession.js            MODIFIED —
+│                                            _resolveSpatialContextualLabel()
+│                                            resolves a remote
+│                                            `WorldSpatialSelection` to a
+│                                            display string through the
+│                                            SAME getStructurePlacement()
+│                                            + getSavedDocumentTitle()
+│                                            steps application/EditorSession.js#
+│                                            getSelectedPlacementInfo()
+│                                            already established for a
+│                                            LOCAL placement selection —
+│                                            no second title-lookup
+│                                            mechanism; _applySpatialPresenceRoster()
+│                                            now builds a WorldSpatialAnchor
+│                                            per device, with THIS
+│                                            session's own camera as the
+│                                            viewer, before it ever
+│                                            reaches the renderer; and
+│                                            focusCollaborator(deviceId)
+│                                            is the new "Follow" entry
+│                                            point — local camera
+│                                            navigation ONLY, through the
+│                                            exact same _beginCameraFocus()/
+│                                            LOCATION_FOCUS_OFFSET
+│                                            machinery 0.2.94's own
+│                                            Locations panel already
+│                                            uses, never a second camera-
+│                                            movement mechanism and never
+│                                            anything sent to the
+│                                            followed collaborator's own
+│                                            replica.
+├── renderer/
+│   └── RemoteSpatialPresenceRenderer.js     MODIFIED — a marker's label
+│                                            now redraws on every
+│                                            setPresence() call, not just
+│                                            once at creation (activity
+│                                            changes far more often than
+│                                            a name does), and what it
+│                                            draws depends on the
+│                                            anchor's own presentation
+│                                            mode: MARKER_FULL (near)
+│                                            shows the full name plus the
+│                                            contextual activity line;
+│                                            MARKER_ABBREVIATED (mid)
+│                                            shows a shortened name only;
+│                                            MARKER_ONLY (far) shows the
+│                                            cone with no label at all;
+│                                            HIDDEN (outside the view
+│                                            cone) removes the marker
+│                                            from the scene entirely,
+│                                            exactly like no position at
+│                                            all always has.
+└── ui/components/
+    └── WorldCollaboratorIndicator.js        MODIFIED — a row's activity
+                                             text is now the SAME
+                                             contextual phrase the 3D
+                                             marker shows ("Building
+                                             House," never a second,
+                                             divergent wording), and each
+                                             row gains a small "Follow"
+                                             button that emits which
+                                             device to focus — the
+                                             component itself never
+                                             calls session.focusCollaborator()
+                                             directly; the host view does.
+```
+
+The architectural rule this milestone exists to enforce, stated the way
+every collaboration milestone since 0.2.95 has stated its own:
+
+```text
+A spatial anchor is a presentation decision, never remote authority.
+```
+
+Nothing a remote participant reports — position, heading, selection,
+activity — gains any new POWER by passing through a `WorldSpatialAnchor`.
+The derivation only ever decides how something ALREADY true (0.3.0's own
+observation) gets DRAWN: how far away, how prominent, what to call the
+thing they've selected. A `WorldSpatialAnchor` is never persisted, never
+signed, never broadcast, and never itself becomes a new wire format —
+`core/WorldSpatialAnchor.js` imports nothing from `peer/` or any
+`application/*PropagationUseCase.js`, and nothing in it is reachable from
+`application/WorldSpatialPresenceUseCase.js`'s own ingestion path. The
+THIRD protocol 0.3.0 introduced (`forkbuild:world-spatial-presence`)
+remains the only one; this milestone deliberately adds no fourth. And
+"Follow" is local camera navigation, full stop — `focusCollaborator()`
+reads a collaborator's already-received position ONCE and moves the
+CALLER's own camera there, through the identical deterministic glide
+`focusLocation()` already uses; it is never a live tether, never a
+subscription, and the followed collaborator's own replica has no way to
+learn it happened — see docs/Principles.md, "Follow Is Local Camera
+Navigation, Never A Shared Camera (0.3.1)."
+
+A remote selection's contextual label follows the same restraint. A
+`WorldSpatialSelection` of kind `'placement'` resolves to the referenced
+document's saved title (`getSavedDocumentTitle()`), exactly the string a
+LOCAL placement inspector would show — never a new naming scheme. A
+selection of kind `'brick'` deliberately resolves to no label at all:
+`core/Building.js` carries no title field to show, and this milestone
+adds none, rather than inventing one just to fill a sentence. "Building"
+alone remains a completely honest thing to say when there's nothing more
+specific to say.
+
+Deliberately not in 0.3.1, named rather than hidden: remote editing,
+remote cursors that can manipulate objects, locks, collaborative undo/
+redo, chat bubbles or any other persistent annotation attached to a
+marker, voice integration, CRDT/OT, server-mediated presence, and a
+"currently following" MODE of any kind — clicking Follow again simply
+re-focuses wherever that collaborator now is; there is no persistent
+follow state to track, disable, or synchronize. A true camera-frustum
+culling pass (matching the renderer's actual FOV/aspect/near-far planes)
+is also deliberately not attempted — `isWithinViewCone()` is a
+legibility heuristic over a wide, fixed angle, never a literal render-
+frustum test, and is named and documented as exactly that rather than
+allowed to masquerade as more.
+
+The flagship (`tests/CollaborativeSpatialAwareness.test.js`) proves: the
+pure tier/view-cone/presentation-mode derivations in isolation; that a
+remote StructurePlacement selection resolves to its real saved title
+through the SAME lookup a local inspector uses; that Bob's activity
+label reads "Building House" the moment his selection resolves, and
+falls back to the plain "Building"/"Here" wording the instant it no
+longer does; that `focusCollaborator()` glides Alice's camera toward
+Bob's last-known position through the identical deterministic path
+`focusLocation()` already uses, while Bob's own document, placement, and
+`CommandHistory` remain completely untouched throughout; and the same
+defining security assertion 0.3.0 already proved, reaffirmed one layer
+higher: nothing a `WorldSpatialAnchor` computes ever reaches
+`SpatialSelectionState`, `SpatialEditingService`, or any
+`application/commands/` class.
+
+```text
+0.2.99  World Collaboration UX                           ✓
+             │
+             ▼
+0.3.0   Collaborative Spatial Presence                   ✓
+             │
+             ▼
+0.3.1   Collaborative Spatial Awareness                  ✓
+             ├── WorldSpatialAnchor — a derived, rendering-only reading
+             ├── Proximity tiers + a view-cone visibility heuristic
+             ├── Contextual activity labels ("Building House")
+             ├── Follow — local camera navigation, never a shared camera
+             └── No fourth protocol — consumed entirely from 0.3.0's own
+```
+
+This closes the ladder the 0.2.x series spent building, one rung higher
+than 0.3.0 left it:
 
 ```text
 BRICK
@@ -7130,11 +7329,14 @@ WORLD SYNCHRONIZATION
 WORLD COLLABORATION
   ↓
 WORLD SPATIAL PRESENCE
+  ↓
+WORLD SPATIAL AWARENESS
 ```
 
 The 0.2.x series was largely about making the World itself structurally
-complete and synchronizable. What comes after 0.3.0 — the experience of
-multiple humans inhabiting and building the same deterministic world
-together, beyond merely seeing where one another are looking — remains
-open and unscheduled, a deliberate stopping point rather than an
+complete and synchronizable; 0.3.0 and 0.3.1 made a collaborator's
+presence in it visible and legible. What comes next — the experience of
+multiple humans actually BUILDING the same deterministic world together,
+beyond seeing where one another are looking and what that means —
+remains open and unscheduled, a deliberate stopping point rather than an
 arbitrary version bump.
