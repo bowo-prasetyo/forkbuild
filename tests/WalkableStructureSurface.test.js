@@ -39,7 +39,7 @@ import { Position } from '../core/Position.js';
 // answers a different question, "where may an avatar stand," and a
 // stair/slope's own non-uniform walkable height is never reduced to a
 // single AABB scalar anywhere in this pipeline. No physics engine, no
-// momentum, no falling — every step remains the exact same deterministic
+// momentum — every step remains the exact same deterministic
 // height constraint 0.3.2 already established, just applied to a real
 // per-point surface height instead of a single flat top face.
 
@@ -339,12 +339,17 @@ async function runTests() {
         // (rotation 0 faces +Z, see core/AvatarMovementSimulation.js).
         // A flat landing immediately beyond the stair's own far edge
         // (flush with its own top) lets the avatar actually WALK OFF
-        // the top once climbed — without it, the very next step would
-        // be a 1.0-unit drop back to bare ground, correctly blocked as
-        // an unsupported ledge (falling remains explicitly out of
-        // scope this milestone — see docs/Roadmap.md); that is
-        // correct, deliberate behavior, just not what THIS assertion
-        // is about.
+        // the top once climbed, onto more flat, valid support — proving
+        // the climb reached a genuinely walkable surface, not merely a
+        // single-tick peak. The landing itself is finite (`plate_2x4`
+        // is 4 units deep — see core/library/CoreLibrary.js), so a long
+        // enough walk eventually crosses ITS OWN far edge too and falls
+        // (0.3.4 — see tests/AvatarVerticalNavigation.test.js for that
+        // behavior in full); this test only cares about what happens
+        // WHILE still on the stair/landing, so it watches for the
+        // full-height/far-edge facts DURING the walk rather than
+        // asserting on wherever the avatar has wandered to once the
+        // fixed tick budget below runs out.
         const document = documentWithBricks([
             new Brick({ definitionId: 'core:stair', position: new Position(0, stair.height / 2, 3), rotation: -90 }),
             new Brick({ definitionId: 'core:plate_2x4', position: new Position(0, stair.height - plate.height / 2, 5.5) })
@@ -357,18 +362,23 @@ async function runTests() {
 
         controller.keyDown('w');
         const observedHeights = new Set();
+        let reachedFullHeight = false;
+        let crossedFarEdge = false;
         for (let i = 0; i < 400; i++) {
             controller.tick(0.03);
-            observedHeights.add(Math.round(avatarPresenceSession.current.position.y * 1000) / 1000);
+            const p = avatarPresenceSession.current.position;
+            observedHeights.add(Math.round(p.y * 1000) / 1000);
+            if (p.y >= stair.height - 1e-6) reachedFullHeight = true;
+            if (p.z > 3.5) crossedFarEdge = true;
         }
         controller.keyUp('w');
 
         const stepHeight = Math.round((stair.height / DEFAULT_STAIR_STEP_COUNT) * 1000) / 1000;
         assert(observedHeights.has(stepHeight), '39. AvatarMovementController: the avatar visibly rests on the FIRST tread at some point');
         assert(observedHeights.size >= 3, '40. AvatarMovementController: the avatar visibly rests at several DISTINCT tread heights while climbing, not a single jump straight to the top');
-        assert(avatarPresenceSession.current.position.y >= stair.height - 1e-6,
+        assert(reachedFullHeight,
             '41. AvatarMovementController: the avatar reaches the stair\'s own full height by climbing tread by tread');
-        assert(avatarPresenceSession.current.position.z > 3.5,
+        assert(crossedFarEdge,
             '42. AvatarMovementController: the avatar actually crosses past the stair\'s own far edge — it was climbed, not merely tolerated');
     }
     {
@@ -376,10 +386,12 @@ async function runTests() {
         const document = documentWithBricks([
             new Brick({ definitionId: 'core:slope_45', position: new Position(0, slope.height / 2, 3), rotation: -90 }),
             // Same landing-beyond-the-edge reasoning as the stair test
-            // above — without it, the very last step off a continuous
-            // ramp's own top is indistinguishable from walking off an
-            // unsupported ledge, correctly blocked (falling stays out
-            // of scope this milestone).
+            // above — a flat landing to walk onto once the ramp is
+            // crested. It is finite too, so this test watches for the
+            // full-height fact DURING the walk rather than at the end
+            // of a fixed tick budget that may, by then, have carried
+            // the avatar off the landing's own far edge as well (0.3.4
+            // — see tests/AvatarVerticalNavigation.test.js).
             new Brick({ definitionId: 'core:plate_2x4', position: new Position(0, slope.height - plate.height / 2, 5.5) })
         ]);
         const loadedDocuments = new Map([['doc-slope-climb', document]]);
@@ -390,16 +402,17 @@ async function runTests() {
 
         controller.keyDown('w');
         let sawStrictlyBetween = false;
+        let reachedFullHeight = false;
         for (let i = 0; i < 400; i++) {
             controller.tick(0.03);
             const y = avatarPresenceSession.current.position.y;
             assert(Number.isFinite(y), '43. AvatarMovementController: the avatar\'s Y stays finite throughout a slope climb');
             if (y > 0.05 && y < slope.height - 0.05) sawStrictlyBetween = true;
+            if (y >= slope.height - 1e-6) reachedFullHeight = true;
         }
         controller.keyUp('w');
         assert(sawStrictlyBetween, '44. AvatarMovementController: the avatar passes through a genuinely intermediate height while crossing the slope — a continuous ramp, not a teleport');
-        assert(avatarPresenceSession.current.position.y >= slope.height - 1e-6,
-            '45. AvatarMovementController: the avatar reaches the slope\'s own full height');
+        assert(reachedFullHeight, '45. AvatarMovementController: the avatar reaches the slope\'s own full height');
     }
     {
         // Approaching a stair from its OWN tall/back side directly

@@ -66,6 +66,7 @@ import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
 import { deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
+import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
 import { deriveWorldSpatialAnchor } from '../core/WorldSpatialAnchor.js';
 
 const STREAMING_RADIUS = 150;
@@ -2961,12 +2962,22 @@ export class WorldNavigationSession {
         const heading = this.getCompassHeading();
         const selection = this._resolveWorldSpatialSelection(documentId);
         const gizmoState = this._editingService.transformGizmoState;
+        // 0.3.4 — the local avatar's own vertical motion
+        // (core/AvatarVerticalState.js), read fresh off the movement
+        // controller exactly like `isMoving` already is below, and fed
+        // into deriveWorldSpatialActivity()'s own new JUMPING/FALLING
+        // cases. Absent entirely (no controller wired at all) simply
+        // means neither ever fires — same graceful-absence posture as
+        // `isMoving` already follows.
+        const verticalState = this._avatarMovementController ? this._avatarMovementController.verticalState() : null;
         const activity = deriveWorldSpatialActivity({
             gizmoActive: gizmoState.active,
             gizmoMode: gizmoState.mode,
             hasSelection: !selection.isEmpty,
             canEdit: this.canEditDocument(documentId),
-            isMoving: Boolean(this._avatarMovementController && this._avatarMovementController.hasMovementInput())
+            isMoving: Boolean(this._avatarMovementController && this._avatarMovementController.hasMovementInput()),
+            rising: verticalState === AvatarVerticalState.RISING,
+            falling: verticalState === AvatarVerticalState.FALLING
         });
         this._worldSpatialPresenceUseCase.updateSpatial(documentId, {
             position: cameraPosition ? { x: cameraPosition.x, z: cameraPosition.z } : undefined,

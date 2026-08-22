@@ -9410,3 +9410,119 @@ climbing, dynamic physics, moving platforms, slope-dependent movement
 speed, and collision against arbitrary mesh geometry (every profile here
 is still a closed-form function over width/height/depth). See
 docs/Roadmap.md for the full list.
+
+## 0.3.4 — Vertical World Navigation
+
+Jump/gravity kinematics have existed since 0.2.36 —
+`core/AvatarMovementSimulation.js` integrates a signed `verticalVelocity`
+against a `groundHeight` parameter and snaps a grounded avatar onto it,
+unchanged in this milestone. What 0.3.4 actually changes is narrow and
+lives one layer up:
+
+```text
+core/AvatarVerticalState.js   (new)
+    ↓
+export const AvatarVerticalState = { SUPPORTED, RISING, FALLING };
+export function deriveAvatarVerticalState({ grounded, verticalVelocity }) { /* pure read, no new state */ }
+```
+
+A pure label over the exact same `grounded`/`verticalVelocity` bookkeeping
+`core/AvatarMovementSimulation.js` and `application/AvatarMovementController.js`
+already carried — `core/AvatarMovementSimulation.js`'s own result gains a
+`verticalState` field (additive), and `AvatarMovementController` gains a
+`verticalState()` accessor mirroring `isCollided()`/`isBlockedBySlope()`/
+`isBlockedByStepHeight()`. No new mutable state anywhere.
+
+### `application/AvatarStepConstraint.js#apply()` — the actual behavior change
+
+Through 0.3.3, ANY height delta beyond `maxStepHeight` was blocked
+identically, whichever direction it went. 0.3.4 splits the two directions:
+
+```text
+toHeight - fromHeight >  maxStepHeight   -> still BLOCKED   (unchanged — a wall)
+toHeight - fromHeight < -maxStepHeight   -> now FALLING     (new — a ledge)
+    { position: { x: desiredPosition.x, y: desiredPosition.y, z: desiredPosition.z },
+      blocked: false, falling: true }
+```
+
+`falling: true` tells `application/AvatarMovementController.js` to force
+its own `_grounded` to `false` for the NEXT tick, regardless of what that
+tick's own `simulateAvatarMovement()` result said — the avatar WAS
+standing on something when the tick began; it just walked past the edge
+of it. `_verticalVelocity` is already `0` at that moment (every grounded
+tick zeroes it), so the following tick's gravity integration starts
+cleanly from rest, using `core/AvatarMovementSimulation.js`'s own
+UNCHANGED gravity/landing code — `groundHeight` for each of those ticks
+is `application/AvatarStepConstraint.js#supportHeightAt()`, recomputed
+fresh from wherever the avatar currently is, so landing resolves against
+the SAME `core/WalkableSurface.js` a walking step has always used —
+including a stair's own tread or a slope's own ramp mid-surface, never
+merely "back to the flat baseline."
+
+```text
+SUPPORTED (walking, on a platform's edge)
+    │ next step's toHeight drops > maxStepHeight below fromHeight
+    ▼
+FALLING (grounded forced false; verticalVelocity=0 at the moment of leaving)
+    │ core/AvatarMovementSimulation.js integrates gravity each tick,
+    │ against groundHeight = supportHeightAt(current x, z) — live,
+    │ re-resolved every tick, same WalkableSurface as always
+    ▼
+SUPPORTED (y <= groundHeight -> snap, verticalVelocity=0, grounded=true —
+           unchanged landing logic since 0.2.36/0.3.2)
+```
+
+Jumping needed no new code at all: Space has always only jumped from
+`grounded === true` (see `core/AvatarMovementSimulation.js`'s own
+pre-0.3.4 comment on why — no double-jump, no air control), so
+`AvatarVerticalState.RISING`/`FALLING` simply names the two halves of an
+arc that already existed.
+
+### `core/WorldSpatialActivity.js` — JUMPING/FALLING
+
+Two new values, derived from `AvatarVerticalState` exactly the way every
+other value in this vocabulary is derived from local interaction state:
+
+```text
+deriveWorldSpatialActivity({ ..., rising, falling })
+    gizmo active                    -> MOVING_STRUCTURE / ROTATING_STRUCTURE  (unchanged, still highest priority)
+    rising                          -> JUMPING     (new)
+    falling                         -> FALLING     (new)
+    hasSelection && canEdit         -> BUILDING
+    hasSelection                    -> INSPECTING
+    isMoving                        -> WALKING
+    (none of the above)             -> IDLE
+```
+
+Both default `false`, so every pre-0.3.4 caller is byte-for-byte
+unchanged. `application/WorldNavigationSession.js#syncWorldSpatialPresence()`
+reads `_avatarMovementController.verticalState()` fresh each sync call,
+exactly like it already reads `hasMovementInput()` for `isMoving`.
+`core/AvatarAnimationState.js` is deliberately untouched — its existing
+`JUMPING` value already covers the whole airborne rendering experience;
+see docs/Principles.md, "Avatar Vertical State Is Derived, Never A
+Second Physics Bookkeeping (0.3.4)."
+
+### What never changes
+
+`core/SpatialBounds.js`/`core/AvatarCollision.js` (collision),
+`application/AvatarMovementConstraint.js` (horizontal obstruction),
+`application/AvatarTerrainConstraint.js` (terrain slope), and
+`core/WalkableSurface.js` itself are all completely unmodified by this
+milestone — 0.3.4 is entirely a question of WHEN the avatar's own
+vertical state changes, never a question of what geometry means. Nothing
+about jump velocity, gravity state, fall state, or landing state joins
+`core/WorldSpatialPresenceAdvertisement.js`'s own wire shape — see
+docs/Principles.md, "Local Physics Is Local; Spatial Presence Is
+Observation (0.3.4)."
+
+See `tests/AvatarVerticalNavigation.test.js` for the full flagship:
+climbing a step/stair onto a platform, walking off its own edge into
+FALLING, landing back to SUPPORTED, a grounded jump's own RISING/FALLING
+arc, tick-for-tick determinism across two independent runs, and a
+dedicated edge case proving a fall lands on a slope's own per-point ramp
+height, never a brick's flat bounding-box maximum. Deliberately not in
+0.3.4: crouching, swimming, ladders, wall climbing, double jump, air
+control, moving platforms, elevators, a physics engine, rigid bodies,
+and any of it joining `WorldOperationEnvelope` or the presence protocol.
+See docs/Roadmap.md for the full list.
