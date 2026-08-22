@@ -1771,8 +1771,6 @@ export default {
                     >Move Placement</button>
                 </div>
                 <p v-if="author">by {{ author }}</p>
-            </div>
-            <!-- Navigation and action buttons moved outside overlay to avoid width constraint -->
             <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
                 <button class="action-btn" @click="goHome">Home</button>
                 <button class="action-btn" @click="openLocationsPanel">Locations</button>
