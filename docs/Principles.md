@@ -6904,3 +6904,75 @@ the flat plane rather than replacing it is what keeps this milestone
 additive: every controller and constraint built without a
 `stepConstraint` wired behaves exactly as it did before this milestone,
 byte for byte.
+
+### Walkability Is Not Collision (0.3.3)
+
+`core/SpatialBounds.js` and `core/AvatarCollision.js` answer one
+question: does this geometry overlap that geometry? `core/WalkableSurface.js`
+answers a different one: where may an avatar stand and move? They may
+share the same underlying brick geometry, but they are not the same
+question, and this codebase never lets one quietly become the other.
+Reusing an AABB for walkability is the trap this principle names
+outright: a slope's AABB is a plain box, and nothing about a box's own
+min/max corners can answer "what is the actual support height at this
+specific (x, z)?" — the question every sloped or stepped surface
+genuinely needs answered. `core/WalkableSurface.js` therefore never
+widens, reuses, or is read by anything `core/SpatialBounds.js` or
+`core/AvatarCollision.js` already own; placement collision stays exactly
+the conservative AABB test it always was, and this codebase's own
+collision system never gradually grows into an accidental physics
+engine just because a slope needed a real height function somewhere.
+The split is structural, not cosmetic:
+
+```text
+Collision
+  ↓
+"What occupies this space?"
+
+Walkability
+  ↓
+"Where may an avatar stand and move?"
+```
+
+### A Directional Walkable Shape Generalizes Its Own Seam, Never Reuses A Flat One (0.3.3)
+
+`core/BrickWalkability.js#walkableTopAt()` was named, at the time of
+0.3.2, as exactly the seam a future non-box primitive would specialize
+— not a claim that one existed yet. `core/WalkableSurface.js` is that
+specialization, and it is deliberately built ON TOP of the existing
+seam rather than beside or instead of it: an ordinary flat-topped brick
+(`WalkableSurfaceKind.FLAT`) still resolves through `walkableTopAt()`
+directly, byte for byte unchanged from 0.3.2. Only a genuinely
+directional shape (`STEP`, `SLOPE`) gets a new, local-space profile —
+and even then, that profile is evaluated in the brick's own LOCAL
+coordinate space, honoring `Brick.rotation`, because which way a stair
+climbs or a slope rises IS the entire reason it is a stair or a slope,
+not a box. `core/AvatarCollision.js#brickAabb()`'s own "ignore
+`Brick.rotation`" simplification, documented since 0.2.42 for collision,
+is untouched by this — a flat brick's own footprint test still makes
+that same simplification, because a flat top face has no direction to
+get wrong in the first place.
+
+### A Per-Tick Height Delta Can Replace A Brick-Wide Wall Check, Once Something Downstream Is Equipped To Police It (0.3.3)
+
+`application/AvatarMovementConstraint.js` decided, since 0.3.2, whether
+a brick blocks horizontal passage by comparing its own overall PEAK
+height against the avatar's current support height — correct for a
+flat box, where the peak IS the only height that exists. A stair or a
+slope has no single peak worth comparing: its near edge and far edge
+can differ by the brick's own full height. 0.3.3 resolves this not by
+teaching `AvatarMovementConstraint` to understand tread/ramp geometry
+itself, but by recognizing that `application/AvatarStepConstraint.js`
+already runs a per-tick, per-point height-DELTA check downstream of
+it — so a directional shape is excluded from horizontal collision
+UNCONDITIONALLY (once stepping is enabled at all), and the step
+constraint's own existing `isStepClimbable()` check becomes the only
+gate deciding whether any specific tick's approach is actually
+climbable. This is not a special case bolted onto collision — it is a
+recognition that two constraints already running in sequence
+(`docs/Architecture.md`'s own five-stage 0.3.2 pipeline) can jointly
+answer a question neither could answer alone, without either one
+growing new knowledge of the other's domain. With stepping OFF entirely,
+this carve-out vanishes completely — there is no downstream check left
+to police the approach, so a directional shape reverts to being a
+genuine, full-height wall, exactly as it always was pre-0.3.2.

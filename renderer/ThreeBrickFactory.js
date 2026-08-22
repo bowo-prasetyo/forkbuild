@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { DEFAULT_STAIR_STEP_COUNT } from '../core/WalkableSurface.js';
 
 // The renderer-side counterpart to core/BrickRegistry: it knows nothing
 // about what a brick *means*, only how to turn one specific definitionId
@@ -58,7 +59,15 @@ function hipRoofMeshFactory(color, width, depth, height) {
 // then straight back down the riser face and along the base) rather than
 // several separate meshes, so it stays one primitive, one mesh, one
 // definitionId — never a hidden composite of smaller bricks.
-function stairMeshFactory(color, width, height, depth, steps = 4) {
+//
+// 0.3.3 — `steps` now defaults to core/WalkableSurface.js's own
+// DEFAULT_STAIR_STEP_COUNT rather than a locally hardcoded `4` — the
+// SAME constant that file's own stepped walkable-surface profile reads,
+// so the treads rendered here and the treads an avatar actually climbs
+// (application/AvatarStepConstraint.js) can never quietly disagree on
+// how many there are. The value itself is unchanged (4), so this is
+// pixel-identical to every stair already rendered before this milestone.
+function stairMeshFactory(color, width, height, depth, steps = DEFAULT_STAIR_STEP_COUNT) {
     return () => {
         const shape = new THREE.Shape();
         const stepWidth = width / steps;
