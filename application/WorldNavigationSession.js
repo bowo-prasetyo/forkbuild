@@ -24,6 +24,10 @@ import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
 import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
 import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
+import { CreateWorldLandmarkCommand } from './commands/CreateWorldLandmarkCommand.js';
+import { UpdateWorldLandmarkCommand } from './commands/UpdateWorldLandmarkCommand.js';
+import { RemoveWorldLandmarkCommand } from './commands/RemoveWorldLandmarkCommand.js';
+import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { Document } from '../core/Document.js';
 import { computeLifecycleStatus, describeLifecycleStatus } from './DocumentLifecycleStatus.js';
 import { detectSpatialOverlap } from '../core/SpatialOverlap.js';
@@ -4655,6 +4659,139 @@ export class WorldNavigationSession {
 	    const doc = this.getDocument(this._activeDocumentId);
 	    if (!doc) return false;
 	    this._commandHistories.get(doc.world.id).execute(new DeleteGroupCommand({ worldId: doc.world.id, groupId }));
+	    return true;
+	}
+
+	// -----------------------------------------------------------------
+	// World Landmarks (0.3.7) — explicit, persistent World content.
+	// -----------------------------------------------------------------
+	//
+	// Landmarks already appear in getWorldLocations() (kind: 'landmark',
+	// see application/WorldLocationDirectory.js) for navigation/compass
+	// purposes — focusLocation() already moves the camera to one, no
+	// changes needed there. This section is only the MUTATION surface:
+	// create, rename/redescribe, and remove, each an ordinary Command
+	// executed through the exact same
+	// this._commandHistories.get(worldId).execute(cmd) chokepoint every
+	// other named World content type (Group, above) already uses — so
+	// propagation (WorldCommandPropagationUseCase, wired once in
+	// _registerCommandHistory) and undo/redo need zero landmark-specific
+	// code. See core/WorldLandmark.js's own header and docs/Principles.md,
+	// "A Landmark Is World Content, Not Spatial Presence (0.3.7)."
+	//
+	// getLandmark() is the one richer read: a WorldLocation deliberately
+	// never carries description/authorIdentityId (core/WorldLocation.js)
+	// or a worldId, so the Edit Landmark form reads the raw WorldLandmark
+	// instead — searched across every loaded document (see
+	// _resolveLandmarkOwner below), the same "world-wide, not just the
+	// active document" scope getWorldLocations() already has, so the
+	// form always has real title/description to prefill regardless of
+	// which loaded World the landmark actually lives in. Returns null
+	// when no loaded document currently has it.
+	getLandmark(landmarkId) {
+	    const doc = this._resolveLandmarkOwner(landmarkId);
+	    if (!doc) return null;
+	    return doc.world.getWorldLandmark(landmarkId).toJSON();
+	}
+
+	// Which loaded document's World actually owns landmarkId. Landmarks
+	// are world-wide destinations exactly like structures (see
+	// WorldLocationDirectory's own header) — a landmark shown in the
+	// Locations panel may belong to any currently loaded document, not
+	// only the active one — so getLandmark()/update/remove below resolve
+	// by searching rather than assuming "the active document."
+	_resolveLandmarkOwner(landmarkId) {
+	    for (const doc of this.getLoadedDocuments()) {
+	        if (doc.world.getWorldLandmark(landmarkId)) {
+	            return doc;
+	        }
+	    }
+	    return null;
+	}
+
+	// "Place Here" — a landmark at the local avatar's own current
+	// position, in the ACTIVE document's World (the world you're
+	// actually working in, exactly like createGroupFromSelection/
+	// renameGroup above — same _ensureEditableDocumentId fork-on-write
+	// guard, same canEditDocument authorization gate the milestone
+	// design calls for: "any EDIT member can modify World landmarks,"
+	// never a separate LandmarkOwner/ACL concept).
+	//
+	// Requires a live avatar (see getAvatarPosition()'s own header) —
+	// World View hides the Add Landmark affordance without one, but
+	// this throws rather than silently doing nothing if called
+	// directly. core/WorldLandmark.js stores X/Z as authoritative and
+	// documents Y as "derived from terrain at render time," but (like
+	// StructurePlacement's own position) the value actually stored here
+	// is still the avatar's real, currently-correct Y. The avatar's own
+	// position is in the shared/absolute layout space (see
+	// application/WorldSpatialContextService.js, which compares it
+	// directly against placement positions already offset the same
+	// way) — this World's own layout offset (getDocumentPosition) must
+	// be subtracted to get the LOCAL position WorldLandmark stores,
+	// the exact inverse of the offset WorldLocationDirectory#
+	// _landmarkLocationsFor() adds back for display.
+	createLandmarkHere(title, description = '') {
+	    const avatarPos = this.getAvatarPosition();
+	    if (!avatarPos) {
+	        throw new Error('WorldNavigationSession: cannot add a landmark without a live avatar position');
+	    }
+	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
+	    const doc = this.getDocument(this._activeDocumentId);
+	    if (!doc) {
+	        throw new Error('WorldNavigationSession: no active World to add a landmark to');
+	    }
+	    const worldId = doc.world.id;
+	    if (!this.canEditDocument(worldId)) {
+	        throw new Error('WorldNavigationSession: not authorized to add landmarks to this World');
+	    }
+	    const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
+	    if (!authorIdentityId) {
+	        throw new Error('WorldNavigationSession: sign in to add a landmark');
+	    }
+	    const layoutPosition = this.getDocumentPosition(worldId);
+	    const cmd = new CreateWorldLandmarkCommand({
+	        worldId,
+	        authorIdentityId,
+	        title,
+	        description,
+	        position: new Position(
+	            avatarPos.x - layoutPosition.x,
+	            avatarPos.y - layoutPosition.y,
+	            avatarPos.z - layoutPosition.z
+	        )
+	    });
+	    this._commandHistories.get(worldId).execute(cmd);
+	    return cmd.executedLandmarkId;
+	}
+
+	updateLandmark(landmarkId, { title, description } = {}) {
+	    const owner = this._resolveLandmarkOwner(landmarkId);
+	    if (!owner) {
+	        throw new Error(`WorldNavigationSession: no landmark "${landmarkId}" known`);
+	    }
+	    const worldId = this._ensureEditableDocumentId(owner.world.id);
+	    if (!this.canEditDocument(worldId)) {
+	        throw new Error('WorldNavigationSession: not authorized to edit landmarks in this World');
+	    }
+	    this._commandHistories.get(worldId).execute(
+	        new UpdateWorldLandmarkCommand({ worldId, landmarkId, title, description })
+	    );
+	    return true;
+	}
+
+	removeLandmark(landmarkId) {
+	    const owner = this._resolveLandmarkOwner(landmarkId);
+	    if (!owner) {
+	        throw new Error(`WorldNavigationSession: no landmark "${landmarkId}" known`);
+	    }
+	    const worldId = this._ensureEditableDocumentId(owner.world.id);
+	    if (!this.canEditDocument(worldId)) {
+	        throw new Error('WorldNavigationSession: not authorized to remove landmarks from this World');
+	    }
+	    this._commandHistories.get(worldId).execute(
+	        new RemoveWorldLandmarkCommand({ worldId, landmarkId })
+	    );
 	    return true;
 	}
 

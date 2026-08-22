@@ -34,6 +34,7 @@ export class WorldSpatialContext {
         hydrologyFeature,
         nearbyStructures = [],
         nearbyCollaborators = [],
+        nearbyLandmarks = [],
         distanceFromOrigin
     } = {}) {
         if (!position) {
@@ -54,6 +55,15 @@ export class WorldSpatialContext {
             : Object.freeze([]);
         this._nearbyCollaborators = Array.isArray(nearbyCollaborators)
             ? Object.freeze([...nearbyCollaborators])
+            : Object.freeze([]);
+        // 0.3.7 — World Landmarks & Personal Waypoints. Same shape and
+        // same streaming-radius filtering as nearbyStructures above —
+        // a WorldLandmark is intentional World content rather than
+        // derived from a StructurePlacement, but "what's nearby" treats
+        // both as ordinary navigable points. See core/WorldLandmark.js's
+        // own header.
+        this._nearbyLandmarks = Array.isArray(nearbyLandmarks)
+            ? Object.freeze([...nearbyLandmarks])
             : Object.freeze([]);
         this._distanceFromOrigin = typeof distanceFromOrigin === 'number' && Number.isFinite(distanceFromOrigin)
             ? distanceFromOrigin
@@ -81,6 +91,10 @@ export class WorldSpatialContext {
     // Nearby collaborators within spatial awareness radius
     // Each entry: { identityId, displayName, activity, distance, direction }
     get nearbyCollaborators() { return this._nearbyCollaborators; }
+
+    // 0.3.7 — nearby WorldLandmarks within streaming radius.
+    // Each entry: { id, title, distance, direction }
+    get nearbyLandmarks() { return this._nearbyLandmarks; }
 
     // Euclidean distance from world origin (0, 0, 0) in meters
     get distanceFromOrigin() { return this._distanceFromOrigin; }
@@ -142,6 +156,7 @@ export class WorldSpatialContext {
             hydrologyFeature: this._hydrologyFeature,
             nearbyStructures: [...this._nearbyStructures],
             nearbyCollaborators: [...this._nearbyCollaborators],
+            nearbyLandmarks: [...this._nearbyLandmarks],
             distanceFromOrigin: this._distanceFromOrigin,
             description: this.description
         };
@@ -156,6 +171,7 @@ export function deriveSpatialContext({
     world,
     structurePlacements = [],
     collaboratorPositions = [],
+    landmarks = [],
     streamingRadius = 100
 }) {
     if (!position) {
@@ -205,6 +221,23 @@ export function deriveSpatialContext({
         .filter((c) => c.distance <= awarenessRadius)
         .sort((a, b) => a.distance - b.distance);
 
+    // 0.3.7 — nearby landmarks, the exact same shape/filter/sort as
+    // nearbyStructures above.
+    const nearbyLandmarks = landmarks
+        .map((landmark) => {
+            const dx = landmark.position.x - position.x;
+            const dz = landmark.position.z - position.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            return {
+                id: landmark.id,
+                title: landmark.title || 'Untitled Landmark',
+                distance: Math.round(distance),
+                direction: null // Will be computed by WorldSpatialContext instance
+            };
+        })
+        .filter((l) => l.distance <= streamingRadius)
+        .sort((a, b) => a.distance - b.distance);
+
     // Calculate distance from origin
     const distanceFromOrigin = Math.round(Math.sqrt(
         position.x * position.x + position.z * position.z
@@ -218,6 +251,7 @@ export function deriveSpatialContext({
         hydrologyFeature,
         nearbyStructures,
         nearbyCollaborators,
+        nearbyLandmarks,
         distanceFromOrigin
     });
 
@@ -233,6 +267,13 @@ export function deriveSpatialContext({
         const collab = collaboratorPositions.find((cp) => cp.identityId === c.identityId);
         if (collab) {
             c.direction = context.directionLabel(collab.position);
+        }
+    });
+
+    nearbyLandmarks.forEach((l) => {
+        const landmark = landmarks.find((lm) => lm.id === l.id);
+        if (landmark) {
+            l.direction = context.directionLabel(landmark.position);
         }
     });
 

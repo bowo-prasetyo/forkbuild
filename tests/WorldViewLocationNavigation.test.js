@@ -116,7 +116,11 @@ async function run() {
     {
         assert(isValidWorldLocationKind(WorldLocationKind.ORIGIN) === true, '1. ORIGIN is a valid kind');
         assert(isValidWorldLocationKind(WorldLocationKind.STRUCTURE) === true, '2. STRUCTURE is a valid kind');
-        assert(isValidWorldLocationKind('landmark') === false, '3. an un-shipped kind (LANDMARK) is not valid — deliberately postponed');
+        // 0.3.7 shipped LANDMARK — see core/WorldLocationKind.js and
+        // tests/WorldLandmarks.test.js. 'not-a-real-kind' below still
+        // proves the vocabulary stays closed, just no longer excluding
+        // 'landmark' specifically.
+        assert(isValidWorldLocationKind(WorldLocationKind.LANDMARK) === true, '3. LANDMARK is a valid kind (0.3.7)');
 
         const loc = new WorldLocation({
             id: 'placement-1', title: 'My House', kind: WorldLocationKind.STRUCTURE,

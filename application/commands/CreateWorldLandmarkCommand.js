@@ -1,5 +1,6 @@
 import { WorldLandmark } from '../../core/WorldLandmark.js';
 import { Position } from '../../core/Position.js';
+import { createId } from '../../core/createId.js';
 import { Command } from './Command.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints.
@@ -8,9 +9,14 @@ import { Command } from './Command.js';
 // stores worldId, authorIdentityId, title, description, and position;
 // execute() creates the landmark's identity, it doesn't receive one,
 // following the same pattern as PlaceStructureCommand and PlaceBrickCommand.
+// Unlike Brick/StructurePlacement, WorldLandmark does not default its own
+// id (core/WorldLandmark.js requires one explicitly), so this command
+// mints one itself via createId() on first execute().
 //
-// _executedLandmarkId tracks what was created for undo() correctness,
-// but is excluded from toJSON() — replaying elsewhere creates a new id.
+// _executedLandmarkId tracks what was created for undo() correctness AND
+// is included in toJSON(), the same "redo() must recreate the SAME
+// identity" precedent core/commands/PlaceBrickCommand.js#executedBrickId
+// and CreateGroupCommand.js#executedGroupId already established.
 export class CreateWorldLandmarkCommand extends Command {
     constructor({ worldId, authorIdentityId, title, description = '', position, id, timestamp } = {}) {
         super({ id, timestamp });
@@ -28,13 +34,17 @@ export class CreateWorldLandmarkCommand extends Command {
     get description() { return this._description; }
     get position() { return this._position; }
     get type() { return 'create-world-landmark'; }
+    // The id of the landmark this command created — null until execute()
+    // has run. Lets a caller (e.g. WorldNavigationSession#createLandmarkHere)
+    // learn what was just created, mirroring CreateGroupCommand#executedGroupId.
+    get executedLandmarkId() { return this._executedLandmarkId; }
 
     // context: { world } — the live World this command applies to.
     // Returns the created (or re-created on redo) WorldLandmark.
     execute(context) {
         this._assertWorldMatches(context);
         const landmark = new WorldLandmark({
-            id: this._executedLandmarkId || undefined,
+            id: this._executedLandmarkId || createId(),
             worldId: this._worldId,
             authorIdentityId: this._authorIdentityId,
             title: this._title,

@@ -8,6 +8,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -353,6 +354,7 @@ async function run() {
         const serializer = new DocumentSerializer();
         const registry = new CreateBrickRegistryUseCase().execute();
         const loadDocumentUseCase = new LoadDocumentUseCase(storage, serializer);
+        const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(storage, serializer);
         const saveDocumentUseCase = new SaveDocumentUseCase(storage, serializer);
         const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
         const discoveryProvider = new LocalDiscoveryProvider(storage);
@@ -376,7 +378,7 @@ async function run() {
         saveDocumentUseCase.execute(new DocumentManager(doc));
 
         const session = new WorldNavigationSession({
-            registry, loadPublicationDocumentUseCase: null, worldLayoutProvider,
+            registry, loadPublicationDocumentUseCase, worldLayoutProvider,
             discoveryProvider, loadDocumentUseCase
         });
         session._session = { addWorld() {}, removeWorld() {}, dispose() {} };
@@ -396,7 +398,7 @@ async function run() {
         assert(landmarkLoc.isLandmark === true, '63. isLandmark getter returns true');
 
         const found = directory.find('lm-nav');
-        assert(found === landmarkLoc, '64. find() locates landmark by id');
+        assert(found !== null && found.id === landmarkLoc.id, '64. find() locates landmark by id');
     }
 
     // -------------------------------------------------------------
@@ -466,8 +468,8 @@ async function run() {
         saveDocumentUseCase.execute(manager);
 
         // Load fresh from storage
-        const loadedManager = loadDocumentUseCase.execute('persist-world');
-        const loadedWorld = loadedManager.document.world;
+        const loadedDocument = loadDocumentUseCase.execute(new DocumentManager(), 'persist-world');
+        const loadedWorld = loadedDocument.world;
 
         const loadedLandmark = loadedWorld.getWorldLandmark('lm-persist');
         assert(loadedLandmark, '67. landmark survives storage round-trip');

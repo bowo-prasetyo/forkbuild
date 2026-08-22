@@ -44,10 +44,16 @@ export class WorldSpatialContextService {
         
         // Collect all structure placements from loaded documents
         const structurePlacements = [];
+        // 0.3.7 — World Landmarks & Personal Waypoints. Same collection,
+        // same layoutPosition offset (see application/
+        // WorldLocationDirectory.js#_landmarkLocationsFor, which applies
+        // the identical transform for navigation) — a landmark's own
+        // position is LOCAL to its World, exactly like a placement's.
+        const landmarks = [];
         for (const document of documents) {
             const layoutPosition = this._session.getDocumentPosition?.(document.world.id) || { x: 0, y: 0, z: 0 };
             const placements = document.world.getStructurePlacements?.() || [];
-            
+
             for (const placement of placements) {
                 structurePlacements.push({
                     id: placement.id,
@@ -58,6 +64,19 @@ export class WorldSpatialContextService {
                         z: placement.position.z + layoutPosition.z
                     },
                     documentTitle: this._session.getSavedDocumentTitle?.(placement.documentId) || 'Untitled Structure'
+                });
+            }
+
+            const worldLandmarks = document.world.getWorldLandmarks?.() || [];
+            for (const landmark of worldLandmarks) {
+                landmarks.push({
+                    id: landmark.id,
+                    title: landmark.title,
+                    position: {
+                        x: landmark.position.x + layoutPosition.x,
+                        y: landmark.position.y + layoutPosition.y,
+                        z: landmark.position.z + layoutPosition.z
+                    }
                 });
             }
         }
@@ -88,6 +107,7 @@ export class WorldSpatialContextService {
             world: null, // Not directly used; structurePlacements provided separately
             structurePlacements,
             collaboratorPositions,
+            landmarks,
             streamingRadius: 100
         });
     }
@@ -103,10 +123,13 @@ export class WorldSpatialContextService {
         const documents = this._session.getLoadedDocuments?.() || [];
         
         const structurePlacements = [];
+        // 0.3.7 — same collection, same layoutPosition offset as
+        // getCurrentContext() above.
+        const landmarks = [];
         for (const document of documents) {
             const layoutPosition = this._session.getDocumentPosition?.(document.world.id) || { x: 0, y: 0, z: 0 };
             const placements = document.world.getStructurePlacements?.() || [];
-            
+
             for (const placement of placements) {
                 structurePlacements.push({
                     id: placement.id,
@@ -117,6 +140,19 @@ export class WorldSpatialContextService {
                         z: placement.position.z + layoutPosition.z
                     },
                     documentTitle: this._session.getSavedDocumentTitle?.(placement.documentId) || 'Untitled Structure'
+                });
+            }
+
+            const worldLandmarks = document.world.getWorldLandmarks?.() || [];
+            for (const landmark of worldLandmarks) {
+                landmarks.push({
+                    id: landmark.id,
+                    title: landmark.title,
+                    position: {
+                        x: landmark.position.x + layoutPosition.x,
+                        y: landmark.position.y + layoutPosition.y,
+                        z: landmark.position.z + layoutPosition.z
+                    }
                 });
             }
         }
@@ -147,6 +183,7 @@ export class WorldSpatialContextService {
             world: null,
             structurePlacements,
             collaboratorPositions,
+            landmarks,
             streamingRadius: 100
         });
     }
