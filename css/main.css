@@ -436,6 +436,26 @@ html, body {
     flex-shrink: 0;
 }
 
+/* 0.4.0 — Structure Composition & Blueprint Library. A structure entry
+   now offers two distinct actions (Copy Into Document, Fork As New
+   Document) instead of one — wrapped in its own flex row so they wrap
+   together rather than fighting .structure-item-name for space. */
+.structure-item-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.35rem;
+}
+
+.action-btn--copy {
+    background: #2a2a2a;
+    color: #d0d0d0;
+    border: 1px solid #4caf7d;
+}
+
+.action-btn--copy:hover {
+    background: #234433;
+}
+
 /* 0.2.84 — Building Library & Palette UX. One unified Bricks/Structures
    panel replacing the previously-separate BrickPalette/
    StructureLibraryPanel components; deliberately reuses .palette-*,

@@ -144,3 +144,63 @@ placement (`application/commands/RemoveStructurePlacementCommand.js`)
 never touches the Document it referenced — a placement and its content
 are two different lifecycles, exactly as removing a Brick never touches
 the BrickDefinition it was an instance of.
+
+## Copying a Structure Into the Current Document (0.4.0)
+
+Forking (above) and Placing (0.2.90, above) both let a Structure or
+Document be reused without hand-recreating its bricks, but neither puts
+a Structure's own bricks INTO the document you already have open — Fork
+opens a brand-new Document; Placing references a whole separate
+Document from within a World. 0.4.0 (Structure Composition & Blueprint
+Library) answers the remaining question: how do I fold a Structure's
+bricks directly into the document I'm already building, so House + Well
++ Barn become one larger blueprint under one undo history? See
+docs/Principles.md, "Copying Composes A Blueprint; Forking Creates One
+(0.4.0)."
+
+`application/CopyStructureIntoDocumentUseCase.js` turns a Structure into
+ONE `PasteBricksCommand` (0.1.42) — the same command a clipboard paste
+already produces, reused rather than duplicated (see that use case's own
+header for why no parallel `PasteStructureCommand` exists):
+
+    const command = new CopyStructureIntoDocumentUseCase().execute(structure, {
+        worldId: document.world.id,
+        buildingId: document.world.getBuildings()[0].id,
+        world: document.world,
+        registry: brickRegistry
+    });
+    commandHistory.execute(command);   // one undo entry, however many bricks
+
+`EditorSession.copyStructureIntoDocument(structure)` wraps this the same
+way `paste()` already wraps `PasteClipboardUseCase` — same "document and
+CommandHistory must exist" guard, same single execute() call. Positioning
+(Composition Offset) is deterministic, not manual: copying into an EMPTY
+document keeps the Structure's own untranslated local geometry (so
+copying House into a blank document produces byte-identical bricks to
+forking House); copying into a document that already has content appends
+the new Structure just past the document's current occupied footprint
+along X (`core/SpatialBounds.js#fromWorld()`/`#fromBricks()` — the same
+derived-bounds math `core/Structure.js` already uses for itself), so
+composing several structures never requires picking coordinates by hand
+and never overlaps what's already there.
+
+`ui/components/BuildLibraryPanel.js` offers Copy Into Document beside
+Fork As New Document on every structure entry — Copy emits `copy`
+(wired to `EditorSession.copyStructureIntoDocument()`), Fork still emits
+`fork` exactly as before. Copying carries no provenance field: a copied
+brick is an ordinary brick in the current document, indistinguishable
+from one placed by hand the instant it lands — composition is about
+what the current blueprint now contains, never about where each piece
+came from.
+
+An interactive ghost-preview placement flow for Copy (drag/rotate before
+committing, mirroring `application/tools/StructurePlacementTool.js`'s
+own 0.2.90 UX one rung over) is deliberately deferred — 0.4.0 is the
+composition mechanic and its deterministic default placement; a
+positioning UI for it is later work, named rather than hidden, the same
+restraint every milestone in this document already applies to its own
+scope. A built-in structure library rich enough to make composition
+genuinely useful (more categories, more structures per category), a
+User Blueprint Library ("Save As Blueprint" from the current document),
+and generated preview thumbnails are equally out of scope here — see
+docs/Roadmap.md, 0.4.0's own "Deliberately excluded."

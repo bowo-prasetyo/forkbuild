@@ -40,12 +40,19 @@ export function matches(query, ...fields) {
 // since 0.1.9) AND emits 'place' — this panel's one new behavior — so
 // the Editor can switch to the Place tool in the same click, because
 // selecting a brick and never being able to place it with one action
-// was never the point. Clicking a structure's Fork button only ever
-// emits 'fork', exactly as StructureLibraryPanel already did — forking
-// opens a brand new Document (EditorSession.forkStructure()), never
-// places anything into the current one. Nothing here changes
-// PaletteUseCase, EditorContext, ForkStructureUseCase, or what either
-// action actually does — only how both are found and asked for.
+// was never the point. A structure entry offers TWO actions as of
+// 0.4.0 (Structure Composition & Blueprint Library) — Copy Into
+// Document (emits 'copy') and Fork As New Document (emits 'fork') —
+// deliberately distinct verbs for a deliberately distinct architectural
+// operation, see docs/Principles.md, "Copying Composes A Blueprint;
+// Forking Creates One (0.4.0)": Fork still only ever opens a brand new
+// Document (EditorSession.forkStructure()), exactly as
+// StructureLibraryPanel originally did; Copy instead inserts the
+// structure's bricks into the CURRENTLY OPEN document
+// (EditorSession.copyStructureIntoDocument()) and never opens or
+// creates anything. Nothing here changes PaletteUseCase, EditorContext,
+// ForkStructureUseCase, CopyStructureIntoDocumentUseCase, or what any
+// action actually does — only how they're found and asked for.
 export default {
     name: 'BuildLibraryPanel',
     components: { BuildLibraryPreview },
@@ -69,7 +76,7 @@ export default {
             default: null
         }
     },
-    emits: ['place', 'fork'],
+    emits: ['place', 'fork', 'copy'],
     setup(props, { emit }) {
         const activeTab = ref('bricks');
         const query = ref('');
@@ -116,6 +123,10 @@ export default {
             emit('fork', structure);
         }
 
+        function copyStructure(structure) {
+            emit('copy', structure);
+        }
+
         onMounted(() => {
             unsubscribe = props.paletteUseCase.onActiveBrickChanged((definitionId) => {
                 selectedDefinitionId.value = definitionId;
@@ -136,7 +147,8 @@ export default {
             filteredStructureGroups,
             setTab,
             selectBrick,
-            forkStructure
+            forkStructure,
+            copyStructure
         };
     },
     template: `
@@ -202,9 +214,14 @@ export default {
                         >
                             <BuildLibraryPreview kind="structure" :item="structure" :preview-service="previewService" />
                             <span class="structure-item-name">{{ structure.name }}</span>
-                            <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
-                                Fork
-                            </button>
+                            <div class="structure-item-actions">
+                                <button class="action-btn action-btn--copy structure-item-copy" @click="copyStructure(structure)">
+                                    Copy Into Document
+                                </button>
+                                <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
+                                    Fork As New Document
+                                </button>
+                            </div>
                         </li>
                     </ul>
                 </div>
