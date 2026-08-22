@@ -66,6 +66,7 @@ import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
 import { deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
+import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
 import { deriveWorldSpatialAnchor } from '../core/WorldSpatialAnchor.js';
 
 const STREAMING_RADIUS = 150;
@@ -2624,6 +2625,32 @@ export class WorldNavigationSession {
         return { x: state.position.x, y: state.position.y, z: state.position.z };
     }
 
+    // 0.3.6 — World Discovery & Exploration. The local avatar's own
+    // live world position — WorldSpatialContextService's primary
+    // "where am I" signal (see application/WorldSpatialContextService.js
+    // and docs/Principles.md, "Exploration Is Derived From Place, Not
+    // Stored As Place"). Same graceful-absence posture as
+    // getCameraPosition() above: a session with no avatarPresenceSession
+    // wired (nobody logged in, or most existing tests) simply returns
+    // null, leaving the caller to fall back to getCameraPosition().
+    getAvatarPosition() {
+        if (!this._avatarPresenceSession) {
+            return null;
+        }
+        const { x, y, z } = this._avatarPresenceSession.current.position;
+        return { x, y, z };
+    }
+
+    // 0.3.6 — the SAME seed terrainHeightAt()/ecologyZoneAt()/
+    // hydrologyFeatureAt() already use everywhere else in this file
+    // (DEFAULT_WORLD_SEED, imported above) — spatial context derivation
+    // must never invent a second, session-local notion of "which seed
+    // is this world using," it just needs a way to ask this session
+    // which one is live.
+    getWorldSeed() {
+        return DEFAULT_WORLD_SEED;
+    }
+
     _inspectLocalAvatar() {
         if (!this._avatarProfileUseCase || !this._avatarPresenceSession) {
             return null;
@@ -2961,12 +2988,22 @@ export class WorldNavigationSession {
         const heading = this.getCompassHeading();
         const selection = this._resolveWorldSpatialSelection(documentId);
         const gizmoState = this._editingService.transformGizmoState;
+        // 0.3.4 — the local avatar's own vertical motion
+        // (core/AvatarVerticalState.js), read fresh off the movement
+        // controller exactly like `isMoving` already is below, and fed
+        // into deriveWorldSpatialActivity()'s own new JUMPING/FALLING
+        // cases. Absent entirely (no controller wired at all) simply
+        // means neither ever fires — same graceful-absence posture as
+        // `isMoving` already follows.
+        const verticalState = this._avatarMovementController ? this._avatarMovementController.verticalState() : null;
         const activity = deriveWorldSpatialActivity({
             gizmoActive: gizmoState.active,
             gizmoMode: gizmoState.mode,
             hasSelection: !selection.isEmpty,
             canEdit: this.canEditDocument(documentId),
-            isMoving: Boolean(this._avatarMovementController && this._avatarMovementController.hasMovementInput())
+            isMoving: Boolean(this._avatarMovementController && this._avatarMovementController.hasMovementInput()),
+            rising: verticalState === AvatarVerticalState.RISING,
+            falling: verticalState === AvatarVerticalState.FALLING
         });
         this._worldSpatialPresenceUseCase.updateSpatial(documentId, {
             position: cameraPosition ? { x: cameraPosition.x, z: cameraPosition.z } : undefined,

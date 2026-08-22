@@ -6,6 +6,7 @@ import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase
 import { EditorActionRegistry, createStandardActions } from '../../application/EditorActionRegistry.js';
 import { EditorActionContext } from '../../application/EditorActionContext.js';
 import { InputRouter } from '../../application/InputRouter.js';
+import { WorldSpatialContextService } from '../../application/WorldSpatialContextService.js';
 import EditingSidebar from '../components/EditingSidebar.js';
 import CommandPalette from '../components/CommandPalette.js';
 import ActionFeedback from '../components/ActionFeedback.js';
@@ -174,6 +175,29 @@ export default {
         // cheap, always-current query — see WorldLocationDirectory's
         // own header), never cached across opens.
         const compassHeading = ref(null);
+        // 0.3.6 — World Discovery & Exploration. Spatial context for
+        // current location (terrain zone, hydrology feature, nearby structures,
+        // nearby collaborators) derived deterministically from position + world.
+        const spatialContext = ref(null);
+        // 0.3.6 — the compass's own contextual markers (design conversation:
+        // "extending the compass from merely N/E/S/W to contextual
+        // markers... but only for nearby meaningful locations"). A pure
+        // read/reshape of spatialContext.value — never a second query —
+        // capped at 5 total so the tiny dial never turns into a minimap
+        // (explicitly out of scope for 0.3.6). CompassIndicator only
+        // needs an id/direction/kind/label per marker; it never sees
+        // core/WorldSpatialContext.js's richer shape directly, keeping
+        // the component's own presentation-only contract unchanged.
+        const compassMarkers = computed(() => {
+            if (!spatialContext.value) return [];
+            const structures = (spatialContext.value.nearbyStructures || []).map((s) => (
+                { id: `structure:${s.id}`, direction: s.direction, kind: 'structure', label: s.title }
+            ));
+            const collaborators = (spatialContext.value.nearbyCollaborators || []).map((c) => (
+                { id: `collaborator:${c.identityId}`, direction: c.direction, kind: 'collaborator', label: c.displayName }
+            ));
+            return structures.concat(collaborators).filter((m) => m.direction).slice(0, 5);
+        });
         const showLocationsPanel = ref(false);
         const worldLocations = ref([]);
         // 0.2.99 — World Collaboration UX. `worldMembers`/
@@ -258,6 +282,11 @@ export default {
             deviceAuthorizationPropagationUseCase: deviceAuthorizationUseCase
         });
         const session = worldViewFactory.createSession(registry);
+        // 0.3.6 — World Discovery & Exploration. Spatial context service
+        // derives location descriptions, nearby structures, and collaborator
+        // positions from the viewer's current position and deterministic
+        // world environment (terrain ecology, hydrology, structures).
+        const spatialContextService = new WorldSpatialContextService(session);
         // Purely a client rendering preference (see docs/Principles.md,
         // "Avatar Visibility Is A Client Rendering Preference, Not
         // Avatar State") — never persisted, never affects
@@ -612,6 +641,11 @@ export default {
             // 0.2.94 — re-read alongside cameraPosition on the exact
             // same cadence; see compassHeading's own ref comment.
             compassHeading.value = session.getCompassHeading();
+            
+            // 0.3.6 — World Discovery & Exploration. Derive spatial context
+            // (terrain zone, hydrology feature, nearby structures, collaborators)
+            // from current camera position for contextual location descriptions.
+            spatialContext.value = spatialContextService.getCurrentContext();
 
             // 0.2.38 — see the ref's own comment above.
             if (typeof session.getRemoteAvatarDiagnostics === 'function') {
@@ -1276,6 +1310,10 @@ export default {
                 session.hover(event.clientX, event.clientY);
                 refreshHoverUI();
             }
+            // Update compass heading during camera orbit (when dragging with no buttons pressed after initial drag)
+            if (isDragging && event.buttons === 0) {
+                compassHeading.value = session.getCompassHeading();
+            }
         }
 
         function onPointerUp(event) {
@@ -1690,6 +1728,8 @@ export default {
             spatialPlacement,
             cameraPosition,
             compassHeading,
+            spatialContext,
+            compassMarkers,
             showLocationsPanel,
             worldLocations,
             goHome,
@@ -1771,20 +1811,10 @@ export default {
                     >Move Placement</button>
                 </div>
                 <p v-if="author">by {{ author }}</p>
-                <p v-if="cameraPosition" class="world-view-coords">
-                    Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
-                </p>
-                <!-- 0.2.94 — World View Location & Navigation. Purely
-                     read-only orientation + navigation: the compass is
-                     never clickable, and Home/Locations only ever move
-                     the camera — see docs/Principles.md, "World View
-                     Navigation Operates On Spatial Observation, Never
-                     On Document Mutation (0.2.94)." -->
-                <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
-                    <CompassIndicator :heading="compassHeading" />
-                    <button class="action-btn" @click="goHome">Home</button>
-                    <button class="action-btn" @click="openLocationsPanel">Locations</button>
-                </div>
+            <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
+                <button class="action-btn" @click="goHome">Home</button>
+                <button class="action-btn" @click="openLocationsPanel">Locations</button>
+            </div>
                 <!-- 0.2.99 — World Collaboration UX. Deliberately
                      subtle, exactly like the compass above: the World
                      itself stays visually dominant. Both the indicator
@@ -2281,6 +2311,84 @@ export default {
                 @revoke="revokeWorldMember"
                 @cancel="closeMembersPanel"
             />
+            <!-- 0.2.94/0.3.6 — Navigation HUD: camera coordinates
+                 and compass as a floating overlay on the main
+                 viewport, positioned at top-right below Logout button.
+                 Transparent background ensures the World scenery
+                 remains dominant. Now includes contextual location
+                 description, nearby structures, and collaborator markers. -->
+            <div v-if="cameraPosition" class="world-view-nav-hud">
+                <p class="world-view-nav-hud-coords">
+                    {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
+                </p>
+                <div class="world-view-nav-hud-compass">
+                    <!-- 0.3.6 — contextual markers rendered ON the dial
+                         itself, at each nearby structure's/collaborator's
+                         own compass direction. -->
+                    <CompassIndicator :heading="compassHeading" :markers="compassMarkers" />
+                </div>
+                <!-- 0.3.6 — Contextual location description -->
+                <div v-if="spatialContext && spatialContext.description" class="world-view-nav-context">
+                    {{ spatialContext.description }}
+                </div>
+                <!-- 0.3.6 — readable legend for the same markers shown on
+                     the compass above (a 36px dial has no room for
+                     labels) -->
+                <div v-if="spatialContext && spatialContext.nearbyStructures && spatialContext.nearbyStructures.length > 0" class="world-view-nav-markers">
+                    <div v-for="structure in spatialContext.nearbyStructures.slice(0, 3)" :key="structure.id" class="world-view-nav-marker">
+                        <span class="marker-direction">{{ structure.direction }}</span>
+                        <span class="marker-label">{{ structure.title }} ({{ structure.distance }}m)</span>
+                    </div>
+                </div>
+                <div v-if="spatialContext && spatialContext.nearbyCollaborators && spatialContext.nearbyCollaborators.length > 0" class="world-view-nav-markers">
+                    <div v-for="collab in spatialContext.nearbyCollaborators.slice(0, 3)" :key="collab.identityId" class="world-view-nav-marker collaborator">
+                        <span class="marker-direction">{{ collab.direction }}</span>
+                        <span class="marker-label">{{ collab.displayName }} ({{ collab.distance }}m)</span>
+                    </div>
+                </div>
+            </div>
         </div>
     `
 };
+
+// 0.3.6 — World Discovery & Exploration. Styles for contextual location descriptions and markers.
+const style = document.createElement('style');
+style.textContent = `
+    .world-view-nav-context {
+        font-size: 0.75rem;
+        color: #a0aec0;
+        margin-top: 0.25rem;
+        padding-top: 0.25rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .world-view-nav-markers {
+        margin-top: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .world-view-nav-marker {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.7rem;
+        color: #f6e05e;
+    }
+    
+    .world-view-nav-marker.collaborator {
+        color: #81e6d9;
+    }
+    
+    .marker-direction {
+        font-weight: bold;
+        min-width: 1.5rem;
+        text-align: center;
+    }
+    
+    .marker-label {
+        opacity: 0.9;
+    }
+`;
+document.head.appendChild(style);

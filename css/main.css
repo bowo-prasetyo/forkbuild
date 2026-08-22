@@ -1184,6 +1184,108 @@ html, body {
     display: block;
 }
 
+/* World View Navigation HUD - camera coordinates and compass
+   Positioned as an overlay on the main viewport, deliberately
+   transparent and unobtrusive while remaining readable. */
+.world-view-nav-hud {
+    position: absolute;
+    top: 5rem;
+    right: 1.5rem;
+    z-index: 10;
+    background: rgba(18, 18, 18, 0.6);
+    border: 1px solid rgba(74, 74, 74, 0.5);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 180px;
+}
+
+.world-view-nav-hud-coords {
+    font-family: monospace;
+    font-size: 0.85rem !important;
+    color: #a0a0a0 !important;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.world-view-nav-hud-compass {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Scale up the compass dial slightly for better visibility */
+.world-view-nav-hud .compass-indicator-dial {
+    width: 36px;
+    height: 36px;
+    --compass-radius: 15px;
+}
+
+.world-view-nav-hud .compass-indicator-label {
+    font-size: 0.9rem;
+    color: #b0b0b0;
+}
+
+/* 0.3.6 — Contextual location description */
+.world-view-nav-context {
+    font-size: 0.85rem !important;
+    color: #c0c0c0 !important;
+    margin: 0.25rem 0 0 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(74, 74, 74, 0.5);
+    font-style: italic;
+}
+
+/* 0.3.6 — Nearby structure and collaborator markers */
+.world-view-nav-markers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(74, 74, 74, 0.5);
+}
+
+.world-view-nav-marker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem !important;
+    color: #a0a0a0 !important;
+}
+
+.world-view-nav-marker .marker-direction {
+    font-weight: bold;
+    color: #ffd700;
+    min-width: 24px;
+    text-align: center;
+}
+
+.world-view-nav-marker .marker-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.world-view-nav-marker.collaborator .marker-direction {
+    color: #4ecdc4;
+}
+
+.world-view-nav-marker.collaborator .marker-label {
+    color: #b0e0ff;
+}
+
+/* Original overlay style - keep for title/author info */
+/* The World View left panel — everything from the title down through
+   Avatar/Search/Tools/Editing/Worlds-in-View lives inside this one
+   floating box (see WorldView.js's template: the div opened here
+   isn't closed until after the last section, deliberately, so this
+   max-width actually bounds the whole panel). Only the top-right nav
+   HUD (.world-view-nav-hud) sits outside it. */
 .world-view-overlay {
     position: absolute;
     top: 1rem;
@@ -1193,7 +1295,7 @@ html, body {
     border: 1px solid #2a2a2a;
     border-radius: 4px;
     padding: 1rem 1.25rem;
-    max-width: 320px;
+    max-width: 280px;
     pointer-events: none;
 }
 
@@ -1705,6 +1807,12 @@ html, body {
     border: 1px solid #3a3a3a;
     background: #1a1a1a;
     flex-shrink: 0;
+    /* 0.3.6 — how far a contextual marker (.compass-indicator-marker)
+       sits from the dial's own center; kept as a variable so a scaled-up
+       dial (see .world-view-nav-hud .compass-indicator-dial below) can
+       override just this one number rather than re-deriving every
+       marker's position. */
+    --compass-radius: 11px;
 }
 
 .compass-indicator-tick {
@@ -1736,6 +1844,31 @@ html, body {
 
 .compass-indicator--unknown .compass-indicator-needle {
     background: #4a4a4a;
+}
+
+/* 0.3.6 — a contextual marker: a small dot pushed out to the dial's own
+   edge at its direction's angle (see CompassIndicator.js#markerStyle()).
+   Deliberately dot-only, no in-dial label — the dial stays a handful of
+   pixels; the readable label lives in WorldView.js's own text legend
+   next to it. Colors match .world-view-nav-marker's own
+   structure/collaborator distinction so the dial and the legend read as
+   one system. */
+.compass-indicator-marker {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.compass-indicator-marker--structure {
+    background: #ffd700;
+}
+
+.compass-indicator-marker--collaborator {
+    background: #4ecdc4;
 }
 
 .compass-indicator-label {
@@ -2710,6 +2843,7 @@ html, body {
 /* Allow interaction with controls inside the overlay */
 .world-view-overlay {
     pointer-events: none;   /* let clicks pass through empty space */
+    max-width: 280px;       /* keep the left panel compact */
 }
 
 .world-view-overlay > * {

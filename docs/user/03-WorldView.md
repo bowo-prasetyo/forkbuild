@@ -45,6 +45,12 @@ it:
   Like Search and Explore Here/What's Here?, this only ever moves the
   camera; it never loads, selects, or edits anything.
 
+The compass shows cardinal directions (N, E, S, W) and your current heading
+in degrees. As you move through the world, the terrain around you is
+generated deterministically from the world seed — grass, beach, rock, forest
+and farmland, lakes and winding rivers all follow the terrain's own elevation
+and moisture.
+
 ## Camera vs. Editing
 
 The header shows two things that can genuinely differ:
@@ -190,7 +196,27 @@ that placement; only *where it sits in shared space* is theirs to move.
 
 ## Building in World View
 
-World View isn't just for looking — you can build here too.
+World View isn't just for looking — you can build here too, alongside other
+builders who are present in the same world.
+
+### Collaborative building
+
+When multiple people are building in the same world:
+
+- **See other builders** — their avatars appear in the world with display names
+  and activity indicators (e.g., "**Bob — Building House**").
+- **Real-time updates** — bricks placed by others appear immediately as the
+  world operations propagate.
+- **No conflicts** — if two people edit the same structure simultaneously,
+  deterministic ordering ensures the world converges to a consistent state.
+- **Ephemeral activity feed** — a local panel shows recent operations
+  ("Bob placed Block 2×2", "Alice rotated House") to help you understand
+  changes even when they happen outside your current view. This feed is
+  temporary and not persisted.
+
+> **Presence describes activity; commands establish shared reality.**
+> Spatial presence helps you understand what others are doing, but only
+> world operations actually change the shared environment.
 
 1. Click the **Place** tool in the overlay.
 2. Pick a brick type from the dropdown.

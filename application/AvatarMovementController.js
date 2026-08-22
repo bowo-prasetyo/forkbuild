@@ -1,5 +1,6 @@
 import { AvatarMovementState } from '../core/AvatarMovementState.js';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
+import { deriveAvatarVerticalState } from '../core/AvatarVerticalState.js';
 
 // 0.2.36 — the ONE place raw input becomes an AvatarPresence update.
 // See docs/Principles.md, "Input Changes Presence; Presence Changes
@@ -59,6 +60,20 @@ import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 // passage in the first place — see AvatarMovementConstraint's own
 // 0.3.2 comment). A controller built without a stepConstraint computes
 // none of this and behaves exactly as it did before this milestone.
+//
+// 0.3.4 — Vertical World Navigation. `stepConstraint.apply()` can now
+// report `falling: true` — the resolved horizontal step walks the
+// avatar off the edge of whatever it was standing on (see that class's
+// own header). This is the ONE new thing `tick()` does: when that
+// happens, `_grounded` is forced to `false` for the NEXT tick,
+// regardless of what this tick's own `simulateAvatarMovement()` result
+// said (it still said `grounded: true` — the avatar WAS standing on
+// something when this tick began; it just walked past the edge of it
+// during the tick). No other new bookkeeping — `_verticalVelocity` is
+// already `0` at that moment (a grounded tick always zeroes it — see
+// core/AvatarMovementSimulation.js), so the very next tick's gravity
+// integration starts cleanly from rest, exactly like the top of any
+// other fall.
 const EPSILON = 1e-6;
 
 export class AvatarMovementController {
@@ -189,6 +204,13 @@ export class AvatarMovementController {
             });
             finalPosition = stepResult.position;
             this._blockedByStepHeight = stepResult.blocked;
+            // 0.3.4 — the avatar just walked off the edge of whatever
+            // it was standing on; the NEXT tick starts genuinely
+            // airborne, whatever this tick's own simulation result
+            // said about `grounded`.
+            if (stepResult.falling) {
+                this._grounded = false;
+            }
         }
 
         const positionChanged = !samePosition(finalPosition, current.position);
@@ -232,6 +254,20 @@ export class AvatarMovementController {
     // surface, not something any other internal logic reads.
     isBlockedByStepHeight() {
         return this._blockedByStepHeight;
+    }
+
+    // 0.3.4 — the avatar's CURRENT vertical motion state (SUPPORTED /
+    // RISING / FALLING — core/AvatarVerticalState.js), derived fresh
+    // from exactly the same `_grounded`/`_verticalVelocity` bookkeeping
+    // this controller already carries between ticks. Same "debug/UI
+    // surface, not something any other internal logic reads" posture
+    // as isCollided()/isBlockedBySlope()/isBlockedByStepHeight() above
+    // — application/WorldNavigationSession.js reads it to feed
+    // core/WorldSpatialActivity.js#deriveWorldSpatialActivity()'s own
+    // new JUMPING/FALLING cases, never anything that changes movement
+    // itself.
+    verticalState() {
+        return deriveAvatarVerticalState({ grounded: this._grounded, verticalVelocity: this._verticalVelocity });
     }
 
     // 0.2.44 — whether the player is CURRENTLY holding any directional
