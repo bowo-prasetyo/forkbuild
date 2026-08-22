@@ -22,5 +22,9 @@ export const DomainEvent = Object.freeze({
     // (and anything referencing it, like a selection) survives the edit.
     STRUCTURE_PLACEMENT_ADDED: 'StructurePlacementAdded',
     STRUCTURE_PLACEMENT_REMOVED: 'StructurePlacementRemoved',
-    STRUCTURE_PLACEMENT_UPDATED: 'StructurePlacementUpdated'
+    STRUCTURE_PLACEMENT_UPDATED: 'StructurePlacementUpdated',
+    // 0.3.7 — World Landmarks & Personal Waypoints adds landmark events.
+    LANDMARK_ADDED: 'LandmarkAdded',
+    LANDMARK_REMOVED: 'LandmarkRemoved',
+    LANDMARK_UPDATED: 'LandmarkUpdated'
 });
