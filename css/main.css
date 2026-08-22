@@ -1228,6 +1228,56 @@ html, body {
     color: #b0b0b0;
 }
 
+/* 0.3.6 — Contextual location description */
+.world-view-nav-context {
+    font-size: 0.85rem !important;
+    color: #c0c0c0 !important;
+    margin: 0.25rem 0 0 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(74, 74, 74, 0.5);
+    font-style: italic;
+}
+
+/* 0.3.6 — Nearby structure and collaborator markers */
+.world-view-nav-markers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(74, 74, 74, 0.5);
+}
+
+.world-view-nav-marker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem !important;
+    color: #a0a0a0 !important;
+}
+
+.world-view-nav-marker .marker-direction {
+    font-weight: bold;
+    color: #ffd700;
+    min-width: 24px;
+    text-align: center;
+}
+
+.world-view-nav-marker .marker-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.world-view-nav-marker.collaborator .marker-direction {
+    color: #4ecdc4;
+}
+
+.world-view-nav-marker.collaborator .marker-label {
+    color: #b0e0ff;
+}
+
 /* Original overlay style - keep for title/author info */
 .world-view-overlay {
     position: absolute;
