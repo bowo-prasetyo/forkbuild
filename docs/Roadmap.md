@@ -8351,3 +8351,161 @@ can itself become a reusable Structure. A Personal Blueprint Library to
 save those creations into, and a larger built-in library to compose FROM
 in the first place, remain exactly where this milestone leaves them:
 named, not forgotten, sized on their own.
+
+## 0.4.3 — Personal Blueprint Library
+
+0.4.2 closed the recursive loop but left the extracted Structure with
+nowhere to live beyond the caller's own variable — `createStructureFromSelection()`
+returns a valid, independent Structure and stops there. 0.4.3 answers the
+question that leaves open: where does the user's newly created Structure
+live?
+
+    Built-in Structure
+          │
+          ▼
+       Compose
+          │
+          ▼
+      Document
+          │
+          ▼
+       Extract
+          │
+          ▼
+    New Structure ──save──> Personal Structure Library
+
+### The boundary
+
+A Personal Structure Library is kept deliberately separate from both
+shared World state and the built-in Village Library:
+
+    Shared World        Built-in Library         Personal Library
+      World/Documents      VillageLibrary           user's own
+      /Commands            (StructureRegistry)       Structures
+      (replicated,         (static, read-only,       (local, per-device,
+       signed)              ships with the app)       StorageProvider-backed)
+
+A personal blueprint is reusable CONTENT, not shared World state — see
+docs/Principles.md, "A Personal Library Persists What Extraction Only
+Returns (0.4.3)."
+
+### What shipped
+
+- `application/LocalStructureLibraryStore.js` — a `StorageProvider`-backed
+  catalog of the user's own Structures, built to the exact same shape
+  `application/LocalWorldExperienceStore.js` (0.3.10) already established:
+  a key-prefixed record per entry (`'personal-structure:' + id`), `save`/
+  `load`/`remove`/`list` delegated straight to the injected
+  `StorageProvider`, domain objects round-tripped through their own
+  `toJSON()`/`fromJSON()`. Basic operations: `addStructure(structure)`,
+  `getStructure(id)`, `hasStructure(id)`, `listStructures()` (most-recently-
+  saved first), `removeStructure(id)`, `updateStructureMetadata(id, {...})`
+  (rename/re-categorize/re-tag/re-describe in place, preserving the
+  original save time), `groupByCategory()`, and `search(tags)` — the last
+  two mirroring `core/StructureRegistry.js`'s own API exactly, via a
+  shared `core/groupStructuresByCategory.js` helper extracted from that
+  registry rather than a second grouping loop written for personal
+  content.
+- **No new domain object.** A Personal Structure Library stores ordinary
+  `core/Structure.js` values — the exact same class `CreateStructureFromSelectionUseCase`
+  (0.4.2) already returns and `CopyStructureIntoDocumentUseCase`/
+  `ForkStructureUseCase` already consume. Nothing here adds a
+  `libraryId`, a `personal: true` flag, or any other field to `Structure`
+  itself — see docs/Principles.md, "Library Membership Is Not Structure
+  Identity (0.4.3)": a Structure can move freely between built-in,
+  personal, forked, and composed contexts without ever knowing which
+  library (if any) it currently sits in.
+- `application/CreatePersonalStructureLibraryUseCase.js` — the
+  composition-root factory, the same shape
+  `application/CreatePersistenceUseCase.js` and
+  `application/CreateWorldViewUseCase.js` already establish for their own
+  local-only stores: build a `LocalStorageProvider`, hand it to the store.
+- `EditorSession.saveStructureToPersonalLibrary(structure)` — the
+  "somewhere to put it" 0.4.2 deliberately left open, called SEPARATELY
+  from `createStructureFromSelection()`, never folded into one step.
+  `application/EditorActionRegistry.js`'s `structure.createFromSelection`
+  action now chains exactly one more step after extraction succeeds —
+  `session.saveStructureToPersonalLibrary(structure)` — so the 0.4.0→0.4.3
+  workflow reads: select bricks → Create Structure → metadata dialog →
+  Personal Library → Structure appears immediately → Compose/Fork. A
+  surface without the method (or without the new, optional
+  `ui.onPersonalLibraryChanged()` refresh hook) degrades to 0.4.2's
+  original "Created" feedback, never throwing.
+- `ui/components/BuildLibraryPanel.js` — a new "My Structures" section
+  beneath the built-in category groups, reusing the exact same
+  `filteredStructureGroups`-style search, `BuildLibraryPreview`, and
+  Copy Into Document/Fork As New Document buttons a Village entry already
+  offers (a personal Structure composes and forks through the identical
+  `EditorSession` methods — nothing about WHERE a Structure is stored
+  changes what can be done with it). Two new actions are personal-library-
+  only: Rename and Remove, since Village stays read-only exactly as it
+  always has.
+- **Deletion semantics.** Deleting a Structure from the Personal Library
+  never affects a Document that already copied or forked its bricks — by
+  the time a Structure's content is inside a Document, it is ordinary
+  bricks, structurally incapable of noticing their source Structure was
+  ever removed. This was already true architecturally (0.4.0/0.4.2's own
+  copy-not-reference semantics); `tests/PersonalStructureLibrary.test.js`'s
+  flagship proves it directly rather than by inspection.
+- **Local, not synchronized.** A Personal Structure Library is per-device
+  application state, exactly like `LocalWorldExperience` (0.3.10) — a
+  user's "My Structures" on desktop and on tablet can legitimately differ.
+  Deliberately not a sixth replication mechanism alongside World/
+  Publication/PlacementRecord/SpatialIndex/Presence — see "Deliberately
+  excluded," below.
+- **No in-place Structure editing.** A saved Structure stays immutable/
+  value-like — updating its bricks always goes back through Compose →
+  modify → Extract → save-as-new, never a direct edit. `tests/PersonalStructureLibrary.test.js`'s
+  flagship demonstrates this "versioning" workflow directly: Farmstead is
+  composed, extended with a Market stall, and re-extracted/saved as
+  "Farmstead Deluxe" — a second, independent Structure, never a mutation
+  of the first.
+- `tests/PersonalStructureLibrary.test.js` — the flagship: build House +
+  Well + Barn, extract "Farmstead," save it, reload the library from
+  local persistence, compose Farmstead into two independent Documents,
+  delete Farmstead from the library, prove both Documents are completely
+  unaffected, edit one of those Documents and re-extract/save "Farmstead
+  Deluxe," reload the library again and confirm both the deletion and the
+  new save persisted deterministically, and — mirroring
+  `tests/WorldReturnExperience.test.js`'s own Phase G — a durable World's
+  own serialization stays byte-identical before and after every single
+  library operation in the entire scenario.
+
+### Deliberately excluded
+
+- **Cross-device synchronization.** "My blueprints follow me across my
+  devices" is a real, separate milestone, not an accidental fifth/sixth
+  replication mechanism smuggled in here — see "Multi-device question,"
+  above.
+- **In-place Structure editing/versioning.** Compose → modify → Extract →
+  save-as-new stays the only path to a changed Structure; explicit
+  versioning (Farmstead v1/v2 as related entities) is a later milestone
+  if it turns out to be needed.
+- **Import/Export/Sharing** of personal blueprints between users —
+  0.4.6's own question, not this one.
+- **A richer built-in structure library.** Unchanged from 0.4.0/0.4.1/
+  0.4.2's own lists — content and packaging (0.4.4) is a separate pass,
+  sized on its own.
+
+```text
+0.4.0   Structure Composition & Blueprint Library          ✓
+0.4.1   Interactive Structure Composition UX                ✓
+0.4.2   Structure Extraction & Blueprint Creation            ✓
+             │
+             ▼
+0.4.3   Personal Blueprint Library                           ✓
+             ├── LocalStructureLibraryStore — StorageProvider-backed, per-device
+             ├── EditorSession.saveStructureToPersonalLibrary() — chained after extraction
+             └── BuildLibraryPanel "My Structures" — Copy/Fork/Rename/Remove
+```
+
+> **0.4.0 — How do I combine several Structures into something bigger?**
+> **0.4.1 — How do I control WHERE and HOW each one lands?**
+> **0.4.2 — Can I turn what I just built into something reusable?**
+> **0.4.3 — Where does it go, and is it still there tomorrow?**
+
+Use structures (0.4.0) → place structures (0.4.1) → create structures
+(0.4.2) → keep structures (0.4.3). A larger built-in library to discover
+and compose FROM (0.4.4), richer discovery/preview (0.4.5), and import/
+export/sharing (0.4.6) remain exactly where this milestone leaves them:
+named, not forgotten, sized on their own.

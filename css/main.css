@@ -456,6 +456,28 @@ html, body {
     background: #234433;
 }
 
+/* 0.4.3 — Personal Blueprint Library. A second, visually distinct
+   section beneath the built-in category groups above — "My Structures"
+   never mixes into a Village category, and gets a top border/spacing to
+   read as its own library rather than one more category among Village's
+   own. Its own entries reuse .structure-item/.structure-item-actions/
+   .action-btn--copy/.action-btn--fork wholesale (same content, same
+   actions); only Rename/Remove are new, and reuse the existing
+   .action-btn--secondary/.action-btn--danger vocabulary rather than
+   inventing a third button color. */
+.personal-structure-library {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.personal-structure-library-title {
+    margin: 0;
+}
+
 /* 0.2.84 — Building Library & Palette UX. One unified Bricks/Structures
    panel replacing the previously-separate BrickPalette/
    StructureLibraryPanel components; deliberately reuses .palette-*,

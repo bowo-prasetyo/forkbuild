@@ -53,6 +53,18 @@ export function matches(query, ...fields) {
 // creates anything. Nothing here changes PaletteUseCase, EditorContext,
 // ForkStructureUseCase, CopyStructureIntoDocumentUseCase, or what any
 // action actually does — only how they're found and asked for.
+//
+// 0.4.3 — Personal Blueprint Library. `personalStructureGroups` renders
+// as its own "My Structures" section below the built-in groups above —
+// same [{ category, structures }] shape, same
+// filteredStructureGroups-style search, same BuildLibraryPreview, same
+// Copy/Fork buttons (a personal Structure composes and forks through the
+// exact same EditorSession methods a built-in one does — nothing about
+// where a Structure is stored changes what can be done with it). The
+// only NEW actions live here: Rename (emits 'rename-personal-structure')
+// and Remove (emits 'remove-personal-structure'), since only the user's
+// own library content can be renamed or deleted — Village stays
+// read-only, exactly as it always has.
 export default {
     name: 'BuildLibraryPanel',
     components: { BuildLibraryPreview },
@@ -71,12 +83,23 @@ export default {
             type: Array,
             required: true
         },
+        // Same shape as structureGroups, sourced from
+        // application/LocalStructureLibraryStore.js#groupByCategory()
+        // instead of the built-in StructureRegistry — unlike
+        // structureGroups, this DOES change at runtime (saving, renaming,
+        // or removing a personal Structure), so the caller re-supplies a
+        // fresh array after every such change rather than this panel
+        // ever mutating or caching it.
+        personalStructureGroups: {
+            type: Array,
+            default: () => []
+        },
         previewService: {
             type: Object,
             default: null
         }
     },
-    emits: ['place', 'fork', 'copy'],
+    emits: ['place', 'fork', 'copy', 'rename-personal-structure', 'remove-personal-structure'],
     setup(props, { emit }) {
         const activeTab = ref('bricks');
         const query = ref('');
@@ -109,6 +132,23 @@ export default {
                 .filter((group) => group.structures.length > 0);
         });
 
+        // 0.4.3 — Personal Blueprint Library. Same filtering rule as
+        // filteredStructureGroups above, applied to the caller's own
+        // personalStructureGroups prop instead — one shared query box,
+        // one shared matches() rule, for both the built-in and personal
+        // halves of the Structures tab.
+        const filteredPersonalStructureGroups = computed(() => {
+            const normalized = normalize(query.value);
+            return (props.personalStructureGroups || [])
+                .map((group) => ({
+                    category: group.category,
+                    structures: group.structures.filter((structure) =>
+                        matches(normalized, structure.name, structure.category, structure.tags.join(' '))
+                    )
+                }))
+                .filter((group) => group.structures.length > 0);
+        });
+
         function setTab(tab) {
             activeTab.value = tab;
             query.value = '';
@@ -125,6 +165,18 @@ export default {
 
         function copyStructure(structure) {
             emit('copy', structure);
+        }
+
+        // 0.4.3 — Personal Blueprint Library. Rename/Remove only ever
+        // apply to a personal Structure — the built-in Village entries
+        // never render these buttons at all (see the template below), so
+        // there's no separate "is this one editable" check needed here.
+        function renamePersonalStructure(structure) {
+            emit('rename-personal-structure', structure);
+        }
+
+        function removePersonalStructure(structure) {
+            emit('remove-personal-structure', structure);
         }
 
         onMounted(() => {
@@ -145,10 +197,13 @@ export default {
             selectedDefinitionId,
             filteredBrickGroups,
             filteredStructureGroups,
+            filteredPersonalStructureGroups,
             setTab,
             selectBrick,
             forkStructure,
-            copyStructure
+            copyStructure,
+            renamePersonalStructure,
+            removePersonalStructure
         };
     },
     template: `
@@ -202,7 +257,12 @@ export default {
             </div>
 
             <div v-else class="structure-library-panel">
-                <p v-if="filteredStructureGroups.length === 0" class="build-library-empty">No matching structures.</p>
+                <p
+                    v-if="filteredStructureGroups.length === 0 && filteredPersonalStructureGroups.length === 0"
+                    class="build-library-empty"
+                >
+                    No matching structures.
+                </p>
                 <div v-for="group in filteredStructureGroups" :key="group.category" class="palette-group">
                     <h4 class="palette-category">{{ group.category }}</h4>
                     <ul class="structure-list">
@@ -224,6 +284,38 @@ export default {
                             </div>
                         </li>
                     </ul>
+                </div>
+
+                <div v-if="filteredPersonalStructureGroups.length > 0" class="personal-structure-library">
+                    <h4 class="palette-title personal-structure-library-title">My Structures</h4>
+                    <div v-for="group in filteredPersonalStructureGroups" :key="group.category" class="palette-group">
+                        <h4 class="palette-category">{{ group.category }}</h4>
+                        <ul class="structure-list">
+                            <li
+                                v-for="structure in group.structures"
+                                :key="structure.id"
+                                class="structure-item build-library-item"
+                                :title="structure.description"
+                            >
+                                <BuildLibraryPreview kind="structure" :item="structure" :preview-service="previewService" />
+                                <span class="structure-item-name">{{ structure.name }}</span>
+                                <div class="structure-item-actions">
+                                    <button class="action-btn action-btn--copy structure-item-copy" @click="copyStructure(structure)">
+                                        Copy Into Document
+                                    </button>
+                                    <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
+                                        Fork As New Document
+                                    </button>
+                                    <button class="action-btn action-btn--secondary structure-item-rename" @click="renamePersonalStructure(structure)">
+                                        Rename
+                                    </button>
+                                    <button class="action-btn action-btn--danger structure-item-remove" @click="removePersonalStructure(structure)">
+                                        Remove
+                                    </button>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
