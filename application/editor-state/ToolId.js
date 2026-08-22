@@ -14,5 +14,13 @@ export const ToolId = Object.freeze({
     // different enough operations (different preview shape, different
     // command, different collision check) to earn their own small,
     // focused Tool class — see application/tools/StructurePlacementTool.js.
-    PLACE_STRUCTURE: 'place-structure'
+    PLACE_STRUCTURE: 'place-structure',
+    // 0.4.1 — Interactive Structure Composition UX. A separate tool
+    // from PLACE_STRUCTURE for the same reason PLACE_STRUCTURE is
+    // separate from PLACE: what's being placed (a library
+    // core/Structure.js's own bricks vs. a Document reference) and what
+    // gets committed (a flattened PasteBricksCommand vs. a
+    // PlaceStructureCommand StructurePlacement) diverge — see
+    // application/tools/StructureCompositionTool.js's own header.
+    COMPOSE_STRUCTURE: 'compose-structure'
 });

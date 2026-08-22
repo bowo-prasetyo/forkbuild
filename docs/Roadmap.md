@@ -8121,3 +8121,113 @@ how people create increasingly sophisticated reusable content — a User
 Blueprint Library, generated previews, and Blueprint Packs are the
 natural next steps this milestone deliberately leaves open, not
 forgotten.
+
+## 0.4.1 — Interactive Structure Composition UX
+
+0.4.0's own "Deliberately excluded" named the gap directly: Copy Into
+Document committed immediately, at a deterministic auto-offset
+position, with no way to see or adjust where a Structure would land
+before it did. That is a perfectly fine default for "just get House
+into my document," and a real limitation the moment a user wants to
+compose House AND Well AND Barn into a deliberately arranged village
+rather than a straight line along X.
+
+0.4.1 turns Copy Into Document into an interactive ghost-preview
+placement flow — move, rotate, see collision feedback, click to commit
+— without touching what Copy fundamentally IS. See
+docs/StructureLibrary.md, "Interactive Structure Composition (0.4.1)."
+
+### What shipped
+
+- `application/StructureCompositionTransform.js#transformStructureBricks()`
+  — the one pure function behind "rotate and move a Structure before it
+  lands": rotates each of a Structure's own local bricks around the
+  Structure's own origin (`application/TransformMath.js`'s existing
+  rotation formula — no second one invented), rotates each brick's own
+  rotation by the same amount, then translates by the transform's
+  position. Both the interactive preview and the eventual commit
+  resolve through this SAME function via
+  `CopyStructureIntoDocumentUseCase#execute()` — the preview is a
+  visualization of the exact command that will run, never an
+  approximation of it.
+- `CopyStructureIntoDocumentUseCase` gained an optional `transform`
+  override and a public `defaultTransform()` — the 0.4.0 auto-offset
+  logic, unchanged, now also the interactive tool's own seed position.
+  The 0.4.0 call shape (no `transform`) is untouched, byte-identical.
+- `application/tools/StructureCompositionTool.js` (`ToolId.COMPOSE_STRUCTURE`)
+  — the Copy counterpart to `application/tools/StructurePlacementTool.js`
+  (0.2.90), reusing that tool's exact shape: pointer move -> snap ->
+  preview; `R`/`Shift+R` -> rotate in exact 90° steps; pointer down ->
+  validate -> commit. Collision reuses
+  `application/StructurePlacementValidator.js` unchanged — the
+  Structure's own AABB against the World's existing bricks and
+  `StructurePlacement`s. Deliberately one-shot, unlike
+  `StructurePlacementTool`: composing House once is "paste it," so
+  committing OR cancelling (`Escape`) both return to Select rather than
+  staying camped in a placement mode.
+- `EditorSession.beginStructureComposition(structure)` — enters
+  `COMPOSE_STRUCTURE` mode without touching the Document; only the
+  tool's eventual commit does, through the exact same
+  `copyStructureIntoDocument()` -> `CopyStructureIntoDocumentUseCase`
+  path 0.4.0 already established. `copyStructureIntoDocument()` itself
+  is unchanged — the immediate, non-interactive verb still exists
+  alongside the interactive one.
+- `application/editor-state/ActiveCompositionState.js` and
+  `application/editor-state/CompositionPreviewState.js` +
+  `application/CompositionPreviewUseCase.js` — Editor State, never
+  Document state, mirroring `ActiveStructureState`/`StructurePreviewState`/
+  `StructurePreviewUseCase` one rung over. The one real difference: a
+  library `Structure` has no Document to resolve a reference from, so
+  `CompositionPreviewState` carries the `Structure` instance itself.
+- `renderer/CompositionPreviewRenderer.js` — the real 3D ghost, a
+  sibling of `renderer/StructurePreviewRenderer.js` that never needs a
+  `StructureDocumentResolver`: `structure.bricks` are already in hand.
+- `tests/StructureCompositionPlacement.test.js` (headless) and
+  `tests/StructureCompositionRendering.test.js` (the ghost mesh math) —
+  the flagship: ghost appears at the same deterministic position the
+  0.4.0 immediate-copy path would have used, moving the preview mutates
+  no Document state, rotation is deterministic across repeated presses,
+  an occupied position is invalid and refuses to commit, a valid click
+  commits exactly ONE `PasteBricksCommand` whose geometry matches the
+  preview exactly, undo/redo restores the SAME brick ids, `Escape`
+  cancels with zero Document mutation, and the preview itself
+  contributes nothing to command or Document serialization.
+
+### Deliberately excluded
+
+- **A larger built-in structure library**, **a User Blueprint Library**,
+  **generated preview thumbnails**, and **Blueprint Packs** — all
+  unchanged from 0.4.0's own list; composition UX and composition
+  content are separate passes, sized on their own.
+- **Free-form (non-90°) rotation.** The ghost rotates in the same exact
+  90° steps every other rotation gesture in this codebase already uses
+  — a continuous-rotation gizmo for composition is future work, not a
+  gap introduced here.
+- **Numeric/typed transform entry** for the composition preview (an
+  exact-coordinates input rather than mouse movement) — `StructurePlacementTool`
+  doesn't have this either; when it's built, it is built once and
+  shared, not duplicated here first.
+- **Extracting a composed Document back into a reusable Structure**
+  ("Create Structure" from a selection) — a separate, larger question
+  (where does the new Structure's local origin come from? normalized to
+  its own minimum bounds, most likely) that a User Blueprint Library
+  needs answered first, not a natural extension of this milestone's own
+  scope.
+
+```text
+0.4.0   Structure Composition & Blueprint Library          ✓
+             │
+             ▼
+0.4.1   Interactive Structure Composition UX                ✓
+             ├── transformStructureBricks() — the one shared rotate+translate pipeline
+             ├── StructureCompositionTool — ghost preview, rotate, collision, click-to-commit
+             └── CompositionPreviewRenderer — the real 3D ghost, no resolver needed
+```
+
+> **0.4.0 — How do I combine several Structures into something bigger?**
+> **0.4.1 — How do I control WHERE and HOW each one lands?**
+
+Composition's own next questions — a richer library to compose FROM, a
+User Blueprint Library, and turning a composed Document back into a
+reusable Structure — remain exactly where 0.4.0 left them: named, not
+forgotten, sized on their own.

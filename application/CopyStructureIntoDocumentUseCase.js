@@ -1,5 +1,6 @@
 import { PasteBricksCommand } from './commands/PasteBricksCommand.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
+import { transformStructureBricks } from './StructureCompositionTransform.js';
 
 // Composition margin between successively copied structures along X, in
 // the same units as Position — the whole-structure equivalent of
@@ -47,26 +48,39 @@ export const COMPOSITION_MARGIN = 2;
 // there, so composing House + Well + Barn into one blueprint never
 // requires the caller to pick coordinates by hand.
 export class CopyStructureIntoDocumentUseCase {
-    execute(structure, { worldId, buildingId, world, registry } = {}) {
+    // transform: an optional explicit { position, rotation } — 0.4.1's
+    // Interactive Structure Composition UX passes the user's OWN chosen
+    // preview transform here (application/tools/StructureCompositionTool.js),
+    // so committing a composition calls this SAME method the
+    // non-interactive path always has, never a second command-building
+    // path — see application/StructureCompositionTransform.js's own
+    // header on why preview and commit must share one geometry pipeline.
+    // Omitted (the 0.4.0 call shape, unchanged), it falls back to
+    // defaultTransform() below — the deterministic automatic placement.
+    execute(structure, { worldId, buildingId, world, registry, transform = null } = {}) {
         if (!structure || !worldId || !buildingId || !world) {
             return null;
         }
-        const offset = this._nextOffset(structure, world, registry);
-        const items = structure.bricks.map((brick) => ({
-            definitionId: brick.definitionId,
-            position: {
-                x: brick.position.x + offset.x,
-                y: brick.position.y + offset.y,
-                z: brick.position.z + offset.z
-            },
-            rotation: brick.rotation
-        }));
+        const resolvedTransform = transform || this.defaultTransform(structure, world, registry);
+        const items = transformStructureBricks(structure, resolvedTransform);
         return new PasteBricksCommand({
             worldId,
             buildingId,
             items,
             description: `Copy ${structure.name} Into Document`
         });
+    }
+
+    // The deterministic AUTOMATIC composition transform — never
+    // rotated, appended just past the document's current footprint
+    // along +X (see _nextOffset() below, unchanged since 0.4.0). Public
+    // so 0.4.1's StructureCompositionTool can seed its interactive
+    // preview at exactly this position before the user moves anything —
+    // "Copy Into Document" always previews where the non-interactive
+    // path would have placed it (docs/Roadmap.md, 0.4.1, "Add 'Place
+    // Here' Semantics").
+    defaultTransform(structure, world, registry) {
+        return { position: this._nextOffset(structure, world, registry), rotation: 0 };
     }
 
     _nextOffset(structure, world, registry) {
