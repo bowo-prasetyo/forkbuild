@@ -1771,17 +1771,21 @@ export default {
                     >Move Placement</button>
                 </div>
                 <p v-if="author">by {{ author }}</p>
-                <p v-if="cameraPosition" class="world-view-coords">
-                    Cam: {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
-                </p>
-                <!-- 0.2.94 — World View Location & Navigation. Purely
-                     read-only orientation + navigation: the compass is
-                     never clickable, and Home/Locations only ever move
-                     the camera — see docs/Principles.md, "World View
-                     Navigation Operates On Spatial Observation, Never
-                     On Document Mutation (0.2.94)." -->
-                <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
-                    <CompassIndicator :heading="compassHeading" />
+                <!-- 0.2.94/0.3.6 — Navigation HUD: camera coordinates
+                     and compass moved to a floating overlay on the main
+                     viewport for better visibility while keeping the
+                     view uncluttered. Transparent background ensures
+                     the World scenery remains dominant. -->
+                <div v-if="cameraPosition" class="world-view-nav-hud">
+                    <p class="world-view-nav-hud-coords">
+                        {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
+                    </p>
+                    <div class="world-view-nav-hud-compass">
+                        <CompassIndicator :heading="compassHeading" />
+                    </div>
+                </div>
+                <!-- Home and Locations buttons moved below for better organization -->
+                <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation" style="margin-top: 0.5rem;">
                     <button class="action-btn" @click="goHome">Home</button>
                     <button class="action-btn" @click="openLocationsPanel">Locations</button>
                 </div>
