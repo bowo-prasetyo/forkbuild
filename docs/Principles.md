@@ -7300,3 +7300,53 @@ dependency" discipline 0.2.81 already established for Fork, applied
 here to its logical conclusion — Copy doesn't even keep provenance,
 because composing a blueprint was never a claim about where each piece
 originated, only about what the current blueprint now contains.
+
+### Extraction Copies A Blueprint; It Never Moves One (0.4.2)
+
+0.4.0 gave composition its first verb, Copy: Structure into Document.
+0.4.2 (Structure Extraction & Blueprint Creation) adds the direction
+that verb never covered — Document into Structure —
+`application/CreateStructureFromSelectionUseCase.js` turning a selection
+of bricks a user has already composed back into a brand-new,
+independent `core/Structure.js`. The same discipline "Copying Composes A
+Blueprint; Forking Creates One (0.4.0)" established for Copy applies
+here without exception: extraction is COPY, never move.
+
+After `createStructureFromSelection()` returns, the Document it read
+from is exactly what it was before the call — same bricks, same ids,
+same geometry. The new Structure's bricks are freshly constructed
+instances with freshly minted ids, never references to the Document's
+own `Brick` objects, the same "never share an instance with where it
+came from" rule `ForkStructureUseCase` already applies when a Structure
+becomes a Document; extraction applies it in reverse, when a Document's
+selection becomes a Structure. Nothing about the new Structure remembers
+which Document it was extracted from, at what position, or when — a
+Structure never carries provenance about a Document the way a fork
+carries `parentStructureId` about a Structure, because "what shape did I
+select" was never a claim about where in some Document it happened to
+sit.
+
+Normalization is the one geometry decision this operation owns: the
+selection's own minimum X/Z occupied bounds become the new Structure's
+local origin, using the exact same `core/SpatialBounds.js#fromBricks()`
+derivation `core/Structure.js` and `CopyStructureIntoDocumentUseCase`
+already share — never a second bounds calculation invented for this one
+caller. Y is deliberately left untouched: a brick's Y is the height its
+original author intended (every built-in Structure in
+`core/library/VillageLibrary.js` already measures Y from the ground up),
+never a footprint edge to normalize away. Selecting the same shape twice
+— once composed near the World's origin, once composed far from it —
+produces the identical Structure both times: extraction's output
+depends only on the SHAPE selected, never on where in the Document that
+shape happened to be sitting.
+
+Selection eligibility draws the same boundary 0.2.93 already drew for
+World View picking: only an ordinary brick selection can become a
+Structure. A `StructurePlacement` selection is a reference to an
+entirely different Document — silently dereferencing and flattening it
+into "the bricks of the Structure I just extracted" would quietly turn
+one operation (copy what I selected) into a different, much larger one
+(import and flatten someone else's whole Document) without the user
+ever asking for that. `CreateStructureFromSelectionUseCase` refuses
+instead, with a message naming exactly why, rather than either
+attempting the flatten or silently producing nothing.

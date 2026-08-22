@@ -247,3 +247,73 @@ useful (more categories, more structures per category), a User
 Blueprint Library ("Save As Blueprint" from the current document), and
 generated preview thumbnails remain out of scope here — see
 docs/Roadmap.md, 0.4.1's own "Deliberately excluded."
+
+## Structure Extraction & Blueprint Creation (0.4.2)
+
+0.4.0/0.4.1 only ever moved content ONE direction: a library Structure
+into the document a user already has open. 0.4.2 closes the loop —
+turning bricks a user has already composed back into a reusable
+Structure:
+
+    Structure --copy/compose--> Document --extract--> Structure
+
+`application/CreateStructureFromSelectionUseCase.js` reads a selection
+(`application/editor-state/SelectionState.js`) out of a Document and
+returns a brand-new `core/Structure.js` instance — pure observation, the
+same "no UI, no persistence, no World mutation" restraint
+`application/CopySelectionUseCase.js` already applies to the clipboard:
+
+    const farmstead = new CreateStructureFromSelectionUseCase().execute(selection, document, {
+        registry: brickRegistry,
+        name: 'Farmstead',
+        category: 'residential',
+        tags: ['farmstead'],
+        description: 'House, well and barn compound'
+    });
+
+`EditorSession.createStructureFromSelection(metadata)` wraps this the
+same way `copySelection()` already wraps `CopySelectionUseCase` — reads
+the current selection and the open Document, touches neither. The
+returned Structure isn't saved anywhere by this call: nothing here adds
+it to the `StructureRegistry` or writes it to storage. A Personal
+Blueprint Library to save it into is 0.4.3's own question, not this
+milestone's.
+
+**Normalization.** The selection's own minimum X/Z occupied bounds
+become the new Structure's local origin — the exact same
+`core/SpatialBounds.js#fromBricks()` math `core/Structure.js` and
+`CopyStructureIntoDocumentUseCase` already use, never a second bounds
+calculation. Y is left exactly as authored (every built-in Structure
+already measures Y from the ground up), so extracting the same shape is
+deterministic no matter where in the Document it was composed. See
+docs/Principles.md, "Extraction Copies A Blueprint; It Never Moves One
+(0.4.2)."
+
+**Selection rule: brick selections only.** A `StructurePlacement`
+selection (0.2.93) is a reference to an entirely different Document —
+extraction refuses it outright, throwing `"Create Structure requires
+brick selections only."` rather than silently dereferencing and
+flattening someone else's whole Document, or silently doing nothing.
+
+**Copy, never move.** After extraction, the Document it read from is
+exactly what it was before the call — same bricks, same ids, same
+geometry. The new Structure's bricks are fresh instances with fresh
+ids, never references to the Document's own bricks.
+
+`application/EditorActionRegistry.js` exposes this as `structure.createFromSelection`
+("Create Structure") in a new `Structure` category, gated exactly like
+`clipboard.copy` except a `StructurePlacement` selection, which is never
+eligible — reachable today from the Command Palette (0.1.50), where
+every registered action already renders with no per-action wiring
+needed. `ui/views/EditorView.js#actionUi.promptCreateStructure()`
+captures Name/Category/Description with the same `window.prompt()`
+pattern `ui/components/GroupsPanel.js` already uses for a group's name;
+author, version, and generated thumbnails are deliberately not asked
+for here — they belong to the Personal Blueprint Library (0.4.3), not
+the extraction mechanic itself.
+
+A round trip through the whole recursive loop — build, extract, fork
+the extraction, copy the extraction, compose it alongside others, and
+repeat the whole pipeline a second time to confirm the result is
+deterministic — is `tests/StructureExtraction.test.js`'s own flagship
+coverage.
