@@ -1,5 +1,6 @@
 import { WorldLandmark } from '../../core/WorldLandmark.js';
 import { Position } from '../../core/Position.js';
+import { createId } from '../../core/createId.js';
 import { Command } from './Command.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints.
@@ -8,6 +9,9 @@ import { Command } from './Command.js';
 // stores worldId, authorIdentityId, title, description, and position;
 // execute() creates the landmark's identity, it doesn't receive one,
 // following the same pattern as PlaceStructureCommand and PlaceBrickCommand.
+// Unlike Brick/StructurePlacement, WorldLandmark does not default its own
+// id (core/WorldLandmark.js requires one explicitly), so this command
+// mints one itself via createId() on first execute().
 //
 // _executedLandmarkId tracks what was created for undo() correctness,
 // but is excluded from toJSON() — replaying elsewhere creates a new id.
@@ -34,7 +38,7 @@ export class CreateWorldLandmarkCommand extends Command {
     execute(context) {
         this._assertWorldMatches(context);
         const landmark = new WorldLandmark({
-            id: this._executedLandmarkId || undefined,
+            id: this._executedLandmarkId || createId(),
             worldId: this._worldId,
             authorIdentityId: this._authorIdentityId,
             title: this._title,

@@ -47,8 +47,9 @@ export class WorldLocationDirectory {
     list() {
         const locations = [this._originLocation()];
         for (const document of this._session.getLoadedDocuments()) {
-            locations.push(...this._structureLocationsFor(document));
-            locations.push(...this._landmarkLocationsFor(document.world));
+            const layoutPosition = this._session.getDocumentPosition(document.world.id);
+            locations.push(...this._structureLocationsFor(document, layoutPosition));
+            locations.push(...this._landmarkLocationsFor(document.world, layoutPosition));
         }
         return locations;
     }
@@ -71,9 +72,7 @@ export class WorldLocationDirectory {
         });
     }
 
-    _structureLocationsFor(document) {
-        const documentId = document.world.id;
-        const layoutPosition = this._session.getDocumentPosition(documentId);
+    _structureLocationsFor(document, layoutPosition) {
         return document.world.getStructurePlacements().map((placement) => new WorldLocation({
             id: placement.id,
             title: this._session.getSavedDocumentTitle(placement.documentId),
@@ -86,12 +85,16 @@ export class WorldLocationDirectory {
         }));
     }
 
-    _landmarkLocationsFor(world) {
+    _landmarkLocationsFor(world, layoutPosition) {
         return world.getWorldLandmarks().map((landmark) => new WorldLocation({
             id: landmark.id,
             title: landmark.title,
             kind: WorldLocationKind.LANDMARK,
-            position: landmark.position
+            position: new Position(
+                landmark.position.x + layoutPosition.x,
+                landmark.position.y + layoutPosition.y,
+                landmark.position.z + layoutPosition.z
+            )
         }));
     }
 }
