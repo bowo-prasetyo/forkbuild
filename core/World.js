@@ -1,6 +1,7 @@
 import { Building } from './Building.js';
 import { Group } from './Group.js';
 import { StructurePlacement } from './StructurePlacement.js';
+import { WorldLandmark } from './WorldLandmark.js';
 import { DomainEvent } from './events/Event.js';
 import { createId } from './createId.js';
 
@@ -16,6 +17,7 @@ export class World {
         this._buildings = new Map();
         this._groups = new Map();
         this._placements = new Map();
+        this._landmarks = new Map();
         this._metadata = metadata;
         this._eventBus = eventBus;
     }
@@ -233,13 +235,57 @@ export class World {
         return Array.from(this._placements.values());
     }
 
+    // -----------------------------------------------------------------
+    // World Landmarks (0.3.7) — explicit, persistent World content.
+    // Unlike StructurePlacement (a reference to external Document state),
+    // a WorldLandmark IS the stored state — a named point users create
+    // to mark places of interest. See core/WorldLandmark.js's own header.
+    // -----------------------------------------------------------------
+
+    addWorldLandmark(landmark) {
+        this._landmarks.set(landmark.id, landmark);
+        this._publish(DomainEvent.WORLD_LANDMARK_ADDED, { landmark });
+    }
+
+    removeWorldLandmark(id) {
+        const landmark = this._landmarks.get(id);
+        if (!landmark) {
+            return;
+        }
+        this._landmarks.delete(id);
+        this._publish(DomainEvent.WORLD_LANDMARK_REMOVED, { landmark });
+    }
+
+    getWorldLandmark(id) {
+        return this._landmarks.get(id) || null;
+    }
+
+    getWorldLandmarks() {
+        return Array.from(this._landmarks.values());
+    }
+
+    updateWorldLandmark(id, updates) {
+        const landmark = this._landmarks.get(id);
+        if (!landmark) {
+            return;
+        }
+        if (updates.title !== undefined) {
+            landmark.setTitle(updates.title);
+        }
+        if (updates.description !== undefined) {
+            landmark.setDescription(updates.description);
+        }
+        this._publish(DomainEvent.WORLD_LANDMARK_UPDATED, { landmark });
+    }
+
     toJSON() {
         return {
             id: this._id,
             metadata: this._metadata,
             buildings: this.getBuildings().map((building) => building.toJSON()),
             groups: this.getGroups().map((group) => group.toJSON()),
-            placements: this.getStructurePlacements().map((placement) => placement.toJSON())
+            placements: this.getStructurePlacements().map((placement) => placement.toJSON()),
+            landmarks: this.getWorldLandmarks().map((landmark) => landmark.toJSON())
         };
     }
 
@@ -255,6 +301,10 @@ export class World {
         // Worlds serialized before 0.2.90 have no placements field.
         for (const placementJson of json.placements || []) {
             world.addStructurePlacement(StructurePlacement.fromJSON(placementJson));
+        }
+        // Worlds serialized before 0.3.7 have no landmarks field.
+        for (const landmarkJson of json.landmarks || []) {
+            world.addWorldLandmark(WorldLandmark.fromJSON(landmarkJson));
         }
         return world;
     }

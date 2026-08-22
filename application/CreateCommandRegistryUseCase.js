@@ -18,6 +18,9 @@ import { MoveStructurePlacementCommand } from './commands/MoveStructurePlacement
 import { RotateStructurePlacementCommand } from './commands/RotateStructurePlacementCommand.js';
 import { DuplicateStructurePlacementCommand } from './commands/DuplicateStructurePlacementCommand.js';
 import { SetStructurePlacementTransformCommand } from './commands/SetStructurePlacementTransformCommand.js';
+import { CreateWorldLandmarkCommand } from './commands/CreateWorldLandmarkCommand.js';
+import { UpdateWorldLandmarkCommand } from './commands/UpdateWorldLandmarkCommand.js';
+import { RemoveWorldLandmarkCommand } from './commands/RemoveWorldLandmarkCommand.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
@@ -54,6 +57,12 @@ export class CreateCommandRegistryUseCase {
         // 0.2.97 — the ABSOLUTE counterpart to move/rotate's own
         // relative deltas — see that command's own header.
         registry.register('set-structure-placement-transform', SetStructurePlacementTransformCommand);
+        // 0.3.7 — World Landmarks & Personal Waypoints: explicit,
+        // persistent World content. Landmarks follow the same undo/redo/
+        // persistence/replay contract as all other World content.
+        registry.register('create-world-landmark', CreateWorldLandmarkCommand);
+        registry.register('update-world-landmark', UpdateWorldLandmarkCommand);
+        registry.register('remove-world-landmark', RemoveWorldLandmarkCommand);
         return registry;
     }
 }

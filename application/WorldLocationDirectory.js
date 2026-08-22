@@ -3,6 +3,7 @@ import { WorldLocationKind } from '../core/WorldLocationKind.js';
 import { Position } from '../core/Position.js';
 
 // 0.2.94 — World View Location & Navigation.
+// 0.3.7 — World Landmarks & Personal Waypoints: added landmark locations.
 //
 // The ONE place a WorldLocation is ever constructed. Deliberately a
 // thin READ over state `session` (a WorldNavigationSession) already
@@ -42,18 +43,21 @@ export class WorldLocationDirectory {
     // World's own `getStructurePlacements()` order — so the SAME loaded
     // world state always produces the SAME location list, on any
     // replica, matching this milestone's own determinism requirement.
+    // 0.3.7: Landmarks are appended after structures, grouped by World.
     list() {
         const locations = [this._originLocation()];
         for (const document of this._session.getLoadedDocuments()) {
             locations.push(...this._structureLocationsFor(document));
+            locations.push(...this._landmarkLocationsFor(document.world));
         }
         return locations;
     }
 
-    // A single location by id — `'origin'`, or a StructurePlacement's
-    // own id — or null if it isn't (or is no longer) navigable. Reuses
-    // list() rather than a second lookup path, so "find one" and "list
-    // all" can never disagree about what currently exists.
+    // A single location by id — `'origin'`, a StructurePlacement's
+    // own id, or a WorldLandmark's id — or null if it isn't (or is no
+    // longer) navigable. Reuses list() rather than a second lookup path,
+    // so "find one" and "list all" can never disagree about what
+    // currently exists.
     find(locationId) {
         return this.list().find((location) => location.id === locationId) || null;
     }
@@ -79,6 +83,15 @@ export class WorldLocationDirectory {
                 placement.position.y + layoutPosition.y,
                 placement.position.z + layoutPosition.z
             )
+        }));
+    }
+
+    _landmarkLocationsFor(world) {
+        return world.getWorldLandmarks().map((landmark) => new WorldLocation({
+            id: landmark.id,
+            title: landmark.title,
+            kind: WorldLocationKind.LANDMARK,
+            position: landmark.position
         }));
     }
 }
