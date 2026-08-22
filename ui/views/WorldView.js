@@ -225,6 +225,18 @@ export default {
         const showWelcomePanel = ref(false);
         const welcomeContext = ref(null);
         const welcomeIsArrival = ref(true);
+        // 0.3.10 — World Persistence & Return Experience. `worldReturnInfo`
+        // is null for a World this replica has never visited before (a
+        // first-timer, per session.hasVisitedWorld()), or
+        // `{ lastVisitedAt }` when it has — read fresh in
+        // _syncWorldExperience() below, BEFORE that same tick's
+        // restoreWorldExperience() call, so it always reflects the PRIOR
+        // visit, never the one currently in progress. Purely
+        // presentational — WorldWelcomePanel uses it only to swap
+        // "Welcome to X" for "Welcome back to X" / "Continue Exploring",
+        // never to decide anything this view or the session doesn't
+        // already independently decide.
+        const worldReturnInfo = ref(null);
         // 0.3.7 — World Landmarks & Personal Waypoints. `canEditActiveWorld`
         // mirrors isActiveWorldOwner's own refresh cadence exactly (both
         // set inside refreshSpatialUI() below) — a pure reflect of
@@ -399,6 +411,16 @@ export default {
         // single shared interval would force one cadence on both.
         let presentSpatialWorldDocumentId = null;
         let unsubscribeWorldSpatialPresence = null;
+        // 0.3.10 — which documentId, if any, this replica currently has
+        // an active LOCAL World Experience for — see
+        // _syncWorldExperience() below. Its own bookkeeping variable,
+        // deliberately separate from presentWorldDocumentId/
+        // presentSpatialWorldDocumentId above: a session with no
+        // localWorldExperienceStore wired still tracks this (session.
+        // saveWorldExperience()/restoreWorldExperience() are graceful
+        // no-ops either way), so it can't simply reuse either presence
+        // variable's lifecycle.
+        let presentExperienceWorldDocumentId = null;
         // 0.3.9 — which documentIds have already had their automatic
         // arrival Welcome shown this session, so re-entering the same
         // World later (or a spatial-presence refresh that doesn't
@@ -836,6 +858,12 @@ export default {
             // since the last tick, so this never re-enters presence (or
             // re-subscribes) on every 3-second poll.
             _syncWorldPresence(activeId);
+            // 0.3.10 — runs BEFORE _syncWorldSpatialPresence() below on
+            // purpose: it populates worldReturnInfo (and restores this
+            // replica's own last camera framing) for `activeId` before
+            // spatial presence's own arrival check can open the Welcome
+            // panel — see _syncWorldExperience()'s own header.
+            _syncWorldExperience(activeId);
             // 0.3.0 — the SAME active-document tracking, one protocol
             // further — see _syncWorldSpatialPresence()'s own header.
             _syncWorldSpatialPresence(activeId);
@@ -911,6 +939,40 @@ export default {
             unsubscribeWorldPresence = session.onWorldPresenceChanged(presentWorldDocumentId, (roster) => {
                 worldPresenceRoster.value = roster;
             });
+        }
+
+        // 0.3.10 — World Persistence & Return Experience. Mirrors
+        // _syncWorldPresence() above in SHAPE only (a no-op unless the
+        // active document actually changed, save-then-restore across the
+        // transition) — deliberately NOT the same protocol: this reads
+        // and writes nothing but this replica's OWN local storage (see
+        // session.saveWorldExperience()/restoreWorldExperience()'s own
+        // header), never anything broadcast to a peer. `worldReturnInfo`
+        // is captured from the OUTGOING (prior) experience record before
+        // this tick's own restore/save ever touches it, so it always
+        // describes "how I last left this World," never the visit
+        // currently starting.
+        function _syncWorldExperience(activeId) {
+            if (activeId === presentExperienceWorldDocumentId) {
+                return;
+            }
+            if (presentExperienceWorldDocumentId) {
+                session.saveWorldExperience(presentExperienceWorldDocumentId);
+            }
+            presentExperienceWorldDocumentId = activeId || null;
+            if (!presentExperienceWorldDocumentId) {
+                worldReturnInfo.value = null;
+                return;
+            }
+            const hasVisitedBefore = typeof session.hasVisitedWorld === 'function'
+                && session.hasVisitedWorld(presentExperienceWorldDocumentId);
+            const priorExperience = hasVisitedBefore && typeof session.getWorldExperience === 'function'
+                ? session.getWorldExperience(presentExperienceWorldDocumentId)
+                : null;
+            worldReturnInfo.value = priorExperience ? { lastVisitedAt: priorExperience.lastVisitedAt } : null;
+            if (typeof session.restoreWorldExperience === 'function') {
+                session.restoreWorldExperience(presentExperienceWorldDocumentId);
+            }
         }
 
         function refreshCollaborationRoster(documentId) {
@@ -995,6 +1057,15 @@ export default {
                 : null;
             welcomeContext.value = context ? context.toJSON() : null;
         }
+
+        // 0.3.10 — true only for the automatic ARRIVAL showing of a World
+        // this replica has a prior local experience record for — "Welcome
+        // back," never "Welcome," and "Continue Exploring" over "Explore
+        // Freely." Reopening later via the toolbar's "Explore" button
+        // (isArrival: false) always shows the plain, non-returning framing
+        // — returning is specifically about how you ARRIVED, not a
+        // permanent mode for the rest of the visit.
+        const welcomeIsReturning = computed(() => welcomeIsArrival.value && Boolean(worldReturnInfo.value));
 
         function openWelcomePanel(isArrival) {
             refreshWelcomeContext();
@@ -1841,6 +1912,15 @@ export default {
             if (unsubscribeWorldSpatialPresence) {
                 unsubscribeWorldSpatialPresence();
             }
+            // 0.3.10 — the FINAL save for whichever World this replica's
+            // local experience is currently tracking, so closing the tab
+            // (or navigating elsewhere) still remembers this camera
+            // framing — _syncWorldExperience() above only ever saves on
+            // the NEXT active-document change, which never comes once
+            // this view is torn down.
+            if (presentExperienceWorldDocumentId) {
+                session.saveWorldExperience(presentExperienceWorldDocumentId);
+            }
             session.dispose();
         });
 
@@ -1923,6 +2003,8 @@ export default {
             showWelcomePanel,
             welcomeContext,
             welcomeIsArrival,
+            worldReturnInfo,
+            welcomeIsReturning,
             openExplorePanel,
             closeWelcomePanel,
             exploreWelcomeSuggestion,
@@ -2524,6 +2606,8 @@ export default {
                 v-if="showWelcomePanel"
                 :context="welcomeContext"
                 :is-arrival="welcomeIsArrival"
+                :returning="welcomeIsReturning"
+                :last-visited-at="worldReturnInfo && worldReturnInfo.lastVisitedAt"
                 @explore="exploreWelcomeSuggestion"
                 @dismiss="closeWelcomePanel"
             />

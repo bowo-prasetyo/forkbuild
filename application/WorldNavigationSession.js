@@ -278,7 +278,16 @@ export class WorldNavigationSession {
 	    // existing test) simply never advertises or observes spatial
 	    // presence at all; see enterWorldSpatialPresence()/
 	    // syncWorldSpatialPresence()/leaveWorldSpatialPresence() below.
-	    worldSpatialPresenceUseCase = null
+	    worldSpatialPresenceUseCase = null,
+	    // 0.3.10 — World Persistence & Return Experience. OPTIONAL, the
+	    // same "enforce/offer only when the collaborator is actually
+	    // wired" posture every other optional collaborator in this
+	    // constructor follows — a session built without one (every
+	    // pre-0.3.10 caller, and every existing test) simply never
+	    // remembers or restores a camera framing for any World. See
+	    // application/LocalWorldExperienceStore.js and the "Local World
+	    // Experience & Return" section below.
+	    localWorldExperienceStore = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -544,6 +553,9 @@ export class WorldNavigationSession {
 	    // that drops out of a later roster snapshot can be explicitly
 	    // removed from the scene rather than left as a stale marker.
 	    this._spatialPresenceRenderedDevices = new Map();
+
+	    // 0.3.10 — see the constructor's own comment above.
+	    this._localWorldExperienceStore = localWorldExperienceStore;
 
 	    this._container = null;
 	    this._session = null;
@@ -2273,6 +2285,100 @@ export class WorldNavigationSession {
             collaborators,
             placeContexts
         });
+    }
+
+    // -----------------------------------------------------------------
+    // Local World Experience & Return (0.3.10)
+    // -----------------------------------------------------------------
+    //
+    // Purely local, per-user camera framing for a World this replica has
+    // visited before — never a Document field, a WorldPlacement field,
+    // or anything ever broadcast. See core/LocalWorldExperience.js and
+    // docs/Principles.md, "Personal Experience Is Not Shared World
+    // State (0.3.10)." Every method below is a graceful no-op with no
+    // localWorldExperienceStore wired — the same optional-collaborator
+    // posture every other optional feature in this constructor follows.
+    //
+    // Deliberately independent of enterWorldPresence()/leaveWorldPresence()
+    // (0.2.98): those broadcast a SHARED "I am here" fact to peers; these
+    // read/write nothing but this replica's own local storage. A caller
+    // wires both at the same "active document changed" event (see
+    // ui/views/WorldView.js's _syncWorldExperience()) without either
+    // implying the other — and, per the same principle, this state is
+    // NEVER consulted by canEditDocument()/worldAuthorizationService: a
+    // prior visit is a UX convenience, never an authorization claim.
+
+    hasVisitedWorld(documentId) {
+        if (!this._localWorldExperienceStore || !documentId) {
+            return false;
+        }
+        return this._localWorldExperienceStore.hasVisited(documentId);
+    }
+
+    getWorldExperience(documentId) {
+        if (!this._localWorldExperienceStore || !documentId) {
+            return null;
+        }
+        return this._localWorldExperienceStore.getExperience(documentId);
+    }
+
+    // Most-recently-visited Worlds this replica has a local experience
+    // record for — the "Recent Worlds" list's own data source. An empty
+    // array, never a throw, with no store wired.
+    getRecentlyVisitedWorlds(limit = 10) {
+        if (!this._localWorldExperienceStore) {
+            return [];
+        }
+        return this._localWorldExperienceStore.getRecentlyVisited(limit);
+    }
+
+    // Snapshots THIS replica's current camera framing (position, target,
+    // a derived heading reading) and active Camera Perspective for
+    // `documentId`, right now. A no-op with no localWorldExperienceStore
+    // wired, or before start() has ever run (no camera controller yet —
+    // nothing to snapshot).
+    saveWorldExperience(documentId) {
+        if (!this._localWorldExperienceStore || !documentId || !this._spatialCameraController) {
+            return;
+        }
+        const state = this._spatialCameraController.getSpatialCameraState();
+        const heading = computeCompassHeading(state.position, state.target);
+        this._localWorldExperienceStore.recordVisit(documentId, {
+            position: { x: state.position.x, y: state.position.y, z: state.position.z },
+            target: { x: state.target.x, y: state.target.y, z: state.target.z },
+            heading: heading ? heading.degrees : null,
+            perspective: this._cameraPerspective
+        });
+    }
+
+    // Restores whatever THIS replica's own last visit to `documentId`
+    // left behind, if anything. A stored Camera Perspective takes
+    // priority and is re-applied via setCameraPerspective() — a
+    // perspective is always an offset from the avatar's CURRENT
+    // position (core/CameraPerspective.js), never a raw coordinate, so
+    // it re-frames correctly even if the avatar moved (or the World
+    // changed) since the last visit. Otherwise, a stored free/orbit
+    // position+target is restored directly, exactly like every other
+    // camera-focus caller in this file (see _beginCameraFocus()) — never
+    // a second camera-movement mechanism. Returns the restored
+    // LocalWorldExperience, or null when there is nothing to restore
+    // (no store wired, or no prior visit on record) — the caller simply
+    // keeps whatever framing it already had, e.g. 0.3.9's Welcome
+    // framing for a first-time visitor.
+    restoreWorldExperience(documentId) {
+        if (!this._localWorldExperienceStore || !documentId) {
+            return null;
+        }
+        const experience = this._localWorldExperienceStore.getExperience(documentId);
+        if (!experience) {
+            return null;
+        }
+        if (experience.cameraPerspective) {
+            this.setCameraPerspective(experience.cameraPerspective);
+        } else if (experience.cameraPosition && experience.cameraTarget) {
+            this._beginCameraFocus({ position: experience.cameraPosition, target: experience.cameraTarget });
+        }
+        return experience;
     }
 
     // 0.2.94 — the Locations-panel counterpart to focusDocument()/

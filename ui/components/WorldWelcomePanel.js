@@ -35,10 +35,47 @@ export default {
         isArrival: {
             type: Boolean,
             default: true
+        },
+        // 0.3.10 — World Persistence & Return Experience. True only for
+        // the automatic arrival showing of a World this replica has a
+        // prior LOCAL camera experience for (session.hasVisitedWorld())
+        // — purely presentational, swaps "Welcome to X" for "Welcome
+        // back to X" and "Explore Freely" for "Continue Exploring."
+        // Never changes what content this panel shows, only the framing
+        // — the same "framing only" contract `isArrival` above already
+        // has. See ui/views/WorldView.js's own worldReturnInfo/
+        // welcomeIsReturning header.
+        returning: {
+            type: Boolean,
+            default: false
+        },
+        // Epoch ms of this replica's PRIOR visit to this World, or null
+        // — only meaningful alongside `returning: true`.
+        lastVisitedAt: {
+            type: Number,
+            default: null
         }
     },
     emits: ['explore', 'dismiss'],
     computed: {
+        lastVisitedLabel() {
+            if (!this.returning || typeof this.lastVisitedAt !== 'number') {
+                return null;
+            }
+            const elapsedMs = Date.now() - this.lastVisitedAt;
+            if (elapsedMs < 0) {
+                return null;
+            }
+            const dayMs = 24 * 60 * 60 * 1000;
+            const elapsedDays = Math.floor(elapsedMs / dayMs);
+            if (elapsedDays <= 0) {
+                return 'today';
+            }
+            if (elapsedDays === 1) {
+                return 'yesterday';
+            }
+            return `${elapsedDays} days ago`;
+        },
         suggestions() {
             if (!this.context || !Array.isArray(this.context.suggestedDestinations)) {
                 return [];
@@ -106,9 +143,11 @@ export default {
             @keydown="onKeydown"
         >
             <div class="modal-panel world-welcome-panel">
-                <h3 v-if="isArrival">Welcome to {{ worldTitle }}</h3>
+                <h3 v-if="isArrival && returning">Welcome back to {{ worldTitle }}</h3>
+                <h3 v-else-if="isArrival">Welcome to {{ worldTitle }}</h3>
                 <h3 v-else>{{ worldTitle }}</h3>
 
+                <p v-if="returning && lastVisitedLabel" class="world-welcome-panel-stats">Last visited {{ lastVisitedLabel }}</p>
                 <p v-if="context.currentPlace" class="world-welcome-panel-place">★ {{ context.currentPlace.title }}</p>
                 <p v-if="statsParts.length" class="world-welcome-panel-stats">{{ statsParts.join(' · ') }}</p>
 
@@ -137,7 +176,7 @@ export default {
                 </p>
 
                 <div class="modal-actions">
-                    <button class="action-btn action-btn--primary" @click="$emit('dismiss')">{{ isArrival ? 'Explore Freely' : 'Close' }}</button>
+                    <button class="action-btn action-btn--primary" @click="$emit('dismiss')">{{ isArrival ? (returning ? 'Continue Exploring' : 'Explore Freely') : 'Close' }}</button>
                 </div>
             </div>
         </div>

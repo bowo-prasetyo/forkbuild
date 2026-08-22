@@ -33,6 +33,7 @@ import { WorldAuthorizationService } from './WorldAuthorizationService.js';
 import { WorldMembershipUseCase } from './WorldMembershipUseCase.js';
 import { WorldPresenceUseCase } from './WorldPresenceUseCase.js';
 import { WorldSpatialPresenceUseCase } from './WorldSpatialPresenceUseCase.js';
+import { LocalWorldExperienceStore } from './LocalWorldExperienceStore.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -140,6 +141,13 @@ export class CreateWorldViewUseCase {
             storageProvider
         );
         const saveDocumentUseCase = new SaveDocumentUseCase(storageProvider);
+        // 0.3.10 — World Persistence & Return Experience. The SAME local
+        // storageProvider every other local-only store this method
+        // builds already reads/writes — a per-user, per-World camera
+        // framing that never becomes World content. See
+        // application/LocalWorldExperienceStore.js and
+        // core/LocalWorldExperience.js.
+        const localWorldExperienceStore = new LocalWorldExperienceStore({ storageProvider });
         // 0.2.93 — World View Instance Inspection. Both read from the
         // SAME local storageProvider ui/views/EditorView.js's own
         // CreatePersistenceUseCase already builds its equivalents from
@@ -532,7 +540,9 @@ export class CreateWorldViewUseCase {
                     worldMembershipUseCase,
                     worldPresenceUseCase,
                     // 0.3.0: Collaborative Spatial Presence — see above.
-                    worldSpatialPresenceUseCase
+                    worldSpatialPresenceUseCase,
+                    // 0.3.10: World Persistence & Return Experience — see above.
+                    localWorldExperienceStore
                 });
                 sessionRef = session;
                 return session;
