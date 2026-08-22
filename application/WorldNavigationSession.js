@@ -2625,6 +2625,32 @@ export class WorldNavigationSession {
         return { x: state.position.x, y: state.position.y, z: state.position.z };
     }
 
+    // 0.3.6 — World Discovery & Exploration. The local avatar's own
+    // live world position — WorldSpatialContextService's primary
+    // "where am I" signal (see application/WorldSpatialContextService.js
+    // and docs/Principles.md, "Exploration Is Derived From Place, Not
+    // Stored As Place"). Same graceful-absence posture as
+    // getCameraPosition() above: a session with no avatarPresenceSession
+    // wired (nobody logged in, or most existing tests) simply returns
+    // null, leaving the caller to fall back to getCameraPosition().
+    getAvatarPosition() {
+        if (!this._avatarPresenceSession) {
+            return null;
+        }
+        const { x, y, z } = this._avatarPresenceSession.current.position;
+        return { x, y, z };
+    }
+
+    // 0.3.6 — the SAME seed terrainHeightAt()/ecologyZoneAt()/
+    // hydrologyFeatureAt() already use everywhere else in this file
+    // (DEFAULT_WORLD_SEED, imported above) — spatial context derivation
+    // must never invent a second, session-local notion of "which seed
+    // is this world using," it just needs a way to ask this session
+    // which one is live.
+    getWorldSeed() {
+        return DEFAULT_WORLD_SEED;
+    }
+
     _inspectLocalAvatar() {
         if (!this._avatarProfileUseCase || !this._avatarPresenceSession) {
             return null;
