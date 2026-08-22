@@ -8,6 +8,8 @@ import { EditorSettings } from './editor-state/EditorSettings.js';
 import { PreviewState } from './editor-state/PreviewState.js';
 import { ActiveStructureState } from './editor-state/ActiveStructureState.js';
 import { StructurePreviewState } from './editor-state/StructurePreviewState.js';
+import { ActiveCompositionState } from './editor-state/ActiveCompositionState.js';
+import { CompositionPreviewState } from './editor-state/CompositionPreviewState.js';
 
 // EditorContext holds transient editor state — not domain state. Nothing
 // here belongs to a World and nothing here should ever be serialized into
@@ -29,6 +31,8 @@ export class EditorContext {
         this._settings = new EditorSettings();
         this._activeStructure = new ActiveStructureState();
         this._structurePreview = StructurePreviewState.hidden();
+        this._activeComposition = ActiveCompositionState.none();
+        this._compositionPreview = CompositionPreviewState.hidden();
     }
 
     get eventBus() {
@@ -111,6 +115,26 @@ export class EditorContext {
     setStructurePreview(structurePreview) {
         this._structurePreview = structurePreview;
         this._publish(EditorEvent.STRUCTURE_PREVIEW_CHANGED, { structurePreview });
+    }
+
+    // ------------------------------------------------- 0.4.1 structure composition
+
+    get activeComposition() {
+        return this._activeComposition;
+    }
+
+    setActiveComposition(structure) {
+        this._activeComposition = new ActiveCompositionState(structure);
+        this._publish(EditorEvent.ACTIVE_COMPOSITION_CHANGED, { structure });
+    }
+
+    get compositionPreview() {
+        return this._compositionPreview;
+    }
+
+    setCompositionPreview(compositionPreview) {
+        this._compositionPreview = compositionPreview;
+        this._publish(EditorEvent.COMPOSITION_PREVIEW_CHANGED, { compositionPreview });
     }
 
     _publish(eventType, payload) {

@@ -64,8 +64,13 @@ export class EditorActionContext {
     // shortcuts (align, distribute, numeric transform, move/rotate
     // selection) stay disabled while either placement mode is active,
     // the same "one hardcoded 'place'" spot 0.1.50 already used for the
-    // brick ghost.
-    get placementMode() { return this._activeTool === 'place' || this._activeTool === 'place-structure'; }
+    // brick ghost. 0.4.1 adds COMPOSE_STRUCTURE to the same gate — a
+    // Structure-composition preview is exactly as much "placement mode"
+    // as the other two, and needs the same carve-out (e.g. Escape
+    // falling through to the tool instead of Clear Selection).
+    get placementMode() {
+        return this._activeTool === 'place' || this._activeTool === 'place-structure' || this._activeTool === 'compose-structure';
+    }
     get capabilities() { return this._capabilities; }
     get selectionIsStructurePlacement() { return this._selectionIsStructurePlacement; }
 

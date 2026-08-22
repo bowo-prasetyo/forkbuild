@@ -12,6 +12,7 @@ import { SelectionUseCase } from '../../application/SelectionUseCase.js';
 import { PaletteUseCase } from '../../application/PaletteUseCase.js';
 import { PreviewUseCase } from '../../application/PreviewUseCase.js';
 import { StructurePreviewUseCase } from '../../application/StructurePreviewUseCase.js';
+import { CompositionPreviewUseCase } from '../../application/CompositionPreviewUseCase.js';
 import { CreateLibraryPreviewUseCase } from '../../application/CreateLibraryPreviewUseCase.js';
 import { EditorSession } from '../../application/EditorSession.js';
 import { ToolId } from '../../application/editor-state/ToolId.js';
@@ -77,6 +78,9 @@ export default {
                     </p>
                     <p v-if="activeTool === ToolId.PLACE_STRUCTURE" class="placement-hint">
                         Placing "{{ activeStructureTitle }}" — hover the ground, R to rotate, click to place.
+                    </p>
+                    <p v-if="activeTool === ToolId.COMPOSE_STRUCTURE" class="placement-hint">
+                        Composing "{{ activeCompositionTitle }}" — hover the ground, R to rotate, click to place, Esc to cancel.
                     </p>
                     <p v-if="activeTool === ToolId.SELECT && selectedPlacementInfo" class="placement-hint">
                         Selected "{{ selectedPlacementInfo.title }}" — drag to move, R to rotate.
@@ -144,6 +148,8 @@ export default {
         const previewUseCase = new PreviewUseCase(editorContext);
         // 0.2.90 — Structure Placement & World Instances.
         const structurePreviewUseCase = new StructurePreviewUseCase(editorContext);
+        // 0.4.1 — Interactive Structure Composition UX.
+        const compositionPreviewUseCase = new CompositionPreviewUseCase(editorContext);
         const { libraryPreviewService } = new CreateLibraryPreviewUseCase().execute(registry);
         const toolRegistry = new CreateToolRegistryUseCase().execute();
         const documentManager = new CreateDocumentManagerUseCase().execute();
@@ -172,7 +178,9 @@ export default {
 		    copyStructureIntoDocumentUseCase,
 		    // 0.2.90 — Structure Placement & World Instances.
 		    structureResolver: structureDocumentResolver,
-		    structurePreviewUseCase
+		    structurePreviewUseCase,
+		    // 0.4.1 — Interactive Structure Composition UX.
+		    compositionPreviewUseCase
 		});
 
 		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
@@ -190,11 +198,18 @@ export default {
 		    }
 		}
 
-		// 0.4.0 — Structure Composition & Blueprint Library.
+		// 0.4.1 — Interactive Structure Composition UX. "Copy Into
+		// Document" now enters an interactive ghost-preview mode
+		// (StructureCompositionTool) instead of copying immediately —
+		// the actual insertion still only ever happens through the SAME
+		// EditorSession#copyStructureIntoDocument()
+		// -> CopyStructureIntoDocumentUseCase path 0.4.0 established,
+		// just triggered by the tool's own click-to-commit rather than
+		// this handler. See docs/Roadmap.md, 0.4.1.
 		function copyStructureIntoDocument(structure) {
-		    const copied = editorSession.copyStructureIntoDocument(structure);
-		    if (copied) {
-		        feedback.show(`Copied "${structure.name}" into this document`);
+		    const started = editorSession.beginStructureComposition(structure);
+		    if (started) {
+		        feedback.show(`Composing "${structure.name}" — click to place, R to rotate, Esc to cancel`);
 		    }
 		}
 
@@ -204,6 +219,12 @@ export default {
         // activeTool's own ref+subscription shape one rung up, so the
         // placement hint can name what's being placed.
         const activeStructureTitle = ref(editorContext.activeStructure.title);
+        // 0.4.1 — Interactive Structure Composition UX: mirrors
+        // activeStructureTitle's own ref+subscription shape, so the
+        // placement hint can name what's being composed.
+        const activeCompositionTitle = ref(
+            editorContext.activeComposition.structure ? editorContext.activeComposition.structure.name : null
+        );
         // 0.2.91 — World Instance Editing & Placement Management: mirrors
         // selectionCount's own ref+subscription shape, so the sidebar's
         // registry-gated actions (selection.duplicate) and the
@@ -215,6 +236,7 @@ export default {
         let unsubTool = null;
         let unsubSelection = null;
         let unsubActiveStructure = null;
+        let unsubActiveComposition = null;
 
         function setTool(toolId) {
             editorContext.setActiveTool(toolId);
@@ -403,6 +425,12 @@ export default {
                     activeStructureTitle.value = title;
                 }
             );
+            unsubActiveComposition = editorContext.eventBus.subscribe(
+                EditorEvent.ACTIVE_COMPOSITION_CHANGED,
+                ({ structure }) => {
+                    activeCompositionTitle.value = structure ? structure.name : null;
+                }
+            );
 
             refreshDocumentInfo();
             unsubDocumentState = documentManager.onStateChanged(refreshDocumentInfo);
@@ -503,8 +531,25 @@ export default {
                 // ever reaching PlacementTool. Routed to the tool
                 // directly instead, exactly like WorldView's identical
                 // carve-out for the same reason.
-                if ((activeTool.value === ToolId.PLACE || activeTool.value === ToolId.PLACE_STRUCTURE)
+                if ((activeTool.value === ToolId.PLACE || activeTool.value === ToolId.PLACE_STRUCTURE
+                        || activeTool.value === ToolId.COMPOSE_STRUCTURE)
                     && event.key.toLowerCase() === 'r') {
+                    editorSession.onKeyDown(event);
+                    return;
+                }
+                // 4.6. COMPOSE_STRUCTURE's own Escape-to-cancel
+                // (StructureCompositionTool#onKeyDown()) needs the exact
+                // same carve-out as 4.5's Rotate, for the exact same
+                // reason: step 5's matchShortcut() resolves Escape to
+                // 'selection.clear' by KEY ALONE and returns immediately
+                // once ANY action matches the key — regardless of
+                // whether actionRegistry.execute() actually did
+                // anything (it's disabled here: no selection is active
+                // while composing) — so Escape would never reach the
+                // tool without this carve-out. Neither PLACE nor
+                // PLACE_STRUCTURE need this: neither tool implements an
+                // Escape handler of its own.
+                if (activeTool.value === ToolId.COMPOSE_STRUCTURE && event.key === 'Escape') {
                     editorSession.onKeyDown(event);
                     return;
                 }
@@ -536,6 +581,9 @@ export default {
             if (unsubActiveStructure) {
                 unsubActiveStructure.unsubscribe();
             }
+            if (unsubActiveComposition) {
+                unsubActiveComposition.unsubscribe();
+            }
             if (unsubDocumentState) {
                 unsubDocumentState();
             }
@@ -563,6 +611,7 @@ export default {
             copyStructureIntoDocument,
             activeTool,
             activeStructureTitle,
+            activeCompositionTitle,
             selectionCount,
             selectionIsStructurePlacement,
             selectedPlacementInfo,

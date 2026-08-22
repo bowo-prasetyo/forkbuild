@@ -4,6 +4,7 @@ import { PickingService } from '../renderer/PickingService.js';
 import { SelectionRenderer } from '../renderer/SelectionRenderer.js';
 import { PreviewRenderer } from '../renderer/PreviewRenderer.js';
 import { StructurePreviewRenderer } from '../renderer/StructurePreviewRenderer.js';
+import { CompositionPreviewRenderer } from '../renderer/CompositionPreviewRenderer.js';
 import { TransformGizmoRenderer } from '../renderer/TransformGizmoRenderer.js';
 import { TransformGizmoController } from '../renderer/TransformGizmoController.js';
 import { TransformMath } from './TransformMath.js';
@@ -50,6 +51,12 @@ export class RenderWorldUseCase {
         // — see renderer/StructurePreviewRenderer.js's own header.
         const structurePreviewRenderer = new StructurePreviewRenderer(renderer, structureResolver, TransformMath);
         structurePreviewRenderer.subscribe(editorEventBus);
+        // 0.4.1 — Interactive Structure Composition UX: the ghost for
+        // composing a library Structure — see renderer/
+        // CompositionPreviewRenderer.js's own header on how it differs
+        // from structurePreviewRenderer above (no resolver needed).
+        const compositionPreviewRenderer = new CompositionPreviewRenderer(renderer, TransformMath);
+        compositionPreviewRenderer.subscribe(editorEventBus);
         const transformGizmoRenderer = new TransformGizmoRenderer(renderer);
         const transformGizmoController = new TransformGizmoController({
             camera: renderer.camera,
@@ -84,6 +91,7 @@ export class RenderWorldUseCase {
             dispose() {
                 transformGizmoController.dispose();
                 transformGizmoRenderer.dispose();
+                compositionPreviewRenderer.unsubscribe();
                 structurePreviewRenderer.unsubscribe();
                 previewRenderer.unsubscribe();
                 selectionRenderer.unsubscribe();

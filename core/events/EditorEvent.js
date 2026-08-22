@@ -23,5 +23,11 @@ export const EditorEvent = Object.freeze({
     // 0.2.90 — Structure Placement & World Instances. Mirror the brick
     // palette's own ACTIVE_BRICK_CHANGED/PREVIEW_CHANGED pair one rung up.
     ACTIVE_STRUCTURE_CHANGED: 'ActiveStructureChanged',
-    STRUCTURE_PREVIEW_CHANGED: 'StructurePreviewChanged'
+    STRUCTURE_PREVIEW_CHANGED: 'StructurePreviewChanged',
+    // 0.4.1 — Interactive Structure Composition UX. Mirrors the pair
+    // directly above, one rung over: composing a library Structure into
+    // the current Document instead of placing a StructurePlacement
+    // reference to another Document.
+    ACTIVE_COMPOSITION_CHANGED: 'ActiveCompositionChanged',
+    COMPOSITION_PREVIEW_CHANGED: 'CompositionPreviewChanged'
 });

@@ -80,7 +80,14 @@ export class EditorSession {
         // working — StructurePlacementTool already degrades gracefully
         // when either is missing (its own header explains why).
         structureResolver = null,
-        structurePreviewUseCase = null
+        structurePreviewUseCase = null,
+        // 0.4.1 — Interactive Structure Composition UX. Optional for the
+        // exact same reason: an EditorSession built without it (older
+        // call sites, tests/BlueprintComposition.test.js's own harness)
+        // simply never offers beginStructureComposition() —
+        // copyStructureIntoDocument() (0.4.0, unchanged) keeps working
+        // either way.
+        compositionPreviewUseCase = null
     }) {
         this._registry = registry;
         this._editorContext = editorContext;
@@ -96,6 +103,7 @@ export class EditorSession {
         this._copyStructureIntoDocumentUseCase = copyStructureIntoDocumentUseCase;
         this._structureResolver = structureResolver;
         this._structurePreviewUseCase = structurePreviewUseCase;
+        this._compositionPreviewUseCase = compositionPreviewUseCase;
 
         this._container = null;
         this._session = null;
@@ -810,6 +818,34 @@ export class EditorSession {
         return true;
     }
 
+    // 0.4.1 — Interactive Structure Composition UX. Enters
+    // COMPOSE_STRUCTURE mode for `structure` instead of copying it
+    // immediately — mirrors placeDocument()'s own shape one rung over
+    // (set the thing being placed on EditorContext, then switch tools;
+    // StructureCompositionTool reads it back at activate()). The actual
+    // copy still only ever happens through
+    // CopyStructureIntoDocumentUseCase#execute() when the tool commits
+    // — this method never touches the Document itself, exactly like
+    // placeDocument() never creates a StructurePlacement itself. Same
+    // "document must exist and have a building" guard as
+    // copyStructureIntoDocument() (below), checked up front so a click
+    // on an empty document's Copy button fails immediately rather than
+    // entering a composition mode with nothing to commit into. Returns
+    // false (and does nothing) if `structure` is falsy or there's
+    // nothing to compose into, so callers can wire this straight to a
+    // UI action without a guard.
+    beginStructureComposition(structure) {
+        if (!structure || !this._documentManager.document) {
+            return false;
+        }
+        if (this._documentManager.document.world.getBuildings().length === 0) {
+            return false;
+        }
+        this._editorContext.setActiveComposition(structure);
+        this._editorContext.setActiveTool(ToolId.COMPOSE_STRUCTURE);
+        return true;
+    }
+
     // 0.2.90 — Structure Placement & World Instances. Enters
     // PLACE_STRUCTURE mode targeting `documentId` — the "put this
     // already-created structure here" entry point, wired from Toolbar's
@@ -942,6 +978,9 @@ export class EditorSession {
         if (this._structurePreviewUseCase) {
             this._structurePreviewUseCase.hide();
         }
+        if (this._compositionPreviewUseCase) {
+            this._compositionPreviewUseCase.hide();
+        }
         const eventBus = new CreateEventBusUseCase().execute();
         this._session = new RenderWorldUseCase().execute(
             this._container,
@@ -966,7 +1005,10 @@ export class EditorSession {
             commandHistory: this._commandHistory,
             // 0.2.90 — read by StructurePlacementTool only.
             structureResolver: this._structureResolver,
-            structurePreviewUseCase: this._structurePreviewUseCase
+            structurePreviewUseCase: this._structurePreviewUseCase,
+            // 0.4.1 — read by StructureCompositionTool only.
+            compositionPreviewUseCase: this._compositionPreviewUseCase,
+            copyStructureIntoDocumentUseCase: this._copyStructureIntoDocumentUseCase
         };
         this._toolManager = new ToolManager(this._toolRegistry, toolContext, this._editorContext);
         this._toolManager.start();

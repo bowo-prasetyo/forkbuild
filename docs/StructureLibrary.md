@@ -185,22 +185,65 @@ composing several structures never requires picking coordinates by hand
 and never overlaps what's already there.
 
 `ui/components/BuildLibraryPanel.js` offers Copy Into Document beside
-Fork As New Document on every structure entry — Copy emits `copy`
-(wired to `EditorSession.copyStructureIntoDocument()`), Fork still emits
-`fork` exactly as before. Copying carries no provenance field: a copied
-brick is an ordinary brick in the current document, indistinguishable
-from one placed by hand the instant it lands — composition is about
-what the current blueprint now contains, never about where each piece
-came from.
+Fork As New Document on every structure entry — Fork still emits `fork`
+exactly as before. Copying carries no provenance field: a copied brick
+is an ordinary brick in the current document, indistinguishable from
+one placed by hand the instant it lands — composition is about what the
+current blueprint now contains, never about where each piece came from.
 
-An interactive ghost-preview placement flow for Copy (drag/rotate before
-committing, mirroring `application/tools/StructurePlacementTool.js`'s
-own 0.2.90 UX one rung over) is deliberately deferred — 0.4.0 is the
-composition mechanic and its deterministic default placement; a
-positioning UI for it is later work, named rather than hidden, the same
-restraint every milestone in this document already applies to its own
-scope. A built-in structure library rich enough to make composition
-genuinely useful (more categories, more structures per category), a
-User Blueprint Library ("Save As Blueprint" from the current document),
-and generated preview thumbnails are equally out of scope here — see
-docs/Roadmap.md, 0.4.0's own "Deliberately excluded."
+## Interactive Structure Composition (0.4.1)
+
+0.4.0 named its own gap in "Deliberately excluded": Copy Into Document
+committed immediately, at the deterministic auto-offset position, with
+no way to see or adjust where a Structure would land before it did.
+0.4.1 closes that gap by turning Copy into an interactive ghost-preview
+placement flow, reusing `application/tools/StructurePlacementTool.js`'s
+own 0.2.90 UX one rung over rather than inventing a second placement
+mechanism — see `application/tools/StructureCompositionTool.js`'s own
+header.
+
+Copy's own emitted `copy` event now wires to
+`EditorSession.beginStructureComposition(structure)`, which sets
+`EditorContext.activeComposition` and switches to the new
+`COMPOSE_STRUCTURE` tool — it never touches the Document itself. The
+tool seeds its ghost preview at exactly the same deterministic position
+`CopyStructureIntoDocumentUseCase#defaultTransform()` already computed
+for the 0.4.0 immediate-copy path, so "Copy Into Document" always
+previews where the non-interactive path would have placed it before the
+user moves anything. From there:
+
+- Hovering the ground moves the ghost (`PlacementPositionService#calculateStructureGround()`,
+  shared with `StructurePlacementTool`).
+- `R`/`Shift+R` rotates the ghost in exact 90° steps — the SAME
+  rotation convention (and the same `application/TransformMath.js`
+  formula) every other rotation gesture in this codebase already uses.
+- Collision reuses `application/StructurePlacementValidator.js`
+  unchanged — the Structure's own AABB checked against the World's
+  existing bricks and `StructurePlacement`s; an occupied position tints
+  the ghost and refuses to commit.
+- Clicking a valid position commits through the exact same
+  `CopyStructureIntoDocumentUseCase#execute()` 0.4.0 already used, now
+  passed an explicit `transform: { position, rotation }` instead of
+  falling back to `defaultTransform()` — still ONE `PasteBricksCommand`,
+  still no `PasteStructureCommand`, still no provenance field. Preview
+  and commit resolve through the SAME
+  `application/StructureCompositionTransform.js#transformStructureBricks()`
+  pipeline, so the ghost is a visualization of the exact command that
+  will run, never an approximation of it.
+- `Escape` cancels with zero Document mutation. Composing is one-shot —
+  unlike `StructurePlacementTool`, which stays active for placing the
+  same structure repeatedly, committing or cancelling a composition
+  returns to Select; "compose House once" is closer to a paste gesture
+  than a placement mode.
+
+`renderer/CompositionPreviewRenderer.js` renders the ghost — a sibling
+of `renderer/StructurePreviewRenderer.js` that never needs a
+`StructureDocumentResolver`: a library Structure's bricks are already
+in hand (no Document reference to resolve), so the ghost is built
+straight from `structure.bricks`.
+
+A built-in structure library rich enough to make composition genuinely
+useful (more categories, more structures per category), a User
+Blueprint Library ("Save As Blueprint" from the current document), and
+generated preview thumbnails remain out of scope here — see
+docs/Roadmap.md, 0.4.1's own "Deliberately excluded."
