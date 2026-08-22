@@ -53,14 +53,17 @@ const FLAT_GROUND_Y = 0;
 // Deliberately NOT a physics climb — see docs/Principles.md, "Step-Up
 // Movement Is A Deterministic Height Constraint, Never A Physics
 // Climb (0.3.2)." A step within maxStepHeight is taken in full, in one
-// tick, with no partial ascent; a step beyond it is simply not taken —
-// the avatar stops at the edge, exactly like a too-steep terrain slope
-// already stops it (core/TerrainWalkability.js). Stepping DOWN off a
-// tall ledge is symmetrically blocked, not a fall — genuine gravity-
-// driven falling off an edge remains explicitly out of scope for this
-// milestone (see core/BrickWalkability.js#isStepClimbable's own
-// header), the same way climbing full staircases and sloped brick
-// geometry are named, in docs/Roadmap.md, as later work.
+// tick, with no partial ascent; a step UP beyond it is simply not taken
+// — the avatar stops at the edge, exactly like a too-steep terrain
+// slope already stops it (core/TerrainWalkability.js).
+//
+// 0.3.4 — Vertical World Navigation. Stepping DOWN beyond maxStepHeight
+// no longer shares that same "blocked, symmetric with stepping up"
+// fate — see apply()'s own header below for the full reasoning. It was
+// a deliberately named simplification through 0.3.3, never a claim
+// that a ledge and a wall were the same kind of obstacle; this
+// milestone is exactly the moment that simplification was named to
+// wait for.
 const DEFAULT_QUERY_RADIUS = 12; // world units — mirrors AvatarMovementConstraint's own reasoning
 const MAX_DOCUMENT_SPAN_MARGIN = 64;
 
@@ -156,26 +159,76 @@ export class AvatarStepConstraint {
     // airborne avatar passes straight through unchanged, so a running
     // jump can still land on top of a tall brick from above, exactly
     // like landing on the ground already works.
+    //
+    // 0.3.4 — Vertical World Navigation. Before this milestone, ANY
+    // height delta beyond `maxStepHeight` was treated identically,
+    // whichever direction it went: blocked, X/Z reverted, exactly like
+    // walking into a wall — see docs/Roadmap.md's own 0.3.3 note,
+    // "falling off a ledge under gravity... a too-large step DOWN is
+    // blocked, symmetric with a too-large step up." That symmetry was
+    // always an explicit, named simplification, never a claim that
+    // stepping off a ledge and stepping into a wall were the same kind
+    // of event. They aren't: a wall in front of the avatar is real
+    // geometry actively occupying that space; a ledge is the ABSENCE of
+    // a supporting surface, which is exactly what gravity — already
+    // sitting one layer down in core/AvatarMovementSimulation.js since
+    // 0.2.36 — exists to answer. So the two directions now diverge:
+    //
+    //   toHeight - fromHeight >  maxStepHeight  -> still BLOCKED
+    //       (a wall, a step too tall to climb — unchanged from 0.3.3)
+    //   toHeight - fromHeight < -maxStepHeight  -> now FALLING
+    //       (the surface ahead drops away — horizontal motion is
+    //       accepted, Y is left UNSNAPPED, and `falling: true` tells
+    //       the caller — application/AvatarMovementController.js — to
+    //       flip `grounded` to false for the NEXT tick, so
+    //       core/AvatarMovementSimulation.js's own existing gravity
+    //       integration takes over from here)
+    //
+    // Landing still reads the exact same `supportHeightAt()` — the
+    // SAME `WalkableSurface` abstraction 0.3.3 built, whether the
+    // surface below is flat ground, a brick's flat top, a stair tread,
+    // or a slope's own ramp. There is no second "falling surface"
+    // concept anywhere in this codebase; see docs/Principles.md,
+    // "Falling Still Asks WalkableSurface The Same Question Walking
+    // Always Has (0.3.4)."
     apply(position, desiredPosition, { grounded = true } = {}) {
         if (!grounded) {
-            return { position: desiredPosition, blocked: false };
+            return { position: desiredPosition, blocked: false, falling: false };
         }
         const fromHeight = this.supportHeightAt(position.x, position.z);
         const toHeight = this.supportHeightAt(desiredPosition.x, desiredPosition.z);
         if (isStepClimbable(fromHeight, toHeight, this._maxStepHeight)) {
             return {
                 position: { x: desiredPosition.x, y: toHeight, z: desiredPosition.z },
-                blocked: false
+                blocked: false,
+                falling: false
             };
         }
-        // Same "revert X/Z to where the avatar already stood, Y still
-        // passes through from desiredPosition" convention
-        // AvatarTerrainConstraint.apply() already documents — a
-        // rejected step must never also cancel legitimate vertical
-        // motion (a jump/fall) already in progress.
+        if (toHeight < fromHeight) {
+            // The surface ahead drops away by more than a step can
+            // bridge — an unsupported ledge, not a wall. X/Z proceed;
+            // Y is passed through exactly as terrain/collision left
+            // it (still resting on the OLD support height, one tick
+            // behind — see AvatarMovementController's own 0.3.4 note
+            // on why that one-tick lag is fine), and gravity takes
+            // over starting next tick.
+            return {
+                position: { x: desiredPosition.x, y: desiredPosition.y, z: desiredPosition.z },
+                blocked: false,
+                falling: true
+            };
+        }
+        // Stepping UP beyond maxStepHeight remains a genuine wall,
+        // exactly as it was through 0.3.3 — falling only ever explains
+        // a DROP, never a climb. Same "revert X/Z to where the avatar
+        // already stood, Y still passes through from desiredPosition"
+        // convention AvatarTerrainConstraint.apply() already documents
+        // — a rejected step must never also cancel legitimate vertical
+        // motion (a jump already in progress) already in flight.
         return {
             position: { x: position.x, y: desiredPosition.y, z: position.z },
-            blocked: true
+            blocked: true,
+            falling: false
         };
     }
 }

@@ -7768,3 +7768,233 @@ World
 Vertical navigation (falling, jumping, landing) and multiple humans
 actually building the same deterministic world together remain the next
 open questions — unscheduled, not forgotten.
+
+## 0.3.4 — Vertical World Navigation
+
+0.3.3 built the shared geometric truth — `core/WalkableSurface.js` — that
+answers "where may an avatar stand?" for flat ground, a brick's own top
+face, a stair tread, or a slope's own ramp, alike. It deliberately left
+one question unanswered, named rather than hidden in its own "Deliberately
+staged, not attempted here" list:
+
+```text
+What happens when a WalkableSurface
+genuinely stops existing beneath
+the avatar's feet mid-stride?
+```
+
+Through 0.3.3, the answer was: nothing happens, because it can't. A step
+DOWN beyond `DEFAULT_MAX_STEP_HEIGHT` was symmetric with a step UP beyond
+it — both simply blocked, X/Z reverted, the avatar stopped at the edge as
+if it had walked into a wall. Walking off the top of a stair, a slope, or
+a raised platform with nothing beyond it was, quite literally, impossible
+— not because the avatar couldn't fall, but because the movement pipeline
+never let it try.
+
+0.3.4 answers that question:
+
+```text
+0.3.3 established              0.3.4 establishes
+
+Where can I stand?             What happens when support changes?
+        ↓                               ↓
+WalkableSurface                 jump / fall / land
+        ↓
+What is my support height?
+```
+
+### Why this milestone, now
+
+0.3.3 made the distinction between collision geometry ("what occupies
+this space?") and walkable geometry ("where may an avatar stand?")
+mature enough that jumping/falling finally has somewhere real to land —
+literally. A house with an upper floor and a staircase could be built,
+climbed, and stood on since 0.3.3, but walking off its own edge was
+blocked like a wall, not survived like a fall:
+
+```text
+             avatar
+                ↓
+        ┌─────────────┐
+        │   platform  │
+        └─────────────┘
+                       ↓
+                       ↓
+────────────────────────────
+             ground
+```
+
+0.3.4 is what makes that drop actually happen.
+
+### The one new concept: `core/AvatarVerticalState.js`
+
+A small, closed vocabulary — `SUPPORTED` / `RISING` / `FALLING` —
+deliberately NOT a second physics bookkeeping system. Jump/gravity
+kinematics (`verticalVelocity`, `grounded`) have lived in
+`core/AvatarMovementSimulation.js` since 0.2.36; `AvatarVerticalState` is
+a pure, stateless LABEL read off those exact two values, the same
+"derive, never duplicate" discipline `core/WorldSpatialActivity.js`
+already established for a different question:
+
+```text
+grounded === true             -> SUPPORTED
+grounded === false, v > 0     -> RISING
+grounded === false, v <= 0    -> FALLING
+```
+
+Same "deterministic, no random numbers, no renderer dependence, no
+wall-clock dependence" contract every kinematic file in this codebase
+already keeps: identical input + identical World + identical initial
+avatar state produces an identical trajectory, tick for tick — proven
+directly in `tests/AvatarVerticalNavigation.test.js`'s own determinism
+flagship phase.
+
+### Falling — the actual change
+
+Jumping and gravity already existed, since 0.2.36 — `core/AvatarMovementSimulation.js`
+has integrated `verticalVelocity` against gravity and snapped a grounded
+avatar onto its own `groundHeight` from the very first avatar-movement
+milestone. What 0.3.4 actually adds lives one layer up, in
+`application/AvatarStepConstraint.js#apply()`: the two directions of a
+too-large height delta, treated identically through 0.3.3, now diverge:
+
+```text
+toHeight - fromHeight >  maxStepHeight   -> still BLOCKED (a wall)
+toHeight - fromHeight < -maxStepHeight   -> now FALLING (a ledge)
+```
+
+A wall is real geometry actively occupying space; a ledge is the ABSENCE
+of a supporting surface — exactly what gravity, already sitting one
+layer down, exists to answer. When a grounded step reports `falling`,
+`application/AvatarMovementController.js` flips its own `grounded`
+bookkeeping to `false` for the very next tick — nothing else changes.
+The existing gravity integration in `core/AvatarMovementSimulation.js`
+takes it from there, using `application/AvatarStepConstraint.js#supportHeightAt()`
+— the SAME function a walking step has always snapped onto — as the
+landing surface, recomputed fresh every tick from wherever the avatar
+currently is:
+
+```text
+WalkableSurface
+       │
+       ├── walking    -> snap onto it
+       ├── stepping   -> snap onto it
+       └── landing    -> integrate gravity down onto it
+```
+
+One geometric truth, three consumers. A falling avatar lands on a
+stair's own tread or a slope's own ramp exactly as precisely as it would
+have snapped onto either while walking — proven in
+`tests/AvatarVerticalNavigation.test.js`'s own edge-case section, where a
+fall is deliberately engineered to land mid-ramp on a slope, and the
+landed height is asserted to equal `resolveWalkableSurfaceAt()`'s own
+per-point answer, never a brick's flat bounding-box maximum.
+
+### Jumping — already there, unchanged
+
+Space has jumped avatars into the air since 0.2.36, grounded-only (no
+double-jump, no air control): `SUPPORTED + Space -> RISING`; `RISING`
+or `FALLING + Space -> nothing`. 0.3.4 changes nothing about this —
+it is simply the other half of the SUPPORTED/RISING/FALLING picture
+this milestone finally names.
+
+### `core/WorldSpatialActivity.js` — one tiny vocabulary extension
+
+`JUMPING`/`FALLING` join the existing `IDLE`/`WALKING`/`INSPECTING`/
+`BUILDING`/`MOVING_STRUCTURE`/`ROTATING_STRUCTURE` set, derived from the
+local avatar's own `AvatarVerticalState` exactly the way every other
+value in that vocabulary is derived from local interaction state — never
+authorization, never something a participant types. `core/AvatarAnimationState.js`
+is deliberately left untouched: its existing `JUMPING` value already
+covers the whole airborne rendering experience, and splitting it into a
+separate falling pose is a presentation decision for whenever a real
+animation is built, not a byproduct of this milestone's own vocabulary
+work.
+
+### Remote avatars: deliberately unchanged
+
+`jump velocity`, `gravity state`, `fall state`, and `landing state` join
+nothing in the spatial-presence protocol. A remote replica still only
+ever observes `position`, `heading`, `selection`, and `activity` — if Bob
+falls off a roof, Alice eventually sees Bob's position change through the
+exact same presence mechanism 0.3.0 already built. Local physics stays
+local; spatial presence stays observation. See docs/Principles.md, "Local
+Physics Is Local; Spatial Presence Is Observation (0.3.4)."
+
+### Deliberately excluded
+
+Named rather than hidden, the same restraint every milestone since
+0.2.x has applied to its own scope:
+
+- **Crouching, swimming, ladders, wall/hand-over-hand climbing.**
+- **Double jump, air dash, air control.** Space still only ever jumps
+  from `SUPPORTED` — this milestone's own explicit, deliberate boundary.
+- **Moving platforms, elevators, animated stairs.** `WalkableSurface`
+  stays a pure function of static brick geometry.
+- **A physics engine, rigid bodies, ragdolls.** `verticalVelocity`
+  remains the one signed scalar this codebase has carried since
+  0.2.36 — no momentum beyond it, no collision response, no impulses.
+- **Network-authoritative avatar physics, persistent avatar velocity,
+  replicated physics state.** See "Remote avatars," above.
+- **Camera shake, head bob, landing animation, cinematic effects.**
+  Camera Perspective (0.3.2) already follows the avatar's own position
+  through a fall/jump for free — First Person, Third Person, and
+  Bird's-Eye all read whatever position `AvatarPresence` reports, with
+  no changes needed here. Presentation polish is explicitly later work;
+  this milestone is about making the underlying trajectory correct
+  first.
+
+```text
+0.3.0   Collaborative Spatial Presence                   ✓
+             │
+             ▼
+0.3.1   Collaborative Spatial Awareness                  ✓
+             │
+             ▼
+0.3.2   Avatar & Camera Experience                       ✓
+             │
+             ▼
+0.3.3   Walkable Structures                               ✓
+             │
+             ▼
+0.3.4   Vertical World Navigation                         ✓
+             ├── core/AvatarVerticalState.js — SUPPORTED/RISING/FALLING, derived not duplicated
+             ├── Falling — a step DOWN beyond maxStepHeight now falls, never blocks
+             ├── Landing — the SAME WalkableSurface a walking step snaps onto
+             └── WorldSpatialActivity — JUMPING/FALLING, one tiny vocabulary extension
+```
+
+> **0.3.0 — Where are they?**
+> **0.3.1 — What does their presence mean?**
+> **0.3.2 — How do I inhabit this world?**
+> **0.3.3 — Where can I stand and walk?**
+> **0.3.4 — What happens when support changes?**
+
+The architectural rule this milestone leaves standing:
+
+```text
+Collision
+  ↓
+"What occupies this space?"     — core/SpatialBounds.js, core/AvatarCollision.js
+Walkability
+  ↓
+"Where may an avatar stand?"    — core/WalkableSurface.js
+Vertical motion
+  ↓
+"What happens when support changes?" — core/AvatarVerticalState.js,
+                                        core/AvatarMovementSimulation.js
+Commands
+  ↓
+"What changed in the shared World?"
+World
+  ↓
+"What is true for everyone?"
+```
+
+This is also, deliberately, where the avatar-mechanics thread of this
+roadmap pauses. A user can now inhabit the world, switch perspective,
+walk onto structures, climb stairs and slopes, jump, fall, and land —
+the basic vertical model is complete. The next open question returns to
+the social side of ForkBuild: multiple humans actually building the same
+deterministic World together, and observing what their collaborators are
+doing while they do it — unscheduled, not forgotten.
