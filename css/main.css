@@ -578,7 +578,8 @@ html, body {
    columns, narrow ones collapse toward one, without either view
    needing its own layout logic. */
 .repository-view,
-.author-view {
+.author-view,
+.recent-worlds-view {
     padding: 2rem 2.5rem 3rem;
     max-width: 1400px;
     margin: 0 auto;
@@ -586,8 +587,19 @@ html, body {
 }
 
 .repository-view h1,
-.author-view h1 {
+.author-view h1,
+.recent-worlds-view h1 {
     margin: 0 0 1.5rem;
+}
+
+/* 0.3.10 — World Persistence & Return Experience. Reuses
+   .repository-view/.author-view's own layout wholesale (same "a
+   catalog of cards, centered, responsive" shape) — see
+   ui/views/RecentWorldsView.js. */
+.recent-worlds-subtitle {
+    margin: -1rem 0 1.5rem;
+    color: #909090;
+    font-size: 0.9rem;
 }
 
 .publication-list {
@@ -991,6 +1003,20 @@ html, body {
 .publication-description--list {
     display: block;
     margin-top: 0.2rem;
+}
+
+/* 0.3.10 — World Persistence & Return Experience. ui/components/WorldCard.js
+   reuses .publication-card/.publication-list/.action-btn--explore
+   wholesale (same "a catalog of cards" language RecentWorldsView shares
+   with Repository/Author — see this file's own 0.3.10 comment above) —
+   these two rules are the only genuinely new styling a World Card needs
+   beyond a plain Publication Card. */
+.world-card-visit {
+    color: #707070;
+}
+
+.world-card-perspective {
+    color: #5a8fc4;
 }
 
 /* Toolbar */

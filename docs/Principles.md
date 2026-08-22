@@ -7199,3 +7199,55 @@ what this milestone composes, is what it deliberately excludes: no
 quests, objectives, XP, achievements, rewards, NPC guides, or scripted
 missions. Suggestions point at content collaborators already created —
 they never tell a newcomer what they are supposed to do.
+
+### Personal Experience Is Not Shared World State (0.3.10)
+
+0.3.9 already drew this line in its own closing paragraph — "No
+`World.welcomeMessage`, `visitCount`, `lastVisited`, or
+`recommendedLocation` field exists or ever should" — 0.3.10 is that same
+boundary given its own home. `core/LocalWorldExperience.js` and
+`application/LocalWorldExperienceStore.js` remember exactly one thing:
+THIS replica's own camera framing (position, target, a derived heading
+snapshot, and active Camera Perspective) the last time THIS user left a
+given World, keyed by `worldId` in local storage. Nothing here is a
+`Document` field, a `WorldPlacement` field, a `World#toJSON()` field, or
+anything ever broadcast — a `LocalWorldExperience` record for Alice
+never exists on Bob's replica, and never could, because nothing ever
+sends it there. `WorldNavigationSession#saveWorldExperience()`/
+`restoreWorldExperience()` are the ONLY read/write path, and both are
+purely local: no peer message, no signed advertisement, no gossip
+protocol, unlike literally everything else this session synchronizes
+(presence, membership, commands, spatial anchors).
+
+Camera Perspective (0.3.2) restores itself the same way it was chosen
+in the first place: as an offset from the avatar's CURRENT position
+(`core/CameraPerspective.js`), never a raw coordinate frozen at the
+moment of the last visit — so returning after the avatar has moved (or
+after a future milestone finally lets it persist across sessions) still
+frames correctly. The free/orbit camera, having no avatar-relative
+formula to fall back on, restores the exact saved `{position, target}`
+pair instead — deliberately not reconstructed from a stored heading
+angle alone, which would silently discard vertical framing (see
+`core/CompassHeading.js`'s own "computed fresh, never stored" principle
+for why a heading field here is a display SNAPSHOT, not a live source
+of truth to rebuild a framing from).
+
+Deliberately excluded, and named rather than merely absent: persistent
+avatar position (a separate, larger question — is an avatar itself
+durable World content? — left for its own future milestone), avatar
+inventory, personal homes/ownership, bookmarks shared with anyone else,
+visit-history synchronization, and any social activity feed ("Bob
+visited Market," "Alice built a house") — the durable-vs-ephemeral
+boundary `docs/Principles.md` already draws elsewhere between commands
+(durable) and activity (ephemeral) stays exactly where it was; 0.3.10
+adds no new durable fact about the World, and no new broadcast protocol
+at all.
+
+Finally, a local visit record is a UX convenience, never an
+authorization claim: `WorldNavigationSession#canEditDocument()` is
+re-derived from `worldAuthorizationService` alone on every call, same
+as 0.2.95 established, and never consults
+`hasVisitedWorld()`/`getWorldExperience()`. Having visited — or even
+having previously edited — a World does not mean a since-revoked grant
+is still honored on return; membership is always re-checked against
+CURRENT World state, never inferred from local history.
