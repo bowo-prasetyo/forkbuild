@@ -1221,6 +1221,7 @@ html, body {
 .world-view-nav-hud .compass-indicator-dial {
     width: 36px;
     height: 36px;
+    --compass-radius: 15px;
 }
 
 .world-view-nav-hud .compass-indicator-label {
@@ -1806,6 +1807,12 @@ html, body {
     border: 1px solid #3a3a3a;
     background: #1a1a1a;
     flex-shrink: 0;
+    /* 0.3.6 — how far a contextual marker (.compass-indicator-marker)
+       sits from the dial's own center; kept as a variable so a scaled-up
+       dial (see .world-view-nav-hud .compass-indicator-dial below) can
+       override just this one number rather than re-deriving every
+       marker's position. */
+    --compass-radius: 11px;
 }
 
 .compass-indicator-tick {
@@ -1837,6 +1844,31 @@ html, body {
 
 .compass-indicator--unknown .compass-indicator-needle {
     background: #4a4a4a;
+}
+
+/* 0.3.6 — a contextual marker: a small dot pushed out to the dial's own
+   edge at its direction's angle (see CompassIndicator.js#markerStyle()).
+   Deliberately dot-only, no in-dial label — the dial stays a handful of
+   pixels; the readable label lives in WorldView.js's own text legend
+   next to it. Colors match .world-view-nav-marker's own
+   structure/collaborator distinction so the dial and the legend read as
+   one system. */
+.compass-indicator-marker {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.compass-indicator-marker--structure {
+    background: #ffd700;
+}
+
+.compass-indicator-marker--collaborator {
+    background: #4ecdc4;
 }
 
 .compass-indicator-label {

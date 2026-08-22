@@ -179,6 +179,25 @@ export default {
         // current location (terrain zone, hydrology feature, nearby structures,
         // nearby collaborators) derived deterministically from position + world.
         const spatialContext = ref(null);
+        // 0.3.6 — the compass's own contextual markers (design conversation:
+        // "extending the compass from merely N/E/S/W to contextual
+        // markers... but only for nearby meaningful locations"). A pure
+        // read/reshape of spatialContext.value — never a second query —
+        // capped at 5 total so the tiny dial never turns into a minimap
+        // (explicitly out of scope for 0.3.6). CompassIndicator only
+        // needs an id/direction/kind/label per marker; it never sees
+        // core/WorldSpatialContext.js's richer shape directly, keeping
+        // the component's own presentation-only contract unchanged.
+        const compassMarkers = computed(() => {
+            if (!spatialContext.value) return [];
+            const structures = (spatialContext.value.nearbyStructures || []).map((s) => (
+                { id: `structure:${s.id}`, direction: s.direction, kind: 'structure', label: s.title }
+            ));
+            const collaborators = (spatialContext.value.nearbyCollaborators || []).map((c) => (
+                { id: `collaborator:${c.identityId}`, direction: c.direction, kind: 'collaborator', label: c.displayName }
+            ));
+            return structures.concat(collaborators).filter((m) => m.direction).slice(0, 5);
+        });
         const showLocationsPanel = ref(false);
         const worldLocations = ref([]);
         // 0.2.99 — World Collaboration UX. `worldMembers`/
@@ -1709,6 +1728,8 @@ export default {
             spatialPlacement,
             cameraPosition,
             compassHeading,
+            spatialContext,
+            compassMarkers,
             showLocationsPanel,
             worldLocations,
             goHome,
@@ -2301,20 +2322,24 @@ export default {
                     {{ cameraPosition.x.toFixed(1) }}, {{ cameraPosition.y.toFixed(1) }}, {{ cameraPosition.z.toFixed(1) }}
                 </p>
                 <div class="world-view-nav-hud-compass">
-                    <CompassIndicator :heading="compassHeading" />
+                    <!-- 0.3.6 — contextual markers rendered ON the dial
+                         itself, at each nearby structure's/collaborator's
+                         own compass direction. -->
+                    <CompassIndicator :heading="compassHeading" :markers="compassMarkers" />
                 </div>
                 <!-- 0.3.6 — Contextual location description -->
                 <div v-if="spatialContext && spatialContext.description" class="world-view-nav-context">
                     {{ spatialContext.description }}
                 </div>
-                <!-- 0.3.6 — Nearby structure markers on compass -->
+                <!-- 0.3.6 — readable legend for the same markers shown on
+                     the compass above (a 36px dial has no room for
+                     labels) -->
                 <div v-if="spatialContext && spatialContext.nearbyStructures && spatialContext.nearbyStructures.length > 0" class="world-view-nav-markers">
                     <div v-for="structure in spatialContext.nearbyStructures.slice(0, 3)" :key="structure.id" class="world-view-nav-marker">
                         <span class="marker-direction">{{ structure.direction }}</span>
                         <span class="marker-label">{{ structure.title }} ({{ structure.distance }}m)</span>
                     </div>
                 </div>
-                <!-- 0.3.6 — Nearby collaborator markers -->
                 <div v-if="spatialContext && spatialContext.nearbyCollaborators && spatialContext.nearbyCollaborators.length > 0" class="world-view-nav-markers">
                     <div v-for="collab in spatialContext.nearbyCollaborators.slice(0, 3)" :key="collab.identityId" class="world-view-nav-marker collaborator">
                         <span class="marker-direction">{{ collab.direction }}</span>
