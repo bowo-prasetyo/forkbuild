@@ -13,8 +13,10 @@ import { Command } from './Command.js';
 // id (core/WorldLandmark.js requires one explicitly), so this command
 // mints one itself via createId() on first execute().
 //
-// _executedLandmarkId tracks what was created for undo() correctness,
-// but is excluded from toJSON() — replaying elsewhere creates a new id.
+// _executedLandmarkId tracks what was created for undo() correctness AND
+// is included in toJSON(), the same "redo() must recreate the SAME
+// identity" precedent core/commands/PlaceBrickCommand.js#executedBrickId
+// and CreateGroupCommand.js#executedGroupId already established.
 export class CreateWorldLandmarkCommand extends Command {
     constructor({ worldId, authorIdentityId, title, description = '', position, id, timestamp } = {}) {
         super({ id, timestamp });
@@ -32,6 +34,10 @@ export class CreateWorldLandmarkCommand extends Command {
     get description() { return this._description; }
     get position() { return this._position; }
     get type() { return 'create-world-landmark'; }
+    // The id of the landmark this command created — null until execute()
+    // has run. Lets a caller (e.g. WorldNavigationSession#createLandmarkHere)
+    // learn what was just created, mirroring CreateGroupCommand#executedGroupId.
+    get executedLandmarkId() { return this._executedLandmarkId; }
 
     // context: { world } — the live World this command applies to.
     // Returns the created (or re-created on redo) WorldLandmark.

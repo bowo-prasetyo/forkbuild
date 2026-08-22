@@ -7099,3 +7099,51 @@ structure, following a collaborator — still goes exclusively through
 `focusLocation()`/`followAvatarId()` and `SpatialCameraController`; a
 richer sense of "where am I" never grows a second way to move the
 camera there.
+
+### A Landmark Is World Content, Not Spatial Presence (0.3.7)
+
+0.3.6 drew a hard line at "exploration is derived, never stored" — but
+named its own limit plainly: nothing that milestone built lets anyone
+leave a durable mark on a World. `core/WorldLandmark.js` is the
+deliberate exception, and it is exactly that: an EXCEPTION, not a
+loosening of 0.3.6's own rule. A `WorldLandmark` is not derived from
+anything else the World already holds (contrast `core/WorldLocation.js`,
+read fresh from a `StructurePlacement`'s own identity every time) — it
+IS stored state, created by `application/commands/
+CreateWorldLandmarkCommand.js`, persisted in `World#toJSON()`'s own
+`landmarks` array, and propagated exactly like a `Group` or a
+`StructurePlacement`: an ordinary `Command` executed through
+`CommandHistory`, picked up by `WorldCommandPropagationUseCase`'s
+existing `attachCommandHistory()` subscription with zero landmark-
+specific wiring anywhere in the sync path. Editing authority is the
+existing World membership model, never a new `LandmarkOwner`/ACL
+concept — `authorIdentityId` records provenance only; anyone holding
+EDIT on the World may rename, redescribe, or remove any landmark in it,
+the same `WorldNavigationSession#canEditDocument()` gate every other
+mutation chokepoint already consults. A landmark's position is X/Z
+LOCAL to its containing World, exactly like `StructurePlacement`'s own —
+`application/WorldLocationDirectory.js#_landmarkLocationsFor()` applies
+the World's layout offset for display, and
+`WorldNavigationSession#createLandmarkHere()` subtracts that same offset
+from the avatar's own absolute position when creating one, the two
+exact inverses of each other.
+
+### Derived Place Describes the World; Landmarks Deliberately Modify Its Meaning (0.3.7)
+
+The companion boundary to the principle above, stated from the other
+side: `core/WorldSpatialContext.js` (0.3.6) and `core/WorldLandmark.js`
+(0.3.7) now sit side by side in the same "what's around me" surfaces —
+`WorldSpatialContextService`'s `nearbyStructures`/`nearbyLandmarks`, the
+compass's contextual markers, the Locations panel — and it would be easy
+to let them blur into one flat "stuff nearby" list. They stay two
+different questions on purpose. Exploration (terrain zone, hydrology,
+nearby structures) answers "what IS here" — a fact about the World any
+two replicas derive identically from nothing but position and seed, and
+a fact no one authored. A landmark answers "what does this place MEAN
+to someone" — a human chose to stand here and say "Old Bridge, nice view
+of the river," and that choice is content, not geometry.
+`ui/components/LocationsPanel.js` keeps the distinction visible rather
+than collapsing it into shared icons on one list: World / Structures /
+Landmarks are three separate, clearly labeled sections, and only the
+Landmarks section ever offers Add/Edit/Remove — Structures and World
+stay exactly as read-only here as 0.2.94 first made them.

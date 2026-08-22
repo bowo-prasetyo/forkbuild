@@ -1871,6 +1871,14 @@ html, body {
     background: #4ecdc4;
 }
 
+/* 0.3.7 — World Landmarks & Personal Waypoints. Matches
+   .world-view-nav-marker.landmark's own color in ui/views/WorldView.js
+   so the dial and its legend read as one system, same as structure/
+   collaborator above. */
+.compass-indicator-marker--landmark {
+    background: #f687b3;
+}
+
 .compass-indicator-label {
     font-family: monospace;
     font-size: 0.75rem;
@@ -1928,11 +1936,34 @@ html, body {
     white-space: nowrap;
 }
 
-.locations-panel-item-kind {
+/* 0.3.7 — World Landmarks & Personal Waypoints. Groups the flat
+   locations list into World/Structures/Landmarks sections — see
+   ui/components/LocationsPanel.js's own header on why that grouping
+   matters (derived place vs. intentional content), never merely
+   different icons on one list. */
+.locations-panel-section + .locations-panel-section {
+    margin-top: 0.9rem;
+}
+
+.locations-panel-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.locations-panel-section-title {
+    margin: 0 0 0.4rem;
     font-size: 0.72rem;
     color: #707070;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+}
+
+.locations-panel-item-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
 }
 
 .locations-panel-item-position {
