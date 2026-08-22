@@ -1,5 +1,5 @@
-import { brickAabb, translateAabb } from '../core/AvatarCollision.js';
-import { walkableTopAt, isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
+import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
+import { resolveWalkableSurfaceAt, walkableSurfaceKindFor } from '../core/WalkableSurface.js';
 
 // The flat plane core/AvatarMovementSimulation.js has always walked on
 // — see that file's own (pre-0.3.2) GROUND_Y constant. Deliberately
@@ -24,6 +24,17 @@ const FLAT_GROUND_Y = 0;
 // class supplies the REAL loaded-world geometry (brick footprints,
 // terrain height), core/BrickWalkability.js supplies the pure "is this
 // a step or a climb" math applied to it.
+//
+// 0.3.3 — Walkable Structures. `supportHeightAt()`'s own per-brick
+// height now comes from core/WalkableSurface.js#resolveWalkableSurfaceAt()
+// rather than walkableTopAt() directly — see that file's own header for
+// why a stair or a slope's own walkable height can never be an AABB
+// question. Nothing in THIS class changed conceptually: it still
+// answers "what is the highest walkable surface at this point," still
+// takes the max across every currently-loaded brick plus the flat
+// baseline, and an ordinary flat-topped brick still resolves to exactly
+// the height it always did. Only the source of a non-flat brick's own
+// height generalized.
 //
 // This is the THIRD and FINAL stage of the movement-constraint
 // pipeline application/AvatarMovementController.js runs each tick —
@@ -79,14 +90,26 @@ export class AvatarStepConstraint {
 
     // The highest walkable surface directly beneath/at (x, z): the
     // flat walking plane's own height, or any currently-loaded brick's
-    // top face whose horizontal footprint contains the point —
-    // whichever is HIGHER. Taking the max (rather than "the first
-    // brick found") is what makes standing atop a stack of bricks
-    // well-defined: the ground beneath a stack is never the relevant
-    // surface once something is sitting on top of it. Public — this is
-    // also what application/AvatarMovementController.js reads BEFORE
-    // simulating a tick, to tell core/AvatarMovementSimulation.js what
-    // surface the avatar is CURRENTLY standing on (its `groundHeight`).
+    // own walkable surface (its flat top face, a stair tread, or a
+    // slope's own ramp height — see core/WalkableSurface.js) whose
+    // footprint contains the point — whichever is HIGHER. Taking the
+    // max (rather than "the first brick found") is what makes standing
+    // atop a stack of bricks well-defined: the ground beneath a stack
+    // is never the relevant surface once something is sitting on top
+    // of it. Public — this is also what
+    // application/AvatarMovementController.js reads BEFORE simulating
+    // a tick, to tell core/AvatarMovementSimulation.js what surface
+    // the avatar is CURRENTLY standing on (its `groundHeight`).
+    //
+    // 0.3.3 — the per-brick height itself now comes from
+    // core/WalkableSurface.js#resolveWalkableSurfaceAt() rather than
+    // core/BrickWalkability.js#walkableTopAt() directly: an ordinary
+    // flat-topped brick still resolves to EXACTLY the same top-face
+    // height as before (that function still delegates straight back to
+    // walkableTopAt() for the FLAT case — see its own header), while a
+    // `core:stair`/`core:slope_45` brick now reports the tread/ramp
+    // height under this specific (x, z), honoring the brick's own
+    // rotation.
     supportHeightAt(x, z) {
         let height = this._groundHeight;
         if (!this._loadedDocuments || !this._getWorldPosition) {
@@ -103,10 +126,20 @@ export class AvatarStepConstraint {
                     // AvatarMovementConstraint's own obstacle collection
                     // follows for an unrecognized definitionId.
                     if (!definition) continue;
-                    const worldAabb = translateAabb(brickAabb(brick.position, definition), worldPosition);
-                    const top = walkableTopAt(worldAabb, x, z);
-                    if (top !== null && top > height) {
-                        height = top;
+                    const surface = resolveWalkableSurfaceAt({
+                        shapeKind: walkableSurfaceKindFor(brick.definitionId),
+                        center: {
+                            x: brick.position.x + worldPosition.x,
+                            y: brick.position.y + worldPosition.y,
+                            z: brick.position.z + worldPosition.z
+                        },
+                        width: definition.width,
+                        height: definition.height,
+                        depth: definition.depth,
+                        rotationDegrees: brick.rotation
+                    }, x, z);
+                    if (surface !== null && surface.height > height) {
+                        height = surface.height;
                     }
                 }
             }

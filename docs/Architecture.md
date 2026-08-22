@@ -9264,3 +9264,149 @@ distinct concept, falling off a ledge under gravity (a too-large step
 DOWN is blocked, symmetric with a too-large step up, never a fall), and
 any rigid-body/physics engine. These remain named, unscheduled future
 work — see docs/Roadmap.md.
+
+## 0.3.3 — Walkable Structures
+
+`core/BrickWalkability.js#walkableTopAt()` answered exactly one shape:
+"the box's own top face, if the point falls inside its footprint" —
+named, at the time, as the seam a future non-box primitive would
+specialize. `core/WalkableSurface.js` is that specialization, built
+directly on top of it rather than replacing it.
+
+```js
+export const WalkableSurfaceKind = { FLAT: 'flat', SLOPE: 'slope', STEP: 'step' };
+
+function resolveWalkableSurfaceAt(brickGeometry, x, z) { /* ... */ }
+```
+
+`resolveWalkableSurfaceAt({ shapeKind, center, width, height, depth,
+rotationDegrees, steps }, x, z)` returns `{ height, normal, kind }` or
+`null` — outside a brick's own footprint, exactly `walkableTopAt()`'s
+own "no surface here, never a surface at height zero" convention.
+`shapeKind` comes from a small, explicit lookup,
+`walkableSurfaceKindFor(definitionId)` — `core:stair` → `STEP`,
+`core:slope_45` → `SLOPE`, everything else (including any unrecognized
+id) → `FLAT`. FLAT is not reimplemented: it constructs the brick's own
+world AABB (`core/AvatarCollision.js#brickAabb()`) and calls
+`walkableTopAt()` directly, so every ordinary box's own walkable height
+is byte-for-byte unchanged from 0.3.2.
+
+```text
+core/WalkableSurface.js
+        │
+        ├── FLAT  -> delegates to core/BrickWalkability.js#walkableTopAt()  (unchanged)
+        ├── STEP  -> local-space stepped profile (core:stair)
+        └── SLOPE -> local-space continuous ramp profile (core:slope_45)
+```
+
+### Walkability Is Not Collision
+
+The architectural rule this file exists to enforce, restated as its own
+principle in docs/Principles.md: collision (`core/SpatialBounds.js`,
+`core/AvatarCollision.js`) answers "what occupies this space," a
+conservative AABB overlap test, unchanged since 0.2.42/0.2.25. Reusing
+that same AABB to answer "where may an avatar stand" is exactly the
+trap this milestone avoids — a slope's AABB is a plain box; nothing
+about a box's min/max corners can answer "what is the actual support
+height at this specific (x, z)?" the way a real ramp needs to.
+`core/WalkableSurface.js` therefore never touches `SpatialBounds`, never
+widens what placement collision considers, and is read by exactly one
+consumer: `application/AvatarStepConstraint.js`.
+
+### STEP — stairs, tread by tread
+
+`stepSurfaceAt()` ascends along the brick's own LOCAL +X axis in
+`DEFAULT_STAIR_STEP_COUNT` (4) discrete treads — the identical profile
+`renderer/ThreeBrickFactory.js#stairMeshFactory()` extrudes into a mesh
+(a `THREE.Shape` traced tread-front, riser, tread-front, ... from `(0,
+0)` to `(width, height)`). That step count is no longer duplicated: both
+files now read the same exported `DEFAULT_STAIR_STEP_COUNT`, so the
+treads rendered and the treads climbed can never quietly drift to a
+different count. Local `x = -width/2` (the front face) already reports
+one riser up — a real stair has no zero-height lip at its own front
+edge; local `x = +width/2` (the back face) reports the brick's own full
+height, identical to what an ordinary flat-topped box of the same
+height would report.
+
+### SLOPE — a continuous ramp
+
+`slopeSurfaceAt()` ascends continuously along the same LOCAL +X axis,
+from 0 at the front face to the full brick height at the back —
+`rise/run = height/width`, exactly 1 (45°) for `core:slope_45`'s own
+1x1x1 dimensions, though the profile itself never hardcodes 45; it
+always reads the brick's real geometry. `normal` is computed as a real,
+tilted unit vector for SLOPE (straight up for FLAT/STEP, whose
+individual treads/top face are themselves flat) and carried on the
+returned `WalkableSurface`, but nothing in this milestone's movement
+pipeline reads it yet — no slope-dependent walk speed, deliberately.
+
+### Rotation — a directional shape must honor it; a flat one still doesn't
+
+`core/AvatarCollision.js#brickAabb()` has always ignored `Brick.rotation`
+for collision — an honestly documented simplification, unaffected by
+this milestone; FLAT's own footprint test stays exactly that
+rotation-agnostic AABB check. STEP and SLOPE cannot make the same
+simplification: which way a stair climbs or a slope rises is the entire
+reason it is a stair or a slope, not a box. Both transform the query
+point into the brick's own LOCAL space first, undoing exactly the
+rotation `renderer/BrickRenderer.js` applies going the other way
+(`mesh.rotation.y = brick.rotation * (Math.PI / 180)`), via plain
+trigonometry rather than a lookup table — so a profile written once, in
+local space, produces a correct world-space climb direction at any of
+the 90°-increment rotations the placement UI offers, or any arbitrary
+angle.
+
+### `application/AvatarStepConstraint.js` — unchanged in shape
+
+`supportHeightAt(x, z)` still takes the max walkable height across the
+flat baseline and every currently-loaded brick at that point — it now
+reads each brick's own per-point height from
+`resolveWalkableSurfaceAt()` instead of calling `walkableTopAt()`
+directly. Nothing about its own public contract changed: a stack of
+bricks still reports its topmost surface; a flat-topped brick still
+reports exactly the height it always did; missing collaborators still
+degrade to the flat plane, never throw.
+
+### `application/AvatarMovementConstraint.js` — a directional shape is never a flat wall
+
+The one genuinely new wiring problem STEP/SLOPE raise, not answered by
+`core/WalkableSurface.js` alone: this class used to decide whether a
+brick blocks horizontal passage at all by comparing its own OVERALL
+peak height (`worldAabb.max.y`) against the avatar's current support
+height — correct for a flat box, wrong for a directional shape, whose
+near and far edges are nowhere near the same height. A stair's own peak
+(1.0) is far past `DEFAULT_MAX_STEP_HEIGHT` (0.6), so that single-scalar
+comparison would make the ENTIRE staircase an impassable wall, blocking
+the avatar before it ever reaches the first, perfectly climbable tread.
+
+```text
+_collectObstacles() — per brick, once stepping is enabled
+       │
+       ├── STEP or SLOPE  -> always excluded (never a wall via this class)
+       └── FLAT            -> excluded only when |peak - supportHeight| <= maxStepHeight  (unchanged since 0.3.2)
+```
+
+A directional shape is now excluded from horizontal collision
+UNCONDITIONALLY once stepping is enabled — exactly like a low flat brick
+already was. `AvatarStepConstraint`'s own per-tick height-DELTA check
+(`isStepClimbable(fromHeight, toHeight, maxStepHeight)`, unchanged since
+0.3.2) becomes the ONLY gate deciding whether any specific approach is
+actually climbable. Walking straight at a stair's own tall back face
+(skipping every lower tread) is still genuinely blocked — the
+single-tick jump from bare ground to the top tread exceeds
+`maxStepHeight` exactly like 0.3.2's own too-tall-cube case; it is
+simply blocked by the step check now, never by a brick-wide wall check
+in this class. With stepping OFF entirely (`maxStepHeight` omitted, the
+pre-0.3.2 default), nothing here changes at all — a stair is still a
+genuine, full-height wall, exactly as it always was; this carve-out only
+exists once there is a step check downstream actually equipped to
+police the approach instead.
+
+See `tests/WalkableStructureSurface.test.js`. Deliberately not in
+0.3.3, named rather than hidden: falling off a ledge under gravity
+(walking off the top of a stair/slope with nothing beyond it is a
+blocked step down, never a fall), jumping, crouching, ladders, arbitrary
+climbing, dynamic physics, moving platforms, slope-dependent movement
+speed, and collision against arbitrary mesh geometry (every profile here
+is still a closed-form function over width/height/depth). See
+docs/Roadmap.md for the full list.
