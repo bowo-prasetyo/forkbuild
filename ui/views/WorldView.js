@@ -1276,6 +1276,10 @@ export default {
                 session.hover(event.clientX, event.clientY);
                 refreshHoverUI();
             }
+            // Update compass heading during camera orbit (when dragging with no buttons pressed after initial drag)
+            if (isDragging && event.buttons === 0) {
+                compassHeading.value = session.getCompassHeading();
+            }
         }
 
         function onPointerUp(event) {
