@@ -36,14 +36,20 @@ who's looking at it or when.
 ## Orientation and Locations
 
 Next to your camera coordinates, a small **compass** shows which way you're
-facing (it's read-only — it never moves the camera). Two buttons sit beside
-it:
+facing (it's read-only — it never moves the camera). The compass now includes
+contextual markers for nearby structures and terrain features. Two buttons sit
+beside it:
 
 - **Home** resets the camera to the default view.
 - **Locations** opens a list of every place this session currently knows
   about — **Home**, plus every structure — each with one **Focus** button.
   Like Search and Explore Here/What's Here?, this only ever moves the
   camera; it never loads, selects, or edits anything.
+
+As you move through the world, you'll see contextual descriptions like
+"**Forest · near House**" or "**Grassland · 120m from Origin**" derived from
+your position, the terrain ecology, and nearby structures. This information
+is computed on-the-fly from the world seed — nothing is stored.
 
 ## Camera vs. Editing
 
@@ -190,7 +196,27 @@ that placement; only *where it sits in shared space* is theirs to move.
 
 ## Building in World View
 
-World View isn't just for looking — you can build here too.
+World View isn't just for looking — you can build here too, alongside other
+builders who are present in the same world.
+
+### Collaborative building
+
+When multiple people are building in the same world:
+
+- **See other builders** — their avatars appear in the world with display names
+  and activity indicators (e.g., "**Bob — Building House**").
+- **Real-time updates** — bricks placed by others appear immediately as the
+  world operations propagate.
+- **No conflicts** — if two people edit the same structure simultaneously,
+  deterministic ordering ensures the world converges to a consistent state.
+- **Ephemeral activity feed** — a local panel shows recent operations
+  ("Bob placed Block 2×2", "Alice rotated House") to help you understand
+  changes even when they happen outside your current view. This feed is
+  temporary and not persisted.
+
+> **Presence describes activity; commands establish shared reality.**
+> Spatial presence helps you understand what others are doing, but only
+> world operations actually change the shared environment.
 
 1. Click the **Place** tool in the overlay.
 2. Pick a brick type from the dropdown.

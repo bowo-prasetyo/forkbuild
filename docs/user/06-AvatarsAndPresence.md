@@ -80,12 +80,34 @@ can also walk your avatar directly with **Avatar Control Mode**:
 | Key | Action |
 |---|---|
 | **W / A / S / D** | Move / turn |
-| **Shift** | Run |
+| **Shift** | Run (faster movement) |
 | **Space** | Jump |
 
 Walking respects collision against nearby loaded buildings — you can't walk
-through structures streamed in around you. **Follow Avatar** keeps the
-camera locked to your avatar as it moves, instead of orbiting freely.
+through structures streamed in around you. Your avatar can walk across placed
+structures, climb vertical surfaces, and navigate uneven terrain. The camera
+follows your avatar naturally as you move.
+
+**Follow Avatar** keeps the camera locked to your avatar as it moves, instead
+of orbiting freely. You can also follow other players' avatars to see where
+they're going.
+
+### Spatial awareness and activity
+
+When other builders are present, you'll see contextual indicators showing what
+they're doing:
+
+- "**Bob — Building House**" appears near their avatar when they're actively
+  placing or editing bricks.
+- "**Alice — Moving Structure**" indicates someone transforming a placed
+  structure.
+
+These activity indicators are derived from spatial presence data and help you
+understand what others are working on without needing explicit communication.
+
+> **Presence describes activity; commands establish shared reality.**
+> The activity indicator shows what someone is *doing*, but only the actual
+> world operations change the shared environment.
 
 ## What's next?
 

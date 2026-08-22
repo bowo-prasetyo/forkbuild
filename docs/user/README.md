@@ -25,8 +25,9 @@ top-level [docs/](..) folder.
    identity, the vault (locking/unlocking), and backing it up with
    export/import.
 6. **[Avatars & Presence](06-AvatarsAndPresence.md)** — customizing how
-   you look, controlling who can see you, and seeing (and walking
-   among) everyone else in World View.
+   you look, controlling who can see you, seeing (and walking
+   among) everyone else in World View, and understanding what they're
+   doing through spatial awareness.
 7. **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
    connecting directly to other people, remembering, friending, and
    blocking.
@@ -54,7 +55,27 @@ ForkBuild has two editing surfaces, and they behave the same way:
   the gizmo. Save, load, and publish documents from the toolbar.
 - **World View** (`/world/:id`) — the shared spatial world. Fly between
   published worlds, search for and explore what's around you, inspect
-  bricks, and — with the same gizmo — edit them in place.
+  bricks, walk your avatar across structures and terrain, and — with
+  the same gizmo — edit bricks in place alongside other builders.
 
 Whatever you do in either surface, every change is one undoable step,
 and `Ctrl/Cmd+Z` takes it back.
+
+## Collaboration and exploration
+
+ForkBuild 0.3 adds embodied collaboration and world discovery:
+
+- **Walk and navigate** — use WASD keys to walk your avatar across
+  buildings and terrain, jump, climb, and explore vertical spaces.
+- **Build together** — see other builders' avatars, understand what
+  they're working on through spatial awareness, and place bricks
+  alongside them in real time.
+- **Discover the world** — use the compass with contextual location
+  markers to find nearby structures and terrain features like forests,
+  rivers, and grasslands.
+- **Follow collaborators** — lock your camera to follow someone's
+  avatar as they move through the world.
+
+Everything you see is derived from the world's deterministic seed —
+terrain, ecology, and hydrology are computed identically for everyone,
+creating a coherent shared place without storing extra data.
