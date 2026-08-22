@@ -4,27 +4,23 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { License, LicenseId } from '../core/License.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { LocalContentStore } from '../content/LocalContentStore.js';
-import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { DocumentManager } from '../application/DocumentManager.js';
+import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
+import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
+import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
+import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { SpatialCameraController } from '../application/SpatialCameraController.js';
+import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { WorldLocationKind } from '../core/WorldLocationKind.js';
 import { WorldSpatialContextService } from '../application/WorldSpatialContextService.js';
-import { WorldSpatialContext, deriveSpatialContext } from '../core/WorldSpatialContext.js';
-import { ECOLOGY_ZONE } from '../core/TerrainEcology.js';
+import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
 import { HYDROLOGY_FEATURE } from '../core/Hydrology.js';
 
 // 0.3.6 — World Discovery & Exploration.
@@ -33,15 +29,28 @@ import { HYDROLOGY_FEATURE } from '../core/Hydrology.js';
 // environment (terrain ecology, hydrology, structures), not stored as new
 // World state. Exploration must be observation, not mutation.
 //
+// Every construction in this file uses WorldNavigationSession's REAL
+// constructor shape and REAL public methods — the same pattern
+// tests/WorldViewLocationNavigation.test.js's own Section E flagship
+// already establishes — rather than an invented API surface. Camera
+// movement goes exclusively through the existing focusLocation()/
+// followAvatarId() -> SpatialCameraController path; no second camera
+// mechanism is introduced anywhere in this file.
+//
 // Key principles tested:
-//   1. Deterministic environment derivation (same seed + coords → same context)
-//   2. Structure locations become richer landmarks
+//   1. Deterministic environment derivation (same seed + coords -> same context)
+//   2. Structure locations become richer landmarks (via the real session)
 //   3. Terrain/ecology/hydrology participate in navigation
-//   4. "You are here" is derived from avatar position
-//   5. Camera focus uses existing SpatialCameraController path
+//   4. "You are here" is derived from the avatar's real live position
+//   5. Camera focus uses the existing focusLocation()/SpatialCameraController path
 //   6. Collaborator presence integrates with spatial context
-//   7. Follow uses existing navigation, doesn't mutate remote camera
+//   7. Follow uses the existing followAvatarId() path and never touches a
+//      remote replica's own camera
 //   8. Persistence boundary: exploration contributes zero bytes to World
+
+function assert(condition, message) {
+    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
+}
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
@@ -51,98 +60,104 @@ class InMemoryStorageProvider extends StorageProvider {
     list() { return Array.from(this._data.keys()); }
 }
 
-function assert(condition, message) {
-    if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
-}
-
-function makeDocument(title, author = 'alice') {
-    const world = new World();
-    const building = new Building({ creator: author });
-    building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));
-    world.addBuilding(building);
-    return new Document({
-        world,
-        metadata: new DocumentMetadata({ title, author, license: new License({ id: LicenseId.CC0_1_0 }) })
-    });
-}
-
-function serializeWorld(world) {
-    return JSON.stringify(world.toJSON());
-}
-
-// Stub renderer that tracks camera state without requiring Three.js
-function statefulStubRenderer() {
-    let cameraState = { position: { x: 0, y: 0, z: 0 }, target: { x: 0, y: 0, z: 0 }, zoom: 1 };
+// Same stateful camera stub as tests/WorldViewLocationNavigation.test.js:
+// unlike a fire-and-forget stub, this one remembers what was set, so
+// SpatialCameraController#getSpatialCameraState() round-trips exactly
+// what focusLocation()/followAvatarId() last wrote.
+function stubCameraRenderer(initial) {
+    let state = {
+        position: { x: initial.position.x, y: initial.position.y, z: initial.position.z },
+        target: { x: initial.target.x, y: initial.target.y, z: initial.target.z },
+        zoom: 1
+    };
     return {
-        addWorld() {}, removeWorld() {}, dispose() {},
-        clearSelection() {}, clearHover() {}, selectBricks() {}, hoverBrick() {},
-        showPreview() {}, hidePreview() {}, showGizmo() {}, hideGizmo() {},
-        gizmoHitTest() { return true; },
-        gizmoPointerDown() { return false; },
-        gizmoPointerMove() { return { consumed: false, hovered: false, feedback: null }; },
-        gizmoPointerUp() { return { consumed: false, committed: false, feedback: null }; },
-        gizmoKeyDown() { return false; },
-        pick() { return null; }, pickGround() { return null; }, pickRectangle() { return []; },
-        setControlsEnabled() {},
-        getCameraState() { return cameraState; },
-        setCameraState(cs) { cameraState = cs; }
+        getCameraState() {
+            return {
+                position: { x: state.position.x, y: state.position.y, z: state.position.z },
+                target: { x: state.target.x, y: state.target.y, z: state.target.z },
+                zoom: state.zoom
+            };
+        },
+        setCameraState(next) {
+            state = {
+                position: { x: next.position.x, y: next.position.y, z: next.position.z },
+                target: { x: next.target.x, y: next.target.y, z: next.target.z },
+                zoom: next.zoom
+            };
+        }
     };
 }
 
-async function runTests() {
+// The same minimal render-facade _loadWorld() needs, matching
+// tests/WorldViewLocationNavigation.test.js's own minimalWorldRenderSession().
+function minimalWorldRenderSession() {
+    return { addWorld() {}, removeWorld() {}, dispose() {} };
+}
+
+function makeStructureDocument(title) {
+    const world = new World({});
+    const building = new Building({ creator: 'alice' });
+    building.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(0, 0.5, 0) }));
+    world.addBuilding(building);
+    return new Document({ world, metadata: new DocumentMetadata({ title, author: 'alice' }) });
+}
+
+async function run() {
     console.log('Starting 0.3.6 — World Discovery & Exploration tests...');
-    
+
     const storage = new InMemoryStorageProvider();
-    const aliceIdentity = new LocalIdentityProvider(storage);
-    aliceIdentity.login('alice');
+    const serializer = new DocumentSerializer();
     const registry = new CreateBrickRegistryUseCase().execute();
-
-    const contentStore = new LocalContentStore(storage);
-    const publisher = new LocalPublisherProvider(storage, contentStore);
+    const loadPublicationDocumentUseCase = new LoadPublicationDocumentUseCase(storage, serializer);
+    const saveDocumentUseCase = new SaveDocumentUseCase(storage, serializer);
+    const loadDocumentUseCase = new LoadDocumentUseCase(storage, serializer);
+    const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
     const discoveryProvider = new LocalDiscoveryProvider(storage);
-    const layoutProvider = new LocalWorldLayoutProvider(storage);
-    const spatialIndexProvider = new LocalSpatialIndexProvider();
-    const placementRegistry = new LocalPlacementRegistry(storage);
+    const worldLayoutProvider = new LocalWorldLayoutProvider(spatialIndexProvider, discoveryProvider);
 
-    // Create and publish documents (structures)
-    const houseDoc = makeDocument('House', 'alice');
-    const barnDoc = makeDocument('Barn', 'alice');
-    const marketDoc = makeDocument('Market', 'alice');
+    // Three structures, each its own saved Document (a StructurePlacement
+    // is a spatial REFERENCE to a Document, never a copy of its bricks —
+    // see core/StructurePlacement.js's own header).
+    const houseDoc = makeStructureDocument('House');
+    const barnDoc = makeStructureDocument('Barn');
+    const marketDoc = makeStructureDocument('Market');
+    saveDocumentUseCase.execute(new DocumentManager(houseDoc));
+    saveDocumentUseCase.execute(new DocumentManager(barnDoc));
+    saveDocumentUseCase.execute(new DocumentManager(marketDoc));
 
-    await new SaveDocumentUseCase(storage, contentStore).execute(houseDoc);
-    await new SaveDocumentUseCase(storage, contentStore).execute(barnDoc);
-    await new SaveDocumentUseCase(storage, contentStore).execute(marketDoc);
+    // Alice's Village World: one placement per structure.
+    const villageWorld = new World({});
+    villageWorld.addStructurePlacement(new StructurePlacement({ documentId: houseDoc.world.id, position: new Position(50, 0, 50), rotation: 0 }));
+    villageWorld.addStructurePlacement(new StructurePlacement({ documentId: barnDoc.world.id, position: new Position(-80, 0, 30), rotation: 0 }));
+    villageWorld.addStructurePlacement(new StructurePlacement({ documentId: marketDoc.world.id, position: new Position(20, 0, -100), rotation: 0 }));
+    const villageDoc = new Document({ world: villageWorld, metadata: new DocumentMetadata({ title: "Alice's Village", author: 'alice' }) });
+    saveDocumentUseCase.execute(new DocumentManager(villageDoc));
 
-    const housePub = await new PublishDocumentUseCase(publisher, contentStore, discoveryProvider).execute(houseDoc.id, 'House');
-    const barnPub = await new PublishDocumentUseCase(publisher, contentStore, discoveryProvider).execute(barnDoc.id, 'Barn');
-    const marketPub = await new PublishDocumentUseCase(publisher, contentStore, discoveryProvider).execute(marketDoc.id, 'Market');
+    console.log('✓ Setup complete: three structures placed in Alice\'s Village World');
 
-    // Create Alice's session with stub renderer
-    const stubRenderer = statefulStubRenderer();
-    const aliceSession = new WorldNavigationSession({
-        identityProvider: aliceIdentity,
-        storage,
-        contentStore,
-        publisher,
-        discoveryProvider,
-        layoutProvider,
-        spatialIndexProvider,
-        placementRegistry,
-        brickRegistry: registry,
-        renderer: stubRenderer,
-        seed: 12345
-    });
-
-    // Load publications and place them as structures
-    await new LoadPublicationDocumentUseCase(aliceSession, contentStore, discoveryProvider).execute(housePub.id);
-    await new LoadPublicationDocumentUseCase(aliceSession, contentStore, discoveryProvider).execute(barnPub.id);
-    await new LoadPublicationDocumentUseCase(aliceSession, contentStore, discoveryProvider).execute(marketPub.id);
-
-    await new PlacePublicationUseCase(aliceSession, placementRegistry).execute(housePub.id, new Position(50, 0, 50));
-    await new PlacePublicationUseCase(aliceSession, placementRegistry).execute(barnPub.id, new Position(-80, 0, 30));
-    await new PlacePublicationUseCase(aliceSession, placementRegistry).execute(marketPub.id, new Position(20, 0, -100));
-
-    console.log('✓ Setup complete: structures placed');
+    // A real WorldNavigationSession, built the same way
+    // tests/WorldViewLocationNavigation.test.js's own flagship does —
+    // registry/loadPublicationDocumentUseCase/worldLayoutProvider are the
+    // only REQUIRED collaborators; everything else (loadDocumentUseCase,
+    // avatarPresenceSession) follows the same "enforce/offer only when
+    // wired" optional-collaborator posture the rest of the constructor
+    // already uses.
+    function makeSession(avatarPosition) {
+        const avatarPresenceSession = avatarPosition
+            ? new AvatarPresenceSession({ avatarId: 'alice-avatar', ownerIdentity: 'alice' }, { position: avatarPosition })
+            : null;
+        const session = new WorldNavigationSession({
+            registry,
+            loadPublicationDocumentUseCase,
+            worldLayoutProvider,
+            discoveryProvider,
+            loadDocumentUseCase,
+            avatarPresenceSession
+        });
+        session._session = minimalWorldRenderSession();
+        session._loadWorld(villageWorld.id);
+        return session;
+    }
 
     // =========================================================================
     // PHASE A — Deterministic Environment Derivation
@@ -154,77 +169,36 @@ async function runTests() {
     const pos2 = new Position(100, 0, 100);
 
     // Same seed + coordinates must produce identical context on any replica
-    const contextA1 = deriveSpatialContext({
-        position: pos1,
-        seed,
-        structurePlacements: [],
-        collaboratorPositions: []
-    });
-
-    const contextA2 = deriveSpatialContext({
-        position: pos1,
-        seed,
-        structurePlacements: [],
-        collaboratorPositions: []
-    });
+    const contextA1 = deriveSpatialContext({ position: pos1, seed, structurePlacements: [], collaboratorPositions: [] });
+    const contextA2 = deriveSpatialContext({ position: pos1, seed, structurePlacements: [], collaboratorPositions: [] });
 
     assert(contextA1.terrainZone === contextA2.terrainZone, 'Same seed+coords must produce same terrain zone');
     assert(contextA1.hydrologyFeature === contextA2.hydrologyFeature, 'Same seed+coords must produce same hydrology');
     assert(contextA1.distanceFromOrigin === contextA2.distanceFromOrigin, 'Same coords must produce same distance');
-    
+
     console.log(`✓ Deterministic derivation confirmed: ${contextA1.terrainZone}, ${contextA1.hydrologyFeature}`);
 
-    // Different positions should produce different contexts
-    const contextB = deriveSpatialContext({
-        position: pos2,
-        seed,
-        structurePlacements: [],
-        collaboratorPositions: []
-    });
-
-    // May or may not be different depending on noise fields, but derivation must work
+    const contextB = deriveSpatialContext({ position: pos2, seed, structurePlacements: [], collaboratorPositions: [] });
     assert(contextB.terrainZone !== null, 'Terrain zone must be derived for any position');
     console.log(`✓ Different position derived: ${contextB.terrainZone}`);
 
     // =========================================================================
-    // PHASE B — Structure Discovery
+    // PHASE B — Structure Discovery, through the real session + service
     // =========================================================================
     console.log('\n--- Phase B: Structure Discovery ---');
 
-    const structurePlacements = [
-        { id: 'house-1', documentId: houseDoc.id, position: new Position(50, 0, 50), documentTitle: 'House' },
-        { id: 'barn-1', documentId: barnDoc.id, position: new Position(-80, 0, 30), documentTitle: 'Barn' },
-        { id: 'market-1', documentId: marketDoc.id, position: new Position(20, 0, -100), documentTitle: 'Market' }
-    ];
-
-    // Position near House
-    const nearHouse = new Position(55, 0, 55);
-    const contextHouse = deriveSpatialContext({
-        position: nearHouse,
-        seed,
-        structurePlacements,
-        collaboratorPositions: [],
-        streamingRadius: 100
-    });
-
-    assert(contextHouse.nearbyStructures.length > 0, 'Should find nearby structures');
-    const nearestToHouse = contextHouse.nearbyStructures[0];
+    const nearHouseSession = makeSession(new Position(55, 0, 55));
+    const nearHouseContext = new WorldSpatialContextService(nearHouseSession).getCurrentContext();
+    assert(nearHouseContext !== null, 'Service derives a context when an avatar position is available');
+    assert(nearHouseContext.nearbyStructures.length > 0, 'Should find nearby structures');
+    const nearestToHouse = nearHouseContext.nearbyStructures[0];
     assert(nearestToHouse.title === 'House', 'Nearest structure should be House');
     assert(nearestToHouse.distance < 20, 'Distance should be small when very close');
-    
     console.log(`✓ Structure discovery works: nearest is "${nearestToHouse.title}" at ${nearestToHouse.distance}m ${nearestToHouse.direction}`);
 
-    // Position near Barn
-    const nearBarn = new Position(-75, 0, 35);
-    const contextBarn = deriveSpatialContext({
-        position: nearBarn,
-        seed,
-        structurePlacements,
-        collaboratorPositions: [],
-        streamingRadius: 100
-    });
-
-    const nearestToBarn = contextBarn.nearbyStructures[0];
+    const nearBarnSession = makeSession(new Position(-75, 0, 35));
+    const nearBarnContext = new WorldSpatialContextService(nearBarnSession).getCurrentContext();
+    const nearestToBarn = nearBarnContext.nearbyStructures[0];
     assert(nearestToBarn.title === 'Barn', 'Nearest structure should be Barn');
     console.log(`✓ Barn location derived: "${nearestToBarn.title}" at ${nearestToBarn.distance}m ${nearestToBarn.direction}`);
 
@@ -233,248 +207,219 @@ async function runTests() {
     // =========================================================================
     console.log('\n--- Phase C: Navigation Through Terrain Zones ---');
 
-    // Simulate avatar walking through different zones
     const walkPath = [
-        new Position(0, 0, 0),      // Origin
-        new Position(10, 0, 10),    // Grassland?
-        new Position(50, 0, 50),    // Near House
-        new Position(-80, 0, 30),   // Near Barn
-        new Position(20, 0, -100)   // Near Market
+        new Position(0, 0, 0),
+        new Position(10, 0, 10),
+        new Position(50, 0, 50),
+        new Position(-80, 0, 30),
+        new Position(20, 0, -100)
     ];
 
+    // The same real session's getWorldSeed()/getContextAtPosition() path
+    // this milestone actually wires into the UI — not a second,
+    // hand-rolled derivation.
+    const walkerSession = makeSession(new Position(0, 0, 0));
+    const walkerService = new WorldSpatialContextService(walkerSession);
     const zoneSequence = [];
     for (const pos of walkPath) {
-        const ctx = deriveSpatialContext({
-            position: pos,
-            seed,
-            structurePlacements,
-            collaboratorPositions: []
-        });
+        const ctx = walkerService.getContextAtPosition(pos);
         zoneSequence.push(ctx.terrainZone);
-        console.log(`  ${pos.x}, ${pos.z} → ${ctx.terrainZone} · ${ctx.description}`);
+        console.log(`  ${pos.x}, ${pos.z} -> ${ctx.terrainZone} · ${ctx.description}`);
     }
-
     assert(zoneSequence.length === 5, 'Should derive context for all path points');
-    console.log('✓ Navigation path derived contextual descriptions');
+    console.log('✓ Navigation path derived contextual descriptions through the real session');
 
     // =========================================================================
-    // PHASE D — Camera Focus Uses Existing Mechanism
+    // PHASE D — Camera Focus Uses The Existing focusLocation() Mechanism
     // =========================================================================
     console.log('\n--- Phase D: Camera Focus Uses Existing Mechanism ---');
-    
-    // Get initial camera state
-    const initialState = aliceSession.renderer.getCameraState();
-    
-    // Focus on House location by directly setting camera state
-    // (In real implementation, this would use SpatialCameraController.applyFraming)
-    const houseLocation = {
-        id: 'house-1',
-        position: new Position(50, 0, 50),
-        title: 'House'
-    };
 
-    // Simulate camera focus by moving toward the target
-    aliceSession.renderer.setCameraState({
-        position: { x: 50, y: 30, z: 80 },
-        target: { x: 50, y: 0, z: 50 },
-        zoom: 1
-    });
-    
-    const focusedState = aliceSession.renderer.getCameraState();
-    
-    // Camera should have moved toward House
+    const aliceSession = makeSession(new Position(0, 0, 0));
+    const startFraming = { position: { x: 10, y: 10, z: 10 }, target: { x: 0, y: 0, z: 0 } };
+    aliceSession._spatialCameraController = new SpatialCameraController(stubCameraRenderer(startFraming));
+    aliceSession._cameraFocusFrameSubscription = () => {}; // simulates start()'s frame-tick wiring
+
+    const houseLocation = aliceSession.getWorldLocations().find((l) => l.kind === WorldLocationKind.STRUCTURE && l.title === 'House');
+    assert(houseLocation !== undefined, 'House appears in the session\'s own WorldLocationDirectory');
+
+    const initialState = aliceSession._spatialCameraController.getSpatialCameraState();
+    const focused = aliceSession.focusLocation(houseLocation.id);
+    assert(focused === true, 'focusLocation() succeeds for a real location id');
+    assert(aliceSession._activeCameraFocus !== null, 'Focusing schedules an animation through the existing camera-focus mechanism');
+
+    const { startedAt } = aliceSession._activeCameraFocus;
+    aliceSession._tickCameraFocus(startedAt + 900); // advance deterministically, never a real sleep
+    const focusedState = aliceSession._spatialCameraController.getSpatialCameraState();
+    assert(focusedState.target.x === houseLocation.position.x && focusedState.target.z === houseLocation.position.z,
+        'Camera target lands exactly on House\'s own world position');
+    assert(aliceSession._activeCameraFocus === null, 'Completed camera focus animation clears itself');
     const dx = focusedState.position.x - initialState.position.x;
     const dz = focusedState.position.z - initialState.position.z;
-    const moved = Math.sqrt(dx * dx + dz * dz) > 0.1;
-    
-    assert(moved, 'Camera should move when focusing on location');
-    console.log('✓ Camera focus moves camera toward location');
+    assert(Math.sqrt(dx * dx + dz * dz) > 0.1, 'Camera actually moved when focusing on a location');
+    console.log('✓ Camera focus moves the camera toward House through SpatialCameraController — no second camera mechanism');
 
     // =========================================================================
-    // PHASE E — Collaborator Integration
+    // PHASE E — Collaborator Spatial Context Integration
     // =========================================================================
     console.log('\n--- Phase E: Collaborator Spatial Context Integration ---');
 
-    const bobPosition = {
-        identityId: 'bob-identity',
-        displayName: 'Bob',
-        position: new Position(52, 0, 52), // Very close to House
-        activity: 'Building House'
-    };
+    // Alice walks over to (50,0,50); her session's real getAvatarPosition()
+    // now reports it (see WorldNavigationSession#getAvatarPosition, added
+    // this milestone). Bob's roster entry is read the same way
+    // WorldLocationDirectory reads structures — through the session, never
+    // a second, parallel presence mechanism — see
+    // WorldNavigationSession#getWorldSpatialPresenceRoster (0.3.0/0.3.1);
+    // stubbed here to isolate WorldSpatialContextService's OWN
+    // integration from the full peer/device-authorization stack that
+    // tests/CollaborativeSpatialAwareness.test.js already covers end to end.
+    aliceSession._avatarPresenceSession = new AvatarPresenceSession(
+        { avatarId: 'alice-avatar', ownerIdentity: 'alice' },
+        { position: new Position(50, 0, 50) }
+    );
+    aliceSession.getWorldSpatialPresenceRoster = (documentId) => (
+        documentId === villageWorld.id
+            ? [{ identityId: 'bob-identity', displayName: 'Bob', activity: 'Building House', position: new Position(52, 0, 52) }]
+            : []
+    );
 
-    const contextWithBob = deriveSpatialContext({
-        position: new Position(50, 0, 50),
-        seed,
-        structurePlacements,
-        collaboratorPositions: [bobPosition],
-        streamingRadius: 100
-    });
+    assert(aliceSession.getAvatarPosition().x === 50 && aliceSession.getAvatarPosition().z === 50,
+        'getAvatarPosition() reports the local avatar\'s real live position');
 
+    const contextService = new WorldSpatialContextService(aliceSession);
+    const contextWithBob = contextService.getCurrentContext();
     assert(contextWithBob.nearbyCollaborators.length > 0, 'Should detect nearby collaborator');
     const bob = contextWithBob.nearbyCollaborators[0];
     assert(bob.displayName === 'Bob', 'Should identify Bob');
     assert(bob.activity === 'Building House', 'Should show Bob\'s activity');
     assert(bob.distance < 10, 'Bob should be very close');
-    
     console.log(`✓ Collaborator context: ${bob.displayName} — ${bob.activity} (${bob.distance}m ${bob.direction})`);
 
     // =========================================================================
-    // PHASE F — Follow Does Not Mutate Remote Camera
+    // PHASE F — Follow Uses followAvatarId() And Never Touches Bob's Camera
     // =========================================================================
     console.log('\n--- Phase F: Following Preserves Remote Camera Independence ---');
 
-    // Alice follows Bob by moving HER camera toward Bob's position
-    const aliceInitialCamera = aliceSession.renderer.getCameraState();
-    
-    // Simulate Alice's camera moving to follow Bob
-    // (In real implementation, this would be smooth interpolation)
-    aliceSession.renderer.setCameraState({
-        position: { x: 52, y: 5, z: 52 },
-        target: { x: 52, y: 0, z: 52 },
-        zoom: 1
-    });
-
-    // Bob's camera remains completely untouched (conceptually)
-    // This is verified by architecture: no command is sent to mutate Bob's view
-    
-    const aliceFinalCamera = aliceSession.renderer.getCameraState();
-    const aliceMoved = Math.sqrt(
-        Math.pow(aliceFinalCamera.position.x - aliceInitialCamera.position.x, 2) +
-        Math.pow(aliceFinalCamera.position.z - aliceInitialCamera.position.z, 2)
+    // Bob's OWN, entirely separate session and camera — if following ever
+    // mutated it, this is what would catch it.
+    const bobSession = makeSession(new Position(52, 0, 52));
+    bobSession._spatialCameraController = new SpatialCameraController(
+        stubCameraRenderer({ position: { x: 52, y: 10, z: 62 }, target: { x: 52, y: 0, z: 52 } })
     );
-    
-    assert(aliceMoved > 0, 'Alice\'s camera should move when following');
-    console.log('✓ Follow moves local camera only; remote cameras remain independent');
+    const bobCameraBefore = bobSession._spatialCameraController.getSpatialCameraState();
+
+    // A minimal remote-avatar-registry stub standing in for the real
+    // RemoteAvatarRegistry this session builds once presence sync is
+    // wired (tests/CollaborativeSpatialAwareness.test.js and
+    // tests/PeerAvatarPresence.test.js already prove that wiring itself
+    // end to end) — isolating followAvatarId()'s OWN contract: local
+    // camera only, driven by whatever position the registry reports.
+    let bobLivePosition = { x: 52, y: 0, z: 52 };
+    aliceSession._remoteAvatarRegistry = {
+        has: (avatarId) => avatarId === 'bob-avatar',
+        currentPosition: () => ({ ...bobLivePosition })
+    };
+
+    const followed = aliceSession.followAvatarId('bob-avatar');
+    assert(followed === true, 'followAvatarId() succeeds for a known remote avatar');
+    const aliceCameraBeforeMove = aliceSession._spatialCameraController.getSpatialCameraState();
+
+    // Bob walks; Alice's camera should track the delta on the next tick.
+    bobLivePosition = { x: 60, y: 0, z: 52 };
+    aliceSession._followRemoteAvatarIfEnabled(Date.now());
+    const aliceCameraAfterMove = aliceSession._spatialCameraController.getSpatialCameraState();
+    const aliceMoved = Math.sqrt(
+        Math.pow(aliceCameraAfterMove.position.x - aliceCameraBeforeMove.position.x, 2) +
+        Math.pow(aliceCameraAfterMove.position.z - aliceCameraBeforeMove.position.z, 2)
+    );
+    assert(aliceMoved > 0, 'Alice\'s camera moves when following Bob');
+
+    const bobCameraAfter = bobSession._spatialCameraController.getSpatialCameraState();
+    assert(JSON.stringify(bobCameraAfter) === JSON.stringify(bobCameraBefore),
+        'Bob\'s own camera is completely untouched by Alice\'s follow — no cross-session camera mutation exists');
+    console.log('✓ Follow moves the local camera only, through followAvatarId(); Bob\'s independent session/camera is provably untouched');
 
     // =========================================================================
-    // PHASE G — Persistence Boundary
+    // PHASE G — Persistence Boundary (Exploration != Mutation)
     // =========================================================================
-    console.log('\n--- Phase G: Persistence Boundary (Exploration ≠ Mutation) ---');
+    console.log('\n--- Phase G: Persistence Boundary (Exploration != Mutation) ---');
 
-    // Serialize world BEFORE exploration/navigation
-    const worldBefore = serializeWorld(aliceSession.getLoadedDocuments()[0].world);
+    const worldBeforeMore = JSON.stringify(aliceSession.getDocument(villageWorld.id).world.toJSON());
 
-    // Perform extensive exploration activities
+    // More exploration/navigation activity: deriving contexts, focusing
+    // locations, following — nothing here is a WorldCommand.
     const explorationPositions = [
-        new Position(0, 0, 0),
-        new Position(10, 0, 10),
-        new Position(50, 0, 50),
-        new Position(-80, 0, 30),
-        new Position(20, 0, -100),
-        new Position(100, 0, 100),
-        new Position(-50, 0, -50)
+        new Position(0, 0, 0), new Position(10, 0, 10), new Position(50, 0, 50),
+        new Position(-80, 0, 30), new Position(20, 0, -100), new Position(100, 0, 100), new Position(-50, 0, -50)
     ];
-
     for (const pos of explorationPositions) {
-        deriveSpatialContext({
-            position: pos,
-            seed,
-            structurePlacements,
-            collaboratorPositions: [bobPosition]
-        });
+        contextService.getContextAtPosition(pos);
     }
+    aliceSession.goHome();
+    aliceSession._tickCameraFocus(aliceSession._activeCameraFocus.startedAt + 900);
 
-    // Navigate to multiple locations (simulated)
-    aliceSession.renderer.setCameraState({
-        position: { x: 50, y: 30, z: 80 },
-        target: { x: 50, y: 0, z: 50 },
-        zoom: 1
-    });
-    aliceSession.renderer.setCameraState({
-        position: { x: -80, y: 30, z: 60 },
-        target: { x: -80, y: 0, z: 30 },
-        zoom: 1
-    });
+    const worldAfterMore = JSON.stringify(aliceSession.getDocument(villageWorld.id).world.toJSON());
+    assert(worldBeforeMore === worldAfterMore, 'Exploration/navigation must not mutate World state');
 
-    // Serialize world AFTER exploration/navigation
-    const worldAfter = serializeWorld(aliceSession.getLoadedDocuments()[0].world);
-
-    // Worlds must be byte-identical: exploration contributed zero bytes
-    assert(worldBefore === worldAfter, 'Exploration/navigation must not mutate World state');
-    console.log('✓ Persistence boundary verified: exploration contributes zero bytes to World');
+    const history = aliceSession._commandHistories.get(villageWorld.id);
+    assert(!history || history.canUndo() === false, 'Zero commands were ever executed — Focus/Home/Follow/compass are pure camera + read operations');
+    console.log('✓ Persistence boundary verified: exploration contributes zero bytes to World, zero commands executed');
 
     // =========================================================================
     // PHASE H — Contextual Location Descriptions
     // =========================================================================
     console.log('\n--- Phase H: Contextual Location Descriptions ---');
 
-    const descOrigin = deriveSpatialContext({
-        position: new Position(0, 0, 0),
-        seed,
-        structurePlacements: [],
-        collaboratorPositions: []
-    });
+    const structurePlacements = [
+        { id: 'house-1', position: new Position(50, 0, 50), documentTitle: 'House' },
+        { id: 'barn-1', position: new Position(-80, 0, 30), documentTitle: 'Barn' },
+        { id: 'market-1', position: new Position(20, 0, -100), documentTitle: 'Market' }
+    ];
+
+    const descOrigin = deriveSpatialContext({ position: new Position(0, 0, 0), seed, structurePlacements: [], collaboratorPositions: [] });
     console.log(`  Origin: "${descOrigin.description}"`);
 
-    const descNearHouse = deriveSpatialContext({
-        position: new Position(55, 0, 55),
-        seed,
-        structurePlacements,
-        collaboratorPositions: []
-    });
+    const descNearHouse = deriveSpatialContext({ position: new Position(55, 0, 55), seed, structurePlacements, collaboratorPositions: [] });
     console.log(`  Near House: "${descNearHouse.description}"`);
-    
     assert(descNearHouse.description.includes('House'), 'Description should mention nearby structure');
     console.log('✓ Contextual descriptions generated from derived state');
 
     // =========================================================================
-    // PHASE I — Direction Labels
+    // PHASE I — Compass Direction Labels
     // =========================================================================
     console.log('\n--- Phase I: Compass Direction Labels ---');
 
-    const centerPos = new Position(0, 0, 0);
-    const contextCenter = deriveSpatialContext({
-        position: centerPos,
-        seed,
-        structurePlacements: [],
-        collaboratorPositions: []
-    });
-
-    // Test direction calculations
+    const contextCenter = deriveSpatialContext({ position: new Position(0, 0, 0), seed, structurePlacements: [], collaboratorPositions: [] });
     const north = contextCenter.directionLabel(new Position(0, 0, 100));
     const east = contextCenter.directionLabel(new Position(100, 0, 0));
     const south = contextCenter.directionLabel(new Position(0, 0, -100));
     const west = contextCenter.directionLabel(new Position(-100, 0, 0));
-
     console.log(`  N: ${north}, E: ${east}, S: ${south}, W: ${west}`);
-    
-    // Allow some tolerance for diagonal classification
+
     const validDirections = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     assert(validDirections.includes(north), 'North should be a valid direction');
     assert(validDirections.includes(east), 'East should be a valid direction');
     assert(validDirections.includes(south), 'South should be a valid direction');
     assert(validDirections.includes(west), 'West should be a valid direction');
-    
     console.log('✓ Compass direction labels working');
+    assert(Object.values(HYDROLOGY_FEATURE).length > 0, 'HYDROLOGY_FEATURE vocabulary is non-empty'); // keeps the import meaningful
 
     // =========================================================================
-    // PHASE J — Service Integration
+    // PHASE J — WorldSpatialContextService Integration
     // =========================================================================
     console.log('\n--- Phase J: WorldSpatialContextService Integration ---');
 
-    const contextService = new WorldSpatialContextService(aliceSession);
-    
-    // Mock avatar position for service
-    aliceSession.getAvatarPosition = () => new Position(50, 0, 50);
-    aliceSession.getWorldSeed = () => seed;
-    aliceSession.getCollaboratorPositions = () => [bobPosition];
-    
-    const serviceContext = contextService.getCurrentContext();
-    assert(serviceContext !== null, 'Service should return context');
-    assert(serviceContext.terrainZone !== null, 'Service should derive terrain zone');
-    
     const description = contextService.getCurrentLocationDescription();
     console.log(`  Service description: "${description}"`);
     assert(typeof description === 'string', 'Service should provide location description');
-    
+
     const nearestStructure = contextService.findNearestStructure();
     if (nearestStructure) {
         console.log(`  Nearest structure: "${nearestStructure.title}" (${nearestStructure.distance}m)`);
     }
-    
+
     const nearbyCollabs = contextService.findNearbyCollaborators();
     console.log(`  Nearby collaborators: ${nearbyCollabs.length}`);
-    
+    assert(nearbyCollabs.length > 0 && nearbyCollabs[0].displayName === 'Bob', 'Service surfaces Bob through the same integration proven in Phase E');
     console.log('✓ WorldSpatialContextService integration successful');
 
     // =========================================================================
@@ -485,13 +430,13 @@ async function runTests() {
     console.log('========================================');
     console.log('\nKey validations:');
     console.log('  ✓ Deterministic environment derivation');
-    console.log('  ✓ Structure locations as landmarks');
+    console.log('  ✓ Structure locations as landmarks, through the real session');
     console.log('  ✓ Terrain/ecology/hydrology in navigation');
-    console.log('  ✓ "You are here" derived from position');
-    console.log('  ✓ Camera focus via existing SpatialCameraController');
+    console.log('  ✓ "You are here" derived from real avatar position');
+    console.log('  ✓ Camera focus via existing focusLocation()/SpatialCameraController');
     console.log('  ✓ Collaborator presence integration');
-    console.log('  ✓ Follow preserves remote camera independence');
-    console.log('  ✓ Exploration contributes zero bytes to World');
+    console.log('  ✓ Follow uses followAvatarId(); a separate session\'s camera is provably untouched');
+    console.log('  ✓ Exploration contributes zero bytes to World, zero commands executed');
     console.log('  ✓ Contextual location descriptions');
     console.log('  ✓ Compass direction labels');
     console.log('  ✓ Service layer integration');
@@ -499,7 +444,7 @@ async function runTests() {
     console.log('  "Exploration Is Derived From Place, Not Stored As Place"');
 }
 
-runTests().catch(err => {
+run().catch((err) => {
     console.error('TEST FAILED:', err.message);
     console.error(err.stack);
     process.exit(1);

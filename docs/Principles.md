@@ -7067,3 +7067,35 @@ all — a COSMETIC label, derived locally, exactly like every other
 `WorldSpatialActivity` value already is, carrying no velocity, no
 gravity state, and no claim of authority over what Bob's own client
 does next.
+
+### Exploration Is Derived From Place, Not Stored As Place (0.3.6)
+
+`core/WorldSpatialContext.js`'s `deriveSpatialContext()` answers "what is
+around me right now" from nothing but a position, a seed, the currently
+loaded documents' own `StructurePlacement`s, and whatever collaborator
+roster `WorldNavigationSession#getWorldSpatialPresenceRoster()` already
+reports — every one of those a value this codebase already computed for
+an unrelated reason (terrain ecology/hydrology since 0.2.76-0.2.89,
+placements since 0.2.90, spatial presence since 0.3.0/0.3.1). No new
+World state is introduced to represent "Alice is standing in the
+forest," and none is needed: the same `(seed, x, z)` always derives the
+same terrain zone and hydrology feature on any replica, and the same
+loaded `World` always derives the same nearby structures, so two
+independent replicas agree on a viewer's spatial context without either
+one persisting or transmitting it. This is deliberately narrower than it
+sounds — `WorldSpatialContext` answers "what is here," never "what did I
+discover" or "what have I visited"; a durable per-user discovery/
+achievement history is a different feature entirely, one this milestone
+does not build, because mixing the two would turn a pure read into a
+write path (see `application/WorldSpatialContextService.js`'s own
+header). `WorldNavigationSession#getAvatarPosition()`/`getWorldSeed()`
+(0.3.6) are the only new session-level surface this required — thin
+reads over state (`_avatarPresenceSession`, the same `DEFAULT_WORLD_SEED`
+every terrain query already shares) the session already held, exactly
+the "takes `session`, calls back into it, never a second source of
+truth" shape `application/WorldLocationDirectory.js` established in
+0.2.94. Camera movement in response to a derived context — focusing a
+structure, following a collaborator — still goes exclusively through
+`focusLocation()`/`followAvatarId()` and `SpatialCameraController`; a
+richer sense of "where am I" never grows a second way to move the
+camera there.
