@@ -2100,7 +2100,7 @@ export class WorldNavigationSession {
 
         for (const document of this.getLoadedDocuments()) {
             const world = document.world;
-            for (const landmark of world.getLandmarks()) {
+            for (const landmark of world.getWorldLandmarks()) {
                 landmarks.push(landmark);
             }
             for (const placement of world.getStructurePlacements()) {
@@ -2140,7 +2140,7 @@ export class WorldNavigationSession {
 
         for (const document of this.getLoadedDocuments()) {
             const world = document.world;
-            for (const landmark of world.getLandmarks()) {
+            for (const landmark of world.getWorldLandmarks()) {
                 landmarks.push(landmark);
             }
             for (const placement of world.getStructurePlacements()) {
@@ -2164,7 +2164,7 @@ export class WorldNavigationSession {
         const landmarks = [];
         for (const document of this.getLoadedDocuments()) {
             const world = document.world;
-            for (const landmark of world.getLandmarks()) {
+            for (const landmark of world.getWorldLandmarks()) {
                 if (landmark.id === landmarkId) {
                     landmarks.push(landmark);
                 }

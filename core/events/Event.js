@@ -23,12 +23,6 @@ export const DomainEvent = Object.freeze({
     STRUCTURE_PLACEMENT_ADDED: 'StructurePlacementAdded',
     STRUCTURE_PLACEMENT_REMOVED: 'StructurePlacementRemoved',
     STRUCTURE_PLACEMENT_UPDATED: 'StructurePlacementUpdated',
-    // 0.3.7 — World Landmarks & Personal Waypoints. A landmark is a named,
-    // persistent point worth remembering — semantic, not geometric. See
-    // core/WorldLandmark.js and core/World.js's landmark methods.
-    LANDMARK_ADDED: 'LandmarkAdded',
-    LANDMARK_REMOVED: 'LandmarkRemoved',
-    LANDMARK_UPDATED: 'LandmarkUpdated'
     // 0.3.7 — World Landmarks & Personal Waypoints: explicit, persistent
     // World content. A WorldLandmark's lifecycle is a domain concern
     // exactly like StructurePlacement above.
