@@ -72,6 +72,7 @@ import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
 import { deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
 import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
 import { deriveWorldSpatialAnchor } from '../core/WorldSpatialAnchor.js';
+import { derivePlaceContexts, findNearestLandmark, describeLocation } from '../core/WorldCurationContext.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -2084,6 +2085,103 @@ export class WorldNavigationSession {
     // active document.
     getWorldLocations() {
         return this._worldLocationDirectory.list();
+    }
+
+    // 0.3.8 — Collaborative World Curation. Returns derived place
+    // contexts based on spatial proximity to landmarks. Each context
+    // includes the landmark, nearby structures, nearby landmarks, and
+    // nearby collaborators. Purely derived — never persisted, never
+    // authoritative. See core/WorldCurationContext.js for the grouping
+    // logic and radius constants.
+    getPlaceContexts() {
+        const landmarks = [];
+        const structurePlacements = [];
+        const structureTitles = new Map();
+
+        for (const document of this.getLoadedDocuments()) {
+            const world = document.world;
+            for (const landmark of world.getLandmarks()) {
+                landmarks.push(landmark);
+            }
+            for (const placement of world.getStructurePlacements()) {
+                structurePlacements.push(placement);
+                structureTitles.set(placement.documentId, this.getSavedDocumentTitle(placement.documentId));
+            }
+        }
+
+        const collaborators = this.getSpatialCollaborators().map((c) => ({
+            identityId: c.identityId,
+            label: c.label,
+            position: c.position,
+            activity: c.activity
+        }));
+
+        return derivePlaceContexts({
+            landmarks,
+            structurePlacements,
+            structureTitles,
+            collaborators
+        });
+    }
+
+    // 0.3.8 — Returns a human-readable description of the current
+    // location based on nearby landmarks and structures. E.g.,
+    // "In Village" or "Near Old Bridge". Returns empty string if
+    // no meaningful context can be derived.
+    getCurrentLocationDescription() {
+        const cameraPos = this.getCameraPosition();
+        if (!cameraPos) {
+            return '';
+        }
+
+        const landmarks = [];
+        const structurePlacements = [];
+        const structureTitles = new Map();
+
+        for (const document of this.getLoadedDocuments()) {
+            const world = document.world;
+            for (const landmark of world.getLandmarks()) {
+                landmarks.push(landmark);
+            }
+            for (const placement of world.getStructurePlacements()) {
+                structurePlacements.push(placement);
+                structureTitles.set(placement.documentId, this.getSavedDocumentTitle(placement.documentId));
+            }
+        }
+
+        return describeLocation({
+            position: cameraPos,
+            landmarks,
+            structurePlacements,
+            structureTitles
+        });
+    }
+
+    // 0.3.8 — Focus the camera on a place context (landmark position).
+    // Uses the same camera animation as focusLocation(). Returns false
+    // if the landmarkId is not found.
+    focusPlace(landmarkId) {
+        const landmarks = [];
+        for (const document of this.getLoadedDocuments()) {
+            const world = document.world;
+            for (const landmark of world.getLandmarks()) {
+                if (landmark.id === landmarkId) {
+                    landmarks.push(landmark);
+                }
+            }
+        }
+
+        if (landmarks.length === 0) {
+            return false;
+        }
+
+        const landmark = landmarks[0];
+        const { x, y, z } = landmark.position;
+        this._beginCameraFocus({
+            position: { x: x + LOCATION_FOCUS_OFFSET.x, y: y + LOCATION_FOCUS_OFFSET.y, z: z + LOCATION_FOCUS_OFFSET.z },
+            target: { x, y, z }
+        });
+        return true;
     }
 
     // 0.2.94 — the Locations-panel counterpart to focusDocument()/

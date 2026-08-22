@@ -236,6 +236,20 @@ export class World {
     }
 
     // -----------------------------------------------------------------
+    // Landmarks (0.3.7) — named, persistent points worth remembering.
+    // A WorldLandmark is SEMANTIC: a human-meaningful label attached to
+    // a position. Multiple landmarks can coexist; they do not partition
+    // space or conflict. Deleting a landmark does NOT delete any nearby
+    // structures, placements, or other content — curation organizes
+    // content; it does not own content. See core/WorldLandmark.js.
+    // -----------------------------------------------------------------
+
+    addLandmark(landmark) {
+        this._landmarks.set(landmark.id, landmark);
+        this._publish(DomainEvent.LANDMARK_ADDED, { landmark });
+    }
+
+    removeLandmark(id) {
     // World Landmarks (0.3.7) — explicit, persistent World content.
     // Unlike StructurePlacement (a reference to external Document state),
     // a WorldLandmark IS the stored state — a named point users create
@@ -253,6 +267,18 @@ export class World {
             return;
         }
         this._landmarks.delete(id);
+        this._publish(DomainEvent.LANDMARK_REMOVED, { landmark });
+    }
+
+    getLandmark(id) {
+        return this._landmarks.get(id) || null;
+    }
+
+    getLandmarks() {
+        return Array.from(this._landmarks.values());
+    }
+
+    updateLandmark(id, changes) {
         this._publish(DomainEvent.WORLD_LANDMARK_REMOVED, { landmark });
     }
 
@@ -269,6 +295,16 @@ export class World {
         if (!landmark) {
             return;
         }
+        if (changes.title !== undefined) {
+            landmark._title = changes.title;
+        }
+        if (changes.description !== undefined) {
+            landmark._description = changes.description;
+        }
+        if (changes.position !== undefined) {
+            landmark._position = changes.position;
+        }
+        this._publish(DomainEvent.LANDMARK_UPDATED, { landmark });
         if (updates.title !== undefined) {
             landmark.setTitle(updates.title);
         }
@@ -285,6 +321,7 @@ export class World {
             buildings: this.getBuildings().map((building) => building.toJSON()),
             groups: this.getGroups().map((group) => group.toJSON()),
             placements: this.getStructurePlacements().map((placement) => placement.toJSON()),
+            landmarks: this.getLandmarks().map((landmark) => landmark.toJSON())
             landmarks: this.getWorldLandmarks().map((landmark) => landmark.toJSON())
         };
     }
@@ -304,6 +341,7 @@ export class World {
         }
         // Worlds serialized before 0.3.7 have no landmarks field.
         for (const landmarkJson of json.landmarks || []) {
+            world.addLandmark(WorldLandmark.fromJSON(landmarkJson));
             world.addWorldLandmark(WorldLandmark.fromJSON(landmarkJson));
         }
         return world;
