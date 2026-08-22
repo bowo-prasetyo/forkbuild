@@ -26,6 +26,7 @@ import WorldMembersPanel from '../components/WorldMembersPanel.js';
 import WorldPresenceIndicator from '../components/WorldPresenceIndicator.js';
 import WorldCollaboratorIndicator, { buildSpatialCollaboratorRows } from '../components/WorldCollaboratorIndicator.js';
 import { buildWorldCollaborationRoster } from '../components/WorldCollaborationRoster.js';
+import WorldWelcomePanel from '../components/WorldWelcomePanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 
 const DRAG_THRESHOLD_PX = 6;
@@ -58,7 +59,8 @@ export default {
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
         AvatarInfoPanel, NearbyAvatarsPanel,
         CompassIndicator, LocationsPanel, LandmarkFormModal,
-        WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator
+        WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
+        WorldWelcomePanel
     },
     setup() {
         const route = useRoute();
@@ -208,6 +210,21 @@ export default {
         });
         const showLocationsPanel = ref(false);
         const worldLocations = ref([]);
+        // 0.3.9 — World Welcome & Guided Exploration. `welcomeContext`
+        // is session.getWelcomeContext(...)'s own toJSON() — re-read
+        // fresh on open and again on every live spatial-presence update
+        // (see _syncWorldSpatialPresence() below), never cached beyond
+        // that. `showWelcomePanel` opens automatically the first time
+        // this session enters a World's spatial presence (one showing
+        // per World per session — see `_welcomeShownForDocumentId`
+        // below, a plain non-reactive Set since it's bookkeeping, not
+        // something the template ever reads) and can be reopened any
+        // time through the "Explore" toolbar button —
+        // `welcomeIsArrival` only changes which framing/dismiss label
+        // WorldWelcomePanel shows, never the content.
+        const showWelcomePanel = ref(false);
+        const welcomeContext = ref(null);
+        const welcomeIsArrival = ref(true);
         // 0.3.7 — World Landmarks & Personal Waypoints. `canEditActiveWorld`
         // mirrors isActiveWorldOwner's own refresh cadence exactly (both
         // set inside refreshSpatialUI() below) — a pure reflect of
@@ -382,6 +399,13 @@ export default {
         // single shared interval would force one cadence on both.
         let presentSpatialWorldDocumentId = null;
         let unsubscribeWorldSpatialPresence = null;
+        // 0.3.9 — which documentIds have already had their automatic
+        // arrival Welcome shown this session, so re-entering the same
+        // World later (or a spatial-presence refresh that doesn't
+        // actually change the active document) never re-shows it
+        // uninvited — only the toolbar's "Explore" button reopens it
+        // after the first showing.
+        const welcomeShownForDocumentId = new Set();
         let spatialPresenceSyncInterval = null;
 
         availableDefinitions.value = registry.getAll();
@@ -935,7 +959,87 @@ export default {
                     resolveDisplayName: resolveIdentityDisplayName,
                     resolveSelectionLabel: (selection) => session.resolveSpatialSelectionLabel(selection)
                 });
+                // 0.3.9 — a live presence change (someone joins, starts
+                // building, leaves) refreshes an ALREADY-OPEN welcome/
+                // exploration panel's "What's happening nearby?" and
+                // suggestions in place — see docs/Principles.md,
+                // "Exploration Guides Attention, Never Ownership or
+                // Mutation (0.3.9)": this never reopens a panel the
+                // viewer already dismissed.
+                if (showWelcomePanel.value) {
+                    refreshWelcomeContext();
+                }
             });
+            // 0.3.9 — the automatic arrival showing: once per World per
+            // session, the moment this session actually enters that
+            // World's spatial presence. See `welcomeShownForDocumentId`'s
+            // own comment above for why a later re-entry (or an
+            // unrelated refreshSpatialUI() tick) never repeats it.
+            if (!welcomeShownForDocumentId.has(presentSpatialWorldDocumentId)) {
+                welcomeShownForDocumentId.add(presentSpatialWorldDocumentId);
+                openWelcomePanel(true);
+            }
+        }
+
+        // 0.3.9 — World Welcome & Guided Exploration. Re-reads
+        // session.getWelcomeContext() fresh (never cached beyond this
+        // call) and stores its plain toJSON() shape — the same "map to
+        // toJSON() before storing in a ref" convention
+        // refreshLocationsPanel() above already uses for
+        // getWorldLocations(). `resolveIdentityDisplayName` is the same
+        // presentation-only resolver every other spatial-presence path
+        // in this file already threads through.
+        function refreshWelcomeContext() {
+            const context = typeof session.getWelcomeContext === 'function'
+                ? session.getWelcomeContext((identityId) => resolveIdentityDisplayName(identityId))
+                : null;
+            welcomeContext.value = context ? context.toJSON() : null;
+        }
+
+        function openWelcomePanel(isArrival) {
+            refreshWelcomeContext();
+            welcomeIsArrival.value = Boolean(isArrival);
+            showWelcomePanel.value = true;
+        }
+
+        // The toolbar's own "Explore" entry point (section 7 of the
+        // design: "a small exploration control... selects a destination
+        // from existing derived information") — same content and
+        // component as the automatic arrival showing, just reopened on
+        // request rather than once automatically.
+        function openExplorePanel() {
+            openWelcomePanel(false);
+        }
+
+        function closeWelcomePanel() {
+            showWelcomePanel.value = false;
+        }
+
+        // WorldWelcomePanel's own `explore` emit carries the raw
+        // WorldExplorationSuggestion#toJSON() shape — this is the ONE
+        // place that decides which existing navigation primitive a
+        // suggestion's `kind` maps to, exactly the mapping the design
+        // calls for: landmark/structure/place all go through
+        // focusLocation()/focusPlace() (camera-only — see 0.3.2's own
+        // "Camera Navigation Is Never Avatar Movement"), a collaborator
+        // suggestion goes through focusCollaborator(), the SAME call
+        // followCollaborator() above already makes. Never teleports the
+        // avatar, never mutates the World.
+        function exploreWelcomeSuggestion(suggestion) {
+            const location = suggestion && suggestion.location;
+            if (!location) {
+                return;
+            }
+            if (suggestion.kind === 'collaborator' && location.collaborator && location.collaborator.deviceId) {
+                session.focusCollaborator(location.collaborator.deviceId);
+            } else if (suggestion.kind === 'landmark' && location.landmark) {
+                session.focusLocation(location.landmark.id);
+            } else if (suggestion.kind === 'structure' && location.structure) {
+                session.focusLocation(location.structure.id);
+            } else if (suggestion.kind === 'place' && location.place && location.place.landmark) {
+                session.focusPlace(location.place.landmark.id);
+            }
+            refreshSpatialUI();
         }
 
         // 0.3.1 — Collaborative Spatial Awareness. The host view's own
@@ -1816,6 +1920,12 @@ export default {
             compassMarkers,
             showLocationsPanel,
             worldLocations,
+            showWelcomePanel,
+            welcomeContext,
+            welcomeIsArrival,
+            openExplorePanel,
+            closeWelcomePanel,
+            exploreWelcomeSuggestion,
             canEditActiveWorld,
             showLandmarkForm,
             landmarkFormTarget,
@@ -1906,6 +2016,12 @@ export default {
             <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
                 <button class="action-btn" @click="goHome">Home</button>
                 <button class="action-btn" @click="openLocationsPanel">Locations</button>
+                <button
+                    v-if="activeDocumentInfo"
+                    class="action-btn action-btn--explore"
+                    title="Suggested destinations and who's here"
+                    @click="openExplorePanel"
+                >Explore</button>
             </div>
                 <!-- 0.2.99 — World Collaboration UX. Deliberately
                      subtle, exactly like the compass above: the World
@@ -2403,6 +2519,13 @@ export default {
                 :landmark="landmarkFormTarget"
                 @save="onSaveLandmarkForm"
                 @cancel="closeLandmarkForm"
+            />
+            <WorldWelcomePanel
+                v-if="showWelcomePanel"
+                :context="welcomeContext"
+                :is-arrival="welcomeIsArrival"
+                @explore="exploreWelcomeSuggestion"
+                @dismiss="closeWelcomePanel"
             />
             <WorldMembersPanel
                 v-if="showMembersPanel"

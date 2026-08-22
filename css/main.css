@@ -1972,6 +1972,93 @@ html, body {
     color: #707070;
 }
 
+/* 0.3.9 — ui/components/WorldWelcomePanel.js: same .modal-overlay/
+   .modal-panel convention as .locations-panel above, composing
+   WorldWelcomeContext's own derived reading rather than any new
+   layout idiom — see docs/Principles.md, "Exploration Guides
+   Attention, Never Ownership or Mutation (0.3.9)." */
+.world-welcome-panel-place {
+    margin: 0 0 0.3rem;
+    font-size: 0.9rem;
+    color: #e0e0e0;
+}
+
+.world-welcome-panel-stats {
+    margin: 0 0 0.9rem;
+    font-size: 0.82rem;
+    color: #909090;
+}
+
+.world-welcome-panel-section + .world-welcome-panel-section {
+    margin-top: 0.9rem;
+}
+
+.world-welcome-panel-section-title {
+    margin: 0 0 0.4rem;
+    font-size: 0.72rem;
+    color: #707070;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.world-welcome-panel-activity {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: #b0b0b0;
+}
+
+.world-welcome-panel-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+.world-welcome-panel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.world-welcome-panel-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.world-welcome-panel-item-title {
+    font-size: 0.88rem;
+    color: #e0e0e0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-welcome-panel-item-reason {
+    font-size: 0.75rem;
+    color: #707070;
+}
+
+.world-welcome-panel-empty {
+    color: #909090;
+    font-size: 0.85rem;
+}
+
 /* 0.2.99 — ui/components/WorldPresenceIndicator.js: deliberately as
    understated as .compass-indicator above — a single glanceable fact,
    never its own panel. */

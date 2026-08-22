@@ -191,6 +191,7 @@ export class WorldWelcomeContext {
                 identityId: c.identityId,
                 label: c.label,
                 activity: c.activity,
+                deviceId: c.deviceId,
                 distance: c.distance
             })),
             suggestedDestinations: this._suggestedDestinations.map(s => s.toJSON()),
@@ -230,33 +231,26 @@ export function deriveWorldWelcomeContext({
         throw new Error('deriveWorldWelcomeContext requires a world');
     }
     
-    // Find nearby landmarks
+    // Find nearby landmarks. With no position given, include all of
+    // them (distance unranked) rather than filtering by proximity.
     const nearbyLandmarks = [];
     for (const landmark of landmarks) {
-        if (position) {
-            const distance = distanceXZ(position, landmark.position);
-            if (distance !== null && distance <= WELCOME_CONTEXT_RADIUS) {
-                nearbyLandmarks.push({
-                    id: landmark.id,
-                    title: landmark.title,
-                    position: landmark.position,
-                    distance: Math.round(distance * 10) / 10
-                });
-            } else if (!position) {
-                // If no position given, include all landmarks
-                nearbyLandmarks.push({
-                    id: landmark.id,
-                    title: landmark.title,
-                    position: landmark.position,
-                    distance: null
-                });
-            }
-        } else {
+        if (!position) {
             nearbyLandmarks.push({
                 id: landmark.id,
                 title: landmark.title,
                 position: landmark.position,
                 distance: null
+            });
+            continue;
+        }
+        const distance = distanceXZ(position, landmark.position);
+        if (distance !== null && distance <= WELCOME_CONTEXT_RADIUS) {
+            nearbyLandmarks.push({
+                id: landmark.id,
+                title: landmark.title,
+                position: landmark.position,
+                distance: Math.round(distance * 10) / 10
             });
         }
     }
@@ -308,6 +302,11 @@ export function deriveWorldWelcomeContext({
                     label: collab.label,
                     activity: collab.activity,
                     position: collab.position,
+                    // Carried through, unfiltered, so a "Follow" action
+                    // built from a suggestion/row can call
+                    // focusCollaborator(deviceId) directly — see
+                    // application/WorldNavigationSession.js#_getPresentCollaborators().
+                    deviceId: collab.deviceId,
                     distance: Math.round(distance * 10) / 10
                 });
             }
@@ -317,6 +316,7 @@ export function deriveWorldWelcomeContext({
                 label: collab.label,
                 activity: collab.activity,
                 position: collab.position,
+                deviceId: collab.deviceId,
                 distance: null
             });
         }
