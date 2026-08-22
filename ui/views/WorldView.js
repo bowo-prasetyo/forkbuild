@@ -2325,3 +2325,45 @@ export default {
         </div>
     `
 };
+
+// 0.3.6 — World Discovery & Exploration. Styles for contextual location descriptions and markers.
+const style = document.createElement('style');
+style.textContent = `
+    .world-view-nav-context {
+        font-size: 0.75rem;
+        color: #a0aec0;
+        margin-top: 0.25rem;
+        padding-top: 0.25rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .world-view-nav-markers {
+        margin-top: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .world-view-nav-marker {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.7rem;
+        color: #f6e05e;
+    }
+    
+    .world-view-nav-marker.collaborator {
+        color: #81e6d9;
+    }
+    
+    .marker-direction {
+        font-weight: bold;
+        min-width: 1.5rem;
+        text-align: center;
+    }
+    
+    .marker-label {
+        opacity: 0.9;
+    }
+`;
+document.head.appendChild(style);

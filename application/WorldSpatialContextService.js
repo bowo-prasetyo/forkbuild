@@ -62,8 +62,25 @@ export class WorldSpatialContextService {
             }
         }
 
-        // Get collaborator positions from spatial presence (if available)
-        const collaboratorPositions = this._session.getCollaboratorPositions?.() || [];
+        // Get collaborator positions from spatial presence roster
+        const collaboratorPositions = [];
+        if (typeof this._session.getWorldSpatialPresenceRoster === 'function') {
+            // Get roster for all loaded documents
+            const documents = this._session.getLoadedDocuments?.() || [];
+            for (const doc of documents) {
+                const roster = this._session.getWorldSpatialPresenceRoster(doc.world.id) || [];
+                for (const entry of roster) {
+                    if (entry.position) {
+                        collaboratorPositions.push({
+                            identityId: entry.identityId,
+                            displayName: entry.displayName || entry.identityId,
+                            activity: entry.activity || null,
+                            position: entry.position
+                        });
+                    }
+                }
+            }
+        }
 
         return deriveSpatialContext({
             position,
@@ -104,7 +121,25 @@ export class WorldSpatialContextService {
             }
         }
 
-        const collaboratorPositions = this._session.getCollaboratorPositions?.() || [];
+        // Get collaborator positions from spatial presence roster
+        const collaboratorPositions = [];
+        if (typeof this._session.getWorldSpatialPresenceRoster === 'function') {
+            // Get roster for all loaded documents
+            const documents = this._session.getLoadedDocuments?.() || [];
+            for (const doc of documents) {
+                const roster = this._session.getWorldSpatialPresenceRoster(doc.world.id) || [];
+                for (const entry of roster) {
+                    if (entry.position) {
+                        collaboratorPositions.push({
+                            identityId: entry.identityId,
+                            displayName: entry.displayName || entry.identityId,
+                            activity: entry.activity || null,
+                            position: entry.position
+                        });
+                    }
+                }
+            }
+        }
 
         return deriveSpatialContext({
             position,
