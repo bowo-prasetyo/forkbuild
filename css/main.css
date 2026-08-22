@@ -1228,7 +1228,12 @@ html, body {
     color: #b0b0b0;
 }
 
-/* Original overlay style - keep for title/author info */
+/* The World View left panel — everything from the title down through
+   Avatar/Search/Tools/Editing/Worlds-in-View lives inside this one
+   floating box (see WorldView.js's template: the div opened here
+   isn't closed until after the last section, deliberately, so this
+   max-width actually bounds the whole panel). Only the top-right nav
+   HUD (.world-view-nav-hud) sits outside it. */
 .world-view-overlay {
     position: absolute;
     top: 1rem;
