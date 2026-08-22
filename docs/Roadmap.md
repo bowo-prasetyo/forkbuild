@@ -8231,3 +8231,123 @@ Composition's own next questions — a richer library to compose FROM, a
 User Blueprint Library, and turning a composed Document back into a
 reusable Structure — remain exactly where 0.4.0 left them: named, not
 forgotten, sized on their own.
+
+## 0.4.2 — Structure Extraction & Blueprint Creation
+
+0.4.0 gave the composition pipeline its first verb, Copy: a library
+Structure's bricks land in the document a user already has open. 0.4.1
+made landing them precise: an interactive ghost preview instead of a
+deterministic auto-offset. Both, together, only ever move content ONE
+direction — Structure into Document. 0.4.1's own "Deliberately excluded"
+named the gap directly: turning a composed Document back into a reusable
+Structure is a separate, larger question (where does the new Structure's
+local origin come from?) that needed Copy to exist first. 0.4.2 answers
+it, closing the loop this milestone names:
+
+    Structure --copy/compose--> Document --extract--> Structure
+
+### What shipped
+
+- `application/CreateStructureFromSelectionUseCase.js` — the reverse of
+  `CopyStructureIntoDocumentUseCase`: reads a `SelectionState`
+  (`application/editor-state/SelectionState.js`) out of a Document and
+  returns a brand-new `core/Structure.js` instance. Pure observation —
+  no UI, no persistence, no World mutation — exactly the same
+  restraint `application/CopySelectionUseCase.js` already applies to
+  the clipboard, one rung over. The source bricks are never touched:
+  extraction is copy, never move (see docs/Principles.md, "Extraction
+  Copies A Blueprint; It Never Moves One (0.4.2)").
+- **Normalization** — the selection's own minimum X/Z occupied bounds
+  become the new Structure's origin, computed with the exact same
+  `core/SpatialBounds.js#fromBricks()` math `core/Structure.js` and
+  `CopyStructureIntoDocumentUseCase` already rely on rather than a
+  second bounds calculation. Y is left exactly as authored: every
+  built-in Structure already measures Y from the ground up, so
+  shifting it the same way X/Z are shifted would lift or bury the
+  extracted Structure relative to its own floor. The result:
+  extracting the same shape is deterministic regardless of where in
+  the Document it happened to be composed.
+- **Selection rule: brick selections only.** A `StructurePlacement`
+  selection (0.2.93) is a reference to an entirely different Document
+  — automatically dereferencing and flattening it here would be a
+  different, larger operation this milestone deliberately does not
+  attempt. Rather than silently doing nothing, `execute()` throws
+  `"Create Structure requires brick selections only."` so the UI can
+  say exactly why.
+- `EditorSession.createStructureFromSelection(metadata)` — mirrors
+  `copySelection()`'s own shape: reads the current selection and the
+  open Document, touches neither, returns the new Structure for the
+  caller to do with as it pleases (fork it, copy it elsewhere, or —
+  0.4.3 — save it to a personal library).
+- `application/EditorActionRegistry.js` — a new `Structure` category,
+  `structure.createFromSelection` ("Create Structure"), gated exactly
+  like `clipboard.copy` (any brick selection) except a
+  `StructurePlacement` selection, which is never eligible. Reachable
+  today through the Command Palette (0.1.50) — every registered action
+  already renders there with no per-action wiring needed.
+- `ui/views/EditorView.js#actionUi.promptCreateStructure()` — the
+  metadata prompt (Name/Category/Description), the same
+  `window.prompt()` pattern `ui/components/GroupsPanel.js` already uses
+  for a group's name. Author, version, and thumbnails are deliberately
+  not asked for here — see "Deliberately excluded," below.
+- `tests/StructureExtraction.test.js` — the flagship, the full
+  recursive loop: compose House + Well + Barn into a Document (0.4.0,
+  unmodified) → select everything → Create "Farmstead" → assert its
+  bounds sit at minimum X/Z = 0 while the source Document is
+  byte-identical to before extraction → fork Farmstead
+  (`ForkStructureUseCase`) and assert the fork's geometry matches
+  exactly → copy Farmstead into a fresh empty Document
+  (`CopyStructureIntoDocumentUseCase`) and assert the same → compose
+  Farmstead A + Farmstead B + Market into a new Village with disjoint
+  footprints → run the whole Build+Extract pipeline twice from scratch
+  and assert byte-identical Structure geometry and metadata → assert a
+  `StructurePlacement` selection, an empty selection, and a missing
+  name are each rejected predictably.
+
+### Deliberately excluded
+
+Named rather than hidden, the same restraint every milestone in this
+document applies to its own scope:
+
+- **Saving the extracted Structure anywhere.** `createStructureFromSelection()`
+  returns a valid, independent Structure and stops there — it is not
+  added to the `StructureRegistry`, not written to storage, and not
+  offered anywhere as "Fork" or "Copy Into Document" already offer a
+  library Structure. A Personal Blueprint Library to put it in (0.4.3)
+  is a separate, larger question (save/rename/delete/search, alongside
+  the built-in Village Library) that this milestone deliberately does
+  not answer — see docs/Roadmap.md's own 0.4.3.
+- **Author, version, and generated thumbnails** for the new Structure —
+  the same "not yet" 0.4.0 already named for the library as a whole;
+  they belong to the Personal Blueprint Library, not the extraction
+  mechanic.
+- **Extracting a `StructurePlacement`** (dereferencing and flattening
+  its referenced Document's bricks into the extracting Document's own
+  Structure) — a real, different operation from "copy the bricks I
+  can already see," explicitly rejected rather than attempted here.
+- **A richer built-in structure library** and **Blueprint Packs** —
+  unchanged from 0.4.0/0.4.1's own lists; content and packaging are
+  separate passes, sized on their own.
+
+```text
+0.4.0   Structure Composition & Blueprint Library          ✓
+0.4.1   Interactive Structure Composition UX                ✓
+             │
+             ▼
+0.4.2   Structure Extraction & Blueprint Creation           ✓
+             ├── CreateStructureFromSelectionUseCase — Document selection -> new Structure
+             ├── Normalization — minimum X/Z bounds become the Structure's own origin
+             └── EditorActionRegistry — "Create Structure", reachable from the Command Palette
+```
+
+> **0.4.0 — How do I combine several Structures into something bigger?**
+> **0.4.1 — How do I control WHERE and HOW each one lands?**
+> **0.4.2 — Can I turn what I just built into something reusable?**
+
+With both directions now in place — Structure into Document (Copy/
+Compose) and Document into Structure (Extract) — ForkBuild has a
+recursive creator loop: anything a user builds from reusable Structures
+can itself become a reusable Structure. A Personal Blueprint Library to
+save those creations into, and a larger built-in library to compose FROM
+in the first place, remain exactly where this milestone leaves them:
+named, not forgotten, sized on their own.

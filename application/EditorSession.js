@@ -27,6 +27,7 @@ import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { ForkStructureUseCase } from './ForkStructureUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUseCase.js';
+import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelectionUseCase.js';
 import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlacementCommand.js';
 import { MoveStructurePlacementCommand } from './commands/MoveStructurePlacementCommand.js';
 import { RotateStructurePlacementCommand } from './commands/RotateStructurePlacementCommand.js';
@@ -74,6 +75,8 @@ export class EditorSession {
         forkStructureUseCase = new ForkStructureUseCase(),
         // 0.4.0 — Structure Composition & Blueprint Library.
         copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase(),
+        // 0.4.2 — Structure Extraction & Blueprint Creation.
+        createStructureFromSelectionUseCase = new CreateStructureFromSelectionUseCase(),
         // 0.2.90 — Structure Placement & World Instances. Both optional
         // so an EditorSession built without them (older call sites,
         // test harnesses that never enter PLACE_STRUCTURE mode) keeps
@@ -101,6 +104,7 @@ export class EditorSession {
         this._pasteClipboardUseCase = pasteClipboardUseCase;
         this._forkStructureUseCase = forkStructureUseCase;
         this._copyStructureIntoDocumentUseCase = copyStructureIntoDocumentUseCase;
+        this._createStructureFromSelectionUseCase = createStructureFromSelectionUseCase;
         this._structureResolver = structureResolver;
         this._structurePreviewUseCase = structurePreviewUseCase;
         this._compositionPreviewUseCase = compositionPreviewUseCase;
@@ -844,6 +848,43 @@ export class EditorSession {
         this._editorContext.setActiveComposition(structure);
         this._editorContext.setActiveTool(ToolId.COMPOSE_STRUCTURE);
         return true;
+    }
+
+    // 0.4.2 — Structure Extraction & Blueprint Creation. The reverse of
+    // copyStructureIntoDocument() above:
+    //
+    //   Copy:     Structure --copy--> current Document's own bricks
+    //   Extract:  current selection's bricks --extract--> new Structure
+    //
+    // Reads the CURRENT selection out of the open Document via
+    // CreateStructureFromSelectionUseCase and returns a brand-new
+    // core/Structure.js instance — observation only, exactly like
+    // copySelection() above: neither the Document nor CommandHistory is
+    // ever touched, so this has no undo entry and nothing to replay.
+    // `metadata` is `{ name, category, tags, description }`; `name` is
+    // required (see that use case's own header). Returns null when
+    // there's no document or nothing left to extract; throws when the
+    // selection is anything other than an ordinary brick selection (a
+    // StructurePlacement selection, most notably) or `name` is missing —
+    // callers surface that message directly rather than silently doing
+    // nothing (see application/EditorActionRegistry.js's own
+    // 'structure.createFromSelection').
+    //
+    // The returned Structure is not saved anywhere — 0.4.3 (Personal
+    // Blueprint Library) is what gives a caller somewhere to put it;
+    // this method's whole job ends at "here is a valid, independent
+    // Structure," the same restraint ForkStructureUseCase and
+    // CopyStructureIntoDocumentUseCase both already apply to their own
+    // single responsibility.
+    createStructureFromSelection(metadata = {}) {
+        const document = this._documentManager.document;
+        if (!this._createStructureFromSelectionUseCase || !document) {
+            return null;
+        }
+        return this._createStructureFromSelectionUseCase.execute(this._editorContext.selection, document, {
+            ...metadata,
+            registry: this._registry
+        });
     }
 
     // 0.2.90 — Structure Placement & World Instances. Enters

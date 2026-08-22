@@ -382,6 +382,40 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             })
         }),
 
+        // --------------------------------------------------- Structure
+        // 0.4.2 — Structure Extraction & Blueprint Creation. Gated
+        // exactly like clipboard.copy (any brick selection will do)
+        // EXCEPT a StructurePlacement selection, which is never eligible
+        // — see application/CreateStructureFromSelectionUseCase.js's own
+        // header on why that stays a distinct, larger operation. `ui`
+        // supplies the metadata prompt (name/category/description);
+        // a surface without one degrades to feedback, same as every
+        // other ui.* hook here.
+        define({
+            id: 'structure.createFromSelection',
+            label: 'Create Structure',
+            category: 'Structure',
+            description: 'Create a reusable Structure from the selected bricks, normalized to its own local origin',
+            enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection && !ctx.selectionIsStructurePlacement,
+            disabledReason: (ctx) => {
+                if (!ctx.hasSelection) return 'No bricks selected';
+                if (ctx.selectionIsStructurePlacement) return 'Create Structure requires brick selections only';
+                return null;
+            },
+            execute: () => surfaceCall('createStructureFromSelection', 'Create Structure is not available on this surface', (createStructureFromSelection) => {
+                if (typeof ui.promptCreateStructure !== 'function') {
+                    feedback.show('Create Structure is not available on this surface');
+                    return;
+                }
+                const metadata = ui.promptCreateStructure();
+                if (!metadata) {
+                    return;
+                }
+                const structure = createStructureFromSelection(metadata);
+                feedback.show(structure ? `Created "${structure.name}"` : 'Nothing to create — select bricks first');
+            })
+        }),
+
         // ----------------------------------------------------- Transform
         nudge('Right', 'Right', '→', 'arrowright', { x: 1, y: 0, z: 0 }, 'x'),
         nudge('Left', 'Left', '←', 'arrowleft', { x: -1, y: 0, z: 0 }, 'x'),

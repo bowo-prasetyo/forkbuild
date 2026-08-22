@@ -379,7 +379,27 @@ export default {
             togglePalette() {
                 paletteOpen.value = !paletteOpen.value;
             },
-            focusNumeric: null
+            focusNumeric: null,
+            // 0.4.2 — Structure Extraction & Blueprint Creation. Minimal
+            // metadata capture — the same window.prompt() chain
+            // ui/components/GroupsPanel.js already uses for a group's
+            // name — Name/Category/Description, nothing more.
+            // Author/version/thumbnails belong to the Personal Blueprint
+            // Library (0.4.3), not this milestone. Returns null (and
+            // creates nothing) if the user cancels or leaves the name
+            // blank.
+            promptCreateStructure() {
+                const name = prompt('Structure name:', '');
+                if (name === null || !name.trim()) {
+                    return null;
+                }
+                const category = prompt('Category:', 'uncategorized');
+                if (category === null) {
+                    return null;
+                }
+                const description = prompt('Description (optional):', '') || '';
+                return { name: name.trim(), category: category.trim() || 'uncategorized', description };
+            }
         };
         const actionRegistry = new EditorActionRegistry(
             createStandardActions({ session: editorSession, feedback, ui: actionUi })
