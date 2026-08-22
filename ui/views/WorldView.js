@@ -1772,11 +1772,11 @@ export default {
                 </div>
                 <p v-if="author">by {{ author }}</p>
             </div>
-            <!-- Home and Locations buttons moved below for better organization -->
-            <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation" style="margin-top: 0.5rem;">
-                    <button class="action-btn" @click="goHome">Home</button>
-                    <button class="action-btn" @click="openLocationsPanel">Locations</button>
-                </div>
+            <!-- Navigation and action buttons moved outside overlay to avoid width constraint -->
+            <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
+                <button class="action-btn" @click="goHome">Home</button>
+                <button class="action-btn" @click="openLocationsPanel">Locations</button>
+            </div>
                 <!-- 0.2.99 — World Collaboration UX. Deliberately
                      subtle, exactly like the compass above: the World
                      itself stays visually dominant. Both the indicator
