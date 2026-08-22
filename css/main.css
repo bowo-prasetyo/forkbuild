@@ -1238,7 +1238,7 @@ html, body {
     border: 1px solid #2a2a2a;
     border-radius: 4px;
     padding: 1rem 1.25rem;
-    max-width: 320px;
+    max-width: 280px;
     pointer-events: none;
 }
 
