@@ -46,9 +46,20 @@ selection, or edit anything. See
 
 | Control | Action |
 |---|---|
-| Compass indicator | Read-only heading readout — never clickable |
+| Compass indicator | Read-only heading with contextual markers for nearby structures and terrain features |
 | **Home** | Reset the camera to the default view |
 | **Locations** | Open a list of Home plus every structure known this session, each with a **Focus** button |
+
+### Contextual location descriptions
+
+As you move through the world, the interface shows derived context like:
+
+- "**Forest · near House**" — you're in a forest biome near a structure
+- "**Grassland · 120m from Origin**" — open terrain at a distance from center
+- "**River · House 50m SW**" — water feature with nearby building direction
+
+These descriptions are computed from your position, terrain ecology,
+hydrology, and structure placements — nothing is stored in the world.
 
 ## Selection
 
