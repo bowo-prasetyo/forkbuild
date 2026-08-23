@@ -58,10 +58,38 @@ export default {
             default: null
         }
     },
-    emits: ['explore', 'dismiss'],
+    emits: ['explore', 'dismiss', 'go-to-place'],
     computed: {
         lastVisitedLabel() {
             return this.returning ? formatRelativeVisit(this.lastVisitedAt) : null;
+        },
+        // 0.5.6 — Geographic Place Navigation & Arrival. "You are IN"
+        // only for a named WorldRegion the viewer is actually standing
+        // inside (real, human-authored geometry — context.placeName);
+        // "You are NEAR" for the closest geographic place CANDIDATE
+        // (context.primaryGeographicPlace) — a cross-World identity
+        // guess, never confirmed, so it never earns "in." Neither
+        // implies the other: a viewer can be in a named region with no
+        // geographic-place candidate nearby, near a candidate with no
+        // named region containing them, both, or neither (null). See
+        // docs/Principles.md, "A Geographic Place Is Navigable; It Does
+        // Not Become World Content (0.5.6)."
+        arrivalNote() {
+            if (this.context && this.context.placeName) {
+                return `You are in ${this.context.placeName}`;
+            }
+            if (this.context && this.context.primaryGeographicPlace) {
+                return `You are near ${this.context.primaryGeographicPlace.displayName}`;
+            }
+            return null;
+        },
+        nearbyGeographicPlaces() {
+            if (!this.context || !Array.isArray(this.context.nearbyGeographicPlaces)) {
+                return [];
+            }
+            // Deliberately capped, the same "short, scannable list"
+            // restraint `suggestions` above already applies.
+            return this.context.nearbyGeographicPlaces.slice(0, 5);
         },
         suggestions() {
             if (!this.context || !Array.isArray(this.context.suggestedDestinations)) {
@@ -135,6 +163,7 @@ export default {
                 <h3 v-else>{{ worldTitle }}</h3>
 
                 <p v-if="returning && lastVisitedLabel" class="world-welcome-panel-stats">Last visited {{ lastVisitedLabel }}</p>
+                <p v-if="arrivalNote" class="world-welcome-panel-arrival-note">{{ arrivalNote }}</p>
                 <p v-if="context.currentPlace" class="world-welcome-panel-place">★ {{ context.currentPlace.title }}</p>
                 <p v-if="statsParts.length" class="world-welcome-panel-stats">{{ statsParts.join(' · ') }}</p>
 
@@ -154,6 +183,26 @@ export default {
                                 <span class="world-welcome-panel-item-reason">{{ s.reason }}</span>
                             </div>
                             <button class="action-btn" @click="$emit('explore', s)">{{ suggestionActionLabel(s) }}</button>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- 0.5.6 — Geographic Place Navigation & Arrival. A
+                     SEPARATE section from "Nearby" above: those are
+                     landmarks/structures/collaborators actually placed
+                     in THIS World; these are cross-World candidate
+                     identities — never merged into the same list, so a
+                     viewer never mistakes a geographic guess for
+                     confirmed World content. -->
+                <section v-if="nearbyGeographicPlaces.length" class="world-welcome-panel-section">
+                    <h4 class="world-welcome-panel-section-title">Nearby Places</h4>
+                    <ul class="world-welcome-panel-list">
+                        <li v-for="place in nearbyGeographicPlaces" :key="place.fingerprintKey" class="world-welcome-panel-item">
+                            <div class="world-welcome-panel-item-info">
+                                <span class="world-welcome-panel-item-title">● {{ place.displayName }}</span>
+                                <span class="world-welcome-panel-item-reason">{{ place.distance }} m<span v-if="place.direction"> · {{ place.direction }}</span></span>
+                            </div>
+                            <button class="action-btn" @click="$emit('go-to-place', place.fingerprintKey)">Go to Place</button>
                         </li>
                     </ul>
                 </section>

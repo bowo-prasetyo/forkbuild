@@ -10658,9 +10658,191 @@ already built.
 > person actually BROWSE and UNDERSTAND them, without the UI ever
 > claiming more certainty than the architecture actually has?**
 
-What's left, and deliberately unbuilt: `PlaceEquivalenceClaim`, a
-configurable directory sort, confidence scores, and every item
-0.5.2/0.5.3/0.5.4's own "Deliberately excluded" lists already named and
-this milestone left exactly as untouched. Each is sized on its own,
-exactly like every "Deliberately excluded" list in this document
-before it.
+## 0.5.6 — Geographic Place Navigation & Arrival
+
+0.5.5 could show a geographic place candidate and highlight its
+constituent regions on a map, but the viewer still had to manually
+figure out how to actually get there. The question this milestone
+answers:
+
+> "I found a place. Now take me there."
+
+The obvious implementation — give a geographic place a stored position
+in `core/World.js` — was deliberately rejected. It would have quietly
+undone every restraint 0.5.4/0.5.5 fought to keep: the moment a
+candidate identity gets a permanent slot in the World's own document,
+"candidate" stops being true. Instead:
+
+> A Geographic Place Is Navigable; It Does Not Become World Content.
+
+### What shipped
+
+- **`core/GeographicPlaceNavigation.js`** — the derived id space and
+  every pure function this milestone needs, none of them touching a
+  store, a session, or the World:
+  - `geographicPlaceLocationId(fingerprintKey)`/`isGeographicPlaceLocationId()`/
+    `geographicPlaceFingerprintKeyFromLocationId()` — the
+    `place:<fingerprintKey>` id a geographic place is addressed by
+    everywhere in this codebase, never a newly generated persistent
+    identity.
+  - `deriveGeographicPlaceNavigationTarget(place)` — "where is the
+    place?" answered the only way this architecture is willing to: by
+    reusing `core/GeographicPlaceView.js`'s own deterministic
+    `representativeRegion` pick, never re-deriving or re-ranking
+    anything of its own. Returns an IDENTITY (`worldId`/`regionId`),
+    deliberately never a position — position is layout-dependent,
+    resolved one layer up.
+  - `deriveNearbyGeographicPlaces(entries, viewerPosition, radius)` —
+    the pure distance/direction math behind "Nearby Places," its own
+    300m default radius (deliberately NOT `core/WorldSpatialContext.js`'s
+    ~100m proximity window — a geographic place should be discoverable
+    from much further away than a landmark sitting on top of the
+    viewer). No `visitors`/`lastVisited`/`distance` is ever stored;
+    every row is recomputed fresh on every call.
+  - `searchGeographicPlaces(places, query)` — a lightweight filter over
+    displayName, every community name, and every region's own name.
+    Never a second index.
+- **`application/WorldLocationDirectory.js`** — `find()` now resolves a
+  `place:<fingerprintKey>` id by reusing `deriveGeographicPlaceNavigationTarget()`'s
+  representative-region pick, then reusing that region's own
+  already-computed, layout-offset `WorldLocation` wholesale (from
+  `list()`) rather than recomputing an offset a second time. Only the
+  id/title/kind differ from the plain region location. `list()` itself
+  is untouched — a geographic place candidate is reachable through
+  `find()`, never a row a plain Locations browse sees.
+- **`core/WorldLocationKind.js`** — a new `GEOGRAPHIC_PLACE` kind,
+  documented as a DERIVED destination, deliberately not added to
+  `core/World.js`.
+- **`application/WorldNavigationSession.js`** —
+  `getNearbyGeographicPlaces(radius)` resolves each candidate's
+  position through `WorldLocationDirectory` (the SAME lookup
+  `focusLocation()` itself uses, so "how far away" and "where does Go
+  To Place actually take me" can never disagree) and
+  `searchGeographicPlaces(query)`, a thin delegation over the pure
+  search function. `focusLocation('place:<key>')` needs no new method
+  at all — the existing entry point absorbs the new destination kind.
+  `getWelcomeContext()` now threads already-resolved nearby places
+  through to `WorldWelcomeContext`.
+- **`core/WorldWelcomeContext.js`** — an optional `nearbyGeographicPlaces`
+  array and a `primaryGeographicPlace` getter (nearest first), byte-
+  identical for every pre-0.5.6 caller that never passes it.
+- **`ui/components/GeographicPlaceDirectoryPanel.js`** — a "Nearby
+  Places" section (distance/direction, a "Go" action) above the
+  existing alphabetical list, plus a search box filtering the directory
+  client-side through the pure search function.
+- **`ui/components/GeographicPlacePanel.js`** — a new "Go to Place"
+  button alongside "Show on Map," emitting `go-to-place` for the host
+  to route through `focusLocation()`.
+- **`ui/components/WorldWelcomePanel.js`** — an arrival note ("You are
+  in Willow Village" for a real, human-authored `WorldRegion`; "You are
+  near Kawahara Village" for the closest geographic place candidate —
+  never the same phrasing for both) and a "Nearby Places" section,
+  separate from the existing "Nearby" landmarks/structures/collaborators
+  list so a viewer never mistakes a cross-World geographic guess for
+  confirmed World content.
+- **`ui/views/WorldView.js`** — `nearbyGeographicPlaces`, refreshed on
+  the same cadence as `spatialContext`/`mapContent`; the compass's
+  contextual markers and the nav HUD legend both extend to a `place`
+  kind; `goToGeographicPlace(fingerprintKey)` is the ONE new navigation
+  function, reused from every surface (directory, place panel, compass
+  via the directory, welcome panel) rather than a `focusGeographicPlace()`.
+- **`tests/GeographicPlaceNavigation.test.js`** — 4 sections, 82
+  assertions: the pure navigation/distance/search functions,
+  `WorldLocationDirectory` resolving a geographic-place id in
+  isolation, `WorldNavigationSession` wiring, and a CAPSTONE where
+  three replicas describing approximately the same ground in three
+  separate Worlds converge on one byte-identical navigation
+  destination — reachable identically from the directory, the
+  region/map path, and the compass/nearby path, unaffected by which
+  claim currently ranks first, while a geographically unrelated nearby
+  region stays its own separate destination throughout.
+
+### One resolution path, reused everywhere
+
+Every surface this milestone adds — the directory's "Go to Place," a
+place panel's "Go to Place," the compass's contextual markers, the
+World View's "Nearby Places" legend, `WorldWelcomePanel`'s own arrival
+section — resolves a geographic place through the exact same call:
+`session.focusLocation(geographicPlaceLocationId(fingerprintKey))`.
+None of them recompute a layout offset, a distance, or a direction
+independently. This is also why there is no `focusGeographicPlace()`
+anywhere in this codebase: the existing abstraction from 0.3.9/0.2.94
+was never actually about STRUCTURE/LANDMARK/REGION specifically, it
+was always "somewhere a camera can be sent" — a geographic place
+candidate qualifies without needing to become anything more permanent
+than that.
+
+### Deliberately excluded
+
+- **A `WorldGeographicPlace` stored in `core/World.js`.** The entire
+  point of this milestone — see "One architectural principle" above.
+- **`focusGeographicPlace()`, or any second camera/navigation
+  mechanism.** Every new entry point routes through the existing
+  `focusLocation()`.
+- **Persisted visit history, favorites, or "recently navigated
+  places."** `getNearbyGeographicPlaces()` recomputes distance fresh on
+  every call — no `visitors`/`lastVisited` field exists anywhere for
+  this milestone to have populated.
+- **A confidence-weighted or radius-sensitive "arrival" — snapping the
+  camera to the exact center, entering some special mode, or treating
+  proximity as confirmation.** "Go to Place" moves the camera with the
+  SAME offset framing every other destination gets; arrival is still
+  only ever "near," never "in."
+- **A second search index, fuzzy matching, or ranking by relevance.**
+  `searchGeographicPlaces()` is a plain case-insensitive substring
+  filter over the directory the caller already has.
+- **Any change to how a region is grouped, ranked, or represented.**
+  `core/PlaceFingerprint.js`, `core/PlaceIdentity.js`,
+  `core/GeographicPlaceResolution.js`, and `core/GeographicPlaceView.js`
+  are completely untouched — this milestone only ever resolves a
+  navigation target from what they already produce.
+
+```text
+0.5.5   Geographic Place Directory & Identity UX                 ✓
+             │
+             ▼
+0.5.6   Geographic Place Navigation & Arrival                    ✓
+             ├── GeographicPlaceNavigation — place:<fingerprintKey> id
+             │   space, deriveGeographicPlaceNavigationTarget()'s
+             │   deterministic representative pick, distance/direction
+             │   math, search — all pure, none of it stored
+             ├── WorldLocationDirectory#find() — resolves a geographic
+             │   place id by reusing the representative region's own
+             │   already-offset location; list() itself untouched
+             ├── WorldLocationKind.GEOGRAPHIC_PLACE — a derived
+             │   destination kind, deliberately never added to World.js
+             ├── WorldNavigationSession#getNearbyGeographicPlaces()/
+             │   searchGeographicPlaces() — focusLocation() needs no
+             │   new method at all
+             ├── WorldWelcomeContext — nearbyGeographicPlaces/
+             │   primaryGeographicPlace, "You are near X"
+             ├── GeographicPlaceDirectoryPanel/GeographicPlacePanel/
+             │   WorldWelcomePanel — "Go to Place," Nearby Places,
+             │   search
+             ├── WorldView — compass + nav HUD extended to a `place`
+             │   marker kind, one goToGeographicPlace() reused
+             │   everywhere
+             └── GeographicPlaceNavigation.test.js — 82 assertions;
+                 CAPSTONE proves three replicas converge on one
+                 byte-identical destination reachable identically from
+                 the directory, the map, and the compass/nearby path
+```
+
+> **0.5.5 — Now that a client can tell candidates apart, how does a
+> person actually BROWSE and UNDERSTAND them, without the UI ever
+> claiming more certainty than the architecture actually has?**
+> **0.5.6 — Now that a person can find a geographic place candidate,
+> how do they actually GET there — without it ever becoming a fourth
+> kind of World geometry to get there with?**
+
+What's left, and deliberately unbuilt: a `WorldGeographicPlace` stored
+anywhere, `focusGeographicPlace()`, persisted visit history/favorites,
+confidence-weighted arrival, a second search index, and every item
+0.5.2 through 0.5.5's own "Deliberately excluded" lists already named
+and this milestone left exactly as untouched. Each is sized on its
+own, exactly like every "Deliberately excluded" list in this document
+before it. What began as *building a world* has now moved through
+*naming a world*, *discovering a world*, and *navigating a
+decentralized community's descriptions of that world* — four
+milestone families, each adding exactly one capability without ever
+strengthening a candidate into a fact.

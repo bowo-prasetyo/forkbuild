@@ -83,6 +83,12 @@ import { preferredClaimedName } from '../core/PlaceNamingView.js';
 import { groupRegionsByPlaceIdentity } from '../core/PlaceIdentity.js';
 import { geographicPlaceForRegion } from '../core/GeographicPlaceResolution.js';
 import { buildGeographicPlaceDirectory, geographicPlaceByKey } from '../core/GeographicPlaceDirectory.js';
+import {
+    geographicPlaceLocationId,
+    deriveNearbyGeographicPlaces,
+    searchGeographicPlaces as searchGeographicPlaceRows,
+    DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS
+} from '../core/GeographicPlaceNavigation.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -2326,6 +2332,11 @@ export class WorldNavigationSession {
         // sibling loop above for structures/landmarks, and
         // getCurrentRegionPath() below for the identical offset logic).
         const regions = this._collectRegions();
+        // 0.5.6 — Geographic Place Navigation & Arrival. Already
+        // distance-filtered/sorted, direction-labeled rows — see
+        // getNearbyGeographicPlaces()'s own header for why this is the
+        // one call site that resolution logic lives behind.
+        const nearbyGeographicPlaces = this.getNearbyGeographicPlaces();
 
         return deriveWorldWelcomeContext({
             world: activeDocument.world,
@@ -2335,7 +2346,8 @@ export class WorldNavigationSession {
             structureTitles,
             collaborators,
             placeContexts,
-            regions
+            regions,
+            nearbyGeographicPlaces
         });
     }
 
@@ -2476,6 +2488,61 @@ export class WorldNavigationSession {
         const regions = this._collectRawRegions();
         const claims = this._collectClaimsFor(regions);
         return geographicPlaceByKey(fingerprintKey, regions, claims, options);
+    }
+
+    // 0.5.6 — Geographic Place Navigation & Arrival. Every geographic
+    // place candidate within `radius` of the viewer's current position
+    // (avatar position, falling back to camera position — the exact
+    // same "where am I" fallback getWelcomeContext()/getCurrentRegionPath()
+    // already use), nearest first. [] with no position available (no
+    // avatar, no camera — e.g. before start()), the same graceful
+    // degradation every other position-dependent read in this file
+    // already has.
+    //
+    // Deliberately resolves each place's navigable position through
+    // `_worldLocationDirectory` — the SAME single source of truth
+    // focusLocation() itself reads via its own `place:<fingerprintKey>`
+    // resolution (application/WorldLocationDirectory.js#
+    // _geographicPlaceLocation()) — rather than recomputing a layout
+    // offset here a second time. "How far away is it" and "where does
+    // Go To Place actually take me" can never disagree, by
+    // construction: both answers come from the exact same lookup.
+    //
+    // No distance/visitor/lastVisited is ever stored — every row
+    // returned here is recomputed fresh on every call, exactly like
+    // getGeographicPlaceDirectory() itself already is.
+    getNearbyGeographicPlaces(radius = DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS) {
+        const position = this.getAvatarPosition() || this.getCameraPosition();
+        if (!position) {
+            return [];
+        }
+        const entries = [];
+        for (const place of this.getGeographicPlaceDirectory()) {
+            const location = this._worldLocationDirectory.find(geographicPlaceLocationId(place.fingerprintKey));
+            if (!location) {
+                continue;
+            }
+            entries.push({
+                fingerprintKey: place.fingerprintKey,
+                displayName: place.displayName,
+                descriptionCount: place.descriptionCount,
+                worldCount: place.worldCount,
+                authorCount: place.authorCount,
+                position: { x: location.position.x, y: location.position.y, z: location.position.z }
+            });
+        }
+        return deriveNearbyGeographicPlaces(entries, position, radius);
+    }
+
+    // 0.5.6 — a lightweight, derived filter over getGeographicPlaceDirectory()'s
+    // own rows — see core/GeographicPlaceNavigation.js#searchGeographicPlaces()
+    // for what it matches against (displayName, every community name,
+    // every region's own name). Never a second index kept in sync with
+    // anything; every call re-derives the directory fresh, the same
+    // "cheap, never cached" posture getGeographicPlaceDirectory() itself
+    // already holds to.
+    searchGeographicPlaces(query, options = {}) {
+        return searchGeographicPlaceRows(this.getGeographicPlaceDirectory(options), query);
     }
 
     // Every claim this replica has on file for any of `regions` —

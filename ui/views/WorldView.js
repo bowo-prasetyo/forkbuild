@@ -33,6 +33,7 @@ import PlaceNamingPanel from '../components/PlaceNamingPanel.js';
 import GeographicPlaceDirectoryPanel from '../components/GeographicPlaceDirectoryPanel.js';
 import GeographicPlacePanel from '../components/GeographicPlacePanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
+import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -212,7 +213,18 @@ export default {
             const landmarks = (spatialContext.value.nearbyLandmarks || []).map((l) => (
                 { id: `landmark:${l.id}`, direction: l.direction, kind: 'landmark', label: l.title }
             ));
-            return structures.concat(collaborators, landmarks).filter((m) => m.direction).slice(0, 5);
+            // 0.5.6 — Geographic Place Navigation & Arrival. A derived
+            // marker per nearby geographic place candidate, read off
+            // `nearbyGeographicPlaces` (its OWN much-larger radius —
+            // see core/GeographicPlaceNavigation.js#
+            // DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS — not
+            // spatialContext's own ~100m proximity window), appended
+            // last so existing structure/collaborator/landmark markers
+            // keep priority under the same 5-marker cap below.
+            const places = (nearbyGeographicPlaces.value || []).map((p) => (
+                { id: `place:${p.fingerprintKey}`, direction: p.direction, kind: 'place', label: p.displayName }
+            ));
+            return structures.concat(collaborators, landmarks, places).filter((m) => m.direction).slice(0, 5);
         });
         const showLocationsPanel = ref(false);
         const worldLocations = ref([]);
@@ -311,6 +323,15 @@ export default {
         const showGeographicPlacePanel = ref(false);
         const geographicPlace = ref(null);
         const mapHighlightRegionKeys = ref([]);
+        // 0.5.6 — Geographic Place Navigation & Arrival.
+        // `nearbyGeographicPlaces` is session.getNearbyGeographicPlaces()'s
+        // own already-sorted/distance/direction-labeled rows, refreshed
+        // on the SAME cadence as spatialContext/mapContent above (every
+        // refreshSpatialUI() tick) — the compass and the nav HUD legend
+        // both read this ref directly; the directory panel's own
+        // "Nearby Places" section is populated from it too when the
+        // panel opens (see openGeographicPlaceDirectory() below).
+        const nearbyGeographicPlaces = ref([]);
         // 0.2.99 — World Collaboration UX. `worldMembers`/
         // `worldPresenceRoster` are the RAW facts session.
         // listWorldMembers()/getWorldPresenceRoster() already return for
@@ -779,6 +800,11 @@ export default {
             // exact same cadence as spatialContext above — see
             // `mapContent`'s own ref comment.
             mapContent.value = session.getMapContent((identityId) => resolveIdentityDisplayName(identityId));
+
+            // 0.5.6 — Geographic Place Navigation & Arrival. Re-read on
+            // the exact same cadence — see `nearbyGeographicPlaces`'s
+            // own ref comment.
+            nearbyGeographicPlaces.value = session.getNearbyGeographicPlaces();
 
             // 0.2.38 — see the ref's own comment above.
             if (typeof session.getRemoteAvatarDiagnostics === 'function') {
@@ -1625,6 +1651,37 @@ export default {
             showGeographicPlaceDirectory.value = true;
         }
 
+        // -----------------------------------------------------------------
+        // 0.5.6 — Geographic Place Navigation & Arrival
+        // -----------------------------------------------------------------
+        //
+        // The ONE new navigation entry point this milestone adds, reused
+        // from every surface a geographic place can be reached from
+        // (the directory's own "Nearby Places" section, a place panel's
+        // "Go to Place" button, the compass's contextual markers via the
+        // Places directory, and WorldWelcomePanel's own "Nearby Places"
+        // section) — never a `focusGeographicPlace()`, just
+        // session.focusLocation() addressed by this place's own derived
+        // `place:<fingerprintKey>` id (core/GeographicPlaceNavigation.js),
+        // the exact same call/return-value contract every other
+        // destination in this file already uses. `false` (an unknown or
+        // no-longer-resolvable place) surfaces the same feedback message
+        // openGeographicPlace() already shows for a stale directory row.
+        function goToGeographicPlace(fingerprintKey) {
+            const moved = session.focusLocation(geographicPlaceLocationId(fingerprintKey));
+            if (!moved) {
+                feedback.show('That geographic place is no longer available');
+                return;
+            }
+            refreshSpatialUI();
+            showGeographicPlaceDirectory.value = false;
+            showGeographicPlacePanel.value = false;
+            geographicPlace.value = null;
+            if (showWelcomePanel.value) {
+                closeWelcomePanel();
+            }
+        }
+
         function closeGeographicPlaceDirectory() {
             showGeographicPlaceDirectory.value = false;
         }
@@ -2378,6 +2435,8 @@ export default {
             focusRegionFromPlace,
             openNamesFromPlace,
             showGeographicPlaceOnMap,
+            nearbyGeographicPlaces,
+            goToGeographicPlace,
             goHome,
             openLocationsPanel,
             closeLocationsPanel,
@@ -3031,7 +3090,9 @@ export default {
             <GeographicPlaceDirectoryPanel
                 v-if="showGeographicPlaceDirectory"
                 :places="geographicPlaces"
+                :nearby="nearbyGeographicPlaces"
                 @open-place="openGeographicPlace"
+                @go-to-place="goToGeographicPlace"
                 @cancel="closeGeographicPlaceDirectory"
             />
             <GeographicPlacePanel
@@ -3040,6 +3101,7 @@ export default {
                 @focus-region="focusRegionFromPlace"
                 @open-names="openNamesFromPlace"
                 @show-on-map="showGeographicPlaceOnMap"
+                @go-to-place="goToGeographicPlace(geographicPlace.fingerprintKey)"
                 @cancel="closeGeographicPlacePanel"
             />
             <WorldWelcomePanel
@@ -3049,6 +3111,7 @@ export default {
                 :returning="welcomeIsReturning"
                 :last-visited-at="worldReturnInfo && worldReturnInfo.lastVisitedAt"
                 @explore="exploreWelcomeSuggestion"
+                @go-to-place="goToGeographicPlace"
                 @dismiss="closeWelcomePanel"
             />
             <WorldMembersPanel
@@ -3109,6 +3172,16 @@ export default {
                     <div v-for="landmark in spatialContext.nearbyLandmarks.slice(0, 3)" :key="landmark.id" class="world-view-nav-marker landmark">
                         <span class="marker-direction">{{ landmark.direction }}</span>
                         <span class="marker-label">★ {{ landmark.title }} ({{ landmark.distance }}m)</span>
+                    </div>
+                </div>
+                <!-- 0.5.6 — same legend treatment for nearby geographic
+                     place candidates, its own much larger radius (see
+                     core/GeographicPlaceNavigation.js#
+                     DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS). -->
+                <div v-if="nearbyGeographicPlaces && nearbyGeographicPlaces.length > 0" class="world-view-nav-markers">
+                    <div v-for="place in nearbyGeographicPlaces.slice(0, 3)" :key="place.fingerprintKey" class="world-view-nav-marker place">
+                        <span class="marker-direction">{{ place.direction }}</span>
+                        <span class="marker-label">⬢ {{ place.displayName }} ({{ place.distance }}m)</span>
                     </div>
                 </div>
             </div>

@@ -114,7 +114,16 @@ export class WorldWelcomeContext {
         // milestone (and never passes `regions` to
         // deriveWorldWelcomeContext() below) gets byte-identical
         // behavior.
-        currentRegionPath = []
+        currentRegionPath = [],
+        // 0.5.6 — Geographic Place Navigation & Arrival. Already
+        // distance-filtered/sorted rows from
+        // application/WorldNavigationSession.js#getNearbyGeographicPlaces()
+        // — `{ fingerprintKey, displayName, distance, direction,
+        // descriptionCount, worldCount, authorCount, position }`.
+        // Optional and empty by default, so every caller that predates
+        // this milestone gets byte-identical behavior, the same posture
+        // `currentRegionPath` above already established.
+        nearbyGeographicPlaces = []
     } = {}) {
         this._world = world || null;
         this._currentPlace = currentPlace || null;
@@ -124,6 +133,7 @@ export class WorldWelcomeContext {
         this._suggestedDestinations = Array.from(suggestedDestinations);
         this._activitySummary = Array.from(activitySummary);
         this._currentRegionPath = Array.from(currentRegionPath);
+        this._nearbyGeographicPlaces = Array.from(nearbyGeographicPlaces);
     }
     
     get world() { return this._world; }
@@ -143,7 +153,22 @@ export class WorldWelcomeContext {
     // The World Derives Geography From Names (0.5.0)."
     get currentRegionPath() { return this._currentRegionPath; }
     get placeName() { return describePlace(this._currentRegionPath); }
-    
+
+    // 0.5.6 — Geographic Place Navigation & Arrival. Nearest first —
+    // see getNearbyGeographicPlaces()'s own sort. `primaryGeographicPlace`
+    // is the single closest one (or null with none nearby), the arrival
+    // banner's own "You are near X" data source — deliberately a
+    // SEPARATE getter from `currentPlace`/`placeName` above: those
+    // describe a named WorldRegion the viewer is actually standing
+    // INSIDE (real, human-authored geometry), while a geographic place
+    // is only ever a cross-World candidate identity — "near," never
+    // "in," regardless of whether the viewer happens to be standing
+    // inside its representative region's own radius. See
+    // docs/Principles.md, "A Geographic Place Is Navigable; It Does Not
+    // Become World Content (0.5.6)."
+    get nearbyGeographicPlaces() { return this._nearbyGeographicPlaces; }
+    get primaryGeographicPlace() { return this._nearbyGeographicPlaces[0] || null; }
+
     // Count of structures in this welcome context
     get structureCount() { return this._nearbyStructures.length; }
     
@@ -155,9 +180,10 @@ export class WorldWelcomeContext {
     
     // Whether there's anything interesting to show
     get hasContent() {
-        return this.structureCount > 0 || 
-               this.landmarkCount > 0 || 
-               this.collaboratorCount > 0;
+        return this.structureCount > 0 ||
+               this.landmarkCount > 0 ||
+               this.collaboratorCount > 0 ||
+               this._nearbyGeographicPlaces.length > 0;
     }
     
     // Get the primary suggested destination (first in list)
@@ -221,6 +247,20 @@ export class WorldWelcomeContext {
                 distance: r.distance
             })),
             placeName: this.placeName,
+            nearbyGeographicPlaces: this._nearbyGeographicPlaces.map(p => ({
+                fingerprintKey: p.fingerprintKey,
+                displayName: p.displayName,
+                distance: p.distance,
+                direction: p.direction,
+                descriptionCount: p.descriptionCount,
+                worldCount: p.worldCount,
+                authorCount: p.authorCount
+            })),
+            primaryGeographicPlace: this.primaryGeographicPlace ? {
+                fingerprintKey: this.primaryGeographicPlace.fingerprintKey,
+                displayName: this.primaryGeographicPlace.displayName,
+                distance: this.primaryGeographicPlace.distance
+            } : null,
             structureCount: this.structureCount,
             landmarkCount: this.landmarkCount,
             collaboratorCount: this.collaboratorCount,
@@ -243,6 +283,12 @@ export class WorldWelcomeContext {
 //   - placeContexts: optional pre-computed PlaceContext array from WorldCurationContext
 //   - regions: optional array of WorldRegion instances (0.5.0) — omit
 //     for byte-identical pre-0.5.0 behavior
+//   - nearbyGeographicPlaces: optional, ALREADY resolved/sorted rows
+//     (0.5.6) — see application/WorldNavigationSession.js#
+//     getNearbyGeographicPlaces(), the one place that resolution
+//     happens; this function does no filtering or sorting of its own,
+//     it only carries the array through. Omit for byte-identical
+//     pre-0.5.6 behavior.
 //
 // Returns: WorldWelcomeContext instance
 export function deriveWorldWelcomeContext({
@@ -253,7 +299,8 @@ export function deriveWorldWelcomeContext({
     structureTitles = new Map(),
     collaborators = [],
     placeContexts = [],
-    regions = []
+    regions = [],
+    nearbyGeographicPlaces = []
 } = {}) {
     if (!world) {
         throw new Error('deriveWorldWelcomeContext requires a world');
@@ -410,7 +457,8 @@ export function deriveWorldWelcomeContext({
         nearbyCollaborators,
         suggestedDestinations: suggestions,
         activitySummary,
-        currentRegionPath
+        currentRegionPath,
+        nearbyGeographicPlaces
     });
 }
 

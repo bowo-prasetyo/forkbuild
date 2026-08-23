@@ -43,6 +43,10 @@ export class WorldLocation {
     get isStructure() { return this._kind === WorldLocationKind.STRUCTURE; }
     get isLandmark() { return this._kind === WorldLocationKind.LANDMARK; }
     get isRegion() { return this._kind === WorldLocationKind.REGION; }
+    // 0.5.6 — a WorldLocation derived from a geographic place candidate
+    // rather than a single World-content object — see
+    // core/GeographicPlaceNavigation.js's own header.
+    get isGeographicPlace() { return this._kind === WorldLocationKind.GEOGRAPHIC_PLACE; }
 
     toJSON() {
         return {

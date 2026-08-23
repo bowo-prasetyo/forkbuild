@@ -19,6 +19,14 @@
 // A world-wide place directory that could also mutate naming claims
 // would blur the same line 0.5.4 was careful to draw: this panel shows
 // candidacy, it never acts on it.
+//
+// 0.5.6 — Geographic Place Navigation & Arrival. "Go to Place" is the
+// one NEW action this milestone adds, and it is still just navigation:
+// the host handles the emit by calling the exact same
+// session.focusLocation() every other destination in this codebase
+// already uses, addressed by this place's own derived
+// `place:<fingerprintKey>` id (see core/GeographicPlaceNavigation.js)
+// — never a second camera mechanism, never a `focusGeographicPlace()`.
 export default {
     name: 'GeographicPlacePanel',
     props: {
@@ -28,7 +36,7 @@ export default {
             default: null
         }
     },
-    emits: ['focus-region', 'open-names', 'show-on-map', 'cancel'],
+    emits: ['focus-region', 'open-names', 'show-on-map', 'go-to-place', 'cancel'],
     methods: {
         formatRegionLabel(region) {
             const kind = region.kind ? `${region.kind.charAt(0).toUpperCase()}${region.kind.slice(1)}` : 'Place';
@@ -107,6 +115,7 @@ export default {
                 </section>
 
                 <div class="modal-actions">
+                    <button class="action-btn action-btn--primary" @click="$emit('go-to-place')">Go to Place</button>
                     <button class="action-btn" @click="$emit('show-on-map')">Show on Map</button>
                     <button class="action-btn" @click="$emit('cancel')">Close</button>
                 </div>
