@@ -28,6 +28,7 @@ import WorldPresenceIndicator from '../components/WorldPresenceIndicator.js';
 import WorldCollaboratorIndicator, { buildSpatialCollaboratorRows } from '../components/WorldCollaboratorIndicator.js';
 import { buildWorldCollaborationRoster } from '../components/WorldCollaborationRoster.js';
 import WorldWelcomePanel from '../components/WorldWelcomePanel.js';
+import WorldMapPanel from '../components/WorldMapPanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 
 const DRAG_THRESHOLD_PX = 6;
@@ -61,7 +62,7 @@ export default {
         AvatarInfoPanel, NearbyAvatarsPanel,
         CompassIndicator, LocationsPanel, LandmarkFormModal, RegionFormModal,
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
-        WorldWelcomePanel
+        WorldWelcomePanel, WorldMapPanel
     },
     setup() {
         const route = useRoute();
@@ -258,6 +259,17 @@ export default {
         // RegionFormModal's own header.
         const showRegionForm = ref(false);
         const regionFormTarget = ref(null);
+        // 0.5.1 — World Maps & Geographic Navigation. `mapContent` is
+        // session.getMapContent()'s own shape — refreshed on the SAME
+        // cadence as spatialContext/cameraPosition below (every
+        // refreshSpatialUI() tick, not just on open) so a collaborator's
+        // dot keeps moving while the map stays open, the same "always
+        // current, never a second source of truth" posture spatialContext
+        // itself already has. See ui/components/WorldMapPanel.js's own
+        // header for why panning/zooming that view is deliberately NOT
+        // reset by this refresh.
+        const showMapPanel = ref(false);
+        const mapContent = ref({ regions: [], landmarks: [], structures: [], collaborators: [], viewerPosition: null });
         // 0.2.99 — World Collaboration UX. `worldMembers`/
         // `worldPresenceRoster` are the RAW facts session.
         // listWorldMembers()/getWorldPresenceRoster() already return for
@@ -721,6 +733,11 @@ export default {
             // (terrain zone, hydrology feature, nearby structures, collaborators)
             // from current camera position for contextual location descriptions.
             spatialContext.value = spatialContextService.getCurrentContext();
+
+            // 0.5.1 — World Maps & Geographic Navigation. Re-read on the
+            // exact same cadence as spatialContext above — see
+            // `mapContent`'s own ref comment.
+            mapContent.value = session.getMapContent((identityId) => resolveIdentityDisplayName(identityId));
 
             // 0.2.38 — see the ref's own comment above.
             if (typeof session.getRemoteAvatarDiagnostics === 'function') {
@@ -1389,6 +1406,39 @@ export default {
                 feedback.show('Region removed');
             });
             refreshLocationsPanel();
+            refreshSpatialUI();
+        }
+
+        // -----------------------------------------------------------------
+        // 0.5.1 — World Maps & Geographic Navigation
+        // -----------------------------------------------------------------
+        //
+        // openMapPanel() re-reads mapContent immediately (never waits for
+        // the next 3-second refreshSpatialUI() tick) so the map's first
+        // paint is never stale. Once open, refreshSpatialUI() itself keeps
+        // mapContent current — see that ref's own comment. Clicking a
+        // marker on the map routes through the exact SAME
+        // focusLocation()/focusCollaborator() every other navigation
+        // entry point in this file already uses (goHome,
+        // focusLocationFromPanel, the Explore panel's suggestions) —
+        // WorldMapPanel itself never touches the camera or the session
+        // directly.
+        function openMapPanel() {
+            mapContent.value = session.getMapContent((identityId) => resolveIdentityDisplayName(identityId));
+            showMapPanel.value = true;
+        }
+
+        function closeMapPanel() {
+            showMapPanel.value = false;
+        }
+
+        function focusLocationFromMap(locationId) {
+            session.focusLocation(locationId);
+            refreshSpatialUI();
+        }
+
+        function focusCollaboratorFromMap(deviceId) {
+            session.focusCollaborator(deviceId);
             refreshSpatialUI();
         }
 
@@ -2072,6 +2122,12 @@ export default {
             landmarkFormTarget,
             showRegionForm,
             regionFormTarget,
+            showMapPanel,
+            mapContent,
+            openMapPanel,
+            closeMapPanel,
+            focusLocationFromMap,
+            focusCollaboratorFromMap,
             goHome,
             openLocationsPanel,
             closeLocationsPanel,
@@ -2164,6 +2220,7 @@ export default {
             <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
                 <button class="action-btn" @click="goHome">Home</button>
                 <button class="action-btn" @click="openLocationsPanel">Locations</button>
+                <button class="action-btn" @click="openMapPanel">Map</button>
                 <button
                     v-if="activeDocumentInfo"
                     class="action-btn action-btn--explore"
@@ -2676,6 +2733,13 @@ export default {
                 :region="regionFormTarget"
                 @save="onSaveRegionForm"
                 @cancel="closeRegionForm"
+            />
+            <WorldMapPanel
+                v-if="showMapPanel"
+                :content="mapContent"
+                @focus-location="focusLocationFromMap"
+                @focus-collaborator="focusCollaboratorFromMap"
+                @cancel="closeMapPanel"
             />
             <WorldWelcomePanel
                 v-if="showWelcomePanel"

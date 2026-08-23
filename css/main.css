@@ -4101,3 +4101,138 @@ html, body {
     color: #e0e0e0;
     border-color: #4caf7d;
 }
+
+/* 0.5.1 — World Maps & Geographic Navigation.
+   ui/components/WorldMapPanel.js follows the SAME .modal-overlay/
+   .modal-panel convention as .locations-panel/.region-form above, just
+   wider — the map itself needs the room, everything else (hint text,
+   toolbar, close button) stays the same shape every other panel here
+   already has. */
+.world-map-panel {
+    width: 680px;
+}
+
+.world-map-hint {
+    font-size: 0.78rem;
+    color: #909090;
+    margin: 0 0 0.75rem;
+    line-height: 1.4;
+}
+
+.world-map-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.world-map-scale {
+    font-size: 0.78rem;
+    color: #909090;
+    min-width: 5.5rem;
+    text-align: center;
+}
+
+.world-map-toolbar .action-btn:last-child {
+    margin-left: auto;
+}
+
+.world-map-svg {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    background: #101410;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.world-map-background {
+    fill: #101410;
+}
+
+/* Regions are drawn broadest-first (see WorldMapPanel's own
+   projectedRegions ordering) so a CONTINENT never visually buries a
+   VILLAGE drawn inside it; tier only ever changes stroke/label
+   weight, never geometry — see core/WorldMapProjection.js's own header
+   on presentation tiers. */
+.world-map-region {
+    fill: rgba(76, 175, 125, 0.08);
+    stroke: rgba(76, 175, 125, 0.5);
+    stroke-width: 1.5;
+    cursor: pointer;
+}
+
+.world-map-region:hover {
+    fill: rgba(76, 175, 125, 0.16);
+    stroke: #4caf7d;
+}
+
+.world-map-region-label {
+    fill: #c8e6d5;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+    font-family: inherit;
+}
+
+.world-map-region-label--tier-1 { font-size: 15px; font-weight: 600; }
+.world-map-region-label--tier-2 { font-size: 12px; font-weight: 600; }
+.world-map-region-label--tier-3 { font-size: 10px; }
+.world-map-region-label--tier-4 { font-size: 9px; }
+
+.world-map-marker {
+    cursor: pointer;
+}
+
+.world-map-marker-glyph {
+    font-size: 14px;
+    fill: #e0e0e0;
+    pointer-events: none;
+}
+
+.world-map-marker--structure .world-map-marker-glyph {
+    fill: #9fc7ff;
+}
+
+.world-map-marker--landmark .world-map-marker-glyph {
+    fill: #f0c95c;
+}
+
+.world-map-marker--viewer .world-map-marker-glyph {
+    fill: #4caf7d;
+    font-size: 16px;
+}
+
+.world-map-marker-label {
+    font-size: 9px;
+    fill: #a0a0a0;
+    pointer-events: none;
+    font-family: inherit;
+}
+
+.world-map-marker--viewer .world-map-marker-label {
+    fill: #4caf7d;
+    font-weight: 600;
+}
+
+.world-map-collaborator-dot {
+    fill: #d97757;
+    stroke: #1a1a1a;
+    stroke-width: 1.5;
+}
+
+.world-map-collaborator-initial {
+    font-size: 8px;
+    fill: #1a1a1a;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.world-map-empty {
+    font-size: 0.8rem;
+    color: #707070;
+    text-align: center;
+    margin: 0.75rem 0 0;
+}

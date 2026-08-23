@@ -9723,3 +9723,159 @@ fallback naming for unnamed places, and a UI for the `parentRegionId`
 field the derivation itself was designed never to need. Each is named,
 not forgotten, sized on its own, exactly like every "Deliberately
 excluded" list in this document before it.
+
+## 0.5.1 — World Maps & Geographic Navigation
+
+0.5.0 answered "what is this place called?" and deliberately stopped
+there — its own "Deliberately excluded" list named the gap directly: "a
+rendered 3D boundary... a renderer pass for visualizing region extents
+directly is future work, sized on its own." Naming a place is only half
+the point if nobody can ever SEE the geography that naming produced.
+This milestone is that other half: not another domain object, not
+another protocol, not another persistence layer — a way to look at the
+World someone has already collaboratively named and see where
+everything actually is.
+
+The design conversation that proposed this milestone was equally
+explicit about what a map must NOT become:
+
+> A map is a DERIVED VIEW of World content that already exists, computed
+> fresh every time it opens — never a second representation of the
+> World, and never something a viewer's own pan/zoom/click can feed
+> back into.
+
+No new geometry kind, no map-specific storage, and no click on the map
+that mutates anything. A map reads exactly what `WorldRegion`/
+`WorldLandmark`/`StructurePlacement`/spatial presence already say and
+projects it flat.
+
+### What shipped
+
+- **`core/WorldMapProjection.js`** — the pure arithmetic this milestone
+  is actually built on: `createMapViewport({ centerX, centerZ, span,
+  width, height })` describes a square window onto the ground plane;
+  `projectPosition()`/`projectRegion()` turn a World `{x,z}` (or a
+  region's own circle) into map coordinates, with `scale` uniform
+  across X and Y so a circular region always projects as a circle,
+  never an ellipse, regardless of the viewport's own aspect ratio.
+  `unprojectPoint()` is the exact inverse, used only for panning the
+  map itself, never for anything that reaches the World. North (+Z,
+  `core/CompassHeading.js`'s own fixed 0° reference) is drawn UP.
+  `regionPresentationTier(kind)` gives a `CONTINENT` more visual weight
+  than a `NEIGHBORHOOD` — a rendering-only label over `RegionKind`,
+  never a second geometry rule. `suggestMapExtent(viewerPosition,
+  points)` picks a sensible STARTING viewport (centered on the viewer,
+  wide enough to fit everything with headroom, clamped to
+  `[MIN_MAP_SPAN, MAX_MAP_SPAN]`) — this module has zero dependency on
+  Vue, SVG, or Three.js, so the same math could back a minimap or a
+  thumbnail later with no duplicated geometry.
+- **`application/WorldNavigationSession.js#getMapContent()`** — the
+  map's one data source: every region (`_collectRegions()`, reused
+  as-is), landmark, structure placement, and spatially-present
+  collaborator across every loaded document, each position already
+  offset into this session's shared/absolute layout space, plus the
+  viewer's own current position. Deliberately WORLD-WIDE, the exact
+  same scope `WorldLocationDirectory#list()` already uses for
+  navigation — never limited to `core/WorldSpatialContext.js`'s own
+  streaming/proximity radius, because "what does this World contain" and
+  "what's near me right now" are different questions with different
+  answers.
+- **`ui/components/WorldMapPanel.js`** — a top-down SVG reading of
+  `getMapContent()`, projected through `core/WorldMapProjection.js`.
+  Regions draw as circles (broadest-first, so a `CONTINENT` never
+  visually buries a `VILLAGE` inside it) with tiered labels; landmarks,
+  structures, and collaborators draw as small glyphs/dots; the viewer's
+  own position draws as a distinct, non-interactive "You" marker. Zoom
+  (+/−, scroll wheel) and "Center On Me" mutate only this component's
+  own local `centerX`/`centerZ`/`span` — never the 3D camera, never the
+  World. Clicking a region/landmark/structure emits `focus-location`;
+  clicking a collaborator emits `focus-collaborator`; the host routes
+  both straight to the SAME `session.focusLocation()`/
+  `focusCollaborator()` every other navigation entry point already
+  calls. Clicking empty map space only re-centers the flat map view
+  itself via `unprojectPoint()` — one step more conservative than "never
+  touches the World," it doesn't even touch the camera.
+- **`ui/views/WorldView.js`** — wires a "Map" button into the existing
+  navigation action row (beside Home/Locations/Explore), a `mapContent`
+  ref refreshed on the exact same `refreshSpatialUI()` cadence as
+  `cameraPosition`/`compassHeading`/`spatialContext` (one clock, never a
+  bespoke map timer) — deliberately NOT re-deriving the viewer's own
+  pan/zoom state on that cadence, so a live collaborator refresh never
+  yanks the map back to "centered on me" out from under someone looking
+  elsewhere.
+- **`tests/WorldMaps.test.js`** — 47 assertions across five sections:
+  `createMapViewport`/`projectPosition`/`unprojectPoint` (round-trip
+  exactness, the +Z-is-up convention, off-map visibility), `projectRegion`
+  (uniform scaling, the circle-vs-rectangle edge-crossing case a plain
+  point-in-rect test would miss), `regionPresentationTier` (every
+  `RegionKind`, graceful fallback for an unrecognized one),
+  `suggestMapExtent` (origin/viewer centering, the MIN/MAX clamp, the
+  single-farthest-point rule), and an integration section proving
+  `getMapContent()` gathers regions/landmarks/structures/collaborators
+  correctly and that a landmark far beyond the streaming radius still
+  appears — the map's own world-wide scope, not the shorter reach
+  `WorldSpatialContext` deliberately keeps.
+
+### Deliberately excluded
+
+- **Multi-World map projection across independently laid-out Worlds
+  drawn at once.** `getMapContent()` already offsets every position into
+  shared layout space (the same transform `WorldLocationDirectory`
+  uses), so nothing stops a future map from spanning multiple loaded
+  documents — this milestone's own `WorldMapPanel` still frames a single
+  viewport session-wide, not a curated multi-World atlas view.
+- **Hierarchical zoom-dependent decluttering keyed to region tier** (e.g.
+  automatically hiding `PLACE`-kind regions until zoomed in past some
+  threshold). `regionPresentationTier()` changes label SIZE/weight, and
+  a region already stops rendering a label below a small screen radius —
+  a fuller "zoom levels hide/reveal whole categories" system was named
+  in the design conversation and deliberately left for a future
+  milestone sized on its own.
+- **A minimap or persistent HUD-embedded map.** `WorldMapPanel` is a
+  modal, opened on demand exactly like `LocationsPanel`/`WorldMembersPanel` —
+  `core/WorldMapProjection.js` has no opinion on this and could back an
+  always-visible corner minimap later with zero new geometry, but that
+  presentation choice isn't built here.
+- **Drag-to-pan.** The map pans by clicking empty space (recentering on
+  the clicked point) and by explicit zoom controls; continuous
+  click-and-drag panning is a natural, additive interaction improvement
+  on top of the exact same `unprojectPoint()` this milestone already
+  ships, not attempted here.
+- **Rendering a region's boundary IN the 3D World view itself** (a
+  ground-plane ring at a region's actual radius). Named directly in
+  0.5.0's own "Deliberately excluded" list and still not built — this
+  milestone answers "show me the geography on a flat map," not "show me
+  the boundary while I'm standing inside the World."
+
+```text
+0.5.0   World Regions & Decentralized Place Naming              ✓
+             │
+             ▼
+0.5.1   World Maps & Geographic Navigation                      ✓
+             ├── WorldMapProjection — pure project/unproject arithmetic,
+             │   zero Vue/SVG/Three.js dependency, independently testable
+             ├── WorldNavigationSession#getMapContent() — world-wide
+             │   regions/landmarks/structures/collaborators, the SAME
+             │   scope WorldLocationDirectory already uses for navigation
+             ├── WorldMapPanel — click a place or person to move the
+             │   camera; pan/zoom the flat map itself touches nothing
+             │   else, ever
+             └── WorldMaps.test.js — 47 assertions: projection geometry,
+                 presentation tiers, extent suggestion, and a world-wide
+                 (never streaming-limited) content-gathering integration
+```
+
+> **0.5.0 — Can I name a whole AREA, and have the World derive its own
+> geography from what I named?**
+> **0.5.1 — Now that this World has a geography, can I actually SEE
+> it — every place and person on one flat map, click anything to go
+> there, without any of that ever becoming a second copy of the World
+> itself?**
+
+A World's geography stays exactly as community-authored and as
+purely-derived as 0.5.0 left it; this milestone only adds a window onto
+it. What's left, and deliberately unbuilt: multi-World atlas views,
+tier-driven zoom decluttering, an always-visible minimap, drag-to-pan,
+and the in-World 3D boundary render 0.5.0 already named. Each is sized
+on its own, exactly like every "Deliberately excluded" list in this
+document before it.

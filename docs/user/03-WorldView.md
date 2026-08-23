@@ -73,6 +73,17 @@ World content, governed by the same collaboration permissions as everything
 else you build together, never a personal, private pin only you can see or
 touch.
 
+### The World Map
+
+Next to **Locations**, the **Map** button opens a flat, top-down view of
+everywhere this session currently knows about in the World — named places,
+landmarks, structures, everyone else who's here, and a marker for you.
+Scroll or use +/− to zoom, click empty space to pan the map, and click any
+place or person to move your camera straight there. Nothing about the map
+is editable, and looking at it never changes anything — it's simply a way
+to see the geography a World's collaborators have already built and named,
+all at once, instead of one landmark at a time.
+
 ## Camera vs. Editing
 
 The header shows two things that can genuinely differ:
