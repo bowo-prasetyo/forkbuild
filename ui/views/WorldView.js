@@ -33,7 +33,7 @@ import WorldFocusPanel from '../components/WorldFocusPanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
 import { WorldFocusKind } from '../../core/WorldFocusContext.js';
-import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/EditorEntryContext.js';
+import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery, withReturnWorld } from '../../core/EditorEntryContext.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/WorldViewNavigationState.js';
 
 const DRAG_THRESHOLD_PX = 6;
@@ -1865,6 +1865,29 @@ export default {
             openNamingPanel(regionId);
         }
 
+        // 0.6.1 — World ↔ Editor Continuity & Return Navigation. Which
+        // World the Editor's own "← Back to World" button should
+        // return to, and what to label it — the FOCUSED (camera)
+        // document, exactly the value `focusedDocumentTitle` below
+        // already tracks (session.getFocusedDocumentId(), per
+        // docs/Principles.md "Camera Focus, Active Document, and
+        // Selection Are Three Different Things"), falling back to
+        // whatever World route this WorldView instance is currently on.
+        // Deliberately NOT `context.source.documentId`: for a STRUCTURE
+        // that's the placed structure's own content document (the fork
+        // TARGET), never the World the viewer was standing in — see
+        // core/EditorEntryContext.js's own constructor header on why
+        // `returnWorldId` is its own field. For REGION/LANDMARK the two
+        // already coincide, so reading it here uniformly, regardless of
+        // kind, is always correct, never merely "correct for two out of
+        // three kinds."
+        function currentReturnWorld() {
+            const id = (typeof session.getFocusedDocumentId === 'function' && session.getFocusedDocumentId())
+                || route.params.documentId
+                || null;
+            return { id, title: (id && focusedDocumentTitle.value) || title.value || '' };
+        }
+
         // "Edit a Copy" (0.5.9) — World View never edits Document
         // content itself (see docs/Principles.md, "World View Observes
         // and Navigates; Editor Mutates and Builds"); this is the one
@@ -1886,6 +1909,11 @@ export default {
         // core/EditorEntryContext.js#editorEntryContextFromQuery() and
         // hands it to EditorSession#openDocument(), the one place it's
         // ever consumed.
+        //
+        // 0.6.1 — `withReturnWorld()` attaches the return address
+        // `editCopyContext` itself has no way to know (see
+        // currentReturnWorld()'s own header just above) before the
+        // SAME encode step 0.6.0 already established.
         function editFocusedCopyFromFocusPanel() {
             const context = focusContext.value;
             if (!context || !context.source || !context.source.documentId) {
@@ -1893,7 +1921,9 @@ export default {
             }
             const documentId = context.source.documentId;
             const publication = session.getPublicationIdForDocument(documentId);
-            const entryQuery = editorEntryContextToQuery(context.editCopyContext);
+            const returnWorld = currentReturnWorld();
+            const entryContext = withReturnWorld(context.editCopyContext, { returnWorldId: returnWorld.id, returnWorldTitle: returnWorld.title });
+            const entryQuery = editorEntryContextToQuery(entryContext);
             closeFocusPanel();
             router.push({
                 path: '/editor',
@@ -2122,6 +2152,23 @@ export default {
         // applies. A brick/ground inspection's own `documentId` is the
         // shared containing World, never brick-owned content — camera
         // framing only, same as a REGION/LANDMARK "Edit a Copy."
+        //
+        // 0.6.1 — `returnWorldId`/`returnWorldTitle` are set directly in
+        // the constructor call here (unlike editFocusedCopyFromFocusPanel()
+        // above, there's no already-built EditorEntryContext to attach
+        // them to after the fact) — see currentReturnWorld()'s own
+        // header for why this is always the FOCUSED document, never
+        // `documentId` above (which, for a placement inspection, is the
+        // placed structure's own content, exactly the fork target, not
+        // a place to return to). `focusLocationId` is deliberately left
+        // unset here, same as before this milestone: a brick/ground
+        // inspection has no WorldFocusPanel-shaped location id to
+        // reopen on return, and a placement inspection's own
+        // `placementId` isn't surfaced onto `spatialInspection` today —
+        // see docs/Roadmap.md, 0.6.1's own "Deliberately excluded" list.
+        // Camera framing on return still works regardless (0.3.10's own
+        // per-World experience store already restores it — see
+        // WorldNavigationSession#restoreWorldExperience()).
         function editInspectedCopy(inspection) {
             if (!inspection) {
                 return;
@@ -2137,13 +2184,16 @@ export default {
             // the per-type shape this mirrors.
             const position = inspection.type === 'ground' ? inspection.position : inspection.worldPosition;
             const title = isPlacement ? inspection.sourceTitle : inspection.worldTitle;
+            const returnWorld = currentReturnWorld();
             const entryContext = new EditorEntryContext({
                 sourceDocumentId: documentId,
                 focusPosition: position || null,
                 selectAllBricks: isPlacement,
                 title: title || '',
                 kind: isPlacement ? WorldFocusKind.STRUCTURE : null,
-                reason: EditorEntryReason.WORLD_VIEW_EDIT_COPY
+                reason: EditorEntryReason.WORLD_VIEW_EDIT_COPY,
+                returnWorldId: returnWorld.id,
+                returnWorldTitle: returnWorld.title
             });
             router.push({
                 path: '/editor',
@@ -2577,6 +2627,33 @@ export default {
             session.start(viewport.value);
             session.navigateToDocument(initialDocumentId);
             refreshSpatialUI();
+
+            // 0.6.1 — World ↔ Editor Continuity & Return Navigation.
+            // The Editor's own "← Back to World" button (ui/components/
+            // Toolbar.js) navigates to `/world/<returnWorldId>?returnLocation=<id>`
+            // — `returnLocation` is exactly the same
+            // WorldRegion/WorldLandmark/StructurePlacement id
+            // core/EditorEntryContext.js#focusLocationId already carried
+            // FOR the Editor's own camera framing on the way in, reused
+            // here for the trip back out. Reopening the SAME WorldFocusPanel
+            // is all this does — the camera itself is already handled,
+            // for free, by 0.3.10's own per-World experience store
+            // (session.navigateToDocument() above already triggered
+            // restoreWorldExperience() via refreshSpatialUI()'s
+            // _syncWorldExperience(), restoring exactly the framing this
+            // replica had when it left for the Editor). A location that
+            // no longer resolves (deleted while the viewer was away)
+            // degrades silently — arriving back in World View is not an
+            // error, even when the one thing being returned to is gone.
+            if (route.query.returnLocation) {
+                const context = session.getFocusContextForLocation(route.query.returnLocation);
+                if (context) {
+                    focusContext.value = context.toJSON();
+                    showFocusPanel.value = true;
+                }
+                router.replace({ path: `/world/${initialDocumentId}` });
+            }
+
             hasLocalAvatar.value = session.hasLocalAvatar();
             // 0.3.1 — apply the two now-default-on avatar toggles to
             // the session itself once a local avatar actually exists

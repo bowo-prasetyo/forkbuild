@@ -59,6 +59,8 @@ export default {
                 :editor-session="editorSession"
                 :publish-document-use-case="publishDocumentUseCase"
                 :feedback="feedback"
+                :entry-context="entryContext"
+                @back-to-world="backToWorld"
             />
             <div class="editor-body">
                 <div class="sidebar">
@@ -458,11 +460,37 @@ export default {
         const showMetadataEditor = ref(false);
         let unsubDocumentState = null;
 
+        // 0.6.1 — World ↔ Editor Continuity & Return Navigation. The
+        // EditorEntryContext (core/EditorEntryContext.js) a fork arrived
+        // with, kept alive for the life of THIS open document only —
+        // unlike every 0.6.0 consumption of it (frameCameraOn()/
+        // selectAll(), applied once and discarded), Toolbar's own "←
+        // Back to World"/"Save & Return to World" buttons need it to
+        // stay readable for as long as the fork they describe is what's
+        // actually open. `arrivalDocumentId` is that fork's own
+        // world.id, captured once right after openDocument() — see
+        // refreshDocumentInfo() below, which clears both the moment the
+        // OPEN document stops being the one this context describes (a
+        // later Load/New/place-a-different-document), so the header
+        // never claims "Editing a copy of X" about a document that
+        // isn't X's fork anymore. Never persisted, never read by
+        // anything outside this view — exactly the ephemeral,
+        // navigation-only posture core/EditorEntryContext.js's own
+        // header already establishes.
+        const entryContext = ref(null);
+        let arrivalDocumentId = null;
+
         function refreshDocumentInfo() {
             const document = documentManager.document;
             if (!document) {
                 documentInfo.value = null;
+                entryContext.value = null;
+                arrivalDocumentId = null;
                 return;
+            }
+            if (entryContext.value && document.world.id !== arrivalDocumentId) {
+                entryContext.value = null;
+                arrivalDocumentId = null;
             }
             const state = documentManager.state;
             const status = computeLifecycleStatus({ hasBeenSaved: !!state.lastSaved, isPublished: false });
@@ -479,6 +507,26 @@ export default {
                 editable: true,
                 editabilityNotice: null
             };
+        }
+
+        // Toolbar's own "← Back to World"/"Save & Return to World" —
+        // see core/EditorEntryContext.js's own 0.6.1 header for why
+        // `returnWorldId` is never `route.query.fork`/`sourceDocumentId`,
+        // and `focusLocationId` doubles as exactly the id
+        // ui/views/WorldView.js#getFocusContextForLocation() needs to
+        // reopen the same WorldFocusPanel on arrival. A no-op without a
+        // known return address (a fork reached some OTHER way than
+        // "Edit a Copy" — e.g. a bare Publication Catalog fork — simply
+        // has nowhere this button can send the viewer back to).
+        function backToWorld() {
+            const context = entryContext.value;
+            if (!context || !context.returnWorldId) {
+                return;
+            }
+            router.push({
+                path: `/world/${context.returnWorldId}`,
+                query: context.focusLocationId ? { returnLocation: context.focusLocationId } : {}
+            });
         }
 
         function onSaveMetadata({ title, description, license }) {
@@ -593,8 +641,21 @@ export default {
                     // place this context is ever consumed; it is
                     // discarded the instant this block finishes, never
                     // stored anywhere.
-                    const entryContext = editorEntryContextFromQuery(route.query, route.query.fork);
-                    editorSession.openDocument(forkedDocument, entryContext);
+                    // Named `decodedEntryContext` here, distinct from
+                    // the top-level `entryContext` ref (0.6.1) it feeds
+                    // — this local is the ONE-TIME decode result;
+                    // `entryContext.value` below is what stays live for
+                    // Toolbar's own header/"← Back to World" for as long
+                    // as this fork is the open document (see that ref's
+                    // own header, just above refreshDocumentInfo()).
+                    const decodedEntryContext = editorEntryContextFromQuery(route.query, route.query.fork);
+                    editorSession.openDocument(forkedDocument, decodedEntryContext);
+                    // 0.6.1 — set AFTER openDocument() succeeds, so a
+                    // fork that throws (caught below) never leaves a
+                    // stale entryContext describing a document that was
+                    // never actually opened.
+                    entryContext.value = decodedEntryContext;
+                    arrivalDocumentId = decodedEntryContext ? forkedDocument.world.id : null;
                     // 0.2.21: the document id silently changing (0.1.24's
                     // fork mechanism) is exactly what the milestone design
                     // asked not to leave unexplained. 0.6.0 — when the
@@ -605,8 +666,8 @@ export default {
                     // arrival indicator, ephemeral UI only (see
                     // `feedback.show()`'s own 2.5s auto-hide below), never
                     // persisted anywhere.
-                    feedback.show(entryContext && entryContext.title
-                        ? `Editing a copy of "${entryContext.title}"`
+                    feedback.show(decodedEntryContext && decodedEntryContext.title
+                        ? `Editing a copy of "${decodedEntryContext.title}"`
                         : `Created your editable fork of "${forkedDocument.metadata.title}"`);
                 } catch (err) {
                     feedback.show(`Fork failed: ${err.message}`);
@@ -766,6 +827,8 @@ export default {
             loadDocumentUseCase,
             editorSession,
             publishDocumentUseCase,
+            entryContext,
+            backToWorld,
             structureGroups,
             personalStructureGroups,
             libraryPreviewService,

@@ -72,6 +72,27 @@
 // core/WorldFocusContext.js#WorldFocusContext.editCopyContext, the one
 // place this decision is made, per kind, exactly like every other
 // per-kind branch deriveWorldFocusContext() already has.
+//
+// -----------------------------------------------------------------
+// 0.6.1 — World ↔ Editor Continuity & Return Navigation
+// -----------------------------------------------------------------
+//
+// 0.6.0 made an EditorEntryContext answer "why did the viewer arrive,
+// and what were they looking at" on the way IN. This milestone reuses
+// the exact same object for the trip back OUT, rather than inventing a
+// second "return context" shape: `returnWorldId`/`returnWorldTitle`
+// (this module's own header on the constructor explains why
+// `returnWorldId` can't just be `sourceDocumentId`) tell
+// ui/components/Toolbar.js's own "← Back to World" button where to
+// navigate, and `focusLocationId` — already carried for the Editor's
+// OWN camera framing — doubles as exactly what ui/views/WorldView.js
+// needs to reopen the SAME WorldFocusPanel on return (its own
+// getFocusContextForLocation() already takes precisely this id). One
+// small ephemeral object, read once on the way in
+// (EditorSession#applyEntryContext()) and once on the way out
+// (EditorView's own "← Back to World" handler), never a Document
+// field, a WorldPlacement field, or anything broadcast — the same
+// posture this module's own top-of-file header already established.
 export const EditorEntryReason = Object.freeze({
     WORLD_VIEW_EDIT_COPY: 'world_view_edit_copy'
 });
@@ -88,7 +109,25 @@ export class EditorEntryContext {
         selectAllBricks = false,
         title = '',
         kind = null,
-        reason = null
+        reason = null,
+        // 0.6.1 — World ↔ Editor Continuity & Return Navigation. The
+        // World View document to navigate BACK to — deliberately its
+        // own field, never conflated with `sourceDocumentId` above.
+        // For REGION/LANDMARK, `sourceDocumentId` already IS the
+        // containing World (see this module's own header on why), but
+        // for STRUCTURE it's the placed structure's own content
+        // document — a fork target, not a place to return the viewer
+        // to. Only the caller (ui/views/WorldView.js, which alone
+        // knows which World is currently on screen) can supply the
+        // right answer for every kind uniformly — see
+        // core/WorldFocusContext.js's own note on why this is never
+        // derived here. `returnWorldTitle` is carried purely for the
+        // Editor's own "← Back to World" header (docs/Roadmap.md,
+        // 0.6.1) — a display convenience, resolved once by WorldView
+        // and never re-looked-up by the Editor, which has no access to
+        // World data at all.
+        returnWorldId = null,
+        returnWorldTitle = ''
     } = {}) {
         if (!sourceDocumentId) {
             throw new Error('EditorEntryContext requires a sourceDocumentId');
@@ -106,6 +145,8 @@ export class EditorEntryContext {
         this._title = title || '';
         this._kind = kind || null;
         this._reason = reason || null;
+        this._returnWorldId = returnWorldId || null;
+        this._returnWorldTitle = returnWorldTitle || '';
     }
 
     get sourceDocumentId() { return this._sourceDocumentId; }
@@ -115,6 +156,8 @@ export class EditorEntryContext {
     get title() { return this._title; }
     get kind() { return this._kind; }
     get reason() { return this._reason; }
+    get returnWorldId() { return this._returnWorldId; }
+    get returnWorldTitle() { return this._returnWorldTitle; }
 
     toJSON() {
         return {
@@ -124,9 +167,30 @@ export class EditorEntryContext {
             selectAllBricks: this._selectAllBricks,
             title: this._title,
             kind: this._kind,
-            reason: this._reason
+            reason: this._reason,
+            returnWorldId: this._returnWorldId,
+            returnWorldTitle: this._returnWorldTitle
         };
     }
+}
+
+// 0.6.1 — the one place `returnWorldId`/`returnWorldTitle` are ever
+// attached to an EditorEntryContext that didn't already carry them.
+// Needed because core/WorldFocusContext.js#editCopyContext is a plain
+// getter (no arguments — see its own 0.6.0 header) computed from
+// fields a WorldFocusContext already has, and NONE of them is "which
+// World is currently on screen." Only ui/views/WorldView.js's own
+// route/session state knows that, so it calls this immediately after
+// reading `context.editCopyContext`, rather than editCopyContext
+// guessing at a World id it was never given. Pure: returns a NEW
+// EditorEntryContext (this module's instances are treated as
+// immutable everywhere else already), or the input unchanged when
+// there's nothing to attach — never mutates `entryContext` in place.
+export function withReturnWorld(entryContext, { returnWorldId = null, returnWorldTitle = '' } = {}) {
+    if (!entryContext || !returnWorldId) {
+        return entryContext;
+    }
+    return new EditorEntryContext({ ...entryContext.toJSON(), returnWorldId, returnWorldTitle });
 }
 
 // The one place an EditorEntryContext is ever derived FROM a
@@ -189,6 +253,14 @@ export function editorEntryContextToQuery(entryContext) {
         query.entryZ = String(entryContext.focusPosition.z);
     }
     if (entryContext.selectAllBricks) query.entrySelectAll = '1';
+    // 0.6.1 — carried the same way `entryTitle`/`entryKind` already
+    // are: a plain string, present only when there's something to
+    // carry. `returnWorldId` is what lets the Editor's own "← Back to
+    // World" button (ui/components/Toolbar.js) navigate anywhere at
+    // all — see core/EditorEntryContext.js's own constructor header on
+    // why it's never the same value as `sourceDocumentId`/`entryLocation`.
+    if (entryContext.returnWorldId) query.entryReturnWorld = entryContext.returnWorldId;
+    if (entryContext.returnWorldTitle) query.entryReturnWorldTitle = entryContext.returnWorldTitle;
     return query;
 }
 
@@ -215,6 +287,8 @@ export function editorEntryContextFromQuery(query, sourceDocumentId) {
         selectAllBricks: query.entrySelectAll === '1',
         title: query.entryTitle || '',
         kind: query.entryKind || null,
-        reason: query.entryReason
+        reason: query.entryReason,
+        returnWorldId: query.entryReturnWorld || null,
+        returnWorldTitle: query.entryReturnWorldTitle || ''
     });
 }
