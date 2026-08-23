@@ -12,6 +12,7 @@ import { TransformSnap } from './TransformSnap.js';
 import { TransformSettings } from './TransformSettings.js';
 import { TransformAlignment } from './TransformAlignment.js';
 import { SelectionTransformValidator } from '../core/SelectionTransformValidator.js';
+import { SnapMath } from '../core/SnapMath.js';
 
 // Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
@@ -69,6 +70,20 @@ import { SelectionTransformValidator } from '../core/SelectionTransformValidator
 // NOT — they compute exact geometric relationships between the
 // selection's OWN members, not a free-form move into arbitrary space,
 // and were out of this milestone's own scope.
+//
+// 0.4.9 — Alignment, Snapping & Repetition adds ONE new operation here,
+// snapSelectionToGrid(): "move this selection's pivot onto the nearest
+// world-space grid intersection" (core/SnapMath.js), routed through the
+// SAME beginTransformGesture/commitTransformGesture chokepoint with
+// snap:false — exact intent, like applyNumericTransform — so it
+// inherits 0.4.8's collision gate for free rather than needing a new
+// one. Gesture-delta snapping itself (_snapGestureTransform, every
+// keyboard/gizmo frame) and alignSelection/distributeSelection both
+// already existed before this milestone (0.1.47/0.1.48) and are
+// unchanged; repetition (application/RepeatSelectionUseCase.js) is new
+// but lives outside this class entirely — it creates bricks, which is
+// application/CopySelectionUseCase.js/PasteClipboardUseCase.js territory,
+// not a transform of an existing selection.
 export class SpatialEditingService {
     // 0.2.95 — World Editing Authorization Foundation. `canEditDocument`
     // is the ONE clean seam docs/Principles.md, "Selection In World
@@ -305,6 +320,44 @@ export class SpatialEditingService {
                 TransformAlignment.calculateDistributionTransforms(entries, axis),
             'Distribute'
         );
+    }
+
+    // ---------------------------------------- snap to grid (0.4.9)
+
+    // "Align this selection to the existing construction grid" — the
+    // design conversation's own section 2, distinct from
+    // alignSelection()/distributeSelection() above (which reference the
+    // selection's OWN bounds) and distinct from the PER-GESTURE delta
+    // snapping _snapGestureTransform() already applies to every keyboard/
+    // gizmo frame (0.1.47): this snaps the selection's absolute pivot
+    // onto the nearest world-space grid intersection, moving every
+    // member by that SAME x/z delta so the selection's own internal
+    // geometry is preserved exactly, the same rule numeric absolute
+    // translation (applyNumericTransform) already follows. Y is left
+    // untouched — see core/SnapMath.js's own header on why grid
+    // snapping is a ground-plane (X/Z) operation here.
+    //
+    // Deliberately routed through beginTransformGesture/
+    // commitTransformGesture with snap:false (exact intent, like
+    // applyNumericTransform) rather than the alignment/distribution
+    // shortcut (_executeLayoutOperation): unlike alignment, this is a
+    // real move into arbitrary world space, not a reshape relative to
+    // the selection's own bounds — so it inherits 0.4.8's collision gate
+    // through the SAME commit path every other free-form move already
+    // uses, for free. An already-grid-aligned selection, or one with
+    // gridSize <= 0, is a no-op through the usual transformsEqual
+    // discipline; a colliding target leaves the World completely
+    // unmutated, the same "reject the whole operation" posture this
+    // milestone's repetition (RepeatSelectionUseCase) also follows.
+    snapSelectionToGrid(selection, gridSize) {
+        if (!selection || selection.isEmpty || selection.type === 'ground') return false;
+        if (this._gizmoState.active) return false;
+        const pivot = this.getGroupPivot(selection);
+        if (!pivot) return false;
+        const snapped = SnapMath.snapPosition(pivot.x, pivot.z, gridSize);
+        const delta = { x: snapped.x - pivot.x, y: 0, z: snapped.z - pivot.z };
+        if (!this.beginTransformGesture(selection, { mode: 'translate', axis: null })) return false;
+        return this.commitTransformGesture(selection, { translation: delta }, { snap: false });
     }
 
     // Shared transaction for alignment and distribution:

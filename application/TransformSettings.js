@@ -29,6 +29,14 @@ const DEFAULT_TRANSLATION_SNAP = 1;
 const DEFAULT_ROTATION_SNAP = 15;
 const DEFAULT_PRECISION_MULTIPLIER = 0.1;
 
+// 0.4.9 — the "Snap: Off / 0.5 / 1 / 2" editor setting the design
+// conversation asked for is a small closed set of presets over the
+// SAME translationSnap this class already had (0.1.47); no new
+// mechanism, just named values a settings surface can offer directly.
+// "Off" is expressed with setSnappingEnabled(false), not a preset
+// value — see that method's own comment.
+export const TRANSLATION_SNAP_PRESETS = Object.freeze([0.5, 1, 2]);
+
 export class TransformSettings {
     constructor({
         snappingEnabled = DEFAULT_SNAPPING_ENABLED,
@@ -75,5 +83,45 @@ export class TransformSettings {
             precise,
             this._precisionMultiplier
         );
+    }
+
+    // ------------------------------------------------- mutability (0.4.9)
+    //
+    // Before this milestone every field here was constructor-only —
+    // fine for the 0.1.47 "precision is on by default" ship, but a real
+    // "Snap: Off / 0.5 / 1 / 2" editor control needs to change these on
+    // a LIVE TransformSettings instance (the same one SpatialEditingService
+    // already holds a reference to), not rebuild the whole gesture
+    // service to flip one preference. These three setters are the whole
+    // surface such a control needs; nothing about how snapping is
+    // APPLIED (application/TransformSnap.js, SpatialEditingService's own
+    // gesture transaction) changes at all.
+
+    setSnappingEnabled(enabled) {
+        this._snappingEnabled = !!enabled;
+    }
+
+    // value: a positive number, or null for "off." Mirrors
+    // setSnappingEnabled(false) in effect (TransformSnap.snapValue
+    // already passes a value through unchanged for a <= 0 increment),
+    // but is its own axis-scoped control — a settings surface can offer
+    // "Off" as either a global toggle or a translation-only preset
+    // without the two ever disagreeing about what "off" means.
+    setTranslationSnap(value) {
+        this._translationSnap = TransformSettings._validateSnapValue(value, 'setTranslationSnap');
+    }
+
+    setRotationSnap(value) {
+        this._rotationSnap = TransformSettings._validateSnapValue(value, 'setRotationSnap');
+    }
+
+    static _validateSnapValue(value, method) {
+        if (value === null) {
+            return 0;
+        }
+        if (!Number.isFinite(value) || value <= 0) {
+            throw new Error(`TransformSettings.${method}(): value must be a positive number or null`);
+        }
+        return value;
     }
 }

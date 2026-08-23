@@ -198,6 +198,12 @@ export class WorldNavigationSession {
 	    documentCloneService = null,
 	    copySelectionUseCase = null,
 	    pasteClipboardUseCase = null,
+	    // 0.4.9 — Alignment, Snapping & Repetition. Same optional
+	    // posture as copySelectionUseCase/pasteClipboardUseCase above —
+	    // a session built without one simply can't offer
+	    // repeatSelection(); duplicateSelection() keeps working either
+	    // way.
+	    repeatSelectionUseCase = null,
     	discoveryProvider = null, // <-- Fixed: Added missing parameter
 	    placementRegistry = null,
 	    moveWorldPlacementUseCase = null,
@@ -300,6 +306,7 @@ export class WorldNavigationSession {
 	    this._documentCloneService = documentCloneService;
 	    this._copySelectionUseCase = copySelectionUseCase;
 	    this._pasteClipboardUseCase = pasteClipboardUseCase;
+	    this._repeatSelectionUseCase = repeatSelectionUseCase;
 	    // 0.2.23: WHERE a published world sits in shared space — a
 	    // separate concern from the document/publication itself (see
 	    // docs/Principles.md, "A Publication Is What; A Placement Is
@@ -2825,6 +2832,22 @@ export class WorldNavigationSession {
         return success;
     }
 
+    // 0.4.9 — see EditorSession#snapSelectionToGrid()'s own comment:
+    // identical shape, reused across both surfaces.
+    snapSelectionToGrid(gridSize) {
+	    if (this._historyPreview && this._historyPreview.active) return false;
+        this._ensureEditableSelection();
+        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
+            return false;
+        }
+        const success = this._editingService.snapSelectionToGrid(this._spatialSelection, gridSize);
+        if (success) {
+            this._refreshInspection();
+            this._refreshGizmo();
+        }
+        return success;
+    }
+
     applyNumericTransform(intent, options = {}) {
 	    if (this._historyPreview && this._historyPreview.active) return false;
         this._ensureEditableSelection();
@@ -4889,6 +4912,42 @@ export class WorldNavigationSession {
 	        this._setSpatialSelection(SpatialSelectionState.bricks({ documentId: doc.world.id, items }));
 	    }
 	    return command.executedBrickIds[0] || null;
+	}
+
+	// 0.4.9 — "Repeat x N" for World View, mirroring duplicateSelection()'s
+	// own guard shape one rung up: RepeatSelectionUseCase's own header
+	// covers the atomicity/collision contract. false means either
+	// "nothing to repeat" or "blocked by collision" — either way the
+	// World is guaranteed untouched.
+	repeatSelection(options = {}) {
+	    if (this._historyPreview && this._historyPreview.active) return false;
+	    this._ensureEditableSelection();
+	    if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
+	        return false;
+	    }
+	    const selection = this._spatialSelection;
+	    if (!selection || selection.isEmpty || !this._repeatSelectionUseCase) {
+	        return false;
+	    }
+	    const docId = selection.documentId || this._activeDocumentId;
+	    const doc = docId ? this.getDocument(docId) : null;
+	    if (!doc) {
+	        return false;
+	    }
+	    const buildingId = selection.buildingId;
+	    const command = this._repeatSelectionUseCase.execute(selection, doc, options);
+	    if (!command) {
+	        return false;
+	    }
+	    this._commandHistories.get(doc.world.id).execute(command);
+	    const items = command.commands
+	        .flatMap((child) => child.executedBrickIds)
+	        .map((brickId) => ({ type: 'brick', buildingId, brickId }));
+	    if (items.length > 0) {
+	        this._setSpatialSelection(SpatialSelectionState.bricks({ documentId: doc.world.id, items }));
+	    }
+	    this._refreshGizmo();
+	    return true;
 	}
 
 	cloneDocument(documentId) {
