@@ -20,6 +20,7 @@ import { WorldAuthorizationService } from '../application/WorldAuthorizationServ
 import { WorldAccessLevel, worldAccessAtLeast, isValidWorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 
 // 0.2.95 — World Editing Authorization Foundation.
 //
@@ -351,7 +352,8 @@ async function run() {
             const identityProvider = identityId ? makeIdentityProvider({ identityId, username: identityId }) : null;
             const session = new WorldNavigationSession({
                 registry, loadPublicationDocumentUseCase, worldLayoutProvider,
-                discoveryProvider, worldAuthorizationService, avatarPresenceSession, identityProvider
+                discoveryProvider, worldAuthorizationService, avatarPresenceSession, identityProvider,
+                saveDocumentUseCase: new SaveDocumentUseCase(storage, serializer)
             });
             session._session = stubRenderer();
             session._loadWorld(aliceWorld.id);
