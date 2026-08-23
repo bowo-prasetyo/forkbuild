@@ -69,27 +69,32 @@ async function run() {
             'groupByCategory: every registered structure appears in exactly one group');
 
         // First-seen order, matching VillageLibrary's own declaration
-        // order (house:residential, barn:agricultural, well/market/
-        // mill/bridge...) — byte-for-byte the same contract
+        // order — 0.4.4 (Village Library Expansion) declares all five
+        // categories' structures grouped together (residential,
+        // agricultural, commercial, community, infrastructure) rather
+        // than 0.2.81's original interleaved six, but the CONTRACT this
+        // section actually tests — first-seen order, no category
+        // repeating — is unchanged; byte-for-byte the same contract
         // BrickRegistry#groupByCategory() already established.
         const categoryOrder = groups.map((g) => g.category);
-        assert(categoryOrder[0] === 'residential', 'groupByCategory: first group is residential (House is first-declared)');
-        assert(categoryOrder[1] === 'agricultural', 'groupByCategory: second group is agricultural (Barn is next)');
+        assert(JSON.stringify(categoryOrder) === JSON.stringify(['residential', 'agricultural', 'commercial', 'community', 'infrastructure']),
+            'groupByCategory: first-seen category order matches VillageLibrary\'s own declaration order');
         assert(new Set(categoryOrder).size === categoryOrder.length, 'groupByCategory: no category repeats as a second group');
 
         const agricultural = groups.find((g) => g.category === 'agricultural');
         const agriculturalIds = agricultural.structures.map((s) => s.id).sort();
-        assert(JSON.stringify(agriculturalIds) === JSON.stringify(['village:barn', 'village:mill']),
-            'groupByCategory: Barn and Mill share the agricultural group');
+        assert(JSON.stringify(agriculturalIds) === JSON.stringify(['village:barn', 'village:granary', 'village:mill', 'village:silo', 'village:stable']),
+            'groupByCategory: all five agricultural structures share the agricultural group');
 
         const infrastructure = groups.find((g) => g.category === 'infrastructure');
         const infrastructureIds = infrastructure.structures.map((s) => s.id).sort();
-        assert(JSON.stringify(infrastructureIds) === JSON.stringify(['village:bridge', 'village:well']),
-            'groupByCategory: Well and Bridge share the infrastructure group');
+        assert(JSON.stringify(infrastructureIds) === JSON.stringify(['village:bridge', 'village:dock', 'village:fence_segment', 'village:village_gate', 'village:watchtower', 'village:well']),
+            'groupByCategory: all six infrastructure structures share the infrastructure group');
 
-        // getAll()/getByCategory()/search() stay exactly what 0.2.81 shipped.
-        assert(registry.getAll().length === 6, 'groupByCategory: getAll() is unaffected — still six structures');
-        assert(registry.getByCategory('commercial').length === 1, 'groupByCategory: getByCategory() is unaffected');
+        // getAll()/getByCategory()/search() stay exactly what 0.2.81
+        // shipped — only the CONTENT grew (0.4.4).
+        assert(registry.getAll().length === 20, 'groupByCategory: getAll() is unaffected — twenty structures (0.4.4)');
+        assert(registry.getByCategory('commercial').length === 2, 'groupByCategory: getByCategory() is unaffected — two commercial structures');
 
         console.log('✓ Section A: StructureRegistry#groupByCategory() — same shape as BrickRegistry, real VillageLibrary contents');
     }
