@@ -11,6 +11,7 @@ import { TransformMath } from './TransformMath.js';
 import { TransformSnap } from './TransformSnap.js';
 import { TransformSettings } from './TransformSettings.js';
 import { TransformAlignment } from './TransformAlignment.js';
+import { SelectionTransformValidator } from '../core/SelectionTransformValidator.js';
 
 // Translates spatial editing intent into domain mutations via CommandHistory.
 // The UI calls this; it never touches Brick directly.
@@ -49,6 +50,25 @@ import { TransformAlignment } from './TransformAlignment.js';
 // literally. No-op operations (already at target, zero delta, empty
 // input) create zero history entries — the transformsEqual discipline,
 // unchanged since 0.1.38.
+//
+// 0.4.8 — Collision-Aware Multi-Brick Transform. previewTransformGesture
+// and commitTransformGesture are now the ONE chokepoint (named as
+// exactly that, and deliberately left alone, by 0.4.7's own "Deliberately
+// excluded" section) that also decides whether a transform is legal:
+// every preview frame stamps its gesture feedback with `valid` — whether
+// the candidate positions collide with any brick outside the moving
+// selection, per core/SelectionTransformValidator.js — and commit
+// refuses to turn an invalid candidate into a TransformSelectionCommand,
+// reverting to the pre-gesture positions instead. This is the SAME
+// "release over an invalid position cancels the whole gesture" posture
+// application/StructurePlacementGestureService.js already established
+// for structure placements; brick selections get it here for the first
+// time. Keyboard nudge, gizmo drag, and numeric input all route through
+// commitTransformGesture already, so all three inherit the gate for
+// free. Alignment/distribution (_executeLayoutOperation) deliberately do
+// NOT — they compute exact geometric relationships between the
+// selection's OWN members, not a free-form move into arbitrary space,
+// and were out of this milestone's own scope.
 export class SpatialEditingService {
     // 0.2.95 — World Editing Authorization Foundation. `canEditDocument`
     // is the ONE clean seam docs/Principles.md, "Selection In World
@@ -68,7 +88,7 @@ export class SpatialEditingService {
     // REAL predicate (application/WorldNavigationSession.js, backed by
     // application/WorldAuthorizationService.js) gets a gate that can
     // ever say no.
-    constructor(session, commandHistories, brickRegistry = null, transformSettings = new TransformSettings(), canEditDocument = () => true) {
+    constructor(session, commandHistories, brickRegistry = null, transformSettings = new TransformSettings(), canEditDocument = () => true, collisionValidator = new SelectionTransformValidator()) {
         this._session = session;
         this._commandHistories = commandHistories;
         this._boundsService = new SelectionBoundsService(brickRegistry);
@@ -76,6 +96,7 @@ export class SpatialEditingService {
         this._gizmoState = TransformGizmoState.idle();
         this._gestureFeedback = null;
         this._canEditDocument = typeof canEditDocument === 'function' ? canEditDocument : () => true;
+        this._collisionValidator = collisionValidator;
     }
 
     get transformGizmoState() { return this._gizmoState; }
@@ -438,7 +459,8 @@ export class SpatialEditingService {
         const applied = this._snapGestureTransform(transform, gestureOptions);
         const nextTransforms = this._calculatePreviewTransforms(this._gizmoState.initialTransforms, this._gizmoState.pivot, applied.transform);
         this._applyTransforms(document.world, nextTransforms);
-        this._gestureFeedback = applied.feedback;
+        const valid = this._collisionValidator.canApply(document.world, nextTransforms);
+        this._gestureFeedback = applied.feedback ? { ...applied.feedback, valid } : null;
         return true;
     }
 
@@ -459,6 +481,11 @@ export class SpatialEditingService {
         });
         this._gestureFeedback = null;
         if (this._transformsEqual(before, after)) return false;
+        // 0.4.8 — release over an invalid (colliding) candidate cancels
+        // the whole gesture rather than partially committing; the real
+        // bricks are already back at `before`, above, so there is
+        // nothing further to undo.
+        if (!this._collisionValidator.canApply(world, after)) return false;
         history.execute(new TransformSelectionCommand({
             worldId: world.id,
             transforms: after,
