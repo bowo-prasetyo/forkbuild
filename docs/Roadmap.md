@@ -9202,6 +9202,103 @@ import, running `EditorSession` and `WorldNavigationSession` directly:
   independent World content with no special provenance the rest of the
   0.4.x creation pipeline needs to know about
 
+## 0.4.8 — Collision-Aware Multi-Brick Transform
+
+0.4.7's own "Deliberately excluded" section named exactly one gap left in
+the multi-brick transform kernel — not multi-selection, not group move/
+rotate-as-one-command, not group delete, all of which had already
+shipped in 0.1.42–0.1.50 and stayed untouched by that milestone: **there
+was no collision check anywhere in the transform gesture path.**
+`application/SpatialEditingService.js#previewTransformGesture()`/
+`commitTransformGesture()` mutated real bricks live, with no validity
+flag at all — unlike single-brick placement
+(`core/PlacementValidator.js` + `application/editor-state/PreviewState.js`)
+and structure placement (`application/StructurePlacementValidator.js` +
+`application/StructurePlacementGestureService.js`), both of which
+already refuse an overlapping commit. This milestone closes exactly that
+gap, and nothing else — no new command, no ghost-mesh renderer, no
+persistent "selection group" concept (`core/Group.js` already covers
+that, untouched here).
+
+### What changed
+
+**`core/SelectionTransformValidator.js`** — new. The multi-brick
+counterpart to `PlacementValidator.js`'s single-brick check: given the
+FULL final state of every selected brick (the same shape
+`application/TransformMath.js#calculateTransforms()` already produces),
+it checks that no member lands on a non-member brick already in its
+building, and that no two members land on the same cell as EACH OTHER —
+while a same-selection reshuffle (two members swapping cells with one
+another) is explicitly fine, matching how a rotated selection actually
+behaves. Position matching is epsilon-based rather than
+`PlacementValidator.js`'s exact `===`: a rotated brick's landing
+coordinate comes out of `sin`/`cos` as `1.9999999999999998`, not `2`,
+caught directly by this milestone's own flagship test before it shipped
+as a silent false-negative (a real collision going undetected).
+
+**`application/SpatialEditingService.js`** — `previewTransformGesture()`
+now stamps its per-frame gesture feedback with `valid` (mirroring
+`StructurePlacementGestureService`'s own feedback shape); `commitTransformGesture()`
+refuses to turn an invalid candidate into a `TransformSelectionCommand`,
+reverting to the pre-gesture positions instead — the exact "releasing
+over an invalid position cancels the whole gesture, never a partial
+commit" posture `StructurePlacementGestureService.js` already
+established for structure placements. Keyboard nudge, gizmo drag, and
+numeric transform input all commit through this ONE method already
+(this class's own header, unchanged since 0.1.49), so all three inherit
+the gate for free — no second wiring pass needed. Alignment and
+distribution (`alignSelection()`/`distributeSelection()`) deliberately
+do NOT gain the gate: they compute exact geometric relationships between
+a selection's OWN members, not a free-form move into arbitrary space,
+and stayed out of this milestone's own scope.
+
+**`ui/components/TransformFeedback.js`** — the transient HUD panel
+(0.1.47) now reads `feedback.valid`: a red accent and a "Blocked —
+collision" line when a preview is invalid, green as before otherwise.
+Purely presentational; `valid` absent or `true` renders identically to
+every caller that predates this field.
+
+### Deliberately excluded
+
+- **A ghost-mesh renderer.** Structure placement previews via a
+  separate ghost object because it never touches the real
+  `StructurePlacement` until commit. Brick selections have always
+  previewed by mutating real bricks live and reverting on cancel (this
+  class's own header, unchanged since 0.1.38) — that architecture is not
+  something this milestone's own scope called for changing, so "the
+  ghost" here is the real bricks themselves, now carrying a validity
+  flag.
+- **AABB or oriented-bounds collision.** `SelectionTransformValidator.js`
+  stays exact-position (epsilon-widened for floating point), the same
+  conservative posture `PlacementValidator.js` already took for ordinary
+  bricks — real oriented/mesh-level collision remains its own future
+  question, unaffected by this milestone.
+- **Gating alignment/distribution.** Named above — out of scope, not an
+  oversight.
+
+### Flagship test
+
+`tests/MultiBrickTransformCollision.test.js` is new:
+
+- Section 1: `SelectionTransformValidator` in isolation — empty-batch
+  no-op, moving into empty space, moving onto a non-member, a
+  same-selection swap (valid), two members landing on the same cell
+  (invalid), a missing building (conservatively invalid)
+- Section 2: `SpatialEditingService`'s gesture transaction — preview
+  feedback reports `valid` live every frame; a colliding commit is
+  blocked with zero new history entries and the real bricks left
+  exactly where the gesture began; a valid commit behaves exactly as
+  before this milestone
+- Section 3: keyboard `rotateSelection()` inherits the gate through the
+  shared commit path; a same-selection 180° swap is NOT mistaken for a
+  collision
+- Section 4: a persistent `Group`, resolved into a selection, is gated
+  identically — no separate code path to keep honest
+- Section 5 — CAPSTONE: duplicate (0.4.7) then transform (0.4.8) —
+  dragging a fresh duplicate by exactly the delta that would land it
+  back on its own source is blocked; a clear move commits normally;
+  undo/redo both stay exact throughout
+
 ```text
 0.4.0   Structure Composition & Blueprint Library          ✓
 0.4.1   Interactive Structure Composition UX                ✓
@@ -9223,6 +9320,13 @@ import, running `EditorSession` and `WorldNavigationSession` directly:
              ├── duplicateSelection() — the one real gap, closed on both surfaces
              ├── EditorActionRegistry — Ctrl/Cmd+D works for any selection, not just placements
              └── SelectionDuplication.test.js — one command, fresh ids, clipboard untouched
+             │
+             ▼
+0.4.8   Collision-Aware Multi-Brick Transform                  ✓
+             ├── SelectionTransformValidator — the multi-brick collision check, epsilon-exact
+             ├── SpatialEditingService — preview reports `valid` live, commit blocks a collision
+             ├── keyboard/gizmo/numeric input inherit the gate through the shared commit path
+             └── MultiBrickTransformCollision.test.js — duplicate onto source is blocked, undo/redo exact
 ```
 
 > **0.4.0 — How do I combine several Structures into something bigger?**
@@ -9233,7 +9337,8 @@ import, running `EditorSession` and `WorldNavigationSession` directly:
 > **0.4.5 — Does reaching for one feel like reaching for the other?**
 > **0.4.6 — Can Bob get what Alice built, without Alice's device?**
 > **0.4.7 — Once it's placed, can I duplicate it as easily as I built it?**
+> **0.4.8 — Can I trust the preview before I commit to a move?**
 
-Richer discovery/preview, true peer-to-peer transfer, and collision-aware
-group-transform preview remain exactly where 0.4.4, 0.4.6, and 0.4.7 left
-them: named, not forgotten, each sized on its own.
+Richer discovery/preview, true peer-to-peer transfer, and AABB/oriented-
+bounds collision remain exactly where 0.4.4, 0.4.6, and 0.4.8 left them:
+named, not forgotten, each sized on its own.

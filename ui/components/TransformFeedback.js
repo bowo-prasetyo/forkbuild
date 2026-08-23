@@ -15,6 +15,15 @@
 // precise }) and the views pass through untouched; null hides the panel.
 // This is the read-only foundation a future numeric-entry milestone
 // could build on — numeric INPUT is explicitly not part of 0.1.47.
+//
+// 0.4.8 — `valid` is new on the feedback blob (SpatialEditingService,
+// mirroring the `valid` StructurePlacementGestureService's own feedback
+// has always carried). When it is explicitly `false` — a collision with
+// a brick outside the moving selection — the accent turns red and a
+// "Blocked — collision" line appears; releasing the gesture will cancel
+// rather than commit. Absent/true reads exactly as before this
+// milestone, so structure-placement feedback (which sets `valid` too)
+// and any older caller that never sets it both render identically.
 export default {
     name: 'TransformFeedback',
     props: {
@@ -29,6 +38,9 @@ export default {
         },
         precise() {
             return !!(this.feedback && this.feedback.precise);
+        },
+        invalid() {
+            return !!(this.feedback && this.feedback.valid === false);
         },
         title() {
             const fb = this.feedback;
@@ -53,18 +65,23 @@ export default {
             if (!fb) {
                 return [];
             }
+            const lines = [];
             if (fb.mode === 'rotate') {
-                return [`Δ ${this.formatSigned(fb.rotation)}°`];
+                lines.push(`Δ ${this.formatSigned(fb.rotation)}°`);
+            } else if (fb.axis && fb.translation) {
+                lines.push(`Δ ${this.formatSigned(fb.translation[fb.axis])}`);
+            } else {
+                const translation = fb.translation || { x: 0, y: 0, z: 0 };
+                lines.push(
+                    `ΔX ${this.formatSigned(translation.x)}`,
+                    `ΔY ${this.formatSigned(translation.y)}`,
+                    `ΔZ ${this.formatSigned(translation.z)}`
+                );
             }
-            if (fb.axis && fb.translation) {
-                return [`Δ ${this.formatSigned(fb.translation[fb.axis])}`];
+            if (this.invalid) {
+                lines.push('Blocked — collision');
             }
-            const translation = fb.translation || { x: 0, y: 0, z: 0 };
-            return [
-                `ΔX ${this.formatSigned(translation.x)}`,
-                `ΔY ${this.formatSigned(translation.y)}`,
-                `ΔZ ${this.formatSigned(translation.z)}`
-            ];
+            return lines;
         }
     },
     methods: {
@@ -90,7 +107,7 @@ export default {
                 pointerEvents: 'none',
                 background: 'rgba(18, 18, 18, 0.88)',
                 border: '1px solid #3a3a3a',
-                borderLeft: '3px solid #4caf7d',
+                borderLeft: invalid ? '3px solid #e05252' : '3px solid #4caf7d',
                 borderRadius: '4px',
                 padding: '8px 12px',
                 fontFamily: 'monospace',
@@ -100,7 +117,7 @@ export default {
                 minWidth: '150px'
             }"
         >
-            <div :style="{ color: '#4caf7d', fontWeight: '600', marginBottom: '2px' }">{{ title }}</div>
+            <div :style="{ color: invalid ? '#e05252' : '#4caf7d', fontWeight: '600', marginBottom: '2px' }">{{ title }}</div>
             <div v-for="(line, index) in lines" :key="index" :style="{ color: '#d0d0d0' }">{{ line }}</div>
         </div>
     `
