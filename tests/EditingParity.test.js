@@ -23,6 +23,7 @@ const REQUIRED_EDITING_METHODS = [
     'selectAll',
     'clearSelection',
     'deleteSelection',
+    'duplicateSelection',
     'getSelectionCount',
     // Transform
     'moveSelection',

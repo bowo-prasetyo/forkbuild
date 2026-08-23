@@ -281,27 +281,26 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 feedback.show('Selection cleared');
             })
         }),
-        // 0.2.91 — World Instance Editing & Placement Management.
-        // "Duplicate" only makes sense for a structure-placement
-        // selection today (bricks already have copy/paste) — gated on
-        // ctx.selectionIsStructurePlacement, never on selectionCount
-        // alone.
+        // 0.2.91 — World Instance Editing & Placement Management gated
+        // this to a structure-placement selection only ("bricks already
+        // have copy/paste"). 0.4.7 — Advanced Building & Structural
+        // Editing closes that gap: a loose brick selection now duplicates
+        // in ONE gesture too (EditorSession/WorldNavigationSession's own
+        // duplicateSelection() branches on selection kind internally), so
+        // this action needs no selectionIsStructurePlacement gate at all
+        // — any non-empty selection is duplicable, exactly like delete.
         define({
             id: 'selection.duplicate',
             label: 'Duplicate',
             category: 'Selection',
             shortcut: 'Ctrl/Cmd+D',
             keys: [{ key: 'd', ctrl: true }],
-            description: 'Duplicate the selected structure placement (same content, a new instance)',
-            enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection && ctx.selectionIsStructurePlacement,
-            disabledReason: (ctx) => {
-                if (!ctx.hasSelection) return 'No selection';
-                if (!ctx.selectionIsStructurePlacement) return 'Only structure placements can be duplicated';
-                return null;
-            },
+            description: 'Duplicate the selected bricks or structure placement (one undo step)',
+            enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
+            disabledReason: selectionRequired,
             execute: () => surfaceCall('duplicateSelection', 'Duplicate is not available on this surface', (duplicateSelection) => {
                 const newId = duplicateSelection();
-                feedback.show(newId ? 'Duplicated structure' : 'Nothing to duplicate');
+                feedback.show(newId ? 'Duplicated selection' : 'Nothing to duplicate');
             })
         }),
         define({
