@@ -36,6 +36,7 @@ import { UpdateDocumentMetadataUseCase } from '../../application/UpdateDocumentM
 import { computeLifecycleStatus, describeLifecycleStatus } from '../../application/DocumentLifecycleStatus.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
+import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
@@ -582,11 +583,31 @@ export default {
 			            sourcePublication = findPublicationUseCase.execute(route.query.publication);
 			        }
 			        const forkedDocument = forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);
-                    editorSession.openDocument(forkedDocument);
+                    // 0.6.0 — Context-Preserving Fork-to-Edit. Decodes
+                    // whatever EditorEntryContext World View's "Edit a
+                    // Copy" attached to this same navigation (see
+                    // core/EditorEntryContext.js's own header on the
+                    // query-param channel) and hands it to
+                    // openDocument(), which frames the camera and, for a
+                    // STRUCTURE, selects the fork's own bricks — the one
+                    // place this context is ever consumed; it is
+                    // discarded the instant this block finishes, never
+                    // stored anywhere.
+                    const entryContext = editorEntryContextFromQuery(route.query, route.query.fork);
+                    editorSession.openDocument(forkedDocument, entryContext);
                     // 0.2.21: the document id silently changing (0.1.24's
                     // fork mechanism) is exactly what the milestone design
-                    // asked not to leave unexplained.
-                    feedback.show(`Created your editable fork of "${forkedDocument.metadata.title}"`);
+                    // asked not to leave unexplained. 0.6.0 — when the
+                    // fork carries a title (it was reached through "Edit
+                    // a Copy," not every fork is), name what was actually
+                    // being looked at rather than the generic message —
+                    // this is the transient "Editing a copy of ___"
+                    // arrival indicator, ephemeral UI only (see
+                    // `feedback.show()`'s own 2.5s auto-hide below), never
+                    // persisted anywhere.
+                    feedback.show(entryContext && entryContext.title
+                        ? `Editing a copy of "${entryContext.title}"`
+                        : `Created your editable fork of "${forkedDocument.metadata.title}"`);
                 } catch (err) {
                     feedback.show(`Fork failed: ${err.message}`);
                 }

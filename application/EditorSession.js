@@ -41,6 +41,7 @@ import { Position } from '../core/Position.js';
 import { StructurePlacementGestureService } from './StructurePlacementGestureService.js';
 import { GizmoGestureRouter } from './GizmoGestureRouter.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
+import { CameraState } from '../renderer/CameraState.js';
 
 // Owns the live runtime graph — the render session, World, CommandHistory,
 // ToolManager, InputDispatcher — as one unit, so nothing else has to know
@@ -63,6 +64,13 @@ import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.
 // surface (0.1.42/0.1.43) belongs wherever this session is extended in
 // the deployed tree; the action layer degrades gracefully when those
 // methods are absent rather than assuming them.
+//
+// 0.6.0 — the SAME diagonal offset application/WorldNavigationSession.js
+// #focusLocation() already uses (its own LOCATION_FOCUS_OFFSET) — one
+// camera-framing convention across World View and the Editor, not a
+// second. See frameCameraOn()'s own header.
+const ENTRY_CAMERA_OFFSET = { x: 12, y: 12, z: 12 };
+
 export class EditorSession {
     constructor({
         registry,
@@ -222,6 +230,60 @@ export class EditorSession {
 
     clearSelection() {
         this._editorContext.clearSelection();
+        return true;
+    }
+
+    // 0.6.0 — Context-Preserving Fork-to-Edit. Frames the camera around
+    // `position` the moment a document opens, so a fork reached through
+    // "Edit a Copy" lands looking at what the viewer was actually
+    // focused on in World View, instead of _rebuild()'s own arbitrary
+    // default view (renderer/CameraState.js's own DEFAULT_POSITION/
+    // DEFAULT_TARGET). 0.5.9 deliberately left this unbuilt — "adding
+    // one is a real feature sized for its own milestone" — this is that
+    // milestone. Mirrors application/WorldViewSession.js#viewDocument()'s
+    // own "layout position + fixed offset, target = the position
+    // itself" shape exactly, one rung down (a focused OBJECT inside an
+    // already-open document, not a whole document's own layout slot).
+    // No-op (returns false) before start()/openDocument() has built a
+    // render session yet, or without a position to frame — never throws.
+    frameCameraOn(position) {
+        if (!this._session || !position) {
+            return false;
+        }
+        const { x, y, z } = position;
+        this._session.setCameraState(new CameraState({
+            position: new Position(x + ENTRY_CAMERA_OFFSET.x, y + ENTRY_CAMERA_OFFSET.y, z + ENTRY_CAMERA_OFFSET.z),
+            target: new Position(x, y, z),
+            zoom: 1
+        }));
+        return true;
+    }
+
+    // 0.6.0 — the one place an EditorEntryContext
+    // (core/EditorEntryContext.js) is ever consumed, called by
+    // openDocument() itself right after a fork opens. Frames the camera
+    // on whatever position the viewer was looking at in World View and,
+    // ONLY when the context says the whole opened document IS the
+    // focused object's own content (`selectAllBricks` — see that
+    // module's own header on why only a STRUCTURE ever sets it),
+    // selects everything currently in it — the Editor equivalent of
+    // "Village Hall is already selected." A null/undefined
+    // entryContext (every OTHER caller of openDocument() — Load,
+    // forkStructure(), a fresh New) leaves the camera and selection
+    // exactly where _rebuild() already put them: untouched. Public
+    // (not `_`-prefixed) because it's a real, independently useful
+    // capability — exactly like frameCameraOn()/selectAll() above it,
+    // not an internal rebuild step.
+    applyEntryContext(entryContext) {
+        if (!entryContext) {
+            return false;
+        }
+        if (entryContext.focusPosition) {
+            this.frameCameraOn(entryContext.focusPosition);
+        }
+        if (entryContext.selectAllBricks) {
+            this.selectAll();
+        }
         return true;
     }
 
@@ -870,7 +932,11 @@ export class EditorSession {
         });
     }
 
-    openDocument(document) {
+    // `entryContext` (core/EditorEntryContext.js) is optional and
+    // 0.6.0-only — every pre-existing caller (Load, a fresh New,
+    // forkStructure() below) passes nothing, and behaves exactly as
+    // before. See applyEntryContext()'s own header for what it does.
+    openDocument(document, entryContext = null) {
         this._rebuild((eventBus) => {
             const worldJson = document.world.toJSON();
             const world = World.fromJSON(worldJson, eventBus);
@@ -878,6 +944,7 @@ export class EditorSession {
             this._documentManager.newDocument(newDocument);
             return world;
         });
+        this.applyEntryContext(entryContext);
     }
 
     // 0.2.81 — Forkable Structure Library. Forks `structure` (a
