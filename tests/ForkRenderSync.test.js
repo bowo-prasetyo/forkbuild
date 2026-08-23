@@ -8,7 +8,10 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
+import { DeleteBrickCommand } from '../application/commands/DeleteBrickCommand.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
@@ -87,10 +90,14 @@ async function runTests() {
         const worldRenderer = new WorldRenderer(fakeLowLevelRenderer, registry);
         worldRenderer.subscribe(sessionEventBus);
 
+        const avatarPresenceSession = new AvatarPresenceSession(
+            { avatarId: 'alice-avatar', ownerIdentity: 'alice' },
+            { position: new Position(0, 0, 0) }
+        );
         const session = new WorldNavigationSession({
             registry, loadPublicationDocumentUseCase, worldLayoutProvider,
             saveDocumentUseCase, publishDocumentUseCase, identityProvider: alice,
-            documentCloneService, discoveryProvider
+            documentCloneService, discoveryProvider, avatarPresenceSession
         });
         // Mirrors exactly what WorldNavigationSession.start() wires up
         // (this._eventBus, then RenderWorldViewUseCase(..., eventBus,
@@ -129,7 +136,15 @@ async function runTests() {
     // -------------------------------------------------------------
     // 1-4. The core regression: a fork's mesh must keep following the
     //      domain model after the mutation that created it, not just
-    //      render correctly ONCE at fork time.
+    //      render correctly ONCE at fork time. 0.5.9 retired
+    //      moveSelection() from WorldNavigationSession — the FORK is
+    //      now triggered by createLandmarkHere() (World View's one
+    //      remaining mutation surface), but the regression itself is
+    //      about the fork's WORLD having a wired eventBus, not about
+    //      which command mutated it — so the follow-up mutations
+    //      below execute an ordinary MoveBrickCommand directly against
+    //      the fork's own CommandHistory, proving the exact same
+    //      wiring EditorSession's own brick-moving UI would rely on.
     // -------------------------------------------------------------
     {
         const publication = publisher.publish(makeDocument('A Brick'), alice);
@@ -142,20 +157,28 @@ async function runTests() {
         assert(beforePos.x === layoutPos.x && beforePos.z === layoutPos.z,
             '1. before any edit, the mesh sits at the world layout offset (sanity check on the harness itself)');
 
-        session.moveSelection({ x: 3, y: 0, z: 0 });
+        session.createLandmarkHere('Fork Trigger', '');
         const forkId = session.getActiveDocumentId();
-        const forkBrickId = session.getDocument(forkId).world.getBuildings()[0].getBricks()[0].id;
+        const forkBuilding = session.getDocument(forkId).world.getBuildings()[0];
+        const forkBrickId = forkBuilding.getBricks()[0].id;
+        const forkHistory = session._commandHistories.get(forkId);
+
+        forkHistory.execute(new MoveBrickCommand({
+            worldId: forkId, buildingId: forkBuilding.id, brickId: forkBrickId, delta: { x: 3, y: 0, z: 0 }
+        }));
 
         const afterFirstMove = meshPositionFor(worldRenderer, forkBrickId);
         assert(afterFirstMove !== null, '2. the fork\'s brick has a mesh at all');
         assert(afterFirstMove.x === layoutPos.x + 3,
-            `3. THE REGRESSION: the mesh reflects the move that triggered the fork (expected x=${layoutPos.x + 3}, got x=${afterFirstMove.x}) — `
+            `3. THE REGRESSION: the mesh reflects the move applied to the fork (expected x=${layoutPos.x + 3}, got x=${afterFirstMove.x}) — `
             + 'a fork whose World has no wired eventBus renders correctly ONCE, then freezes forever, no matter how many further edits are applied');
 
         // A second move on the SAME fork must ALSO be visible — this
-        // catches "only the move that created the fork happened to
+        // catches "only the move right after the fork happened to
         // work by coincidence" rather than genuine live wiring.
-        session.moveSelection({ x: 0, y: 0, z: 5 });
+        forkHistory.execute(new MoveBrickCommand({
+            worldId: forkId, buildingId: forkBuilding.id, brickId: forkBrickId, delta: { x: 0, y: 0, z: 5 }
+        }));
         const afterSecondMove = meshPositionFor(worldRenderer, forkBrickId);
         assert(afterSecondMove.x === layoutPos.x + 3 && afterSecondMove.z === layoutPos.z + 5,
             '4. a SECOND mutation on the already-forked document is also visible — the fork stays live, not just its first frame');
@@ -172,16 +195,29 @@ async function runTests() {
         const publication = publisher.publish(makeDocument('Add Remove'), alice);
         const { session, worldRenderer } = buildRealRenderSession();
         session._loadWorld(publication.documentId);
-        const sourceBrickId = selectFirstBrick(session, publication.documentId);
 
-        session.deleteSelection();
+        // 0.5.9 retired deleteSelection()/pasteClipboard() from
+        // WorldNavigationSession — createLandmarkHere() triggers the
+        // fork instead, and the BRICK_REMOVED wiring this section
+        // actually cares about is exercised by executing a
+        // DeleteBrickCommand directly against the fork's own
+        // CommandHistory, same as Section 1-4 above.
+        session.createLandmarkHere('Fork Trigger', '');
         const forkId = session.getActiveDocumentId();
-        assert(worldRenderer.meshRegistry.getMesh(sourceBrickId) === null,
-            '5. the deleted brick\'s mesh is gone (delete is itself the fork-triggering mutation here)');
+        const forkBuilding = session.getDocument(forkId).world.getBuildings()[0];
+        const forkBrickId = forkBuilding.getBricks()[0].id;
+        const forkHistory = session._commandHistories.get(forkId);
+
+        forkHistory.execute(new DeleteBrickCommand({
+            worldId: forkId, buildingId: forkBuilding.id, brickId: forkBrickId
+        }));
+        assert(worldRenderer.meshRegistry.getMesh(forkBrickId) === null,
+            '5. the deleted brick\'s mesh is gone — BRICK_REMOVED reaches the renderer on the fork too');
         assert(session.getDocument(forkId).world.getBuildings()[0].getBricks().length === 0,
             '5b. the fork\'s domain model is correctly empty');
 
-        session.pasteClipboard(); // no-op without a prior copy, but exercises the path without throwing
+        const forkLandmarkId = session.getDocument(forkId).world.getWorldLandmarks()[0].id;
+        session.updateLandmark(forkLandmarkId, { title: 'Renamed' }); // exercises further interaction without throwing
         assert(session.getLoadedDocuments().length === 1, '6. still exactly one loaded document after further interaction');
     }
 
