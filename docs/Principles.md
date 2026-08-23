@@ -7934,3 +7934,105 @@ exchange, rendezvous relay, or DHT plugs into `exportClaim()`/
 `importClaim()` exactly as it stands today — the naming model
 underneath never has to change, and neither does this class's own
 public surface, for any transport that comes after it.
+
+### Geographic Similarity Suggests Identity; It Never Mutates Identity (0.5.4)
+
+0.5.2 and 0.5.3 each independently named, in their own "Deliberately
+excluded" lists, the exact same open question: a `PlaceNamingClaim`'s
+`regionId` is an exact reference to ONE `WorldRegion`, so two authors'
+regions covering the same real ground but created independently are,
+for naming purposes, still two separate places. 0.5.4 (Place Identity &
+Geographic Claim Resolution) closes that gap, and the design
+conversation that proposed it was explicit about the one trap to avoid:
+
+> Don't make `WorldRegion A == WorldRegion B`. Don't modify either
+> World. Geographic similarity SUGGESTS identity; it never MUTATES
+> identity.
+
+**A fingerprint match is CANDIDACY, never proof.** `core/PlaceIdentity.js#derivePlaceIdentity()`
+returns exactly one word for its verdict — `candidate` — and that word
+is used EVERYWHERE in this milestone's own code and comments in place
+of "same," "matched," or "identical," because none of those words are
+ever true here. Two regions whose `core/PlaceFingerprint.js` fingerprints
+are byte-identical are worth showing a human as a SUGGESTION; they are
+never worth acting on automatically. See this milestone's own
+docs/Roadmap.md entry, "Candidacy, never proof."
+
+**No region is ever merged, and no `WorldRegion` is ever mutated by
+this milestone — full stop.** `core/GeographicPlaceResolution.js` never
+calls `World#addWorldRegion()`, `updateWorldRegion()`, or any Command;
+it never even receives a `World` — only plain region-like objects and
+claims a caller already assembled. `tests/PlaceIdentity.test.js`
+Sections D and F both include a direct assertion that a `WorldRegion`'s
+own `.name` is byte-identical before and after every resolution this
+milestone performs. This is 0.5.0's own "hierarchy is geometric, never
+authored" restraint (`parentRegionId` is informational, never consulted
+by `regionsContaining()`) applied one level up: place IDENTITY is
+geometric-candidate-only, never authored into certainty by an
+algorithm, exactly the same way region CONTAINMENT was never authored
+into hierarchy.
+
+**Quantization absorbs noise; it never manufactures agreement.**
+`core/PlaceFingerprint.js#deriveFingerprint()` rounds a region's center
+and radius to the nearest multiple of a small quantum (1 world unit by
+default) specifically so two authors' independently-typed geometry
+(100.00001 vs. 100.00002) fingerprints identically, while two
+genuinely different, intentionally-authored values (100 vs. 180) never
+do. The quantum is deliberately TIGHT: this milestone would rather
+under-match — two authors describing the same ground with meaningfully
+different geometry stay separate candidates — than over-match. See
+`tests/PlaceIdentity.test.js` Section A for the direct noise-absorption
+proof, and Section B for the full adversarial matrix (same center/
+different radius, same radius/different center, nested regions,
+overlapping-but-different-center, and completely unrelated regions) all
+proving the SAME conservative bias.
+
+**An exact-key partition, not a similarity-threshold cluster — because
+that is what makes it an honest equivalence relation.**
+`core/PlaceIdentity.js#groupRegionsByPlaceIdentity()` groups regions by
+whether their QUANTIZED fingerprints are byte-identical, never by a
+pairwise "close enough" comparison chained across a list. A threshold-
+based approach would not necessarily be transitive (A close to B, B
+close to C, but A not close to C is a real failure mode for any
+tolerance-based clustering), which would make a grouping's result
+depend on the order regions happened to be compared in — exactly the
+kind of replica-dependent, non-deterministic outcome this entire
+architecture has refused since `core/PlaceNamingView.js#namingView()`'s
+own deterministic tie-breaks. Exact-key equality sidesteps the problem
+entirely: it is reflexive, symmetric, and transitive BY CONSTRUCTION,
+proven directly in `tests/PlaceIdentity.test.js` Section B rather than
+merely assumed.
+
+**`kind` is a hard gate, not a soft signal — a real, named limitation,
+not an oversight.** Two regions with identical center and radius but a
+different `kind` label (a Village one author calls a Village, the same
+ground another author calls a Town) do NOT fingerprint-match today. This
+trades a real false-negative cost (genuinely-same-ground authors who
+happened to disagree about administrative granularity won't see their
+names combined) for the same conservative "never over-match" bias
+described above, and is named directly as future refinement in
+docs/Roadmap.md's own "Deliberately excluded" list rather than solved
+here with an unvalidated weighting scheme.
+
+**Combined ranking is ADDITIVE, never a replacement for the per-region
+view 0.5.2 already built.** `core/GeographicPlaceResolution.js` produces
+a NEW, separate ranked view spanning every region in a candidate group
+— it never replaces, filters, or reorders what `core/PlaceNamingView.js#namingView()`
+already computes for one region alone. `ui/components/PlaceNamingPanel.js`
+shows both, clearly separated and labeled: "Community Names" (this
+region's own claims, exactly as 0.5.2 left it) and "Community Names
+Across These Places" (the new, combined view), with an explicit "Other
+Geographic Descriptions" section captioned "each stays its own separate
+region" — a human reading the panel is never left to guess which
+question either number is actually answering.
+
+**Not yet explicit human confirmation — that boundary is drawn on
+purpose, the same way 0.5.2 drew its own around exchange.** The design
+conversation that proposed this milestone also sketched a stronger,
+SEPARATE future concept — a signed `PlaceEquivalenceClaim`, "I
+explicitly confirm these two regions describe the same place,"
+geometry-plus-human-assertion rather than geometry alone. This
+milestone deliberately proves CANDIDACY works first, in isolation,
+before anything is built on top of it — the identical "data model
+first" discipline 0.5.2 already established for naming claims
+themselves, and 0.5.0 established before that for regions.

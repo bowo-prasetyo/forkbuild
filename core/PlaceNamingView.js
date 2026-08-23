@@ -31,21 +31,35 @@ export function claimsForRegion(regionId, claims = []) {
     return claims.filter((claim) => claim && claim.regionId === regionId);
 }
 
-// Every distinct NAME claimed for `regionId`, ranked by the number of
-// DISTINCT identities who have claimed it (most-agreed-on first), ties
-// broken by name for deterministic ordering across replicas that happen
-// to have discovered a different subset of claims. Each entry:
+// 0.5.4 — Place Identity & Geographic Claim Resolution pulled the actual
+// scoring/ranking logic out of namingView() below into this standalone
+// function, so core/GeographicPlaceResolution.js could rank a set of
+// claims spanning MULTIPLE regions (every region a fingerprint-based
+// place-identity group considers a candidate for the same ground —
+// see core/PlaceIdentity.js) using the exact same distinct-author
+// scoring, without namingView()'s own single-regionId filter getting in
+// the way. `namingView()` itself is unchanged in behavior — it is now a
+// two-line composition of claimsForRegion() + this function — see this
+// milestone's own regression test proving byte-identical output.
+//
+// Ranks every distinct NAME across `claims` by the number of DISTINCT
+// identities who have claimed it (most-agreed-on first), ties broken by
+// name for deterministic ordering across replicas that happen to have
+// discovered a different subset of claims. Each entry:
 //
 //   { name, score, claims }
 //
 // `score` is the distinct-author count described above; `claims` is
-// every PlaceNamingClaim (JSON or class instance, either is accepted —
-// see claimsForRegion() above) contributing to that name, most recent
-// first, so a UI can show "who said this" without a second lookup.
-export function namingView(regionId, claims = []) {
-    const relevant = claimsForRegion(regionId, claims);
+// every PlaceNamingClaim (JSON or class instance, either is accepted)
+// contributing to that name, most recent first, so a UI can show "who
+// said this" without a second lookup. Deliberately does NOT filter by
+// regionId at all — a caller that wants only one region's own claims
+// ranked calls namingView() below instead, or pre-filters via
+// claimsForRegion() itself.
+export function rankClaimsByName(claims = []) {
     const byName = new Map();
-    for (const claim of relevant) {
+    for (const claim of claims) {
+        if (!claim) continue;
         const key = claim.name;
         if (!byName.has(key)) {
             byName.set(key, { name: key, authors: new Set(), claims: [] });
@@ -61,6 +75,13 @@ export function namingView(regionId, claims = []) {
             claims: entry.claims.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         }))
         .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+}
+
+// Every distinct NAME claimed for `regionId`, ranked by rankClaimsByName()
+// above — see that function's own header for the full scoring rules.
+// Each entry: { name, score, claims }.
+export function namingView(regionId, claims = []) {
+    return rankClaimsByName(claimsForRegion(regionId, claims));
 }
 
 // The single top-ranked name for a region, or null when nobody has

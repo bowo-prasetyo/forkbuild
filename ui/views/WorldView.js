@@ -271,6 +271,16 @@ export default {
         const namingPanelClaims = ref([]);
         const namingPanelView = ref([]);
         const namingPanelPreferredName = ref(null);
+        // 0.5.4 — Place Identity & Geographic Claim Resolution.
+        // `namingPanelGeographicRegions`/`namingPanelGeographicView` are
+        // session.getGeographicNamingView()'s own output — every region
+        // this replica currently knows about that CANDIDATE-matches
+        // namingPanelRegionId's own geometry (core/PlaceIdentity.js),
+        // and the combined naming view across every one of them. Purely
+        // additive alongside namingPanelClaims/namingPanelView above,
+        // which stay scoped to exactly this one region, unchanged.
+        const namingPanelGeographicRegions = ref([]);
+        const namingPanelGeographicView = ref([]);
         const myIdentityId = computed(() => session.getMyIdentityId());
         // 0.5.1 — World Maps & Geographic Navigation. `mapContent` is
         // session.getMapContent()'s own shape — refreshed on the SAME
@@ -1436,6 +1446,13 @@ export default {
             namingPanelClaims.value = session.getPlaceNamingClaims(regionId);
             namingPanelView.value = session.getPlaceNamingView(regionId);
             namingPanelPreferredName.value = session.getPreferredPlaceName(regionId);
+            // 0.5.4 — see this function's own header on why this stays
+            // a separate, additive read: it never changes what
+            // namingPanelClaims/namingPanelView above already show for
+            // THIS region alone.
+            const geographic = session.getGeographicNamingView(regionId);
+            namingPanelGeographicRegions.value = geographic.regions;
+            namingPanelGeographicView.value = geographic.namingView;
         }
 
         function openNamingPanel(regionId) {
@@ -2274,6 +2291,8 @@ export default {
             namingPanelClaims,
             namingPanelView,
             namingPanelPreferredName,
+            namingPanelGeographicRegions,
+            namingPanelGeographicView,
             openNamingPanel,
             closeNamingPanel,
             publishNamingClaim,
@@ -2878,10 +2897,13 @@ export default {
             />
             <PlaceNamingPanel
                 v-if="showNamingPanel"
+                :region-id="namingPanelRegionId"
                 :region-name="(worldLocations.find(l => l.id === namingPanelRegionId) || {}).title || ''"
                 :naming-view="namingPanelView"
                 :claims="namingPanelClaims"
                 :preferred-name="namingPanelPreferredName"
+                :geographic-regions="namingPanelGeographicRegions"
+                :geographic-naming-view="namingPanelGeographicView"
                 :my-identity-id="myIdentityId"
                 @publish-name="publishNamingClaim"
                 @retract-name="retractNamingClaim"
