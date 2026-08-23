@@ -1,5 +1,6 @@
 // 0.2.94 — World View Location & Navigation.
 // 0.3.7 — World Landmarks & Personal Waypoints: added LANDMARK kind.
+// 0.5.0 — World Regions & Decentralized Place Naming: added REGION kind.
 //
 // The closed vocabulary for what a WorldLocation (core/WorldLocation.js)
 // actually IS. Deliberately narrow: only the kinds this milestone
@@ -16,10 +17,16 @@
 //               STRUCTURE, a LANDMARK is not derived from other state;
 //               it IS the stored state — see docs/Principles.md,
 //               "A Landmark Is World Content, Not Spatial Presence (0.3.7)".
+//   REGION    — an explicit core/WorldRegion.js instance, a named AREA
+//               rather than a single point. Navigable to its CENTER,
+//               exactly like a LANDMARK is navigable to its own point —
+//               see docs/Principles.md, "Users Name Places; The World
+//               Derives Geography From Names (0.5.0)".
 export const WorldLocationKind = Object.freeze({
     ORIGIN: 'origin',
     STRUCTURE: 'structure',
-    LANDMARK: 'landmark'
+    LANDMARK: 'landmark',
+    REGION: 'region'
 });
 
 export function isValidWorldLocationKind(kind) {

@@ -28,5 +28,11 @@ export const DomainEvent = Object.freeze({
     // exactly like StructurePlacement above.
     WORLD_LANDMARK_ADDED: 'WorldLandmarkAdded',
     WORLD_LANDMARK_REMOVED: 'WorldLandmarkRemoved',
-    WORLD_LANDMARK_UPDATED: 'WorldLandmarkUpdated'
+    WORLD_LANDMARK_UPDATED: 'WorldLandmarkUpdated',
+    // 0.5.0 — World Regions & Decentralized Place Naming: a named AREA,
+    // the same kind of persistent World content as a landmark's named
+    // POINT. Lifecycle is a domain concern exactly like the two above.
+    WORLD_REGION_ADDED: 'WorldRegionAdded',
+    WORLD_REGION_REMOVED: 'WorldRegionRemoved',
+    WORLD_REGION_UPDATED: 'WorldRegionUpdated'
 });

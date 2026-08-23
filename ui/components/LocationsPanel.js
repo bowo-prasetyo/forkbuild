@@ -25,6 +25,12 @@
 // never decides authorization, only shows or hides the affordance; the
 // session methods behind add-landmark/edit-landmark/remove-landmark
 // enforce it again regardless of what this panel shows.
+//
+// 0.5.0 — World Regions & Decentralized Place Naming adds a fourth
+// section, Places, following the exact same pattern as Landmarks: a
+// REGION location is also World content an EDIT member may create/
+// rename/redescribe/remove directly (add-region/edit-region/remove-region),
+// distinguished here only because it names an AREA rather than a point.
 export default {
     name: 'LocationsPanel',
     props: {
@@ -33,14 +39,19 @@ export default {
             type: Array,
             default: () => []
         },
-        // Whether the active document currently accepts landmark edits —
-        // gates Add/Edit/Remove; Focus is always available regardless.
+        // Whether the active document currently accepts landmark/region
+        // edits — gates Add/Edit/Remove; Focus is always available
+        // regardless.
         canEdit: {
             type: Boolean,
             default: false
         }
     },
-    emits: ['focus', 'cancel', 'add-landmark', 'edit-landmark', 'remove-landmark'],
+    emits: [
+        'focus', 'cancel',
+        'add-landmark', 'edit-landmark', 'remove-landmark',
+        'add-region', 'edit-region', 'remove-region'
+    ],
     computed: {
         originLocations() {
             return this.locations.filter((loc) => loc.kind === 'origin');
@@ -50,6 +61,9 @@ export default {
         },
         landmarkLocations() {
             return this.locations.filter((loc) => loc.kind === 'landmark');
+        },
+        regionLocations() {
+            return this.locations.filter((loc) => loc.kind === 'region');
         }
     },
     methods: {
@@ -127,6 +141,29 @@ export default {
                                     <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
                                     <button v-if="canEdit" class="action-btn" @click="$emit('edit-landmark', loc.id)">Edit</button>
                                     <button v-if="canEdit" class="action-btn action-btn--danger" @click="$emit('remove-landmark', loc.id)">Remove</button>
+                                </div>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="locations-panel-section">
+                        <div class="locations-panel-section-header">
+                            <h4 class="locations-panel-section-title">Places</h4>
+                            <button v-if="canEdit" class="action-btn" @click="$emit('add-region')">+ Name This Area</button>
+                        </div>
+                        <p v-if="regionLocations.length === 0" class="locations-panel-empty">
+                            No named areas yet — give a stretch of this World a name.
+                        </p>
+                        <ul v-else class="locations-panel-list">
+                            <li v-for="loc in regionLocations" :key="loc.id" class="locations-panel-item">
+                                <div class="locations-panel-item-info">
+                                    <span class="locations-panel-item-title">⬢ {{ loc.title }}</span>
+                                    <span class="locations-panel-item-position">{{ formatPosition(loc) }}</span>
+                                </div>
+                                <div class="locations-panel-item-actions">
+                                    <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
+                                    <button v-if="canEdit" class="action-btn" @click="$emit('edit-region', loc.id)">Edit</button>
+                                    <button v-if="canEdit" class="action-btn action-btn--danger" @click="$emit('remove-region', loc.id)">Remove</button>
                                 </div>
                             </li>
                         </ul>

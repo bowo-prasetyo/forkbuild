@@ -22,6 +22,7 @@ import NearbyAvatarsPanel from '../components/NearbyAvatarsPanel.js';
 import CompassIndicator from '../components/CompassIndicator.js';
 import LocationsPanel from '../components/LocationsPanel.js';
 import LandmarkFormModal from '../components/LandmarkFormModal.js';
+import RegionFormModal from '../components/RegionFormModal.js';
 import WorldMembersPanel from '../components/WorldMembersPanel.js';
 import WorldPresenceIndicator from '../components/WorldPresenceIndicator.js';
 import WorldCollaboratorIndicator, { buildSpatialCollaboratorRows } from '../components/WorldCollaboratorIndicator.js';
@@ -58,7 +59,7 @@ export default {
         PlacementInfoPanel, PlacementEditorDialog,
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
         AvatarInfoPanel, NearbyAvatarsPanel,
-        CompassIndicator, LocationsPanel, LandmarkFormModal,
+        CompassIndicator, LocationsPanel, LandmarkFormModal, RegionFormModal,
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
         WorldWelcomePanel
     },
@@ -250,6 +251,13 @@ export default {
         const canEditActiveWorld = ref(false);
         const showLandmarkForm = ref(false);
         const landmarkFormTarget = ref(null);
+        // 0.5.0 — World Regions & Decentralized Place Naming. Same
+        // shape/gating as showLandmarkForm/landmarkFormTarget above —
+        // `regionFormTarget` is null for Add, or
+        // { id, name, description, kind, radius } for Edit — see
+        // RegionFormModal's own header.
+        const showRegionForm = ref(false);
+        const regionFormTarget = ref(null);
         // 0.2.99 — World Collaboration UX. `worldMembers`/
         // `worldPresenceRoster` are the RAW facts session.
         // listWorldMembers()/getWorldPresenceRoster() already return for
@@ -1333,6 +1341,57 @@ export default {
             refreshSpatialUI();
         }
 
+        // -----------------------------------------------------------------
+        // 0.5.0 — World Regions & Decentralized Place Naming
+        // -----------------------------------------------------------------
+        //
+        // Same guarded()/refresh shape as the landmark handlers above —
+        // see that section's own header.
+        function openAddRegionForm() {
+            regionFormTarget.value = null;
+            showRegionForm.value = true;
+        }
+
+        function openEditRegionForm(regionId) {
+            const region = session.getRegion(regionId);
+            if (!region) {
+                feedback.show('That region is no longer available');
+                return;
+            }
+            regionFormTarget.value = region;
+            showRegionForm.value = true;
+        }
+
+        function closeRegionForm() {
+            showRegionForm.value = false;
+            regionFormTarget.value = null;
+        }
+
+        function onSaveRegionForm({ name, description, kind, radius }) {
+            const target = regionFormTarget.value;
+            guarded(() => {
+                if (target) {
+                    session.updateRegion(target.id, { name, description, kind, radius });
+                    feedback.show(`Updated "${name}"`);
+                } else {
+                    session.createRegionHere(name, { description, kind, radius });
+                    feedback.show(`Named "${name}"`);
+                }
+            });
+            closeRegionForm();
+            refreshLocationsPanel();
+            refreshSpatialUI();
+        }
+
+        function removeRegionFromPanel(regionId) {
+            guarded(() => {
+                session.removeRegion(regionId);
+                feedback.show('Region removed');
+            });
+            refreshLocationsPanel();
+            refreshSpatialUI();
+        }
+
         // 0.2.93 — "Open Source": reuses the EXISTING /editor?load=<id>
         // route ui/components/PublicationCatalog.js and every forked-
         // document link already use to open a document in the Editor —
@@ -2011,6 +2070,8 @@ export default {
             canEditActiveWorld,
             showLandmarkForm,
             landmarkFormTarget,
+            showRegionForm,
+            regionFormTarget,
             goHome,
             openLocationsPanel,
             closeLocationsPanel,
@@ -2020,6 +2081,11 @@ export default {
             closeLandmarkForm,
             onSaveLandmarkForm,
             removeLandmarkFromPanel,
+            openAddRegionForm,
+            openEditRegionForm,
+            closeRegionForm,
+            onSaveRegionForm,
+            removeRegionFromPanel,
             showMembersPanel,
             worldCollaborationRoster,
             worldOnlineCount,
@@ -2595,12 +2661,21 @@ export default {
                 @add-landmark="openAddLandmarkForm"
                 @edit-landmark="openEditLandmarkForm"
                 @remove-landmark="removeLandmarkFromPanel"
+                @add-region="openAddRegionForm"
+                @edit-region="openEditRegionForm"
+                @remove-region="removeRegionFromPanel"
             />
             <LandmarkFormModal
                 v-if="showLandmarkForm"
                 :landmark="landmarkFormTarget"
                 @save="onSaveLandmarkForm"
                 @cancel="closeLandmarkForm"
+            />
+            <RegionFormModal
+                v-if="showRegionForm"
+                :region="regionFormTarget"
+                @save="onSaveRegionForm"
+                @cancel="closeRegionForm"
             />
             <WorldWelcomePanel
                 v-if="showWelcomePanel"
@@ -2635,6 +2710,15 @@ export default {
                          itself, at each nearby structure's/collaborator's
                          own compass direction. -->
                     <CompassIndicator :heading="compassHeading" :markers="compassMarkers" />
+                </div>
+                <!-- 0.5.0 — the human-named place breadcrumb, e.g.
+                     "Willow Village · Green Valley", shown ABOVE the
+                     derived terrain description below (never merged
+                     with it — see docs/Principles.md, "Users Name
+                     Places; The World Derives Geography From Names
+                     (0.5.0)"). -->
+                <div v-if="spatialContext && spatialContext.placeName" class="world-view-nav-context world-view-nav-context--place">
+                    {{ spatialContext.placeName }}
                 </div>
                 <!-- 0.3.6 — Contextual location description -->
                 <div v-if="spatialContext && spatialContext.description" class="world-view-nav-context">

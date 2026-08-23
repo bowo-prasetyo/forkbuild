@@ -42,6 +42,7 @@ export class WorldLocation {
     get isOrigin() { return this._kind === WorldLocationKind.ORIGIN; }
     get isStructure() { return this._kind === WorldLocationKind.STRUCTURE; }
     get isLandmark() { return this._kind === WorldLocationKind.LANDMARK; }
+    get isRegion() { return this._kind === WorldLocationKind.REGION; }
 
     toJSON() {
         return {

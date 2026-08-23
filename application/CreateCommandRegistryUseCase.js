@@ -21,6 +21,9 @@ import { SetStructurePlacementTransformCommand } from './commands/SetStructurePl
 import { CreateWorldLandmarkCommand } from './commands/CreateWorldLandmarkCommand.js';
 import { UpdateWorldLandmarkCommand } from './commands/UpdateWorldLandmarkCommand.js';
 import { RemoveWorldLandmarkCommand } from './commands/RemoveWorldLandmarkCommand.js';
+import { CreateWorldRegionCommand } from './commands/CreateWorldRegionCommand.js';
+import { UpdateWorldRegionCommand } from './commands/UpdateWorldRegionCommand.js';
+import { RemoveWorldRegionCommand } from './commands/RemoveWorldRegionCommand.js';
 
 // Builds the CommandRegistry and registers every built-in command type.
 // Later, community tools or plugin commands get one extra line here —
@@ -63,6 +66,12 @@ export class CreateCommandRegistryUseCase {
         registry.register('create-world-landmark', CreateWorldLandmarkCommand);
         registry.register('update-world-landmark', UpdateWorldLandmarkCommand);
         registry.register('remove-world-landmark', RemoveWorldLandmarkCommand);
+        // 0.5.0 — World Regions & Decentralized Place Naming: a named
+        // AREA, the same persistent-World-content contract as a
+        // landmark's named POINT above.
+        registry.register('create-world-region', CreateWorldRegionCommand);
+        registry.register('update-world-region', UpdateWorldRegionCommand);
+        registry.register('remove-world-region', RemoveWorldRegionCommand);
         return registry;
     }
 }

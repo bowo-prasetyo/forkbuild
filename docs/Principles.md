@@ -7568,3 +7568,94 @@ composes/forks through the exact same `CopyStructureIntoDocumentUseCase`/
 Structure's own identity" rule 0.4.3 already established for built-in
 versus personal now extends to imported without a single new field or
 branch.
+
+### Users Name Places; The World Derives Geography From Names (0.5.0)
+
+0.3.7 drew one deliberate exception into 0.3.6's "exploration is
+derived, never stored" rule: a `WorldLandmark`, a named POINT a human
+plants because nothing about terrain, seed, or geometry can invent a
+place's MEANING on its own. 0.5.0 (World Regions & Decentralized Place
+Naming) extends that exact same exception from a point to an AREA —
+`core/WorldRegion.js` — and then builds the one thing a point never
+needed: a way for many named areas to combine into a place someone can
+actually read, like *"Willow Village · Green Valley · Kingdom of
+Eldoria."* The rule this milestone commits to, stated plainly:
+
+> Users define the names; the World only ever DERIVES geographic
+> context from names that already exist. There is no central naming
+> authority, no procedurally "correct" name for a piece of ground, and
+> no requirement that two people's names for overlapping ground ever be
+> reconciled into one answer.
+
+**Geometry decides containment; authorship never does.**
+`core/WorldRegionGeography.js#regionsContaining()` answers "what named
+area(s) is this position inside" using nothing but each region's own
+center and radius — `distanceXZ() <= radius`, sorted smallest-first.
+This function NEVER reads `parentRegionId`, and that omission is the
+entire point. Consider Alice's authored hierarchy — Kingdom of Eldoria
+containing Green Valley containing Willow Village, each one naming the
+one before it as `parentRegionId` — sitting alongside Bob's completely
+unrelated "Northern Settlement," drawn independently over some of the
+same ground, naming no parent at all. Both are ordinary `WorldRegion`
+content; both are equally "correct." A viewer standing where all four
+overlap sees `describePlace()` produce *"Willow Village · Northern
+Settlement · Green Valley · Kingdom of Eldoria"* — Bob's unrelated
+region slots in purely by its own radius, between Alice's village and
+her valley, with neither author having coordinated, asked permission, or
+needing the system to arbitrate whose name for this ground is real. This
+is deliberately WEAKER than a real hierarchy — a real GIS system would
+insist a region belongs to exactly one parent — and the weakness is what
+makes decentralized naming actually work: nothing about creating
+"Willow Village" requires Green Valley to exist first, requires anyone's
+approval, or breaks the moment two authors' geography disagrees.
+
+**`parentRegionId` is informational, never load-bearing.** It exists so
+a future UI could ask "show me everything Alice filed under Green
+Valley," via `childRegions()` — and nothing else in this codebase
+consults it. It is never validated against an actually-existing region
+at creation time, and removing a region a child still names as its
+parent leaves that reference simply dangling — the same graceful-
+absence posture `application/WorldLocationDirectory.js` already takes
+toward a removed `StructurePlacement`, never a cascade delete, never an
+integrity error. A region with no parent at all is exactly as valid as
+one nested three levels deep; hierarchy is a convenience a UI MIGHT
+offer, never a requirement the geometry depends on.
+
+**Named content stays separate from derived content, on purpose.**
+`core/WorldSpatialContext.js`'s new `placeName` (from `containingRegions`)
+sits deliberately apart from its existing `description` getter (terrain
+zone, hydrology, nearest structure — pure derivation, byte-for-byte
+unchanged by this milestone) rather than merged into one string. The
+distinction 0.3.7's own principle already drew between "what IS here"
+(a fact every replica derives identically from seed and position) and
+"what does this place MEAN to someone" (a human's authored choice) holds
+exactly as true for an area as it did for a point — this milestone adds
+a second axis of that same boundary, never collapses the first one.
+
+**Procedural naming stays a presentation option, never a stored fact.**
+The design conversation that proposed this milestone named procedural
+fallback naming (deterministic "Sector 12"-style labels for unnamed
+ground) as a legitimate idea — and, just as deliberately, this milestone
+does not build it. A position outside every named region has `placeName
+=== ''`; `WorldNavigationSession#getCurrentPlaceName()` falls back to
+the EXISTING `describeLocation()` reading (0.3.8's nearest-landmark/
+structure heuristic) rather than inventing a new placeholder name. If a
+procedural fallback is ever built, the boundary this principle insists
+on is the same one 0.3.9 already drew for exploration suggestions:
+presentation only, NEVER written back into `WorldRegion` or `World#toJSON()`
+as if a human had authored it. A generated name a World merely DISPLAYS
+and a name a human CHOSE must never become indistinguishable in storage,
+or "users name places" quietly stops being true.
+
+**No naming authority beyond ordinary World membership.** `WorldRegion`
+carries `authorIdentityId` for provenance only — exactly the same
+posture 0.3.7 already established for `WorldLandmark`. There is no
+`officialName`, `verifiedName`, `canonicalName`, or `ADMIN_NAMING_AUTHORITY`
+concept anywhere in this milestone: any identity holding EDIT access to
+a World may create, rename, resize, or remove any region in it, the same
+`WorldNavigationSession#canEditDocument()` gate every other World-content
+mutation already consults. Introducing a governance layer over WHOSE
+names count was named directly, in the original design conversation, as
+something to deliberately not build yet — a World's geography stays
+purely community-authored, with no built-in concept of a "more correct"
+namer.

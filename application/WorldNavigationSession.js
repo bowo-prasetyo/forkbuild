@@ -27,6 +27,10 @@ import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { CreateWorldLandmarkCommand } from './commands/CreateWorldLandmarkCommand.js';
 import { UpdateWorldLandmarkCommand } from './commands/UpdateWorldLandmarkCommand.js';
 import { RemoveWorldLandmarkCommand } from './commands/RemoveWorldLandmarkCommand.js';
+import { CreateWorldRegionCommand } from './commands/CreateWorldRegionCommand.js';
+import { UpdateWorldRegionCommand } from './commands/UpdateWorldRegionCommand.js';
+import { RemoveWorldRegionCommand } from './commands/RemoveWorldRegionCommand.js';
+import { RegionKind } from '../core/RegionKind.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { Document } from '../core/Document.js';
 import { computeLifecycleStatus, describeLifecycleStatus } from './DocumentLifecycleStatus.js';
@@ -74,6 +78,7 @@ import { AvatarVerticalState } from '../core/AvatarVerticalState.js';
 import { deriveWorldSpatialAnchor } from '../core/WorldSpatialAnchor.js';
 import { derivePlaceContexts, findNearestLandmark, describeLocation } from '../core/WorldCurationContext.js';
 import { deriveWorldWelcomeContext } from '../core/WorldWelcomeContext.js';
+import { regionsContaining, describePlace } from '../core/WorldRegionGeography.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -2282,6 +2287,12 @@ export class WorldNavigationSession {
         const collaborators = this._getPresentCollaborators(resolveDisplayName);
         const position = this.getAvatarPosition() || this.getCameraPosition();
         const placeContexts = derivePlaceContexts({ landmarks, structurePlacements, structureTitles, collaborators });
+        // 0.5.0 — regions across every loaded document, positions
+        // already offset into the SAME shared/absolute layout space the
+        // avatar/camera position above already is (see this method's
+        // sibling loop above for structures/landmarks, and
+        // getCurrentRegionPath() below for the identical offset logic).
+        const regions = this._collectRegions();
 
         return deriveWorldWelcomeContext({
             world: activeDocument.world,
@@ -2290,8 +2301,81 @@ export class WorldNavigationSession {
             structurePlacements,
             structureTitles,
             collaborators,
-            placeContexts
+            placeContexts,
+            regions
         });
+    }
+
+    // 0.5.0 — World Regions & Decentralized Place Naming. Every
+    // WorldRegion across every currently loaded document, with each
+    // region's own X/Z offset into this session's shared/absolute
+    // layout space (getDocumentPosition), the exact inverse of what
+    // createRegionHere() below subtracts when creating one. A thin,
+    // read-only helper shared by getWelcomeContext(), getCurrentRegionPath(),
+    // and getRegions() — never a second source of truth for what regions
+    // currently exist.
+    _collectRegions() {
+        const regions = [];
+        for (const document of this.getLoadedDocuments()) {
+            const layoutPosition = this.getDocumentPosition(document.world.id);
+            for (const region of document.world.getWorldRegions()) {
+                regions.push({
+                    id: region.id,
+                    worldId: document.world.id,
+                    name: region.name,
+                    description: region.description,
+                    kind: region.kind,
+                    radius: region.radius,
+                    parentRegionId: region.parentRegionId,
+                    authorIdentityId: region.authorIdentityId,
+                    position: {
+                        x: region.x + layoutPosition.x,
+                        y: region.position.y + layoutPosition.y,
+                        z: region.z + layoutPosition.z
+                    }
+                });
+            }
+        }
+        return regions;
+    }
+
+    // Every currently known region, world-wide across loaded documents —
+    // the "Places" panel's own data source, the region counterpart to
+    // getWorldLocations().
+    getRegions() {
+        return this._collectRegions();
+    }
+
+    // 0.5.0 — every named region actually containing the viewer's
+    // current position, innermost first. Purely derived — see
+    // core/WorldRegionGeography.js#regionsContaining().
+    getCurrentRegionPath() {
+        const position = this.getAvatarPosition() || this.getCameraPosition();
+        if (!position) {
+            return [];
+        }
+        const regions = this._collectRegions();
+        return regionsContaining(position, regions).map((region) => {
+            const dx = region.position.x - position.x;
+            const dz = region.position.z - position.z;
+            return {
+                id: region.id,
+                name: region.name,
+                kind: region.kind,
+                distance: Math.round(Math.sqrt(dx * dx + dz * dz) * 10) / 10
+            };
+        });
+    }
+
+    // The human breadcrumb for the viewer's CURRENT position, e.g.
+    // "Willow Village · Green Valley". Falls back to the exact same
+    // describeLocation() reading (nearest landmark/structure) this
+    // session already offered before 0.5.0 when no region contains the
+    // position — never a fabricated placeholder name.
+    getCurrentPlaceName() {
+        const path = this.getCurrentRegionPath();
+        const placeName = describePlace(path);
+        return placeName || this.getCurrentLocationDescription();
     }
 
     // -----------------------------------------------------------------
@@ -5204,6 +5288,115 @@ export class WorldNavigationSession {
 	    }
 	    this._commandHistories.get(worldId).execute(
 	        new RemoveWorldLandmarkCommand({ worldId, landmarkId })
+	    );
+	    return true;
+	}
+
+	// -----------------------------------------------------------------
+	// World Regions (0.5.0) — explicit, persistent World content: a
+	// named AREA (center + radius) rather than a landmark's single
+	// point. Mirrors the World Landmarks section immediately above in
+	// every structural respect — same Command chokepoint (so
+	// propagation/undo/redo need zero region-specific code), same
+	// world-wide "search every loaded document" resolution, same
+	// canEditDocument() authorization gate, never a second
+	// RegionOwner/ACL concept. See core/WorldRegion.js's own header and
+	// docs/Principles.md, "Users Name Places; The World Derives
+	// Geography From Names (0.5.0)."
+	// -----------------------------------------------------------------
+
+	getRegion(regionId) {
+	    const doc = this._resolveRegionOwner(regionId);
+	    if (!doc) return null;
+	    return doc.world.getWorldRegion(regionId).toJSON();
+	}
+
+	_resolveRegionOwner(regionId) {
+	    for (const doc of this.getLoadedDocuments()) {
+	        if (doc.world.getWorldRegion(regionId)) {
+	            return doc;
+	        }
+	    }
+	    return null;
+	}
+
+	// "Name This Area" — a region CENTERED on the local avatar's own
+	// current position, in the ACTIVE document's World, exactly the same
+	// fork-on-write / authorization posture createLandmarkHere() already
+	// established one section above. `radius` is required — unlike a
+	// landmark's single point, an area has no meaningful default extent;
+	// the caller (a form field, or a test) decides how big "here" means.
+	// `kind`/`parentRegionId` are both optional: a region with no kind
+	// picked defaults to RegionKind.PLACE, and a region with no parent
+	// is exactly as valid as one nested three levels deep — see
+	// core/WorldRegion.js's own header on why hierarchy is never
+	// mandatory.
+	createRegionHere(name, { description = '', kind = RegionKind.PLACE, radius, parentRegionId = null } = {}) {
+	    if (!Number.isFinite(radius) || radius <= 0) {
+	        throw new Error('WorldNavigationSession: a region requires a positive radius');
+	    }
+	    const avatarPos = this.getAvatarPosition();
+	    if (!avatarPos) {
+	        throw new Error('WorldNavigationSession: cannot add a region without a live avatar position');
+	    }
+	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
+	    const doc = this.getDocument(this._activeDocumentId);
+	    if (!doc) {
+	        throw new Error('WorldNavigationSession: no active World to add a region to');
+	    }
+	    const worldId = doc.world.id;
+	    if (!this.canEditDocument(worldId)) {
+	        throw new Error('WorldNavigationSession: not authorized to add regions to this World');
+	    }
+	    const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
+	    if (!authorIdentityId) {
+	        throw new Error('WorldNavigationSession: sign in to add a region');
+	    }
+	    const layoutPosition = this.getDocumentPosition(worldId);
+	    const cmd = new CreateWorldRegionCommand({
+	        worldId,
+	        authorIdentityId,
+	        name,
+	        description,
+	        kind,
+	        radius,
+	        parentRegionId,
+	        position: new Position(
+	            avatarPos.x - layoutPosition.x,
+	            avatarPos.y - layoutPosition.y,
+	            avatarPos.z - layoutPosition.z
+	        )
+	    });
+	    this._commandHistories.get(worldId).execute(cmd);
+	    return cmd.executedRegionId;
+	}
+
+	updateRegion(regionId, { name, description, kind, radius } = {}) {
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
+	    }
+	    const worldId = this._ensureEditableDocumentId(owner.world.id);
+	    if (!this.canEditDocument(worldId)) {
+	        throw new Error('WorldNavigationSession: not authorized to edit regions in this World');
+	    }
+	    this._commandHistories.get(worldId).execute(
+	        new UpdateWorldRegionCommand({ worldId, regionId, name, description, kind, radius })
+	    );
+	    return true;
+	}
+
+	removeRegion(regionId) {
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
+	    }
+	    const worldId = this._ensureEditableDocumentId(owner.world.id);
+	    if (!this.canEditDocument(worldId)) {
+	        throw new Error('WorldNavigationSession: not authorized to remove regions from this World');
+	    }
+	    this._commandHistories.get(worldId).execute(
+	        new RemoveWorldRegionCommand({ worldId, regionId })
 	    );
 	    return true;
 	}
