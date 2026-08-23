@@ -85,10 +85,13 @@ import { geographicPlaceForRegion } from '../core/GeographicPlaceResolution.js';
 import { buildGeographicPlaceDirectory, geographicPlaceByKey } from '../core/GeographicPlaceDirectory.js';
 import {
     geographicPlaceLocationId,
+    isGeographicPlaceLocationId,
+    geographicPlaceFingerprintKeyFromLocationId,
     deriveNearbyGeographicPlaces,
     searchGeographicPlaces as searchGeographicPlaceRows,
     DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS
 } from '../core/GeographicPlaceNavigation.js';
+import { deriveWorldFocusContext, WorldFocusKind } from '../core/WorldFocusContext.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -2516,6 +2519,21 @@ export class WorldNavigationSession {
         if (!position) {
             return [];
         }
+        return deriveNearbyGeographicPlaces(this._collectGeographicPlaceEntries(), position, radius);
+    }
+
+    // 0.5.8 — World View Contextual Focus & Information Hierarchy. The
+    // entries loop getNearbyGeographicPlaces() built inline before this
+    // milestone, extracted so getFocusContext() below can ask its own
+    // "what's the nearest OTHER geographic place candidate to THIS
+    // target" question by reusing the exact same resolution — never a
+    // second copy of this loop, and never a second way "how far away is
+    // a geographic place" gets answered. See core/GeographicPlaceNavigation.js#
+    // deriveNearbyGeographicPlaces()'s own header on why no distance is
+    // ever stored: every entry's position is re-resolved fresh, on
+    // every call, straight through the same WorldLocationDirectory
+    // lookup focusLocation() itself uses.
+    _collectGeographicPlaceEntries() {
         const entries = [];
         for (const place of this.getGeographicPlaceDirectory()) {
             const location = this._worldLocationDirectory.find(geographicPlaceLocationId(place.fingerprintKey));
@@ -2531,7 +2549,148 @@ export class WorldNavigationSession {
                 position: { x: location.position.x, y: location.position.y, z: location.position.z }
             });
         }
-        return deriveNearbyGeographicPlaces(entries, position, radius);
+        return entries;
+    }
+
+    // 0.5.8 — every WorldLandmark across every loaded document, in this
+    // session's own shared/absolute layout space (getDocumentPosition)
+    // — the exact same offset _collectRegions()/getMapContent() already
+    // apply — PLUS each landmark's own description, which
+    // getMapContent()'s thinner {id, title, position} rows don't carry.
+    // A thin, read-only helper for getFocusContext() below; never a
+    // second source of truth for what landmarks currently exist.
+    _collectFocusLandmarks() {
+        const landmarks = [];
+        for (const document of this.getLoadedDocuments()) {
+            const layoutPosition = this.getDocumentPosition(document.world.id);
+            for (const landmark of document.world.getWorldLandmarks()) {
+                landmarks.push({
+                    id: landmark.id,
+                    title: landmark.title,
+                    description: landmark.description,
+                    position: {
+                        x: landmark.position.x + layoutPosition.x,
+                        y: landmark.position.y + layoutPosition.y,
+                        z: landmark.position.z + layoutPosition.z
+                    }
+                });
+            }
+        }
+        return landmarks;
+    }
+
+    // The structure counterpart to _collectFocusLandmarks() above —
+    // same shape/offset getMapContent() already produces for
+    // structures; kept as its own method purely so getFocusContext()
+    // below reads symmetrically with the landmark/region helpers beside
+    // it, not because the shape actually differs from getMapContent()'s
+    // own structures array.
+    _collectFocusStructures() {
+        const structures = [];
+        for (const document of this.getLoadedDocuments()) {
+            const layoutPosition = this.getDocumentPosition(document.world.id);
+            for (const placement of document.world.getStructurePlacements()) {
+                structures.push({
+                    id: placement.id,
+                    title: this.getSavedDocumentTitle(placement.documentId),
+                    position: {
+                        x: placement.position.x + layoutPosition.x,
+                        y: placement.position.y + layoutPosition.y,
+                        z: placement.position.z + layoutPosition.z
+                    }
+                });
+            }
+        }
+        return structures;
+    }
+
+    // 0.5.8 — World View Contextual Focus & Information Hierarchy. The
+    // ONE place a core/WorldFocusContext.js#WorldFocusContext is ever
+    // built: gathers whatever raw World state deriveWorldFocusContext()
+    // needs (the target itself, the viewer's own current position for
+    // distance/direction, every region for containment, every
+    // geographic place candidate for "Near: ___") and hands it to that
+    // pure function — this method never derives anything itself. See
+    // getFocusContextForLocation()/getFocusContextForCollaborator()
+    // below for the two ways a caller actually reaches this; both are
+    // thin resolvers that end here.
+    _buildFocusContext(kind, entity) {
+        if (!entity) {
+            return null;
+        }
+        const viewerPosition = this.getAvatarPosition() || this.getCameraPosition();
+        return deriveWorldFocusContext({
+            kind,
+            entity,
+            viewerPosition,
+            regions: this._collectRegions(),
+            nearbyPlaceEntries: this._collectGeographicPlaceEntries()
+        });
+    }
+
+    // The Locations-panel/Map/Explore counterpart to focusLocation(): the
+    // SAME `locationId` space (a WorldRegion/WorldLandmark/StructurePlacement
+    // id, or a geographic place's own derived `place:<fingerprintKey>` id
+    // — see core/GeographicPlaceNavigation.js) resolved into a
+    // WorldFocusContext instead of a camera move. Deliberately does NOT
+    // go through `_worldLocationDirectory.find()` for a region/landmark/
+    // structure id — that returns only {id, title, kind, position},
+    // missing the description/region-kind a focus panel wants to show —
+    // so this resolves each kind against its own richer collection
+    // instead (_collectRegions()/_collectFocusLandmarks()/
+    // _collectFocusStructures()). Returns null for an unknown id, an
+    // ORIGIN id (not a focusable kind — see core/WorldFocusContext.js's
+    // own closed vocabulary), or when nothing is currently loaded —
+    // never throws.
+    getFocusContextForLocation(locationId) {
+        if (!locationId) {
+            return null;
+        }
+        if (isGeographicPlaceLocationId(locationId)) {
+            const fingerprintKey = geographicPlaceFingerprintKeyFromLocationId(locationId);
+            const entry = fingerprintKey
+                ? this._collectGeographicPlaceEntries().find((e) => e.fingerprintKey === fingerprintKey)
+                : null;
+            return this._buildFocusContext(WorldFocusKind.GEOGRAPHIC_PLACE, entry);
+        }
+        const region = this._collectRegions().find((r) => r.id === locationId);
+        if (region) {
+            return this._buildFocusContext(WorldFocusKind.REGION, region);
+        }
+        const landmark = this._collectFocusLandmarks().find((l) => l.id === locationId);
+        if (landmark) {
+            return this._buildFocusContext(WorldFocusKind.LANDMARK, landmark);
+        }
+        const structure = this._collectFocusStructures().find((s) => s.id === locationId);
+        if (structure) {
+            return this._buildFocusContext(WorldFocusKind.STRUCTURE, structure);
+        }
+        return null;
+    }
+
+    // The collaborator counterpart to getFocusContextForLocation() above
+    // — a WorldCollaboratorIndicator row/Explore's "Nearby People" row/a
+    // map collaborator marker all already address a collaborator by
+    // `deviceId`, exactly what focusCollaborator() itself takes.
+    // `resolveDisplayName` is the same optional `(identityId) => string`
+    // every other collaborator-listing method here already accepts —
+    // see _getPresentCollaborators()'s own header. Returns null for an
+    // unknown/no-longer-present deviceId, never throws.
+    getFocusContextForCollaborator(deviceId, resolveDisplayName) {
+        if (!deviceId) {
+            return null;
+        }
+        const collaborator = this._getPresentCollaborators(resolveDisplayName).find((c) => c.deviceId === deviceId);
+        if (!collaborator || !collaborator.position) {
+            return null;
+        }
+        return this._buildFocusContext(WorldFocusKind.COLLABORATOR, {
+            identityId: collaborator.identityId,
+            deviceId: collaborator.deviceId,
+            displayName: collaborator.label,
+            activity: collaborator.activity,
+            position: collaborator.position
+        });
     }
 
     // 0.5.6 — a lightweight, derived filter over getGeographicPlaceDirectory()'s

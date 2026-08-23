@@ -78,6 +78,19 @@ anything, or moves your avatar — it only changes what this panel is
 currently showing you, the same "Navigate ≠ Modify" boundary every other
 navigation control in World View already holds to.
 
+### Info — what am I looking at?
+
+Next to most **Go** buttons — in Explore's Nearby rows, and in the
+Locations panel — you'll also find an **Info** button. Where Go moves
+your camera, Info opens a small panel describing whatever you selected
+without moving anything: what it is, how far away it is, which named
+place it sits inside ("You are in Willow Village") or which geographic
+place candidate it's near ("You are near Kawahara Village") when
+neither is known for certain. From there you can still press **Go** to
+travel there, **Show on Map** to see it on the World Map, or **Names**
+(for a named place) to see or publish community names for it — Info
+itself never does any of those on its own.
+
 ### Landmarks — marking a place worth remembering
 
 Unlike a structure (a placed building you or someone else built) or a

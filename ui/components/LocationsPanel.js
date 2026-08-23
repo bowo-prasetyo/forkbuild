@@ -37,6 +37,14 @@
 // opening ui/components/PlaceNamingPanel.js to publish/retract a
 // naming claim needs no World edit authority, only a signed-in
 // identity — see that panel's own header.
+//
+// 0.5.8 — World View Contextual Focus & Information Hierarchy adds one
+// more action to every row, Info, deliberately DISTINCT from Focus:
+// Focus (pre-existing) moves the camera; Info opens
+// ui/components/WorldFocusPanel.js's own read-only reading of the same
+// row — a description, distance/direction, and which named place it
+// sits inside — without moving anything. See core/WorldFocusContext.js's
+// own header on why this panel is never itself called "Focus."
 export default {
     name: 'LocationsPanel',
     props: {
@@ -62,7 +70,9 @@ export default {
         // NOT gated by canEdit like edit-region/remove-region above —
         // see that panel's own header on why naming claims need no
         // World edit authority at all.
-        'manage-names'
+        'manage-names',
+        // 0.5.8 — opens WorldFocusPanel for this row's own locationId.
+        'inspect'
     ],
     computed: {
         originLocations() {
@@ -130,7 +140,10 @@ export default {
                                     <span class="locations-panel-item-title">📍 {{ loc.title }}</span>
                                     <span class="locations-panel-item-position">{{ formatPosition(loc) }}</span>
                                 </div>
-                                <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
+                                <div class="locations-panel-item-actions">
+                                    <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
+                                    <button class="action-btn" @click="$emit('inspect', loc.id)">Info</button>
+                                </div>
                             </li>
                         </ul>
                     </section>
@@ -151,6 +164,7 @@ export default {
                                 </div>
                                 <div class="locations-panel-item-actions">
                                     <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
+                                    <button class="action-btn" @click="$emit('inspect', loc.id)">Info</button>
                                     <button v-if="canEdit" class="action-btn" @click="$emit('edit-landmark', loc.id)">Edit</button>
                                     <button v-if="canEdit" class="action-btn action-btn--danger" @click="$emit('remove-landmark', loc.id)">Remove</button>
                                 </div>
@@ -174,6 +188,7 @@ export default {
                                 </div>
                                 <div class="locations-panel-item-actions">
                                     <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
+                                    <button class="action-btn" @click="$emit('inspect', loc.id)">Info</button>
                                     <button class="action-btn" @click="$emit('manage-names', loc.id)">Names</button>
                                     <button v-if="canEdit" class="action-btn" @click="$emit('edit-region', loc.id)">Edit</button>
                                     <button v-if="canEdit" class="action-btn action-btn--danger" @click="$emit('remove-region', loc.id)">Remove</button>

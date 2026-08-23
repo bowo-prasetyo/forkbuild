@@ -33,8 +33,10 @@ import PlaceNamingPanel from '../components/PlaceNamingPanel.js';
 import GeographicPlaceDirectoryPanel from '../components/GeographicPlaceDirectoryPanel.js';
 import GeographicPlacePanel from '../components/GeographicPlacePanel.js';
 import CollapsibleSection from '../components/CollapsibleSection.js';
+import WorldFocusPanel from '../components/WorldFocusPanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
+import { WorldFocusKind } from '../../core/WorldFocusContext.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/WorldViewNavigationState.js';
 
 const DRAG_THRESHOLD_PX = 6;
@@ -69,7 +71,8 @@ export default {
         CompassIndicator, LocationsPanel, LandmarkFormModal, RegionFormModal,
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
-        GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection
+        GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
+        WorldFocusPanel
     },
     setup() {
         const route = useRoute();
@@ -334,6 +337,18 @@ export default {
         // "Nearby Places" section is populated from it too when the
         // panel opens (see openGeographicPlaceDirectory() below).
         const nearbyGeographicPlaces = ref([]);
+        // 0.5.8 — World View Contextual Focus & Information Hierarchy.
+        // `focusContext` is a core/WorldFocusContext.js#WorldFocusContext.toJSON()
+        // shape (or null), rebuilt fresh every time something is
+        // inspected — never cached, mirroring every other "cheap,
+        // rebuilt on demand" derived read in this file. WorldFocusPanel
+        // is its own overlay, independent of primaryMode, so it can be
+        // opened from Explore's own nearby rows OR the Locations panel
+        // without either of them having to leave the surface they were
+        // already on — see openFocusForLocation()/
+        // openFocusForCollaborator() below.
+        const showFocusPanel = ref(false);
+        const focusContext = ref(null);
         // 0.5.7 — World View UX & Progressive Exploration.
         // `worldViewNav` is a plain, non-reactive
         // WorldViewNavigationState instance — treated exactly like
@@ -1699,6 +1714,12 @@ export default {
             showMapPanel.value = false;
             showGeographicPlaceDirectory.value = false;
             showGeographicPlacePanel.value = false;
+            // 0.5.8 — WorldFocusPanel is its own overlay, but a primary-
+            // mode switch is still "leaving whatever you were looking
+            // at" — the same reasoning that already closes every other
+            // panel in this list.
+            showFocusPanel.value = false;
+            focusContext.value = null;
         }
 
         function setPrimaryMode(mode) {
@@ -1795,6 +1816,120 @@ export default {
         function focusCollaboratorFromMap(deviceId) {
             session.focusCollaborator(deviceId);
             refreshSpatialUI();
+        }
+
+        // -----------------------------------------------------------------
+        // 0.5.8 — World View Contextual Focus & Information Hierarchy
+        // -----------------------------------------------------------------
+        //
+        // openFocusForLocation()/openFocusForCollaborator() are the two
+        // entry points every "Info" button in this file (Explore's own
+        // nearby rows, LocationsPanel's own rows) calls — both simply
+        // read session.getFocusContext*()  and show WorldFocusPanel;
+        // neither ever moves the camera or the map. goFromFocusPanel()/
+        // showFocusOnMap()/openNamesFromFocusPanel() are the panel's own
+        // three possible actions, each reusing the EXACT SAME session
+        // call every other navigation entry point in this file already
+        // uses for that verb — see core/WorldFocusContext.js's own
+        // header on why none of them is a new navigation mechanism.
+        function openFocusForLocation(locationId) {
+            const context = session.getFocusContextForLocation(locationId);
+            if (!context) {
+                feedback.show('That is no longer available');
+                return;
+            }
+            focusContext.value = context.toJSON();
+            showFocusPanel.value = true;
+        }
+
+        // Explore's own "Nearby Places" row only has a fingerprintKey on
+        // hand, not the full `place:<fingerprintKey>` locationId
+        // openFocusForLocation() expects — this thin wrapper is purely
+        // so the template doesn't need geographicPlaceLocationId()
+        // exposed as its own top-level binding.
+        function openFocusForGeographicPlace(fingerprintKey) {
+            openFocusForLocation(geographicPlaceLocationId(fingerprintKey));
+        }
+
+        function openFocusForCollaborator(deviceId) {
+            const context = session.getFocusContextForCollaborator(deviceId, (identityId) => resolveIdentityDisplayName(identityId));
+            if (!context) {
+                feedback.show('That person is no longer nearby');
+                return;
+            }
+            focusContext.value = context.toJSON();
+            showFocusPanel.value = true;
+        }
+
+        function closeFocusPanel() {
+            showFocusPanel.value = false;
+            focusContext.value = null;
+        }
+
+        // "Go" — moves the camera to whatever is currently focused,
+        // addressed through the exact same session call every other
+        // destination kind in this file already uses: focusLocation()
+        // for a region/landmark/structure/geographic place (by its own
+        // derived `place:<fingerprintKey>` id), focusCollaborator() for
+        // a person. See core/WorldFocusContext.js#WorldFocusContext's
+        // own `source` field, the only place this reads the underlying
+        // id from.
+        function goFromFocusPanel() {
+            const context = focusContext.value;
+            if (!context || !context.source) {
+                return;
+            }
+            const { kind, id } = context.source;
+            const moved = kind === WorldFocusKind.COLLABORATOR
+                ? session.focusCollaborator(id)
+                : session.focusLocation(kind === WorldFocusKind.GEOGRAPHIC_PLACE ? geographicPlaceLocationId(id) : id);
+            if (!moved) {
+                feedback.show('That is no longer available');
+                closeFocusPanel();
+                return;
+            }
+            refreshSpatialUI();
+            closeFocusPanel();
+        }
+
+        // "Show on Map" — switches World View to its Map primary mode,
+        // after first moving the camera the exact same way "Go" above
+        // does, so the map's own initial viewport (which centers on
+        // wherever the viewer currently is — see WorldMapPanel's own
+        // header) opens already looking at what was focused. Only
+        // offered for kinds whose context.availableActions includes
+        // 'map' (region/geographic place — see
+        // core/WorldFocusContext.js#deriveWorldFocusContext()'s own
+        // per-kind action table); WorldFocusPanel itself hides the
+        // button otherwise.
+        function showFocusOnMap() {
+            const context = focusContext.value;
+            if (!context || !context.source) {
+                return;
+            }
+            const { kind, id } = context.source;
+            session.focusLocation(kind === WorldFocusKind.GEOGRAPHIC_PLACE ? geographicPlaceLocationId(id) : id);
+            refreshSpatialUI();
+            closeFocusPanel();
+            setPrimaryMode(WorldViewPrimaryMode.MAP);
+        }
+
+        // "Names" — only ever offered for a REGION (see
+        // core/WorldFocusContext.js's own per-kind action table; a
+        // GEOGRAPHIC_PLACE's own community names live one level up, in
+        // ui/components/GeographicPlacePanel.js instead — this button is
+        // never shown there). Opens the EXACT SAME PlaceNamingPanel every
+        // other "Names" entry point in this file already opens, never a
+        // second naming surface.
+        function openNamesFromFocusPanel() {
+            const context = focusContext.value;
+            if (!context || !context.source || context.source.kind !== WorldFocusKind.REGION) {
+                return;
+            }
+            const regionId = context.source.id;
+            closeFocusPanel();
+            refreshLocationsPanel();
+            openNamingPanel(regionId);
         }
 
         // -----------------------------------------------------------------
@@ -2660,6 +2795,15 @@ export default {
             focusLocationFromMap,
             focusCollaboratorFromMap,
             mapHighlightRegionKeys,
+            showFocusPanel,
+            focusContext,
+            openFocusForLocation,
+            openFocusForGeographicPlace,
+            openFocusForCollaborator,
+            closeFocusPanel,
+            goFromFocusPanel,
+            showFocusOnMap,
+            openNamesFromFocusPanel,
             showGeographicPlaceDirectory,
             geographicPlaces,
             showGeographicPlacePanel,
@@ -2842,6 +2986,7 @@ export default {
                     <div v-for="place in nearbyGeographicPlaces" :key="place.fingerprintKey" class="world-view-nearby-row">
                         <span class="world-view-nearby-row-label">⬢ {{ place.displayName }}</span>
                         <span class="world-view-nearby-row-distance">{{ place.distance }}m {{ place.direction }}</span>
+                        <button class="action-btn world-view-nearby-row-go" @click="openFocusForGeographicPlace(place.fingerprintKey)">Info</button>
                         <button class="action-btn world-view-nearby-row-go" @click="goToGeographicPlace(place.fingerprintKey)">Go</button>
                     </div>
                 </CollapsibleSection>
@@ -2855,6 +3000,7 @@ export default {
                     <div v-for="landmark in nearbyLandmarkRows" :key="landmark.id" class="world-view-nearby-row">
                         <span class="world-view-nearby-row-label">★ {{ landmark.title }}</span>
                         <span class="world-view-nearby-row-distance">{{ landmark.distance }}m {{ landmark.direction }}</span>
+                        <button class="action-btn world-view-nearby-row-go" @click="openFocusForLocation(landmark.id)">Info</button>
                         <button class="action-btn world-view-nearby-row-go" @click="focusLocationFromPanel(landmark.id)">Go</button>
                     </div>
                 </CollapsibleSection>
@@ -2868,6 +3014,11 @@ export default {
                     <div v-for="person in nearbyPeopleRows" :key="person.identityId" class="world-view-nearby-row">
                         <span class="world-view-nearby-row-label">{{ person.displayName }}</span>
                         <span class="world-view-nearby-row-distance">{{ person.distance }}m {{ person.direction }}</span>
+                        <button
+                            v-if="person.deviceId"
+                            class="action-btn world-view-nearby-row-go"
+                            @click="openFocusForCollaborator(person.deviceId)"
+                        >Info</button>
                         <button
                             v-if="person.deviceId"
                             class="action-btn world-view-nearby-row-go"
@@ -3363,6 +3514,7 @@ export default {
                 :locations="worldLocations"
                 :can-edit="canEditActiveWorld"
                 @focus="focusLocationFromPanel"
+                @inspect="openFocusForLocation"
                 @cancel="closeLocationsPanel"
                 @add-landmark="openAddLandmarkForm"
                 @edit-landmark="openEditLandmarkForm"
@@ -3436,6 +3588,14 @@ export default {
                 @explore="exploreWelcomeSuggestion"
                 @go-to-place="goToGeographicPlace"
                 @dismiss="closeWelcomePanel"
+            />
+            <WorldFocusPanel
+                v-if="showFocusPanel"
+                :context="focusContext"
+                @go="goFromFocusPanel"
+                @show-on-map="showFocusOnMap"
+                @open-names="openNamesFromFocusPanel"
+                @cancel="closeFocusPanel"
             />
             <WorldMembersPanel
                 v-if="showMembersPanel"
