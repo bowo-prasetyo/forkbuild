@@ -8398,6 +8398,19 @@ reached through World View can never see a different license/
 fork-allowed outcome than the identical document's own in-session
 fork-on-write would have applied.
 
+**Edit a Copy reaches every inspection surface, not only Focus.** The
+direct-click Inspection panel (0.2.93 — brick, ground, and placement) got
+its own "Edit a Copy" too, alongside its pre-existing "Open Source": a
+viewer who clicks something in the 3D view directly should not have to
+first go find the same thing again in Explore or the Locations panel just
+to fork it. `ui/views/WorldView.js#editInspectedCopy(documentId)` is the
+one function both surfaces route through — for a brick or ground
+inspection it forks `spatialInspection.documentId` (the containing
+World), for a placement it forks `spatialInspection.sourceDocumentId`
+(the placed structure's own content, the exact distinction `WorldFocusPanel`'s
+own STRUCTURE case already draws) — never a second fork mechanism, the
+same `/editor?fork=` navigation either way.
+
 **A Geographic Place has no document to fork.** Consistent with 0.5.5's
 own "A Geographic Place Is A Derived View, Never A Fourth Stored
 Object" — a `GEOGRAPHIC_PLACE` focus context never offers `EDIT_COPY`

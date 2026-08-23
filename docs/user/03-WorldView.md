@@ -101,23 +101,29 @@ never does any of those on its own.
 
 ### Edit a Copy — taking something into the Editor
 
-A region, a landmark, or a placed structure's own Info panel has one more
-button: **Edit a Copy**. It creates an independent copy of the document
-that actually contains what you were looking at — never the whole World,
-never anyone else's original — and opens it straight into the Editor,
-ready to build on.
+Wherever World View shows you something specific — a region, a landmark,
+a placed structure, a brick, or bare ground — the panel that describes it
+has one more button: **Edit a Copy**. It creates an independent copy of
+the document that actually contains what you were looking at — never the
+whole World, never anyone else's original — and opens it straight into
+the Editor, ready to build on. Two panels offer it: the **Focus** panel
+(the Info button on Explore/Locations rows, for a region/landmark/
+structure) and the **Inspection** panel (a direct click in the 3D view,
+for a brick, bare ground, or a placed structure) — same action, same
+button, either way you got there.
 
-- For a **landmark** or a **region**, that's the World document they
-  belong to.
+- For a **landmark**, a **region**, a **brick**, or **bare ground**,
+  that's the World document they belong to.
 - For a **placed structure**, that's the structure's own content — not
   the World it happens to be sitting in.
 
 The original is never touched — ForkBuild tells you the moment your copy
 is ready, exactly like any other fork (see
 [Publishing & Forking](04-PublishingAndForking.md)). A **geographic
-place** never offers Edit a Copy on its own — it's a grouping of several
-people's own regions, with no single document of its own to copy; open
-one of its regions instead, and copy that.
+place** and a **collaborator** never offer Edit a Copy — a geographic
+place is a grouping of several people's own regions with no single
+document of its own to copy (open one of its regions instead), and a
+person is not a document at all.
 
 This is the *only* door out of World View's read-only surface. Everything
 else here — flying around, Search, Explore Here/What's Here?, the compass,
@@ -270,7 +276,13 @@ Click any brick to open the **Inspection** panel, which tells you:
 - Who authored the world
 
 Use **Focus Brick** to zoom right in, or **Focus World** to jump to that
-creation's home position.
+creation's home position. Right beside those, an **Edit a Copy** button
+forks the World this brick belongs to and opens the copy in the Editor —
+leaving the original untouched. Clicking bare ground inside a creation
+opens the same kind of panel (position and the containing world/author,
+no brick-specific fields) with its own **Edit a Copy** button, for the
+same reason: forking doesn't require finding something notable first,
+just clicking anywhere inside the World you want to build on.
 
 Click a **placed structure** (an instance of a whole document, dropped into
 a creation from the Editor — see
@@ -281,13 +293,17 @@ containing world's title and author. This is read-only in World View —
 there's no gizmo, no numeric field, nothing to drag. Click **Open Source**
 to jump straight into the Editor on the referenced document itself; every
 other instance of it, wherever it's placed, reflects whatever you edit
-there. Right beside it, this panel has its own **Edit a Copy** button too
-— if you'd rather work on an independent copy instead, leaving every other
+there. Its own **Edit a Copy** button, right beside Open Source, targets
+that same referenced document instead of the World merely positioning it
+— if you'd rather work on an independent copy, leaving every other
 instance (and the original) untouched, use that one instead of Open
-Source. It's the same action described in
-[Edit a Copy](#edit-a-copy--taking-something-into-the-editor) below,
-reachable straight from here as well as from a structure's Focus panel —
-you don't have to go find it in a list first.
+Source.
+
+Every "Edit a Copy" button in World View — here, and on a region/landmark/
+structure's own Focus panel — is the same action, described in full in
+[Edit a Copy](#edit-a-copy--taking-something-into-the-editor) below. You
+don't have to go find something in a list first; clicking on it directly
+works too.
 
 ## Document Information and Placement
 
