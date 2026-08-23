@@ -41,7 +41,7 @@ export default {
             default: null
         }
     },
-    emits: ['go', 'show-on-map', 'open-names', 'cancel'],
+    emits: ['go', 'show-on-map', 'open-names', 'edit-copy', 'cancel'],
     methods: {
         glyph() {
             return (this.context && KIND_GLYPH[this.context.kind]) || '•';
@@ -100,8 +100,16 @@ export default {
                         class="action-btn"
                         @click="$emit('open-names')"
                     >Names</button>
+                    <button
+                        v-if="context.availableActions.includes('edit_copy')"
+                        class="action-btn"
+                        @click="$emit('edit-copy')"
+                    >Edit a Copy</button>
                     <button class="action-btn" @click="$emit('cancel')">Close</button>
                 </div>
+                <p v-if="context.availableActions.includes('edit_copy')" class="world-focus-panel-hint">
+                    Creates an independent copy of this document and opens it in the Editor.
+                </p>
             </div>
         </div>
     `

@@ -10846,3 +10846,221 @@ before it. What began as *building a world* has now moved through
 decentralized community's descriptions of that world* — four
 milestone families, each adding exactly one capability without ever
 strengthening a candidate into a fact.
+
+## 0.5.7 — World View UX & Progressive Exploration
+
+World View accumulated a lot since 0.3.6 — Welcome, Locations,
+Geographic Places, Map, Compass, Navigation, Regions, Landmarks,
+Naming, Collaborators, Activity — each its own always-visible toolbar
+button and its own always-on-top modal, with nothing coordinating
+them. This milestone reorganizes that accumulated richness into a
+coherent Explore / Map / Places experience with progressive
+disclosure, constrained panels, and contextual back-navigation. No
+changes to the underlying World model — this is entirely a UI/
+navigation reorganization.
+
+### What shipped
+
+- **`application/WorldViewNavigationState.js`** — the one new concept:
+  a small, pure, framework-free module owning (1) which of the three
+  PRIMARY modes (Explore/Map/Places) is current, mutually exclusive by
+  construction, and (2) UI memory that should survive switching
+  between them — which Places screen (directory vs. one place's
+  detail) was open, which "Nearby ___" sections are collapsed, whether
+  a region's naming claims are expanded. No session/World access of
+  any kind.
+- **`ui/views/WorldView.js`** — Locations/Map/"Geographic Places"/
+  Explore's four separate always-open buttons become three
+  mutually-exclusive Explore/Map/Places tabs; opening one now always
+  closes whichever other primary surface was open. A "Nearby" block
+  (Places/Landmarks/People, each collapsible) surfaces in Explore
+  mode. Places gets real back-navigation (directory -> detail ->
+  Back), remembered across mode switches.
+- **`ui/components/CollapsibleSection.js`** — generic "title + count,
+  expand/collapse" wrapper, state owned by the host, not itself.
+- **`ui/components/PlaceNamingPanel.js`**/**`GeographicPlacePanel.js`**
+  — progressive disclosure (top 3 names, "More" for the rest) and real
+  Back navigation instead of a blunt Cancel.
+- **`tests/WorldViewUX.test.js`** — 10 sections against
+  `WorldViewNavigationState` headlessly: exactly one primary mode ever
+  active, Places' directory -> detail -> Back, mode switching
+  preserves Places' own screen, collapsible/naming-disclosure state
+  independence, and the module exposes no World-mutating method and
+  holds no session/world reference.
+
+> **Now that World View has real information architecture, does
+> everything living inside it still deserve to?**
+
+## 0.5.8 — World View Contextual Focus & Information Hierarchy
+
+A small, derived Focus layer answering "what am I looking at, right
+now?" the same way regardless of which World View surface a region/
+landmark/structure/collaborator/geographic place was selected from —
+never new World content, never a new navigation mechanism.
+
+### What shipped
+
+- **`core/WorldFocusContext.js`** — `WorldFocusContext` value object +
+  `deriveWorldFocusContext()`, pure and read-only. Carries kind,
+  title, subtitle, description, position/distance/direction,
+  `regionPath` (real containment of the TARGET's own position),
+  `geographicPlace` (nearest candidate), `availableActions`, and
+  `source`. `arrivalPhrase` reuses the established "You are in"/"You
+  are near" wording for whatever is focused, not just the viewer's
+  own arrival.
+- **`application/WorldNavigationSession.js`** —
+  `getFocusContextForLocation()`/`getFocusContextForCollaborator()`,
+  thin resolvers built entirely from existing collections.
+- **`ui/components/WorldFocusPanel.js`** — the unified read-only
+  panel. Its own camera-move button is labeled "Go," never "Focus" a
+  second time with a different meaning — see docs/Principles.md, "A
+  Focus Context Describes What You Are Looking At; It Does Not
+  Navigate (0.5.8)."
+- **`tests/WorldViewFocus.test.js`** — pure derivation for all five
+  kinds, session wiring, no mutation, determinism, and a capstone
+  proving cross-surface consistency.
+
+> **Now that a viewer can ask "what am I looking at?" uniformly
+> everywhere, what should the answer let them actually DO?**
+
+## 0.5.9 — World View Read-Only Exploration & Fork-to-Edit
+
+0.2.1 made "Editor / World Editing Parity" a load-bearing invariant:
+whatever Editor View could mutate, World View could mutate too,
+through the same shared `EditorActionRegistry`. Milestone after
+milestone then built that parity out — placement, the transform
+gizmo, groups, clipboard — until World View was, quietly, a second
+full editor wearing navigation chrome, with its own competing
+fork-on-write path and a command palette that silently disabled half
+its own actions because the two surfaces had drifted out of true
+sync. 0.5.7/0.5.8 spent two milestones giving World View a real,
+READ-ONLY information architecture (Explore/Map/Places, one unified
+Focus); once that existed, the editing capability sitting alongside it
+stopped looking like parity and started looking like the wrong
+boundary entirely. This milestone draws the boundary explicitly:
+
+> **World View Observes and Navigates; Editor Mutates and Builds.**
+
+### What shipped
+
+- **`application/WorldNavigationSession.js`** — every brick/structure/
+  group content-mutation method is gone entirely, not hidden:
+  placement (`setActiveDefinitionId`/`commitPlacement`/
+  `cancelPlacement`/`rotatePlacementPreview`), the gizmo
+  (`gizmoPointerDown`/`gizmoPointerMove`/`gizmoPointerUp`/
+  `gizmoKeyDown`/`isGestureActive`), selection transform
+  (`moveSelection`/`deleteSelection`/`rotateSelection`/
+  `alignSelection`/`distributeSelection`/`snapSelectionToGrid`/
+  `applyNumericTransform`), clipboard (`copySelection`/
+  `pasteClipboard`/`duplicateSelection`/`repeatSelection`), and the
+  full group CRUD surface. `EditorSession` already had a complete,
+  independent implementation of all of it — confirmed before removing
+  anything — so this is zero capability loss, only a relocation.
+  `SpatialEditingService`/`SpatialPlacementService`/
+  `TransformGizmoUseCase` are no longer constructed by this session at
+  all; `_refreshEditingContext()`/`_refreshGizmo()` remain as
+  deliberate, harmless no-ops (cheaper and safer than hunting down two
+  dozen scattered call sites that still call them out of habit) rather
+  than a second special-cased code path.
+- **Two deliberate exceptions, kept on purpose** — World Region/
+  Landmark naming (`createRegionHere()`/`updateRegion()`/
+  `removeRegion()`/`createLandmarkHere()`/`updateLandmark()`/
+  `removeLandmark()`, avatar-position-driven annotation, not
+  construction) and `movePlacement()` (0.2.23's own header already
+  established "Moving A Placement Is Not Editing A Document"). Both
+  route through the same `canEditDocument()`/fork-on-write machinery
+  brick mutation used — that infrastructure was never brick-specific.
+- **`core/WorldFocusContext.js`** — a new `WorldFocusAction.EDIT_COPY`,
+  offered for REGION/LANDMARK/STRUCTURE (never COLLABORATOR or
+  GEOGRAPHIC_PLACE — a person and a derived grouping are not
+  documents), plus `source.documentId`: the Document that actually
+  CONTAINS what is focused — for a STRUCTURE, deliberately the placed
+  structure's own content document, never the World merely
+  positioning it.
+- **`ui/components/WorldFocusPanel.js`**/**`ui/views/WorldView.js`** —
+  an "Edit a Copy" button reusing the EXACT SAME `/editor?fork=`
+  navigation `ui/components/PublicationCatalog.js#forkPublication()`
+  already used since 0.2.13/0.2.22 — never a second fork mechanism.
+- **`application/WorldNavigationSession.js#getPublicationIdForDocument()`**
+  — the one new method this needed: resolves the same "most recent
+  Publication governs" answer `_checkForkPolicy()` already computed
+  internally, so a fork reached through World View can never see a
+  different license outcome than the identical document's own
+  in-session fork-on-write would have applied.
+- **Test suite realignment** — `tests/EditingParity.test.js` (0.2.1's
+  own flagship for the invariant this milestone reverses) retired;
+  `tests/WorldEditingAuthorization.test.js`'s own FLAGSHIP (Section G)
+  reworked to drive `canEditDocument()`'s authorization gate through
+  landmark mutation instead of brick mutation — the architectural
+  point (owner/reader/blocked/multi-device authority) is identical,
+  only the concrete payload changed. A further ~17 test files that
+  exercised the removed brick-mutation surface on
+  `WorldNavigationSession` were individually deleted, trimmed, or
+  reworked the same way — see each file's own header for what
+  changed and why.
+- **`tests/WorldViewReadOnlyFork.test.js`** — the flagship: (A) the
+  removed methods are actually gone and the two kept exceptions still
+  work; (B) every pre-existing read/navigation operation is unaffected;
+  (C/D/E/H) Edit a Copy forks an independent Document, the source
+  stays byte-identical in storage through the fork AND through
+  subsequently editing the fork, and the fork enters ordinary
+  `EditorSession` architecture with full mutation capability; (F) the
+  data a future "frame the Editor's camera on open" feature would need
+  survives the trip, without claiming that feature exists yet; (G) a
+  geographic place never offers Edit a Copy, each of its own regions
+  does.
+
+### Deliberately excluded
+
+- **Camera framing inside the Editor on open.** `EditorSession` has no
+  camera-positioning API at all today; adding one is a real feature
+  sized for its own milestone, not a side effect of this one. "Edit a
+  Copy" hands off title/position/documentId — everything such a
+  feature would need — without claiming the camera moves anywhere yet.
+- **Porting World Region/Landmark naming to the Editor.** Considered
+  and rejected — see "What shipped" above: it is avatar-position-
+  driven World annotation, not Document-scoped construction, and the
+  Editor has no notion of "being somewhere in a live World" to build
+  it on.
+- **A new `ForkDocumentForEditingUseCase` or any second fork
+  mechanism.** "Edit a Copy" is a two-line function (resolve
+  `source.documentId`, navigate to `/editor?fork=`) reusing
+  infrastructure that already existed since 0.2.13/0.2.22 — inventing
+  a new use case class for it would be exactly the kind of premature
+  abstraction this codebase avoids.
+- **Document metadata editing (title/description/license) and
+  `movePlacement()`'s own dialog.** Neither is brick/structure/group
+  content construction; both stay exactly as they were, untouched by
+  this milestone.
+
+```text
+0.5.7   World View UX & Progressive Exploration                  ✓
+             │
+             ▼
+0.5.8   World View Contextual Focus & Information Hierarchy      ✓
+             │
+             ▼
+0.5.9   World View Read-Only Exploration & Fork-to-Edit           ✓
+             ├── WorldNavigationSession — every brick/structure/group
+             │   mutation method removed entirely; EditorSession
+             │   already had full parity, so zero capability lost
+             ├── Two exceptions kept on purpose: Region/Landmark
+             │   naming (annotation) and movePlacement() (arrangement)
+             ├── WorldFocusContext — EDIT_COPY action + source.documentId
+             │   for REGION/LANDMARK/STRUCTURE only
+             ├── "Edit a Copy" — reuses the existing /editor?fork=
+             │   navigation, never a second fork mechanism
+             ├── getPublicationIdForDocument() — the one new method
+             └── tests/WorldViewReadOnlyFork.test.js — read-only
+                 surface, fork independence, ordinary Editor
+                 architecture, geographic place non-editability
+```
+
+> **World View asked "what is this?" as of 0.5.8. As of 0.5.9, the
+> only way it ever changes what "this" IS, is by handing you an
+> independent copy and stepping aside.**
+
+What's left, and deliberately unbuilt: camera framing inside the
+Editor on open, Region/Landmark naming ported to the Editor, and any
+second fork mechanism — each sized on its own, exactly like every
+"Deliberately excluded" list in this document before it.

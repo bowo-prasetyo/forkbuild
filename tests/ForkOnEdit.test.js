@@ -1,4 +1,5 @@
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
@@ -20,8 +21,6 @@ import { SpatialSelectionState } from '../application/spatial-state/SpatialSelec
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { License, LicenseId } from '../core/License.js';
 import { SpatialCameraController } from '../application/SpatialCameraController.js';
-import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../application/EditorActionContext.js';
 import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
 
 // ---------------------------------------------------------------------
@@ -103,11 +102,14 @@ async function runTests() {
     const publishDocumentUseCase = new PublishDocumentUseCase(publisher, alice);
     const documentCloneService = new DocumentCloneService();
 
-    function buildSession(extraRenderer) {
+    function buildSession(extraRenderer, { avatarPosition = null } = {}) {
+        const avatarPresenceSession = avatarPosition
+            ? new AvatarPresenceSession({ avatarId: 'alice-avatar', ownerIdentity: 'alice' }, { position: avatarPosition })
+            : null;
         const session = new WorldNavigationSession({
             registry, loadPublicationDocumentUseCase, worldLayoutProvider,
             saveDocumentUseCase, publishDocumentUseCase, identityProvider: alice,
-            documentCloneService, discoveryProvider
+            documentCloneService, discoveryProvider, avatarPresenceSession
         });
         session._session = stubRenderer(extraRenderer);
         return session;
@@ -141,18 +143,23 @@ async function runTests() {
     // 3-9. The flagship lifecycle: publish -> view -> edit -> exactly
     //      one automatic fork -> original unchanged -> fork carries
     //      the mutation and lineage -> publish the fork -> original
-    //      publication still resolves identically.
+    //      publication still resolves identically. 0.5.9 retired
+    //      WorldNavigationSession's own moveSelection() — the mutation
+    //      that drives this flagship is now createLandmarkHere()/
+    //      updateLandmark(), World View's one remaining mutation
+    //      surface, which crosses the exact same fork-on-write seam;
+    //      see docs/Principles.md "World View Observes and Navigates;
+    //      Editor Mutates and Builds".
     // -------------------------------------------------------------
     let flagshipOriginal, flagshipForkId, flagshipNewPublication;
     {
         const publication = publisher.publish(makeDocument('Castle'), alice);
         flagshipOriginal = publication;
-        const session = buildSession();
+        const session = buildSession(undefined, { avatarPosition: new Position(3, 0, 0) });
         session._loadWorld(publication.documentId);
-        selectFirstBrick(session, publication.documentId);
 
-        const moved = session.moveSelection({ x: 3, y: 0, z: 0 });
-        assert(moved === true, '3. the edit itself succeeds');
+        const landmarkId = session.createLandmarkHere('Flagship Landmark', '');
+        assert(typeof landmarkId === 'string' && landmarkId.length > 0, '3. the edit itself succeeds');
         assert(!session.isDocumentPublished(publication.documentId), '4. the published id is no longer tracked as published');
         assert(session.getDocument(publication.documentId) === null,
             '4b. the published source is superseded in this session (not silently mutated in place)');
@@ -166,21 +173,21 @@ async function runTests() {
         const forkDoc = session.getDocument(forkId);
         assert(forkDoc.metadata.parentDocumentId === publication.documentId,
             '7. fork provenance points at the original published document');
-        assert(forkDoc.world.getBuildings()[0].getBricks()[0].position.x === 3,
+        assert(forkDoc.world.getWorldLandmark(landmarkId) !== null,
             '7b. the mutation landed on the fork');
 
         // The published snapshot's own storage is untouched — reloading
         // it fresh (as any other viewer would) resolves the ORIGINAL
-        // geometry, byte-for-byte.
+        // content, byte-for-byte.
         const reloaded = loadPublicationDocumentUseCase.execute(publication.documentId);
-        assert(reloaded.world.getBuildings()[0].getBricks()[0].position.x === 0,
+        assert(reloaded.world.getWorldLandmarks().length === 0,
             '8. the original published snapshot is verifiably unchanged');
         assert(publisher.verifySnapshot(publication.id, publication.contentHash),
             '8b. the original publication still verifies against its own content hash');
 
         // A second mutation in the SAME session stays on the same
         // fork — the boundary is crossed once, not once per command.
-        session.moveSelection({ x: 1, y: 0, z: 0 });
+        session.updateLandmark(landmarkId, { title: 'Flagship Landmark (renamed)' });
         assert(session.getActiveDocumentId() === forkId, '9. a second mutation does not create a second fork');
         assert(session.getLoadedDocuments().length === 1, '9b. still exactly one loaded document');
 
@@ -208,10 +215,14 @@ async function runTests() {
         bob.login('bob');
         const publication = publisher.publish(makeDocument('Bob Views This'), alice);
 
+        const bobAvatarPresenceSession = new AvatarPresenceSession(
+            { avatarId: 'bob-avatar', ownerIdentity: 'bob' },
+            { position: new Position(5, 0, 5) }
+        );
         const bobSession = new WorldNavigationSession({
             registry, loadPublicationDocumentUseCase, worldLayoutProvider,
             saveDocumentUseCase, publishDocumentUseCase, identityProvider: bob,
-            documentCloneService, discoveryProvider
+            documentCloneService, discoveryProvider, avatarPresenceSession: bobAvatarPresenceSession
         });
         bobSession._session = stubRenderer();
         bobSession._loadWorld(publication.documentId);
@@ -221,8 +232,10 @@ async function runTests() {
         assert(bobSession.getLoadedDocuments().length === 1 && bobSession.isDocumentPublished(publication.documentId),
             '12a. Bob viewing only: NO fork exists');
 
-        selectFirstBrick(bobSession, publication.documentId);
-        bobSession.moveSelection({ x: 5, y: 0, z: 0 });
+        // 0.5.9 retired moveSelection() from WorldNavigationSession —
+        // createLandmarkHere() is the one mutation surface World View
+        // kept, and it crosses the exact same fork-on-write boundary.
+        bobSession.createLandmarkHere("Bob's Landmark", '');
         assert(bobSession.getLoadedDocuments().length === 1 && !bobSession.isDocumentPublished(publication.documentId),
             '12b. Bob edits: exactly ONE fork exists, and it is his');
         const bobForkDoc = bobSession.getDocument(bobSession.getActiveDocumentId());
@@ -237,11 +250,10 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const publication = publisher.publish(makeDocument('All Rights Reserved', LicenseId.ALL_RIGHTS_RESERVED), alice);
-        const session = buildSession();
+        const session = buildSession(undefined, { avatarPosition: new Position(0, 0, 0) });
         session._loadWorld(publication.documentId);
-        selectFirstBrick(session, publication.documentId);
 
-        assertThrows(() => session.moveSelection({ x: 1, y: 0, z: 0 }),
+        assertThrows(() => session.createLandmarkHere('Should Fail', ''),
             '13. editing a fork-forbidden published world is rejected, not silently forked');
         assert(session.isDocumentPublished(publication.documentId),
             '14. the source remains published/unforked after a denied attempt — no partial fork');
@@ -265,29 +277,14 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // 16. A gizmo-driven drag (not a keyboard command) crosses the
-    //     boundary too — the renderer receives the FORKED selection,
-    //     not the published one, because the fork happens before the
-    //     drag is even armed.
+    // 16. Gizmo-driven-drag-forks-before-the-drag-is-armed coverage
+    //     removed — 0.5.9 retired gizmoPointerDown()/gizmoPointerMove()/
+    //     gizmoPointerUp()/gizmoKeyDown() from WorldNavigationSession
+    //     wholesale (EditorSession alone owns the gizmo kernel now, and
+    //     landmarks are never gizmo-dragged). See docs/Principles.md
+    //     "World View Observes and Navigates; Editor Mutates and
+    //     Builds".
     // -------------------------------------------------------------
-    {
-        let selectionSeenByRenderer = null;
-        const publication = publisher.publish(makeDocument('Gizmo Drag'), alice);
-        const session = buildSession({
-            gizmoPointerDown(x, y, selection) {
-                selectionSeenByRenderer = selection.documentId;
-                return true;
-            }
-        });
-        session._loadWorld(publication.documentId);
-        selectFirstBrick(session, publication.documentId);
-
-        session.gizmoPointerDown({ button: 0, clientX: 10, clientY: 10 });
-        assert(selectionSeenByRenderer !== null && selectionSeenByRenderer !== publication.documentId,
-            '16. the renderer receives the fork, not the published document, at drag start');
-        assert(session.getDocument(publication.documentId) === null,
-            '16b. the published source is already superseded before the drag begins');
-    }
 
     // -------------------------------------------------------------
     // 17. Multi-brick selection remaps every member to the fork —
@@ -303,7 +300,7 @@ async function runTests() {
             world, metadata: new DocumentMetadata({ title: 'Two Bricks', author: 'alice', license: new License({ id: LicenseId.CC0_1_0 }) })
         });
         const publication = publisher.publish(doc, alice);
-        const session = buildSession();
+        const session = buildSession(undefined, { avatarPosition: new Position(0, 0, 0) });
         session._loadWorld(publication.documentId);
 
         const buildingRef = session.getDocument(publication.documentId).world.getBuildings()[0];
@@ -316,37 +313,31 @@ async function runTests() {
             ]
         }));
 
-        session.moveSelection({ x: 0, y: 1, z: 0 });
+        // 0.5.9 retired moveSelection() from WorldNavigationSession —
+        // the trigger here is a landmark, which never touches a brick
+        // at all, but _remapReferencesAfterFork() remaps whatever
+        // selection is active on ANY fork, so both selected bricks
+        // must still land on the fork's own fresh identities, not be
+        // silently narrowed to one (or dropped).
+        session.createLandmarkHere('Fork Trigger', '');
         const forkId = session.getActiveDocumentId();
+        assert(forkId !== publication.documentId, '17. the landmark mutation forked the document');
+        const remappedSelection = session.getSpatialSelection();
+        assert(remappedSelection.documentId === forkId, '17b. the active selection followed the fork, not left pointing at the superseded source');
+        assert(remappedSelection.brickIds.length === 2, '17c. both selected bricks were remapped, not silently narrowed to one');
         const forkBricks = session.getDocument(forkId).world.getBuildings()[0].getBricks();
-        assert(forkBricks.length === 2 && forkBricks.every((b) => b.position.y === 1.5),
-            '17. every selected brick was remapped to the fork and received the mutation');
+        assert(forkBricks.length === 2 && forkBricks.every((b) => remappedSelection.brickIds.includes(b.id)),
+            "17d. the remapped selection resolves to the fork's own fresh brick identities");
     }
 
     // -------------------------------------------------------------
-    // 18. gizmoPointerDown runs on EVERY pointer-down while something
-    //     is selected (gizmo-first: try the gizmo, fall back to a
-    //     plain click otherwise) — that alone must never fork. Only
-    //     an actual handle hit may cross the boundary; a pointer-down
-    //     that misses (e.g. clicking a different brick to reselect)
-    //     is not a mutation and must leave the snapshot untouched.
+    // 18. Gizmo-pointer-down-never-eagerly-forks coverage removed —
+    //     0.5.9 retired gizmoPointerDown()/gizmoHitTest() plumbing
+    //     from WorldNavigationSession wholesale, alongside the rest of
+    //     the gizmo kernel (EditorSession alone owns it now). See
+    //     docs/Principles.md "World View Observes and Navigates;
+    //     Editor Mutates and Builds".
     // -------------------------------------------------------------
-    {
-        let hitTestCalls = 0;
-        const publication = publisher.publish(makeDocument('No Eager Fork'), alice);
-        const session = buildSession({
-            gizmoHitTest() { hitTestCalls++; return false; },
-            gizmoPointerDown() { throw new Error('must not arm a drag when the hit test misses'); }
-        });
-        session._loadWorld(publication.documentId);
-        selectFirstBrick(session, publication.documentId);
-
-        const consumed = session.gizmoPointerDown({ button: 0, clientX: 5, clientY: 5 });
-        assert(consumed === false, '18. a pointer-down that misses the gizmo is not consumed');
-        assert(hitTestCalls === 1, '18b. the hit test ran before any fork decision was made');
-        assert(session.isDocumentPublished(publication.documentId),
-            '18c. no fork was created merely by a pointer-down elsewhere — lazy means on the actual mutation, not on every click');
-    }
 
     // -------------------------------------------------------------
     // 19. A fork inherits the EXACT position of the snapshot it
@@ -362,14 +353,16 @@ async function runTests() {
         publisher.publish(makeDocument('Decoy A'), alice);
         publisher.publish(makeDocument('Decoy B'), alice);
         const publication = publisher.publish(makeDocument('Positioned'), alice);
-        const session = buildSession();
+        const session = buildSession(undefined, { avatarPosition: new Position(1, 0, 0) });
         session._loadWorld(publication.documentId);
         const sourcePos = session.getDocumentPosition(publication.documentId);
         assert(sourcePos.x !== 0 || sourcePos.z !== 0,
             '19. precondition: the source resolves to a real, non-origin deterministic position');
 
-        selectFirstBrick(session, publication.documentId);
-        session.moveSelection({ x: 1, y: 0, z: 0 });
+        // 0.5.9 retired moveSelection() from WorldNavigationSession —
+        // createLandmarkHere() is the one mutation surface World View
+        // kept, and it triggers the exact same fork.
+        session.createLandmarkHere('Position Check', '');
         const forkId = session.getActiveDocumentId();
         const forkPos = session.getDocumentPosition(forkId);
         assert(forkPos.x === sourcePos.x && forkPos.y === sourcePos.y && forkPos.z === sourcePos.z,
@@ -396,6 +389,10 @@ async function runTests() {
         const pinLayout = new LocalWorldLayoutProvider(pinSpatialIndex, pinDiscovery);
 
         const publication = pinPublisher.publish(makeDocument('Streaming Pin'), carol);
+        const carolAvatarPresenceSession = new AvatarPresenceSession(
+            { avatarId: 'carol-avatar', ownerIdentity: 'carol' },
+            { position: new Position(0, 0, 0) }
+        );
         const session = new WorldNavigationSession({
             registry,
             loadPublicationDocumentUseCase: new LoadPublicationDocumentUseCase(pinStorage),
@@ -404,7 +401,8 @@ async function runTests() {
             publishDocumentUseCase: new PublishDocumentUseCase(pinPublisher, carol),
             identityProvider: carol,
             documentCloneService,
-            discoveryProvider: pinDiscovery
+            discoveryProvider: pinDiscovery,
+            avatarPresenceSession: carolAvatarPresenceSession
         });
         // Camera parked far from the source's grid slot: findVisibleDocuments()
         // legitimately excludes the original publication too, so the only
@@ -434,8 +432,11 @@ async function runTests() {
         session._spatialCameraController = new SpatialCameraController(session._session);
 
         session._loadWorld(publication.documentId);
-        selectFirstBrick(session, publication.documentId);
-        session.moveSelection({ x: 2, y: 0, z: 0 });
+        // 0.5.9 retired moveSelection() from WorldNavigationSession —
+        // createLandmarkHere() is the one mutation surface World View
+        // kept, and it triggers the exact same fork this pinning test
+        // depends on.
+        session.createLandmarkHere('Streaming Pin Landmark', '');
         const forkId = session.getActiveDocumentId();
 
         session.saveDocument(forkId);
@@ -473,35 +474,17 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // 22. UX: a mutation the fork policy refuses surfaces as
-    //     transient feedback through the EditorActionRegistry (0.1.50's
-    //     existing "degrade to feedback instead of throwing" contract,
-    //     extended to a REFUSED capability, not just a missing one) —
-    //     never as an uncaught exception reaching the UI raw.
+    // 22. EditorActionRegistry fork-denial-as-feedback coverage
+    //     removed — 'transform.nudgeRight' called moveSelection(),
+    //     which 0.5.9 retired from WorldNavigationSession wholesale
+    //     (EditorSession alone owns the standard transform actions
+    //     now); EditorActionRegistry has no registered action that
+    //     drives createLandmarkHere()/updateLandmark()/removeLandmark()
+    //     to rework this onto — landmark naming is a "press a button
+    //     while standing somewhere" UI flow, not a keyboard-shortcut
+    //     transform action. See docs/Principles.md "World View
+    //     Observes and Navigates; Editor Mutates and Builds".
     // -------------------------------------------------------------
-    {
-        const publication = publisher.publish(makeDocument('Feedback On Denial', LicenseId.ALL_RIGHTS_RESERVED), alice);
-        const session = buildSession();
-        session._loadWorld(publication.documentId);
-        selectFirstBrick(session, publication.documentId);
-
-        const messages = [];
-        const feedback = { show(message) { messages.push(message); } };
-        const registry = new EditorActionRegistry(createStandardActions({ session, feedback, ui: {} }));
-        const context = EditorActionContext.capture({ session, selectionCount: 1 });
-
-        let threw = false;
-        try {
-            registry.execute('transform.nudgeRight', context);
-        } catch (e) {
-            threw = true;
-        }
-        assert(!threw, '22. a policy-denied action never throws out of the registry');
-        assert(messages.length === 1 && /forking/i.test(messages[0]),
-            '22b. the denial reason reaches the user as feedback instead of silently failing');
-        assert(session.isDocumentPublished(publication.documentId),
-            '22c. the source is still untouched — the caught error does not paper over a partial mutation');
-    }
 
     console.log('✅ All Fork-on-Edit & Immutable Snapshot Lineage tests passed.');
 }

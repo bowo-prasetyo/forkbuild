@@ -1,13 +1,17 @@
 # Controls Reference
 
-Every mouse and keyboard interaction in ForkBuild. **Editing shortcuts
-on this page come from the same EditorActionRegistry that drives the
-command palette and the sidebar** — if this document and the palette
-ever disagree, the registry is the source of truth and this page is a
-bug.
+Every mouse and keyboard interaction in ForkBuild. As of 0.5.9, only
+camera/navigation controls and World Region/Landmark naming work in both
+Editor and World View — see docs/Principles.md, "World View Observes and
+Navigates; Editor Mutates and Builds." Everything under **Editing shortcuts**
+below (selection-for-mutation, transform, groups, clipboard, placement,
+the command palette) is Editor-only now: **Editing shortcuts come from the
+same EditorActionRegistry that drives the command palette and the
+sidebar** — if this document and the palette ever disagree, the registry is
+the source of truth and this page is a bug.
 
-Open the **Command Palette** with `Ctrl/Cmd+K` in either view to search
-every operation below by name.
+Open the **Command Palette** with `Ctrl/Cmd+K` in the Editor to search
+every editing operation below by name.
 
 ## Camera (both views)
 
@@ -18,7 +22,7 @@ every operation below by name.
 | Scroll wheel | Zoom |
 | `Home` | Reset camera (ignored while a gizmo drag is active) |
 
-## Command Surface (both views)
+## Command Surface (Editor only)
 
 | Input | Action |
 |---|---|
@@ -61,18 +65,18 @@ As you move through the world, the interface shows derived context like:
 These descriptions are computed from your position, terrain ecology,
 hydrology, and structure placements — nothing is stored in the world.
 
-## Selection
+## Selection (click/marquee work in both views; only the Editor mutates)
 
 | Input | Action | Notes |
 |---|---|---|
-| Click a brick | Select it | |
+| Click a brick | Select it | in World View this is INSPECTION/focus only — see [World View](03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor) |
 | `Ctrl/Cmd/Shift`-click | Toggle brick in/out of selection | |
 | Drag on empty space | Marquee-select | additive with `Ctrl/Cmd/Shift` |
 | `Ctrl/Cmd+A` | Select All | |
-| `Esc` | Clear Selection | last stop of the Escape chain |
-| `Delete` / `Backspace` | Delete Selection | one undo step |
+| `Esc` | Clear Selection | Editor's own Escape chain, below — World View's own Escape only ever closes whichever panel is open |
+| `Delete` / `Backspace` | Delete Selection — **Editor only** | one undo step; no keyboard binding at all in World View |
 
-## Transform — keyboard
+## Transform — keyboard (Editor only)
 
 | Input | Action |
 |---|---|
@@ -83,7 +87,7 @@ hydrology, and structure placements — nothing is stored in the world.
 | `Shift+R` | Rotate −90° |
 | `Shift` while gizmo-dragging or nudging | Precision mode (0.1× increments) |
 
-## Transform — gizmo
+## Transform — gizmo (Editor only)
 
 | Input | Action |
 |---|---|
@@ -100,7 +104,7 @@ it — every brick reverts to exactly where it started, with no new undo
 entry. Rearranging bricks within the same selection is never treated as a
 collision.
 
-## Transform — numeric panel
+## Transform — numeric panel (Editor only)
 
 | Input | Action |
 |---|---|
@@ -109,7 +113,7 @@ collision.
 | `Enter` or Apply | One operation, one undo step — never snapped |
 | `Esc` in a field | Clear the field (never clears the selection) |
 
-## Alignment & Distribution
+## Alignment & Distribution (Editor only)
 
 Available in the sidebar's Transform section and through the palette.
 Alignment needs **2+ bricks**; distribution needs **3+**. Both operate
@@ -150,7 +154,7 @@ selectable unit — a live reference, not a copy — see
 | Instance panel **Edit Source Document** | Open the referenced document to change its bricks | every instance updates, since an instance is a live reference |
 | `Delete` / `Backspace` | Remove the instance | never touches the referenced document |
 
-## Groups
+## Groups (Editor only)
 
 | Operation | Availability |
 |---|---|
@@ -162,28 +166,33 @@ Group transforms (move/rotate/align/distribute/numeric) operate on the
 resolved member bricks; membership itself is never changed by a
 transform.
 
-## Clipboard
+## Clipboard (Editor only)
 
 | Input | Action | Notes |
 |---|---|---|
 | `Ctrl/Cmd+C` | Copy | requires a selection |
 | `Ctrl/Cmd+V` | Paste | disabled while the clipboard is empty |
 
-## Duplicate
+## Duplicate (Editor only)
 
 | Input | Action | Notes |
 |---|---|---|
-| `Ctrl/Cmd+D` | Duplicate the current selection in place — one undo step | works on loose bricks or a resolved group in either view; a structure-instance selection only duplicates in the Editor (World View leaves it a no-op — see [Structure Instances](#structure-instances-editor)). Leaves the clipboard (and any pending paste offset) untouched |
+| `Ctrl/Cmd+D` | Duplicate the current selection in place — one undo step | works on loose bricks or a resolved group; a structure-instance selection duplicates too — see [Structure Instances](#structure-instances-editor). Leaves the clipboard (and any pending paste offset) untouched |
 
 The duplicate becomes the active selection, so it's ready to drag or nudge
 immediately.
 
 ## History
 
-| Input | Action |
-|---|---|
-| `Ctrl/Cmd+Z` | Undo |
-| `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` | Redo |
+| Input | Action | Where |
+|---|---|---|
+| `Ctrl/Cmd+Z` | Undo | Editor only — no keyboard binding in World View |
+| `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` | Redo | Editor only — no keyboard binding in World View |
+
+World View still HAS undo/redo — a Region/Landmark naming edit is a real
+command, and its own Timeline (see
+[World View](03-WorldView.md#the-operation-timeline)) can preview and
+restore it — there is simply no keyboard shortcut wired to it there.
 
 ## Editor-only
 
@@ -192,15 +201,15 @@ immediately.
 | `1` / `2` | Switch Select / Place tool |
 | `Ctrl/Cmd+S` | Save document |
 
-## Placement (both views, Place tool active)
+## Placement (Editor only)
 
 0.2.87 — owned by the active Place tool itself
-(`application/tools/PlacementTool.js` in the Editor,
-`WorldNavigationSession#rotatePlacementPreview()` in World View), not by
-EditorActionRegistry — `R`/`Shift+R` already name Rotate Clockwise/
-Counter-Clockwise for a SELECTION above, disabled while placing, so this
-table is the one deliberate exception to this page's own "registry is
-the source of truth" rule stated at the top.
+(`application/tools/PlacementTool.js`), not by EditorActionRegistry —
+`R`/`Shift+R` already name Rotate Clockwise/Counter-Clockwise for a
+SELECTION above, disabled while placing, so this table is the one
+deliberate exception to this page's own "registry is the source of truth"
+rule stated at the top. World View has no Place tool at all — see
+[World View](03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor).
 
 | Input | Action | Notes |
 |---|---|---|
@@ -209,7 +218,7 @@ the source of truth" rule stated at the top.
 | `Shift+R` | Rotate the pending preview −90° | |
 | Click | Commit the preview as a real Brick | refused at an occupied (red) position |
 
-## Escape priority
+## Escape priority (Editor)
 
 Escape is context-sensitive, in exactly this order:
 
@@ -218,3 +227,11 @@ Escape is context-sensitive, in exactly this order:
 3. **Active gizmo gesture** — cancels the drag (no history).
 4. **Active marquee** — cancels the marquee.
 5. **Otherwise** — clears the selection (in Place mode: exits placement).
+
+### Escape in World View
+
+World View's own `onKeyDown` no longer has an editing chain to prioritize
+at all (0.5.9) — an active text input still owns Escape the same way, and
+otherwise Escape simply closes whichever World View panel is currently
+open (the Focus panel, a naming panel, and so on), each closing its own
+overlay independently rather than through one shared priority chain.

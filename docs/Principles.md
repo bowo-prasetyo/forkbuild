@@ -8277,3 +8277,145 @@ inside the panel, at which point it calls the exact same
 entry point already used — the same "Navigate ≠ Modify" boundary this
 codebase has held to since 0.2.94, extended one more time to a surface
 that, unlike its predecessors, doesn't even navigate by default.
+
+### World View Observes and Navigates; Editor Mutates and Builds (0.5.9)
+
+0.2.1 established "Editor / World Editing Parity" as a load-bearing
+invariant: whatever mutation Editor View could do to a document, World
+View could do too, through the same `EditorActionRegistry`/
+`createStandardActions()` surface, "subject only to explicitly
+documented presentation or navigation constraints." Milestone after
+milestone then built that parity out in earnest — brick placement
+(0.1.14, 0.2.87), the transform gizmo (0.1.46–0.1.49), groups (0.1.43),
+clipboard (0.1.42), fork-on-write for a published snapshot's first edit
+(0.2.20) — until World View was, quietly, a second full editor wearing
+navigation chrome.
+
+0.5.7 and 0.5.8 spent two milestones giving World View a real
+information architecture — Explore/Map/Places, a unified Focus — built
+entirely on READING World state. Once that architecture existed, the
+editing capability sitting alongside it stopped looking like parity and
+started looking like two competing editors solving the same problem
+differently: World View's own in-place fork-on-write vs. Editor's
+explicit `/editor?fork=` navigation; World View's own gizmo vs.
+Editor's; a command palette that, in World View, quietly disabled half
+its own actions because `WorldNavigationSession` had never actually
+implemented `paste()`/`renameSelectedGroup()`/`duplicateSelectedGroup()`/
+`deleteSelectedGroup()` — the exact entropy a "shared action registry"
+was supposed to prevent, still accumulating for four milestones because
+nothing forced the two surfaces to name their intent identically. This
+milestone reverses 0.2.1's own invariant on purpose:
+
+  **World View Observes and Navigates; Editor Mutates and Builds.**
+
+Every brick/structure/group content-mutation method
+`WorldNavigationSession` ever grew — `setActiveDefinitionId`/
+`commitPlacement`/`cancelPlacement`/`rotatePlacementPreview` (placement),
+`gizmoPointerDown`/`gizmoPointerMove`/`gizmoPointerUp`/`gizmoKeyDown`/
+`isGestureActive` (the gizmo), `moveSelection`/`deleteSelection`/
+`rotateSelection`/`alignSelection`/`distributeSelection`/
+`snapSelectionToGrid`/`applyNumericTransform` (selection transform),
+`copySelection`/`pasteClipboard`/`duplicateSelection`/`repeatSelection`
+(clipboard), and the full group CRUD surface — is gone from that class
+entirely, not merely hidden behind a disabled button. `EditorSession`
+already had a complete, independent implementation of every one of
+these (confirmed before removing anything — see this milestone's own
+implementation notes), so nothing about EDITING got weaker; only WHERE
+it lives changed. `ui/views/WorldView.js` no longer constructs an
+`EditorActionRegistry`/`CommandPalette`/`EditingSidebar` at all — there
+is nothing left in that registry a read-only surface could offer.
+
+**Two deliberate exceptions, and why neither is "editing" in the sense
+above.** `WorldNavigationSession` kept exactly two mutation-shaped
+capabilities:
+
+  1. **World Region/Landmark naming** (`createRegionHere()`/
+     `updateRegion()`/`removeRegion()`/`createLandmarkHere()`/
+     `updateLandmark()`/`removeLandmark()`, 0.5.0/0.3.7). These are
+     driven by the live avatar's own current position inside World
+     View — "name the place I am standing at" — a concept the Editor
+     has no equivalent for at all, since it edits a single Document's
+     bricks in the abstract, never "being somewhere in a live,
+     multi-document World." Naming a place is annotation/curation, not
+     construction: it adds no geometry, composes nothing, and (see
+     0.5.0's own principle) is always a CLAIM, never authoritative
+     content. Porting it to the Editor would require giving EditorSession
+     an entirely new concept of World-level, avatar-anchored content —
+     a real feature, wildly out of proportion to this milestone, and
+     not what "World View Observes and Navigates" is actually
+     objecting to.
+  2. **`movePlacement()`** (0.2.23) — repositioning an existing
+     `StructurePlacement` within the shared World layout. Its own
+     pre-0.5.9 header already stated the principle this milestone
+     merely reuses: "Moving A Placement Is Not Editing A Document — it
+     never touches the Document/Publication, never forks anything."
+     Arranging WHERE something sits in a shared layout is the same
+     kind of act as naming a place — curating the World's own
+     structure — never authoring the content itself.
+
+Both exceptions still route through the exact same `canEditDocument()`/
+`_ensureEditableDocumentId()`/`_forkForEdit()` machinery brick mutation
+used — 0.2.95's authorization seam and 0.2.20's fork-on-write are
+untouched, general-purpose infrastructure, not brick-specific. Undo/redo
+(`undo()`/`redo()`) and the history-preview/replay machinery
+(`beginHistoryPreview()`/`restoreHistoryAt()`/etc.) also stay for the
+exact same reason: a viewer's landmark edit needs to be undoable too.
+
+**Selection stays; it now serves focus and inspection, never mutation.**
+`pick()`/`hover()`/`selectAll()`/`marqueeSelect()`/`clearSelection()`/
+`getSpatialSelection()` are all still here — 0.2.93 already established
+"Selection In World View Does Not Imply Editing Authority" for
+StructurePlacement selection specifically; this milestone generalizes
+that to EVERY selection. What selection now drives: `getSpatialInspection()`
+(read-only brick/placement detail), `focusSelection()` (camera
+movement), and collaborative presence (showing OTHERS what you have
+selected). It drives nothing else — `getSpatialEditingContext()` still
+exists (some call sites read it) but is now permanently empty, an
+accurate "nothing is editable" answer rather than a removed method a
+caller would have to guard against.
+
+**Edit a Copy — the one deliberate door out.** World View was
+deliberately NOT made a dead end. Every `WorldFocusContext` for a
+REGION/LANDMARK/STRUCTURE (never a `GEOGRAPHIC_PLACE` — see below —
+and never a COLLABORATOR, a person is not a document) now carries an
+`EDIT_COPY` action and a `source.documentId`: the Document that actually
+CONTAINS what is focused. For a landmark or region, that is the
+containing World's own document. For a STRUCTURE, it is deliberately
+the PLACED structure's own content document (`StructurePlacement#
+documentId` — the exact id `ui/views/WorldView.js#openStructureSource()`
+already loads for structure-source viewing), never the World that
+merely positions it — "Edit a Copy" always forks what a viewer was
+actually LOOKING AT, never a document-sized container around it.
+`WorldFocusPanel`'s own "Edit a Copy" button, when pressed, calls the
+EXACT SAME `/editor?fork=<documentId>&publication=<id>` navigation
+`ui/components/PublicationCatalog.js#forkPublication()` already used
+since 0.2.13/0.2.22 — never a second fork mechanism, never a new
+`ForkWorldViewSnapshotUseCase`. `WorldNavigationSession#
+getPublicationIdForDocument()` is the only new method this required: a
+small, public wrapper around the SAME "most recent Publication governs"
+resolution `_checkForkPolicy()` already used internally, so a fork
+reached through World View can never see a different license/
+fork-allowed outcome than the identical document's own in-session
+fork-on-write would have applied.
+
+**A Geographic Place has no document to fork.** Consistent with 0.5.5's
+own "A Geographic Place Is A Derived View, Never A Fourth Stored
+Object" — a `GEOGRAPHIC_PLACE` focus context never offers `EDIT_COPY`
+at all; it is a grouping of OTHER Worlds' own regions, with no single
+document of its own. Each of ITS regions offers Edit a Copy
+individually, exactly like any other region — the geographic place
+itself stays exactly as non-authoritative and non-editable as it always
+was.
+
+**What this milestone deliberately does NOT do.** It does not give the
+Editor any notion of avatar position, a live multi-document World, or
+camera framing on open — `EditorSession` has no camera-positioning API
+at all, and adding one is a real feature sized for its own milestone,
+not a side effect of this one. "Edit a Copy" therefore hands off enough
+DATA to identify what was focused (title, position, documentId) without
+claiming the Editor's camera actually moves anywhere to meet it — see
+`tests/WorldViewReadOnlyFork.test.js`'s own Section F for exactly what
+is and is not proven. It also does not touch Document metadata editing
+(title/description/license) or `movePlacement()`'s own dialog — neither
+is brick/structure/group content construction, and both were already
+outside 0.2.1's original parity list in spirit even if not in name.

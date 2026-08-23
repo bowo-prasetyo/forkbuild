@@ -217,7 +217,7 @@ function createEditorSession(document) {
 }
 
 // ---------------------------------------------------------------------
-// 3. WorldNavigationSession: pick modes, selectAll, marquee, −Sel
+// 3. WorldNavigationSession: pick modes, selectAll, marquee
 // ---------------------------------------------------------------------
 
 {
@@ -300,24 +300,12 @@ function createEditorSession(document) {
     assert(rendererCalls.some(([op, v]) => op === 'controls' && v === false), 'controls disabled delegated');
     assert(rendererCalls.some(([op, v]) => op === 'controls' && v === true), 'controls enabled delegated');
 
-    // −Sel: remove selection from group through the existing command.
-    nav._stubRectangleHits = [
-        { documentId: docId, buildingId, brickId: idA },
-        { documentId: docId, buildingId, brickId: idB },
-        { documentId: docId, buildingId, brickId: idC }
-    ];
-    nav.marqueeSelect({ x0: 0, y0: 0, x1: 10, y1: 10 });
-    const groupId = nav.createGroupFromSelection('Trio');
-    assert(groupId, 'group created from marquee selection');
-    nav._stubRectangleHits = [{ documentId: docId, buildingId, brickId: idC }];
-    nav.marqueeSelect({ x0: 0, y0: 0, x1: 10, y1: 10 });
-    assert(nav.removeFromGroupWithSelection(groupId) === true, 'removeFromGroupWithSelection succeeds');
-    const group = nav.getDocument(docId).world.getGroup(groupId);
-    assert(group.memberCount === 2 && !group.hasMember(idC), 'member removed');
-    nav.undo();
-    assert(nav.getDocument(docId).world.getGroup(groupId).memberCount === 3, 'undo restores membership');
+    // Group-mutation coverage removed — 0.5.9 retired World View's own
+    // brick-level mutation (createGroupFromSelection/
+    // removeFromGroupWithSelection); see docs/Principles.md "World View
+    // Observes and Navigates; Editor Mutates and Builds".
 
-    console.log('✓ WorldNavigationSession pick modes, selectAll, marquee, remove-from-group');
+    console.log('✓ WorldNavigationSession pick modes, selectAll, marquee');
 }
 
 console.log('\nAll advanced selection tests passed.');

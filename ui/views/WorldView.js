@@ -3,12 +3,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
-import { EditorActionRegistry, createStandardActions } from '../../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../../application/EditorActionContext.js';
 import { InputRouter } from '../../application/InputRouter.js';
 import { WorldSpatialContextService } from '../../application/WorldSpatialContextService.js';
-import EditingSidebar from '../components/EditingSidebar.js';
-import CommandPalette from '../components/CommandPalette.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
@@ -54,16 +50,17 @@ const DRAG_THRESHOLD_PX = 6;
 const DEFAULT_EXPLORE_RADIUS = 25;
 const NEARBY_RADIUS = 5;
 
-// 0.1.50: the World View joins the consolidated command surface.
-// Editing shortcuts now come from the SAME EditorActionRegistry the
-// Editor uses — parity by construction. Escape priority: text input >
-// palette > gizmo gesture > placement mode > selection. The overlay
-// gains the consolidated EditingSidebar; hover/inspection/placement
-// panels are unchanged.
+// 0.1.50 gave World View the same consolidated EditorActionRegistry/
+// EditingSidebar/CommandPalette the Editor uses, for editing parity by
+// construction. 0.5.9 retires all of it: World View no longer edits
+// Document content at all (see docs/Principles.md, "World View
+// Observes and Navigates; Editor Mutates and Builds") — hover/
+// inspection/focus panels are unchanged, everything mutation-shaped is
+// gone.
 export default {
     name: 'WorldView',
     components: {
-        EditingSidebar, CommandPalette, ActionFeedback,
+        ActionFeedback,
         DocumentInfoPanel, MetadataEditorDialog,
         PlacementInfoPanel, PlacementEditorDialog,
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
@@ -177,8 +174,6 @@ export default {
         // something well-formed to render.
         const locationBrowserDiagnostics = ref({ available: false, fatal: null, complete: false, warnings: [] });
         const locationBrowserInspected = ref(null);
-        const spatialEditingContext = ref(null);
-        const spatialPlacement = ref(null);
         const cameraPosition = ref(null);
         // 0.2.94 — World View Location & Navigation. `compassHeading`
         // mirrors `cameraPosition`'s own refresh cadence exactly (both
@@ -387,10 +382,6 @@ export default {
         // refreshSpatialUI()'s own 3-second cadence would be worth
         // reading on a timer.
         const spatialCollaboratorRows = ref([]);
-        const availableDefinitions = ref([]);
-        const selectedDefinitionId = ref(null);
-        const activeTool = ref('select');
-        const paletteOpen = ref(false);
         const feedbackMessage = ref('');
         const feedbackVisible = ref(false);
 
@@ -539,11 +530,6 @@ export default {
         const welcomeShownForDocumentId = new Set();
         let spatialPresenceSyncInterval = null;
 
-        availableDefinitions.value = registry.getAll();
-        if (availableDefinitions.value.length > 0) {
-            selectedDefinitionId.value = availableDefinitions.value[0].id;
-        }
-
         // ----------------------------- 0.1.50 action surface -------------
 
         const feedback = {
@@ -558,24 +544,12 @@ export default {
                 }, 2500);
             }
         };
-        const actionUi = {
-            togglePalette() {
-                paletteOpen.value = !paletteOpen.value;
-            },
-            focusNumeric: null
-        };
-        const actionRegistry = new EditorActionRegistry(
-            createStandardActions({ session, feedback, ui: actionUi })
-        );
-        const getActionContext = () => EditorActionContext.capture({
-            session,
-            selectionCount: spatialSelection.value ? spatialSelection.value.count : 0,
-            paletteOpen: paletteOpen.value,
-            activeTool: activeTool.value
-        });
-        function closePalette() {
-            paletteOpen.value = false;
-        }
+        // 0.5.9 — actionRegistry/EditorActionContext/CommandPalette/
+        // EditingSidebar are gone from World View entirely: every action
+        // createStandardActions() ever offered (selection mutation,
+        // transform, clipboard, groups, undo/redo) is now Editor-only —
+        // see docs/Principles.md, "World View Observes and Navigates;
+        // Editor Mutates and Builds (0.5.9)".
 
         // Guards every direct session call this view makes outside the
         // EditorActionRegistry (which already catches and surfaces
@@ -605,21 +579,6 @@ export default {
                 feedback.show(err.message);
                 return undefined;
             }
-        }
-
-        function alignSelection(mode) {
-            guarded(() => session.alignSelection(mode));
-            refreshSpatialUI();
-        }
-
-        function distributeSelection(axis) {
-            guarded(() => session.distributeSelection(axis));
-            refreshSpatialUI();
-        }
-
-        function applyNumericTransform(intent, options) {
-            guarded(() => session.applyNumericTransform(intent, options));
-            refreshSpatialUI();
         }
 
         // 0.2.21: Document Properties editor. Editing metadata on a
@@ -751,27 +710,10 @@ export default {
             refreshSpatialUI();
         }
 
-        // -----------------------------------------------------------------
-        // Tool switching
-        // -----------------------------------------------------------------
-
-        function setTool(tool) {
-            activeTool.value = tool;
-            if (tool === 'place') {
-                if (selectedDefinitionId.value) {
-                    session.setActiveDefinitionId(selectedDefinitionId.value);
-                }
-            } else {
-                session.cancelPlacement();
-            }
-            refreshSpatialUI();
-        }
-
-        function onBrickSelectionChange() {
-            if (activeTool.value === 'place' && selectedDefinitionId.value) {
-                session.setActiveDefinitionId(selectedDefinitionId.value);
-            }
-        }
+        // Tool switching (Select/Place) — REMOVED (0.5.9). World View
+        // only ever has one "mode" left: look around and pick/hover for
+        // focus and inspection. See docs/Principles.md, "World View
+        // Observes and Navigates; Editor Mutates and Builds".
 
         // -----------------------------------------------------------------
         // Spatial UI refresh
@@ -910,32 +852,6 @@ export default {
                     displayName: session.getAvatarDisplayName(entry.avatarId)
                 }))
                 : [];
-
-            const editingCtx = session.getSpatialEditingContext();
-            if (editingCtx && !editingCtx.isEmpty) {
-                spatialEditingContext.value = {
-                    type: editingCtx.type,
-                    capabilities: editingCtx.capabilities
-                };
-            } else {
-                spatialEditingContext.value = null;
-            }
-
-            const placement = session.getSpatialPlacement();
-            if (placement && placement.valid) {
-                spatialPlacement.value = {
-                    valid: placement.valid,
-                    definitionId: placement.definitionId,
-                    position: placement.position,
-                    rotation: placement.rotation,
-                    // 0.2.87 — "occupied" per PlacementValidator, distinct
-                    // from `valid` (which just means a real target was
-                    // found at all) — see SpatialPlacementState's own header.
-                    blocked: placement.blocked
-                };
-            } else {
-                spatialPlacement.value = null;
-            }
 
             // 0.2.22: the header (title/author/status) and the route
             // always track the ACTIVE document — session.
@@ -1426,7 +1342,7 @@ export default {
         // -----------------------------------------------------------------
         //
         // All three funnel through guarded() exactly like every other
-        // mutation in this file (alignSelection, onSaveMetadata, ...): a
+        // mutation in this file (movePlacement, onSaveMetadata, ...): a
         // denial (not authorized, no live avatar, fork-policy refusal)
         // becomes a feedback toast, never an uncaught exception. The
         // Locations panel's own list is re-read after each so a create/
@@ -1932,6 +1848,32 @@ export default {
             openNamingPanel(regionId);
         }
 
+        // "Edit a Copy" (0.5.9) — World View never edits Document
+        // content itself (see docs/Principles.md, "World View Observes
+        // and Navigates; Editor Mutates and Builds"); this is the one
+        // deliberate door out of that boundary. Only ever offered for a
+        // REGION/LANDMARK/STRUCTURE (see core/WorldFocusContext.js's own
+        // per-kind action table) — each already carries the id of the
+        // Document that actually CONTAINS it (`source.documentId`; for a
+        // STRUCTURE that's the placed structure's own content document,
+        // never the World merely positioning it). Reuses the EXACT SAME
+        // `/editor?fork=` navigation ui/components/PublicationCatalog.js#
+        // forkPublication() already uses — never a second fork mechanism,
+        // never a fork performed here in World View itself.
+        function editFocusedCopyFromFocusPanel() {
+            const context = focusContext.value;
+            if (!context || !context.source || !context.source.documentId) {
+                return;
+            }
+            const documentId = context.source.documentId;
+            const publication = session.getPublicationIdForDocument(documentId);
+            closeFocusPanel();
+            router.push({
+                path: '/editor',
+                query: publication ? { fork: documentId, publication } : { fork: documentId }
+            });
+        }
+
         // -----------------------------------------------------------------
         // 0.5.5 — Geographic Place Directory & Identity UX
         // -----------------------------------------------------------------
@@ -2317,22 +2259,16 @@ export default {
         }
 
         // -----------------------------------------------------------------
-        // Pointer interaction (gizmo-first, unchanged since 0.1.46)
+        // Pointer interaction (0.5.9 — no gizmo, no placement: pick/hover
+        // only, driving focus and inspection, never mutation)
         // -----------------------------------------------------------------
 
         function onPointerDown(event) {
             isDragging = false;
             pointerStart = { x: event.clientX, y: event.clientY };
-            if (guarded(() => session.gizmoPointerDown(event))) {
-                return;
-            }
         }
 
         function onPointerMove(event) {
-            const gizmoResult = session.gizmoPointerMove(event);
-            if (gizmoResult.consumed) {
-                return;
-            }
             if (pointerStart) {
                 const dx = event.clientX - pointerStart.x;
                 const dy = event.clientY - pointerStart.y;
@@ -2340,7 +2276,7 @@ export default {
                     isDragging = true;
                 }
             }
-            if (event.buttons === 0 && !gizmoResult.hovered) {
+            if (event.buttons === 0) {
                 session.hover(event.clientX, event.clientY);
                 refreshHoverUI();
             }
@@ -2351,31 +2287,21 @@ export default {
         }
 
         function onPointerUp(event) {
-            const gizmoResult = session.gizmoPointerUp(event);
-            if (gizmoResult.consumed) {
-                refreshSpatialUI();
-                pointerStart = null;
-                isDragging = false;
-                return;
-            }
             if (!isDragging && pointerStart) {
-                if (activeTool.value === 'place') {
-                    guarded(() => session.commitPlacement());
-                    refreshSpatialUI();
-                } else {
-                    session.pick(event.clientX, event.clientY, { 
-                        toggle: event.ctrlKey || event.metaKey, 
-                        additive: event.shiftKey 
-                    });
-                    refreshSpatialUI();
-                }
+                session.pick(event.clientX, event.clientY, {
+                    toggle: event.ctrlKey || event.metaKey,
+                    additive: event.shiftKey
+                });
+                refreshSpatialUI();
             }
             pointerStart = null;
             isDragging = false;
         }
 
         // -----------------------------------------------------------------
-        // Keyboard interaction — registry-driven (0.1.50)
+        // Keyboard interaction (0.5.9 — no registry-driven editing
+        // shortcuts left; only text-input/avatar-control-mode handling
+        // remains)
         // -----------------------------------------------------------------
 
         function onKeyDown(event) {
@@ -2386,61 +2312,10 @@ export default {
                 }
                 return;
             }
-            // 2. An open palette owns the keyboard.
-            if (paletteOpen.value) {
-                if (event.key === 'Escape') {
-                    event.preventDefault();
-                    paletteOpen.value = false;
-                } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-                    event.preventDefault();
-                    paletteOpen.value = false;
-                }
-                return;
-            }
-            // 3. An active gizmo gesture owns the keyboard.
-            if (session.isGestureActive()) {
-                if (session.gizmoKeyDown({ key: event.key })) {
-                    refreshSpatialUI();
-                }
-                return;
-            }
-            // 3.5. Avatar Control Mode (0.2.36) — only ever consumes
+            // 2. Avatar Control Mode (0.2.36) — only ever consumes
             // W/A/S/D/Shift/Space, and only while explicitly on (see
-            // onAvatarKeyDown above); anything else falls through to
-            // the tiers below exactly as if control mode were off.
+            // onAvatarKeyDown above).
             if (onAvatarKeyDown(event)) {
-                return;
-            }
-            // 4. Placement mode keeps its own Escape (exit placement).
-            if (activeTool.value === 'place' && event.key === 'Escape') {
-                setTool('select');
-                return;
-            }
-            // 4.5. Placement mode keeps its own Rotate too (0.2.87) —
-            // same reasoning as Escape just above: 'R'/'Shift+R' already
-            // name Rotate Clockwise/Counter-Clockwise in the registry
-            // (transform.rotateClockwise/CounterClockwise), but those
-            // are disabled while placing (editingAllowed() checks
-            // ctx.placementMode) — and matchShortcut() below resolves a
-            // key to its bound action by KEY ALONE, oblivious to
-            // enabled(), so falling through to step 5 unchanged would
-            // silently swallow the keystroke on a disabled action rather
-            // than ever reaching placement. Handled here instead, before
-            // the registry ever sees it.
-            if (activeTool.value === 'place' && event.key.toLowerCase() === 'r') {
-                if (session.rotatePlacementPreview(event.shiftKey ? -90 : 90)) {
-                    event.preventDefault();
-                    refreshSpatialUI();
-                }
-                return;
-            }
-            // 5. Registry-driven editing shortcuts.
-            const action = InputRouter.matchShortcut(event, actionRegistry);
-            if (action) {
-                if (actionRegistry.execute(action.id, getActionContext())) {
-                    event.preventDefault();
-                    refreshSpatialUI();
-                }
                 return;
             }
         }
@@ -2563,10 +2438,9 @@ export default {
         // Avatar movement keyboard interaction (0.2.36)
         // -----------------------------------------------------------------
         //
-        // Deliberately separate from onKeyDown's registry-driven
-        // shortcut dispatch below: W/A/S/D/Shift/Space are never
-        // EditorActionRegistry actions, they only ever mean anything
-        // while Avatar Control Mode is explicitly on. Both handlers
+        // Deliberately separate from onKeyDown below: W/A/S/D/Shift/Space
+        // only ever mean anything while Avatar Control Mode is
+        // explicitly on. Both handlers
         // still respect the same "text inputs own their keys" rule
         // onKeyDown already follows, so search/metadata fields never
         // fight the avatar for keystrokes.
@@ -2767,8 +2641,6 @@ export default {
             focusLocationBrowserResult,
             selectLocationBrowserResult,
             inspectLocationBrowserResult,
-            spatialEditingContext,
-            spatialPlacement,
             cameraPosition,
             compassHeading,
             spatialContext,
@@ -2804,6 +2676,7 @@ export default {
             goFromFocusPanel,
             showFocusOnMap,
             openNamesFromFocusPanel,
+            editFocusedCopyFromFocusPanel,
             showGeographicPlaceDirectory,
             geographicPlaces,
             showGeographicPlacePanel,
@@ -2872,24 +2745,11 @@ export default {
             closeMembersPanel,
             grantWorldMember,
             revokeWorldMember,
-            availableDefinitions,
-            selectedDefinitionId,
-            activeTool,
-            paletteOpen,
             feedbackMessage,
             feedbackVisible,
-            actionRegistry,
-            getActionContext,
-            actionUi,
-            closePalette,
-            setTool,
-            onBrickSelectionChange,
             focusWorld,
             focusSelection,
             openStructureSource,
-            alignSelection,
-            distributeSelection,
-            applyNumericTransform,
             onSaveMetadata,
             saveActiveDocument,
             publishActiveDocument
@@ -3186,7 +3046,7 @@ export default {
                     />
                 </div>
 
-                <div v-if="spatialHover && activeTool === 'select' && !spatialPlacement" class="spatial-panel spatial-panel--hover">
+                <div v-if="spatialHover" class="spatial-panel spatial-panel--hover">
                     <h4>Hover</h4>
                     <p class="spatial-type">{{ spatialHover.type }}</p>
                     <p v-if="spatialHover.worldTitle" class="spatial-world">
@@ -3360,73 +3220,6 @@ export default {
                     @interact="performAvatarInteraction"
                 />
 
-                <div
-                    v-if="spatialPlacement"
-                    :class="['spatial-panel', 'spatial-panel--placement', { 'spatial-panel--blocked': spatialPlacement.blocked }]"
-                >
-                    <h4>Placement Preview</h4>
-                    <p class="spatial-type">{{ spatialPlacement.definitionId }}</p>
-                    <p class="spatial-pos">
-                        {{ spatialPlacement.position.x.toFixed(2) }},
-                        {{ spatialPlacement.position.y.toFixed(2) }},
-                        {{ spatialPlacement.position.z.toFixed(2) }}
-                        · {{ spatialPlacement.rotation % 360 }}°
-                    </p>
-                    <p v-if="spatialPlacement.blocked" class="editing-hint editing-hint--blocked">
-                        Occupied — can't place here
-                    </p>
-                    <p v-else class="editing-hint">Click to place • R to rotate • Escape to switch to Select</p>
-                </div>
-
-                <div class="world-view-section">
-                    <h4>Tools</h4>
-                    <div class="tool-switcher tool-switcher--spatial">
-                        <button
-                            :class="['tool-btn', { 'tool-btn--active': activeTool === 'select' }]"
-                            @click="setTool('select')"
-                        >
-                            Select
-                        </button>
-                        <button
-                            :class="['tool-btn', { 'tool-btn--active': activeTool === 'place' }]"
-                            @click="setTool('place')"
-                        >
-                            Place
-                        </button>
-                    </div>
-                    <div v-if="activeTool === 'place'" class="placement-controls">
-                        <select
-                            v-model="selectedDefinitionId"
-                            class="placement-select"
-                            @change="onBrickSelectionChange"
-                        >
-                            <option
-                                v-for="def in availableDefinitions"
-                                :key="def.id"
-                                :value="def.id"
-                            >
-                                {{ def.name }}
-                            </option>
-                        </select>
-                        <p class="placement-hint">
-                            Hover over ground or a brick face, R to rotate, then click to place.
-                        </p>
-                    </div>
-                </div>
-
-                <div v-if="activeTool === 'select'" class="world-view-section">
-                    <h4>Editing</h4>
-                    <EditingSidebar
-                        :registry="actionRegistry"
-                        :get-context="getActionContext"
-                        :ui="actionUi"
-                        :selection-count="spatialSelection ? spatialSelection.count : 0"
-                        :apply-numeric="applyNumericTransform"
-                        :align="alignSelection"
-                        :distribute="distributeSelection"
-                    />
-                </div>
-
                 <div v-if="failedWorlds.length > 0" class="world-view-section world-view-section--error">
                     <h4>Unavailable ({{ failedWorlds.length }})</h4>
                     <ul class="world-list world-list--failed">
@@ -3468,12 +3261,6 @@ export default {
               </div>
             </div>
             <div ref="viewport" class="world-viewport"></div>
-            <CommandPalette
-                v-if="paletteOpen"
-                :registry="actionRegistry"
-                :get-context="getActionContext"
-                @close="closePalette"
-            />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
@@ -3595,6 +3382,7 @@ export default {
                 @go="goFromFocusPanel"
                 @show-on-map="showFocusOnMap"
                 @open-names="openNamesFromFocusPanel"
+                @edit-copy="editFocusedCopyFromFocusPanel"
                 @cancel="closeFocusPanel"
             />
             <WorldMembersPanel

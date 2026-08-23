@@ -6,7 +6,7 @@ history preserved.
 
 ## Publishing your creation
 
-1. Build something in the Editor (or World View).
+1. Build something in the Editor.
 2. Give it a title (and, optionally, a description and a license — click
    **Edit Metadata**, or set them the first time you save a brand-new
    document).
