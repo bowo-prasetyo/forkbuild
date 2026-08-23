@@ -14,6 +14,7 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
@@ -100,11 +101,15 @@ async function runTests() {
     const publishDocumentUseCase = new PublishDocumentUseCase(publisher, alice);
     const documentCloneService = new DocumentCloneService();
 
-    function buildSession() {
+    function buildSession(avatarPosition = null) {
+        const avatarPresenceSession = avatarPosition
+            ? new AvatarPresenceSession({ avatarId: 'alice-avatar', ownerIdentity: 'alice' }, { position: avatarPosition })
+            : null;
         const session = new WorldNavigationSession({
             registry, loadPublicationDocumentUseCase, worldLayoutProvider,
             saveDocumentUseCase, publishDocumentUseCase, identityProvider: alice,
-            documentCloneService, discoveryProvider, placementRegistry, moveWorldPlacementUseCase
+            documentCloneService, discoveryProvider, placementRegistry, moveWorldPlacementUseCase,
+            avatarPresenceSession
         });
         session._session = statefulStubRenderer();
         session._spatialCameraController = new SpatialCameraController(session._session);
@@ -203,12 +208,18 @@ async function runTests() {
     //        next mutation correctly lands there, leaving the
     //        previously-active document completely untouched. This is
     //        the regression test for the cross-document corruption bug
-    //        0.2.27 fixed: group operations used to independently fork
+    //        0.2.27 fixed: mutations used to independently fork
     //        whatever _focusedDocumentId happened to be, regardless of
-    //        which document the selection actually belonged to.
+    //        which document the selection actually belonged to. 0.5.9
+    //        retired WorldNavigationSession's own group capability
+    //        (createGroupFromSelection) — createLandmarkHere() proves
+    //        the exact same point: it targets _activeDocumentId, never
+    //        the selection directly, so the fork still follows Bob
+    //        (the document the brick SELECTION made active), never
+    //        Alice.
     // -------------------------------------------------------------
     {
-        const session = buildSession();
+        const session = buildSession(new Position(0, 0, 0));
         session._loadWorld(publicationAlice.documentId);
         session._loadWorld(publicationBob.documentId);
         session.setActiveDocument(publicationAlice.documentId);
@@ -226,21 +237,24 @@ async function runTests() {
         assert(session.getFocusedDocumentId() === publicationAlice.documentId,
             '13. camera focus is untouched by the selection — still Alice, from setActiveDocument above, which never moves the camera');
 
-        const groupId = session.createGroupFromSelection('Bob Group');
-        assert(groupId !== null, '14. the group was created');
+        const landmarkId = session.createLandmarkHere('Bob Landmark', '');
+        assert(typeof landmarkId === 'string' && landmarkId.length > 0, '14. the landmark was created');
 
-        // The mutation must have forked BOB (the selection's document),
-        // and Alice must be completely untouched: still published, no
-        // group ever added to her world.
+        // The mutation must have forked BOB (the selection's document,
+        // now also the ACTIVE document per assertion 12 —
+        // createLandmarkHere() targets _activeDocumentId, never the
+        // selection directly, so this still proves the exact
+        // regression 0.2.27 fixed), and Alice must be completely
+        // untouched: still published, no landmark ever added to her
+        // world.
         const forkedBobId = session.getActiveDocumentId();
         assert(forkedBobId !== publicationBob.documentId,
-            '15a. Bob was forked (he was still a published snapshot) — the mutation correctly landed on the selection\'s document');
+            '15a. Bob was forked (he was still a published snapshot) — the mutation correctly landed on the active document');
         assert(session.isDocumentPublished(publicationAlice.documentId),
             '15b. Alice was never forked — she was never the mutation target, despite having been "active" moments earlier');
         const aliceDoc = session.getDocument(publicationAlice.documentId);
-        const aliceGroups = typeof aliceDoc.world.getGroups === 'function' ? aliceDoc.world.getGroups() : [];
-        assert(aliceGroups.length === 0,
-            '15c. the group landed on Bob\'s fork, never on Alice\'s document');
+        assert(aliceDoc.world.getWorldLandmarks().length === 0,
+            '15c. the landmark landed on Bob\'s fork, never on Alice\'s document');
     }
 
     // -------------------------------------------------------------

@@ -114,7 +114,7 @@ async function run() {
         assert(isValidWorldFocusKind(WorldFocusKind.REGION), '1. REGION is a valid kind');
         assert(isValidWorldFocusKind(WorldFocusKind.GEOGRAPHIC_PLACE), '2. GEOGRAPHIC_PLACE is a valid kind');
         assert(isValidWorldFocusKind('nonsense') === false, '3. an unknown kind string is invalid');
-        assert(Object.values(WorldFocusAction).length === 3, '4. exactly three actions exist: go, map, names');
+        assert(Object.values(WorldFocusAction).length === 4, '4. exactly four actions exist: go, map, names, edit_copy (0.5.9)');
 
         const viewer = { x: 0, y: 0, z: 0 };
         const regions = [
@@ -133,29 +133,32 @@ async function run() {
         assert(regionContext.regionPath.length === 1 && regionContext.regionPath[0].id === 'r-outer',
             '9. a region\'s own regionPath contains the LARGER region it sits inside, never itself');
         assert(regionContext.placeName === 'Green Valley', '10. placeName reuses describePlace() over regionPath');
-        assert(regionContext.hasAction(WorldFocusAction.GO) && regionContext.hasAction(WorldFocusAction.MAP) && regionContext.hasAction(WorldFocusAction.NAMES),
-            '11. a region offers Go, Map, and Names');
+        assert(regionContext.hasAction(WorldFocusAction.GO) && regionContext.hasAction(WorldFocusAction.MAP) && regionContext.hasAction(WorldFocusAction.NAMES)
+            && regionContext.hasAction(WorldFocusAction.EDIT_COPY),
+            '11. a region offers Go, Map, Names, and Edit a Copy (0.5.9)');
         assert(regionContext.source.kind === WorldFocusKind.REGION && regionContext.source.id === 'r-inner', '12. source carries kind+id for the host to act on');
         const expectedDistance = Math.round(Math.sqrt(10 * 10 + 10 * 10) * 10) / 10;
         assert(regionContext.distance === expectedDistance, '13. distance is the real XZ distance from the viewer, rounded to one decimal');
         assert(regionContext.direction === 'NE', '14. direction is computed from the SAME directionLabelBetween() every other kind uses');
 
-        // LANDMARK — never offers Map/Names; carries its own description.
+        // LANDMARK — never offers Map/Names; offers Edit a Copy (0.5.9);
+        // carries its own description.
         const landmarkEntity = { id: 'lm-1', title: 'Village Well', description: 'Central water source', position: { x: 12, y: 0, z: 12 } };
         const landmarkContext = deriveWorldFocusContext({ kind: WorldFocusKind.LANDMARK, entity: landmarkEntity, viewerPosition: viewer, regions });
         assert(landmarkContext.subtitle === 'Landmark' && landmarkContext.description === 'Central water source', '15. landmark subtitle/description');
-        assert(JSON.stringify(landmarkContext.availableActions) === JSON.stringify([WorldFocusAction.GO]), '16. a landmark offers ONLY Go');
+        assert(JSON.stringify(landmarkContext.availableActions) === JSON.stringify([WorldFocusAction.GO, WorldFocusAction.EDIT_COPY]), '16. a landmark offers Go and Edit a Copy (0.5.9)');
         assert(landmarkContext.regionPath.length === 2 && landmarkContext.regionPath[0].id === 'r-inner',
             '17. a landmark\'s regionPath includes every containing region, innermost first, WITHOUT the self-exclusion regions apply to themselves');
         assert(landmarkContext.arrivalPhrase === 'You are in Willow Village · Green Valley', '18. "in" wording when real regions contain the target, innermost first');
 
         // STRUCTURE — no description field at all (structures carry none
-        // in this codebase), Go only. Placed well outside both regions
-        // above so its own regionPath comes back genuinely empty.
+        // in this codebase), Go and Edit a Copy (0.5.9). Placed well
+        // outside both regions above so its own regionPath comes back
+        // genuinely empty.
         const structureEntity = { id: 'st-1', title: 'Old Bridge', position: { x: 2000, y: 0, z: 2000 } };
         const structureContext = deriveWorldFocusContext({ kind: WorldFocusKind.STRUCTURE, entity: structureEntity, viewerPosition: viewer, regions });
         assert(structureContext.subtitle === 'Structure' && structureContext.description === '', '19. structure subtitle/empty description');
-        assert(JSON.stringify(structureContext.availableActions) === JSON.stringify([WorldFocusAction.GO]), '20. a structure offers ONLY Go');
+        assert(JSON.stringify(structureContext.availableActions) === JSON.stringify([WorldFocusAction.GO, WorldFocusAction.EDIT_COPY]), '20. a structure offers Go and Edit a Copy (0.5.9)');
         assert(structureContext.regionPath.length === 0, '21. a structure far from any region has an empty regionPath');
         assert(structureContext.geographicPlace === null, '22. no candidates supplied -> no geographicPlace');
         assert(structureContext.arrivalPhrase === 'Unmarked ground — no named place claims this yet.', '23. neutral wording when neither a region nor a geographic place is known');

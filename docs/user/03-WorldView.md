@@ -281,10 +281,13 @@ containing world's title and author. This is read-only in World View —
 there's no gizmo, no numeric field, nothing to drag. Click **Open Source**
 to jump straight into the Editor on the referenced document itself; every
 other instance of it, wherever it's placed, reflects whatever you edit
-there. If you'd rather work on an independent copy instead — leaving every
-other instance untouched — use its Focus panel's own
-[**Edit a Copy**](#edit-a-copy--taking-something-into-the-editor) button
-instead of Open Source.
+there. Right beside it, this panel has its own **Edit a Copy** button too
+— if you'd rather work on an independent copy instead, leaving every other
+instance (and the original) untouched, use that one instead of Open
+Source. It's the same action described in
+[Edit a Copy](#edit-a-copy--taking-something-into-the-editor) below,
+reachable straight from here as well as from a structure's Focus panel —
+you don't have to go find it in a list first.
 
 ## Document Information and Placement
 

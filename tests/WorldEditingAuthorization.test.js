@@ -20,6 +20,7 @@ import { WorldAuthorizationService } from '../application/WorldAuthorizationServ
 import { WorldAccessLevel, worldAccessAtLeast, isValidWorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 
 // 0.2.95 — World Editing Authorization Foundation.
 //
@@ -342,9 +343,17 @@ async function run() {
             const avatarPresenceSession = avatarPosition
                 ? new AvatarPresenceSession({ avatarId: `${identityId || 'anon'}-avatar`, ownerIdentity: identityId || 'anon' }, { position: avatarPosition })
                 : null;
+            // createLandmarkHere() needs a signing identity, not just an
+            // avatar position — mirrors tests/WorldLandmarksSessionUX.test.js's
+            // own makeSession(). worldAuthorizationService's OWN identityProvider
+            // (constructed separately, above, for canEditDocument()) is a
+            // different collaborator from this one on purpose — this is
+            // "who is signing the command," that is "who is asking to edit."
+            const identityProvider = identityId ? makeIdentityProvider({ identityId, username: identityId }) : null;
             const session = new WorldNavigationSession({
                 registry, loadPublicationDocumentUseCase, worldLayoutProvider,
-                discoveryProvider, worldAuthorizationService, avatarPresenceSession
+                discoveryProvider, worldAuthorizationService, avatarPresenceSession, identityProvider,
+                saveDocumentUseCase: new SaveDocumentUseCase(storage, serializer)
             });
             session._session = stubRenderer();
             session._loadWorld(aliceWorld.id);
