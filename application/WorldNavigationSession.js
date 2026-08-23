@@ -2367,6 +2367,65 @@ export class WorldNavigationSession {
         });
     }
 
+    // 0.5.1 — World Maps & Geographic Navigation. Every region/landmark/
+    // structure/collaborator currently known to this session, WORLD-WIDE
+    // across every loaded document — the exact same scope
+    // application/WorldLocationDirectory.js#list() already uses for
+    // navigation (never streaming-radius-limited, per that class's own
+    // header), because a map is for understanding the whole World, not
+    // just what's currently rendered nearby. Each entry's position is
+    // already offset into this session's shared/absolute layout space
+    // (getDocumentPosition) — the SAME transform _collectRegions() above
+    // and WorldLocationDirectory's own _landmarkLocationsFor()/
+    // _structureLocationsFor() already apply — so a map spanning
+    // multiple loaded Worlds lines their content up exactly like the
+    // Locations panel already does. `resolveDisplayName` is the same
+    // optional `(identityId) => string` every other collaborator-listing
+    // method here already accepts — see _getPresentCollaborators()'s
+    // own header.
+    //
+    // Purely a read: never mutates the World, never decides what a map
+    // does with this. See core/WorldMapProjection.js for the pure
+    // projection math built on top, and ui/components/WorldMapPanel.js
+    // for the one renderer that consumes it today.
+    getMapContent(resolveDisplayName) {
+        const landmarks = [];
+        const structures = [];
+        for (const document of this.getLoadedDocuments()) {
+            const layoutPosition = this.getDocumentPosition(document.world.id);
+            for (const landmark of document.world.getWorldLandmarks()) {
+                landmarks.push({
+                    id: landmark.id,
+                    title: landmark.title,
+                    position: {
+                        x: landmark.position.x + layoutPosition.x,
+                        y: landmark.position.y + layoutPosition.y,
+                        z: landmark.position.z + layoutPosition.z
+                    }
+                });
+            }
+            for (const placement of document.world.getStructurePlacements()) {
+                structures.push({
+                    id: placement.id,
+                    title: this.getSavedDocumentTitle(placement.documentId),
+                    position: {
+                        x: placement.position.x + layoutPosition.x,
+                        y: placement.position.y + layoutPosition.y,
+                        z: placement.position.z + layoutPosition.z
+                    }
+                });
+            }
+        }
+
+        return {
+            regions: this._collectRegions(),
+            landmarks,
+            structures,
+            collaborators: this._getPresentCollaborators(resolveDisplayName),
+            viewerPosition: this.getAvatarPosition() || this.getCameraPosition()
+        };
+    }
+
     // The human breadcrumb for the viewer's CURRENT position, e.g.
     // "Willow Village · Green Valley". Falls back to the exact same
     // describeLocation() reading (nearest landmark/structure) this

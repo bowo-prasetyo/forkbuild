@@ -7659,3 +7659,77 @@ names count was named directly, in the original design conversation, as
 something to deliberately not build yet — a World's geography stays
 purely community-authored, with no built-in concept of a "more correct"
 namer.
+
+### A World Map Is A Derived View, Never A Second World (0.5.1)
+
+0.5.0 gave a World's geography a NAME — `WorldRegion`, `regionsContaining()`,
+a breadcrumb someone can read. It deliberately stopped short of showing
+anyone that geography — no rendered boundary, no minimap, "a renderer
+pass for visualizing region extents directly is future work, sized on
+its own." 0.5.1 (World Maps & Geographic Navigation) is that renderer
+pass, built on top of every derivation this codebase already trusts
+rather than inventing a parallel one. The rule this milestone commits
+to, stated plainly:
+
+> A map is a PROJECTION of World content that already exists, computed
+> fresh every time it's opened. It is never a second store of what a
+> World contains, and nothing a viewer does TO the map — panning,
+> zooming, clicking empty space — ever reaches the World, the 3D camera,
+> or even the other viewers in it.
+
+**`core/WorldMapProjection.js` is arithmetic, not a renderer.** It knows
+nothing about SVG, Vue, or the World's own content — only how to turn a
+`{ x, z }` and a viewport (`center`, `span`, `width`, `height`) into a
+2D point, and back. This is exactly the same discipline
+`core/WorldSpatialContext.js` and `core/WorldRegionGeography.js` already
+hold: derivation lives in `core/`, stays pure, and stays trivially
+testable without a DOM. Because the projection has no opinion on units
+or on WHO is asking, the same math backs a full-screen map panel today
+and could back a minimap or a thumbnail tomorrow with zero duplicated
+geometry — see that file's own header.
+
+**The map's DATA source is `WorldNavigationSession#getMapContent()`, the
+exact same gather every other World-wide read in this codebase already
+performs** — `_collectRegions()`, `application/WorldLocationDirectory.js#list()`.
+Deliberately WORLD-WIDE, never streaming-radius-limited: `core/WorldSpatialContext.js`'s
+`nearbyLandmarks`/`nearbyStructures` answer "what's near me right now,"
+a genuinely different question from "what does this whole World
+contain," and a map exists to answer the second one. A landmark 5,000
+meters from the viewer is invisible to `nearbyLandmarks` and perfectly
+visible on the map — that's not an inconsistency between the two, it's
+the map doing the one job `WorldSpatialContext` was never built for.
+
+**Panning and zooming are LOCAL VIEWER STATE, weaker even than "never
+changes the World."** The design conversation that proposed this
+milestone was explicit: *"Clicking the map never changes the World. It
+only changes the local camera."* `ui/components/WorldMapPanel.js` goes
+one step further than that sentence requires — clicking empty map space
+doesn't even reach the 3D camera, it only re-centers the flat map view
+itself (`unprojectPoint()` converting a click back to a world position,
+purely presentational state the component owns). Only clicking an
+actual place or person emits `focus-location`/`focus-collaborator`,
+routed by the host straight to the SAME `session.focusLocation()`/
+`focusCollaborator()` every other navigation entry point already uses
+— `goHome`, the Locations panel, the Explore panel's suggestions, and
+now the map. No second camera mechanism, no second navigation verb.
+
+**Presentation tiers are labels, never geometry, exactly like
+`RegionKind` itself.** `regionPresentationTier()` lets a `CONTINENT`
+draw a bigger label than a `NEIGHBORHOOD` on the map — a rendering
+weight only, the same "labels only, never behavior" restraint
+`core/RegionKind.js` already documents for the kind vocabulary these
+tiers are derived from. Nothing about a region's actual radius, its
+containment math, or its authority to exist changes because of what
+tier its `kind` happens to fall into.
+
+**The map is refreshed on the same cadence as everything else it sits
+beside, never a separate polling loop.** `mapContent` in
+`ui/views/WorldView.js` is re-read inside the SAME `refreshSpatialUI()`
+tick that already refreshes `cameraPosition`/`compassHeading`/
+`spatialContext` — one clock, one source of truth for "what does the
+live World currently look like," never a bespoke timer for the map
+alone. What IS deliberately NOT re-derived on that cadence is the
+viewer's own pan/zoom choice (`centerX`/`centerZ`/`span` in
+`WorldMapPanel`'s own `data()`) — content refreshing every few seconds
+must never silently yank the map back to "centered on me" while someone
+is looking at the far side of a World.
