@@ -19,6 +19,7 @@
 // See docs/Principles.md, "Exploration Guides Attention, Never Ownership
 // or Mutation (0.3.9)."
 import { distanceXZ } from './WorldSpatialAnchor.js';
+import { regionsContaining, describePlace } from './WorldRegionGeography.js';
 
 // How far to look for nearby content when building welcome context.
 // Deliberately generous to ensure meaningful first impressions.
@@ -105,7 +106,15 @@ export class WorldWelcomeContext {
         nearbyStructures = [],
         nearbyCollaborators = [],
         suggestedDestinations = [],
-        activitySummary = []
+        activitySummary = [],
+        // 0.5.0 — World Regions & Decentralized Place Naming. Every
+        // named WorldRegion actually containing the arrival position,
+        // innermost first — see core/WorldRegionGeography.js. Optional
+        // and empty by default, so every caller that predates this
+        // milestone (and never passes `regions` to
+        // deriveWorldWelcomeContext() below) gets byte-identical
+        // behavior.
+        currentRegionPath = []
     } = {}) {
         this._world = world || null;
         this._currentPlace = currentPlace || null;
@@ -114,6 +123,7 @@ export class WorldWelcomeContext {
         this._nearbyCollaborators = Array.from(nearbyCollaborators);
         this._suggestedDestinations = Array.from(suggestedDestinations);
         this._activitySummary = Array.from(activitySummary);
+        this._currentRegionPath = Array.from(currentRegionPath);
     }
     
     get world() { return this._world; }
@@ -125,6 +135,14 @@ export class WorldWelcomeContext {
     get nearbyCollaborators() { return this._nearbyCollaborators; }
     get suggestedDestinations() { return this._suggestedDestinations; }
     get activitySummary() { return this._activitySummary; }
+
+    // 0.5.0 — the named regions containing the arrival position,
+    // innermost first, and the human breadcrumb built from them (e.g.
+    // "Willow Village · Green Valley"), '' when none. See
+    // core/WorldRegion.js and docs/Principles.md, "Users Name Places;
+    // The World Derives Geography From Names (0.5.0)."
+    get currentRegionPath() { return this._currentRegionPath; }
+    get placeName() { return describePlace(this._currentRegionPath); }
     
     // Count of structures in this welcome context
     get structureCount() { return this._nearbyStructures.length; }
@@ -196,6 +214,13 @@ export class WorldWelcomeContext {
             })),
             suggestedDestinations: this._suggestedDestinations.map(s => s.toJSON()),
             activitySummary: this._activitySummary,
+            currentRegionPath: this._currentRegionPath.map(r => ({
+                id: r.id,
+                name: r.name,
+                kind: r.kind,
+                distance: r.distance
+            })),
+            placeName: this.placeName,
             structureCount: this.structureCount,
             landmarkCount: this.landmarkCount,
             collaboratorCount: this.collaboratorCount,
@@ -216,6 +241,8 @@ export class WorldWelcomeContext {
 //   - structureTitles: Map<documentId, title> for resolving placement titles
 //   - collaborators: array of { identityId, label, position, activity }
 //   - placeContexts: optional pre-computed PlaceContext array from WorldCurationContext
+//   - regions: optional array of WorldRegion instances (0.5.0) — omit
+//     for byte-identical pre-0.5.0 behavior
 //
 // Returns: WorldWelcomeContext instance
 export function deriveWorldWelcomeContext({
@@ -225,7 +252,8 @@ export function deriveWorldWelcomeContext({
     structurePlacements = [],
     structureTitles = new Map(),
     collaborators = [],
-    placeContexts = []
+    placeContexts = [],
+    regions = []
 } = {}) {
     if (!world) {
         throw new Error('deriveWorldWelcomeContext requires a world');
@@ -357,7 +385,23 @@ export function deriveWorldWelcomeContext({
     
     // Generate activity summary ("What's happening?")
     const activitySummary = deriveActivitySummary(collaborators);
-    
+
+    // 0.5.0 — named regions actually containing the arrival position,
+    // innermost first. `position`-less callers (same graceful-absence
+    // posture as every other section above) simply get none.
+    const currentRegionPath = position
+        ? regionsContaining(position, regions).map((region) => {
+            const dx = region.position.x - position.x;
+            const dz = region.position.z - position.z;
+            return {
+                id: region.id,
+                name: region.name,
+                kind: region.kind,
+                distance: Math.round(Math.sqrt(dx * dx + dz * dz) * 10) / 10
+            };
+        })
+        : [];
+
     return new WorldWelcomeContext({
         world,
         currentPlace,
@@ -365,7 +409,8 @@ export function deriveWorldWelcomeContext({
         nearbyStructures,
         nearbyCollaborators,
         suggestedDestinations: suggestions,
-        activitySummary
+        activitySummary,
+        currentRegionPath
     });
 }
 

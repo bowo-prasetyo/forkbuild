@@ -25,6 +25,7 @@ import { surfaceCategoryAt, SURFACE_CATEGORY } from './TerrainSurface.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';
 import { hydrologyFeatureAt, HYDROLOGY_FEATURE } from './Hydrology.js';
 import { Position } from './Position.js';
+import { regionsContaining, describePlace } from './WorldRegionGeography.js';
 
 export class WorldSpatialContext {
     constructor({
@@ -35,6 +36,14 @@ export class WorldSpatialContext {
         nearbyStructures = [],
         nearbyCollaborators = [],
         nearbyLandmarks = [],
+        // 0.5.0 — World Regions & Decentralized Place Naming. Every
+        // WorldRegion whose circle actually contains this position,
+        // innermost (smallest-radius) first — see
+        // core/WorldRegionGeography.js#regionsContaining(). Unlike
+        // nearbyStructures/nearbyLandmarks (a proximity RADIUS around
+        // the viewer), this is geometric CONTAINMENT: "what named
+        // area(s) am I actually standing inside," not "what's nearby."
+        containingRegions = [],
         distanceFromOrigin
     } = {}) {
         if (!position) {
@@ -64,6 +73,9 @@ export class WorldSpatialContext {
         // own header.
         this._nearbyLandmarks = Array.isArray(nearbyLandmarks)
             ? Object.freeze([...nearbyLandmarks])
+            : Object.freeze([]);
+        this._containingRegions = Array.isArray(containingRegions)
+            ? Object.freeze([...containingRegions])
             : Object.freeze([]);
         this._distanceFromOrigin = typeof distanceFromOrigin === 'number' && Number.isFinite(distanceFromOrigin)
             ? distanceFromOrigin
@@ -95,6 +107,19 @@ export class WorldSpatialContext {
     // 0.3.7 — nearby WorldLandmarks within streaming radius.
     // Each entry: { id, title, distance, direction }
     get nearbyLandmarks() { return this._nearbyLandmarks; }
+
+    // 0.5.0 — every named WorldRegion this position is actually inside,
+    // innermost first. Each entry: { id, name, kind, radius, distance }
+    get containingRegions() { return this._containingRegions; }
+
+    // 0.5.0 — the human-authored breadcrumb for this exact position,
+    // e.g. "Willow Village · Green Valley · Kingdom of Eldoria", or ''
+    // when no region contains it. This is content someone NAMED, kept
+    // deliberately separate from `description` below (which stays a
+    // purely DERIVED terrain/hydrology/structure reading, unchanged by
+    // this milestone) — see docs/Principles.md, "Users Name Places; The
+    // World Derives Geography From Names (0.5.0)."
+    get placeName() { return describePlace(this._containingRegions); }
 
     // Euclidean distance from world origin (0, 0, 0) in meters
     get distanceFromOrigin() { return this._distanceFromOrigin; }
@@ -157,6 +182,8 @@ export class WorldSpatialContext {
             nearbyStructures: [...this._nearbyStructures],
             nearbyCollaborators: [...this._nearbyCollaborators],
             nearbyLandmarks: [...this._nearbyLandmarks],
+            containingRegions: [...this._containingRegions],
+            placeName: this.placeName,
             distanceFromOrigin: this._distanceFromOrigin,
             description: this.description
         };
@@ -172,6 +199,7 @@ export function deriveSpatialContext({
     structurePlacements = [],
     collaboratorPositions = [],
     landmarks = [],
+    regions = [],
     streamingRadius = 100
 }) {
     if (!position) {
@@ -238,6 +266,21 @@ export function deriveSpatialContext({
         .filter((l) => l.distance <= streamingRadius)
         .sort((a, b) => a.distance - b.distance);
 
+    // 0.5.0 — every named region actually containing this position,
+    // innermost first. Geometric containment, not a proximity radius —
+    // see core/WorldRegionGeography.js#regionsContaining()'s own header.
+    const containingRegions = regionsContaining(position, regions).map((region) => {
+        const dx = region.position.x - position.x;
+        const dz = region.position.z - position.z;
+        return {
+            id: region.id,
+            name: region.name,
+            kind: region.kind,
+            radius: region.radius,
+            distance: Math.round(Math.sqrt(dx * dx + dz * dz) * 10) / 10
+        };
+    });
+
     // Calculate distance from origin
     const distanceFromOrigin = Math.round(Math.sqrt(
         position.x * position.x + position.z * position.z
@@ -252,6 +295,7 @@ export function deriveSpatialContext({
         nearbyStructures,
         nearbyCollaborators,
         nearbyLandmarks,
+        containingRegions,
         distanceFromOrigin
     });
 

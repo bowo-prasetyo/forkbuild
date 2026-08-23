@@ -2,6 +2,7 @@ import { Building } from './Building.js';
 import { Group } from './Group.js';
 import { StructurePlacement } from './StructurePlacement.js';
 import { WorldLandmark } from './WorldLandmark.js';
+import { WorldRegion } from './WorldRegion.js';
 import { DomainEvent } from './events/Event.js';
 import { createId } from './createId.js';
 
@@ -18,6 +19,7 @@ export class World {
         this._groups = new Map();
         this._placements = new Map();
         this._landmarks = new Map();
+        this._regions = new Map();
         this._metadata = metadata;
         this._eventBus = eventBus;
     }
@@ -278,6 +280,60 @@ export class World {
         this._publish(DomainEvent.WORLD_LANDMARK_UPDATED, { landmark });
     }
 
+    // -----------------------------------------------------------------
+    // World Regions (0.5.0) — explicit, persistent World content. A
+    // WorldRegion IS the stored state exactly like a WorldLandmark above
+    // — see core/WorldRegion.js's own header — except it names an AREA
+    // (center + radius) rather than a single point.
+    // -----------------------------------------------------------------
+
+    addWorldRegion(region) {
+        this._regions.set(region.id, region);
+        this._publish(DomainEvent.WORLD_REGION_ADDED, { region });
+    }
+
+    removeWorldRegion(id) {
+        const region = this._regions.get(id);
+        if (!region) {
+            return;
+        }
+        this._regions.delete(id);
+        this._publish(DomainEvent.WORLD_REGION_REMOVED, { region });
+    }
+
+    getWorldRegion(id) {
+        return this._regions.get(id) || null;
+    }
+
+    getWorldRegions() {
+        return Array.from(this._regions.values());
+    }
+
+    // updates: { name, description, kind, radius } — any subset. A
+    // region's center and parentRegionId are deliberately not
+    // reassignable here; relocating or reparenting one is remove +
+    // recreate, the same restraint updateWorldLandmark() above already
+    // takes with a landmark's position.
+    updateWorldRegion(id, updates) {
+        const region = this._regions.get(id);
+        if (!region) {
+            return;
+        }
+        if (updates.name !== undefined) {
+            region.setName(updates.name);
+        }
+        if (updates.description !== undefined) {
+            region.setDescription(updates.description);
+        }
+        if (updates.kind !== undefined) {
+            region.setKind(updates.kind);
+        }
+        if (updates.radius !== undefined) {
+            region.setRadius(updates.radius);
+        }
+        this._publish(DomainEvent.WORLD_REGION_UPDATED, { region });
+    }
+
     toJSON() {
         return {
             id: this._id,
@@ -285,7 +341,8 @@ export class World {
             buildings: this.getBuildings().map((building) => building.toJSON()),
             groups: this.getGroups().map((group) => group.toJSON()),
             placements: this.getStructurePlacements().map((placement) => placement.toJSON()),
-            landmarks: this.getWorldLandmarks().map((landmark) => landmark.toJSON())
+            landmarks: this.getWorldLandmarks().map((landmark) => landmark.toJSON()),
+            regions: this.getWorldRegions().map((region) => region.toJSON())
         };
     }
 
@@ -305,6 +362,10 @@ export class World {
         // Worlds serialized before 0.3.7 have no landmarks field.
         for (const landmarkJson of json.landmarks || []) {
             world.addWorldLandmark(WorldLandmark.fromJSON(landmarkJson));
+        }
+        // Worlds serialized before 0.5.0 have no regions field.
+        for (const regionJson of json.regions || []) {
+            world.addWorldRegion(WorldRegion.fromJSON(regionJson));
         }
         return world;
     }

@@ -44,12 +44,15 @@ export class WorldLocationDirectory {
     // world state always produces the SAME location list, on any
     // replica, matching this milestone's own determinism requirement.
     // 0.3.7: Landmarks are appended after structures, grouped by World.
+    // 0.5.0: Regions are appended after landmarks, grouped by World —
+    // navigable to their own CENTER, exactly like a landmark's point.
     list() {
         const locations = [this._originLocation()];
         for (const document of this._session.getLoadedDocuments()) {
             const layoutPosition = this._session.getDocumentPosition(document.world.id);
             locations.push(...this._structureLocationsFor(document, layoutPosition));
             locations.push(...this._landmarkLocationsFor(document.world, layoutPosition));
+            locations.push(...this._regionLocationsFor(document.world, layoutPosition));
         }
         return locations;
     }
@@ -94,6 +97,22 @@ export class WorldLocationDirectory {
                 landmark.position.x + layoutPosition.x,
                 landmark.position.y + layoutPosition.y,
                 landmark.position.z + layoutPosition.z
+            )
+        }));
+    }
+
+    // 0.5.0 — a WorldRegion is navigable to its own CENTER, the same
+    // "world-wide, not just the active document" scope every other
+    // location kind here already has.
+    _regionLocationsFor(world, layoutPosition) {
+        return world.getWorldRegions().map((region) => new WorldLocation({
+            id: region.id,
+            title: region.name,
+            kind: WorldLocationKind.REGION,
+            position: new Position(
+                region.position.x + layoutPosition.x,
+                region.position.y + layoutPosition.y,
+                region.position.z + layoutPosition.z
             )
         }));
     }

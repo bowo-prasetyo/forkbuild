@@ -9486,3 +9486,240 @@ Richer discovery/preview, true peer-to-peer transfer, AABB/oriented-bounds
 collision, and magnetic face/edge snapping remain exactly where 0.4.4,
 0.4.6, 0.4.8, and 0.4.9 left them: named, not forgotten, each sized on
 its own.
+
+## 0.5.0 — World Regions & Decentralized Place Naming
+
+0.3.6 through 0.3.10 built a five-milestone ladder answering, in order,
+"Where am I?", "What places exist?", "What belongs near this place?",
+"Where should I explore?", and "What was my experience here?" — every
+rung derived, never stored, right up to the one exception 0.3.7 carved
+out on purpose: a `WorldLandmark`, a named POINT a user plants because a
+World has no way to invent meaning for a location on its own. 0.4.x then
+spent its own arc on an entirely different question — how people create
+increasingly reusable BUILD content — and closes, for now, at 0.4.9. The
+question this milestone returns to is the one 0.3.7 answered for a single
+point and never asked for an AREA: what is this whole *place* called?
+
+The design conversation that proposed this milestone was explicit about
+the trap to avoid: don't make ForkBuild's Worlds behave like a real-world
+GIS system before they need to. A World here isn't necessarily Earth —
+one might be the Kingdom of Eldoria, another a Mars colony — so nothing
+about naming a place should hard-code what a "Village" or a "Country"
+geometrically IS. The conversation's own answer, adopted directly:
+
+> **Users define the names; the application derives geographic context
+> from those named places.**
+
+No central naming server, no procedural authority over what a place is
+called — a `WorldRegion` is decentralized World content exactly like a
+`WorldLandmark` already is, propagated through the same Command/
+`world-sync` pipeline every other piece of World content already uses.
+
+### What shipped
+
+- **`core/WorldRegion.js`** — a named AREA (center + radius, X/Z only,
+  the same convention `core/WorldLandmark.js` already established for Y
+  being terrain-derived at render time), sitting directly alongside
+  `WorldLandmark` as the same kind of deliberate exception to "derived,
+  never stored." Geometry is a circle on purpose — "am I in this
+  region?" is one `distanceXZ() <= radius` comparison
+  (`WorldRegion#contains()`) — never a polygon; `CIRCLE`/`RECTANGLE`/
+  `POLYGON` geometry kinds remain a named, unbuilt future extension. A
+  region's `kind` (`core/RegionKind.js`: `CONTINENT`/`COUNTRY`/`REGION`/
+  `CITY`/`TOWN`/`VILLAGE`/`DISTRICT`/`NEIGHBORHOOD`/`PLACE`) is a
+  semantic LABEL only — nothing anywhere hard-codes what a `VILLAGE`'s
+  radius should be, or treats one kind's geometry differently from
+  another's. `parentRegionId` is optional, purely informational grouping
+  metadata, never required and never validated against an actually-
+  existing region — see "Hierarchy is geometric, never authored," below.
+- **`application/commands/CreateWorldRegionCommand.js`,
+  `UpdateWorldRegionCommand.js`, `RemoveWorldRegionCommand.js`** — mint,
+  rename/redescribe/reclassify/resize, and remove a region, built to the
+  exact same shape as the three `WorldLandmark` commands 0.3.7 already
+  shipped: `execute()` mints the identity (never receives one), undo/redo
+  round-trip through `toJSON()`/`fromJSON()` with the SAME re-created id,
+  and both are registered in `application/CreateCommandRegistryUseCase.js`
+  alongside every other World content type. A region's CENTER and
+  `parentRegionId` are deliberately not editable in place — relocating or
+  reparenting one is remove + recreate, the same restraint
+  `UpdateWorldLandmarkCommand` already takes with a landmark's position —
+  but `radius` IS editable in place: "make my region bigger" doesn't
+  require moving anything.
+- **`core/WorldRegionGeography.js`** — the derivation module this
+  milestone is actually about. `regionsContaining(position, regions)`
+  returns every region whose circle contains a position, sorted
+  smallest-radius-first (most specific to broadest); `describePlace(...)`
+  joins that list into a human breadcrumb, e.g. *"Willow Village · Green
+  Valley · Kingdom of Eldoria"*. Both are PURE GEOMETRY — neither
+  function ever reads `parentRegionId`. That is what lets two completely
+  unrelated, independently-authored, overlapping regions (Alice's
+  "Willow Village" and Bob's unrelated "Northern Settlement" drawn over
+  the same ground) both nest correctly on screen without the system ever
+  having to decide which of them is "correct" — see docs/Principles.md,
+  "Users Name Places; The World Derives Geography From Names (0.5.0)."
+- **`core/World.js`** — `addWorldRegion`/`removeWorldRegion`/
+  `getWorldRegion`/`getWorldRegions`/`updateWorldRegion`, a `regions`
+  array in `toJSON()`/`fromJSON()` (absent entirely in a pre-0.5.0
+  world, exactly like `landmarks` was absent pre-0.3.7), and three new
+  `DomainEvent`s (`WORLD_REGION_ADDED`/`REMOVED`/`UPDATED`) — a region's
+  lifecycle is a domain concern exactly like every other World content
+  type already publishes.
+- **`core/WorldLocationKind.js` gains `REGION`**, and
+  `application/WorldLocationDirectory.js` gains `_regionLocationsFor()` —
+  a region is navigable to its own CENTER exactly like a landmark is
+  navigable to its own point, appended after landmarks in `list()`. No
+  new navigation mechanism: `WorldNavigationSession#focusLocation()` was
+  already fully generic over `WorldLocation.position` and needed zero
+  region-specific code to reach one.
+- **`core/WorldSpatialContext.js` gains `containingRegions`/`placeName`**
+  — every region actually containing the viewer's CURRENT position
+  (geometric containment, not a proximity radius like
+  `nearbyStructures`/`nearbyLandmarks`), and the breadcrumb string built
+  from it. Deliberately kept separate from the existing `description`
+  getter (terrain/hydrology/nearest-structure, unchanged by this
+  milestone) rather than merged into it — a human NAMED this place; the
+  World only ever DERIVES the rest. `application/WorldSpatialContextService.js`
+  gathers a World's regions the same way it already gathers landmarks.
+- **`core/WorldWelcomeContext.js` gains an optional `regions` param** to
+  `deriveWorldWelcomeContext()`, producing `currentRegionPath`/
+  `placeName` on the returned context — fully additive: a caller that
+  never passes `regions` (every call site that predates this milestone)
+  gets byte-identical behavior, an empty path and an empty `placeName`.
+- **`application/WorldNavigationSession.js`** — `createRegionHere(name,
+  { description, kind, radius, parentRegionId })` (the "Name This Area"
+  verb, centered on the avatar's own current position, same fork-on-write/
+  `canEditDocument()` authorization posture `createLandmarkHere()`
+  already established), `updateRegion()`/`removeRegion()`/`getRegion()`,
+  world-wide `getRegions()` (the "Places" panel's data source), and
+  `getCurrentRegionPath()`/`getCurrentPlaceName()` — the latter falling
+  back to the EXISTING `describeLocation()` reading (nearest landmark/
+  structure) when no region contains the position, never a fabricated
+  placeholder name.
+- **`ui/components/RegionFormModal.js`** — "Name This Area"/"Edit
+  Region": Name, Kind (a plain select over `RegionKind`), Radius, and
+  Description, the same Add/Edit dual-mode shape
+  `ui/components/LandmarkFormModal.js` already established one rung
+  over. **`ui/components/LocationsPanel.js`** gains a fourth section,
+  Places, following the identical Landmarks pattern (Focus always
+  available; Add/Edit/Remove gated by `canEdit`). **`ui/views/WorldView.js`**
+  wires both, and the nav HUD now shows the named `placeName` breadcrumb
+  ABOVE the derived terrain `description` line — never merged with it.
+- **`tests/WorldRegions.test.js`** — the flagship, 131 assertions across
+  sixteen sections: the value object and its validation, geometric
+  containment proven independent of `parentRegionId` (an overlapping,
+  unrelated region still nests purely by radius), World storage/
+  serialization/backward-compatibility, all three commands' execute/
+  undo/redo/registry round-trip, `WorldLocationDirectory` and
+  `WorldNavigationSession#getRegions()` integration, `WorldSpatialContext`
+  and `WorldWelcomeContext` breadcrumb derivation (including the "a
+  caller that never passes regions sees no change" backward-compatibility
+  case), multi-replica determinism, storage round-trip persistence, and
+  a CAPSTONE scripting the milestone's own flagship scenario end to end:
+  Green Valley → Willow Village → Market District, two independent
+  replicas observing the identical nested breadcrumb, an unrelated
+  overlapping region sliding correctly into that breadcrumb by radius
+  alone, concurrent independently-authored regions converging byte-
+  identically, a "disconnect/reconnect" replica rehydrated purely from
+  `toJSON()`, and rename/remove/undo all staying exact throughout.
+
+### Hierarchy is geometric, never authored
+
+The single architectural decision this milestone is built around: a
+region's `parentRegionId` is optional, purely informational grouping
+metadata — never consulted by `regionsContaining()`, never validated
+against an actually-existing region, and never required. What determines
+"Willow Village is inside Green Valley is inside Kingdom of Eldoria" for
+the breadcrumb a viewer actually sees is `regionsContaining()`'s own
+smallest-radius-first sort — pure geometry, recomputed fresh from
+whatever regions currently exist. This is deliberately WEAKER than a
+real hierarchy, and that weakness is the point: it is what lets Bob draw
+"Northern Settlement" over ground Alice already named without either of
+them coordinating, asking permission, or the system ever having to
+arbitrate whose place name is the "real" one. Both are legitimate World
+content; a position inside both simply belongs to both.
+
+### Deliberately excluded
+
+- **Polygon/arbitrary-boundary geometry.** A region is a circle. If
+  circles prove insufficient, `CIRCLE`/`RECTANGLE`/`POLYGON` geometry
+  kinds are a natural extension of the exact same `WorldRegion` concept
+  — not attempted here, per this milestone's own "don't build a GIS
+  system too early" design constraint.
+- **Mandatory hierarchy, or any cascading parent/child integrity.**
+  Removing a region a child names as its `parentRegionId` leaves that
+  field dangling, exactly the same graceful-absence posture
+  `application/WorldLocationDirectory.js` already takes with a removed
+  `StructurePlacement` — never an error, never a cascade delete.
+- **"Official"/"verified"/"canonical" names, or any naming authority
+  beyond ordinary World membership.** No `officialName`, no
+  `verifiedName`, no second `ADMIN_NAMING_AUTHORITY` concept — any
+  identity with EDIT access to a World may create, rename, resize, or
+  remove any region in it, the exact same posture 0.3.7 already
+  established for landmarks.
+- **Procedural fallback naming for an unnamed area** (e.g. deterministic
+  "Sector 12"-style labels generated from coordinates). Named directly in
+  the design conversation as a legitimate future presentation layer —
+  deliberately not built here. A position outside every region today
+  simply has no `placeName` (`''`), and every caller that needs SOME
+  reading already has one: `WorldNavigationSession#getCurrentPlaceName()`
+  falls back to the existing `describeLocation()` (nearest landmark/
+  structure), unchanged since 0.3.8.
+- **A parent-region picker in the UI.** `parentRegionId` is fully
+  supported at the entity/command/session layer, but
+  `RegionFormModal.js` doesn't yet offer a way to browse and pick an
+  existing region as a parent — a UI affordance for a field that, per
+  "Hierarchy is geometric, never authored" above, no derivation actually
+  depends on.
+- **A rendered 3D boundary** (a ground-plane ring/circle showing a
+  region's actual radius in the World View viewport). This milestone is
+  the data model, the derivation, and panel/navigation integration — a
+  renderer pass for visualizing region extents directly is future work,
+  sized on its own.
+- **Cross-region search/discovery** (e.g. "find all VILLAGE-kind regions
+  across every World this session knows about"). `getRegions()` today is
+  scoped to currently loaded documents, the same scope
+  `getWorldLocations()` already has — a broader catalog is a separate,
+  larger question.
+
+```text
+0.3.4   Vertical World Navigation                         ✓
+             │
+             ▼
+   (0.3.5 – 0.3.10: Curated Discovery, World Exploration & Landmarks,
+    Recommended Places, World Welcome & Guided Exploration,
+    World Persistence & Return)                           ✓
+             │
+             ▼
+0.4.0 – 0.4.9   Structure Composition & Blueprint Library thread    ✓
+             │
+             ▼
+0.5.0   World Regions & Decentralized Place Naming              ✓
+             ├── WorldRegion — a named AREA (center + radius), the
+             │   0.3.7 WorldLandmark exception extended from point to area
+             ├── WorldRegionGeography — regionsContaining()/describePlace(),
+             │   pure geometry, NEVER dependent on parentRegionId
+             ├── Create/Update/RemoveWorldRegionCommand — the same
+             │   Command/world-sync pipeline every other World content uses
+             ├── WorldLocationDirectory/WorldSpatialContext/WorldWelcomeContext
+             │   — region-as-destination, containingRegions/placeName,
+             │   currentRegionPath, all additive
+             ├── "Name This Area" / Places panel — the same Add/Edit/Remove
+             │   shape 0.3.7 already established for landmarks
+             └── WorldRegions.test.js — 131 assertions; CAPSTONE proves
+                 Green Valley → Willow Village → Market District converges
+                 byte-identically across two independent replicas
+```
+
+> **0.3.7 — Can I mark a single place that matters to me?**
+> **0.5.0 — Can I name a whole AREA, and have the World derive its own
+> geography from what I named — without anyone's permission, and
+> without two people's names for the same ground ever having to be
+> reconciled into one "correct" answer?**
+
+A community-authored geography is the point: nothing here waits for a
+central authority to bless a name before it counts. What's left, and
+deliberately unbuilt: polygon geometry, a rendered boundary, procedural
+fallback naming for unnamed places, and a UI for the `parentRegionId`
+field the derivation itself was designed never to need. Each is named,
+not forgotten, sized on its own, exactly like every "Deliberately
+excluded" list in this document before it.

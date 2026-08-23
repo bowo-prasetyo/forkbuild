@@ -50,6 +50,10 @@ export class WorldSpatialContextService {
         // the identical transform for navigation) — a landmark's own
         // position is LOCAL to its World, exactly like a placement's.
         const landmarks = [];
+        // 0.5.0 — World Regions & Decentralized Place Naming. Same
+        // collection, same layoutPosition offset as landmarks above —
+        // see application/WorldLocationDirectory.js#_regionLocationsFor().
+        const regions = [];
         for (const document of documents) {
             const layoutPosition = this._session.getDocumentPosition?.(document.world.id) || { x: 0, y: 0, z: 0 };
             const placements = document.world.getStructurePlacements?.() || [];
@@ -76,6 +80,21 @@ export class WorldSpatialContextService {
                         x: landmark.position.x + layoutPosition.x,
                         y: landmark.position.y + layoutPosition.y,
                         z: landmark.position.z + layoutPosition.z
+                    }
+                });
+            }
+
+            const worldRegions = document.world.getWorldRegions?.() || [];
+            for (const region of worldRegions) {
+                regions.push({
+                    id: region.id,
+                    name: region.name,
+                    kind: region.kind,
+                    radius: region.radius,
+                    position: {
+                        x: region.position.x + layoutPosition.x,
+                        y: region.position.y + layoutPosition.y,
+                        z: region.position.z + layoutPosition.z
                     }
                 });
             }
@@ -108,6 +127,7 @@ export class WorldSpatialContextService {
             structurePlacements,
             collaboratorPositions,
             landmarks,
+            regions,
             streamingRadius: 100
         });
     }
@@ -126,6 +146,9 @@ export class WorldSpatialContextService {
         // 0.3.7 — same collection, same layoutPosition offset as
         // getCurrentContext() above.
         const landmarks = [];
+        // 0.5.0 — same collection, same layoutPosition offset as
+        // getCurrentContext() above.
+        const regions = [];
         for (const document of documents) {
             const layoutPosition = this._session.getDocumentPosition?.(document.world.id) || { x: 0, y: 0, z: 0 };
             const placements = document.world.getStructurePlacements?.() || [];
@@ -152,6 +175,21 @@ export class WorldSpatialContextService {
                         x: landmark.position.x + layoutPosition.x,
                         y: landmark.position.y + layoutPosition.y,
                         z: landmark.position.z + layoutPosition.z
+                    }
+                });
+            }
+
+            const worldRegions = document.world.getWorldRegions?.() || [];
+            for (const region of worldRegions) {
+                regions.push({
+                    id: region.id,
+                    name: region.name,
+                    kind: region.kind,
+                    radius: region.radius,
+                    position: {
+                        x: region.position.x + layoutPosition.x,
+                        y: region.position.y + layoutPosition.y,
+                        z: region.position.z + layoutPosition.z
                     }
                 });
             }
@@ -184,6 +222,7 @@ export class WorldSpatialContextService {
             structurePlacements,
             collaboratorPositions,
             landmarks,
+            regions,
             streamingRadius: 100
         });
     }
