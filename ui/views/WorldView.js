@@ -2054,19 +2054,40 @@ export default {
         // route ui/components/PublicationCatalog.js and every forked-
         // document link already use to open a document in the Editor —
         // never a second navigation mechanism, and never a mutation
-        // World View performs itself. This is the ONE escape hatch out
-        // of World View's otherwise strictly read-only instance
-        // inspection (see docs/Principles.md, "Selection In World View
-        // Does Not Imply Editing Authority") — editing a placed
-        // structure's bricks always happens by opening its Document in
-        // the Editor, exactly like application/EditorSession.js#
+        // World View performs itself. Editing a placed structure's
+        // bricks always happens by opening its Document in the Editor,
+        // exactly like application/EditorSession.js#
         // editStructurePlacementSource() already established for the
-        // Editor's own StructureInstancePanel.
+        // Editor's own StructureInstancePanel. Unlike "Edit a Copy"
+        // below, this loads the document DIRECTLY — no fork, no
+        // independent copy; every other instance of it, wherever
+        // placed, reflects whatever gets edited there.
         function openStructureSource(documentId) {
             if (!documentId) {
                 return;
             }
             router.push({ path: '/editor', query: { load: documentId } });
+        }
+
+        // 0.5.9 — the direct-click Inspection panel's own "Edit a Copy,"
+        // sibling to Open Source above: same target (the placed
+        // structure's own content document), but forks it instead of
+        // loading it directly — leaving every other instance, and the
+        // original, untouched. Identical logic to
+        // editFocusedCopyFromFocusPanel() below (resolve a publication
+        // id if one exists, then the same `/editor?fork=` navigation
+        // ui/components/PublicationCatalog.js#forkPublication() already
+        // uses) — kept as its own function because it starts from a
+        // plain documentId, not a WorldFocusContext.
+        function editStructureSourceCopy(documentId) {
+            if (!documentId) {
+                return;
+            }
+            const publication = session.getPublicationIdForDocument(documentId);
+            router.push({
+                path: '/editor',
+                query: publication ? { fork: documentId, publication } : { fork: documentId }
+            });
         }
 
         // -----------------------------------------------------------------
@@ -2750,6 +2771,7 @@ export default {
             focusWorld,
             focusSelection,
             openStructureSource,
+            editStructureSourceCopy,
             onSaveMetadata,
             saveActiveDocument,
             publishActiveDocument
@@ -3195,6 +3217,14 @@ export default {
                             @click="openStructureSource(spatialInspection.sourceDocumentId)"
                         >
                             Open Source
+                        </button>
+                        <button
+                            v-if="spatialInspection.type === 'placement'"
+                            class="action-btn"
+                            title="Fork the referenced Document and open the copy in the Editor"
+                            @click="editStructureSourceCopy(spatialInspection.sourceDocumentId)"
+                        >
+                            Edit a Copy
                         </button>
                     </div>
                 </div>
