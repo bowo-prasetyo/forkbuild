@@ -11064,3 +11064,182 @@ What's left, and deliberately unbuilt: camera framing inside the
 Editor on open, Region/Landmark naming ported to the Editor, and any
 second fork mechanism — each sized on its own, exactly like every
 "Deliberately excluded" list in this document before it.
+
+## 0.6.0 — Context-Preserving Fork-to-Edit
+
+0.5.9 drew the boundary — World View Observes and Navigates; Editor
+Mutates and Builds — and left "Edit a Copy" a bare fork-and-navigate
+hop, naming exactly what it deferred in its own "Deliberately
+excluded" list: "Camera framing inside the Editor on open... a real
+feature, out of proportion to that milestone." This milestone is that
+feature, closing the remaining gap between WORLD VIEW's *Observe →
+Understand → Navigate → Discover* and the EDITOR's *Select → Transform
+→ Build → Collaborate*:
+
+> **When exploration becomes creation, preserve the user's context.**
+
+### What shipped
+
+- **`core/EditorEntryContext.js`** — a new, deliberately EPHEMERAL
+  value object (`EditorEntryContext` + `deriveEditorEntryContext()`),
+  the exact same kind of thing `core/WorldFocusContext.js` already is,
+  extended one step further: across the one hard boundary a
+  WorldFocusContext never crosses, a full page navigation into the
+  Editor. Never constructed from a Document, never serialized into
+  one, never persisted anywhere — it lives for the span of one router
+  navigation and is discarded the instant `EditorSession#openDocument()`
+  applies it once. Carries `sourceDocumentId`, `focusPosition`,
+  `focusLocationId`, `selectAllBricks`, `title`, `kind`, `reason` — and
+  its own router-query encode/decode pair
+  (`editorEntryContextToQuery()`/`editorEntryContextFromQuery()`), the
+  ONE channel `ui/views/WorldView.js`'s "Edit a Copy" and
+  `ui/views/EditorView.js`'s fork handler share.
+- **`selectAllBricks` is a boolean, never a list of brick ids** — see
+  that module's own header for why: `application/DocumentCloneService.js`
+  (the ONE cloning mechanism every fork in this codebase shares)
+  regenerates every world/building/brick id on every clone, by design.
+  A source brick id could never survive the trip to be matched against
+  the fork's own content — threading one across would be a category
+  error, not a missing feature. Because a STRUCTURE's own `documentId`
+  is, by construction, the placed structure's ENTIRE content document
+  (`application/ForkStructureUseCase.js`'s own invariant), "select the
+  structure" and "select every brick now in the fresh fork" are the
+  SAME operation — resolved AFTER the fork, against the fork's own
+  fresh ids, never before.
+- **`core/WorldFocusContext.js#editCopyContext`** — a new derived
+  getter, computed on demand from a WorldFocusContext's own fields,
+  never stored. `null` for COLLABORATOR/GEOGRAPHIC_PLACE (neither ever
+  offered EDIT_COPY at all — 0.5.9's own invariant, untouched here) or
+  when there's no `source.documentId` to fork. `selectAllBricks` is
+  decided HERE, per kind, exactly like every other per-kind branch in
+  that file — true ONLY for STRUCTURE; REGION and LANDMARK get camera
+  framing alone, because their own `documentId` is the CONTAINING
+  World, not exclusively-owned content — auto-selecting there would
+  mean "clicking the village well selects half the village."
+- **`application/RenderWorldUseCase.js`** — `getCameraState()`/
+  `setCameraState()` added to the Editor's own render-session handle,
+  the exact same pair `application/RenderWorldViewUseCase.js` already
+  exposes for World View's camera. One camera-state contract
+  (`renderer/CameraState.js`), read/written through the same narrow
+  shape in both render pipelines — never a second one.
+- **`application/EditorSession.js#frameCameraOn()`/`applyEntryContext()`**
+  — `frameCameraOn(position)` reuses the SAME diagonal offset
+  `application/WorldNavigationSession.js#focusLocation()` already uses
+  (`{x:12,y:12,z:12}`, target = the position itself) — one
+  camera-framing convention across World View and the Editor, not a
+  second. `applyEntryContext(entryContext)` is the one place an
+  EditorEntryContext is ever consumed: frames the camera when a
+  position is present, and calls the PRE-EXISTING `selectAll()` when
+  `selectAllBricks` is set — no new selection mechanism, just an
+  existing capability wired to a new trigger. `openDocument()` grew an
+  optional second parameter (`entryContext = null`) that calls it after
+  rebuilding; every pre-existing caller (Load, `forkStructure()`, a
+  fresh New) passes nothing and is completely unaffected.
+- **`ui/views/WorldView.js`** — `editFocusedCopyFromFocusPanel()`
+  attaches `context.editCopyContext`, encoded via
+  `editorEntryContextToQuery()`, onto the SAME `/editor?fork=`
+  navigation it already used — never a second navigation mechanism,
+  just more query params alongside the pre-existing `publication` one.
+  `editInspectedCopy()` (the direct-click Inspection panel's own "Edit
+  a Copy," which has no WorldFocusContext to read from) now builds an
+  EditorEntryContext by hand from `spatialInspection`, applying the
+  identical rule: `selectAllBricks` only for a `'placement'`
+  inspection (the structure-placement equivalent), camera framing only
+  for `'brick'`/`'ground'`.
+- **`ui/views/EditorView.js`** — the fork handler decodes the entry
+  context via `editorEntryContextFromQuery()` and passes it to
+  `openDocument()`. The transient arrival indicator item 5 of this
+  milestone's own design asked for — "Editing a copy of Village Hall"
+  — reuses the pre-existing `feedback.show()` toast (already a 2.5s
+  auto-hide) rather than a new UI surface; it names the fork's own
+  title when an entry context carried one, falling back to 0.2.21's
+  original generic message otherwise.
+- **`tests/ContextPreservingFork.test.js`** — the flagship: a Barn
+  structure forked end-to-end through a real (headless) EditorSession,
+  proving the fork is independent and correct (A/B), the applied
+  context lands on the FORK's own fresh brick id — never the source's
+  (D), a LANDMARK/REGION focus frames the camera without ever
+  selecting arbitrary bricks (E), a GEOGRAPHIC_PLACE/COLLABORATOR still
+  never offers Edit a Copy at all (F), the fork stays an ordinary,
+  fully mutable Editor document afterward (G), and an EditorEntryContext
+  never appears in `Document.toJSON()`/`World.toJSON()` while the
+  router-query channel round-trips exactly (H).
+
+### Deliberately excluded
+
+- **Threading brick ids across the fork boundary.** See "What shipped"
+  above — `DocumentCloneService` regenerates every id on every clone;
+  a stable cross-fork brick id cannot exist by construction, so
+  `selectAllBricks` (resolved AFTER the fork, against its own content)
+  is the correct design, not a simplification of a fancier one.
+- **Auto-selecting anything for REGION/LANDMARK.** Considered and
+  rejected — see `core/WorldFocusContext.js#editCopyContext`'s own
+  header: only a kind whose OWN document is entirely and exclusively
+  its own content may ever select on entry; a REGION/LANDMARK's
+  document is the containing World, which nothing in this codebase has
+  ever treated as "belonging" to one annotation inside it.
+  `docs/Roadmap.md`'s own 0.5.9 entry already drew this line for
+  content mutation ("annotation, not construction") — this milestone
+  draws the identical line for auto-selection.
+- **A `focusGeographicPlace()`-shaped EditorEntryContext for
+  GEOGRAPHIC_PLACE, or "resolve through the representative region"
+  logic in this module.** Unnecessary: GEOGRAPHIC_PLACE never offers
+  EDIT_COPY at all (0.5.9's own invariant), so `editCopyContext` is
+  simply `null` for it — exactly like COLLABORATOR — never a special
+  second derivation path standing in for a fork target that doesn't
+  exist.
+- **Deciding World Region/Landmark naming's own read-only boundary
+  question** (0.5.9's "annotation, not construction" exception —
+  whether that capability belongs in World View long-term, or should
+  move to the Editor). Explicitly out of scope for this milestone,
+  which only changes what happens ONCE a fork already opens in the
+  Editor; a future milestone should decide it on its own, the same way
+  every architectural fork-in-the-road in this document already gets
+  its own milestone rather than riding along inside an unrelated one.
+- **A general command palette, or any other new World View action
+  surface.** This milestone adds zero new buttons to World View's own
+  vocabulary (Explore/Map/Places/Focus/Go/Edit a Copy) — it only
+  enriches what "Edit a Copy" already carries across a navigation that
+  already existed.
+
+```text
+0.5.9   World View Read-Only Exploration & Fork-to-Edit           ✓
+             │
+             ▼
+0.6.0   Context-Preserving Fork-to-Edit                          ✓
+             ├── core/EditorEntryContext.js — ephemeral value object +
+             │   deriveEditorEntryContext(); router-query encode/decode
+             │   (the ONE channel World View and the Editor share)
+             ├── selectAllBricks: boolean, resolved AFTER the fork —
+             │   never brick ids threaded across DocumentCloneService's
+             │   own identity-regenerating boundary
+             ├── WorldFocusContext#editCopyContext — derived, per-kind
+             │   (STRUCTURE only ever selects; REGION/LANDMARK frame
+             │   the camera alone; COLLABORATOR/GEOGRAPHIC_PLACE null)
+             ├── RenderWorldUseCase — getCameraState()/setCameraState(),
+             │   the same pair World View's own render session already had
+             ├── EditorSession#frameCameraOn()/applyEntryContext() —
+             │   same diagonal offset focusLocation() already uses;
+             │   applyEntryContext() wired into openDocument()'s new,
+             │   optional second parameter
+             ├── WorldView.js/EditorView.js — the entry context rides
+             │   the EXISTING /editor?fork= navigation; the arrival
+             │   indicator reuses the existing feedback toast
+             └── tests/ContextPreservingFork.test.js — fork independence,
+                 fresh-id selection, camera framing, non-editable kinds
+                 stay non-editable, ordinary Editor architecture,
+                 Document/World persistence boundary
+```
+
+> **World View asked "what is this?" as of 0.5.8, and handed you an
+> independent copy as of 0.5.9. As of 0.6.0, that copy opens already
+> looking at, and — when it unambiguously can — already holding, the
+> thing you were looking at when you asked.**
+
+What's left, and deliberately unbuilt: threading brick ids across a
+fork boundary that structurally cannot support them, auto-selection
+for any kind whose document isn't exclusively its own content, a
+second geographic-place-shaped derivation path, World Region/Landmark
+naming's own long-term home, and any new World View action surface —
+each sized on its own, exactly like every "Deliberately excluded" list
+in this document before it.

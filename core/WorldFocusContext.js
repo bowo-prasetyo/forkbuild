@@ -1,6 +1,7 @@
 import { distanceXZ } from './WorldSpatialAnchor.js';
 import { regionsContaining, describePlace } from './WorldRegionGeography.js';
 import { directionLabelBetween, deriveNearbyGeographicPlaces, DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS } from './GeographicPlaceNavigation.js';
+import { deriveEditorEntryContext } from './EditorEntryContext.js';
 
 // 0.5.8 — World View Contextual Focus & Information Hierarchy.
 //
@@ -132,6 +133,25 @@ export class WorldFocusContext {
 
     hasAction(action) { return this._availableActions.includes(action); }
 
+    // 0.6.0 — Context-Preserving Fork-to-Edit. The EditorEntryContext
+    // (core/EditorEntryContext.js) that "Edit a Copy" would hand to the
+    // Editor if invoked RIGHT NOW — derived on demand from this
+    // context's own fields, never stored, never computed unless read.
+    // null whenever this kind never offers EDIT_COPY in the first
+    // place (COLLABORATOR/GEOGRAPHIC_PLACE — see hasAction() above and
+    // deriveWorldFocusContext()'s own per-kind action table) or carries
+    // no source.documentId to fork. `selectAllBricks` is decided HERE,
+    // per kind, exactly like every other per-kind branch in this file —
+    // only STRUCTURE's own documentId is content it exclusively owns
+    // (see core/EditorEntryContext.js's own header for why REGION/
+    // LANDMARK never set this).
+    get editCopyContext() {
+        if (!this.hasAction(WorldFocusAction.EDIT_COPY) || !this._source || !this._source.documentId) {
+            return null;
+        }
+        return deriveEditorEntryContext(this, { selectAllBricks: this._kind === WorldFocusKind.STRUCTURE });
+    }
+
     // The human-authored breadcrumb for this target's OWN position —
     // "Willow Village · Green Valley" — empty string when no named
     // region actually contains it. Exactly core/WorldSpatialContext.js#
@@ -181,7 +201,8 @@ export class WorldFocusContext {
             } : null,
             arrivalPhrase: this.arrivalPhrase,
             availableActions: [...this._availableActions],
-            source: this._source ? { ...this._source } : null
+            source: this._source ? { ...this._source } : null,
+            editCopyContext: this.editCopyContext ? this.editCopyContext.toJSON() : null
         };
     }
 }

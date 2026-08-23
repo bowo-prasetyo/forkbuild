@@ -33,6 +33,7 @@ import WorldFocusPanel from '../components/WorldFocusPanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
 import { WorldFocusKind } from '../../core/WorldFocusContext.js';
+import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/EditorEntryContext.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/WorldViewNavigationState.js';
 
 const DRAG_THRESHOLD_PX = 6;
@@ -1876,6 +1877,15 @@ export default {
         // `/editor?fork=` navigation ui/components/PublicationCatalog.js#
         // forkPublication() already uses — never a second fork mechanism,
         // never a fork performed here in World View itself.
+        //
+        // 0.6.0 — Context-Preserving Fork-to-Edit. `context.editCopyContext`
+        // (core/WorldFocusContext.js's own derived getter) rides along
+        // as extra query params — never a second navigation mechanism,
+        // just more of the SAME `/editor?fork=` hop already carrying
+        // `publication`. EditorView's fork handler decodes it back via
+        // core/EditorEntryContext.js#editorEntryContextFromQuery() and
+        // hands it to EditorSession#openDocument(), the one place it's
+        // ever consumed.
         function editFocusedCopyFromFocusPanel() {
             const context = focusContext.value;
             if (!context || !context.source || !context.source.documentId) {
@@ -1883,10 +1893,11 @@ export default {
             }
             const documentId = context.source.documentId;
             const publication = session.getPublicationIdForDocument(documentId);
+            const entryQuery = editorEntryContextToQuery(context.editCopyContext);
             closeFocusPanel();
             router.push({
                 path: '/editor',
-                query: publication ? { fork: documentId, publication } : { fork: documentId }
+                query: { fork: documentId, ...(publication ? { publication } : {}), ...entryQuery }
             });
         }
 
@@ -2087,28 +2098,60 @@ export default {
 
         // 0.5.9 — the direct-click Inspection panel's own "Edit a Copy."
         // Available for every inspection type (brick, ground, placement):
-        // the template passes whichever documentId actually identifies
-        // what's being looked at — `spatialInspection.documentId` (the
-        // CONTAINING World) for brick/ground, `spatialInspection.
-        // sourceDocumentId` (the placed structure's own content, never
-        // the World merely positioning it — same distinction Open Source
-        // above already draws) for a placement. Forks that document
-        // instead of loading it directly (see openStructureSource()
-        // above) — leaving every other instance, and the original,
-        // untouched. Identical logic to editFocusedCopyFromFocusPanel()
-        // below (resolve a publication id if one exists, then the same
+        // resolves whichever documentId actually identifies what's
+        // being looked at — `inspection.documentId` (the CONTAINING
+        // World) for brick/ground, `inspection.sourceDocumentId` (the
+        // placed structure's own content, never the World merely
+        // positioning it — same distinction Open Source above already
+        // draws) for a placement. Forks that document instead of
+        // loading it directly (see openStructureSource() above) —
+        // leaving every other instance, and the original, untouched.
+        // Identical logic to editFocusedCopyFromFocusPanel() above
+        // (resolve a publication id if one exists, then the same
         // `/editor?fork=` navigation ui/components/PublicationCatalog.js#
         // forkPublication() already uses) — kept as its own function
-        // because it starts from a plain documentId, not a
+        // because it starts from `spatialInspection`, not a
         // WorldFocusContext.
-        function editInspectedCopy(documentId) {
+        //
+        // 0.6.0 — builds its own EditorEntryContext by hand (there is no
+        // WorldFocusContext here to read `.editCopyContext` off of) —
+        // camera framing off `worldPosition`/`position`, and
+        // `selectAllBricks` ONLY for a 'placement' inspection, the exact
+        // same "only STRUCTURE, because only its document is exclusively
+        // its own content" rule core/WorldFocusContext.js#editCopyContext
+        // applies. A brick/ground inspection's own `documentId` is the
+        // shared containing World, never brick-owned content — camera
+        // framing only, same as a REGION/LANDMARK "Edit a Copy."
+        function editInspectedCopy(inspection) {
+            if (!inspection) {
+                return;
+            }
+            const isPlacement = inspection.type === 'placement';
+            const documentId = isPlacement ? inspection.sourceDocumentId : inspection.documentId;
             if (!documentId) {
                 return;
             }
             const publication = session.getPublicationIdForDocument(documentId);
+            // brick/placement carry `worldPosition`; ground carries
+            // `position` — see the inspection-fields template above for
+            // the per-type shape this mirrors.
+            const position = inspection.type === 'ground' ? inspection.position : inspection.worldPosition;
+            const title = isPlacement ? inspection.sourceTitle : inspection.worldTitle;
+            const entryContext = new EditorEntryContext({
+                sourceDocumentId: documentId,
+                focusPosition: position || null,
+                selectAllBricks: isPlacement,
+                title: title || '',
+                kind: isPlacement ? WorldFocusKind.STRUCTURE : null,
+                reason: EditorEntryReason.WORLD_VIEW_EDIT_COPY
+            });
             router.push({
                 path: '/editor',
-                query: publication ? { fork: documentId, publication } : { fork: documentId }
+                query: {
+                    fork: documentId,
+                    ...(publication ? { publication } : {}),
+                    ...editorEntryContextToQuery(entryContext)
+                }
             });
         }
 
@@ -3244,7 +3287,7 @@ export default {
                             v-if="spatialInspection.documentId"
                             class="action-btn"
                             title="Fork this Document and open the copy in the Editor"
-                            @click="editInspectedCopy(spatialInspection.type === 'placement' ? spatialInspection.sourceDocumentId : spatialInspection.documentId)"
+                            @click="editInspectedCopy(spatialInspection)"
                         >
                             Edit a Copy
                         </button>

@@ -74,6 +74,15 @@ export class RenderWorldUseCase {
             // raycast.
             pickPlacement: (screenX, screenY) => pickingService.pickPlacement(screenX, screenY),
             setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
+            // 0.6.0 — Context-Preserving Fork-to-Edit. The same pair
+            // application/RenderWorldViewUseCase.js already exposes for
+            // World View's own camera — added here so
+            // application/EditorSession.js#frameCameraOn() has
+            // something to call. One camera-state contract
+            // (renderer/CameraState.js), read/written through this same
+            // narrow handle, in both render pipelines.
+            getCameraState: () => renderer.cameraController.getState(),
+            setCameraState: (state) => renderer.cameraController.setState(state),
             showGizmo: (pivot, bounds) => transformGizmoController.show(pivot, bounds),
             hideGizmo: () => transformGizmoController.hide(),
             gizmoHitTest: (screenX, screenY) =>
