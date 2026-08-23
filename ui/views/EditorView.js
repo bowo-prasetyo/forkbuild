@@ -81,7 +81,7 @@ export default {
                         Placing "{{ activeStructureTitle }}" — hover the ground, R to rotate, click to place.
                     </p>
                     <p v-if="activeTool === ToolId.COMPOSE_STRUCTURE" class="placement-hint">
-                        Composing "{{ activeCompositionTitle }}" — hover the ground, R to rotate, click to place, Esc to cancel.
+                        Placing "{{ activeCompositionTitle }}" — hover the ground, R to rotate, click to place, Esc to cancel.
                     </p>
                     <p v-if="activeTool === ToolId.SELECT && selectedPlacementInfo" class="placement-hint">
                         Selected "{{ selectedPlacementInfo.title }}" — drag to move, R to rotate.
@@ -103,7 +103,7 @@ export default {
                         :preview-service="libraryPreviewService"
                         @place="setTool(ToolId.PLACE)"
                         @fork="forkStructure"
-                        @copy="copyStructureIntoDocument"
+                        @place-structure="copyStructureIntoDocument"
                         @rename-personal-structure="renamePersonalStructure"
                         @remove-personal-structure="removePersonalStructure"
                     />
@@ -240,17 +240,27 @@ export default {
 		}
 
 		// 0.4.1 — Interactive Structure Composition UX. "Copy Into
-		// Document" now enters an interactive ghost-preview mode
+		// Document" enters an interactive ghost-preview mode
 		// (StructureCompositionTool) instead of copying immediately —
 		// the actual insertion still only ever happens through the SAME
 		// EditorSession#copyStructureIntoDocument()
 		// -> CopyStructureIntoDocumentUseCase path 0.4.0 established,
 		// just triggered by the tool's own click-to-commit rather than
 		// this handler. See docs/Roadmap.md, 0.4.1.
+		//
+		// 0.4.5 — Unified Build Placement. This function is the SAME
+		// entry point BuildLibraryPanel's structure card now calls on a
+		// plain click (emits 'place-structure'), exactly the way
+		// selectBrick()/setTool(ToolId.PLACE) is what a brick's click
+		// calls — the name stays copyStructureIntoDocument() (the
+		// mutation semantics EditorSession#beginStructureComposition()
+		// still describes never changed), only the UI-facing verb the
+		// user sees does. See docs/Principles.md, "Buildable Things
+		// Share One Placement Experience."
 		function copyStructureIntoDocument(structure) {
 		    const started = editorSession.beginStructureComposition(structure);
 		    if (started) {
-		        feedback.show(`Composing "${structure.name}" — click to place, R to rotate, Esc to cancel`);
+		        feedback.show(`Placing "${structure.name}" — click to place, R to rotate, Esc to cancel`);
 		    }
 		}
 

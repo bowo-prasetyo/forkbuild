@@ -431,3 +431,19 @@ per-device application state, exactly like `LocalWorldExperience`
 legitimately differ today. Making personal blueprints follow a user
 across devices is a deliberately separate, later milestone — see
 docs/Roadmap.md, 0.4.3's own "Deliberately excluded."
+
+## Unified Build Placement (0.4.5)
+
+Every UI reference above to "Copy Into Document beside Fork As New
+Document" describes how `ui/components/BuildLibraryPanel.js` looked
+through 0.4.4. As of 0.4.5, a structure card's whole click target is
+Place — the same click-a-card-to-place interaction a Brick card already
+offered — emitting `place-structure` (handled by the same
+`EditorSession#beginStructureComposition()` → `StructureCompositionTool`
+→ `CopyStructureIntoDocumentUseCase` path 0.4.0/0.4.1 already built).
+Fork As New Document, and — for a personal Structure — Rename and
+Remove, moved into a small secondary "⋮" menu on the card rather than
+sitting beside Place as competing buttons. Nothing about composing,
+forking, extracting, or personally storing a Structure changed; see
+docs/Roadmap.md, 0.4.5, and docs/Principles.md, "Buildable Things Share
+One Placement Experience (0.4.5)."
