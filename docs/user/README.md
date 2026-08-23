@@ -10,8 +10,11 @@ top-level [docs/](..) folder.
 1. **[Getting Started](01-GettingStarted.md)** — open the app, log in,
    and place your first brick.
 2. **[The Editor](02-TheEditor.md)** — the building toolkit: tools,
-   selection, transforms, groups, placing reusable structure instances,
-   and a creation's title/description/license.
+   selection, transforms, groups, composing and forking ready-made
+   structures from the Build Library, saving your own builds to a
+   personal blueprint library and sharing them as files, placing
+   reusable structure instances, and a creation's title/description/
+   license.
 3. **[World View](03-WorldView.md)** — the shared 3D space every
    published creation lives in: flying around, orienting yourself and
    finding places, searching and exploring to find things, inspecting
@@ -63,7 +66,7 @@ and `Ctrl/Cmd+Z` takes it back.
 
 ## Collaboration and exploration
 
-ForkBuild 0.3 adds embodied collaboration and world discovery:
+ForkBuild gives you embodied collaboration and world discovery:
 
 - **Walk and navigate** — use WASD keys to walk your avatar across
   buildings and terrain, jump, climb, and explore vertical spaces.
@@ -79,3 +82,19 @@ ForkBuild 0.3 adds embodied collaboration and world discovery:
 Everything you see is derived from the world's deterministic seed —
 terrain, ecology, and hydrology are computed identically for everyone,
 creating a coherent shared place without storing extra data.
+
+## Reusable structures and blueprints
+
+Beyond individual bricks, the Editor's Build Library lets you build with
+whole structures at once — twenty ready-made ones spanning five
+categories, plus anything you save yourself:
+
+- **Compose** a structure straight into what you're building, or **fork**
+  one into a brand-new document of its own.
+- **Save your own** builds as reusable structures in **My Structures**,
+  your personal blueprint library.
+- **Export and import** a blueprint as a portable file to share it with
+  someone else, or carry it to another device.
+
+See [The Editor](02-TheEditor.md#structures-composing-forking-and-your-personal-library)
+for the full walkthrough.

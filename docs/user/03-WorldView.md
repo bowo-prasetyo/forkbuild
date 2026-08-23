@@ -173,7 +173,7 @@ creation's home position.
 
 Click a **placed structure** (an instance of a whole document, dropped into
 a creation from the Editor — see
-[The Editor](02-TheEditor.md#structures-placing-and-editing-instances)) and
+[The Editor](02-TheEditor.md#structure-instances-a-live-reference)) and
 the same panel shows what it references instead: its source document's
 title, local and world position, rotation, ground elevation, and the
 containing world's title and author. This is read-only in World View —
@@ -263,10 +263,16 @@ Selection works exactly like the Editor:
 - **Shift+Drag** to box-select.
 - **Ctrl/Cmd+A** to select everything in the world you're currently editing.
 
-## Copy, paste, and groups
+## Copy, paste, duplicate, and groups
 
-Copy (`Ctrl+C`), paste (`Ctrl+V`), and the **Groups** panel all work in World
-View just as they do in the Editor — see [The Editor](02-TheEditor.md).
+Copy (`Ctrl+C`), paste (`Ctrl+V`), duplicate (`Ctrl/Cmd+D`), and the
+**Groups** panel all work in World View just as they do in the Editor for
+an ordinary brick selection — see
+[The Editor](02-TheEditor.md#copy-paste-and-duplicate). A
+[placed structure](#inspecting-a-brick--or-a-placed-structure) stays
+read-only here as described above: selecting one doesn't enable
+duplicate, copy, or paste, since editing a placement's position, rotation,
+or count is Editor-only.
 
 ## Save and publish here, too
 

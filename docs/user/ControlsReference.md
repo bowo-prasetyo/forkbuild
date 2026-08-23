@@ -94,6 +94,12 @@ hydrology, and structure placements — nothing is stored in the world.
 | Release | Commit — exactly one undo step |
 | `Esc` mid-drag | Cancel — nothing changes, no history |
 
+If a member of a multi-brick drag or nudge would land on a brick outside
+the selection, releasing there cancels the gesture instead of committing
+it — every brick reverts to exactly where it started, with no new undo
+entry. Rearranging bricks within the same selection is never treated as a
+collision.
+
 ## Transform — numeric panel
 
 | Input | Action |
@@ -109,10 +115,29 @@ Available in the sidebar's Transform section and through the palette.
 Alignment needs **2+ bricks**; distribution needs **3+**. Both operate
 on the whole selection bounds in **world axes** and commit one command.
 
+## Structures (Build Library) — Editor only
+
+Composing, forking, and your personal library — see
+[The Editor](02-TheEditor.md#structures-composing-forking-and-your-personal-library).
+
+| Input | Action | Notes |
+|---|---|---|
+| Click a card in the **Structures** tab | Enter Compose-Structure mode, ghost preview follows the pointer | works for a built-in structure or one of your own **My Structures** |
+| `R` / `Shift+R` while composing | Rotate the pending ghost ±90° | same placement-preview keys as a brick |
+| Click | Commit — every brick in the structure lands as one undo step | refused at an occupied (red) position |
+| `Esc` while composing | Cancel — nothing added | |
+| Card's **⋮** menu, **Fork As New Document** | Start a brand-new document that begins as a copy of that structure | never modifies the library entry |
+| Selection with **1+ bricks**, then **Create Structure** (Command Palette) | Save the selection as a new entry in **My Structures** | prompts for name / category / description |
+| **My Structures** card's **⋮** menu, **Rename** | Edit a personal structure's name/category/tags/description | personal structures only |
+| **My Structures** card's **⋮** menu, **Remove** | Delete it from your library | never touches bricks already composed or forked from it |
+| **My Structures** card's **⋮** menu, **Export Blueprint** | Download it as a portable JSON file | personal structures only |
+| **Import Blueprint** button (beside the My Structures heading) | Add a blueprint file to your library as a new entry | fresh identity, even for a re-imported file |
+
 ## Structure Instances (Editor)
 
 A **structure instance** places a whole saved document as a single,
-selectable unit — see [The Editor](02-TheEditor.md#structures-placing-and-editing-instances).
+selectable unit — a live reference, not a copy — see
+[The Editor](02-TheEditor.md#structure-instances-a-live-reference).
 
 | Input | Action | Notes |
 |---|---|---|
@@ -120,7 +145,7 @@ selectable unit — see [The Editor](02-TheEditor.md#structures-placing-and-edit
 | `R` / `Shift+R` while placing | Rotate the pending instance ±90° | same placement-preview keys as a brick |
 | Click a placed instance (Select tool) | Select it as one unit, distinct from a brick selection | |
 | Drag in the viewport, or the gizmo | Move / rotate the instance | |
-| `Ctrl/Cmd+D` | Duplicate — places another instance of the same document | only enabled for a structure-instance selection |
+| `Ctrl/Cmd+D` | Duplicate — places another instance of the same document | see [Duplicate](#duplicate) — instance selections get a fresh instance instead of a fresh brick copy |
 | Instance panel **X / Z / Rotation** fields, then Apply | Set an exact position/heading | Y (elevation) is always terrain-derived, never a target |
 | Instance panel **Edit Source Document** | Open the referenced document to change its bricks | every instance updates, since an instance is a live reference |
 | `Delete` / `Backspace` | Remove the instance | never touches the referenced document |
@@ -143,6 +168,15 @@ transform.
 |---|---|---|
 | `Ctrl/Cmd+C` | Copy | requires a selection |
 | `Ctrl/Cmd+V` | Paste | disabled while the clipboard is empty |
+
+## Duplicate
+
+| Input | Action | Notes |
+|---|---|---|
+| `Ctrl/Cmd+D` | Duplicate the current selection in place — one undo step | works on loose bricks or a resolved group in either view; a structure-instance selection only duplicates in the Editor (World View leaves it a no-op — see [Structure Instances](#structure-instances-editor)). Leaves the clipboard (and any pending paste offset) untouched |
+
+The duplicate becomes the active selection, so it's ready to drag or nudge
+immediately.
 
 ## History
 
