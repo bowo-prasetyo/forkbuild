@@ -2069,17 +2069,23 @@ export default {
             router.push({ path: '/editor', query: { load: documentId } });
         }
 
-        // 0.5.9 — the direct-click Inspection panel's own "Edit a Copy,"
-        // sibling to Open Source above: same target (the placed
-        // structure's own content document), but forks it instead of
-        // loading it directly — leaving every other instance, and the
-        // original, untouched. Identical logic to
-        // editFocusedCopyFromFocusPanel() below (resolve a publication
-        // id if one exists, then the same `/editor?fork=` navigation
-        // ui/components/PublicationCatalog.js#forkPublication() already
-        // uses) — kept as its own function because it starts from a
-        // plain documentId, not a WorldFocusContext.
-        function editStructureSourceCopy(documentId) {
+        // 0.5.9 — the direct-click Inspection panel's own "Edit a Copy."
+        // Available for every inspection type (brick, ground, placement):
+        // the template passes whichever documentId actually identifies
+        // what's being looked at — `spatialInspection.documentId` (the
+        // CONTAINING World) for brick/ground, `spatialInspection.
+        // sourceDocumentId` (the placed structure's own content, never
+        // the World merely positioning it — same distinction Open Source
+        // above already draws) for a placement. Forks that document
+        // instead of loading it directly (see openStructureSource()
+        // above) — leaving every other instance, and the original,
+        // untouched. Identical logic to editFocusedCopyFromFocusPanel()
+        // below (resolve a publication id if one exists, then the same
+        // `/editor?fork=` navigation ui/components/PublicationCatalog.js#
+        // forkPublication() already uses) — kept as its own function
+        // because it starts from a plain documentId, not a
+        // WorldFocusContext.
+        function editInspectedCopy(documentId) {
             if (!documentId) {
                 return;
             }
@@ -2771,7 +2777,7 @@ export default {
             focusWorld,
             focusSelection,
             openStructureSource,
-            editStructureSourceCopy,
+            editInspectedCopy,
             onSaveMetadata,
             saveActiveDocument,
             publishActiveDocument
@@ -3219,10 +3225,10 @@ export default {
                             Open Source
                         </button>
                         <button
-                            v-if="spatialInspection.type === 'placement'"
+                            v-if="spatialInspection.documentId"
                             class="action-btn"
-                            title="Fork the referenced Document and open the copy in the Editor"
-                            @click="editStructureSourceCopy(spatialInspection.sourceDocumentId)"
+                            title="Fork this Document and open the copy in the Editor"
+                            @click="editInspectedCopy(spatialInspection.type === 'placement' ? spatialInspection.sourceDocumentId : spatialInspection.documentId)"
                         >
                             Edit a Copy
                         </button>
