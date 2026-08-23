@@ -63,6 +63,21 @@ export class LocalPlaceNamingClaimStore {
         return this.list(worldId).filter((claim) => claim.regionId === regionId);
     }
 
+    // 0.5.3 — true if a claim with this exact id is already on file for
+    // `worldId`. The ONE new query this milestone's exchange layer
+    // needed: save() above never deduplicates (by design — see its own
+    // header on why the SAME author republishing under a NEW id is two
+    // legitimate, distinct claims), but a claim ARRIVING a second or
+    // third time through application/PlaceNamingClaimExchange.js#
+    // importClaim() is the exact same signed fact, not a new one — see
+    // that class's own header on why identity there is checked by
+    // `claim.id` alone (already bound into the signed payload — see
+    // core/PlaceNamingClaim.js#getSigningDescriptor()) rather than by
+    // re-deriving some second, redundant content hash.
+    has(worldId, claimId) {
+        return this._loadAll(worldId).some((json) => json.id === claimId);
+    }
+
     // Withdraws a claim this replica itself stored, by id. Retraction
     // is LOCAL ONLY — it removes the claim from what THIS replica shows
     // going forward, but (like every publish/unpublish pair in this

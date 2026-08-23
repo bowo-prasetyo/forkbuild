@@ -1479,6 +1479,63 @@ export default {
             refreshNamingPanel();
         }
 
+        // 0.5.3 — Decentralized Place Name Exchange. Builds the portable
+        // package via session.exportPlaceNamingClaim() (pure — see that
+        // method's own header) and triggers an immediate browser
+        // download, the exact same `data:application/json` + <a
+        // download> shape exportPersonalStructure() (ui/views/
+        // EditorView.js) already established for a Blueprint one domain
+        // over — deliberately no intermediate modal here either.
+        function exportNamingClaim(claimId) {
+            const pkg = guarded(() => session.exportPlaceNamingClaim(namingPanelRegionId.value, claimId));
+            if (!pkg) return;
+            const json = JSON.stringify(pkg, null, 2);
+            const slug = pkg.claim.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'place-name';
+            const link = document.createElement('a');
+            link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+            link.download = `forkbuild-place-naming-claim-${slug}.json`;
+            link.click();
+            feedback.show(`Exported "${pkg.claim.name}"`);
+        }
+
+        // `rawText` is whatever PlaceNamingPanel's own hidden file input
+        // read off disk — untrusted input, so JSON.parse and
+        // session.importPlaceNamingClaim() (which runs application/
+        // PlaceNamingClaimPublicationValidator.js and signature
+        // verification before anything is stored — see
+        // application/PlaceNamingClaimExchange.js#importClaim()'s own
+        // header) are each handled separately, mirroring
+        // importBlueprint()'s own two-stage "is this even JSON" / "is
+        // this a valid, verifiable package" error handling.
+        //
+        // A duplicate (a claim this replica already knew about) is NOT
+        // an error — see importClaim()'s own header on why re-receiving
+        // the same signed claim is an entirely ordinary outcome of
+        // exchange — so it gets its own, non-alarming feedback message
+        // rather than looking like a failure.
+        function importNamingClaim(rawText) {
+            let parsed;
+            try {
+                parsed = JSON.parse(rawText);
+            } catch (e) {
+                feedback.show('That is not valid JSON — choose a file exported with "Export Claim."');
+                return;
+            }
+            const result = guarded(() => session.importPlaceNamingClaim(parsed));
+            if (!result) return;
+            const { claim, isNew } = result;
+            if (!isNew) {
+                feedback.show(`"${claim.name}" was already known — nothing changed`);
+                return;
+            }
+            if (claim.regionId === namingPanelRegionId.value) {
+                refreshNamingPanel();
+                feedback.show(`Imported "${claim.name}"`);
+            } else {
+                feedback.show(`Imported "${claim.name}" for a different place — open its Names panel to see it`);
+            }
+        }
+
         // -----------------------------------------------------------------
         // 0.5.1 — World Maps & Geographic Navigation
         // -----------------------------------------------------------------
@@ -2223,6 +2280,8 @@ export default {
             retractNamingClaim,
             setPreferredNamingName,
             clearPreferredNamingName,
+            exportNamingClaim,
+            importNamingClaim,
             myIdentityId,
             showMembersPanel,
             worldCollaborationRoster,
@@ -2828,6 +2887,8 @@ export default {
                 @retract-name="retractNamingClaim"
                 @set-preferred-name="setPreferredNamingName"
                 @clear-preferred-name="clearPreferredNamingName"
+                @export-claim="exportNamingClaim"
+                @import-claim="importNamingClaim"
                 @cancel="closeNamingPanel"
             />
             <WorldMapPanel
