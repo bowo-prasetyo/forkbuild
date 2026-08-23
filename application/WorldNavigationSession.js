@@ -80,6 +80,8 @@ import { derivePlaceContexts, findNearestLandmark, describeLocation } from '../c
 import { deriveWorldWelcomeContext } from '../core/WorldWelcomeContext.js';
 import { regionsContaining, describePlace } from '../core/WorldRegionGeography.js';
 import { preferredClaimedName } from '../core/PlaceNamingView.js';
+import { groupRegionsByPlaceIdentity } from '../core/PlaceIdentity.js';
+import { geographicPlaceForRegion } from '../core/GeographicPlaceResolution.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -2374,6 +2376,84 @@ export class WorldNavigationSession {
     // getWorldLocations().
     getRegions() {
         return this._collectRegions();
+    }
+
+    // 0.5.4 — Place Identity & Geographic Claim Resolution. Every
+    // WorldRegion across every currently loaded document, in EACH
+    // region's own NATIVE per-World coordinates — deliberately NOT
+    // offset into this session's shared multi-document layout space the
+    // way _collectRegions() above is. That offset exists purely so
+    // several loaded Worlds can be visualized side by side without
+    // overlapping on screen; using it here would make every cross-World
+    // geographic comparison meaningless (two regions that genuinely
+    // describe the same ground in two independent Worlds would appear
+    // however many thousands of units apart the layout happened to
+    // place their documents). core/PlaceFingerprint.js/PlaceIdentity.js
+    // only ever see what THIS method returns — never the shared-layout
+    // positions _collectRegions() produces.
+    _collectRawRegions() {
+        const regions = [];
+        for (const document of this.getLoadedDocuments()) {
+            for (const region of document.world.getWorldRegions()) {
+                regions.push({
+                    id: region.id,
+                    worldId: document.world.id,
+                    name: region.name,
+                    kind: region.kind,
+                    radius: region.radius,
+                    authorIdentityId: region.authorIdentityId,
+                    position: { x: region.x, y: region.position.y, z: region.z }
+                });
+            }
+        }
+        return regions;
+    }
+
+    // core/PlaceIdentity.js#groupRegionsByPlaceIdentity(), applied to
+    // every region across every currently loaded document. Pure
+    // geometry — candidacy only; see that module's own header on why a
+    // matching fingerprint is never treated as proof that two regions
+    // are the same place.
+    getGeographicPlaceGroups(options = {}) {
+        return groupRegionsByPlaceIdentity(this._collectRawRegions(), options);
+    }
+
+    // The combined community naming view for whatever geographic place
+    // `regionId` belongs to: every region this replica currently knows
+    // about that shares its core/PlaceFingerprint.js fingerprint (see
+    // core/PlaceIdentity.js), and every claim on file for ANY of them,
+    // ranked together by core/PlaceNamingView.js#rankClaimsByName()'s
+    // own distinct-author scoring — see core/GeographicPlaceResolution.js
+    // for the full derivation. Returns `{ regions, namingView }`:
+    // `regions` is always at least `[the region itself]` when it's
+    // known to this replica; `namingView` is [] when naming claims
+    // aren't wired, mirroring getPlaceNamingView()'s own graceful
+    // degradation — a caller may always call this safely without first
+    // checking whether either collaborator exists.
+    getGeographicNamingView(regionId, options = {}) {
+        const regions = this._collectRawRegions();
+        const claims = this._collectClaimsFor(regions);
+        const group = geographicPlaceForRegion(regionId, regions, claims, options);
+        if (!group) {
+            return { regions: [], namingView: [] };
+        }
+        return { regions: group.regions, namingView: group.namingView };
+    }
+
+    // Every claim this replica has on file for any of `regions` —
+    // gathered per (worldId, regionId), since
+    // application/LocalPlaceNamingClaimStore.js is scoped per World.
+    // Returns [] when naming claims were never wired, the same
+    // graceful-degradation posture getPlaceNamingClaims() itself keeps.
+    _collectClaimsFor(regions) {
+        if (!this._placeNamingClaimUseCase) {
+            return [];
+        }
+        const claims = [];
+        for (const region of regions) {
+            claims.push(...this._placeNamingClaimUseCase.claimsForRegion(region.worldId, region.id));
+        }
+        return claims;
     }
 
     // 0.5.0 — every named region actually containing the viewer's

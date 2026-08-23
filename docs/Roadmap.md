@@ -10238,3 +10238,241 @@ lets `receivedAt` freshness actually change a ranking, and every item
 0.5.2's own "Deliberately excluded" list already named and this
 milestone left exactly as untouched. Each is sized on its own, exactly
 like every "Deliberately excluded" list in this document before it.
+
+## 0.5.4 — Place Identity & Geographic Claim Resolution
+
+0.5.2 and 0.5.3 each independently named, in their own "Deliberately
+excluded" lists, the exact same open question neither one attempted: "a
+`PlaceNamingClaim#regionId` is an exact reference to one region; two
+authors' regions covering the same real ground but created independently
+are, for naming purposes, still two separate places." The design
+conversation that reviewed 0.5.3's own merge was explicit that this,
+not another transport, is the next architectural gap — and equally
+explicit about the trap to avoid closing it into:
+
+> Don't make `WorldRegion A == WorldRegion B`. Don't modify either
+> World. **Geographic similarity SUGGESTS identity; it never MUTATES
+> identity.**
+
+The design conversation drew this milestone as two levels, and this is
+built exactly to that shape:
+
+> **Level 1 — local equivalence.** Given regions a client already has,
+> derive whether they are geographically EQUIVALENT CANDIDATES. Pure,
+> deterministic, no network, no persistence, no World mutation.
+> **Level 2 — claim resolution.** Given a claim naming Region A and a
+> claim naming Region B, does the client group their names together?
+> The answer is never "yes" — it is "maybe."
+
+### What shipped
+
+- **`core/PlaceFingerprint.js`** — a normalized, DERIVED geographic
+  descriptor for one `WorldRegion`: center X/Z, radius, and `kind`, each
+  quantized (rounded to the nearest multiple of a small "quantum" — 1
+  world unit by default for both position and radius) to absorb
+  floating-point noise between two independently-typed authors'
+  geometry while staying tight enough that genuinely different,
+  intentionally-authored values never collapse together.
+  `deriveFingerprint()`/`fingerprintKey()`/`fingerprintsEqual()`/
+  `describeFingerprint()` — never persisted, never signed, never itself
+  a claim about anything. `kind` participates as a HARD gate, not a
+  soft signal, on purpose: a Village and a District covering identical
+  center/radius do NOT fingerprint-match — a deliberate, conservative,
+  NAMED limitation (see "Deliberately excluded" below), never an
+  oversight.
+- **`core/PlaceIdentity.js`** — the "Level 1" module, built to the exact
+  function name the design conversation proposed:
+  `derivePlaceIdentity(regionA, regionB)` returns a `PlaceIdentity`
+  (`{ candidate, fingerprintA, fingerprintB }`) — `candidate` is the
+  ONLY word this codebase ever uses for the verdict, never "same,"
+  "matched," or "identical," because none of those are true.
+  `groupRegionsByPlaceIdentity(regions)` partitions a region list into
+  equivalence classes by EXACT fingerprint key — deliberately an exact-
+  key partition rather than a similarity threshold with pairwise
+  "close enough" chaining, which is what makes the whole operation an
+  honest, automatically-transitive equivalence relation rather than a
+  fuzzy clustering result that could depend on comparison order (proven
+  directly in `tests/PlaceIdentity.test.js` Section B). Groups are
+  sorted by fingerprint key for the same cross-replica determinism
+  `core/PlaceNamingView.js#namingView()` already established one
+  milestone over.
+- **`core/PlaceNamingView.js#rankClaimsByName()`** — the actual
+  scoring/ranking logic pulled out of `namingView()` into a standalone,
+  additive function that ranks a set of claims by distinct-author score
+  WITHOUT `namingView()`'s own single-`regionId` filter — exactly what a
+  combined, cross-region ranking needs. `namingView()` itself is now a
+  two-line composition of `claimsForRegion()` + `rankClaimsByName()`,
+  proven byte-identical to its pre-0.5.4 behavior
+  (`tests/PlaceIdentity.test.js` Section C).
+- **`core/GeographicPlaceResolution.js`** — the "Level 2" module:
+  `resolveGeographicPlaces(regions, claims)` groups regions by
+  `core/PlaceIdentity.js#groupRegionsByPlaceIdentity()` and, within each
+  group, ranks every claim naming ANY region in that group together via
+  `rankClaimsByName()` — `{ fingerprint, regions, claims, namingView }`
+  per group. `geographicPlaceForRegion(regionId, regions, claims)` is
+  the single-group convenience a session/UI actually calls.
+  `describeGeographicPlace()` is a thin presentation string. This module
+  never looks anything up itself (no store, no session, no World
+  document) — it only reshapes what `PlaceIdentity.js`/`PlaceNamingView.js`
+  already independently derive, the same "the caller already has
+  everything it needs" posture `namingView()` itself keeps.
+- **`application/WorldNavigationSession.js`** —
+  `_collectRawRegions()` (private): every region across every loaded
+  document, in EACH region's own NATIVE per-World coordinates —
+  deliberately NOT the shared multi-document layout offset
+  `_collectRegions()` already applies for side-by-side visualization,
+  which would make every cross-World geometric comparison meaningless.
+  `getGeographicPlaceGroups()`/`getGeographicNamingView(regionId)` are
+  thin public delegations to `core/PlaceIdentity.js`/
+  `core/GeographicPlaceResolution.js` over that raw region list plus
+  whatever claims `placeNamingClaimUseCase` (if wired) already holds for
+  every region in a candidate group — `{ regions: [], namingView: [] }`
+  when nothing is loaded/wired or the region is unknown, the same
+  graceful-degradation posture every other read method here already
+  follows. No new required collaborator: this milestone reuses the
+  EXACT `placeNamingClaimUseCase` 0.5.2 already wired.
+- **`ui/components/PlaceNamingPanel.js`** — two new, purely ADDITIVE
+  sections, shown only when a candidate match actually exists: "Other
+  Geographic Descriptions" (every other region in the group, its own
+  kind/name, explicitly captioned "each stays its own separate region")
+  and "Community Names Across These Places" (the combined ranking).
+  Neither section replaces or alters the existing per-region "Community
+  Names" section, which stays exactly what 0.5.2/0.5.3 already showed.
+  `ui/views/WorldView.js` wires `session.getGeographicNamingView()`
+  alongside the existing per-region reads in `refreshNamingPanel()`.
+- **`tests/PlaceIdentity.test.js`** — 7 sections, 63 assertions:
+  fingerprint quantization/noise-absorption, the FULL adversarial
+  matrix the design conversation named (same center/different radius,
+  same radius/different center, nested village/district, overlapping-
+  but-different-center, completely unrelated, floating-point noise,
+  different region kinds) plus symmetry and a direct transitivity proof,
+  the `namingView()` regression, cross-region combined ranking never
+  touching a `WorldRegion`, `WorldNavigationSession` graceful
+  degradation, a direct 0.5.0/0.5.2 regression check, and a CAPSTONE:
+  Alice and Bob independently create regions in TWO SEPARATE Worlds at
+  approximately the same location, publish different names, exchange
+  claims via the existing 0.5.3 transport, and deterministically
+  converge on one combined ranked view — while both Worlds, and both
+  regions' own names, stay completely untouched throughout.
+
+### Candidacy, never proof
+
+Every function this milestone ships proves its own restraint by what it
+refuses to say. `core/PlaceIdentity.js#derivePlaceIdentity()` never
+returns "same" — only `candidate`, and even that only for geometry that
+quantizes to an EXACT match, never a tolerance-based "close enough."
+`core/GeographicPlaceResolution.js` never merges two regions' claims
+into one region's naming view — it produces a NEW, separate combined
+view alongside the original per-region one, and a UI (this milestone's
+own `PlaceNamingPanel.js` changes) always shows both, clearly labeled.
+Nothing here EVER calls `World#addWorldRegion`, `updateWorldRegion`, or
+any Command — a matching fingerprint is evidence a human can act on
+(publish a name, or someday explicitly confirm it — see "Deliberately
+excluded" below), never evidence the system acts on by itself. This is
+the exact same restraint 0.5.0's own `parentRegionId` already
+established ("hierarchy is geometric, never authored") applied here one
+level up: place IDENTITY is geometric-candidate-only, never authored
+into certainty by an algorithm.
+
+### `kind` is a hard gate — a named, conservative limitation
+
+`core/PlaceFingerprint.js#deriveFingerprint()` includes a region's own
+`kind` exactly as the design conversation specified, and treats it as a
+HARD requirement for a match, not a weighted signal: two regions with
+identical center and radius but different `kind` (a Village someone
+calls "town" vs. the same ground someone else calls "village") do NOT
+fingerprint-match today (`tests/PlaceIdentity.test.js`, assertion 17).
+This is a deliberate choice to under-match rather than over-match —
+this milestone would rather miss a genuine candidate than manufacture a
+false one — but it is also a real, acknowledged cost: two authors
+describing the literal same ground who happened to pick different
+administrative labels will not see each other's names combined. Named
+directly as future refinement, not attempted here — see "Deliberately
+excluded" below.
+
+### Deliberately excluded
+
+- **`PlaceEquivalenceClaim` — explicit human confirmation.** The design
+  conversation that proposed this milestone also sketched a SEPARATE,
+  future signed assertion ("I explicitly confirm these two regions
+  describe the same place") stronger than a geometric fingerprint match
+  — geometry-plus-human-assertion, not geometry alone. Named directly as
+  its own future milestone, deliberately not attempted here: this
+  milestone's whole job was proving CANDIDACY works before building
+  confirmation on top of it.
+- **Treating `kind` as a soft signal instead of a hard gate.** See "`kind`
+  is a hard gate" above — a real, named limitation this milestone leaves
+  exactly as it is rather than guessing at a weighting scheme with no
+  real-world data to validate it against.
+- **Any actual World discovery/replication mechanism.** This milestone
+  is scoped exactly the way its own design conversation scoped Level 1:
+  "given regions ALREADY AVAILABLE to one client." How a second
+  replica's `WorldRegion` geometry actually reaches this one — peer
+  discovery, World replication, visiting a friend's published World —
+  is existing, unrelated machinery from earlier milestones; this
+  milestone only ever reads whatever `WorldNavigationSession#
+  getLoadedDocuments()` already returns.
+- **Configurable quantization exposed anywhere in the UI.** The position/
+  radius quanta are code-level defaults (`DEFAULT_POSITION_QUANTUM`/
+  `DEFAULT_RADIUS_QUANTUM`), overridable by a caller that passes
+  `options`, but no UI here lets a viewer tune them — a tuning surface
+  with no real usage data to justify a default change is premature.
+- **Sybil resistance, reputation, voting, or any "official"/canonical
+  name.** All still exactly as far out of scope as 0.5.2/0.5.3 already
+  left them — this milestone adds a new way to GROUP claims, never a new
+  way to decide a winner among them.
+- **Any change to how a `WorldRegion` is created, edited, or removed.**
+  `application/commands/CreateWorldRegionCommand.js` and its siblings
+  are completely untouched; nothing about geographic candidacy ever
+  flows back into World content.
+
+```text
+0.5.0   World Regions & Decentralized Place Naming              ✓
+             │
+             ▼
+0.5.1   World Maps & Geographic Navigation                      ✓
+             │
+             ▼
+0.5.2   Place Naming & Naming Claims                             ✓
+             │
+             ▼
+0.5.3   Decentralized Place Name Exchange                       ✓
+             │
+             ▼
+0.5.4   Place Identity & Geographic Claim Resolution             ✓
+             ├── PlaceFingerprint — quantized center/radius/kind,
+             │   absorbs floating-point noise, never over-matches
+             ├── PlaceIdentity — derivePlaceIdentity()/
+             │   groupRegionsByPlaceIdentity(), CANDIDATE never proof,
+             │   an honest transitive equivalence relation by construction
+             ├── PlaceNamingView#rankClaimsByName() — additive
+             │   extraction, namingView() proven byte-identical
+             ├── GeographicPlaceResolution — combined cross-region
+             │   ranking, never merges or mutates a WorldRegion
+             ├── WorldNavigationSession#getGeographicNamingView() —
+             │   raw per-World coordinates, graceful degradation
+             ├── PlaceNamingPanel — two new sections, purely additive,
+             │   clearly labeled "suggestion, never a merge"
+             └── PlaceIdentity.test.js — 63 assertions; CAPSTONE proves
+                 Alice and Bob, two separate Worlds, converge on one
+                 combined ranking while both Worlds stay untouched
+```
+
+> **0.5.2 — Can I, and everyone else, each have our own honest opinion
+> about what to call a place, without any of us needing the others'
+> permission?**
+> **0.5.3 — Now that we can each hold an opinion, how does either of us
+> ever find out what the other one said?**
+> **0.5.4 — Now that Alice's region and Bob's region might be the same
+> ground, how does either of them ever find out — without either
+> World, or either region, ever having to become the other?**
+
+What's left, and deliberately unbuilt: `PlaceEquivalenceClaim` (an
+explicit, stronger, human-confirmed assertion of sameness — sketched
+directly by this milestone's own design conversation as the next real
+step), treating `kind` as a soft signal, any actual cross-replica
+discovery/replication mechanism, a UI for tuning quantization, and every
+item 0.5.2/0.5.3's own "Deliberately excluded" lists already named and
+this milestone left exactly as untouched. Each is sized on its own,
+exactly like every "Deliberately excluded" list in this document
+before it.

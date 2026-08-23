@@ -22,6 +22,15 @@
 export default {
     name: 'PlaceNamingPanel',
     props: {
+        // 0.5.4 — the region this panel is currently open for. Used
+        // only to tell this region apart from OTHER candidate regions
+        // in geographicRegions below — never sent to the session
+        // directly by this component (the host already scopes every
+        // emit to the right region, exactly as before this milestone).
+        regionId: {
+            type: String,
+            default: null
+        },
         // The region's own World-authored name (WorldRegion.name) —
         // shown as read-only context, never editable here.
         regionName: {
@@ -54,6 +63,32 @@ export default {
         myIdentityId: {
             type: String,
             default: null
+        },
+        // 0.5.4 — Place Identity & Geographic Claim Resolution.
+        // session.getGeographicNamingView(regionId)'s own `regions`:
+        // every region this replica currently knows about whose
+        // geometry CANDIDATE-matches this one's (core/PlaceIdentity.js)
+        // — always includes this region itself when it's known, so
+        // length 1 means "no other candidate found." Never a claim that
+        // any of these are actually the same World object — see this
+        // component's own template copy, and core/PlaceIdentity.js's
+        // header, on why "candidate" is the only word used anywhere
+        // here.
+        geographicRegions: {
+            type: Array,
+            default: () => []
+        },
+        // session.getGeographicNamingView(regionId)'s own `namingView`:
+        // the SAME distinct-author ranking as `namingView` above,
+        // computed across every claim for EVERY region in
+        // geographicRegions rather than only this one. Deliberately
+        // additive alongside `namingView`, never a replacement for it —
+        // this replica's own per-region community view (namingView
+        // above) is completely unaffected by whether a candidate match
+        // was ever found.
+        geographicNamingView: {
+            type: Array,
+            default: () => []
         }
     },
     // 0.5.3 — Decentralized Place Name Exchange adds 'export-claim' (any
@@ -74,12 +109,30 @@ export default {
     computed: {
         canPublish() {
             return this.newName.trim().length > 0;
+        },
+        // 0.5.4 — every geographicRegions entry OTHER than this panel's
+        // own region — the "Other geographic descriptions of this
+        // place" list. [] whenever no candidate match was found (the
+        // ordinary case for a region nobody else has independently
+        // described), so the section below stays hidden rather than
+        // showing an empty list.
+        otherGeographicRegions() {
+            return this.geographicRegions.filter((region) => region.id !== this.regionId);
         }
     },
     methods: {
         formatAuthor(identityId) {
             if (!identityId) return 'unknown';
             return identityId.length > 16 ? `${identityId.slice(0, 12)}…` : identityId;
+        },
+        // 0.5.4 — a short label for one of otherGeographicRegions'
+        // entries: its own kind and World-authored name, never anything
+        // this panel invents. Region-like objects here come from
+        // session.getGeographicNamingView(), which always carries
+        // `kind`/`name` — see WorldNavigationSession#_collectRawRegions().
+        formatRegionLabel(region) {
+            const kind = region.kind ? `${region.kind.charAt(0).toUpperCase()}${region.kind.slice(1)}` : 'Place';
+            return region.name ? `${kind} · ${region.name}` : kind;
         },
         formatWhen(createdAt) {
             const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
@@ -164,6 +217,40 @@ export default {
                     <button v-if="preferredName" class="action-btn" @click="$emit('clear-preferred-name')">
                         Clear my preference
                     </button>
+                </section>
+
+                <section v-if="otherGeographicRegions.length > 0" class="naming-panel-section">
+                    <h4 class="locations-panel-section-title">Other Geographic Descriptions</h4>
+                    <p class="form-hint form-hint--neutral">
+                        These regions were authored independently, but
+                        their geometry looks similar enough to describe
+                        the same ground. This is only a suggestion —
+                        each stays its own separate region, and nothing
+                        here merges them.
+                    </p>
+                    <ul class="naming-panel-list">
+                        <li v-for="region in otherGeographicRegions" :key="region.worldId + ':' + region.id" class="naming-panel-item">
+                            <div class="naming-panel-item-info">
+                                <span class="naming-panel-item-name">{{ formatRegionLabel(region) }}</span>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div v-if="geographicNamingView.length > 0">
+                        <h4 class="locations-panel-section-title">Community Names Across These Places</h4>
+                        <p class="form-hint form-hint--neutral">
+                            Combines every claim published for this
+                            place's geometry, wherever it was described.
+                        </p>
+                        <ul class="naming-panel-list">
+                            <li v-for="entry in geographicNamingView" :key="entry.name" class="naming-panel-item">
+                                <div class="naming-panel-item-info">
+                                    <span class="naming-panel-item-name">{{ entry.name }}</span>
+                                    <span class="naming-panel-item-score">{{ entry.score }} {{ entry.score === 1 ? 'person' : 'people' }}</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </section>
 
                 <section class="naming-panel-section">
