@@ -4398,3 +4398,162 @@ html, body {
     font-size: 0.85rem;
     color: #9b8cff;
 }
+
+/* ===================================================================
+   0.5.7 — World View UX & Progressive Exploration
+   ===================================================================
+   World View's left panel (.world-view-overlay) grew one section at a
+   time across 0.1.50-0.5.6 with no height bound of its own — on a
+   long enough stack (an active build, an open selection, several
+   nearby-world lists) content was pushed out past the bottom of the
+   viewport with no way to reach it. This is the structural fix: a
+   SINGLE scrollable wrapper around the panel's entire content, so the
+   panel itself always fits, never the World scene beneath it. See
+   ui/views/WorldView.js's own template — this wrapper is the ONLY
+   direct child of .world-view-overlay now, so the existing
+   ".world-view-overlay > *" pointer-events rule (still below) keeps
+   working unchanged: it targets this one wrapper instead of many
+   siblings, and every click inside it still reaches its target exactly
+   as before. */
+.world-view-overlay-scroll {
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* a hair of right padding keeps the scrollbar off the content
+       itself, matching .naming-panel-list's own scrollable-list
+       treatment above */
+    padding-right: 0.25rem;
+}
+
+/* The three PRIMARY modes — Explore / Map / Places — replacing the
+   four separate always-visible buttons (Locations, Map, Geographic
+   Places, Explore) 0.2.94-0.5.6 accumulated. Mutually exclusive by
+   construction (application/WorldViewNavigationState.js): exactly one
+   carries --active at a time. */
+.world-view-primary-nav {
+    display: flex;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+}
+
+.world-view-primary-nav .action-btn {
+    flex: 1;
+}
+
+.world-view-primary-nav .action-btn--active {
+    background: #2a5540;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+
+/* Generic collapsible section (ui/components/CollapsibleSection.js) —
+   used for World View's "Nearby ___" groups in Explore mode. The
+   header stays a full-width button (never just the caret) so the
+   entire row is clickable, not a tiny hit target. */
+.collapsible-section {
+    margin-top: 0.6rem;
+}
+
+.collapsible-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0.3rem 0;
+    color: #d0d0d0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.collapsible-section-header:hover {
+    color: #ffffff;
+}
+
+.collapsible-section-caret {
+    color: #707070;
+    width: 0.9rem;
+    text-align: center;
+}
+
+.collapsible-section-title {
+    flex: 1;
+}
+
+.collapsible-section-count {
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: #707070;
+}
+
+.collapsible-section-body {
+    padding: 0.25rem 0 0.25rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+/* One "Nearby ___" row — a name, a distance, and a compact Go action.
+   Point 5 of the design conversation: "not everything needs to become
+   an icon... but repeated actions... can become compact controls." */
+.world-view-nearby-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.world-view-nearby-row-label {
+    color: #d0d0d0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-view-nearby-row-distance {
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: #707070;
+    flex-shrink: 0;
+}
+
+.world-view-nearby-row-go {
+    flex-shrink: 0;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.72rem;
+}
+
+.world-view-nearby-empty {
+    color: #606060;
+    font-size: 0.78rem;
+    font-style: italic;
+}
+
+/* ui/components/PlaceNamingPanel.js: the "More — other descriptions,
+   claim history, import/export" disclosure gating everything past
+   Community Names/Publish A Name — same full-width, caret-led button
+   language as .collapsible-section-header above, kept as its own class
+   since this one isn't reusable (PlaceNamingPanel doesn't use
+   CollapsibleSection itself — it toggles one boolean over several
+   sibling <section> elements rather than wrapping a single slot). */
+.naming-panel-advanced-toggle {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    border-top: 1px solid #2a2a2a;
+    margin: 0.4rem 0 0.9rem;
+    padding: 0.6rem 0 0.2rem;
+    color: #909090;
+    font-size: 0.78rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.naming-panel-advanced-toggle:hover {
+    color: #e0e0e0;
+}
