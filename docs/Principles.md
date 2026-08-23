@@ -8122,3 +8122,84 @@ group as a whole. A geographic place candidate is a fact about which
 EXISTING circles a viewer should look at together, never a shape of its
 own — exactly 0.5.1's "a world map is a derived view, never a second
 world" restraint, applied to a group of regions instead of one.
+
+### A Geographic Place Is Navigable; It Does Not Become World Content (0.5.6)
+
+0.5.5 made a geographic place candidate something a viewer could
+BROWSE. The obvious next question — "I found a place, now take me
+there" — could have been answered by giving a geographic place its own
+row in `core/World.js`: a `WorldGeographicPlace` with a stored position,
+alongside `Region`/`Landmark`/`Structure`. That would have been the
+easy path, and it would have quietly undone every restraint 0.5.4 and
+0.5.5 fought to keep: the moment a candidate identity gets a permanent
+slot in the World's own document, "candidate" stops being true. Someone
+would eventually read `World.getGeographicPlaces()` and treat it as a
+list of real places, the same way a `WorldRegion` is a real place today
+— and a fingerprint match would have quietly become an assertion this
+architecture never actually verified.
+
+So `core/GeographicPlaceNavigation.js` takes the harder path instead:
+
+```text
+World content:
+    Region
+    Landmark
+    Structure
+
+Derived content:
+    GeographicPlace
+```
+
+A geographic place becomes navigable by being addressable through
+`application/WorldLocationDirectory.js`'s own existing identifier
+space — a `WorldLocation` whose kind is `GEOGRAPHIC_PLACE` and whose id
+is `place:<fingerprintKey>`, built FRESH on every `find()` call by
+resolving the place's own deterministic representative region (see
+"A Representative Region Is A Presentation Choice, Never An Authority
+(0.5.5)" above — this milestone reuses that exact pick rather than
+adding a second one) and reusing that region's own already-computed,
+layout-offset position. There is no `focusGeographicPlace()`, no second
+camera system, and no new WorldLocationDirectory.list() entry — a
+geographic place candidate is reachable through `focusLocation()`
+addressed by its own derived id, and through nothing else. The
+existing abstraction absorbed the new destination kind exactly because
+it was never actually about STRUCTURE/LANDMARK/REGION specifically; it
+was always about "somewhere a camera can be sent," and a geographic
+place candidate qualifies without needing to become anything more
+permanent than that.
+
+The same restraint governs `getNearbyGeographicPlaces()`: the design
+conversation was explicit that no `place.visitors`/`place.lastVisited`/
+`place.distance` may ever be stored — distance is computed fresh from
+the viewer's current position and the place's own resolved location on
+every call, the same "rebuilt, never cached" posture
+`getGeographicPlaceDirectory()` already held to in 0.5.5. A "Nearby
+Places" list is a live reading of where the viewer happens to be
+standing right now, never a record of where they've been.
+
+**"Near," never "in."** A geographic place is only ever a cross-World
+CANDIDATE identity — a fingerprint match, not a confirmation. A viewer
+can stand inside its representative region's own radius and the
+architecture still has no stronger claim to make than "this looks like
+the ground several people have described." `ui/components/WorldWelcomePanel.js`
+makes that distinction visible in its own wording: "You are in
+Willow Village" for a named `WorldRegion` the viewer is actually
+standing inside (real, human-authored geometry — a fact), "You are
+near Kawahara Village" for the closest geographic place candidate (a
+guess, however well-corroborated). Neither implies the other, and the
+architecture never upgrades the second phrasing to the first just
+because a viewer happens to be standing at the representative region's
+own center.
+
+**One resolution path, reused everywhere.** The directory's "Go to
+Place," a place panel's "Go to Place," the compass's contextual
+markers, the World View's "Nearby Places" legend, and
+`WorldWelcomePanel`'s own arrival section all resolve a geographic
+place through the exact same call:
+`session.focusLocation(geographicPlaceLocationId(fingerprintKey))` ->
+`WorldLocationDirectory#find()` -> the representative region's own
+resolved position. None of them recompute a layout offset, a distance,
+or a direction independently — `getNearbyGeographicPlaces()` itself
+resolves each candidate's position by asking `WorldLocationDirectory`
+the same question `focusLocation()` would, so "how far away is it" and
+"where does Go To Place actually take me" can never quietly disagree.

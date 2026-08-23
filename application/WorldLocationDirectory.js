@@ -1,6 +1,11 @@
 import { WorldLocation } from '../core/WorldLocation.js';
 import { WorldLocationKind } from '../core/WorldLocationKind.js';
 import { Position } from '../core/Position.js';
+import {
+    isGeographicPlaceLocationId,
+    geographicPlaceFingerprintKeyFromLocationId,
+    deriveGeographicPlaceNavigationTarget
+} from '../core/GeographicPlaceNavigation.js';
 
 // 0.2.94 — World View Location & Navigation.
 // 0.3.7 — World Landmarks & Personal Waypoints: added landmark locations.
@@ -58,12 +63,68 @@ export class WorldLocationDirectory {
     }
 
     // A single location by id — `'origin'`, a StructurePlacement's
-    // own id, or a WorldLandmark's id — or null if it isn't (or is no
-    // longer) navigable. Reuses list() rather than a second lookup path,
-    // so "find one" and "list all" can never disagree about what
-    // currently exists.
+    // own id, a WorldLandmark's id, a WorldRegion's own id, or (0.5.6)
+    // a geographic place's derived `place:<fingerprintKey>` id — or
+    // null if it isn't (or is no longer) navigable. Reuses list()
+    // rather than a second lookup path, so "find one" and "list all"
+    // can never disagree about what currently exists.
+    //
+    // Deliberately NOT `list().find(...)` for a geographic-place id:
+    // list() stays exactly what it was before this milestone (Origin,
+    // structures, landmarks, regions — never geographic place
+    // candidates, which would otherwise duplicate every single-region
+    // "candidate" already listed once as its own REGION location). A
+    // geographic place is reachable through focusLocation() without
+    // ever being a row a plain Locations browse sees — see
+    // _geographicPlaceLocation() below.
     find(locationId) {
+        if (isGeographicPlaceLocationId(locationId)) {
+            return this._geographicPlaceLocation(locationId);
+        }
         return this.list().find((location) => location.id === locationId) || null;
+    }
+
+    // 0.5.6 — Geographic Place Navigation & Arrival. Resolves a
+    // `place:<fingerprintKey>` id the SAME way "Show on Map" already
+    // has since 0.5.5 (ui/views/WorldView.js#showGeographicPlaceOnMap()):
+    // the place's own deterministic representative region
+    // (core/GeographicPlaceNavigation.js#deriveGeographicPlaceNavigationTarget())
+    // IS the navigation target, and that region's already-computed,
+    // layout-offset WorldLocation (from list() — the SAME position
+    // _regionLocationsFor() below produces for it under its OWN id) is
+    // reused wholesale rather than a second offset computation. Only
+    // the id/title/kind differ: the id is this place's own derived id,
+    // the title is the place's community-claimed displayName (never the
+    // representative region's own, possibly-unclaimed WorldRegion.name),
+    // and the kind is GEOGRAPHIC_PLACE — so a caller (a compass marker,
+    // an arrival banner) can tell "I got here via a geographic place
+    // candidate" apart from "I got here via one specific region," even
+    // though the camera ends up in the exact same place either way.
+    //
+    // null when `_session.getGeographicPlace` isn't wired, the
+    // fingerprintKey is unknown, or the representative region's own
+    // World isn't (or is no longer) loaded — the same graceful-absence
+    // posture find() already has for every other unknown id.
+    _geographicPlaceLocation(locationId) {
+        if (typeof this._session.getGeographicPlace !== 'function') {
+            return null;
+        }
+        const fingerprintKey = geographicPlaceFingerprintKeyFromLocationId(locationId);
+        const place = fingerprintKey ? this._session.getGeographicPlace(fingerprintKey) : null;
+        const target = deriveGeographicPlaceNavigationTarget(place);
+        if (!target) {
+            return null;
+        }
+        const regionLocation = this.list().find((location) => location.id === target.regionId);
+        if (!regionLocation) {
+            return null;
+        }
+        return new WorldLocation({
+            id: locationId,
+            title: target.title,
+            kind: WorldLocationKind.GEOGRAPHIC_PLACE,
+            position: regionLocation.position
+        });
     }
 
     _originLocation() {

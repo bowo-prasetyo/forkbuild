@@ -4366,3 +4366,35 @@ html, body {
     stroke: #d97757;
     stroke-width: 2.5;
 }
+
+/* 0.5.6 — Geographic Place Navigation & Arrival. A geographic place's
+   own compass/legend color — violet, distinct from structure (gold),
+   collaborator (teal), and landmark (pink) above, so all four kinds
+   read apart at a glance on the dial and in the HUD legend. */
+.compass-indicator-marker--place {
+    background: #9b8cff;
+}
+
+.world-view-nav-marker.place .marker-direction {
+    color: #9b8cff;
+}
+
+/* ui/components/GeographicPlaceDirectoryPanel.js: the "Nearby Places"
+   section reuses .naming-panel-section/.naming-panel-list wholesale
+   (the same "ranked list of named things" shape 0.5.5's own
+   GeographicPlacePanel already reused) — only the search box below it
+   is new layout. */
+.geographic-place-search-input {
+    width: 100%;
+    margin: 0.75rem 0;
+}
+
+/* ui/components/WorldWelcomePanel.js: the arrival banner's "You are
+   in"/"You are near" line — deliberately more prominent than
+   .world-welcome-panel-stats (a fact worth noticing on arrival) but
+   plainer than the world title itself. */
+.world-welcome-panel-arrival-note {
+    margin: 0 0 0.3rem;
+    font-size: 0.85rem;
+    color: #9b8cff;
+}
