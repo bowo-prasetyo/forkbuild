@@ -30,6 +30,8 @@ import { buildWorldCollaborationRoster } from '../components/WorldCollaborationR
 import WorldWelcomePanel from '../components/WorldWelcomePanel.js';
 import WorldMapPanel from '../components/WorldMapPanel.js';
 import PlaceNamingPanel from '../components/PlaceNamingPanel.js';
+import GeographicPlaceDirectoryPanel from '../components/GeographicPlaceDirectoryPanel.js';
+import GeographicPlacePanel from '../components/GeographicPlacePanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 
 const DRAG_THRESHOLD_PX = 6;
@@ -63,7 +65,8 @@ export default {
         AvatarInfoPanel, NearbyAvatarsPanel,
         CompassIndicator, LocationsPanel, LandmarkFormModal, RegionFormModal,
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
-        WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel
+        WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
+        GeographicPlaceDirectoryPanel, GeographicPlacePanel
     },
     setup() {
         const route = useRoute();
@@ -293,6 +296,21 @@ export default {
         // reset by this refresh.
         const showMapPanel = ref(false);
         const mapContent = ref({ regions: [], landmarks: [], structures: [], collaborators: [], viewerPosition: null });
+        // 0.5.5 — Geographic Place Directory & Identity UX.
+        // `geographicPlaces` is session.getGeographicPlaceDirectory()'s
+        // own array of GeographicPlaceView#toJSON() rows — re-read fresh
+        // every time the directory opens, the same "cheap, never cached"
+        // posture worldLocations already keeps. `geographicPlace` is
+        // whichever ONE row is currently open in GeographicPlacePanel,
+        // or null; `mapHighlightRegionKeys` is purely additive state for
+        // WorldMapPanel — a "Show on Map" click never changes what the
+        // map itself contains, only which of its ALREADY-drawn regions
+        // get an extra highlight (see WorldMapPanel's own header).
+        const showGeographicPlaceDirectory = ref(false);
+        const geographicPlaces = ref([]);
+        const showGeographicPlacePanel = ref(false);
+        const geographicPlace = ref(null);
+        const mapHighlightRegionKeys = ref([]);
         // 0.2.99 — World Collaboration UX. `worldMembers`/
         // `worldPresenceRoster` are the RAW facts session.
         // listWorldMembers()/getWorldPresenceRoster() already return for
@@ -1574,6 +1592,12 @@ export default {
 
         function closeMapPanel() {
             showMapPanel.value = false;
+            // 0.5.5 — a highlight set by showGeographicPlaceOnMap() above
+            // is a one-shot "look here" for that one visit; closing the
+            // map clears it so the NEXT open (from the plain "Map"
+            // toolbar button, or a different place) never shows a stale
+            // highlight left over from an unrelated place.
+            mapHighlightRegionKeys.value = [];
         }
 
         function focusLocationFromMap(locationId) {
@@ -1584,6 +1608,76 @@ export default {
         function focusCollaboratorFromMap(deviceId) {
             session.focusCollaborator(deviceId);
             refreshSpatialUI();
+        }
+
+        // -----------------------------------------------------------------
+        // 0.5.5 — Geographic Place Directory & Identity UX
+        // -----------------------------------------------------------------
+        //
+        // Read-only, exactly like the Locations panel's own Focus button:
+        // nothing below ever calls a mutating session method, publishes
+        // or retracts a claim, or touches a WorldRegion. openNamesFromPlace()
+        // is the one bridge back into EXISTING 0.5.2 machinery — it opens
+        // ui/components/PlaceNamingPanel.js for one region rather than
+        // rebuilding publish/retract here a second time.
+        function openGeographicPlaceDirectory() {
+            geographicPlaces.value = session.getGeographicPlaceDirectory().map((place) => place.toJSON());
+            showGeographicPlaceDirectory.value = true;
+        }
+
+        function closeGeographicPlaceDirectory() {
+            showGeographicPlaceDirectory.value = false;
+        }
+
+        function openGeographicPlace(fingerprintKey) {
+            const place = session.getGeographicPlace(fingerprintKey);
+            if (!place) {
+                feedback.show('That geographic place is no longer available');
+                return;
+            }
+            geographicPlace.value = place.toJSON();
+            showGeographicPlaceDirectory.value = false;
+            showGeographicPlacePanel.value = true;
+        }
+
+        function closeGeographicPlacePanel() {
+            showGeographicPlacePanel.value = false;
+            geographicPlace.value = null;
+        }
+
+        function focusRegionFromPlace(regionId) {
+            session.focusLocation(regionId);
+            refreshSpatialUI();
+        }
+
+        function openNamesFromPlace(regionId) {
+            closeGeographicPlacePanel();
+            // PlaceNamingPanel's own `region-name` prop is read off
+            // `worldLocations` (see the template below) — refreshed here
+            // in case this replica reached the Names panel without ever
+            // opening the Locations panel first, the only other entry
+            // point that already keeps `worldLocations` current.
+            refreshLocationsPanel();
+            openNamingPanel(regionId);
+        }
+
+        // Highlights every region already IN this place's own group —
+        // never invents new geometry (see WorldMapPanel's own header) —
+        // and centers the camera on the place's representative region
+        // first, the same deterministic pick core/GeographicPlaceView.js
+        // already makes, purely so the map opens looking at ground that
+        // actually matters rather than wherever the camera happened to
+        // already be.
+        function showGeographicPlaceOnMap() {
+            const place = geographicPlace.value;
+            if (!place) return;
+            mapHighlightRegionKeys.value = place.regions.map((region) => `${region.worldId}:${region.id}`);
+            if (place.representativeRegion) {
+                session.focusLocation(place.representativeRegion.id);
+                refreshSpatialUI();
+            }
+            showGeographicPlacePanel.value = false;
+            openMapPanel();
         }
 
         // 0.2.93 — "Open Source": reuses the EXISTING /editor?load=<id>
@@ -2272,6 +2366,18 @@ export default {
             closeMapPanel,
             focusLocationFromMap,
             focusCollaboratorFromMap,
+            mapHighlightRegionKeys,
+            showGeographicPlaceDirectory,
+            geographicPlaces,
+            showGeographicPlacePanel,
+            geographicPlace,
+            openGeographicPlaceDirectory,
+            closeGeographicPlaceDirectory,
+            openGeographicPlace,
+            closeGeographicPlacePanel,
+            focusRegionFromPlace,
+            openNamesFromPlace,
+            showGeographicPlaceOnMap,
             goHome,
             openLocationsPanel,
             closeLocationsPanel,
@@ -2381,6 +2487,7 @@ export default {
                 <button class="action-btn" @click="goHome">Home</button>
                 <button class="action-btn" @click="openLocationsPanel">Locations</button>
                 <button class="action-btn" @click="openMapPanel">Map</button>
+                <button class="action-btn" @click="openGeographicPlaceDirectory">Geographic Places</button>
                 <button
                     v-if="activeDocumentInfo"
                     class="action-btn action-btn--explore"
@@ -2916,9 +3023,24 @@ export default {
             <WorldMapPanel
                 v-if="showMapPanel"
                 :content="mapContent"
+                :highlight-region-keys="mapHighlightRegionKeys"
                 @focus-location="focusLocationFromMap"
                 @focus-collaborator="focusCollaboratorFromMap"
                 @cancel="closeMapPanel"
+            />
+            <GeographicPlaceDirectoryPanel
+                v-if="showGeographicPlaceDirectory"
+                :places="geographicPlaces"
+                @open-place="openGeographicPlace"
+                @cancel="closeGeographicPlaceDirectory"
+            />
+            <GeographicPlacePanel
+                v-if="showGeographicPlacePanel"
+                :place="geographicPlace"
+                @focus-region="focusRegionFromPlace"
+                @open-names="openNamesFromPlace"
+                @show-on-map="showGeographicPlaceOnMap"
+                @cancel="closeGeographicPlacePanel"
             />
             <WorldWelcomePanel
                 v-if="showWelcomePanel"

@@ -10476,3 +10476,191 @@ item 0.5.2/0.5.3's own "Deliberately excluded" lists already named and
 this milestone left exactly as untouched. Each is sized on its own,
 exactly like every "Deliberately excluded" list in this document
 before it.
+
+## 0.5.5 — Geographic Place Directory & Identity UX
+
+0.5.4 proved a client can GROUP regions into geographic-place candidates
+and RANK their names together, but left the result reachable only
+through a naming panel already scoped to one region at a time
+(`PlaceNamingPanel`, opened from one specific `WorldRegion`). There was
+still no natural way to just BROWSE what 0.5.4 had already derived. The
+design conversation that reviewed 0.5.4's own merge named the gap, and
+the one idea this milestone is built around:
+
+> A geographic place is a DERIVED VIEW over descriptions, not a new
+> object that owns them.
+
+### What shipped
+
+- **`core/GeographicPlaceView.js`** — the last, presentation-facing step
+  of the pipeline this milestone closes:
+  `WorldRegion -> PlaceFingerprint -> PlaceIdentity -> GeographicPlaceView -> UI`.
+  `buildGeographicPlaceView(group)` reshapes one
+  `core/GeographicPlaceResolution.js` group into a `GeographicPlaceView`
+  — `{ fingerprintKey, regions, names, representativeRegion, worldCount,
+  authorCount }` — with two computed conveniences, `displayName` (the
+  top combined-ranked name, falling back to the representative region's
+  own `WorldRegion.name` when nobody has claimed one) and
+  `descriptionCount`. `representativeRegion` is a deterministic
+  presentation pick ONLY — `group.regions[0]` off the SAME
+  `${worldId}:${id}` sort `core/GeographicPlaceResolution.js#buildPlaceGroup()`
+  already established, never re-sorted here, so two replicas holding the
+  same regions always pick the same one and neither ever mistakes it for
+  authority. `describeCandidacyReasons(place)` is the "Why grouped
+  together?" checklist — a static, four-item list (same fingerprint,
+  same center/radius within their quanta, same `kind`) for any
+  multi-region place, `[]` for a singleton with nothing to explain — and
+  `CANDIDACY_CAVEAT` is the one sentence ("This is a geographic
+  candidate, not a verified identity.") every renderer of that checklist
+  pairs it with. There is no persisted `WorldGeographicPlace` anywhere —
+  this class is instantiated fresh on every read and thrown away.
+- **`core/GeographicPlaceDirectory.js`** — the world-wide counterpart to
+  `application/WorldLocationDirectory.js`, and a deliberately different
+  question from the one that directory answers ("what's inside this
+  World?" vs. "which candidate geographic identities span every World I
+  have loaded?"). `buildGeographicPlaceDirectory(regions, claims)` maps
+  every `resolveGeographicPlaces()` group through
+  `buildGeographicPlaceView()` and sorts the result alphabetically by
+  `displayName` (case-insensitive, fingerprint-key tie-break) — a
+  directory reads like a phone book, not like the fingerprint-key
+  grouping order that exists purely for cross-replica agreement on
+  MEMBERSHIP, which is meaningless to a person browsing by name.
+  `geographicPlaceByKey(fingerprintKey, ...)` and
+  `geographicPlaceForRegionId(regionId, ...)` are the two lookups a
+  directory row, or a naming panel already scoped to one region, each
+  actually need.
+- **`application/WorldNavigationSession.js`** —
+  `getGeographicPlaceDirectory()`/`getGeographicPlace(fingerprintKey)`
+  are thin delegations over the exact same `_collectRawRegions()`/
+  `_collectClaimsFor()` helpers 0.5.4 already built, reused unchanged —
+  no new required collaborator, and the same graceful degradation every
+  read method here already holds to (`[]`/`null` with nothing loaded or
+  wired, never a throw).
+- **`ui/components/GeographicPlaceDirectoryPanel.js`** — a read-only
+  browser over `getGeographicPlaceDirectory()`, one clickable row per
+  place (display name, "N descriptions · M Worlds · K contributors").
+  Opening a row hands its `fingerprintKey` up to the host, exactly the
+  "dumb panel, smart host" split every other modal in this codebase
+  already follows.
+- **`ui/components/GeographicPlacePanel.js`** — the place itself:
+  Community Names (the combined ranking), Described By (every region in
+  the group, captioned "each stays its own separate region" — never
+  "other regions that are this place"), and, when there's more than one
+  region, Why Grouped Together (the checklist + caveat above). No
+  publish/retract here at all — a per-region "Names" button reopens the
+  EXISTING `PlaceNamingPanel` rather than rebuilding that machinery a
+  second time. "Show on Map" is the one action this panel offers besides
+  navigation.
+- **`ui/components/WorldMapPanel.js`** — a new, optional
+  `highlightRegionKeys` prop (`${worldId}:${id}` strings, the same
+  format `core/GeographicPlaceResolution.js` already sorts by): every
+  matching region draws with an extra highlight class. "Show on Map"
+  highlights geometry that's already there; it never draws a new
+  boundary — see docs/Principles.md, "A Geographic Place Highlights
+  Existing Geometry; It Never Draws New Geometry (0.5.5)."
+- **`ui/views/WorldView.js`** — a new "Geographic Places" toolbar button
+  alongside "Locations"/"Map", wiring both new panels and
+  `showGeographicPlaceOnMap()` (sets the map's highlight, focuses the
+  camera on the place's representative region, then opens the existing
+  map panel — no second map implementation).
+- **`tests/GeographicPlaceDirectory.test.js`** — 5 sections, 49
+  assertions: `GeographicPlaceView` construction and its deterministic
+  representative pick, `GeographicPlaceDirectory` ordering and lookups,
+  `WorldNavigationSession` wiring and graceful degradation, a direct
+  "no `WorldRegion` is ever mutated" regression, and a CAPSTONE: Alice,
+  Bob, and Carol each independently describe approximately the same
+  ground in THREE separate Worlds, publish and exchange names, and
+  every one of their three replicas independently converges on the
+  identical directory — while a FOURTH, similarly-NAMED ("Kawahara
+  Town") but geographically unrelated region Alice creates separately
+  stays its own entry throughout. Same name is never enough; same
+  geography is only ever a candidate.
+
+### A directory is presentation over 0.5.4, never a new layer of truth
+
+Every choice in this milestone reduces to one restraint: nothing here
+adds a single new FACT to this architecture. `GeographicPlaceView` is
+rebuilt from scratch on every read; `GeographicPlaceDirectory`'s
+alphabetical order is a presentation choice a caller could recompute
+differently without losing any information; the representative region
+is a tie-break, not an authority; the "Why grouped together?" checklist
+explains evidence that already existed in 0.5.4, it doesn't add any.
+There is still no `WorldGeographicPlace` in `core/World.js`, no
+canonical name, and no confirmation stronger than a fingerprint match —
+this milestone is entirely UI and derivation over what 0.5.0-0.5.4
+already built.
+
+### Deliberately excluded
+
+- **`PlaceEquivalenceClaim` — explicit human confirmation.** Still
+  exactly as out of scope as 0.5.4 left it — this milestone makes
+  CANDIDACY browsable, it does not strengthen it into confirmation.
+- **A configurable directory sort (by size, by recency, by World).**
+  Alphabetical-by-displayName is the one order this milestone ships;
+  letting a viewer pick a different one is a real, named future
+  refinement with no usage data yet to justify a default change.
+- **Any change to how a region is grouped or ranked.**
+  `core/PlaceFingerprint.js`, `core/PlaceIdentity.js`, and
+  `core/GeographicPlaceResolution.js` are completely untouched — this
+  milestone only ever reshapes and sorts what they already produce.
+- **Confidence scores, percentages, or any numeric "how sure are we."**
+  `describeCandidacyReasons()` is a fixed checklist, never a computed
+  score — this architecture has no evidence more precise than "the
+  fingerprints matched," and showing a number would claim a certainty
+  it doesn't have.
+- **Publishing or retracting a naming claim from the new panels
+  themselves.** `GeographicPlacePanel` is read-only; its "Names" button
+  reopens `PlaceNamingPanel` rather than duplicating publish/retract.
+- **Sybil resistance, reputation, voting, or any "official"/canonical
+  name.** Still exactly as far out of scope as every 0.5.x milestone
+  before it — a directory is a new way to BROWSE claims, never a new
+  way to decide a winner among them.
+
+```text
+0.5.0   World Regions & Decentralized Place Naming              ✓
+             │
+             ▼
+0.5.1   World Maps & Geographic Navigation                      ✓
+             │
+             ▼
+0.5.2   Place Naming & Naming Claims                             ✓
+             │
+             ▼
+0.5.3   Decentralized Place Name Exchange                       ✓
+             │
+             ▼
+0.5.4   Place Identity & Geographic Claim Resolution             ✓
+             │
+             ▼
+0.5.5   Geographic Place Directory & Identity UX                 ✓
+             ├── GeographicPlaceView — the derived row: displayName,
+             │   descriptionCount, a deterministic (never authoritative)
+             │   representative region
+             ├── GeographicPlaceDirectory — world-wide, alphabetically
+             │   ordered, byKey()/forRegionId() lookups
+             ├── WorldNavigationSession#getGeographicPlaceDirectory()/
+             │   getGeographicPlace() — thin delegations, no new
+             │   required collaborator
+             ├── GeographicPlaceDirectoryPanel + GeographicPlacePanel —
+             │   read-only, "Names" reopens the existing naming panel
+             ├── WorldMapPanel highlightRegionKeys — highlights existing
+             │   geometry, never draws a new boundary
+             └── GeographicPlaceDirectory.test.js — 49 assertions;
+                 CAPSTONE proves three independent replicas converge on
+                 one directory while a same-named, different-ground
+                 region stays separate throughout
+```
+
+> **0.5.4 — Now that Alice's region and Bob's region might be the same
+> ground, how does either of them ever find out — without either
+> World, or either region, ever having to become the other?**
+> **0.5.5 — Now that a client can tell candidates apart, how does a
+> person actually BROWSE and UNDERSTAND them, without the UI ever
+> claiming more certainty than the architecture actually has?**
+
+What's left, and deliberately unbuilt: `PlaceEquivalenceClaim`, a
+configurable directory sort, confidence scores, and every item
+0.5.2/0.5.3/0.5.4's own "Deliberately excluded" lists already named and
+this milestone left exactly as untouched. Each is sized on its own,
+exactly like every "Deliberately excluded" list in this document
+before it.

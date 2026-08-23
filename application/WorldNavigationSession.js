@@ -82,6 +82,7 @@ import { regionsContaining, describePlace } from '../core/WorldRegionGeography.j
 import { preferredClaimedName } from '../core/PlaceNamingView.js';
 import { groupRegionsByPlaceIdentity } from '../core/PlaceIdentity.js';
 import { geographicPlaceForRegion } from '../core/GeographicPlaceResolution.js';
+import { buildGeographicPlaceDirectory, geographicPlaceByKey } from '../core/GeographicPlaceDirectory.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -2438,6 +2439,43 @@ export class WorldNavigationSession {
             return { regions: [], namingView: [] };
         }
         return { regions: group.regions, namingView: group.namingView };
+    }
+
+    // 0.5.5 — Geographic Place Directory & Identity UX. Every geographic
+    // place candidate this replica currently knows about, world-wide
+    // across every loaded document — the "Places" directory's own data
+    // source, the geographic counterpart to
+    // application/WorldLocationDirectory.js#list(). Each entry is a
+    // core/GeographicPlaceView.js#GeographicPlaceView: a DERIVED reading
+    // over whatever regions/claims this replica already has, never a
+    // fourth stored object alongside WorldRegion/PlaceFingerprint/
+    // PlaceIdentity — see that module's own header on the exact
+    // pipeline this closes:
+    //
+    //   WorldRegion -> PlaceFingerprint -> PlaceIdentity ->
+    //   GeographicPlaceView -> UI
+    //
+    // Cheap and safe to call as often as a UI likes, the same "list() is
+    // never cached" posture WorldLocationDirectory itself already
+    // documents — this method re-derives the whole directory fresh on
+    // every call rather than keeping any state of its own.
+    getGeographicPlaceDirectory(options = {}) {
+        const regions = this._collectRawRegions();
+        const claims = this._collectClaimsFor(regions);
+        return buildGeographicPlaceDirectory(regions, claims, options);
+    }
+
+    // One geographic place by its own fingerprint key — exactly the id
+    // a getGeographicPlaceDirectory() row itself carries
+    // (GeographicPlaceView#fingerprintKey) — so a directory row can be
+    // opened directly without the caller needing to already hold a
+    // regionId. Returns null for an unknown key, never a throw, the
+    // same graceful-absence posture getGeographicNamingView() already
+    // keeps for an unknown regionId.
+    getGeographicPlace(fingerprintKey, options = {}) {
+        const regions = this._collectRawRegions();
+        const claims = this._collectClaimsFor(regions);
+        return geographicPlaceByKey(fingerprintKey, regions, claims, options);
     }
 
     // Every claim this replica has on file for any of `regions` —
