@@ -8509,3 +8509,166 @@ Use structures (0.4.0) → place structures (0.4.1) → create structures
 and compose FROM (0.4.4), richer discovery/preview (0.4.5), and import/
 export/sharing (0.4.6) remain exactly where this milestone leaves them:
 named, not forgotten, sized on their own.
+
+## 0.4.4 — Village Library Expansion
+
+0.4.0 through 0.4.3 built the whole composition/extraction/personal-
+library architecture around a deliberately small proof: six Village
+structures. Every one of those milestones already named the next
+question directly — "a richer built-in structure library... content and
+packaging is a separate pass, sized on its own." 0.4.4 is that pass, and
+only that pass: a content/design milestone, not an architecture
+milestone. Nothing in `core/Structure.js`, `core/StructureRegistry.js`,
+`application/CopyStructureIntoDocumentUseCase.js`,
+`application/CreateStructureFromSelectionUseCase.js`, or
+`application/LocalStructureLibraryStore.js` changed at all.
+
+### What shipped
+
+`core/library/VillageLibrary.js` grows from six structures to twenty,
+across five categories:
+
+```text
+residential      House, Cottage, Large House, Tool Shed
+agricultural      Barn, Mill, Stable, Granary, Silo
+commercial          Market, Market Stall
+community           Village Hall, Pavilion, Small Chapel
+infrastructure      Well, Bridge, Village Gate, Watchtower,
+                    Fence Segment, Dock
+```
+
+**No new brick primitive.** Every one of the fourteen new structures is
+built ONLY from the fifteen `core:*` definitions
+`core/library/CoreLibrary.js` already registered before this milestone
+— see docs/Principles.md, "A Brick Is A Primitive, Never A Preassembled
+Structure." `core:slope_45` and `core:plate_2x4`, both registered since
+0.1.5/0.2.80 but never once used by the original six structures, get
+their first real use here (Cottage's and Small Chapel's gable roofs;
+Cottage's and Small Chapel's own floors) — proof this milestone is
+testing the EXPRESSIVE POWER of the existing vocabulary, exactly as
+intended, rather than reaching for a shortcut. `tests/VillageLibraryExpansion.test.js`
+Section I asserts directly that all fifteen `core:*` definitions are
+used by at least one Village structure.
+
+**Structure != Building.** Five of the twenty new structures place zero
+`core:wall_1x3` bricks at all: Market Stall (two columns and a flat
+canopy), Pavilion (four columns and a hipped roof — an open gazebo, no
+walls whatsoever), Village Gate (two flanking towers around an open
+archway passage), Fence Segment (two posts and a rail, sized to meet
+edge-to-edge with another segment), and Dock (a plank platform on
+column stilts over open water). A Structure was always "a reusable,
+named collection of Bricks" (`core/Structure.js`'s own header, unchanged
+since 0.2.81) — never a synonym for "building" — and this milestone
+makes that concrete rather than leaving it merely true in principle.
+This also makes the Personal Blueprint Library (0.4.3) more useful
+immediately: a user extracting their own porch, gate, or fence run from
+a document they built now has five different built-in precedents for
+what a non-building Structure looks like.
+
+**Genuine functional identity, not cosmetic variants.** Every new
+structure was designed against the same three questions
+docs/Roadmap.md's own 0.4.4 design conversation asked: is its silhouette
+recognizable at a distance, does it read as its own thing rather than
+"House with a brick swapped," and does it use more of the vocabulary
+than stacked cubes? Concretely: Cottage is a narrow 2x4 gable-roofed
+dwelling (never a recolored House); Large House is a genuine two-story
+building with a floor band and two full stories of walls; Village Hall
+is a wide single-story civic hall with a double door and a bell cupola
+(never a second Large House); Stable uses `core:arch` as functional open
+stall fronts (never decoration); Small Chapel uses a full-width `core:arch`
+as its entrance and a `core:column` as a rooftop spire; Silo is a sealed
+double-capped tower with an exterior ladder, deliberately shorter and
+narrower than Mill rather than a recolor of it; Watchtower is the only
+tower with a deliberately open (roofless) top, ringed with `core:trim`
+crenellations.
+
+**Composition usefulness.** The new categories were chosen so a
+believable compound can be built entirely from library structures with
+no manual brick placement — a farmstead (Cottage + Barn + Well +
+Granary), a village center (Village Hall + Market + Market Stall +
+Pavilion), or a defensive perimeter (Watchtower + Village Gate + several
+Fence Segments) each compose from `application/CopyStructureIntoDocumentUseCase.js`
+exactly the way `tests/StructureExtraction.test.js`'s own Farmstead
+scenario already proved for the original six.
+
+**Structure quality tests.** `tests/VillageLibraryExpansion.test.js` is
+new, dedicated flagship coverage for the CONTENT itself (as opposed to
+`tests/ForkableStructureLibrary.test.js`'s and `tests/BuildLibraryUX.test.js`'s
+own, updated-but-otherwise-unchanged coverage of the ARCHITECTURE), run
+against the real, full twenty-structure registry:
+
+- catalog shape — twenty structures, five categories, no id collides
+- per structure — unique brick ids, every `definitionId` resolves in
+  `BrickRegistry`, non-empty geometry, valid derived
+  `SpatialBounds.fromBricks()` bounds
+- deterministic serialization — `toJSON()` → `fromJSON()` → `toJSON()`
+  byte-identical for every structure, and two independently constructed
+  `StructureRegistry` instances produce byte-identical content
+- no accidental duplicate-position bricks — no two bricks in one
+  structure share the exact same definitionId/position/rotation (a real
+  copy-paste bug, deliberately never confused with the ordinary "a door
+  or window sits flush in — or half-embedded into — the wall it opens"
+  idiom every structure, old and new, already relies on)
+- every structure renders through the unmodified `BrickRenderer`/
+  `ThreeBrickFactory` pipeline
+- fork produces independent bricks, for all twenty structures, source
+  never mutated
+- copy into document produces independent bricks, for all twenty
+  structures, source never mutated
+- composition preview matches committed geometry — for every structure,
+  `application/StructureCompositionTransform.js#transformStructureBricks()`
+  (what a live ghost preview would show) and what
+  `CopyStructureIntoDocumentUseCase` actually commits, given the exact
+  same transform, are byte-identical
+- brick vocabulary diversity — all fifteen `core:*` primitives are used
+  somewhere in the library
+- Structure != Building — the five non-wall structures above are
+  asserted directly
+
+### Deliberately excluded
+
+- **A new brick primitive.** Named directly in the milestone's own
+  design conversation: "If we discover that a Watchtower or Dock
+  genuinely requires a new primitive, that's valuable feedback — but a
+  separate milestone." Every one of the twenty structures stayed inside
+  the existing fifteen; no such feedback surfaced.
+- **Structure Preview & Library Discovery** (larger 3D preview,
+  rotate-before-placing, an inspector showing dimensions/brick count/
+  description) — 0.4.5's own question, unaffected by a bigger catalog
+  existing to browse.
+- **Blueprint Import/Export** between installations — 0.4.6's own
+  question.
+- **Structure versioning, nested Structures, procedural Structures, or
+  structure-level scripts** — none of these are content questions;
+  adding them here would smuggle architecture into what this milestone
+  is deliberately keeping a pure content/design pass.
+- **Renaming, re-categorizing, or removing any of the original six
+  Village structures.** All six keep their original id, category, tags,
+  description, and bricks byte-for-byte — every existing fork,
+  composition, and saved reference to `village:house` through
+  `village:bridge` stays exactly as valid as it was before this
+  milestone.
+
+```text
+0.4.0   Structure Composition & Blueprint Library          ✓
+0.4.1   Interactive Structure Composition UX                ✓
+0.4.2   Structure Extraction & Blueprint Creation            ✓
+0.4.3   Personal Blueprint Library                           ✓
+             │
+             ▼
+0.4.4   Village Library Expansion                             ✓
+             ├── VillageLibrary — six structures grow to twenty, five categories
+             ├── core:slope_45 / core:plate_2x4 — finally used, no new primitive
+             ├── Structure != Building — five structures place zero walls
+             └── VillageLibraryExpansion.test.js — dedicated content quality coverage
+```
+
+> **0.4.0 — How do I combine several Structures into something bigger?**
+> **0.4.1 — How do I control WHERE and HOW each one lands?**
+> **0.4.2 — Can I turn what I just built into something reusable?**
+> **0.4.3 — Where does it go, and is it still there tomorrow?**
+> **0.4.4 — Is there enough here to actually build with?**
+
+A richer catalog now exists to discover and compose from. Richer
+discovery and preview (0.4.5) and import/export/sharing (0.4.6) remain
+exactly where 0.4.3 left them: named, not forgotten, sized on their own.

@@ -35,10 +35,27 @@ groupByCategory() (0.2.84) is the one method BrickRegistry got first
 group the same way Bricks already did; getAll(), getByCategory(), and
 search() are unchanged since 0.2.81.
 
-village:house, village:barn, village:well, village:market, village:mill,
-and village:bridge (core/library/VillageLibrary.js) are the current
-built-in structure library — namespaced "village:structure", mirroring
-docs/BrickIDs.md's own "library:brick" convention.
+core/library/VillageLibrary.js (namespaced "village:structure", mirroring
+docs/BrickIDs.md's own "library:brick" convention) is the current built-in
+structure library. 0.2.81 shipped six structures; 0.4.4 (Village Library
+Expansion) grew the same library to twenty, across five categories —
+content only, no new architecture, no new brick primitive:
+
+    residential      village:house, village:cottage, village:large_house,
+                      village:tool_shed
+    agricultural      village:barn, village:mill, village:stable,
+                      village:granary, village:silo
+    commercial         village:market, village:market_stall
+    community          village:village_hall, village:pavilion,
+                      village:small_chapel
+    infrastructure     village:well, village:bridge, village:village_gate,
+                      village:watchtower, village:fence_segment,
+                      village:dock
+
+Five of those twenty (village:market_stall, village:pavilion,
+village:village_gate, village:fence_segment, village:dock) place zero
+wall_1x3 bricks — deliberately: see docs/Roadmap.md, 0.4.4, "Structure
+!= Building."
 
 ## Forking a Structure
 

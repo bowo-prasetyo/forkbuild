@@ -22,9 +22,9 @@ import { BrickRenderer } from '../renderer/BrickRenderer.js';
 // document already uses. Nothing here adds a StructureBuilder/
 // StructureEngine/StructureRuntime subsystem.
 //
-//   Section A: StructureRegistry / VillageLibrary contents — six
-//              structures, every brick they place resolves to one of
-//              the 15 ORDINARY core:* definitions, no special brick
+//   Section A: StructureRegistry / VillageLibrary contents — twenty
+//              structures (0.4.4), every brick they place resolves to
+//              one of the 15 ORDINARY core:* definitions, no special brick
 //   Section B: Structure is pure data — toJSON/fromJSON round-trips,
 //              never hands out a reference a fork could use to mutate
 //              the library's own bricks
@@ -34,7 +34,7 @@ import { BrickRenderer } from '../renderer/BrickRenderer.js';
 //   Section D: EditorSession.forkStructure() — delegates to
 //              ForkStructureUseCase then opens the result through the
 //              existing openDocument() path; no second editing system
-//   Section E: every one of the six structures renders — same
+//   Section E: every registered structure renders — same
 //              BrickRenderer/ThreeBrickFactory pipeline every ordinary
 //              brick already uses, never a house-shaped mesh factory
 //   Section F: FLAGSHIP — load Village House -> verify its bricks ->
@@ -47,6 +47,11 @@ function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
+// 0.4.4 (Village Library Expansion) grew this list from six to twenty —
+// tests/VillageLibraryExpansion.test.js is the flagship coverage for the
+// expanded content itself; this file keeps proving the ARCHITECTURE
+// (fork/serialize/render) still holds, so it only needs a representative
+// handful, not all twenty.
 const STRUCTURE_IDS = ['village:house', 'village:barn', 'village:well', 'village:market', 'village:mill', 'village:bridge'];
 
 class InMemoryStorageProvider extends StorageProvider {
@@ -82,7 +87,7 @@ async function run() {
     {
         const registry = new CreateStructureRegistryUseCase().execute();
 
-        assert(registry.getAll().length === 6, 'registry: VillageLibrary registers exactly six structures');
+        assert(registry.getAll().length === 20, 'registry: VillageLibrary registers exactly twenty structures (0.4.4)');
         for (const id of STRUCTURE_IDS) {
             assert(registry.has(id), `registry: ${id} is registered`);
             assert(registry.get(id) instanceof Structure, `registry: get(${id}) returns a Structure`);
@@ -108,14 +113,19 @@ async function run() {
         assert(totalBricks >= 40, 'registry: the Village collection is a genuine multi-brick composition, not a token gesture');
 
         // Category/tag search parity with BrickRegistry's own contract.
+        // 0.4.4 grew residential from just House to four structures —
+        // tests/VillageLibraryExpansion.test.js's own Section A is the
+        // flagship coverage for the full twenty-structure/five-category
+        // shape; this assertion only needs to prove House is still among
+        // them, membership never contains, exactly as before.
         const residential = registry.getByCategory('residential');
-        assert(residential.length === 1 && residential[0].id === 'village:house',
-            'registry: getByCategory("residential") returns exactly House');
+        assert(residential.length === 4 && residential.some((s) => s.id === 'village:house'),
+            'registry: getByCategory("residential") includes House among four residential structures');
         const bySearch = registry.search(['bridge']);
         assert(bySearch.length === 1 && bySearch[0].id === 'village:bridge',
             'registry: search(["bridge"]) returns exactly Bridge');
 
-        console.log('✓ Section A: StructureRegistry/VillageLibrary — six structures, every brick a real core:* primitive');
+        console.log('✓ Section A: StructureRegistry/VillageLibrary — twenty structures, every brick a real core:* primitive');
     }
 
     // ---------------------------------------------------------------
@@ -234,7 +244,7 @@ async function run() {
                 assert(mesh !== null && mesh !== undefined, `${structure.id}: ${brick.definitionId} renders a real mesh`);
             }
         }
-        console.log('✓ Section E: all six Village structures render through the unmodified BrickRenderer/ThreeBrickFactory pipeline');
+        console.log('✓ Section E: all Village structures render through the unmodified BrickRenderer/ThreeBrickFactory pipeline');
     }
 
     // ---------------------------------------------------------------

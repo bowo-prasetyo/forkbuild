@@ -7424,3 +7424,26 @@ nothing about its origin; `CopyStructureIntoDocumentUseCase` and
 neither, with zero branching on which one it came from. A Structure's
 identity is what it IS — its own bricks and metadata — never where it
 happens to be catalogued today.
+
+### A Structure Is A Reusable Spatial Composition, Never A Synonym For "Building" (0.4.4)
+
+`core/Structure.js`'s own header has said it since 0.2.81: "a Structure
+is a reusable, named collection of Bricks." Nothing about that
+definition mentions walls, a roof, or an interior — it was never
+narrower than what it actually says, but five structures shipping
+without a single wall makes the claim concrete rather than merely true
+in principle. `village:market_stall`, `village:pavilion`,
+`village:village_gate`, `village:fence_segment`, and `village:dock`
+(`core/library/VillageLibrary.js`, 0.4.4) each place zero
+`core:wall_1x3` bricks — a canopy on two columns, an open gazebo, two
+towers around a passage, a rail on two posts, a platform on stilts.
+
+This matters beyond variety for its own sake. The Personal Blueprint
+Library (0.4.3) lets a user extract and keep any selection of bricks
+they've composed — a porch, a garden wall, a section of fence — and
+until this milestone, every built-in precedent for "what does a good
+Structure look like" was a fully enclosed dwelling or civic building.
+Five deliberately non-building structures give a user five concrete
+answers to "can I extract just THIS part," not only "can I extract a
+whole house." A Structure was never required to look like a building;
+0.4.4 is where the library stops implying otherwise.
