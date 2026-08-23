@@ -47,8 +47,11 @@ import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.
 //              renderer/WorldRenderer.js's own render path uses.
 //   Section D: application/WorldNavigationSession.js#pick() — routes a
 //              placement hit through the read-only inspection path,
-//              never the brick/ground editing one; moveSelection/
-//              rotateSelection/deleteSelection all remain no-ops for it.
+//              never the brick/ground editing one; 0.5.9 went further
+//              still and retired moveSelection/rotateSelection/
+//              deleteSelection from this class entirely — they are not
+//              merely no-ops for a placement selection, they do not
+//              exist on WorldNavigationSession at all.
 //   Section E: FLAGSHIP — Editor creates House, places House inside a
 //              World, saves both; World View loads the World, picks the
 //              House; inspection reflects the exact placementId/
@@ -334,9 +337,13 @@ async function run() {
                 '44. the render facade\'s clearSelection() was invoked, un-highlighting the placement');
         }
 
-        // D6 — the read-only guarantee: move/rotate/delete are all
-        // no-ops for a placement selection, and the World document is
-        // completely untouched.
+        // D6 — the read-only guarantee, now stronger than a no-op: 0.5.9
+        // retired moveSelection()/rotateSelection()/deleteSelection()
+        // from WorldNavigationSession entirely (EditorSession alone
+        // owns them) — a placement selection was already inert against
+        // them before that; now there is nothing on this class to even
+        // ATTEMPT the mutation with. World View is architecturally
+        // incapable of editing, not merely refusing to.
         {
             const session = buildSession();
             session._session.pickPlacement = () => ({ placementId: placement.id, point: new Position(5, 0, 5), distance: 8 });
@@ -349,9 +356,9 @@ async function run() {
             const beforePosition = { x: placement.position.x, y: placement.position.y, z: placement.position.z };
             const beforeRotation = placement.rotation;
 
-            assert(session.moveSelection({ x: 5, y: 0, z: 5 }) === false, '45. moveSelection() is a no-op for a placement selection');
-            assert(session.rotateSelection(90) === false, '46. rotateSelection() is a no-op for a placement selection');
-            assert(session.deleteSelection() === false, '47. deleteSelection() is a no-op for a placement selection');
+            assert(typeof session.moveSelection !== 'function', '45. moveSelection() does not exist on WorldNavigationSession at all');
+            assert(typeof session.rotateSelection !== 'function', '46. ...nor does rotateSelection()');
+            assert(typeof session.deleteSelection !== 'function', '47. ...nor deleteSelection()');
 
             // Read back through the SESSION'S OWN loaded copy (_loadWorld
             // deserializes a fresh World from storage — a different
@@ -362,7 +369,7 @@ async function run() {
             const stillThere = liveWorld.getStructurePlacement(placement.id);
             assert(stillThere !== null, '48. the placement was never removed');
             assert(stillThere.position.x === beforePosition.x && stillThere.position.z === beforePosition.z,
-                '49. the placement\'s position is byte-identical after every no-op mutation attempt');
+                '49. the placement\'s position is byte-identical — a selection alone never touches it');
             assert(stillThere.rotation === beforeRotation, '50. ...and its rotation too');
             assert(liveWorld.getStructurePlacements().length === 1, '51. still exactly one placement — nothing was duplicated or removed');
 

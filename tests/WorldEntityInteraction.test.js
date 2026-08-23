@@ -28,6 +28,7 @@ import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { DocumentCloneService } from '../application/DocumentCloneService.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -581,37 +582,50 @@ async function runTests() {
         assert(bobSession.getAvatarInteraction().isEmpty, '71. FLAGSHIP: clicking the building clears the avatar interaction target');
         assert(bobSession.getSpatialSelection().brickId === brickId, "72. FLAGSHIP: the building's brick is now a genuine document selection");
 
-        // Bob moves the brick -> document forks (exactly 0.2.20's
+        // Bob edits the World -> document forks (exactly 0.2.20's
         // fork-on-write boundary — never bypassed by avatar
-        // interaction machinery).
-        const moved = bobSession.moveSelection({ x: 3, y: 0, z: 0 });
-        assert(moved === true, '73. FLAGSHIP: the edit itself succeeds');
+        // interaction machinery). 0.5.9 retired moveSelection() from
+        // WorldNavigationSession — and Bob deliberately has no avatar
+        // of his own (assertion 65 above), so createLandmarkHere()
+        // isn't available to him either. The fork trigger here is
+        // updateDocumentMetadata() (unaffected, needs no avatar); the
+        // brick move itself then executes directly against the fork's
+        // own CommandHistory, same pattern as
+        // tests/ForkRenderSync.test.js for the identical reason.
+        const forkId = bobSession.updateDocumentMetadata(publication.documentId, { title: "Bob's Copy" });
+        assert(forkId !== publication.documentId, '73. FLAGSHIP: exactly one NEW document exists — Bob\'s fork');
         assert(!bobSession.isDocumentPublished(publication.documentId), '74. FLAGSHIP: the published id is no longer tracked as published in Bob\'s session');
-        const forkId = bobSession.getActiveDocumentId();
-        assert(forkId !== publication.documentId, '75. FLAGSHIP: exactly one NEW document exists — Bob\'s fork');
+        assert(bobSession.getActiveDocumentId() === forkId, '74b. FLAGSHIP: Bob\'s active document switched to the fork');
         const forkDoc = bobSession.getDocument(forkId);
-        assert(forkDoc.metadata.parentDocumentId === publication.documentId, '76. FLAGSHIP: fork provenance points at the original published document');
-        assert(forkDoc.world.getBuildings()[0].getBricks()[0].position.x === 3, '77. FLAGSHIP: the mutation landed on the fork');
+        assert(forkDoc.metadata.parentDocumentId === publication.documentId, '75. FLAGSHIP: fork provenance points at the original published document');
+
+        const forkHistory = bobSession._commandHistories.get(forkId);
+        const forkBuilding = forkDoc.world.getBuildings()[0];
+        const forkBrickId = forkBuilding.getBricks()[0].id;
+        forkHistory.execute(new MoveBrickCommand({
+            worldId: forkId, buildingId: forkBuilding.id, brickId: forkBrickId, delta: { x: 3, y: 0, z: 0 }
+        }));
+        assert(forkDoc.world.getBuildings()[0].getBricks()[0].position.x === 3, '76. FLAGSHIP: the mutation landed on the fork');
 
         // Alice's avatar remains COMPLETELY unaffected throughout.
         assert(aliceAvatarPresenceSession.current.position.x === 5 && aliceAvatarPresenceSession.current.position.z === 5,
-            "78. FLAGSHIP: Alice's own AvatarPresence is untouched by Bob's click-then-edit sequence");
+            "77. FLAGSHIP: Alice's own AvatarPresence is untouched by Bob's click-then-edit sequence");
         assert(JSON.stringify(aliceAvatarProfileUseCase.getProfile().toJSON()) === aliceProfileJsonBefore,
-            "79. FLAGSHIP: Alice's AvatarProfile is byte-identical — never touched by Bob targeting or editing anything");
+            "78. FLAGSHIP: Alice's AvatarProfile is byte-identical — never touched by Bob targeting or editing anything");
         assert(publisher.verifySnapshot(publication.id, publication.contentHash),
-            "80. FLAGSHIP: Alice's original Publication still verifies against its own content hash");
+            "79. FLAGSHIP: Alice's original Publication still verifies against its own content hash");
         const placementAfter = placementRegistry.findByPublicationId(publication.id)[0];
         assert(JSON.stringify(placementAfter.toJSON()) === placementJsonBefore,
-            '81. FLAGSHIP: the ORIGINAL Building Placement is byte-identical — Bob\'s fork is a separate document, not an edit in place');
+            '80. FLAGSHIP: the ORIGINAL Building Placement is byte-identical — Bob\'s fork is a separate document, not an edit in place');
         const spatialCountAfterAvatarClick = spatialIndexProvider.discover({ x: 0, y: 0, z: 0 }, 100000).length;
         assert(spatialCountAfterAvatarClick === spatialCountBefore,
-            '82. FLAGSHIP: SpatialIndex is unaffected by avatar selection specifically (unchanged since before ANY of this scenario ran)');
+            '81. FLAGSHIP: SpatialIndex is unaffected by avatar selection specifically (unchanged since before ANY of this scenario ran)');
 
         // Reloading the original published snapshot fresh (as any
         // other viewer would) resolves the ORIGINAL geometry.
         const reloaded = loadPublicationDocumentUseCase.execute(publication.documentId);
         assert(reloaded.world.getBuildings()[0].getBricks()[0].position.x === 0,
-            '83. FLAGSHIP: the original published snapshot is verifiably unchanged, byte-for-byte');
+            '82. FLAGSHIP: the original published snapshot is verifiably unchanged, byte-for-byte');
 
         aliceSession.dispose();
         bobSession.dispose();

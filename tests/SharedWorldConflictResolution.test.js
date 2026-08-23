@@ -21,6 +21,7 @@ import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { CommandHistoryEvent } from '../application/events/CommandHistoryEvent.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { RemoveStructurePlacementCommand } from '../application/commands/RemoveStructurePlacementCommand.js';
@@ -577,17 +578,21 @@ async function runTests() {
     const worldLayoutProvider = new LocalWorldLayoutProvider(spatialIndexProvider, discoveryProvider);
 
     const gapWorld = buildOneBrickWorld();
-    const building = gapWorld.getBuildings()[0];
-    const brick = building.getBricks()[0];
     const gapDoc = new Document({ world: gapWorld, metadata: new DocumentMetadata({ title: "Alice's World", author: 'alice', authorIdentityId: 'did:key:alice' }) });
     storage.save(gapWorld.id, serializer.serialize(gapDoc));
 
     const propagationSpy = makePropagationSpy();
+    const avatarPresenceSession = new AvatarPresenceSession(
+        { avatarId: 'alice-avatar', ownerIdentity: 'alice' },
+        { position: new Position(0, 0, 0) }
+    );
     const session = new WorldNavigationSession({
         registry, loadPublicationDocumentUseCase, worldLayoutProvider, discoveryProvider,
         // 0.2.97 — the ONE new constructor collaborator this milestone
         // adds. Nothing else about session construction changed.
-        worldCommandPropagation: propagationSpy
+        worldCommandPropagation: propagationSpy,
+        identityProvider: { currentUser: () => ({ username: 'alice' }), getSigningIdentity: () => ({ id: 'did:key:alice' }) },
+        avatarPresenceSession
     });
     session._session = stubRenderer();
     session._loadWorld(gapWorld.id);
@@ -595,10 +600,13 @@ async function runTests() {
     assert(propagationSpy.attachedWorldIds.includes(gapWorld.id),
         '45. loading a World with worldCommandPropagation wired attaches its CommandHistory automatically — no manual wiring at the call site');
 
-    session._session.pick = () => ({ documentId: gapWorld.id, buildingId: building.id, brickId: brick.id, distance: 1 });
-    session.pick(400, 300);
-    const moved = session.moveSelection({ x: 3, y: 0, z: 0 });
-    assert(moved === true, '46. the ordinary moveSelection() call path is completely unaffected');
+    // 0.5.9 retired moveSelection() from WorldNavigationSession —
+    // createLandmarkHere() is the one local-mutation entry point World
+    // View kept, and it is exactly what the composition gap this
+    // section closes is about: ANY local mutation gets broadcast
+    // automatically, not specifically a brick move.
+    const landmarkId = session.createLandmarkHere('Composition Gap Landmark', '');
+    assert(typeof landmarkId === 'string' && landmarkId.length > 0, '46. the ordinary createLandmarkHere() call path is completely unaffected');
     assert(propagationSpy.broadcasts.length === 1, '47. the local mutation was broadcast automatically — zero manual broadcastCommand() calls anywhere in this test');
     assert(propagationSpy.broadcasts[0].worldDocumentId === gapWorld.id, '48. ...addressed to the correct World');
     assert(typeof propagationSpy.broadcasts[0].command.toJSON === 'function', '49. ...carrying the real, already-executed Command instance');
