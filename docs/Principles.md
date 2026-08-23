@@ -7350,3 +7350,77 @@ one operation (copy what I selected) into a different, much larger one
 ever asking for that. `CreateStructureFromSelectionUseCase` refuses
 instead, with a message naming exactly why, rather than either
 attempting the flatten or silently producing nothing.
+
+### A Personal Library Persists What Extraction Only Returns (0.4.3)
+
+0.4.2 deliberately stopped at `createStructureFromSelection()` returning
+a valid, independent Structure — "saving it anywhere" was named as a
+separate, larger question rather than folded into extraction itself.
+0.4.3 (Personal Blueprint Library) answers it with
+`application/LocalStructureLibraryStore.js`, and draws the same boundary
+`LocalWorldExperience` (0.3.10) already drew for a different kind of
+per-user state:
+
+    LocalWorldExperience:        Personal camera framing is not shared World state.
+    LocalStructureLibraryStore:  A personal blueprint is reusable content, not shared World state.
+
+Three consequences follow directly:
+
+- **Structurally separate from `core/World.js`.** A Personal Structure
+  Library never holds a `WorldPlacement`, never touches a `Document`, and
+  is never signed, published, or replicated — every operation on it is a
+  read/write against its own `StorageProvider`-backed records, exactly
+  the shape `LocalWorldExperienceStore` already established. Composing or
+  forking a Structure still goes through the SAME `CopyStructureIntoDocumentUseCase`/
+  `ForkStructureUseCase` a built-in Structure already uses — nothing
+  about where a Structure is stored changes what can be done with it.
+- **Extraction and persistence stay two different steps, always.**
+  `EditorSession.saveStructureToPersonalLibrary(structure)` is called
+  SEPARATELY, always after `createStructureFromSelection()` (0.4.2,
+  unmodified) has already returned a valid Structure — never one call
+  that both extracts and saves. This is the same restraint "Extraction
+  Copies A Blueprint; It Never Moves One (0.4.2)" already applied to
+  keeping extraction itself single-purpose, extended one step further:
+  0.4.2 built the pure observation, 0.4.3 adds the pure persistence step
+  after it, and neither absorbs the other's responsibility.
+- **Deletion has no live dependency to break.** By the time a Structure's
+  bricks are inside a Document — via Copy (0.4.0) or Fork (0.2.81) —
+  they are ordinary bricks, fresh instances with fresh ids, structurally
+  incapable of noticing their source Structure was ever removed from the
+  library. Deleting a personal Structure therefore never affects a World
+  that previously used it; this was already true architecturally (the
+  same copy-never-reference guarantee `ForkStructureUseCase` and
+  `CopyStructureIntoDocumentUseCase` both already provide), and
+  `tests/PersonalStructureLibrary.test.js`'s flagship proves it directly
+  rather than by inspection: compose into two independent Documents,
+  delete from the library, assert both Documents are byte-identical to
+  before the deletion.
+
+Also local, not yet synchronized: a Personal Structure Library is
+per-device state, exactly like `LocalWorldExperience` — a user's "My
+Structures" on desktop and on a tablet can legitimately differ today.
+Making personal blueprints follow a user across devices is a deliberate,
+separate, later milestone, not a sixth replication mechanism smuggled in
+alongside World/Publication/PlacementRecord/SpatialIndex/Presence.
+
+### Library Membership Is Not Structure Identity (0.4.3)
+
+`core/Structure.js`'s own fields stay exactly what 0.2.81 first defined:
+`id`, `name`, `category`, `tags`, `description`, `bricks`. 0.4.3
+introduces a second place a Structure can live — the user's own Personal
+Structure Library, alongside the built-in Village Library — without
+adding a single field to `Structure` itself to say which one it's in.
+There is no `libraryId`, no `personal: true` flag, nothing that would let
+a Structure carry an opinion about its own container.
+
+This preserves a property 0.4.0 through 0.4.2 already built toward: the
+SAME Structure can move freely between built-in, personal, forked, and
+composed contexts without ever knowing where it came from or where it
+currently sits. `CreateStructureFromSelectionUseCase` returns a Structure
+identical in shape whether or not it's ever saved; `LocalStructureLibraryStore`
+stores whatever independent Structure value it's handed, asking it
+nothing about its origin; `CopyStructureIntoDocumentUseCase` and
+`ForkStructureUseCase` accept a Structure from either library, or from
+neither, with zero branching on which one it came from. A Structure's
+identity is what it IS — its own bricks and metadata — never where it
+happens to be catalogued today.

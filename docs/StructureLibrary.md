@@ -317,3 +317,100 @@ the extraction, copy the extraction, compose it alongside others, and
 repeat the whole pipeline a second time to confirm the result is
 deterministic — is `tests/StructureExtraction.test.js`'s own flagship
 coverage.
+
+## Personal Blueprint Library (0.4.3)
+
+0.4.2 answered "can I turn what I just built into something reusable?"
+but stopped at `createStructureFromSelection()` returning a valid
+Structure — it is never saved anywhere by that call. 0.4.3 gives it
+somewhere to go: `application/LocalStructureLibraryStore.js`, a local,
+per-device catalog of the user's OWN Structures, architecturally separate
+from both the shared World (`World`/`Document`/`Command`) and the
+built-in Village Library (`core/StructureRegistry.js`/
+`core/library/VillageLibrary.js`):
+
+    Shared World          Built-in Library         Personal Library
+      World / Documents /    StructureRegistry          LocalStructureLibraryStore
+      Commands                (VillageLibrary)            (user's own Structures)
+
+A personal blueprint is reusable content, not shared World state — see
+docs/Principles.md, "A Personal Library Persists What Extraction Only
+Returns (0.4.3)."
+
+**No new domain object.** `LocalStructureLibraryStore` stores ordinary
+`core/Structure.js` values — the exact same class the built-in library
+already uses and `CreateStructureFromSelectionUseCase` already returns.
+Nothing here adds a `libraryId` or a `personal: true` field to `Structure`
+itself; see docs/Principles.md, "Library Membership Is Not Structure
+Identity (0.4.3)." `core/groupStructuresByCategory.js` is a small, pure
+grouping helper extracted from `StructureRegistry#groupByCategory()`
+specifically so the personal library's own `groupByCategory()` groups its
+contents exactly the same way the built-in one always has, rather than a
+second grouping loop.
+
+**Basic operations**, backed by the same `StorageProvider` (`storage/
+LocalStorageProvider.js` in the browser) `application/LocalWorldExperienceStore.js`
+(0.3.10) already uses for its own per-device state:
+
+    addStructure(structure)
+    getStructure(id)
+    hasStructure(id)
+    listStructures()                 // most-recently-saved first
+    removeStructure(id)
+    updateStructureMetadata(id, { name, category, tags, description })
+    groupByCategory()                 // same [{ category, structures }] shape as StructureRegistry
+    search(tags)                      // same contract as StructureRegistry#search()
+
+`application/CreatePersonalStructureLibraryUseCase.js` is the composition-
+root factory — the same shape `application/CreatePersistenceUseCase.js`
+and `application/CreateWorldViewUseCase.js` already establish for their
+own local-only stores.
+
+**Saving, chained, not folded in.** `EditorSession.saveStructureToPersonalLibrary(structure)`
+is always called SEPARATELY, after `createStructureFromSelection()` has
+already returned a valid Structure — extraction itself stays exactly the
+pure, unpersisted observation 0.4.2 made it:
+
+    const structure = editorSession.createStructureFromSelection(metadata);  // 0.4.2, unchanged
+    editorSession.saveStructureToPersonalLibrary(structure);                 // 0.4.3, chained after
+
+`application/EditorActionRegistry.js`'s `structure.createFromSelection`
+action performs exactly this chain, then calls the optional
+`ui.onPersonalLibraryChanged()` hook so a surface that offers one (like
+`ui/views/EditorView.js`) can refresh its own list immediately. The 0.4.0
+→ 0.4.3 workflow this completes:
+
+    Select bricks -> Create Structure -> metadata dialog ->
+        Personal Library -> Structure appears immediately -> Compose/Fork
+
+**UI.** `ui/components/BuildLibraryPanel.js` renders a "My Structures"
+section beneath the built-in category groups, reusing the identical
+`BuildLibraryPreview`, search, and Copy Into Document/Fork As New
+Document actions a Village entry already offers — a personal Structure
+composes and forks through the exact same `EditorSession` methods as a
+built-in one. Two actions are personal-library-only: Rename and Remove;
+Village stays read-only, exactly as it always has.
+
+**Deletion never touches a Document.** By the time a Structure's bricks
+are inside a Document (via Copy or Fork), they are ordinary bricks —
+structurally incapable of noticing their source Structure was ever
+removed from the library, the same copy-not-reference guarantee 0.4.0/
+0.4.2 already established one rung down. `tests/PersonalStructureLibrary.test.js`
+proves this directly: compose a Structure into two independent Documents,
+delete it from the library, and assert both Documents are byte-identical
+to before the deletion.
+
+**No in-place editing.** A saved Structure stays immutable/value-like —
+`updateStructureMetadata()` only ever changes name/category/tags/
+description, never bricks. Changing what a Structure actually builds
+always goes back through the existing loop: Compose it into a Document,
+modify that Document, Extract a NEW Structure, save it (optionally under
+a new name, e.g. "Farmstead Deluxe") — never a direct mutation of the
+original.
+
+**Local, not synchronized (yet).** A Personal Structure Library is
+per-device application state, exactly like `LocalWorldExperience`
+(0.3.10) — a user's "My Structures" on desktop and on a tablet can
+legitimately differ today. Making personal blueprints follow a user
+across devices is a deliberately separate, later milestone — see
+docs/Roadmap.md, 0.4.3's own "Deliberately excluded."

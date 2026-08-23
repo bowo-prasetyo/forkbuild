@@ -77,6 +77,13 @@ export class EditorSession {
         copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase(),
         // 0.4.2 — Structure Extraction & Blueprint Creation.
         createStructureFromSelectionUseCase = new CreateStructureFromSelectionUseCase(),
+        // 0.4.3 — Personal Blueprint Library. Optional, same posture as
+        // every other optional collaborator here — an EditorSession
+        // built without one (older call sites, test harnesses that never
+        // save a Structure anywhere) simply can't persist one;
+        // createStructureFromSelection() (0.4.2, unchanged) keeps
+        // working either way, since saving was always a separate step.
+        personalStructureLibraryStore = null,
         // 0.2.90 — Structure Placement & World Instances. Both optional
         // so an EditorSession built without them (older call sites,
         // test harnesses that never enter PLACE_STRUCTURE mode) keeps
@@ -105,6 +112,7 @@ export class EditorSession {
         this._forkStructureUseCase = forkStructureUseCase;
         this._copyStructureIntoDocumentUseCase = copyStructureIntoDocumentUseCase;
         this._createStructureFromSelectionUseCase = createStructureFromSelectionUseCase;
+        this._personalStructureLibraryStore = personalStructureLibraryStore;
         this._structureResolver = structureResolver;
         this._structurePreviewUseCase = structurePreviewUseCase;
         this._compositionPreviewUseCase = compositionPreviewUseCase;
@@ -885,6 +893,24 @@ export class EditorSession {
             ...metadata,
             registry: this._registry
         });
+    }
+
+    // 0.4.3 — Personal Blueprint Library. The "somewhere to put it"
+    // createStructureFromSelection() above deliberately left open —
+    // called SEPARATELY, always after extraction has already returned a
+    // valid Structure, never folded into one step (see
+    // application/LocalStructureLibraryStore.js's own header on why
+    // extraction and persistence stay two different responsibilities).
+    // Delegates straight to the injected store's addStructure(); returns
+    // false (and does nothing) if `structure` is falsy or no store is
+    // wired, so callers can chain this straight after
+    // createStructureFromSelection() without a guard.
+    saveStructureToPersonalLibrary(structure) {
+        if (!structure || !this._personalStructureLibraryStore) {
+            return false;
+        }
+        this._personalStructureLibraryStore.addStructure(structure);
+        return true;
     }
 
     // 0.2.90 — Structure Placement & World Instances. Enters

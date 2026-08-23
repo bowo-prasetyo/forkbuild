@@ -1,3 +1,5 @@
+import { groupStructuresByCategory } from './groupStructuresByCategory.js';
+
 // Central registry mapping a Structure's id (e.g. "village:house") to
 // the Structure itself — the exact same shape as core/BrickRegistry.js,
 // one rung up: libraries of Structures register here at startup instead
@@ -56,15 +58,6 @@ export class StructureRegistry {
     // `getByCategory()`, and `search()` always have — additively, with
     // no change to Structure's own stored shape.
     groupByCategory() {
-        const groups = [];
-        const indexByCategory = new Map();
-        for (const structure of this.getAll()) {
-            if (!indexByCategory.has(structure.category)) {
-                indexByCategory.set(structure.category, groups.length);
-                groups.push({ category: structure.category, structures: [] });
-            }
-            groups[indexByCategory.get(structure.category)].structures.push(structure);
-        }
-        return groups;
+        return groupStructuresByCategory(this.getAll());
     }
 }

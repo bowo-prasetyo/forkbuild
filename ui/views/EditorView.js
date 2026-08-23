@@ -2,6 +2,7 @@ import { ref, onMounted, onBeforeUnmount, inject } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../../application/CreateStructureRegistryUseCase.js';
+import { CreatePersonalStructureLibraryUseCase } from '../../application/CreatePersonalStructureLibraryUseCase.js';
 import { ForkStructureUseCase } from '../../application/ForkStructureUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from '../../application/CopyStructureIntoDocumentUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
@@ -98,10 +99,13 @@ export default {
                     <BuildLibraryPanel
                         :palette-use-case="paletteUseCase"
                         :structure-groups="structureGroups"
+                        :personal-structure-groups="personalStructureGroups"
                         :preview-service="libraryPreviewService"
                         @place="setTool(ToolId.PLACE)"
                         @fork="forkStructure"
                         @copy="copyStructureIntoDocument"
+                        @rename-personal-structure="renamePersonalStructure"
+                        @remove-personal-structure="removePersonalStructure"
                     />
                     <EditingSidebar
                         :registry="actionRegistry"
@@ -140,6 +144,8 @@ export default {
 
         const registry = new CreateBrickRegistryUseCase().execute();
         const structureRegistry = new CreateStructureRegistryUseCase().execute();
+        // 0.4.3 — Personal Blueprint Library.
+        const { personalStructureLibraryStore } = new CreatePersonalStructureLibraryUseCase().execute();
         const forkStructureUseCase = new ForkStructureUseCase();
         const copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase();
         const editorContext = new CreateEditorContextUseCase().execute();
@@ -180,7 +186,9 @@ export default {
 		    structureResolver: structureDocumentResolver,
 		    structurePreviewUseCase,
 		    // 0.4.1 — Interactive Structure Composition UX.
-		    compositionPreviewUseCase
+		    compositionPreviewUseCase,
+		    // 0.4.3 — Personal Blueprint Library.
+		    personalStructureLibraryStore
 		});
 
 		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
@@ -190,6 +198,39 @@ export default {
 		// paletteUseCase's own brick definitions), so this is read
 		// once, not subscribed to.
 		const structureGroups = ref(structureRegistry.groupByCategory());
+
+		// 0.4.3 — Personal Blueprint Library. Unlike structureGroups
+		// above, this DOES change at runtime — saving a newly extracted
+		// Structure, renaming one, or removing one — so it's refreshed
+		// explicitly after each of those, rather than read once.
+		const personalStructureGroups = ref(personalStructureLibraryStore.groupByCategory());
+		function refreshPersonalStructureGroups() {
+		    personalStructureGroups.value = personalStructureLibraryStore.groupByCategory();
+		}
+
+		// Reachable two ways: directly ("Remove"/"Rename" on a My
+		// Structures entry) and indirectly (actionUi.onPersonalLibraryChanged,
+		// called by EditorActionRegistry right after
+		// structure.createFromSelection saves a brand-new Structure —
+		// see application/EditorActionRegistry.js's own 0.4.3 comment).
+		function renamePersonalStructure(structure) {
+		    const name = prompt('Rename structure:', structure.name);
+		    if (name === null || !name.trim()) {
+		        return;
+		    }
+		    personalStructureLibraryStore.updateStructureMetadata(structure.id, { name: name.trim() });
+		    refreshPersonalStructureGroups();
+		    feedback.show(`Renamed to "${name.trim()}"`);
+		}
+
+		function removePersonalStructure(structure) {
+		    // Deleting from the library never touches a Document that
+		    // already copied or forked this Structure's bricks — see
+		    // application/LocalStructureLibraryStore.js's own header.
+		    personalStructureLibraryStore.removeStructure(structure.id);
+		    refreshPersonalStructureGroups();
+		    feedback.show(`Removed "${structure.name}" from My Structures`);
+		}
 
 		function forkStructure(structure) {
 		    const forked = editorSession.forkStructure(structure);
@@ -399,6 +440,14 @@ export default {
                 }
                 const description = prompt('Description (optional):', '') || '';
                 return { name: name.trim(), category: category.trim() || 'uncategorized', description };
+            },
+            // 0.4.3 — Personal Blueprint Library. Called by
+            // EditorActionRegistry right after structure.createFromSelection
+            // successfully saves a newly extracted Structure into
+            // personalStructureLibraryStore, so "My Structures" reflects
+            // it immediately — see this file's own refreshPersonalStructureGroups().
+            onPersonalLibraryChanged() {
+                refreshPersonalStructureGroups();
             }
         };
         const actionRegistry = new EditorActionRegistry(
@@ -626,9 +675,12 @@ export default {
             editorSession,
             publishDocumentUseCase,
             structureGroups,
+            personalStructureGroups,
             libraryPreviewService,
             forkStructure,
             copyStructureIntoDocument,
+            renamePersonalStructure,
+            removePersonalStructure,
             activeTool,
             activeStructureTitle,
             activeCompositionTitle,

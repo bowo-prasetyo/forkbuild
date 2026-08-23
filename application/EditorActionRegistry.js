@@ -391,6 +391,14 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // supplies the metadata prompt (name/category/description);
         // a surface without one degrades to feedback, same as every
         // other ui.* hook here.
+        //
+        // 0.4.3 — Personal Blueprint Library. Extraction itself stays
+        // exactly what 0.4.2 made it — a pure, unpersisted observation —
+        // this action just chains ONE more step after it returns a valid
+        // Structure: session.saveStructureToPersonalLibrary(structure).
+        // A surface built without that method (or without the optional
+        // ui.onPersonalLibraryChanged() refresh hook) degrades to
+        // 0.4.2's original "Created" feedback, never throwing.
         define({
             id: 'structure.createFromSelection',
             label: 'Create Structure',
@@ -412,7 +420,16 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                     return;
                 }
                 const structure = createStructureFromSelection(metadata);
-                feedback.show(structure ? `Created "${structure.name}"` : 'Nothing to create — select bricks first');
+                if (!structure) {
+                    feedback.show('Nothing to create — select bricks first');
+                    return;
+                }
+                const saved = typeof session.saveStructureToPersonalLibrary === 'function'
+                    && session.saveStructureToPersonalLibrary(structure);
+                if (saved && typeof ui.onPersonalLibraryChanged === 'function') {
+                    ui.onPersonalLibraryChanged();
+                }
+                feedback.show(saved ? `Saved "${structure.name}" to My Structures` : `Created "${structure.name}"`);
             })
         }),
 
