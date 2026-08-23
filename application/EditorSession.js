@@ -25,6 +25,7 @@ import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { CopySelectionUseCase } from './CopySelectionUseCase.js';
 import { PasteClipboardUseCase, PASTE_OFFSET as DUPLICATE_OFFSET } from './PasteClipboardUseCase.js';
+import { RepeatSelectionUseCase } from './RepeatSelectionUseCase.js';
 import { ForkStructureUseCase } from './ForkStructureUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUseCase.js';
 import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelectionUseCase.js';
@@ -93,6 +94,14 @@ export class EditorSession {
         // methods — nothing else here depends on them existing.
         exportBlueprintUseCase = new ExportBlueprintUseCase(),
         importBlueprintUseCase = new ImportBlueprintUseCase(),
+        // 0.4.9 — Alignment, Snapping & Repetition. Optional, same
+        // graceful-degradation posture as every other optional
+        // collaborator here — an EditorSession built without one (older
+        // call sites, test harnesses that never repeat a selection)
+        // simply can't offer repeatSelection(); duplicateSelection()
+        // (0.4.7, unchanged) keeps working either way, since repetition
+        // is a distinct entry point built on the same primitives.
+        repeatSelectionUseCase = null,
         // 0.2.90 — Structure Placement & World Instances. Both optional
         // so an EditorSession built without them (older call sites,
         // test harnesses that never enter PLACE_STRUCTURE mode) keeps
@@ -124,6 +133,7 @@ export class EditorSession {
         this._personalStructureLibraryStore = personalStructureLibraryStore;
         this._exportBlueprintUseCase = exportBlueprintUseCase;
         this._importBlueprintUseCase = importBlueprintUseCase;
+        this._repeatSelectionUseCase = repeatSelectionUseCase;
         this._structureResolver = structureResolver;
         this._structurePreviewUseCase = structurePreviewUseCase;
         this._compositionPreviewUseCase = compositionPreviewUseCase;
@@ -302,6 +312,17 @@ export class EditorSession {
         return this._gestureService.applyNumericTransform(this._editorContext.selection, intent, options);
     }
 
+    // 0.4.9 — "align this selection to the existing construction grid."
+    // See SpatialEditingService#snapSelectionToGrid()'s own header:
+    // exact move onto the nearest grid intersection, collision-gated
+    // through the same commit path every free-form move already uses.
+    snapSelectionToGrid(gridSize) {
+        if (this._editorContext.tool.activeTool === ToolId.PLACE) {
+            return false;
+        }
+        return this._gestureService.snapSelectionToGrid(this._editorContext.selection, gridSize);
+    }
+
     // They close the method-surface gap so the action registry and
     // EditorActionContext.capture() work identically on both surfaces.
 
@@ -414,6 +435,36 @@ export class EditorSession {
             this._editorContext.setSelection(new SelectionState({ items }));
         }
         return command.executedBrickIds[0] || null;
+    }
+
+    // 0.4.9 — "Repeat x N": RepeatSelectionUseCase's own header. options:
+    // { count, offset: {x,y,z} }. Produces exactly ONE history entry (a
+    // CompositeCommand of N PasteBricksCommand children) whose collision
+    // check covers the whole batch atomically — a null result means
+    // nothing happened and the World is guaranteed untouched, so the
+    // caller never has to special-case "blocked" vs. "nothing to
+    // repeat." On success, every brick from every copy becomes the new
+    // active selection, mirroring duplicateSelection()'s own "the result
+    // becomes what's selected next" convention.
+    repeatSelection(options = {}) {
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (!this._repeatSelectionUseCase || selection.isEmpty || !document || !this._commandHistory) {
+            return false;
+        }
+        const buildingId = selection.buildingId;
+        const command = this._repeatSelectionUseCase.execute(selection, document, options);
+        if (!command) {
+            return false;
+        }
+        this._commandHistory.execute(command);
+        const items = command.commands
+            .flatMap((child) => child.executedBrickIds)
+            .map((brickId) => ({ type: 'brick', buildingId, brickId }));
+        if (items.length > 0) {
+            this._editorContext.setSelection(new SelectionState({ items }));
+        }
+        return true;
     }
 
     // 0.2.91 — everything a UI panel needs to show "Selected House

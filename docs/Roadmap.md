@@ -9299,6 +9299,141 @@ every caller that predates this field.
   back on its own source is blocked; a clear move commits normally;
   undo/redo both stay exact throughout
 
+## 0.4.9 — Alignment, Snapping & Repetition
+
+The design conversation that proposed this milestone framed it as
+introducing grid snapping, brick-to-brick alignment, and repetition from
+scratch. Investigating each in turn found the first two already shipped:
+`application/TransformSnap.js` + `application/TransformSettings.js`
+(0.1.47) already snap every keyboard/gizmo gesture DELTA before it
+touches a brick, in the exact order the conversation itself asked for
+("gesture -> candidate transform -> snap -> collision validation ->
+commit," 0.4.8's own collision gate already sitting at the end of that
+pipeline); `application/TransformAlignment.js`'s
+`alignSelection()`/`distributeSelection()` (0.1.48) already align a
+selection to ITS OWN bounds. Two real gaps remained, and this milestone
+closes exactly those two, nothing more:
+
+1. There was no way to snap a selection's ABSOLUTE position onto the
+   world-space construction grid — only a live gesture's delta.
+2. There was no way to create N copies of a selection as one operation.
+   Ordinary duplication (0.4.7) never collision-checks at all, and doing
+   it N times by hand gives N separate history entries with no batch
+   validation — exactly the gap "Repeat x5" in the design conversation
+   was reaching for.
+
+### What changed
+
+**`core/SnapMath.js`** — new. Pure, absolute-position grid snapping:
+`snap(value, gridSize)` and `snapPosition(x, z, gridSize)`, X/Z only (Y
+is a brick's stacking height, not a footprint edge — see this module's
+own header). Deliberately does not import `application/TransformSnap.js`
+despite the identical rounding formula: core/ never depends on
+application/, the same boundary `core/SelectionTransformValidator.js`
+already respects.
+
+**`application/SpatialEditingService.js`** — one new method,
+`snapSelectionToGrid()`: moves a selection's pivot onto the nearest grid
+intersection, preserving every member's relative geometry (the same
+uniform-delta rule numeric absolute translation already follows), routed
+through the SAME `beginTransformGesture`/`commitTransformGesture`
+chokepoint with `snap: false` (exact intent, like
+`applyNumericTransform`) — so it inherits 0.4.8's collision gate for
+free instead of needing a new one. A colliding target leaves the World
+completely unmutated.
+
+**`application/RepetitionMath.js`** and
+**`application/RepeatSelectionUseCase.js`** — new. Repetition is
+duplication generalized from one offset copy to N: reuses
+`CopySelectionUseCase`'s bounds-relative, group-aware clipboard and
+`PasteClipboardUseCase`'s re-anchoring exactly the way
+`_duplicateBrickSelection()` already does for a single copy, called
+against N anchor positions instead of one. The one genuinely new rule:
+repetition is ATOMIC. Every candidate copy is validated — against the
+World AND against every other copy in the same batch — using
+`core/SelectionTransformValidator.js` completely unmodified (a candidate
+brick's synthetic id simply doesn't exist in the target building yet, so
+every real brick already there correctly registers as a collision risk)
+before a single brick is created. A mid-batch collision rejects the
+ENTIRE repetition; nothing partially commits. A successful repetition is
+still exactly one `CompositeCommand` — one history entry regardless of
+`count`. No new World identity concept: every copy is ordinary
+`PasteBricksCommand` output with fresh ids, never a persistent
+"RepeatingStructure."
+
+**`application/TransformSettings.js`** — three new setters
+(`setSnappingEnabled`, `setTranslationSnap`, `setRotationSnap`) and a new
+`TRANSLATION_SNAP_PRESETS` export (`[0.5, 1, 2]`). Before this milestone
+every field was constructor-only; a real "Snap: Off / 0.5 / 1 / 2"
+editor control needs to change these on the SAME live instance
+`SpatialEditingService` already holds, not rebuild the gesture service.
+Nothing about how snapping is applied changes.
+
+**`application/EditorSession.js`** and
+**`application/WorldNavigationSession.js`** — `snapSelectionToGrid()`
+and `repeatSelection()` join `alignSelection()`/`distributeSelection()`/
+`duplicateSelection()` as session-level entry points, both surfaces,
+same optional-collaborator posture (`repeatSelectionUseCase = null`)
+every other optional use case here already follows. A successful
+repetition's new bricks become the active selection, mirroring
+`duplicateSelection()`'s own convention.
+
+### Deliberately excluded
+
+- **Magnetic face/edge snapping between arbitrary bricks.** The design
+  conversation's own call: ForkBuild's brick vocabulary already spans
+  slopes, stairs, arches, windows, doors, beams, columns, and roofs — a
+  universal "smart snap" system would need to reason about every one of
+  their surfaces and easily becomes a second geometry engine. Grid
+  snapping (this milestone) covers the deterministic, predictable case;
+  semantic snapping stays a future question, sized on its own.
+- **Changing `TransformSettings`'s rotation default (15°) to 90°.** The
+  design conversation floated 90° as ForkBuild's dominant orientation
+  increment, but 0.1.47 already shipped 15° as the tested default across
+  every transform surface (keyboard, gizmo, numeric input). This
+  milestone adds the ABILITY to change it (`setRotationSnap`); changing
+  what ships by default is a separate decision for whoever wires the
+  actual settings panel, not something to slip in silently here.
+- **A settings panel UI for the new snap presets.** `TRANSLATION_SNAP_PRESETS`
+  and the three new setters are the complete surface such a panel needs;
+  building the panel itself is presentation work outside this milestone's
+  domain-layer scope, the same restraint 0.4.6 applied to blueprint
+  export/import (pure use cases; "what the caller does with the package
+  ... is deliberately none of this class's business").
+
+### Flagship test
+
+`tests/AlignmentAndRepetition.test.js` is new:
+
+- Section 1: `core/SnapMath.js` — deterministic absolute-position
+  snapping in isolation, negative values, trig-drifted floats snapping
+  cleanly, `gridSize <= 0` means "off"
+- Section 2: `SpatialEditingService#snapSelectionToGrid()` — preserves a
+  multi-brick selection's relative geometry, one history entry, no-op
+  discipline, collision-gated through the same commit path 0.4.8 already
+  established
+- Section 3: `RepeatSelectionUseCase` in isolation — deterministic
+  per-copy offsets regardless of where the source selection sits in the
+  World, fresh identities, group-aware, reuses `PasteBricksCommand`
+  rather than a new command class
+- Section 4: atomicity — copy 4 of 5 colliding rejects the WHOLE batch;
+  the World is provably byte-identical to before the rejected attempt
+- Section 5: one history entry regardless of `count`; undo removes the
+  complete repeated construction; redo reproduces identical identities
+- Section 6: `EditorSession#repeatSelection()` and
+  `WorldNavigationSession#repeatSelection()` — same one-entry/
+  active-selection contract as `duplicateSelection()`, graceful
+  degradation without the use case wired, replay-identical
+- Section 7 — collaboration: a repetition `CompositeCommand`
+  reconstructed from its own `toJSON()` payload via `CommandRegistry`
+  (exactly what `application/WorldCommandPropagationUseCase.js`'s
+  receiving side already does) converges two independent World replicas
+  byte-identically
+- Section 8 — CAPSTONE: repeat a 2-brick house x3 -> select one repeated
+  copy -> extract it into a Structure -> export -> import (fresh ids) ->
+  place back into the Document — the full 0.4.x creation chain, one more
+  time, over freshly repeated content
+
 ```text
 0.4.0   Structure Composition & Blueprint Library          ✓
 0.4.1   Interactive Structure Composition UX                ✓
@@ -9327,6 +9462,13 @@ every caller that predates this field.
              ├── SpatialEditingService — preview reports `valid` live, commit blocks a collision
              ├── keyboard/gizmo/numeric input inherit the gate through the shared commit path
              └── MultiBrickTransformCollision.test.js — duplicate onto source is blocked, undo/redo exact
+             │
+             ▼
+0.4.9   Alignment, Snapping & Repetition                        ✓
+             ├── SnapMath — pure absolute-position grid snapping; gesture-delta snapping already existed
+             ├── snapSelectionToGrid() — exact move, collision-gated through the 0.4.8 commit path
+             ├── RepeatSelectionUseCase — N copies as ONE atomic, whole-batch-validated CompositeCommand
+             └── AlignmentAndRepetition.test.js — copy 4 of 5 colliding rejects the ENTIRE repetition
 ```
 
 > **0.4.0 — How do I combine several Structures into something bigger?**
@@ -9338,7 +9480,9 @@ every caller that predates this field.
 > **0.4.6 — Can Bob get what Alice built, without Alice's device?**
 > **0.4.7 — Once it's placed, can I duplicate it as easily as I built it?**
 > **0.4.8 — Can I trust the preview before I commit to a move?**
+> **0.4.9 — Can I place it precisely, and build with it many times, without extra risk?**
 
-Richer discovery/preview, true peer-to-peer transfer, and AABB/oriented-
-bounds collision remain exactly where 0.4.4, 0.4.6, and 0.4.8 left them:
-named, not forgotten, each sized on its own.
+Richer discovery/preview, true peer-to-peer transfer, AABB/oriented-bounds
+collision, and magnetic face/edge snapping remain exactly where 0.4.4,
+0.4.6, 0.4.8, and 0.4.9 left them: named, not forgotten, each sized on
+its own.

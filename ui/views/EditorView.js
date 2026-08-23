@@ -30,6 +30,7 @@ import ActionFeedback from '../components/ActionFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { CopySelectionUseCase } from '../../application/CopySelectionUseCase.js';
+import { RepeatSelectionUseCase } from '../../application/RepeatSelectionUseCase.js';
 import { PasteClipboardUseCase } from '../../application/PasteClipboardUseCase.js';
 import { UpdateDocumentMetadataUseCase } from '../../application/UpdateDocumentMetadataUseCase.js';
 import { computeLifecycleStatus, describeLifecycleStatus } from '../../application/DocumentLifecycleStatus.js';
@@ -170,7 +171,8 @@ export default {
 
 		const copySelectionUseCase = new CopySelectionUseCase(registry);
 		const pasteClipboardUseCase = new PasteClipboardUseCase();
-		
+		const repeatSelectionUseCase = new RepeatSelectionUseCase(registry);
+
 		const editorSession = new EditorSession({
 		    registry,
 		    editorContext,
@@ -182,6 +184,8 @@ export default {
 		    identityProvider,
 		    copySelectionUseCase,  // Pass use case
 		    pasteClipboardUseCase,  // Pass use case
+		    // 0.4.9 — Alignment, Snapping & Repetition.
+		    repeatSelectionUseCase,
 		    forkStructureUseCase,
 		    copyStructureIntoDocumentUseCase,
 		    // 0.2.90 — Structure Placement & World Instances.

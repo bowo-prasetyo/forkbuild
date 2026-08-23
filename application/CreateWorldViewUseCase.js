@@ -18,6 +18,7 @@ import { ReplayDocumentUseCase } from './ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from './RestoreHistoryStateUseCase.js';
 import { DocumentCloneService } from './DocumentCloneService.js';
 import { CopySelectionUseCase } from './CopySelectionUseCase.js';
+import { RepeatSelectionUseCase } from './RepeatSelectionUseCase.js';
 import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
 import { WorldCommandPropagationUseCase } from './WorldCommandPropagationUseCase.js';
@@ -482,6 +483,8 @@ export class CreateWorldViewUseCase {
                     documentCloneService,
                     copySelectionUseCase: new CopySelectionUseCase(registry),
                     pasteClipboardUseCase: new PasteClipboardUseCase(),
+                    // 0.4.9 — Alignment, Snapping & Repetition.
+                    repeatSelectionUseCase: new RepeatSelectionUseCase(registry),
                     // 0.2.20: fork-on-write needs to resolve a loaded
                     // world's Publication to check its fork policy
                     // before lazily forking it.
