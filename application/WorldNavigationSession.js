@@ -4832,6 +4832,65 @@ export class WorldNavigationSession {
 	    return false;
 	}
 	
+	// 0.4.7 — Ctrl/Cmd+D for a loose brick selection in World View
+	// (previously copy/paste only). A structure-placement selection is
+	// deliberately a no-op here, the same way move/rotate/delete already
+	// are for one (see SpatialEditingService#getEditingContext()'s own
+	// header) — World View has never had placement mutation, only
+	// placement inspection and NEW-structure placement (0.2.93's
+	// "Selection In World View Does Not Imply Editing Authority"); this
+	// milestone closes the brick-selection gap without opening that one.
+	// _ensureEditableSelection() is deleteSelection()'s own guard
+	// (fork-on-write for a selection into a published document), not
+	// pasteClipboard()'s _ensureEditableDocumentId — duplicate reads FROM
+	// the selection's own source bricks, so it needs the selection guard.
+	duplicateSelection() {
+	    if (this._historyPreview && this._historyPreview.active) return null;
+	    this._ensureEditableSelection();
+	    if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
+	        return null;
+	    }
+	    const newId = this._duplicateBrickSelection(this._spatialSelection);
+	    if (newId) {
+	        this._refreshGizmo();
+	    }
+	    return newId;
+	}
+
+	// 0.4.7 — see EditorSession#_duplicateBrickSelection()'s own header:
+	// identical shape, reused across both surfaces. Deliberately builds a
+	// throwaway clipboard local to this call rather than routing through
+	// this._copySelectionUseCase-backed copySelection()/pasteClipboard()
+	// — those mutate this._clipboardState/_pasteCount, and a Ctrl+D must
+	// never clobber whatever the user actually has copied.
+	_duplicateBrickSelection(selection) {
+	    if (!selection || selection.isEmpty || !this._copySelectionUseCase || !this._pasteClipboardUseCase) {
+	        return null;
+	    }
+	    const docId = selection.documentId || this._activeDocumentId;
+	    const doc = docId ? this.getDocument(docId) : null;
+	    if (!doc) {
+	        return null;
+	    }
+	    const clipboard = this._copySelectionUseCase.execute(selection, doc);
+	    if (!clipboard || clipboard.isEmpty) {
+	        return null;
+	    }
+	    const buildingId = selection.buildingId;
+	    const command = this._pasteClipboardUseCase.execute(clipboard, {
+	        worldId: doc.world.id, buildingId, position: { x: 2, y: 0, z: 2 }
+	    });
+	    if (!command) {
+	        return null;
+	    }
+	    this._commandHistories.get(doc.world.id).execute(command);
+	    if (command.executedBrickIds.length > 0) {
+	        const items = command.executedBrickIds.map((brickId) => ({ type: 'brick', buildingId, brickId }));
+	        this._setSpatialSelection(SpatialSelectionState.bricks({ documentId: doc.world.id, items }));
+	    }
+	    return command.executedBrickIds[0] || null;
+	}
+
 	cloneDocument(documentId) {
 	    const doc = this.getDocument(documentId || this._activeDocumentId);
 	    if (!doc) throw new Error('no loaded document');

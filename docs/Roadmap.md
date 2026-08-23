@@ -9045,6 +9045,163 @@ applied to itself:
   itself, before any second version exists to migrate from, would be
   speculative work this milestone's own scope never called for.
 
+## 0.4.7 — Advanced Building & Structural Editing
+
+0.4.0 through 0.4.6 answered "how do I acquire, compose, and share
+reusable Structures." Once one is actually placed into a Document, the
+natural next question is "can I easily refine what I just built" — this
+milestone's own opening design conversation proposed a broad three-part
+answer: multi-brick selection, group move/rotate/duplicate/delete as one
+gesture each, and a collision-aware ghost preview for group transforms.
+
+Investigating that proposal against the codebase turned up something the
+proposal itself didn't know: **almost all of it already shipped**, back
+in 0.1.42–0.1.50, and has been exercised by every multi-selection test
+since. Named plainly rather than re-built:
+
+- **Multi-brick selection** — `application/spatial-state/SpatialSelectionState.js`'s
+  `items[]`/`bricks()`/`addBrick()`/`toggleBrick()` (0.1.45), wired into
+  both surfaces' click/marquee gestures.
+- **Group move/rotate as one gesture, one command** —
+  `application/TransformSelectionUseCase.js` /
+  `application/commands/TransformSelectionCommand.js` (0.1.44), the
+  single kernel every keyboard nudge, gizmo drag, alignment,
+  distribution, and numeric-input transform already funnels through,
+  regardless of selection size.
+- **Group delete as one command** —
+  `SpatialEditingService#deleteSelection()` / `EditorSession#deleteSelection()`
+  / `SelectionTool#_deleteSelected()` (0.1.45), each folding N
+  `DeleteBrickCommand`s into one `CompositeCommand`.
+- **Persistent named Groups** with create/rename/duplicate/delete/
+  membership editing (0.1.43) — `core/Group.js`, already World content,
+  already tested end-to-end in `tests/Grouping.test.js` and
+  `tests/AdvancedSelection.test.js`.
+
+That left exactly one gesture where the proposal's own instinct was
+right and the codebase's own comments agreed: **duplicating an ordinary
+brick selection in place.** `application/EditorActionRegistry.js`'s
+`selection.duplicate` action (Ctrl/Cmd+D) existed since 0.2.91, but its
+own `enabled` predicate — and its own comment — restricted it to a
+structure-placement selection, reasoning "bricks already have copy/
+paste." Copy-then-paste is two gestures and two history entries, not
+one; World View's `WorldNavigationSession` didn't even have a
+`duplicateSelection()` method to gate. This milestone closes exactly
+that gap, and nothing else — see "Deliberately excluded" below for why
+the collision/ghost-preview third of the original proposal is a named,
+separate future milestone rather than bolted on here.
+
+### What changed
+
+**`application/EditorSession.js`** — `duplicateSelection()` now branches
+on selection kind: a structure-placement selection keeps its existing
+0.2.91 behavior unchanged; a loose brick selection routes to the new
+`_duplicateBrickSelection()`, which calls `CopySelectionUseCase` then
+`PasteClipboardUseCase` directly — the same two use cases copy/paste
+already use — producing exactly ONE `PasteBricksCommand` with fresh
+brick (and, when a selected Group is fully covered, fresh group)
+identities. Deliberately does NOT go through `copySelection()`/`paste()`
+(which write `this._clipboardState`/`this._pasteCount`): an explicit
+Ctrl+C the user made earlier survives an intervening Ctrl+D. The
+duplicate becomes the active selection, so the very next drag/rotate
+moves the copy, not the original — "select, duplicate, rotate, place."
+
+**`application/WorldNavigationSession.js`** — gains `duplicateSelection()`
+and `_duplicateBrickSelection()` for the first time (there was no method
+here for the action registry to call at all). Mirrors
+`deleteSelection()`'s own authorization guard (`_ensureEditableSelection()`,
+fork-on-write for a selection into a published document) rather than
+`pasteClipboard()`'s document-scoped one, because duplicating reads FROM
+the selection's own source bricks. A structure-placement selection is a
+deliberate no-op here — see "Deliberately excluded."
+
+**`application/EditorActionRegistry.js`** — `selection.duplicate`'s
+`enabled`/`disabledReason` drop the `ctx.selectionIsStructurePlacement`
+gate entirely; any non-empty selection is now duplicable, exactly like
+`selection.delete` already was.
+
+**`tests/EditingParity.test.js`** — `duplicateSelection` added to
+`REQUIRED_EDITING_METHODS`, closing a tracked-but-unenforced parity gap
+between the two surfaces.
+
+**`core/version.js`** — bumped to 0.4.7, matching this file's own
+milestone number (this had silently drifted since 0.3.4 across six
+prior milestones; corrected in passing since the file's own header
+comment already promises it tracks this document).
+
+### Deliberately excluded
+
+- **Collision-aware ghost preview for group move/rotate.** The original
+  proposal's second and third parts. Investigation found NO collision
+  check anywhere in `SpatialEditingService`'s transform gesture path
+  today (`previewTransformGesture()`/`commitTransformGesture()` mutate
+  real bricks live, with no ghost mesh and no validity flag at all) —
+  unlike single-brick placement (`core/PlacementValidator.js` +
+  `PreviewState`) and structure placement/composition
+  (`application/StructurePlacementValidator.js` +
+  `CompositionPreviewState`), both of which already have real red/green
+  ghost machinery. Adding a hard collision block to the ONE chokepoint
+  every keyboard nudge, gizmo drag, alignment, distribution, and numeric
+  transform already shares would touch the most heavily-relied-on shared
+  kernel in the codebase (`tests/TransformParity.test.js`,
+  `tests/InteractiveGizmo.test.js`, `tests/NumericTransform.test.js`,
+  `tests/TransformSnapping.test.js`, `tests/TransformAlignment.test.js`,
+  `tests/CommandReplay.test.js`, `tests/MultiClientSync.test.js`) for a
+  capability nothing in this milestone's own scope strictly required.
+  Named directly rather than attempted at the edge of a review: its own
+  future milestone, sized on its own, the same restraint 0.4.4 and 0.4.6
+  already modeled for their own deferred neighbors.
+- **Structure-placement move/rotate/delete/duplicate in World View.**
+  World View has only ever offered placement SELECTION (inspection) and
+  placing NEW structures — every placement mutation
+  (`MoveStructurePlacementCommand`/`RotateStructurePlacementCommand`/
+  `RemoveStructurePlacementCommand`/`DuplicateStructurePlacementCommand`)
+  has been Editor-View-only since 0.2.91, driven by
+  `application/tools/SelectionTool.js`, which `WorldNavigationSession`
+  never uses. `duplicateSelection()`'s World View brick-only scope keeps
+  that existing, deliberate asymmetry intact rather than quietly
+  widening World View's editing authority as a side effect of this
+  milestone — see docs/Principles.md, "Selection In World View Does Not
+  Imply Editing Authority (0.2.93)."
+- **A new "selection group" concept.** The original proposal explicitly
+  argued against persisting an ad hoc selection as World content — moot
+  here, since `core/Group.js` already exists, already persists exactly
+  that, and already has its own full duplicate/rename/delete surface
+  (0.1.43). Nothing new was needed or added.
+- **Boolean building operations, brick parenting/hierarchy, arbitrary
+  mesh collision.** Named in the original proposal as out of scope, and
+  nothing in this milestone's own investigation changed that — the flat
+  Document brick model and conservative AABB/exact-position collision
+  posture keep serving deterministic replication exactly as before.
+
+### Flagship test
+
+`tests/SelectionDuplication.test.js` is new — headless, no renderer/
+import, running `EditorSession` and `WorldNavigationSession` directly:
+
+- Section 1: `EditorSession` duplicates a 3-brick loose selection as
+  exactly ONE `paste-bricks` history entry; the duplicate carries fresh
+  identities, sits off its sources, becomes the active selection, and
+  undo/redo reproduce the exact same duplicate identities
+- Section 2: a fully-selected persistent Group travels with the
+  duplicate, with fresh membership
+- Section 3: duplicating never touches `this._clipboardState`/`_pasteCount`
+  — an explicit Ctrl+C survives an intervening Ctrl+D, proven by copying
+  A/B, duplicating C/D, then pasting and getting A/B back
+- Section 4: a structure-placement selection still duplicates through
+  the SAME `duplicateSelection()` entry point exactly as it did before
+  this milestone (regression guard on the branch this milestone edited)
+- Section 5: `WorldNavigationSession` duplicates a multi-brick selection
+  — one command, fresh ids, undo/redo, and a replay of the command
+  stream alone reproduces the world byte-for-byte
+- Section 6: a structure-placement selection is a proven no-op for
+  `WorldNavigationSession#duplicateSelection()` — no history entry, the
+  original placement untouched
+- Section 7 — CAPSTONE: select a 3-brick composition, duplicate it, then
+  run the DUPLICATE (never the original) through
+  `CreateStructureFromSelectionUseCase` — proving a duplicate is ordinary,
+  independent World content with no special provenance the rest of the
+  0.4.x creation pipeline needs to know about
+
 ```text
 0.4.0   Structure Composition & Blueprint Library          ✓
 0.4.1   Interactive Structure Composition UX                ✓
@@ -9059,6 +9216,13 @@ applied to itself:
              ├── BlueprintImportValidator — untrusted input, validated before construction
              ├── Export/ImportBlueprintUseCase — every id crossing the boundary is fresh
              └── BlueprintExchange.test.js — Alice exports, Bob imports, both stay independent
+             │
+             ▼
+0.4.7   Advanced Building & Structural Editing                 ✓
+             ├── Multi-select / group transform / group delete — already shipped, 0.1.42-0.1.50
+             ├── duplicateSelection() — the one real gap, closed on both surfaces
+             ├── EditorActionRegistry — Ctrl/Cmd+D works for any selection, not just placements
+             └── SelectionDuplication.test.js — one command, fresh ids, clipboard untouched
 ```
 
 > **0.4.0 — How do I combine several Structures into something bigger?**
@@ -9068,7 +9232,8 @@ applied to itself:
 > **0.4.4 — Is there enough here to actually build with?**
 > **0.4.5 — Does reaching for one feel like reaching for the other?**
 > **0.4.6 — Can Bob get what Alice built, without Alice's device?**
+> **0.4.7 — Once it's placed, can I duplicate it as easily as I built it?**
 
-Richer discovery/preview and true peer-to-peer transfer remain exactly
-where 0.4.4 and 0.4.6 left them: named, not forgotten, sized on their
-own.
+Richer discovery/preview, true peer-to-peer transfer, and collision-aware
+group-transform preview remain exactly where 0.4.4, 0.4.6, and 0.4.7 left
+them: named, not forgotten, each sized on its own.

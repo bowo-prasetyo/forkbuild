@@ -24,7 +24,7 @@ import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
 import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
 import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { CopySelectionUseCase } from './CopySelectionUseCase.js';
-import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
+import { PasteClipboardUseCase, PASTE_OFFSET as DUPLICATE_OFFSET } from './PasteClipboardUseCase.js';
 import { ForkStructureUseCase } from './ForkStructureUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUseCase.js';
 import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelectionUseCase.js';
@@ -349,25 +349,71 @@ export class EditorSession {
     // StructurePlacement referencing the SAME documentId, never a new
     // Document (see application/commands/DuplicateStructurePlacementCommand.js's
     // own header). Returns the new placement's id (truthy) or null.
-    // Deliberately not offered for a brick selection here — copy/paste
-    // already covers that, and this action is gated on
-    // ctx.selectionIsStructurePlacement in the registry (see
-    // application/EditorActionRegistry.js, 'selection.duplicate').
+    //
+    // 0.4.7 — "Duplicate a composed selection" extends the SAME action to
+    // a loose brick selection (1..N bricks), previously copy/paste-only
+    // (two gestures, two history entries — see this method's own header
+    // before 0.4.7). Ctrl/Cmd+D on N selected bricks now produces exactly
+    // ONE PasteBricksCommand with fresh brick/group identities, by
+    // reusing CopySelectionUseCase/PasteClipboardUseCase directly rather
+    // than inventing a second "duplicate bricks" command — see
+    // _duplicateBrickSelection()'s own header for why this deliberately
+    // never touches this._clipboardState.
     duplicateSelection() {
         const selection = this._editorContext.selection;
         const document = this._documentManager.document;
-        if (!selection.isStructurePlacementSelection || !document || !this._commandHistory) {
+        if (selection.isEmpty || !document || !this._commandHistory) {
             return null;
         }
-        const command = new DuplicateStructurePlacementCommand({
-            worldId: document.world.id,
-            placementId: selection.selectedPlacementId
-        });
-        this._commandHistory.execute(command);
-        if (command.executedPlacementId && this._selectionUseCase) {
-            this._selectionUseCase.selectPlacement(command.executedPlacementId);
+        if (selection.isStructurePlacementSelection) {
+            const command = new DuplicateStructurePlacementCommand({
+                worldId: document.world.id,
+                placementId: selection.selectedPlacementId
+            });
+            this._commandHistory.execute(command);
+            if (command.executedPlacementId && this._selectionUseCase) {
+                this._selectionUseCase.selectPlacement(command.executedPlacementId);
+            }
+            return command.executedPlacementId;
         }
-        return command.executedPlacementId;
+        return this._duplicateBrickSelection(selection, document);
+    }
+
+    // 0.4.7 — duplicates a loose brick selection as ONE history entry.
+    // Deliberately reuses CopySelectionUseCase (bounds-relative geometry,
+    // group-aware) and PasteClipboardUseCase (fresh ids, re-anchored at
+    // an offset) rather than a new command class — a duplicate IS a
+    // copy immediately pasted, geometrically, so there is no separate
+    // math to invent. Builds a THROWAWAY clipboard state local to this
+    // call: this._clipboardState/this._pasteCount (an explicit Ctrl+C
+    // the user made earlier, and its own cascade count) are never read
+    // or written here, so Ctrl+D never clobbers a real copy sitting in
+    // the clipboard. The duplicate becomes the active selection —
+    // "Duplicate -> rotate -> place" needs the COPY selected, not the
+    // original — mirroring WorldNavigationSession's own duplicate.
+    _duplicateBrickSelection(selection, document) {
+        if (!this._copySelectionUseCase || !this._pasteClipboardUseCase) {
+            return null;
+        }
+        const clipboard = this._copySelectionUseCase.execute(selection, document);
+        if (!clipboard || clipboard.isEmpty) {
+            return null;
+        }
+        const buildingId = selection.buildingId;
+        const command = this._pasteClipboardUseCase.execute(clipboard, {
+            worldId: document.world.id,
+            buildingId,
+            position: DUPLICATE_OFFSET
+        });
+        if (!command) {
+            return null;
+        }
+        this._commandHistory.execute(command);
+        if (command.executedBrickIds.length > 0) {
+            const items = command.executedBrickIds.map((brickId) => ({ type: 'brick', buildingId, brickId }));
+            this._editorContext.setSelection(new SelectionState({ items }));
+        }
+        return command.executedBrickIds[0] || null;
     }
 
     // 0.2.91 — everything a UI panel needs to show "Selected House
