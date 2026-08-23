@@ -4557,3 +4557,42 @@ html, body {
 .naming-panel-advanced-toggle:hover {
     color: #e0e0e0;
 }
+
+/* 0.5.8 — World View Contextual Focus & Information Hierarchy.
+   ui/components/WorldFocusPanel.js: a small, single-purpose "what am I
+   looking at?" reading, deliberately plainer than the specialized
+   panels (GeographicPlacePanel, LocationsPanel) it complements — see
+   that component's own header. */
+.world-focus-panel {
+    width: 380px;
+}
+
+.world-focus-panel-subtitle {
+    margin: 0;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #808080;
+}
+
+.world-focus-panel-description {
+    margin: 0.4rem 0;
+    font-size: 0.88rem;
+    color: #c0c0c0;
+}
+
+/* Same "in"/"near" violet wording .world-welcome-panel-arrival-note
+   already established for the viewer's OWN arrival banner — reused
+   here verbatim for whatever is currently focused, never a second
+   color convention for the same distinction. */
+.world-focus-panel-arrival {
+    margin: 0.5rem 0 0.3rem;
+    font-size: 0.85rem;
+    color: #9b8cff;
+}
+
+.world-focus-panel-nearby {
+    margin: 0 0 0.5rem;
+    font-size: 0.78rem;
+    color: #808080;
+}

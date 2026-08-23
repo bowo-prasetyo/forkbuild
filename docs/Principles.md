@@ -8203,3 +8203,77 @@ or a direction independently — `getNearbyGeographicPlaces()` itself
 resolves each candidate's position by asking `WorldLocationDirectory`
 the same question `focusLocation()` would, so "how far away is it" and
 "where does Go To Place actually take me" can never quietly disagree.
+
+### A Focus Context Describes What You Are Looking At; It Does Not Navigate (0.5.8)
+
+0.3.6 through 0.5.7 gave World View a real information architecture —
+regions, landmarks, structures, collaborators, and geographic place
+candidates, each independently browsable from Explore, the Locations
+panel, the World Map, or the Places directory. What none of them
+shared was a single answer to one question, asked identically
+regardless of which surface a viewer selected something from:
+
+  "What am I looking at, right now?"
+
+`core/WorldFocusContext.js` answers it the same way every other
+"describe World state" module in this codebase already does: a small,
+DERIVED, read-only reshaping of whatever was selected, rebuilt fresh on
+every call, never persisted, and never a sixth stored kind alongside
+`WorldRegion`/`WorldLandmark`/`StructurePlacement`/`GeographicPlaceView`/
+`WorldSpatialContext`. `application/WorldNavigationSession.js#getFocusContextForLocation()`/
+`getFocusContextForCollaborator()` are the only two places one is ever
+built, and both are thin resolvers over collections the session already
+had — no new World content, no new command, no new persistence.
+
+**Three verbs, one noun, never confused.** By 0.5.7, this codebase
+already used "Focus" to mean "move the camera" — `focusLocation()`,
+`focusCollaborator()`, `focusPlace()`, and the "Focus" buttons on
+`LocationsPanel`/`GeographicPlacePanel` that call them. This milestone
+does not rename any of that: renaming a method called from dozens of
+sites for a naming preference alone would be exactly the kind of
+churn-for-its-own-sake this codebase avoids. Instead it draws the line
+explicitly, in the one new surface that could have collided with it:
+
+```text
+Focus (noun, NEW)  — "show me information about this thing."
+                      core/WorldFocusContext.js,
+                      ui/components/WorldFocusPanel.js
+Go    (verb, OLD)  — moves the 3D camera. focusLocation()/
+                      focusCollaborator() — unrenamed.
+Map   (verb, OLD)  — changes the 2D map viewport. WorldMapPanel's own
+                      "Show on Map" — unrenamed.
+```
+
+`WorldFocusPanel`'s own camera-move button is labeled "Go" — the exact
+word Explore's own "Nearby ___" rows already used for the same action
+— never "Focus" a second time with a different meaning in the same
+screen. A `WorldFocusContext` itself never calls `focusLocation()` or
+touches the map; it only carries enough (`availableActions`, `source`)
+for the host to offer those as separate buttons.
+
+**"In," never upgraded to "near," and vice versa.** A `WorldFocusContext`
+carries two independently-derived fields describing where its target
+sits, geographically — `regionPath` (real, human-authored `WorldRegion`
+containment of the TARGET's own position, not the viewer's) and
+`geographicPlace` (the nearest geographic place CANDIDATE to that same
+position). These are never merged into one guess: `arrivalPhrase`
+renders "You are in ___" only from `regionPath`, "You are near ___"
+only from `geographicPlace`, and a neutral fallback when neither
+exists — reusing the exact two-tier wording "A Geographic Place Is
+Navigable; It Does Not Become World Content (0.5.6)" established for
+the viewer's own arrival, now available for whatever is FOCUSED
+instead. Both fields are computed by reusing existing pure functions
+wholesale (`core/WorldRegionGeography.js#regionsContaining()`,
+`core/GeographicPlaceNavigation.js#deriveNearbyGeographicPlaces()`) —
+this milestone adds no second distance/containment implementation.
+
+**Selecting is not navigating.** Opening a `WorldFocusPanel` — from an
+Explore nearby row's new "Info" button, or a `LocationsPanel` row's own
+new "Info" button — never moves the camera, never changes the map
+viewport, and never touches a single bit of World content; it only
+reads. The camera only moves when the viewer explicitly presses "Go"
+inside the panel, at which point it calls the exact same
+`focusLocation()`/`focusCollaborator()` every pre-existing navigation
+entry point already used — the same "Navigate ≠ Modify" boundary this
+codebase has held to since 0.2.94, extended one more time to a surface
+that, unlike its predecessors, doesn't even navigate by default.
