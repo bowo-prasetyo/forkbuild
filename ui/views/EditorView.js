@@ -106,6 +106,8 @@ export default {
                         @place-structure="copyStructureIntoDocument"
                         @rename-personal-structure="renamePersonalStructure"
                         @remove-personal-structure="removePersonalStructure"
+                        @export-personal-structure="exportPersonalStructure"
+                        @import-blueprint="importBlueprint"
                     />
                     <EditingSidebar
                         :registry="actionRegistry"
@@ -236,6 +238,61 @@ export default {
 		    const forked = editorSession.forkStructure(structure);
 		    if (forked) {
 		        feedback.show(`Forked "${structure.name}" — now editing your own copy`);
+		    }
+		}
+
+		// 0.4.6 — Blueprint Sharing & Exchange. Builds the portable
+		// package via editorSession.exportBlueprint() (pure — see that
+		// method's own header) and triggers an immediate browser
+		// download, the same `data:application/json` + <a download>
+		// shape ui/views/IdentityManagementView.js's own portable-
+		// identity export already established — deliberately no
+		// intermediate modal, since (unlike an identity export) there is
+		// no passphrase to collect first.
+		function exportPersonalStructure(structure) {
+		    let pkg;
+		    try {
+		        pkg = editorSession.exportBlueprint(structure);
+		    } catch (e) {
+		        feedback.show(e.message);
+		        return;
+		    }
+		    if (!pkg) {
+		        return;
+		    }
+		    const json = JSON.stringify(pkg, null, 2);
+		    const slug = structure.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'structure';
+		    const link = document.createElement('a');
+		    link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+		    link.download = `forkbuild-blueprint-${slug}.json`;
+		    link.click();
+		    feedback.show(`Exported "${structure.name}" as a blueprint`);
+		}
+
+		// 0.4.6 — Blueprint Sharing & Exchange. `rawText` is whatever
+		// BuildLibraryPanel's hidden file input read off disk — untrusted
+		// input, so JSON.parse and editorSession.importBlueprint() (which
+		// runs application/BlueprintImportValidator.js before
+		// constructing anything — see that use case's own header) are
+		// each wrapped separately, mirroring
+		// IdentityManagementView.js#confirmImport()'s own two-stage
+		// "is this even JSON" / "is this a valid package" error handling.
+		function importBlueprint(rawText) {
+		    let pkg;
+		    try {
+		        pkg = JSON.parse(rawText);
+		    } catch (e) {
+		        feedback.show('That is not valid JSON — choose a file exported with "Export Blueprint."');
+		        return;
+		    }
+		    try {
+		        const structure = editorSession.importBlueprint(pkg);
+		        if (structure) {
+		            refreshPersonalStructureGroups();
+		            feedback.show(`Imported "${structure.name}" into My Structures`);
+		        }
+		    } catch (e) {
+		        feedback.show(e.message.replace(/^(BlueprintImport|BlueprintPackage):\s*/, ''));
 		    }
 		}
 
@@ -691,6 +748,8 @@ export default {
             copyStructureIntoDocument,
             renamePersonalStructure,
             removePersonalStructure,
+            exportPersonalStructure,
+            importBlueprint,
             activeTool,
             activeStructureTitle,
             activeCompositionTitle,

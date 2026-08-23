@@ -504,6 +504,34 @@ html, body {
     margin: 0;
 }
 
+/* 0.4.6 — Blueprint Sharing & Exchange. Import is a library-level action
+   (unlike Export, which lives in a personal Structure's own "⋮" menu
+   alongside Fork/Rename/Remove), so it sits beside the section's own
+   title instead of inside any one card. Reuses .action-btn--secondary
+   wholesale — same rationale as every other addition in this section:
+   no new button colors. The real <input type="file"> stays functional
+   but visually hidden — .personal-structure-library-import is the only
+   click target a user ever sees, mirroring the "styled trigger button +
+   invisible native file input" shape most of the web already uses. */
+.personal-structure-library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.personal-structure-library-import-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* 0.2.84 — Building Library & Palette UX. One unified Bricks/Structures
    panel replacing the previously-separate BrickPalette/
    StructureLibraryPanel components; deliberately reuses .palette-*,

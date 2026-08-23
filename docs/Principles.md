@@ -7505,3 +7505,66 @@ stays its own operation with its own tool
 unification. "Buildable Things Share One Placement Experience" describes
 the Build Library's two catalogs (Bricks, Structures) — the things a
 Document is built FROM — not every spatial placement this engine has.
+
+### A Blueprint Package Is Portable Data, Never A Live Dependency (0.4.6)
+
+The Personal Structure Library (0.4.3) gave a Structure somewhere to
+live; it never gave it a way to leave. A `LocalStructureLibraryStore` is
+StorageProvider-backed, and StorageProvider is per-device — Alice's "My
+Structures" and Bob's are, by construction, two different libraries that
+have never heard of each other. 0.4.6 closes that gap with an EXPORT/
+IMPORT boundary, deliberately not a live one:
+
+    Alice's Structure --export--> Blueprint Package --import--> Bob's Structure
+
+A Blueprint Package (`application/BlueprintPackage.js`) is plain,
+self-contained JSON — a Structure's own `id`/`name`/`category`/`tags`/
+`description`/`bricks`, wrapped in a small versioned envelope. It is not
+a pointer to Alice's library, her device, or her session. The moment
+Alice's export finishes, the package owes nothing further to where it
+came from: deleting Alice's original Structure, renaming it, or her
+device going offline forever has zero effect on a package already
+written to disk, or on anything Bob later imports from it. Compare this
+to what a `StructurePlacement` (0.2.90) deliberately IS — a live
+reference into another Document, meaningful only as long as that
+Document resolves — and the boundary is exactly the one this
+milestone's own design conversation drew:
+
+    Structure --export/import--> Blueprint Package    — portable, independent, never a World citizen
+    Structure --publish-->        World                — 0.2.9x's own, separate question
+
+**Untrusted input, validated before anything is built.** A blueprint
+file may have crossed devices, been hand-edited, or arrived from a
+stranger — it is never trusted the way a Structure already living in the
+current process's own registry is. `application/BlueprintImportValidator.js`
+answers exactly one question, "is this package well-formed?", and is
+strictly separate from `application/ImportBlueprintUseCase.js`, which
+only ever constructs a Structure from an ALREADY-validated package — the
+identical split `identity/IdentityImport.js`/`identity/IdentityRecovery.js`
+already draw for a portable identity package (0.2.48), applied here to
+data that carries no secret at all. A blueprint is DATA, never
+executable behavior:
+
+    Import -> validate -> construct Structure -> save to personal library    — always
+    Import -> execute arbitrary command                                     — never
+
+**Every id crossing the boundary is fresh.** `ImportBlueprintUseCase`
+mints a brand-new structure id and a brand-new id for every brick,
+regardless of what the package itself claims — the same "an id crossing
+a trust boundary always regenerates" rule `ForkStructureUseCase` (0.2.81)
+and `CreateStructureFromSelectionUseCase` (0.4.2) already apply to
+forking and extraction respectively. This is not merely hygiene: it is
+what guarantees importing the same package twice — even into the same
+library — always produces two independent entries, never a silent
+overwrite of one by an id collision neither side asked for.
+
+**Indistinguishable once imported.** An imported Structure is not a
+second kind of "My Structures" entry. It renders through the same
+`BuildLibraryPreview`, enters the same Place lifecycle (0.4.5), and
+composes/forks through the exact same `CopyStructureIntoDocumentUseCase`/
+`ForkStructureUseCase` paths as anything extracted locally or shipped in
+`core/library/VillageLibrary.js`. Nothing downstream of import ever asks
+"was this imported?" — the same "library membership is never part of a
+Structure's own identity" rule 0.4.3 already established for built-in
+versus personal now extends to imported without a single new field or
+branch.

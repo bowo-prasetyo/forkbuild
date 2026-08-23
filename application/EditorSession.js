@@ -28,6 +28,8 @@ import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { ForkStructureUseCase } from './ForkStructureUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUseCase.js';
 import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelectionUseCase.js';
+import { ExportBlueprintUseCase } from './ExportBlueprintUseCase.js';
+import { ImportBlueprintUseCase } from './ImportBlueprintUseCase.js';
 import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlacementCommand.js';
 import { MoveStructurePlacementCommand } from './commands/MoveStructurePlacementCommand.js';
 import { RotateStructurePlacementCommand } from './commands/RotateStructurePlacementCommand.js';
@@ -84,6 +86,13 @@ export class EditorSession {
         // createStructureFromSelection() (0.4.2, unchanged) keeps
         // working either way, since saving was always a separate step.
         personalStructureLibraryStore = null,
+        // 0.4.6 — Blueprint Sharing & Exchange. Same optional posture as
+        // every other Structure use case above: an EditorSession built
+        // without these (older call sites, test harnesses that never
+        // export/import a blueprint) simply can't offer those two
+        // methods — nothing else here depends on them existing.
+        exportBlueprintUseCase = new ExportBlueprintUseCase(),
+        importBlueprintUseCase = new ImportBlueprintUseCase(),
         // 0.2.90 — Structure Placement & World Instances. Both optional
         // so an EditorSession built without them (older call sites,
         // test harnesses that never enter PLACE_STRUCTURE mode) keeps
@@ -113,6 +122,8 @@ export class EditorSession {
         this._copyStructureIntoDocumentUseCase = copyStructureIntoDocumentUseCase;
         this._createStructureFromSelectionUseCase = createStructureFromSelectionUseCase;
         this._personalStructureLibraryStore = personalStructureLibraryStore;
+        this._exportBlueprintUseCase = exportBlueprintUseCase;
+        this._importBlueprintUseCase = importBlueprintUseCase;
         this._structureResolver = structureResolver;
         this._structurePreviewUseCase = structurePreviewUseCase;
         this._compositionPreviewUseCase = compositionPreviewUseCase;
@@ -911,6 +922,47 @@ export class EditorSession {
         }
         this._personalStructureLibraryStore.addStructure(structure);
         return true;
+    }
+
+    // 0.4.6 — Blueprint Sharing & Exchange. Pure — returns the portable
+    // package (application/BlueprintPackage.js's plain, JSON-safe shape)
+    // for `structure`; never touches storage, a file, or the clipboard.
+    // What the caller does with the result (build a download link, in
+    // ui/views/EditorView.js's own case) is deliberately none of this
+    // method's business, the same restraint copySelection() already
+    // applies to its own clipboard payload. Throws the same descriptive
+    // error application/ExportBlueprintUseCase.js#execute() throws when
+    // `structure` isn't a valid Structure — callers surface that message
+    // directly rather than silently doing nothing.
+    exportBlueprint(structure) {
+        if (!this._exportBlueprintUseCase) {
+            return null;
+        }
+        return this._exportBlueprintUseCase.execute(structure);
+    }
+
+    // 0.4.6 — Blueprint Sharing & Exchange. The reverse of
+    // exportBlueprint() above, folding validate -> construct -> save into
+    // one call — unlike createStructureFromSelection()/
+    // saveStructureToPersonalLibrary() (0.4.2/0.4.3), which stay two
+    // separate steps so a caller can edit metadata in between, importing
+    // a blueprint offers no such editing step: the package already
+    // carries its own name/category/tags/description, and 0.4.6's own
+    // design conversation is explicit that "imported, personal, and
+    // built-in Structures should become indistinguishable at placement
+    // time" the moment the import completes. Throws
+    // BlueprintPackageError (application/BlueprintImportValidator.js) on
+    // malformed/untrusted input — callers surface that message directly,
+    // exactly the way application/IdentityUseCase.js#importIdentity()'s
+    // own callers already surface IdentityPackageError. Returns null (and
+    // does nothing) if no use case or personal library store is wired.
+    importBlueprint(pkg) {
+        if (!this._importBlueprintUseCase || !this._personalStructureLibraryStore) {
+            return null;
+        }
+        const structure = this._importBlueprintUseCase.execute(pkg, { registry: this._registry });
+        this._personalStructureLibraryStore.addStructure(structure);
+        return structure;
     }
 
     // 0.2.90 — Structure Placement & World Instances. Enters
