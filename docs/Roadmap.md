@@ -9879,3 +9879,180 @@ tier-driven zoom decluttering, an always-visible minimap, drag-to-pan,
 and the in-World 3D boundary render 0.5.0 already named. Each is sized
 on its own, exactly like every "Deliberately excluded" list in this
 document before it.
+
+## 0.5.2 — Place Naming & Naming Claims
+
+0.5.0 answered "what is this place called?" with the simplest possible
+model: whoever holds EDIT on a World may name, rename, or remove a
+`WorldRegion` directly, the same authority every other piece of World
+content already has. The design conversation that closed out 0.5.1
+named the boundary that answer deliberately stops at: a genuinely
+decentralized ecosystem needs more than ONE authored name per region — it
+needs Alice, Bob, and Carol to each hold a real, standing opinion about
+what the same ground should be called, none of them needing the others'
+permission, and none of their opinions silently overwriting anyone
+else's. This milestone is that layer, built as data model first,
+exchange transport deliberately later:
+
+> `WorldRegion` stays objective shared geometry, exactly as 0.5.0 left
+> it. A `PlaceNamingClaim` is a new, separate, signed, published
+> ASSERTION about what a region is called — never a World mutation,
+> never authoritative, and never reconciled into one "correct" answer.
+> A naming VIEW is a client's own derived ranking of whatever claims it
+> knows about, by confidence, never by authority.
+
+### What shipped
+
+- **`core/PlaceNamingClaim.js`** — the wire shape of a naming claim:
+  `id`, `worldId`, `regionId`, `name`, `authorIdentityId`, `createdAt`,
+  and a REQUIRED `signature` (new `SignatureType.PLACE_NAMING_CLAIM`,
+  `core/Signature.js`) — never tolerated unsigned, the same discipline
+  `WORLD_EDIT_AUTHORIZATION_GRANT` already established. Deliberately
+  NEVER stored inside `World#toJSON()`, never touches a Command, undo/
+  redo, or `application/WorldCommandPropagationUseCase.js` — publishing
+  a claim about someone else's region changes nothing about that region
+  or the World it lives in.
+- **`identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()`**
+  — structural verification only: the signer MUST equal the claim's own
+  `authorIdentityId` (a claim has exactly one party to it, unlike a
+  World edit grant's granting/subject pair). Whether that identity holds
+  any authority over the region's World is never asked, anywhere — see
+  `core/PlaceNamingClaim.js`'s own header on why a naming claim needs
+  none.
+- **`core/PlaceNamingView.js`** — pure derivation: `namingView(regionId,
+  claims)` ranks every distinct name claimed for a region by the number
+  of DISTINCT identities who claimed it (never raw claim count — one
+  author republishing the same name five times scores exactly 1, not
+  5), ties broken by name for cross-replica determinism.
+  `preferredClaimedName()`/`describeNamingView()` are thin presentation
+  conveniences over the same ranking ("Green Valley · 3 community
+  names").
+- **`application/LocalPlaceNamingClaimStore.js`** +
+  **`application/PlaceNamingClaimUseCase.js`** — the local persistence
+  and signing entry point, mirroring `publisher/LocalPublisherProvider.js`'s
+  own shape one layer down: `publish()` requires a real signing
+  identity and refuses to store anything that doesn't independently
+  verify; `retract()` silently refuses (`false`, never a thrown error)
+  any claim id that isn't the CALLER'S OWN. Deliberately local-only —
+  no peer gossip, no exchange protocol; see "Deliberately excluded"
+  below.
+- **`application/LocalNamePreferenceStore.js`** — the third naming
+  concept the design conversation named: a purely local, UNSIGNED,
+  never-published override, keyed per signed-in identity so two people
+  sharing one browser/`storageProvider` never see each other's
+  preference.
+- **`application/WorldNavigationSession.js`** — `publishPlaceNamingClaim()`/
+  `retractPlaceNamingClaim()`/`getPlaceNamingClaims()`/`getPlaceNamingView()`/
+  `setPreferredPlaceName()`/`clearPreferredPlaceName()`/
+  `getPreferredPlaceName()`/`getDisplayPlaceName()`, all behind two new
+  OPTIONAL collaborators (`placeNamingClaimUseCase`/
+  `localNamePreferenceStore`) following the exact "enforce/offer only
+  when wired" posture every other optional collaborator in that
+  constructor already follows. `getDisplayPlaceName()` composes all
+  three naming layers — local preference, then claimed ranking, then the
+  region's own `WorldRegion.name` — without ever writing any of that
+  back anywhere.
+- **`ui/components/PlaceNamingPanel.js`** — lists the ranked community
+  view, lets anyone (canEdit or not) publish a new claim or retract
+  their own, and lets this viewer set/clear a local preference. Wired
+  into `ui/views/WorldView.js` via a new "Names" button on each region
+  row in `ui/components/LocationsPanel.js` — deliberately NOT gated by
+  `canEdit` the way Edit/Remove are, since naming claims need no World
+  edit authority at all.
+- **`tests/PlaceNamingClaims.test.js`** — 8 sections: claim
+  construction/validation, required-signature verification (including a
+  tampered-payload and an impersonated-signer case), naming-view scoring
+  and deterministic tie-breaks, store persistence/retraction,
+  use-case-level publish/retract authorization, per-identity preference
+  isolation, a direct regression proof that `WorldRegion.name`/
+  `regionsContaining()`/`describePlace()` are byte-for-byte unchanged by
+  any of this, and a capstone: three independent identities disagreeing
+  about one region, a local preference that never leaks between them,
+  a retraction that reshapes the ranking, and every remaining claim
+  still independently verifying at the end.
+
+### A claim is a fact about an opinion, never a fact about a place
+
+`core/PlaceNamingClaim.js` proves this the same way `core/WorldRegion.js`
+proved 0.5.0's own "geometry decides containment; authorship never
+does": by what it deliberately refuses to consult. Publishing a claim
+never checks `canEditDocument()` — the World-content authorization gate
+every landmark/region MUTATION in `WorldNavigationSession` already
+enforces — because a claim was never a mutation to begin with. The only
+authority `PlaceNamingClaimUseCase#publish()` checks is "can this
+identity sign at all," and the only authority `#retract()` checks is
+"is this identity the claim's own author." Nothing else — not World
+membership, not region authorship, not any notion of who was there
+first — has any say over whether a claim may exist.
+
+### Deliberately excluded
+
+- **A decentralized exchange transport.** `LocalPlaceNamingClaimStore`
+  persists and lists claims for whichever World this replica happens to
+  have; it never gossips a claim to a peer and never fetches one from
+  anywhere else. Two replicas that independently published claims about
+  the same region will show different naming views until some future
+  transport lets them exchange claims — named directly in the design
+  conversation as its own next milestone ("0.5.3 — Decentralized Place
+  Name Exchange"), deliberately not attempted here.
+- **Sybil resistance beyond "one author, one vote."** `namingView()`'s
+  distinct-author scoring stops one identity from inflating a name's
+  score by republishing it, but does nothing about one PERSON minting
+  many distinct `did:key` identities. Reputation, endorsement, proof of
+  distinct personhood, or any other resistance mechanism was named in
+  the design conversation as real future work, sized on its own.
+- **A "PlaceFingerprint" or any other cross-region identity model.** The
+  design conversation raised, and explicitly declined to build yet, a
+  way for geometrically-similar-but-independently-created regions to
+  share naming claims. A claim's `regionId` is an exact reference to one
+  region; two authors' regions covering the same real ground but created
+  independently are, for naming purposes, still two separate places
+  until a future milestone solves that harder problem.
+- **Removing or deprecating `WorldRegion.name`.** The design
+  conversation floated eventually treating a region's own name as "a
+  temporary/local convenience during the transition" — not attempted
+  here. `WorldRegion.name` stays exactly what 0.5.0 left it, and every
+  0.5.0/0.5.1 code path that reads it is unmodified and re-proven
+  unmodified by this milestone's own Section G regression test.
+- **A "winner" name written back anywhere.** `getDisplayPlaceName()`
+  computes a presentation string fresh on every call; nothing about a
+  naming view, a preference, or a claim ranking is ever persisted as a
+  new "canonical" name for a region, on this replica or any other.
+
+```text
+0.5.0   World Regions & Decentralized Place Naming              ✓
+             │
+             ▼
+0.5.1   World Maps & Geographic Navigation                      ✓
+             │
+             ▼
+0.5.2   Place Naming & Naming Claims                             ✓
+             ├── PlaceNamingClaim — signed, REQUIRED, never a World
+             │   mutation; regionId is a reference, never an edit
+             ├── PlaceNamingView — pure derivation, distinct-author
+             │   scoring, confidence never authority
+             ├── LocalPlaceNamingClaimStore/PlaceNamingClaimUseCase —
+             │   local persistence + signing/verification, no exchange
+             │   transport yet
+             ├── LocalNamePreferenceStore — the third naming concept:
+             │   personal, unsigned, never published
+             └── PlaceNamingClaims.test.js — 8 sections proving the
+                 whole stack, including a direct 0.5.0 regression check
+```
+
+> **0.5.0 — Can I name a whole AREA, and have the World derive its own
+> geography from what I named?**
+> **0.5.1 — Now that this World has a geography, can I actually SEE
+> it?**
+> **0.5.2 — Now that I can see a place, can I — and everyone else — each
+> have our own honest opinion about what to call it, without any of us
+> needing the others' permission, and without the World ever having to
+> pick a winner?**
+
+What's left, and deliberately unbuilt: the actual decentralized exchange
+that lets two replicas' independently-published claims meet each other,
+any real Sybil resistance beyond one-author-one-vote, a cross-region
+identity model for geometrically-similar-but-independent regions, and
+any notion of a "winner" name persisted anywhere. Each is sized on its
+own, exactly like every "Deliberately excluded" list in this document
+before it.

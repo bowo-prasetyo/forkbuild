@@ -15,6 +15,7 @@ import {
     getWorldEditAuthorizationGrantSigningDescriptor,
     getWorldEditAuthorizationRevocationSigningDescriptor
 } from '../core/WorldEditAuthorizationEnvelope.js';
+import { getPlaceNamingClaimSigningDescriptor } from '../core/PlaceNamingClaim.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -444,6 +445,42 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getWorldEditAuthorizationRevocationSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.5.2 — a PlaceNamingClaim is NEVER tolerated unsigned, the same
+    // REQUIRED discipline as verifyWorldEditAuthorizationGrant() above —
+    // see core/PlaceNamingClaim.js's own header on why "distinct
+    // authors" (core/PlaceNamingView.js#namingView()'s own score) only
+    // means anything if each claim is provably a different identity's
+    // own assertion. Unlike a World edit grant, the signer MUST equal
+    // the claim's own `authorIdentityId` rather than some separate
+    // "granting" identity — a naming claim has exactly one party to it,
+    // the person doing the claiming. This is STRUCTURAL verification
+    // only: whether authorIdentityId holds EDIT on the region's World,
+    // or membership in it at all, is never asked here, and never asked
+    // anywhere else either — see this file's own header comment on
+    // core/PlaceNamingClaim.js for why a naming claim deliberately needs
+    // no such authority.
+    verifyPlaceNamingClaim(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no place naming claim' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a place naming claim must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.authorIdentityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the claim\'s own author' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getPlaceNamingClaimSigningDescriptor(record), record.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).

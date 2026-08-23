@@ -7733,3 +7733,123 @@ viewer's own pan/zoom choice (`centerX`/`centerZ`/`span` in
 `WorldMapPanel`'s own `data()`) — content refreshing every few seconds
 must never silently yank the map back to "centered on me" while someone
 is looking at the far side of a World.
+
+### A Name Is A Claim, Not A Fact (0.5.2)
+
+0.5.0 gave a World's geography a NAME, authored the same way every other
+piece of World content is: whoever holds EDIT on the World may create,
+rename, or remove a `WorldRegion`. That was deliberately the SIMPLEST
+possible answer, and the design conversation that closed out 0.5.1 named
+exactly what it leaves unsolved: what happens when Alice, Bob, and Carol
+each have a genuine, good-faith opinion about what the same ground
+should be called, and none of them holds — or wants — editorial
+authority over anyone else's? 0.5.2 (Place Naming & Naming Claims)
+answers that by drawing a boundary the design conversation stated
+plainly:
+
+> A `WorldRegion`'s own name is objective shared geometry's label —
+> World content, exactly as 0.5.0 left it. A `PlaceNamingClaim` is a
+> subjective, signed, published ASSERTION about what a region should be
+> called — never World content, never authoritative, and never
+> reconciled into one "correct" answer. A client's own naming VIEW is a
+> derived reading of whatever claims it happens to know about — a
+> ranking by confidence, never a claim of authority.
+
+**A claim never touches the region it's about.** `core/PlaceNamingClaim.js`
+carries a `regionId` it refers to, but is never stored inside
+`World#toJSON()`, never travels through a Command, never touches
+undo/redo, and is never propagated by
+`application/WorldCommandPropagationUseCase.js`. Publishing "Riverbend"
+about Alice's own "Willow Village" changes nothing about the region
+itself — `region.name` stays exactly what it was, forever, regardless of
+how many claims disagree with it or how strongly. See this milestone's
+own capstone test (`tests/PlaceNamingClaims.test.js`, Section H) for the
+proof: Alice's own claim for her own region loses 1-2 to Bob and Carol's
+"Riverbend," and `region.name` never moves.
+
+**No naming authority beyond a signature over one's own claim.** Unlike
+`WorldRegion` (0.5.0's own "any EDIT member" posture) or a World edit
+grant (0.2.98's owner-only posture), publishing a `PlaceNamingClaim`
+requires NEITHER EDIT access to the region's World NOR membership in it
+at all — the only thing `application/PlaceNamingClaimUseCase.js#publish()`
+ever checks is "can this identity sign at all." This is intentional and
+load-bearing: the entire point of a naming CLAIM, as opposed to a
+naming EDIT, is that Bob's opinion about Alice's region needs no
+permission from Alice. See `core/PlaceNamingClaim.js`'s own header, and
+contrast this directly with 0.5.0's own "No naming authority beyond
+ordinary World membership" principle above — 0.5.2 is a strictly WEAKER
+authority requirement than 0.5.0 already was, on purpose.
+
+**A claim is NEVER tolerated unsigned.** `SignatureType.PLACE_NAMING_CLAIM`
+(`core/Signature.js`) is REQUIRED, the same discipline
+`WORLD_EDIT_AUTHORIZATION_GRANT` already established — see
+`identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()`, which
+additionally requires the signer to equal the claim's own
+`authorIdentityId` (never some separate "granting" identity — a naming
+claim has exactly one party to it). This is what makes
+`core/PlaceNamingView.js`'s own distinct-author scoring meaningful at
+all: "3 people call this Green Valley" is worth exactly nothing as a
+signal if any one of those "3" could be the same author copy-pasting
+under a fabricated name.
+
+**Confidence, never authority.** `core/PlaceNamingView.js#namingView()`
+ranks names by the number of DISTINCT identities who have claimed each
+one — an author who republishes the same name five times contributes
+exactly one point, the same as an author who published it once (see
+that module's own header, and `tests/PlaceNamingClaims.test.js` Section
+C's own regression proof). Ten publications of "Green Valley" from ONE
+identity never outrank three publications of "Emerald Valley" from
+three DIFFERENT identities. There is still no protection against one
+identity minting many distinct `did:key` identities to inflate a
+name's score — real Sybil resistance (reputation, endorsement, proof of
+distinct personhood) is explicitly future work, not this milestone's
+(see docs/Roadmap.md, 0.5.2's own "Deliberately excluded" list) — but
+"one author, one vote no matter how many times they shout" is the floor
+this milestone commits to, and it is a floor, never presented as a
+ceiling: nothing here computes or displays a "winner," only a ranking a
+viewer can inspect and override.
+
+**A third, genuinely local concept: the preference, never a claim.**
+`application/LocalNamePreferenceStore.js` is deliberately NEVER signed,
+NEVER stored in a `PlaceNamingClaim`, and NEVER leaves the device it was
+set on. Alice can locally prefer "Green Valley" while Bob locally
+prefers "Emerald Valley" for the exact same region on the exact same
+shared World, and neither preference is visible to, or corrects, the
+other's — proven directly in `tests/PlaceNamingClaims.test.js` Section F
+(two identities sharing one `storageProvider`, each seeing only their
+own preference) and Section H's own capstone. This is the THIRD naming
+concept the original design conversation named, distinct from both a
+`WorldRegion`'s own `name` and a published `PlaceNamingClaim`:
+
+```text
+Local name                — "my name for this place" — personal, never
+                             published.
+Published naming claim    — signed, publicly discoverable, never
+                             authoritative.
+Community-preferred name  — a client's own DERIVED ranking of whatever
+                             claims it happens to know about.
+```
+
+**`getDisplayPlaceName()` is presentation, composing all three layers
+without ever collapsing them into one stored fact.**
+`application/WorldNavigationSession.js#getDisplayPlaceName()` reads, in
+order, a viewer's own local preference, then the top-ranked claimed
+name, then falls back to the region's own `WorldRegion.name` — the exact
+0.5.0 behavior every pre-0.5.2 caller already saw. Nothing about this
+priority order is written back anywhere; calling it twice in a row with
+a different claim landscape can return a different string both times,
+exactly as it should for a purely derived read. This mirrors
+`core/WorldSpatialContext.js`'s own `placeName`/`description` split
+0.5.0 already established: what a region a human explicitly authored
+INTO the World says, versus what a client merely DISPLAYS, must never
+become indistinguishable in storage.
+
+**Not yet a decentralized exchange — that boundary is drawn on purpose.**
+`application/LocalPlaceNamingClaimStore.js` persists and lists claims
+for whichever World this replica happens to have; it never gossips one
+to a peer, never fetches one from anywhere else, and never reconciles
+two replicas' independently-published claims into one. This is
+identical in spirit to 0.5.0's own "not a real-world GIS model"
+restraint: establish the DATA MODEL first, prove it in isolation, and
+size the actual decentralized transport as its own future milestone —
+see docs/Roadmap.md, 0.5.2's own "Deliberately excluded" list.

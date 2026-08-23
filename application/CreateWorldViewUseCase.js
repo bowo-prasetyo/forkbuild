@@ -35,6 +35,7 @@ import { WorldMembershipUseCase } from './WorldMembershipUseCase.js';
 import { WorldPresenceUseCase } from './WorldPresenceUseCase.js';
 import { WorldSpatialPresenceUseCase } from './WorldSpatialPresenceUseCase.js';
 import { LocalWorldExperienceStore } from './LocalWorldExperienceStore.js';
+import { CreateWorldPlaceNamingUseCase } from './CreateWorldPlaceNamingUseCase.js';
 
 // Builds the world exploration backend and returns a session factory, so
 // ui/ never imports storage/, publisher/, or discovery/ directly.
@@ -149,6 +150,12 @@ export class CreateWorldViewUseCase {
         // application/LocalWorldExperienceStore.js and
         // core/LocalWorldExperience.js.
         const localWorldExperienceStore = new LocalWorldExperienceStore({ storageProvider });
+        // 0.5.2 — Place Naming & Naming Claims. A separate local
+        // backend, never folded into localWorldExperienceStore above —
+        // see application/CreateWorldPlaceNamingUseCase.js's own header.
+        const { placeNamingClaimUseCase, localNamePreferenceStore } = identityProvider
+            ? new CreateWorldPlaceNamingUseCase().execute(identityProvider)
+            : { placeNamingClaimUseCase: null, localNamePreferenceStore: null };
         // 0.2.93 — World View Instance Inspection. Both read from the
         // SAME local storageProvider ui/views/EditorView.js's own
         // CreatePersistenceUseCase already builds its equivalents from
@@ -545,7 +552,10 @@ export class CreateWorldViewUseCase {
                     // 0.3.0: Collaborative Spatial Presence — see above.
                     worldSpatialPresenceUseCase,
                     // 0.3.10: World Persistence & Return Experience — see above.
-                    localWorldExperienceStore
+                    localWorldExperienceStore,
+                    // 0.5.2: Place Naming & Naming Claims — see above.
+                    placeNamingClaimUseCase,
+                    localNamePreferenceStore
                 });
                 sessionRef = session;
                 return session;

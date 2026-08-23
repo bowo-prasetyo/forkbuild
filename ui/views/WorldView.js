@@ -29,6 +29,7 @@ import WorldCollaboratorIndicator, { buildSpatialCollaboratorRows } from '../com
 import { buildWorldCollaborationRoster } from '../components/WorldCollaborationRoster.js';
 import WorldWelcomePanel from '../components/WorldWelcomePanel.js';
 import WorldMapPanel from '../components/WorldMapPanel.js';
+import PlaceNamingPanel from '../components/PlaceNamingPanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 
 const DRAG_THRESHOLD_PX = 6;
@@ -62,7 +63,7 @@ export default {
         AvatarInfoPanel, NearbyAvatarsPanel,
         CompassIndicator, LocationsPanel, LandmarkFormModal, RegionFormModal,
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
-        WorldWelcomePanel, WorldMapPanel
+        WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel
     },
     setup() {
         const route = useRoute();
@@ -259,6 +260,18 @@ export default {
         // RegionFormModal's own header.
         const showRegionForm = ref(false);
         const regionFormTarget = ref(null);
+        // 0.5.2 — Place Naming & Naming Claims. `namingPanelRegionId` is
+        // the region this panel currently reads/writes claims for; the
+        // panel's actual props (claims/namingView/preferredName) are
+        // re-derived fresh from the session on open AND after every
+        // publish/retract/set-preferred action below, never cached
+        // independently — see openNamingPanel()/refreshNamingPanel().
+        const showNamingPanel = ref(false);
+        const namingPanelRegionId = ref(null);
+        const namingPanelClaims = ref([]);
+        const namingPanelView = ref([]);
+        const namingPanelPreferredName = ref(null);
+        const myIdentityId = computed(() => session.getMyIdentityId());
         // 0.5.1 — World Maps & Geographic Navigation. `mapContent` is
         // session.getMapContent()'s own shape — refreshed on the SAME
         // cadence as spatialContext/cameraPosition below (every
@@ -1410,6 +1423,63 @@ export default {
         }
 
         // -----------------------------------------------------------------
+        // 0.5.2 — Place Naming & Naming Claims
+        // -----------------------------------------------------------------
+        //
+        // Deliberately NOT gated by canEditActiveWorld anywhere below —
+        // see core/PlaceNamingClaim.js's own header on why publishing or
+        // retracting a naming claim needs no World edit authority at
+        // all, unlike every landmark/region handler above.
+        function refreshNamingPanel() {
+            const regionId = namingPanelRegionId.value;
+            if (!regionId) return;
+            namingPanelClaims.value = session.getPlaceNamingClaims(regionId);
+            namingPanelView.value = session.getPlaceNamingView(regionId);
+            namingPanelPreferredName.value = session.getPreferredPlaceName(regionId);
+        }
+
+        function openNamingPanel(regionId) {
+            namingPanelRegionId.value = regionId;
+            refreshNamingPanel();
+            showNamingPanel.value = true;
+        }
+
+        function closeNamingPanel() {
+            showNamingPanel.value = false;
+            namingPanelRegionId.value = null;
+        }
+
+        function publishNamingClaim(name) {
+            guarded(() => {
+                session.publishPlaceNamingClaim(namingPanelRegionId.value, name);
+                feedback.show(`Published "${name}"`);
+            });
+            refreshNamingPanel();
+        }
+
+        function retractNamingClaim(claimId) {
+            guarded(() => {
+                session.retractPlaceNamingClaim(namingPanelRegionId.value, claimId);
+                feedback.show('Claim retracted');
+            });
+            refreshNamingPanel();
+        }
+
+        function setPreferredNamingName(name) {
+            guarded(() => {
+                session.setPreferredPlaceName(namingPanelRegionId.value, name);
+            });
+            refreshNamingPanel();
+        }
+
+        function clearPreferredNamingName() {
+            guarded(() => {
+                session.clearPreferredPlaceName(namingPanelRegionId.value);
+            });
+            refreshNamingPanel();
+        }
+
+        // -----------------------------------------------------------------
         // 0.5.1 — World Maps & Geographic Navigation
         // -----------------------------------------------------------------
         //
@@ -2142,6 +2212,18 @@ export default {
             closeRegionForm,
             onSaveRegionForm,
             removeRegionFromPanel,
+            showNamingPanel,
+            namingPanelRegionId,
+            namingPanelClaims,
+            namingPanelView,
+            namingPanelPreferredName,
+            openNamingPanel,
+            closeNamingPanel,
+            publishNamingClaim,
+            retractNamingClaim,
+            setPreferredNamingName,
+            clearPreferredNamingName,
+            myIdentityId,
             showMembersPanel,
             worldCollaborationRoster,
             worldOnlineCount,
@@ -2721,6 +2803,7 @@ export default {
                 @add-region="openAddRegionForm"
                 @edit-region="openEditRegionForm"
                 @remove-region="removeRegionFromPanel"
+                @manage-names="openNamingPanel"
             />
             <LandmarkFormModal
                 v-if="showLandmarkForm"
@@ -2733,6 +2816,19 @@ export default {
                 :region="regionFormTarget"
                 @save="onSaveRegionForm"
                 @cancel="closeRegionForm"
+            />
+            <PlaceNamingPanel
+                v-if="showNamingPanel"
+                :region-name="(worldLocations.find(l => l.id === namingPanelRegionId) || {}).title || ''"
+                :naming-view="namingPanelView"
+                :claims="namingPanelClaims"
+                :preferred-name="namingPanelPreferredName"
+                :my-identity-id="myIdentityId"
+                @publish-name="publishNamingClaim"
+                @retract-name="retractNamingClaim"
+                @set-preferred-name="setPreferredNamingName"
+                @clear-preferred-name="clearPreferredNamingName"
+                @cancel="closeNamingPanel"
             />
             <WorldMapPanel
                 v-if="showMapPanel"

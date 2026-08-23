@@ -31,6 +31,12 @@
 // REGION location is also World content an EDIT member may create/
 // rename/redescribe/remove directly (add-region/edit-region/remove-region),
 // distinguished here only because it names an AREA rather than a point.
+//
+// 0.5.2 — Place Naming & Naming Claims adds one more region action,
+// Names, deliberately NOT gated by `canEdit` the way Edit/Remove are:
+// opening ui/components/PlaceNamingPanel.js to publish/retract a
+// naming claim needs no World edit authority, only a signed-in
+// identity — see that panel's own header.
 export default {
     name: 'LocationsPanel',
     props: {
@@ -50,7 +56,13 @@ export default {
     emits: [
         'focus', 'cancel',
         'add-landmark', 'edit-landmark', 'remove-landmark',
-        'add-region', 'edit-region', 'remove-region'
+        'add-region', 'edit-region', 'remove-region',
+        // 0.5.2 — Place Naming & Naming Claims. Opens
+        // ui/components/PlaceNamingPanel.js for one region. Deliberately
+        // NOT gated by canEdit like edit-region/remove-region above —
+        // see that panel's own header on why naming claims need no
+        // World edit authority at all.
+        'manage-names'
     ],
     computed: {
         originLocations() {
@@ -162,6 +174,7 @@ export default {
                                 </div>
                                 <div class="locations-panel-item-actions">
                                     <button class="action-btn" @click="$emit('focus', loc.id)">Focus</button>
+                                    <button class="action-btn" @click="$emit('manage-names', loc.id)">Names</button>
                                     <button v-if="canEdit" class="action-btn" @click="$emit('edit-region', loc.id)">Edit</button>
                                     <button v-if="canEdit" class="action-btn action-btn--danger" @click="$emit('remove-region', loc.id)">Remove</button>
                                 </div>
