@@ -54,6 +54,30 @@ generated deterministically from the world seed — grass, beach, rock, forest
 and farmland, lakes and winding rivers all follow the terrain's own elevation
 and moisture.
 
+### Explore, Map, and Places — three ways to browse, never at once
+
+Below the navigation buttons sit three tabs: **Explore**, **Map**, and
+**Places**. These are World View's three primary, mutually exclusive ways
+to look around — opening one always closes whichever of the others was
+open, so you're never juggling several overlapping browsing panels at the
+same time.
+
+- **Explore** is the default. It shows the arrival/welcome panel (who's
+  here, and a few suggested destinations) plus a **Nearby** section with
+  three collapsible groups — **Nearby Places**, **Nearby Landmarks**, and
+  **Nearby People** — each just a name, a distance, and a compact **Go**
+  button. Click a group's title to expand it — World View remembers which
+  groups you left open even after you switch to Map or Places and come
+  back.
+- **Map** opens the same flat, top-down World Map described below.
+- **Places** opens the geographic place directory described in
+  [Geographic places](#geographic-places) below.
+
+Switching between Explore, Map, and Places never loads a document, edits
+anything, or moves your avatar — it only changes what this panel is
+currently showing you, the same "Navigate ≠ Modify" boundary every other
+navigation control in World View already holds to.
+
 ### Landmarks — marking a place worth remembering
 
 Unlike a structure (a placed building you or someone else built) or a
@@ -75,14 +99,32 @@ touch.
 
 ### The World Map
 
-Next to **Locations**, the **Map** button opens a flat, top-down view of
-everywhere this session currently knows about in the World — named places,
-landmarks, structures, everyone else who's here, and a marker for you.
-Scroll or use +/− to zoom, click empty space to pan the map, and click any
-place or person to move your camera straight there. Nothing about the map
-is editable, and looking at it never changes anything — it's simply a way
-to see the geography a World's collaborators have already built and named,
-all at once, instead of one landmark at a time.
+The **Map** tab opens a flat, top-down view of everywhere this session
+currently knows about in the World — named places, landmarks, structures,
+everyone else who's here, and a marker for you. Scroll or use +/− to zoom,
+click empty space to pan the map, and click any place or person to move
+your camera straight there. Nothing about the map is editable, and looking
+at it never changes anything — it's simply a way to see the geography a
+World's collaborators have already built and named, all at once, instead
+of one landmark at a time.
+
+### Geographic places
+
+The **Places** tab opens a directory of every **geographic place** this
+session has identified — places multiple people have independently named
+or described (as a region — see Locations' own Places section) that turn
+out to occupy roughly the same ground. Click a row to open its own detail
+screen: how many descriptions and Worlds it spans, its own **Community
+Names**, and **Go to Place** / **Show on Map** buttons. Click **← Back** (or
+press Escape) to return to the directory — switching to Map or Explore and
+back to Places later reopens exactly the screen you left, detail or list.
+
+A place's Community Names section only shows its top few names at first,
+with a **More names** button to see the full ranked list — and everything
+past "publish a name of your own" (other geographic descriptions, the raw
+claim history, import/export) sits behind one **More** disclosure, so the
+common case — "what do people call this, and what do I call it?" — never
+competes with everything else the naming system can do.
 
 ## Camera vs. Editing
 

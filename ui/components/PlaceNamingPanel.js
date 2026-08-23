@@ -103,7 +103,27 @@ export default {
     ],
     data() {
         return {
-            newName: ''
+            newName: '',
+            // 0.5.7 — World View UX & Progressive Exploration. This
+            // panel used to show "Community Names," "Other Geographic
+            // Descriptions," "All Claims," and "Exchange" all at once —
+            // exactly the milestone's own example of a naming surface
+            // that dominates the interface instead of answering "what
+            // do people call this?" first. `namesExpanded` gates the
+            // Community Names list down to its top 3 entries;
+            // `advancedExpanded` gates everything below "Publish A
+            // Name" (the other-descriptions cross-reference, the raw
+            // claim list, import/export) behind one "More" disclosure.
+            // Both default closed and are local, component-only UI
+            // state — deliberately NOT threaded through
+            // application/WorldViewNavigationState.js's per-region
+            // naming-disclosure tracking, since this panel is
+            // recreated fresh (v-if) every time it opens; a future
+            // milestone could wire that tracking through if
+            // remembering a viewer's OWN prior disclosure choice across
+            // re-opens of the same place turns out to matter.
+            namesExpanded: false,
+            advancedExpanded: false
         };
     },
     computed: {
@@ -118,6 +138,19 @@ export default {
         // showing an empty list.
         otherGeographicRegions() {
             return this.geographicRegions.filter((region) => region.id !== this.regionId);
+        },
+        // 0.5.7 — the top 3 (most-agreed-on — namingView is already
+        // sorted, see core/PlaceNamingView.js#namingView()'s own
+        // header) unless the viewer explicitly asked to see the rest,
+        // or there simply aren't more than 3 to hide.
+        visibleNamingView() {
+            if (this.namesExpanded || this.namingView.length <= 3) {
+                return this.namingView;
+            }
+            return this.namingView.slice(0, 3);
+        },
+        hasMoreNames() {
+            return this.namingView.length > 3;
         }
     },
     methods: {
@@ -202,7 +235,7 @@ export default {
                         Nobody has published a naming claim for this place yet.
                     </p>
                     <ul v-else class="naming-panel-list">
-                        <li v-for="entry in namingView" :key="entry.name" class="naming-panel-item">
+                        <li v-for="entry in visibleNamingView" :key="entry.name" class="naming-panel-item">
                             <div class="naming-panel-item-info">
                                 <span class="naming-panel-item-name">{{ entry.name }}</span>
                                 <span class="naming-panel-item-score">{{ entry.score }} {{ entry.score === 1 ? 'person' : 'people' }}</span>
@@ -214,43 +247,14 @@ export default {
                             >{{ preferredName === entry.name ? 'Your preference' : 'Prefer this' }}</button>
                         </li>
                     </ul>
+                    <!-- 0.5.7 — progressive disclosure: the full ranked
+                         list only appears once asked for. -->
+                    <button v-if="hasMoreNames" class="action-btn" @click="namesExpanded = !namesExpanded">
+                        {{ namesExpanded ? 'Show fewer names' : 'More names (' + namingView.length + ')' }}
+                    </button>
                     <button v-if="preferredName" class="action-btn" @click="$emit('clear-preferred-name')">
                         Clear my preference
                     </button>
-                </section>
-
-                <section v-if="otherGeographicRegions.length > 0" class="naming-panel-section">
-                    <h4 class="locations-panel-section-title">Other Geographic Descriptions</h4>
-                    <p class="form-hint form-hint--neutral">
-                        These regions were authored independently, but
-                        their geometry looks similar enough to describe
-                        the same ground. This is only a suggestion —
-                        each stays its own separate region, and nothing
-                        here merges them.
-                    </p>
-                    <ul class="naming-panel-list">
-                        <li v-for="region in otherGeographicRegions" :key="region.worldId + ':' + region.id" class="naming-panel-item">
-                            <div class="naming-panel-item-info">
-                                <span class="naming-panel-item-name">{{ formatRegionLabel(region) }}</span>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div v-if="geographicNamingView.length > 0">
-                        <h4 class="locations-panel-section-title">Community Names Across These Places</h4>
-                        <p class="form-hint form-hint--neutral">
-                            Combines every claim published for this
-                            place's geometry, wherever it was described.
-                        </p>
-                        <ul class="naming-panel-list">
-                            <li v-for="entry in geographicNamingView" :key="entry.name" class="naming-panel-item">
-                                <div class="naming-panel-item-info">
-                                    <span class="naming-panel-item-name">{{ entry.name }}</span>
-                                    <span class="naming-panel-item-score">{{ entry.score }} {{ entry.score === 1 ? 'person' : 'people' }}</span>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
                 </section>
 
                 <section class="naming-panel-section">
@@ -274,44 +278,94 @@ export default {
                     </div>
                 </section>
 
-                <section v-if="claims.length > 0" class="naming-panel-section">
-                    <h4 class="locations-panel-section-title">All Claims</h4>
-                    <ul class="naming-panel-list">
-                        <li v-for="claim in claims" :key="claim.id" class="naming-panel-item">
-                            <div class="naming-panel-item-info">
-                                <span class="naming-panel-item-name">{{ claim.name }}</span>
-                                <span class="naming-panel-item-meta">{{ formatAuthor(claim.authorIdentityId) }} · {{ formatWhen(claim.createdAt) }}</span>
-                            </div>
-                            <div class="naming-panel-item-actions">
-                                <button class="action-btn" @click="onExportClaim(claim.id)">Export</button>
-                                <button
-                                    v-if="claim.authorIdentityId === myIdentityId"
-                                    class="action-btn action-btn--danger"
-                                    @click="$emit('retract-name', claim.id)"
-                                >Retract</button>
-                            </div>
-                        </li>
-                    </ul>
-                </section>
+                <!-- 0.5.7 — everything below is secondary to "what do
+                     people call this and how do I add my own name" —
+                     cross-World candidates, the raw claim ledger, and
+                     import/export all collapse behind one disclosure
+                     rather than each competing for attention up front. -->
+                <button
+                    type="button"
+                    class="naming-panel-advanced-toggle"
+                    :aria-expanded="advancedExpanded"
+                    @click="advancedExpanded = !advancedExpanded"
+                >
+                    {{ advancedExpanded ? '▾' : '▸' }} More — other descriptions, claim history, import/export
+                </button>
 
-                <section class="naming-panel-section">
-                    <h4 class="locations-panel-section-title">Exchange</h4>
-                    <p class="form-hint form-hint--neutral">
-                        Names are published locally first — share a claim
-                        by exporting it, or bring in someone else's by
-                        importing what they exported. Importing never
-                        overwrites anything; it only adds one more signed
-                        opinion to the community list above.
-                    </p>
-                    <button class="action-btn" @click="triggerImportClaim">Import Claim</button>
-                    <input
-                        ref="importClaimFileInput"
-                        type="file"
-                        accept="application/json,.json"
-                        style="display: none;"
-                        @change="onImportClaimFileChosen"
-                    />
-                </section>
+                <template v-if="advancedExpanded">
+                    <section v-if="otherGeographicRegions.length > 0" class="naming-panel-section">
+                        <h4 class="locations-panel-section-title">Other Geographic Descriptions</h4>
+                        <p class="form-hint form-hint--neutral">
+                            These regions were authored independently, but
+                            their geometry looks similar enough to describe
+                            the same ground. This is only a suggestion —
+                            each stays its own separate region, and nothing
+                            here merges them.
+                        </p>
+                        <ul class="naming-panel-list">
+                            <li v-for="region in otherGeographicRegions" :key="region.worldId + ':' + region.id" class="naming-panel-item">
+                                <div class="naming-panel-item-info">
+                                    <span class="naming-panel-item-name">{{ formatRegionLabel(region) }}</span>
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div v-if="geographicNamingView.length > 0">
+                            <h4 class="locations-panel-section-title">Community Names Across These Places</h4>
+                            <p class="form-hint form-hint--neutral">
+                                Combines every claim published for this
+                                place's geometry, wherever it was described.
+                            </p>
+                            <ul class="naming-panel-list">
+                                <li v-for="entry in geographicNamingView" :key="entry.name" class="naming-panel-item">
+                                    <div class="naming-panel-item-info">
+                                        <span class="naming-panel-item-name">{{ entry.name }}</span>
+                                        <span class="naming-panel-item-score">{{ entry.score }} {{ entry.score === 1 ? 'person' : 'people' }}</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <section v-if="claims.length > 0" class="naming-panel-section">
+                        <h4 class="locations-panel-section-title">All Claims</h4>
+                        <ul class="naming-panel-list">
+                            <li v-for="claim in claims" :key="claim.id" class="naming-panel-item">
+                                <div class="naming-panel-item-info">
+                                    <span class="naming-panel-item-name">{{ claim.name }}</span>
+                                    <span class="naming-panel-item-meta">{{ formatAuthor(claim.authorIdentityId) }} · {{ formatWhen(claim.createdAt) }}</span>
+                                </div>
+                                <div class="naming-panel-item-actions">
+                                    <button class="action-btn" @click="onExportClaim(claim.id)">Export</button>
+                                    <button
+                                        v-if="claim.authorIdentityId === myIdentityId"
+                                        class="action-btn action-btn--danger"
+                                        @click="$emit('retract-name', claim.id)"
+                                    >Retract</button>
+                                </div>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="naming-panel-section">
+                        <h4 class="locations-panel-section-title">Exchange</h4>
+                        <p class="form-hint form-hint--neutral">
+                            Names are published locally first — share a claim
+                            by exporting it, or bring in someone else's by
+                            importing what they exported. Importing never
+                            overwrites anything; it only adds one more signed
+                            opinion to the community list above.
+                        </p>
+                        <button class="action-btn" @click="triggerImportClaim">Import Claim</button>
+                        <input
+                            ref="importClaimFileInput"
+                            type="file"
+                            accept="application/json,.json"
+                            style="display: none;"
+                            @change="onImportClaimFileChosen"
+                        />
+                    </section>
+                </template>
 
                 <div class="modal-actions">
                     <button class="action-btn" @click="$emit('cancel')">Close</button>

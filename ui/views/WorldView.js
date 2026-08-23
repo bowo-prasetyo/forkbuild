@@ -32,8 +32,10 @@ import WorldMapPanel from '../components/WorldMapPanel.js';
 import PlaceNamingPanel from '../components/PlaceNamingPanel.js';
 import GeographicPlaceDirectoryPanel from '../components/GeographicPlaceDirectoryPanel.js';
 import GeographicPlacePanel from '../components/GeographicPlacePanel.js';
+import CollapsibleSection from '../components/CollapsibleSection.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { geographicPlaceLocationId } from '../../core/GeographicPlaceNavigation.js';
+import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/WorldViewNavigationState.js';
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -67,7 +69,7 @@ export default {
         CompassIndicator, LocationsPanel, LandmarkFormModal, RegionFormModal,
         WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
-        GeographicPlaceDirectoryPanel, GeographicPlacePanel
+        GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection
     },
     setup() {
         const route = useRoute();
@@ -332,6 +334,16 @@ export default {
         // "Nearby Places" section is populated from it too when the
         // panel opens (see openGeographicPlaceDirectory() below).
         const nearbyGeographicPlaces = ref([]);
+        // 0.5.7 — World View UX & Progressive Exploration.
+        // `worldViewNav` is a plain, non-reactive
+        // WorldViewNavigationState instance — treated exactly like
+        // `session` itself elsewhere in this file: this view calls its
+        // methods, then mirrors whatever changed into these refs so
+        // the template can react to it. See that class's own header,
+        // and setPrimaryMode()/goBackInPlaces() below for the mirroring.
+        const worldViewNav = new WorldViewNavigationState();
+        const primaryMode = ref(worldViewNav.primaryMode);
+        const placesView = ref(worldViewNav.currentPlacesView);
         // 0.2.99 — World Collaboration UX. `worldMembers`/
         // `worldPresenceRoster` are the RAW facts session.
         // listWorldMembers()/getWorldPresenceRoster() already return for
@@ -1163,17 +1175,35 @@ export default {
             refreshWelcomeContext();
             welcomeIsArrival.value = Boolean(isArrival);
             showWelcomePanel.value = true;
+            // 0.5.7 — the Welcome panel IS Explore mode's content
+            // (see setPrimaryMode() below), including on the automatic
+            // arrival showing — so primaryMode always agrees with what's
+            // actually on screen, never left pointing at whatever mode
+            // the viewer was in during a PREVIOUS World.
+            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
+            primaryMode.value = worldViewNav.primaryMode;
         }
 
-        // The toolbar's own "Explore" entry point (section 7 of the
-        // design: "a small exploration control... selects a destination
-        // from existing derived information") — same content and
-        // component as the automatic arrival showing, just reopened on
-        // request rather than once automatically.
+        // The Explore primary-mode entry point (section 7 of the
+        // original 0.3.9 design: "a small exploration control... selects
+        // a destination from existing derived information") — same
+        // content and component as the automatic arrival showing, just
+        // reopened on request rather than once automatically.
+        //
+        // 0.5.7 — routed through setPrimaryMode() so re-entering Explore
+        // also closes whatever other primary surface (Map, Places) was
+        // open, the same one-panel-at-a-time guarantee every other mode
+        // switch gets.
         function openExplorePanel() {
-            openWelcomePanel(false);
+            setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
         }
 
+        // 0.5.7 — dismissing Explore's own content returns primaryMode
+        // to its resting default rather than leaving the Explore tab
+        // shown "active" with nothing underneath it — Explore already
+        // IS that default (see WorldViewNavigationState's own
+        // constructor), so this is a no-op on primaryMode itself, only
+        // on the panel's visibility.
         function closeWelcomePanel() {
             showWelcomePanel.value = false;
         }
@@ -1350,11 +1380,23 @@ export default {
             refreshSpatialUI();
         }
 
+        // 0.5.7 — Locations (World/Structures/Landmarks/Regions) lives
+        // under Explore mode rather than its own always-visible
+        // toolbar button — see setPrimaryMode()'s own header. Opening
+        // it still goes through the same mutual-exclusion helper every
+        // other primary surface uses, so it's never stacked on top of
+        // the Map or Places directory.
         function openLocationsPanel() {
+            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
+            primaryMode.value = worldViewNav.primaryMode;
+            closePrimaryNavigationPanels();
             refreshLocationsPanel();
             showLocationsPanel.value = true;
         }
 
+        // Locations lives under Explore (see openLocationsPanel()'s own
+        // header) — since Explore is already worldViewNav's resting
+        // default, closing it needs no mode reset of its own.
         function closeLocationsPanel() {
             showLocationsPanel.value = false;
         }
@@ -1624,6 +1666,125 @@ export default {
             // toolbar button, or a different place) never shows a stale
             // highlight left over from an unrelated place.
             mapHighlightRegionKeys.value = [];
+            // 0.5.7 — dismissing Map with nothing to replace it returns
+            // primaryMode to Explore, its resting default, rather than
+            // leaving the Map tab shown "active" over an empty panel.
+            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
+            primaryMode.value = worldViewNav.primaryMode;
+        }
+
+        // -----------------------------------------------------------------
+        // 0.5.7 — World View UX & Progressive Exploration
+        // -----------------------------------------------------------------
+        //
+        // Explore / Map / Places are now the three PRIMARY navigation
+        // surfaces (see application/WorldViewNavigationState.js's own
+        // header) — mutually exclusive, replacing the four separate
+        // always-visible buttons (Locations, Map, Geographic Places,
+        // Explore) 0.2.94-0.5.6 accumulated. "Locations" (World/
+        // Structures/Landmarks/Regions) stays reachable from Explore
+        // mode rather than disappearing — see openLocationsPanel()
+        // below, now routed through the same mutual-exclusion helper.
+        //
+        // closePrimaryNavigationPanels() deliberately never touches the
+        // landmark/region CREATE forms, Save/Publish/Edit Metadata, or
+        // Members — those are editing/collaboration surfaces, a
+        // genuinely different concern from BROWSING the World (see
+        // docs/Principles.md's own recurring "Navigate ≠ Modify"), and
+        // the design conversation's own point 4: exploration and
+        // editing should never compete for the same UI space.
+        function closePrimaryNavigationPanels() {
+            showWelcomePanel.value = false;
+            showLocationsPanel.value = false;
+            showMapPanel.value = false;
+            showGeographicPlaceDirectory.value = false;
+            showGeographicPlacePanel.value = false;
+        }
+
+        function setPrimaryMode(mode) {
+            if (!worldViewNav.setPrimaryMode(mode)) {
+                return;
+            }
+            primaryMode.value = worldViewNav.primaryMode;
+            closePrimaryNavigationPanels();
+            if (mode === WorldViewPrimaryMode.EXPLORE) {
+                openWelcomePanel(false);
+            } else if (mode === WorldViewPrimaryMode.MAP) {
+                mapContent.value = session.getMapContent((identityId) => resolveIdentityDisplayName(identityId));
+                showMapPanel.value = true;
+            } else if (mode === WorldViewPrimaryMode.PLACES) {
+                // Restores whichever screen (directory or one place's
+                // detail) the viewer left Places on — see
+                // application/WorldViewNavigationState.js's own
+                // "mode switching preserves appropriate state."
+                const view = worldViewNav.currentPlacesView;
+                if (view.screen === 'detail' && view.fingerprintKey) {
+                    restoreGeographicPlaceDetail(view.fingerprintKey);
+                    placesView.value = worldViewNav.currentPlacesView;
+                } else {
+                    openGeographicPlaceDirectory();
+                }
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 0.5.7 — Explore mode: collapsible "Nearby ___" groups
+        // -----------------------------------------------------------------
+        //
+        // Point 3 of the design conversation: "the user sees the
+        // CATEGORY, not 20 controls." Each group reuses data this view
+        // already computes on every refreshSpatialUI() tick
+        // (nearbyGeographicPlaces / spatialContext.nearbyLandmarks /
+        // spatialCollaboratorRows) — nothing here queries the session a
+        // second time. Collapsed state is mirrored from worldViewNav
+        // into this one plain ref, the same "pure module, mirrored into
+        // a ref" pattern primaryMode/placesView above already use.
+        const NEARBY_PLACES_SECTION = 'explore:nearby-places';
+        const NEARBY_LANDMARKS_SECTION = 'explore:nearby-landmarks';
+        const NEARBY_PEOPLE_SECTION = 'explore:nearby-people';
+        const nearbySectionsCollapsed = ref({
+            places: worldViewNav.isSectionCollapsed(NEARBY_PLACES_SECTION, false),
+            landmarks: worldViewNav.isSectionCollapsed(NEARBY_LANDMARKS_SECTION, true),
+            people: worldViewNav.isSectionCollapsed(NEARBY_PEOPLE_SECTION, true)
+        });
+
+        // CollapsibleSection already computes the intended NEXT
+        // collapsed value and emits it (see that component's own
+        // onToggleClick) — this just records it, both in the pure
+        // module (so it survives a primary-mode switch) and in the ref
+        // the template actually reads.
+        function setNearbySectionCollapsed(key, sectionId, collapsed) {
+            worldViewNav.setSectionCollapsed(sectionId, collapsed);
+            nearbySectionsCollapsed.value = { ...nearbySectionsCollapsed.value, [key]: collapsed };
+        }
+
+        const nearbyLandmarkRows = computed(() => (
+            (spatialContext.value && spatialContext.value.nearbyLandmarks) || []
+        ));
+
+        // Joins spatialContext's own nearbyCollaborators (distance/
+        // direction, but only identityId) against
+        // spatialCollaboratorRows' own primaryDeviceId — the same
+        // deviceId WorldCollaboratorIndicator's "Follow" button already
+        // uses — so a "Go" action here can call the EXACT SAME
+        // followCollaborator() every other collaborator-focus entry
+        // point in this file already uses, without a new session query.
+        const nearbyPeopleRows = computed(() => {
+            const contextCollaborators = (spatialContext.value && spatialContext.value.nearbyCollaborators) || [];
+            const deviceByIdentity = new Map(spatialCollaboratorRows.value.map((row) => [row.identityId, row.primaryDeviceId]));
+            return contextCollaborators.map((c) => ({
+                identityId: c.identityId,
+                displayName: c.displayName,
+                distance: c.distance,
+                direction: c.direction,
+                deviceId: deviceByIdentity.get(c.identityId) || null
+            }));
+        });
+
+        function goToNearbyCollaborator(deviceId) {
+            if (deviceId) {
+                followCollaborator(deviceId);
+            }
         }
 
         function focusLocationFromMap(locationId) {
@@ -1646,7 +1807,14 @@ export default {
         // is the one bridge back into EXISTING 0.5.2 machinery — it opens
         // ui/components/PlaceNamingPanel.js for one region rather than
         // rebuilding publish/retract here a second time.
+        // 0.5.7 — a fresh directory open always resets Places back to
+        // its list screen (see WorldViewNavigationState#
+        // openPlacesDirectory's own header on the distinction from
+        // merely switching primary mode BACK to Places, which
+        // preserves whatever detail screen was open).
         function openGeographicPlaceDirectory() {
+            worldViewNav.openPlacesDirectory();
+            placesView.value = worldViewNav.currentPlacesView;
             geographicPlaces.value = session.getGeographicPlaceDirectory().map((place) => place.toJSON());
             showGeographicPlaceDirectory.value = true;
         }
@@ -1680,12 +1848,34 @@ export default {
             if (showWelcomePanel.value) {
                 closeWelcomePanel();
             }
+            // 0.5.7 — arriving somewhere is naturally followed by
+            // looking around, not by leaving Places on whatever detail
+            // screen sent you there — reset back to Explore, the same
+            // destination every other "you have arrived" path in this
+            // file already lands on.
+            worldViewNav.openPlacesDirectory();
+            placesView.value = worldViewNav.currentPlacesView;
+            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
+            primaryMode.value = worldViewNav.primaryMode;
         }
 
+        // 0.5.7 — mirrors closeMapPanel()'s own header: dismissing the
+        // directory with nothing to replace it returns primaryMode to
+        // Explore rather than leaving the Places tab "active" over an
+        // empty panel. Deliberately does NOT reset the Places back-
+        // stack (openGeographicPlaceDirectory()/openPlacesDirectory()
+        // own job) — closing here is not the same as asking for a
+        // fresh list.
         function closeGeographicPlaceDirectory() {
             showGeographicPlaceDirectory.value = false;
+            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.EXPLORE);
+            primaryMode.value = worldViewNav.primaryMode;
         }
 
+        // 0.5.7 — reached only from the directory's own row click (see
+        // GeographicPlacePanel.js's own header), so entering detail
+        // always pushes onto the SAME back-stack goBackInPlaces() below
+        // unwinds.
         function openGeographicPlace(fingerprintKey) {
             const place = session.getGeographicPlace(fingerprintKey);
             if (!place) {
@@ -1693,13 +1883,49 @@ export default {
                 return;
             }
             geographicPlace.value = place.toJSON();
+            worldViewNav.openPlaceDetail(fingerprintKey);
+            placesView.value = worldViewNav.currentPlacesView;
             showGeographicPlaceDirectory.value = false;
+            showGeographicPlacePanel.value = true;
+        }
+
+        // Re-enters an already-open detail screen — used ONLY to
+        // restore Places to where the viewer left it after switching
+        // primary mode away and back (see setPrimaryMode() above), never
+        // to navigate to a NEW place (that's openGeographicPlace()'s
+        // job, which also records the back-stack entry). A place that's
+        // become unresolvable since (the World it lived in unloaded)
+        // falls back to the directory rather than showing a broken
+        // panel.
+        function restoreGeographicPlaceDetail(fingerprintKey) {
+            const place = session.getGeographicPlace(fingerprintKey);
+            if (!place) {
+                worldViewNav.openPlacesDirectory();
+                geographicPlaces.value = session.getGeographicPlaceDirectory().map((p) => p.toJSON());
+                showGeographicPlaceDirectory.value = true;
+                return;
+            }
+            geographicPlace.value = place.toJSON();
             showGeographicPlacePanel.value = true;
         }
 
         function closeGeographicPlacePanel() {
             showGeographicPlacePanel.value = false;
             geographicPlace.value = null;
+        }
+
+        // GeographicPlacePanel's own "← Back" / Escape / backdrop-click
+        // — always returns to the directory it was opened from, never
+        // closes Places entirely (there is nowhere else for it to go —
+        // see this class's own header on why the back-stack is exactly
+        // two screens deep).
+        function goBackInPlaces() {
+            worldViewNav.goBackInPlaces();
+            placesView.value = worldViewNav.currentPlacesView;
+            showGeographicPlacePanel.value = false;
+            geographicPlace.value = null;
+            geographicPlaces.value = session.getGeographicPlaceDirectory().map((place) => place.toJSON());
+            showGeographicPlaceDirectory.value = true;
         }
 
         function focusRegionFromPlace(regionId) {
@@ -1735,6 +1961,16 @@ export default {
             }
             showGeographicPlacePanel.value = false;
             openMapPanel();
+            // 0.5.7 — "Show on Map" genuinely switches which primary
+            // surface is showing (Places' own detail screen -> Map),
+            // so primaryMode follows it — otherwise the Map tab would
+            // render the map without ever looking "active." Places'
+            // OWN back-stack is deliberately left untouched (still
+            // pointing at this same place's detail) — see
+            // setPrimaryMode()'s own PLACES branch, which is exactly
+            // what lets switching back to the Places tab return here.
+            worldViewNav.setPrimaryMode(WorldViewPrimaryMode.MAP);
+            primaryMode.value = worldViewNav.primaryMode;
         }
 
         // 0.2.93 — "Open Source": reuses the EXISTING /editor?load=<id>
@@ -2437,6 +2673,20 @@ export default {
             showGeographicPlaceOnMap,
             nearbyGeographicPlaces,
             goToGeographicPlace,
+            // 0.5.7 — World View UX & Progressive Exploration.
+            WorldViewPrimaryMode,
+            primaryMode,
+            placesView,
+            setPrimaryMode,
+            goBackInPlaces,
+            nearbySectionsCollapsed,
+            setNearbySectionCollapsed,
+            NEARBY_PLACES_SECTION,
+            NEARBY_LANDMARKS_SECTION,
+            NEARBY_PEOPLE_SECTION,
+            nearbyLandmarkRows,
+            nearbyPeopleRows,
+            goToNearbyCollaborator,
             goHome,
             openLocationsPanel,
             closeLocationsPanel,
@@ -2504,6 +2754,7 @@ export default {
     template: `
         <div class="world-view">
             <div class="world-view-overlay">
+              <div class="world-view-overlay-scroll">
                 <h2>{{ title }}</h2>
                 <p
                     v-if="activeDocumentInfo"
@@ -2542,17 +2793,88 @@ export default {
                     >Move Placement</button>
                 </div>
                 <p v-if="author">by {{ author }}</p>
+            <!-- 0.5.7 — World View UX & Progressive Exploration. Home
+                 and Locations stay plain navigation utilities; Explore /
+                 Map / Places below are the three PRIMARY, mutually
+                 exclusive modes that replace the separate always-open
+                 Map/"Geographic Places"/"Explore" buttons this toolbar
+                 used to carry — see application/
+                 WorldViewNavigationState.js's own header. -->
             <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
                 <button class="action-btn" @click="goHome">Home</button>
-                <button class="action-btn" @click="openLocationsPanel">Locations</button>
-                <button class="action-btn" @click="openMapPanel">Map</button>
-                <button class="action-btn" @click="openGeographicPlaceDirectory">Geographic Places</button>
                 <button
                     v-if="activeDocumentInfo"
-                    class="action-btn action-btn--explore"
-                    title="Suggested destinations and who's here"
-                    @click="openExplorePanel"
+                    class="action-btn"
+                    title="Landmarks, regions, and every structure this session knows about"
+                    @click="openLocationsPanel"
+                >Locations</button>
+            </div>
+            <div v-if="cameraPosition" class="world-view-primary-nav">
+                <button
+                    :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.EXPLORE }]"
+                    title="What's around me, and where can I go?"
+                    @click="setPrimaryMode(WorldViewPrimaryMode.EXPLORE)"
                 >Explore</button>
+                <button
+                    :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.MAP }]"
+                    title="Where is everything?"
+                    @click="setPrimaryMode(WorldViewPrimaryMode.MAP)"
+                >Map</button>
+                <button
+                    :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.PLACES }]"
+                    title="What places exist?"
+                    @click="setPrimaryMode(WorldViewPrimaryMode.PLACES)"
+                >Places</button>
+            </div>
+            <!-- Point 3 of the design conversation: "the user sees the
+                 CATEGORY, not 20 controls." Reuses data this view
+                 already computes every refreshSpatialUI() tick — no new
+                 session query. -->
+            <div v-if="cameraPosition && primaryMode === WorldViewPrimaryMode.EXPLORE" class="world-view-section world-view-section--nearby">
+                <h4>Nearby</h4>
+                <CollapsibleSection
+                    title="Nearby Places"
+                    :count="nearbyGeographicPlaces.length"
+                    :collapsed="nearbySectionsCollapsed.places"
+                    @toggle="setNearbySectionCollapsed('places', NEARBY_PLACES_SECTION, $event)"
+                >
+                    <p v-if="nearbyGeographicPlaces.length === 0" class="world-view-nearby-empty">Nothing nearby yet.</p>
+                    <div v-for="place in nearbyGeographicPlaces" :key="place.fingerprintKey" class="world-view-nearby-row">
+                        <span class="world-view-nearby-row-label">⬢ {{ place.displayName }}</span>
+                        <span class="world-view-nearby-row-distance">{{ place.distance }}m {{ place.direction }}</span>
+                        <button class="action-btn world-view-nearby-row-go" @click="goToGeographicPlace(place.fingerprintKey)">Go</button>
+                    </div>
+                </CollapsibleSection>
+                <CollapsibleSection
+                    title="Nearby Landmarks"
+                    :count="nearbyLandmarkRows.length"
+                    :collapsed="nearbySectionsCollapsed.landmarks"
+                    @toggle="setNearbySectionCollapsed('landmarks', NEARBY_LANDMARKS_SECTION, $event)"
+                >
+                    <p v-if="nearbyLandmarkRows.length === 0" class="world-view-nearby-empty">Nothing nearby yet.</p>
+                    <div v-for="landmark in nearbyLandmarkRows" :key="landmark.id" class="world-view-nearby-row">
+                        <span class="world-view-nearby-row-label">★ {{ landmark.title }}</span>
+                        <span class="world-view-nearby-row-distance">{{ landmark.distance }}m {{ landmark.direction }}</span>
+                        <button class="action-btn world-view-nearby-row-go" @click="focusLocationFromPanel(landmark.id)">Go</button>
+                    </div>
+                </CollapsibleSection>
+                <CollapsibleSection
+                    title="Nearby People"
+                    :count="nearbyPeopleRows.length"
+                    :collapsed="nearbySectionsCollapsed.people"
+                    @toggle="setNearbySectionCollapsed('people', NEARBY_PEOPLE_SECTION, $event)"
+                >
+                    <p v-if="nearbyPeopleRows.length === 0" class="world-view-nearby-empty">Nobody nearby yet.</p>
+                    <div v-for="person in nearbyPeopleRows" :key="person.identityId" class="world-view-nearby-row">
+                        <span class="world-view-nearby-row-label">{{ person.displayName }}</span>
+                        <span class="world-view-nearby-row-distance">{{ person.distance }}m {{ person.direction }}</span>
+                        <button
+                            v-if="person.deviceId"
+                            class="action-btn world-view-nearby-row-go"
+                            @click="goToNearbyCollaborator(person.deviceId)"
+                        >Go</button>
+                    </div>
+                </CollapsibleSection>
             </div>
                 <!-- 0.2.99 — World Collaboration UX. Deliberately
                      subtle, exactly like the compass above: the World
@@ -2992,6 +3314,7 @@ export default {
                         </li>
                     </ul>
                 </div>
+              </div>
             </div>
             <div ref="viewport" class="world-viewport"></div>
             <CommandPalette
@@ -3102,7 +3425,7 @@ export default {
                 @open-names="openNamesFromPlace"
                 @show-on-map="showGeographicPlaceOnMap"
                 @go-to-place="goToGeographicPlace(geographicPlace.fingerprintKey)"
-                @cancel="closeGeographicPlacePanel"
+                @cancel="goBackInPlaces"
             />
             <WorldWelcomePanel
                 v-if="showWelcomePanel"

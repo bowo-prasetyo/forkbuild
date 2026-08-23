@@ -117,7 +117,14 @@ export default {
                 <div class="modal-actions">
                     <button class="action-btn action-btn--primary" @click="$emit('go-to-place')">Go to Place</button>
                     <button class="action-btn" @click="$emit('show-on-map')">Show on Map</button>
-                    <button class="action-btn" @click="$emit('cancel')">Close</button>
+                    <!-- 0.5.7 — reached only from
+                         GeographicPlaceDirectoryPanel's own row click
+                         (see this component's own header), so "cancel"
+                         always means "back to the directory I came
+                         from," never "close World View's Places
+                         surface entirely" — the host wires this to
+                         goBackInPlaces(), not a full close. -->
+                    <button class="action-btn" @click="$emit('cancel')">← Back</button>
                 </div>
             </div>
         </div>
