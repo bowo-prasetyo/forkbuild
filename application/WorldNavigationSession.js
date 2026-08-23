@@ -79,6 +79,7 @@ import { deriveWorldSpatialAnchor } from '../core/WorldSpatialAnchor.js';
 import { derivePlaceContexts, findNearestLandmark, describeLocation } from '../core/WorldCurationContext.js';
 import { deriveWorldWelcomeContext } from '../core/WorldWelcomeContext.js';
 import { regionsContaining, describePlace } from '../core/WorldRegionGeography.js';
+import { preferredClaimedName } from '../core/PlaceNamingView.js';
 
 const STREAMING_RADIUS = 150;
 const NAVIGATION_RADIUS = 80;
@@ -298,7 +299,22 @@ export class WorldNavigationSession {
 	    // remembers or restores a camera framing for any World. See
 	    // application/LocalWorldExperienceStore.js and the "Local World
 	    // Experience & Return" section below.
-	    localWorldExperienceStore = null
+	    localWorldExperienceStore = null,
+	    // 0.5.2 — Place Naming & Naming Claims. Both OPTIONAL, the same
+	    // "enforce/offer only when the collaborator is actually wired"
+	    // posture every other optional collaborator in this constructor
+	    // already follows: a session built without one (every pre-0.5.2
+	    // caller, and every existing test) simply can't publish/retract/
+	    // read naming claims or local name preferences — see the "Place
+	    // Naming & Naming Claims" section below, and
+	    // application/CreateWorldPlaceNamingUseCase.js for the real
+	    // wiring. Deliberately separate collaborators, never folded into
+	    // one — a claim is signed, shared content; a preference is
+	    // unsigned, local-only state, exactly the boundary core/
+	    // PlaceNamingClaim.js and application/LocalNamePreferenceStore.js
+	    // each document in their own header.
+	    placeNamingClaimUseCase = null,
+	    localNamePreferenceStore = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -568,6 +584,10 @@ export class WorldNavigationSession {
 
 	    // 0.3.10 — see the constructor's own comment above.
 	    this._localWorldExperienceStore = localWorldExperienceStore;
+
+	    // 0.5.2 — see the constructor's own comment above.
+	    this._placeNamingClaimUseCase = placeNamingClaimUseCase;
+	    this._localNamePreferenceStore = localNamePreferenceStore;
 
 	    this._container = null;
 	    this._session = null;
@@ -5458,6 +5478,172 @@ export class WorldNavigationSession {
 	        new RemoveWorldRegionCommand({ worldId, regionId })
 	    );
 	    return true;
+	}
+
+	// The currently signed-in identity's own did:key id, or null — a
+	// small general-purpose accessor this milestone needed for
+	// ui/components/PlaceNamingPanel.js to tell "my own claim" apart
+	// from everyone else's without duplicating
+	// identity/resolveSigningIdentityId.js's own tolerant lookup in the
+	// UI layer.
+	getMyIdentityId() {
+	    return resolveSigningIdentityId(this._identityProvider);
+	}
+
+	// -----------------------------------------------------------------
+	// Place Naming & Naming Claims (0.5.2) — deliberately NOT another
+	// World Regions section above it. A WorldRegion's own `name` is
+	// untouched by any of this and stays exactly what
+	// core/WorldRegionGeography.js's regionsContaining()/describePlace()
+	// read. What follows is a SEPARATE, additive layer: any identity —
+	// not only a region's author, not even someone holding EDIT on the
+	// World the region lives in — may publish a signed opinion about
+	// what a region should be called (core/PlaceNamingClaim.js), and
+	// this replica can locally prefer one name over whatever
+	// core/PlaceNamingView.js's own ranking would otherwise show. See
+	// docs/Principles.md, "A Name Is A Claim, Not A Fact (0.5.2)."
+	//
+	// Every method below degrades gracefully when
+	// placeNamingClaimUseCase/localNamePreferenceStore were never wired
+	// (every pre-0.5.2 caller, and every existing test): publish/retract
+	// throw a clear "not available" error exactly like
+	// grantWorldEdit()/revokeWorldEdit() already do without
+	// worldMembershipUseCase, while the read methods return an empty/
+	// null "nothing to show" result rather than throwing — a UI can
+	// always safely call getPlaceNamingView()/getPreferredPlaceName()
+	// without first checking whether naming claims are configured at
+	// all.
+	// -----------------------------------------------------------------
+
+	// Signs and publishes "I claim region `regionId` is called `name`,"
+	// scoped to whichever World that region actually belongs to (see
+	// _resolveRegionOwner() above and core/PlaceNamingClaim.js's own
+	// header on why a claim always carries an explicit worldId). Throws
+	// if the region is unknown to this replica, or if naming claims were
+	// never wired — never a canEditDocument() check, unlike every
+	// World-content mutation above: publishing a claim never touches the
+	// World itself. See application/PlaceNamingClaimUseCase.js#publish().
+	publishPlaceNamingClaim(regionId, name) {
+	    if (!this._placeNamingClaimUseCase) {
+	        throw new Error('WorldNavigationSession: place naming claims are not available');
+	    }
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
+	    }
+	    return this._placeNamingClaimUseCase.publish(owner.world.id, regionId, name);
+	}
+
+	// Withdraws a claim THIS identity itself published — see
+	// application/PlaceNamingClaimUseCase.js#retract() on why anyone
+	// else's claim id is silently ignored (returns false) rather than
+	// throwing.
+	retractPlaceNamingClaim(regionId, claimId) {
+	    if (!this._placeNamingClaimUseCase) {
+	        throw new Error('WorldNavigationSession: place naming claims are not available');
+	    }
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        return false;
+	    }
+	    return this._placeNamingClaimUseCase.retract(owner.world.id, claimId);
+	}
+
+	// Every claim this replica knows about for one region, most recent
+	// first — raw facts, unranked. [] when naming claims aren't wired or
+	// the region is unknown, never an error.
+	getPlaceNamingClaims(regionId) {
+	    if (!this._placeNamingClaimUseCase) {
+	        return [];
+	    }
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        return [];
+	    }
+	    return this._placeNamingClaimUseCase.claimsForRegion(owner.world.id, regionId);
+	}
+
+	// core/PlaceNamingView.js#namingView() for one region — ranked by
+	// distinct-author score, most-agreed-on name first. [] under the
+	// same "nothing wired, nothing known" conditions as
+	// getPlaceNamingClaims() above.
+	getPlaceNamingView(regionId) {
+	    if (!this._placeNamingClaimUseCase) {
+	        return [];
+	    }
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        return [];
+	    }
+	    return this._placeNamingClaimUseCase.namingView(owner.world.id, regionId);
+	}
+
+	// This replica's own LOCAL, unsigned, unshared override — see
+	// application/LocalNamePreferenceStore.js's own header on why this
+	// is a genuinely third concept, never a claim and never the
+	// region's own name.
+	setPreferredPlaceName(regionId, name) {
+	    if (!this._localNamePreferenceStore) {
+	        throw new Error('WorldNavigationSession: place name preferences are not available');
+	    }
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
+	    }
+	    return this._localNamePreferenceStore.setPreferredName(owner.world.id, regionId, name);
+	}
+
+	clearPreferredPlaceName(regionId) {
+	    if (!this._localNamePreferenceStore) {
+	        return false;
+	    }
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        return false;
+	    }
+	    return this._localNamePreferenceStore.clearPreferredName(owner.world.id, regionId);
+	}
+
+	// This replica's own raw local override for one region, or null —
+	// distinct from getDisplayPlaceName() below, which additionally
+	// falls back to the community-claimed and World-authored name. A UI
+	// showing "your preference: ___" reads this; a UI showing "what to
+	// actually label the map with" reads getDisplayPlaceName().
+	getPreferredPlaceName(regionId) {
+	    if (!this._localNamePreferenceStore) {
+	        return null;
+	    }
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        return null;
+	    }
+	    return this._localNamePreferenceStore.getPreferredName(owner.world.id, regionId);
+	}
+
+	// The single name a caller (a map label, a Locations panel row)
+	// should actually DISPLAY for a region, in priority order:
+	//   1. this replica's own local preference, if one was ever set
+	//   2. the top-ranked name from getPlaceNamingView() above, if
+	//      anyone has published a claim at all
+	//   3. the region's own WorldRegion.name — the exact 0.5.0 behavior
+	//      every pre-0.5.2 caller already saw, untouched
+	// Never throws, never returns an empty string for a region that
+	// actually exists — the same "always something sensible to show"
+	// guarantee getRegion() itself already offers.
+	getDisplayPlaceName(regionId) {
+	    const owner = this._resolveRegionOwner(regionId);
+	    const preferred = (this._localNamePreferenceStore && owner)
+	        ? this._localNamePreferenceStore.getPreferredName(owner.world.id, regionId)
+	        : null;
+	    if (preferred) {
+	        return preferred;
+	    }
+	    const claimed = preferredClaimedName(regionId, this.getPlaceNamingClaims(regionId));
+	    if (claimed) {
+	        return claimed;
+	    }
+	    const region = this.getRegion(regionId);
+	    return region ? region.name : '';
 	}
 
 	// Add these to EditorSession.js and WorldNavigationSession.js

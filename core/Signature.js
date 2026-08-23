@@ -139,7 +139,19 @@ export const SignatureType = Object.freeze({
     // made under WORLD_EDIT_AUTHORIZATION_GRANT above. See core/
     // WorldEditAuthorizationEnvelope.js's
     // getWorldEditAuthorizationRevocationSigningDescriptor().
-    WORLD_EDIT_AUTHORIZATION_REVOCATION: 'world-edit-authorization-revocation'
+    WORLD_EDIT_AUTHORIZATION_REVOCATION: 'world-edit-authorization-revocation',
+    // 0.5.2 — a REQUIRED signature (never optional — see this file's own
+    // "no unsigned claims" rule above), over a PlaceNamingClaim
+    // (core/PlaceNamingClaim.js's own wire shape). Proves "identity X
+    // itself asserts that region Y is called Z" — a deliberately
+    // WEAKER claim than WORLD_EDIT_AUTHORIZATION_GRANT: it never
+    // authorizes anything, never requires the signer to hold EDIT on
+    // the World the region lives in, and two claims for the same
+    // region that disagree are both perfectly valid signed facts, not
+    // a conflict either replica needs to resolve. See core/
+    // PlaceNamingClaim.js's own getSigningDescriptor() and
+    // docs/Principles.md, "A Name Is A Claim, Not A Fact (0.5.2)."
+    PLACE_NAMING_CLAIM: 'place-naming-claim'
 });
 
 export class Signature {
