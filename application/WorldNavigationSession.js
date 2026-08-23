@@ -5,25 +5,11 @@ import { SpatialHoverState } from './spatial-state/SpatialHoverState.js';
 import { SpatialCameraController } from './SpatialCameraController.js';
 import { SpatialInspectionService } from './SpatialInspectionService.js';
 import { SpatialInspectionState } from './spatial-state/SpatialInspectionState.js';
-import { SpatialEditingService } from './SpatialEditingService.js';
 import { SpatialEditingContext } from './spatial-state/SpatialEditingContext.js';
-import { SpatialPlacementService } from './SpatialPlacementService.js';
-import { SpatialPlacementState } from './spatial-state/SpatialPlacementState.js';
-import { PlaceBrickCommand } from './commands/PlaceBrickCommand.js';
 import { CommandHistory } from './CommandHistory.js';
-import { PlacementValidator } from '../core/PlacementValidator.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { EventBus } from '../core/events/EventBus.js';
-import { TransformGizmoUseCase } from './TransformGizmoUseCase.js';
-import { TransformSettings } from './TransformSettings.js';
 import { License } from '../core/License.js';
-import { SpatialClipboardState } from './spatial-state/SpatialClipboardState.js';
-import { CreateGroupCommand } from './commands/CreateGroupCommand.js';
-import { DeleteGroupCommand } from './commands/DeleteGroupCommand.js';
-import { RenameGroupCommand } from './commands/RenameGroupCommand.js';
-import { AddToGroupCommand } from './commands/AddToGroupCommand.js';
-import { RemoveFromGroupCommand } from './commands/RemoveFromGroupCommand.js';
-import { DuplicateGroupCommand } from './commands/DuplicateGroupCommand.js';
 import { CreateWorldLandmarkCommand } from './commands/CreateWorldLandmarkCommand.js';
 import { UpdateWorldLandmarkCommand } from './commands/UpdateWorldLandmarkCommand.js';
 import { RemoveWorldLandmarkCommand } from './commands/RemoveWorldLandmarkCommand.js';
@@ -203,6 +189,23 @@ const CAMERA_FOCUS_DURATION_MS = 900;
 // drives the Editor. Group and clipboard surface (0.1.42/0.1.43)
 // belongs wherever this session is extended in the deployed tree; the
 // action layer degrades gracefully when those methods are absent.
+//
+// 0.5.9 — World View Read-Only Exploration & Fork-to-Edit. Every
+// paragraph above this one describes editing capability that no longer
+// lives on this class: placement, gizmo/transform, groups, and
+// clipboard are gone (EditorSession already had full parity for all of
+// it — see docs/Principles.md, "World View Observes and Navigates;
+// Editor Mutates and Builds"). selectAll()/getSelectionCount()/
+// pick()/hover()/marqueeSelect()/clearSelection() stay — they drive
+// FOCUS and inspection, not mutation. World Region/Landmark naming
+// (createRegionHere() etc., further below) also stays, deliberately —
+// see that section's own header on why naming a place is annotation,
+// not construction. The one deliberate door out of this boundary is
+// "Edit a Copy": forkFocusedDocument-shaped navigation
+// (ui/views/WorldView.js#editFocusedCopyFromFocusPanel(), reusing the
+// exact same `/editor?fork=` entry point ui/components/
+// PublicationCatalog.js#forkPublication() already used) that hands the
+// containing Document off to the Editor rather than editing it here.
 export class WorldNavigationSession {
 	constructor({
 	    registry,
@@ -214,14 +217,6 @@ export class WorldNavigationSession {
 	    restoreHistoryStateUseCase = null,
 	    identityProvider = null,
 	    documentCloneService = null,
-	    copySelectionUseCase = null,
-	    pasteClipboardUseCase = null,
-	    // 0.4.9 — Alignment, Snapping & Repetition. Same optional
-	    // posture as copySelectionUseCase/pasteClipboardUseCase above —
-	    // a session built without one simply can't offer
-	    // repeatSelection(); duplicateSelection() keeps working either
-	    // way.
-	    repeatSelectionUseCase = null,
     	discoveryProvider = null, // <-- Fixed: Added missing parameter
 	    placementRegistry = null,
 	    moveWorldPlacementUseCase = null,
@@ -346,9 +341,6 @@ export class WorldNavigationSession {
 	    this._restoreHistoryStateUseCase = restoreHistoryStateUseCase;
 	    this._identityProvider = identityProvider;
 	    this._documentCloneService = documentCloneService;
-	    this._copySelectionUseCase = copySelectionUseCase;
-	    this._pasteClipboardUseCase = pasteClipboardUseCase;
-	    this._repeatSelectionUseCase = repeatSelectionUseCase;
 	    // 0.2.23: WHERE a published world sits in shared space — a
 	    // separate concern from the document/publication itself (see
 	    // docs/Principles.md, "A Publication Is What; A Placement Is
@@ -614,43 +606,26 @@ export class WorldNavigationSession {
 	    this._container = null;
 	    this._session = null;
         this._spatialCameraController = null;
-        this._transformSettings = new TransformSettings();
-        this._placementService = new SpatialPlacementService(registry);
         this._loadedDocuments = new Map();
         this._commandHistories = new Map();
+        // 0.5.9 — World View Read-Only Exploration & Fork-to-Edit.
+        // SpatialEditingService/SpatialPlacementService/TransformGizmoUseCase
+        // (brick/structure/group content mutation — placement, gizmo
+        // drags, selection transforms, clipboard, groups) no longer
+        // exist on this session at all: EditorSession already owns that
+        // whole kernel with full parity (see docs/Principles.md, "World
+        // View Observes and Navigates; Editor Mutates and Builds
+        // (0.5.9)"). SpatialInspectionService stays — read-only.
+        // `_commandHistories` also stays: World Region/Landmark naming
+        // (createRegionHere() etc., below) still routes fork-on-write
+        // and undo/redo through it exactly as before — that capability
+        // was deliberately NOT part of this milestone's removal (naming
+        // a place is navigation/annotation, not construction).
         this._inspectionService = new SpatialInspectionService(this);
-        this._editingService = new SpatialEditingService(
-            this,
-            this._commandHistories,
-            this._registry,
-            this._transformSettings,
-            // 0.2.95 — the ONE seam every real mutation chokepoint in
-            // SpatialEditingService now consults — see that class's own
-            // constructor comment.
-            (documentId) => this.canEditDocument(documentId)
-        );
-        this._gizmoUseCase = new TransformGizmoUseCase(this._editingService);
         this._failedLoads = new Map();
         this._spatialSelection = SpatialSelectionState.empty();
         this._spatialHover = SpatialHoverState.empty();
         this._spatialInspection = SpatialInspectionState.empty();
-        this._spatialEditingContext = SpatialEditingContext.empty();
-        this._spatialPlacement = SpatialPlacementState.empty();
-        this._activeDefinitionId = null;
-        // 0.2.87 — one shared PlacementValidator instance (stateless,
-        // safe to reuse) rather than commitPlacement()'s own previous
-        // habit of constructing a fresh one inline; the SAME instance
-        // now also backs the hover-time `blocked` check in
-        // _updatePlacementPreview(), so preview and commit can never
-        // disagree about what counts as occupied. `_pendingPlacementRotation`
-        // is this session's own placement-preview orientation — owned
-        // here, not on SpatialPlacementState, because it must survive
-        // across hover updates and brick switches within one placement
-        // session; it resets only when placement mode is actually left
-        // (setActiveDefinitionId(null)), never on every hover or brick
-        // change — see rotatePlacementPreview() below.
-        this._placementValidator = new PlacementValidator();
-        this._pendingPlacementRotation = 0;
         // 0.2.27: two independent concepts that used to be one field —
         // see docs/Principles.md, "Camera Focus, Active Document, and
         // Selection Are Three Different Things."
@@ -666,8 +641,6 @@ export class WorldNavigationSession {
         this._activeDocumentId = null;
         this._eventBus = null;
 	    this._discoveryProvider = discoveryProvider;
-
-		this._pasteCount = 0;
 
         // 0.2.20: documentIds currently loaded straight from a
         // publication — immutable as far as this session is concerned,
@@ -725,10 +698,6 @@ export class WorldNavigationSession {
         this._cameraFocusFrameSubscription = null;
     }
 
-    get transformSettings() {
-        return this._transformSettings;
-    }
-
     // 0.2.97 — the ONE place a CommandHistory ever enters
     // `_commandHistories`. Every call site that used to write
     // `this._commandHistories.set(worldId, history)` directly now
@@ -773,18 +742,6 @@ export class WorldNavigationSession {
         this.dispose();
         this._container = container;
         this._eventBus = new EventBus();
-        this._transformSettings = new TransformSettings();
-        this._editingService = new SpatialEditingService(
-            this,
-            this._commandHistories,
-            this._registry,
-            this._transformSettings,
-            // 0.2.95 — the ONE seam every real mutation chokepoint in
-            // SpatialEditingService now consults — see that class's own
-            // constructor comment.
-            (documentId) => this.canEditDocument(documentId)
-        );
-        this._gizmoUseCase = new TransformGizmoUseCase(this._editingService);
         this._session = new RenderWorldViewUseCase().execute(
             container,
             this._registry,
@@ -795,11 +752,16 @@ export class WorldNavigationSession {
             // constructor comment and renderer/WorldRenderer.js's 0.2.90
             // header. Still gracefully absent (null) for any caller that
             // doesn't wire one, exactly as before this milestone.
-            { gestureService: this._editingService, structureResolver: this._structureResolver }
+            //
+            // 0.5.9 — gestureService is now permanently null: World View
+            // no longer owns a gesture/gizmo kernel at all (see this
+            // class's own header), so renderer/TransformGizmoController.js
+            // never has one to drive a drag with — its own null guards
+            // already make that a silent no-op rather than a throw.
+            { gestureService: null, structureResolver: this._structureResolver }
         );
         this._spatialCameraController = new SpatialCameraController(this._session);
         this._inspectionService = new SpatialInspectionService(this);
-        this._placementService = new SpatialPlacementService(this._registry);
         // Remote avatars first: _setupLocalAvatar()'s presence
         // subscription publishes THROUGH _presenceSyncService, so it
         // must already exist by the time that subscription is wired.
@@ -1877,203 +1839,18 @@ export class WorldNavigationSession {
     }
 
     // -----------------------------------------------------------------
-    // Placement Mode
+    // Placement Mode & Gizmo interaction — REMOVED (0.5.9). World View
+    // no longer offers brick placement, brick/group selection-transform,
+    // or gizmo dragging at all; EditorSession already owns the full,
+    // identical kernel (SpatialPlacementService/SpatialEditingService/
+    // TransformGizmoUseCase) with zero loss of capability — see
+    // docs/Principles.md, "World View Observes and Navigates; Editor
+    // Mutates and Builds (0.5.9)". setActiveDefinitionId/
+    // getActiveDefinitionId/isPlacementMode/rotatePlacementPreview/
+    // isGestureActive/getSpatialPlacement/commitPlacement/
+    // cancelPlacement/gizmoPointerDown/gizmoPointerMove/gizmoPointerUp/
+    // gizmoKeyDown used to live here.
     // -----------------------------------------------------------------
-
-    setActiveDefinitionId(definitionId) {
-        this._activeDefinitionId = definitionId;
-        if (!definitionId) {
-            this._spatialPlacement = SpatialPlacementState.empty();
-            // 0.2.87 — leaving placement mode resets the pending
-            // orientation; switching bricks WHILE still placing does
-            // not (this method is only reached with a null definitionId
-            // when placement mode actually ends — see cancelPlacement()
-            // and commitPlacement()'s own use of setActiveDefinitionId
-            // is never called on a successful commit, only via explicit
-            // cancellation).
-            this._pendingPlacementRotation = 0;
-            this._session.hidePreview();
-        }
-        this._refreshGizmo();
-    }
-
-    getActiveDefinitionId() {
-        return this._activeDefinitionId;
-    }
-
-    isPlacementMode() {
-        return this._activeDefinitionId !== null;
-    }
-
-    // 0.2.87 — rotates the PENDING placement preview by `delta` degrees
-    // (default +90, matching PlaceBrickCommand/RotateBrickCommand's own
-    // convention of un-normalized accumulation — see this file's own
-    // header note above _pendingPlacementRotation). Acts on whatever the
-    // most recent hover already resolved (this._spatialPlacement),
-    // exactly like PlacementTool's own onKeyDown() in the Editor: no
-    // re-picking, no CommandHistory entry — rotating before you've
-    // placed anything is Editor/session state, never a domain mutation.
-    // Returns false (a no-op) when there's nothing currently being
-    // hovered to rotate, so callers can skip a redundant UI refresh.
-    rotatePlacementPreview(delta = 90) {
-        if (!this._activeDefinitionId || !this._spatialPlacement || !this._spatialPlacement.valid) {
-            return false;
-        }
-        this._pendingPlacementRotation += delta;
-        this._spatialPlacement = new SpatialPlacementState({
-            valid: this._spatialPlacement.valid,
-            definitionId: this._spatialPlacement.definitionId,
-            position: this._spatialPlacement.position,
-            rotation: this._pendingPlacementRotation,
-            blocked: this._spatialPlacement.blocked,
-            targetDocumentId: this._spatialPlacement.targetDocumentId,
-            targetBuildingId: this._spatialPlacement.targetBuildingId
-        });
-        this._presentPlacementPreview();
-        return true;
-    }
-
-    isGestureActive() {
-        return this._editingService ? this._editingService.transformGizmoState.active : false;
-    }
-
-    getSpatialPlacement() {
-        return this._spatialPlacement;
-    }
-
-    commitPlacement() {
-        if (!this._spatialPlacement || !this._spatialPlacement.valid) {
-            return false;
-        }
-        const placement = this._spatialPlacement;
-        let targetDocumentId = placement.targetDocumentId || this._activeDocumentId;
-        let targetBuildingId = placement.targetBuildingId || null;
-        // 0.2.20: placing a brick is a mutation — fork first if the
-        // target is still a published, unforked snapshot. The target
-        // building (if any was resolved before the fork) is remapped
-        // positionally, same as a selection would be.
-        if (this._publishedDocumentIds.has(targetDocumentId)) {
-            const sourceDoc = this._loadedDocuments.get(targetDocumentId);
-            const buildingIndex = (targetBuildingId && sourceDoc)
-                ? sourceDoc.world.getBuildings().findIndex((b) => b.id === targetBuildingId)
-                : -1;
-            targetDocumentId = this._ensureEditableDocumentId(targetDocumentId);
-            const forkedDoc = this._loadedDocuments.get(targetDocumentId);
-            targetBuildingId = (buildingIndex !== -1 && forkedDoc)
-                ? (forkedDoc.world.getBuildings()[buildingIndex]?.id || null)
-                : null;
-        }
-        const document = this._loadedDocuments.get(targetDocumentId);
-        if (!document) {
-            return false;
-        }
-        const world = document.world;
-        const buildings = world.getBuildings();
-        if (buildings.length === 0) {
-            return false;
-        }
-        const buildingId = targetBuildingId || buildings[0].id;
-        if (!this._placementValidator.canPlace(world, buildingId, placement.position)) {
-            return false;
-        }
-        const command = new PlaceBrickCommand({
-            worldId: world.id,
-            buildingId,
-            definitionId: placement.definitionId,
-            position: placement.position,
-            rotation: placement.rotation
-        });
-        let history = this._commandHistories.get(world.id);
-        if (!history) {
-            history = new CommandHistory({ world });
-            this._registerCommandHistory(world.id, history);
-        }
-        history.execute(command);
-        this._spatialPlacement = SpatialPlacementState.empty();
-        return true;
-    }
-
-    cancelPlacement() {
-        this.setActiveDefinitionId(null);
-    }
-
-    // -----------------------------------------------------------------
-    // Gizmo interaction (0.1.46; modifiers + feedback in 0.1.47)
-    // -----------------------------------------------------------------
-
-    gizmoPointerDown(rawEvent) {
-        if (!this._session || rawEvent.button !== 0) {
-            return false;
-        }
-        if (this.isPlacementMode() || this._spatialSelection.isEmpty) {
-            return false;
-        }
-        // gizmoPointerDown runs on EVERY pointer-down while something
-        // is selected — that's the "gizmo-first" pattern (try the
-        // gizmo, fall back to a plain click-select on pointer-up), not
-        // a signal that this particular click is a drag. A fork must
-        // stay lazy on the actual first mutation, so hit-test BEFORE
-        // forking: a click that lands anywhere but a handle (e.g.
-        // re-selecting a different brick) must never fork on its own.
-        if (typeof this._session.gizmoHitTest === 'function'
-            && !this._session.gizmoHitTest(rawEvent.clientX, rawEvent.clientY)) {
-            return false;
-        }
-        // This IS a genuine grab: it commits to a mutation the moment
-        // the drag ends. Fork now, before the renderer arms the drag
-        // against `this._spatialSelection` — every subsequent gizmo
-        // callback (move/up) reads that same (now-forked) selection
-        // reference.
-        this._ensureEditableSelection();
-        return this._session.gizmoPointerDown(
-            rawEvent.clientX,
-            rawEvent.clientY,
-            this._spatialSelection,
-            this._toModifiers(rawEvent)
-        ) === true;
-    }
-
-    gizmoPointerMove(rawEvent) {
-        if (!this._session) {
-            return { consumed: false, hovered: false, feedback: null };
-        }
-        return this._session.gizmoPointerMove(
-            rawEvent.clientX,
-            rawEvent.clientY,
-            this._spatialSelection,
-            this._toModifiers(rawEvent)
-        ) || { consumed: false, hovered: false, feedback: null };
-    }
-
-    gizmoPointerUp(rawEvent) {
-        if (!this._session) {
-            return { consumed: false, committed: false, feedback: null };
-        }
-        const result = this._session.gizmoPointerUp(
-            rawEvent.clientX,
-            rawEvent.clientY,
-            this._spatialSelection,
-            this._toModifiers(rawEvent)
-        );
-        if (result && result.consumed) {
-            this._refreshInspection();
-            this._refreshEditingContext();
-            this._refreshGizmo();
-            return result;
-        }
-        return { consumed: false, committed: false, feedback: null };
-    }
-
-    gizmoKeyDown(keyEvent) {
-        if (!this._session) {
-            return false;
-        }
-        const consumed = this._session.gizmoKeyDown(keyEvent, this._spatialSelection);
-        if (consumed) {
-            this._refreshGizmo();
-        }
-        return consumed;
-    }
 
     // -----------------------------------------------------------------
     // Navigation
@@ -2566,6 +2343,7 @@ export class WorldNavigationSession {
             for (const landmark of document.world.getWorldLandmarks()) {
                 landmarks.push({
                     id: landmark.id,
+                    documentId: document.world.id,
                     title: landmark.title,
                     description: landmark.description,
                     position: {
@@ -2592,6 +2370,13 @@ export class WorldNavigationSession {
             for (const placement of document.world.getStructurePlacements()) {
                 structures.push({
                     id: placement.id,
+                    // The PLACED structure's own content document — see
+                    // core/WorldFocusContext.js's own header on why
+                    // "Edit a Copy" forks THIS, never the containing
+                    // World document that merely positions it. The exact
+                    // same id ui/views/WorldView.js#openStructureSource()
+                    // already loads.
+                    documentId: placement.documentId,
                     title: this.getSavedDocumentTitle(placement.documentId),
                     position: {
                         x: placement.position.x + layoutPosition.x,
@@ -3166,7 +2951,6 @@ export class WorldNavigationSession {
             const hover = SpatialHoverState.brick(brickHit);
             this._setSpatialHover(hover);
             this._session.hoverBrick(brickHit.brickId);
-            this._updatePlacementPreview(brickHit);
             return hover;
         }
         const groundHit = this._session.pickGround(screenX, screenY);
@@ -3174,12 +2958,10 @@ export class WorldNavigationSession {
             const hover = SpatialHoverState.ground(groundHit.position);
             this._setSpatialHover(hover);
             this._session.clearHover();
-            this._updatePlacementPreview(groundHit);
             return hover;
         }
         this._setSpatialHover(SpatialHoverState.empty());
         this._session.clearHover();
-        this._clearPlacementPreview();
         return null;
     }
 
@@ -3268,116 +3050,10 @@ export class WorldNavigationSession {
         return true;
     }
 
-    moveSelection(delta, modifiers = null) {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-        this._ensureEditableSelection();
-        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
-            return false;
-        }
-        const ctx = this._spatialEditingContext;
-        if (!ctx.can('move')) {
-            return false;
-        }
-        const success = this._editingService.moveSelection(this._spatialSelection, delta, { modifiers });
-        if (success) {
-            this._refreshInspection();
-            this._refreshGizmo();
-        }
-        return success;
-    }
-
-    deleteSelection() {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-        this._ensureEditableSelection();
-        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
-            return false;
-        }
-        const ctx = this._spatialEditingContext;
-        if (!ctx.can('delete')) {
-            return false;
-        }
-        const success = this._editingService.deleteSelection(this._spatialSelection);
-        if (success) {
-            this.clearSelection();
-        }
-        return success;
-    }
-
-    rotateSelection(deltaRotation, modifiers = null) {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-        this._ensureEditableSelection();
-        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
-            return false;
-        }
-        const ctx = this._spatialEditingContext;
-        if (!ctx.can('rotate')) {
-            return false;
-        }
-        const success = this._editingService.rotateSelection(this._spatialSelection, deltaRotation, { modifiers });
-        if (success) {
-            this._refreshInspection();
-            this._refreshGizmo();
-        }
-        return success;
-    }
-
-    alignSelection(mode) {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-        this._ensureEditableSelection();
-        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
-            return false;
-        }
-        const success = this._editingService.alignSelection(this._spatialSelection, mode);
-        if (success) {
-            this._refreshInspection();
-            this._refreshGizmo();
-        }
-        return success;
-    }
-
-    distributeSelection(axis) {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-        this._ensureEditableSelection();
-        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
-            return false;
-        }
-        const success = this._editingService.distributeSelection(this._spatialSelection, axis);
-        if (success) {
-            this._refreshInspection();
-            this._refreshGizmo();
-        }
-        return success;
-    }
-
-    // 0.4.9 — see EditorSession#snapSelectionToGrid()'s own comment:
-    // identical shape, reused across both surfaces.
-    snapSelectionToGrid(gridSize) {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-        this._ensureEditableSelection();
-        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
-            return false;
-        }
-        const success = this._editingService.snapSelectionToGrid(this._spatialSelection, gridSize);
-        if (success) {
-            this._refreshInspection();
-            this._refreshGizmo();
-        }
-        return success;
-    }
-
-    applyNumericTransform(intent, options = {}) {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-        this._ensureEditableSelection();
-        if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
-            return false;
-        }
-        const success = this._editingService.applyNumericTransform(this._spatialSelection, intent, options);
-        if (success) {
-            this._refreshInspection();
-            this._refreshGizmo();
-        }
-        return success;
-    }
+    // moveSelection/deleteSelection/rotateSelection/alignSelection/
+    // distributeSelection/snapSelectionToGrid/applyNumericTransform —
+    // REMOVED (0.5.9). See the "Placement Mode & Gizmo interaction"
+    // removal note above; EditorSession owns this whole kernel now.
 
     undo() {
 	    if (this._historyPreview && this._historyPreview.active) return false;
@@ -3633,11 +3309,14 @@ export class WorldNavigationSession {
         return this._worldAuthorizationService.resolveAccess(document, documentId);
     }
 
-    // The gate every real mutation chokepoint in
-    // application/SpatialEditingService.js consults (wired at
-    // construction — see start()/the constructor above), and safe to
-    // call directly from a UI surface that wants to reflect (never
-    // decide) whether an edit affordance should even be offered.
+    // The gate every real mutation chokepoint on this session consults
+    // directly (createRegionHere/updateRegion/removeRegion/
+    // createLandmarkHere/updateLandmark/removeLandmark below — 0.5.9
+    // retired every OTHER mutation chokepoint this session used to have;
+    // see docs/Principles.md, "World View Observes and Navigates; Editor
+    // Mutates and Builds"), and safe to call directly from a UI surface
+    // that wants to reflect (never decide) whether an edit affordance
+    // should even be offered.
     //
     // 0.2.98 — now also threads `documentId` through to
     // WorldAuthorizationService, so a NON-OWNER holding a signed World
@@ -3826,7 +3505,11 @@ export class WorldNavigationSession {
         const cameraPosition = this.getCameraPosition();
         const heading = this.getCompassHeading();
         const selection = this._resolveWorldSpatialSelection(documentId);
-        const gizmoState = this._editingService.transformGizmoState;
+        // 0.5.9 — World View no longer has a gizmo to drag at all, so
+        // this is always inactive now; kept as a real (if permanently
+        // empty) shape rather than editing deriveWorldSpatialActivity()'s
+        // own call below, which still expects gizmoActive/gizmoMode.
+        const gizmoState = { active: false, mode: null };
         // 0.3.4 — the local avatar's own vertical motion
         // (core/AvatarVerticalState.js), read fresh off the movement
         // controller exactly like `isMoving` already is below, and fed
@@ -4652,24 +4335,11 @@ export class WorldNavigationSession {
         return this._moveWorldPlacementUseCase.execute(record.placementId, newPosition);
     }
 
-    // Guard for selection-driven mutations (move/rotate/delete/align/
-    // distribute/numeric transform/gizmo drags). Forks the CURRENT
-    // selection's document in place when it is still published, and
-    // updates `this._spatialSelection` (by reference, so every caller
-    // already holding it — including a renderer gizmo drag armed via
-    // gizmoPointerDown — sees the forked selection) to the equivalent
-    // selection in the fork. A no-op when there is no selection or the
-    // selection's document is already editable.
-    _ensureEditableSelection() {
-        if (!this._spatialSelection || this._spatialSelection.isEmpty) {
-            return;
-        }
-        const sourceId = this._spatialSelection.documentId;
-        if (!sourceId || !this._publishedDocumentIds.has(sourceId)) {
-            return;
-        }
-        this._forkForEdit(sourceId);
-    }
+    // _ensureEditableSelection() — REMOVED (0.5.9). Was the fork-on-write
+    // guard for selection-driven mutations (move/rotate/delete/align/
+    // distribute/numeric transform/gizmo drags), all gone now. Region/
+    // Landmark naming below uses _ensureEditableDocumentId instead —
+    // it never needed the selection-remapping this one did.
 
     // Guard for document-scoped mutations that are not selection-driven
     // (placement, groups, paste). Returns the documentId to actually
@@ -4827,6 +4497,29 @@ export class WorldNavigationSession {
             ? publication.license
             : new License(publication.license || {});
         return { allowed: license.forkAllowed, license };
+    }
+
+    // "Edit a Copy" (0.5.9) — the publication id (if any) governing
+    // `documentId`, for a caller building a `/editor?fork=` navigation
+    // exactly like ui/components/PublicationCatalog.js#forkPublication()
+    // already does: without a `publication` query param,
+    // ForkDocumentUseCase's own license enforcement never runs (see its
+    // own header — "only enforce when a sourcePublication is known").
+    // Reuses the SAME "most recent Publication governs" reduction
+    // _checkForkPolicy() above already applies, so a viewer can never
+    // see a different fork outcome ("allowed"/license) here than
+    // World View's own in-session fork-on-write would have applied to
+    // the identical document. Returns null when the document is not a
+    // known publication at all (a local-only fork, or one this
+    // replica's discoveryProvider simply cannot resolve) — never throws.
+    getPublicationIdForDocument(documentId) {
+        const publications = this._findPublications(documentId);
+        if (publications.length === 0) {
+            return null;
+        }
+        const publication = publications.reduce((latest, p) =>
+            (!latest || p.publishedAt > latest.publishedAt) ? p : latest, null);
+        return publication.id;
     }
 
     // Remaps this session's live references — selection, focus, active
@@ -5066,173 +4759,24 @@ export class WorldNavigationSession {
         this._spatialInspection = this._inspectionService.inspect(this._spatialSelection);
     }
 
+    // 0.5.9 — permanently inert. _refreshEditingContext()/_refreshGizmo()
+    // used to recompute "what can I do to the current selection" and the
+    // gizmo's own presentation after every selection/mutation change —
+    // both were called from a couple dozen places across this file (
+    // selection changes, navigation, undo/redo, avatar interaction...).
+    // Now that World View has no editing kernel or gizmo left at all
+    // (see docs/Principles.md, "World View Observes and Navigates;
+    // Editor Mutates and Builds (0.5.9)"), leaving these two AS
+    // deliberate no-ops is far less invasive than hunting every one of
+    // those call sites individually — `_spatialEditingContext` simply
+    // stays permanently empty, which is the architecturally correct
+    // answer anyway ("nothing is editable"), and getSpatialEditingContext()
+    // keeps returning that same accurate, harmless empty context.
     _refreshEditingContext() {
-        if (!this._editingService) {
-            this._spatialEditingContext = SpatialEditingContext.empty();
-            return;
-        }
-        this._spatialEditingContext = this._editingService.getEditingContext(this._spatialSelection);
+        this._spatialEditingContext = SpatialEditingContext.empty();
     }
 
-    _refreshGizmo() {
-        if (!this._session || !this._editingService || !this._gizmoUseCase) {
-            return;
-        }
-        if (this._editingService.transformGizmoState.active) {
-            return;
-        }
-        if (this.isPlacementMode()) {
-            this._hideGizmo();
-            return;
-        }
-        const presentation = this._gizmoUseCase.resolvePresentation(this._spatialSelection);
-        if (!presentation) {
-            this._hideGizmo();
-            return;
-        }
-        const offset = this._getWorldPosition(this._spatialSelection.documentId);
-        const worldPivot = {
-            x: presentation.pivot.x + offset.x,
-            y: presentation.pivot.y + offset.y,
-            z: presentation.pivot.z + offset.z
-        };
-        const worldBounds = {
-            min: {
-                x: presentation.bounds.min.x + offset.x,
-                y: presentation.bounds.min.y + offset.y,
-                z: presentation.bounds.min.z + offset.z
-            },
-            max: {
-                x: presentation.bounds.max.x + offset.x,
-                y: presentation.bounds.max.y + offset.y,
-                z: presentation.bounds.max.z + offset.z
-            },
-            center: worldPivot,
-            size: presentation.bounds.size
-        };
-        this._showGizmo(worldPivot, worldBounds);
-    }
-
-    _hideGizmo() {
-        if (typeof this._session?.hideGizmo === 'function') {
-            this._session.hideGizmo();
-        }
-    }
-
-    _showGizmo(pivot, bounds) {
-        if (typeof this._session?.showGizmo === 'function') {
-            this._session.showGizmo(pivot, bounds);
-        }
-    }
-
-    _updatePlacementPreview(hitResult) {
-        if (!this._activeDefinitionId || !this._session) {
-            return;
-        }
-        let existingBrick = null;
-        let layoutOffset = null;
-        // 0.2.27: ground-hover preview targets the ACTIVE document —
-        // must agree with commitPlacement's own fallback, or the
-        // preview would show a brick landing in one document while the
-        // actual commit lands in another.
-        let targetDocumentId = this._activeDocumentId;
-        let targetBuildingId = null;
-        if (hitResult.type === 'brick') {
-            targetDocumentId = hitResult.documentId;
-            targetBuildingId = hitResult.buildingId;
-            const document = this._loadedDocuments.get(targetDocumentId);
-            if (document) {
-                const building = document.world.getBuilding(hitResult.buildingId);
-                existingBrick = building?.findBrick(hitResult.brickId);
-                layoutOffset = this._getWorldPosition(targetDocumentId);
-            }
-        } else if (hitResult.type === 'ground') {
-            if (targetDocumentId) {
-                layoutOffset = this._getWorldPosition(targetDocumentId);
-            }
-        }
-        if (!targetDocumentId || !layoutOffset) {
-            this._clearPlacementPreview();
-            return;
-        }
-        const computed = this._placementService.calculateFromHit(
-            hitResult,
-            this._activeDefinitionId,
-            existingBrick,
-            layoutOffset,
-            { gridSnapEnabled: true, gridSnapSize: 1 }
-        );
-        if (!computed.valid) {
-            this._clearPlacementPreview();
-            return;
-        }
-        // 0.2.87 — the SAME PlacementValidator commitPlacement() itself
-        // uses, run early so the ghost can be shown-but-tinted rather
-        // than silently doing nothing on click. Building resolution
-        // mirrors commitPlacement()'s own fallback exactly (targeted
-        // building, or this document's first building) — see
-        // core/PlacementValidator.js's own header for why exact-position
-        // collision is the whole check, on purpose, for 0.2.87.
-        const targetDocument = this._loadedDocuments.get(targetDocumentId);
-        const resolvedBuildingId = targetBuildingId || targetDocument?.world.getBuildings()[0]?.id || null;
-        const blocked = !resolvedBuildingId
-            || !this._placementValidator.canPlace(targetDocument.world, resolvedBuildingId, computed.position);
-        this._spatialPlacement = new SpatialPlacementState({
-            valid: true,
-            definitionId: computed.definitionId,
-            position: computed.position,
-            rotation: this._pendingPlacementRotation,
-            blocked,
-            targetDocumentId,
-            targetBuildingId: computed.targetBuildingId
-        });
-        this._presentPlacementPreview();
-    }
-
-    // 0.2.87 — the one place that turns this._spatialPlacement into a
-    // world-space showPreview() call, shared by _updatePlacementPreview()
-    // (a fresh hover) and rotatePlacementPreview() (the same position,
-    // a new rotation) so the two can never compute the terrain offset
-    // differently. `terrainHeightAt()` is called directly from
-    // core/TerrainHeightField.js, never through renderer.terrainHeightAt()
-    // — the same discipline application/AvatarTerrainConstraint.js
-    // already established (see its own header) — sampled ONCE at the
-    // TARGET DOCUMENT's own placement position, mirroring
-    // renderer/WorldRenderer.js#_terrainOffsetY() exactly: a whole
-    // building rides the terrain as one rigid unit, so the brick you're
-    // about to add must be lifted by the SAME offset the building's
-    // already-committed bricks render with, never a second,
-    // independently-sampled value. Before this, the ghost sat flush
-    // with the document's local Y=0 plane while the real brick — the
-    // instant it committed — visually jumped by the building's own
-    // terrain lift.
-    _presentPlacementPreview() {
-        const placement = this._spatialPlacement;
-        const layoutOffset = this._getWorldPosition(placement.targetDocumentId) || { x: 0, y: 0, z: 0 };
-        const groundY = terrainHeightAt(DEFAULT_WORLD_SEED, layoutOffset.x, layoutOffset.z);
-        const worldPos = {
-            x: placement.position.x + layoutOffset.x,
-            y: placement.position.y + layoutOffset.y + groundY,
-            z: placement.position.z + layoutOffset.z
-        };
-        this._session.showPreview(placement.definitionId, worldPos, placement.rotation, !placement.blocked);
-    }
-
-    _clearPlacementPreview() {
-        this._spatialPlacement = SpatialPlacementState.empty();
-        if (this._session) {
-            this._session.hidePreview();
-        }
-    }
-
-    _toModifiers(rawEvent) {
-        return {
-            ctrl: rawEvent.ctrlKey || false,
-            shift: rawEvent.shiftKey || false,
-            alt: rawEvent.altKey || false,
-            meta: rawEvent.metaKey || false
-        };
-    }
+    _refreshGizmo() {}
 
     _getFailedIds() {
         return Array.from(this._failedLoads.keys());
@@ -5324,148 +4868,9 @@ export class WorldNavigationSession {
 	    this.clearSelection();
 	}
 	
-	copySelection() {
-	    if (this._historyPreview && this._historyPreview.active) return SpatialClipboardState.empty(); // <-- ADD THIS
-	    if (!this._copySelectionUseCase || !this._activeDocumentId) return SpatialClipboardState.empty();
-
-	    // Prefer the document ID from the selection, fall back to the
-	    // active document (0.2.27: never the camera-focused one).
-	    const docId = (this._spatialSelection && this._spatialSelection.documentId) || this._activeDocumentId;
-	    if (!docId) return SpatialClipboardState.empty();
-	    
-	    const doc = this.getDocument(docId);
-	    if (!doc) return SpatialClipboardState.empty();
-	    
-	    this._pasteCount = 0; // Reset cascade count on new copy
-	    this._clipboardState = this._copySelectionUseCase.execute(this._spatialSelection, doc);
-	    return this._clipboardState;
-	}
-	
-	// 3. Fix pasteClipboard to cascade offsets
-	pasteClipboard() {
-	    if (this._historyPreview && this._historyPreview.active) return false; // ADD THIS LINE
-	    if (!this._pasteClipboardUseCase || !this._clipboardState || this._clipboardState.isEmpty) return false;
-	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
-	    const doc = this.getDocument(this._activeDocumentId);
-	    if (!doc) return false;
-	    const buildingId = doc.world.getBuildings()[0]?.id;
-	    if (!buildingId) return false;
-	    if (!this._pasteCount) this._pasteCount = 0;
-	    this._pasteCount++;
-	    const offset = { x: 2 * this._pasteCount, y: 0, z: 2 * this._pasteCount };
-	    const command = this._pasteClipboardUseCase.execute(this._clipboardState, {
-	        worldId: doc.world.id, buildingId, position: offset
-	    });
-	    if (command) {
-	        this._commandHistories.get(doc.world.id).execute(command);
-	        
-	        // Automatically select the newly pasted bricks
-	        if (command.executedBrickIds && command.executedBrickIds.length > 0) {
-	            const items = command.executedBrickIds.map(brickId => ({ type: 'brick', buildingId, brickId }));
-	            this._setSpatialSelection(SpatialSelectionState.bricks({
-	                documentId: doc.world.id,
-	                items
-	            }));
-	        }
-	        return true;
-	    }
-	    return false;
-	}
-	
-	// 0.4.7 — Ctrl/Cmd+D for a loose brick selection in World View
-	// (previously copy/paste only). A structure-placement selection is
-	// deliberately a no-op here, the same way move/rotate/delete already
-	// are for one (see SpatialEditingService#getEditingContext()'s own
-	// header) — World View has never had placement mutation, only
-	// placement inspection and NEW-structure placement (0.2.93's
-	// "Selection In World View Does Not Imply Editing Authority"); this
-	// milestone closes the brick-selection gap without opening that one.
-	// _ensureEditableSelection() is deleteSelection()'s own guard
-	// (fork-on-write for a selection into a published document), not
-	// pasteClipboard()'s _ensureEditableDocumentId — duplicate reads FROM
-	// the selection's own source bricks, so it needs the selection guard.
-	duplicateSelection() {
-	    if (this._historyPreview && this._historyPreview.active) return null;
-	    this._ensureEditableSelection();
-	    if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
-	        return null;
-	    }
-	    const newId = this._duplicateBrickSelection(this._spatialSelection);
-	    if (newId) {
-	        this._refreshGizmo();
-	    }
-	    return newId;
-	}
-
-	// 0.4.7 — see EditorSession#_duplicateBrickSelection()'s own header:
-	// identical shape, reused across both surfaces. Deliberately builds a
-	// throwaway clipboard local to this call rather than routing through
-	// this._copySelectionUseCase-backed copySelection()/pasteClipboard()
-	// — those mutate this._clipboardState/_pasteCount, and a Ctrl+D must
-	// never clobber whatever the user actually has copied.
-	_duplicateBrickSelection(selection) {
-	    if (!selection || selection.isEmpty || !this._copySelectionUseCase || !this._pasteClipboardUseCase) {
-	        return null;
-	    }
-	    const docId = selection.documentId || this._activeDocumentId;
-	    const doc = docId ? this.getDocument(docId) : null;
-	    if (!doc) {
-	        return null;
-	    }
-	    const clipboard = this._copySelectionUseCase.execute(selection, doc);
-	    if (!clipboard || clipboard.isEmpty) {
-	        return null;
-	    }
-	    const buildingId = selection.buildingId;
-	    const command = this._pasteClipboardUseCase.execute(clipboard, {
-	        worldId: doc.world.id, buildingId, position: { x: 2, y: 0, z: 2 }
-	    });
-	    if (!command) {
-	        return null;
-	    }
-	    this._commandHistories.get(doc.world.id).execute(command);
-	    if (command.executedBrickIds.length > 0) {
-	        const items = command.executedBrickIds.map((brickId) => ({ type: 'brick', buildingId, brickId }));
-	        this._setSpatialSelection(SpatialSelectionState.bricks({ documentId: doc.world.id, items }));
-	    }
-	    return command.executedBrickIds[0] || null;
-	}
-
-	// 0.4.9 — "Repeat x N" for World View, mirroring duplicateSelection()'s
-	// own guard shape one rung up: RepeatSelectionUseCase's own header
-	// covers the atomicity/collision contract. false means either
-	// "nothing to repeat" or "blocked by collision" — either way the
-	// World is guaranteed untouched.
-	repeatSelection(options = {}) {
-	    if (this._historyPreview && this._historyPreview.active) return false;
-	    this._ensureEditableSelection();
-	    if (!this._spatialEditingContext || this._spatialEditingContext.isEmpty) {
-	        return false;
-	    }
-	    const selection = this._spatialSelection;
-	    if (!selection || selection.isEmpty || !this._repeatSelectionUseCase) {
-	        return false;
-	    }
-	    const docId = selection.documentId || this._activeDocumentId;
-	    const doc = docId ? this.getDocument(docId) : null;
-	    if (!doc) {
-	        return false;
-	    }
-	    const buildingId = selection.buildingId;
-	    const command = this._repeatSelectionUseCase.execute(selection, doc, options);
-	    if (!command) {
-	        return false;
-	    }
-	    this._commandHistories.get(doc.world.id).execute(command);
-	    const items = command.commands
-	        .flatMap((child) => child.executedBrickIds)
-	        .map((brickId) => ({ type: 'brick', buildingId, brickId }));
-	    if (items.length > 0) {
-	        this._setSpatialSelection(SpatialSelectionState.bricks({ documentId: doc.world.id, items }));
-	    }
-	    this._refreshGizmo();
-	    return true;
-	}
+	// copySelection/pasteClipboard/duplicateSelection/
+	// _duplicateBrickSelection/repeatSelection — REMOVED (0.5.9). See
+	// the "Placement Mode & Gizmo interaction" removal note above.
 
 	cloneDocument(documentId) {
 	    const doc = this.getDocument(documentId || this._activeDocumentId);
@@ -5503,94 +4908,10 @@ export class WorldNavigationSession {
 	    this._activeDocumentId = fork.world.id;
 	    return fork.world.id;
 	}
-	// 1. Fix restoreHistoryAt (Update the fake documentManager to include load/state)
-	getGroups() {
-	    const doc = this.getDocument(this._activeDocumentId);
-	    if (!doc) return [];
-	    const world = doc.world || doc;
-	    const groups = typeof world.getGroups === 'function' ? world.getGroups() : (world.groups || []);
-	    return groups.map(g => ({ id: g.id, name: g.name, memberCount: g.memberCount || (g.brickIds ? g.brickIds.length : 0) }));
-	}
-	// 0.2.27: resolves the target document from the SELECTION itself
-	// (already forked/remapped by _ensureEditableSelection above, if
-	// it needed to be), never from a separately, independently forked
-	// _activeDocumentId. Before this milestone these could be two
-	// DIFFERENT documents — a selection in Bob's world while Alice's
-	// happened to be active — and this method would fork BOTH
-	// (needlessly forking Alice's) and then build the group command
-	// from Alice's worldId with Bob's brick ids: a real, silent
-	// cross-document corruption bug. Group membership is a selection-
-	// scoped operation exactly like move/rotate/delete; it must use
-	// the same source of truth they do.
-	createGroupFromSelection(name) {
-	    this._ensureEditableSelection();
-	    if (this._spatialSelection.isEmpty) return null;
-	    const doc = this.getDocument(this._spatialSelection.documentId);
-	    if (!doc) return null;
-	    const cmd = new CreateGroupCommand({ worldId: doc.world.id, brickIds: this._spatialSelection.brickIds, name });
-	    this._commandHistories.get(doc.world.id).execute(cmd);
-	    return cmd.executedGroupId;
-	}
-	selectGroup(groupId) {
-	    const doc = this.getDocument(this._activeDocumentId);
-	    if (!doc) return false;
-	    const group = doc.world.getGroup(groupId);
-	    if (!group) return false;
-	    const items = [];
-	    for (const brickId of group.brickIds) {
-	        for (const building of doc.world.getBuildings()) {
-	            if (building.findBrick(brickId)) {
-	                items.push({ type: 'brick', buildingId: building.id, brickId });
-	                break;
-	            }
-	        }
-	    }
-	    this._setSpatialSelection(SpatialSelectionState.bricks({ documentId: doc.world.id, items }));
-	    return true;
-	}
-	addSelectionToSelectedGroup(groupId) {
-	    this._ensureEditableSelection();
-	    if (this._spatialSelection.isEmpty) return false;
-	    const doc = this.getDocument(this._spatialSelection.documentId);
-	    if (!doc) return false;
-	    const cmd = new AddToGroupCommand({ worldId: doc.world.id, groupId, brickIds: this._spatialSelection.brickIds });
-	    this._commandHistories.get(doc.world.id).execute(cmd);
-	    return true;
-	}
-	removeSelectionFromSelectedGroup(groupId) {
-	    this._ensureEditableSelection();
-	    if (this._spatialSelection.isEmpty) return false;
-	    const doc = this.getDocument(this._spatialSelection.documentId);
-	    if (!doc) return false;
-	    const cmd = new RemoveFromGroupCommand({ worldId: doc.world.id, groupId, brickIds: this._spatialSelection.brickIds });
-	    this._commandHistories.get(doc.world.id).execute(cmd);
-	    return true;
-	}
-	// groupId-targeted operations below have no selection of their own
-	// to resolve a document from — they operate on the ACTIVE document
-	// (0.2.27: never the camera-focused one).
-	renameGroup(groupId, name) {
-	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
-	    const doc = this.getDocument(this._activeDocumentId);
-	    if (!doc) return false;
-	    this._commandHistories.get(doc.world.id).execute(new RenameGroupCommand({ worldId: doc.world.id, groupId, name }));
-	    return true;
-	}
-	duplicateGroup(groupId) {
-	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
-	    const doc = this.getDocument(this._activeDocumentId);
-	    if (!doc) return null;
-	    const cmd = new DuplicateGroupCommand({ worldId: doc.world.id, groupId });
-	    this._commandHistories.get(doc.world.id).execute(cmd);
-	    return cmd.executedGroupId;
-	}
-	deleteGroup(groupId) {
-	    this._activeDocumentId = this._ensureEditableDocumentId(this._activeDocumentId);
-	    const doc = this.getDocument(this._activeDocumentId);
-	    if (!doc) return false;
-	    this._commandHistories.get(doc.world.id).execute(new DeleteGroupCommand({ worldId: doc.world.id, groupId }));
-	    return true;
-	}
+	// getGroups/createGroupFromSelection/selectGroup/
+	// addSelectionToSelectedGroup/removeSelectionFromSelectedGroup/
+	// renameGroup/duplicateGroup/deleteGroup — REMOVED (0.5.9). See the
+	// "Placement Mode & Gizmo interaction" removal note above.
 
 	// -----------------------------------------------------------------
 	// World Landmarks (0.3.7) — explicit, persistent World content.
@@ -5641,11 +4962,14 @@ export class WorldNavigationSession {
 
 	// "Place Here" — a landmark at the local avatar's own current
 	// position, in the ACTIVE document's World (the world you're
-	// actually working in, exactly like createGroupFromSelection/
-	// renameGroup above — same _ensureEditableDocumentId fork-on-write
-	// guard, same canEditDocument authorization gate the milestone
-	// design calls for: "any EDIT member can modify World landmarks,"
-	// never a separate LandmarkOwner/ACL concept).
+	// actually working in) — the same _ensureEditableDocumentId
+	// fork-on-write guard, same canEditDocument authorization gate the
+	// milestone design calls for: "any EDIT member can modify World
+	// landmarks," never a separate LandmarkOwner/ACL concept. This is
+	// deliberately NOT construction/mutation in the 0.5.9 sense (see
+	// docs/Principles.md, "World View Observes and Navigates; Editor
+	// Mutates and Builds") — naming a place a viewer is standing at is
+	// annotation, not building; it stays here, on purpose.
 	//
 	// Requires a live avatar (see getAvatarPosition()'s own header) —
 	// World View hides the Add Landmark affordance without one, but
@@ -6052,20 +5376,9 @@ export class WorldNavigationSession {
 	    return region ? region.name : '';
 	}
 
-	// Add these to EditorSession.js and WorldNavigationSession.js
-	// They bridge the gap between the UI/Tests (which pass a groupId)
-	// and the Action Registry (which relies on the internal selected state).
-	
-	addToGroupWithSelection(groupId) {
-	    this._selectedGroupId = groupId;
-	    return this.addSelectionToSelectedGroup(groupId);
-	}
-	
-	removeFromGroupWithSelection(groupId) {
-	    this._selectedGroupId = groupId;
-	    return this.removeSelectionFromSelectedGroup(groupId);
-	}
-	
+	// addToGroupWithSelection/removeFromGroupWithSelection — REMOVED
+	// (0.5.9), along with the group methods they bridged to above.
+
 	// --- History Preview & Restore (0.1.39 / 0.1.41) ---
 	beginHistoryPreview() {
 	    this._historyPreview = { active: true, cursor: null, world: null };
@@ -6211,9 +5524,6 @@ export class WorldNavigationSession {
         this._container = null;
         this._spatialCameraController = null;
         this._inspectionService = null;
-        this._editingService = null;
-        this._gizmoUseCase = null;
-        this._placementService = null;
         for (const unsubscribe of this._commandHistoryUnsubscribes.values()) {
             unsubscribe();
         }
@@ -6225,9 +5535,6 @@ export class WorldNavigationSession {
         this._spatialHover = SpatialHoverState.empty();
         this._spatialInspection = SpatialInspectionState.empty();
         this._spatialEditingContext = SpatialEditingContext.empty();
-        this._spatialPlacement = SpatialPlacementState.empty();
-        this._activeDefinitionId = null;
-        this._pendingPlacementRotation = 0;
         this._focusedDocumentId = null;
         this._activeDocumentId = null;
         this._eventBus = null;

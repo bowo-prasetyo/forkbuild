@@ -16,6 +16,7 @@ import {
 } from '../application/DocumentLifecycleStatus.js';
 import { describeLicense, LICENSE_OPTIONS } from '../application/LicenseLabels.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
@@ -326,22 +327,37 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // 12. Subsequent edits — a metadata change followed by a brick
-    //     move — stay on the SAME fork, not a second one.
+    // 12. Subsequent edits — a metadata change followed by a landmark
+    //     mutation — stay on the SAME fork, not a second one. (0.5.9
+    //     retired WorldNavigationSession's own moveSelection() —
+    //     EditorSession alone owns brick mutation now.
+    //     createLandmarkHere() is the one mutation surface World View
+    //     kept, and it crosses through the exact same
+    //     _ensureEditableDocumentId() seam moveSelection() used to; see
+    //     docs/Principles.md "World View Observes and Navigates;
+    //     Editor Mutates and Builds".)
     // -------------------------------------------------------------
     {
         const publication = publisher.publish(makeDocument('Two Edits'), alice);
-        const session = buildSession();
+        const avatarPresenceSession = new AvatarPresenceSession(
+            { avatarId: 'alice-avatar', ownerIdentity: 'alice' },
+            { position: new Position(0, 0, 0) }
+        );
+        const session = new WorldNavigationSession({
+            registry, loadPublicationDocumentUseCase, worldLayoutProvider,
+            saveDocumentUseCase, publishDocumentUseCase, identityProvider: alice,
+            documentCloneService, discoveryProvider, avatarPresenceSession
+        });
+        session._session = stubRenderer();
         session._loadWorld(publication.documentId);
 
         const forkId = session.updateDocumentMetadata(publication.documentId, { title: 'Retitled' });
-        selectFirstBrick(session, forkId);
-        session.moveSelection({ x: 2, y: 0, z: 0 });
+        session.createLandmarkHere('Second Edit', '');
 
-        assert(session.getActiveDocumentId() === forkId, '12. the brick move stayed on the same fork the metadata edit created');
+        assert(session.getActiveDocumentId() === forkId, '12. the landmark mutation stayed on the same fork the metadata edit created');
         assert(session.getLoadedDocuments().length === 1, '12b. still exactly one loaded document — no second fork');
         assert(session.getDocument(forkId).metadata.title === 'Retitled',
-            '12c. the earlier metadata edit is still there after the later brick edit');
+            '12c. the earlier metadata edit is still there after the later landmark mutation');
     }
 
     // -------------------------------------------------------------

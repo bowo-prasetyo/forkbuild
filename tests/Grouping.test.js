@@ -4,7 +4,6 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
-import { WorldPosition } from '../core/WorldPosition.js';
 import { Group } from '../core/Group.js';
 import { DomainEvent } from '../core/events/Event.js';
 import { EventBus } from '../core/events/EventBus.js';
@@ -23,35 +22,15 @@ import { SpatialSelectionState } from '../application/spatial-state/SpatialSelec
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { CopySelectionUseCase } from '../application/CopySelectionUseCase.js';
 import { PasteClipboardUseCase } from '../application/PasteClipboardUseCase.js';
-import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
 import { EditorSession } from '../application/EditorSession.js';
 import { EditorContext } from '../application/EditorContext.js';
 import { DocumentManager } from '../application/DocumentManager.js';
 import { SelectionUseCase } from '../application/SelectionUseCase.js';
 import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { StorageProvider } from '../storage/StorageProvider.js';
-import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 
 // ---------------------------------------------------------------------
 // Helpers & stubs
 // ---------------------------------------------------------------------
-
-class InMemoryStorageProvider extends StorageProvider {
-    constructor() { super(); this._data = new Map(); }
-    save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
-    load(name) { return this._data.has(name) ? JSON.parse(JSON.stringify(this._data.get(name))) : null; }
-    remove(name) { this._data.delete(name); }
-    list() { return Array.from(this._data.keys()); }
-}
-
-const stubLayoutProvider = {
-    getPosition: () => new WorldPosition(0, 0, 0),
-    findVisibleDocuments: () => []
-};
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -325,109 +304,15 @@ function createWorldWithBricks(specs) {
 }
 
 // ---------------------------------------------------------------------
-// 6. WorldNavigationSession: groups through the full lifecycle
+// 6. WorldNavigationSession group-lifecycle coverage removed —
+//    0.5.9 retired World View's own group/clipboard capability
+//    entirely (createGroupFromSelection/copySelection/pasteClipboard/
+//    selectGroup/duplicateGroup/renameGroup/deleteGroup and friends —
+//    EditorSession alone owns groups now, see Section 7 below). There
+//    is no landmark equivalent to a "group" of bricks, so this is a
+//    deletion, not a rework. See docs/Principles.md "World View
+//    Observes and Navigates; Editor Mutates and Builds".
 // ---------------------------------------------------------------------
-
-{
-    const storage = new InMemoryStorageProvider();
-    const serializer = new DocumentSerializer();
-    const doc = new Document({
-        world: (() => {
-            const w = new World();
-            const b = new Building({ creator: 'alice' });
-            for (const x of [0, 2, 4]) {
-                b.addBrick(new Brick({ definitionId: 'core:cube', position: new Position(x, 0.5, 0) }));
-            }
-            w.addBuilding(b);
-            return w;
-        })(),
-        metadata: new DocumentMetadata({ title: 'Group Session World', author: 'alice' })
-    });
-    storage.save(doc.world.id, serializer.serialize(doc));
-
-    const commandRegistry = new CreateCommandRegistryUseCase().execute();
-    const replayUseCase = new ReplayDocumentUseCase(commandRegistry);
-    const rendererCalls = [];
-    const nav = new WorldNavigationSession({
-        registry: new CreateBrickRegistryUseCase().execute(),
-        loadPublicationDocumentUseCase: new LoadPublicationDocumentUseCase(storage),
-        worldLayoutProvider: stubLayoutProvider,
-        saveDocumentUseCase: new SaveDocumentUseCase(storage),
-        replayDocumentUseCase: replayUseCase,
-        restoreHistoryStateUseCase: new RestoreHistoryStateUseCase(replayUseCase),
-        documentCloneService: null,
-        copySelectionUseCase: new CopySelectionUseCase(new CreateBrickRegistryUseCase().execute()),
-        pasteClipboardUseCase: new PasteClipboardUseCase()
-    });
-    nav._eventBus = new EventBus();
-    nav._session = {
-        addWorld: (world, id) => rendererCalls.push(['add', id]),
-        removeWorld: (world, id) => rendererCalls.push(['remove', id]),
-        selectBricks: () => {},
-        clearSelection: () => {},
-        clearHover: () => {},
-        hidePreview: () => {}
-    };
-    nav._loadWorld(doc.world.id);
-    nav._focusedDocumentId = doc.world.id;
-
-    const world = nav.getDocument(doc.world.id).world;
-    const buildingId = world.getBuildings()[0].id;
-    const brickIds = world.getBuildings()[0].getBricks().map((b) => b.id);
-
-    // Select two bricks and group them.
-    nav._setSpatialSelection(SpatialSelectionState.bricks({
-        documentId: doc.world.id,
-        items: brickIds.slice(0, 2).map((brickId) => ({ type: 'brick', buildingId, brickId }))
-    }));
-    const groupId = nav.createGroupFromSelection('Walls');
-    assert(groupId, 'group created from selection');
-    assert(nav.getGroups().length === 1, 'session lists the group');
-    assert(nav.getTimeline().some((op) => op.description === 'Group 2 Bricks'), 'timeline shows the group command');
-
-    // Copy carries the group; paste recreates it.
-    const clipboard = nav.copySelection();
-    assert(clipboard.groups.length === 1, 'session copy is group-aware');
-    assert(nav.pasteClipboard() === true, 'paste succeeds');
-    assert(world.getGroups().length === 2, 'pasted group exists');
-    assert(world.getBuildings()[0].getBricks().length === 5, 'pasted bricks exist');
-
-    // Select/duplicate/rename/delete via session, all through history.
-    assert(nav.selectGroup(groupId) === true, 'group selection resolves');
-    assert(nav.getSpatialSelection().brickIds.length === 2, 'resolved members selected');
-    const dupId = nav.duplicateGroup(groupId);
-    assert(dupId && dupId !== groupId, 'duplicate returns a new group id');
-    assert(nav.renameGroup(groupId, 'Outer Walls') === true, 'rename applied');
-    assert(nav.getGroups().find((g) => g.id === groupId).name === 'Outer Walls', 'rename visible');
-    assert(nav.deleteGroup(dupId) === true, 'delete applied');
-    assert(nav.getGroups().length === 2, 'duplicated group deleted');
-
-    // Undo walks back through every group operation.
-    nav.undo(); // delete
-    assert(nav.getGroups().length === 3, 'undo restores the deleted group');
-    nav.undo(); // rename
-    nav.undo(); // duplicate
-    nav.undo(); // paste
-    assert(world.getGroups().length === 1, 'undo removes pasted group');
-    nav.undo(); // create
-    assert(world.getGroups().length === 0, 'undo removes the created group');
-    for (let i = 0; i < 5; i++) nav.redo();
-    assert(world.getGroups().length === 2, 'redo rebuilds the group state');
-
-    // Replay identity with groups in the history.
-    const history = nav._commandHistories.get(world.id);
-    const replayed = replayUseCase.execute(history);
-    assert(JSON.stringify(replayed.toJSON()) === JSON.stringify(world.toJSON()), 'replay reproduces groups byte-for-byte');
-
-    // Restore to the state right after the original create.
-    nav.restoreHistoryAt(1);
-    const restoredWorld = nav.getDocument(doc.world.id).world;
-    assert(restoredWorld.getGroups().length === 1, 'restore reproduces the historical group state');
-    assert(restoredWorld.getGroups()[0].name === 'Walls', 'restored group pre-rename');
-    assert(nav.isDocumentDirty(doc.world.id), 'restored state dirty until saved');
-
-    console.log('✓ session groups: create/copy/paste/duplicate/rename/delete/undo/replay/restore');
-}
 
 // ---------------------------------------------------------------------
 // 7. Editor parity: same machinery, Editor selection shape

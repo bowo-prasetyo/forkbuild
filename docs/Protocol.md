@@ -163,9 +163,13 @@ augmented by WorldLayoutProvider for spatial navigation:
 
 1. **Repository View** — technical exploration.
 2. **Author View** — social exploration.
-3. **World View** — spatial exploration; as of 0.1.46 also an editing
-   surface (interactive gizmo), whose edits persist through the same
-   command-history mechanism as the Editor's.
+3. **World View** — spatial exploration. 0.1.46 through 0.5.8 also made
+   it an editing surface (interactive gizmo); 0.5.9 retired all of that
+   brick/structure/group mutation back to the Editor alone — see
+   docs/Principles.md, "World View Observes and Navigates; Editor
+   Mutates and Builds (0.5.9)". World Region/Landmark naming remains,
+   its edits persisting through the same command-history mechanism as
+   the Editor's.
 
 WorldLayoutProvider contract (0.1.27):
 

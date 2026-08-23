@@ -533,33 +533,43 @@ Canonical serialization: serialize → deserialize → serialize produces
 byte-identical JSON. Property ordering is insertion-ordered (ES2015
 guarantee); array ordering follows Map insertion order.
 
-Editing Capability Parity (0.2.1)
+Editing Capability Parity (0.2.1) — reversed by 0.5.9
 
-The 0.2.1 milestone establishes that both editing surfaces are clients
-of the same editing capabilities. The difference between Editor View
-and World View is presentation and navigation emphasis, not different
-meanings of operations.
+The 0.2.1 milestone established that both editing surfaces were clients
+of the same editing capabilities, via the shared action registry
+(createStandardActions(), 0.1.50). 0.5.9 — World View Read-Only
+Exploration & Fork-to-Edit — deliberately reverses this: World View no
+longer constructs an action registry at all, and every brick/structure/
+group content-mutation method (`EditorActionRegistry`'s whole surface)
+now exists only on EditorSession. See docs/Principles.md, "World View
+Observes and Navigates; Editor Mutates and Builds (0.5.9)".
 
 The capability matrix (see docs/CapabilityMatrix.md) is the normative
-reference. Every mutable document operation supported by Editor View is
-available through the same action/command pathway in World View, subject
-only to explicitly documented presentation or navigation constraints.
+reference for the CURRENT boundary. Two mutation-shaped capabilities
+remain on WorldNavigationSession on purpose — World Region/Landmark
+naming (avatar-position-driven annotation) and moving a
+StructurePlacement (shared-layout arrangement, "Moving A Placement Is
+Not Editing A Document," 0.2.23) — neither is Document content
+construction. World View's own "Edit a Copy" is the one deliberate door
+from there into Editor-only mutation: it forks the Document actually
+containing whatever was focused and opens the fork in the Editor,
+reusing the same `/editor?fork=` navigation publication forking already
+used since 0.2.13/0.2.22.
 
-The action registry (0.1.50) is the authoritative capability vocabulary.
-Both views construct createStandardActions() with their own session
-bound in. If an operation is missing from a session, the action degrades
-to friendly feedback — it never silently disappears.
+The flagship test (tests/WorldViewReadOnlyFork.test.js) verifies:
+- WorldNavigationSession exposes none of the removed mutation methods
+- Every pre-existing read/navigation operation still works
+- Edit a Copy forks an independent Document; the source stays
+  byte-identical in storage through the fork and through subsequently
+  editing the fork
+- The fork enters ordinary EditorSession architecture, with full
+  mutation capability
+- A geographic place never offers Edit a Copy; each of its own regions
+  does
 
-The parity test (tests/EditingParity.test.js) verifies:
-- Both sessions expose the same set of editing methods
-- The action registry produces identical action IDs for equivalent contexts
-- EditorActionContext.capture() works identically on both surfaces
-- The capability matrix is internally consistent
-- Surface-specific methods are documented and separated
-
-This is the foundation for collaboration: when multiplayer arrives,
-both surfaces will synchronize document mutations through the same
-command layer, not through surface-specific behavior.
+This is unrelated to collaboration/multiplayer, which still synchronizes
+document mutations through the same command layer regardless of which
+session originates them.
 
 Schema Versioning & Migration (0.2.2)
 

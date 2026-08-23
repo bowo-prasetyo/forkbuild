@@ -67,10 +67,19 @@ export function isValidWorldFocusKind(kind) {
 // the exact same "Show on Map" ui/components/GeographicPlacePanel.js
 // already has, Names -> the exact same PlaceNamingPanel every region
 // already opens) — this file invents no new verb.
+// EDIT_COPY (0.5.9) — "Edit a Copy": forks the Document CONTAINING this
+// target (never the target itself, never the whole World — see
+// docs/Principles.md, "World View Observes and Navigates; Editor
+// Mutates and Builds (0.5.9)") and opens the fork in the Editor. Only
+// ever offered for a REGION/LANDMARK/STRUCTURE — never COLLABORATOR (a
+// person is not a document) and never GEOGRAPHIC_PLACE (a derived
+// grouping of OTHER Worlds' regions has no single document of its own
+// to fork; its own regions each offer Edit a Copy individually).
 export const WorldFocusAction = Object.freeze({
     GO: 'go',
     MAP: 'map',
-    NAMES: 'names'
+    NAMES: 'names',
+    EDIT_COPY: 'edit_copy'
 });
 
 export class WorldFocusContext {
@@ -221,9 +230,12 @@ function formatGeographicPlaceSummary(place) {
 // Parameters:
 //   - kind: one of WorldFocusKind
 //   - entity: the kind-specific raw row —
-//       REGION:           { id, name, kind, description, position, radius }
-//       LANDMARK:         { id, title, description, position }
-//       STRUCTURE:        { id, title, position }
+//       REGION:           { id, name, kind, description, position, radius,
+//                            documentId }
+//       LANDMARK:         { id, title, description, position, documentId }
+//       STRUCTURE:        { id, title, position, documentId } — documentId
+//                          here is the placed structure's OWN content
+//                          document, not the containing World's
 //       COLLABORATOR:     { identityId, deviceId, displayName, activity, position }
 //       GEOGRAPHIC_PLACE: a GeographicPlaceView#toJSON() shape PLUS its
 //                          own resolved `position` (the caller attaches
@@ -299,8 +311,14 @@ export function deriveWorldFocusContext({
                 subtitle: `Region${entity.kind ? ` · ${capitalize(entity.kind)}` : ''}`,
                 description: entity.description || '',
                 position, distance: roundedDistance, direction, regionPath, geographicPlace,
-                availableActions: [WorldFocusAction.GO, WorldFocusAction.MAP, WorldFocusAction.NAMES],
-                source: { kind, id: entity.id }
+                availableActions: [WorldFocusAction.GO, WorldFocusAction.MAP, WorldFocusAction.NAMES, WorldFocusAction.EDIT_COPY],
+                // _collectRegions() (application/WorldNavigationSession.js)
+                // calls this field `worldId`, not `documentId` — same
+                // value (a WorldRegion's owning Document/World identity
+                // are the same id throughout this codebase), tolerated
+                // here rather than renaming a field several other
+                // existing callers of _collectRegions() already depend on.
+                source: { kind, id: entity.id, documentId: entity.documentId || entity.worldId || null }
             });
         case WorldFocusKind.LANDMARK:
             return new WorldFocusContext({
@@ -309,8 +327,8 @@ export function deriveWorldFocusContext({
                 subtitle: 'Landmark',
                 description: entity.description || '',
                 position, distance: roundedDistance, direction, regionPath, geographicPlace,
-                availableActions: [WorldFocusAction.GO],
-                source: { kind, id: entity.id }
+                availableActions: [WorldFocusAction.GO, WorldFocusAction.EDIT_COPY],
+                source: { kind, id: entity.id, documentId: entity.documentId || null }
             });
         case WorldFocusKind.STRUCTURE:
             return new WorldFocusContext({
@@ -319,8 +337,14 @@ export function deriveWorldFocusContext({
                 subtitle: 'Structure',
                 description: '',
                 position, distance: roundedDistance, direction, regionPath, geographicPlace,
-                availableActions: [WorldFocusAction.GO],
-                source: { kind, id: entity.id }
+                availableActions: [WorldFocusAction.GO, WorldFocusAction.EDIT_COPY],
+                // A STRUCTURE's own documentId is the PLACED structure's
+                // real content document (StructurePlacement#documentId —
+                // the same id ui/views/WorldView.js#openStructureSource()
+                // already loads) — never the containing World's document
+                // that merely positions it. "Edit a Copy" forks the
+                // structure itself, exactly what a viewer is looking at.
+                source: { kind, id: entity.id, documentId: entity.documentId || null }
             });
         case WorldFocusKind.COLLABORATOR:
             return new WorldFocusContext({

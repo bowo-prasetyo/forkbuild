@@ -1,13 +1,18 @@
 # Interactive Transform Gizmo
 
-*New in 0.1.46.* Whenever bricks are selected — in the Editor or in the
-World View — a gizmo appears at the selection's pivot. Dragging its
-handles moves or rotates the selection with a live preview; releasing
-commits the change as **one undo step**. Selecting a single
+*New in 0.1.46.* Whenever bricks are selected in the Editor, a gizmo
+appears at the selection's pivot. Dragging its handles moves or rotates
+the selection with a live preview; releasing commits the change as
+**one undo step**. Selecting a single
 [structure instance](02-TheEditor.md#structure-instances-a-live-reference)
 in the Editor shows the exact same gizmo, with one difference: the green
 Y-axis handle is inert. A placement's elevation always follows the terrain
 underneath it — it's never a handle you drag or a value you type.
+
+The gizmo is Editor-only (see [World View](03-WorldView.md) — as of 0.5.9
+it's a read-only exploration surface, with no gizmo, no transform, and no
+brick editing of any kind; find something worth building on and use its
+Focus panel's **Edit a Copy** button to open it here, in the Editor).
 
 ## The gizmo
 
@@ -108,14 +113,6 @@ them exactly like any multi-selection:
 - The group itself is untouched: membership never changes because of a
   transform. (The gizmo doesn't even know groups exist.)
 - One undo restores every member to where it was.
-
-## Editor and World View: same gizmo, same behavior
-
-The gizmo in the World View is not a different feature — it's the same
-gesture with the same math. A 90° rotation or a 3-unit move produces an
-identical result (and an identical history entry) in both surfaces, and
-keyboard transforms (`R`, arrow keys) agree exactly with what a drag
-does: what you see while dragging is precisely what gets committed.
 
 ## Snapping
 

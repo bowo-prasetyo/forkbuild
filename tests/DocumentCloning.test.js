@@ -320,58 +320,17 @@ function createSession(storage, { replay = true } = {}) {
 }
 
 // ---------------------------------------------------------------------
-// 6. Session clipboard flow: copy, paste, cascade, preview gating
+// 6. Session clipboard flow — REMOVED (0.5.9)
 // ---------------------------------------------------------------------
-
-{
-    const storage = new InMemoryStorageProvider();
-    const serializer = new DocumentSerializer();
-    const doc = createDocumentWithBricks([
-        { position: new Position(0, 0.5, 0) },
-        { position: new Position(3, 0.5, 0) }
-    ]);
-    storage.save(doc.world.id, serializer.serialize(doc));
-
-    const { nav } = createSession(storage);
-    nav._loadWorld(doc.world.id);
-    nav._focusedDocumentId = doc.world.id;
-    nav._activeDocumentId = doc.world.id;
-
-    assert(nav.copySelection().isEmpty, 'copy without selection is empty');
-
-    const world = nav.getDocument(doc.world.id).world;
-    const buildingId = world.getBuildings()[0].id;
-    const originalIds = world.getBuildings()[0].getBricks().map((b) => b.id);
-    nav._setSpatialSelection(SpatialSelectionState.bricks({
-        documentId: doc.world.id,
-        items: originalIds.map((brickId) => ({ type: 'brick', buildingId, brickId }))
-    }));
-
-    const clipboard = nav.copySelection();
-    assert(clipboard.count === 2, 'selection copied');
-    assert(clipboard.sourceDocumentId === doc.world.id, 'clipboard knows its source');
-    const history = nav._commandHistories.get(world.id);
-    assert(history.getCursor() === 0, 'copy created no history entry');
-
-    assert(nav.pasteClipboard() === true, 'first paste succeeds');
-    assert(history.getCursor() === 1, 'paste is one history entry');
-    assert(world.getBuildings()[0].getBricks().length === 4, 'two bricks pasted');
-
-    nav.pasteClipboard();
-    const bricks = world.getBuildings()[0].getBricks();
-    assert(bricks.length === 6, 'second paste adds again');
-    const firstPasteShifted = bricks.slice(2, 4).map((b) => `${b.position.x + 2},${b.position.z + 2}`);
-    const secondPaste = bricks.slice(4).map((b) => `${b.position.x},${b.position.z}`);
-    assert(JSON.stringify(secondPaste) === JSON.stringify(firstPasteShifted), 'paste offset cascades');
-
-    // Editing gates during preview apply to the clipboard too.
-    nav.beginHistoryPreview();
-    assert(nav.pasteClipboard() === false, 'paste gated during preview');
-    assert(nav.copySelection().isEmpty, 'copy gated during preview');
-    nav.cancelHistoryPreview();
-
-    console.log('✓ session clipboard flow: copy, paste, cascade, preview gating');
-}
+//
+// copySelection()/pasteClipboard() no longer exist on
+// WorldNavigationSession — 0.5.9 retired World View's own clipboard
+// kernel entirely; EditorSession alone owns it now (see
+// tests/AlignmentAndRepetition.test.js and this file's own Section 3-5
+// for the underlying CopySelectionUseCase/PasteClipboardUseCase/
+// PasteBricksCommand coverage, which is unaffected). See
+// docs/Principles.md "World View Observes and Navigates; Editor
+// Mutates and Builds".
 
 // ---------------------------------------------------------------------
 // 7. Session clone & fork adoption
@@ -491,42 +450,44 @@ function createSession(storage, { replay = true } = {}) {
     assert(nav.isDocumentDirty(forkId), 'fork starts dirty');
     assert(nav.getTimeline(forkId).length === 0, 'fork history starts empty');
 
-    // Select B's 3 bricks and copy.
+    // World B: dirty its history directly through CommandHistory —
+    // 0.5.9 retired copySelection()/pasteClipboard()/moveSelection()
+    // from WorldNavigationSession (EditorSession alone owns that
+    // clipboard/transform kernel now — see this file's own Section 6
+    // note and tests/AdvancedSelection.test.js). This flagship's own
+    // point is the fork/undo/redo/save/publish/replay/restore
+    // lifecycle, not brick-level editing specifics, so it exercises
+    // that lifecycle with two ordinary PlaceBrickCommand entries
+    // instead — same shape (two history entries, undo/redo between
+    // them, an intermediate state to restore).
     const buildingB = worldB.getBuildings()[0].id;
-    nav._setSpatialSelection(SpatialSelectionState.bricks({
-        documentId: forkId,
-        items: idsB0.map((brickId) => ({ type: 'brick', buildingId: buildingB, brickId }))
-    }));
-    const clipboard = nav.copySelection();
-    assert(clipboard.count === 3, 'clipboard carries the selection');
     const historyB = nav._commandHistories.get(worldB.id);
-    assert(historyB.getCursor() === 0, 'copy created no history entry');
+    assert(historyB.getCursor() === 0, 'fork starts with no history entries');
 
-    // Paste → one atomic command.
-    assert(nav.pasteClipboard() === true, 'paste succeeds');
-    assert(historyB.getCursor() === 1, 'undo removes the entire paste (one entry)');
-    assert(historyB.getTimeline()[0].description === 'Paste 3 Bricks', 'timeline shows one paste operation');
-    const bricksAfterPaste = worldB.getBuildings()[0].getBricks();
-    assert(bricksAfterPaste.length === 6, 'World B contains original + copied bricks');
-    const pastedIds = bricksAfterPaste.map((b) => b.id).filter((id) => !idsB0.includes(id));
-    assert(pastedIds.length === 3 && new Set(pastedIds).size === 3, 'pasted brick identities are unique');
-    assert(nav.getSpatialSelection().brickIds.length === 3, 'pasted bricks are selected');
+    historyB.execute(new PlaceBrickCommand({
+        worldId: worldB.id, buildingId: buildingB,
+        definitionId: 'core:cube', position: new Position(20, 0.5, 0)
+    }));
+    assert(historyB.getCursor() === 1, 'first placement is one history entry');
+    const bricksAfterFirstPlace = worldB.getBuildings()[0].getBricks();
+    assert(bricksAfterFirstPlace.length === 4, 'World B contains original 3 + 1 new brick');
+    const firstPlacedId = bricksAfterFirstPlace.map((b) => b.id).find((id) => !idsB0.includes(id));
+    assert(firstPlacedId, 'the new brick has a fresh identity');
 
-    // Move the pasted group.
-    assert(nav.moveSelection({ x: 5, y: 0, z: 0 }) === true, 'pasted group moves');
-    assert(historyB.getCursor() === 2, 'move is the second entry');
+    historyB.execute(new PlaceBrickCommand({
+        worldId: worldB.id, buildingId: buildingB,
+        definitionId: 'core:cube', position: new Position(25, 0.5, 0)
+    }));
+    assert(historyB.getCursor() === 2, 'second placement is the second entry');
 
-    // Undo removes the whole paste; redo recreates it — same identities.
-    nav.undo(); // move
-    nav.undo(); // paste
-    assert(worldB.getBuildings()[0].getBricks().length === 3, 'undo removes the entire paste');
-    nav.redo(); // paste
-    const repastedIds = worldB.getBuildings()[0].getBricks().map((b) => b.id).filter((id) => !idsB0.includes(id));
-    assert(
-        JSON.stringify([...repastedIds].sort()) === JSON.stringify([...pastedIds].sort()),
-        'redo recreates the same pasted identities'
-    );
-    nav.redo(); // move
+    // Undo removes the second placement; redo recreates it — same identity.
+    nav.undo(); // second placement
+    assert(worldB.getBuildings()[0].getBricks().length === 4, 'undo removes the second placed brick');
+    nav.redo(); // second placement
+    const bricksAfterRedo = worldB.getBuildings()[0].getBricks();
+    assert(bricksAfterRedo.length === 5, 'redo recreates the second placement');
+    const secondPlacedId = bricksAfterRedo.map((b) => b.id).find((id) => id !== firstPlacedId && !idsB0.includes(id));
+    assert(secondPlacedId, 'redo recreates the same second identity, not a fresh one');
 
     // Save and publish B.
     nav.saveDocument();
@@ -543,10 +504,10 @@ function createSession(storage, { replay = true } = {}) {
     const replayedB = replayUseCase.execute(historyB);
     assert(
         JSON.stringify(replayedB.toJSON()) === JSON.stringify(worldB.toJSON()),
-        'replay reproduces the forked, pasted, moved world'
+        'replay reproduces the forked, edited world'
     );
 
-    // Restore the intermediate state (after paste, before move).
+    // Restore the intermediate state (after the first placement, before the second).
     nav.restoreHistoryAt(1);
     const restoredWorld = nav.getDocument(forkId).world;
     const retired = nav.getRetiredHistories(forkId)[0];
@@ -558,7 +519,7 @@ function createSession(storage, { replay = true } = {}) {
     assert(nav.isDocumentDirty(forkId), 'restored state is dirty until saved');
     assert(nav.getTimeline(forkId).length === 0, 'timeline restarts after restore');
 
-    console.log('✓ FLAGSHIP: create → save → publish → fork → copy → paste → move → save → publish → replay → restore');
+    console.log('✓ FLAGSHIP: create → save → publish → fork → edit → save → publish → replay → restore');
 }
 
 console.log('\nAll document cloning tests passed.');

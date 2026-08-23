@@ -62,8 +62,11 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 //              repetition; the World is provably untouched
 //   Section 5: one history entry; undo removes the complete repeated
 //              construction; redo reproduces it exactly
-//   Section 6: EditorSession / WorldNavigationSession wiring — the same
-//              two entry points duplicateSelection() already has
+//   Section 6: EditorSession wiring — the same entry point
+//              duplicateSelection() already has (0.5.9 retired
+//              WorldNavigationSession's own repeatSelection() — see
+//              docs/Principles.md "World View Observes and Navigates;
+//              Editor Mutates and Builds")
 //   Section 7: collaboration — the composite command, reconstructed from
 //              its own serialized JSON the way application/
 //              WorldCommandPropagationUseCase.js's receiving side
@@ -322,7 +325,7 @@ function createWorldWithBricks(specs, worldId, buildingId) {
 }
 
 // ---------------------------------------------------------------------
-// 6. EditorSession / WorldNavigationSession wiring
+// 6. EditorSession wiring
 // ---------------------------------------------------------------------
 
 {
@@ -381,61 +384,11 @@ function createWorldWithBricks(specs, worldId, buildingId) {
     console.log('✓ EditorSession#repeatSelection: same one-entry/active-selection contract as duplicateSelection(), graceful without the use case');
 }
 
-{
-    const storage = new InMemoryStorageProvider();
-    const serializer = new DocumentSerializer();
-    const { world, building, ids: [a] } = createWorldWithBricks([{ position: new Position(0, 0.5, 0) }]);
-    const document = new Document({ world, metadata: new DocumentMetadata({ title: 'World Repeat Test', author: 'tester' }) });
-    storage.save(document.world.id, serializer.serialize(document));
-
-    const worldRegistry = new CreateBrickRegistryUseCase().execute();
-    const commandRegistry = new CreateCommandRegistryUseCase().execute();
-    const replayUseCase = new ReplayDocumentUseCase(commandRegistry);
-    const nav = new WorldNavigationSession({
-        registry: worldRegistry,
-        loadPublicationDocumentUseCase: new LoadPublicationDocumentUseCase(storage),
-        worldLayoutProvider: stubLayoutProvider,
-        saveDocumentUseCase: new SaveDocumentUseCase(storage),
-        replayDocumentUseCase: replayUseCase,
-        restoreHistoryStateUseCase: new RestoreHistoryStateUseCase(replayUseCase),
-        documentCloneService: null,
-        copySelectionUseCase: new CopySelectionUseCase(worldRegistry),
-        pasteClipboardUseCase: new PasteClipboardUseCase(),
-        repeatSelectionUseCase: new RepeatSelectionUseCase(worldRegistry)
-    });
-    nav._eventBus = new EventBus();
-    nav._session = {
-        addWorld: () => {}, removeWorld: () => {}, selectBricks: () => {},
-        clearSelection: () => {}, clearHover: () => {}, hidePreview: () => {}
-    };
-    nav._loadWorld(document.world.id);
-    nav._focusedDocumentId = document.world.id;
-
-    const docId = document.world.id;
-    const liveWorld = nav.getDocument(docId).world;
-    const liveBuilding = liveWorld.getBuildings()[0];
-    nav._setSpatialSelection(SpatialSelectionState.bricks({
-        documentId: docId,
-        items: [{ type: 'brick', buildingId: liveBuilding.id, brickId: a }]
-    }));
-
-    const history = nav._commandHistories.get(docId);
-    assert(nav.repeatSelection({ count: 3, offset: { x: 4, y: 0, z: 0 } }) === true, 'World View repeatSelection succeeds');
-    assert(history.getCursor() === 1, 'World View repetition is exactly ONE history entry');
-    assert(liveBuilding.getBricks().length === 4, 'original + 3 copies');
-    const newSelection = nav.getSpatialSelection();
-    assert(newSelection.brickIds.length === 3, 'World View active selection becomes all 3 repeated bricks');
-
-    nav.undo();
-    assert(liveBuilding.getBricks().length === 1, 'World View undo removes the whole repetition');
-    nav.redo();
-    assert(liveBuilding.getBricks().length === 4, 'World View redo recreates it');
-
-    const replayed = replayUseCase.execute(history);
-    assert(JSON.stringify(replayed.toJSON()) === JSON.stringify(liveWorld.toJSON()), 'replay reproduces the repetition byte-for-byte');
-
-    console.log('✓ WorldNavigationSession#repeatSelection: one entry, active selection is the repeats, undo/redo/replay exact');
-}
+// WorldNavigationSession#repeatSelection wiring coverage removed —
+// 0.5.9 retired World View's own brick-level mutation entry points
+// (repeatSelection() among them; EditorSession alone owns it now); see
+// docs/Principles.md "World View Observes and Navigates; Editor
+// Mutates and Builds".
 
 // ---------------------------------------------------------------------
 // 7. Collaboration — world-sync reconstructs the SAME repetition

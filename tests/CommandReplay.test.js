@@ -451,7 +451,14 @@ function createFixtureDocument() {
 
     // Editing is suspended during preview.
     assert(nav.undo() === false, 'undo suppressed during preview');
-    assert(nav.moveSelection({ x: 1, y: 0, z: 0 }) === false, 'editing suppressed during preview');
+    // moveSelection() coverage removed — 0.5.9 retired World View's own
+    // brick-level mutation entirely (EditorSession alone owns it now).
+    // The one mutation surface WorldNavigationSession kept
+    // (createLandmarkHere/updateLandmark/removeLandmark) is gated by
+    // canEditDocument(), not by history preview, so there is no
+    // preview-suppression assertion to replace it with here; see
+    // docs/Principles.md "World View Observes and Navigates; Editor
+    // Mutates and Builds".
 
     // Scrub back to the initial state.
     nav.previewHistoryAt(0);

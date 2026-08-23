@@ -15,6 +15,7 @@ import { WorldNavigationSession } from '../application/WorldNavigationSession.js
 import { SpatialEditingService } from '../application/SpatialEditingService.js';
 import { CommandHistory } from '../application/CommandHistory.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
+import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { WorldAuthorizationService } from '../application/WorldAuthorizationService.js';
 import { WorldAccessLevel, worldAccessAtLeast, isValidWorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
@@ -54,10 +55,18 @@ import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
 //              own second device inherits her authority through device
 //              authorization, and loses it the moment that
 //              authorization is revoked — all verified against a real
-//              WorldNavigationSession, including a direct call into
-//              application/SpatialEditingService.js that skips every
-//              session-level wrapper, proving the gate lives below the
-//              UI, not merely behind it.
+//              WorldNavigationSession. 0.5.9 — World View Read-Only
+//              Exploration & Fork-to-Edit retired every brick-mutation
+//              entry point this section used to drive
+//              (moveSelection/rotateSelection/deleteSelection/
+//              alignSelection/applyNumericTransform — EditorSession
+//              alone owns those now); this section now drives the SAME
+//              canEditDocument() gate through createLandmarkHere()/
+//              updateLandmark()/removeLandmark() instead — World
+//              Region/Landmark naming is the one mutation surface
+//              World View kept, and it is gated by the exact same
+//              seam. See docs/Principles.md, "World View Observes and
+//              Navigates; Editor Mutates and Builds (0.5.9)".
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -304,9 +313,9 @@ async function run() {
     // Section G: FLAGSHIP
     // -------------------------------------------------------------
     //   Alice owns World W. Bob can READ it but never EDIT it — every
-    //   mutation entry point WorldNavigationSession exposes is a no-op
-    //   for him, including one that bypasses the session wrapper
-    //   entirely and calls SpatialEditingService directly. Charlie is
+    //   mutation entry point WorldNavigationSession still exposes
+    //   (createLandmarkHere/updateLandmark/removeLandmark — 0.5.9
+    //   retired every brick-level one) is refused for him. Charlie is
     //   blocked: NONE on both axes. Alice's own second device (DEVICE
     //   authorization) inherits her EDIT authority; the moment that
     //   authorization is revoked, the SAME physical device loses it —
@@ -322,52 +331,60 @@ async function run() {
         const discoveryProvider = new LocalDiscoveryProvider(storage);
         const worldLayoutProvider = new LocalWorldLayoutProvider(spatialIndexProvider, discoveryProvider);
 
-        const aliceWorld = buildOneBrickWorld(new Position(0, 0.5, 0));
-        const building = aliceWorld.getBuildings()[0];
-        const brick = building.getBricks()[0];
+        const aliceWorld = new World({});
         const aliceDoc = new Document({
             world: aliceWorld,
             metadata: new DocumentMetadata({ title: "Alice's World", author: 'alice', authorIdentityId: 'did:key:alice' })
         });
         storage.save(aliceWorld.id, serializer.serialize(aliceDoc));
 
-        function buildSession(worldAuthorizationService) {
+        function buildSession(worldAuthorizationService, { avatarPosition = null, identityId = null } = {}) {
+            const avatarPresenceSession = avatarPosition
+                ? new AvatarPresenceSession({ avatarId: `${identityId || 'anon'}-avatar`, ownerIdentity: identityId || 'anon' }, { position: avatarPosition })
+                : null;
             const session = new WorldNavigationSession({
                 registry, loadPublicationDocumentUseCase, worldLayoutProvider,
-                discoveryProvider, worldAuthorizationService
+                discoveryProvider, worldAuthorizationService, avatarPresenceSession
             });
             session._session = stubRenderer();
             session._loadWorld(aliceWorld.id);
             return session;
         }
 
-        function selectBrick(session) {
-            session._session.pick = () => ({ documentId: aliceWorld.id, buildingId: building.id, brickId: brick.id, distance: 1 });
-            return session.pick(400, 300);
-        }
-
-        function readBrick(session) {
-            const b = session.getDocument(aliceWorld.id).world.getBuilding(building.id).findBrick(brick.id);
-            return { x: b.position.x, y: b.position.y, z: b.position.z, rotation: b.rotation };
+        function readLandmarks(session) {
+            return session.getDocument(aliceWorld.id).world.getWorldLandmarks();
         }
 
         // --- Alice: owner -----------------------------------------------
+        let seedLandmarkId;
         {
             const aliceAuth = new WorldAuthorizationService({
                 identityProvider: makeIdentityProvider({ identityId: 'did:key:alice', username: 'alice' })
             });
-            const alice = buildSession(aliceAuth);
+            const alice = buildSession(aliceAuth, { avatarPosition: new Position(0, 0, 0), identityId: 'did:key:alice' });
             assert(alice.getWorldAccessLevel(aliceWorld.id) === WorldAccessLevel.EDIT, '42. Alice: EDIT');
             assert(alice.canReadDocument(aliceWorld.id) === true, '43. Alice: canRead true');
             assert(alice.canEditDocument(aliceWorld.id) === true, '44. Alice: canEdit true');
 
-            selectBrick(alice);
-            const before = readBrick(alice);
-            assert(alice.moveSelection({ x: 3, y: 0, z: 0 }) === true, '45. Alice: moveSelection succeeds on her own World');
-            const after = readBrick(alice);
-            assert(after.x === before.x + 3, '46. Alice: the brick actually moved');
-            assert(alice.rotateSelection(90) === true, '47. Alice: rotateSelection succeeds too');
-            assert(alice.deleteSelection() === true, '48. Alice: deleteSelection succeeds — she owns this World outright');
+            seedLandmarkId = alice.createLandmarkHere('Village Well', '');
+            assert(typeof seedLandmarkId === 'string' && seedLandmarkId.length > 0, '45. Alice: createLandmarkHere succeeds on her own World');
+            assert(alice.updateLandmark(seedLandmarkId, { title: 'Village Well (renamed)' }) === true, '46. Alice: updateLandmark succeeds too');
+            assert(readLandmarks(alice)[0].title === 'Village Well (renamed)', '47. Alice: the landmark actually changed');
+            assert(alice.removeLandmark(seedLandmarkId) === true, '48. Alice: removeLandmark succeeds — she owns this World outright');
+            alice.saveDocument(aliceWorld.id);
+        }
+
+        // Bob/Charlie/the multi-device pair all need something ALREADY
+        // there to try to mutate — re-seed it under Alice now that it was
+        // removed above, and persist so every OTHER session's own fresh
+        // _loadWorld() (below) actually sees it.
+        {
+            const aliceAuth = new WorldAuthorizationService({
+                identityProvider: makeIdentityProvider({ identityId: 'did:key:alice', username: 'alice' })
+            });
+            const alice = buildSession(aliceAuth, { avatarPosition: new Position(0, 0, 0), identityId: 'did:key:alice' });
+            seedLandmarkId = alice.createLandmarkHere('Village Well', '');
+            alice.saveDocument(aliceWorld.id);
         }
 
         // --- Bob: read-only observer -------------------------------------
@@ -375,35 +392,29 @@ async function run() {
             const bobAuth = new WorldAuthorizationService({
                 identityProvider: makeIdentityProvider({ identityId: 'did:key:bob', username: 'bob' })
             });
-            const bob = buildSession(bobAuth);
+            const bob = buildSession(bobAuth, { avatarPosition: new Position(5, 0, 5), identityId: 'did:key:bob' });
             assert(bob.getWorldAccessLevel(aliceWorld.id) === WorldAccessLevel.READ, '49. Bob: READ, not EDIT');
             assert(bob.canReadDocument(aliceWorld.id) === true, '50. Bob: canRead true — World View stays an exploration surface for him');
             assert(bob.canEditDocument(aliceWorld.id) === false, '51. Bob: canEdit false');
 
-            const selection = selectBrick(bob);
-            assert(selection !== null, '52. Bob: he can still SELECT/inspect the House — selection is not gated, only mutation');
-            const before = readBrick(bob);
+            assert(readLandmarks(bob).length === 1, '52. Bob: he can still SEE Alice\'s landmark — reading is not gated, only mutation');
 
-            assert(bob.moveSelection({ x: 3, y: 0, z: 0 }) === false, '53. Bob: moveSelection() is a no-op');
-            assert(bob.rotateSelection(90) === false, '54. Bob: rotateSelection() is a no-op');
-            assert(bob.deleteSelection() === false, '55. Bob: deleteSelection() is a no-op');
-            assert(bob.alignSelection('x-min') === false, '56. Bob: alignSelection() is a no-op');
-            assert(bob.applyNumericTransform({ translation: { x: 9, y: 0, z: 0 }, rotation: null }, { absolute: true }) === false,
-                '57. Bob: applyNumericTransform() is a no-op');
+            let threwOnCreate = false;
+            try { bob.createLandmarkHere('Bob\'s Landmark', ''); } catch (e) { threwOnCreate = true; }
+            assert(threwOnCreate, '53. Bob: createLandmarkHere() throws — he cannot add World content here');
 
-            const after = readBrick(bob);
-            assert(after.x === before.x && after.y === before.y && after.z === before.z && after.rotation === before.rotation,
-                '58. Bob: the brick is byte-identical after every attempted mutation');
+            let threwOnUpdate = false;
+            try { bob.updateLandmark(seedLandmarkId, { title: 'Hijacked' }); } catch (e) { threwOnUpdate = true; }
+            assert(threwOnUpdate, '54. Bob: updateLandmark() throws');
+
+            let threwOnRemove = false;
+            try { bob.removeLandmark(seedLandmarkId); } catch (e) { threwOnRemove = true; }
+            assert(threwOnRemove, '55. Bob: removeLandmark() throws');
+
+            assert(readLandmarks(bob).length === 1 && readLandmarks(bob)[0].title === 'Village Well',
+                '56. Bob: the World is byte-identical after every attempted mutation');
             assert(bob._commandHistories.get(aliceWorld.id).canUndo() === false,
-                '59. Bob: zero CommandHistory entries were ever created — nothing was even attempted at the domain layer');
-
-            // Even bypassing the UI entirely: call straight into
-            // SpatialEditingService, skipping WorldNavigationSession's
-            // own moveSelection()/rotateSelection() wrappers completely.
-            const bypassResult = bob._editingService.moveSelection(bob.getSpatialSelection(), { x: 3, y: 0, z: 0 });
-            assert(bypassResult === false, '60. Bob: bypassing the session wrapper and calling SpatialEditingService directly is STILL refused');
-            const stillBefore = readBrick(bob);
-            assert(stillBefore.x === before.x, '61. Bob: ...and the World is still byte-identical after the bypass attempt');
+                '57. Bob: zero CommandHistory entries were ever created — nothing was even attempted at the domain layer');
         }
 
         // --- Charlie: blocked / unauthorized -----------------------------
@@ -412,16 +423,14 @@ async function run() {
                 identityProvider: makeIdentityProvider({ identityId: 'did:key:charlie', username: 'charlie' }),
                 isBlocked: (id) => id === 'did:key:charlie'
             });
-            const charlie = buildSession(charlieAuth);
-            assert(charlie.getWorldAccessLevel(aliceWorld.id) === WorldAccessLevel.NONE, '62. Charlie: NONE');
-            assert(charlie.canReadDocument(aliceWorld.id) === false, '63. Charlie: canRead false');
-            assert(charlie.canEditDocument(aliceWorld.id) === false, '64. Charlie: canEdit false');
+            const charlie = buildSession(charlieAuth, { avatarPosition: new Position(9, 0, 9), identityId: 'did:key:charlie' });
+            assert(charlie.getWorldAccessLevel(aliceWorld.id) === WorldAccessLevel.NONE, '58. Charlie: NONE');
+            assert(charlie.canReadDocument(aliceWorld.id) === false, '59. Charlie: canRead false');
+            assert(charlie.canEditDocument(aliceWorld.id) === false, '60. Charlie: canEdit false');
 
-            selectBrick(charlie);
-            assert(charlie.moveSelection({ x: 1, y: 0, z: 0 }) === false, '65. Charlie: moveSelection() is a no-op');
-            assert(charlie.deleteSelection() === false, '66. Charlie: deleteSelection() is a no-op');
-            const stillThere = charlie.getDocument(aliceWorld.id).world.getBuilding(building.id).findBrick(brick.id);
-            assert(stillThere !== null, '67. Charlie: the brick was never deleted');
+            let threw = false;
+            try { charlie.removeLandmark(seedLandmarkId); } catch (e) { threw = true; }
+            assert(threw, '61. Charlie: removeLandmark() throws');
         }
 
         // --- Multi-device: Alice's Laptop and Phone ----------------------
@@ -431,8 +440,8 @@ async function run() {
             const laptopAuth = new WorldAuthorizationService({
                 identityProvider: makeIdentityProvider({ identityId: 'did:key:alice', username: 'alice' })
             });
-            const laptop = buildSession(laptopAuth);
-            assert(laptop.canEditDocument(aliceWorld.id) === true, '68. Alice\'s Laptop: EDIT (direct)');
+            const laptop = buildSession(laptopAuth, { avatarPosition: new Position(0, 0, 0), identityId: 'did:key:alice' });
+            assert(laptop.canEditDocument(aliceWorld.id) === true, '62. Alice\'s Laptop: EDIT (direct)');
 
             // Phone: a DIFFERENT physical key (did:key:alice-phone), but
             // resolveSocialIdentity reports it as a currently-authorized
@@ -443,13 +452,11 @@ async function run() {
                 identityProvider: makeIdentityProvider({ identityId: 'did:key:alice-phone', username: 'alice' }),
                 resolveSocialIdentity: () => ({ identityId: 'did:key:alice', mode: 'DEVICE', deviceIdentityId: 'did:key:alice-phone' })
             });
-            const phoneAuthorized = buildSession(phoneAuthAuthorized);
+            const phoneAuthorized = buildSession(phoneAuthAuthorized, { avatarPosition: new Position(1, 0, 1), identityId: 'did:key:alice-phone' });
             assert(phoneAuthorized.canEditDocument(aliceWorld.id) === true,
-                '69. Alice\'s Phone, authorized device: EDIT — inherited through device authorization, never a second owner record');
-
-            selectBrick(phoneAuthorized);
-            assert(phoneAuthorized.moveSelection({ x: 1, y: 0, z: 0 }) === true,
-                '70. Alice\'s Phone, authorized device: can actually move the brick, same as the Laptop');
+                '63. Alice\'s Phone, authorized device: EDIT — inherited through device authorization, never a second owner record');
+            assert(typeof phoneAuthorized.createLandmarkHere('Phone Landmark', '') === 'string',
+                '64. Alice\'s Phone, authorized device: can actually add a landmark, same as the Laptop');
 
             // Same physical phone key — but the grant naming it has since
             // been revoked. resolveOwnSocialIdentity() itself falls back
@@ -460,15 +467,15 @@ async function run() {
                 identityProvider: makeIdentityProvider({ identityId: 'did:key:alice-phone', username: 'alice-phone-device' }),
                 resolveSocialIdentity: () => ({ identityId: 'did:key:alice-phone', mode: 'DIRECT', deviceIdentityId: 'did:key:alice-phone' })
             });
-            const phoneRevoked = buildSession(phoneAuthRevoked);
+            const phoneRevoked = buildSession(phoneAuthRevoked, { avatarPosition: new Position(1, 0, 1), identityId: 'did:key:alice-phone' });
             assert(phoneRevoked.canEditDocument(aliceWorld.id) === false,
-                '71. Alice\'s Phone, device authorization REVOKED: no EDIT — same physical device, same World, authority gone');
+                '65. Alice\'s Phone, device authorization REVOKED: no EDIT — same physical device, same World, authority gone');
             assert(phoneRevoked.canReadDocument(aliceWorld.id) === true,
-                '72. ...but still READ — a revoked device is an unauthorized editor, not a blocked stranger');
+                '66. ...but still READ — a revoked device is an unauthorized editor, not a blocked stranger');
 
-            selectBrick(phoneRevoked);
-            assert(phoneRevoked.moveSelection({ x: 1, y: 0, z: 0 }) === false,
-                '73. Alice\'s Phone, device authorization REVOKED: moveSelection() is now a no-op');
+            let threw = false;
+            try { phoneRevoked.createLandmarkHere('Should Fail', ''); } catch (e) { threw = true; }
+            assert(threw, '67. Alice\'s Phone, device authorization REVOKED: createLandmarkHere() now throws');
         }
     }
 

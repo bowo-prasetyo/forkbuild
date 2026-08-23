@@ -4596,3 +4596,9 @@ html, body {
     font-size: 0.78rem;
     color: #808080;
 }
+
+.world-focus-panel-hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.76rem;
+    color: #808080;
+}

@@ -2,8 +2,15 @@
 
 World View is the shared 3D space where **every published creation exists side
 by side**. Fly around, search for what you're looking for, discover what
-others have built nearby, inspect their bricks, and even edit right where you
-stand.
+others have built nearby, and inspect their bricks — World View is a
+read-only exploration surface, never a second place to build. The moment
+you want to change something, **Edit a Copy** hands you an independent copy
+in the Editor, the one place ForkBuild ever builds — see
+[Edit a Copy](#edit-a-copy--taking-something-into-the-editor) below.
+
+World Region and Landmark naming is the one exception: naming a place you're
+standing at is annotation, not construction, so it stays right here — see
+[Landmarks](#landmarks--marking-a-place-worth-remembering) below.
 
 ## Opening World View
 
@@ -87,9 +94,34 @@ without moving anything: what it is, how far away it is, which named
 place it sits inside ("You are in Willow Village") or which geographic
 place candidate it's near ("You are near Kawahara Village") when
 neither is known for certain. From there you can still press **Go** to
-travel there, **Show on Map** to see it on the World Map, or **Names**
-(for a named place) to see or publish community names for it — Info
-itself never does any of those on its own.
+travel there, **Show on Map** to see it on the World Map, **Names**
+(for a named place) to see or publish community names for it, or
+**Edit a Copy** to open it in the Editor — see below. Info itself
+never does any of those on its own.
+
+### Edit a Copy — taking something into the Editor
+
+A region, a landmark, or a placed structure's own Info panel has one more
+button: **Edit a Copy**. It creates an independent copy of the document
+that actually contains what you were looking at — never the whole World,
+never anyone else's original — and opens it straight into the Editor,
+ready to build on.
+
+- For a **landmark** or a **region**, that's the World document they
+  belong to.
+- For a **placed structure**, that's the structure's own content — not
+  the World it happens to be sitting in.
+
+The original is never touched — ForkBuild tells you the moment your copy
+is ready, exactly like any other fork (see
+[Publishing & Forking](04-PublishingAndForking.md)). A **geographic
+place** never offers Edit a Copy on its own — it's a grouping of several
+people's own regions, with no single document of its own to copy; open
+one of its regions instead, and copy that.
+
+This is the *only* door out of World View's read-only surface. Everything
+else here — flying around, Search, Explore Here/What's Here?, the compass,
+the Map, Info — only ever looks.
 
 ### Landmarks — marking a place worth remembering
 
@@ -149,10 +181,13 @@ Camera: Alice's Castle · Editing: Bob's Castle
 
 **Camera** is wherever you're currently looking — flying to a world, or
 clicking a search result's **Focus** button, moves the camera there.
-**Editing** is whichever document your next action (moving a brick, editing
-metadata, publishing) would actually apply to — clicking a brick, or a
-search/location result's **Select** button, changes it *without* moving the
-camera.
+**Editing** is whichever document your next action (adding a landmark or
+region, editing metadata, publishing) would actually apply to — clicking a
+brick or placement, or a search/location result's **Select** button,
+changes it *without* moving the camera. (Editing bricks themselves is
+Editor-only now — see [Edit a Copy](#edit-a-copy--taking-something-into-the-editor)
+above; nothing you can do to a brick in World View changes which document
+is "being edited" here.)
 
 The two usually move together (Focus does both), but two creations can share
 the exact same spot in the world — focusing one, then the other, moves the
@@ -244,8 +279,12 @@ the same panel shows what it references instead: its source document's
 title, local and world position, rotation, ground elevation, and the
 containing world's title and author. This is read-only in World View —
 there's no gizmo, no numeric field, nothing to drag. Click **Open Source**
-to jump into the Editor and edit the referenced document's bricks directly;
-every instance of it, wherever it's placed, reflects that edit.
+to jump straight into the Editor on the referenced document itself; every
+other instance of it, wherever it's placed, reflects whatever you edit
+there. If you'd rather work on an independent copy instead — leaving every
+other instance untouched — use its Focus panel's own
+[**Edit a Copy**](#edit-a-copy--taking-something-into-the-editor) button
+instead of Open Source.
 
 ## Document Information and Placement
 
@@ -282,63 +321,37 @@ and the **Move** button is disabled. You can still **Focus** it, inspect it,
 and — subject to the usual fork-on-edit rule — edit the document sitting at
 that placement; only *where it sits in shared space* is theirs to move.
 
-## Building in World View
+## World View is read-only — building happens in the Editor
 
-World View isn't just for looking — you can build here too, alongside other
-builders who are present in the same world.
+World View is for looking around, not building: there's no Place tool, no
+transform gizmo, no copy/paste, no groups, and clicking a brick selects it
+for **inspection only** — nothing about clicking, dragging, or pressing a
+key here ever changes a brick. The moment you want to build on something
+you found, use its Focus panel's **[Edit a Copy](#edit-a-copy--taking-something-into-the-editor)**
+button to open an independent copy in the Editor — the one place ForkBuild
+ever builds. See [The Editor](02-TheEditor.md) for placing, transforming,
+grouping, and every other construction tool.
 
-### Collaborative building
+World Region and Landmark naming is the one exception — see
+[Landmarks](#landmarks--marking-a-place-worth-remembering) above — because
+naming a place is annotation, not construction.
 
-When multiple people are building in the same world:
+### Seeing other collaborators
 
-- **See other builders** — their avatars appear in the world with display names
-  and activity indicators (e.g., "**Bob — Building House**").
-- **Real-time updates** — bricks placed by others appear immediately as the
-  world operations propagate.
-- **No conflicts** — if two people edit the same structure simultaneously,
-  deterministic ordering ensures the world converges to a consistent state.
-- **Ephemeral activity feed** — a local panel shows recent operations
-  ("Bob placed Block 2×2", "Alice rotated House") to help you understand
-  changes even when they happen outside your current view. This feed is
-  temporary and not persisted.
+When multiple people are present in the same World:
 
-> **Presence describes activity; commands establish shared reality.**
-> Spatial presence helps you understand what others are doing, but only
-> world operations actually change the shared environment.
+- **See other people** — their avatars appear with display names and
+  activity indicators (e.g., "**Bob — exploring nearby**").
+- **Real-time updates** — anything they publish (a landmark, a name, a
+  fresh fork of their own) appears for you as it happens.
+- **Ephemeral activity feed** — a local panel shows recent activity to help
+  you understand what's changed even outside your current view. This feed
+  is temporary and not persisted.
 
-1. Click the **Place** tool in the overlay.
-2. Pick a brick type from the dropdown.
-3. Hover over the ground or a brick face — a ghost preview appears.
-4. Click to place it.
-
-Switch back to **Select** to move, rotate, or delete bricks, using the same
-keys as the Editor (arrows, `R`, `Delete`), or drag the on-screen
-[gizmo](InteractiveTransformGizmo.md).
-
-> **Editing a published creation?** Your first change automatically creates
-> your own editable copy — the original is never touched. ForkBuild will tell
-> you the moment this happens ("Created your own editable copy — … is
-> unchanged"), so you always know when you've branched off. See
-> [Publishing & Forking](04-PublishingAndForking.md).
-
-## Selecting in World View
-
-Selection works exactly like the Editor:
-
-- **Click** to select, **Ctrl/Cmd+Click** to toggle, **Shift+Click** to add.
-- **Shift+Drag** to box-select.
-- **Ctrl/Cmd+A** to select everything in the world you're currently editing.
-
-## Copy, paste, duplicate, and groups
-
-Copy (`Ctrl+C`), paste (`Ctrl+V`), duplicate (`Ctrl/Cmd+D`), and the
-**Groups** panel all work in World View just as they do in the Editor for
-an ordinary brick selection — see
-[The Editor](02-TheEditor.md#copy-paste-and-duplicate). A
-[placed structure](#inspecting-a-brick--or-a-placed-structure) stays
-read-only here as described above: selecting one doesn't enable
-duplicate, copy, or paste, since editing a placement's position, rotation,
-or count is Editor-only.
+> **Presence describes activity; it never changes anything on its own.**
+> Spatial presence helps you understand what others are doing, but only an
+> actual mutation — always in the Editor now, except Region/Landmark
+> naming — changes the shared environment.
 
 ## Save and publish here, too
 
@@ -349,17 +362,16 @@ shows which one it is.
 
 ## The Operation Timeline
 
-This is one of ForkBuild's most powerful features. Every change you make is
+This is one of ForkBuild's most powerful features. Every change you make —
+here, that means adding, renaming, or removing a landmark or region — is
 recorded as an **operation**, and the timeline lets you travel through them.
 
 Click **Timeline** in the overlay to open it. You'll see a list like:
 
 ```
-Place Brick
-Place Brick
-Move 3 Bricks
-Rotate 3 Bricks
-Paste 3 Bricks
+Add Landmark "Old Bridge"
+Rename Region "Willow Village"
+Remove Landmark "Great View"
 ```
 
 ### Preview any moment

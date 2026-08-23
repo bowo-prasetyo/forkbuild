@@ -17,9 +17,6 @@ import { CreateBrickRegistryUseCase } from './CreateBrickRegistryUseCase.js';
 import { ReplayDocumentUseCase } from './ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from './RestoreHistoryStateUseCase.js';
 import { DocumentCloneService } from './DocumentCloneService.js';
-import { CopySelectionUseCase } from './CopySelectionUseCase.js';
-import { RepeatSelectionUseCase } from './RepeatSelectionUseCase.js';
-import { PasteClipboardUseCase } from './PasteClipboardUseCase.js';
 import { WorldNavigationSession } from './WorldNavigationSession.js';
 import { WorldCommandPropagationUseCase } from './WorldCommandPropagationUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -491,10 +488,11 @@ export class CreateWorldViewUseCase {
                     restoreHistoryStateUseCase,
                     identityProvider,
                     documentCloneService,
-                    copySelectionUseCase: new CopySelectionUseCase(registry),
-                    pasteClipboardUseCase: new PasteClipboardUseCase(),
-                    // 0.4.9 — Alignment, Snapping & Repetition.
-                    repeatSelectionUseCase: new RepeatSelectionUseCase(registry),
+                    // 0.5.9 — World View no longer has brick-selection
+                    // copy/paste/repeat at all (see
+                    // docs/Principles.md, "World View Observes and
+                    // Navigates; Editor Mutates and Builds"); these
+                    // three use cases are EditorSession's alone now.
                     // 0.2.20: fork-on-write needs to resolve a loaded
                     // world's Publication to check its fork policy
                     // before lazily forking it.
