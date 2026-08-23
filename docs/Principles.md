@@ -8036,3 +8036,89 @@ milestone deliberately proves CANDIDACY works first, in isolation,
 before anything is built on top of it — the identical "data model
 first" discipline 0.5.2 already established for naming claims
 themselves, and 0.5.0 established before that for regions.
+
+### A Geographic Place Is A Derived View, Never A Fourth Stored Object (0.5.5)
+
+0.5.4 proved a client can group regions into geographic-place
+candidates and rank their names together, but the result only ever
+existed as a shape one naming panel, already scoped to a single region,
+knew how to read. 0.5.5 (Geographic Place Directory & Identity UX) gives
+that result somewhere to live for a viewer to actually browse — and
+draws its whole design around one sentence from the design conversation
+that proposed it:
+
+> A geographic place is a DERIVED VIEW over descriptions, not a new
+> object that owns them.
+
+`core/GeographicPlaceView.js` is instantiated fresh on every read and
+thrown away — there is no `WorldGeographicPlace` anywhere in
+`core/World.js`, no cache keyed by fingerprint, nothing this milestone
+persists at all. The pipeline it closes is now four steps, and the
+FOURTH is presentation only:
+
+```text
+WorldRegion -> PlaceFingerprint -> PlaceIdentity -> GeographicPlaceView -> UI
+```
+
+**A representative region is a presentation choice, never an
+authority.** `buildGeographicPlaceView()` picks `group.regions[0]` —
+already sorted by `${worldId}:${id}`, the exact tie-break
+`core/GeographicPlaceResolution.js#buildPlaceGroup()` established one
+milestone earlier — to decide which region's label a directory row
+shows, or which region's geometry a "Show on Map" click centers the
+camera on. It decides NOTHING else. Nothing in this pipeline ever
+writes "this is the real one" back into a `WorldRegion`, and two
+replicas holding the exact same regions always pick the exact same
+representative, for the same reason `core/PlaceIdentity.js#
+groupRegionsByPlaceIdentity()`'s own group ordering already had to be
+deterministic: a presentation choice that disagreed across replicas
+would look, to a viewer, exactly like a decision the architecture
+never actually made.
+
+**A directory's ordering is a browsing convenience, never a ranking of
+importance.** `core/GeographicPlaceDirectory.js` sorts alphabetically
+by `displayName`, deliberately NOT by the fingerprint-key order
+`groupRegionsByPlaceIdentity()` itself uses (that order exists purely
+so replicas agree on GROUPING, and reads as arbitrary to a person
+browsing by name) and deliberately NOT by description count, World
+count, or contributor count either — any of those would quietly imply
+"more descriptions matters more," a claim this architecture has never
+made and has no basis to make. Alphabetical is the one order with
+no opinion about which place is more important than another.
+
+**"Why grouped together?" explains evidence that already existed; it
+manufactures none of its own.** `describeCandidacyReasons()` is a
+static, four-item checklist — same fingerprint, same center, same
+radius, same kind — shown for any multi-region place, paired with
+`CANDIDACY_CAVEAT`: "This is a geographic candidate, not a verified
+identity." There is deliberately no confidence score, no percentage, no
+"87% likely the same place." A number would claim a precision this
+architecture has never had; the whole reason 0.5.4 committed to a
+single boolean (`candidate`) rather than a similarity score was to
+avoid manufacturing exactly that false precision, and 0.5.5's job is to
+make that existing restraint VISIBLE to a person, not to quietly
+undo it with a number in the UI layer instead.
+
+**Read-only, on purpose — publishing stays where 0.5.2 put it.**
+`ui/components/GeographicPlacePanel.js` shows names, descriptions, and
+the candidacy checklist; it has no publish or retract action of its
+own. Its "Names" button reopens the EXISTING `PlaceNamingPanel` for one
+region rather than rebuilding that machinery a second time in a
+world-wide surface — the same restraint that kept 0.5.4's own combined
+ranking additive alongside the per-region view instead of replacing it,
+applied here one more level up.
+
+### A Geographic Place Highlights Existing Geometry; It Never Draws New Geometry (0.5.5)
+
+`ui/components/WorldMapPanel.js`'s own header, since 0.5.1, has been
+explicit that a map "should still render the actual regions, never
+invent a new geographic boundary." "Show on Map" from a
+`GeographicPlacePanel` extends that same restraint to a geographic
+place candidate: it passes a set of `${worldId}:${id}` keys, and every
+region ALREADY drawn on the map that matches one gets an extra
+highlight class — a brighter stroke, a different fill. Nothing new is
+projected, nothing new is computed, and no boundary is drawn around the
+group as a whole. A geographic place candidate is a fact about which
+EXISTING circles a viewer should look at together, never a shape of its
+own — exactly 0.5.1's "a world map is a derived view, never a second
+world" restraint, applied to a group of regions instead of one.

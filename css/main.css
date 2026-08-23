@@ -4317,3 +4317,52 @@ html, body {
 .form-field-row .form-input {
     flex: 1;
 }
+
+/* 0.5.5 — Geographic Place Directory & Identity UX.
+   ui/components/GeographicPlaceDirectoryPanel.js follows the same
+   .modal-overlay/.modal-panel/.locations-panel-item language every
+   other directory-style panel here already uses; the only new thing is
+   that a row itself is clickable (role="button"), not just its action
+   button, since opening a place IS this list's whole purpose. */
+.geographic-place-directory-panel {
+    width: 460px;
+}
+
+.geographic-place-directory-list .locations-panel-item {
+    cursor: pointer;
+}
+
+.geographic-place-directory-list .locations-panel-item:hover {
+    border-color: #4caf7d;
+}
+
+/* ui/components/GeographicPlacePanel.js reuses .naming-panel-section/
+   .naming-panel-list wholesale (see that panel's own header on why —
+   it's the exact same "ranked list of named things" shape 0.5.2's
+   naming panel already established), plus its own small checklist for
+   "why grouped together?" */
+.geographic-place-panel {
+    width: 480px;
+}
+
+.geographic-place-reasons-list {
+    list-style: none;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.82rem;
+    color: #a8d9bd;
+}
+
+/* 0.5.5 — "Show on Map" highlights the geometry that already exists;
+   it never draws a new shape. A highlighted region gets a brighter
+   stroke/fill and a subtle glow, layered on top of whatever tier
+   styling .world-map-region already applies — never a replacement for
+   it. */
+.world-map-region--highlighted {
+    fill: rgba(217, 119, 87, 0.18);
+    stroke: #d97757;
+    stroke-width: 2.5;
+}

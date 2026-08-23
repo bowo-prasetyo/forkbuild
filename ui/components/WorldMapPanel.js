@@ -55,6 +55,21 @@ export default {
         content: {
             type: Object,
             default: () => ({ regions: [], landmarks: [], structures: [], collaborators: [], viewerPosition: null })
+        },
+        // 0.5.5 — Geographic Place Directory & Identity UX. An optional
+        // array of `${worldId}:${id}` keys (the exact format
+        // core/GeographicPlaceResolution.js#buildPlaceGroup() already
+        // sorts its own regions by) — every region matching one of these
+        // keys draws with an extra highlight class. This is the ONLY
+        // thing "Show on Map" from ui/components/GeographicPlacePanel.js
+        // does: it highlights the geometry that ALREADY exists here.
+        // Nothing about a geographic place candidate ever draws new
+        // shapes, boundaries, or geometry of its own — see this
+        // component's own header, "the map should still render the
+        // actual regions, not invent a new geographic boundary."
+        highlightRegionKeys: {
+            type: Array,
+            default: () => []
         }
     },
     emits: ['focus-location', 'focus-collaborator', 'cancel'],
@@ -82,15 +97,25 @@ export default {
                 height: MAP_SIZE
             });
         },
+        // 0.5.5 — `highlightKeySet` is recomputed from the
+        // `highlightRegionKeys` prop rather than doing an `.includes()`
+        // scan per region below — a cosmetic optimization, never a
+        // behavior change (Set membership and Array#includes() agree on
+        // every input here).
+        highlightKeySet() {
+            return new Set(this.highlightRegionKeys || []);
+        },
         projectedRegions() {
             return this.content.regions
                 .map((region) => {
                     const projected = projectRegion(region, this.viewport);
                     return {
                         id: region.id,
+                        worldId: region.worldId,
                         name: region.name,
                         kind: region.kind,
                         tier: regionPresentationTier(region.kind),
+                        highlighted: this.highlightKeySet.has(`${region.worldId}:${region.id}`),
                         ...projected
                     };
                 })
@@ -217,7 +242,7 @@ export default {
                     <g v-for="region in projectedRegions" :key="'region:' + region.id">
                         <circle
                             class="world-map-region"
-                            :class="'world-map-region--tier-' + region.tier"
+                            :class="['world-map-region--tier-' + region.tier, { 'world-map-region--highlighted': region.highlighted }]"
                             :cx="region.x" :cy="region.y" :r="region.radius"
                             @click.stop="$emit('focus-location', region.id)"
                         >
