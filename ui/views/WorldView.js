@@ -801,6 +801,22 @@ export default {
             if (inspection && !inspection.isEmpty) {
                 spatialInspection.value = {
                     type: inspection.type,
+                    // Pre-existing bug, found while chasing a missing
+                    // "Edit a Copy" button (0.5.9): SpatialInspectionState
+                    // keeps documentId/buildingId/brickId/placementId as
+                    // its OWN top-level fields, siblings of `data`, not
+                    // inside it (see application/spatial-state/
+                    // SpatialInspectionState.js). Spreading only
+                    // `inspection.data` silently dropped `documentId`
+                    // from this object entirely — every button gated on
+                    // `spatialInspection.documentId` (Focus World, since
+                    // 0.2.93, and now Edit a Copy) has never actually
+                    // been able to render for a brick/ground/placement
+                    // inspection. `data` already carries the identical
+                    // value under `worldId` for every inspection type,
+                    // which is why the surrounding fields (Type, World,
+                    // Author, ...) always rendered fine.
+                    documentId: inspection.documentId,
                     ...inspection.data
                 };
             } else {
