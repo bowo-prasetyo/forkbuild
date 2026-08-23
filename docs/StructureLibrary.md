@@ -447,3 +447,109 @@ sitting beside Place as competing buttons. Nothing about composing,
 forking, extracting, or personally storing a Structure changed; see
 docs/Roadmap.md, 0.4.5, and docs/Principles.md, "Buildable Things Share
 One Placement Experience (0.4.5)."
+
+## Blueprint Sharing & Exchange (0.4.6)
+
+Every section above describes a Personal Structure Library that is
+per-device — "Local, not synchronized (yet)" (0.4.3's own words above).
+0.4.6 gives a Structure a way to LEAVE the device it was saved on without
+becoming shared World content:
+
+    Alice's Structure --export--> Blueprint Package --import--> Bob's Structure
+
+deliberately never:
+
+    Structure --publish--> World
+
+A blueprint stays reusable content, exactly the same category
+`core/Structure.js`'s own header has occupied since 0.2.81 — it is not,
+and does not become, a `StructurePlacement`, a `Publication`, or anything
+else that implies a live World or a live dependency on Alice's device.
+See docs/Principles.md, "A Blueprint Package Is Portable Data, Never A
+Live Dependency (0.4.6)."
+
+**The package.** `application/BlueprintPackage.js#buildBlueprintPackage()`
+wraps a Structure's own `toJSON()` in a small, versioned envelope:
+
+    { kind: "forkbuild.blueprint", schemaVersion: 1, structure: { id, name, category, tags, description, bricks } }
+
+`kind` is a plain discriminator (not a security boundary) so an unrelated
+JSON file fails validation with a specific, first message rather than an
+obscure one several fields deep. `schemaVersion` is the same "room for
+future additive evolution" identity/IdentityExport.js's own portable
+package format already established one domain over — a later schema
+version could add `author`/`thumbnail` without breaking a v1 package's
+own importability.
+
+**Export.** `application/ExportBlueprintUseCase.js` is pure — no file
+I/O, no persistence — mirroring `ForkStructureUseCase`/
+`CreateStructureFromSelectionUseCase`'s own "one execute(), one job"
+shape. `EditorSession#exportBlueprint(structure)` delegates straight to
+it; `ui/views/EditorView.js` turns the returned package into an actual
+browser download, the same `data:application/json` + `<a download>`
+mechanism `ui/views/IdentityManagementView.js`'s own portable-identity
+export already uses — deliberately no intermediate modal, since (unlike
+an identity export) there is no passphrase to collect first. Reachable
+from "My Structures" own "⋮" menu — personal Structures only, alongside
+Fork/Rename/Remove.
+
+**Validation, strictly separate from construction.**
+`application/BlueprintImportValidator.js#validateBlueprintPackage()`
+answers exactly one question — "is this package well-formed?" — and
+never constructs a Structure. A blueprint file is untrusted input, so
+every failure mode is checked before anything is built: schema version,
+structure id/name/category/tags/description shape, a non-empty bricks
+array, per-brick id (present, unique — no duplicate brick ids),
+definitionId (present, and — when a BrickRegistry is supplied — actually
+resolvable, rejecting an unsupported brick definition), and
+position/rotation (present, every coordinate a finite number, rejecting
+NaN/Infinity/non-numeric geometry). The same "validate, THEN construct,
+NEVER execute" discipline `identity/IdentityImport.js` already applies to
+a portable identity package, one domain over:
+
+    Import -> validate -> construct Structure -> save to personal library
+    Import -> execute arbitrary command                                     — never
+
+**Import, and why every id is fresh.**
+`application/ImportBlueprintUseCase.js` constructs a brand-new
+`core/Structure.js` from an already-validated package — its own id AND
+every brick's own id are freshly minted (`createId()`), never trusted
+from the package, the identical "an id crossing a boundary always
+regenerates" rule `ForkStructureUseCase` and
+`CreateStructureFromSelectionUseCase` already apply to forking and
+extraction. This is what makes "Structure A != Structure B" true even
+when Bob imports the exact same package twice: two independent library
+entries, never a silent overwrite of one by the other.
+`EditorSession#importBlueprint(pkg)` folds validate → construct → save
+into one call — unlike extraction's own two-step
+`createStructureFromSelection()`/`saveStructureToPersonalLibrary()`
+split, import offers no metadata-editing step in between, because the
+package already carries its own name/category/tags/description.
+
+**Indistinguishable at placement time.** An imported Structure lands in
+"My Structures" as an ordinary entry — same `BuildLibraryPreview`, same
+click-to-Place lifecycle (0.4.5), same Fork/Rename/Remove/Export actions
+as anything extracted locally. There is no
+`ImportedStructurePlacementTool` and no branch anywhere in
+`CopyStructureIntoDocumentUseCase` or `StructureCompositionTool` that
+knows or cares whether a Structure was built-in, personally extracted, or
+imported.
+
+**Independence, proven end to end.** `tests/BlueprintExchange.test.js`'s
+own flagship scenario exports "Alice's Riverside Inn," imports it into a
+completely independent `LocalStructureLibraryStore` (its own
+`StorageProvider`, standing in for a second device), places the imported
+copy through the ordinary composition pipeline, and then renames AND
+deletes Alice's original — proving both her imported copy and the
+Document it was already placed into are byte-identical before and after.
+The same test also proves every rejection named above (unknown brick
+definition, duplicate brick ids, NaN coordinates, missing fields,
+unsupported schema version) happens before a single byte reaches Bob's
+library.
+
+**Deliberately excluded.** No peer-to-peer transfer, no cloud blueprint
+storage, no blueprint marketplace, no World-level blueprint discovery/
+search, no ratings/comments/likes, and no CRDT-based collaborative
+blueprint editing — 0.4.6 is a portable ARTIFACT (export a file, import a
+file), not a distribution network. See docs/Roadmap.md, 0.4.6, for the
+full list and why each is a genuinely separate, later question.

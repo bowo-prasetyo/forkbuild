@@ -80,6 +80,26 @@ export function matches(query, ...fields) {
 // 'remove-personal-structure'), since only the user's own library
 // content can be renamed or deleted — Village stays read-only, exactly
 // as it always has. Both live in the same secondary "⋮" menu as Fork.
+//
+// 0.4.6 — Blueprint Sharing & Exchange. "My Structures" is no longer
+// device-bound: a personal Structure's "⋮" menu gains Export Blueprint
+// (emits 'export-personal-structure', same one-Structure-in shape as
+// Fork/Rename/Remove), and the section's own header gains an Import
+// Blueprint button — a library-level action, not a per-card one, so it
+// lives beside the "My Structures" title instead of inside any single
+// card's menu. Deliberately unconditional: unlike the built-in/personal
+// category groups themselves (which simply render nothing when empty),
+// "My Structures" and its Import control always render on the Structures
+// tab, because Import is exactly how an empty personal library stops
+// being empty — gating it behind "at least one structure already exists"
+// would make importing your very first blueprint require one already
+// being there. What crosses the emit boundary here is deliberately raw
+// file TEXT, not a parsed/validated package or a Structure — this panel
+// finds and asks for things, same as every other emit in this file; it
+// is application/BlueprintImportValidator.js and
+// application/ImportBlueprintUseCase.js (via
+// application/EditorSession.js#importBlueprint(), called from
+// ui/views/EditorView.js) that actually parse, validate, and construct.
 export default {
     name: 'BuildLibraryPanel',
     components: { BuildLibraryPreview },
@@ -114,7 +134,19 @@ export default {
             default: null
         }
     },
-    emits: ['place', 'fork', 'place-structure', 'rename-personal-structure', 'remove-personal-structure'],
+    emits: [
+        'place', 'fork', 'place-structure', 'rename-personal-structure', 'remove-personal-structure',
+        // 0.4.6 — Blueprint Sharing & Exchange. 'export-personal-structure'
+        // mirrors 'fork'/'rename-personal-structure'/'remove-personal-structure'
+        // exactly — one Structure in, no return value expected, the caller
+        // (ui/views/EditorView.js) owns turning it into an actual download.
+        // 'import-blueprint' is different in kind: it isn't per-item, so it
+        // carries the raw file text read here rather than a Structure — the
+        // caller owns parsing/validating/persisting it, same "this panel
+        // finds and asks for things, it never decides what they mean" rule
+        // this file's own header states.
+        'export-personal-structure', 'import-blueprint'
+    ],
     setup(props, { emit }) {
         const activeTab = ref('bricks');
         const query = ref('');
@@ -216,6 +248,42 @@ export default {
             closeMenu();
         }
 
+        // 0.4.6 — Blueprint Sharing & Exchange. Export only ever applies
+        // to a personal Structure — same reasoning as Rename/Remove above
+        // (a built-in Village entry never renders this button at all —
+        // see the template below), so there's no separate "is this one
+        // exportable" check needed here either.
+        function exportPersonalStructure(structure) {
+            emit('export-personal-structure', structure);
+            closeMenu();
+        }
+
+        // Import is a library-level action, not a per-structure one, so
+        // it lives beside "My Structures" own title rather than inside
+        // any one card's menu — clicking it just opens the OS file
+        // picker via the hidden input below, exactly the same
+        // <input type="file"> + FileReader shape
+        // ui/views/IdentityManagementView.js's own portable-identity
+        // import already established one domain over.
+        const importFileInput = ref(null);
+        function triggerImportBlueprint() {
+            if (importFileInput.value) {
+                importFileInput.value.click();
+            }
+        }
+        function onImportBlueprintFileChosen(event) {
+            const file = event.target.files && event.target.files[0];
+            event.target.value = ''; // allow re-choosing the same file later
+            if (!file) {
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                emit('import-blueprint', String(reader.result || ''));
+            };
+            reader.readAsText(file);
+        }
+
         onMounted(() => {
             unsubscribe = props.paletteUseCase.onActiveBrickChanged((definitionId) => {
                 selectedDefinitionId.value = definitionId;
@@ -248,7 +316,11 @@ export default {
             toggleMenu,
             forkStructure,
             renamePersonalStructure,
-            removePersonalStructure
+            removePersonalStructure,
+            exportPersonalStructure,
+            importFileInput,
+            triggerImportBlueprint,
+            onImportBlueprintFileChosen
         };
     },
     template: `
@@ -338,8 +410,23 @@ export default {
                     </ul>
                 </div>
 
-                <div v-if="filteredPersonalStructureGroups.length > 0" class="personal-structure-library">
-                    <h4 class="palette-title personal-structure-library-title">My Structures</h4>
+                <div class="personal-structure-library">
+                    <div class="personal-structure-library-header">
+                        <h4 class="palette-title personal-structure-library-title">My Structures</h4>
+                        <button
+                            type="button"
+                            class="action-btn action-btn--secondary personal-structure-library-import"
+                            @click="triggerImportBlueprint"
+                        >Import Blueprint</button>
+                        <input
+                            ref="importFileInput"
+                            type="file"
+                            accept="application/json"
+                            class="personal-structure-library-import-input"
+                            aria-label="Import blueprint file"
+                            @change="onImportBlueprintFileChosen"
+                        />
+                    </div>
                     <div v-for="group in filteredPersonalStructureGroups" :key="group.category" class="palette-group">
                         <h4 class="palette-category">{{ group.category }}</h4>
                         <ul class="structure-list">
@@ -366,6 +453,9 @@ export default {
                                         </button>
                                         <button class="action-btn action-btn--secondary structure-item-rename" @click="renamePersonalStructure(structure)">
                                             Rename
+                                        </button>
+                                        <button class="action-btn action-btn--secondary structure-item-export" @click="exportPersonalStructure(structure)">
+                                            Export Blueprint
                                         </button>
                                         <button class="action-btn action-btn--danger structure-item-remove" @click="removePersonalStructure(structure)">
                                             Remove

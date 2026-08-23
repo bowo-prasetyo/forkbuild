@@ -8860,6 +8860,215 @@ and tests/VillageLibraryExpansion.test.js are unchanged and still pass.
 > **0.4.4 — Is there enough here to actually build with?**
 > **0.4.5 — Does reaching for one feel like reaching for the other?**
 
-Richer discovery/preview (0.4.6) and import/export/sharing (0.4.7)
-remain exactly where 0.4.4 left them: named, not forgotten, sized on
-their own.
+Richer discovery/preview and import/export/sharing remained exactly
+where 0.4.4 left them: named, not forgotten, sized on their own. Sharing
+turned out to be the more urgent of the two — see 0.4.6, below.
+
+## 0.4.6 — Blueprint Sharing & Exchange
+
+0.4.0 through 0.4.5 grew what a Structure IS (composition, extraction, a
+personal library, a twenty-structure catalog) and HOW a user reaches for
+one (0.4.5's own unified Place click). None of that ever let a Structure
+leave the device it was created on: `application/LocalStructureLibraryStore.js`
+is StorageProvider-backed, and StorageProvider is per-device (0.4.3's own
+"Deliberately excluded"). A user can build something as good as "Alice's
+Riverside Inn," but Bob — on a different device, or a different
+installation entirely — has no way to obtain it short of rebuilding it
+brick by brick. This milestone is the smallest closure of that gap:
+
+```text
+Structure --export--> Blueprint Package --import--> Structure
+```
+
+The important boundary, named directly in this milestone's own design
+conversation and never crossed: a Blueprint Package is a portable
+ARTIFACT, not a live dependency, and it never becomes World content —
+
+```text
+Structure --export/import--> Blueprint Package     — this milestone
+Structure --publish-->        World                 — a separate, already-answered question
+```
+
+See docs/Principles.md, "A Blueprint Package Is Portable Data, Never A
+Live Dependency (0.4.6)."
+
+### What changed
+
+**`application/BlueprintPackage.js`** — new. `buildBlueprintPackage(structure)`
+wraps a Structure's own `toJSON()` in a small, versioned, JSON-safe
+envelope: `{ kind: "forkbuild.blueprint", schemaVersion: 1, structure }`.
+`kind` is a plain discriminator, not a security boundary — it exists so
+an unrelated JSON file (an exported identity, a saved Document, random
+JSON) fails validation with one specific, first message rather than an
+obscure one several fields deep. Deterministic: the same Structure
+produces byte-identical JSON on every call, because `Structure#toJSON()`
+itself already emits fields and bricks in a fixed order.
+
+**`application/BlueprintImportValidator.js`** — new. Strict, side-effect-
+free validation, deliberately separate from construction — the identical
+split `identity/IdentityImport.js` already draws from
+`identity/IdentityRecovery.js` one domain over (0.2.48), applied here to
+data that carries no secret at all. Rejects, before anything is built:
+the wrong `kind` or an unsupported `schemaVersion`; a missing/malformed
+structure id, name, category, tags, or description; a missing or empty
+bricks array; and, per brick, a missing id, a duplicate id, a missing or
+unsupported `definitionId` (checked against a supplied `BrickRegistry`),
+a missing or non-finite position axis, or a non-finite rotation.
+
+**`application/ExportBlueprintUseCase.js`** / **`application/ImportBlueprintUseCase.js`**
+— new. Export is pure delegation to `buildBlueprintPackage()`, mirroring
+every other Structure use case's own "one execute(), one job" shape.
+Import runs the validator first, then constructs a brand-new
+`core/Structure.js` — its own id AND every brick's own id freshly minted
+(`createId()`), never trusted from the package, the same "an id crossing
+a boundary always regenerates" rule `ForkStructureUseCase` and
+`CreateStructureFromSelectionUseCase` already apply to forking and
+extraction. This is what guarantees importing the same package twice —
+even into the same library — always produces two independent entries.
+
+**`application/EditorSession.js`** — `exportBlueprint(structure)` (pure,
+returns the package) and `importBlueprint(pkg)` (validates, constructs,
+and saves straight to the wired `personalStructureLibraryStore` in one
+call — import offers no metadata-editing step in between, unlike
+extraction's own separate `createStructureFromSelection()`/
+`saveStructureToPersonalLibrary()`, because the package already carries
+its own name/category/tags/description). Both optional, both graceful
+no-ops with nothing wired, the same posture every other 0.4.x addition to
+this class already follows.
+
+**`ui/components/BuildLibraryPanel.js`.** A personal Structure's "⋮" menu
+gains **Export Blueprint**, alongside Fork/Rename/Remove — emits
+`export-personal-structure`, one Structure in, no return value expected.
+"My Structures" own header gains an **Import Blueprint** button — a
+library-level action, not a per-card one, so it triggers a hidden
+`<input type="file">` (the same shape `ui/views/IdentityManagementView.js`'s
+own portable-identity import already established) and emits
+`import-blueprint` with the raw file text; parsing/validating/
+constructing stays entirely `EditorView.js`'s and `EditorSession.js`'s
+job, never this panel's. The "My Structures" section itself now renders
+unconditionally on the Structures tab (previously gated on having at
+least one personal Structure already saved) — Import is exactly how an
+empty personal library stops being empty, so gating its own entry point
+behind "not empty" would be circular.
+
+**`ui/views/EditorView.js`.** `exportPersonalStructure(structure)` turns
+the returned package into an immediate browser download — `JSON.stringify`
++ `data:application/json` + `<a download>`, deliberately no intermediate
+modal, since (unlike an identity export) there is no passphrase to
+collect first. `importBlueprint(rawText)` wraps `JSON.parse` and
+`editorSession.importBlueprint()` in separate `try`/`catch` blocks,
+mirroring `IdentityManagementView.js#confirmImport()`'s own two-stage
+"is this even JSON" / "is this a valid package" error surfacing.
+
+**`css/main.css`.** `.personal-structure-library-header` (title + Import
+button, flex row) and `.personal-structure-library-import-input` (a
+visually-hidden-but-functional file input, the standard "styled trigger
+button + invisible native input" shape). Export reuses
+`.action-btn--secondary` wholesale, alongside Rename — no new button
+color, same restraint 0.4.3/0.4.5 already applied to Rename/Remove/Fork.
+
+### What deliberately did not change
+
+- **`core/Structure.js` gains no new field.** No `exportedFrom`,
+  `importedAt`, or provenance of any kind lives on the Structure itself
+  — the same "library membership is never part of a Structure's own
+  identity" rule 0.4.3 established for built-in versus personal now
+  extends to imported without touching this class at all. If provenance
+  is ever wanted, it belongs on a library RECORD (alongside `savedAt`,
+  which already lives in `LocalStructureLibraryStore`'s own storage
+  record, not on `Structure`) — deliberately not attempted here.
+- **No placement-time special case for an imported Structure.** Nothing
+  in `CopyStructureIntoDocumentUseCase`, `ForkStructureUseCase`, or
+  `StructureCompositionTool` branches on where a Structure came from.
+  tests/BlueprintExchange.test.js's own Phase D proves this directly: an
+  imported Structure composes into a Document through the exact same
+  `CopyStructureIntoDocumentUseCase` call every built-in and personal
+  Structure already goes through.
+- **No encryption, signing, or passphrase.** A blueprint is reusable
+  geometry, not key material — unlike `identity/IdentityExport.js`'s own
+  portable package, there is nothing here worth protecting at rest or in
+  transit, so the package stays deliberately plain, human-readable JSON.
+
+### Flagship test
+
+`tests/BlueprintExchange.test.js` is new — headless, no renderer/import,
+running through `BlueprintPackage`, `BlueprintImportValidator`,
+`ExportBlueprintUseCase`, `ImportBlueprintUseCase`, and `EditorSession`
+directly.
+
+- Section A: `buildBlueprintPackage()` shape and determinism (the same
+  Structure exported twice is byte-identical)
+- Section B: every malformed-package rejection named above, one at a
+  time, each asserted as an actual `BlueprintPackageError`
+- Section C: `EditorSession#exportBlueprint()`/`#importBlueprint()` are
+  graceful no-ops with nothing wired, delegate correctly when wired, and
+  mint a fresh structure id on import
+- Section D — FLAGSHIP: Alice builds House + Well + Barn, extracts
+  "Alice's Riverside Inn," and exports it; Bob imports the package into a
+  COMPLETELY INDEPENDENT `LocalStructureLibraryStore` (its own
+  `StorageProvider`, standing in for a second device) — Structure A !=
+  Structure B, but `geometry(A) === geometry(B)`; Bob places his copy
+  through the ordinary composition pipeline; Alice then renames AND
+  deletes her original, and both Bob's imported copy and the Document he
+  already placed it into are proven byte-identical before and after;
+  every malformed package (unknown brick definition, duplicate ids, NaN
+  coordinates, missing fields, unsupported schema version) is rejected
+  before a single byte reaches Bob's library; export/import are proven
+  deterministic one more time at the use-case level, independent of
+  `EditorSession`
+
+### Deliberately excluded
+
+Named directly, the same restraint 0.4.6's own design conversation
+applied to itself:
+
+- **No peer-to-peer transfer.** Export produces a file; import reads a
+  file. How that file crosses from Alice's device to Bob's (email, a
+  chat attachment, a USB stick) is deliberately none of this milestone's
+  concern — a later milestone's own question, not a redesign this one
+  needs to anticipate.
+- **No cloud blueprint storage, marketplace, or World-level blueprint
+  discovery/search.** Those mix this milestone's clean local-library
+  abstraction with a completely different distribution problem — see
+  this milestone's own design conversation's list: no
+  `forkbuild:blueprint-sync`, no collaborative blueprint editing, no
+  CRDT, no ratings/comments/likes, no ownership marketplace, no
+  monetization or blockchain mechanics.
+- **No provenance field on `Structure` or automatic "imported from"
+  tracking.** Named above, under "What deliberately did not change."
+- **Structure Preview & Library Discovery** (larger 3D preview,
+  rotate-before-placing, an inspector showing dimensions/brick count/
+  description) — still its own future question, unaffected by
+  blueprints now being portable.
+- **Blueprint schema migration tooling.** `schemaVersion` exists so a
+  LATER milestone can add fields additively; writing the migration logic
+  itself, before any second version exists to migrate from, would be
+  speculative work this milestone's own scope never called for.
+
+```text
+0.4.0   Structure Composition & Blueprint Library          ✓
+0.4.1   Interactive Structure Composition UX                ✓
+0.4.2   Structure Extraction & Blueprint Creation            ✓
+0.4.3   Personal Blueprint Library                           ✓
+0.4.4   Village Library Expansion                             ✓
+0.4.5   Unified Build Placement                               ✓
+             │
+             ▼
+0.4.6   Blueprint Sharing & Exchange                           ✓
+             ├── BlueprintPackage — a small, versioned, portable JSON envelope
+             ├── BlueprintImportValidator — untrusted input, validated before construction
+             ├── Export/ImportBlueprintUseCase — every id crossing the boundary is fresh
+             └── BlueprintExchange.test.js — Alice exports, Bob imports, both stay independent
+```
+
+> **0.4.0 — How do I combine several Structures into something bigger?**
+> **0.4.1 — How do I control WHERE and HOW each one lands?**
+> **0.4.2 — Can I turn what I just built into something reusable?**
+> **0.4.3 — Where does it go, and is it still there tomorrow?**
+> **0.4.4 — Is there enough here to actually build with?**
+> **0.4.5 — Does reaching for one feel like reaching for the other?**
+> **0.4.6 — Can Bob get what Alice built, without Alice's device?**
+
+Richer discovery/preview and true peer-to-peer transfer remain exactly
+where 0.4.4 and 0.4.6 left them: named, not forgotten, sized on their
+own.
