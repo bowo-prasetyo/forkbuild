@@ -4,7 +4,7 @@
 World View — a gizmo appears at the selection's pivot. Dragging its
 handles moves or rotates the selection with a live preview; releasing
 commits the change as **one undo step**. Selecting a single
-[structure instance](02-TheEditor.md#structures-placing-and-editing-instances)
+[structure instance](02-TheEditor.md#structure-instances-a-live-reference)
 in the Editor shows the exact same gizmo, with one difference: the green
 Y-axis handle is inert. A placement's elevation always follows the terrain
 underneath it — it's never a handle you drag or a value you type.
@@ -130,6 +130,20 @@ exception on purpose — they always apply the exact value or exact geometric
 result you asked for, never snapped, since you already typed (or asked for)
 something precise.
 
+## Collision blocks the commit
+
+Moving or rotating a selection checks the result against every brick
+*outside* the selection before it's allowed to land. If any member would
+overlap something already there, releasing there doesn't commit — every
+brick in the selection reverts to exactly where it was, with no new undo
+entry, the same way releasing over an occupied cell with a single placed
+brick refuses the click. Rearranging bricks *within* the same selection
+(two members trading places under a rotation, say) is never treated as a
+collision. This check applies to gizmo drags, keyboard nudges, and
+rotation alike; alignment, distribution, and the numeric transform panel
+are not gated by it, since those compute an exact, deliberate result
+rather than a free-form move.
+
 ## Not in there yet
 
 Deliberately — these are planned for upcoming milestones:
@@ -137,6 +151,9 @@ Deliberately — these are planned for upcoming milestones:
 - **Scale handles** — the engine has no scale semantics yet; the gizmo
   will not pretend otherwise.
 - **Drag-duplicate** — hold a modifier and drag to copy, coming later.
+  `Ctrl/Cmd+D` already duplicates the current selection in place (see
+  [The Editor](02-TheEditor.md#copy-paste-and-duplicate)) — this item is
+  specifically about doing it as part of a drag gesture.
 
 ## Tips
 
