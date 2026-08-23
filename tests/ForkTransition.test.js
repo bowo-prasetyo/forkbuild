@@ -1,4 +1,5 @@
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
@@ -113,11 +114,17 @@ async function runTests() {
     const publishDocumentUseCase = new PublishDocumentUseCase(publisher, alice);
     const documentCloneService = new DocumentCloneService();
 
-    function buildSession(identityProvider = alice) {
+    function buildSession(identityProvider = alice, avatarPosition = null) {
+        const avatarPresenceSession = avatarPosition
+            ? new AvatarPresenceSession(
+                { avatarId: `${identityProvider.currentUser().username}-avatar`, ownerIdentity: identityProvider.currentUser().username },
+                { position: avatarPosition }
+            )
+            : null;
         const session = new WorldNavigationSession({
             registry, loadPublicationDocumentUseCase, worldLayoutProvider,
             saveDocumentUseCase, publishDocumentUseCase, identityProvider,
-            documentCloneService, discoveryProvider
+            documentCloneService, discoveryProvider, avatarPresenceSession
         });
         session._session = stubRenderer();
         return session;
@@ -132,13 +139,18 @@ async function runTests() {
     // -------------------------------------------------------------
     // 1-8. The flagship transition: the active document, not just
     //      "a fork somewhere", switches — atomically, on the same
-    //      mutation that created it.
+    //      mutation that created it. 0.5.9 retired moveSelection()
+    //      from WorldNavigationSession — createLandmarkHere() is the
+    //      one mutation surface World View kept, and it crosses the
+    //      exact same active-document-switching seam; see
+    //      docs/Principles.md "World View Observes and Navigates;
+    //      Editor Mutates and Builds".
     // -------------------------------------------------------------
     {
         const publication = publisher.publish(makeDocument('Alice World'), alice);
         const bob = new LocalIdentityProvider(new InMemoryStorageProvider());
         bob.login('bob');
-        const session = buildSession(bob);
+        const session = buildSession(bob, new Position(0, 0, 0));
         session._loadWorld(publication.documentId);
 
         assert(session.getActiveDocumentId() === publication.documentId,
@@ -147,7 +159,7 @@ async function runTests() {
         selectFirstBrick(session, publication.documentId);
         const sourcePos = session.getDocumentPosition(publication.documentId);
 
-        session.moveSelection({ x: 3, y: 0, z: 0 });
+        session.createLandmarkHere('Fork Trigger', '');
 
         const activeId = session.getActiveDocumentId();
         assert(activeId !== publication.documentId,
@@ -185,11 +197,11 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const publication = publisher.publish(makeDocument('Locked World', LicenseId.ALL_RIGHTS_RESERVED), alice);
-        const session = buildSession();
+        const session = buildSession(alice, new Position(0, 0, 0));
         session._loadWorld(publication.documentId);
         selectFirstBrick(session, publication.documentId);
 
-        assertThrows(() => session.moveSelection({ x: 1, y: 0, z: 0 }),
+        assertThrows(() => session.createLandmarkHere('Should Fail', ''),
             '9. a fork-forbidden edit is rejected outright');
 
         assert(session.getActiveDocumentId() === publication.documentId,
@@ -228,13 +240,12 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const publication = publisher.publish(makeDocument('Stays Put'), alice);
-        const session = buildSession();
+        const session = buildSession(alice, new Position(0, 0, 0));
         session._loadWorld(publication.documentId);
 
         const forkId = session.updateDocumentMetadata(publication.documentId, { title: 'First Edit' });
-        selectFirstBrick(session, forkId);
-        session.moveSelection({ x: 1, y: 0, z: 0 });
-        assert(session.getActiveDocumentId() === forkId, '11. active document unchanged after a second (spatial) edit');
+        session.createLandmarkHere('Second Edit', '');
+        assert(session.getActiveDocumentId() === forkId, '11. active document unchanged after a second (landmark) edit');
 
         session.updateDocumentMetadata(forkId, { description: 'Third edit.' });
         assert(session.getActiveDocumentId() === forkId, '11b. and unchanged after a third (metadata) edit');
