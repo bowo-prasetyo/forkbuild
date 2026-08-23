@@ -145,6 +145,12 @@ export class WorldFocusContext {
     // only STRUCTURE's own documentId is content it exclusively owns
     // (see core/EditorEntryContext.js's own header for why REGION/
     // LANDMARK never set this).
+    //
+    // 0.6.1 — deliberately carries no `returnWorldId` (see
+    // core/EditorEntryContext.js's own 0.6.1 header): this getter has
+    // no way to know which World is currently on screen — only its
+    // caller does. ui/views/WorldView.js attaches it immediately after
+    // reading this getter, via core/EditorEntryContext.js#withReturnWorld().
     get editCopyContext() {
         if (!this.hasAction(WorldFocusAction.EDIT_COPY) || !this._source || !this._source.documentId) {
             return null;

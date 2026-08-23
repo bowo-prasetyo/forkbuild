@@ -11243,3 +11243,196 @@ second geographic-place-shaped derivation path, World Region/Landmark
 naming's own long-term home, and any new World View action surface —
 each sized on its own, exactly like every "Deliberately excluded" list
 in this document before it.
+
+## 0.6.1 — World ↔ Editor Continuity & Return Navigation
+
+0.6.0 closed the gap on the way IN — a fork opens already looking at,
+and sometimes already holding, what the viewer was focused on. It said
+nothing about the way back OUT: "Edit a Copy" was, and through 0.6.0
+remained, a one-way door. A viewer who finishes editing has exactly two
+options — the browser's own Back button, or getting lost — and nothing
+in World View remembers what they were even looking at. This milestone
+is that return trip:
+
+> **When exploration becomes creation, preserve the user's context. When
+> creation is done, hand it back.**
+
+### What shipped
+
+- **`core/EditorEntryContext.js#returnWorldId`/`returnWorldTitle`** —
+  two new fields on the SAME ephemeral value object 0.6.0 already
+  established, rather than a second "return context" shape. Carrying
+  `returnWorldId` requires its own field, never `sourceDocumentId`:
+  for a STRUCTURE, `sourceDocumentId` is the placed structure's own
+  content — the fork TARGET — while `returnWorldId` is the World the
+  viewer was actually standing in, a different id entirely (they only
+  coincide for REGION/LANDMARK, whose own `sourceDocumentId` already IS
+  the containing World — see that module's own constructor header for
+  the full reasoning). `focusLocationId`, already carried one-way for
+  the Editor's own camera framing, is reused unchanged for the trip
+  back — the Editor never learns a second id for "what to reopen when
+  you return." Both new fields round-trip through the SAME router-query
+  channel (`entryReturnWorld`/`entryReturnWorldTitle`), and a pre-0.6.1
+  query with neither key still decodes cleanly (`returnWorldId: null`)
+  — never a fabricated guess.
+- **`core/EditorEntryContext.js#withReturnWorld()`** — the one place
+  `returnWorldId`/`returnWorldTitle` are ever attached to an
+  already-derived context. Needed because
+  `core/WorldFocusContext.js#editCopyContext` is a plain getter (no
+  arguments, by 0.6.0's own design) computed from fields a
+  WorldFocusContext already has — and "which World is currently on
+  screen" isn't one of them; only `ui/views/WorldView.js`'s own
+  route/session state knows that. Pure: returns a NEW EditorEntryContext
+  (or the input completely unchanged when there's no returnWorldId to
+  attach), never mutates in place.
+- **`ui/views/WorldView.js#currentReturnWorld()`** — resolves the
+  FOCUSED (camera) document — `session.getFocusedDocumentId()`, falling
+  back to the current route — as the return address, uniformly
+  regardless of which kind is being forked. `editFocusedCopyFromFocusPanel()`
+  attaches it via `withReturnWorld()`; `editInspectedCopy()` (which
+  builds its own EditorEntryContext by hand — no WorldFocusContext to
+  read `.editCopyContext` off of) sets it directly in the constructor
+  call. Neither function's fork navigation changes shape — still the
+  SAME `/editor?fork=` hop 0.5.9/0.6.0 already established, just
+  carrying two more query params.
+- **`ui/views/WorldView.js` onMounted() return-navigation handler** —
+  when `route.query.returnLocation` is present (the Editor's own "←
+  Back to World" button sets it), calls the pre-existing
+  `session.getFocusContextForLocation()` and reopens the SAME
+  WorldFocusPanel the viewer had open before forking, then cleans the
+  query via `router.replace()` — the identical "consume once, strip the
+  URL" convention `ui/views/EditorView.js`'s own fork/load handler
+  already uses. A location that no longer resolves (deleted while the
+  viewer was away) degrades silently: arriving back in World View is
+  never an error. The camera itself needed NO new code at all —
+  0.3.10's own per-World experience store already restores it, for
+  free, the instant `session.navigateToDocument()` runs, because
+  leaving World View for the Editor already triggers that store's own
+  `saveWorldExperience()` on unmount.
+- **`ui/views/EditorView.js#entryContext`** — unlike every 0.6.0
+  consumption of an EditorEntryContext (`frameCameraOn()`/`selectAll()`,
+  applied once and discarded), Toolbar's own header/return buttons need
+  it to stay readable for as long as the fork it describes is what's
+  actually open. Kept in a ref, set once right after a successful fork,
+  and cleared automatically — via the SAME `documentManager.onStateChanged()`
+  subscription `refreshDocumentInfo()` already held — the moment the
+  open document stops being the fork this context describes (a later
+  Load/New/place-a-different-document), so the header never claims
+  "Editing a copy of X" about a document that isn't X's fork anymore.
+  `backToWorld()` reads `returnWorldId`/`focusLocationId` straight off
+  it to navigate to `/world/<returnWorldId>?returnLocation=<id>` — a
+  no-op with no known return address (a fork reached some other way
+  than "Edit a Copy," e.g. a bare Publication Catalog fork).
+- **`ui/components/Toolbar.js`** — two new pieces, both purely additive
+  and both gated on `entryContext && entryContext.returnWorldId`:
+  **← Back to World** (emits `back-to-world`, handled by EditorView's
+  own `backToWorld()` — Toolbar never calls `router.push()` itself) and
+  **Save & Return to World** (the SAME `save()` already wired to the
+  existing Save button, immediately followed by the identical emit —
+  never a second save path). A header line — `Editing a copy of "___" ·
+  From: ___` — names what's open and where it came from, reusing
+  `entryContext.title` 0.6.0's own arrival toast already carries.
+  Browser Back still works exactly as before; it was never disabled,
+  only no longer the sole way back.
+- **`tests/WorldEditorContinuity.test.js`** — the flagship: A)
+  `returnWorldId`/`returnWorldTitle` construction/getters/toJSON; B)
+  `withReturnWorld()` is pure, leaves its input untouched with nothing
+  to attach, and never mutates the original when it does attach
+  something; C) the router-query round trip, including a pre-0.6.1
+  query with no return address decoding cleanly; D) the SAME
+  `returnWorldId` attaches correctly whether the focused kind's own
+  `sourceDocumentId` diverges from it (STRUCTURE) or already equals it
+  (REGION); E) a real `WorldNavigationSession` resolves the SAME
+  structure placement `getFocusContextForLocation()` receives back on
+  return, and degrades to `null` once the placement is gone; F) a real
+  `EditorSession` fork applies camera/selection exactly as 0.6.0
+  already did, the return address survives completely intact for
+  Toolbar's own buttons, and neither it nor the return World's own id
+  ever reaches Document/World persistence.
+
+### Deliberately excluded
+
+- **A second "return context" domain concept, or any fork-lineage field
+  on Document** (`Document.parentDocumentId`-as-navigation,
+  `Structure.sourceDocumentId`, or similar). Considered and rejected —
+  this milestone's entire design is reusing the SAME ephemeral
+  EditorEntryContext 0.6.0 already established for the trip in, for the
+  trip out, specifically so provenance never has to become a permanent,
+  persisted genealogy. `Document.metadata.parentDocumentId` already
+  exists (0.1.24's fork mechanism) and already means something
+  different — "this Document was forked from that one," a fact about
+  the Document itself — and stays completely untouched here.
+- **Restoring the Editor's own camera/selection on a return trip BACK
+  into the Editor.** Never asked for: the return trip this milestone
+  builds runs Editor → World View exactly once per fork; nothing in
+  0.6.0 or 0.6.1 re-enters a previously-forked-from Editor document
+  automatically. A later Load of that same document is an ordinary
+  Load, unaffected by anything here.
+- **Restoring `focusLocationId` for the Inspection panel's own "Edit a
+  Copy"** (`editInspectedCopy()`'s brick/ground/placement path).
+  `spatialInspection` doesn't surface a placement's own id today, and
+  a brick/ground inspection has no WorldFocusPanel-shaped location to
+  reopen in the first place — see that function's own 0.6.1 comment.
+  Camera framing on return still works regardless, via 0.3.10's
+  existing per-World experience store; only the WorldFocusPanel reopen
+  is narrower here than the WorldFocusPanel-driven path.
+- **A navigation guard on unsaved changes** ("are you sure you want to
+  leave without saving?" before Back to World / browser Back). This
+  codebase has never had one anywhere else (Load/New already discard
+  unsaved work silently) — inventing one only for this button would be
+  a new, unrelated safety mechanism riding along inside a continuity
+  milestone, not a return-navigation concern itself. The existing "●
+  Unsaved changes" indicator, and Save & Return to World's own
+  save-first behavior, already cover the common case.
+- **Porting anything from World View's "Deliberately excluded" list
+  in 0.5.9/0.6.0** (collaborative live editing, permanent fork
+  genealogy, version history, autosave synchronization, cloud
+  blueprint sync, region hierarchy, polygon regions, procedural place
+  names, reputation-based naming, map boundary editing, merging
+  Worlds). None of those became any more in-scope by giving the Editor
+  a way back to World View.
+
+```text
+0.6.0   Context-Preserving Fork-to-Edit                          ✓
+             │
+             ▼
+0.6.1   World ↔ Editor Continuity & Return Navigation            ✓
+             ├── EditorEntryContext#returnWorldId/returnWorldTitle —
+             │   two new fields on the SAME 0.6.0 object, never a
+             │   second "return context" shape; focusLocationId reused
+             │   unchanged for the trip back out
+             ├── withReturnWorld() — the one place a return address is
+             │   ever attached to an already-derived editCopyContext;
+             │   pure, never mutates its input
+             ├── WorldView#currentReturnWorld() — the FOCUSED document,
+             │   uniform across every kind, wired into both "Edit a
+             │   Copy" entry points
+             ├── WorldView onMounted() — reopens the same WorldFocusPanel
+             │   on return via the pre-existing getFocusContextForLocation();
+             │   camera restore already free via 0.3.10's experience store
+             ├── EditorView#entryContext — stays live for as long as its
+             │   own fork is the open document, cleared automatically on
+             │   Load/New
+             ├── Toolbar — "← Back to World" / "Save & Return to World" /
+             │   the "Editing a copy of ___ · From: ___" header line,
+             │   entirely additive, browser Back still works
+             └── tests/WorldEditorContinuity.test.js — field-level
+                 correctness, purity, uniform-across-kind, a real
+                 WorldNavigationSession round trip, and a real
+                 EditorSession fork with the persistence boundary intact
+```
+
+> **World View handed the viewer an independent copy as of 0.5.9, and
+> as of 0.6.0 that copy opened already looking at what they came from.
+> As of 0.6.1, finishing there hands them back — to the same World, the
+> same place, the same thing they were looking at — without the
+> Editor ever having to remember more than one small, ephemeral object
+> to do it.**
+
+What's left, and deliberately unbuilt: a second return-context domain
+concept or any fork-lineage field on Document, restoring the Editor's
+OWN camera/selection on a future return trip back into it, a
+WorldFocusPanel reopen for the Inspection panel's own "Edit a Copy,"
+and an unsaved-changes navigation guard this codebase has never had
+anywhere else — each sized on its own, exactly like every "Deliberately
+excluded" list in this document before it.

@@ -56,9 +56,27 @@ export default {
         feedback: {
             type: Object,
             default: null
+        },
+        // 0.6.1 — World ↔ Editor Continuity & Return Navigation. The
+        // EditorEntryContext (core/EditorEntryContext.js) EditorView
+        // decoded off the fork that opened the CURRENTLY open document,
+        // or null — see that view's own `entryContext` ref header for
+        // exactly when it's null (every non-"Edit a Copy" way to reach
+        // the Editor, and any later Load/New that replaces the fork).
+        // Toolbar only ever READS it (title/kind/returnWorldTitle for
+        // the header line, returnWorldId to decide whether "← Back to
+        // World" renders at all) — it never constructs, mutates, or
+        // navigates with one directly; every actual navigation goes
+        // through the `back-to-world` emit below, so EditorView (which
+        // owns the router) stays the one place that ever calls
+        // router.push().
+        entryContext: {
+            type: Object,
+            default: null
         }
     },
-    setup(props) {
+    emits: ['back-to-world'],
+    setup(props, { emit }) {
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
         const recentOpen = ref(false);
@@ -118,6 +136,18 @@ export default {
             }
         }
 
+        // 0.6.1 — World ↔ Editor Continuity & Return Navigation. "Save &
+        // Return to World" — deliberately the SAME save() above (never a
+        // second save path) immediately followed by the `back-to-world`
+        // emit EditorView's own plain "← Back to World" button already
+        // uses — this button exists purely so a viewer who wants both
+        // doesn't have to click Save, notice it worked, then find Back
+        // to World separately.
+        function saveAndReturnToWorld() {
+            save();
+            emit('back-to-world');
+        }
+
         function toggleRecent() {
             recentOpen.value = !recentOpen.value;
             if (!recentOpen.value) {
@@ -155,16 +185,41 @@ export default {
             dirty, recentDocuments, sortedRecentDocuments, filteredRecentDocuments,
             recentOpen, recentQuery, toggleRecent, formatModified,
             searchThreshold: SEARCH_THRESHOLD,
-            save, createNew, load, place, publish
+            save, createNew, load, place, publish, saveAndReturnToWorld
         };
     },
     template: `
         <div class="toolbar">
             <span class="toolbar-title">ForkBuild</span>
 
+            <!-- 0.6.1 — World ↔ Editor Continuity & Return Navigation.
+                 Only renders once EditorView has decoded a real
+                 EditorEntryContext WITH a return address — see that
+                 view's own `entryContext` ref header for exactly when
+                 that is (an "Edit a Copy" fork, and only for as long as
+                 its own fork stays the open document). "Editing a copy
+                 of ___" names what's open the same way EditorView's own
+                 0.6.0 arrival toast already does; "· From: ___" only
+                 appears when a return world title was actually carried
+                 — a stale/hand-typed URL degrades to no subtitle rather
+                 than "From: undefined." -->
+            <template v-if="entryContext && entryContext.returnWorldId">
+                <button class="toolbar-back-to-world" @click="$emit('back-to-world')">← Back to World</button>
+                <span class="toolbar-entry-context">
+                    Editing a copy of "{{ entryContext.title || entryContext.returnWorldTitle || 'this' }}"<template v-if="entryContext.returnWorldTitle"> · From: {{ entryContext.returnWorldTitle }}</template>
+                </span>
+            </template>
+
             <button class="toolbar-save" @click="save">Save</button>
             <button class="toolbar-publish" @click="publish">Publish</button>
             <button class="toolbar-new" @click="createNew">New</button>
+            <button
+                v-if="entryContext && entryContext.returnWorldId"
+                class="toolbar-save-return"
+                @click="saveAndReturnToWorld"
+            >
+                Save &amp; Return to World
+            </button>
 
             <span class="toolbar-dirty" :class="{ 'toolbar-dirty--clean': !dirty }">
                 {{ dirty ? '● Unsaved changes' : 'Saved' }}
