@@ -10056,3 +10056,185 @@ identity model for geometrically-similar-but-independent regions, and
 any notion of a "winner" name persisted anywhere. Each is sized on its
 own, exactly like every "Deliberately excluded" list in this document
 before it.
+
+## 0.5.3 — Decentralized Place Name Exchange
+
+0.5.2 built the whole naming MODEL — claim, view, local store, local
+preference — and drew its own boundary exactly where its own design
+conversation said to stop: "a decentralized exchange transport...
+named directly... as its own next milestone." This milestone is that
+missing piece, and it deliberately changes NOTHING about the model it
+plugs into:
+
+> Naming exchange DISTRIBUTES claims; it never ESTABLISHES truth. A
+> `PlaceNamingClaimExchange` accepts, validates, exports, imports, and
+> deduplicates a `PlaceNamingClaim` — it never ranks one, never decides
+> which of two disagreeing claims "wins," and never touches
+> `core/PlaceNamingView.js`'s own confidence-not-authority scoring at
+> all. The first transport is deliberately boring: a plain, portable
+> JSON publication, moved by hand today (export a file, import a file),
+> so every future transport — a WebRTC peer exchange, a rendezvous
+> relay, a future DHT — has one single, already-proven seam to plug
+> into instead of needing its own bespoke integration with the naming
+> model.
+
+### What shipped
+
+- **`application/PlaceNamingClaimPublication.js`** — the portable wire
+  envelope for ONE claim: `{ kind: 'forkbuild.place-naming-claim',
+  schemaVersion: 1, claim }`, mirroring
+  `application/BlueprintPackage.js`'s own shape one domain over.
+  Deliberately carries NO separate envelope-level "publishedAt" — a
+  claim's own `createdAt` is already the signed publication timestamp
+  (part of `getSigningDescriptor()`'s own payload); a second, unsigned
+  one would just be a spoofable shadow fact. `buildPlaceNamingClaimPublication()`
+  refuses to build a package for an unsigned claim, so a package that
+  exists at all is always at least worth attempting to verify.
+- **`application/PlaceNamingClaimPublicationValidator.js`** — strict,
+  side-effect-free STRUCTURAL validation, the same split
+  `application/BlueprintImportValidator.js` already draws from
+  `application/ImportBlueprintUseCase.js`: this module only ever asks
+  "is this well-formed?" (right kind, right schema version, every
+  claim/signature field present as the right type). Whether the claim
+  actually verifies cryptographically is a separate question, asked
+  next by `identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()` —
+  never conflated into one check.
+- **`application/PlaceNamingClaimExchange.js`** — the star of the
+  milestone. `exportClaim(claim)` builds a publication; `importClaim(pkg)`
+  runs validate → construct → verify, in that order, always, and only
+  after all three succeed does anything get persisted. Deduplicates by
+  the claim's own `id` — already bound into the signed payload, so no
+  second, separately-derived content hash is needed (see
+  `application/LocalPlaceNamingClaimStore.js#has()`'s own header).
+  Receiving the SAME claim a second, third, or hundredth time (the
+  ordinary cost of any gossip-style transport) is always a safe no-op:
+  `importClaim()` returns `{ claim, isNew: false }` rather than
+  throwing or duplicating storage.
+- **`application/LocalPlaceNamingPublicationLog.js`** — the one
+  genuinely new piece of metadata this milestone's design conversation
+  asked for: `receivedAt`, first-seen-wins, per World, per claim id.
+  Deliberately never read by `core/PlaceNamingView.js#namingView()` and
+  never allowed to influence a naming view's ranking — preserved for a
+  FUTURE freshness policy to consume, not wired into 0.5.2's
+  distinct-author scoring now.
+- **`application/LocalPlaceNamingClaimStore.js#has()`** — the ONE new
+  additive query the exchange layer needed (does a claim with this id
+  already exist for this World?). `save()`'s own no-dedup-by-content
+  policy is completely untouched — that rule is about the SAME author
+  republishing a name under a brand-new claim id (still two legitimate,
+  distinct claims); `has()` answers a different question entirely (has
+  this EXACT signed claim, by id, already arrived?).
+- **`application/CreateWorldPlaceNamingUseCase.js`** — updated to also
+  wire `LocalPlaceNamingPublicationLog` and `PlaceNamingClaimExchange`,
+  exactly the "one file" its own 0.5.2 header predicted would need to
+  change. `placeNamingClaimUseCase`/`localNamePreferenceStore` are
+  completely unmodified.
+- **`application/WorldNavigationSession.js`** —
+  `exportPlaceNamingClaim(regionId, claimId)`/`importPlaceNamingClaim(pkg)`,
+  behind a new OPTIONAL `placeNamingClaimExchange` collaborator,
+  following the exact "enforce/offer only when wired" posture every
+  other optional collaborator here already follows. `importPlaceNamingClaim()`
+  is deliberately NOT scoped to the currently active World or region —
+  a publication carries its own worldId/regionId, and the store is
+  already scoped per-World.
+- **`ui/components/PlaceNamingPanel.js`** — every claim row (not only
+  this viewer's own) now has an Export button, and a new "Exchange"
+  section lets this viewer import a claim from a file, mirroring
+  `ui/components/BuildLibraryPanel.js`'s own hidden-file-input pattern
+  for a Blueprint one domain over. `ui/views/WorldView.js` wires
+  export to an immediate browser download and import to the same
+  two-stage "is this JSON" / "does this actually verify" error handling
+  `importBlueprint()` already established.
+- **`tests/PlaceNamingExchange.test.js`** — 7 sections: publication
+  envelope shape/determinism, every malformed-package rejection,
+  first-seen-wins receipt logging, export/import/dedup/tamper/
+  impersonation rejection at the exchange layer, `WorldNavigationSession`
+  graceful degradation, a direct regression proof that
+  `core/PlaceNamingClaim.js`/`core/PlaceNamingView.js`/`WorldRegion` are
+  byte-for-byte unchanged, and a capstone: Alice and Bob, on completely
+  independent replicas (their own storage, their own verifier
+  instances), exchange claims about the same World and deterministically
+  converge on the identical ranked naming view — without either replica
+  ever reading the other's storage, or exchanging a World document at
+  all.
+
+### Naming exchange distributes claims; it never establishes truth
+
+Every method `PlaceNamingClaimExchange` exposes answers "can this claim
+move from one replica to another," never "which name should a viewer
+see." `exportClaim()` is a pure passthrough over
+`application/PlaceNamingClaimPublication.js`; `importClaim()`'s only
+three questions are "is this well-formed," "does it verify," and "have
+I already got it" — ranking stays entirely `core/PlaceNamingView.js#namingView()`'s
+job, completely untouched by this milestone (proven directly in
+`tests/PlaceNamingExchange.test.js` Section F: an imported claim ranks
+identically to a locally published one, because `namingView()` has no
+notion of "where a claim came from" at all).
+
+### Deliberately excluded
+
+- **Any transport beyond a hand-moved file.** `PlaceNamingClaimExchange`
+  is protocol-independent by design — it knows nothing about WebRTC
+  peers, a rendezvous relay, or a DHT. Wiring one of those in means
+  building a new caller of `exportClaim()`/`importClaim()`, never
+  touching this class or the naming model beneath it.
+- **A signed retraction protocol.** `application/LocalPlaceNamingClaimStore.js#retract()`
+  already documented, in 0.5.2, that retraction is LOCAL ONLY: deleting
+  a claim from Alice's own store tells nobody who already received it.
+  This milestone's design conversation raised a future signed
+  `CLAIM → RETRACTED` lifecycle referencing the original claim id, and
+  explicitly declined to build it here — distributing a retraction is a
+  meaningfully different, harder problem (a retraction is itself a
+  claim that needs exchanging) than distributing the original claim,
+  and is sized as its own future work.
+- **"Retracting" any claim other than one's own.** The exchange layer
+  adds no new moderation or "hide this locally" capability — every
+  retraction still goes through `application/PlaceNamingClaimUseCase.js#retract()`'s
+  existing author-only check. Exchange's job is deduplicating on
+  IMPORT, never removing anything on anyone's behalf.
+- **Any use of `receivedAt` to affect ranking.** `LocalPlaceNamingPublicationLog`
+  exists so a FUTURE policy has honest data to work with; 0.5.3 itself
+  never reads it back into `namingView()`, a UI sort order, or anywhere
+  else that would change what a viewer currently sees.
+- **A "PlaceFingerprint" or any cross-region identity model.** Still
+  exactly as out of scope as 0.5.2 left it — two independently-created
+  regions covering the same real ground are still, for naming purposes,
+  two separate places.
+- **Sybil resistance beyond one-author-one-vote, reputation, voting, or
+  any notion of an "official"/canonical name.** All still exactly as
+  far out of scope as every prior milestone in this section left them.
+
+```text
+0.5.0   World Regions & Decentralized Place Naming              ✓
+             │
+             ▼
+0.5.1   World Maps & Geographic Navigation                      ✓
+             │
+             ▼
+0.5.2   Place Naming & Naming Claims                             ✓
+             │
+             ▼
+0.5.3   Decentralized Place Name Exchange                       ✓
+             ├── PlaceNamingClaimPublication — portable envelope,
+             │   deliberately no second unsigned "publishedAt"
+             ├── PlaceNamingClaimPublicationValidator — structural
+             │   shape only, never conflated with signature verification
+             ├── PlaceNamingClaimExchange — validate → construct →
+             │   verify → dedup-by-id → store; never ranks anything
+             ├── LocalPlaceNamingPublicationLog — receivedAt,
+             │   first-seen-wins, preserved for future policy only
+             └── PlaceNamingExchange.test.js — 7 sections, including a
+                 two-independent-replica capstone that converges on one
+                 ranked view without either side reading the other's storage
+```
+
+> **0.5.3 — Now that Alice and Bob can each hold their own honest
+> opinion about a place's name, how does either of them ever find out
+> what the other one said?**
+
+What's left, and deliberately unbuilt: any transport beyond a
+hand-moved file, a signed retraction/lifecycle protocol, any policy that
+lets `receivedAt` freshness actually change a ranking, and every item
+0.5.2's own "Deliberately excluded" list already named and this
+milestone left exactly as untouched. Each is sized on its own, exactly
+like every "Deliberately excluded" list in this document before it.

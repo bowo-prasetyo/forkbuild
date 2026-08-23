@@ -7853,3 +7853,84 @@ identical in spirit to 0.5.0's own "not a real-world GIS model"
 restraint: establish the DATA MODEL first, prove it in isolation, and
 size the actual decentralized transport as its own future milestone —
 see docs/Roadmap.md, 0.5.2's own "Deliberately excluded" list.
+
+### Naming Exchange Distributes Claims; It Never Establishes Truth (0.5.3)
+
+0.5.2 built the naming MODEL and explicitly stopped at the exact
+boundary its own design conversation named: two replicas that each
+independently published a claim would show two different naming views
+until "some future transport lets them exchange claims." 0.5.3
+(Decentralized Place Name Exchange) is that transport, and its entire
+design rests on one sentence, stated plainly by the design conversation
+that asked for it:
+
+> Naming exchange DISTRIBUTES claims; it never ESTABLISHES truth.
+
+`application/PlaceNamingClaimExchange.js` proves this the same way
+every prior milestone in this section proved its own restraint: by what
+it deliberately never does. It never calls `core/PlaceNamingView.js#namingView()`,
+never compares one claim's "confidence" against another's, and never
+decides which of two disagreeing names a viewer should prefer. Every
+one of those questions was already, correctly, answered by 0.5.2, and
+answering it twice — once in the naming model, once in the exchange
+layer — is exactly the kind of duplicated authority this architecture
+has refused since 0.5.0's own "geometry decides containment; authorship
+never does." Exchange only ever moves a claim, unchanged, still
+carrying its own signature, from one replica's store to another's.
+
+**Validate, construct, verify — always in that order, before anything
+is persisted.** `PlaceNamingClaimExchange#importClaim()` follows the
+exact same three-step discipline `application/ImportBlueprintUseCase.js`
+already established one domain over for a Blueprint: a package is
+untrusted input the moment it crosses a device boundary, so
+`application/PlaceNamingClaimPublicationValidator.js` checks its SHAPE
+first, `core/PlaceNamingClaim.js#fromJSON()` constructs a real claim
+second, and only then does `identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()`
+ask whether it is actually AUTHENTIC. "Well-formed" and "signed by who
+it claims to be signed by" are never conflated into one check anywhere
+in this codebase, and this milestone keeps that discipline rather than
+inventing a shortcut for naming claims specifically.
+
+**A claim's own `id` is its exchange identity — no second, derived
+content hash needed.** The design conversation that proposed this
+milestone suggested deriving a claim's identity from a hash of its
+signed fields for deduplication purposes. This codebase already had a
+simpler answer: `core/PlaceNamingClaim.js`'s own `id` is already bound
+into the signed payload (`getSigningDescriptor()`'s own `payload.id`),
+so a claim's id cannot be forged to a DIFFERENT payload without the
+signature failing to verify — the exact property a derived content hash
+would have existed to provide, already present for free. See
+`application/LocalPlaceNamingClaimStore.js#has()`'s own header for why
+this is a genuinely different question from that store's own
+`save()`'s "never deduplicate by (regionId, name, author)" rule: that
+rule is about the SAME author republishing a name under a brand-NEW
+claim id (still two legitimate, distinct claims); `has()` answers "has
+this EXACT claim, by id, already arrived," which is the only question
+importing the SAME publication two, three, or a hundred times (the
+ordinary cost of any real gossip transport) ever needs answered.
+
+**`receivedAt` is the one fact no signature could ever cover — which is
+exactly why it lives outside the claim.** The design conversation asked
+for freshness metadata, and drew its own careful distinction: not on
+the signed claim itself, where a second "publishedAt" would just be an
+unsigned, spoofable shadow of `claim.createdAt` (already the real,
+trustworthy signed timestamp); only `receivedAt` — "when did THIS
+replica first learn about this" — is genuinely new, because by
+definition no author could ever sign that in advance.
+`application/LocalPlaceNamingPublicationLog.js` keeps it, first-seen-
+wins, and 0.5.3 deliberately never reads it back into a ranking. This
+mirrors `application/LocalNamePreferenceStore.js`'s own 0.5.2 restraint
+exactly: preserve a genuinely local fact, but never let its mere
+existence quietly become a second, competing naming authority.
+
+**The first transport is deliberately boring, on purpose.** Every
+package `application/PlaceNamingClaimExchange.js` produces or consumes
+is plain, portable JSON, moved by hand today — a file export, a file
+import, the exact same shape `application/BlueprintPackage.js` already
+proved out for a Structure. This is 0.4.6's own restraint applied a
+second time: prove the EXCHANGE BOUNDARY works, in isolation, before
+building any real transport on top of it. A future WebRTC peer
+exchange, rendezvous relay, or DHT plugs into `exportClaim()`/
+`importClaim()` exactly as it stands today — the naming model
+underneath never has to change, and neither does this class's own
+public surface, for any transport that comes after it.

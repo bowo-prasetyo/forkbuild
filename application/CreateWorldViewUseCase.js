@@ -153,9 +153,12 @@ export class CreateWorldViewUseCase {
         // 0.5.2 — Place Naming & Naming Claims. A separate local
         // backend, never folded into localWorldExperienceStore above —
         // see application/CreateWorldPlaceNamingUseCase.js's own header.
-        const { placeNamingClaimUseCase, localNamePreferenceStore } = identityProvider
+        // 0.5.3 — Decentralized Place Name Exchange adds
+        // placeNamingClaimExchange to that same wiring call; nothing
+        // else about this block changed.
+        const { placeNamingClaimUseCase, localNamePreferenceStore, placeNamingClaimExchange } = identityProvider
             ? new CreateWorldPlaceNamingUseCase().execute(identityProvider)
-            : { placeNamingClaimUseCase: null, localNamePreferenceStore: null };
+            : { placeNamingClaimUseCase: null, localNamePreferenceStore: null, placeNamingClaimExchange: null };
         // 0.2.93 — World View Instance Inspection. Both read from the
         // SAME local storageProvider ui/views/EditorView.js's own
         // CreatePersistenceUseCase already builds its equivalents from
@@ -555,7 +558,9 @@ export class CreateWorldViewUseCase {
                     localWorldExperienceStore,
                     // 0.5.2: Place Naming & Naming Claims — see above.
                     placeNamingClaimUseCase,
-                    localNamePreferenceStore
+                    localNamePreferenceStore,
+                    // 0.5.3: Decentralized Place Name Exchange — see above.
+                    placeNamingClaimExchange
                 });
                 sessionRef = session;
                 return session;

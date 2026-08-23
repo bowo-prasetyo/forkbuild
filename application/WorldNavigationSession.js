@@ -314,7 +314,16 @@ export class WorldNavigationSession {
 	    // PlaceNamingClaim.js and application/LocalNamePreferenceStore.js
 	    // each document in their own header.
 	    placeNamingClaimUseCase = null,
-	    localNamePreferenceStore = null
+	    localNamePreferenceStore = null,
+	    // 0.5.3 — Decentralized Place Name Exchange. The SAME optional-
+	    // collaborator posture as the two above: a session built without
+	    // one (every pre-0.5.3 caller, and every existing test) simply
+	    // can't export/import a naming claim — see the "Decentralized
+	    // Place Name Exchange" section below, and
+	    // application/PlaceNamingClaimExchange.js's own header on why
+	    // this is a genuinely separate concern from publishing/retracting
+	    // one's own claim.
+	    placeNamingClaimExchange = null
 	}) {
 	    this._registry = registry;
 	    this._loadPublicationDocumentUseCase = loadPublicationDocumentUseCase;
@@ -588,6 +597,7 @@ export class WorldNavigationSession {
 	    // 0.5.2 — see the constructor's own comment above.
 	    this._placeNamingClaimUseCase = placeNamingClaimUseCase;
 	    this._localNamePreferenceStore = localNamePreferenceStore;
+	    this._placeNamingClaimExchange = placeNamingClaimExchange;
 
 	    this._container = null;
 	    this._session = null;
@@ -5576,6 +5586,58 @@ export class WorldNavigationSession {
 	        return [];
 	    }
 	    return this._placeNamingClaimUseCase.namingView(owner.world.id, regionId);
+	}
+
+	// -----------------------------------------------------------------
+	// Decentralized Place Name Exchange (0.5.3) — the missing piece
+	// 0.5.2 deliberately left for this milestone: HOW a claim this
+	// replica published/discovered reaches, or is reached by, another
+	// replica. See application/PlaceNamingClaimExchange.js's own header
+	// for the full design; both methods below are thin delegations —
+	// this session never validates, signs, or verifies anything itself.
+	// -----------------------------------------------------------------
+
+	// Builds a portable publication package for one claim this replica
+	// already has on file for `regionId` — see
+	// application/PlaceNamingClaimPublication.js for the exact wire
+	// shape. What the caller does with the returned package (write it to
+	// a file, copy it to a clipboard) is this session's own business as
+	// little as it is application/ExportBlueprintUseCase.js's. Throws if
+	// exchange isn't wired, the region is unknown, or `claimId` doesn't
+	// match any claim this replica actually has for it — never a stale
+	// or partial package.
+	exportPlaceNamingClaim(regionId, claimId) {
+	    if (!this._placeNamingClaimExchange) {
+	        throw new Error('WorldNavigationSession: place naming exchange is not available');
+	    }
+	    const owner = this._resolveRegionOwner(regionId);
+	    if (!owner) {
+	        throw new Error(`WorldNavigationSession: no region "${regionId}" known`);
+	    }
+	    const claim = this._placeNamingClaimUseCase
+	        ? this._placeNamingClaimUseCase.claimsForRegion(owner.world.id, regionId).find((c) => c.id === claimId)
+	        : null;
+	    if (!claim) {
+	        throw new Error(`WorldNavigationSession: no naming claim "${claimId}" known for this region`);
+	    }
+	    return this._placeNamingClaimExchange.exportClaim(claim);
+	}
+
+	// Imports a naming claim publication `pkg` (untrusted input — see
+	// application/PlaceNamingClaimExchange.js#importClaim()'s own
+	// "validate, construct, verify" order) into this replica's own
+	// claim store. Deliberately NOT scoped to `regionId` or to whatever
+	// World is currently active: a publication carries its own
+	// worldId/regionId, and application/LocalPlaceNamingClaimStore.js is
+	// already scoped per-World — see that store's own header on why it
+	// happily holds claims for a World this replica isn't even currently
+	// viewing. Returns `{ claim, isNew }`; throws for anything malformed
+	// or unverifiable, never silently drops it.
+	importPlaceNamingClaim(pkg) {
+	    if (!this._placeNamingClaimExchange) {
+	        throw new Error('WorldNavigationSession: place naming exchange is not available');
+	    }
+	    return this._placeNamingClaimExchange.importClaim(pkg);
 	}
 
 	// This replica's own LOCAL, unsigned, unshared override — see

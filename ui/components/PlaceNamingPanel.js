@@ -56,7 +56,16 @@ export default {
             default: null
         }
     },
-    emits: ['publish-name', 'retract-name', 'set-preferred-name', 'clear-preferred-name', 'cancel'],
+    // 0.5.3 — Decentralized Place Name Exchange adds 'export-claim' (any
+    // claim, not only this viewer's own — a signed claim is a portable
+    // fact anyone holding it may forward, exactly like re-sharing a
+    // Blueprint someone else exported) and 'import-claim' (the raw text
+    // read off whatever file the hidden input below picked, mirroring
+    // ui/components/BuildLibraryPanel.js's own import-blueprint shape).
+    emits: [
+        'publish-name', 'retract-name', 'set-preferred-name', 'clear-preferred-name',
+        'export-claim', 'import-claim', 'cancel'
+    ],
     data() {
         return {
             newName: ''
@@ -90,6 +99,31 @@ export default {
                 event.stopPropagation();
                 this.$emit('cancel');
             }
+        },
+        // 0.5.3 — the host (ui/views/WorldView.js) turns this into an
+        // actual file download; this component only ever hands over the
+        // raw claimId, exactly the same "dumb panel" split this file's
+        // own header describes.
+        onExportClaim(claimId) {
+            this.$emit('export-claim', claimId);
+        },
+        triggerImportClaim() {
+            this.$refs.importClaimFileInput.click();
+        },
+        // Mirrors ui/components/BuildLibraryPanel.js#onImportBlueprintFileChosen()
+        // exactly: read the chosen file as text, hand the RAW text up to
+        // the host (which owns JSON.parse + session.importPlaceNamingClaim()'s
+        // own validate/verify), and reset the input so the same file can
+        // be re-chosen later.
+        onImportClaimFileChosen(event) {
+            const file = event.target.files && event.target.files[0];
+            event.target.value = '';
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                this.$emit('import-claim', String(reader.result || ''));
+            };
+            reader.readAsText(file);
         }
     },
     template: `
@@ -161,13 +195,35 @@ export default {
                                 <span class="naming-panel-item-name">{{ claim.name }}</span>
                                 <span class="naming-panel-item-meta">{{ formatAuthor(claim.authorIdentityId) }} · {{ formatWhen(claim.createdAt) }}</span>
                             </div>
-                            <button
-                                v-if="claim.authorIdentityId === myIdentityId"
-                                class="action-btn action-btn--danger"
-                                @click="$emit('retract-name', claim.id)"
-                            >Retract</button>
+                            <div class="naming-panel-item-actions">
+                                <button class="action-btn" @click="onExportClaim(claim.id)">Export</button>
+                                <button
+                                    v-if="claim.authorIdentityId === myIdentityId"
+                                    class="action-btn action-btn--danger"
+                                    @click="$emit('retract-name', claim.id)"
+                                >Retract</button>
+                            </div>
                         </li>
                     </ul>
+                </section>
+
+                <section class="naming-panel-section">
+                    <h4 class="locations-panel-section-title">Exchange</h4>
+                    <p class="form-hint form-hint--neutral">
+                        Names are published locally first — share a claim
+                        by exporting it, or bring in someone else's by
+                        importing what they exported. Importing never
+                        overwrites anything; it only adds one more signed
+                        opinion to the community list above.
+                    </p>
+                    <button class="action-btn" @click="triggerImportClaim">Import Claim</button>
+                    <input
+                        ref="importClaimFileInput"
+                        type="file"
+                        accept="application/json,.json"
+                        style="display: none;"
+                        @change="onImportClaimFileChosen"
+                    />
                 </section>
 
                 <div class="modal-actions">

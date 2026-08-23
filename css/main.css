@@ -4298,6 +4298,16 @@ html, body {
     color: #707070;
 }
 
+/* 0.5.3 — Decentralized Place Name Exchange: a claim row now shows both
+   Export and (conditionally) Retract, so it needs its own small flex
+   row rather than the single bare button naming-panel-item's own
+   space-between layout assumed. */
+.naming-panel-item-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
 .form-field-row {
     display: flex;
     gap: 0.5rem;
