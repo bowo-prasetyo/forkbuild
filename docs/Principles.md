@@ -7447,3 +7447,61 @@ Five deliberately non-building structures give a user five concrete
 answers to "can I extract just THIS part," not only "can I extract a
 whole house." A Structure was never required to look like a building;
 0.4.4 is where the library stops implying otherwise.
+
+### Buildable Things Share One Placement Experience (0.4.5)
+
+Bricks and Structures may have different internal representations and
+commit semantics, but selecting either from the Build Library enters
+the same Place interaction: preview, transform, validate, and commit.
+Architectural differences should not become unnecessary UX differences.
+
+Before this milestone, that internal distinction leaked all the way to
+the click: a Brick's card was one click away from a live ghost preview,
+while a Structure's card offered two competing buttons — "Copy Into
+Document" and "Fork As New Document" — neither of which was named
+"Place," and the interactive preview those buttons already led to
+(0.4.1) was hiding behind a verb ("Copy") that never suggested it. The
+user does not experience `PlaceBrickCommand` versus
+`CopyStructureIntoDocumentUseCase`; they experience "I want to put this
+into my Document." `ui/components/BuildLibraryPanel.js` now treats a
+structure card exactly like a brick card at the click boundary — the
+whole card is the Place target, emitting `place-structure` the way a
+brick emits `place` — and tucks Fork (a real, deliberately different
+operation — see "Copying Composes A Blueprint; Forking Creates One
+(0.4.0)") into a small secondary menu where it can no longer compete
+with Place for the primary gesture.
+
+This is a UI-boundary rename, not an architecture rewrite, and the two
+are kept deliberately distinct:
+
+- **User intent** ("Place House") is a vocabulary word chosen for what
+  the person clicking experiences.
+- **Mutation semantics** (`CopyStructureIntoDocumentUseCase`: transform
+  a Structure into bricks and insert those bricks) describe what
+  actually happens to the Document.
+
+`EditorSession#beginStructureComposition()` keeps its own name — it
+still only ever arms `StructureCompositionTool`, never touches the
+Document itself — because renaming it would suggest the mutation
+changed when only the button above it did. The same restraint that kept
+`CopyStructureIntoDocumentUseCase` and `ForkStructureUseCase` as two
+separate classes in 0.4.0 (rather than one "paste a structure" class
+branching on a flag) keeps `PlacementTool` and `StructureCompositionTool`
+as two separate, focused Tool implementations here: what's being placed
+(one Brick vs. a Structure's whole brick set) and what gets committed
+(`PlaceBrickCommand` vs. one `PasteBricksCommand`) genuinely differ, so
+each keeps its own small class rather than being forced into one
+tool that branches on kind internally. What unifies is the LIFECYCLE
+shape both already shared — activate/select, pointer-move previews,
+`R`/`Shift+R` rotates, a validated click commits, one command, one undo
+step — made visible at the one place a user actually experiences it:
+the Build Library's own click target.
+
+This also draws a line worth keeping visible: `StructurePlacement` (the
+World-level "reference to another Document," 0.2.90) is placement of a
+different kind of thing — a live reference, not a composition — and
+stays its own operation with its own tool
+(`application/tools/StructurePlacementTool.js`), never folded into this
+unification. "Buildable Things Share One Placement Experience" describes
+the Build Library's two catalogs (Bricks, Structures) — the things a
+Document is built FROM — not every spatial placement this engine has.

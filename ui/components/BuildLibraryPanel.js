@@ -34,37 +34,52 @@ export function matches(query, ...fields) {
 // pipeline every brick/structure already renders with — never a
 // second, hand-drawn icon set).
 //
+// 0.4.5 — Unified Build Placement. Bricks and Structures are both
+// buildable items; their difference is content size, not placement
+// interaction — see docs/Principles.md, "Buildable Things Share One
+// Placement Experience." Clicking a structure entry ANYWHERE on its
+// card now does exactly what clicking a brick entry already did: it
+// emits 'place-structure' and the Editor enters a Place lifecycle
+// (preview, transform, validate, commit) — no separate "Copy Into
+// Document" button to find first. Fork As New Document is a real,
+// deliberately different operation (a content operation, not a
+// placement one — see "Copying Composes A Blueprint; Forking Creates
+// One (0.4.0)") and stays available, just moved into a small secondary
+// "⋮" menu alongside Rename/Remove (personal structures only) so it
+// never competes with Place for the primary click target. Nothing
+// downstream of the click changes: 'place-structure' still reaches
+// EditorSession.beginStructureComposition() → StructureCompositionTool
+// → CopyStructureIntoDocumentUseCase, the exact path 0.4.0/0.4.1 already
+// built — this milestone renames and rearranges the UI boundary only,
+// per docs/Principles.md's own "healthy separation" between user intent
+// and mutation semantics.
+//
 // Deliberately preserves the exact separation the underlying use cases
 // already draw, and makes it visible rather than papering over it:
 // clicking a brick calls paletteUseCase.selectDefinition() (unchanged
 // since 0.1.9) AND emits 'place' — this panel's one new behavior — so
 // the Editor can switch to the Place tool in the same click, because
 // selecting a brick and never being able to place it with one action
-// was never the point. A structure entry offers TWO actions as of
-// 0.4.0 (Structure Composition & Blueprint Library) — Copy Into
-// Document (emits 'copy') and Fork As New Document (emits 'fork') —
-// deliberately distinct verbs for a deliberately distinct architectural
-// operation, see docs/Principles.md, "Copying Composes A Blueprint;
-// Forking Creates One (0.4.0)": Fork still only ever opens a brand new
-// Document (EditorSession.forkStructure()), exactly as
-// StructureLibraryPanel originally did; Copy instead inserts the
-// structure's bricks into the CURRENTLY OPEN document
-// (EditorSession.copyStructureIntoDocument()) and never opens or
-// creates anything. Nothing here changes PaletteUseCase, EditorContext,
-// ForkStructureUseCase, CopyStructureIntoDocumentUseCase, or what any
-// action actually does — only how they're found and asked for.
+// was never the point. A structure entry's click does the analogous
+// thing for a Structure (emits 'place-structure'); Fork
+// (emits 'fork') remains a deliberately distinct verb for a
+// deliberately distinct architectural operation. Nothing here changes
+// PaletteUseCase, EditorContext, ForkStructureUseCase,
+// CopyStructureIntoDocumentUseCase, or what any action actually does —
+// only how they're found and asked for.
 //
 // 0.4.3 — Personal Blueprint Library. `personalStructureGroups` renders
 // as its own "My Structures" section below the built-in groups above —
 // same [{ category, structures }] shape, same
 // filteredStructureGroups-style search, same BuildLibraryPreview, same
-// Copy/Fork buttons (a personal Structure composes and forks through the
-// exact same EditorSession methods a built-in one does — nothing about
-// where a Structure is stored changes what can be done with it). The
-// only NEW actions live here: Rename (emits 'rename-personal-structure')
-// and Remove (emits 'remove-personal-structure'), since only the user's
-// own library content can be renamed or deleted — Village stays
-// read-only, exactly as it always has.
+// Place/Fork actions (a personal Structure composes and forks through
+// the exact same EditorSession methods a built-in one does — nothing
+// about where a Structure is stored changes what can be done with it).
+// The only NEW actions live here: Rename (emits
+// 'rename-personal-structure') and Remove (emits
+// 'remove-personal-structure'), since only the user's own library
+// content can be renamed or deleted — Village stays read-only, exactly
+// as it always has. Both live in the same secondary "⋮" menu as Fork.
 export default {
     name: 'BuildLibraryPanel',
     components: { BuildLibraryPreview },
@@ -99,10 +114,15 @@ export default {
             default: null
         }
     },
-    emits: ['place', 'fork', 'copy', 'rename-personal-structure', 'remove-personal-structure'],
+    emits: ['place', 'fork', 'place-structure', 'rename-personal-structure', 'remove-personal-structure'],
     setup(props, { emit }) {
         const activeTab = ref('bricks');
         const query = ref('');
+        // 0.4.5 — Unified Build Placement. Which structure's secondary
+        // "⋮" menu (Fork, Rename, Remove) is currently open — at most
+        // one at a time, closed by picking any action, switching tabs,
+        // or clicking anywhere else in the panel.
+        const openMenuId = ref(null);
 
         const brickGroups = ref(props.paletteUseCase.getGroupedDefinitions());
         const selectedDefinitionId = ref(props.paletteUseCase.getSelectedDefinitionId());
@@ -152,6 +172,7 @@ export default {
         function setTab(tab) {
             activeTab.value = tab;
             query.value = '';
+            openMenuId.value = null;
         }
 
         function selectBrick(definitionId) {
@@ -159,12 +180,26 @@ export default {
             emit('place', definitionId);
         }
 
-        function forkStructure(structure) {
-            emit('fork', structure);
+        // 0.4.5 — Unified Build Placement. The structure card's PRIMARY
+        // action — clicking anywhere on it, exactly like clicking a
+        // brick — enters Place. Never called for a click that landed
+        // inside the secondary menu (the menu's own wrapper stops that
+        // click from bubbling here — see the template below).
+        function placeStructure(structure) {
+            emit('place-structure', structure);
         }
 
-        function copyStructure(structure) {
-            emit('copy', structure);
+        function toggleMenu(structureId) {
+            openMenuId.value = openMenuId.value === structureId ? null : structureId;
+        }
+
+        function closeMenu() {
+            openMenuId.value = null;
+        }
+
+        function forkStructure(structure) {
+            emit('fork', structure);
+            closeMenu();
         }
 
         // 0.4.3 — Personal Blueprint Library. Rename/Remove only ever
@@ -173,35 +208,45 @@ export default {
         // there's no separate "is this one editable" check needed here.
         function renamePersonalStructure(structure) {
             emit('rename-personal-structure', structure);
+            closeMenu();
         }
 
         function removePersonalStructure(structure) {
             emit('remove-personal-structure', structure);
+            closeMenu();
         }
 
         onMounted(() => {
             unsubscribe = props.paletteUseCase.onActiveBrickChanged((definitionId) => {
                 selectedDefinitionId.value = definitionId;
             });
+            // 0.4.5 — any click that reaches window (i.e. wasn't stopped
+            // by the menu's own wrapper — see the template) closes an
+            // open secondary menu, the same "click outside closes it"
+            // convention CommandPalette's own dropdowns use.
+            window.addEventListener('click', closeMenu);
         });
 
         onBeforeUnmount(() => {
             if (unsubscribe) {
                 unsubscribe();
             }
+            window.removeEventListener('click', closeMenu);
         });
 
         return {
             activeTab,
             query,
             selectedDefinitionId,
+            openMenuId,
             filteredBrickGroups,
             filteredStructureGroups,
             filteredPersonalStructureGroups,
             setTab,
             selectBrick,
+            placeStructure,
+            toggleMenu,
             forkStructure,
-            copyStructure,
             renamePersonalStructure,
             removePersonalStructure
         };
@@ -270,17 +315,24 @@ export default {
                             v-for="structure in group.structures"
                             :key="structure.id"
                             class="structure-item build-library-item"
-                            :title="structure.description"
+                            :title="'Place ' + structure.name"
+                            @click="placeStructure(structure)"
                         >
                             <BuildLibraryPreview kind="structure" :item="structure" :preview-service="previewService" />
                             <span class="structure-item-name">{{ structure.name }}</span>
-                            <div class="structure-item-actions">
-                                <button class="action-btn action-btn--copy structure-item-copy" @click="copyStructure(structure)">
-                                    Copy Into Document
-                                </button>
-                                <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
-                                    Fork As New Document
-                                </button>
+                            <div class="structure-item-menu" @click.stop>
+                                <button
+                                    type="button"
+                                    class="action-btn action-btn--secondary structure-item-menu-toggle"
+                                    aria-label="More actions"
+                                    :aria-expanded="openMenuId === structure.id"
+                                    @click="toggleMenu(structure.id)"
+                                >⋮</button>
+                                <div v-if="openMenuId === structure.id" class="structure-item-menu-list">
+                                    <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
+                                        Fork As New Document
+                                    </button>
+                                </div>
                             </div>
                         </li>
                     </ul>
@@ -295,23 +347,30 @@ export default {
                                 v-for="structure in group.structures"
                                 :key="structure.id"
                                 class="structure-item build-library-item"
-                                :title="structure.description"
+                                :title="'Place ' + structure.name"
+                                @click="placeStructure(structure)"
                             >
                                 <BuildLibraryPreview kind="structure" :item="structure" :preview-service="previewService" />
                                 <span class="structure-item-name">{{ structure.name }}</span>
-                                <div class="structure-item-actions">
-                                    <button class="action-btn action-btn--copy structure-item-copy" @click="copyStructure(structure)">
-                                        Copy Into Document
-                                    </button>
-                                    <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
-                                        Fork As New Document
-                                    </button>
-                                    <button class="action-btn action-btn--secondary structure-item-rename" @click="renamePersonalStructure(structure)">
-                                        Rename
-                                    </button>
-                                    <button class="action-btn action-btn--danger structure-item-remove" @click="removePersonalStructure(structure)">
-                                        Remove
-                                    </button>
+                                <div class="structure-item-menu" @click.stop>
+                                    <button
+                                        type="button"
+                                        class="action-btn action-btn--secondary structure-item-menu-toggle"
+                                        aria-label="More actions"
+                                        :aria-expanded="openMenuId === structure.id"
+                                        @click="toggleMenu(structure.id)"
+                                    >⋮</button>
+                                    <div v-if="openMenuId === structure.id" class="structure-item-menu-list">
+                                        <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
+                                            Fork As New Document
+                                        </button>
+                                        <button class="action-btn action-btn--secondary structure-item-rename" @click="renamePersonalStructure(structure)">
+                                            Rename
+                                        </button>
+                                        <button class="action-btn action-btn--danger structure-item-remove" @click="removePersonalStructure(structure)">
+                                            Remove
+                                        </button>
+                                    </div>
                                 </div>
                             </li>
                         </ul>

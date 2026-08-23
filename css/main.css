@@ -416,10 +416,19 @@ html, body {
     gap: 0.35rem;
 }
 
+/* 0.4.5 — Unified Build Placement. A structure card is now clickable
+   the same way a .palette-item (Brick) card is — see the hover rule
+   just below — because clicking it does the analogous thing: enter
+   Place. */
 .structure-item {
     padding: 0.5rem 0.6rem;
     border-radius: 4px;
     background: #1f1f1f;
+    cursor: pointer;
+}
+
+.structure-item:hover {
+    background: #262626;
 }
 
 .structure-item-name {
@@ -432,37 +441,54 @@ html, body {
     white-space: nowrap;
 }
 
-.structure-item-fork {
+/* 0.4.5 — Unified Build Placement. Fork (and, for a personal Structure,
+   Rename/Remove) moved out of the card's primary row into this small
+   secondary menu, so none of them compete with the card's own click
+   target (Place) — see docs/Principles.md, "Buildable Things Share One
+   Placement Experience." Replaces 0.4.0's .structure-item-actions two-
+   button row entirely. */
+.structure-item-menu {
+    position: relative;
     flex-shrink: 0;
 }
 
-/* 0.4.0 — Structure Composition & Blueprint Library. A structure entry
-   now offers two distinct actions (Copy Into Document, Fork As New
-   Document) instead of one — wrapped in its own flex row so they wrap
-   together rather than fighting .structure-item-name for space. */
-.structure-item-actions {
+.structure-item-menu-toggle {
+    padding: 0.2rem 0.55rem;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.structure-item-menu-list {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    z-index: 10;
     display: flex;
-    flex-shrink: 0;
-    gap: 0.35rem;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 170px;
+    padding: 0.4rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.action-btn--copy {
-    background: #2a2a2a;
-    color: #d0d0d0;
-    border: 1px solid #4caf7d;
-}
-
-.action-btn--copy:hover {
-    background: #234433;
+/* Every action inside the menu (Fork, and — for a personal Structure —
+   Rename/Remove) fills the menu's width and left-aligns, regardless of
+   which .action-btn--* color it uses. */
+.structure-item-menu-list .action-btn {
+    width: 100%;
+    text-align: left;
 }
 
 /* 0.4.3 — Personal Blueprint Library. A second, visually distinct
    section beneath the built-in category groups above — "My Structures"
    never mixes into a Village category, and gets a top border/spacing to
    read as its own library rather than one more category among Village's
-   own. Its own entries reuse .structure-item/.structure-item-actions/
-   .action-btn--copy/.action-btn--fork wholesale (same content, same
-   actions); only Rename/Remove are new, and reuse the existing
+   own. Its own entries reuse .structure-item/.structure-item-menu/
+   .action-btn--fork wholesale (same content, same actions); only
+   Rename/Remove are new, and reuse the existing
    .action-btn--secondary/.action-btn--danger vocabulary rather than
    inventing a third button color. */
 .personal-structure-library {

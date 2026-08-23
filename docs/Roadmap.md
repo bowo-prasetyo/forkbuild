@@ -8482,7 +8482,7 @@ Returns (0.4.3)."
   versioning (Farmstead v1/v2 as related entities) is a later milestone
   if it turns out to be needed.
 - **Import/Export/Sharing** of personal blueprints between users —
-  0.4.6's own question, not this one.
+  0.4.7's own question, not this one.
 - **A richer built-in structure library.** Unchanged from 0.4.0/0.4.1/
   0.4.2's own lists — content and packaging (0.4.4) is a separate pass,
   sized on its own.
@@ -8506,8 +8506,9 @@ Returns (0.4.3)."
 
 Use structures (0.4.0) → place structures (0.4.1) → create structures
 (0.4.2) → keep structures (0.4.3). A larger built-in library to discover
-and compose FROM (0.4.4), richer discovery/preview (0.4.5), and import/
-export/sharing (0.4.6) remain exactly where this milestone leaves them:
+and compose FROM (0.4.4), one unified Place interaction across Bricks
+and Structures (0.4.5), richer discovery/preview (0.4.6), and import/
+export/sharing (0.4.7) remain exactly where this milestone leaves them:
 named, not forgotten, sized on their own.
 
 ## 0.4.4 — Village Library Expansion
@@ -8634,10 +8635,14 @@ against the real, full twenty-structure registry:
   the existing fifteen; no such feedback surfaced.
 - **Structure Preview & Library Discovery** (larger 3D preview,
   rotate-before-placing, an inspector showing dimensions/brick count/
-  description) — 0.4.5's own question, unaffected by a bigger catalog
+  description) — 0.4.6's own question, unaffected by a bigger catalog
   existing to browse.
-- **Blueprint Import/Export** between installations — 0.4.6's own
+- **Blueprint Import/Export** between installations — 0.4.7's own
   question.
+- **A unified Place interaction across Bricks and Structures** — the
+  Build Library still offers Structures through the two-button "Copy
+  Into Document" / "Fork As New Document" surface 0.4.0 introduced.
+  0.4.5's own question, not a content one.
 - **Structure versioning, nested Structures, procedural Structures, or
   structure-level scripts** — none of these are content questions;
   adding them here would smuggle architecture into what this milestone
@@ -8669,6 +8674,192 @@ against the real, full twenty-structure registry:
 > **0.4.3 — Where does it go, and is it still there tomorrow?**
 > **0.4.4 — Is there enough here to actually build with?**
 
-A richer catalog now exists to discover and compose from. Richer
-discovery and preview (0.4.5) and import/export/sharing (0.4.6) remain
+A richer catalog now exists to discover and compose from. One unified
+Place interaction across Bricks and Structures (0.4.5), richer
+discovery/preview (0.4.6), and import/export/sharing (0.4.7) remain
 exactly where 0.4.3 left them: named, not forgotten, sized on their own.
+
+## 0.4.5 — Unified Build Placement
+
+Every milestone from 0.4.0 through 0.4.4 grew what a Structure IS and
+where it can live — composition, interactive placement, extraction, a
+personal library, a twenty-structure catalog. None of them touched HOW
+a user reaches for one, and by 0.4.4 that gap had become visible: a
+Brick's Build Library card is one click from a live ghost preview
+(`ui/components/BuildLibraryPanel.js#selectBrick()` → `ToolId.PLACE`),
+while a Structure's card offers two buttons — "Copy Into Document" and
+"Fork As New Document" — and the word "Place" appears on neither, even
+though 0.4.1 already turned "Copy Into Document" into exactly that: an
+interactive ghost-preview placement mode
+(`application/tools/StructureCompositionTool.js`). The architecture
+already unified; the UI never caught up to it.
+
+The user does not experience `PlaceBrickCommand` versus
+`CopyStructureIntoDocumentUseCase` — they experience "I want to put
+this into my Document." See docs/Principles.md, "Buildable Things Share
+One Placement Experience (0.4.5)":
+
+```text
+Brick
+  → click card → Place mode → hover → R rotates → click commits
+
+Structure
+  → click card → Place mode → hover → R rotates → click commits
+```
+
+### What changed
+
+**UI boundary only — architecture untouched.** Nothing in
+`application/tools/PlacementTool.js`,
+`application/tools/StructureCompositionTool.js`,
+`application/CopyStructureIntoDocumentUseCase.js`,
+`application/ForkStructureUseCase.js`, or
+`application/EditorSession.js#beginStructureComposition()` /
+`#copyStructureIntoDocument()` / `#forkStructure()` changed behavior.
+Every one of those keeps its existing name and existing job — see
+docs/Principles.md's own reasoning for why `beginStructureComposition()`
+in particular keeps its name even though the button that calls it no
+longer says "Copy."
+
+**`ui/components/BuildLibraryPanel.js`.** A structure card's entire
+`<li>` is now the click target (`@click="placeStructure(structure)"`,
+mirroring `selectBrick()`'s own card-level click), emitting
+`place-structure` instead of `copy`. Fork As New Document (`fork`) — a
+real, deliberately different operation, see "Copying Composes A
+Blueprint; Forking Creates One (0.4.0)" — moves into a small secondary
+"⋮" menu (`.structure-item-menu`) that stops its own clicks from
+bubbling to the card (`@click.stop`), so it never competes with Place
+for the primary gesture. For a personal Structure, Rename and Remove
+join Fork in the same menu — unchanged operations, relocated for the
+same reason.
+
+**`ui/views/EditorView.js`.** `@copy="copyStructureIntoDocument"`
+becomes `@place-structure="copyStructureIntoDocument"` — the handler
+function itself keeps its name (it still only ever calls
+`EditorSession#beginStructureComposition()`, never a new method) — and
+the COMPOSE_STRUCTURE placement hint and its feedback toast both read
+"Placing" instead of "Composing," matching PLACE_STRUCTURE's existing
+wording exactly.
+
+**`css/main.css`.** `.structure-item` gains the same clickable/hover
+treatment `.palette-item` already had. `.structure-item-actions` and
+`.action-btn--copy` (the old two-button row) are retired entirely,
+replaced by `.structure-item-menu` / `.structure-item-menu-toggle` /
+`.structure-item-menu-list`, reusing the existing `.action-btn--fork` /
+`.action-btn--secondary` / `.action-btn--danger` vocabulary for the
+menu's own contents — no new button colors.
+
+### What deliberately did not change
+
+Named directly, the same restraint every milestone in this document
+applies to its own scope:
+
+- **`StructureCompositionTool` and `PlacementTool` stay two separate Tool
+  classes.** What each places (one Brick vs. a Structure's whole brick
+  set) and what each commits (`PlaceBrickCommand` vs. one
+  `PasteBricksCommand`) genuinely differ — forcing them into one
+  tool branching on kind would trade a real UX win for an unforced
+  architecture one. What unifies is the LIFECYCLE shape they already
+  shared (activate/select → pointer-move previews → `R`/`Shift+R`
+  rotates → a validated click commits → one command, one undo step),
+  made visible at the Build Library's own click target — never a new
+  shared base class or interface neither tool asked for.
+- **World-level `StructurePlacement`** (`application/tools/StructurePlacementTool.js`,
+  0.2.90 — placing a live REFERENCE to another Document) stays its own
+  operation, untouched. "Buildable Things Share One Placement
+  Experience" describes the Build Library's two catalogs — the things a
+  Document is built FROM — not every spatial placement this engine has.
+- **The automatic composition offset**
+  (`CopyStructureIntoDocumentUseCase#defaultTransform()`) stays exactly
+  as it was — it still seeds `StructureCompositionTool#activate()`'s
+  initial ghost position, and it's still what a non-interactive caller
+  (a future API, a test harness) gets when it omits an explicit
+  transform. Interactive placement always overrides it once the pointer
+  moves; nothing about this milestone needed it to do less.
+- **No renderer-level preview merge.** `renderer/PreviewRenderer.js`
+  and `renderer/CompositionPreviewRenderer.js` stay two separate
+  renderers — they already share the same underlying contract
+  (position, rotation, valid, target) at the EditorContext level
+  (`PreviewState` / `CompositionPreviewState`); a physical merge would
+  buy nothing this milestone's own UI-boundary scope needed.
+
+### Flagship test
+
+`tests/UnifiedBuildPlacement.test.js` is new — headless, no renderer/
+import, running through `PlacementTool` and `StructureCompositionTool`
+directly, exactly the boundary tests/PlacementPreviewUX.test.js and
+tests/StructureCompositionPlacement.test.js already established. Its
+one claim: a Brick and a Structure present ONE placement contract, not
+two.
+
+- Section A/B: select → preview → `R` rotates → a valid click commits
+  → one history entry → one undo removes everything — proven for a
+  Brick, then proven again for a Structure, key for key
+- Section C: an invalid (colliding) preview refuses to commit, for both
+- Section D: the same Structure/position/rotation, run twice
+  independently and committed into two independent Documents, produces
+  byte-identical resulting geometry
+- Section E: `EditorSession#beginStructureComposition()` ("Place
+  Structure," the unified entry point) never opens or creates a
+  Document; `#forkStructure()` ("Fork As New Document," still a
+  distinct secondary action behind the "⋮" menu) still does — Fork and
+  Place remain structurally independent, exactly as
+  tests/BuildLibraryUX.test.js's own Section E already proved for Place
+  vs. Fork before this milestone
+
+The per-mechanism depth this file deliberately does NOT re-prove
+(rotation composition math, every collision edge case, serialization
+round-trips, the twenty-structure catalog's own content quality) stays
+exactly where it already lived: tests/PlacementPreviewUX.test.js,
+tests/StructureCompositionPlacement.test.js, tests/BuildLibraryUX.test.js,
+and tests/VillageLibraryExpansion.test.js are unchanged and still pass.
+
+### Deliberately excluded
+
+- **Renaming `CopyStructureIntoDocumentUseCase` or
+  `beginStructureComposition()`.** The UI-facing verb changed; the
+  mutation-semantics name did not — see docs/Principles.md's own
+  reasoning for why conflating the two would be a regression, not a
+  cleanup.
+- **A shared `PlacementCandidate`/`BuildPlacementTarget` base class or
+  interface.** Considered and rejected: `PlacementTool` and
+  `StructureCompositionTool` differ enough in what they place and what
+  they commit that a shared base would either stay empty ceremony or
+  grow into the "giant tool that does everything" this milestone's own
+  design conversation explicitly warned against. The shared contract is
+  a LIFECYCLE SHAPE, proven by a shared test (this milestone's
+  flagship), not shared code neither tool needed.
+- **A renderer-level preview merge** (`PreviewRenderer` /
+  `CompositionPreviewRenderer` into one class) — named above, under
+  "What deliberately did not change."
+- **Structure Preview & Library Discovery** (larger 3D preview,
+  rotate-before-placing, an inspector showing dimensions/brick
+  count/description) and **Blueprint Import/Export** — 0.4.6's and
+  0.4.7's own questions respectively, unaffected by how a Structure's
+  card is clicked.
+
+```text
+0.4.0   Structure Composition & Blueprint Library          ✓
+0.4.1   Interactive Structure Composition UX                ✓
+0.4.2   Structure Extraction & Blueprint Creation            ✓
+0.4.3   Personal Blueprint Library                           ✓
+0.4.4   Village Library Expansion                             ✓
+             │
+             ▼
+0.4.5   Unified Build Placement                               ✓
+             ├── BuildLibraryPanel — a Structure card clicks like a Brick card
+             ├── Fork/Rename/Remove move into a secondary "⋮" menu
+             ├── PlacementTool / StructureCompositionTool — same lifecycle, still two classes
+             └── UnifiedBuildPlacement.test.js — one contract, proven for both
+```
+
+> **0.4.0 — How do I combine several Structures into something bigger?**
+> **0.4.1 — How do I control WHERE and HOW each one lands?**
+> **0.4.2 — Can I turn what I just built into something reusable?**
+> **0.4.3 — Where does it go, and is it still there tomorrow?**
+> **0.4.4 — Is there enough here to actually build with?**
+> **0.4.5 — Does reaching for one feel like reaching for the other?**
+
+Richer discovery/preview (0.4.6) and import/export/sharing (0.4.7)
+remain exactly where 0.4.4 left them: named, not forgotten, sized on
+their own.
