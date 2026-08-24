@@ -32,6 +32,7 @@ import KeyboardShortcutsOverlay from '../components/KeyboardShortcutsOverlay.js'
 import ActionFeedback from '../components/ActionFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
+import { CreateBlueprintAttributionUseCase } from '../../application/CreateBlueprintAttributionUseCase.js';
 import { CopySelectionUseCase } from '../../application/CopySelectionUseCase.js';
 import { RepeatSelectionUseCase } from '../../application/RepeatSelectionUseCase.js';
 import { PasteClipboardUseCase } from '../../application/PasteClipboardUseCase.js';
@@ -181,8 +182,10 @@ export default {
                 :structure="inspectedStructure"
                 :registry="brickRegistry"
                 :source="inspectedStructureSource"
+                :attribution="inspectedStructureAttribution"
                 @place="placeInspectedStructure"
                 @export="exportInspectedStructure"
+                @claim-authorship="claimAuthorship"
                 @close="inspectedStructure = null"
             />
         </div>
@@ -217,6 +220,8 @@ export default {
         const identityProvider = identityUseCase.provider;
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
         const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute();
+        // 0.6.5 — Blueprint Identity & Attribution.
+        const { blueprintAttributionUseCase } = new CreateBlueprintAttributionUseCase().execute(identityProvider);
 
 		const copySelectionUseCase = new CopySelectionUseCase(registry);
 		const pasteClipboardUseCase = new PasteClipboardUseCase();
@@ -457,9 +462,17 @@ export default {
 		// component's own header).
 		const inspectedStructure = ref(null);
 		const inspectedStructureSource = ref('built-in');
+		// 0.6.5 — Blueprint Identity & Attribution. `{ fingerprint,
+		// attributions, mine }`, refreshed every time the panel opens (and
+		// again right after claimAuthorship() below) — never cached
+		// against the structure's own id, since the whole point of a
+		// fingerprint is that it stays valid across a fresh Structure
+		// instance with a fresh id.
+		const inspectedStructureAttribution = ref(null);
 		function inspectStructure(structure) {
 		    inspectedStructure.value = structure;
 		    inspectedStructureSource.value = personalStructureLibraryStore.hasStructure(structure.id) ? 'personal' : 'built-in';
+		    inspectedStructureAttribution.value = blueprintAttributionUseCase.summarize(structure);
 		}
 		// The panel's own Place/Export buttons delegate straight to the
 		// SAME copyStructureIntoDocument()/exportStructure() every card's
@@ -474,6 +487,26 @@ export default {
 		    const structure = inspectedStructure.value;
 		    inspectedStructure.value = null;
 		    exportStructure(structure);
+		}
+		// 0.6.5 — Blueprint Identity & Attribution. Publishes a signed
+		// BlueprintAttribution for whatever the Info panel is currently
+		// showing, then re-summarizes so the panel immediately reflects
+		// "You" as author without needing to be closed and reopened —
+		// the same "the surface stays visually up to date the instant
+		// this fires" posture 0.4.3's own onPersonalLibraryChanged()
+		// already established for a saved Structure.
+		function claimAuthorship() {
+		    const structure = inspectedStructure.value;
+		    if (!structure) {
+		        return;
+		    }
+		    try {
+		        blueprintAttributionUseCase.publish(structure);
+		        inspectedStructureAttribution.value = blueprintAttributionUseCase.summarize(structure);
+		        feedback.show(`You are now credited as an author of "${structure.name}"`);
+		    } catch (e) {
+		        feedback.show(e.message.replace(/^BlueprintAttributionUseCase:\s*/, ''));
+		    }
 		}
 
 		// 0.6.3 — Blueprint Authoring & Versioning UX. Replaces the 0.4.2
@@ -1098,8 +1131,10 @@ export default {
             inspectStructure,
             inspectedStructure,
             inspectedStructureSource,
+            inspectedStructureAttribution,
             placeInspectedStructure,
             exportInspectedStructure,
+            claimAuthorship,
             showCreateBlueprintDialog,
             createBlueprintPreview,
             onCreateBlueprint,
