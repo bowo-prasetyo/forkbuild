@@ -9072,3 +9072,63 @@ reimplemented once per domain — the resolver itself never imports a
 single domain module (no `BlueprintAttribution`, no `PlaceNamingClaim`),
 receiving instead a small `kindPlugin` supplying whatever
 validator/constructor/verifier that domain already built.
+
+### Availability Is Not Validity (0.7.1)
+
+0.7.0's `application/PublicationResolver.js#resolve()` only had one way
+to fail: throw, with a message. That was sufficient as long as the only
+`ContentStore` behind it was `content/LocalContentStore.js` — a local
+read either finds bytes or it doesn't, instantly and forever, and every
+kind of "doesn't" really did mean the same thing: this is bad. A real,
+network-backed `ContentStore` breaks that equivalence. Content can be
+completely genuine — correctly signed, correctly hashed, correctly
+addressed — and still be unreachable RIGHT NOW because a node hasn't
+replicated it yet, a connection timed out, or a gateway is temporarily
+down. None of that is evidence the publication is bad. Collapsing "bad"
+and "not available yet" into one generic failure would force every
+caller to guess which one actually happened from a string message.
+
+**`application/PublicationResolutionOutcome.js` names the difference
+structurally, not by convention.** `CONTENT_UNAVAILABLE` is its own
+outcome, produced whenever `content/IpfsContentStore.js#get()` throws
+or returns nothing — never conflated with `CONTENT_HASH_MISMATCH`
+(bytes WERE retrieved, and they're wrong), `INVALID_CONTENT` (the bytes
+parse but fail structural validation), or `INVALID_CONTENT_SIGNATURE`
+(the wrapped object's own signature fails). A caller that only wants
+"did it work" still treats every non-`RESOLVED` outcome as failure; a
+caller that wants to retry later, rather than discard a publication
+outright, checks for exactly `CONTENT_UNAVAILABLE` — the one outcome
+that says nothing whatsoever about the publication's own trustworthiness.
+
+**A `ContentStore` decides reachability. It never decides authenticity.**
+`content/IpfsContentStore.js#get()` throws a `ContentUnavailableError`
+for every network-shaped failure and NEVER for a hash mismatch or a bad
+signature — those checks happen one layer up, in `application/
+PublicationResolver.js`'s own step 5 (`CONTENT_HASH_MISMATCH`) and step
+8 (`INVALID_CONTENT_SIGNATURE`), exactly where 0.7.0 already put them.
+A store that tried to make that call itself would be reintroducing the
+identical "retrieve → trust" shortcut `application/
+PublicationResolver.js`'s own header has refused since 0.7.0.
+
+**The CID is a locator. It is never this content's identity.** The
+distinction `core/ContentReference.js` drew in 0.2.14 between a content
+hash and its `uri` holds exactly as written the moment that `uri`
+becomes `ipfs://bafy...` instead of `https://...`. `content/
+IpfsContentStore.js#put()` computes its returned `ContentReference`'s
+`hash` locally, from the bytes THIS REPLICA is looking at — the same
+`computeContentHash()` `content/LocalContentStore.js` already uses —
+and only ever writes the CID Kubo hands back into `uri`. A caller that
+only ever reads `contentReference.hash` cannot tell whether the bytes
+came from a local store or a real IPFS node, which is exactly why
+`application/PublicationResolver.js` never had to change to gain one.
+
+**A publication points at content, not at a device.** The property a
+real decentralized network is FOR: once bytes are content-addressed and
+replicated, resolving them never again depends on the specific node —
+Alice's, or anyone else's — that first published them. `tests/
+IpfsPublicationResolution.test.js`'s own flagship proves this
+deterministically (a publication that is `CONTENT_UNAVAILABLE` on one
+node resolves, unchanged, the moment the identical bytes exist on
+another); `tests/IpfsLiveIntegration.test.js` is the one file in this
+codebase that attempts to show the same thing against a real Kubo
+network, when one happens to be running.

@@ -10,12 +10,12 @@ import { PublicationResolver } from './PublicationResolver.js';
 // or identity/LocalAuthorizationVerifier.js directly — the same
 // composition-root shape application/CreatePublisherUseCase.js and
 // application/CreateBlueprintAttributionUseCase.js already established.
-// Swapping content/LocalContentStore.js for an IPFS- or Arweave-backed
-// ContentStore later (content/ContentStore.js's own header already names
-// them) means changing exactly this one file — application/
-// PublicationResolver.js, every kindPlugin, and every caller stay
-// untouched, because none of them ever import a concrete ContentStore
-// themselves.
+// 0.7.1 proved the claim this file's own header made: application/
+// CreateIpfsPublicationResolverUseCase.js wires content/
+// IpfsContentStore.js into the identical shape, and application/
+// PublicationResolver.js, every kindPlugin, and every caller of either
+// use case stay completely untouched — none of them ever import a
+// concrete ContentStore themselves.
 export class CreatePublicationResolverUseCase {
     execute() {
         const storageProvider = new LocalStorageProvider();

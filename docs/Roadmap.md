@@ -13046,3 +13046,200 @@ storage/anchoring backend, a discovery index, publication reputation and
 freshness, `kindPlugin`s for the other three claim types, and any form
 of unpublish/revoke — each sized on its own, exactly like every
 "Deliberately excluded" list in this document before it.
+
+## 0.7.1 — IPFS Content Publication & Resolution
+
+0.7.0's own closing line drew the boundary this milestone crosses: "no
+new storage backend ships in 0.7.0 — content/LocalContentStore.js,
+unmodified, is still the only ContentStore that exists." This is the
+first real one, and the first real-world validation of everything 0.7.0
+built: a signed envelope, a resolver that imports no domain module, and
+a `kindPlugin` per content kind, proven against an actual decentralized,
+content-addressed network instead of two `LocalContentStore` instances
+bridged by copying bytes by hand.
+
+### What shipped
+
+- `content/IpfsContentStore.js` — a real `ContentStore` implementation
+  talking to a Kubo (go-ipfs) node's own HTTP RPC API
+  (`/api/v0/add`, `/api/v0/cat`), using nothing but the `fetch`/
+  `FormData`/`Blob` globals this codebase already runs on — zero new
+  dependencies, zero `package.json`, zero build step. `put()` computes
+  its returned `ContentReference`'s `hash` locally, from the bytes this
+  replica is looking at, exactly like `content/LocalContentStore.js`
+  already does; the CID Kubo hands back goes only into `uri`, one
+  retrieval mechanism among however many others a `ContentReference` may
+  carry — never a second, competing identity. Pins on add by default, so
+  a resolved-but-not-yet-garbage-collected publication never becomes a
+  silent, permanent `CONTENT_UNAVAILABLE`.
+- `content/ContentUnavailableError` — thrown by `get()`/`put()` for
+  every network-shaped failure (timeout, connection refused, a non-2xx
+  response, a node that simply doesn't have this CID yet) — never for a
+  hash mismatch or a bad signature, which stay exactly where 0.7.0 put
+  them, one layer up in `application/PublicationResolver.js`. `has()`
+  never throws at all, the same best-effort, degrade-to-`false` posture
+  `content/LocalContentStore.js#has()` already keeps.
+- `application/PublicationResolutionOutcome.js` — the explicit outcome
+  vocabulary this milestone's own design conversation asked for before
+  going further: `RESOLVED`, `INVALID_ENVELOPE`,
+  `INVALID_PUBLICATION_SIGNATURE`, `CONTENT_UNAVAILABLE`,
+  `CONTENT_HASH_MISMATCH`, `INVALID_CONTENT`,
+  `INVALID_CONTENT_SIGNATURE`, `DOMAIN_CROSS_CHECK_FAILED`. `content
+  can be valid but temporarily unavailable` — the design conversation's
+  own words — is now a distinct, structurally-named outcome, never
+  indistinguishable from an actually invalid publication.
+- `application/PublicationResolver.js` — `publish()`/`resolve()` are now
+  `async` (a real network call cannot be synchronous; `await`ing
+  `content/LocalContentStore.js`'s own still-synchronous returns is a
+  same-tick no-op, so nothing about the 0.7.0 path changed behavior).
+  `resolve()` no longer throws for a data problem — it returns
+  `{ outcome, content, publication, reason }`, still running the
+  identical ten-step discipline 0.7.0 shipped, still never partially
+  resolving, still never storing on a failed check.
+- `application/PlaceNamingClaimPublicationKind.js` — the second
+  `kindPlugin`, and the one that actually proves genericity rather than
+  mere reuse: unlike `core/BlueprintAttribution.js`, a `PlaceNamingClaim`
+  does not self-describe on the wire — 0.5.3 wraps it in a separate
+  envelope module instead (`application/PlaceNamingClaimPublication.js`).
+  This plugin operates on that wrapper shape directly; `application/
+  PublicationResolver.js` needed no change to accept it.
+- `application/CreateIpfsPublicationResolverUseCase.js` — the proof of
+  0.7.0's own claim: identical shape to `application/
+  CreatePublicationResolverUseCase.js`, one `ContentStore` swapped, and
+  `application/PublicationResolver.js`, every `kindPlugin`, and every
+  caller stay completely untouched.
+- `tests/IpfsContentStore.test.js` — deterministic, network-free
+  coverage of the store's own wire behavior against an injected fake
+  Kubo API: put/get round trip, hash-vs-CID separation, a non-IPFS
+  reference resolving to `null`, and every network failure shape
+  surfacing as `ContentUnavailableError`.
+- `tests/IpfsPublicationResolution.test.js` — the flagship this
+  milestone's own design conversation asked for by name: Alice publishes
+  BOTH a `BlueprintAttribution` and a `PlaceNamingClaim` to her own fake
+  IPFS node; Bob resolves both through one `PublicationResolver` +
+  `content/IpfsContentStore.js`, no per-kind resolver class anywhere;
+  Carol's node, sharing no content with Alice's, gets
+  `CONTENT_UNAVAILABLE` for a perfectly genuine publication — then
+  resolves the IDENTICAL envelope successfully the moment the same bytes
+  are added to her own node, proving the publication was never actually
+  pointing at Alice's device.
+- `tests/IpfsLiveIntegration.test.js` — the one file in this codebase
+  that ever calls the real global `fetch` against an actual daemon.
+  Probes `FORKBUILD_TEST_IPFS_API_A`/`_B` (defaulting to Kubo's own
+  local defaults) with a short timeout and skips itself, cleanly, with
+  exit code 0, the moment either is unreachable — true in this sandbox,
+  which has no `ipfs` binary and never will (see this file's own header
+  for why that is a deliberate, permanent property of this codebase's
+  zero-dependency architecture, not a gap to close). When a node IS
+  running, it proves the real add/cat/verify pipeline works against
+  genuine Kubo wire behavior; cross-node replication is reported, never
+  asserted pass/fail, since whether it happens within a short timeout
+  depends on facts about the running environment (peering, DHT
+  reachability) this codebase has no business being flaky about.
+
+### IPFS provides availability; hashes and signatures provide integrity; neither establishes truth
+
+See docs/Principles.md, "Availability Is Not Validity (0.7.1)," for the
+full reasoning. The short version, named directly by this milestone's
+own design conversation: IPFS answers "where can these bytes be found
+right now," never "are they true" or even "were they ever published at
+all if the answer is currently no." Those two questions were already
+answered, completely independently, by 0.7.0's own pipeline — a content
+hash and a signature — and 0.7.1 changes neither. What it adds is a
+third, previously-unneeded axis: whether the bytes an already-verified
+publication points at can be reached RIGHT NOW, tracked explicitly by
+`application/PublicationResolutionOutcome.js` rather than smuggled into
+a generic thrown Error a caller would have to string-match to understand.
+
+### Deliberately excluded
+
+- **A public HTTP gateway as a fallback retrieval path.** `content/
+  IpfsContentStore.js` talks only to a configured node's own RPC API.
+  This milestone's own design conversation was explicit that a gateway,
+  if one is ever added, is a UI convenience — "Open content" — never a
+  second way for `application/PublicationResolver.js` itself to decide
+  something is authentic; equating "a gateway returned bytes" with
+  "content is authentic" is exactly the shortcut docs/Principles.md's
+  own "Availability Is Not Validity" refuses.
+- **Arweave, HTTP, or any other concrete `ContentStore`.** `content/
+  ContentStore.js`'s own 0.2.14 header named three; this milestone ships
+  the first. The other two remain exactly as unbuilt as 0.7.0 left them.
+- **Any UI surface for publishing or resolving through IPFS.** No
+  component, view, or use case beyond `application/
+  CreateIpfsPublicationResolverUseCase.js` itself changed. A person still
+  cannot click a button to publish a blueprint attribution to IPFS —
+  only the underlying machinery now genuinely supports it.
+- **A decentralized discovery index.** Still sized as its own future
+  milestone (0.7.2, unchanged from 0.7.0's own roadmap entry) —
+  `application/PublicationResolver.js#resolve()` still resolves a
+  publication it is HANDED; it never searches for one, and nothing in
+  this milestone changes that.
+- **Blockchain anchoring.** Still its own future milestone. This
+  milestone's own design conversation drew the line explicitly: IPFS
+  answers "where can I retrieve this," a blockchain would answer "what
+  was anchored, in what order, publicly" — two different problems, never
+  conflated into one milestone.
+- **A pinning marketplace, replication guarantees, or any persistence
+  SLA.** `put()` pins on the node it talks to; whether that node stays
+  up, whether the content gets pinned elsewhere, whether it survives
+  garbage collection on some OTHER node that never pinned it — all of
+  that is deployment and network topology, exactly as out of scope for
+  the domain model as this milestone's own design conversation said.
+- **Distinguishing "genuinely deleted/never existed" from "temporarily
+  unavailable."** `CONTENT_UNAVAILABLE` deliberately covers both — no
+  `ContentStore`, local or networked, can honestly promise that
+  distinction, and pretending otherwise would be its own kind of
+  "retrieve → trust" shortcut.
+- **Retry policy, backoff, or automatic re-resolution of a
+  `CONTENT_UNAVAILABLE` publication.** `application/
+  PublicationResolver.js#resolve()` reports the outcome; deciding
+  whether and when to try again is entirely the caller's own policy, not
+  something this milestone bakes into the resolver.
+
+```text
+0.7.0   Decentralized Publication Protocol & Content Addressing  ✓
+             │
+             ▼
+0.7.1   IPFS Content Publication & Resolution                    ✓
+             ├── content/IpfsContentStore.js — real Kubo HTTP RPC
+             │   client (add/cat), zero new dependencies; hash stays
+             │   OURS, CID is only ever a locator
+             ├── content/ContentUnavailableError — network-shaped
+             │   failures only, never conflated with hash/signature
+             │   invalidity
+             ├── application/PublicationResolutionOutcome.js — 8 named
+             │   outcomes; CONTENT_UNAVAILABLE structurally distinct
+             │   from every INVALID_* outcome
+             ├── application/PublicationResolver.js — publish()/
+             │   resolve() now async; resolve() returns
+             │   { outcome, content, publication, reason }, never throws
+             │   for a data problem
+             ├── application/PlaceNamingClaimPublicationKind.js — second
+             │   kindPlugin, deliberately differently-shaped wire format,
+             │   proving genericity rather than mere reuse
+             ├── application/CreateIpfsPublicationResolverUseCase.js —
+             │   proof of 0.7.0's own "swap one file" claim
+             └── IpfsContentStore.test.js + IpfsPublicationResolution.test.js
+                 (deterministic, fake-network) + IpfsLiveIntegration.test.js
+                 (real node, self-skipping) — two content kinds, one
+                 resolver, one ContentStore backend, and a genuine
+                 CONTENT_UNAVAILABLE → RESOLVED transition once content
+                 propagates to a second node
+```
+
+> **0.7.0 built a signed envelope, a resolver, and exactly one proof
+> that the pattern works — against two `LocalContentStore` instances
+> bridged by hand. 0.7.1 is the milestone that stops taking that proof
+> on faith: a real Kubo node, a real CID, a real network round trip, and
+> a genuinely new failure mode — content that is completely valid and
+> simply not here yet — named and handled as its own outcome rather than
+> smuggled into a generic thrown Error. IPFS answers where; 0.7.0's hash
+> and signature already answered what and who; nothing in this milestone
+> lets any of the three pretend to answer whether it's true.**
+
+What's left, and deliberately unbuilt: every other concrete
+`ContentStore` (Arweave, HTTP), a public-gateway fallback, any UI surface
+for IPFS publishing at all, a discovery index, blockchain anchoring, and
+any retry/backoff/persistence-guarantee policy — each sized on its own,
+exactly like every "Deliberately excluded" list in this document before
+it.
