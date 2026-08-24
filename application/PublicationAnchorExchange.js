@@ -85,4 +85,23 @@ export class PublicationAnchorExchange {
 
         return this._catalog.add(anchor);
     }
+
+    // 0.8.5 — Historical Anchor Discovery & Synchronization.
+    //
+    // A thin passthrough to the injected catalog's own
+    // findByPublicationId() — the read this class needed once
+    // application/PublicationAnchorPeerExchange.js had to ANSWER a
+    // REQUEST, not just handle one. Deliberately does not expose the
+    // catalog itself: a caller (namely PublicationAnchorPeerExchange)
+    // only ever needs "which anchors do I know about this publication,"
+    // never remove()/getReceivedAt()/list()-across-everything, so this
+    // stays the one query this class's own import boundary already has
+    // standing to answer. Never verifies, never filters by whether an
+    // anchor is signed — see exportAnchor()'s own header for where an
+    // unsigned entry (only reachable via application/
+    // AddPublicationAnchorUseCase.js's separate, no-signature-check path)
+    // gets refused, one layer up, by the caller that tries to export it.
+    findByPublicationId(publicationId) {
+        return this._catalog.findByPublicationId(publicationId);
+    }
 }

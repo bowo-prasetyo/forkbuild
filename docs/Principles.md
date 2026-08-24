@@ -9912,3 +9912,120 @@ Establish Authority (0.8.0)," which this milestone's transport extends
 across a network, not past.
 
 See `docs/Roadmap.md`, 0.8.4, for the full milestone entry.
+
+### Synchronization Distributes Claims, Not Verification, Truth, Or Authority (0.8.5)
+
+0.8.4 gave replicas a PUSH: an authenticated peer that happens to be
+connected when an anchor is announced hears about it. 0.8.5 gives them a
+PULL: a replica that connects LATER can explicitly ask for anchors it
+missed. The mechanism is new — `application/
+PublicationAnchorPeerProtocol.js`'s own `REQUEST`/`RESPONSE` pair,
+`application/PublicationAnchorPeerExchange.js#requestAnchors()`/
+`_handleRequest()`/`_handleResponse()` — but the invariant is not: this
+milestone exists specifically to prove that adding a pull-based transport
+never widens what actually crosses the wire.
+
+**A RESPONSE is answered from THIS replica's own catalog, and nothing
+else.** `_handleRequest()` never forwards a REQUEST to a third peer, and
+never aggregates what OTHER peers might know — see docs/Roadmap.md,
+0.8.5, "Deliberately excluded," on relayed/transitive discovery. A
+replica can only ever tell another replica what IT itself has cataloged,
+the identical restraint that already governs who can `announce()`
+anything at all.
+
+**Every anchor in a RESPONSE is verified exactly as strictly as one
+ANNOUNCE always was — there is no bulk-trust shortcut.**
+`_handleResponse()` runs each envelope in the batch through the IDENTICAL
+`application/PublicationAnchorExchange.js#importAnchor()` call an
+ANNOUNCE already used: validate, construct, verify SIGNATURE, catalog.
+`tests/PublicationAnchorPeerExchange.test.js`'s own Section C proves a
+forged anchor anywhere in a RESPONSE array is rejected exactly like a
+forged ANNOUNCE, and — the one property specific to a BATCH transfer —
+that one bad envelope never blocks a genuine sibling elsewhere in the
+same array. Synchronizing ten anchors at once is never treated as ten
+times more trustworthy than synchronizing one; each one still stands or
+falls entirely on its own signature.
+
+**A RESPONSE carries claims, never metadata about how this replica came
+to know them.** `application/PublicationAnchorPeerProtocol.js#
+toPublicationAnchorResponseMessage()`'s own wire shape is `{ kind,
+publicationId, anchors }` — plain `PublicationAnchor.toJSON()` envelopes,
+nothing else. No `receivedAt`, no verification outcome, and no "which
+peer told me this" field was added anywhere. `receivedAt` in particular
+stays exactly what 0.8.2 already made it: the LOCAL moment a replica's
+OWN catalog first saw an anchor, never a value carried over from
+whichever peer relayed it — `tests/PublicationAnchorPeerExchange.test.js`
+Section D's own late-joiner flagship makes this concrete: Bob has held an
+anchor for some time by the moment Carol connects and requests it, yet
+Carol's own `receivedAt` is recorded fresh, at the moment SHE first heard
+about it, never copied from Bob's.
+
+**THE central invariant extends completely unchanged: neither new
+handler ever calls `application/ExternalAnchorVerifier.js`.**
+`_handleRequest()` answering a REQUEST and `_handleResponse()` importing
+a RESPONSE both stay exactly where `_handleIncoming()` already stopped
+for an ANNOUNCE — a synchronized anchor is exactly as unverified, on
+arrival, as an announced one always was. `tests/
+PublicationAnchorPeerExchange.test.js`'s own late-joiner flagship proves
+the strongest version of this: Alice, Bob, and Carol each independently
+verify the IDENTICAL synchronized claim and reach three different,
+equally honest answers (VALID / PROOF_UNAVAILABLE / VALID) — verification
+never depended on whether an anchor arrived via ANNOUNCE or via
+synchronization, because nothing about HOW a claim arrived was ever part
+of what gets verified.
+
+See `docs/Roadmap.md`, 0.8.5, for the full milestone entry.
+
+### Evidence Set Convergence Does Not Imply Truth Convergence (0.8.5)
+
+`application/PublicationAnchorDiscoveryCoordinator.js`'s own flagship
+sets up the exact asymmetry this principle is named for: Alice starts
+knowing only Anchor A, Bob knows both A and B, Carol starts knowing only
+B. After each of Alice and Carol runs `discoverFromPeers()` against Bob,
+all three replicas hold the identical SET of two claims — `{A, B}`
+everywhere. That is real, observable convergence, and this codebase is
+happy to call it that. What it is not, and what no code in this
+milestone was ever allowed to become, is convergence on what those claims
+MEAN.
+
+**Convergence is a property of the catalog, never a property of the
+claims' own truth.** Nothing added in 0.8.5 computes a "most complete"
+peer, ranks a replica that holds more anchors above one that holds fewer,
+or treats a converged set as more authoritative than any individual
+member of it. `application/PublicationAnchorDiscoveryCoordinator.js#
+discoverFromPeers()` returns `{ publicationId, attemptedPeers,
+discovered }` — an operation log of what was asked and what came back —
+never a verdict, a score, or a "consensus" field. Two anchors that
+directly CONTRADICT each other (different `anchorType`s, different
+locators, even opposite claims about the same publication) converge onto
+the same replica exactly as harmlessly as two that agree; see `core/
+PublicationAnchor.js`'s own header and `docs/Principles.md`, "External
+Anchoring Provides Evidence; It Does Not Establish Authority (0.8.0)," on
+why multiple anchors were never meant to be reconciled into one verdict
+in the first place.
+
+**Deduplication is not agreement.** When Alice and Carol both discover
+Anchor A through Bob, `application/LocalPublicationAnchorCatalog.js#
+add()`'s own id-based dedup (0.8.2) means each ends up with exactly ONE
+cataloged copy — never two redundant entries, and never a "confirmed by N
+peers" counter either. Convergence here means "the set no longer differs
+between replicas," never "N independent sources agree this is true" — no
+code anywhere counts how many peers offered the same anchor, because
+peer-count was never meant to stand in for evidentiary weight. A single
+peer's RESPONSE and ten peers' identical RESPONSEs produce the exact same
+cataloged outcome.
+
+**Verification stays exactly as independent after synchronization as it
+was before it.** `application/PublicationAnchorPeerExchange.js#
+_handleResponse()`'s own header already establishes that a synchronized
+anchor is exactly as unverified on arrival as an announced one — this
+principle names the natural next question and forecloses it too: once
+Alice and Carol both hold Anchor B, nothing about EITHER replica now
+holding it changes what the OTHER can independently determine about it.
+A converged evidence set is not a step toward a converged verdict; it is
+the complete, final shape of what this layer of the system was ever built
+to share. Whether — and how — several independently-held, possibly
+disagreeing anchors for the SAME publication might ever be reasoned about
+together is 0.8.6's own question, deliberately unopened here.
+
+See `docs/Roadmap.md`, 0.8.5, for the full milestone entry.

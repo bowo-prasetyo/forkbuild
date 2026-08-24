@@ -34,6 +34,7 @@ import { CreatePeerContentExchangeUseCase } from '../application/CreatePeerConte
 import { CreatePublicationResolutionCoordinatorUseCase } from '../application/CreatePublicationResolutionCoordinatorUseCase.js';
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
 import { CreatePublicationAnchorPeerExchangeUseCase } from '../application/CreatePublicationAnchorPeerExchangeUseCase.js';
+import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../application/CreatePublicationAnchorDiscoveryCoordinatorUseCase.js';
 import { CreateExternalAnchorVerifierUseCase } from '../application/CreateExternalAnchorVerifierUseCase.js';
 import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/CreateBitcoinAnchorProofVerifierUseCase.js';
 import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/CreatePublicationEvidenceCoordinatorUseCase.js';
@@ -355,6 +356,19 @@ const { catalog: publicationAnchorCatalog, peerExchange: publicationAnchorPeerEx
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry
 });
+
+// 0.8.5 — Historical Anchor Discovery & Synchronization.
+// `publicationAnchorDiscoveryCoordinator` wraps the SAME
+// `publicationAnchorPeerExchange` instance above — never a second one —
+// so a caller's discoverFromPeers() call sees exactly the anchors that
+// replica's own live wire traffic sees, unchanged. Provided here for a
+// future UI to call (e.g. a Publication Center "Discover More Evidence"
+// action); this milestone adds no such button itself, the identical
+// restraint 0.8.4 already held for `publicationAnchorPeerExchange` before
+// any UI consumed it.
+const { discoveryCoordinator: publicationAnchorDiscoveryCoordinator } = new CreatePublicationAnchorDiscoveryCoordinatorUseCase().execute({
+    peerExchange: publicationAnchorPeerExchange
+});
 const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute();
 const { externalAnchorVerifier } = new CreateExternalAnchorVerifierUseCase().execute({
     proofVerifiers: [bitcoinProofVerifier]
@@ -395,5 +409,7 @@ app.provide('publicationAnchorCatalog', publicationAnchorCatalog);
 app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
 // 0.8.4 — External Anchor Publication Over Peers.
 app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
+// 0.8.5 — Historical Anchor Discovery & Synchronization.
+app.provide('publicationAnchorDiscoveryCoordinator', publicationAnchorDiscoveryCoordinator);
 app.use(router);
 app.mount('#app');
