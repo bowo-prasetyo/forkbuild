@@ -8555,3 +8555,143 @@ purely local fact ("this id was recently interesting to this device"),
 never a pointer FROM a placed brick BACK TO the blueprint that produced
 it. A Document's own bricks stay exactly as unaware of which library
 entry (if any) they came from as they always have been.
+
+### A Blueprint Fingerprint Is Derived From Design Content, Never From Local Identity (0.6.5)
+
+`core/Structure.js#id` is intentionally LOCAL identity. 0.4.6's own
+`ImportBlueprintUseCase.js` makes a deliberate, load-bearing choice: an
+id crossing the export/import boundary always regenerates. Alice's
+`Structure.id = "A123"` becomes Bob's `Structure.id = "B987"` — correct
+for local independence, but it leaves "is Bob's B987 the same DESIGN as
+Alice's A123?" with no answer at all. `core/BlueprintFingerprint.js`
+answers exactly that, and nothing more:
+
+```text
+local Structure identity   (Structure#id, Brick#id)
+        ≠
+blueprint design identity  (BlueprintFingerprint)
+```
+
+Two intentionally separate identity spaces. A fingerprint is derived
+from a blueprint's CANONICALIZED design content — every brick's
+`definitionId`/position/rotation, plus the structure's own name/
+category/description — and deliberately blind to everything that marks
+where or how a particular copy happens to be stored: `Structure#id`,
+every `Brick#id`, creation timestamp, library location, usage history,
+source library, and local author identity. None of the latter group are
+even fields `core/Structure.js` or `application/BlueprintPackage.js`'s
+own wire shape carries — there was nothing to accidentally leak into the
+fingerprint so much as nothing to have to remember to exclude.
+
+This is the exact same restraint `core/PlaceFingerprint.js` already
+established for geography, one milestone-family earlier: a
+`WorldRegion`'s own identity and its derived geographic fingerprint are
+two different things, and the fingerprint NEVER becomes a place a
+caller writes to. `core/BlueprintFingerprint.js` keeps that restraint
+just as strictly — **the fingerprint is derived data, computed fresh on
+demand (`deriveBlueprintFingerprint(structure)`), and NEVER cached as a
+field**:
+
+```js
+const fingerprint = deriveBlueprintFingerprint(structure);   // yes
+structure.fingerprint;                                       // never
+structure.blueprintId;                                       // never
+```
+
+Identity derived from content does not need to become mutable domain
+state. Caching it on the Structure would create exactly the
+synchronization hazard this codebase has consistently avoided elsewhere
+(see "Sorting Is Presentation, Never Identity (0.6.4)" for the same
+shape of restraint one rung over): a cached field can go stale the
+moment the rule that derives it changes, where a pure function called
+fresh every time never can.
+
+Canonicalization was settled BEFORE `core/BlueprintAttribution.js` was
+built, not discovered partway through it, exactly because the design
+conversation that opened this milestone named the risk directly:
+fingerprints are meant to be exchanged between independent replicas,
+and changing the canonicalization rule after that has happened is a
+compatibility break, not a refactor. Two decisions worth naming
+explicitly: brick ORDER never matters (two structures built from the
+same bricks in a different sequence must fingerprint identically —
+`canonicalizeBlueprint()` sorts by each brick's own content, never by
+array position), and `tags` are excluded FOR NOW, not because they
+could never belong, but because 0.6.3 never gave any authoring surface
+a tags field at all — there is no real authored content yet whose
+semantics this milestone would be settling. The moment a real
+tags-authoring UI exists is the moment to decide whether two designs
+differing only in tags are the same blueprint or different ones — not
+speculatively here, ahead of either existing.
+
+A matching fingerprint is a CANDIDATE for "this is the same design," the
+same restrained verdict `core/PlaceIdentity.js` already commits to for
+matching geographic fingerprints — never proof, never grounds to
+silently merge or deduplicate two library entries on its own. See
+"Attribution Is An External Assertion About A Fingerprint, Never
+Structure State (0.6.5)," directly below, for what a fingerprint match
+is allowed to support once a human decides to act on it.
+
+### Attribution Is An External Assertion About A Fingerprint, Never Structure State (0.6.5)
+
+Once a blueprint has a stable design identity independent of any one
+Structure instance (see above), "who made it?" becomes a question with
+somewhere to attach an answer. `core/BlueprintAttribution.js` is that
+answer, drawn with exactly the same boundary 0.5.2 already drew for
+geography:
+
+```text
+BlueprintFingerprint  = objective, derived design identity
+BlueprintAttribution  = a subjective, signed, published ASSERTION
+                        about who authored that design
+```
+
+A `BlueprintAttribution` carries a `fingerprint` it is about, but is
+never stored inside `core/Structure.js#toJSON()`, never travels through
+a Command, never touches undo/redo, and is never written into
+`application/BlueprintPackage.js`'s own portable Structure package.
+Publishing an attribution for a fingerprint changes nothing about any
+Structure that happens to fingerprint to it — on this device, or
+anyone else's — the exact same "a claim about content is never mutation
+of that content" restraint `core/PlaceNamingClaim.js` already holds for
+a region's name.
+
+**Never "ownership."** This codebase deliberately never models or names
+a legal-ownership concept anywhere. "Author," "publisher," and
+"contributor" each claim exactly one narrow thing — respectively, "I
+made this," "I made this available," and "I contributed to this" — and
+none of them imply exclusivity, permission, or a property right. A
+future role beyond "author," should a real need for one ever appear, is
+a SEPARATE assertion type with its own name, never a semantic expansion
+of what `BlueprintAttribution` already means.
+
+Signed, and REQUIRED to be — never tolerated unsigned, the identical
+posture `core/Signature.js`'s own `PLACE_NAMING_CLAIM` header already
+justifies for the same reason: "N known authors" only means anything if
+each attribution is provably a DIFFERENT identity's own assertion, not
+the same claim copy-pasted under a fabricated author. Structural
+verification only, though — `identity/LocalAuthorizationVerifier.js#
+verifyBlueprintAttribution()` checks that the signer equals the
+attribution's own `authorIdentityId`, and nothing more. It never asks
+whether that identity actually created the local Structure a
+fingerprint was derived from, because that is not a question ANY
+signature can answer — the same restraint `core/PlaceNamingClaim.js`
+already applies to whether a name-claimant has any real connection to
+the ground they're naming. Bob can publish an attribution for a design
+Alice actually made; nothing here calls that impossible, because this
+layer establishes what a claim MEANS, never whether it is true. Reading
+several attributions for one fingerprint and deciding what to make of
+disagreement between them is left entirely to whoever reads them later
+— exactly the judgment `core/PlaceNamingView.js` already declines to
+make on a naming claim's behalf.
+
+0.6.5 builds no exchange transport for an attribution at all —
+`application/LocalBlueprintAttributionStore.js` is exactly what its name
+says, LOCAL, mirroring `application/LocalPlaceNamingClaimStore.js`
+before 0.5.3 gave naming claims somewhere to travel. A fingerprint match
+across two independent replicas remains informational only, never
+grounds for this milestone to auto-deduplicate an import: "you already
+have this blueprint" is a real, sensible future feature once
+fingerprints and attributions have had a chance to prove themselves
+this way first — not something to build speculatively ahead of that,
+the same restraint that keeps 0.4.6's own "every id crossing a boundary
+regenerates" rule completely unchanged by this milestone.

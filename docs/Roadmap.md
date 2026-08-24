@@ -12015,3 +12015,201 @@ taxonomy, favorites/starring, any popularity signal, persisted filter/
 sort UI state, and everything 0.6.3 already deferred — each sized on
 its own, exactly like every "Deliberately excluded" list in this
 document before it.
+
+## 0.6.5 — Blueprint Identity & Attribution
+
+0.4.6 gave a Structure a portable wire form and made a deliberate,
+load-bearing choice: every id crossing the export/import boundary
+regenerates. Alice's `Structure.id = "A123"` becomes Bob's
+`Structure.id = "B987"` on import — exactly right for local
+independence, but it leaves a real question unanswered: once Bob has
+"B987," is there any way for him, or anyone, to tell it is the SAME
+DESIGN Alice originally published? Before this milestone, there was
+not — `tests/BlueprintExchange.test.js` had quietly needed the idea
+since 0.4.6 (see its own `geometrySnapshot()` helper, which compares two
+Structures' geometry while ignoring their ids), but nothing promoted it
+into a real, documented part of the domain. This milestone closes that
+gap with exactly two new concepts, and builds no network protocol,
+marketplace, rating system, or mutable version history to go with them:
+
+    local Structure identity  (Structure#id, Brick#id)
+            ≠
+    blueprint design identity (BlueprintFingerprint)
+
+### What shipped
+
+- **`core/BlueprintFingerprint.js`** (new) — `deriveBlueprintFingerprint(structure)`
+  returns a deterministic `"bp:<hash>"` string derived from a
+  Structure's own CANONICALIZED design content: every brick's
+  `definitionId`/`position`/`rotation` (sorted by content, never by
+  array order, so authoring order never matters) plus the structure's
+  own `name`/`category`/`description`. `Structure#id`, every `Brick#id`,
+  and `tags` are all deliberately excluded — see this module's own
+  header for the full accounting of what participates and why, settled
+  BEFORE `BlueprintAttribution` was built rather than discovered
+  partway through it, per this milestone's own design conversation.
+  Hashing reuses `serializer/contentHash.js#computeContentHash()`
+  unchanged — the same FNV-1a hash `core/ContentReference.js` already
+  computes for a published Document's integrity check, applied here to
+  a blueprint's canonical content instead. `canonicalizeBlueprint()`,
+  `blueprintFingerprintsEqual()`, and `describeBlueprintFingerprint()`
+  round out the module the same way `core/PlaceFingerprint.js` rounds
+  out its own three-function shape one domain over. Pure, synchronous,
+  no I/O — a fingerprint is never persisted, never cached on a
+  Structure, and never signed on its own.
+- **`core/BlueprintAttribution.js`** (new) — a signed, REQUIRED-signature
+  assertion: "identity X asserts authorship of the blueprint whose
+  design content fingerprints to Y." Deliberately the same three-layer
+  split 0.5.2 drew for geography (`WorldRegion` / `PlaceNamingClaim` /
+  `PlaceNamingView`), applied here to a blueprint's design identity
+  instead of a region's geometry. Deliberately never called
+  "BlueprintOwnership" — see docs/Principles.md, "Attribution Is An
+  External Assertion About A Fingerprint, Never Structure State
+  (0.6.5)" for why "author" is the only word this milestone commits to.
+  `core/Signature.js` gains one new `SignatureType.BLUEPRINT_ATTRIBUTION`,
+  and `identity/LocalAuthorizationVerifier.js#verifyBlueprintAttribution()`
+  enforces the exact same "signer MUST equal the claim's own author"
+  structural rule `verifyPlaceNamingClaim()` already enforces one domain
+  over — never a check on whether the signer actually made the local
+  Structure a fingerprint was derived from, which is a truth judgment
+  this layer was never built to make (see core/PlaceNamingClaim.js's own
+  header on the identical restraint).
+- **`application/LocalBlueprintAttributionStore.js`** + **`application/BlueprintAttributionUseCase.js`** +
+  **`application/CreateBlueprintAttributionUseCase.js`** (new) — the
+  exact `LocalPlaceNamingClaimStore`/`PlaceNamingClaimUseCase`/
+  `CreateWorldPlaceNamingUseCase` shape, one domain over: a flat,
+  per-fingerprint list in `StorageProvider`, `publish()`/`retract()`/
+  `attributionsForBlueprint()`, and `summarize(structure)` — a small,
+  presentation-ready `{ fingerprint, attributions, mine }` a UI can
+  render directly, never a ranking or authority verdict (the same
+  "confidence, not authority" restraint `core/PlaceNamingView.js`
+  already keeps). LOCAL ONLY: this replica's own store, never gossiped,
+  fetched, or reconciled with anyone else's — see this milestone's own
+  "Deliberately excluded" below.
+- **`ui/components/StructureInfoPanel.js`** — gains a `Blueprint` fact
+  (the fingerprint, via `describeBlueprintFingerprint()`) and an
+  `Author` fact (`"You"`, `"N known authors"`, or `"Not yet attributed"`,
+  from a caller-supplied `attribution` summary — this panel still never
+  computes one itself, the same "Inspect ≠ edit" restraint its own
+  0.6.3 header already established for every other fact it shows) plus
+  a `Claim authorship` inline link (reusing `.inline-link-btn`, no new
+  CSS), shown only when the currently signed-in identity has not
+  already attributed this design.
+- **`ui/views/EditorView.js#inspectStructure()`** — now also calls
+  `blueprintAttributionUseCase.summarize(structure)` and hands the
+  result to `StructureInfoPanel` as `:attribution`; a new
+  `claimAuthorship()` calls `publish()` and immediately re-summarizes,
+  the same "the surface stays visually up to date the instant this
+  fires" posture 0.4.3's own `onPersonalLibraryChanged()` established.
+- **`tests/BlueprintIdentityAttribution.test.js`** (new) — Section A:
+  `BlueprintFingerprint` canonicalization — order-independent, id-
+  independent, tolerant of floating-point noise, sensitive to every
+  real design change (moved/rotated/re-defined brick, changed name/
+  category/description), and confirms `tags` never participate. Section
+  B: `BlueprintAttribution` construction/validation/signing-descriptor
+  parity. Section C: `verifyBlueprintAttribution()` — required
+  signature, tamper detection, impersonation rejection. Section D:
+  `LocalBlueprintAttributionStore` persistence/retraction. Section E:
+  `BlueprintAttributionUseCase` — required signing, author-only
+  retraction, `summarize()`. Section F — CAPSTONE: Alice publishes an
+  attribution, exports "Farmstead," Bob imports it under a completely
+  independent Structure id and fresh brick ids, and the two Structures
+  still fingerprint identically; Bob publishes his own attribution for
+  the same fingerprint; both identities' own `summarize()` correctly
+  report "mine" as their own attribution and "2" known authors overall;
+  mutating Bob's copy afterward touches neither Alice's fingerprint nor
+  either already-published attribution; an unrelated design gets its
+  own independent fingerprint and an empty attribution list.
+
+### Deliberately excluded
+
+- **Any exchange transport.** `LocalBlueprintAttributionStore` is
+  exactly that — LOCAL. No gossip, no publication log, no peer fetch, no
+  reconciliation between two replicas' independently-published
+  attributions. `application/BlueprintPackage.js`'s own portable
+  Structure package is completely unchanged by this milestone — an
+  attribution never crosses the export/import boundary yet. This is
+  0.6.6's own job, exactly as this milestone's own design conversation
+  named it ("Decentralized Blueprint Publication").
+- **Automatic import deduplication.** A fingerprint match is
+  informational only. Importing the same blueprint three times still
+  produces three independent personal-library entries, exactly as
+  0.4.6 always intended — see docs/Principles.md, "A Blueprint Package
+  Is Portable Data, Never A Live Dependency (0.4.6)." "You already have
+  this blueprint" is a real, sensible future feature once fingerprints
+  have had time to prove themselves informationally; building it now,
+  before that, would be speculative.
+- **`structure.fingerprint` or `structure.blueprintId`.** Zero fields
+  added to `core/Structure.js`. A fingerprint is always DERIVED —
+  `deriveBlueprintFingerprint(structure)`, called fresh, every time —
+  never cached as mutable domain state, the same restraint
+  `core/PlaceFingerprint.js` already keeps for a `WorldRegion`. See
+  docs/Principles.md, "A Blueprint Fingerprint Is Derived From Design
+  Content, Never From Local Identity (0.6.5)."
+- **"Ownership."** Deliberately never modeled or named — "author" is
+  the only role this milestone commits to. Whether an author holds any
+  legal claim over a design is a completely different question this
+  codebase has no opinion on and builds no mechanism to answer.
+- **`tags` in the fingerprint.** Considered, and left out FOR NOW:
+  0.6.3 never gave `CreateBlueprintDialog` a tags field at all, so there
+  is no real authored content yet to decide the semantics of. The
+  moment a real tags-authoring UI exists is the moment to decide whether
+  two blueprints differing only in tags are the same design or
+  different ones — not speculatively here, ahead of either existing.
+- **Group-membership data in the fingerprint.** Moot today:
+  `core/Structure.js` carries no group concept of its own at all. If one
+  is ever added, that milestone decides whether it participates.
+- **Retraction UI, or any UI for browsing every attribution on file.**
+  `BlueprintAttributionUseCase#retract()`/`attributionsForBlueprint()`
+  exist and are tested; nothing in `ui/` calls either yet. "Claim
+  authorship" was the one workflow this milestone's design conversation
+  actually asked for; "manage everything you've ever claimed" is a
+  separate surface, sized on its own once attributions can actually
+  travel anywhere (0.6.6).
+- **Ratings, likes, popularity, or a fingerprint-based "trending"
+  view.** Exactly as out of scope as 0.6.4's own identical exclusion for
+  usage history — `LocalBlueprintAttributionStore` records who claims
+  authorship of what, on this device, and nothing resembling a second
+  decentralized reputation problem alongside Place Naming Claims.
+- **Cloud sync, or a change to how Export/Import already work.**
+  `application/ExportBlueprintUseCase.js`/`ImportBlueprintUseCase.js`
+  are completely untouched — a blueprint package still carries exactly
+  the Structure it always did.
+
+```text
+0.6.4   Blueprint Discovery, Search & Library Organization        ✓
+             │
+             ▼
+0.6.5   Blueprint Identity & Attribution                          ✓
+             ├── core/BlueprintFingerprint.js — deterministic
+             │   "bp:<hash>" design identity, order/id-independent,
+             │   excludes Structure#id, Brick#id, and (for now) tags
+             ├── core/BlueprintAttribution.js — REQUIRED-signature
+             │   "identity X authored fingerprint Y" assertion, never
+             │   Structure state, deliberately never "ownership"
+             ├── SignatureType.BLUEPRINT_ATTRIBUTION +
+             │   verifyBlueprintAttribution() — same structural
+             │   "signer == own author" rule as PLACE_NAMING_CLAIM
+             ├── LocalBlueprintAttributionStore +
+             │   BlueprintAttributionUseCase — LOCAL ONLY publish/
+             │   retract/summarize, no exchange transport yet
+             ├── StructureInfoPanel — Blueprint + Author facts, "Claim
+             │   authorship" inline link, still fully read-only
+             └── tests/BlueprintIdentityAttribution.test.js — canon-
+                 icalization, signing, storage, use-case authority, and
+                 an export/import capstone proving fingerprint identity
+                 survives 0.4.6's own "every id regenerates" rule
+```
+
+> **0.6.4 made a large personal library stay browsable. 0.6.5 is the
+> milestone that answers the question browsing a shared one would
+> immediately raise: once a blueprint has left your device, what
+> exactly IS it, independently of the copy sitting in front of you —
+> and who gets to say they made it?**
+
+What's left, and deliberately unbuilt: any exchange transport for an
+attribution, automatic import deduplication, ownership semantics,
+tags/group participation in the fingerprint (both moot until their own
+authoring/data-model milestones), retraction or browse-everything UI,
+and any popularity signal — each sized on its own, exactly like every
+"Deliberately excluded" list in this document before it.

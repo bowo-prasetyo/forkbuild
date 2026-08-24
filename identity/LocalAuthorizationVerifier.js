@@ -16,6 +16,7 @@ import {
     getWorldEditAuthorizationRevocationSigningDescriptor
 } from '../core/WorldEditAuthorizationEnvelope.js';
 import { getPlaceNamingClaimSigningDescriptor } from '../core/PlaceNamingClaim.js';
+import { getBlueprintAttributionSigningDescriptor } from '../core/BlueprintAttribution.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -481,6 +482,42 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getPlaceNamingClaimSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.6.5 — a BlueprintAttribution is NEVER tolerated unsigned, the
+    // same REQUIRED discipline as verifyPlaceNamingClaim() above — see
+    // core/BlueprintAttribution.js's own header on why "N known
+    // authors" only means anything if each attribution is provably a
+    // different identity's own assertion. The signer MUST equal the
+    // attribution's own `authorIdentityId`, exactly like a naming
+    // claim's signer must equal ITS OWN author — an attribution has
+    // exactly one party to it, the person doing the claiming. This is
+    // STRUCTURAL verification only: whether authorIdentityId actually
+    // created the Structure it was derived from is never asked here,
+    // and never asked anywhere else either — a fingerprint match is
+    // never proof, only a candidate, exactly the same restraint
+    // core/PlaceIdentity.js's own header already applies one domain
+    // over.
+    verifyBlueprintAttribution(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no blueprint attribution' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a blueprint attribution must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.authorIdentityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the attribution\'s own author' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getBlueprintAttributionSigningDescriptor(record), record.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).

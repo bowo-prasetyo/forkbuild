@@ -151,7 +151,22 @@ export const SignatureType = Object.freeze({
     // a conflict either replica needs to resolve. See core/
     // PlaceNamingClaim.js's own getSigningDescriptor() and
     // docs/Principles.md, "A Name Is A Claim, Not A Fact (0.5.2)."
-    PLACE_NAMING_CLAIM: 'place-naming-claim'
+    PLACE_NAMING_CLAIM: 'place-naming-claim',
+    // 0.6.5 — a REQUIRED signature (never optional — see this file's
+    // own "no unsigned claims" rule above), over a BlueprintAttribution
+    // (core/BlueprintAttribution.js's own wire shape). Proves "identity
+    // X itself asserts authorship of the blueprint whose design content
+    // fingerprints to Y" — deliberately the SAME shape of claim as
+    // PLACE_NAMING_CLAIM above, one domain over: it never authorizes
+    // anything, never requires the signer to have created the LOCAL
+    // Structure instance it was derived from, and several identities'
+    // attributions for the same fingerprint disagreeing about who made
+    // it are all perfectly valid signed facts, not a conflict either
+    // replica needs to resolve. See core/BlueprintAttribution.js's own
+    // getSigningDescriptor() and docs/Principles.md, "Attribution Is An
+    // External Assertion About A Fingerprint, Never Structure State
+    // (0.6.5)."
+    BLUEPRINT_ATTRIBUTION: 'blueprint-attribution'
 });
 
 export class Signature {
