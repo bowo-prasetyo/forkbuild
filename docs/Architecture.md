@@ -166,7 +166,16 @@ description, enabled(context), disabledReason(context),
 execute(invocation). createStandardActions({ session, feedback, ui })
 binds each surface's session into shared definitions; both views build
 their registry from the same factory, so ids/labels/shortcuts/
-availability rules are identical everywhere.
+availability rules are identical everywhere. As of 0.5.9 the Editor is
+the only surface still built from it (World View's own copy was
+retired — see "World View Observes and Navigates; Editor Mutates and
+Builds" in docs/Principles.md). 0.6.2 adds `tier`
+('primary'/'common'/'advanced') as one more piece of purely-display
+metadata alongside category/shortcut — read by EditingSidebar to decide
+what stays always-visible vs. collapses into an "Advanced" disclosure;
+never consulted by enabled()/execute(), and the palette/keyboard
+dispatch stay completely tier-blind, so every action is reachable by
+search or shortcut regardless of tier.
 
 ACTIONS ARE NOT COMMANDS — the load-bearing distinction of 0.1.50. Some
 actions produce history (delete -> DeleteBrickCommand, move ->
@@ -242,9 +251,23 @@ queue, no toast framework.
 EditingSidebar (ui/components/EditingSidebar.js, 0.1.50): consolidated
 Selection / Transform / Groups / Clipboard sections composing the
 existing AlignmentPanel and NumericTransformPanel unchanged, with empty
-states ("No bricks selected — select bricks to transform, align,
-distribute, or edit numerically") and disabled reasons instead of dead
-buttons. Organization, not a new UI architecture.
+states and disabled reasons instead of dead buttons. Organization, not
+a new UI architecture. 0.6.2 reworks it around the `tier` hierarchy
+above: Rotate (Primary) and the numeric panel (Move) stay always
+visible in Transform, with Align/Distribute/RepeatPanel (Advanced)
+collapsed by default inside one CollapsibleSection; Groups keeps Create
+visible with every other operation collapsed the same way. The old bare
+"N brick(s) selected" text plus its own Duplicate/Delete/Clear moved out
+entirely, to SelectionInspector (ui/components/SelectionInspector.js,
+0.6.2) — a live count+position card EditorView renders next to the
+viewport, the brick-selection counterpart to StructureInstancePanel
+(0.2.91) which has done the same job for a StructurePlacement selection
+since that milestone; the two stay mutually exclusive, never both
+rendered, backed by EditorSession#getSelectionSummary() (0.6.2) versus
+the pre-existing getSelectedPlacementInfo(). KeyboardShortcutsOverlay
+(ui/components/KeyboardShortcutsOverlay.js, 0.6.2), opened with `?` or a
+Toolbar button, is a pure reader over the same registry plus a small
+hardcoded list of view-local shortcuts — no second shortcut table.
 
 TransformFeedback (0.1.47) remains the in-gesture overlay: mode/axis,
 effective snap increment, precision tag, snapped Δ — what the

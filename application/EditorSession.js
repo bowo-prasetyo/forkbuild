@@ -42,6 +42,7 @@ import { StructurePlacementGestureService } from './StructurePlacementGestureSer
 import { GizmoGestureRouter } from './GizmoGestureRouter.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { CameraState } from '../renderer/CameraState.js';
+import { SelectionBoundsService } from './SelectionBoundsService.js';
 
 // Owns the live runtime graph — the render session, World, CommandHistory,
 // ToolManager, InputDispatcher — as one unit, so nothing else has to know
@@ -161,6 +162,13 @@ export class EditorSession {
             this._transformSettings
         );
         this._gizmoUseCase = new TransformGizmoUseCase(this._gestureService);
+        // 0.6.2 — Editor UX Consolidation: backs getSelectionSummary()
+        // below, the live position readout for a BRICK selection in
+        // ui/components/SelectionInspector.js. SelectionBoundsService
+        // itself is unchanged (0.1.48) — this is its first EditorSession-
+        // owned instance; every prior caller (TransformSelectionUseCase,
+        // CopySelectionUseCase, ...) already constructs its own.
+        this._boundsService = new SelectionBoundsService(registry);
         // 0.2.92 — World Instance Transform UX. A structure-placement
         // selection gets its OWN gesture service (never widens
         // SpatialEditingService — see that class's own 0.2.91 header),
@@ -527,6 +535,41 @@ export class EditorSession {
             this._editorContext.setSelection(new SelectionState({ items }));
         }
         return true;
+    }
+
+    // 0.6.2 — Editor UX Consolidation. getSelectedPlacementInfo() (just
+    // below) has answered "what does a UI panel need to show a selected
+    // StructurePlacement" since 0.2.91; nothing ever answered the
+    // equivalent question for an ordinary BRICK selection — the sidebar
+    // only ever showed a bare count (ui/components/EditingSidebar.js's
+    // pre-0.6.2 "N brick(s) selected" line). This is that answer, for
+    // ui/components/SelectionInspector.js: count plus a LIVE world-space
+    // bounds reading (reusing SelectionBoundsService unchanged — see
+    // this._boundsService's own 0.6.2 header above), so the inspector
+    // can show where the selection actually is without inventing a
+    // second bounds computation.
+    //
+    // Returns null for anything this isn't for: no document, an empty
+    // selection, or a StructurePlacement selection (that one keeps its
+    // own, richer getSelectedPlacementInfo() below — deliberately not
+    // folded into one shape, since a placement's "position" is a
+    // command target and a brick selection's bounds are read-only
+    // geometry; conflating them would let a UI accidentally wire a
+    // Structure's numeric inspector to bricks-shaped data).
+    getSelectionSummary() {
+        const selection = this._editorContext.selection;
+        const document = this._documentManager.document;
+        if (selection.isEmpty || selection.isStructurePlacementSelection || !document) {
+            return null;
+        }
+        const bounds = this._boundsService.calculate(selection, document);
+        if (!bounds) {
+            return null;
+        }
+        return {
+            count: selection.items.length,
+            bounds
+        };
     }
 
     // 0.2.91 — everything a UI panel needs to show "Selected House

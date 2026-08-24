@@ -189,7 +189,7 @@ different reasons:
   dropdown, not the Build Library. See
   [Structure instances](#structure-instances-a-live-reference) below.
 
-### Composing a structure into your document
+### Placing a structure into your document
 
 Click any card in the **Structures** tab — a built-in one or one of your own
 **My Structures** — and a translucent ghost preview of the whole structure
@@ -207,7 +207,7 @@ single brick:
 
 The bricks you get are ordinary bricks in your document from the moment
 they land — indistinguishable from anything you placed by hand, free to
-edit, select, group, or delete like anything else. Composing several
+edit, select, group, or delete like anything else. Placing several
 structures is a fast way to build a scene: click House, place it; click
 Barn, place it beside it; click Well, place it in the yard.
 
@@ -241,9 +241,9 @@ extra actions in its **⋮** menu:
 
 **My Structures** only ever stores the *structure itself* — a name and a set
 of bricks. Removing one never touches anything you already built with it:
-every place you've already composed or forked it into keeps those bricks
+every place you've already placed or forked it into keeps those bricks
 exactly as they are. And it never edits in place — if you want to change
-what a saved structure actually builds, compose it into a document, edit
+what a saved structure actually builds, place it into a document, edit
 that document, then **Create Structure** again (optionally under a new
 name, like "Farmstead Deluxe").
 
@@ -275,7 +275,7 @@ like, import on the other.
 
 ## Structure instances: a live reference
 
-Composing (above) copies a structure's bricks into your document once.
+Placing (above) copies a structure's bricks into your document once.
 Sometimes what you want instead is a **live** copy of something you've
 already built — any saved document, not just something in your library —
 that stays in sync with its source every time you look at it. That's a

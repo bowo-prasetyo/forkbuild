@@ -27,6 +27,7 @@ every editing operation below by name.
 | Input | Action |
 |---|---|
 | `Ctrl/Cmd+K` | Command Palette |
+| `?` | Keyboard Shortcuts overlay (also reachable from the toolbar's "⌨ Shortcuts" button) — every shortcut on this page, read live off the SAME EditorActionRegistry |
 
 ## Discovery (World View)
 
@@ -115,9 +116,24 @@ collision.
 
 ## Alignment & Distribution (Editor only)
 
-Available in the sidebar's Transform section and through the palette.
-Alignment needs **2+ bricks**; distribution needs **3+**. Both operate
-on the whole selection bounds in **world axes** and commit one command.
+Available in the sidebar's Transform section (under **Advanced**) and
+through the palette. Alignment needs **2+ bricks**; distribution needs
+**3+**. Both operate on the whole selection bounds in **world axes** and
+commit one command.
+
+## Repeat (Editor only)
+
+Also in the sidebar's Transform **Advanced** section. Creates **N**
+additional copies of the selection, evenly offset along one axis, as
+**one undo step** — the whole batch is collision-checked before anything
+is created, so a mid-batch collision blocks the entire repeat rather than
+creating some copies and not others.
+
+| Input | Action |
+|---|---|
+| **Copies** field | How many additional copies (the original is never touched) |
+| **Offset** field | Distance between each copy |
+| **Repeat X / Y / Z** | Repeat along that world axis |
 
 ## Structures (Build Library) — Editor only
 
@@ -126,10 +142,10 @@ Composing, forking, and your personal library — see
 
 | Input | Action | Notes |
 |---|---|---|
-| Click a card in the **Structures** tab | Enter Compose-Structure mode, ghost preview follows the pointer | works for a built-in structure or one of your own **My Structures** |
-| `R` / `Shift+R` while composing | Rotate the pending ghost ±90° | same placement-preview keys as a brick |
+| Click a card in the **Structures** tab | Enter structure-placement mode, ghost preview follows the pointer | works for a built-in structure or one of your own **My Structures** |
+| `R` / `Shift+R` while placing | Rotate the pending ghost ±90° | same placement-preview keys as a brick |
 | Click | Commit — every brick in the structure lands as one undo step | refused at an occupied (red) position |
-| `Esc` while composing | Cancel — nothing added | |
+| `Esc` while placing | Cancel — nothing added | |
 | Card's **⋮** menu, **Fork As New Document** | Start a brand-new document that begins as a copy of that structure | never modifies the library entry |
 | Selection with **1+ bricks**, then **Create Structure** (Command Palette) | Save the selection as a new entry in **My Structures** | prompts for name / category / description |
 | **My Structures** card's **⋮** menu, **Rename** | Edit a personal structure's name/category/tags/description | personal structures only |
@@ -223,10 +239,11 @@ rule stated at the top. World View has no Place tool at all — see
 Escape is context-sensitive, in exactly this order:
 
 1. **Active text input** — clears/blurs the field.
-2. **Command palette** — closes the palette.
-3. **Active gizmo gesture** — cancels the drag (no history).
-4. **Active marquee** — cancels the marquee.
-5. **Otherwise** — clears the selection (in Place mode: exits placement).
+2. **Keyboard Shortcuts overlay** — closes the overlay (`?` also closes it).
+3. **Command palette** — closes the palette.
+4. **Active gizmo gesture** — cancels the drag (no history).
+5. **Active marquee** — cancels the marquee.
+6. **Otherwise** — clears the selection (in Place mode: exits placement).
 
 ### Escape in World View
 

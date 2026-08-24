@@ -11436,3 +11436,198 @@ WorldFocusPanel reopen for the Inspection panel's own "Edit a Copy,"
 and an unsaved-changes navigation guard this codebase has never had
 anywhere else — each sized on its own, exactly like every "Deliberately
 excluded" list in this document before it.
+
+## 0.6.2 — Editor UX Consolidation
+
+0.4.0 through 0.4.9 built a genuinely powerful editing kernel —
+placement, structure composition, extraction, duplication, transforms,
+snapping, repetition, atomic collision-checked repeat — and every one
+of those milestones' own UX grew up incrementally around whatever it
+had just added. Nothing was broken; nothing was inconsistent enough to
+block a milestone on its own. But three real gaps had quietly
+accumulated: a brick selection had no live "what am I looking at" panel
+(a StructurePlacement selection has had one, StructureInstancePanel,
+since 0.2.91 — bricks never got the equivalent), RepeatSelectionUseCase
+(0.4.9) had a full application-layer contract and a full flagship test
+but no button anywhere a person could actually click, and every editing
+operation this registry has ever offered rendered at the same visual
+weight regardless of how often it's actually reached for. This
+milestone is a deliberate UX pass over machinery that was already
+correct — not a new domain concept, not a new mutation path:
+
+> **Consolidate the Editor around the workflows people actually
+> perform, before adding more domain concepts on top of an interface
+> that never caught up with the last several.**
+
+### What shipped
+
+- **`application/EditorActionRegistry.js#tier`** — a third piece of
+  purely-DISPLAY metadata on the action shape, alongside the existing
+  `category`/`shortcut` (never consulted by `enabled()`/`execute()`,
+  exactly like those two): `'primary'` (Rotate, Move/nudge — always
+  visible), `'common'` (Duplicate, Delete, Copy/Paste, the group entry
+  point `group.create` — reachable, not first-class), `'advanced'`
+  (Align, Distribute, the new `transform.repeat`, and every OTHER group
+  operation). Every standard action carries one; the command palette
+  and keyboard dispatch stay completely tier-blind — EVERY action is
+  still reachable by search or shortcut regardless of tier, the same
+  "no second, poorer surface" restraint this codebase has applied
+  everywhere else a display grouping was added on top of the registry.
+- **`transform.repeat`** — the UI entry point 0.4.9 never built.
+  `EditorSession#repeatSelection()` and `RepeatSelectionUseCase` are
+  completely unchanged; this action does nothing but call
+  `ui.focusRepeat()` (degrading to feedback without it, the same
+  optional-hook posture `transform.numeric`/`ui.focusNumeric`
+  established first) because Repeat's count/offset are user-tunable,
+  never a fixed zero-arg trigger — the actual repeat still only ever
+  happens through the one call site 0.4.9 already fully tested.
+- **`ui/components/RepeatPanel.js`** (new) — Count + Offset fields and
+  three axis buttons, styled and shaped like
+  `ui/components/AlignmentPanel.js` right next to it: dumb about
+  geometry, a `repeat` prop the host view supplies, zero new
+  application-layer surface.
+- **`application/EditorSession.js#getSelectionSummary()`** — the
+  brick-selection counterpart to `getSelectedPlacementInfo()` (0.2.91):
+  `{ count, bounds }` for an ordinary brick selection (bounds via
+  `SelectionBoundsService`, unchanged, its first EditorSession-owned
+  instance), `null` for an empty selection OR a StructurePlacement
+  selection — deliberately never one merged shape, since a placement's
+  position is a command TARGET and a brick selection's bounds are
+  read-only geometry; conflating them would let a UI accidentally wire
+  a Structure's numeric inspector to bricks-shaped data.
+- **`ui/components/SelectionInspector.js`** (new) — the compact card
+  that makes "selection is the central Editor state" true for a brick
+  selection, live count + position + a "what happens next" hint line +
+  Duplicate/Delete/Clear, all driven through the SAME
+  EditorActionRegistry + context every other action surface here
+  already uses. Replaces EditingSidebar's old bare "N brick(s)
+  selected" paragraph and its own Duplicate/Delete/Clear row — moved
+  here so the buttons sit next to the live readout that explains what
+  they'd act on, not a section away. `EditorView.js` renders this or
+  `StructureInstancePanel` — mutually exclusive by selection kind,
+  never both, proven in `tests/EditorUX.test.js` Section D's own
+  closing assertions.
+- **`ui/components/EditingSidebar.js`** reworked around the tier
+  hierarchy instead of exposing everything at once: Rotate (Primary)
+  and the numeric panel (Move) stay always visible in Transform;
+  Align/Distribute/Repeat (Advanced) collapse into one
+  `ui/components/CollapsibleSection.js`, collapsed by default. Groups
+  keeps Create (the entry point) always visible; every other group
+  operation collapses the same way. Clipboard stays as-is — two
+  buttons is already as small as collapsing it would make it.
+- **`ui/components/KeyboardShortcutsOverlay.js`** (new) — opened with
+  `?` or Toolbar's new "⌨ Shortcuts" button, closed with
+  `?`/Escape/click-outside (the same shell `CommandPalette` already
+  established, reused rather than inventing a second dialog pattern).
+  Purely a READER: every registered action with a shortcut, grouped by
+  category through `EditorActionRegistry.groupByCategory()` unchanged,
+  plus the small, deliberate set of shortcuts that live outside the
+  registry (tool switching, Save, placement's own Rotate/Cancel
+  carve-outs) mirrored from `docs/user/ControlsReference.md` by hand.
+  Wired into `EditorView.js`'s own keydown priority chain one step
+  ahead of the palette — the topmost open surface still wins.
+- **Contextual "what happens next" microcopy** — Duplicate (both the
+  registry's `selection.duplicate` and `EditorView#duplicateSelectedPlacement()`)
+  now says "Copy created — R to rotate, drag to move" instead of only
+  confirming the past action. The old EditorView-level placement-hint
+  paragraph for a selected StructurePlacement was a second copy of the
+  exact line `StructureInstancePanel`'s own hint already showed below
+  it — removed as a duplicate, not a regression.
+- **Fixed a live parse-breaking bug in `ui/components/Toolbar.js`**,
+  found while building the above: an HTML comment inside the
+  component's own `template:` JS template literal (0.6.1's "Back to
+  World" doc comment) contained a literal, unescaped backtick around
+  the word `entryContext` — which, in plain JavaScript, closes a
+  template literal wherever it appears, with no HTML-awareness at all.
+  Since this repository ships no build step (`ui/main.js` and every
+  view/component load as native ES modules straight off disk — see the
+  README's own "Quick Start"), this was a real syntax error in the
+  ACTUAL 0.6.1 deployment, not merely a lint nit: `EditorView.js`
+  imports `Toolbar.js` at module scope, so the parse failure would take
+  the entire `/editor` route down with it. Fixed by dropping the
+  backticks from the comment's prose; nothing else in the file changed.
+- **`tests/EditorUX.test.js`** — the flagship, deliberately testing
+  CONTRACTS BETWEEN EXISTING SYSTEMS rather than re-deriving algorithms
+  already covered elsewhere: (A) every standard action carries a valid
+  tier, and the design conversation's own bucket assignments hold; (B)
+  `getSelectionSummary()` across empty/bricks/placement, matching
+  `SelectionBoundsService` exactly; (C) `transform.repeat` focuses the
+  panel and degrades gracefully without the hook, and a REAL repeat's
+  result is immediately visible through `getSelectionSummary()` with no
+  extra wiring; (D) a capstone narrative — Place → Select → Duplicate →
+  Rotate → Repeat → Extract → Save to My Structures → Place the
+  blueprint back as independent, non-referential bricks — closing with
+  a StructurePlacement selection proven to stay on its own
+  `getSelectedPlacementInfo()` path through the IDENTICAL
+  `selection.duplicate`/`selection.delete` registry actions used on
+  bricks throughout the rest of the file.
+
+### Deliberately excluded
+
+- **Any new domain concept.** No persistent "favorites" or "recent
+  actions" model, no server-synced UI preferences, no second selection
+  abstraction alongside `SelectionState`. Every piece above is either
+  pure display metadata on something that already existed
+  (`tier`), a UI entry point for logic that already existed
+  (`transform.repeat`), or a read-only projection of state that already
+  existed (`getSelectionSummary()`).
+- **A "What happens next?" hint SYSTEM** (a generic, reusable
+  hint-registry keyed off action outcomes). Considered, rejected as
+  premature — three or four hardcoded feedback-string edits and one
+  hint line on `SelectionInspector` cover everything the design
+  conversation actually asked for; a generic system would be
+  speculative infrastructure for a UX device this milestone uses in
+  exactly one place.
+- **Collapsing Clipboard, or the Selection section's Select All, into
+  an "Advanced" bucket.** Both are already as small as a collapse would
+  make them, and Select All in particular is about GROWING the
+  selection rather than acting on one that exists — it belongs with
+  "nothing selected yet," not behind a disclosure toggle.
+- **Terminology cleanup beyond auditing.** The task description's own
+  internal-vs-user-facing naming table was checked against the actual
+  UI (`grep` across every `ui/` template for "Compose"/"Composition")
+  and came back clean — 0.4.5's "Unified Build Placement" milestone
+  already finished this; there was nothing left to rename.
+- **Collaborative live editing**, still exactly as far out of scope as
+  every prior "Deliberately excluded" list in this document already put
+  it — this milestone is a UX pass over a still-single-user Editor, not
+  a step toward one.
+
+```text
+0.6.1   World ↔ Editor Continuity & Return Navigation             ✓
+             │
+             ▼
+0.6.2   Editor UX Consolidation                                   ✓
+             ├── EditorActionRegistry#tier — primary/common/advanced,
+             │   display-only, never consulted by enabled()/execute()
+             ├── transform.repeat + RepeatPanel — the UI entry point
+             │   0.4.9's RepeatSelectionUseCase never had
+             ├── EditorSession#getSelectionSummary() — the brick-
+             │   selection counterpart to getSelectedPlacementInfo()
+             ├── SelectionInspector — replaces EditingSidebar's old
+             │   bare selection paragraph with a live count+position
+             │   card, mutually exclusive with StructureInstancePanel
+             ├── EditingSidebar — Primary/Move always visible, Advanced
+             │   collapses into CollapsibleSection
+             ├── KeyboardShortcutsOverlay — '?' / Toolbar button, reads
+             │   the SAME registry + a small hardcoded view-local list
+             ├── "what happens next" microcopy on Duplicate; a
+             │   redundant EditorView-level placement hint removed
+             ├── fixed a live parse-breaking backtick-in-template-
+             │   literal bug in Toolbar.js (0.6.1's own regression)
+             └── tests/EditorUX.test.js — tier contract, selection-
+                 summary contract, repeat-wiring contract, and a full
+                 Place→Duplicate→Rotate→Repeat→Extract→Save→Place
+                 capstone proving it all composes
+```
+
+> **0.4.x built the kernel. 0.6.2 is the first milestone whose entire
+> job was making sure a person looking at the Editor for the first time
+> in months could still tell what to click — without taking away
+> anything an experienced builder already reaches for by muscle
+> memory.**
+
+What's left, and deliberately unbuilt: a generic hint system, any new
+persisted UI-preference concept, and collaborative live editing — each
+sized on its own, exactly like every "Deliberately excluded" list in
+this document before it.
