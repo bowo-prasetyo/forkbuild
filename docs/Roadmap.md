@@ -15219,3 +15219,260 @@ kinds and the read/answer machinery they need.
 What's left, and deliberately unbuilt: multi-evidence convergence
 (0.8.6) — sized on its own, exactly like every "Deliberately excluded"
 list in this document before it.
+
+## 0.8.6 — Multi-Evidence Convergence & Evidence Relationship Derivation
+
+0.8.5's own "Deliberately excluded" list named this milestone directly:
+"Multi-evidence convergence — agreement, contradiction, corroboration, or
+any temporal reasoning across several anchors... untouched." 0.8.6 is
+that milestone, and it deliberately asks a DIFFERENT kind of question
+from every milestone before it. 0.8.0 through 0.8.5 all built
+MECHANISM — how an anchor is created, verified, cataloged, exchanged,
+and synchronized. 0.8.6 builds no new mechanism at all. It asks a purely
+DERIVED question of mechanism that already exists:
+
+```text
+What can a replica conclude from the collection of independent
+evidence claims it currently knows?
+```
+
+The crucial word is DERIVE, not DECIDE. This milestone introduces no
+`EvidenceTrustScore`, no `EvidenceAuthority`, no `EvidenceRank`, and no
+`EvidenceConsensus` — nothing that would jump from observable evidence
+into an opinionated trust model. It introduces exactly one pure,
+stateless function that looks at a set of already-cataloged anchors and
+reports what is structurally true about them, and nothing more.
+
+```text
+application/LocalPublicationAnchorCatalog.js#findByPublicationId()
+                        │
+                        ▼
+       application/PublicationEvidenceConvergence.js#
+              derivePublicationEvidenceConvergence()
+                        │
+                        ▼
+      { known evidence, structural relationships, local observations }
+```
+
+**Three axes, kept permanently separate — never collapsed into one
+verdict:**
+
+1. **Known evidence** — how many anchors does this replica have on file
+   for this publicationId, and of how many distinct `anchorType`s?
+   Straightforward counting, the same restraint `application/
+   LocalPublicationAnchorCatalog.js` (0.8.2) already held: cataloging is
+   not verifying, and counting is not ranking.
+2. **Structural relationships** — do these anchors' own `contentHash`
+   values agree with EACH OTHER, and (optionally) with an
+   `expectedContentHash` the caller already knows (ordinarily a locally
+   resolved publication's own `contentReference.hash`)? This is a
+   string comparison, computed via the new `application/
+   ContentBindingRelationship.js` enum (`MATCHES_EXPECTED` /
+   `DIFFERS_FROM_EXPECTED` / `NOT_COMPARED`) — never an
+   `AnchorVerificationOutcome`, and never a claim about which side of a
+   mismatch is correct.
+3. **Local verification observations** — whatever THIS replica already
+   determined, locally, by running `application/
+   ExternalAnchorVerifier.js` itself, if it did at all.
+   `verificationByAnchorId` is entirely caller-supplied, entirely
+   optional, and entirely local — this function never runs verification
+   itself and never represents another replica's observation. See
+   "Deliberately excluded" below on why verification results still never
+   cross a replica boundary through this milestone.
+
+**THE central rule — detect, never adjudicate:** when two or more
+cataloged anchors for the same publicationId carry DIFFERENT
+`contentHash` values, `derivePublicationEvidenceConvergence()` reports
+that fact (`contentBindingConflict: true`, plus the actual partition in
+`contentHashGroups`) and stops exactly there. It never marks one group
+"correct," never marks the other "false," and never treats the larger
+group as more authoritative than the smaller one merely for having more
+members — see `docs/Principles.md`, "External Anchoring Provides
+Evidence; It Does Not Establish Authority (0.8.0)," which this milestone
+extends to MULTIPLE anchors considered together, never past it.
+
+- `application/ContentBindingRelationship.js` — the one new enum, naming
+  the purely structural comparison between a single anchor's own
+  `contentHash` and an `expectedContentHash` a caller supplied:
+  `MATCHES_EXPECTED`, `DIFFERS_FROM_EXPECTED`, `NOT_COMPARED` (the last
+  for when no `expectedContentHash` was ever supplied — "no comparison
+  was possible" is kept permanently distinct from "the comparison found
+  a mismatch"). Deliberately never named after `AnchorVerificationOutcome`'s
+  own vocabulary (`VALID`/`INVALID_...`) — a content-binding relationship
+  and a verification outcome answer two entirely different questions.
+- `application/PublicationEvidenceConvergence.js` — the one new
+  function, `derivePublicationEvidenceConvergence({ publicationId,
+  expectedContentHash, anchors, verificationByAnchorId })`. Pure and
+  stateless: no constructor, no injected dependency, no storage, no
+  network, and no import of `application/
+  LocalPublicationAnchorCatalog.js` or `application/
+  ExternalAnchorVerifier.js` anywhere in the file — a caller hands it a
+  plain list of anchors (ordinarily its own catalog's
+  `findByPublicationId()` result) and gets back a plain derived object,
+  nothing cached, nothing persisted. Anchors are deduplicated by their
+  own `id` before anything else is computed — the identical identity
+  `application/LocalPublicationAnchorCatalog.js#add()` already dedups by
+  (0.8.2), so two replicas that both know the SAME anchor, or a caller
+  that accidentally passes the same anchor twice, is exactly one piece
+  of evidence, never two. The returned `anchors` array is always sorted
+  by `anchorId`, never by input or arrival order — the identical
+  underlying set produces a byte-identical result regardless of how a
+  caller happened to order its input, which is what lets two independently
+  converged replicas' own derived results be compared directly for
+  equality. The full returned shape:
+
+  ```js
+  {
+      publicationId,
+      expectedContentHash,       // echoed back, or null
+      anchorCount,
+      anchorTypes,                // sorted list of distinct anchorType strings
+      anchors: [
+          { anchorId, anchorType, contentHash, contentBinding, verification }
+      ],
+      contentHashGroups: [
+          { contentHash, anchorIds }   // the actual partition — never a "winner"
+      ],
+      contentBindingConflict,     // true iff more than one distinct contentHash appears
+      matchingAnchorIds,          // only meaningful when expectedContentHash was supplied
+      divergentAnchorIds          // "diverges," never "is wrong"
+  }
+  ```
+
+  No field anywhere in this shape resembles a score, a rank, a
+  confidence value, or a "winner" — `tests/
+  PublicationEvidenceConvergence.test.js`'s own flagship asserts this
+  directly, scanning the serialized result for any trace of "authority,"
+  "trust," "winner," "consensus," "correct," "malicious," or "reject."
+- `tests/PublicationEvidenceConvergence.test.js` — argument handling
+  (Section A: a publicationId is required, empty input is tolerated,
+  anchors naming a different publicationId are excluded, duplicate
+  anchor ids collapse to one, and the result is order-independent); the
+  five scenarios this milestone was designed around (Section B):
+  complete agreement (no conflict), conflicting content binding
+  (detected, but neither anchor is ever declared correct or incorrect),
+  verification disagreement (the SAME anchor, observed via two SEPARATE
+  calls with two different local `verificationByAnchorId` maps — this
+  function is never called with more than one replica's observations at
+  once), multiple anchor types (no ranking), and duplicate anchor
+  knowledge (one anchor identity, not two pieces of evidence); and a new
+  FLAGSHIP (Section C) extending 0.8.5's own three-replica convergence
+  test with a FOURTH, contradicting anchor — Alice knows A+B, Bob knows
+  A+C, Carol knows B+D, where D's own `contentHash` conflicts with
+  A/B/C's. All three synchronize over real live authenticated
+  connections using `application/
+  PublicationAnchorDiscoveryCoordinator.js`, completely unchanged from
+  0.8.5, and converge on the identical four-anchor evidence set —
+  NETWORK CONVERGENCE. Each replica's own independently derived evidence
+  view then reports the identical content-binding conflict between
+  {A,B,C} and D without any of them ever deciding which is correct —
+  EVIDENCE NON-ADJUDICATION, proven simultaneously with convergence
+  itself, over the same evidence set. A second act then has Alice and
+  Bob independently verify the identical Anchor A against their own
+  `identity/LocalAuthorizationVerifier.js` and feed two different, both
+  entirely honest, local observations into their own derived views —
+  demonstrating that a local verification observation changes nothing
+  about the OTHER replica's derived view, and nothing about the
+  structural conflict finding either.
+
+```text
+0.8.5   Historical Anchor Discovery & Synchronization                ✓
+             │
+             ▼
+0.8.6   Multi-Evidence Convergence & Evidence Relationship Derivation ✓
+             ├── application/ContentBindingRelationship.js — the one new
+             │   enum: MATCHES_EXPECTED / DIFFERS_FROM_EXPECTED /
+             │   NOT_COMPARED; never AnchorVerificationOutcome's own
+             │   vocabulary
+             ├── application/PublicationEvidenceConvergence.js — the one
+             │   new function, derivePublicationEvidenceConvergence();
+             │   pure, stateless, no injected dependency; dedups by
+             │   anchor id; output sorted and order-independent; detects
+             │   contentBindingConflict without ever naming a winner
+             └── PublicationEvidenceConvergence.test.js (new) — argument
+                 handling; the five named scenarios (agreement, conflict,
+                 verification disagreement, multiple anchor types,
+                 duplicate knowledge); flagship extending 0.8.5's own
+                 three-replica convergence test with a fourth,
+                 contradicting anchor — network convergence and evidence
+                 non-adjudication proven simultaneously, over live
+                 authenticated connections
+```
+
+> **Multiple pieces of evidence may be compared, grouped, and shown to
+> agree or conflict, but the system does not convert agreement,
+> multiplicity, or verification into authority.** `application/
+> PublicationEvidenceConvergence.js`'s own flagship makes this concrete
+> with the strongest case this codebase has built yet: three anchors
+> agreeing on one `contentHash` and a fourth anchor asserting a different
+> one, all four converged onto every replica by 0.8.5's own
+> synchronization, completely unchanged. `derivePublicationEvidenceConvergence()`
+> reports the true group sizes — three versus one — and stops exactly
+> there. It never treats the group of three as "the real one" merely for
+> outnumbering the fourth, and it never proposes that any future version
+> of this codebase should. See `docs/Principles.md`, "Evidence
+> Relationships Are Derived, Never Adjudicated (0.8.6)."
+
+### Deliberately excluded
+
+- **Trust, authority, confidence, or ranking, under any name.** No
+  `EvidenceTrustScore`, `EvidenceAuthority`, `EvidenceConfidence`,
+  `EvidenceRank`, `EvidenceStrength`, or `EvidenceConsensus` exists
+  anywhere in this milestone, and none of `application/
+  PublicationEvidenceConvergence.js`'s own fields can be summed, sorted,
+  or thresholded into one. The moment something in this codebase gets
+  called "consensus," the immediate next questions — consensus according
+  to whom, how many nodes are needed, is Bitcoin stronger than an HTTP
+  log, what happens with malicious peers — become impossible to avoid.
+  This milestone answers none of them, on purpose; they stay a future
+  governance/trust milestone's own question, if ForkBuild ever actually
+  needs one.
+- **Exchanging or gossiping verification results.** `verificationByAnchorId`
+  is supplied by, and describes only, the CALLING replica's own local
+  state. No wire message, no protocol change, and no field anywhere
+  carries "Alice says A is VALID" to Bob — the identical restraint 0.8.4
+  and 0.8.5 already held for ANNOUNCE/REQUEST/RESPONSE, extended here to
+  the one new layer that finally reads verification outcomes at all.
+  Adding that later is a completely different protocol, with its own
+  questions about observer identity, freshness, and malicious reporting
+  — deliberately not opened here.
+- **Persisting a derived evidence view anywhere.** `application/
+  PublicationEvidenceConvergence.js` returns a plain object and caches
+  nothing; nothing is written to `application/
+  LocalPublicationAnchorCatalog.js`, and no new storage key exists. A
+  caller that wants the current view calls the function again — the
+  identical "always safe, always re-derives from scratch" posture
+  `application/PublicationResolutionCoordinator.js`'s own header already
+  holds itself to.
+- **A `contentHash`-only, `anchorType`-only, or cross-publication
+  variant.** `derivePublicationEvidenceConvergence()` takes exactly one
+  `publicationId` at a time, mirroring `application/
+  PublicationAnchorPeerProtocol.js`'s own single-axis REQUEST scoping
+  (0.8.5). A caller that wants a evidence view across several
+  publications calls this function once per publicationId; no batched or
+  cross-publication variant was added.
+- **Any UI.** `ui/views/DecentralizedPublicationsView.js` and the 0.8.3
+  evidence cards are completely untouched. A future Publication Center
+  could display something like "4 known anchors, 3 anchor types, 3
+  matching content bindings, 1 conflicting binding" straight from this
+  milestone's own return shape, but no button, panel, or view consumes
+  it yet — the identical restraint 0.8.4's and 0.8.5's own
+  `publicationAnchorPeerExchange`/`publicationAnchorDiscoveryCoordinator`
+  held before any UI used them.
+- **Temporal reasoning of any kind.** Nothing in this milestone reads
+  `anchoredAt` or `receivedAt`, orders anchors by recency, or treats an
+  older anchor as more or less significant than a newer one for the same
+  publicationId. Whether "this anchor superseded that one" is ever a
+  meaningful question stays unopened.
+- **Any change to `application/LocalPublicationAnchorCatalog.js`,
+  `application/ExternalAnchorVerifier.js`, `application/
+  PublicationAnchorDiscoveryCoordinator.js`, or any wire protocol.** This
+  milestone reads their outputs and changes none of their behavior —
+  the flagship test proves this directly by running 0.8.5's own
+  discovery mechanism completely unmodified before deriving anything
+  over its result.
+
+What's left, and deliberately unbuilt: any trust, governance, or
+authority model over converged evidence — sized on its own, if ForkBuild
+ever actually needs one, exactly like every "Deliberately excluded" list
+in this document before it.
