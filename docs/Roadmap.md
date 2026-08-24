@@ -14263,4 +14263,196 @@ What's left, and deliberately unbuilt: a deterministic local/test anchor
 backend, any real external anchor integration, anchor discovery/exchange
 between replicas, Evidence UX and verification history, and
 conflicting-anchor display — each sized on its own, exactly like every
-"Deliberately excluded" list in this document before it.
+"Deliberately excluded" list in this document before it. A real external
+anchor proof adapter and a caller-composable verifier registry (0.8.1)
+are next.
+
+## 0.8.1 — External Anchor Proof Adapters & Verification Registry
+
+0.8.0 shipped `application/ExternalAnchorVerifier.js`'s own
+`proofVerifier` seam with nothing plugged into it — on purpose, sized as
+its own future milestone in that entry's own "Deliberately excluded"
+list. 0.8.1 is that milestone, and only that milestone: one real
+anchorType this codebase can independently check against a real external
+system, and one small piece of composability — a registry — that lets a
+caller verify anchors of several different anchorTypes without hand-
+picking the right plugin before every call. Nothing about what a
+`PublicationAnchor` is, or what `ExternalAnchorVerifier#verify()`'s
+five-step pipeline does, changes — see `docs/Principles.md`, "External
+Evidence Adapters Never Change What PublicationAnchor Means (0.8.1)."
+
+- `anchoring/ProofVerifier.js` — the base adapter contract every
+  anchorType-specific proof plugin implements: `anchorType` (a stable,
+  self-reported string) and `verify(proof, { publicationId, contentHash,
+  locator })`, resolving to `{ valid: true }`, a definite
+  `{ valid: false, reason }` rejection, or an honest
+  `{ valid: false, unavailable: true, reason }` for "cannot presently
+  tell." The identical "one small interface, several real backends" seam
+  `content/ContentStore.js` already established for content retrieval,
+  applied here to evidence verification.
+- `anchoring/BitcoinOpReturnProofVerifier.js` — the one real backend this
+  milestone ships: `anchorType: 'bitcoin-op-return'`. A `proof` is
+  exactly `{ txid, network, vout? }` — no redundant "commitment" field a
+  forger could set independently of the anchor's own signed
+  `contentHash`; the one thing checked is that some OP_RETURN output of
+  the named, confirmed transaction carries that contentHash as raw hex.
+  Talks to a real Esplora-compatible block explorer HTTP API (`GET
+  /tx/:txid`, `GET /blocks/tip/height` only when `minConfirmations` > 1),
+  through the identical injectable-`fetchImpl` seam `content/
+  IpfsContentStore.js` already established in 0.7.1 — every deterministic
+  test in this codebase supplies a fake explorer; no live network call
+  happens on an ordinary `node tests/*.test.js` sweep. Every failure this
+  class can itself distinguish — not found, not yet confirmed, the
+  explorer unreachable, too few confirmations — reports `unavailable:
+  true`, never a bare rejection; only a reachable, confirmed transaction
+  that genuinely does not carry the claimed hash is ever a definite
+  `INVALID_PROOF`.
+- `application/AnchorVerificationOutcome.js` — gains
+  `PROOF_UNAVAILABLE`, a THIRD honest "couldn't confirm" outcome,
+  structurally distinct from both `VALID_PROOF_UNVERIFIED` (no plugin
+  available at all) and `INVALID_PROOF` (a plugin reached a definite no).
+  See `docs/Principles.md`, "A Proof Verifier Reports 'Cannot Presently
+  Verify' Separately From 'Proof Is Wrong' (0.8.1)."
+- `application/ExternalAnchorVerifier.js` — `verify()` is now async (a
+  real proofVerifier may need a real network round trip; every 0.8.0
+  synchronous plugin keeps working unchanged, since awaiting an
+  already-resolved value is a no-op). Gains a `proofVerifierRegistry`
+  option alongside the existing `proofVerifier` one — an explicit
+  `proofVerifier` still always wins — and now catches a thrown proof
+  verifier error and reports `PROOF_UNAVAILABLE`, never letting a network
+  exception propagate as an unhandled rejection or masquerade as
+  `INVALID_PROOF`. The five-step pipeline itself is otherwise byte-for-
+  byte the same shape 0.8.0 shipped.
+- `application/ExternalProofVerifierRegistry.js` — a deliberately dumb
+  `Map<anchorType, proofVerifier>`: `register()`, `get()`, `has()`,
+  `unregister()`, `anchorTypes`. Never verifies anything itself, never
+  imports any concrete adapter, and is never imported by
+  `ExternalAnchorVerifier.js` either — a caller wires the two together
+  explicitly, the identical "generic pipeline, concrete plugin wired at
+  the composition root" split `application/PublicationResolver.js`'s own
+  `kindPlugin` established in 0.7.0.
+- `application/CreateBitcoinAnchorProofVerifierUseCase.js` +
+  `application/CreateExternalAnchorVerifierUseCase.js` (extended) — the
+  composition roots: the former wires a concrete
+  `BitcoinOpReturnProofVerifier` without a caller ever importing
+  `anchoring/` directly, the same shape `application/
+  CreateIpfsPublicationResolverUseCase.js` already established for
+  `content/IpfsContentStore.js` in 0.7.1; the latter now accepts a
+  `proofVerifiers` list and returns a populated (or, by default, empty)
+  `ExternalProofVerifierRegistry` alongside its `ExternalAnchorVerifier`.
+- `tests/BitcoinOpReturnProofVerifier.test.js` — deterministic,
+  network-free coverage of the adapter's own wire behavior: a matching
+  confirmed transaction (with and without a `vout` hint); structurally
+  invalid proofs (missing/malformed txid, a network mismatch) as definite
+  rejections; not-found/unconfirmed/unreachable as `unavailable`, never a
+  rejection; a confirmed, reachable transaction that simply does not
+  carry the claim, as a definite rejection; and `minConfirmations` gating
+  on real chain depth.
+- `tests/ExternalAnchorProofAdapters.test.js` — the flagship: Alice signs
+  a `PublicationAnchor` naming a real (fake-network) Bitcoin transaction;
+  Bob, with none of Alice's local state, wires his own
+  `ExternalProofVerifierRegistry`, resolves the correct plugin by
+  `anchorType` alone, and verifies `VALID`. Then every attack the
+  milestone's own design conversation named, each remaining
+  distinguishable: correct signature + wrong expected contentHash
+  (`CONTENT_MISMATCH`); correct anchor + a real but non-matching
+  transaction (`INVALID_PROOF`); correct proof + a locator modified after
+  signing (`INVALID_SIGNATURE` — the locator is part of the signed
+  descriptor); correct anchor + an unreachable external system
+  (`PROOF_UNAVAILABLE`). Closes with a second, independent anchor for the
+  IDENTICAL publicationId/contentHash, signed by a different identity
+  under a completely different anchorType (`local-test`, never touching
+  Bitcoin), verified through the SAME registry without the first anchor
+  or its proofVerifier ever being consulted — the 0.8.0 "several
+  independent facts, never reconciled" property, still holding with a
+  real backend now attached.
+
+```text
+0.8.0   Decentralized Publication Anchoring & External Evidence     ✓
+             │
+             ▼
+0.8.1   External Anchor Proof Adapters & Verification Registry      ✓
+             ├── anchoring/ProofVerifier.js — the base adapter
+             │   contract: anchorType + verify() -> valid /
+             │   definite-invalid / honestly-unavailable
+             ├── anchoring/BitcoinOpReturnProofVerifier.js — the one
+             │   real backend: a confirmed tx's OP_RETURN output must
+             │   carry the anchor's own contentHash, raw hex, no
+             │   redundant "commitment" field
+             ├── application/AnchorVerificationOutcome.js —
+             │   + PROOF_UNAVAILABLE, a third honest "couldn't
+             │   confirm," never confused with INVALID_PROOF
+             ├── application/ExternalAnchorVerifier.js — verify() is
+             │   now async; + proofVerifierRegistry option; a thrown
+             │   proofVerifier error becomes PROOF_UNAVAILABLE, never
+             │   an unhandled rejection
+             ├── application/ExternalProofVerifierRegistry.js — a
+             │   dumb Map<anchorType, proofVerifier>; never imported
+             │   by ExternalAnchorVerifier.js, wired by the caller
+             ├── application/CreateBitcoinAnchorProofVerifierUseCase.js
+             │   + CreateExternalAnchorVerifierUseCase.js (extended) —
+             │   composition roots, mirroring
+             │   CreateIpfsPublicationResolverUseCase.js's own shape
+             └── BitcoinOpReturnProofVerifier.test.js +
+                 ExternalAnchorProofAdapters.test.js — deterministic
+                 adapter coverage, plus the two-replica flagship: Bob
+                 verifies Alice's real-backend anchor through his own
+                 registry, every attack stays distinguishable, and a
+                 second independent anchor under a different anchorType
+                 never collides with the first
+```
+
+> **0.8.0 promised "a real proofVerifier plugs in later without changing
+> this pipeline." 0.8.1 is the milestone that cashes that promise: one
+> file implementing an existing contract, one dumb lookup table in front
+> of an existing single-plugin option, and one new honestly-named outcome
+> for a failure mode that only becomes possible the moment a plugin talks
+> to a real network. `core/PublicationAnchor.js` gained no Bitcoin-shaped
+> field. `application/ExternalAnchorVerifier.js`'s five steps are the
+> same five steps. The only things that grew are exactly the things 0.8.0
+> said would grow, and nothing it said would stay fixed moved.**
+
+### Deliberately excluded
+
+- **A live-network integration test against a real Bitcoin transaction.**
+  Unlike `content/IpfsContentStore.js`'s own `tests/
+  IpfsLiveIntegration.test.js`, which points at a local, free,
+  developer-controlled Kubo daemon, a real mainnet transaction this test
+  suite could point at would have to already exist, be independently
+  known, and never change — and this codebase has no wallet, no signing
+  capability, and no way to broadcast one of its own. `tests/
+  BitcoinOpReturnProofVerifier.test.js` and `tests/
+  ExternalAnchorProofAdapters.test.js` are exhaustively deterministic
+  instead, the same trade-off `tests/IpfsContentStore.test.js` and
+  `tests/IpfsPublicationResolution.test.js` already made for the wire-
+  behavior half of IPFS coverage.
+- **Any second real anchorType.** `anchoring/ProofVerifier.js`'s own
+  contract is proven generic by ONE concrete implementation, deliberately
+  — an Ethereum event log, an OpenTimestamps calendar server, or a
+  notarization API is a straightforward future adapter, never a reason to
+  revisit the contract itself.
+- **Anchor storage, catalog, or peer exchange.** A `PublicationAnchor`
+  still has nowhere to live beyond a caller's own hands — no
+  `LocalAnchorCatalog`, no discovery, no peer message. `application/
+  ExternalAnchorVerifier.js` still only ever answers "given an anchor I
+  already have, can I verify it?" Sized as its own future milestone,
+  exactly as 0.8.0's own "Deliberately excluded" list already named.
+- **Any UI.** No Publication Center "External Evidence" section, no
+  "Anchor Externally" action. A real backend now exists to anchor
+  something in, but showing that in `ui/` is still its own future
+  milestone, not a side effect of this one.
+- **Automatically anchoring a publication as part of publishing it, or as
+  part of resolving one.** `application/PublicationResolver.js` is
+  completely untouched by this milestone, for the identical reason 0.8.0
+  kept it untouched — see `docs/Principles.md`, "External Anchoring
+  Provides Evidence; It Does Not Establish Authority (0.8.0)."
+- **A "trust score," ranking, or preference among registered
+  proofVerifiers.** `application/ExternalProofVerifierRegistry.js` holds
+  at most one plugin per anchorType, registered by whichever caller wired
+  it — never a list, never a priority order, never a notion of "the
+  better verifier for this anchorType."
+
+What's left, and deliberately unbuilt: a second real anchorType, anchor
+storage/catalog/peer exchange, Evidence UX, and automatic anchoring —
+each sized on its own, exactly like every "Deliberately excluded" list in
+this document before it.

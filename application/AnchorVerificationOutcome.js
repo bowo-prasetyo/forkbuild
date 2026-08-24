@@ -1,4 +1,5 @@
 // 0.8.0 — Decentralized Publication Anchoring & External Evidence.
+// 0.8.1 — External Anchor Proof Adapters & Verification Registry.
 //
 // Names every way application/ExternalAnchorVerifier.js#verify() can
 // end, in the same order its own pipeline checks them (see that file's
@@ -8,8 +9,7 @@
 // availability). Here the axis is proof confidence: a caller needs to
 // tell apart "this evidence is well-formed and genuinely signed" from
 // "and its proof was independently checked against the external system
-// it names," because 0.8.0 ships no anchorType this codebase can
-// actually check a proof against yet (see docs/Roadmap.md).
+// it names."
 //
 //   VALID                    — every check passed, INCLUDING a supplied
 //                               proofVerifier confirming the proof
@@ -22,6 +22,22 @@
 //                               proof itself was never independently
 //                               checked. NEVER treated as a rejection —
 //                               see this file's own header
+//   PROOF_UNAVAILABLE        — a proofVerifier FOR this anchorType exists
+//                               and was consulted, but could not
+//                               PRESENTLY tell whether the proof is good:
+//                               the external system was unreachable, the
+//                               named record was not found (which may
+//                               simply mean "not yet propagated"), or it
+//                               exists but is not yet confirmed. Added in
+//                               0.8.1, the moment the first anchorType
+//                               this codebase can actually check against
+//                               a real external system
+//                               (anchoring/BitcoinOpReturnProofVerifier.js)
+//                               shipped — a real network call can fail in
+//                               ways a well-formed-but-unchecked anchor
+//                               (VALID_PROOF_UNVERIFIED) never could.
+//                               NEVER treated as a rejection either — see
+//                               this file's own header
 //   INVALID_ENVELOPE         — the PublicationAnchor record itself is
 //                               malformed
 //   INVALID_SIGNATURE        — the anchor's own signature does not
@@ -30,18 +46,25 @@
 //                               contentHash and/or publicationId do not
 //                               match what the caller expected it to
 //                               anchor
-//   INVALID_PROOF            — a supplied proofVerifier rejected the
-//                               proof outright
+//   INVALID_PROOF            — a supplied proofVerifier reached a
+//                               definite answer and rejected the proof:
+//                               the named external system was reachable,
+//                               and it does NOT back this contentHash
 //
 // A caller that only wants "is this trustworthy evidence, full stop"
 // still treats anything but VALID as incomplete. A caller that merely
-// wants "is this at least a genuine, on-topic attestation" — the only
-// question 0.8.0 can actually answer, with no anchorType-specific
-// proof-checking backend yet built — accepts VALID_PROOF_UNVERIFIED too.
-// Neither is ever silently promoted to the other.
+// wants "is this at least a genuine, on-topic attestation" accepts
+// VALID_PROOF_UNVERIFIED and PROOF_UNAVAILABLE too — both are honest
+// "couldn't fully confirm" outcomes, for two DIFFERENT reasons (no
+// verifier plugged in at all, vs. a verifier that tried and could not
+// presently reach a definite answer). Neither is ever silently promoted
+// to VALID, and neither is ever silently downgraded to INVALID_PROOF —
+// see docs/Principles.md, "A Proof Verifier Reports 'Cannot Presently
+// Verify' Separately From 'Proof Is Wrong' (0.8.1)."
 export const AnchorVerificationOutcome = Object.freeze({
     VALID: 'valid',
     VALID_PROOF_UNVERIFIED: 'valid-proof-unverified',
+    PROOF_UNAVAILABLE: 'proof-unavailable',
     INVALID_ENVELOPE: 'invalid-envelope',
     INVALID_SIGNATURE: 'invalid-signature',
     CONTENT_MISMATCH: 'content-mismatch',
