@@ -31,6 +31,7 @@ import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUse
 import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelectionUseCase.js';
 import { ExportBlueprintUseCase } from './ExportBlueprintUseCase.js';
 import { ImportBlueprintUseCase } from './ImportBlueprintUseCase.js';
+import { deriveBlueprintFingerprint } from '../core/BlueprintFingerprint.js';
 import { ForkStructureToLibraryUseCase } from './ForkStructureToLibraryUseCase.js';
 import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlacementCommand.js';
 import { MoveStructurePlacementCommand } from './commands/MoveStructurePlacementCommand.js';
@@ -104,6 +105,14 @@ export class EditorSession {
         // methods — nothing else here depends on them existing.
         exportBlueprintUseCase = new ExportBlueprintUseCase(),
         importBlueprintUseCase = new ImportBlueprintUseCase(),
+        // 0.6.6 — Decentralized Blueprint Exchange. Optional, same
+        // graceful-degradation posture as every other optional
+        // collaborator here — an EditorSession built without one (older
+        // call sites, test harnesses that never exchange an attribution)
+        // simply can't offer exportBlueprintAttribution()/
+        // importBlueprintAttribution(); exportBlueprint()/importBlueprint()
+        // (0.4.6, unchanged) keep working either way.
+        blueprintAttributionExchange = null,
         // 0.6.3 — Blueprint Authoring & Versioning UX. Same optional
         // posture as exportBlueprintUseCase/importBlueprintUseCase above.
         forkStructureToLibraryUseCase = new ForkStructureToLibraryUseCase(),
@@ -146,6 +155,7 @@ export class EditorSession {
         this._personalStructureLibraryStore = personalStructureLibraryStore;
         this._exportBlueprintUseCase = exportBlueprintUseCase;
         this._importBlueprintUseCase = importBlueprintUseCase;
+        this._blueprintAttributionExchange = blueprintAttributionExchange;
         this._forkStructureToLibraryUseCase = forkStructureToLibraryUseCase;
         this._repeatSelectionUseCase = repeatSelectionUseCase;
         this._structureResolver = structureResolver;
@@ -1146,11 +1156,20 @@ export class EditorSession {
     // error application/ExportBlueprintUseCase.js#execute() throws when
     // `structure` isn't a valid Structure — callers surface that message
     // directly rather than silently doing nothing.
-    exportBlueprint(structure) {
+    //
+    // 0.6.6 — Decentralized Blueprint Exchange. `attributions` is an
+    // OPTIONAL, additive second argument — a straight passthrough to
+    // ExportBlueprintUseCase's own new parameter. The caller (ui/views/
+    // EditorView.js#exportStructure()) is the one that knows which
+    // attributions, if any, this replica has on file for `structure` —
+    // this method still never reaches for a BlueprintAttributionUseCase
+    // itself, exactly the "Inspect ≠ compute" restraint every other
+    // EditorSession method already keeps toward data it is merely handed.
+    exportBlueprint(structure, attributions = []) {
         if (!this._exportBlueprintUseCase) {
             return null;
         }
-        return this._exportBlueprintUseCase.execute(structure);
+        return this._exportBlueprintUseCase.execute(structure, { attributions });
     }
 
     // 0.4.6 — Blueprint Sharing & Exchange. The reverse of
@@ -1175,6 +1194,47 @@ export class EditorSession {
         const structure = this._importBlueprintUseCase.execute(pkg, { registry: this._registry });
         this._personalStructureLibraryStore.addStructure(structure);
         return structure;
+    }
+
+    // 0.6.6 — Decentralized Blueprint Exchange. The portable form of an
+    // attribution this replica already has — pure passthrough to
+    // BlueprintAttributionExchange#exportAttribution() (see that class's
+    // own header: the publication IS `attribution.toJSON()`, nothing
+    // more to build). Returns null (rather than throwing) when no
+    // exchange is wired, the same graceful-degradation posture
+    // exportBlueprint() already keeps toward its own optional use case.
+    exportBlueprintAttribution(attribution) {
+        if (!this._blueprintAttributionExchange) {
+            return null;
+        }
+        return this._blueprintAttributionExchange.exportAttribution(attribution);
+    }
+
+    // 0.6.6 — Decentralized Blueprint Exchange. Imports a single
+    // attribution publication `pkg` into this replica's own attribution
+    // store, via BlueprintAttributionExchange#importAttribution() —
+    // validate, construct, verify, cross-check, dedupe, store, in that
+    // order (see that class's own header).
+    //
+    // `structure`, if supplied, is a LOCAL Structure this replica already
+    // has (typically the one importBlueprint() just returned, imported
+    // moments earlier from the SAME package's own `attributions` field —
+    // see ui/views/EditorView.js#importBlueprint()) — its fingerprint is
+    // derived HERE, fresh, and handed to the exchange as
+    // `expectedFingerprint`, never trusted from the package itself. This
+    // is the one place this milestone's "never trust the fingerprint a
+    // package merely claims" rule actually gets enforced from the UI
+    // side; omitting `structure` entirely (a bare attribution import,
+    // unconnected to any local Structure) is equally valid — see
+    // BlueprintAttributionExchange#importAttribution()'s own header on
+    // why that case skips the cross-check rather than refusing outright.
+    // Returns null when no exchange is wired.
+    importBlueprintAttribution(pkg, structure = null) {
+        if (!this._blueprintAttributionExchange) {
+            return null;
+        }
+        const expectedFingerprint = structure ? deriveBlueprintFingerprint(structure) : null;
+        return this._blueprintAttributionExchange.importAttribution(pkg, { expectedFingerprint });
     }
 
     // 0.6.3 — Blueprint Authoring & Versioning UX. The Structure-fork

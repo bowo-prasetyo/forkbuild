@@ -11,11 +11,18 @@ import { buildBlueprintPackage } from './BlueprintPackage.js';
 // to a test) is deliberately none of this class's business, the same
 // restraint CreateStructureFromSelectionUseCase's own header applies to
 // where its Structure ends up.
+//
+// 0.6.6 — Decentralized Blueprint Exchange. `attributions` is an
+// OPTIONAL, additive second argument — a straight passthrough to
+// buildBlueprintPackage()'s own new parameter (see that function's own
+// header for the exact, deliberately-not-a-new-object shape). Every
+// existing caller that only ever passed a Structure keeps working
+// unchanged, producing exactly the package it always did.
 export class ExportBlueprintUseCase {
-    execute(structure) {
+    execute(structure, { attributions = [] } = {}) {
         if (!structure || !(structure instanceof Structure)) {
             throw new Error('ExportBlueprintUseCase: a valid Structure is required');
         }
-        return buildBlueprintPackage(structure);
+        return buildBlueprintPackage(structure, { attributions });
     }
 }

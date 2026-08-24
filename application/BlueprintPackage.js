@@ -1,4 +1,5 @@
 import { Structure } from '../core/Structure.js';
+import { BlueprintAttribution } from '../core/BlueprintAttribution.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -27,22 +28,61 @@ import { Structure } from '../core/Structure.js';
 // design conversation named `tags`/`author`/`thumbnail`/`description` as
 // exactly the kind of field a later schema version could add without
 // breaking a v1 package's own importability.
+//
+// 0.6.6 — Decentralized Blueprint Exchange. `attributions` is exactly
+// that kind of additive field, arriving without a schema-version bump:
+// an OPTIONAL array of portable BlueprintAttribution publications (see
+// application/BlueprintAttributionPublicationValidator.js — each entry is
+// simply `attribution.toJSON()`, already self-describing) traveling
+// alongside the design they're about. Deliberately NOT a new "shared
+// blueprint" domain object and NOT a second package `kind` — this
+// milestone's own design conversation was explicit that a Blueprint
+// Package and a BlueprintAttributionPublication stay two independent
+// portable things, and this field is only ever the CONVENIENCE of moving
+// both in one file at once, never a merger of the two:
+//
+//   Blueprint Share Package
+//   ├── structure     — the actual reusable design (unchanged, 0.4.6)
+//   └── attributions   — zero or more signed, independently-verifiable
+//                        assertions ABOUT that design (0.6.6, optional)
+//
+// A Structure imported from a package with no `attributions` at all (or
+// from a package built before this field existed) is exactly as usable
+// as one that arrived with several — see docs/Principles.md, "Attribution
+// Travels With A Blueprint, But Never Becomes Part Of It (0.6.6)."
 export const CURRENT_SCHEMA_VERSION = 1;
 export const BLUEPRINT_KIND = 'forkbuild.blueprint';
 
 // Builds the plain, JSON-safe export package for one Structure. Pure —
 // knows nothing about StorageProvider, files, or downloads; those are
 // application/ExportBlueprintUseCase.js's and the UI's own concerns.
-// Deterministic: the same Structure produces byte-identical JSON on every
-// call, because Structure#toJSON() itself already emits fields and bricks
-// in a fixed order — see tests/BlueprintExchange.test.js, Phase F.
-export function buildBlueprintPackage(structure) {
+// Deterministic: the same Structure (and the same attributions) produces
+// byte-identical JSON on every call, because Structure#toJSON() itself
+// already emits fields and bricks in a fixed order — see
+// tests/BlueprintExchange.test.js, Phase F.
+//
+// `attributions` (0.6.6): an array of signed BlueprintAttribution
+// instances — never raw JSON, the same "only ever accept the real
+// domain object, never a caller's plain object" discipline every other
+// build*Package()/build*Publication() function in this codebase already
+// holds. Omitted (or empty) entirely from the resulting package rather
+// than written out as `attributions: []` — a plain Structure-only export
+// stays byte-for-byte what it always was before this milestone, so
+// nothing downstream needs a version bump to keep parsing it.
+export function buildBlueprintPackage(structure, { attributions = [] } = {}) {
     if (!structure || !(structure instanceof Structure)) {
         throw new Error('BlueprintPackage: a Structure instance is required');
     }
-    return {
+    if (!Array.isArray(attributions) || attributions.some((a) => !(a instanceof BlueprintAttribution))) {
+        throw new Error('BlueprintPackage: attributions must be an array of BlueprintAttribution instances');
+    }
+    const pkg = {
         kind: BLUEPRINT_KIND,
         schemaVersion: CURRENT_SCHEMA_VERSION,
         structure: structure.toJSON()
     };
+    if (attributions.length > 0) {
+        pkg.attributions = attributions.map((attribution) => attribution.toJSON());
+    }
+    return pkg;
 }

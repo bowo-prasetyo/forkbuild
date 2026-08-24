@@ -43,6 +43,8 @@ import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
 import CreateBlueprintDialog from '../components/CreateBlueprintDialog.js';
 import StructureInfoPanel from '../components/StructureInfoPanel.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
+import { deriveBlueprintFingerprint, describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { BLUEPRINT_ATTRIBUTION_KIND } from '../../core/BlueprintAttribution.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
@@ -186,6 +188,7 @@ export default {
                 @place="placeInspectedStructure"
                 @export="exportInspectedStructure"
                 @claim-authorship="claimAuthorship"
+                @export-attribution="exportInspectedAttribution"
                 @close="inspectedStructure = null"
             />
         </div>
@@ -221,7 +224,8 @@ export default {
         const { publishDocumentUseCase } = new CreatePublisherUseCase().execute(identityProvider);
         const { findPublicationUseCase } = new CreateDiscoveryUseCase().execute();
         // 0.6.5 — Blueprint Identity & Attribution.
-        const { blueprintAttributionUseCase } = new CreateBlueprintAttributionUseCase().execute(identityProvider);
+        // 0.6.6 — Decentralized Blueprint Exchange.
+        const { blueprintAttributionUseCase, blueprintAttributionExchange } = new CreateBlueprintAttributionUseCase().execute(identityProvider);
 
 		const copySelectionUseCase = new CopySelectionUseCase(registry);
 		const pasteClipboardUseCase = new PasteClipboardUseCase();
@@ -248,7 +252,9 @@ export default {
 		    // 0.4.1 — Interactive Structure Composition UX.
 		    compositionPreviewUseCase,
 		    // 0.4.3 — Personal Blueprint Library.
-		    personalStructureLibraryStore
+		    personalStructureLibraryStore,
+		    // 0.6.6 — Decentralized Blueprint Exchange.
+		    blueprintAttributionExchange
 		});
 
 		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
@@ -372,10 +378,20 @@ export default {
 		// button). The wire event name from BuildLibraryPanel stays
 		// 'export-personal-structure' unchanged — only this handler's
 		// own name follows what it actually does now.
+		// 0.6.6 — Decentralized Blueprint Exchange. Bundles every
+		// attribution THIS replica currently has on file for `structure`'s
+		// own design (blueprintAttributionUseCase.summarize() — the exact
+		// same read StructureInfoPanel's own Author fact already shows)
+		// straight into the same package — see application/
+		// BlueprintPackage.js's own header on why this is a convenience
+		// bundling of two still-independent things, never a merger. A
+		// design nobody has attributed yet still exports exactly the
+		// Structure-only package 0.4.6 always produced.
 		function exportStructure(structure) {
 		    let pkg;
 		    try {
-		        pkg = editorSession.exportBlueprint(structure);
+		        const { attributions } = blueprintAttributionUseCase.summarize(structure);
+		        pkg = editorSession.exportBlueprint(structure, attributions);
 		    } catch (e) {
 		        feedback.show(e.message);
 		        return;
@@ -392,6 +408,34 @@ export default {
 		    feedback.show(`Exported "${structure.name}" as a blueprint`);
 		}
 
+		// 0.6.6 — Decentralized Blueprint Exchange. Exports a SINGLE
+		// attribution on its own — independent of any blueprint, exactly
+		// the "two independent portable things" this milestone's own
+		// design conversation asked for. Reachable only from
+		// StructureInfoPanel's own "Export Attribution" link, which is
+		// only ever shown when `attribution.mine` exists (see that
+		// component's own header) — there is always something to export
+		// by the time this runs.
+		function exportBlueprintAttribution(attribution) {
+		    let pkg;
+		    try {
+		        pkg = editorSession.exportBlueprintAttribution(attribution);
+		    } catch (e) {
+		        feedback.show(e.message);
+		        return;
+		    }
+		    if (!pkg) {
+		        return;
+		    }
+		    const json = JSON.stringify(pkg, null, 2);
+		    const slug = describeBlueprintFingerprint(attribution.fingerprint).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'attribution';
+		    const link = document.createElement('a');
+		    link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+		    link.download = `forkbuild-blueprint-attribution-${slug}.json`;
+		    link.click();
+		    feedback.show('Exported your attribution');
+		}
+
 		// 0.4.6 — Blueprint Sharing & Exchange. `rawText` is whatever
 		// BuildLibraryPanel's hidden file input read off disk — untrusted
 		// input, so JSON.parse and editorSession.importBlueprint() (which
@@ -400,6 +444,17 @@ export default {
 		// each wrapped separately, mirroring
 		// IdentityManagementView.js#confirmImport()'s own two-stage
 		// "is this even JSON" / "is this a valid package" error handling.
+		// 0.6.6 — Decentralized Blueprint Exchange. `rawText` may now name
+		// either of the two independent portable things this milestone
+		// introduced: an ordinary Blueprint Package (`BLUEPRINT_KIND`,
+		// unchanged since 0.4.6, now optionally carrying `attributions`
+		// too) or a BARE attribution publication
+		// (`BLUEPRINT_ATTRIBUTION_KIND`) received on its own, unconnected
+		// to any blueprint import happening right now — see this
+		// milestone's own design conversation on why attribution travels
+		// separately from the design it's about. Both share the same
+		// file-picker entry point (BuildLibraryPanel's existing "Import
+		// Blueprint"); which one `pkg.kind` names decides which path runs.
 		function importBlueprint(rawText) {
 		    let pkg;
 		    try {
@@ -408,14 +463,78 @@ export default {
 		        feedback.show('That is not valid JSON — choose a file exported with "Export Blueprint."');
 		        return;
 		    }
+		    if (pkg && pkg.kind === BLUEPRINT_ATTRIBUTION_KIND) {
+		        importBareBlueprintAttribution(pkg);
+		        return;
+		    }
 		    try {
 		        const structure = editorSession.importBlueprint(pkg);
 		        if (structure) {
 		            refreshPersonalStructureGroups();
-		            feedback.show(`Imported "${structure.name}" into My Structures`);
+		            const attributionSummary = importBundledBlueprintAttributions(pkg, structure);
+		            feedback.show(`Imported "${structure.name}" into My Structures${attributionSummary}`);
 		        }
 		    } catch (e) {
 		        feedback.show(e.message.replace(/^(BlueprintImport|BlueprintPackage):\s*/, ''));
+		    }
+		}
+
+		// 0.6.6 — Decentralized Blueprint Exchange. Imports every
+		// attribution publication `pkg.attributions` (already validated,
+		// structurally, by the time importBlueprint() above succeeded —
+		// see application/BlueprintImportValidator.js's own header) —
+		// cross-checked against `structure`'s own LOCALLY-derived
+		// fingerprint, never the fingerprint the package merely claims
+		// (application/BlueprintAttributionExchange.js's own header names
+		// this the critical rule). One bad or mismatched attribution never
+		// undoes the successful blueprint import above it — each entry is
+		// its own independent try, exactly like WorldView.js's own naming-
+		// claim import tolerates one malformed claim without touching any
+		// other. Returns a short, human-readable suffix for the caller's
+		// own feedback message, or '' when there was nothing to import.
+		function importBundledBlueprintAttributions(pkg, structure) {
+		    if (!Array.isArray(pkg.attributions) || pkg.attributions.length === 0 || !blueprintAttributionExchange) {
+		        return '';
+		    }
+		    let imported = 0;
+		    for (const attributionJSON of pkg.attributions) {
+		        try {
+		            const result = editorSession.importBlueprintAttribution(attributionJSON, structure);
+		            if (result && result.isNew) {
+		                imported += 1;
+		            }
+		        } catch (e) {
+		            // A single malformed/mismatched attribution is reported
+		            // nowhere but the console — it never blocks the
+		            // blueprint import that already succeeded, and never
+		            // surfaces as though the WHOLE import had failed.
+		            console.warn('Skipped an attribution bundled with this blueprint:', e.message);
+		        }
+		    }
+		    return imported > 0 ? ` with ${imported} attributed ${imported === 1 ? 'author' : 'authors'}` : '';
+		}
+
+		// 0.6.6 — Decentralized Blueprint Exchange. A bare attribution
+		// arriving with no accompanying blueprint in the SAME file has no
+		// local Structure to cross-check its fingerprint against — see
+		// application/BlueprintAttributionExchange.js#importAttribution()'s
+		// own header on why that is still a completely legitimate import,
+		// just an unconfirmed one. Never touches the personal library —
+		// an attribution is never a Structure.
+		function importBareBlueprintAttribution(pkg) {
+		    if (!blueprintAttributionExchange) {
+		        feedback.show('Blueprint attribution exchange is not available');
+		        return;
+		    }
+		    try {
+		        const { attribution, isNew } = editorSession.importBlueprintAttribution(pkg);
+		        if (!isNew) {
+		            feedback.show('That attribution was already known — nothing changed');
+		            return;
+		        }
+		        feedback.show(`Imported an attribution for ${describeBlueprintFingerprint(attribution.fingerprint)}`);
+		    } catch (e) {
+		        feedback.show(e.message.replace(/^BlueprintAttributionExchange:\s*/, ''));
 		    }
 		}
 
@@ -507,6 +626,21 @@ export default {
 		    } catch (e) {
 		        feedback.show(e.message.replace(/^BlueprintAttributionUseCase:\s*/, ''));
 		    }
+		}
+
+		// 0.6.6 — Decentralized Blueprint Exchange. StructureInfoPanel's
+		// own "Export Attribution" link, reachable only once THIS identity
+		// has already claimed authorship of the inspected structure (see
+		// that component's own header) — exports just the ONE attribution
+		// belonging to the currently signed-in identity, independent of
+		// the blueprint itself, straight to exportBlueprintAttribution()
+		// above.
+		function exportInspectedAttribution() {
+		    const attribution = inspectedStructureAttribution.value && inspectedStructureAttribution.value.mine;
+		    if (!attribution) {
+		        return;
+		    }
+		    exportBlueprintAttribution(attribution);
 		}
 
 		// 0.6.3 — Blueprint Authoring & Versioning UX. Replaces the 0.4.2
@@ -1135,6 +1269,7 @@ export default {
             placeInspectedStructure,
             exportInspectedStructure,
             claimAuthorship,
+            exportInspectedAttribution,
             showCreateBlueprintDialog,
             createBlueprintPreview,
             onCreateBlueprint,
