@@ -553,3 +553,86 @@ search, no ratings/comments/likes, and no CRDT-based collaborative
 blueprint editing — 0.4.6 is a portable ARTIFACT (export a file, import a
 file), not a distribution network. See docs/Roadmap.md, 0.4.6, for the
 full list and why each is a genuinely separate, later question.
+
+## Blueprint Authoring & Versioning UX (0.6.3)
+
+Everything above this section describes the Personal Blueprint
+Library's MECHANICS — extraction, storage, composition, export/import.
+0.6.3 doesn't add a mechanic; it makes the mechanics that already
+existed feel like an authoring workflow with a beginning and a
+revision path:
+
+    Build -> Select -> Create Blueprint -> My Structures -> Place ->
+        Modify -> Create Blueprint again
+
+**Create Blueprint, not three prompts.** `ui/components/CreateBlueprintDialog.js`
+replaces the 0.4.2 `window.prompt()` chain (Name, then Category, then
+Description as three separate native dialogs) with one small modal —
+the same shell `ui/components/MetadataEditorDialog.js` already
+established — showing a live preview of a throwaway Structure (the
+current selection run through `CreateStructureFromSelectionUseCase`
+with placeholder metadata) before any name is typed. `application/EditorActionRegistry.js`'s
+`structure.createFromSelection` (relabeled "Create Structure" ->
+**"Create Blueprint"**, `tier: 'advanced'`) now prefers a
+`ui.openCreateBlueprintDialog()` hook over the 0.4.2 `ui.promptCreateStructure()`
+chain, which stays exactly as it was as a fallback for a surface
+without the dialog. `ui/components/SelectionInspector.js` (0.6.2) gains
+an "Advanced" section holding this same action — Create Blueprint is no
+longer Command-Palette-only.
+
+**Fork to My Structures — a second kind of fork.** "Forking a
+Structure" (above) has always meant one specific thing:
+`ForkStructureUseCase` turning a library Structure into a brand-new,
+editable DOCUMENT. `application/ForkStructureToLibraryUseCase.js`
+(0.6.3) names and builds the other operation that word could mean:
+turning a library Structure into a brand-new, independent personal
+STRUCTURE, with no Document involved at all —
+
+    const forked = new ForkStructureToLibraryUseCase().execute(structure);
+    personalStructureLibraryStore.addStructure(forked);   // or
+    editorSession.forkStructureToPersonalLibrary(structure);          // both in one call
+
+Fresh Structure id, fresh brick ids (the same "an id crossing a
+boundary always regenerates" rule this document's own "Forking a
+Structure" and "Sharing blueprints" sections already established),
+metadata preserved as-is — Rename (0.4.3, unchanged) is how a person
+distinguishes their fork afterward. Reachable from a BUILT-IN card's
+"⋮" menu only, as **Fork to My Structures**, right beside the
+pre-existing **Fork As New Document**. This is what makes "Village
+Hall" (read-only, built-in) become an ordinary, renamable, exportable
+entry in My Structures without first becoming — and then having to be
+extracted back out of — a whole Document.
+
+**Every card can leave the device now, not only a personal one.**
+`ExportBlueprintUseCase` was always generic over any `core/Structure.js`
+— only the UI had withheld the **Export Blueprint** button from
+built-in entries. 0.6.3 adds it to a built-in card's "⋮" menu too,
+alongside the new Fork to My Structures and Info entries; a personal
+card's own menu (Fork As New Document, Rename, Export Blueprint,
+Remove) is unchanged.
+
+**Info — inspect, never edit.** `ui/components/StructureInfoPanel.js`
+is a new, read-only detail surface reachable from any card's "⋮" menu
+(built-in or personal): name, category, brick count, footprint and
+height (via `core/SpatialBounds.js#fromBricks()`, never a second,
+cached dimensions field), source, and description, plus Place/Export
+buttons that delegate to the exact same actions the card itself already
+offers. There is no Save button and no editable field anywhere in this
+panel — see docs/Principles.md's running "Inspect ≠ edit" posture.
+
+**Still immutable; revision is still Place -> Modify -> Extract again.**
+0.6.3 does not add in-place blueprint editing. "Farmstead Deluxe"
+coexists with "Farmstead" as two ordinary, independent entries in My
+Structures — never a version of one another at the data-model level.
+`core/Structure.js` gains no `sourceStructureId`/`version`/
+`parentBlueprintId` field: turning a reusable spatial value into a
+genealogy object was considered and deliberately rejected (see
+docs/Roadmap.md, 0.6.3's own "Deliberately excluded") as premature
+ahead of any real, demonstrated need for that provenance to be queryable
+rather than simply remembered by the person who made the revision.
+
+`tests/BlueprintAuthoringUX.test.js` is the flagship: the dialog-first
+registry contract (with the 0.4.2/0.4.3 prompt fallback proven
+byte-for-byte unchanged), `ForkStructureToLibraryUseCase`'s
+independence guarantees, and a full Build -> Extract -> Save -> Place
+-> Modify -> Extract -> Save -> Export -> Import -> Place capstone.

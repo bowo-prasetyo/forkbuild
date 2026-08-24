@@ -11631,3 +11631,209 @@ What's left, and deliberately unbuilt: a generic hint system, any new
 persisted UI-preference concept, and collaborative live editing — each
 sized on its own, exactly like every "Deliberately excluded" list in
 this document before it.
+
+## 0.6.3 — Blueprint Authoring & Versioning UX
+
+0.4.2/0.4.3 built extraction and the Personal Structure Library; 0.6.2
+gave the Editor a real Selection Inspector. What was still missing
+wasn't a domain concept — every piece of machinery this milestone
+touches already existed and was already fully correct — it was that
+authoring and revising a blueprint was still three separate `window.prompt()`
+dialogs reachable only from the Command Palette, and a built-in
+Structure had no way to become a personal one without first becoming an
+entire Document. This milestone makes the workflow the design
+conversation asked for explicit and polished, without adding a single
+new domain concept:
+
+    Build -> Select -> Create Blueprint -> My Structures -> Place ->
+        Modify -> Create Blueprint again
+
+### What shipped
+
+- **`ui/components/CreateBlueprintDialog.js`** (new) — replaces the
+  0.4.2 three-`window.prompt()` chain (Name, then Category, then
+  Description as three separate native dialogs) with one small modal,
+  the same `.modal-overlay`/`.modal-panel`/`.form-field` shell
+  `ui/components/MetadataEditorDialog.js` (0.2.21) already established
+  — no second dialog pattern invented. Shows a live preview (reusing
+  `ui/components/BuildLibraryPreview.js` unchanged) of a throwaway
+  Structure — the CURRENT selection, already run through
+  `CreateStructureFromSelectionUseCase` with placeholder metadata —
+  before any name is typed; clicking **Create Blueprint** re-runs
+  extraction with the real, typed metadata rather than reusing the
+  preview, keeping extraction exactly the pure, repeatable observation
+  0.4.2 made it.
+- **`application/EditorActionRegistry.js`** — `structure.createFromSelection`
+  is relabeled "Create Structure" -> **"Create Blueprint"** (display
+  only; the id is unchanged, per this file's own "unique, dotted,
+  stable" id rule) and now carries `tier: 'advanced'` (0.6.2's
+  hierarchy). `execute()` now prefers a new `ui.openCreateBlueprintDialog()`
+  hook — a real surface owns opening the dialog and running
+  `createStructureFromSelection()`/`saveStructureToPersonalLibrary()`
+  itself once the user actually submits it, because unlike
+  `window.prompt()`, a modal can't hand back its answer synchronously
+  to `execute()`. A surface without the new hook (an older build, or a
+  headless test harness — see `tests/EditorUX.test.js`'s own Section D,
+  unmodified) falls back to the exact 0.4.2/0.4.3 `ui.promptCreateStructure()`
+  chain, byte-for-byte, including its own feedback strings.
+- **`ui/components/SelectionInspector.js`** — gains an "Advanced"
+  `CollapsibleSection` (collapsed by default, the same convention
+  `ui/components/EditingSidebar.js` established in 0.6.2) holding one
+  button: **Create Blueprint**, run through the exact same
+  `run()`/`isDisabled()`/`reasonFor()` every other button in this
+  component already uses. This is the actual "promotion into the
+  normal selection workflow" the design conversation asked for —
+  Create Blueprint was always reachable from the Command Palette; it
+  had never been reachable from the selection itself.
+- **`application/ForkStructureToLibraryUseCase.js`** (new) + **`EditorSession#forkStructureToPersonalLibrary()`**
+  — a SECOND kind of fork, named and built to sit deliberately
+  alongside `ForkStructureUseCase`/`forkStructure()` (0.2.81) rather
+  than replace it:
+
+  ```text
+  Document fork:  Library Structure --fork--> new, editable Document
+  Structure fork: Library Structure --fork--> new, independent
+                   personal Structure (no Document involved at all)
+  ```
+
+  Pure, mirroring every other single-purpose Structure use case here —
+  fresh Structure id, fresh brick ids (the same "an id crossing a
+  boundary always regenerates" rule `ForkStructureUseCase`/
+  `ImportBlueprintUseCase` already apply), metadata preserved as-is
+  (Rename, unchanged, is exactly how a person distinguishes their fork
+  afterward). Reachable from a BUILT-IN card's "⋮" menu only, as **Fork
+  to My Structures** — forking a personal Structure into the SAME
+  personal library isn't a workflow this milestone's design
+  conversation asked for.
+- **`ui/components/BuildLibraryPanel.js`** — every card's "⋮" menu
+  (built-in and personal alike) gains **Info**, opening the new
+  `StructureInfoPanel` below. A built-in card's menu additionally gains
+  **Fork to My Structures** (above) and **Export Blueprint** —
+  `ExportBlueprintUseCase` was always generic over any Structure; only
+  the UI had withheld the button from built-in entries. Nothing about a
+  personal Structure's own menu (Info, Fork As New Document, Rename,
+  Export Blueprint, Remove) changes.
+- **`ui/components/StructureInfoPanel.js`** (new) — a read-only detail
+  surface for one Build Library entry: name, category, brick count,
+  footprint (X × Z) and height (via `core/SpatialBounds.js#fromBricks()`,
+  never a second, cached "dimensions" field — the same math `core/Structure.js`
+  itself already relies on), source ("Village Library" or "My
+  Structures," supplied by the caller, which already knows), and
+  description, plus **Place** and **Export Blueprint** buttons that
+  delegate straight to the SAME `copyStructureIntoDocument()`/
+  `exportStructure()` every card's own primary click and "⋮" menu
+  already use. Deliberately read-only — no field here is editable, and
+  there is no Save button; see docs/Principles.md's running "Inspect ≠
+  edit" posture (0.6.2's `SelectionInspector`/`StructureInstancePanel`
+  split one rung over), now extended to a catalog entry someone is
+  still browsing, not only a live selection.
+- **Confirmation copy.** The dialog-driven Create Blueprint path shows
+  `"<name>" created in My Structures` on success — the psychological
+  close-the-loop line the design conversation asked for ("I created
+  something, and now I own a reusable thing"). The library itself was
+  already visually up to date the instant this fires:
+  `ui.onPersonalLibraryChanged()` (0.4.3, unchanged) still refreshes
+  "My Structures" synchronously, before the dialog even closes.
+- **`tests/BlueprintAuthoringUX.test.js`** — Section A: the registry
+  prefers the dialog hook over the 0.4.2 prompt fallback (and the
+  fallback's own feedback strings stay byte-for-byte unchanged, so
+  `tests/EditorUX.test.js` keeps passing untouched). Section B:
+  `ForkStructureToLibraryUseCase` — fresh id, fresh brick ids, preserved
+  metadata, the built-in Structure provably untouched by mutating the
+  fork, two forks of the same built-in Structure independent of each
+  other. Section C — CAPSTONE: Build -> Select -> Create Blueprint ->
+  My Structures -> Place into an independent Document -> Modify the
+  placed copy -> Create Blueprint again ("Farmstead Deluxe") -> Export
+  -> Import into a wholly separate personal library ("another device")
+  -> Place the imported copy — proving, in order: the source Document's
+  bricks are byte-identical after extraction; the extracted Structure's
+  bricks carry fresh ids; placing a blueprint never mutates the
+  blueprint; modifying a placed copy never reaches back into the
+  library entry; two independent revisions coexist in one library;
+  export/import stays independent (a fresh id, identical geometry);
+  undoing a Document command never touches personal-library state; and
+  the source Document's own serialization never references a library
+  Structure's id.
+
+### Deliberately excluded
+
+- **Mutable Structure editing.** No "open a blueprint, edit it in
+  place, save" flow anywhere in this milestone — 0.4.3's own "Structures
+  remain immutable values" stands completely unchanged. Revising one
+  stays exactly the loop 0.4.3 already established: Place -> Modify the
+  resulting bricks -> Create Blueprint again, optionally under a new
+  name ("Farmstead Deluxe"). No synchronization problem, no stale
+  references, no live dependencies, no new undo semantics — see
+  docs/Principles.md, "Extraction Copies A Blueprint; It Never Moves
+  One (0.4.2)," which this milestone leans on rather than revisits.
+- **`sourceStructureId`/`version`/`parentBlueprintId` on `Structure`
+  itself.** Considered and rejected, exactly as the design conversation
+  itself flagged: this would turn a reusable spatial value into a
+  genealogy object. "Farmstead Deluxe" and "Farmstead" coexist in My
+  Structures as two ordinary, unrelated-by-the-data-model entries —
+  same posture 0.4.3's own "Library Membership Is Not Structure
+  Identity" already established for WHERE a Structure lives, now
+  extended to WHERE it came from. If "based on" provenance ever earns
+  its own feature, it belongs in personal-library metadata alongside a
+  Structure, never inside `core/Structure.js`'s own identity — and only
+  once a real need shows up, not speculatively here.
+- **"Fork to My Structures" on a personal Structure.** Only a built-in
+  card offers it. Duplicating an existing personal Structure into the
+  SAME personal library is a different, narrower feature nobody asked
+  for this milestone — Rename (unchanged) already covers "I want a
+  differently-named copy of what's already mine" for the one case where
+  bricks don't need to change at all.
+- **A tags field in `CreateBlueprintDialog`.** The 0.4.2 prompt chain
+  never asked for tags either (`CreateStructureFromSelectionUseCase`
+  defaults them to `[]`); adding a new field for something no prior UI
+  ever collected is a separate, ungrounded feature, not a byproduct of
+  replacing prompt() with a modal.
+- **Syncing the Personal Structure Library across a user's devices.**
+  Still exactly as out of scope as 0.4.3's own "Deliberately excluded"
+  already put it — this milestone's Export/Import-based device transfer
+  (0.4.6) remains the only cross-device path.
+- **Collaborative live editing**, still exactly as far out of scope as
+  every prior "Deliberately excluded" list in this document already put
+  it.
+
+```text
+0.6.2   Editor UX Consolidation                                   ✓
+             │
+             ▼
+0.6.3   Blueprint Authoring & Versioning UX                       ✓
+             ├── CreateBlueprintDialog — replaces the 0.4.2 three-
+             │   window.prompt() chain with one small modal + live
+             │   preview, reusing BuildLibraryPreview unchanged
+             ├── EditorActionRegistry — "Create Structure" -> "Create
+             │   Blueprint", tier 'advanced', dialog-first execute()
+             │   with the exact 0.4.2/0.4.3 prompt fallback preserved
+             ├── SelectionInspector — Create Blueprint promoted into
+             │   an "Advanced" CollapsibleSection on the selection
+             │   itself, not Command-Palette-only anymore
+             ├── ForkStructureToLibraryUseCase +
+             │   EditorSession#forkStructureToPersonalLibrary() — a
+             │   Structure fork (built-in -> personal Structure),
+             │   deliberately distinct from forkStructure() (a
+             │   Document fork)
+             ├── BuildLibraryPanel — every card gains Info; built-in
+             │   cards gain Fork to My Structures + Export Blueprint
+             ├── StructureInfoPanel — read-only name/category/bricks/
+             │   footprint/height/source/description + Place/Export,
+             │   delegating to the SAME actions every card already has
+             └── tests/BlueprintAuthoringUX.test.js — dialog-first
+                 registry contract, ForkStructureToLibraryUseCase, and
+                 a full Build->Extract->Save->Place->Modify->Extract->
+                 Export->Import->Place capstone
+```
+
+> **0.4.x built the kernel that made a personal Structure possible.
+> 0.6.3 is the milestone whose entire job was making that kernel feel
+> like AUTHORING — a workflow with its own beginning, its own "I made
+> this," and its own way to make a second, better version — rather than
+> a byproduct of the Command Palette.**
+
+What's left, and deliberately unbuilt: mutable Structure editing,
+Structure-level provenance metadata, personal-to-personal forking, a
+tags field nobody asked for, and cross-device library sync beyond
+Export/Import — each sized on its own, exactly like every "Deliberately
+excluded" list in this document before it.

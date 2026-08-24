@@ -100,6 +100,17 @@ export function matches(query, ...fields) {
 // application/ImportBlueprintUseCase.js (via
 // application/EditorSession.js#importBlueprint(), called from
 // ui/views/EditorView.js) that actually parse, validate, and construct.
+//
+// 0.6.3 — Blueprint Authoring & Versioning UX. Every card's "⋮" menu
+// gains an "Info" entry (opens ui/components/StructureInfoPanel.js,
+// read-only, both built-in and personal). A built-in card's menu also
+// gains "Fork to My Structures" (application/ForkStructureToLibraryUseCase.js
+// — a Structure fork, never a Document fork; see that class's own
+// header on the distinction from Fork As New Document above) and
+// "Export Blueprint" (application/ExportBlueprintUseCase.js is generic
+// over any Structure, so a built-in one can leave the device as a
+// portable file exactly like a personal one already could). Nothing
+// about a personal Structure's own menu changes.
 export default {
     name: 'BuildLibraryPanel',
     components: { BuildLibraryPreview },
@@ -145,7 +156,17 @@ export default {
         // caller owns parsing/validating/persisting it, same "this panel
         // finds and asks for things, it never decides what they mean" rule
         // this file's own header states.
-        'export-personal-structure', 'import-blueprint'
+        'export-personal-structure', 'import-blueprint',
+        // 0.6.3 — Blueprint Authoring & Versioning UX. 'inspect-structure'
+        // (any card's "⋮" menu, both built-in and personal — see
+        // ui/components/StructureInfoPanel.js) and 'fork-to-library' (a
+        // BUILT-IN card only — "Village Hall" -> a brand-new, independent
+        // personal Structure, never a Document; see
+        // application/ForkStructureToLibraryUseCase.js's own header on how
+        // this differs from 'fork'/"Fork As New Document" above) both
+        // carry exactly one Structure, same shape as every other per-item
+        // emit in this file.
+        'inspect-structure', 'fork-to-library'
     ],
     setup(props, { emit }) {
         const activeTab = ref('bricks');
@@ -258,6 +279,26 @@ export default {
             closeMenu();
         }
 
+        // 0.6.3 — Blueprint Authoring & Versioning UX. Opens
+        // ui/components/StructureInfoPanel.js for `structure` — a
+        // built-in or a personal one, the panel itself is read-only
+        // either way (see its own header). The caller decides which
+        // library it came from; this panel doesn't need to know.
+        function inspectStructure(structure) {
+            emit('inspect-structure', structure);
+            closeMenu();
+        }
+
+        // 0.6.3 — Blueprint Authoring & Versioning UX. Built-in cards
+        // only (see the template below) — "Village Hall" becomes an
+        // independent entry in My Structures, with no Document
+        // involved. See application/ForkStructureToLibraryUseCase.js's
+        // own header on how this differs from Fork As New Document.
+        function forkToLibrary(structure) {
+            emit('fork-to-library', structure);
+            closeMenu();
+        }
+
         // Import is a library-level action, not a per-structure one, so
         // it lives beside "My Structures" own title rather than inside
         // any one card's menu — clicking it just opens the OS file
@@ -318,6 +359,8 @@ export default {
             renamePersonalStructure,
             removePersonalStructure,
             exportPersonalStructure,
+            inspectStructure,
+            forkToLibrary,
             importFileInput,
             triggerImportBlueprint,
             onImportBlueprintFileChosen
@@ -401,8 +444,17 @@ export default {
                                     @click="toggleMenu(structure.id)"
                                 >⋮</button>
                                 <div v-if="openMenuId === structure.id" class="structure-item-menu-list">
+                                    <button class="action-btn action-btn--secondary structure-item-info" @click="inspectStructure(structure)">
+                                        Info
+                                    </button>
                                     <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
                                         Fork As New Document
+                                    </button>
+                                    <button class="action-btn action-btn--secondary structure-item-fork-to-library" @click="forkToLibrary(structure)">
+                                        Fork to My Structures
+                                    </button>
+                                    <button class="action-btn action-btn--secondary structure-item-export" @click="exportPersonalStructure(structure)">
+                                        Export Blueprint
                                     </button>
                                 </div>
                             </div>
@@ -448,6 +500,9 @@ export default {
                                         @click="toggleMenu(structure.id)"
                                     >⋮</button>
                                     <div v-if="openMenuId === structure.id" class="structure-item-menu-list">
+                                        <button class="action-btn action-btn--secondary structure-item-info" @click="inspectStructure(structure)">
+                                            Info
+                                        </button>
                                         <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
                                             Fork As New Document
                                         </button>

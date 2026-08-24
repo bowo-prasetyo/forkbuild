@@ -2892,6 +2892,58 @@ html, body {
     margin-top: 1rem;
 }
 
+/* 0.6.3 — ui/components/CreateBlueprintDialog.js: same .modal-overlay/
+   .modal-panel/.form-field convention as .metadata-editor above, plus
+   a small live preview strip reusing .build-library-preview (32px)
+   unchanged — no second, bigger thumbnail style invented for "not yet
+   saved" content. */
+.create-blueprint-preview-body {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.create-blueprint-preview-count {
+    font-size: 0.82rem;
+    color: #b0b0b0;
+}
+
+/* 0.6.3 — ui/components/StructureInfoPanel.js: same .modal-overlay/
+   .modal-panel convention, read-only — no .form-field/.form-input
+   anywhere in this panel, only a label/value fact list. */
+.structure-info-panel .structure-info-category {
+    margin: -0.5rem 0 0.85rem;
+    font-size: 0.78rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.structure-info-facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 0.75rem;
+    margin: 0 0 0.85rem;
+}
+
+.structure-info-facts dt {
+    color: #909090;
+    font-size: 0.82rem;
+}
+
+.structure-info-facts dd {
+    margin: 0;
+    color: #e0e0e0;
+    font-size: 0.82rem;
+}
+
+.structure-info-description {
+    margin: 0 0 0.85rem;
+    color: #c0c0c0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
 /* 0.2.24: relative nudge convenience on the Move Placement dialog —
    always adjusts the absolute X/Y/Z fields above; nothing relative is
    ever persisted (see ui/components/PlacementEditorDialog.js). */
