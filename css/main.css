@@ -3014,6 +3014,24 @@ html, body {
     line-height: 1.4;
 }
 
+/* 0.6.7 — Blueprint Attribution Resolution & Community Identity.
+   ui/components/StructureInfoPanel.js's "Community Attribution" section
+   reuses .naming-panel-section/.naming-panel-list/.naming-panel-item
+   wholesale (the same "ranked list of named things" shape 0.5.5's own
+   GeographicPlacePanel already reused, applied here to authors instead
+   of names) — only this small actions row and the .inline-link-btn
+   margin reset are new, since .inline-link-btn was designed to sit mid-
+   sentence, not as a standalone row of two. */
+.structure-info-attribution-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0.3rem 0 0;
+}
+
+.structure-info-attribution-actions .inline-link-btn {
+    margin-left: 0;
+}
+
 /* 0.2.24: relative nudge convenience on the Move Placement dialog —
    always adjusts the absolute X/Y/Z fields above; nothing relative is
    ever persisted (see ui/components/PlacementEditorDialog.js). */

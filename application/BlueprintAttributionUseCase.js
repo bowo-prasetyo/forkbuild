@@ -1,6 +1,7 @@
 import { BlueprintAttribution } from '../core/BlueprintAttribution.js';
 import { deriveBlueprintFingerprint } from '../core/BlueprintFingerprint.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
+import { attributionView } from '../core/BlueprintAttributionView.js';
 
 // 0.6.5 — Blueprint Identity & Attribution.
 //
@@ -29,7 +30,14 @@ import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.j
 // attributions later (see core/PlaceNamingClaim.js's own header on the
 // identical restraint, one domain over).
 export class BlueprintAttributionUseCase {
-    constructor(store, identityProvider, verifier) {
+    // `publicationLog` is OPTIONAL and OFF by default — every call site
+    // that predates 0.6.7 keeps constructing this class with exactly
+    // three arguments, and communityView() below degrades gracefully
+    // (every claim's own receivedAt reads as null) when it is omitted.
+    // See that method's own header on why it, not summarize(), is the
+    // one place this class is allowed to read the publication log at
+    // all.
+    constructor(store, identityProvider, verifier, publicationLog = null) {
         if (!store) {
             throw new Error('BlueprintAttributionUseCase: a BlueprintAttribution store is required');
         }
@@ -42,6 +50,7 @@ export class BlueprintAttributionUseCase {
         this._store = store;
         this._identityProvider = identityProvider;
         this._verifier = verifier;
+        this._publicationLog = publicationLog;
     }
 
     // Signs and stores a new attribution: "I, the currently authenticated
@@ -123,5 +132,44 @@ export class BlueprintAttributionUseCase {
             ? attributions.find((attribution) => attribution.authorIdentityId === authorIdentityId) || null
             : null;
         return { fingerprint, attributions, mine };
+    }
+
+    // 0.6.7 — Blueprint Attribution Resolution & Community Identity.
+    //
+    // The presentation-ready counterpart to summarize() above: the exact
+    // same fingerprint/attributions/identity read, but run through
+    // core/BlueprintAttributionView.js#attributionView() so a caller gets
+    // back a distinct-author ranking (`authors`/`authorCount`) instead of
+    // a flat, unranked list. Deliberately a SEPARATE method rather than a
+    // change to summarize()'s own return shape — summarize() stays the
+    // plain, unranked read every existing caller already relies on, the
+    // same restraint core/PlaceNamingView.js keeps as its own module,
+    // entirely apart from application/PlaceNamingClaimUseCase.js.
+    //
+    // This is also the ONE place in this class allowed to read
+    // `publicationLog`, attaching a companion `receivedAt` map keyed by
+    // attribution id — never merged into the attribution objects
+    // themselves (they stay immutable, exactly as core/
+    // BlueprintAttribution.js constructs them), and never influencing
+    // `authors`/`authorCount`/ordering in any way. summarize() above
+    // still never touches the log at all — see application/
+    // LocalBlueprintAttributionPublicationLog.js's own header on why that
+    // restraint predates this method and stays exactly where 0.6.6 left
+    // it.
+    communityView(structure) {
+        const fingerprint = deriveBlueprintFingerprint(structure);
+        if (!fingerprint) {
+            return { ...attributionView(null, [], null), receivedAt: {} };
+        }
+        const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
+        const attributions = this._store.list(fingerprint);
+        const view = attributionView(fingerprint, attributions, authorIdentityId);
+        const receivedAt = {};
+        if (this._publicationLog) {
+            for (const claim of view.claims) {
+                receivedAt[claim.id] = this._publicationLog.getReceivedAt(fingerprint, claim.id);
+            }
+        }
+        return { ...view, receivedAt };
     }
 }

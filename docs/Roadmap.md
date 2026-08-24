@@ -12427,3 +12427,156 @@ attribution relationship semantics beyond plain authorship, automatic
 import deduplication, ranking/trust scores, a signed retraction protocol,
 and a full attribution-browsing UI — each sized on its own, exactly like
 every "Deliberately excluded" list in this document before it.
+
+## 0.6.7 — Blueprint Attribution Resolution & Community Identity
+
+0.6.5 built the attribution MODEL and 0.6.6 built the EXCHANGE transport
+that lets a replica accumulate more than one signed attribution for the
+same fingerprint, but neither ever answered the question that only makes
+sense once a replica actually holds several: what does a person see when
+multiple identities have all claimed authorship of the same design? This
+milestone is the derivation layer that answers it — the direct
+`core/PlaceNamingView.js` counterpart, one domain over, that 0.6.5's own
+header already predicted would eventually be needed ("a future
+'attribution view,' once 0.6.6 gives attributions somewhere to travel
+besides one replica's own storage").
+
+```text
+BlueprintAttribution (0.6.5)   →   several, independently signed,
+                                    exchanged claims for one fingerprint
+                                                  │
+                                                  ▼
+                              core/BlueprintAttributionView.js (0.6.7)
+                                                  │
+                                                  ▼
+                          "who has claimed this, and with how much
+                           independent support?" — never "who is right"
+```
+
+The one genuinely new design decision this milestone makes, beyond
+copying 0.5.4's own shape: **authors never compete.** A `PlaceNamingView`
+entry picks a winner — a region gets, at most, one PREFERRED name. A
+blueprint can legitimately have three attributed authors at once — an
+original creator, a collaborator, an adapter — with no implication that
+one is more "correct" than another. So `attributionView()` never trims
+its `authors` list to a single answer the way `preferredClaimedName()`
+does; every distinct attributing identity is always shown, ordered only
+for stable presentation.
+
+### What shipped
+
+- **`core/BlueprintAttributionView.js`** (new) — the pure derivation
+  layer: `attributionsForFingerprint()` (mirrors `claimsForRegion()`),
+  `rankAttributionsByAuthor()` (mirrors `rankClaimsByName()`, grouping by
+  `authorIdentityId` instead of by name), `attributionView()` (the
+  composed `{ fingerprint, authors, authorCount, claims, mine }` a caller
+  actually wants), and `describeAttributionView()` (a short "Attributed
+  to N authors" summary, empty string for nothing claimed yet — the same
+  "empty string, never a placeholder" restraint every derived-view module
+  in this codebase keeps). `authorCount` counts DISTINCT identities, never
+  raw claim count: the exact protection 0.5.2 already built for a naming
+  claim, applied here — an identity that redundantly republishes several
+  attributions for the same design still contributes to exactly one
+  `authors` entry, with its own `score` (that author's own claim count)
+  rising instead.
+- **`application/BlueprintAttributionUseCase.js#communityView()`** (new
+  method) — the presentation-ready counterpart to `summarize()`, which
+  stays completely untouched: same fingerprint/attribution/identity read,
+  run through `attributionView()`, plus a companion `receivedAt` map
+  (attribution id → ISO timestamp or `null`) sourced from
+  `LocalBlueprintAttributionPublicationLog` — the exact hook that log's
+  own 0.6.6 header reserved for "a future freshness policy," now finally
+  consumed, still never merged into the attribution objects themselves
+  (they stay immutable) and never influencing ranking. The constructor
+  gained one new, OPTIONAL, backward-compatible fourth argument
+  (`publicationLog`); every pre-0.6.7 three-argument call site keeps
+  working unchanged, with `communityView()` degrading to an always-empty
+  `receivedAt` when it's omitted.
+- **`application/CreateBlueprintAttributionUseCase.js`** — the one small
+  wiring change: the same `publicationLog` instance it already built for
+  `BlueprintAttributionExchange` now also goes to
+  `BlueprintAttributionUseCase`, never a second, independent log.
+- **`ui/components/StructureInfoPanel.js`** — the single "N known
+  authors" fact is now a real "Community Attribution" list, one row per
+  distinct identity with that identity's own supporting-claim count,
+  labeled exactly that — never a ranking or a "most trusted" verdict.
+  Own claims show as "You"; every other identity shows a short truncated
+  `authorIdentityId` — deliberately never a resolved human display name,
+  since nothing in this codebase hands a panel a directory mapping an
+  arbitrary identity to one (see `ui/components/PlaceNamingPanel.js`'s
+  own `formatAuthor()`, reused here verbatim). A collapsed "Attribution
+  Claims" section (progressive disclosure, the same restraint 0.5.7
+  established) lists every raw claim, each labeled with the one timing
+  fact this panel is willing to show for someone else's claim — "Received
+  locally," never the claim's own self-reported, spoofable `createdAt` —
+  or, for the viewer's own claim, "Signed by you," which IS trustworthy
+  because the viewer is the one who signed it.
+- **`tests/BlueprintAttributionResolution.test.js`** (new) — pure
+  derivation-layer unit coverage, `communityView()` wiring (including the
+  no-`publicationLog` degrade path), and a flagship convergence scenario:
+  three independent identities each claim authorship of the same design,
+  one redundantly republishes, every replica exchanges every other
+  replica's claims in a different order with a duplicate re-import mixed
+  in, and every replica's own derived community attribution view —
+  `authors`/`authorCount`/`claims` — converges to byte-identical,
+  regardless of arrival order, duplicate publications, export/import
+  order, or local Structure/brick ids. The viewer-relative `mine`/
+  `receivedAt` fields are proven to correctly stay DIFFERENT per replica
+  throughout — never part of what "converges."
+
+### Deliberately excluded
+
+- **Ranking, trust scores, or "most trusted author."** Unchanged from
+  0.6.6's own identical exclusion — `score` here is presentation order
+  within an already non-competing list, never a verdict about who
+  actually made the design.
+- **Resolved human display names.** No identity directory exists
+  anywhere in this codebase mapping an arbitrary `authorIdentityId` to a
+  name a viewer never independently verified; inventing one here would
+  make a fabricated-looking name read as more authoritative than the
+  truncated identityId `ui/components/PlaceNamingPanel.js` has always
+  shown instead. A real profile/display-name directory, if one is ever
+  built, is its own future milestone, not a shortcut taken here.
+- **`parentBlueprintId`, `version`, `revision`, `createdBy`,
+  `originalAuthor`, `forkedFrom`.** A blueprint fingerprint already gives
+  content identity; attribution already gives (an assertion about)
+  authorship. Lineage/versioning — "this design appears to be a
+  modification of that one" — is a fundamentally different, much harder
+  problem (similarity, not equality) and stays its own future milestone,
+  never folded in here just because the words are adjacent.
+- **A full attribution-browsing UI independent of an inspected
+  Structure.** Unchanged from 0.6.6's own identical exclusion — Community
+  Attribution stays reachable only from the Structure it's about.
+- **Any change to retraction, exchange, or the signing/verification
+  path.** This milestone only ever READS what 0.6.5/0.6.6 already built
+  and ranks it for display; it adds no new mutation, no new wire shape,
+  and no new trust decision anywhere.
+
+```text
+0.6.6   Decentralized Blueprint Exchange                          ✓
+             │
+             ▼
+0.6.7   Blueprint Attribution Resolution & Community Identity     ✓
+             ├── BlueprintAttributionView — distinct-author
+             │   grouping/ranking, presentation only, never a winner
+             ├── BlueprintAttributionUseCase#communityView() — new,
+             │   additive method; summarize() untouched
+             ├── StructureInfoPanel — real "Community Attribution"
+             │   list + collapsed "Attribution Claims" history
+             └── BlueprintAttributionResolution.test.js — 3 sections,
+                 including a 3-identity, out-of-order, duplicate-import
+                 convergence flagship
+```
+
+> **0.6.6 gave an attribution somewhere to travel besides one replica's
+> own storage. 0.6.7 is the milestone that answers what a person actually
+> sees once several have arrived: a real, deterministic community list —
+> never a winner, never a resolved name, and never anything stronger than
+> "here is who has signed a claim, and here is exactly when this replica
+> learned about it."**
+
+What's left, and deliberately unbuilt: resolved display names, blueprint
+lineage/versioning, ranking or trust scoring of any kind, and any UI for
+browsing attribution independent of an inspected Structure — each sized
+on its own, exactly like every "Deliberately excluded" list in this
+document before it.

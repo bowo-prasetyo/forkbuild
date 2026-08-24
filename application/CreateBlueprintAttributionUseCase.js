@@ -22,13 +22,20 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // application/CreateWorldPlaceNamingUseCase.js's own 0.5.3 update already
 // took one domain over. Nothing about `blueprintAttributionUseCase`
 // changes at all.
+//
+// 0.6.7 — Blueprint Attribution Resolution & Community Identity. The
+// SAME `publicationLog` instance built here now also goes to
+// `blueprintAttributionUseCase`, so its new `communityView()` method can
+// attach the `receivedAt` this log already tracks — never a second,
+// independent log instance, since both read/write through the same
+// `storageProvider` key anyway.
 export class CreateBlueprintAttributionUseCase {
     execute(identityProvider) {
         const storageProvider = new LocalStorageProvider();
         const attributionStore = new LocalBlueprintAttributionStore(storageProvider);
         const publicationLog = new LocalBlueprintAttributionPublicationLog(storageProvider);
         const verifier = new LocalAuthorizationVerifier();
-        const blueprintAttributionUseCase = new BlueprintAttributionUseCase(attributionStore, identityProvider, verifier);
+        const blueprintAttributionUseCase = new BlueprintAttributionUseCase(attributionStore, identityProvider, verifier, publicationLog);
         const blueprintAttributionExchange = new BlueprintAttributionExchange(attributionStore, verifier, publicationLog);
 
         return { blueprintAttributionUseCase, blueprintAttributionExchange };
