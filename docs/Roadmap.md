@@ -13554,3 +13554,173 @@ Discovery UI, a global discovery index, and the app-wide wiring that
 would put a live announcement in front of an actual user — each sized
 on its own, exactly like every "Deliberately excluded" list in this
 document before it.
+
+## 0.7.4 — Peer Content Retrieval
+
+0.7.3 left exactly one thing named and unbuilt: "a pull-based
+request/response protocol... any form of content transfer." The
+pipeline that milestone finished reads clean end to end —
+
+```text
+Peer -> PublicationPeerExchange -> PublicationCatalog
+     -> PublicationResolver -> ContentStore
+```
+
+— but every flagship through 0.7.3 still had to plant the bytes a
+publication pointed at by hand, on the SAME replica, before resolving
+it. This milestone closes that gap: if Bob discovers a publication
+whose content he does not have, he can now ask a peer for it directly.
+
+### What shipped
+
+- `application/PeerContentProtocol.js` — the REQUEST/RESPONSE wire pair
+  `application/PublicationPeerProtocol.js`'s own header named and
+  deliberately declined to build, living in its own `'forkbuild:content'`
+  namespace rather than folded into `PublicationPeerMessageKind`. Only
+  two kinds exist, on purpose — there is no `NOT_FOUND`: a peer that
+  cannot or will not help a REQUEST simply never sends a RESPONSE, the
+  same silent-drop restraint every exchange class in this codebase
+  already applies to a message it declines to act on.
+  `isValidContentHash()` is algorithm-agnostic (a bare hex string,
+  bounded, nothing about `core/ContentReference.js`'s own `algorithm`
+  field assumed). `MAX_CONTENT_BYTES` (48KB) caps a RESPONSE's bytes
+  well under `peer/PeerMessage.js`'s own 64KB envelope ceiling, enforced
+  on BOTH the sending side (`toContentResponseMessage()` throws) and the
+  receiving side (`isValidPeerContentMessage()` rejects a hand-crafted
+  oversized message that ignored the first check entirely) — a REQUEST
+  for one publication's bytes must never become a vector for a peer to
+  push something unbounded.
+- `application/PeerContentExchange.js` — attaches to a `peer/
+  PeerMessageBus.js` instance exactly like `application/
+  PublicationPeerExchange.js` already does, under its own namespaced
+  protocol, so the two multiplex over the SAME authenticated connection
+  without knowing about each other. `request(peer, hash)` and
+  `_handleRequest()` both enforce this milestone's own authorization
+  boundary: neither will act on a hash the injected
+  `LocalPublicationCatalog` does not already know, via some cataloged
+  publication's own `contentReference`. Unknown hash — no request, ever,
+  in either direction; known publication — a request is permitted, never
+  guaranteed an answer. `_handleResponse()` enforces the milestone's
+  central security rule: a peer is never trusted merely because it
+  supplied bytes. `core/ContentReference.js#verify()` recomputes the
+  hash of exactly what arrived and checks it against exactly what was
+  requested; a mismatch is dropped, silently, before anything reaches
+  storage. Storing then runs through `content/LocalContentStore.js#put()`
+  UNCHANGED — it already recomputes its own hash from the bytes rather
+  than trusting one handed to it, so mislabeling was never possible even
+  before this milestone existed. A duplicate or concurrently-sourced
+  RESPONSE for the same hash converges harmlessly, for free, because
+  content-addressed storage already makes `put()` idempotent.
+- `application/CreatePeerContentExchangeUseCase.js` — a composition root
+  that, unlike `application/CreatePublicationPeerExchangeUseCase.js`,
+  constructs NONE of its four collaborators itself. `contentStore` and
+  `publicationCatalog` already exist, produced by 0.7.1's/0.7.2's own
+  composition roots; reconstructing separate instances here would
+  silently split a replica's content and catalog state into two halves
+  the rest of the app would never see. `peerMessageBus`/
+  `connectedPeerRegistry` are passed through for the same reason 0.7.3's
+  own composition root already gives. Deliberately NOT wired into
+  `ui/main.js` — see "Deliberately excluded" below.
+- `tests/PeerContentExchange.test.js` — three sections: the wire shapes'
+  own hash/size validation on both sides; routing and every adversarial
+  case against a stub transport (unknown-hash refusal in both
+  directions, a request the responder cannot actually fulfill, a
+  malformed/oversized/unsolicited/tampered RESPONSE all silently
+  dropped without ever crashing the bus, duplicate and concurrent
+  convergence to one stored entry, `dispose()`); and a flagship running
+  `PublicationPeerExchange` and `PeerContentExchange` multiplexed live
+  over ONE real authenticated connection per side — Bob catalogs Alice's
+  publication, resolves `CONTENT_UNAVAILABLE`, asks Alice for the bytes
+  by hash over that same wire, and resolves `RESOLVED`, with no file, no
+  clipboard, and no change to either `PublicationPeerExchange` or
+  `PublicationResolver`.
+
+### Peer identity is not content authenticity
+
+See docs/Principles.md, "Content Delivery Is Not Content Authority
+(0.7.4)," for the full reasoning. The short version, stated once because
+it governs every method in `application/PeerContentExchange.js`: a
+publication's own signature only ever proves who published a LOCATOR —
+never who is allowed to hand this replica bytes for it. Peer identity
+stays exactly as informational as `application/
+PublicationPeerExchange.js`'s own header already insists — `_handleResponse()`
+never reads `meta.connectedPeer` to decide whether to trust a RESPONSE,
+only `core/ContentReference.js#verify()` does that, the identical
+cryptographic check `application/PublicationResolver.js#resolve()` has
+applied to retrieved bytes since 0.7.0. Content delivery authority and
+publisher identity stay two separate facts, exactly as separate as they
+have always been.
+
+### Deliberately excluded
+
+- **Any way to request content that no publication points at.** Both
+  `request()` and `_handleRequest()` refuse a hash the local
+  `LocalPublicationCatalog` does not already know about — see "What
+  shipped" above. Removing that gate would turn a protocol meant for
+  retrieving PUBLISHED content into a generic peer-to-peer file-transfer
+  service; this milestone deliberately never builds that.
+- **Multi-source retrieval, fallback, or racing.** `request()` asks
+  exactly one peer, chosen by the caller. Asking several peers at once,
+  preferring the fastest reply, or falling back automatically from a
+  peer to IPFS (or the reverse) is real, additional policy this
+  milestone names and declines to build — sized as its own future
+  milestone (0.7.6, unchanged from this document's own running table).
+- **Peer trust, reputation, or a "preferred source" concept.** Exactly
+  the restraint `application/PublicationPeerExchange.js`'s own header
+  already applies to WHO announced a publication, extended here to WHO
+  supplied its bytes: no `trustedPeer`, `peerScore`, or "this peer's
+  content is more reliable" field exists anywhere in this milestone, and
+  none should ever be added — see "Peer identity is not content
+  authenticity" above.
+- **Any Discovery/Retrieval UI.** No component or view exists for any of
+  this milestone's own classes, and `application/
+  CreatePeerContentExchangeUseCase.js` is deliberately NOT wired into
+  `ui/main.js` — the identical "no UI surface" restraint 0.7.0 through
+  0.7.3 already applied before it. Sized as its own future milestone
+  (0.7.5, unchanged from 0.7.2's own roadmap entry).
+- **Chunking, streaming, or multi-part content transfer.** A RESPONSE
+  carries one complete payload, capped at `MAX_CONTENT_BYTES`; content
+  larger than that ceiling simply cannot be served by this protocol yet.
+  `peer/PeerMessageBus.js` itself has no concept of a multi-part message
+  (see its own header) — building one is real transport work this
+  milestone declines to do for a use case (a signed JSON document) that
+  has never yet needed it.
+
+```text
+0.7.3   Peer Publication Exchange                                 ✓
+             │
+             ▼
+0.7.4   Peer Content Retrieval                                    ✓
+             ├── application/PeerContentProtocol.js — REQUEST/RESPONSE
+             │   wire shapes; no NOT_FOUND kind; MAX_CONTENT_BYTES
+             │   enforced on both the sending and receiving side
+             ├── application/PeerContentExchange.js — catalog-gated
+             │   request()/_handleRequest() in both directions; hash-
+             │   verified _handleResponse(); peer identity stays
+             │   informational only; multiplexes over the same
+             │   PeerMessageBus a PublicationPeerExchange already uses
+             ├── application/CreatePeerContentExchangeUseCase.js —
+             │   composition root taking all four collaborators as
+             │   parameters, constructing none of them itself
+             └── PeerContentExchange.test.js — 3 sections, flagship
+                 multiplexes both peer exchanges over one real
+                 connection: CONTENT_UNAVAILABLE → peer content
+                 retrieval → RESOLVED
+```
+
+> **0.7.0 built a signed locator. 0.7.1 proved it could be resolved
+> through a real network. 0.7.2 gave a replica somewhere to keep one it
+> had only seen. 0.7.3 replaced a hand-off file with a live wire for the
+> locator itself. Every one of those milestones still left the actual
+> CONTENT sitting wherever it already happened to be. 0.7.4 is the
+> missing pull: ask a peer for bytes by hash, verify them yourself
+> against exactly that hash, and never once trust the peer that handed
+> them over. The catalog still knows nothing about peers. The resolver
+> still knows nothing about peers. Only a `ContentStore`, filled from a
+> new source, changed.**
+
+What's left, and deliberately unbuilt: multi-source retrieval and
+fallback, peer trust or reputation, a Discovery/Retrieval UI, and
+chunked or streaming transfer for content larger than one message — each
+sized on its own, exactly like every "Deliberately excluded" list in
+this document before it.

@@ -9264,3 +9264,64 @@ concept exists anywhere in this milestone, extending the identical
 "publisher identity ≠ transport source" invariant this codebase has
 held since `application/PlaceNamingClaimExchange.js`'s own 0.5.3
 header, now proven true of a live connection as much as a file.
+
+### Content Delivery Is Not Content Authority (0.7.4)
+
+0.7.3 closed with one thing named and unbuilt: "a pull-based
+request/response protocol... any form of content transfer." Every
+milestone through 0.7.3 answered "who published this locator, and can
+its bytes be resolved" without ever asking a THIRD replica to help —
+the bytes a publication pointed at were always already sitting wherever
+`application/PublicationResolver.js#resolve()` looked. `application/
+PeerContentExchange.js` is the missing pull, and the rule its own
+design conversation stated before any code existed: **a peer is never
+trusted merely because it supplied bytes.**
+
+**A publication's signature proves who published a LOCATOR, never who
+may deliver its bytes.** `core/DecentralizedPublication.js`'s own header
+has held this distinction since 0.7.0 — `contentReference.hash`
+(cryptographic identity of the bytes) and `signature.signer` (identity
+of whoever published the reference) were always two independent claims.
+This milestone adds a third, equally independent fact: WHO physically
+handed this replica a copy of those bytes just now. None of the three
+implies either of the others. Alice's signature on a publication gives
+Charlie no special authority to deliver its content, and Charlie
+successfully delivering bytes gives him no retroactive claim to have
+published anything.
+
+**The hash is the only thing that ever makes a RESPONSE trustworthy.**
+`application/PeerContentExchange.js#_handleResponse()` never reads
+`meta.connectedPeer` to decide whether to accept a RESPONSE — the same
+"peer identity stays informational, never authority" restraint
+`application/PublicationPeerExchange.js`'s own header already
+established for an ANNOUNCE, extended here from "is this signed
+correctly" to "do these bytes hash to what I asked for." `core/
+ContentReference.js#verify()` recomputes the hash of exactly what
+arrived and compares it against exactly what was requested; a mismatch
+is dropped before it ever reaches `content/LocalContentStore.js#put()`.
+Storing itself was never the last line of defense — `put()` has
+recomputed its own hash from the bytes it was handed since 0.7.0, so
+mislabeled content was structurally impossible even before this
+verification step existed. This milestone adds a check in front of
+storage, not a fix inside it.
+
+**Retrieval is authorized by what was published, never by what is
+merely known.** `application/PeerContentExchange.js#request()` and
+`#_handleRequest()` both refuse to act on a hash the local `application/
+LocalPublicationCatalog.js` does not already hold, via some cataloged
+publication's own `contentReference` — see `tests/
+PeerContentExchange.test.js`'s own Section B for a request refused in
+both directions. Without that gate, this protocol would answer any hash
+a peer happened to already know, becoming a generic file-transfer
+primitive with no relationship to `core/DecentralizedPublication.js` at
+all. With it, "ask a peer for content" stays exactly what its own name
+says: retrieving what a signed locator already promised was there,
+never fetching by bare guess.
+
+**No new trust concept was introduced.** Exactly like `application/
+PublicationPeerExchange.js`'s own 0.7.3 header, no `trustedPeer`,
+`peerScore`, or "preferred content source" field exists anywhere in
+this milestone, and none should ever be added — a peer that supplies
+verified bytes today is owed nothing more than a peer that supplies
+none tomorrow. See `docs/Roadmap.md`, 0.7.4, "Peer identity is not
+content authenticity," for the full milestone entry.
