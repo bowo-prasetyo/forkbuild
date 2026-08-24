@@ -10029,3 +10029,99 @@ disagreeing anchors for the SAME publication might ever be reasoned about
 together is 0.8.6's own question, deliberately unopened here.
 
 See `docs/Roadmap.md`, 0.8.5, for the full milestone entry.
+
+### Evidence Relationships Are Derived, Never Adjudicated (0.8.6)
+
+0.8.5's own closing question — "whether, and how, several
+independently-held, possibly disagreeing anchors for the SAME
+publication might ever be reasoned about together" — gets exactly one
+answer in 0.8.6, and it is a narrow one: they can be COMPARED, never
+RESOLVED. `application/PublicationEvidenceConvergence.js#
+derivePublicationEvidenceConvergence()` is the first module in this
+codebase that looks at more than one anchor for the same publicationId
+at once and says something about how they relate. What it says is
+strictly structural: do these anchors' own `contentHash` values agree
+with each other, and (optionally) with an `expectedContentHash` the
+caller already knows. What it never says, under any circumstance, is
+which anchor is right.
+
+**Detecting a conflict and adjudicating one are different acts, and this
+codebase now performs exactly the first.** When cataloged anchors for a
+publicationId carry more than one distinct `contentHash`,
+`derivePublicationEvidenceConvergence()` reports `contentBindingConflict:
+true` and the true partition in `contentHashGroups` — nothing is
+dropped, hidden, or quarantined for disagreeing. `tests/
+PublicationEvidenceConvergence.test.js`'s own flagship makes the
+strongest version of this concrete: three anchors agree on one
+`contentHash`, a fourth disagrees, and the derived result names the
+fourth `DIFFERS_FROM_EXPECTED` — never `INVALID`, `MALICIOUS`, or
+`REJECTED`, and never omitted from `anchorCount` for being the odd one
+out. The larger group is never treated as more authoritative for
+outnumbering the smaller one either: `contentHashGroups` reports both
+group sizes honestly and stops there, exactly as `application/
+PublicationAnchor.js`'s own header already required for a single pair of
+competing anchors, now proven to hold for a set of four considered
+together.
+
+**No field in the derived result can be summed, sorted, or thresholded
+into a verdict.** There is no `EvidenceTrustScore`, `EvidenceAuthority`,
+`EvidenceConfidence`, `EvidenceRank`, `EvidenceStrength`, or
+`EvidenceConsensus` anywhere in `application/
+PublicationEvidenceConvergence.js`, and none was ever a step this
+milestone took and then hid — `tests/
+PublicationEvidenceConvergence.test.js`'s own flagship asserts this
+directly, scanning the derived result's own serialized form for any
+trace of "authority," "trust," "winner," "consensus," "correct,"
+"malicious," or "reject." The distinction this principle draws is the
+same one `docs/Principles.md`, "External Anchoring Provides Evidence; It
+Does Not Establish Authority (0.8.0)," drew for a SINGLE anchor,
+extended here to however many a replica has converged on: multiplicity
+is never manufactured into authority, agreement is never manufactured
+into truth, and a structural relationship between two claims is never
+manufactured into a decision about which claim to believe.
+
+See `docs/Roadmap.md`, 0.8.6, for the full milestone entry.
+
+### Verification Observations Stay Local Even Under Comparison (0.8.6)
+
+0.8.4 and 0.8.5 already established that verification outcomes never
+cross the wire — an ANNOUNCE, a REQUEST, and a RESPONSE all carry
+evidence claims and nothing about who verified what. 0.8.6 is the first
+milestone whose whole purpose is to READ verification outcomes
+alongside other evidence, which raises the one question those earlier
+milestones never had to answer: does COMPARING two replicas' local
+observations count as exchanging them? This principle's answer is no,
+and the discipline that keeps it no is entirely about which module ever
+sees more than one replica's observations at once.
+
+**`application/PublicationEvidenceConvergence.js` never receives more
+than one replica's own `verificationByAnchorId` map in a single call.**
+There is no parameter for "which replica observed this," no way to
+merge two maps into one, and no code path that could average, tally, or
+prefer one replica's observation over another's — because the function
+is never handed both at the same time in the first place. A caller that
+wants to compare Alice's and Bob's independent observations of the
+identical anchor calls this function TWICE, once against each replica's
+own local state, and compares the two plain JavaScript objects that come
+back ENTIRELY OUTSIDE this module — `tests/
+PublicationEvidenceConvergence.test.js`'s own flagship does exactly
+this: Alice's own `identity/LocalAuthorizationVerifier.js` reports
+Anchor A `VALID`; Bob's independently reports the identical anchor
+`PROOF_UNAVAILABLE` (his own external system happens to be unreachable
+right now); each replica's own derived view carries only its own
+observation, and neither is ever synthesized into a shared answer.
+
+**A local verification observation never changes another axis of the
+same derived result.** Supplying `verificationByAnchorId` populates the
+`verification` field on the matching anchor entries and nothing else —
+`contentBindingConflict`, `contentHashGroups`, `matchingAnchorIds`, and
+`divergentAnchorIds` are computed purely from the anchors' own
+`contentHash` values and stay identical whether or not any verification
+was ever supplied at all. Structural relationships and local
+observations are answers to two different questions, and one is never
+allowed to leak into the other's result — the same separation of
+concerns `docs/Principles.md`, "Signature Verification Is Not Proof
+Verification (0.8.4)," already drew one layer down, extended here to a
+third, independent axis.
+
+See `docs/Roadmap.md`, 0.8.6, for the full milestone entry.
