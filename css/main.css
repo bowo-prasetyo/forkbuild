@@ -699,6 +699,76 @@ html, body {
     color: rgba(255, 255, 255, 0.85);
 }
 
+/* 0.6.4 — Blueprint Discovery, Search & Library Organization. The
+   Structures tab's All/Built-in/My Structures tri-state, styled as a
+   smaller sibling of .build-library-tab/.build-library-tab--active
+   wholesale rather than a second tab visual language — this is
+   architecturally the same "pick one of a few mutually exclusive
+   views" control one rung down from the Bricks/Structures switcher
+   above it. */
+.build-library-source-tabs {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.build-library-source-tab {
+    flex: 1;
+    padding: 0.3rem 0.4rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #909090;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+}
+
+.build-library-source-tab:hover {
+    background: #262626;
+    color: #d0d0d0;
+}
+
+.build-library-source-tab--active {
+    background: #234433;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+
+/* Category filter + sort dropdowns — reuses .build-library-search's own
+   dark input styling so neither dropdown introduces a third form-field
+   look next to the search box directly above it. */
+.build-library-filters {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.build-library-filter-select {
+    flex: 1;
+    min-width: 0;
+    padding: 0.35rem 0.4rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.75rem;
+    outline: none;
+}
+
+.build-library-filter-select:focus {
+    border-color: #4caf7d;
+}
+
+/* "Recent" reuses .palette-group/.palette-category/.structure-list
+   wholesale — visually it's just another category group, positioned
+   first, never a competing visual language for what is, structurally,
+   the exact same kind of list. */
+.recent-structures-group {
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #2a2a2a;
+}
+
 .viewport {
     flex: 1;
     min-width: 0;

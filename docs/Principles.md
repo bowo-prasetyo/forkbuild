@@ -8475,3 +8475,83 @@ and speculatively building it ahead of a real need is precisely the
 kind of complexity this codebase has consistently declined to add early
 (see, among others, 0.4.3's own "Library Membership Is Not Structure
 Identity").
+
+### Sorting Is Presentation, Never Identity (0.6.4)
+
+A growing Build Library needs to stay browsable by more than scrolling —
+0.6.4 adds a sort dropdown (Name, Recently created, Brick count,
+Footprint, Height) to `ui/components/BuildLibraryPanel.js`. None of it
+touches what a Structure IS. `core/sortStructures.js` is a pure function:
+structures in, the SAME structures back out, reordered. It never mutates
+a Structure, never reorders anything `core/StructureRegistry.js` or
+`application/LocalStructureLibraryStore.js` itself hands back, and its
+result is never serialized, cached, or treated as a second source of
+truth about the library's contents. Choosing "Brick count" instead of
+"Name" changes what the user sees in one render pass and nothing else —
+a Structure's `id`, its `toJSON()` output, and its position in
+`getAll()`/`listStructures()` stay exactly what they always were.
+
+This is why every sort key breaks ties on `id`: two structures named
+identically, or with identical brick counts, must render in the same
+order on every call, on every device, forever — never left to whatever
+order `Array.prototype.sort`'s own stability happens to preserve for a
+comparator that returns 0. Determinism here isn't a nicety; it's what
+keeps "sorted by X" from silently becoming "sorted by X, then by
+insertion order, which varies" the moment two entries tie.
+
+The "Recently created" key makes this restraint concrete rather than
+hypothetical. It is tempting to add a `createdAt` field to
+`core/Structure.js` to support it properly — this milestone doesn't.
+Instead, `sortStructures()` accepts an optional `savedAtById` map
+supplied by the caller, sourced from
+`application/LocalStructureLibraryStore.js#getSavedAtById()` — a
+personal Structure's own storage record already carries a `savedAt`
+(0.4.3, preserved across a rename); this milestone only exposes it. A
+built-in Village Structure was never "created" at any moment a user
+witnessed, so it never appears in the map and always sorts as least
+recent, falling back to the same id tie-break as everything else.
+Recency lives exactly where it was already being tracked — in the
+personal library's own storage record — never duplicated into the
+domain object it describes.
+
+### Usage History Is Local Presentation Metadata, Never Structure State (0.6.4)
+
+The Build Library's "Recent" section answers "what did I just place,"
+sourced from `application/LibraryUsageHistoryStore.js` — a new store
+recording which structure id was used and when. It sits at the exact
+same architectural altitude `application/LocalWorldExperienceStore.js`
+(0.3.10, camera framing) and `application/LocalNamePreferenceStore.js`
+(place-naming display choice) already established, extended to a third
+kind of purely local, per-device, presentation-only signal:
+
+```text
+Structure                    LibraryUsageHistoryStore
+    |                              |
+immutable reusable value      local UI/session metadata
+```
+
+`core/Structure.js` gains no field for this — no `lastUsedAt`, no
+`useCount`. `application/ExportBlueprintUseCase.js`'s portable package
+carries exactly the Structure it always did; usage history never
+crosses the export/import boundary, because it describes THIS device's
+own recent activity, not a fact about the blueprint itself. Recording a
+use never validates the id against either library, and resolving
+"Recent" back into actual Structures — deciding whether a given id is
+now built-in, personal, or gone entirely — is deliberately left to the
+one caller that already knows how to tell them apart
+(`ui/views/EditorView.js`, the same place `inspectStructure()` already
+makes that call for the Info panel). A stale id, left behind after its
+Structure is renamed, re-forked, or removed, is never a bug to guard
+against — it simply fails to resolve, and the caller drops it.
+
+**Placement consumes a blueprint; it does not create a live dependency
+on it.** This isn't new with 0.6.4 — "Copying Composes A Blueprint;
+Forking Creates One (0.4.0)" already established that placing or
+forking a Structure produces ordinary bricks with no `Brick -> Structure
+id` reference anywhere, and 0.6.3's own two-forks principle re-affirmed
+it for Structure-to-Structure forking. Recording a Structure's id in
+usage history changes nothing about that: it is a second, independent,
+purely local fact ("this id was recently interesting to this device"),
+never a pointer FROM a placed brick BACK TO the blueprint that produced
+it. A Document's own bricks stay exactly as unaware of which library
+entry (if any) they came from as they always have been.

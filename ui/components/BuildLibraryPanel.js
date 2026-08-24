@@ -1,5 +1,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import BuildLibraryPreview from './BuildLibraryPreview.js';
+import StructureLibraryCard from './StructureLibraryCard.js';
+import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../../core/sortStructures.js';
 
 // Exported (not just module-local) so tests/BuildLibraryUX.test.js can
 // exercise the actual matching rule directly — the same "logic lives
@@ -18,6 +20,36 @@ export function matches(query, ...fields) {
     }
     const haystack = fields.join(' ').toLowerCase();
     return haystack.includes(query);
+}
+
+// 0.6.4 — Blueprint Discovery, Search & Library Organization. Pure,
+// headlessly-testable helper (same convention as matches()/normalize()
+// above) that builds the "All (27) / Architecture (8) / ..." category
+// filter options from whatever category groups are CURRENTLY VISIBLE —
+// i.e. after search and the Built-in/My Structures tab already
+// narrowed things down, but before the category filter itself is
+// applied — so the option list and every count describe what search
+// actually turned up, never a stale, library-wide total. Accepts any
+// number of [{ category, structures }] group arrays (built-in, then
+// personal) and preserves first-seen order across all of them, the
+// same "first category to appear wins its position" rule
+// core/groupStructuresByCategory.js already established for a single
+// source, extended here to a vocabulary spanning two.
+export function buildCategoryOptions(...groupsLists) {
+    const order = [];
+    const counts = new Map();
+    for (const groups of groupsLists) {
+        for (const group of groups) {
+            if (!counts.has(group.category)) {
+                counts.set(group.category, 0);
+                order.push(group.category);
+            }
+            counts.set(group.category, counts.get(group.category) + group.structures.length);
+        }
+    }
+    const options = order.map((category) => ({ category, count: counts.get(category) }));
+    const total = options.reduce((sum, option) => sum + option.count, 0);
+    return { total, options };
 }
 
 // 0.2.84 — Building Library & Palette UX. Replaces the Editor sidebar's
@@ -54,20 +86,6 @@ export function matches(query, ...fields) {
 // per docs/Principles.md's own "healthy separation" between user intent
 // and mutation semantics.
 //
-// Deliberately preserves the exact separation the underlying use cases
-// already draw, and makes it visible rather than papering over it:
-// clicking a brick calls paletteUseCase.selectDefinition() (unchanged
-// since 0.1.9) AND emits 'place' — this panel's one new behavior — so
-// the Editor can switch to the Place tool in the same click, because
-// selecting a brick and never being able to place it with one action
-// was never the point. A structure entry's click does the analogous
-// thing for a Structure (emits 'place-structure'); Fork
-// (emits 'fork') remains a deliberately distinct verb for a
-// deliberately distinct architectural operation. Nothing here changes
-// PaletteUseCase, EditorContext, ForkStructureUseCase,
-// CopyStructureIntoDocumentUseCase, or what any action actually does —
-// only how they're found and asked for.
-//
 // 0.4.3 — Personal Blueprint Library. `personalStructureGroups` renders
 // as its own "My Structures" section below the built-in groups above —
 // same [{ category, structures }] shape, same
@@ -87,13 +105,7 @@ export function matches(query, ...fields) {
 // Fork/Rename/Remove), and the section's own header gains an Import
 // Blueprint button — a library-level action, not a per-card one, so it
 // lives beside the "My Structures" title instead of inside any single
-// card's menu. Deliberately unconditional: unlike the built-in/personal
-// category groups themselves (which simply render nothing when empty),
-// "My Structures" and its Import control always render on the Structures
-// tab, because Import is exactly how an empty personal library stops
-// being empty — gating it behind "at least one structure already exists"
-// would make importing your very first blueprint require one already
-// being there. What crosses the emit boundary here is deliberately raw
+// card's menu. What crosses the emit boundary here is deliberately raw
 // file TEXT, not a parsed/validated package or a Structure — this panel
 // finds and asks for things, same as every other emit in this file; it
 // is application/BlueprintImportValidator.js and
@@ -111,9 +123,40 @@ export function matches(query, ...fields) {
 // over any Structure, so a built-in one can leave the device as a
 // portable file exactly like a personal one already could). Nothing
 // about a personal Structure's own menu changes.
+//
+// 0.6.4 — Blueprint Discovery, Search & Library Organization. What was
+// still missing wasn't another editing primitive — it was that a
+// library of dozens of blueprints has no way to stay browsable by
+// anything other than scrolling. This milestone makes the existing
+// metadata (name, category, description) actually work for the user:
+//
+//   - Search (matches(), unchanged) now also checks `description`, not
+//     only name/category/tags.
+//   - A Built-in / My Structures / All source tab — three ordinary
+//     local `ref`s, never a duplicated copy of either library's data
+//     (see docs/Principles.md, "Sorting Is Presentation, Never
+//     Identity (0.6.4)").
+//   - A category filter dropdown, its options and counts DERIVED from
+//     whatever search+source already narrowed down to
+//     (buildCategoryOptions(), above) — `category` stays an ordinary
+//     string on Structure itself; no hard-coded taxonomy is added
+//     anywhere in core/.
+//   - A sort dropdown (core/sortStructures.js) — presentation-only
+//     ordering, applied within each rendered category group; a
+//     Structure's id/serialized form never changes based on how the
+//     library happens to be sorted right now.
+//   - A "Recent" section, resolved by the caller (ui/views/EditorView.js)
+//     from application/LibraryUsageHistoryStore.js's own local usage
+//     history — never a field on Structure, never part of a blueprint
+//     export.
+//
+// The three previously-triplicated card templates (built-in group,
+// personal group, and now Recent) are one component,
+// ui/components/StructureLibraryCard.js, parameterized by `source` —
+// extracted here rather than a fourth copy-pasted block.
 export default {
     name: 'BuildLibraryPanel',
-    components: { BuildLibraryPreview },
+    components: { BuildLibraryPreview, StructureLibraryCard },
     props: {
         paletteUseCase: {
             type: Object,
@@ -143,6 +186,36 @@ export default {
         previewService: {
             type: Object,
             default: null
+        },
+        // 0.6.4 — the brick registry, needed only for the 'footprint'/
+        // 'height' sort keys (core/sortStructures.js delegates to
+        // core/SpatialBounds.js#fromBricks(), same as
+        // ui/components/StructureInfoPanel.js already does). Optional —
+        // sorting degrades gracefully (a 1x1x1-per-brick estimate)
+        // without one; see sortStructures()'s own header.
+        registry: {
+            type: Object,
+            default: null
+        },
+        // 0.6.4 — { [structureId]: savedAt } for personal Structures
+        // only (application/LocalStructureLibraryStore.js#getSavedAtById()),
+        // consulted solely by the 'recent' sort key. A built-in
+        // Structure never appears in this map — see
+        // core/sortStructures.js's own header on why that's correct.
+        personalSavedAtById: {
+            type: Object,
+            default: () => ({})
+        },
+        // 0.6.4 — [{ structure, source }], most-recently-used first,
+        // already resolved against BOTH libraries by the caller (which
+        // already knows how to tell a built-in Structure from a
+        // personal one — see ui/views/EditorView.js#inspectStructure()).
+        // This panel never reaches into
+        // application/LibraryUsageHistoryStore.js itself, and never
+        // decides what counts as "used" — see that store's own header.
+        recentStructures: {
+            type: Array,
+            default: () => []
         }
     },
     emits: [
@@ -177,6 +250,14 @@ export default {
         // or clicking anywhere else in the panel.
         const openMenuId = ref(null);
 
+        // 0.6.4 — Blueprint Discovery, Search & Library Organization.
+        // Three ordinary local refs — never a duplicated copy of either
+        // library's own data (see this file's own 0.6.4 header).
+        const sourceFilter = ref('all'); // 'all' | 'built-in' | 'personal'
+        const categoryFilter = ref('all');
+        const sortKey = ref('name');
+        const sortOptions = STRUCTURE_SORT_OPTIONS;
+
         const brickGroups = ref(props.paletteUseCase.getGroupedDefinitions());
         const selectedDefinitionId = ref(props.paletteUseCase.getSelectedDefinitionId());
         let unsubscribe = null;
@@ -193,39 +274,95 @@ export default {
                 .filter((group) => group.definitions.length > 0);
         });
 
-        const filteredStructureGroups = computed(() => {
+        // 0.6.4 — search-only pass (now also checking `description`),
+        // independent of the source tab and category filter below. This
+        // is exactly what buildCategoryOptions() counts, so picking one
+        // category from the dropdown never changes any OTHER category's
+        // own displayed count.
+        const searchedStructureGroups = computed(() => {
             const normalized = normalize(query.value);
             return props.structureGroups
                 .map((group) => ({
                     category: group.category,
                     structures: group.structures.filter((structure) =>
-                        matches(normalized, structure.name, structure.category, structure.tags.join(' '))
-                    )
+                        matches(normalized, structure.name, structure.category, structure.tags.join(' '), structure.description))
                 }))
                 .filter((group) => group.structures.length > 0);
         });
 
         // 0.4.3 — Personal Blueprint Library. Same filtering rule as
-        // filteredStructureGroups above, applied to the caller's own
+        // searchedStructureGroups above, applied to the caller's own
         // personalStructureGroups prop instead — one shared query box,
         // one shared matches() rule, for both the built-in and personal
         // halves of the Structures tab.
-        const filteredPersonalStructureGroups = computed(() => {
+        const searchedPersonalStructureGroups = computed(() => {
             const normalized = normalize(query.value);
             return (props.personalStructureGroups || [])
                 .map((group) => ({
                     category: group.category,
                     structures: group.structures.filter((structure) =>
-                        matches(normalized, structure.name, structure.category, structure.tags.join(' '))
-                    )
+                        matches(normalized, structure.name, structure.category, structure.tags.join(' '), structure.description))
                 }))
                 .filter((group) => group.structures.length > 0);
+        });
+
+        // 0.6.4 — the Built-in/My Structures/All tabs decide which of
+        // the two searched lists above even reach the category filter
+        // and card rendering below; picking 'personal' empties the
+        // built-in contribution entirely (and vice versa) rather than
+        // rendering an empty section.
+        const sourceFilteredBuiltIn = computed(() =>
+            sourceFilter.value === 'personal' ? [] : searchedStructureGroups.value);
+        const sourceFilteredPersonal = computed(() =>
+            sourceFilter.value === 'built-in' ? [] : searchedPersonalStructureGroups.value);
+
+        const categoryOptions = computed(() =>
+            buildCategoryOptions(sourceFilteredBuiltIn.value, sourceFilteredPersonal.value));
+
+        // 0.6.4 — narrows to the selected category (if any), then sorts
+        // WITHIN each remaining group — sorting never merges categories
+        // into one flat list, it only reorders inside the grouping that
+        // already existed.
+        function applyCategoryAndSort(groups) {
+            const narrowed = categoryFilter.value === 'all'
+                ? groups
+                : groups.filter((group) => group.category === categoryFilter.value);
+            return narrowed.map((group) => ({
+                category: group.category,
+                structures: sortStructures(group.structures, sortKey.value, {
+                    registry: props.registry,
+                    savedAtById: props.personalSavedAtById
+                })
+            }));
+        }
+
+        const filteredStructureGroups = computed(() => applyCategoryAndSort(sourceFilteredBuiltIn.value));
+        const filteredPersonalStructureGroups = computed(() => applyCategoryAndSort(sourceFilteredPersonal.value));
+
+        // 0.6.4 — "Recent" is filtered by the same search query as
+        // everything else on this tab, but deliberately NOT by the
+        // source tab or category filter: it answers "what did I just
+        // use," not "what does the current browse filter show" — an
+        // already-short list flickering in and out as someone browses
+        // categories would defeat its own purpose.
+        const filteredRecentStructures = computed(() => {
+            const normalized = normalize(query.value);
+            return (props.recentStructures || []).filter(({ structure }) =>
+                matches(normalized, structure.name, structure.category, structure.tags.join(' '), structure.description));
         });
 
         function setTab(tab) {
             activeTab.value = tab;
             query.value = '';
             openMenuId.value = null;
+            sourceFilter.value = 'all';
+            categoryFilter.value = 'all';
+            sortKey.value = 'name';
+        }
+
+        function setSourceFilter(source) {
+            sourceFilter.value = source;
+            categoryFilter.value = 'all';
         }
 
         function selectBrick(definitionId) {
@@ -237,7 +374,7 @@ export default {
         // action — clicking anywhere on it, exactly like clicking a
         // brick — enters Place. Never called for a click that landed
         // inside the secondary menu (the menu's own wrapper stops that
-        // click from bubbling here — see the template below).
+        // click from bubbling here — see ui/components/StructureLibraryCard.js).
         function placeStructure(structure) {
             emit('place-structure', structure);
         }
@@ -257,8 +394,9 @@ export default {
 
         // 0.4.3 — Personal Blueprint Library. Rename/Remove only ever
         // apply to a personal Structure — the built-in Village entries
-        // never render these buttons at all (see the template below), so
-        // there's no separate "is this one editable" check needed here.
+        // never render these buttons at all (see
+        // ui/components/StructureLibraryCard.js), so there's no separate
+        // "is this one editable" check needed here.
         function renamePersonalStructure(structure) {
             emit('rename-personal-structure', structure);
             closeMenu();
@@ -270,10 +408,10 @@ export default {
         }
 
         // 0.4.6 — Blueprint Sharing & Exchange. Export only ever applies
-        // to a personal Structure — same reasoning as Rename/Remove above
-        // (a built-in Village entry never renders this button at all —
-        // see the template below), so there's no separate "is this one
-        // exportable" check needed here either.
+        // to a personal Structure — same reasoning as Rename/Remove
+        // above (a built-in Village entry never renders this button at
+        // all — see ui/components/StructureLibraryCard.js), so there's
+        // no separate "is this one exportable" check needed here either.
         function exportPersonalStructure(structure) {
             emit('export-personal-structure', structure);
             closeMenu();
@@ -290,9 +428,9 @@ export default {
         }
 
         // 0.6.3 — Blueprint Authoring & Versioning UX. Built-in cards
-        // only (see the template below) — "Village Hall" becomes an
-        // independent entry in My Structures, with no Document
-        // involved. See application/ForkStructureToLibraryUseCase.js's
+        // only (see ui/components/StructureLibraryCard.js) — "Village
+        // Hall" becomes an independent entry in My Structures, with no
+        // Document involved. See application/ForkStructureToLibraryUseCase.js's
         // own header on how this differs from Fork As New Document.
         function forkToLibrary(structure) {
             emit('fork-to-library', structure);
@@ -348,10 +486,17 @@ export default {
             query,
             selectedDefinitionId,
             openMenuId,
+            sourceFilter,
+            categoryFilter,
+            sortKey,
+            sortOptions,
+            categoryOptions,
             filteredBrickGroups,
             filteredStructureGroups,
             filteredPersonalStructureGroups,
+            filteredRecentStructures,
             setTab,
+            setSourceFilter,
             selectBrick,
             placeStructure,
             toggleMenu,
@@ -417,52 +562,91 @@ export default {
             </div>
 
             <div v-else class="structure-library-panel">
+                <div class="build-library-source-tabs" role="tablist">
+                    <button
+                        type="button"
+                        role="tab"
+                        :aria-selected="sourceFilter === 'all'"
+                        :class="['build-library-source-tab', { 'build-library-source-tab--active': sourceFilter === 'all' }]"
+                        @click="setSourceFilter('all')"
+                    >All</button>
+                    <button
+                        type="button"
+                        role="tab"
+                        :aria-selected="sourceFilter === 'built-in'"
+                        :class="['build-library-source-tab', { 'build-library-source-tab--active': sourceFilter === 'built-in' }]"
+                        @click="setSourceFilter('built-in')"
+                    >Built-in</button>
+                    <button
+                        type="button"
+                        role="tab"
+                        :aria-selected="sourceFilter === 'personal'"
+                        :class="['build-library-source-tab', { 'build-library-source-tab--active': sourceFilter === 'personal' }]"
+                        @click="setSourceFilter('personal')"
+                    >My Structures</button>
+                </div>
+                <div class="build-library-filters">
+                    <select v-model="categoryFilter" class="build-library-filter-select" aria-label="Filter by category">
+                        <option value="all">All ({{ categoryOptions.total }})</option>
+                        <option v-for="option in categoryOptions.options" :key="option.category" :value="option.category">
+                            {{ option.category }} ({{ option.count }})
+                        </option>
+                    </select>
+                    <select v-model="sortKey" class="build-library-filter-select" aria-label="Sort structures">
+                        <option v-for="option in sortOptions" :key="option.key" :value="option.key">{{ option.label }}</option>
+                    </select>
+                </div>
+
                 <p
-                    v-if="filteredStructureGroups.length === 0 && filteredPersonalStructureGroups.length === 0"
+                    v-if="filteredStructureGroups.length === 0 && filteredPersonalStructureGroups.length === 0 && filteredRecentStructures.length === 0"
                     class="build-library-empty"
                 >
                     No matching structures.
                 </p>
-                <div v-for="group in filteredStructureGroups" :key="group.category" class="palette-group">
-                    <h4 class="palette-category">{{ group.category }}</h4>
+
+                <div v-if="filteredRecentStructures.length > 0" class="palette-group recent-structures-group">
+                    <h4 class="palette-category">Recent</h4>
                     <ul class="structure-list">
-                        <li
-                            v-for="structure in group.structures"
-                            :key="structure.id"
-                            class="structure-item build-library-item"
-                            :title="'Place ' + structure.name"
-                            @click="placeStructure(structure)"
-                        >
-                            <BuildLibraryPreview kind="structure" :item="structure" :preview-service="previewService" />
-                            <span class="structure-item-name">{{ structure.name }}</span>
-                            <div class="structure-item-menu" @click.stop>
-                                <button
-                                    type="button"
-                                    class="action-btn action-btn--secondary structure-item-menu-toggle"
-                                    aria-label="More actions"
-                                    :aria-expanded="openMenuId === structure.id"
-                                    @click="toggleMenu(structure.id)"
-                                >⋮</button>
-                                <div v-if="openMenuId === structure.id" class="structure-item-menu-list">
-                                    <button class="action-btn action-btn--secondary structure-item-info" @click="inspectStructure(structure)">
-                                        Info
-                                    </button>
-                                    <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
-                                        Fork As New Document
-                                    </button>
-                                    <button class="action-btn action-btn--secondary structure-item-fork-to-library" @click="forkToLibrary(structure)">
-                                        Fork to My Structures
-                                    </button>
-                                    <button class="action-btn action-btn--secondary structure-item-export" @click="exportPersonalStructure(structure)">
-                                        Export Blueprint
-                                    </button>
-                                </div>
-                            </div>
-                        </li>
+                        <StructureLibraryCard
+                            v-for="entry in filteredRecentStructures"
+                            :key="'recent-' + entry.structure.id"
+                            :structure="entry.structure"
+                            :preview-service="previewService"
+                            :source="entry.source"
+                            :is-menu-open="openMenuId === entry.structure.id"
+                            @place="placeStructure"
+                            @toggle-menu="toggleMenu"
+                            @info="inspectStructure"
+                            @fork="forkStructure"
+                            @fork-to-library="forkToLibrary"
+                            @export="exportPersonalStructure"
+                            @rename="renamePersonalStructure"
+                            @remove="removePersonalStructure"
+                        />
                     </ul>
                 </div>
 
-                <div class="personal-structure-library">
+                <div v-for="group in filteredStructureGroups" :key="group.category" class="palette-group">
+                    <h4 class="palette-category">{{ group.category }}</h4>
+                    <ul class="structure-list">
+                        <StructureLibraryCard
+                            v-for="structure in group.structures"
+                            :key="structure.id"
+                            :structure="structure"
+                            :preview-service="previewService"
+                            source="built-in"
+                            :is-menu-open="openMenuId === structure.id"
+                            @place="placeStructure"
+                            @toggle-menu="toggleMenu"
+                            @info="inspectStructure"
+                            @fork="forkStructure"
+                            @fork-to-library="forkToLibrary"
+                            @export="exportPersonalStructure"
+                        />
+                    </ul>
+                </div>
+
+                <div v-if="sourceFilter !== 'built-in'" class="personal-structure-library">
                     <div class="personal-structure-library-header">
                         <h4 class="palette-title personal-structure-library-title">My Structures</h4>
                         <button
@@ -482,42 +666,21 @@ export default {
                     <div v-for="group in filteredPersonalStructureGroups" :key="group.category" class="palette-group">
                         <h4 class="palette-category">{{ group.category }}</h4>
                         <ul class="structure-list">
-                            <li
+                            <StructureLibraryCard
                                 v-for="structure in group.structures"
                                 :key="structure.id"
-                                class="structure-item build-library-item"
-                                :title="'Place ' + structure.name"
-                                @click="placeStructure(structure)"
-                            >
-                                <BuildLibraryPreview kind="structure" :item="structure" :preview-service="previewService" />
-                                <span class="structure-item-name">{{ structure.name }}</span>
-                                <div class="structure-item-menu" @click.stop>
-                                    <button
-                                        type="button"
-                                        class="action-btn action-btn--secondary structure-item-menu-toggle"
-                                        aria-label="More actions"
-                                        :aria-expanded="openMenuId === structure.id"
-                                        @click="toggleMenu(structure.id)"
-                                    >⋮</button>
-                                    <div v-if="openMenuId === structure.id" class="structure-item-menu-list">
-                                        <button class="action-btn action-btn--secondary structure-item-info" @click="inspectStructure(structure)">
-                                            Info
-                                        </button>
-                                        <button class="action-btn action-btn--fork structure-item-fork" @click="forkStructure(structure)">
-                                            Fork As New Document
-                                        </button>
-                                        <button class="action-btn action-btn--secondary structure-item-rename" @click="renamePersonalStructure(structure)">
-                                            Rename
-                                        </button>
-                                        <button class="action-btn action-btn--secondary structure-item-export" @click="exportPersonalStructure(structure)">
-                                            Export Blueprint
-                                        </button>
-                                        <button class="action-btn action-btn--danger structure-item-remove" @click="removePersonalStructure(structure)">
-                                            Remove
-                                        </button>
-                                    </div>
-                                </div>
-                            </li>
+                                :structure="structure"
+                                :preview-service="previewService"
+                                source="personal"
+                                :is-menu-open="openMenuId === structure.id"
+                                @place="placeStructure"
+                                @toggle-menu="toggleMenu"
+                                @info="inspectStructure"
+                                @fork="forkStructure"
+                                @rename="renamePersonalStructure"
+                                @export="exportPersonalStructure"
+                                @remove="removePersonalStructure"
+                            />
                         </ul>
                     </div>
                 </div>
