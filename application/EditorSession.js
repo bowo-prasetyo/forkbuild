@@ -113,6 +113,11 @@ export class EditorSession {
         // importBlueprintAttribution(); exportBlueprint()/importBlueprint()
         // (0.4.6, unchanged) keep working either way.
         blueprintAttributionExchange = null,
+        // 0.6.8 — Blueprint Lineage & Revision Discovery. The identical
+        // optional posture as blueprintAttributionExchange above — an
+        // EditorSession built without one simply can't offer
+        // exportBlueprintLineageClaim()/importBlueprintLineageClaim().
+        blueprintLineageExchange = null,
         // 0.6.3 — Blueprint Authoring & Versioning UX. Same optional
         // posture as exportBlueprintUseCase/importBlueprintUseCase above.
         forkStructureToLibraryUseCase = new ForkStructureToLibraryUseCase(),
@@ -156,6 +161,7 @@ export class EditorSession {
         this._exportBlueprintUseCase = exportBlueprintUseCase;
         this._importBlueprintUseCase = importBlueprintUseCase;
         this._blueprintAttributionExchange = blueprintAttributionExchange;
+        this._blueprintLineageExchange = blueprintLineageExchange;
         this._forkStructureToLibraryUseCase = forkStructureToLibraryUseCase;
         this._repeatSelectionUseCase = repeatSelectionUseCase;
         this._structureResolver = structureResolver;
@@ -1165,11 +1171,14 @@ export class EditorSession {
     // this method still never reaches for a BlueprintAttributionUseCase
     // itself, exactly the "Inspect ≠ compute" restraint every other
     // EditorSession method already keeps toward data it is merely handed.
-    exportBlueprint(structure, attributions = []) {
+    //
+    // 0.6.8 — Blueprint Lineage & Revision Discovery. `lineageClaims` is
+    // the identical OPTIONAL, additive third argument, one concept over.
+    exportBlueprint(structure, attributions = [], lineageClaims = []) {
         if (!this._exportBlueprintUseCase) {
             return null;
         }
-        return this._exportBlueprintUseCase.execute(structure, { attributions });
+        return this._exportBlueprintUseCase.execute(structure, { attributions, lineageClaims });
     }
 
     // 0.4.6 — Blueprint Sharing & Exchange. The reverse of
@@ -1235,6 +1244,36 @@ export class EditorSession {
         }
         const expectedFingerprint = structure ? deriveBlueprintFingerprint(structure) : null;
         return this._blueprintAttributionExchange.importAttribution(pkg, { expectedFingerprint });
+    }
+
+    // 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
+    // exportBlueprintAttribution() shape, one concept over — pure
+    // passthrough to BlueprintLineageExchange#exportClaim(). Returns null
+    // when no exchange is wired.
+    exportBlueprintLineageClaim(claim) {
+        if (!this._blueprintLineageExchange) {
+            return null;
+        }
+        return this._blueprintLineageExchange.exportClaim(claim);
+    }
+
+    // 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
+    // importBlueprintAttribution() shape, one concept over, but with TWO
+    // optional local Structures instead of one — a claim carries two
+    // fingerprints, and a caller may have either, both, or neither of the
+    // two local designs on hand. Each supplied Structure's fingerprint is
+    // derived HERE, fresh, and handed to the exchange as
+    // expectedSourceFingerprint/expectedDerivedFingerprint — never
+    // trusted from the package itself, the same rule
+    // importBlueprintAttribution() already enforces for a single
+    // fingerprint. Returns null when no exchange is wired.
+    importBlueprintLineageClaim(pkg, { sourceStructure = null, derivedStructure = null } = {}) {
+        if (!this._blueprintLineageExchange) {
+            return null;
+        }
+        const expectedSourceFingerprint = sourceStructure ? deriveBlueprintFingerprint(sourceStructure) : null;
+        const expectedDerivedFingerprint = derivedStructure ? deriveBlueprintFingerprint(derivedStructure) : null;
+        return this._blueprintLineageExchange.importClaim(pkg, { expectedSourceFingerprint, expectedDerivedFingerprint });
     }
 
     // 0.6.3 — Blueprint Authoring & Versioning UX. The Structure-fork

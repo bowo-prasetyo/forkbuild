@@ -8886,3 +8886,124 @@ future Blueprint Lineage milestone can build that relationship as its own
 concept, on its own terms, exactly the way this milestone built attribution
 resolution as its own concept rather than as a change to 0.6.6's exchange
 layer.
+
+### Lineage Is A Signed Claim, Never A Fact (0.6.8)
+
+0.6.7's own closing "Deliberately excluded" list named this milestone
+directly and drew the line in advance: "identity ≠ authorship ≠ lineage ≠
+version." 0.6.8 is the milestone that finally builds the third of those
+four concepts, and its entire design rests on refusing to let it collapse
+into any of the other three.
+
+**A `BlueprintLineageClaim` is exactly as strong as a `BlueprintAttribution`
+— no stronger.** `core/BlueprintAttribution.js`'s own 0.6.5 header drew
+the line: a signature proves who made the CLAIM, never who made the
+design. `core/BlueprintLineageClaim.js` inherits that restraint whole: a
+claim that "B was derived from A" proves identity X signed exactly that
+assertion — never that B actually descends from A, never that X made
+either design, never that the claim is even plausible. Two identities can
+sign directly contradicting claims about the same pair of fingerprints,
+and both remain equally valid signed facts, exactly the same non-
+adjudicating posture `core/PlaceNamingClaim.js` established for
+disagreeing place names and `core/BlueprintAttribution.js` established
+for disagreeing authorship.
+
+**A design cannot be derived from itself — the one structural invariant
+this claim type enforces beyond "required signature."** Every other claim
+type in this codebase (`PlaceNamingClaim`, `BlueprintAttribution`) is
+about exactly ONE subject; a `BlueprintLineageClaim` is about a
+RELATIONSHIP between two, and `sourceFingerprint === derivedFingerprint`
+is the one shape that relationship can never honestly take. The
+constructor enforces it directly, `application/
+BlueprintLineageClaimPublicationValidator.js` enforces it again
+structurally on anything arriving over the wire, and `identity/
+LocalAuthorizationVerifier.js#verifyBlueprintLineageClaim()` never even
+reaches that question — cryptographic and structural validity stay two
+separate checks, as always in this codebase.
+
+**No mutable version history, anywhere, full stop.** The design
+conversation that proposed this milestone was explicit from its very
+first sentence: "the important thing is to NOT turn it into a mutable
+version-control system yet." `core/Structure.js` gains no
+`parentBlueprintId`, no `version`, no `revision` — every fingerprint a
+`BlueprintLineageClaim` names stays exactly as immutable and independent
+as `core/BlueprintFingerprint.js` already made it in 0.6.5. Publishing a
+lineage claim changes nothing about either Structure it names, on this
+device or anyone else's — the identical boundary `core/
+BlueprintAttribution.js`'s own header already drew for authorship,
+extended here to derivation.
+
+**A relationship vocabulary of exactly one member, on purpose.**
+`BlueprintLineageRelationship` exports a single value, `DERIVED_FROM`.
+The design conversation that proposed this milestone named
+`INSPIRED_BY`/`VARIANT_OF`/`REBUILD_OF` directly and rejected building
+any of them now, for the identical reason 0.6.6 already declined a richer
+attribution vocabulary: these distinctions become ambiguous almost
+immediately, and a small, honest vocabulary that says exactly one true
+thing beats a large speculative one that invites a publisher to guess
+which of ten overlapping words applies. A future relationship kind, once
+it has a real, demonstrated need, is an ADDITION to the enum — never a
+redesign of the claim itself.
+
+**Contradiction is data, not an error to fix.** `core/
+BlueprintLineageView.js#lineageView()` never picks a winner among several
+`derivedFrom` claims, and `detectLocalLineageCycle()` never deletes,
+merges, or silently prefers one side of a direct `A → B` / `B → A`
+contradiction — it only ever adds a warning flag alongside BOTH claims,
+still fully visible. This is the same "expose the claims, never fix
+history" restraint every derived view in this codebase has kept since
+`core/PlaceNamingView.js#namingView()` first drew it for disagreeing place
+names.
+
+### Similarity Is Evidence; It Never Becomes Lineage (0.6.8)
+
+The direct one-concept-over descendant of 0.5.4's own "Geographic
+Similarity Suggests Identity; It Never Mutates Identity" — the same trap,
+in a different domain, named again by this milestone's own design
+conversation from the start:
+
+> Do NOT automatically infer and persist lineage from similarity. Alice
+> and Bob might independently build almost identical houses. 98%
+> similarity does not establish "Bob copied Alice."
+
+**A similarity score is CANDIDACY for a human's attention, never proof of
+anything.** `core/BlueprintSimilarity.js#compareBlueprintSimilarity()`
+returns five plain, legible numbers — `positionOverlap`, `brickOverlap`,
+`changedBricks`, `addedBricks`, `removedBricks` — plus a `similarity`
+score that is nothing more sophisticated than the average of the first
+two ratios. Deliberately not a fitted, weighted, or learned model: every
+number this module produces is one a person reading the source could
+recompute by hand, because the entire purpose of this module is to be
+legible EVIDENCE, never an oracle a UI defers to.
+
+**`core/BlueprintSimilarity.js` never signs, never persists, and is never
+itself consulted by the layer that actually asserts lineage.**
+`application/BlueprintLineageUseCase.js#publish()` reads exactly two
+things before signing a claim: whether the caller can sign at all, and
+whether the two fingerprints differ. It does not call
+`compareBlueprintSimilarity()`, does not check `isPossibleLineageCandidate()`,
+and would happily sign a claim between two designs that score 0%
+similar — because a low similarity score is not proof of falsehood any
+more than a high one is proof of truth. The two modules meet only in
+`ui/views/EditorView.js`, where a person reads the evidence and decides;
+nowhere in the domain or application layers does a percentage ever
+become a signature.
+
+**An identical pair is explicitly excluded from candidacy.**
+`isPossibleLineageCandidate()` returns `false` whenever `evidence.identical`
+is `true` — "these two fingerprint identically" is `core/
+BlueprintFingerprint.js#blueprintFingerprintsEqual()`'s own question, and
+answering it is never what a "possible predecessor" suggestion is for.
+Offering a person a "derived from" button for the exact same design would
+blur the one distinction this entire milestone exists to keep sharp:
+`A == B` is equality; `A ≈ B` is similarity; `A → B` is lineage, and only
+a human, not a percentage, is ever allowed to assert the third.
+
+**The UI never asserts on a person's behalf.** `ui/components/
+StructureInfoPanel.js`'s own "Possible Predecessors" list is captioned
+"Evidence only — nothing here is asserted," and its "Derived from this"
+button is the ONLY code path anywhere in this codebase that leads to
+`BlueprintLineageUseCase#publish()` being called with a
+similarity-suggested source — every click is a real, individual human
+decision, never a batch action, never a default, never something that
+fires above a threshold without someone choosing it.

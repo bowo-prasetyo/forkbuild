@@ -33,6 +33,7 @@ import ActionFeedback from '../components/ActionFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
 import { CreateBlueprintAttributionUseCase } from '../../application/CreateBlueprintAttributionUseCase.js';
+import { CreateBlueprintLineageUseCase } from '../../application/CreateBlueprintLineageUseCase.js';
 import { CopySelectionUseCase } from '../../application/CopySelectionUseCase.js';
 import { RepeatSelectionUseCase } from '../../application/RepeatSelectionUseCase.js';
 import { PasteClipboardUseCase } from '../../application/PasteClipboardUseCase.js';
@@ -45,6 +46,8 @@ import StructureInfoPanel from '../components/StructureInfoPanel.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 import { deriveBlueprintFingerprint, describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { BLUEPRINT_ATTRIBUTION_KIND } from '../../core/BlueprintAttribution.js';
+import { BLUEPRINT_LINEAGE_CLAIM_KIND } from '../../core/BlueprintLineageClaim.js';
+import { compareBlueprintSimilarity, isPossibleLineageCandidate } from '../../core/BlueprintSimilarity.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
@@ -185,10 +188,14 @@ export default {
                 :registry="brickRegistry"
                 :source="inspectedStructureSource"
                 :attribution="inspectedStructureAttribution"
+                :lineage="inspectedStructureLineage"
+                :similarity-candidates="inspectedStructureSimilarityCandidates"
                 @place="placeInspectedStructure"
                 @export="exportInspectedStructure"
                 @claim-authorship="claimAuthorship"
                 @export-attribution="exportInspectedAttribution"
+                @claim-lineage="claimLineage"
+                @export-lineage-claim="exportInspectedLineageClaim"
                 @close="inspectedStructure = null"
             />
         </div>
@@ -226,6 +233,8 @@ export default {
         // 0.6.5 — Blueprint Identity & Attribution.
         // 0.6.6 — Decentralized Blueprint Exchange.
         const { blueprintAttributionUseCase, blueprintAttributionExchange } = new CreateBlueprintAttributionUseCase().execute(identityProvider);
+        // 0.6.8 — Blueprint Lineage & Revision Discovery.
+        const { blueprintLineageUseCase, blueprintLineageExchange } = new CreateBlueprintLineageUseCase().execute(identityProvider);
 
 		const copySelectionUseCase = new CopySelectionUseCase(registry);
 		const pasteClipboardUseCase = new PasteClipboardUseCase();
@@ -254,7 +263,9 @@ export default {
 		    // 0.4.3 — Personal Blueprint Library.
 		    personalStructureLibraryStore,
 		    // 0.6.6 — Decentralized Blueprint Exchange.
-		    blueprintAttributionExchange
+		    blueprintAttributionExchange,
+		    // 0.6.8 — Blueprint Lineage & Revision Discovery.
+		    blueprintLineageExchange
 		});
 
 		// 0.2.81 — Forkable Structure Library, grouped per 0.2.84
@@ -391,7 +402,12 @@ export default {
 		    let pkg;
 		    try {
 		        const { attributions } = blueprintAttributionUseCase.summarize(structure);
-		        pkg = editorSession.exportBlueprint(structure, attributions);
+		        // 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
+		        // same bundling convenience as `attributions` above, for
+		        // every lineage claim this replica has on file touching
+		        // `structure`'s own fingerprint.
+		        const lineageClaims = blueprintLineageUseCase.claimsForBlueprint(structure);
+		        pkg = editorSession.exportBlueprint(structure, attributions, lineageClaims);
 		    } catch (e) {
 		        feedback.show(e.message);
 		        return;
@@ -467,12 +483,21 @@ export default {
 		        importBareBlueprintAttribution(pkg);
 		        return;
 		    }
+		    // 0.6.8 — Blueprint Lineage & Revision Discovery. A bare lineage
+		    // claim shares the same "arrived on its own, unconnected to any
+		    // blueprint import happening right now" path as a bare
+		    // attribution above.
+		    if (pkg && pkg.kind === BLUEPRINT_LINEAGE_CLAIM_KIND) {
+		        importBareBlueprintLineageClaim(pkg);
+		        return;
+		    }
 		    try {
 		        const structure = editorSession.importBlueprint(pkg);
 		        if (structure) {
 		            refreshPersonalStructureGroups();
 		            const attributionSummary = importBundledBlueprintAttributions(pkg, structure);
-		            feedback.show(`Imported "${structure.name}" into My Structures${attributionSummary}`);
+		            const lineageSummary = importBundledBlueprintLineageClaims(pkg, structure);
+		            feedback.show(`Imported "${structure.name}" into My Structures${attributionSummary}${lineageSummary}`);
 		        }
 		    } catch (e) {
 		        feedback.show(e.message.replace(/^(BlueprintImport|BlueprintPackage):\s*/, ''));
@@ -538,6 +563,81 @@ export default {
 		    }
 		}
 
+		// 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
+		// exportBlueprintAttribution() shape, one concept over — exports a
+		// single signed lineage claim on its own.
+		function exportBlueprintLineageClaim(claim) {
+		    let pkg;
+		    try {
+		        pkg = editorSession.exportBlueprintLineageClaim(claim);
+		    } catch (e) {
+		        feedback.show(e.message);
+		        return;
+		    }
+		    if (!pkg) {
+		        return;
+		    }
+		    const json = JSON.stringify(pkg, null, 2);
+		    const slug = `${describeBlueprintFingerprint(claim.sourceFingerprint)}-to-${describeBlueprintFingerprint(claim.derivedFingerprint)}`
+		        .replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'lineage-claim';
+		    const link = document.createElement('a');
+		    link.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+		    link.download = `forkbuild-blueprint-lineage-${slug}.json`;
+		    link.click();
+		    feedback.show('Exported your lineage claim');
+		}
+
+		// 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
+		// importBundledBlueprintAttributions() shape, one concept over. A
+		// bundled claim's own `structure` may be either its source or its
+		// derived design — whichever fingerprint matches decides which
+		// cross-check editorSession.importBlueprintLineageClaim() runs.
+		function importBundledBlueprintLineageClaims(pkg, structure) {
+		    if (!Array.isArray(pkg.lineageClaims) || pkg.lineageClaims.length === 0 || !blueprintLineageExchange) {
+		        return '';
+		    }
+		    const structureFingerprint = deriveBlueprintFingerprint(structure);
+		    let imported = 0;
+		    for (const claimJSON of pkg.lineageClaims) {
+		        try {
+		            const options = claimJSON.derivedFingerprint === structureFingerprint
+		                ? { derivedStructure: structure }
+		                : { sourceStructure: structure };
+		            const result = editorSession.importBlueprintLineageClaim(claimJSON, options);
+		            if (result && result.isNew) {
+		                imported += 1;
+		            }
+		        } catch (e) {
+		            // Mirrors importBundledBlueprintAttributions()'s own
+		            // restraint: one bad/mismatched lineage claim never
+		            // blocks the blueprint import that already succeeded.
+		            console.warn('Skipped a lineage claim bundled with this blueprint:', e.message);
+		        }
+		    }
+		    return imported > 0 ? ` with ${imported} lineage ${imported === 1 ? 'claim' : 'claims'}` : '';
+		}
+
+		// 0.6.8 — Blueprint Lineage & Revision Discovery. The exact
+		// importBareBlueprintAttribution() shape, one concept over — a
+		// lineage claim arriving with no accompanying blueprint has neither
+		// local Structure to cross-check against, so both are omitted.
+		function importBareBlueprintLineageClaim(pkg) {
+		    if (!blueprintLineageExchange) {
+		        feedback.show('Blueprint lineage exchange is not available');
+		        return;
+		    }
+		    try {
+		        const { claim, isNew } = editorSession.importBlueprintLineageClaim(pkg);
+		        if (!isNew) {
+		            feedback.show('That lineage claim was already known — nothing changed');
+		            return;
+		        }
+		        feedback.show(`Imported a lineage claim: ${describeBlueprintFingerprint(claim.derivedFingerprint)} derived from ${describeBlueprintFingerprint(claim.sourceFingerprint)}`);
+		    } catch (e) {
+		        feedback.show(e.message.replace(/^BlueprintLineageExchange:\s*/, ''));
+		    }
+		}
+
 		// 0.4.1 — Interactive Structure Composition UX. "Copy Into
 		// Document" enters an interactive ghost-preview mode
 		// (StructureCompositionTool) instead of copying immediately —
@@ -596,10 +696,46 @@ export default {
 		// is untouched and still used by exportStructure() above, which only
 		// ever needed the raw, unranked attribution list.
 		const inspectedStructureAttribution = ref(null);
+		// 0.6.8 — Blueprint Lineage & Revision Discovery. The signed-claim
+		// counterpart to inspectedStructureAttribution above —
+		// blueprintLineageUseCase.lineageView(structure)'s own
+		// `{ fingerprint, derivedFrom, derivedDesigns, mine, hasCycleWarning }`.
+		const inspectedStructureLineage = ref(null);
+		// A SEPARATE, unsigned, evidence-only read — never persisted, never
+		// itself a claim (see core/BlueprintSimilarity.js's own header).
+		// `{ structure, evidence }[]`, most-similar first, recomputed every
+		// time the panel opens.
+		const inspectedStructureSimilarityCandidates = ref([]);
+		// Every candidate design this replica currently knows about,
+		// scanned for a "possible predecessor" — the built-in library plus
+		// My Structures, exactly the two sources ui/components/
+		// BuildLibraryPanel.js already shows side by side. Excludes the
+		// inspected structure itself and any candidate a lineage claim
+		// already names as a source, so a confirmed relationship is never
+		// re-suggested as though it were still just a guess.
+		function computeSimilarityCandidates(structure, lineage) {
+		    const alreadyClaimed = new Set((lineage && lineage.derivedFrom || []).map((claim) => claim.sourceFingerprint));
+		    const known = [...structureRegistry.getAll(), ...personalStructureLibraryStore.listStructures()];
+		    const candidates = [];
+		    for (const candidate of known) {
+		        if (candidate.id === structure.id) {
+		            continue;
+		        }
+		        const evidence = compareBlueprintSimilarity(candidate, structure);
+		        if (!isPossibleLineageCandidate(evidence) || alreadyClaimed.has(evidence.sourceFingerprint)) {
+		            continue;
+		        }
+		        candidates.push({ structure: candidate, evidence });
+		    }
+		    candidates.sort((a, b) => b.evidence.similarity - a.evidence.similarity);
+		    return candidates.slice(0, 3);
+		}
 		function inspectStructure(structure) {
 		    inspectedStructure.value = structure;
 		    inspectedStructureSource.value = personalStructureLibraryStore.hasStructure(structure.id) ? 'personal' : 'built-in';
 		    inspectedStructureAttribution.value = blueprintAttributionUseCase.communityView(structure);
+		    inspectedStructureLineage.value = blueprintLineageUseCase.lineageView(structure);
+		    inspectedStructureSimilarityCandidates.value = computeSimilarityCandidates(structure, inspectedStructureLineage.value);
 		}
 		// The panel's own Place/Export buttons delegate straight to the
 		// SAME copyStructureIntoDocument()/exportStructure() every card's
@@ -649,6 +785,43 @@ export default {
 		        return;
 		    }
 		    exportBlueprintAttribution(attribution);
+		}
+
+		// 0.6.8 — Blueprint Lineage & Revision Discovery. Publishes a signed
+		// BlueprintLineageClaim asserting that the inspected structure was
+		// derived from `sourceStructure` — one of
+		// inspectedStructureSimilarityCandidates.value's own entries,
+		// chosen by a person, never automatically. The similarity evidence
+		// that got the candidate shown in the first place is never itself
+		// consulted here: publish() only ever asks "can this identity sign,
+		// and do the two fingerprints actually differ" — see core/
+		// BlueprintSimilarity.js's own header on why a percentage is
+		// evidence for a human, never a threshold this codebase acts on by
+		// itself. Re-derives the panel's own lineage view and similarity
+		// candidates afterward, the same "stays visually up to date"
+		// posture claimAuthorship() already established.
+		function claimLineage(sourceStructure) {
+		    const structure = inspectedStructure.value;
+		    if (!structure) {
+		        return;
+		    }
+		    try {
+		        blueprintLineageUseCase.publish(structure, sourceStructure);
+		        inspectedStructureLineage.value = blueprintLineageUseCase.lineageView(structure);
+		        inspectedStructureSimilarityCandidates.value = computeSimilarityCandidates(structure, inspectedStructureLineage.value);
+		        feedback.show(`Recorded "${structure.name}" as derived from "${sourceStructure.name}"`);
+		    } catch (e) {
+		        feedback.show(e.message.replace(/^BlueprintLineageUseCase:\s*/, ''));
+		    }
+		}
+
+		// 0.6.8 — Blueprint Lineage & Revision Discovery. StructureInfoPanel's
+		// own "Export" link for one of the inspected structure's OWN
+		// lineage claims — exports just that ONE signed claim, independent
+		// of the blueprint itself, straight to exportBlueprintLineageClaim()
+		// above.
+		function exportInspectedLineageClaim(claim) {
+		    exportBlueprintLineageClaim(claim);
 		}
 
 		// 0.6.3 — Blueprint Authoring & Versioning UX. Replaces the 0.4.2
@@ -1274,10 +1447,14 @@ export default {
             inspectedStructure,
             inspectedStructureSource,
             inspectedStructureAttribution,
+            inspectedStructureLineage,
+            inspectedStructureSimilarityCandidates,
             placeInspectedStructure,
             exportInspectedStructure,
             claimAuthorship,
             exportInspectedAttribution,
+            claimLineage,
+            exportInspectedLineageClaim,
             showCreateBlueprintDialog,
             createBlueprintPreview,
             onCreateBlueprint,

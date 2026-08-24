@@ -17,6 +17,7 @@ import {
 } from '../core/WorldEditAuthorizationEnvelope.js';
 import { getPlaceNamingClaimSigningDescriptor } from '../core/PlaceNamingClaim.js';
 import { getBlueprintAttributionSigningDescriptor } from '../core/BlueprintAttribution.js';
+import { getBlueprintLineageClaimSigningDescriptor } from '../core/BlueprintLineageClaim.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -518,6 +519,39 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getBlueprintAttributionSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.6.8 — a BlueprintLineageClaim is NEVER tolerated unsigned, the
+    // same REQUIRED discipline as verifyBlueprintAttribution() above.
+    // The signer MUST equal the claim's own `authorIdentityId` — a
+    // lineage claim has exactly one party to it, the identity asserting
+    // the derivation. STRUCTURAL verification only: whether
+    // sourceFingerprint/derivedFingerprint actually describe a real
+    // derivation is never asked here, and never asked anywhere else
+    // either — core/BlueprintSimilarity.js's own evidence is the closest
+    // this codebase ever comes to that question, and even it only ever
+    // produces a number for a human to weigh. See core/
+    // BlueprintLineageClaim.js's own header.
+    verifyBlueprintLineageClaim(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no blueprint lineage claim' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a blueprint lineage claim must be signed' };
+        }
+        const sig = Signature.fromJSON(record.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== record.authorIdentityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the claim\'s own author' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getBlueprintLineageClaimSigningDescriptor(record), record.signature, identity);
     }
 
     // The core check, exposed for direct use (tests, future verifiers).

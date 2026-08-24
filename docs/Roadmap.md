@@ -12580,3 +12580,269 @@ lineage/versioning, ranking or trust scoring of any kind, and any UI for
 browsing attribution independent of an inspected Structure — each sized
 on its own, exactly like every "Deliberately excluded" list in this
 document before it.
+
+## 0.6.8 — Blueprint Lineage & Revision Discovery
+
+0.6.7's own "Deliberately excluded" list named this milestone directly:
+"Lineage/versioning... is a fundamentally different, much harder problem
+(similarity, not equality) and stays its own future milestone." This
+milestone builds it, and draws the same boundary its own design
+conversation insisted on from the start:
+
+> These two blueprints aren't identical, but one appears to be derived
+> from the other. That is a CLAIM, never a fact the system can prove.
+
+Four now-genuinely-separate concepts, extending the chain 0.6.5–0.6.7
+already established:
+
+```text
+identity  ≠  authorship  ≠  lineage  ≠  version
+
+BlueprintFingerprint    — what exactly IS this design? (0.6.5)
+BlueprintAttribution    — who claims they made it? (0.6.5)
+BlueprintLineageClaim   — who claims one design was derived from
+                          another? (THIS milestone)
+BlueprintSimilarity     — pure EVIDENCE a human can weigh before making
+                          that claim, never a claim itself (THIS
+                          milestone)
+```
+
+Fingerprint equality is `A == B`. Similarity is `A ≈ B`. Lineage is a
+signed `A → B`. This milestone keeps those three relationships
+structurally distinct rather than letting a percentage anywhere quietly
+become an assertion.
+
+### What shipped
+
+- **`core/BlueprintSimilarity.js`** (new) — `compareBlueprintSimilarity(source, candidate)`
+  reuses `core/BlueprintFingerprint.js#canonicalizeBlueprint()`'s own
+  order-independent, id-independent, floating-point-tolerant brick
+  content, and reduces every brick to a POSITION key (x|y|z) and a FULL
+  key (x|y|z|rotation|definitionId). Returns `{ sourceFingerprint,
+  candidateFingerprint, identical, positionOverlap, brickOverlap,
+  changedBricks, addedBricks, removedBricks, similarity }` — five
+  transparent evidence numbers plus a plain average `similarity` score,
+  deliberately never a fitted or weighted model. `isPossibleLineageCandidate()`
+  and `DEFAULT_SIMILARITY_THRESHOLD` are a pure presentation filter (what
+  gets SHOWN as a candidate), never anything this module persists or
+  asserts; an identical pair is explicitly excluded — "these are the
+  same design" is a fingerprint match, never a lineage suggestion.
+  `describeBlueprintSimilarity()` renders a short label ("86% design
+  similarity" / "Identical design"). Pure, synchronous, no I/O, no
+  identity, no store — never signs, never itself decides a claim is
+  worth making.
+- **`core/BlueprintLineageClaim.js`** (new) — a signed, REQUIRED-signature
+  assertion: "identity X asserts that the design fingerprinting to
+  `derivedFingerprint` was derived from the design fingerprinting to
+  `sourceFingerprint`." The exact three-layer split 0.6.5 drew for
+  authorship, applied to derivation instead. `relationship` is a
+  deliberately single-member enum, `BlueprintLineageRelationship.DERIVED_FROM`
+  — this milestone's own design conversation explicitly declined to
+  build `INSPIRED_BY`/`VARIANT_OF`/`REBUILD_OF` speculatively, exactly
+  the restraint 0.6.6 already showed declining the identical richer
+  vocabulary for attribution. The constructor is the one place this
+  milestone enforces a structural invariant beyond "required signature":
+  `sourceFingerprint` and `derivedFingerprint` must differ — a design
+  cannot be derived from itself. `core/Signature.js` gains
+  `SignatureType.BLUEPRINT_LINEAGE_CLAIM`, and `identity/
+  LocalAuthorizationVerifier.js#verifyBlueprintLineageClaim()` enforces
+  the same "signer MUST equal the claim's own author" structural rule
+  every other claim type here already holds.
+- **`core/BlueprintLineageView.js`** (new) — the derived, read-only
+  reading of whatever lineage claims a replica currently knows about for
+  one fingerprint: `lineageView(fingerprint, claims, myIdentityId)`
+  returns `{ fingerprint, derivedFrom, derivedDesigns, mine,
+  hasCycleWarning }`, split by the DIRECTION a claim's two fingerprints
+  give it — `derivedFrom` (this design's own claimed ancestors) never
+  merged with `derivedDesigns` (its claimed descendants). Neither list is
+  ranked or trimmed to a single answer — contradicting claims about the
+  same pair both remain fully visible, the same restraint `core/
+  BlueprintAttributionView.js` already keeps for authorship one concept
+  over. `detectLocalLineageCycle()` flags exactly the ONE-HOP
+  contradiction this milestone's own design conversation used as its
+  worked example (`A → B` and `B → A` both signed and on file) — a real,
+  named limitation, not an oversight: a longer cycle would require a
+  "list every lineage claim this replica has ever seen" capability no
+  store in this codebase provides, and this milestone declines to build
+  one. A UI surfaces the warning; nothing here ever "resolves" a
+  contradiction by dropping either claim.
+- **`application/LocalBlueprintLineageClaimStore.js`** (new) — local,
+  persisted, DUAL-INDEXED storage: `save()` writes the same claim JSON
+  under BOTH of its own fingerprint keys, so `list(fingerprint)` always
+  returns every claim touching that fingerprint in EITHER role from one
+  direct read — no "list everything" store capability needed. `retract()`
+  accepts either of a claim's own two fingerprints and removes it from
+  both index keys in lockstep. LOCAL ONLY, exactly like every other local
+  claim store here.
+- **`application/BlueprintLineageClaimPublicationValidator.js`** +
+  **`application/BlueprintLineageExchange.js`** (new) — the exact
+  application/BlueprintAttributionPublicationValidator.js +
+  BlueprintAttributionExchange.js shape, one concept over:
+  `exportClaim()` is a pure `toJSON()` passthrough; `importClaim(pkg,
+  { expectedSourceFingerprint, expectedDerivedFingerprint })` runs
+  validate → construct → verify → cross-check-source → cross-check-
+  derived → dedupe-by-id → store, always in that order. Both expected
+  fingerprints are independently optional — a receiver with only one of
+  the two local designs on hand checks only that side; a bare claim with
+  neither supplied is still importable, still verified, still stored, as
+  informational as any other unconfirmed fingerprint 0.6.5 already
+  established that posture for.
+- **`application/BlueprintLineageUseCase.js`** + **`application/
+  CreateBlueprintLineageUseCase.js`** (new) — `publish(derivedStructure,
+  sourceStructure)` derives both fingerprints, signs, verifies, and
+  stores; `retract()` stays author-only; `claimsForBlueprint()` is the
+  raw, unranked read; `lineageView(structure)` is the presentation-ready
+  wiring to `core/BlueprintLineageView.js`. Deliberately never consults
+  `core/BlueprintSimilarity.js` itself — publish() only ever asks "can
+  this identity sign, and do the two fingerprints actually differ,"
+  exactly the same restraint `application/BlueprintAttributionUseCase.js#publish()`
+  already applies to authorship. Composition root mirrors `application/
+  CreateBlueprintAttributionUseCase.js` exactly.
+- **`application/BlueprintPackage.js`**, **`application/
+  BlueprintImportValidator.js`**, **`application/ExportBlueprintUseCase.js`**,
+  **`application/EditorSession.js`** — each gains the identical optional,
+  additive `lineageClaims` surface 0.6.6 already built for `attributions`:
+  omitted entirely (never `lineageClaims: []`) when empty, so a plain
+  export stays byte-for-byte unchanged. `EditorSession` gains an optional
+  `blueprintLineageExchange` collaborator behind
+  `exportBlueprintLineageClaim()`/`importBlueprintLineageClaim({ sourceStructure,
+  derivedStructure })` — the latter accepting EITHER, both, or neither
+  local Structure, cross-checking whichever side is supplied fresh,
+  never trusting the package's own claimed fingerprint.
+- **`ui/views/EditorView.js`** — `exportStructure()` now also bundles
+  every lineage claim on file for a structure; `importBlueprint()`
+  branches on a THIRD `pkg.kind` (`BLUEPRINT_LINEAGE_CLAIM_KIND`) for a
+  bare claim arriving on its own, alongside the existing blueprint/bare-
+  attribution branches; `inspectStructure()` now also computes a
+  `lineageView()` AND scans the built-in and personal libraries for
+  `compareBlueprintSimilarity()` candidates above the default threshold
+  — excluding the inspected design itself and any candidate a lineage
+  claim already names as a source — capped to the top 3, most-similar
+  first. `claimLineage(sourceStructure)` publishes a claim chosen by a
+  person from that candidate list; the evidence that got a candidate
+  shown is never itself consulted by the publish path.
+- **`ui/components/StructureInfoPanel.js`** — a new, collapsed-by-default
+  "Possible Lineage" section (mirroring the existing "Attribution Claims"
+  disclosure), showing "Derived From"/"Derived Designs" claim lists, a
+  "⚠ Possible lineage cycle" hint when `hasCycleWarning` is set, and a
+  SEPARATE "Possible Predecessors" list sourced from the caller-computed
+  `similarityCandidates` prop — each candidate captioned with its
+  similarity percentage and an explicit "Evidence only — nothing here is
+  asserted" hint, with a "Derived from this" button that is the ONLY
+  place this panel ever emits `claim-lineage`. Never computes evidence or
+  a lineage view itself — both are supplied by the caller, the same
+  "Inspect ≠ compute" restraint this panel has kept since 0.6.3.
+- **`tests/BlueprintSimilarity.test.js`** (new) — null-safety, the
+  identical-design short circuit (and why it's excluded from candidacy),
+  a worked added/changed/removed comparison with hand-verified ratios,
+  directional added/removed vs. symmetric overlap ratios, and degenerate/
+  empty-structure inputs.
+- **`tests/BlueprintLineageDiscovery.test.js`** (new) — nine sections
+  covering the full stack in one suite (construction, signing/
+  verification, the dual-indexed store, publication validation, exchange
+  cross-checks, pure view derivation and cycle detection, use-case
+  wiring, and package bundling), plus a FLAGSHIP: Alice authors
+  "Farmstead" and exports it; Bob imports it under a fully independent
+  Structure id, builds "Farmstead Large" from his own copy, and signs a
+  claim that survives the 0.4.6 export/import boundary purely on
+  fingerprint identity; both replicas' own `lineageView()` converges from
+  both sides of the relationship; a third, contradicting claim (the
+  reverse relationship) is then introduced, and both replicas
+  independently detect the identical cycle warning without either claim
+  ever being dropped.
+
+### Deliberately excluded
+
+- **A mutable blueprint version history.** No `parentBlueprintId`,
+  `version`, `revision`, `forkedFrom`, or `originalAuthor` anywhere on
+  `core/Structure.js`. A `BlueprintLineageClaim` is a claim ABOUT two
+  independent, immutable fingerprints — it never turns one Structure
+  into "an edit of" another, and neither fingerprint is ever mutated,
+  merged, or superseded by publishing one. See docs/Principles.md,
+  "Lineage Is A Signed Claim, Never A Fact (0.6.8)."
+- **Automatic lineage inference from similarity.** `core/
+  BlueprintSimilarity.js` never signs, never persists, and is never
+  itself consulted by `BlueprintLineageUseCase#publish()`. Two authors
+  independently building near-identical designs can score 98% similar
+  without either having copied the other — see this milestone's own
+  design conversation's own worked example. A claim is asserted by a
+  person, every time, with no threshold this codebase crosses on
+  anyone's behalf. See docs/Principles.md, "Similarity Is Evidence; It
+  Never Becomes Lineage (0.6.8)."
+- **A richer relationship vocabulary.** `INSPIRED_BY`/`VARIANT_OF`/
+  `REBUILD_OF` and similar were named explicitly and declined, exactly
+  the same restraint 0.6.6 already applied to attribution relationship
+  semantics — a real, separately-sized extension if one is ever needed,
+  never spuriously pre-built.
+- **Global, multi-hop cycle detection.** `detectLocalLineageCycle()` only
+  ever sees the one fingerprint's own one-hop claims — a genuine `A → B
+  → C → A` cycle spanning three or more designs is not detected. Building
+  that would require a "list every lineage claim this replica has ever
+  stored" capability that does not exist anywhere in this codebase and
+  that this milestone declines to build, the same restraint every local
+  claim store here already keeps toward "browse everything" surfaces.
+- **`receivedAt` / a publication log for lineage claims.** Unlike
+  attribution (0.6.6/0.6.7), this milestone builds no
+  `LocalBlueprintLineageClaimPublicationLog` and no "Received locally"
+  timing fact — nothing in this milestone's own design conversation
+  asked for it, and adding one speculatively, before a real need, is
+  exactly the premature-abstraction risk this entire progression has
+  refused since 0.6.5.
+- **A signed retraction/withdrawal protocol for lineage exchange.**
+  `application/LocalBlueprintLineageClaimStore.js#retract()` remains
+  LOCAL ONLY, the same restraint every claim store in this codebase
+  already keeps for its own retraction.
+- **Ranking, trust scores, or "the real predecessor."** Several
+  (possibly disagreeing) `derivedFrom` claims for one design all remain
+  fully visible with no verdict about which is correct — the same
+  "confidence, never authority" restraint every derived view in this
+  codebase keeps.
+- **Any change to attribution.** `core/BlueprintAttribution.js` and
+  everything built on it in 0.6.5–0.6.7 are completely untouched —
+  publishing a lineage claim never creates, requires, or implies an
+  attribution for either design, proven directly in this milestone's own
+  flagship test.
+
+```text
+0.6.7   Blueprint Attribution Resolution & Community Identity     ✓
+             │
+             ▼
+0.6.8   Blueprint Lineage & Revision Discovery                    ✓
+             ├── core/BlueprintSimilarity.js — pure evidence
+             │   (positionOverlap/brickOverlap/changed/added/removed/
+             │   similarity), never a claim, never persisted
+             ├── core/BlueprintLineageClaim.js — REQUIRED-signature
+             │   "X derived from Y" assertion; single-member
+             │   relationship vocabulary; self-loop rejected
+             ├── SignatureType.BLUEPRINT_LINEAGE_CLAIM +
+             │   verifyBlueprintLineageClaim() — same structural
+             │   "signer == own author" rule as every other claim type
+             ├── LocalBlueprintLineageClaimStore — dual-indexed by
+             │   BOTH of a claim's own fingerprints
+             ├── BlueprintLineageExchange — validate → construct →
+             │   verify → cross-check-source → cross-check-derived →
+             │   dedup-by-id → store
+             ├── core/BlueprintLineageView.js — derivedFrom/
+             │   derivedDesigns split + one-hop cycle warning
+             ├── StructureInfoPanel — collapsed "Possible Lineage"
+             │   (claims) + separate "Possible Predecessors"
+             │   (similarity evidence, never asserted automatically)
+             └── BlueprintSimilarity.test.js +
+                 BlueprintLineageDiscovery.test.js — 13 sections total,
+                 including a converging cycle-warning flagship
+```
+
+> **0.6.5 gave a blueprint's design a stable identity; 0.6.6 gave an
+> assertion about it somewhere to travel; 0.6.7 gave several such
+> assertions a real, converging community view. 0.6.8 answers the
+> question those three, together, deliberately left open: two
+> INDEPENDENT designs, not identical, not (necessarily) authored by the
+> same person — is one derived from the other? Never proven. Always a
+> claim. Now, finally, a claim this codebase has somewhere to put.**
+
+What's left, and deliberately unbuilt: a mutable version history of any
+kind, automatic lineage inference, a richer relationship vocabulary,
+global multi-hop cycle detection, a lineage publication log, a signed
+retraction protocol, and any ranking of contradicting claims — each
+sized on its own, exactly like every "Deliberately excluded" list in
+this document before it.
