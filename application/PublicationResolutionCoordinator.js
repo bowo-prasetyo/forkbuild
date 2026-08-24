@@ -1,6 +1,8 @@
 import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js';
+import { PeerContentRetrievalCoordinator } from './PeerContentRetrievalCoordinator.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
+// 0.7.6 — Multi-Peer Publication Retrieval & Replication.
 //
 // 0.7.0 through 0.7.4 built a complete pipeline —
 //
@@ -27,15 +29,16 @@ import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js'
 //         │
 //         └── CONTENT_UNAVAILABLE
 //                   │
-//                   ├── no peer supplied ─────────→ return, unchanged
+//                   ├── no candidates supplied ────→ return, unchanged
 //                   │
-//                   └── ask exactly ONE caller-chosen peer, bounded by
-//                       a timeout
+//                   └── ask each caller-chosen candidate IN ORDER
+//                       (PeerContentRetrievalCoordinator, 0.7.6),
+//                       bounded by a timeout PER CANDIDATE
 //                             │
 //                       ┌─────┴─────┐
 //                       │           │
-//                    arrived     timed out
-//                       │           │
+//                    arrived     every candidate
+//                       │        timed out
 //                  resolve again   return the ORIGINAL
 //                  (may still fail  CONTENT_UNAVAILABLE result,
 //                   for a reason    unchanged
@@ -44,20 +47,30 @@ import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js'
 //
 // THE CENTRAL RESTRAINT this milestone's own design conversation
 // insisted on: peer retrieval only ever happens for a publication a
-// caller explicitly hands in, together with a peer the caller
-// explicitly chose to ask — never automatically, never for every entry
-// application/LocalPublicationCatalog.js happens to hold, never racing
-// or falling back across more than one peer. `peer` is a REQUIRED,
-// per-call argument, not a default this class picks for itself — a
-// caller that wants "try the first connected peer" implements that
-// policy itself, one layer up (see ui/views/DecentralizedPublicationsView.js),
-// exactly the way application/PeerContentExchange.js's own header
-// already refuses to reinvent "how do bytes actually move." Multi-peer
-// racing or fallback is explicitly out of scope here too — see
-// docs/Roadmap.md, 0.7.4, "Deliberately excluded," which already sized
-// that as its own future milestone (0.7.6); asking more than one peer
-// per call, sequentially or concurrently, would be exactly that
-// fallback policy, arriving one milestone early.
+// caller explicitly hands in, together with a peer (or peers) the
+// caller explicitly chose to ask — never automatically, never for every
+// entry application/LocalPublicationCatalog.js happens to hold. `peer`/
+// `peers` are REQUIRED, per-call arguments, not a default this class
+// picks for itself — a caller that wants "ask every connected peer"
+// implements that policy itself, one layer up (see ui/views/
+// DecentralizedPublicationsView.js), exactly the way application/
+// PeerContentExchange.js's own header already refuses to reinvent "how
+// do bytes actually move."
+//
+// 0.7.5 shipped this class asking exactly ONE caller-chosen peer,
+// naming and declining multi-peer fallback as its own future milestone
+// (0.7.6). 0.7.6 is that milestone: `resolve()` now also accepts
+// `peers`, an ORDERED list of candidates, tried one at a time by a new
+// application/PeerContentRetrievalCoordinator.js this class builds
+// around whatever `peerContentExchange` it was constructed with. `peer`
+// (singular) still works, unchanged, as a one-candidate shorthand — see
+// `resolve()` below. What did NOT change: this class still never
+// chooses a candidate itself, still never races or ranks them (they are
+// tried strictly in the order the caller supplied), and still invents
+// no new application/PublicationResolutionOutcome.js value — see
+// application/PeerContentRetrievalCoordinator.js's own header for why
+// its retrieval result is carried alongside the outcome, on a separate
+// `retrieval` field, never merged into it.
 //
 // Never stores a resolution outcome anywhere, never memoizes across
 // calls, never ranks or races candidate peers — the identical restraint
@@ -75,9 +88,13 @@ export class PublicationResolutionCoordinator {
         this._resolver = publicationResolver;
         // OPTIONAL — a caller with no live peer transport at all (an
         // offline replica, a test exercising local resolution only) can
-        // still construct this class and call resolve() with `peer`
-        // always omitted; see `resolve()` below.
-        this._peerContentExchange = peerContentExchange;
+        // still construct this class and call resolve() with `peer`/
+        // `peers` always omitted; see `resolve()` below. Wrapped in a
+        // fresh application/PeerContentRetrievalCoordinator.js — never a
+        // second ContentStore or catalog, only a thin sequencing layer
+        // around the SAME peerContentExchange this replica already uses
+        // everywhere else (see ui/main.js).
+        this._retrievalCoordinator = peerContentExchange ? new PeerContentRetrievalCoordinator(peerContentExchange) : null;
     }
 
     // Runs application/PublicationResolver.js#resolve() unchanged. If the
@@ -87,26 +104,39 @@ export class PublicationResolutionCoordinator {
     // reason no amount of peer retrieval could ever fix.
     //
     // Only when the outcome IS CONTENT_UNAVAILABLE, and only when the
-    // caller supplied a `peer` (a live, already-authenticated
-    // ConnectedPeer this class never chooses on its own — see this
-    // class's own header), does it ask that one peer for the bytes by
-    // hash over application/PeerContentExchange.js#request(), wait up to
-    // `timeoutMs` for a verified application/PeerContentExchange.js#
-    // onContentReceived() matching that exact hash, and — only if one
-    // arrives — call application/PublicationResolver.js#resolve() a
-    // SECOND time. That second call re-runs the full ten-step discipline
-    // from scratch; a publication whose bytes just arrived from a peer
-    // gets no less scrutiny than one already sitting in this replica's
-    // own ContentStore. A timeout, a missing `peer`, or no
-    // `peerContentExchange` at construction all return the ORIGINAL
-    // CONTENT_UNAVAILABLE result, unchanged — never a different outcome
-    // invented for "I tried and it didn't work."
-    async resolve(publicationJson, kindPlugin, { peer = null, timeoutMs = PublicationResolutionCoordinator.DEFAULT_TIMEOUT_MS } = {}) {
+    // caller supplied at least one candidate — `peers`, an ORDERED
+    // array, or `peer`, a one-candidate shorthand that behaves exactly
+    // as it did before 0.7.6 — does it hand those candidates to a fresh
+    // application/PeerContentRetrievalCoordinator.js#retrieve() call,
+    // which tries each one in turn, up to `timeoutMs` per candidate,
+    // until a verified RESPONSE for the exact hash arrives or every
+    // candidate is exhausted. Only if one arrives does this method call
+    // application/PublicationResolver.js#resolve() a SECOND time. That
+    // second call re-runs the full ten-step discipline from scratch; a
+    // publication whose bytes just arrived from a peer gets no less
+    // scrutiny than one already sitting in this replica's own
+    // ContentStore. Exhausting every candidate, an empty/missing
+    // `peers`/`peer`, or no `peerContentExchange` at construction all
+    // return the ORIGINAL CONTENT_UNAVAILABLE result, unchanged — never
+    // a different outcome invented for "I tried and it didn't work."
+    //
+    // Either way, the RETURNED result carries one extra field this
+    // class never had before 0.7.6: `retrieval`, the exact `{ retrieved,
+    // hash, attemptedPeers, peer?, reason? }` application/
+    // PeerContentRetrievalCoordinator.js#retrieve() produced — present
+    // only when a retrieval was actually attempted (i.e. never on a
+    // RESOLVED/INVALID_* first result, and never when no candidate was
+    // supplied). See that class's own header on why this is a SEPARATE
+    // field, never folded into `outcome`.
+    async resolve(publicationJson, kindPlugin, {
+        peer = null, peers = null, timeoutMs = PublicationResolutionCoordinator.DEFAULT_TIMEOUT_MS
+    } = {}) {
         const first = await this._resolver.resolve(publicationJson, kindPlugin);
         if (first.outcome !== PublicationResolutionOutcome.CONTENT_UNAVAILABLE) {
             return first;
         }
-        if (!peer || !this._peerContentExchange) {
+        const candidates = (Array.isArray(peers) && peers.length) ? peers : (peer ? [peer] : []);
+        if (!candidates.length || !this._retrievalCoordinator) {
             return first;
         }
         const hash = first.publication && first.publication.contentReference && first.publication.contentReference.hash;
@@ -114,46 +144,12 @@ export class PublicationResolutionCoordinator {
             return first;
         }
 
-        const retrieved = await this._requestFromPeer(peer, hash, timeoutMs);
-        if (!retrieved) {
-            return first;
+        const retrieval = await this._retrievalCoordinator.retrieve(hash, candidates, { timeoutMs });
+        if (!retrieval.retrieved) {
+            return { ...first, retrieval };
         }
-        return this._resolver.resolve(publicationJson, kindPlugin);
-    }
-
-    // Wraps application/PeerContentExchange.js#request()/onContentReceived()
-    // — an intentionally fire-and-forget, event-driven pair — in a single
-    // bounded Promise<boolean>: true the moment a RESPONSE for exactly
-    // `hash` is verified and stored, false on timeout or if `request()`
-    // itself throws (e.g. `peer` is not AUTHENTICATED — see that
-    // method's own header). Never resolves true for any OTHER hash's
-    // arrival; two calls to this method for two different hashes, even
-    // concurrently, never cross-resolve one another, since application/
-    // PeerContentExchange.js#onContentReceived() fires `{ hash }` per
-    // event, filtered here explicitly.
-    _requestFromPeer(peer, hash, timeoutMs) {
-        return new Promise((resolve) => {
-            let settled = false;
-            let timer = null;
-            const finish = (result) => {
-                if (settled) return;
-                settled = true;
-                if (timer) clearTimeout(timer);
-                unsubscribe();
-                resolve(result);
-            };
-            const unsubscribe = this._peerContentExchange.onContentReceived(({ hash: receivedHash }) => {
-                if (receivedHash === hash) {
-                    finish(true);
-                }
-            });
-            timer = setTimeout(() => finish(false), timeoutMs);
-            try {
-                this._peerContentExchange.request(peer, hash);
-            } catch {
-                finish(false);
-            }
-        });
+        const second = await this._resolver.resolve(publicationJson, kindPlugin);
+        return { ...second, retrieval };
     }
 }
 

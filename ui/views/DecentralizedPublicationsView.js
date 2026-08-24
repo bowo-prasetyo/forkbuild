@@ -1,9 +1,10 @@
 import { reactive, ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { PublicationResolutionOutcome } from '../../application/PublicationResolutionOutcome.js';
-import { resolvePublicationView, describePublicationOutcome } from '../../application/PublicationResolutionView.js';
+import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/PublicationResolutionView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
+// 0.7.6 — Multi-Peer Publication Retrieval & Replication.
 //
 // The "Publication Center" this milestone's own design conversation
 // asked for: a single place a person can look at every application/
@@ -23,21 +24,24 @@ import { resolvePublicationView, describePublicationOutcome } from '../../applic
 // never wrong in a way a reload wouldn't also fix, and never stale in a
 // way this page would hide.
 //
-// "Retrieve from Connected Peer" is this milestone's own, deliberately
-// narrow answer to "who do I ask?" — application/
+// "Retrieve from Peers" replaces 0.7.5's own "Retrieve from Connected
+// Peer" — the "multi-source retrieval... fallback... racing" that
+// milestone's own docs/Roadmap.md entry named and sized as a future
+// milestone (0.7.6) has arrived. This page still answers "who do I
+// ask?" the identical deliberately narrow way — application/
 // PublicationPeerExchange.js has never tracked which peer announced
 // which publication (peer identity is informational only, by design;
 // see that class's own header), so there is no natural "ask whoever
-// told you about this" target to offer. This page asks the FIRST
-// currently AUTHENTICATED peer in application/PeerSessionManager.js's
-// own registry — a single, explicit, named default policy living here,
-// in the UI layer, never inside application/
-// PublicationResolutionCoordinator.js itself (see that class's own
-// header on why `peer` is always a required, caller-supplied argument).
-// Choosing AMONG several connected peers, or trying more than one, is
-// exactly the "multi-source retrieval... fallback... racing" docs/
-// Roadmap.md's own 0.7.4 entry already named and sized as a future
-// milestone (0.7.6) — this page deliberately does not build that early.
+// told you about this" target to offer. What changed: instead of the
+// FIRST currently AUTHENTICATED peer, this page now hands application/
+// PublicationResolutionCoordinator.js#resolve() EVERY currently
+// AUTHENTICATED peer, in application/PeerSessionManager.js's own
+// registry order, as its `peers` candidate list — still a single,
+// explicit, named policy living here, in the UI layer, never inside the
+// coordinator itself (see that class's own header on why `peers` is
+// always a required, caller-supplied argument). Candidates are tried in
+// that order, never raced concurrently — see application/
+// PeerContentRetrievalCoordinator.js's own header.
 function humanizeContentKind(contentKind) {
     if (!contentKind) return 'Unknown content';
     return contentKind
@@ -68,8 +72,13 @@ export default {
         const entries = reactive([]);
         const loading = ref(true);
 
-        const retrievalPeer = computed(() => peerSessionManager.listPeers()
-            .find((peer) => peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED) || null);
+        // Every currently AUTHENTICATED peer, in registry order — the
+        // full candidate list this page now hands to application/
+        // PublicationResolutionCoordinator.js#resolve() as `peers`. See
+        // this file's own header on why this replaced 0.7.5's own
+        // single `retrievalPeer`.
+        const retrievalPeers = computed(() => peerSessionManager.listPeers()
+            .filter((peer) => peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED));
 
         function findEntry(publicationId) {
             return entries.find((entry) => entry.publication.id === publicationId);
@@ -107,13 +116,13 @@ export default {
         }
 
         async function retrieve(entry) {
-            const peer = retrievalPeer.value;
-            if (!peer) {
+            const peers = retrievalPeers.value;
+            if (!peers.length) {
                 return;
             }
             entry.retrieving = true;
             try {
-                entry.view = await resolvePublicationView(entry.publication, { coordinator, kindPlugins, peer });
+                entry.view = await resolvePublicationView(entry.publication, { coordinator, kindPlugins, peers });
             } finally {
                 entry.retrieving = false;
             }
@@ -136,6 +145,30 @@ export default {
             if (entry.checking) return 'Checking…';
             if (!entry.view) return 'Checking…';
             return describePublicationOutcome(entry.view.outcome);
+        }
+
+        // 0.7.6 — the "why is this available?" sentence this milestone's
+        // own design conversation asked for. Distinguishes "the bytes
+        // were already sitting in this device's own ContentStore" from
+        // "the bytes just arrived from a connected peer, and were
+        // accepted only after their hash matched" — application/
+        // PublicationResolutionView.js#describeRetrieval()'s own return
+        // value is null in the first case (no retrieval was ever
+        // attempted for this view) and a specific sentence in the
+        // second, so this function never has to duplicate that logic,
+        // only choose between it and the plain "available locally"
+        // default.
+        function availabilityText(entry) {
+            if (!entry.view) return null;
+            if (entry.view.outcome === PublicationResolutionOutcome.RESOLVED) {
+                return describeRetrieval(entry.view)
+                    || "Available locally. The content matching this publication's cryptographic hash is stored on this device.";
+            }
+            if (entry.view.outcome === PublicationResolutionOutcome.CONTENT_UNAVAILABLE) {
+                return describeRetrieval(entry.view)
+                    || 'Unavailable locally. The publication is known, but its referenced content is not currently available on this device.';
+            }
+            return null;
         }
 
         let unsubscribeReceived = null;
@@ -169,8 +202,8 @@ export default {
         });
 
         return {
-            entries, loading, retrievalPeer,
-            humanizeContentKind, shortId, formatWhen, badgeClass, statusLabel,
+            entries, loading, retrievalPeers,
+            humanizeContentKind, shortId, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck
         };
     },
@@ -183,9 +216,9 @@ export default {
                 never remembered from last time: cataloging a publication only ever means this device has SEEN
                 a validly signed locator, never that its content is sitting here right now.
             </p>
-            <p v-if="!retrievalPeer" class="form-hint form-hint--neutral">
-                No authenticated peer is connected right now — "Retrieve from Connected Peer" below will do
-                nothing until one is. Connect to a peer first from <router-link to="/peers">Peers</router-link>.
+            <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
+                No authenticated peer is connected right now — "Retrieve from Peers" below will do nothing
+                until one is. Connect to a peer first from <router-link to="/peers">Peers</router-link>.
             </p>
 
             <p v-if="loading" class="locations-panel-empty">Checking cataloged publications…</p>
@@ -207,14 +240,20 @@ export default {
                     <p v-if="entry.view && entry.view.contentSummary" class="form-hint form-hint--neutral">
                         {{ entry.view.contentSummary }}
                     </p>
+                    <p v-if="availabilityText(entry)" class="form-hint form-hint--neutral">
+                        {{ availabilityText(entry) }}
+                    </p>
                     <p v-else-if="entry.view && entry.view.reason" class="form-hint form-hint--neutral">
                         {{ entry.view.reason }}
+                    </p>
+                    <p v-if="canRetrieve(entry) && retrievalPeers.length > 0" class="form-hint form-hint--neutral">
+                        {{ retrievalPeers.length }} connected peer{{ retrievalPeers.length === 1 ? '' : 's' }} may have this content.
                     </p>
 
                     <div class="identity-mgmt-actions">
                         <button v-if="canRetrieve(entry)" class="action-btn action-btn--secondary"
-                                :disabled="entry.retrieving || !retrievalPeer" @click="retrieve(entry)">
-                            {{ entry.retrieving ? 'Asking peer…' : 'Retrieve from Connected Peer' }}
+                                :disabled="entry.retrieving || retrievalPeers.length === 0" @click="retrieve(entry)">
+                            {{ entry.retrieving ? 'Asking peers…' : 'Retrieve from Peers' }}
                         </button>
                         <button class="action-btn action-btn--secondary" :disabled="entry.checking" @click="recheck(entry)">
                             {{ entry.checking ? 'Checking…' : 'Re-check' }}

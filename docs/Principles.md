@@ -9398,3 +9398,82 @@ adopting it stay two different acts, exactly as separate as cataloging
 and resolving already were.
 
 See `docs/Roadmap.md`, 0.7.5, for the full milestone entry.
+
+### Replication Creates Availability; It Does Not Create Authority (0.7.6)
+
+0.7.4 built `application/PeerContentExchange.js#request()` to ask exactly
+one peer for one hash. 0.7.5's own `application/
+PublicationResolutionCoordinator.js` header named the obvious next step
+and declined to build it: asking several peers, one after another, for
+content this replica does not yet have. 0.7.6 is that step — a new
+`application/PeerContentRetrievalCoordinator.js` that tries an ORDERED
+list of candidates until one answers, or all of them don't. Nothing
+about WHAT makes a RESPONSE trustworthy changed: `core/
+ContentReference.js#verify()` still recomputes the hash of exactly what
+arrived, from whichever peer it arrived from, exactly as it has since
+0.7.4. What changed is only how many candidates get asked, and in what
+order — never who they are, or what they are owed for answering.
+
+**A replica that holds bytes is not the same as a replica that published
+them.** Bob retrieving Alice's content puts real bytes in Bob's own
+`content/ContentStore.js` — genuine replication, not a resolved verdict
+that evaporates on the next page load. It does not put a new entry in
+Bob's own `application/LocalPublicationCatalog.js`, does not sign
+anything on Bob's behalf, and gives Bob no more claim to have published
+Alice's design than a browser's HTTP cache gives it a claim to have
+written a web page. `tests/PeerContentRetrievalCoordinator.test.js`'s
+own flagship makes this literal: after Carol retrieves the identical
+bytes Bob relayed to her, her catalog still holds exactly ONE
+publication — Alice's, signed by Alice, unchanged — while her own
+`ContentStore` now genuinely has the bytes. Three completely different
+facts stay three completely different facts: "I possess these bytes,"
+"a signed publication points at them," and "I am the one who signed
+that publication." Collapsing any two of those would be a shortcut this
+milestone's own design conversation refused to take.
+
+**A publisher relaying a locator is not a second publisher.** `application/
+PublicationPeerExchange.js#announce()` has never cared whether a
+publication being announced is the caller's own or one it merely
+cataloged some other way — Bob re-announcing Alice's ORIGINAL, unedited,
+still-Alice-signed envelope to Carol and Dave is exactly that: the same
+signed record, one more hop, `publisherIdentity` unchanged. Bob choosing
+to publish his OWN envelope for the identical content hash — a distinct
+act, with his own signature and his own publication id — is a
+genuinely different thing, and both are legitimate at once. `application/
+LocalPublicationCatalog.js#findByContentHash()` has returned every
+independently signed locator for a hash, none more authoritative than
+another, since 0.7.2; 0.7.6 changes nothing about that contract, only
+proves it under a live, multi-hop scenario for the first time. No
+"latest," no "canonical," no replacement — the identical restraint that
+class's own header has held since it was written.
+
+**Resolution asks what; retrieval asks whether.** `application/
+PublicationResolutionOutcome.js` answers "what is the state of this
+publication" — RESOLVED, CONTENT_UNAVAILABLE, one of the INVALID_*
+values. `application/PeerContentRetrievalCoordinator.js#retrieve()`
+answers a narrower, operational question: "did THIS attempt, against
+THESE candidates, obtain verified bytes?" The two questions look similar
+enough to tempt merging them into one enum, and this milestone's own
+design conversation refused that temptation directly — a retrieval
+outcome is carried on its own `retrieval` field
+(`{ retrieved, hash, attemptedPeers, peer?, reason? }`), never folded
+into `outcome`, so a caller that only ever cared about the five-year-old
+`PublicationResolutionOutcome` contract sees it completely unchanged.
+`application/PublicationResolutionCoordinator.js#resolve()` is the one
+place both facts ever travel together, and only ever side by side.
+
+**Trying candidate N before candidate N+1 is an ordering, never a
+ranking.** `application/PeerContentRetrievalCoordinator.js` introduces
+no field anywhere that could hold an opinion about which peer is more
+reliable, more trustworthy, or "preferred" — the identical restraint
+`application/PeerContentExchange.js`'s own 0.7.4 header already applies
+to a single peer, extended here to a list of them. The ORDER candidates
+are tried in is entirely the caller's own policy (see `ui/views/
+DecentralizedPublicationsView.js` — every currently authenticated peer,
+in registry order); this class does not choose it, does not remember
+which peer answered last time, and re-derives its answer from scratch on
+every call, exactly like `application/
+PublicationResolutionCoordinator.js`'s own "always safe, always current"
+restraint since 0.7.5.
+
+See `docs/Roadmap.md`, 0.7.6, for the full milestone entry.
