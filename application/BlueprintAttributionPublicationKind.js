@@ -30,15 +30,26 @@ import { validateBlueprintAttributionPublication } from './BlueprintAttributionP
 // own header already established: OPTIONAL, and checked only in
 // crossCheck() — after both the envelope's AND the attribution's own
 // signatures have already verified — never before.
-export function createBlueprintAttributionPublicationKind({ verifier, store, expectedFingerprint = null }) {
+//
+// 0.7.5 — Decentralized Publication UX & Resolution. `store` is now
+// OPTIONAL — a caller that only wants to know WHAT a publication
+// resolves to (application/PublicationResolutionCoordinator.js, driving
+// the Publications Center this milestone adds) never persists it into
+// application/LocalBlueprintAttributionStore.js as a side effect of
+// merely checking. Per application/PublicationResolver.js's own header,
+// `kindPlugin.store` has always been optional — omitting it here simply
+// means the resolved content is never handed to
+// `typeof kindPlugin.store === 'function'`, so resolve() returns the
+// freshly constructed BlueprintAttribution without saving it anywhere.
+// Every existing caller that already passes `store` (application/
+// CreatePublicationResolverUseCase.js's own domain callers) is completely
+// unaffected — this only widens what was already a valid call shape.
+export function createBlueprintAttributionPublicationKind({ verifier, store = null, expectedFingerprint = null }) {
     if (!verifier) {
         throw new Error('createBlueprintAttributionPublicationKind: an authorization verifier is required');
     }
-    if (!store) {
-        throw new Error('createBlueprintAttributionPublicationKind: a BlueprintAttribution store is required');
-    }
 
-    return {
+    const plugin = {
         contentKind: BLUEPRINT_ATTRIBUTION_KIND,
 
         validate: validateBlueprintAttributionPublication,
@@ -51,15 +62,17 @@ export function createBlueprintAttributionPublicationKind({ verifier, store, exp
             if (expectedFingerprint && !blueprintFingerprintsEqual(expectedFingerprint, attribution.fingerprint)) {
                 throw new Error('createBlueprintAttributionPublicationKind: refusing to resolve an attribution for a different design than the one on file — its fingerprint does not match, even though its signature verified');
             }
-        },
+        }
+    };
 
+    if (store) {
         // Dedup-by-id, the exact same posture
         // application/BlueprintAttributionExchange.js#importAttribution()
         // already established — a resolved publication this replica
         // already knows about is never an error, only the ordinary cost
         // of the same attribution reaching this replica through more
         // than one transport.
-        store: (attribution) => {
+        plugin.store = (attribution) => {
             if (store.has(attribution.fingerprint, attribution.id)) {
                 const existing = store.list(attribution.fingerprint)
                     .find((known) => known.id === attribution.id);
@@ -67,6 +80,8 @@ export function createBlueprintAttributionPublicationKind({ verifier, store, exp
             }
             store.save(attribution);
             return { attribution, isNew: true };
-        }
-    };
+        };
+    }
+
+    return plugin;
 }

@@ -13724,3 +13724,190 @@ fallback, peer trust or reputation, a Discovery/Retrieval UI, and
 chunked or streaming transfer for content larger than one message — each
 sized on its own, exactly like every "Deliberately excluded" list in
 this document before it.
+
+## 0.7.5 — Decentralized Publication UX & Resolution
+
+0.7.0 through 0.7.4 built a complete pipeline — signed envelope, real
+network-backed resolution, a local catalog, a live peer transport for
+both the locator and the bytes it points at — and every single one of
+those five milestones closed with the identical line: no UI surface,
+deliberately, because there was nothing yet for one to feed. This
+milestone is the first to actually wire any of it into the running app,
+and the first to answer the question a person has, not a protocol: "can
+I see this, and if not, can you go get it?"
+
+### What shipped
+
+- `application/PublicationResolutionCoordinator.js` — the sequencing
+  layer 0.7.0 through 0.7.4 never needed and never built: resolve a
+  publication locally via `application/PublicationResolver.js#resolve()`
+  unchanged, and only when the outcome is exactly `CONTENT_UNAVAILABLE`,
+  and only when the caller supplies a `peer`, ask that ONE peer for the
+  bytes over `application/PeerContentExchange.js#request()`, wait up to
+  a bounded `timeoutMs` for a verified `onContentReceived()` matching the
+  exact hash, and re-resolve. A timeout, a missing peer, or an already-
+  resolved/invalid result all return unchanged — this class invents no
+  new outcome, stores nothing across calls, and never chooses a peer on
+  its own. See docs/Principles.md, "A Resolution Coordinator Sequences;
+  It Does Not Decide (0.7.5)."
+- `application/CreatePublicationResolutionCoordinatorUseCase.js` — takes
+  both collaborators as parameters, constructing neither, the identical
+  shape `application/CreatePeerContentExchangeUseCase.js`'s own 0.7.4
+  header already established.
+- `application/BlueprintAttributionPublicationKind.js` and
+  `application/PlaceNamingClaimPublicationKind.js` — both relaxed to
+  make `store` OPTIONAL (it was always optional on
+  `application/PublicationResolver.js`'s own `kindPlugin` contract; only
+  these two factories required it). Every existing caller that already
+  passes `store` is completely unaffected.
+- `application/CreatePublicationDisplayKindRegistryUseCase.js` — builds
+  both kindPlugins with `store` omitted, so checking what a cataloged
+  publication resolves to never imports it into
+  `LocalBlueprintAttributionStore`/`LocalPlaceNamingClaimStore` as a side
+  effect. Adds one presentation-only field neither factory's own contract
+  required, `describe(content)`, read exclusively by the next file below.
+- `application/PublicationResolutionView.js` — `resolvePublicationView()`,
+  the application-layer counterpart to `core/BlueprintAttributionView.js`/
+  `core/PlaceNamingView.js`'s own derived-view pattern, necessarily async
+  (deriving this view means actually calling the coordinator — real I/O —
+  where those two only ever read an in-memory array). Produces one flat,
+  UI-ready shape: `{ publication, contentKind, publisherIdentityId,
+  outcome, resolved, reason, content, contentSummary }`. A contentKind
+  with no registered display kindPlugin is reported directly, never
+  guessed at. `describePublicationOutcome()` gives every outcome —
+  including "no kindPlugin for this yet" — a short, human label.
+- `ui/main.js` — the first construction, anywhere in the running app, of
+  every collaborator above plus 0.7.0's resolver, 0.7.2's catalog and
+  exchange, 0.7.3's peer exchange, and 0.7.4's content exchange, all
+  riding the same `peerMessageBus`/`peerSessionManager.registry` every
+  other peer protocol here already shares, and all provided app-wide —
+  one `LocalPublicationCatalog` instance for the entire app, never two.
+- `ui/views/DecentralizedPublicationsView.js` + a new `/publications`
+  route and nav link — the Publication Center: every cataloged
+  publication, its status derived fresh on every view (never stored,
+  never cached — see `application/LocalPublicationCatalog.js`'s own
+  header), and a "Retrieve from Connected Peer" action for a
+  `CONTENT_UNAVAILABLE` entry that asks the first currently AUTHENTICATED
+  peer — a single, explicit, named default policy living here in the UI
+  layer, never inside the coordinator, since `application/
+  PublicationPeerExchange.js` has never tracked which peer announced
+  which publication.
+- `ui/components/StructureInfoPanel.js` + `ui/views/EditorView.js` — a
+  new "Publish to Network" action beside the existing "Export
+  Attribution" link, reachable under the identical `attribution.mine`
+  guard. Wraps the same signed `BlueprintAttribution` export already
+  produces in a `DecentralizedPublication` envelope instead: `publish()`
+  stores and signs it, `LocalPublicationCatalog#add()` catalogs it on
+  this replica, `PublicationPeerExchange#announce()` tells every
+  currently authenticated peer — three already-built 0.7.0/0.7.2/0.7.3
+  classes, called in the one order nothing had ever called them in
+  before. Zero connected peers is never an error, only a publication
+  that stays cataloged, ready to announce again later.
+- `tests/PublicationResolutionCoordinator.test.js` — four sections: local
+  passthrough for every outcome the coordinator never touches; a peer
+  that never answers, timing out to the ORIGINAL `CONTENT_UNAVAILABLE`
+  result; a flagship over a real, live, authenticated connection —
+  `CONTENT_UNAVAILABLE` with no peer, `RESOLVED` the instant one is
+  supplied, one coordinator call each way; and `PublicationResolutionView`
+  resolving a display-only kindPlugin without ever importing into
+  `LocalBlueprintAttributionStore`, plus an unsupported contentKind
+  reported honestly rather than guessed at.
+
+### A resolution coordinator sequences; it does not decide
+
+See docs/Principles.md, "A Resolution Coordinator Sequences; It Does Not
+Decide (0.7.5)," for the full reasoning. The short version: five
+protocol classes stayed exactly as unaware of each other as they were
+the day each shipped. What this milestone adds sits ABOVE all five,
+never between any two of them — it calls `PublicationResolver#resolve()`
+and, only on `CONTENT_UNAVAILABLE` and only with a caller-chosen peer,
+`PeerContentExchange#request()`, and returns whatever they say. No new
+outcome, no cache, no default peer, no import as a side effect of
+merely looking.
+
+### Deliberately excluded
+
+- **Automatic or unattended retrieval.** `application/
+  PublicationResolutionCoordinator.js#resolve()` only ever asks a peer
+  for content the CALLER already selected, for a publication the caller
+  already handed in — never every `CONTENT_UNAVAILABLE` entry a replica
+  happens to catalog, and never on a timer. This milestone's own design
+  conversation was explicit that "retrieve whatever's missing, whenever
+  it's missing" is a fundamentally different, much larger feature than
+  "let a person ask."
+- **Multi-peer selection, racing, or fallback.** `ui/views/
+  DecentralizedPublicationsView.js` asks exactly the first AUTHENTICATED
+  peer; there is no picker, no trying a second peer if the first doesn't
+  answer, and no concurrent request to several. Still sized as its own
+  future milestone (0.7.6, unchanged from docs/Roadmap.md's own 0.7.4
+  entry) — building any of it here would be that milestone arriving one
+  version early.
+- **Publication withdrawal, revocation, or expiry in the UI.**
+  `application/LocalPublicationCatalog.js#remove()` has existed since
+  0.7.2 and is still LOCAL-ONLY, per that class's own header; no button
+  anywhere in this milestone calls it, and forgetting a locator still
+  never un-publishes it.
+- **A "Publish to Network" action for a PlaceNamingClaim.** `application/
+  PlaceNamingClaimPublicationKind.js` was relaxed the identical way
+  `BlueprintAttributionPublicationKind.js` was, and the Publication
+  Center already displays a resolved naming-claim publication correctly
+  — but no UI anywhere in this milestone offers to PUBLISH one, only to
+  view or retrieve one already published some other way (e.g. the IPFS
+  flagship's own manual `publish()` call). Sized as a small, obvious
+  follow-up, not built here to keep this milestone's own UI surface to
+  exactly the one domain (`BlueprintAttribution`) it already had an
+  existing "Claim authorship" entry point for.
+- **Blockchain anchoring, IPFS gateway UX, or any new storage backend.**
+  Still entirely out of scope — this milestone wires up transports and
+  resolution paths 0.7.0/0.7.1 already built, and adds none of its own.
+- **Trust, reputation, or a "verified publisher" badge.** The Publication
+  Center shows exactly what `application/
+  PublicationResolutionOutcome.js` already reports — signed, resolved,
+  or not — and nothing beyond it. No star rating, no "trusted" label, no
+  ranking of one publisher's claim above another's.
+
+```text
+0.7.4   Peer Content Retrieval                                    ✓
+             │
+             ▼
+0.7.5   Decentralized Publication UX & Resolution                 ✓
+             ├── application/PublicationResolutionCoordinator.js —
+             │   resolve locally; ask exactly one caller-chosen peer
+             │   only on CONTENT_UNAVAILABLE; never caches, never picks
+             │   a peer itself
+             ├── application/BlueprintAttributionPublicationKind.js +
+             │   application/PlaceNamingClaimPublicationKind.js — store
+             │   now OPTIONAL, enabling display-only resolution
+             ├── application/CreatePublicationDisplayKindRegistryUseCase.js
+             │   + application/PublicationResolutionView.js — a flat,
+             │   UI-ready resolution shape, never imported anywhere
+             ├── ui/main.js — first real wiring of the entire 0.7.0–0.7.4
+             │   stack into the running app, one shared catalog instance
+             ├── ui/views/DecentralizedPublicationsView.js — the
+             │   Publication Center, at /publications
+             ├── ui/components/StructureInfoPanel.js +
+             │   ui/views/EditorView.js — "Publish to Network" for a
+             │   claimed BlueprintAttribution
+             └── PublicationResolutionCoordinator.test.js — 4 sections,
+                 including a live CONTENT_UNAVAILABLE → RESOLVED
+                 flagship driven by a single coordinator call each way
+```
+
+> **0.7.0 through 0.7.4 built the entire decentralized publication
+> pipeline, one layer at a time, and left every layer unaware of every
+> other beyond exactly the collaborator it was handed. That discipline
+> was always correct, and it made the pipeline easy to test, easy to
+> reason about, and — until now — impossible for a person to actually
+> use, since nothing sat above it to ask "can I see this, and if not,
+> can you go get it?" 0.7.5 is that missing layer: a coordinator that
+> sequences two existing calls and decides nothing on its own, a UI that
+> shows exactly what the protocol already knows, and a "Publish to
+> Network" button wired to three classes that were always ready and
+> never once called.**
+
+What's left, and deliberately unbuilt: automatic/unattended retrieval,
+multi-peer selection or fallback (0.7.6), publication withdrawal in the
+UI, a PlaceNamingClaim publish action, any new storage or anchoring
+backend, and any trust or reputation concept — each sized on its own,
+exactly like every "Deliberately excluded" list in this document before
+it.

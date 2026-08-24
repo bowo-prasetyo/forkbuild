@@ -28,6 +28,11 @@ import { VoiceUseCase } from '../application/VoiceUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { CreateSiblingReadStateStoreUseCase } from '../application/CreateSiblingReadStateStoreUseCase.js';
 import { DeviceConversationSyncUseCase } from '../application/DeviceConversationSyncUseCase.js';
+import { CreatePublicationResolverUseCase } from '../application/CreatePublicationResolverUseCase.js';
+import { CreatePublicationPeerExchangeUseCase } from '../application/CreatePublicationPeerExchangeUseCase.js';
+import { CreatePeerContentExchangeUseCase } from '../application/CreatePeerContentExchangeUseCase.js';
+import { CreatePublicationResolutionCoordinatorUseCase } from '../application/CreatePublicationResolutionCoordinatorUseCase.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -265,6 +270,54 @@ const voiceUseCase = new VoiceUseCase(identityProvider, {
     resolveSocialIdentity
 });
 
+// 0.7.5 — Decentralized Publication UX & Resolution. The first time any
+// of application/PublicationResolver.js (0.7.0), application/
+// LocalPublicationCatalog.js/application/PublicationExchange.js (0.7.2),
+// application/PublicationPeerExchange.js (0.7.3), or application/
+// PeerContentExchange.js (0.7.4) is actually constructed in the running
+// app — every one of those milestones' own "Deliberately excluded"
+// lists named this exact gap ("no UI surface... deliberately NOT wired
+// into ui/main.js") and left it for this milestone by name. Rides the
+// SAME peerMessageBus/peerSessionManager.registry every other peer/
+// PeerMessageBus.js protocol in this file already does, so a
+// publication announcement and a content request multiplex over the
+// identical authenticated connection friendship/chat/voice/lifecycle
+// propagation already share.
+//
+// application/CreatePublicationPeerExchangeUseCase.js's own catalog is
+// the ONE LocalPublicationCatalog instance this replica uses anywhere —
+// every other collaborator below is threaded through with THAT catalog,
+// never a second instance, so "what has this replica cataloged" reads
+// identically everywhere in the app.
+const { publicationResolver, contentStore: publicationContentStore } = new CreatePublicationResolverUseCase().execute();
+const { catalog: publicationCatalog, peerExchange: publicationPeerExchange } = new CreatePublicationPeerExchangeUseCase().execute({
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry
+});
+const { peerContentExchange: publicationPeerContentExchange } = new CreatePeerContentExchangeUseCase().execute({
+    contentStore: publicationContentStore,
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry,
+    publicationCatalog
+});
+// application/PublicationResolutionCoordinator.js — the sequencing layer
+// this milestone adds on top of the four classes above: resolve
+// locally, and only ask a caller-CHOSEN peer for missing bytes when the
+// caller explicitly supplies one (see that class's own header on why it
+// never picks a peer, or retrieves anything, by itself).
+const { coordinator: publicationResolutionCoordinator } = new CreatePublicationResolutionCoordinatorUseCase().execute({
+    publicationResolver,
+    peerContentExchange: publicationPeerContentExchange
+});
+// The small, explicit, display-only kindPlugin registry ui/views/
+// DecentralizedPublicationsView.js reads from — see application/
+// CreatePublicationDisplayKindRegistryUseCase.js's own header on why
+// this is deliberately a SEPARATE composition from
+// blueprintAttributionUseCase/(a future) worldPlaceNamingUseCase: merely
+// checking what a cataloged publication resolves to must never import
+// it into either of those durable stores as a side effect.
+const { kindPlugins: publicationDisplayKindPlugins } = new CreatePublicationDisplayKindRegistryUseCase().execute();
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -284,5 +337,12 @@ app.provide('voiceUseCase', voiceUseCase);
 // so World View can attach presence/profile/interaction to it — see
 // application/CreateWorldViewUseCase.js.
 app.provide('peerMessageBus', peerMessageBus);
+// 0.7.5 — Decentralized Publication UX & Resolution.
+app.provide('publicationResolver', publicationResolver);
+app.provide('publicationCatalog', publicationCatalog);
+app.provide('publicationPeerExchange', publicationPeerExchange);
+app.provide('publicationPeerContentExchange', publicationPeerContentExchange);
+app.provide('publicationResolutionCoordinator', publicationResolutionCoordinator);
+app.provide('publicationDisplayKindPlugins', publicationDisplayKindPlugins);
 app.use(router);
 app.mount('#app');

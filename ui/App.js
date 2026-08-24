@@ -28,6 +28,7 @@ export default {
 	                    <router-link to="/identity" class="app-nav-link">My Identities</router-link>
 	                    <router-link to="/peers" class="app-nav-link">Peers</router-link>
 	                    <router-link to="/conversations" class="app-nav-link">Conversations</router-link>
+	                    <router-link to="/publications" class="app-nav-link">Publications</router-link>
 	                    <router-link to="/about" class="app-nav-link">About</router-link>
 	                </nav>
                     <UserWidget />

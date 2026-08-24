@@ -194,6 +194,7 @@ export default {
                 @export="exportInspectedStructure"
                 @claim-authorship="claimAuthorship"
                 @export-attribution="exportInspectedAttribution"
+                @publish-attribution="publishInspectedAttributionToNetwork"
                 @claim-lineage="claimLineage"
                 @export-lineage-claim="exportInspectedLineageClaim"
                 @close="inspectedStructure = null"
@@ -235,6 +236,16 @@ export default {
         const { blueprintAttributionUseCase, blueprintAttributionExchange } = new CreateBlueprintAttributionUseCase().execute(identityProvider);
         // 0.6.8 — Blueprint Lineage & Revision Discovery.
         const { blueprintLineageUseCase, blueprintLineageExchange } = new CreateBlueprintLineageUseCase().execute(identityProvider);
+        // 0.7.5 — Decentralized Publication UX & Resolution. The SAME
+        // app-wide publicationResolver/publicationCatalog/
+        // publicationPeerExchange ui/main.js already wires (0.7.0/0.7.2/
+        // 0.7.3) — never a second, disconnected instance constructed
+        // here, for the identical reason this view already reuses one
+        // app-wide identityUseCase rather than its own. See
+        // publishInspectedAttributionToNetwork() below.
+        const publicationResolver = inject('publicationResolver');
+        const publicationCatalog = inject('publicationCatalog');
+        const publicationPeerExchange = inject('publicationPeerExchange');
 
 		const copySelectionUseCase = new CopySelectionUseCase(registry);
 		const pasteClipboardUseCase = new PasteClipboardUseCase();
@@ -785,6 +796,46 @@ export default {
 		        return;
 		    }
 		    exportBlueprintAttribution(attribution);
+		}
+
+		// 0.7.5 — Decentralized Publication UX & Resolution.
+		// StructureInfoPanel's own "Publish to Network" link, reachable
+		// under the identical `attribution.mine` guard
+		// exportInspectedAttribution() above already uses. Wraps the SAME
+		// signed BlueprintAttribution export already produces in a signed
+		// application/DecentralizedPublication.js envelope instead of a
+		// hand-off file — application/PublicationResolver.js#publish()
+		// (0.7.0) stores its canonical bytes and signs the locator,
+		// application/LocalPublicationCatalog.js#add() (0.7.2) catalogs it
+		// on THIS replica the same way importing one would, and
+		// application/PublicationPeerExchange.js#announce() (0.7.3) tells
+		// every currently authenticated peer about it — three already-built
+		// classes, called in the one order that was always missing a UI
+		// caller. Zero connected peers is never an error: the publication
+		// is still cataloged, ready to show up in
+		// ui/views/DecentralizedPublicationsView.js and ready to announce
+		// automatically-never — see that class's own header on why
+		// announcing again is always a deliberate, repeated act, never
+		// retried on its own.
+		async function publishInspectedAttributionToNetwork() {
+		    const attribution = inspectedStructureAttribution.value && inspectedStructureAttribution.value.mine;
+		    if (!attribution) {
+		        return;
+		    }
+		    try {
+		        const publication = await publicationResolver.publish({
+		            content: attribution,
+		            contentKind: BLUEPRINT_ATTRIBUTION_KIND,
+		            identityProvider
+		        });
+		        publicationCatalog.add(publication);
+		        const peerCount = publicationPeerExchange.announce(publication);
+		        feedback.show(peerCount > 0
+		            ? `Published to the network — announced to ${peerCount} connected ${peerCount === 1 ? 'peer' : 'peers'}.`
+		            : 'Published to the network — cataloged locally; no peers are connected to announce to right now.');
+		    } catch (e) {
+		        feedback.show(e.message.replace(/^PublicationResolver:\s*/, ''));
+		    }
 		}
 
 		// 0.6.8 — Blueprint Lineage & Revision Discovery. Publishes a signed
@@ -1453,6 +1504,7 @@ export default {
             exportInspectedStructure,
             claimAuthorship,
             exportInspectedAttribution,
+            publishInspectedAttributionToNetwork,
             claimLineage,
             exportInspectedLineageClaim,
             showCreateBlueprintDialog,

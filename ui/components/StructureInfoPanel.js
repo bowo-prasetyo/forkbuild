@@ -81,6 +81,21 @@ import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
 // decides, this panel never decides for them (see core/
 // BlueprintSimilarity.js's own header on why similarity never becomes
 // lineage on its own).
+//
+// 0.7.5 — Decentralized Publication UX & Resolution. Also emits
+// 'publish-attribution' — a THIRD, independent way to move the
+// currently-signed-in identity's own attribution, alongside
+// 'export-attribution' above. Export produces a file a person hands to
+// someone directly; this emits a request to publish the identical
+// attribution through application/PublicationResolver.js (0.7.0) instead
+// — content-addressed, cataloged, and announced to whichever peers are
+// connected right now, discoverable without a file ever changing hands.
+// Reachable under the exact same `attribution.mine` guard
+// 'export-attribution' already uses: there is nothing of this identity's
+// own to publish until they have claimed authorship at least once. This
+// panel never calls application/PublicationResolver.js itself — see this
+// panel's own "Inspect ≠ edit" restraint above — EditorView owns the
+// actual publish call and its own feedback.
 export default {
     name: 'StructureInfoPanel',
     props: {
@@ -99,7 +114,7 @@ export default {
         similarityCandidates: { type: Array, default: () => [] }
     },
     emits: [
-        'place', 'export', 'close', 'claim-authorship', 'export-attribution',
+        'place', 'export', 'close', 'claim-authorship', 'export-attribution', 'publish-attribution',
         'claim-lineage', 'export-lineage-claim'
     ],
     data() {
@@ -291,6 +306,7 @@ export default {
                     <div class="structure-info-attribution-actions">
                         <button v-if="canClaimAuthorship" class="inline-link-btn" @click="$emit('claim-authorship')">Claim authorship</button>
                         <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('export-attribution')">Export Attribution</button>
+                        <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('publish-attribution')">Publish to Network</button>
                     </div>
 
                     <!-- Progressive disclosure, mirroring ui/components/

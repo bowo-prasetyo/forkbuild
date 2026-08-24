@@ -30,28 +30,36 @@ import { validatePlaceNamingClaimPublication } from './PlaceNamingClaimPublicati
 // against the way a Structure's own fingerprint gives an attribution
 // one), and `crossCheck` on a kindPlugin has always been OPTIONAL — see
 // application/PublicationResolver.js's own header.
-export function createPlaceNamingClaimPublicationKind({ verifier, store }) {
+//
+// 0.7.5 — Decentralized Publication UX & Resolution. `store` is now
+// OPTIONAL, for the identical reason application/
+// BlueprintAttributionPublicationKind.js's own 0.7.5 header gives: a
+// caller that only wants to know what a publication resolves to
+// (application/PublicationResolutionCoordinator.js) never imports it
+// into application/LocalPlaceNamingClaimStore.js as a side effect of
+// checking. Every existing caller that already passes `store` is
+// completely unaffected.
+export function createPlaceNamingClaimPublicationKind({ verifier, store = null }) {
     if (!verifier) {
         throw new Error('createPlaceNamingClaimPublicationKind: an authorization verifier is required');
     }
-    if (!store) {
-        throw new Error('createPlaceNamingClaimPublicationKind: a PlaceNamingClaim store is required');
-    }
 
-    return {
+    const plugin = {
         contentKind: PLACE_NAMING_CLAIM_PUBLICATION_KIND,
 
         validate: validatePlaceNamingClaimPublication,
 
         fromJSON: (pkg) => PlaceNamingClaim.fromJSON(pkg.claim),
 
-        verify: (pkg) => verifier.verifyPlaceNamingClaim(pkg.claim),
+        verify: (pkg) => verifier.verifyPlaceNamingClaim(pkg.claim)
+    };
 
+    if (store) {
         // Dedup-by-(worldId, id), the exact same posture
         // application/PlaceNamingClaimExchange.js#importClaim() already
         // established — a resolved publication this replica already
         // knows about is never an error.
-        store: (claim) => {
+        plugin.store = (claim) => {
             if (store.has(claim.worldId, claim.id)) {
                 const existing = store.listForRegion(claim.worldId, claim.regionId)
                     .find((known) => known.id === claim.id);
@@ -59,6 +67,8 @@ export function createPlaceNamingClaimPublicationKind({ verifier, store }) {
             }
             store.save(claim);
             return { claim, isNew: true };
-        }
-    };
+        };
+    }
+
+    return plugin;
 }

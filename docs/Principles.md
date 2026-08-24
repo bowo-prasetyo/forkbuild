@@ -9325,3 +9325,76 @@ this milestone, and none should ever be added — a peer that supplies
 verified bytes today is owed nothing more than a peer that supplies
 none tomorrow. See `docs/Roadmap.md`, 0.7.4, "Peer identity is not
 content authenticity," for the full milestone entry.
+
+### A Resolution Coordinator Sequences; It Does Not Decide (0.7.5)
+
+0.7.0 through 0.7.4 built five classes — `DecentralizedPublication`,
+`PublicationResolver`, `LocalPublicationCatalog`/`PublicationExchange`,
+`PublicationPeerExchange`, `PeerContentExchange` — each one deliberately
+unaware of the others beyond the single collaborator it takes by
+constructor injection. That was correct, and none of it changes here.
+What none of the five ever answered is the question a PERSON actually
+has, looking at one cataloged publication: "can I see this, and if not,
+can you go get it?" Answering that means calling two of them in
+sequence and reacting to an event neither raises on its own behalf.
+`application/PublicationResolutionCoordinator.js` is exactly that
+sequencing — and, this milestone's own design conversation insisted,
+**nothing more**: it owns no storage, ranks nothing, and decides nothing
+a person didn't already ask for.
+
+**Sequencing a decision is not making it.** The coordinator's own
+`resolve()` runs `PublicationResolver#resolve()` first, unconditionally,
+and returns whatever it says unless the outcome is exactly
+`CONTENT_UNAVAILABLE`. It never second-guesses a `RESOLVED`, never
+retries an `INVALID_*`, and never invents a new outcome of its own —
+every value a caller can see still comes from `application/
+PublicationResolutionOutcome.js`, unchanged since 0.7.1. Composing two
+existing operations is not the same as growing a third one with its own
+opinions, and this class is written to make that structurally
+impossible: it has no field, anywhere, that could hold an opinion.
+
+**Retrieval is opt-in per call, never a default the coordinator
+chooses.** `peer` is a required, per-call argument — never a peer this
+class selects for itself, never "the first connected peer" or "every
+connected peer." A caller with no peer to offer gets exactly the local
+`resolve()` result back, unchanged; automatic, unattended retrieval for
+every catalog entry a replica happens to hold was named directly in
+this milestone's own design conversation and refused, for the identical
+reason `application/PeerContentExchange.js`'s own 0.7.4 header refuses
+to answer a hash nobody published a locator for. `ui/views/
+DecentralizedPublicationsView.js` is where "which peer" actually gets
+decided — a single, named, narrow default policy (the first
+AUTHENTICATED peer) living in the UI layer, never inside the
+coordinator. Asking more than one peer, racing candidates, or falling
+back from one to another remains exactly as unbuilt as `docs/
+Roadmap.md`'s own 0.7.4 entry already sized it (0.7.6) — a resolution
+coordinator that quietly grew fallback logic would be that milestone
+arriving early, wearing a different name.
+
+**A cached verdict is the one thing this class refuses to become.**
+`resolve()` stores nothing across calls and re-derives its answer from
+scratch every time, the identical restraint `application/
+LocalPublicationCatalog.js`'s own header already applies to itself —
+see "Discovery Is Not Resolution (0.7.2)" above. Calling it twice for
+the same publication, with or without a peer, is always safe and always
+current; nothing about this milestone lets a replica's own view of "can
+I see this" drift from what a fresh check would say.
+
+**Resolving to look is not resolving to keep.** The two existing
+`kindPlugin` factories (`application/
+BlueprintAttributionPublicationKind.js`, `application/
+PlaceNamingClaimPublicationKind.js`) both made their own `store`
+parameter optional this milestone, so `application/
+CreatePublicationDisplayKindRegistryUseCase.js` can build a kindPlugin
+with no `store` at all — one that resolves a publication far enough to
+describe it, and imports it nowhere. Merely opening `ui/views/
+DecentralizedPublicationsView.js` to check whether a cataloged
+attribution or naming claim can be seen right now must never, as a side
+effect, add it to `application/LocalBlueprintAttributionStore.js` or
+`application/LocalPlaceNamingClaimStore.js` — a person who actually
+wants that already has "Claim authorship" and its naming-claim
+equivalent, both entirely unchanged. Looking at a publication and
+adopting it stay two different acts, exactly as separate as cataloging
+and resolving already were.
+
+See `docs/Roadmap.md`, 0.7.5, for the full milestone entry.

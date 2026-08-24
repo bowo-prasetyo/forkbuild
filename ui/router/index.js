@@ -11,6 +11,7 @@ import IdentityManagementView from '../views/IdentityManagementView.js';
 import PeerConnectionsView from '../views/PeerConnectionsView.js';
 import ChatView from '../views/ChatView.js';
 import ConversationsView from '../views/ConversationsView.js';
+import DecentralizedPublicationsView from '../views/DecentralizedPublicationsView.js';
 
 const routes = [
     { path: '/', name: 'home', component: HomeView },
@@ -36,6 +37,14 @@ const routes = [
     // peer worth showing, independent of whether any of them are online
     // right now — see application/PeerPresenceUseCase.js's own header.
     { path: '/conversations', name: 'conversations', component: ConversationsView },
+    // 0.7.5 — Decentralized Publication UX & Resolution. The "Publication
+    // Center" — see ui/views/DecentralizedPublicationsView.js's own
+    // header for why this is a top-nav destination distinct from
+    // /repository: Repository lists published Documents/Worlds this
+    // replica can browse and fork; this page lists signed
+    // DecentralizedPublication envelopes (0.7.0) this replica has
+    // cataloged (0.7.2), regardless of whether their content resolves.
+    { path: '/publications', name: 'publications', component: DecentralizedPublicationsView },
     { path: '/about', name: 'about', component: AboutView }
 ];
 
