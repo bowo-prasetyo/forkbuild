@@ -9722,3 +9722,79 @@ signature → catalog` shape rather than inventing a new one, exactly as
 0.8.1's own "Deliberately excluded" list already anticipated.
 
 See `docs/Roadmap.md`, 0.8.2, for the full milestone entry.
+
+### Known Evidence Is Not Verified Evidence, And Verified Evidence Is Not Authority (0.8.3)
+
+0.8.2's own header drew the discovery/verification line in the
+application layer: "The catalog answers 'what anchor claims do I know
+about?' The verifier answers 'what can I independently establish about
+one of those claims right now?'" 0.8.3 is the milestone that makes a
+PERSON able to see that same line, in the Publication Center, without
+either question ever quietly answering the other.
+
+**Discovery is always visible; verification is never automatic.**
+`application/PublicationEvidenceCoordinator.js#discover()` is
+synchronous, local-only, and runs the moment `ui/views/
+DecentralizedPublicationsView.js`'s own list loads — a person sees "N
+anchors known" for free, the same way they already see how many
+publications this replica has cataloged. `#verify()` is the opposite in
+every way that matters: asynchronous, may reach a real external system,
+and runs ONLY when a person clicks "Verify Evidence" on one specific
+anchor. Opening the Publication Center, expanding its evidence section,
+or a fresh anchor simply arriving in the catalog — none of these ever
+calls `application/ExternalAnchorVerifier.js`. `tests/
+PublicationEvidenceUX.test.js`'s own Section D proves this with a
+spying verifier that would fail if `discover()` — called repeatedly —
+ever consulted it, and never does.
+
+**No verification result is ever stored anywhere a later lookup could
+find it.** Not on `core/PublicationAnchor.js`, not on `application/
+LocalPublicationAnchorCatalog.js`, and not in any new storage this
+milestone might have added instead — the identical restraint 0.8.2's own
+principle above already states for the catalog, now held by the UI
+layer too. A verification outcome lives only in `ui/views/
+DecentralizedPublicationsView.js`'s own ephemeral `entry.verifications`,
+exactly as long as that page stays open. This is not an oversight to be
+fixed by adding a cache: an external system's own confirmation state can
+change between two checks of the identical anchor — a transaction
+confirms, an explorer that was unreachable comes back — and a value
+computed once and trusted forever would misrepresent that. Verification
+stays what 0.8.0 already made it: computed fresh, every time, by asking
+again.
+
+**Every outcome keeps its own word, and none of them says "trust."**
+`application/PublicationEvidenceView.js#describeVerificationOutcome()`
+gives each of the seven `AnchorVerificationOutcome` values its own
+distinct label — "Independently verified" for `VALID`, "Proof not
+independently verified" for `VALID_PROOF_UNVERIFIED`, "Verification
+unavailable" for `PROOF_UNAVAILABLE`, and four more, down to "Invalid
+external proof" for `INVALID_PROOF` — and never collapses any of them
+into a shared "unverified" bucket, the same discipline `application/
+AnchorVerificationOutcome.js`'s own 0.8.1 header already demanded of
+every CALLER of `ExternalAnchorVerifier#verify()`, now honored by its
+first UI. None of the seven labels ever uses the vocabulary this
+milestone's own design deliberately excluded — "trusted," "authentic,"
+"official," "confirmed author," "canonical" — because none of those
+questions is one this codebase, at any layer, has ever answered. See
+`docs/Principles.md`, "External Anchoring Provides Evidence; It Does Not
+Establish Authority (0.8.0)," which this milestone's UI extends, not
+revises.
+
+**A verified transaction is not automatically evidence for the
+publication on screen.** `ui/views/DecentralizedPublicationsView.js`
+shows every anchor's own claimed `publicationId`/`contentHash` alongside
+its verification badge — not merely a "Bitcoin ✓" — and `application/
+PublicationEvidenceCoordinator.js#verify()` always cross-checks against
+the SPECIFIC publication a person is looking at, exactly the guard that
+turns a stray but genuinely-verified anchor for a DIFFERENT publication
+into an honest `CONTENT_MISMATCH` rather than a false confirmation.
+
+**No anchor is ever ranked, summed, or selected as canonical.** Several
+independent anchors for the same publication are listed in the same
+order `application/LocalPublicationAnchorCatalog.js` itself already
+uses, each with its own independent verification state; nothing this
+milestone added ever picks a "best" one, weighs several `VALID` outcomes
+into a stronger claim, or derives "therefore this publication is
+authoritative" from any count of anchors, verified or not.
+
+See `docs/Roadmap.md`, 0.8.3, for the full milestone entry.
