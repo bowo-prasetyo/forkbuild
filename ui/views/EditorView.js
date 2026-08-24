@@ -38,6 +38,8 @@ import { UpdateDocumentMetadataUseCase } from '../../application/UpdateDocumentM
 import { computeLifecycleStatus, describeLifecycleStatus } from '../../application/DocumentLifecycleStatus.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
+import CreateBlueprintDialog from '../components/CreateBlueprintDialog.js';
+import StructureInfoPanel from '../components/StructureInfoPanel.js';
 import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 
 // 0.1.50: the Editor's keyboard surface is consolidated. Editing
@@ -52,7 +54,7 @@ const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -124,8 +126,10 @@ export default {
                         @place-structure="copyStructureIntoDocument"
                         @rename-personal-structure="renamePersonalStructure"
                         @remove-personal-structure="removePersonalStructure"
-                        @export-personal-structure="exportPersonalStructure"
+                        @export-personal-structure="exportStructure"
                         @import-blueprint="importBlueprint"
+                        @inspect-structure="inspectStructure"
+                        @fork-to-library="forkStructureToLibrary"
                     />
                     <EditingSidebar
                         :registry="actionRegistry"
@@ -160,6 +164,22 @@ export default {
                 :info="documentInfo"
                 @save="onSaveMetadata"
                 @cancel="showMetadataEditor = false"
+            />
+            <CreateBlueprintDialog
+                v-if="showCreateBlueprintDialog"
+                :preview="createBlueprintPreview"
+                :preview-service="libraryPreviewService"
+                @create="onCreateBlueprint"
+                @cancel="closeCreateBlueprintDialog"
+            />
+            <StructureInfoPanel
+                v-if="inspectedStructure"
+                :structure="inspectedStructure"
+                :registry="brickRegistry"
+                :source="inspectedStructureSource"
+                @place="placeInspectedStructure"
+                @export="exportInspectedStructure"
+                @close="inspectedStructure = null"
             />
         </div>
     `,
@@ -268,6 +288,23 @@ export default {
 		    }
 		}
 
+		// 0.6.3 — Blueprint Authoring & Versioning UX. The Structure-fork
+		// counterpart to forkStructure() immediately above — see
+		// application/ForkStructureToLibraryUseCase.js's own header on
+		// the distinction: forkStructure() opens a new DOCUMENT; this
+		// adds a new personal STRUCTURE, with no Document involved.
+		// Reachable only from a built-in card's "⋮" menu (see
+		// ui/components/BuildLibraryPanel.js) — forking a personal
+		// Structure into the SAME personal library isn't a workflow this
+		// milestone's design conversation asked for.
+		function forkStructureToLibrary(structure) {
+		    const forked = editorSession.forkStructureToPersonalLibrary(structure);
+		    if (forked) {
+		        refreshPersonalStructureGroups();
+		        feedback.show(`"${forked.name}" added to My Structures`);
+		    }
+		}
+
 		// 0.4.6 — Blueprint Sharing & Exchange. Builds the portable
 		// package via editorSession.exportBlueprint() (pure — see that
 		// method's own header) and triggers an immediate browser
@@ -276,7 +313,15 @@ export default {
 		// identity export already established — deliberately no
 		// intermediate modal, since (unlike an identity export) there is
 		// no passphrase to collect first.
-		function exportPersonalStructure(structure) {
+		//
+		// 0.6.3 — renamed from exportPersonalStructure(): a built-in
+		// card's "⋮" menu now offers Export Blueprint too (see
+		// ExportBlueprintUseCase's own header — it was always generic
+		// over any Structure; only the UI previously withheld the
+		// button). The wire event name from BuildLibraryPanel stays
+		// 'export-personal-structure' unchanged — only this handler's
+		// own name follows what it actually does now.
+		function exportStructure(structure) {
 		    let pkg;
 		    try {
 		        pkg = editorSession.exportBlueprint(structure);
@@ -346,6 +391,66 @@ export default {
 		    if (started) {
 		        feedback.show(`Placing "${structure.name}" — click to place, R to rotate, Esc to cancel`);
 		    }
+		}
+
+		// 0.6.3 — Blueprint Authoring & Versioning UX. Which built-in or
+		// personal Structure ui/components/StructureInfoPanel.js is
+		// currently showing — null when closed. `inspectedStructureSource`
+		// ('built-in' | 'personal') is derived here, once, at open time —
+		// the panel itself never reaches into either library to answer a
+		// question its host already knows the answer to (see that
+		// component's own header).
+		const inspectedStructure = ref(null);
+		const inspectedStructureSource = ref('built-in');
+		function inspectStructure(structure) {
+		    inspectedStructure.value = structure;
+		    inspectedStructureSource.value = personalStructureLibraryStore.hasStructure(structure.id) ? 'personal' : 'built-in';
+		}
+		// The panel's own Place/Export buttons delegate straight to the
+		// SAME copyStructureIntoDocument()/exportStructure() every card's
+		// primary click and "⋮" menu already use — Inspect never becomes
+		// a second way to do either, only a second way to REACH them.
+		function placeInspectedStructure() {
+		    const structure = inspectedStructure.value;
+		    inspectedStructure.value = null;
+		    copyStructureIntoDocument(structure);
+		}
+		function exportInspectedStructure() {
+		    const structure = inspectedStructure.value;
+		    inspectedStructure.value = null;
+		    exportStructure(structure);
+		}
+
+		// 0.6.3 — Blueprint Authoring & Versioning UX. Replaces the 0.4.2
+		// window.prompt() chain with ui/components/CreateBlueprintDialog.js
+		// — see application/EditorActionRegistry.js's own 0.6.3 comment
+		// on why opening it is as far as that action's execute() itself
+		// goes; the rest of the 0.4.2/0.4.3 chain
+		// (createStructureFromSelection -> saveStructureToPersonalLibrary)
+		// runs here instead, once the user actually submits the form.
+		const showCreateBlueprintDialog = ref(false);
+		// A throwaway Structure (placeholder metadata, real bricks) built
+		// once at open time purely so the dialog has something to show a
+		// preview of before any name is typed — see that component's own
+		// header on why re-extracting with the REAL metadata on Create is
+		// correct rather than reusing this one.
+		const createBlueprintPreview = ref(null);
+		function closeCreateBlueprintDialog() {
+		    showCreateBlueprintDialog.value = false;
+		    createBlueprintPreview.value = null;
+		}
+		function onCreateBlueprint({ name, category, description }) {
+		    const structure = editorSession.createStructureFromSelection({ name, category, description });
+		    closeCreateBlueprintDialog();
+		    if (!structure) {
+		        feedback.show('Nothing to create — select bricks first');
+		        return;
+		    }
+		    const saved = editorSession.saveStructureToPersonalLibrary(structure);
+		    if (saved) {
+		        refreshPersonalStructureGroups();
+		    }
+		    feedback.show(saved ? `"${structure.name}" created in My Structures` : `Created "${structure.name}"`);
 		}
 
         const activeTool = ref(editorContext.tool.activeTool);
@@ -599,25 +704,33 @@ export default {
                 paletteOpen.value = !paletteOpen.value;
             },
             focusNumeric: null,
-            // 0.4.2 — Structure Extraction & Blueprint Creation. Minimal
-            // metadata capture — the same window.prompt() chain
-            // ui/components/GroupsPanel.js already uses for a group's
-            // name — Name/Category/Description, nothing more.
-            // Author/version/thumbnails belong to the Personal Blueprint
-            // Library (0.4.3), not this milestone. Returns null (and
-            // creates nothing) if the user cancels or leaves the name
-            // blank.
-            promptCreateStructure() {
-                const name = prompt('Structure name:', '');
-                if (name === null || !name.trim()) {
-                    return null;
+            // 0.6.3 — Blueprint Authoring & Versioning UX. Supersedes the
+            // 0.4.2 window.prompt() chain (Name/Category/Description as
+            // three separate native prompts) with
+            // ui/components/CreateBlueprintDialog.js. Builds a throwaway
+            // preview Structure (placeholder metadata, the CURRENT
+            // selection's real bricks) so the dialog has something to
+            // show before any name is typed; see that component's own
+            // header on why Create re-extracts with the real metadata
+            // rather than reusing this one. See
+            // application/EditorActionRegistry.js's own 0.6.3 comment on
+            // why opening the dialog is as far as this hook goes — the
+            // rest of the 0.4.2/0.4.3 chain runs from the dialog's own
+            // 'create' handler (this file's own onCreateBlueprint()).
+            openCreateBlueprintDialog() {
+                let preview = null;
+                try {
+                    preview = editorSession.createStructureFromSelection({ name: 'Untitled Blueprint', category: 'uncategorized', description: '' });
+                } catch (e) {
+                    feedback.show(e.message);
+                    return;
                 }
-                const category = prompt('Category:', 'uncategorized');
-                if (category === null) {
-                    return null;
+                if (!preview) {
+                    feedback.show('Nothing to create — select bricks first');
+                    return;
                 }
-                const description = prompt('Description (optional):', '') || '';
-                return { name: name.trim(), category: category.trim() || 'uncategorized', description };
+                createBlueprintPreview.value = preview;
+                showCreateBlueprintDialog.value = true;
             },
             // 0.4.3 — Personal Blueprint Library. Called by
             // EditorActionRegistry right after structure.createFromSelection
@@ -918,11 +1031,22 @@ export default {
             personalStructureGroups,
             libraryPreviewService,
             forkStructure,
+            forkStructureToLibrary,
             copyStructureIntoDocument,
             renamePersonalStructure,
             removePersonalStructure,
-            exportPersonalStructure,
+            exportStructure,
             importBlueprint,
+            brickRegistry: registry,
+            inspectStructure,
+            inspectedStructure,
+            inspectedStructureSource,
+            placeInspectedStructure,
+            exportInspectedStructure,
+            showCreateBlueprintDialog,
+            createBlueprintPreview,
+            onCreateBlueprint,
+            closeCreateBlueprintDialog,
             activeTool,
             activeStructureTitle,
             activeCompositionTitle,

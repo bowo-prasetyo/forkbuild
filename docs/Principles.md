@@ -8432,3 +8432,46 @@ is and is not proven. It also does not touch Document metadata editing
 (title/description/license) or `movePlacement()`'s own dialog — neither
 is brick/structure/group content construction, and both were already
 outside 0.2.1's original parity list in spirit even if not in name.
+
+### A Structure Has Two Different Forks, And Neither Is A Version Of The Other (0.6.3)
+
+"Fork" already had one precise meaning in this codebase — `ForkStructureUseCase`
+(0.2.81) turning a library Structure into a brand-new, editable
+Document — and it stayed the only meaning for five milestones. 0.6.3
+gives the word a second, deliberately DIFFERENT operation rather than
+overloading the first one or inventing a new verb for it:
+
+    Document fork:   Library Structure --fork--> new, editable Document
+    Structure fork:  Library Structure --fork--> new, independent
+                       personal Structure (no Document involved at all)
+
+A person reaches for a Document fork when they want to BUILD starting
+from a Structure. They reach for a Structure fork when they want to OWN
+one — add "Village Hall" to My Structures, rename it, export it, remove
+it — without building anything first and without the detour of forking
+a Document, selecting everything, extracting it back into a Structure,
+and discarding the Document that only ever existed to make that
+possible. Both stay content operations, never World/placement
+operations (per "Forking A Structure Records Provenance, Never A Live
+Dependency," 0.2.81, which this principle extends rather than
+replaces), and both leave the SOURCE Structure completely untouched:
+`application/ForkStructureToLibraryUseCase.js` mints a fresh Structure
+id and fresh brick ids, the same "an id crossing a boundary always
+regenerates" rule every fork/import in this codebase already applies.
+
+**Versioning a blueprint is still Place -> Modify -> Extract, never a
+mutation of either fork.** Neither kind of fork is, or becomes, a
+"version" of the Structure it started from. `core/Structure.js` gains
+no `sourceStructureId`, no `version`, no `parentBlueprintId` — a
+Structure fork's only relationship to its source is that it started out
+geometrically identical, the same "provenance is a label, never a live
+dependency" restraint 0.2.81 already applied to a Document fork's own
+`parentStructureId`. "Farmstead" and "Farmstead Deluxe" (0.4.3's own
+worked example, still true here) sit in My Structures as two ordinary,
+unrelated-by-the-data-model entries. If a person wants to know which
+came from which, that is exactly what naming them is for — turning that
+into queryable data is a genealogy feature nobody has asked for yet,
+and speculatively building it ahead of a real need is precisely the
+kind of complexity this codebase has consistently declined to add early
+(see, among others, 0.4.3's own "Library Membership Is Not Structure
+Identity").

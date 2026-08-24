@@ -147,10 +147,12 @@ Composing, forking, and your personal library — see
 | Click | Commit — every brick in the structure lands as one undo step | refused at an occupied (red) position |
 | `Esc` while placing | Cancel — nothing added | |
 | Card's **⋮** menu, **Fork As New Document** | Start a brand-new document that begins as a copy of that structure | never modifies the library entry |
-| Selection with **1+ bricks**, then **Create Structure** (Command Palette) | Save the selection as a new entry in **My Structures** | prompts for name / category / description |
+| Built-in card's **⋮** menu, **Fork to My Structures** | Add it to My Structures as-is | no document created, nothing extracted |
+| Any card's **⋮** menu, **Info** | Show a read-only name/category/bricks/footprint/height/source/description panel | never editable |
+| Selection with **1+ bricks**, then **Create Blueprint** (Selection panel's Advanced section, or Command Palette) | Open a small dialog (name / category / description + preview); save the selection as a new entry in **My Structures** | |
 | **My Structures** card's **⋮** menu, **Rename** | Edit a personal structure's name/category/tags/description | personal structures only |
 | **My Structures** card's **⋮** menu, **Remove** | Delete it from your library | never touches bricks already composed or forked from it |
-| **My Structures** card's **⋮** menu, **Export Blueprint** | Download it as a portable JSON file | personal structures only |
+| Any card's **⋮** menu, **Export Blueprint** | Download it as a portable JSON file | built-in or personal |
 | **Import Blueprint** button (beside the My Structures heading) | Add a blueprint file to your library as a new entry | fresh identity, even for a re-imported file |
 
 ## Structure Instances (Editor)

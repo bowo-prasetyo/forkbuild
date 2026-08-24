@@ -184,6 +184,12 @@ different reasons:
   build. This is the everyday action.
 - **Fork As New Document** (in the card's **⋮** menu) — starts a brand-new,
   independent document that begins as an exact copy of that structure.
+- **Fork to My Structures** (built-in cards only, in the **⋮** menu) — adds
+  the structure to your own **My Structures**, with no document involved at
+  all. See [My Structures](#my-structures-your-personal-blueprint-library)
+  below.
+- **Info** (in the card's **⋮** menu) — a read-only look at a structure's
+  name, category, brick count, footprint, height, source, and description.
 - Place a **saved document** of your own as a **structure instance** — a
   live, reusable reference rather than a copy — from the toolbar's **Recent**
   dropdown, not the Build Library. See
@@ -224,11 +230,20 @@ click Fork.
 ### My Structures: your personal blueprint library
 
 Built something worth reusing? Select the bricks that make it up (a whole
-building, or just a section) and run **Create Structure** from the Command
-Palette (`Ctrl/Cmd+K`). You'll be asked for a **name**, a **category**, and
-an optional **description**; the structure is normalized to its own local
-origin and saved immediately into **My Structures**, a new section at the
-bottom of the Structures tab, right below the built-in categories.
+building, or just a section) and click **Create Blueprint** — it's in the
+Selection panel's **Advanced** section once you have bricks selected, and
+in the Command Palette (`Ctrl/Cmd+K`) either way. A small dialog asks for a
+**name**, a **category**, and an optional **description**, with a live
+preview of what you're about to save; click **Create Blueprint** and it's
+normalized to its own local origin and saved immediately into **My
+Structures**, a new section at the bottom of the Structures tab, right
+below the built-in categories.
+
+There's a second way a structure ends up in My Structures, with nothing to
+select and nothing to build first: open any **built-in** card's **⋮** menu
+and click **Fork to My Structures**. It's added exactly as it already is —
+no document created, nothing extracted — so it's ready to Rename, Export,
+or place right away, like any other entry in your library.
 
 A structure in **My Structures** works exactly like a built-in one — click
 to place it into your current document, or Fork As New Document — with two
@@ -244,8 +259,9 @@ of bricks. Removing one never touches anything you already built with it:
 every place you've already placed or forked it into keeps those bricks
 exactly as they are. And it never edits in place — if you want to change
 what a saved structure actually builds, place it into a document, edit
-that document, then **Create Structure** again (optionally under a new
-name, like "Farmstead Deluxe").
+that document, then **Create Blueprint** again (optionally under a new
+name, like "Farmstead Deluxe" — it becomes its own separate entry in My
+Structures, not a replacement for the original).
 
 > **Good to know:** My Structures lives on this device. It isn't tied to
 > your identity or synced anywhere automatically — see
@@ -254,13 +270,13 @@ name, like "Farmstead Deluxe").
 
 ### Sharing blueprints: export and import
 
-Any structure in **My Structures** can leave the device it was created on
-as a portable file, without ever becoming part of the shared published
-World:
+Any structure — a built-in one or one of your own — can leave the device
+it's on as a portable file, without ever becoming part of the shared
+published World:
 
-- **Export Blueprint** (in a personal structure's **⋮** menu) downloads it
-  as a small JSON file — a self-contained snapshot of that structure's
-  name, category, tags, description, and bricks.
+- **Export Blueprint** (in any card's **⋮** menu) downloads it as a small
+  JSON file — a self-contained snapshot of that structure's name, category,
+  tags, description, and bricks.
 - **Import Blueprint** (button beside the **My Structures** heading) reads
   a blueprint file back in and adds it to your own My Structures as a new,
   independent entry — a fresh copy with its own identity, never linked back

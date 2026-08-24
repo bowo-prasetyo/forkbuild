@@ -31,6 +31,7 @@ import { CopyStructureIntoDocumentUseCase } from './CopyStructureIntoDocumentUse
 import { CreateStructureFromSelectionUseCase } from './CreateStructureFromSelectionUseCase.js';
 import { ExportBlueprintUseCase } from './ExportBlueprintUseCase.js';
 import { ImportBlueprintUseCase } from './ImportBlueprintUseCase.js';
+import { ForkStructureToLibraryUseCase } from './ForkStructureToLibraryUseCase.js';
 import { RemoveStructurePlacementCommand } from './commands/RemoveStructurePlacementCommand.js';
 import { MoveStructurePlacementCommand } from './commands/MoveStructurePlacementCommand.js';
 import { RotateStructurePlacementCommand } from './commands/RotateStructurePlacementCommand.js';
@@ -103,6 +104,9 @@ export class EditorSession {
         // methods — nothing else here depends on them existing.
         exportBlueprintUseCase = new ExportBlueprintUseCase(),
         importBlueprintUseCase = new ImportBlueprintUseCase(),
+        // 0.6.3 — Blueprint Authoring & Versioning UX. Same optional
+        // posture as exportBlueprintUseCase/importBlueprintUseCase above.
+        forkStructureToLibraryUseCase = new ForkStructureToLibraryUseCase(),
         // 0.4.9 — Alignment, Snapping & Repetition. Optional, same
         // graceful-degradation posture as every other optional
         // collaborator here — an EditorSession built without one (older
@@ -142,6 +146,7 @@ export class EditorSession {
         this._personalStructureLibraryStore = personalStructureLibraryStore;
         this._exportBlueprintUseCase = exportBlueprintUseCase;
         this._importBlueprintUseCase = importBlueprintUseCase;
+        this._forkStructureToLibraryUseCase = forkStructureToLibraryUseCase;
         this._repeatSelectionUseCase = repeatSelectionUseCase;
         this._structureResolver = structureResolver;
         this._structurePreviewUseCase = structurePreviewUseCase;
@@ -1170,6 +1175,27 @@ export class EditorSession {
         const structure = this._importBlueprintUseCase.execute(pkg, { registry: this._registry });
         this._personalStructureLibraryStore.addStructure(structure);
         return structure;
+    }
+
+    // 0.6.3 — Blueprint Authoring & Versioning UX. The Structure-fork
+    // counterpart to forkStructure() above — see
+    // application/ForkStructureToLibraryUseCase.js's own header on the
+    // distinction: forkStructure() turns a Structure into a new
+    // Document to BUILD in; this turns a Structure into a new personal
+    // Structure to OWN, with no Document involved at all. Chains
+    // ForkStructureToLibraryUseCase -> personalStructureLibraryStore
+    // .addStructure(), the same "use case returns a value, this method
+    // persists it" shape importBlueprint() just used immediately above.
+    // Returns null (and does nothing) if `structure` is falsy or no
+    // library store is wired, so callers can wire this straight to a UI
+    // action without a guard.
+    forkStructureToPersonalLibrary(structure) {
+        if (!structure || !this._forkStructureToLibraryUseCase || !this._personalStructureLibraryStore) {
+            return null;
+        }
+        const forked = this._forkStructureToLibraryUseCase.execute(structure);
+        this._personalStructureLibraryStore.addStructure(forked);
+        return forked;
     }
 
     // 0.2.90 — Structure Placement & World Instances. Enters

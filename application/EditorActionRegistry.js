@@ -429,10 +429,28 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // A surface built without that method (or without the optional
         // ui.onPersonalLibraryChanged() refresh hook) degrades to
         // 0.4.2's original "Created" feedback, never throwing.
+        //
+        // 0.6.3 — Blueprint Authoring & Versioning UX. Promoted to a
+        // Selection Inspector button (SelectionInspector's own Advanced
+        // section) alongside its pre-existing Command Palette/keyboard
+        // reach — see docs/Roadmap.md, 0.6.3. Label renamed "Create
+        // Structure" -> "Create Blueprint" (display only; the id stays
+        // `structure.createFromSelection`, unchanged, per this file's
+        // own "unique, dotted, stable" id rule). `ui.openCreateBlueprintDialog`
+        // is the new preferred hook: a real surface owns opening
+        // ui/components/CreateBlueprintDialog.js and calls
+        // createStructureFromSelection()/saveStructureToPersonalLibrary()
+        // itself once the user actually submits it, because a modal
+        // cannot hand back its answer synchronously the way
+        // `ui.promptCreateStructure()`'s window.prompt() chain always
+        // could. A surface without the new hook (an older build, or a
+        // headless test harness) falls back to that exact 0.4.2/0.4.3
+        // prompt-based flow, unchanged byte-for-byte.
         define({
             id: 'structure.createFromSelection',
-            label: 'Create Structure',
+            label: 'Create Blueprint',
             category: 'Structure',
+            tier: 'advanced', // 0.6.3 — a "what's next," not an always-visible button
             description: 'Create a reusable Structure from the selected bricks, normalized to its own local origin',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection && !ctx.selectionIsStructurePlacement,
             disabledReason: (ctx) => {
@@ -440,9 +458,13 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                 if (ctx.selectionIsStructurePlacement) return 'Create Structure requires brick selections only';
                 return null;
             },
-            execute: () => surfaceCall('createStructureFromSelection', 'Create Structure is not available on this surface', (createStructureFromSelection) => {
+            execute: () => surfaceCall('createStructureFromSelection', 'Create Blueprint is not available on this surface', (createStructureFromSelection) => {
+                if (typeof ui.openCreateBlueprintDialog === 'function') {
+                    ui.openCreateBlueprintDialog();
+                    return;
+                }
                 if (typeof ui.promptCreateStructure !== 'function') {
-                    feedback.show('Create Structure is not available on this surface');
+                    feedback.show('Create Blueprint is not available on this surface');
                     return;
                 }
                 const metadata = ui.promptCreateStructure();

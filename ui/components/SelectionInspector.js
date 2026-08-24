@@ -1,3 +1,5 @@
+import CollapsibleSection from './CollapsibleSection.js';
+
 // 0.6.2 — Editor UX Consolidation.
 //
 // "Selection is the central Editor state" (see docs/Roadmap.md, 0.6.2):
@@ -21,8 +23,21 @@
 // registry + context every other action surface in this file family
 // uses (EditingSidebar, CommandPalette) — no second enablement rule,
 // just a second, smaller place buttons are drawn.
+//
+// 0.6.3 — Blueprint Authoring & Versioning UX. Gains an "Advanced"
+// CollapsibleSection (collapsed by default, same convention
+// ui/components/EditingSidebar.js's own Align/Distribute/Repeat
+// section already established in 0.6.2) holding one button: Create
+// Blueprint (`structure.createFromSelection`, tier 'advanced' as of
+// this milestone) — promoting it out of "Command Palette only" into
+// the normal selection workflow the design conversation asked for:
+// Select -> (Common: Duplicate/Delete) -> (Advanced: Create Blueprint).
+// Runs through the exact same run()/isDisabled()/reasonFor() as
+// Duplicate/Delete/Clear above it — no second enablement rule for one
+// more button.
 export default {
     name: 'SelectionInspector',
+    components: { CollapsibleSection },
     props: {
         registry: { type: Object, required: true },
         getContext: { type: Function, required: true },
@@ -32,6 +47,11 @@ export default {
         // StructurePlacement selection, which this component never
         // renders for; EditorView gates that case out already).
         summary: { type: Object, default: null }
+    },
+    data() {
+        return {
+            advancedCollapsed: true
+        };
     },
     computed: {
         context() {
@@ -99,6 +119,20 @@ export default {
                     @click="run('selection.clear')"
                 >Clear</button>
             </div>
+            <CollapsibleSection
+                title="Advanced"
+                :collapsed="advancedCollapsed"
+                @toggle="advancedCollapsed = $event"
+            >
+                <div class="structure-instance-actions">
+                    <button
+                        type="button" class="structure-instance-btn"
+                        :disabled="isDisabled('structure.createFromSelection')"
+                        :title="isDisabled('structure.createFromSelection') ? reasonFor('structure.createFromSelection') : 'Create a reusable Structure from this selection'"
+                        @click="run('structure.createFromSelection')"
+                    >Create Blueprint</button>
+                </div>
+            </CollapsibleSection>
         </div>
     `
 };
