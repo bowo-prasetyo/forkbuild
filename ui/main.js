@@ -33,6 +33,10 @@ import { CreatePublicationPeerExchangeUseCase } from '../application/CreatePubli
 import { CreatePeerContentExchangeUseCase } from '../application/CreatePeerContentExchangeUseCase.js';
 import { CreatePublicationResolutionCoordinatorUseCase } from '../application/CreatePublicationResolutionCoordinatorUseCase.js';
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
+import { CreatePublicationAnchorCatalogUseCase } from '../application/CreatePublicationAnchorCatalogUseCase.js';
+import { CreateExternalAnchorVerifierUseCase } from '../application/CreateExternalAnchorVerifierUseCase.js';
+import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/CreateBitcoinAnchorProofVerifierUseCase.js';
+import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/CreatePublicationEvidenceCoordinatorUseCase.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -322,6 +326,29 @@ const { coordinator: publicationResolutionCoordinator } = new CreatePublicationR
 // it into either of those durable stores as a side effect.
 const { kindPlugins: publicationDisplayKindPlugins } = new CreatePublicationDisplayKindRegistryUseCase().execute();
 
+// 0.8.3 — Publication Center: External Evidence UX. The first UI wiring
+// for the anchor catalog/verifier pipeline 0.8.0-0.8.2 built with no UI
+// consumer at all (see each of those milestones' own "Deliberately
+// excluded" lists). `publicationAnchorCatalog` is the one
+// LocalPublicationAnchorCatalog instance this replica uses anywhere,
+// exactly the same "one instance, threaded everywhere" discipline
+// `publicationCatalog` above already holds for
+// DecentralizedPublication. `bitcoinProofVerifier` talks to a public
+// block explorer (see anchoring/BitcoinOpReturnProofVerifier.js's own
+// header) but is only ever CONSULTED when a person explicitly clicks
+// "Verify" in the Publication Center — see application/
+// PublicationEvidenceCoordinator.js's own header on why discovery and
+// verification stay two separate calls.
+const { catalog: publicationAnchorCatalog } = new CreatePublicationAnchorCatalogUseCase().execute();
+const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute();
+const { externalAnchorVerifier } = new CreateExternalAnchorVerifierUseCase().execute({
+    proofVerifiers: [bitcoinProofVerifier]
+});
+const { coordinator: publicationEvidenceCoordinator } = new CreatePublicationEvidenceCoordinatorUseCase().execute({
+    anchorCatalog: publicationAnchorCatalog,
+    externalAnchorVerifier
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -348,5 +375,8 @@ app.provide('publicationPeerExchange', publicationPeerExchange);
 app.provide('publicationPeerContentExchange', publicationPeerContentExchange);
 app.provide('publicationResolutionCoordinator', publicationResolutionCoordinator);
 app.provide('publicationDisplayKindPlugins', publicationDisplayKindPlugins);
+// 0.8.3 — Publication Center: External Evidence UX.
+app.provide('publicationAnchorCatalog', publicationAnchorCatalog);
+app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
 app.use(router);
 app.mount('#app');

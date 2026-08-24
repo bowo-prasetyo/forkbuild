@@ -4812,3 +4812,92 @@ html, body {
     font-size: 0.76rem;
     color: #808080;
 }
+
+/* 0.8.3 — Publication Center: External Evidence UX. Nests inside
+   .identity-mgmt-card (ui/views/DecentralizedPublicationsView.js),
+   reusing .peer-badge/.action-btn--secondary/.form-hint--neutral
+   wholesale — the same "compose the existing card language, add only
+   what's genuinely new" restraint .peer-connections-view's own comment
+   above already states. What's new here is the "known evidence" summary
+   line, the per-anchor evidence card, and one additional .peer-badge
+   color (.peer-badge--unchecked) for "not yet verified" — deliberately
+   distinct from .peer-badge--pending, which this view reuses for a
+   verification that WAS attempted and came back honestly inconclusive
+   (PROOF_UNAVAILABLE/VALID_PROOF_UNVERIFIED) — "never asked" and "asked,
+   couldn't tell" are different states and get different colors. */
+.evidence-section {
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.evidence-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.evidence-summary-title {
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.85rem;
+}
+
+.evidence-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.evidence-anchor-card {
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 0.75rem 0.9rem;
+}
+
+.evidence-anchor-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.evidence-anchor-type {
+    font-weight: 600;
+    color: #e0e0e0;
+    font-size: 0.88rem;
+}
+
+.evidence-fields {
+    margin: 0.5rem 0 0.75rem;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 0.6rem;
+    row-gap: 0.2rem;
+}
+
+.evidence-field {
+    display: contents;
+}
+
+.evidence-field dt {
+    color: #808080;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.evidence-field dd {
+    margin: 0;
+    color: #c9c9c9;
+    font-size: 0.78rem;
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.peer-badge--unchecked {
+    background: rgba(144, 144, 144, 0.15);
+    color: #909090;
+}

@@ -2,6 +2,8 @@ import { reactive, ref, computed, onMounted, onBeforeUnmount, inject } from 'vue
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { PublicationResolutionOutcome } from '../../application/PublicationResolutionOutcome.js';
 import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/PublicationResolutionView.js';
+import { AnchorVerificationOutcome } from '../../application/AnchorVerificationOutcome.js';
+import { publicationEvidenceView, describeKnownEvidenceCount } from '../../application/PublicationEvidenceView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -42,6 +44,23 @@ import { resolvePublicationView, describePublicationOutcome, describeRetrieval }
 // always a required, caller-supplied argument). Candidates are tried in
 // that order, never raced concurrently — see application/
 // PeerContentRetrievalCoordinator.js's own header.
+//
+// 0.8.3 — Publication Center: External Evidence UX. Each entry also
+// shows its own "External Evidence" section — every application/
+// PublicationAnchor.js this replica has cataloged for that
+// publication, discovered locally the moment the list itself loads
+// (application/PublicationEvidenceCoordinator.js#discover(), a
+// synchronous catalog read with no network access), never
+// independently verified until a person clicks "Verify Evidence" on
+// one specific anchor. Opening this page never calls application/
+// ExternalAnchorVerifier.js; only that explicit click does. A
+// verification result lives only in this component's own `entry.
+// verifications` — ephemeral session state, never written back into
+// application/LocalPublicationAnchorCatalog.js or the anchor itself —
+// so re-opening this page, or asking again, always re-derives the
+// answer fresh. See application/PublicationEvidenceView.js's own
+// header and docs/Principles.md, "Known Evidence Is Not Verified
+// Evidence, And Verified Evidence Is Not Authority (0.8.3)."
 function humanizeContentKind(contentKind) {
     if (!contentKind) return 'Unknown content';
     return contentKind
@@ -59,6 +78,25 @@ const OUTCOME_BADGE_CLASSES = {
     [PublicationResolutionOutcome.CONTENT_UNAVAILABLE]: 'peer-badge--pending'
 };
 
+// 0.8.3 — Publication Center: External Evidence UX. Reuses the three
+// colors .peer-badge already defines rather than inventing seven new
+// ones — VALID is the only outcome ever shown as "good" (green);
+// VALID_PROOF_UNVERIFIED and PROOF_UNAVAILABLE both read as "honestly
+// inconclusive" (amber), matching application/AnchorVerificationOutcome
+// .js's own header on why neither is ever treated as a rejection; every
+// other outcome reads as a definite rejection (red). The LABEL text —
+// never this color alone — is what keeps all seven outcomes distinct;
+// see application/PublicationEvidenceView.js#describeVerificationOutcome().
+const EVIDENCE_BADGE_CLASSES = {
+    [AnchorVerificationOutcome.VALID]: 'peer-badge--authenticated',
+    [AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED]: 'peer-badge--pending',
+    [AnchorVerificationOutcome.PROOF_UNAVAILABLE]: 'peer-badge--pending',
+    [AnchorVerificationOutcome.INVALID_ENVELOPE]: 'peer-badge--failed',
+    [AnchorVerificationOutcome.INVALID_SIGNATURE]: 'peer-badge--failed',
+    [AnchorVerificationOutcome.CONTENT_MISMATCH]: 'peer-badge--failed',
+    [AnchorVerificationOutcome.INVALID_PROOF]: 'peer-badge--failed'
+};
+
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
@@ -68,6 +106,7 @@ export default {
         const publicationPeerExchange = inject('publicationPeerExchange');
         const publicationPeerContentExchange = inject('publicationPeerContentExchange');
         const peerSessionManager = inject('peerSessionManager');
+        const evidenceCoordinator = inject('publicationEvidenceCoordinator');
 
         const entries = reactive([]);
         const loading = ref(true);
@@ -106,9 +145,58 @@ export default {
                 receivedAt: catalog.getReceivedAt(publication.id),
                 view: null,
                 checking: false,
-                retrieving: false
+                retrieving: false,
+                evidenceAnchors: [],
+                evidence: null,
+                evidenceExpanded: false,
+                verifications: {}
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
+            entries.forEach(loadEvidence);
+        }
+
+        // 0.8.3 — Publication Center: External Evidence UX. DISCOVERY
+        // only: a synchronous local catalog read through application/
+        // PublicationEvidenceCoordinator.js#discover(), never a call to
+        // application/ExternalAnchorVerifier.js. Re-running this is
+        // always cheap and safe — it re-reads whatever this replica's
+        // catalog currently holds without disturbing `entry.
+        // verifications`, the ephemeral per-anchor results a person may
+        // already have on screen.
+        function loadEvidence(entry) {
+            if (!evidenceCoordinator) return;
+            entry.evidenceAnchors = evidenceCoordinator.discover(entry.publication.id);
+            entry.evidence = publicationEvidenceView(entry.evidenceAnchors, entry.verifications);
+        }
+
+        function toggleEvidence(entry) {
+            entry.evidenceExpanded = !entry.evidenceExpanded;
+        }
+
+        // The one place this page calls application/
+        // ExternalAnchorVerifier.js (through the coordinator) — always
+        // for exactly ONE anchor, always because a person clicked
+        // "Verify Evidence" on it. Cross-checks against THIS entry's own
+        // publicationId/contentHash, so a mismatched anchor is reported
+        // as CONTENT_MISMATCH rather than silently accepted as evidence
+        // for the wrong publication.
+        async function verifyAnchor(entry, anchorView) {
+            const anchor = entry.evidenceAnchors.find((candidate) => candidate.id === anchorView.anchorId);
+            if (!anchor || !evidenceCoordinator) return;
+            entry.verifications[anchor.id] = { checking: true };
+            entry.evidence = publicationEvidenceView(entry.evidenceAnchors, entry.verifications);
+            const result = await evidenceCoordinator.verify(anchor, {
+                expectedContentHash: entry.publication.contentReference.hash,
+                expectedPublicationId: entry.publication.id
+            });
+            entry.verifications[anchor.id] = { outcome: result.outcome, reason: result.reason };
+            entry.evidence = publicationEvidenceView(entry.evidenceAnchors, entry.verifications);
+        }
+
+        function evidenceBadgeClass(anchorView) {
+            if (anchorView.checking) return 'peer-badge--pending';
+            if (!anchorView.verified) return 'peer-badge--unchecked';
+            return EVIDENCE_BADGE_CLASSES[anchorView.verificationOutcome] || 'peer-badge--unchecked';
         }
 
         async function recheck(entry) {
@@ -204,7 +292,8 @@ export default {
         return {
             entries, loading, retrievalPeers,
             humanizeContentKind, shortId, formatWhen, badgeClass, statusLabel, availabilityText,
-            canRetrieve, retrieve, recheck
+            canRetrieve, retrieve, recheck,
+            describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass
         };
     },
     template: `
@@ -258,6 +347,42 @@ export default {
                         <button class="action-btn action-btn--secondary" :disabled="entry.checking" @click="recheck(entry)">
                             {{ entry.checking ? 'Checking…' : 'Re-check' }}
                         </button>
+                    </div>
+
+                    <div v-if="entry.evidence && entry.evidence.count > 0" class="evidence-section">
+                        <div class="evidence-summary">
+                            <span class="evidence-summary-title">External Evidence</span>
+                            <span class="form-hint form-hint--neutral">{{ describeKnownEvidenceCount(entry.evidence) }}</span>
+                            <button class="action-btn action-btn--secondary" @click="toggleEvidence(entry)">
+                                {{ entry.evidenceExpanded ? 'Hide Evidence' : 'Show Evidence' }}
+                            </button>
+                        </div>
+                        <div v-if="entry.evidenceExpanded" class="evidence-list">
+                            <div v-for="anchorView in entry.evidence.anchors" :key="anchorView.anchorId" class="evidence-anchor-card">
+                                <div class="evidence-anchor-header">
+                                    <span class="evidence-anchor-type">{{ humanizeContentKind(anchorView.anchorType) }}</span>
+                                    <span class="peer-badge" :class="evidenceBadgeClass(anchorView)">{{ anchorView.verificationLabel }}</span>
+                                </div>
+                                <p v-if="anchorView.verificationReason" class="form-hint form-hint--neutral">
+                                    {{ anchorView.verificationReason }}
+                                </p>
+                                <dl class="evidence-fields">
+                                    <div class="evidence-field"><dt>Locator</dt><dd>{{ anchorView.locator }}</dd></div>
+                                    <div class="evidence-field"><dt>Recorded</dt><dd>{{ formatWhen(anchorView.anchoredAt) }}</dd></div>
+                                    <div class="evidence-field"><dt>Publication</dt><dd>{{ anchorView.publicationId }}</dd></div>
+                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ anchorView.contentHash }}</dd></div>
+                                    <div v-if="anchorView.anchorIdentityId" class="evidence-field">
+                                        <dt>Attested by</dt><dd>{{ shortId(anchorView.anchorIdentityId) }}</dd>
+                                    </div>
+                                </dl>
+                                <div class="identity-mgmt-actions">
+                                    <button class="action-btn action-btn--secondary" :disabled="anchorView.checking"
+                                            @click="verifyAnchor(entry, anchorView)">
+                                        {{ anchorView.checking ? 'Verifying…' : (anchorView.verified ? 'Verify Again' : 'Verify Evidence') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -14593,3 +14593,166 @@ What's left, and deliberately unbuilt: Evidence UX in the Publication
 Center, anchor exchange over peers, and multi-evidence convergence —
 each sized on its own, exactly like every "Deliberately excluded" list in
 this document before it.
+
+## 0.8.3 — Publication Center: External Evidence UX
+
+0.8.2's own "Deliberately excluded" list named this milestone directly:
+"No Publication Center 'Known Evidence' list, no per-anchor status
+display... Publication Center: External Evidence UX, is where that
+belongs." 0.8.3 is that milestone. Nothing about what a
+`PublicationAnchor` is, what `application/ExternalAnchorVerifier.js#
+verify()` does, or what `application/LocalPublicationAnchorCatalog.js`
+stores changes here at all — this milestone builds the first UI surface
+over a pipeline 0.8.0-0.8.2 built with none, and makes exactly one thing
+visible that a person could not see before: **known evidence is not the
+same thing as verified evidence, and verified evidence is not
+authority.**
+
+- `application/PublicationEvidenceView.js` — a pure, synchronous,
+  read-only derived shape, mirroring `application/
+  PublicationResolutionView.js`'s own role for resolution.
+  `publicationEvidenceView(anchors, verifications)` turns a list of
+  already-discovered `PublicationAnchor` instances plus an optional
+  per-anchor verification-result map into `{ count, anchors: [...] }`;
+  `describeAnchorEvidence()` derives one anchor's own
+  `{ anchorId, anchorType, locator, anchoredAt, anchorIdentityId,
+  publicationId, contentHash, proof, checking, verified,
+  verificationOutcome, verificationLabel, verificationReason }`, always
+  exposing the anchor's own claimed `publicationId`/`contentHash`
+  binding rather than a bare badge; `describeVerificationOutcome()`
+  labels each of the seven `AnchorVerificationOutcome` values with its
+  own precise wording — "Independently verified," "Proof not
+  independently verified," "Verification unavailable," "Invalid
+  evidence," "Invalid signature," "Content mismatch," "Invalid external
+  proof" — never collapsed into a shared "unverified," and never
+  described with authority language ("trusted," "authentic," "official,"
+  "canonical"). Never imports `application/
+  LocalPublicationAnchorCatalog.js` or `application/
+  ExternalAnchorVerifier.js`; it only ever reshapes values a caller
+  already obtained.
+- `application/PublicationEvidenceCoordinator.js` — the sequencing
+  layer, mirroring `application/PublicationResolutionCoordinator.js`'s
+  own shape: owns no storage and no state of its own.
+  `discover(publicationId)` is a synchronous, local-only pass-through to
+  `LocalPublicationAnchorCatalog#findByPublicationId()` — no network, no
+  verifier ever consulted. `verify(anchor, options)` runs exactly ONE
+  anchor through `ExternalAnchorVerifier#verify()`, cross-checked
+  against the caller's own `expectedContentHash`/`expectedPublicationId`
+  — called only when a person explicitly asks about that one anchor,
+  never as a side effect of `discover()` and never for every known
+  anchor at once.
+- `application/CreatePublicationEvidenceCoordinatorUseCase.js` — the
+  composition root, taking an already-constructed `anchorCatalog` and
+  `externalAnchorVerifier` as parameters rather than building either,
+  the identical shape `application/
+  CreatePublicationResolutionCoordinatorUseCase.js` already established.
+- `ui/main.js` — the first real wiring of the 0.8.0-0.8.2 pipeline: a
+  single `LocalPublicationAnchorCatalog` instance, `anchoring/
+  BitcoinOpReturnProofVerifier.js` registered as a real `proofVerifier`,
+  and the evidence coordinator built over both, provided to the app as
+  `publicationAnchorCatalog`/`publicationEvidenceCoordinator`.
+- `ui/views/DecentralizedPublicationsView.js` — each cataloged
+  publication now shows an "External Evidence" section: a plain "N
+  anchors known" count, computed the moment the page's own list loads
+  (cheap, local, no network — the identical restraint the page's own
+  resolution status already holds); a "Show Evidence" toggle revealing
+  one card per anchor with its locator, recorded time, and its own
+  claimed publication/content-hash binding; and, per anchor, an explicit
+  "Verify Evidence" button — opening this page, or expanding the
+  section, never itself calls `ExternalAnchorVerifier`. A verification
+  result lives only in the component's own ephemeral `entry.
+  verifications`, never written back into the catalog or the anchor
+  record — re-opening the page, or asking again, always re-derives the
+  answer fresh, and an external system's own confirmation state changing
+  between two checks is expected, not a bug.
+- `tests/PublicationEvidenceUX.test.js` — the flagship: Alice signs an
+  anchor, Bob catalogs it, Bob's Publication Center discovers it purely
+  locally, and only once Bob explicitly asks does it independently
+  verify as VALID. Then: discovery with zero/one/many anchors, and
+  several independent anchors for one publication coexisting in the
+  catalog's own order, never ranked; every reachable
+  `AnchorVerificationOutcome` keeping its own distinct label, never
+  collapsed; and the central separation this milestone exists to prove —
+  `discover()` never consults a verifier no matter how many times it is
+  called, deriving a view is equally side-effect-free, verifying one
+  anchor never touches another known anchor for the same publication,
+  and no verification result is ever persisted anywhere a later
+  `discover()` could pick it back up.
+
+```text
+0.8.2   Anchor Catalog & Evidence Discovery                         ✓
+             │
+             ▼
+0.8.3   Publication Center: External Evidence UX                    ✓
+             ├── application/PublicationEvidenceView.js — pure,
+             │   read-only derived shape; seven distinct outcome
+             │   labels, never collapsed; exposes the anchor's own
+             │   publicationId/contentHash binding
+             ├── application/PublicationEvidenceCoordinator.js —
+             │   discover() (local, no network, no verifier) and
+             │   verify() (one anchor, explicit, per call), stateless
+             ├── application/CreatePublicationEvidenceCoordinatorUseCase
+             │   .js — composition root over already-built collaborators
+             ├── ui/main.js — first real wiring of the 0.8.0-0.8.2
+             │   pipeline: catalog + BitcoinOpReturnProofVerifier +
+             │   evidence coordinator, provided to the app
+             ├── ui/views/DecentralizedPublicationsView.js — "External
+             │   Evidence" section: known-count always shown, per-anchor
+             │   "Verify Evidence" always explicit, never automatic
+             └── PublicationEvidenceUX.test.js — the flagship: discover
+                 locally, verify explicitly, one VALID outcome; no
+                 ranking; every outcome distinct; verifying one anchor
+                 never touches another; nothing ever persisted
+```
+
+> **A Publication Center shows two different kinds of information, and
+> this milestone keeps them visibly two.** "3 anchors known" comes from
+> `application/LocalPublicationAnchorCatalog.js` and answers "what
+> evidence claims do I know about?" "Independently verified" comes from
+> `application/ExternalAnchorVerifier.js` and answers "what can I
+> establish about one of those claims right now?" Neither is ever
+> derived from the other, neither is ever automatic on page load, and no
+> number of verified anchors is ever collapsed into a verdict about
+> whether a publication is authoritative. Known evidence is not verified
+> evidence, and verified evidence is not authority.
+
+### Deliberately excluded
+
+- **Peer anchor exchange.** Still `application/
+  AddPublicationAnchorUseCase.js`'s own 0.8.2 scope, unchanged — this
+  milestone adds no way for an anchor to reach a replica other than
+  however it already got there. A `PublicationAnchorExchange` reusing
+  `application/PublicationExchange.js`'s own proven shape remains its
+  own future milestone, exactly as 0.8.1 and 0.8.2 both already named
+  it.
+- **Automatic verification, on page load or anywhere else.** Opening the
+  Publication Center, expanding the evidence section, or discovering a
+  new anchor never calls `ExternalAnchorVerifier`. Only an explicit
+  "Verify Evidence" click, for one named anchor, does.
+- **Persisting a verification result.** No `verified`, `verificationOutcome`,
+  or `verificationTimestamp` field was added anywhere — not to
+  `core/PublicationAnchor.js`, not to `application/
+  LocalPublicationAnchorCatalog.js`, and not to any new storage this
+  milestone might have been tempted to add. A result lives only in the
+  Vue component's own reactive session state, for exactly as long as
+  that page stays open.
+- **Any anchor ranking, trust score, "strongest anchor," or "canonical
+  anchor" selection.** The evidence section lists every known anchor in
+  the catalog's own order and shows each one's own verification state
+  independently; nothing anywhere sums, weighs, or picks among them.
+- **An "add anchor" / "catalog this evidence" form.** `application/
+  AddPublicationAnchorUseCase.js` still has no UI caller — this
+  milestone is entirely about DISPLAYING evidence a replica already
+  cataloged, never about how it got there. A form (or, more likely, real
+  peer exchange) for getting anchors onto a replica in the first place
+  is future scope.
+- **Wallets, private keys, or Bitcoin transaction creation.** Untouched,
+  for the identical reason every prior 0.8.x milestone left it untouched
+  — see `docs/Principles.md`, "External Anchoring Provides Evidence; It
+  Does Not Establish Authority (0.8.0)."
+
+What's left, and deliberately unbuilt: anchor exchange over peers
+(0.8.4), multi-evidence convergence, and any way for a person to submit
+new evidence from inside this app at all — each sized on its own,
+exactly like every "Deliberately excluded" list in this document before
+it.
