@@ -8,7 +8,10 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import {
     PublicationAnchorPeerMessageKind,
+    MAX_ANCHORS_PER_RESPONSE,
     toPublicationAnchorAnnounceMessage,
+    toPublicationAnchorRequestMessage,
+    toPublicationAnchorResponseMessage,
     isValidPublicationAnchorPeerMessage
 } from '../application/PublicationAnchorPeerProtocol.js';
 import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
@@ -18,21 +21,39 @@ import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.4 — External Anchor Publication Over Peers.
+// 0.8.5 — Historical Anchor Discovery & Synchronization.
 //
-//   Section A: PublicationAnchorPeerProtocol — the ANNOUNCE wire shape,
-//              pure data, structural validity only
+//   Section A: PublicationAnchorPeerProtocol — the ANNOUNCE/REQUEST/
+//              RESPONSE wire shapes, pure data, structural validity only
 //   Section B: PublicationAnchorExchange — the new signature-checking
 //              import boundary application/AddPublicationAnchorUseCase.js
 //              (0.8.2) deliberately left unbuilt: validate -> construct ->
-//              verify SIGNATURE -> catalog, never a proof check
+//              verify SIGNATURE -> catalog, never a proof check; plus
+//              findByPublicationId() (0.8.5)
 //   Section C: PublicationAnchorPeerExchange — routing/gating against a
-//              stub PeerMessageBus + ConnectedPeerRegistry: sends only to
-//              AUTHENTICATED peers, drops a malformed or forged incoming
-//              announce silently, fires onAnchorReceived only for what
-//              actually catalogs, never once consults
+//              stub PeerMessageBus + ConnectedPeerRegistry: ANNOUNCE
+//              sends only to AUTHENTICATED peers, drops a malformed or
+//              forged incoming announce silently, fires onAnchorReceived
+//              only for what actually catalogs, never once consults
 //              ExternalAnchorVerifier, multiple/independent/differently-
-//              typed anchors all retained, dispose() detaches
-//   Section D: FLAGSHIP — Alice, Bob, and Carol over real, live,
+//              typed anchors all retained, dispose() detaches; plus
+//              REQUEST/RESPONSE (0.8.5): a REQUEST is answered only from
+//              this replica's own catalog, an unsigned cataloged anchor
+//              is skipped without breaking the rest of a RESPONSE, a
+//              RESPONSE is capped at MAX_ANCHORS_PER_RESPONSE, a forged
+//              anchor inside a RESPONSE is rejected exactly like a forged
+//              ANNOUNCE, and a malformed REQUEST/RESPONSE is dropped
+//              silently
+//   Section D: FLAGSHIP — LATE JOINER (0.8.5). Alice and Bob already
+//              hold two anchors when Carol connects for the first time;
+//              Carol explicitly requests historical anchors for the
+//              publication from Bob and catalogs both — evidence that
+//              predates her own connection, never announced to her.
+//              Verification stays independently local across all three:
+//              Alice reports VALID, Bob reports PROOF_UNAVAILABLE, Carol
+//              reports VALID — for the SAME anchor — and no outcome ever
+//              crosses the wire.
+//   Section E: FLAGSHIP — Alice, Bob, and Carol over real, live,
 //              authenticated connections (peer/LocalPeerConnectionProvider
 //              .js + application/ConnectToPeerUseCase.js, unmodified).
 //              Alice signs one anchor; Bob receives and catalogs it, then
@@ -45,7 +66,8 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //              crossed the wire.
 //
 // See docs/Principles.md, "Peers Exchange Anchor Claims, Not Verification
-// Results (0.8.4)."
+// Results (0.8.4)," and "Synchronization Distributes Claims, Not
+// Verification, Truth, Or Authority (0.8.5)."
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -112,10 +134,10 @@ class StubPeerMessageBus {
         this._handlers.get(protocol).add(handler);
         return () => this._handlers.get(protocol).delete(handler);
     }
-    deliver(protocol, payload) {
+    deliver(protocol, payload, meta = {}) {
         const handlers = this._handlers.get(protocol);
         if (!handlers) return;
-        for (const handler of Array.from(handlers)) handler(payload);
+        for (const handler of Array.from(handlers)) handler(payload, meta);
     }
 }
 
@@ -148,8 +170,37 @@ async function run() {
         assert(!isValidPublicationAnchorPeerMessage({ kind: 'ANNOUNCE' }), '7. a missing envelope is rejected');
         assert(!isValidPublicationAnchorPeerMessage({ kind: 'SOMETHING_ELSE', envelope }), '8. an unknown kind is rejected');
         assert(!isValidPublicationAnchorPeerMessage({ kind: 'ANNOUNCE', envelope: 'not-an-object' }), '9. a non-object envelope is rejected');
+
+        // 0.8.5 — REQUEST/RESPONSE wire shapes.
+        const request = toPublicationAnchorRequestMessage('pub-x');
+        assert(request.kind === PublicationAnchorPeerMessageKind.REQUEST && request.publicationId === 'pub-x', '10. toPublicationAnchorRequestMessage() carries the REQUEST kind and publicationId');
+        assert(Object.keys(request).length === 2, '11. a REQUEST carries exactly kind + publicationId — no requester identity, no cursor');
+        expectThrows(() => toPublicationAnchorRequestMessage(''), '12. toPublicationAnchorRequestMessage() rejects an empty publicationId');
+        expectThrows(() => toPublicationAnchorRequestMessage(null), '13. toPublicationAnchorRequestMessage() rejects a missing publicationId');
+        expectThrows(() => toPublicationAnchorRequestMessage('x'.repeat(600)), '14. toPublicationAnchorRequestMessage() rejects an absurdly long publicationId');
+
+        const response = toPublicationAnchorResponseMessage('pub-x', [envelope]);
+        assert(response.kind === PublicationAnchorPeerMessageKind.RESPONSE && response.publicationId === 'pub-x', '15. toPublicationAnchorResponseMessage() carries the RESPONSE kind and publicationId');
+        assert(Array.isArray(response.anchors) && response.anchors.length === 1 && response.anchors[0] === envelope, '16. a RESPONSE carries the anchor envelopes verbatim, unwrapped');
+        assert(Object.keys(response).length === 3, '17. a RESPONSE carries exactly kind + publicationId + anchors — no receivedAt, no verification field, no source-peer field');
+        expectThrows(() => toPublicationAnchorResponseMessage('', [envelope]), '18. toPublicationAnchorResponseMessage() rejects an empty publicationId');
+        expectThrows(() => toPublicationAnchorResponseMessage('pub-x', 'not-an-array'), '19. toPublicationAnchorResponseMessage() rejects non-array anchors');
+        expectThrows(() => toPublicationAnchorResponseMessage('pub-x', [null]), '20. toPublicationAnchorResponseMessage() rejects a non-object anchor entry');
+        expectThrows(() => toPublicationAnchorResponseMessage('pub-x', new Array(MAX_ANCHORS_PER_RESPONSE + 1).fill(envelope)), '21. toPublicationAnchorResponseMessage() rejects an anchors array over MAX_ANCHORS_PER_RESPONSE');
+        const exactlyMax = toPublicationAnchorResponseMessage('pub-x', new Array(MAX_ANCHORS_PER_RESPONSE).fill(envelope));
+        assert(exactlyMax.anchors.length === MAX_ANCHORS_PER_RESPONSE, '22. exactly MAX_ANCHORS_PER_RESPONSE anchors is accepted, not rejected off-by-one');
+
+        assert(isValidPublicationAnchorPeerMessage(request), '23. a freshly built REQUEST validates');
+        assert(isValidPublicationAnchorPeerMessage(response), '24. a freshly built RESPONSE validates');
+        assert(!isValidPublicationAnchorPeerMessage({ kind: 'REQUEST' }), '25. a REQUEST with no publicationId is rejected');
+        assert(!isValidPublicationAnchorPeerMessage({ kind: 'REQUEST', publicationId: '' }), '26. a REQUEST with an empty publicationId is rejected');
+        assert(!isValidPublicationAnchorPeerMessage({ kind: 'RESPONSE', publicationId: 'pub-x' }), '27. a RESPONSE with no anchors array is rejected');
+        assert(!isValidPublicationAnchorPeerMessage({ kind: 'RESPONSE', publicationId: 'pub-x', anchors: 'not-an-array' }), '28. a RESPONSE with a non-array anchors field is rejected');
+        assert(!isValidPublicationAnchorPeerMessage({ kind: 'RESPONSE', publicationId: 'pub-x', anchors: new Array(MAX_ANCHORS_PER_RESPONSE + 1).fill(envelope) }),
+            '29. a hand-crafted oversized RESPONSE is rejected, bypassing the sending-side check entirely — the RECEIVING side\'s own half of the bounded-response defense');
+        assert(!isValidPublicationAnchorPeerMessage({ kind: 'RESPONSE', publicationId: 'pub-x', anchors: [null] }), '30. a RESPONSE containing a non-object anchor entry is rejected');
     }
-    console.log('✓ Section A: PublicationAnchorPeerProtocol — ANNOUNCE wire shape, structural validity only, no verification field');
+    console.log('✓ Section A: PublicationAnchorPeerProtocol — ANNOUNCE/REQUEST/RESPONSE wire shapes, structural validity only, bounded RESPONSE size, no verification field anywhere');
 
     // ---------------------------------------------------------------
     // Section B — PublicationAnchorExchange
@@ -199,8 +250,14 @@ async function run() {
         proofVerifierCalled = false;
         exchange.importAnchor(anotherAnchor.toJSON());
         assert(proofVerifierCalled === false, '17. importAnchor() itself never invokes any proofVerifier — signature check only');
+
+        // 0.8.5 — findByPublicationId(), the read PublicationAnchorPeerExchange
+        // needs to answer a REQUEST.
+        assert(exchange.findByPublicationId('pub-b').length === 1 && exchange.findByPublicationId('pub-b')[0].id === anchor.id,
+            '18. findByPublicationId() returns the cataloged anchor(s) naming that publicationId');
+        assert(exchange.findByPublicationId('pub-nonexistent').length === 0, '19. findByPublicationId() returns empty for an unknown publicationId, never throws');
     }
-    console.log('✓ Section B: PublicationAnchorExchange — validate/construct/verify SIGNATURE/catalog, forged signatures rejected, no proof verification ever');
+    console.log('✓ Section B: PublicationAnchorExchange — validate/construct/verify SIGNATURE/catalog, forged signatures rejected, no proof verification ever, findByPublicationId()');
 
     // ---------------------------------------------------------------
     // Section C — PublicationAnchorPeerExchange, against a stub transport
@@ -306,11 +363,266 @@ async function run() {
         disposalExchange.dispose();
         disposalBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorAnnounceMessage(signAnchor(alice, { publicationId: 'pub-after-dispose', contentHash: 'hash-after-dispose', anchorType: 'local-test', locator: 'local://ledger/after-dispose' }).toJSON()));
         assert(disposalReceived.length === 0, '21. dispose() unsubscribes from the bus — no further deliveries are handled');
+
+        // ---------------------------------------------------------------
+        // 0.8.5 — REQUEST/RESPONSE routing/gating, same Bob replica
+        // ---------------------------------------------------------------
+        const requester = stubPeer('conn-requester', PeerLifecycleState.AUTHENTICATED);
+
+        const sentBefore = bobBus.sent.length;
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, { kind: 'REQUEST' }, { connectedPeer: requester });
+        assert(bobBus.sent.length === sentBefore, '22. a malformed REQUEST (missing publicationId) is silently dropped, never replied to');
+
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorRequestMessage('pub-nobody-knows'), { connectedPeer: requester });
+        assert(bobBus.sent.length === sentBefore, '23. a REQUEST for an unknown publicationId gets no RESPONSE at all — not an error, not a NOT_FOUND message');
+
+        // 'pub-genuine' was cataloged earlier in this section via a
+        // genuine ANNOUNCE (item 13). Bob answers a REQUEST for it by
+        // sending a RESPONSE directly to the requester.
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorRequestMessage('pub-genuine'), { connectedPeer: requester });
+        const genuineResponse = bobBus.sent[bobBus.sent.length - 1];
+        assert(genuineResponse.peer === requester && genuineResponse.protocol === PublicationAnchorPeerExchange.DEFAULT_PROTOCOL,
+            '24. Bob answers a REQUEST by sending a RESPONSE directly to the requester, under this class\'s own namespaced protocol');
+        assert(genuineResponse.payload.kind === PublicationAnchorPeerMessageKind.RESPONSE && genuineResponse.payload.publicationId === 'pub-genuine',
+            '25. the RESPONSE carries the RESPONSE kind and echoes the requested publicationId');
+        assert(genuineResponse.payload.anchors.length === 1 && genuineResponse.payload.anchors[0].id === genuine.id,
+            '26. the RESPONSE carries exactly the matching cataloged anchor, exported the same way announce() already exports one');
+        assert(genuineResponse.payload.anchors[0].verified === undefined && genuineResponse.payload.anchors[0].verificationOutcome === undefined,
+            '27. the RESPONSE\'s own anchor envelope carries no verification result of any kind — only the signed claim itself, same restraint as ANNOUNCE');
+
+        // An anchor cataloged some OTHER way than this exchange's own
+        // importAnchor() (application/AddPublicationAnchorUseCase.js
+        // tolerates an unsigned one) is silently SKIPPED when building a
+        // RESPONSE — never breaks the reply for a genuinely exportable
+        // sibling naming the same publicationId.
+        const unsignedSibling = new PublicationAnchor({
+            publicationId: 'pub-mixed-signed', contentHash: 'hash-mixed', anchorType: 'local-test', locator: 'local://ledger/mixed-unsigned',
+            anchorIdentity: alice.getSigningIdentity().toJSON()
+        });
+        bobCatalog.add(unsignedSibling);
+        const signedSibling = signAnchor(alice, { publicationId: 'pub-mixed-signed', contentHash: 'hash-mixed', anchorType: 'local-test', locator: 'local://ledger/mixed-signed' });
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorAnnounceMessage(signedSibling.toJSON()));
+        assert(bobCatalog.findByPublicationId('pub-mixed-signed').length === 2, '28. setup: Bob now catalogs both the unsigned and the signed sibling');
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorRequestMessage('pub-mixed-signed'), { connectedPeer: requester });
+        const mixedResponse = bobBus.sent[bobBus.sent.length - 1];
+        assert(mixedResponse.payload.anchors.length === 1 && mixedResponse.payload.anchors[0].id === signedSibling.id,
+            '29. an unsigned cataloged anchor is silently skipped when building a RESPONSE — only the genuinely signed sibling is offered, the response is still sent');
+
+        // A forged/tampered anchor inside a RESPONSE is rejected exactly
+        // like a forged ANNOUNCE — never catalogs, never crashes, never
+        // fires onAnchorReceived.
+        const forgedInResponse = signAnchor(alice, { publicationId: 'pub-forged-response', contentHash: 'hash-forged-response', anchorType: 'local-test', locator: 'local://ledger/forged-response' }).toJSON();
+        forgedInResponse.contentHash = 'tampered-after-signing';
+        const receivedBeforeForgedResponse = received.length;
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorResponseMessage('pub-forged-response', [forgedInResponse]));
+        assert(received.length === receivedBeforeForgedResponse, '30. a RESPONSE containing a forged/tampered anchor never fires onAnchorReceived');
+        assert(bobCatalog.findByPublicationId('pub-forged-response').length === 0, '31. the forged anchor inside a RESPONSE never catalogs — synchronization introduces no second, looser way in');
+
+        // A forged anchor mixed with a GENUINE one in the SAME RESPONSE:
+        // the genuine one still catalogs — one bad envelope in a batch
+        // never blocks the rest of it.
+        const genuineInMixedBatch = signAnchor(alice, { publicationId: 'pub-mixed-batch', contentHash: 'hash-mixed-batch', anchorType: 'local-test', locator: 'local://ledger/mixed-batch' }).toJSON();
+        const forgedInMixedBatch = signAnchor(alice, { publicationId: 'pub-mixed-batch', contentHash: 'hash-mixed-batch-2', anchorType: 'local-test', locator: 'local://ledger/mixed-batch-2' }).toJSON();
+        forgedInMixedBatch.contentHash = 'tampered-in-batch';
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorResponseMessage('pub-mixed-batch', [forgedInMixedBatch, genuineInMixedBatch]));
+        assert(bobCatalog.findByPublicationId('pub-mixed-batch').length === 1 && bobCatalog.get(genuineInMixedBatch.id) !== null,
+            '32. a forged anchor ahead of a genuine one in the same RESPONSE array never blocks the genuine one from cataloging');
+
+        // Duplicate anchor via RESPONSE — deduplicated by the catalog's
+        // own id-based dedup (0.8.2), never a second, separate mechanism
+        // built here.
+        const dupReceivedBefore = received.length;
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorResponseMessage('pub-mixed-batch', [genuineInMixedBatch]));
+        assert(received.length === dupReceivedBefore + 1 && received[received.length - 1].isNew === false,
+            '33. re-synchronizing an already-known anchor via RESPONSE still fires onAnchorReceived, with isNew: false');
+        assert(bobCatalog.findByPublicationId('pub-mixed-batch').length === 1, '34. re-synchronizing never duplicates the catalog entry');
+
+        // receivedAt is local to Bob's own replica, recorded the moment
+        // HIS catalog first saw the anchor via RESPONSE — the wire itself
+        // carries no such field at all (see Section A).
+        assert(typeof bobCatalog.getReceivedAt(genuineInMixedBatch.id) === 'string',
+            '35. Bob recorded his own local receivedAt for an anchor that arrived via RESPONSE, exactly as for an ANNOUNCE');
+
+        // A hand-crafted, structurally-oversized RESPONSE (bypassing
+        // toPublicationAnchorResponseMessage()'s own ceiling entirely) is
+        // dropped by isValidPublicationAnchorPeerMessage() before
+        // _handleResponse() ever runs — never partially processed.
+        const oversizedReceivedBefore = received.length;
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, { kind: 'RESPONSE', publicationId: 'pub-oversized', anchors: new Array(MAX_ANCHORS_PER_RESPONSE + 1).fill(genuineInMixedBatch) });
+        assert(received.length === oversizedReceivedBefore, '36. a hand-crafted oversized RESPONSE is rejected outright, never partially processed');
+
+        // A REQUEST for a publication with more matching anchors than
+        // MAX_ANCHORS_PER_RESPONSE is TRUNCATED, never rejected outright
+        // — the SENDING side's own half of the bounded-response defense.
+        for (let i = 0; i < MAX_ANCHORS_PER_RESPONSE + 5; i += 1) {
+            const many = signAnchor(alice, { publicationId: 'pub-many', contentHash: `hash-many-${i}`, anchorType: 'local-test', locator: `local://ledger/many-${i}` });
+            bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorAnnounceMessage(many.toJSON()));
+        }
+        assert(bobCatalog.findByPublicationId('pub-many').length === MAX_ANCHORS_PER_RESPONSE + 5, '37. setup: Bob genuinely catalogs more anchors for one publication than MAX_ANCHORS_PER_RESPONSE');
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorRequestMessage('pub-many'), { connectedPeer: requester });
+        const manyResponse = bobBus.sent[bobBus.sent.length - 1];
+        assert(manyResponse.payload.anchors.length === MAX_ANCHORS_PER_RESPONSE,
+            '38. Bob\'s own RESPONSE truncates at MAX_ANCHORS_PER_RESPONSE rather than including every matching anchor or refusing to answer at all');
     }
-    console.log('✓ Section C: PublicationAnchorPeerExchange — AUTHENTICATED-only sends, auto-attach, malformed/forged drops, never consults ExternalAnchorVerifier, multi-evidence retained, dispose()');
+    console.log('✓ Section C: PublicationAnchorPeerExchange — AUTHENTICATED-only sends, auto-attach, malformed/forged drops, never consults ExternalAnchorVerifier, multi-evidence retained, dispose(); REQUEST answered only from the local catalog, unsigned entries skipped, forged anchors in a RESPONSE rejected without blocking the rest of the batch, duplicates deduplicated, RESPONSE size bounded');
 
     // ---------------------------------------------------------------
-    // Section D — FLAGSHIP: Alice -> Bob -> Carol, over real, live,
+    // Section D — FLAGSHIP: LATE JOINER (0.8.5). Alice and Bob already
+    // hold two anchors when Carol connects for the first time; Carol
+    // requests them explicitly and catalogs both. Verification stays
+    // independently local across all three, for the SAME anchor.
+    // ---------------------------------------------------------------
+    {
+        const network = new LocalPeerNetwork();
+        const alice = makeIdentity('Alice');
+        const bob = makeIdentity('Bob');
+        const carol = makeIdentity('Carol');
+
+        const aliceTransport = new LocalPeerConnectionProvider('alice-sync', network);
+        const bobTransport = new LocalPeerConnectionProvider('bob-sync', network);
+        const carolTransport = new LocalPeerConnectionProvider('carol-sync', network);
+
+        const aliceConnect = new ConnectToPeerUseCase({ peerConnectionProvider: aliceTransport, identityProvider: alice });
+        const stopAliceListening = aliceConnect.listen();
+
+        const bobConnect = new ConnectToPeerUseCase({ peerConnectionProvider: bobTransport, identityProvider: bob });
+        const stopBobListening = bobConnect.listen();
+        const bobToAlice = bobConnect.connect({ candidateEndpoint: 'alice-sync' });
+
+        await wait(20);
+        assert(bobToAlice.getLifecycleState() === PeerLifecycleState.AUTHENTICATED, '1. setup: Bob authenticates to Alice');
+
+        const { catalog: aliceCatalog, exchange: aliceExchange } = makeAnchorExchange();
+        const aliceBus = new PeerMessageBus();
+        const alicePeerExchange = new PublicationAnchorPeerExchange(aliceExchange, aliceBus, aliceConnect.registry);
+
+        const { catalog: bobCatalog, exchange: bobExchange } = makeAnchorExchange();
+        const bobBus = new PeerMessageBus();
+        const bobPeerExchange = new PublicationAnchorPeerExchange(bobExchange, bobBus, bobConnect.registry);
+
+        // Alice creates and announces TWO anchors for the same
+        // publication, both BEFORE Carol ever connects to anyone — this
+        // is the exact scenario 0.8.4's own ANNOUNCE-only transport
+        // could never give a later-joining replica.
+        const anchorA = signAnchor(alice, { publicationId: 'pub-late-joiner', contentHash: 'hash-late-joiner', anchorType: 'bitcoin-op-return', locator: 'bitcoin://tx/a', proof: { txid: 'a' } });
+        const anchorB = signAnchor(alice, { publicationId: 'pub-late-joiner', contentHash: 'hash-late-joiner', anchorType: 'other-ledger', locator: 'other://chain/b' });
+        alicePeerExchange.announce(anchorA);
+        alicePeerExchange.announce(anchorB);
+        await wait(20);
+        assert(bobCatalog.has(anchorA.id) && bobCatalog.has(anchorB.id), '2. setup: Bob already holds BOTH anchors, from ordinary ANNOUNCE traffic, before Carol exists at all');
+
+        // NOW Carol connects — to Bob only, never to Alice. Alice may
+        // even be long gone by the time Carol asks anything; this
+        // section never has Carol talk to her at all.
+        const carolConnect = new ConnectToPeerUseCase({ peerConnectionProvider: carolTransport, identityProvider: carol });
+        const carolToBob = carolConnect.connect({ candidateEndpoint: 'bob-sync' });
+        await wait(20);
+        assert(carolToBob.getLifecycleState() === PeerLifecycleState.AUTHENTICATED, '3. setup: Carol authenticates to Bob only, after both anchors already existed');
+
+        const { catalog: carolCatalog, exchange: carolExchange } = makeAnchorExchange();
+        const carolBus = new PeerMessageBus();
+        const carolPeerExchange = new PublicationAnchorPeerExchange(carolExchange, carolBus, carolConnect.registry);
+
+        assert(carolCatalog.list().length === 0, '4. Carol starts with an empty catalog — she never received either anchor via ANNOUNCE, she was not connected when either was sent');
+
+        const carolReceived = [];
+        carolPeerExchange.onAnchorReceived((result) => carolReceived.push(result));
+
+        // Carol explicitly requests historical anchors for the
+        // publication from Bob — the one new call this milestone adds.
+        carolPeerExchange.requestAnchors(carolToBob, 'pub-late-joiner');
+        await wait(30);
+
+        assert(carolCatalog.has(anchorA.id) && carolCatalog.has(anchorB.id), '5. Carol now holds BOTH anchors, discovered entirely through explicit REQUEST/RESPONSE synchronization, never through ANNOUNCE');
+        assert(carolReceived.length === 2 && new Set(carolReceived.map((r) => r.anchor.id)).size === 2,
+            '6. onAnchorReceived fired once per anchor in the RESPONSE, each with the real cataloged anchor');
+        assert(carolReceived.every((r) => r.isNew === true), '7. both are genuinely new to Carol\'s own catalog');
+
+        // Byte-identical claims — synchronization carried the exact
+        // signed envelopes, never re-derived or re-signed anything.
+        assert(carolCatalog.get(anchorA.id).signature.signature === anchorA.signature.signature, '8. Carol\'s copy of Anchor A carries the exact same signature Alice produced');
+        assert(carolCatalog.get(anchorB.id).signature.signature === anchorB.signature.signature, '9. Carol\'s copy of Anchor B carries the exact same signature Alice produced');
+
+        // receivedAt is local and NEVER synchronized — Bob first saw
+        // these anchors well before Carol did (via ordinary ANNOUNCE,
+        // then waited through the whole setup above), yet Carol's own
+        // receivedAt is recorded at the moment SHE first heard about
+        // them, never copied from Bob's.
+        const bobReceivedAtA = bobCatalog.getReceivedAt(anchorA.id);
+        const carolReceivedAtA = carolCatalog.getReceivedAt(anchorA.id);
+        assert(bobReceivedAtA !== null && carolReceivedAtA !== null, '10. both Bob and Carol recorded their own local receivedAt');
+        assert(new Date(carolReceivedAtA).getTime() >= new Date(bobReceivedAtA).getTime(),
+            '11. Carol\'s own receivedAt is no earlier than Bob\'s — each replica\'s receivedAt reflects when IT first observed the anchor, never a timestamp copied from the peer that relayed it');
+
+        // Verification stays independently local across all THREE
+        // replicas now, for the identical claim — Alice (the original
+        // signer, who never even cataloged her own anchor — see 0.8.4's
+        // own flagship, item 8b) independently verifies it fresh here for
+        // the first time; Bob's own external system reports
+        // PROOF_UNAVAILABLE; Carol's reports VALID. The three outcomes
+        // disagree, on purpose, to prove none of them ever crossed any
+        // wire — synchronization moved the CLAIM, never a verdict about
+        // it.
+        aliceCatalog.add(anchorA);
+        const verifier = new LocalAuthorizationVerifier();
+        const acceptingPlugin = { anchorType: 'bitcoin-op-return', verify: () => ({ valid: true }) };
+        const unreachablePlugin = { anchorType: 'bitcoin-op-return', verify: () => { throw new Error('block explorer unreachable'); } };
+
+        const aliceExternalVerifier = new ExternalAnchorVerifier(verifier);
+        const aliceResult = await aliceExternalVerifier.verify(aliceCatalog.get(anchorA.id).toJSON(), {
+            expectedContentHash: 'hash-late-joiner', expectedPublicationId: 'pub-late-joiner', proofVerifier: acceptingPlugin
+        });
+        assert(aliceResult.outcome === AnchorVerificationOutcome.VALID, '12. Alice independently verifies VALID');
+
+        const bobExternalVerifier = new ExternalAnchorVerifier(verifier);
+        const bobResult = await bobExternalVerifier.verify(bobCatalog.get(anchorA.id).toJSON(), {
+            expectedContentHash: 'hash-late-joiner', expectedPublicationId: 'pub-late-joiner', proofVerifier: unreachablePlugin
+        });
+        assert(bobResult.outcome === AnchorVerificationOutcome.PROOF_UNAVAILABLE, '13. Bob independently reports PROOF_UNAVAILABLE for the SAME claim');
+
+        const carolExternalVerifier = new ExternalAnchorVerifier(verifier);
+        const carolResult = await carolExternalVerifier.verify(carolCatalog.get(anchorA.id).toJSON(), {
+            expectedContentHash: 'hash-late-joiner', expectedPublicationId: 'pub-late-joiner', proofVerifier: acceptingPlugin
+        });
+        assert(carolResult.outcome === AnchorVerificationOutcome.VALID, '14. Carol independently reports VALID for the SAME claim, discovered entirely via synchronization rather than direct ANNOUNCE — verification never depended on HOW the anchor arrived');
+
+        // Neither outcome was ever written into any cataloged copy, on
+        // any of the three replicas.
+        assert(carolCatalog.get(anchorA.id).toJSON().verified === undefined && carolCatalog.get(anchorA.id).toJSON().verificationOutcome === undefined,
+            '15. Carol\'s own VALID result is never written into her cataloged anchor record');
+        assert(bobCatalog.get(anchorA.id).toJSON().verified === undefined && bobCatalog.get(anchorA.id).toJSON().verificationOutcome === undefined,
+            '16. Bob\'s own PROOF_UNAVAILABLE result is never written into his cataloged anchor record either');
+
+        // Requesting again is harmless — Carol already has both, and
+        // re-synchronizing simply reports isNew: false for each, never
+        // duplicating the catalog.
+        const reReceivedBefore = carolReceived.length;
+        carolPeerExchange.requestAnchors(carolToBob, 'pub-late-joiner');
+        await wait(30);
+        assert(carolReceived.length === reReceivedBefore + 2 && carolReceived.slice(-2).every((r) => r.isNew === false),
+            '17. requesting the same publication again re-fires onAnchorReceived with isNew: false, and never duplicates the catalog');
+        assert(carolCatalog.list().length === 2, '18. Carol\'s catalog still holds exactly the two anchors — evidence SET convergence, never a growing log of duplicates');
+
+        // Requesting a publicationId nobody knows anything about is
+        // harmless too — silently nothing arrives, never an error.
+        const unknownReceivedBefore = carolReceived.length;
+        carolPeerExchange.requestAnchors(carolToBob, 'pub-nobody-has-ever-heard-of');
+        await wait(30);
+        assert(carolReceived.length === unknownReceivedBefore, '19. requesting an unknown publicationId gets no anchors back — not an error, not a NOT_FOUND message');
+
+        alicePeerExchange.dispose();
+        bobPeerExchange.dispose();
+        carolPeerExchange.dispose();
+        stopAliceListening();
+        stopBobListening();
+        aliceTransport.dispose();
+        bobTransport.dispose();
+        carolTransport.dispose();
+    }
+    console.log('✓ Section D: FLAGSHIP — LATE JOINER: Carol connects only to Bob, long after Alice created two anchors and Bob already cataloged them via ordinary ANNOUNCE; Carol explicitly requests and receives both, byte-identical, over a live authenticated connection; receivedAt stays local and unsynchronized; Alice/Bob/Carol independently verify the SAME claim as VALID/PROOF_UNAVAILABLE/VALID; re-requesting converges harmlessly; an unknown publicationId yields nothing');
+
+    // ---------------------------------------------------------------
+    // Section E — FLAGSHIP: Alice -> Bob -> Carol, over real, live,
     // authenticated connections. Bob verifies VALID; Carol independently
     // cannot (PROOF_UNAVAILABLE). Neither outcome ever crosses the wire.
     // ---------------------------------------------------------------
@@ -442,7 +754,7 @@ async function run() {
         bobTransport.dispose();
         carolTransport.dispose();
     }
-    console.log('✓ Section D: FLAGSHIP — Alice → Bob → Carol over live authenticated connections; the identical claim propagates two hops; verification stays independent and local; no outcome ever crosses the wire');
+    console.log('✓ Section E: FLAGSHIP — Alice → Bob → Carol over live authenticated connections; the identical claim propagates two hops; verification stays independent and local; no outcome ever crosses the wire');
 
     console.log('\nAll Publication Anchor Peer Exchange tests passed.');
 }

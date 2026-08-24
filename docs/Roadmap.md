@@ -14965,3 +14965,257 @@ What's left, and deliberately unbuilt: historical anchor discovery for a
 newly joined replica (0.8.5) and multi-evidence convergence (0.8.6) —
 each sized on its own, exactly like every "Deliberately excluded" list in
 this document before it.
+
+## 0.8.5 — Historical Anchor Discovery & Synchronization
+
+0.8.4's own "Deliberately excluded" list named this milestone directly:
+"No REQUEST/RESPONSE message kind was added... a newly joined replica
+discovers only anchors announced (or relayed) to it after it connects...
+Historical anchor discovery/synchronization for a newly joined replica is
+its own future milestone." 0.8.5 is that milestone, and it answers exactly
+one question:
+
+```text
+Alice creates Anchor A
+        │
+        ▼
+Alice catalogs A
+        │
+        ▼
+Carol joins later — does Carol ever learn about A?
+```
+
+Before this milestone: only if Alice (or a relay) happened to be
+connected and re-announced it while Carol was listening. After this
+milestone: Carol can ask.
+
+```text
+Carol connects
+    │
+    ├── requestAnchors(peer, publicationId)
+    │
+    ▼
+Alice/Bob respond with anchor claims already on file
+    │
+    ▼
+Carol validates + verifies signatures  (identical path to an ANNOUNCE)
+    │
+    ▼
+Carol catalogs anchors
+```
+
+This is **discovery/synchronization, not verification** — the identical
+split 0.8.4 already drew for ANNOUNCE, now extended to a pull. It reuses
+essentially everything 0.8.4 built: the SAME wire namespace
+(`forkbuild:anchor`), the SAME signature-checking import boundary
+(`application/PublicationAnchorExchange.js#importAnchor()`), and the SAME
+catalog dedup (`application/LocalPublicationAnchorCatalog.js#add()`,
+by anchor id). The only genuinely new pieces are two additional message
+kinds and the read/answer machinery they need.
+
+- `application/PublicationAnchorPeerProtocol.js` — two new message kinds
+  alongside the existing `ANNOUNCE`, unchanged: `REQUEST` ("give me
+  anchors you know about this publicationId") and `RESPONSE` ("here are
+  matching anchor claims"). Deliberately scoped to `publicationId` ONLY —
+  not `contentHash`, not `anchorType`, not a general filter object —
+  matching exactly what the Publication Center's evidence workflow
+  (0.8.3) needs; broader discovery stays future scope, added on demand.
+  No `NOT_FOUND` kind exists — a peer that knows nothing simply never
+  replies, the identical restraint `application/PeerContentProtocol.js`
+  (0.7.4) already established for content retrieval. `anchors` in a
+  RESPONSE is capped at the new `MAX_ANCHORS_PER_RESPONSE` (64) — the
+  SENDING side truncates, the RECEIVING side's
+  `isValidPublicationAnchorPeerMessage()` rejects a hand-crafted oversized
+  RESPONSE outright, bounding a single reply even though this is not
+  pagination and never claims to be. A RESPONSE carries nothing but plain
+  `PublicationAnchor.toJSON()` envelopes — no `receivedAt`, no
+  verification outcome, no "which peer told me this" metadata — the
+  identical restraint 0.8.4 already drew for ANNOUNCE's own `envelope`,
+  now proven to hold for a whole batch at once.
+- `application/PublicationAnchorExchange.js` — one new method,
+  `findByPublicationId(publicationId)`, a thin passthrough to the
+  injected catalog's own query. The one read
+  `application/PublicationAnchorPeerExchange.js` needed to ANSWER a
+  REQUEST rather than merely receive one.
+- `application/PublicationAnchorPeerExchange.js` — `requestAnchors(peer,
+  publicationId)` sends a REQUEST to exactly one caller-chosen peer,
+  fire-and-forget, the identical shape `application/
+  PeerContentExchange.js#request()` already established for content.
+  `_handleRequest()` answers ONLY from this replica's own catalog: every
+  matching anchor is exported (an unsigned entry — reachable only via
+  `application/AddPublicationAnchorUseCase.js`'s separate, no-signature
+  path — is silently skipped rather than aborting the whole reply),
+  truncated at `MAX_ANCHORS_PER_RESPONSE`, and sent directly back to the
+  requester; a REQUEST for a publicationId this replica knows nothing
+  about gets no reply at all. `_handleResponse()` runs every anchor in
+  the batch through the IDENTICAL `importAnchor()` call an ANNOUNCE
+  already runs through — structural validation, then construction, then
+  SIGNATURE verification, one at a time — so synchronization introduces
+  no second, looser way for an anchor to become trusted; a forged or
+  malformed entry anywhere in the array is dropped without blocking the
+  rest of the batch. `onAnchorReceived()` fires identically for an anchor
+  arriving via ANNOUNCE or via RESPONSE — a caller cannot tell which, and
+  does not need to. THE central invariant is unchanged: neither handler
+  ever calls `application/ExternalAnchorVerifier.js`.
+- `application/PublicationAnchorDiscoveryCoordinator.js` — the
+  application-layer, multi-peer policy over `requestAnchors()`, mirroring
+  `application/PeerContentRetrievalCoordinator.js`'s own 0.7.6 shape with
+  one deliberate difference: `discoverFromPeers(publicationId, peers,
+  options)` never stops at the first candidate that answers, because
+  historical anchor discovery has no single right answer the way a
+  content hash does — it asks EVERY candidate, sequentially, in order,
+  and returns the UNION of whatever each one offered.
+  Deduplication needs no code here either — the catalog's own id-based
+  dedup already makes asking two peers who both know the same anchor
+  converge to one cataloged entry, regardless of how many times
+  `discovered` reports having seen it.
+- `application/CreatePublicationAnchorDiscoveryCoordinatorUseCase.js` —
+  the composition root, taking an already-constructed `peerExchange` as a
+  parameter rather than building a second one, the identical shape
+  `application/CreatePeerContentRetrievalCoordinatorUseCase.js` already
+  established.
+- `ui/main.js` — `publicationAnchorDiscoveryCoordinator` is now
+  constructed, over the SAME `publicationAnchorPeerExchange` instance
+  0.8.4 already wired, and provided to the app for a future UI to call.
+  This milestone builds no button, no "Discover More Evidence" action,
+  and no change to `ui/views/DecentralizedPublicationsView.js` — proving
+  the networking semantics first, exactly as 0.8.4's own
+  `publicationAnchorPeerExchange` was provided a full milestone before
+  any UI consumed it.
+- `tests/PublicationAnchorPeerExchange.test.js` — extended with the new
+  REQUEST/RESPONSE wire shapes (Section A), `findByPublicationId()`
+  (Section B), and REQUEST/RESPONSE routing/gating against a stub
+  transport (Section C): a malformed REQUEST or RESPONSE is dropped
+  silently, a REQUEST is answered only from the local catalog, an
+  unsigned cataloged anchor is skipped without breaking the rest of a
+  reply, a forged anchor inside a RESPONSE is rejected exactly like a
+  forged ANNOUNCE without blocking a genuine sibling in the same batch,
+  duplicates deduplicate, and a RESPONSE is bounded at
+  `MAX_ANCHORS_PER_RESPONSE`. Plus a new flagship (Section D): Alice and
+  Bob already hold two anchors — created and propagated entirely before
+  Carol ever exists — when Carol connects to Bob for the first time and
+  explicitly requests them; she catalogs both, byte-identical, with her
+  own local `receivedAt`. Verification then stays independently local
+  across all THREE replicas for the identical claim: Alice reports VALID,
+  Bob reports PROOF_UNAVAILABLE, Carol reports VALID — no outcome ever
+  crosses the wire, exactly as 0.8.4's own flagship proved for two.
+- `tests/PublicationAnchorDiscoveryCoordinator.test.js` — the new
+  coordinator's own unit tests (candidates tried strictly in order, the
+  result is a union across several candidates rather than a race won by
+  whichever answers first, events for an unrelated publicationId are
+  filtered out, a synchronously-throwing request never blocks the loop)
+  plus its own flagship (Section C): the exact three-replica asymmetry
+  this milestone's own design named — Alice knows only Anchor A, Bob
+  knows A and B, Carol knows only B — resolved live, over real
+  authenticated connections, with Alice and Carol each discovering their
+  missing anchor through Bob. All three converge on the identical evidence
+  SET.
+
+```text
+0.8.4   External Anchor Publication Over Peers                      ✓
+             │
+             ▼
+0.8.5   Historical Anchor Discovery & Synchronization                ✓
+             ├── application/PublicationAnchorPeerProtocol.js — REQUEST/
+             │   RESPONSE added alongside ANNOUNCE, unchanged; publicationId-
+             │   scoped only; no NOT_FOUND; RESPONSE bounded at
+             │   MAX_ANCHORS_PER_RESPONSE; no verification field anywhere
+             ├── application/PublicationAnchorExchange.js —
+             │   findByPublicationId(), the one new read
+             ├── application/PublicationAnchorPeerExchange.js —
+             │   requestAnchors()/_handleRequest()/_handleResponse();
+             │   REQUEST answered only from the local catalog; RESPONSE
+             │   anchors run through the IDENTICAL importAnchor() an
+             │   ANNOUNCE always used; never touches ExternalAnchorVerifier
+             ├── application/PublicationAnchorDiscoveryCoordinator.js —
+             │   sequential multi-peer discovery; UNION, never a race;
+             │   dedup left entirely to the catalog
+             ├── application/
+             │   CreatePublicationAnchorDiscoveryCoordinatorUseCase.js —
+             │   composition root over an already-built peerExchange
+             ├── ui/main.js — publicationAnchorDiscoveryCoordinator
+             │   provided; no UI consumer yet, deliberately
+             └── PublicationAnchorPeerExchange.test.js (extended) +
+                 PublicationAnchorDiscoveryCoordinator.test.js (new) —
+                 malformed/forged/oversized drops; unsigned entries
+                 skipped; late-joiner flagship (Alice+Bob → Carol, three-
+                 way independent verification); convergence flagship
+                 (Alice knows A, Bob knows A+B, Carol knows B → all three
+                 converge)
+```
+
+> **Synchronization distributes knowledge of evidence claims; it does not
+> synchronize verification, truth, or authority.** A newly joined replica
+> that asks `requestAnchors()` learns exactly what another replica already
+> knows — the same signed `PublicationAnchor` envelopes, byte for byte,
+> carried through the identical `importAnchor()` boundary an ANNOUNCE
+> already used. Nothing about WHO verified what, WHEN a peer first heard
+> about an anchor, or WHICH peer relayed it ever crosses this protocol —
+> `application/PublicationAnchorPeerProtocol.js#
+> toPublicationAnchorResponseMessage()`'s own wire shape has no field for
+> any of those, on purpose. `application/
+> PublicationAnchorDiscoveryCoordinator.js`'s own flagship makes the
+> resulting property concrete: Alice, Bob, and Carol can each hold a
+> different SUBSET of known anchors and, after synchronizing, converge on
+> the identical SET — but that convergence is a fact about which CLAIMS
+> each replica has cataloged, never a fact about which of those claims are
+> true. See `docs/Principles.md`, "Evidence Set Convergence Does Not Imply
+> Truth Convergence (0.8.5)."
+
+### Deliberately excluded
+
+- **Discovery by anything other than `publicationId`.** No `contentHash`
+  or `anchorType` filter, and no combined/generic filter object, was
+  added to `application/PublicationAnchorPeerProtocol.js`'s REQUEST
+  shape — the identical single-axis restraint `application/
+  PeerContentProtocol.js` (0.7.4) already held for a content hash. Adding
+  either later means adding new, optional fields to REQUEST, never
+  touching `publicationId`-only discovery's own shape.
+- **Pagination, a cursor, or any multi-round "give me the rest" protocol.**
+  A RESPONSE is truncated at `MAX_ANCHORS_PER_RESPONSE` (64) and stops
+  there — a caller who wants more than that for one publication gets
+  whatever a responding peer chose to include first, never a continuation
+  token. A real cursor-based protocol stays future scope, sized on its
+  own, if actual scale ever demands it.
+- **Relayed or transitive discovery.** `_handleRequest()` answers ONLY
+  from this replica's own catalog — it never forwards a REQUEST to a
+  third peer on the requester's behalf, and never aggregates answers from
+  peers it did not ask directly. A caller that wants a broader search
+  supplies a longer `peers` list to `PublicationAnchorDiscoveryCoordinator
+  .js#discoverFromPeers()` itself; no replica ever does this on another's
+  behalf.
+- **Automatic or background synchronization.** `requestAnchors()` and
+  `discoverFromPeers()` are both explicit, caller-initiated calls — no
+  timer, no "sync on connect," and no hook anywhere that fires a REQUEST
+  merely because a peer became AUTHENTICATED. A future UI action (e.g.
+  "Discover More Evidence" in the Publication Center) can call
+  `discoverFromPeers()` explicitly; this milestone builds no such trigger
+  itself, automatic or otherwise.
+- **Peer reputation, ranking, or a "most complete" peer concept.**
+  `PublicationAnchorDiscoveryCoordinator.js` tries candidates in the order
+  a caller supplied them — sequentially, for deterministic, testable
+  behavior, never because one peer's answers are worth more than
+  another's. No field or method for tracking "how much to trust peer X's
+  synchronization responses" exists anywhere in this milestone, the
+  identical restraint 0.8.4 already held for ANNOUNCE.
+- **Verification results, confidence scores, or "checked by" fields
+  anywhere on the wire or in storage.** Not on the new REQUEST/RESPONSE
+  shapes, not on `core/PublicationAnchor.js`, and not on `application/
+  LocalPublicationAnchorCatalog.js` — the identical restraint 0.8.4
+  already held for ANNOUNCE, now extended to a batch transfer instead of
+  a single envelope.
+- **Any UI for triggering discovery, or for showing "Carol is missing N
+  anchors."** `ui/main.js` provides `publicationAnchorDiscoveryCoordinator`
+  for a future UI to use, but this milestone builds no button and no new
+  concept in `ui/views/DecentralizedPublicationsView.js` — the identical
+  restraint 0.8.4 already held for `publicationAnchorPeerExchange` before
+  any UI consumed it.
+- **Multi-evidence convergence — agreement, contradiction, corroboration,
+  or any temporal reasoning across several anchors.** Untouched, for the
+  identical reason every prior 0.8.x milestone left it untouched — see
+  `docs/Principles.md`, "External Anchoring Provides Evidence; It Does
+  Not Establish Authority (0.8.0)."
+
+What's left, and deliberately unbuilt: multi-evidence convergence
+(0.8.6) — sized on its own, exactly like every "Deliberately excluded"
+list in this document before it.
