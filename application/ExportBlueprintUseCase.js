@@ -21,11 +21,16 @@ import { buildBlueprintPackage } from './BlueprintPackage.js';
 //
 // 0.6.8 — Blueprint Lineage & Revision Discovery. `lineageClaims` is the
 // identical additive passthrough, one concept over.
+//
+// 0.8.7 — External Evidence Import & Publication Package Integration.
+// `anchors` is the identical additive passthrough, one concept further —
+// see application/BlueprintPackage.js's own header for why this stays a
+// signed core/PublicationAnchor.js array, never a verification result.
 export class ExportBlueprintUseCase {
-    execute(structure, { attributions = [], lineageClaims = [] } = {}) {
+    execute(structure, { attributions = [], lineageClaims = [], anchors = [] } = {}) {
         if (!structure || !(structure instanceof Structure)) {
             throw new Error('ExportBlueprintUseCase: a valid Structure is required');
         }
-        return buildBlueprintPackage(structure, { attributions, lineageClaims });
+        return buildBlueprintPackage(structure, { attributions, lineageClaims, anchors });
     }
 }

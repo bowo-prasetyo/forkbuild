@@ -1,6 +1,7 @@
 import { Structure } from '../core/Structure.js';
 import { BlueprintAttribution } from '../core/BlueprintAttribution.js';
 import { BlueprintLineageClaim } from '../core/BlueprintLineageClaim.js';
+import { PublicationAnchor } from '../core/PublicationAnchor.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -78,7 +79,26 @@ export const BLUEPRINT_KIND = 'forkbuild.blueprint';
 // independent portable things — see core/BlueprintLineageClaim.js's own
 // header — this field is only ever the convenience of moving all of
 // them in one file at once, never a merger into one domain concept.
-export function buildBlueprintPackage(structure, { attributions = [], lineageClaims = [] } = {}) {
+//
+// `anchors` (0.8.7): the identical additive, optional, omit-when-empty
+// shape once more, for signed core/PublicationAnchor.js instances. Named
+// "External Evidence Import & Publication Package Integration" — before
+// adding this field, this milestone's own design conversation inspected
+// whether a separate PublicationPackage container should exist instead
+// (see docs/Roadmap.md, 0.8.7). It doesn't: no such container exists
+// anywhere in this codebase, and `attributions`/`lineageClaims` already
+// establish that a Blueprint Package is a general-purpose TRANSPORT
+// convenience for bundling several independent signed envelope types
+// alongside a design, never a merger of them. `anchors` is a fourth
+// instance of that same convenience, nothing more — a PublicationAnchor
+// still describes evidence about a PUBLICATION, never about the Structure
+// itself, exactly as before this field existed; only how far it can ride
+// in one file changed. Each entry is exactly `anchor.toJSON()` — never a
+// verification outcome, a receivedAt, or any other locally-derived field
+// (see application/ExternalAnchorVerifier.js and application/
+// LocalPublicationAnchorCatalog.js for where those live instead, and stay
+// living).
+export function buildBlueprintPackage(structure, { attributions = [], lineageClaims = [], anchors = [] } = {}) {
     if (!structure || !(structure instanceof Structure)) {
         throw new Error('BlueprintPackage: a Structure instance is required');
     }
@@ -87,6 +107,9 @@ export function buildBlueprintPackage(structure, { attributions = [], lineageCla
     }
     if (!Array.isArray(lineageClaims) || lineageClaims.some((c) => !(c instanceof BlueprintLineageClaim))) {
         throw new Error('BlueprintPackage: lineageClaims must be an array of BlueprintLineageClaim instances');
+    }
+    if (!Array.isArray(anchors) || anchors.some((a) => !(a instanceof PublicationAnchor))) {
+        throw new Error('BlueprintPackage: anchors must be an array of PublicationAnchor instances');
     }
     const pkg = {
         kind: BLUEPRINT_KIND,
@@ -98,6 +121,9 @@ export function buildBlueprintPackage(structure, { attributions = [], lineageCla
     }
     if (lineageClaims.length > 0) {
         pkg.lineageClaims = lineageClaims.map((claim) => claim.toJSON());
+    }
+    if (anchors.length > 0) {
+        pkg.anchors = anchors.map((anchor) => anchor.toJSON());
     }
     return pkg;
 }
