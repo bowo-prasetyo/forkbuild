@@ -188,23 +188,23 @@ async function run() {
         });
         const anchorJson = anchor.toJSON();
 
-        const malformedResult = anchorVerifier.verify({ ...anchorJson, kind: 'something.else' });
+        const malformedResult = await anchorVerifier.verify({ ...anchorJson, kind: 'something.else' });
         assert(malformedResult.outcome === AnchorVerificationOutcome.INVALID_ENVELOPE, '3. reports INVALID_ENVELOPE for a malformed record');
 
-        const badSignatureResult = anchorVerifier.verify({ ...anchorJson, locator: 'local://ledger/tampered' });
+        const badSignatureResult = await anchorVerifier.verify({ ...anchorJson, locator: 'local://ledger/tampered' });
         assert(badSignatureResult.outcome === AnchorVerificationOutcome.INVALID_SIGNATURE, '4. reports INVALID_SIGNATURE for a record altered after signing');
 
-        const wrongHashResult = anchorVerifier.verify(anchorJson, { expectedContentHash: 'some-other-hash' });
+        const wrongHashResult = await anchorVerifier.verify(anchorJson, { expectedContentHash: 'some-other-hash' });
         assert(wrongHashResult.outcome === AnchorVerificationOutcome.CONTENT_MISMATCH, '5. reports CONTENT_MISMATCH when contentHash does not match what the caller expected');
 
-        const wrongPublicationResult = anchorVerifier.verify(anchorJson, { expectedPublicationId: 'some-other-publication' });
+        const wrongPublicationResult = await anchorVerifier.verify(anchorJson, { expectedPublicationId: 'some-other-publication' });
         assert(wrongPublicationResult.outcome === AnchorVerificationOutcome.CONTENT_MISMATCH, '6. reports CONTENT_MISMATCH when publicationId does not match what the caller expected');
 
-        const noPluginResult = anchorVerifier.verify(anchorJson, { expectedContentHash: 'hash-3', expectedPublicationId: 'pub-3' });
+        const noPluginResult = await anchorVerifier.verify(anchorJson, { expectedContentHash: 'hash-3', expectedPublicationId: 'pub-3' });
         assert(noPluginResult.outcome === AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED, '7. reports VALID_PROOF_UNVERIFIED when no proofVerifier is supplied — never a rejection');
 
         const mismatchedTypePlugin = { anchorType: 'some-other-chain', verify: () => ({ valid: true }) };
-        const mismatchedTypeResult = anchorVerifier.verify(anchorJson, { proofVerifier: mismatchedTypePlugin });
+        const mismatchedTypeResult = await anchorVerifier.verify(anchorJson, { proofVerifier: mismatchedTypePlugin });
         assert(mismatchedTypeResult.outcome === AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED, '8. a proofVerifier for a different anchorType is never consulted');
 
         const acceptingPlugin = {
@@ -215,11 +215,11 @@ async function run() {
                 return { valid: true };
             }
         };
-        const acceptedResult = anchorVerifier.verify(anchorJson, { proofVerifier: acceptingPlugin });
+        const acceptedResult = await anchorVerifier.verify(anchorJson, { proofVerifier: acceptingPlugin });
         assert(acceptedResult.outcome === AnchorVerificationOutcome.VALID, '11. a matching proofVerifier that accepts the proof reports VALID');
 
         const rejectingPlugin = { anchorType: 'local-test', verify: () => ({ valid: false, reason: 'ledger entry not found' }) };
-        const rejectedResult = anchorVerifier.verify(anchorJson, { proofVerifier: rejectingPlugin });
+        const rejectedResult = await anchorVerifier.verify(anchorJson, { proofVerifier: rejectingPlugin });
         assert(rejectedResult.outcome === AnchorVerificationOutcome.INVALID_PROOF, '12. a matching proofVerifier that rejects the proof reports INVALID_PROOF');
         assert(rejectedResult.reason === 'ledger entry not found', '13. carries the proofVerifier\'s own rejection reason');
 
@@ -231,12 +231,12 @@ async function run() {
         const secondAnchor = signAnchor(secondRegistry, {
             publicationId: 'pub-3', contentHash: 'hash-3', anchorType: 'other-ledger', locator: 'other://chain/99'
         });
-        const secondResult = anchorVerifier.verify(secondAnchor.toJSON(), { expectedContentHash: 'hash-3', expectedPublicationId: 'pub-3' });
+        const secondResult = await anchorVerifier.verify(secondAnchor.toJSON(), { expectedContentHash: 'hash-3', expectedPublicationId: 'pub-3' });
         assert(secondResult.outcome === AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED, '14. a second, independent anchor for the identical publication/content verifies on its own terms');
         assert(secondResult.anchor.anchorIdentity.id === secondRegistry.getSigningIdentity().id, '15. the second anchor carries its own, distinct anchoring identity');
         assert(secondResult.anchor.locator !== anchor.locator, '16. the two anchors name different locators');
 
-        const firstStillValid = anchorVerifier.verify(anchorJson, { expectedContentHash: 'hash-3', expectedPublicationId: 'pub-3' });
+        const firstStillValid = await anchorVerifier.verify(anchorJson, { expectedContentHash: 'hash-3', expectedPublicationId: 'pub-3' });
         assert(firstStillValid.outcome === AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED, '17. the first anchor is completely unaffected by the second anchor\'s existence');
     }
     console.log('✓ Section C: ExternalAnchorVerifier — envelope/signature/mismatch/proof outcomes, independent multi-anchor evidence');

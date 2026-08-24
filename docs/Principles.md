@@ -9565,3 +9565,91 @@ an ordinary publish action. A person (or a future UI) that wants
 external evidence asks for it explicitly, every time.
 
 See `docs/Roadmap.md`, 0.8.0, for the full milestone entry.
+
+### A Proof Verifier Reports "Cannot Presently Verify" Separately From "Proof Is Wrong" (0.8.1)
+
+0.8.0 already drew one line between confidence levels: a genuinely
+signed anchor with no `proofVerifier` plugged in
+(`AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED`) is never treated as
+a rejection just because nobody checked its proof. 0.8.1 draws a SECOND,
+narrower line inside the case where a `proofVerifier` for the anchor's
+own `anchorType` DOES exist and WAS consulted: even then, "I checked and
+it's wrong" and "I tried to check and couldn't get a definite answer"
+are never the same outcome.
+
+`anchoring/BitcoinOpReturnProofVerifier.js` is the first plugin in this
+codebase that can actually fail in the second way, because it is the
+first one that talks to a real, external, sometimes-unreachable system.
+A transaction that does not exist yet on the block explorer it queried
+might simply not have propagated there; one that exists but is not yet
+confirmed might be confirmed a block later; the explorer itself might be
+down. None of these says "this proof is fraudulent" — each one only says
+"this replica cannot presently tell." `application/
+AnchorVerificationOutcome.js`'s own `PROOF_UNAVAILABLE` names exactly
+that state, and `application/ExternalAnchorVerifier.js#verify()` reaches
+it two ways: a `proofVerifier` that returns
+`{ valid: false, unavailable: true, reason }` explicitly, or one that
+simply throws — treated identically, because a network error IS an
+"unavailable," never a signal to guess.
+
+Only a `proofVerifier` that was ABLE to reach the external system, got a
+real answer, and that answer does not back the claimed `contentHash`
+reports `INVALID_PROOF` — `anchoring/BitcoinOpReturnProofVerifier.js`'s
+own Section D (`tests/BitcoinOpReturnProofVerifier.test.js`) proves the
+distinction directly: a confirmed, reachable transaction whose OP_RETURN
+output carries the WRONG data is a definite rejection, while the
+identical transaction simply not found, or not yet confirmed, is
+`PROOF_UNAVAILABLE` — never collapsed into each other in either
+direction. A caller that conflated the two would either reject honest,
+temporarily-unreachable evidence as fraudulent, or accept "couldn't
+check" as "checked and fine" — both are worse than three separate,
+honestly-named outcomes.
+
+### External Evidence Adapters Never Change What PublicationAnchor Means (0.8.1)
+
+0.8.0 built `core/PublicationAnchor.js`, `application/
+ExternalAnchorVerifier.js`, and `application/
+AnchorVerificationOutcome.js` with an open `proofVerifier` seam and
+NOTHING plugged into it — deliberately, so that when a real backend
+eventually arrived, "plugging it in" would be the entire scope of the
+work, not an excuse to revisit what an anchor is or what verifying one
+means. `anchoring/BitcoinOpReturnProofVerifier.js` is that real backend,
+and it changes exactly what 0.8.0's own header promised it would: one
+new file implementing the existing `{ anchorType, verify(proof, context)
+}` contract, and nothing else.
+
+`core/PublicationAnchor.js` gained no Bitcoin-shaped field. `anchorType`
+is still an open string; `bitcoin-op-return` is one value among however
+many a caller ever chooses to use, never a privileged one baked into the
+class, the validator, or the signing descriptor. `application/
+ExternalAnchorVerifier.js`'s own five-step pipeline — validate, construct,
+verify signature, cross-check, optionally verify proof — is completely
+unchanged in shape; the only additions are that step 5 can now resolve
+its plugin from a registry instead of always requiring one supplied
+directly, and that its result can now be a THIRD honest outcome
+alongside the two 0.8.0 already had (see "A Proof Verifier Reports
+'Cannot Presently Verify' Separately From 'Proof Is Wrong' (0.8.1)"
+above). No `verified: true` field appears anywhere in `core/
+PublicationAnchor.js` — verification stays what 0.8.0 already made it:
+something computed fresh, every time, by calling `ExternalAnchorVerifier
+#verify()` again, never something stored and trusted stale.
+
+`application/ExternalProofVerifierRegistry.js` is the one piece of new
+composability 0.8.1 actually adds, and it is deliberately dumb: a
+`Map<anchorType, proofVerifier>` and nothing more. It never verifies
+anything itself, never imports `anchoring/
+BitcoinOpReturnProofVerifier.js` or any other concrete adapter, and
+`application/ExternalAnchorVerifier.js` never imports the registry
+either — both are wired together explicitly by a caller (see
+`application/CreateExternalAnchorVerifierUseCase.js`'s own
+`proofVerifiers` option), the identical "generic pipeline, concrete
+plugin wired at the composition root" split `application/
+PublicationResolver.js`'s own `kindPlugin` has held since 0.7.0. A
+second, third, or hundredth real anchorType — an Ethereum contract event,
+an OpenTimestamps calendar server, a notarization API — plugs in the
+same way: implement `anchoring/ProofVerifier.js`'s own tiny contract,
+register it, and change nothing about `core/PublicationAnchor.js`,
+`application/ExternalAnchorVerifier.js`, or any anchor already signed
+under a different `anchorType`.
+
+See `docs/Roadmap.md`, 0.8.1, for the full milestone entry.
