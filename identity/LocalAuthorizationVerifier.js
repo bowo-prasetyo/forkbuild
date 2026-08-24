@@ -19,6 +19,7 @@ import { getPlaceNamingClaimSigningDescriptor } from '../core/PlaceNamingClaim.j
 import { getBlueprintAttributionSigningDescriptor } from '../core/BlueprintAttribution.js';
 import { getBlueprintLineageClaimSigningDescriptor } from '../core/BlueprintLineageClaim.js';
 import { getDecentralizedPublicationSigningDescriptor } from '../core/DecentralizedPublication.js';
+import { getPublicationAnchorSigningDescriptor } from '../core/PublicationAnchor.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -585,6 +586,38 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
             getDecentralizedPublicationSigningDescriptor(record),
             record.signature,
             record.publisherIdentity
+        );
+    }
+
+    // 0.8.0 — a PublicationAnchor is NEVER tolerated unsigned, the same
+    // REQUIRED discipline as verifyDecentralizedPublication() above. The
+    // anchoring identity is carried inline on the record itself, the
+    // identical shape verifyDecentralizedPublication() already checks
+    // against for the identical reason: a PublicationAnchor has no
+    // separate "authorIdentityId" field to cross-check the signer
+    // against — attesting to an external recording is the one and only
+    // thing this record asserts, and the anchoring identity IS the
+    // signer. This is STRUCTURAL verification only: it proves the named
+    // identity really did sign exactly this publicationId/contentHash/
+    // anchorType/locator/proof tuple, and nothing about whether the
+    // external system it names actually recorded anything, nothing
+    // about whether the referenced content is authentic, and nothing
+    // about who authored it — see application/ExternalAnchorVerifier.js
+    // for the cross-checks that happen after this one succeeds.
+    verifyPublicationAnchor(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no publication anchor' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a publication anchor must be signed' };
+        }
+        if (!record.anchorIdentity) {
+            return { valid: false, signed: true, reason: 'signature without anchor identity' };
+        }
+        return this.verifyDescriptor(
+            getPublicationAnchorSigningDescriptor(record),
+            record.signature,
+            record.anchorIdentity
         );
     }
 
