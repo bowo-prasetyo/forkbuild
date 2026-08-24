@@ -1,4 +1,8 @@
 import { CURRENT_SCHEMA_VERSION, BLUEPRINT_KIND } from './BlueprintPackage.js';
+import {
+    validateBlueprintAttributionPublication,
+    BlueprintAttributionPublicationError
+} from './BlueprintAttributionPublicationValidator.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -118,4 +122,33 @@ export function validateBlueprintPackage(pkg, { registry = null } = {}) {
 
     const seenIds = new Set();
     structure.bricks.forEach((brick, index) => validateBrick(brick, index, seenIds, registry));
+
+    // 0.6.6 — Decentralized Blueprint Exchange. `attributions` is
+    // entirely OPTIONAL (see application/BlueprintPackage.js's own
+    // header) — a package built before this field existed, or one that
+    // simply never had any, has nothing to check here. When present,
+    // each entry only ever needs to be a well-formed attribution
+    // publication — the exact same STRUCTURAL-only scope this validator
+    // already holds for a brick or a structure field; whether an entry
+    // actually verifies cryptographically is application/
+    // BlueprintAttributionExchange.js#importAttribution()'s own job,
+    // never this function's. A malformed entry is re-thrown as a
+    // BlueprintPackageError, the ONE error type this validator ever
+    // surfaces, rather than leaking BlueprintAttributionPublicationError
+    // out of a module whose callers only ever expect the former.
+    if (pkg.attributions !== undefined) {
+        if (!Array.isArray(pkg.attributions)) {
+            throw new BlueprintPackageError('BlueprintImport: attributions must be an array');
+        }
+        pkg.attributions.forEach((attribution, index) => {
+            try {
+                validateBlueprintAttributionPublication(attribution);
+            } catch (e) {
+                if (e instanceof BlueprintAttributionPublicationError) {
+                    throw new BlueprintPackageError(`BlueprintImport: attributions[${index}] is malformed — ${e.message}`);
+                }
+                throw e;
+            }
+        });
+    }
 }

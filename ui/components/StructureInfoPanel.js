@@ -39,6 +39,20 @@ import { describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js
 // fingerprint or touches a store itself, the same "Inspect ≠ edit"
 // restraint this panel's own 0.6.3 header already established for
 // every other fact shown here.
+//
+// 0.6.6 — Decentralized Blueprint Exchange. Also emits
+// 'export-attribution' — a SEPARATE export from the existing
+// 'export' (Export Blueprint) button, reachable only once
+// `attribution.mine` exists: this identity has to have already claimed
+// authorship before there is an attribution OF THEIRS to export at all.
+// Deliberately its own small link rather than folded into "Export
+// Blueprint" — a Blueprint Package and a BlueprintAttributionPublication
+// stay two independent portable things all the way out to the UI (see
+// application/BlueprintPackage.js's own 0.6.6 header), even though
+// "Export Blueprint" ALSO bundles every known attribution alongside the
+// design by default (ui/views/EditorView.js#exportStructure()) — this
+// link exists for the narrower case of sharing just the one signed claim
+// on its own.
 export default {
     name: 'StructureInfoPanel',
     props: {
@@ -47,7 +61,7 @@ export default {
         source: { type: String, default: 'built-in' }, // 'built-in' | 'personal'
         attribution: { type: Object, default: null } // { fingerprint, attributions, mine } | null
     },
-    emits: ['place', 'export', 'close', 'claim-authorship'],
+    emits: ['place', 'export', 'close', 'claim-authorship', 'export-attribution'],
     computed: {
         bounds() {
             return SpatialBounds.fromBricks(this.structure.bricks, this.registry);
@@ -120,6 +134,7 @@ export default {
                     <dd v-if="attribution && attribution.fingerprint">
                         {{ authorLabel }}
                         <button v-if="canClaimAuthorship" class="inline-link-btn" @click="$emit('claim-authorship')">Claim authorship</button>
+                        <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('export-attribution')">Export Attribution</button>
                     </dd>
                 </dl>
 

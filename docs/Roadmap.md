@@ -12213,3 +12213,217 @@ tags/group participation in the fingerprint (both moot until their own
 authoring/data-model milestones), retraction or browse-everything UI,
 and any popularity signal — each sized on its own, exactly like every
 "Deliberately excluded" list in this document before it.
+
+## 0.6.6 — Decentralized Blueprint Exchange
+
+0.6.5 built the whole attribution MODEL — fingerprint, attribution, local
+store, `summarize()` — and drew its own boundary exactly where its own
+design conversation said to stop: "0.6.5 builds no exchange transport for
+an attribution at all... this is 0.6.6's own job." This milestone is that
+missing piece, and it is the natural counterpart to 0.5.3 one domain
+over:
+
+> Attribution exchange DISTRIBUTES assertions; it never ESTABLISHES who
+> actually made a design.
+
+Two independent portable things travel, never one merged domain object:
+
+```text
+Blueprint Package                    BlueprintAttribution publication
+    │                                     │
+    └── the actual reusable design        └── a signed assertion ABOUT
+                                               that design
+```
+
+### What shipped
+
+- **`application/BlueprintAttributionPublicationValidator.js`** (new) —
+  strict, side-effect-free STRUCTURAL validation of a portable
+  attribution, the exact split `application/
+  PlaceNamingClaimPublicationValidator.js` already drew one domain over.
+  Unlike that module, there is no separate envelope wrapper here at all:
+  `core/BlueprintAttribution.js#toJSON()` already carries its own
+  `kind`/`schemaVersion` (its own 0.6.5 header said as much — "exactly
+  what 0.6.6 will need"), so the publication IS `attribution.toJSON()`,
+  unwrapped, validated directly.
+- **`application/BlueprintAttributionExchange.js`** (new) — the star of
+  the milestone, mirroring `application/PlaceNamingClaimExchange.js`
+  exactly: `exportAttribution(attribution)` is a pure passthrough to
+  `toJSON()`; `importAttribution(pkg, { expectedFingerprint })` runs
+  validate → construct → verify → **cross-check** → dedupe-by-id → store,
+  always in that order. The one new step beyond 0.5.3's own shape: when a
+  caller supplies `expectedFingerprint` (typically derived, fresh, from a
+  Structure it just imported), an attribution whose own `fingerprint`
+  doesn't match is rejected — even with a cryptographically perfect
+  signature — because a valid signature only proves WHO signed a payload,
+  never that the payload's own claimed fingerprint describes the design
+  actually on file. `expectedFingerprint` is optional: a bare attribution
+  import with nothing local to compare against still succeeds, simply as
+  an unconfirmed assertion, exactly as informational as any other
+  fingerprint match 0.6.5 already treats "informational only."
+- **`application/LocalBlueprintAttributionPublicationLog.js`** (new) —
+  the `receivedAt` bookkeeping `application/
+  LocalPlaceNamingPublicationLog.js` already established, one domain
+  over: first-seen-wins, per fingerprint, never read back into
+  `summarize()`'s own list, preserved for a future freshness policy this
+  milestone does not build.
+- **`application/BlueprintPackage.js`**, **`application/
+  BlueprintImportValidator.js`**, **`application/ExportBlueprintUseCase.js`** —
+  each gains one small, OPTIONAL, additive surface for the same new
+  field: `buildBlueprintPackage(structure, { attributions = [] })` bundles
+  zero or more signed `BlueprintAttribution` instances alongside a
+  Structure's own geometry, omitting the `attributions` key entirely
+  (never `attributions: []`) when there are none, so a plain export stays
+  byte-for-byte what it always was. `validateBlueprintPackage()`
+  structurally validates every bundled entry, when present, re-throwing
+  as its own `BlueprintPackageError` rather than leaking
+  `BlueprintAttributionPublicationError` out of a module whose callers
+  only ever expect one error type. `application/ImportBlueprintUseCase.js`
+  is completely UNCHANGED — it still only ever returns a Structure;
+  reading `pkg.attributions` back out and importing each one is left to
+  the caller, via `BlueprintAttributionExchange`, exactly the
+  "construction and persistence stay separate steps" restraint this
+  codebase has kept since 0.4.2/0.4.3.
+- **`application/CreateBlueprintAttributionUseCase.js`** — updated to
+  also wire `LocalBlueprintAttributionPublicationLog` and
+  `BlueprintAttributionExchange`, exactly the "one file" its own 0.6.5
+  header predicted would need to change. `blueprintAttributionUseCase` is
+  completely unmodified.
+- **`application/EditorSession.js`** — a new optional
+  `blueprintAttributionExchange` collaborator behind two new methods,
+  `exportBlueprintAttribution(attribution)`/
+  `importBlueprintAttribution(pkg, structure)`, following the exact
+  "enforce/offer only when wired" posture every other optional
+  collaborator here already follows. `importBlueprintAttribution()` is
+  the one place this milestone's fingerprint-cross-check rule actually
+  gets enforced from the UI side: when a caller passes the Structure it
+  just imported, this method derives that Structure's fingerprint FRESH,
+  right here, and hands it to the exchange as `expectedFingerprint` —
+  never trusting a fingerprint the package itself merely claims.
+  `exportBlueprint()` also gains a second, optional `attributions`
+  parameter, passed straight through to `ExportBlueprintUseCase`.
+- **`ui/views/EditorView.js`** — `exportStructure()` now bundles every
+  attribution this replica currently has on file for a structure
+  (`blueprintAttributionUseCase.summarize()`) into the same exported
+  package by default; `importBlueprint()` now branches on `pkg.kind` —
+  an ordinary Blueprint Package imports exactly as it always has, then
+  separately imports any bundled attributions (each cross-checked against
+  the freshly-imported Structure's own fingerprint, one bad entry never
+  undoing the successful blueprint import beneath it), while a BARE
+  attribution publication (`BLUEPRINT_ATTRIBUTION_KIND`) received on its
+  own runs a completely separate path that touches no library at all.
+- **`ui/components/StructureInfoPanel.js`** — a new "Export Attribution"
+  inline link, shown only once `attribution.mine` exists (this identity
+  has already claimed authorship), exporting just that ONE signed
+  attribution independently of the blueprint — the narrower case the
+  bundled-by-default "Export Blueprint" button doesn't cover on its own.
+- **`tests/BlueprintAttributionExchange.test.js`** (new) — Section A:
+  every malformed-publication rejection. Section B: export/import/
+  dedup/tamper/impersonation rejection, PLUS the new fingerprint
+  cross-check — a cryptographically valid attribution rejected for not
+  matching a caller-supplied `expectedFingerprint`, and the same import
+  succeeding when no `expectedFingerprint` is supplied at all. Section C:
+  `LocalBlueprintAttributionPublicationLog` — receivedAt, first-seen-
+  wins, per-fingerprint scoping. Section D: `BlueprintPackage`'s new
+  `attributions` field — build/validate round trip, byte-identical when
+  omitted, `ExportBlueprintUseCase`/`ImportBlueprintUseCase` parity.
+  Section E — FLAGSHIP: Alice creates "Farmstead," fingerprints it,
+  claims authorship, and exports blueprint + attribution together; Bob
+  imports both under a fresh Structure id, verifies the bundled
+  attribution against his OWN locally-derived fingerprint (never the
+  package's own claim), and sees Alice as an attributed author; a
+  hand-tampered claimed fingerprint is rejected (the signature no longer
+  verifies once the signed payload is altered); Bob then modifies his own
+  copy and publishes his own attribution for the resulting, genuinely
+  different design; Alice's original blueprint and attribution remain
+  completely untouched throughout.
+
+### Attribution exchange distributes assertions; it never establishes who actually made a design
+
+Every method `BlueprintAttributionExchange` exposes answers "can this
+attribution move from one replica to another," never "who really made
+this." `exportAttribution()` is a pure passthrough; `importAttribution()`'s
+only questions are "is this well-formed," "does it verify," "does its
+fingerprint match what I can derive locally (when I have something to
+check it against)," and "have I already got it" — deciding what N known
+authors for one fingerprint MEANS stays entirely
+`application/BlueprintAttributionUseCase.js#summarize()`'s job, completely
+untouched by this milestone.
+
+### Deliberately excluded
+
+- **Any transport beyond a hand-moved file.** `BlueprintAttributionExchange`
+  is protocol-independent by design, the identical restraint
+  `application/PlaceNamingClaimExchange.js` already committed to.
+- **A "BlueprintSharePackage" or any new merged domain object.** A
+  Blueprint Package and a BlueprintAttributionPublication stay two
+  independent, independently-verifiable portable things. `attributions`
+  on `application/BlueprintPackage.js` is a bundling CONVENIENCE, never a
+  third domain concept — see docs/Principles.md, "Attribution Exchange
+  Distributes Assertions; It Never Establishes Who Actually Made A Design
+  (0.6.6)."
+- **A central `BlueprintRegistry` or any global blueprint database.**
+  Exactly as out of scope as every prior milestone in this progression
+  has kept a central authority: `World` stays local shared state,
+  `PlaceNamingClaim`/`BlueprintAttribution` stay decentralized assertions,
+  and exchange stays transport — never a server that decides which
+  blueprint or which attribution is canonical.
+- **Attribution relationship semantics** (`AUTHOR`/`DERIVED_FROM`/
+  `ADAPTED_FROM`/`CONTRIBUTOR`). This milestone's own design conversation
+  named these explicitly and declined to build any of them now — a
+  `BlueprintAttribution` still says exactly one thing, "I authored this
+  design," and turning that into a small social graph is real, future,
+  separately-sized work, not a speculative extension bolted on here.
+- **Automatic import deduplication, or "you already have this
+  blueprint."** Still exactly as out of scope as 0.6.5 left it — a
+  fingerprint match remains informational only.
+- **Ranking, trust scores, or "most trusted author."** A blueprint can
+  legitimately have an original author, a derivative author, a
+  collaborator, and an adapter, all attributing the same or related
+  designs — nothing here decides which one a viewer should believe more
+  than another, the identical "confidence, never authority" restraint
+  `core/PlaceNamingView.js` already keeps for a naming claim.
+- **A signed retraction/withdrawal protocol for attribution exchange.**
+  `application/LocalBlueprintAttributionStore.js#retract()` remains LOCAL
+  ONLY, the same restraint 0.5.3 left in place for a naming claim's own
+  retraction.
+- **Any UI for browsing every attribution ever received, independent of a
+  specific inspected Structure.** "Export Attribution" and bundled
+  import/export were the workflows this milestone's design conversation
+  actually asked for; a full attribution inbox is a separate surface,
+  sized on its own.
+
+```text
+0.6.5   Blueprint Identity & Attribution                          ✓
+             │
+             ▼
+0.6.6   Decentralized Blueprint Exchange                          ✓
+             ├── BlueprintAttributionPublicationValidator —
+             │   structural-only, no separate envelope needed
+             │   (attribution.toJSON() already self-describes)
+             ├── BlueprintAttributionExchange — validate → construct
+             │   → verify → cross-check-fingerprint → dedup-by-id →
+             │   store; never ranks or decides who is telling the truth
+             ├── LocalBlueprintAttributionPublicationLog — receivedAt,
+             │   first-seen-wins, preserved for future policy only
+             ├── BlueprintPackage.attributions — optional, additive,
+             │   bundles two still-independent portable things
+             └── BlueprintAttributionExchange.test.js — 5 sections,
+                 including a bundled-export/verified-import capstone
+                 that rejects a hand-tampered fingerprint even with an
+                 otherwise-valid signature
+```
+
+> **0.6.5 gave a blueprint's design a stable identity independent of any
+> one Structure instance, and gave "who made it?" somewhere to attach an
+> answer. 0.6.6 is the milestone that answers the question leaving one
+> device immediately raises: once Alice's attribution has left her
+> device, how does Bob ever receive it — and how does he make sure it's
+> still about the design actually sitting in front of him?**
+
+What's left, and deliberately unbuilt: any transport beyond a hand-moved
+file, a merged "shared blueprint" object, a central blueprint registry,
+attribution relationship semantics beyond plain authorship, automatic
+import deduplication, ranking/trust scores, a signed retraction protocol,
+and a full attribution-browsing UI — each sized on its own, exactly like
+every "Deliberately excluded" list in this document before it.

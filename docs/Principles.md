@@ -8695,3 +8695,99 @@ fingerprints and attributions have had a chance to prove themselves
 this way first — not something to build speculatively ahead of that,
 the same restraint that keeps 0.4.6's own "every id crossing a boundary
 regenerates" rule completely unchanged by this milestone.
+
+### Attribution Exchange Distributes Assertions; It Never Establishes Who Actually Made A Design (0.6.6)
+
+0.6.5 built the whole attribution MODEL and stopped exactly where its own
+design conversation said to: "0.6.5 builds no exchange transport for an
+attribution at all... this is 0.6.6's own job." 0.6.6 (Decentralized
+Blueprint Exchange) is that transport, and its entire design rests on the
+identical sentence 0.5.3 already proved out for a naming claim, one
+domain over:
+
+> Attribution exchange DISTRIBUTES assertions; it never ESTABLISHES who
+> actually made a design.
+
+`application/BlueprintAttributionExchange.js` proves this the same way
+`application/PlaceNamingClaimExchange.js` already proved its own
+restraint: by what it deliberately never does. It never calls
+`application/BlueprintAttributionUseCase.js#summarize()`, never compares
+one attribution's plausibility against another's, and never decides
+which of two identities attributing the same fingerprint is telling the
+truth. Every one of those questions was already, correctly, answered by
+0.6.5, and answering it twice — once in the attribution model, once in
+the exchange layer — is exactly the kind of duplicated authority this
+architecture has refused since 0.5.0. Exchange only ever moves an
+attribution, unchanged, still carrying its own signature, from one
+replica's store to another's.
+
+**Two independent portable things, never one merged domain object.** The
+design conversation that proposed this milestone considered a
+"SharedBlueprint" or "BlueprintSharePackage" as a new domain concept and
+explicitly declined to build one. A design's geometry
+(`application/BlueprintPackage.js`, unchanged since 0.4.6) and a signed
+assertion about who made it (`core/BlueprintAttribution.js#toJSON()`,
+unchanged since 0.6.5) stay two separate, independently-portable,
+independently-verifiable artifacts. `BlueprintPackage.js` only ever grows
+one small, OPTIONAL, additive field — `attributions` — that BUNDLES the
+two for the convenience of moving them in one file at once; it does not
+merge them into a third thing. A Structure imported from a package with
+no `attributions` at all is exactly as usable as one that arrived with
+several, and an attribution can just as validly arrive completely on its
+own, unconnected to any blueprint import happening at the same time — see
+`ui/views/EditorView.js#importBareBlueprintAttribution()`.
+
+**Never trust a package's claimed fingerprint when the actual design can
+be fingerprinted locally.** This is the one genuinely new rule this
+milestone adds beyond what 0.5.3 already established for a naming claim,
+because unlike a `PlaceNamingClaim`'s `regionId` (which an importing
+replica may not know anything about yet), a `BlueprintAttribution`'s
+`fingerprint` can often be checked directly: the moment a receiver
+actually has the Structure an attribution is about — typically because it
+just imported the very Blueprint Package the attribution traveled
+alongside — `deriveBlueprintFingerprint()` on that LOCAL Structure is
+strictly more trustworthy than any string a portable package merely
+claims. `application/BlueprintAttributionExchange.js#importAttribution()`'s
+own `expectedFingerprint` parameter enforces exactly this: a
+cryptographically PERFECT signature only proves the named identity signed
+THIS payload — it proves nothing about whether that payload's
+`fingerprint` field describes the design actually sitting in front of the
+receiver. An attacker who genuinely controls a signing key can still sign
+a syntactically valid attribution claiming an arbitrary fingerprint; the
+cross-check is what catches "authentic signature, wrong subject" the
+signature check alone never could. The check runs AFTER verification,
+deliberately — the fingerprint field is only trustworthy once the
+signature protecting it has already been confirmed, so checking it first
+would compare a locally-derived fact against a number that, at that
+point, nothing yet guarantees the attribution actually said.
+
+**The fingerprint cross-check is opt-in, not mandatory — because a bare
+attribution is still a legitimate, useful thing to hold.** An attribution
+received with no accompanying Structure to compare against (the design
+conversation's own "attribution should be able to travel independently of
+the blueprint it's about") is neither rejected nor held back — it is
+simply stored as an unconfirmed assertion about SOME design with that
+fingerprint, exactly as informational as 0.6.5 already treats any
+fingerprint match as being. `expectedFingerprint` is how a caller who
+genuinely has something local to check supplies it; omitting it is not a
+weaker import, only a different, equally valid one.
+
+**`receivedAt` gets the same treatment a second time.**
+`application/LocalBlueprintAttributionPublicationLog.js` is the exact
+`application/LocalPlaceNamingPublicationLog.js` shape one domain over —
+first-seen-wins, never read back into `summarize()`'s own attribution
+list, preserved for a future freshness policy that this milestone
+deliberately does not build. The reasoning is unchanged from 0.5.3: a
+second, unsigned "publishedAt" would just be a spoofable shadow of
+`attribution.createdAt` (already the real, signed timestamp); only "when
+did THIS replica first learn about this" is genuinely new information no
+signature could ever have covered in advance.
+
+**The transport stays exactly as boring as 0.5.3's and 0.4.6's own.**
+Every publication `BlueprintAttributionExchange` produces or consumes is
+plain, portable JSON, moved by hand today — the identical restraint both
+of this milestone's own ancestors already committed to, for the identical
+reason: prove the exchange boundary works, in isolation, before building
+any real transport on top of it. A future WebRTC peer exchange,
+rendezvous relay, or DHT plugs into `exportAttribution()`/
+`importAttribution()` exactly as they stand today.
