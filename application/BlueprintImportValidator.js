@@ -7,6 +7,7 @@ import {
     validateBlueprintLineageClaimPublication,
     BlueprintLineageClaimPublicationError
 } from './BlueprintLineageClaimPublicationValidator.js';
+import { validatePublicationAnchor, PublicationAnchorError } from './PublicationAnchorValidator.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -171,6 +172,32 @@ export function validateBlueprintPackage(pkg, { registry = null } = {}) {
             } catch (e) {
                 if (e instanceof BlueprintLineageClaimPublicationError) {
                     throw new BlueprintPackageError(`BlueprintImport: lineageClaims[${index}] is malformed — ${e.message}`);
+                }
+                throw e;
+            }
+        });
+    }
+
+    // 0.8.7 — External Evidence Import & Publication Package Integration.
+    // `anchors` is the identical OPTIONAL, structural-only bundle as
+    // `attributions`/`lineageClaims` above, one evidence layer over — see
+    // application/BlueprintPackage.js's own header. Each entry only ever
+    // needs to be a well-formed application/PublicationAnchorValidator.js
+    // envelope here; whether it is genuinely SIGNED is application/
+    // PublicationAnchorExchange.js's own job, one step later, exactly the
+    // same split this validator already holds for every other bundled
+    // field. A malformed entry is re-thrown as this module's own
+    // BlueprintPackageError, never a leaked PublicationAnchorError.
+    if (pkg.anchors !== undefined) {
+        if (!Array.isArray(pkg.anchors)) {
+            throw new BlueprintPackageError('BlueprintImport: anchors must be an array');
+        }
+        pkg.anchors.forEach((anchor, index) => {
+            try {
+                validatePublicationAnchor(anchor);
+            } catch (e) {
+                if (e instanceof PublicationAnchorError) {
+                    throw new BlueprintPackageError(`BlueprintImport: anchors[${index}] is malformed — ${e.message}`);
                 }
                 throw e;
             }

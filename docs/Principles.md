@@ -10125,3 +10125,97 @@ Verification (0.8.4)," already drew one layer down, extended here to a
 third, independent axis.
 
 See `docs/Roadmap.md`, 0.8.6, for the full milestone entry.
+
+### Package Import Is Evidence Ingestion, Not Evidence Verification (0.8.7)
+
+0.8.4 drew this line for a peer connection: `application/
+PublicationAnchorExchange.js#importAnchor()` validates an envelope,
+constructs it, and verifies its SIGNATURE — and stops there, never once
+calling `application/ExternalAnchorVerifier.js`. 0.8.7 draws the
+identical line for the other way an anchor can now arrive: bundled
+inside an `application/BlueprintPackage.js`. Importing a package that
+carries three anchors catalogs three CLAIMS. It proves nothing about any
+of them.
+
+**`application/ImportPackageAnchorsUseCase.js` calls
+`PublicationAnchorExchange#importAnchor()` and nothing else.** No new
+call to `application/ExternalAnchorVerifier.js` exists anywhere in this
+class, or anywhere else this milestone touches — `tests/
+PublicationAnchorPackageImport.test.js`'s own Section C proves this with
+a spy `ExternalAnchorVerifier` that increments a counter every time it is
+consulted: importing a package bundling a genuine anchor, a forged one,
+and a structurally malformed one leaves that counter at zero throughout.
+An explicit `verify()` call afterward — a deliberate, separate action —
+is what moves the counter to one, exactly mirroring the identical
+spy-verifier proof `tests/PublicationAnchorPeerExchange.test.js` already
+ran for peer-delivered anchors in 0.8.4.
+
+**A package is untrusted, portable data — exactly like a peer message —
+so its anchors get exactly the same gate, never a looser one.** A
+forged or tampered anchor bundled in a package is rejected at the
+identical `identity/LocalAuthorizationVerifier.js#
+verifyPublicationAnchor()` boundary a forged anchor arriving over
+`application/PublicationAnchorPeerExchange.js` already is — see `docs/
+Principles.md`, "Signature Verification Is Not Proof Verification
+(0.8.4)." Nothing about arriving inside a `.json` file someone emailed,
+rather than over a live authenticated connection, earns an anchor any
+more standing trust.
+
+**The Section D flagship makes the positive case.** Bob imports a
+package bundling a Blueprint, an attribution, a lineage claim, and a
+Bitcoin anchor from Alice, catalogs the anchor, and derives a full
+`application/PublicationEvidenceConvergence.js` view over it — correctly
+reporting one known anchor, one anchorType, no content-binding conflict
+— entirely BEFORE he ever calls `ExternalAnchorVerifier.verify()` on it.
+Evidence discovery, evidence comparison, and evidence verification stay
+three separate steps, in that order, exactly as every milestone since
+0.8.0 has insisted — package transport is simply a fourth way to reach
+the first step, never a shortcut past the third.
+
+See `docs/Roadmap.md`, 0.8.7, for the full milestone entry.
+
+### Importing Evidence Preserves The Claim; It Does Not Repair The Claim (0.8.7)
+
+A `BlueprintPackage` bundles a `Structure`; a `PublicationAnchor`
+describes evidence about a `DecentralizedPublication`. This codebase has
+never had a concept of "the publication a given Blueprint Package is
+about" — no field on `application/BlueprintPackage.js` names one, and
+0.8.7 does not invent one merely because a package can now also carry
+anchors. That absence is deliberate, not an oversight this milestone
+should have fixed.
+
+**`application/ImportPackageAnchorsUseCase.js` never cross-checks a
+bundled anchor's `publicationId`/`contentHash` against anything about the
+package it arrived in, because there is nothing structurally binding the
+two.** An anchor naming `publicationId: "pub-x"` bundled inside a package
+whose `structure` has nothing at all to do with `pub-x` is exactly as
+importable as one that agrees — this class has no basis to judge
+"agreement" in the first place, and does not pretend to. The anchor's own
+`publicationId`/`contentHash` fields are preserved byte-for-byte, exactly
+as `application/PublicationAnchorExchange.js` already preserves them for
+a peer-delivered anchor.
+
+**Whether a bundled anchor's claims agree with what a caller separately
+knows is `application/PublicationEvidenceConvergence.js`'s own question,
+asked afterward, never this milestone's to pre-empt.** A caller that
+wants to know whether an imported anchor's `contentHash` matches a
+publication it has separately resolved passes `expectedContentHash` to
+`ExternalAnchorVerifier.verify()`, or supplies the anchor to
+`derivePublicationEvidenceConvergence()` alongside others — both existing
+mechanisms, both unchanged by this milestone, both already built to
+detect and report a mismatch without ever silently rewriting one side of
+it. See `docs/Principles.md`, "Evidence Relationships Are Derived, Never
+Adjudicated (0.8.6)" — a package importer that "fixed" a bundled anchor's
+`publicationId` to match its own package would be adjudicating a claim
+under a different name, the exact outcome that principle already forbids.
+
+**No provenance of the package itself is ever written into the anchor.**
+No `importedFromPackage`, `packageId`, or similar field was added to
+`core/PublicationAnchor.js` — the signed envelope a package carries is
+identical to the one a peer connection would have carried for the same
+claim, and stays exactly as portable leaving this milestone's own import
+path as it was arriving. `application/LocalPublicationAnchorCatalog.js#
+receivedAt` remains this codebase's one place for local arrival
+metadata, unchanged.
+
+See `docs/Roadmap.md`, 0.8.7, for the full milestone entry.

@@ -15476,3 +15476,224 @@ What's left, and deliberately unbuilt: any trust, governance, or
 authority model over converged evidence — sized on its own, if ForkBuild
 ever actually needs one, exactly like every "Deliberately excluded" list
 in this document before it.
+
+## 0.8.7 — External Evidence Import & Publication Package Integration
+
+0.8.6 completed the evidence layer itself, cleanly: a replica can now
+discover, verify, exchange, synchronize, compare, and derive relationships
+among independent external evidence claims, all without ever adjudicating
+one. But the evidence layer and this codebase's OTHER portable container —
+`application/BlueprintPackage.js` (0.4.6, already extended twice: 0.6.6's
+`attributions`, 0.6.8's `lineageClaims`) — were never connected. A
+Blueprint Package could carry a design and every signed claim ABOUT that
+design's authorship and ancestry, but not a single piece of the external
+evidence 0.8.0-0.8.6 built. 0.8.7 closes that gap, at exactly the
+package/import BOUNDARY, without merging what a package IS with what an
+anchor IS:
+
+```text
+BlueprintPackage                          PublicationAnchor
+    structure                                 "which identity attests
+    attributions   (0.6.6)                      this publicationId/
+    lineageClaims  (0.6.8)                       contentHash pair was
+    anchors        (0.8.7, new)  ◄────────────── recorded, where, with
+                                                  what proof?"
+```
+
+**The architectural question this milestone's own design conversation
+raised before writing a single field: does a `PublicationAnchor` belong on
+`BlueprintPackage`, or does it need its own `PublicationPackage`
+container?** Inspecting the existing package boundary first (rather than
+forcing the concept in) settled it quickly: no `PublicationPackage`
+container exists anywhere in this codebase, and `attributions`/
+`lineageClaims` already establish exactly what a Blueprint Package IS — a
+general-purpose, additive, omit-when-empty TRANSPORT convenience for
+moving several independent signed envelope types alongside a design in one
+file, never a merger of them into one domain concept. `anchors` is a
+fourth instance of that same convenience. A `PublicationAnchor` still
+describes evidence about a PUBLICATION, never about the Structure — that
+never changes; only how far it can ride in one file does.
+
+- `application/BlueprintPackage.js` — `buildBlueprintPackage(structure,
+  { attributions, lineageClaims, anchors })` gains the third additive,
+  optional array, following `attributions`'/`lineageClaims`' own exact
+  shape: each entry must be a real `core/PublicationAnchor.js` instance
+  (never a plain object), the built package carries exactly
+  `anchor.toJSON()` for each — never a `verified`, `verificationOutcome`,
+  `evidenceScore`, or `evidenceRank` field, none of which this codebase
+  has ever attached to an anchor's own signed envelope — and the `anchors`
+  key is omitted ENTIRELY when the array is empty, so a package built with
+  no anchors is byte-identical to one built before this milestone existed.
+  `application/ExportBlueprintUseCase.js` passes the new parameter
+  straight through, unchanged in every other respect.
+- `application/BlueprintImportValidator.js` — `validateBlueprintPackage()`
+  gains the identical OPTIONAL, structural-only check
+  `attributions`/`lineageClaims` already established: each bundled anchor
+  is run through `application/PublicationAnchorValidator.js#
+  validatePublicationAnchor()` — is this even a well-formed anchor
+  envelope? — with a malformed entry re-thrown as this module's own
+  `BlueprintPackageError`, never a leaked `PublicationAnchorError`.
+  Signature verification is deliberately OUT of scope here, exactly as it
+  already is for every other field this validator checks.
+- `application/ImportPackageAnchorsUseCase.js` — the one new use case,
+  and the one place this milestone actually connects package import to
+  the evidence layer. `application/ImportBlueprintUseCase.js` itself is
+  UNCHANGED — it still only ever returns a `Structure`; reading
+  `pkg.anchors` back out and importing them is this class's own job,
+  mirroring the exact "caller's own job" split 0.6.6 already established
+  for `pkg.attributions` (see `tests/BlueprintAttributionExchange.test.js`'s
+  own Section D comment on that split). Every bundled anchor is handed,
+  completely unchanged, to `application/PublicationAnchorExchange.js#
+  importAnchor()` — the SAME validate → construct → verify SIGNATURE →
+  catalog boundary 0.8.4 already built for an anchor arriving from a
+  stranger over a peer connection. **No second anchor-validation
+  implementation was written.** A package is untrusted, portable data,
+  exactly like a peer message; there is no reason its anchors deserve a
+  looser gate. Returns
+  `{ importedAnchors, skippedAnchors, rejectedAnchors }`:
+  `importedAnchors` are real, newly-cataloged `PublicationAnchor`
+  instances; `skippedAnchors` are `{ anchor, reason: 'duplicate' }` — an
+  anchor this replica's catalog already knew, never an error;
+  `rejectedAnchors` are `{ anchor, reason, message }`, with `reason` one
+  of `'invalid-structure'` (failed `PublicationAnchorValidator`) or
+  `'invalid-signature'` (parsed, but did not verify) — never collapsed
+  into a bare `success: false`. One malformed or forged anchor in a bundle
+  of several never blocks an otherwise-valid sibling from importing,
+  mirroring `application/PublicationAnchorPeerExchange.js`'s own
+  per-envelope tolerance for a RESPONSE batch (0.8.5).
+- **No cross-check between a bundled anchor's `publicationId`/
+  `contentHash` and "the package's own publication."** This codebase has
+  no notion of "the publication a Blueprint Package is about" — a
+  `BlueprintPackage` bundles a `Structure`, never a
+  `DecentralizedPublication` — so there is nothing for
+  `ImportPackageAnchorsUseCase` to compare a bundled anchor against, and
+  it does not invent one. An anchor's claims are preserved exactly as
+  received; whether they agree with what a caller separately knows about
+  a publication is `application/PublicationEvidenceConvergence.js`'s own
+  question (0.8.6), asked afterward, over the catalog — never this
+  milestone's.
+- `tests/PublicationAnchorPackageImport.test.js` — Section A:
+  `BlueprintPackage`'s new `anchors` field, byte-identical when omitted,
+  unmutated `anchor.toJSON()` when present, rejects a non-instance entry,
+  multiple independent and differently-`anchorType`d anchors all
+  preserved with no dedup or ranking; Section B:
+  `BlueprintImportValidator`'s structural rejection of a malformed
+  bundled anchor, surfaced as `BlueprintPackageError`; Section C:
+  `ImportPackageAnchorsUseCase`'s imported/skipped/rejected
+  categorization, one bad anchor never blocking a good sibling in the
+  same bundle, re-import converging harmlessly, and a VERIFICATION
+  ISOLATION proof with a spy `ExternalAnchorVerifier` — package import
+  results in zero calls to it, an explicit `verify()` afterward results in
+  exactly one; Section D — FLAGSHIP: Alice bundles a Blueprint, an
+  attribution, a lineage claim, and a Bitcoin anchor into ONE package;
+  Bob imports it on a completely independent replica (`Structure` via the
+  unmodified `ImportBlueprintUseCase`, the anchor via
+  `ImportPackageAnchorsUseCase`), catalogs the anchor, derives an evidence
+  convergence view over it with `application/
+  PublicationEvidenceConvergence.js` (0.8.6, untouched) BEFORE verifying
+  anything, and only then explicitly verifies it — `VALID`. A second,
+  differently-typed anchor (a transparency log) arrives via a second
+  package and is shown to coexist, unranked, independently un/verified
+  against the first — proving package transport, proof verification, and
+  evidence authority stay three separate questions, exactly as every
+  milestone since 0.8.0 already insisted.
+
+```text
+0.8.6   Multi-Evidence Convergence & Evidence Relationship Derivation ✓
+             │
+             ▼
+0.8.7   External Evidence Import & Publication Package Integration   ✓
+             ├── application/BlueprintPackage.js — third additive,
+             │   optional field: `anchors`, omitted entirely when empty,
+             │   exactly `anchor.toJSON()` per entry, no verification or
+             │   ranking field ever attached
+             ├── application/BlueprintImportValidator.js — the identical
+             │   structural-only bundled-field check as attributions/
+             │   lineageClaims, one evidence layer over
+             ├── application/ImportPackageAnchorsUseCase.js — the one new
+             │   use case; reuses PublicationAnchorExchange's existing
+             │   validate/construct/verify-signature/catalog boundary
+             │   entirely, introduces no second one; categorized
+             │   imported/skipped/rejected result; never calls
+             │   ExternalAnchorVerifier
+             └── PublicationAnchorPackageImport.test.js (new) — package
+                 round trip, validator rejection, categorized import
+                 results, verification isolation; flagship: Blueprint +
+                 attribution + lineage + anchor in one package, imported
+                 and cataloged on an independent replica, evidence
+                 convergence derived before any verification runs, then
+                 verified explicitly — VALID
+```
+
+> **Importing a package that bundles external evidence catalogs a CLAIM;
+> it never performs, implies, or shortcuts VERIFICATION of that claim.**
+> `tests/PublicationAnchorPackageImport.test.js`'s own Section C proves
+> this with the same spy-verifier discipline `docs/Principles.md` already
+> established for peer transport (0.8.4): `ImportPackageAnchorsUseCase`
+> import a package's three anchors — genuine, forged, and malformed alike
+> — and a spy `ExternalAnchorVerifier` records zero calls throughout. The
+> Section D flagship makes the same point positively: Bob derives a full
+> evidence convergence view over a freshly-imported anchor, correctly
+> reporting one anchor of one anchorType with no content-binding conflict,
+> entirely BEFORE he ever calls `verify()` on it. See `docs/
+> Principles.md`, "Package Import Is Evidence Ingestion, Not Evidence
+> Verification (0.8.7)," and "Importing Evidence Preserves The Claim; It
+> Does Not Repair The Claim (0.8.7)."
+
+### Deliberately excluded
+
+- **A separate `PublicationPackage` container.** Settled by inspection,
+  not by default — see this milestone's own opening architectural
+  question above. No such container exists in this codebase, and
+  `attributions`/`lineageClaims` already prove `BlueprintPackage` is a
+  general-purpose transport convenience, not a design-only container.
+- **A second anchor-validation or signature-verification
+  implementation.** `application/ImportPackageAnchorsUseCase.js` imports
+  through `application/PublicationAnchorExchange.js` unchanged — it adds
+  no new call to `identity/LocalAuthorizationVerifier.js`, and no new
+  structural check beyond what `application/
+  PublicationAnchorValidator.js` already performs.
+- **Provenance fields on `core/PublicationAnchor.js`.** No
+  `importedFromPackage`, `packageId`, `receivedFromPeer`, or `importedAt`
+  was added to the anchor's own signed envelope. `application/
+  LocalPublicationAnchorCatalog.js#receivedAt` already is this
+  codebase's one place for LOCAL provenance about when a replica first
+  saw an anchor, regardless of how; a package-specific variant of that,
+  if ever needed, is separate local metadata for a future milestone to
+  size, never a change to the portable, signed anchor itself.
+- **Rewriting or rejecting an anchor for disagreeing with "the package's
+  own publication."** As this milestone's own entry above explains, no
+  such relationship exists to disagree with in the first place — a
+  Blueprint Package bundles a Structure, never a DecentralizedPublication.
+  An imported anchor's `publicationId`/`contentHash` are preserved
+  exactly as signed; any mismatch with what a caller separately knows is
+  `application/PublicationEvidenceConvergence.js`'s own question, asked
+  later, never this milestone's to pre-empt.
+- **Automatic anchoring during export, Bitcoin transactions, wallet
+  integration, or automatic proof verification during import.** Exporting
+  a package still only ever bundles anchors the CALLER already has and
+  already signed; nothing in this milestone creates one, submits one to
+  an external system, or verifies one's proof without an explicit,
+  separate `ExternalAnchorVerifier.verify()` call.
+- **Evidence ranking, scoring, trust models, or a "verified package"
+  status.** No field anywhere in a `BlueprintPackage`, an imported result,
+  or the catalog ever sums, sorts, or thresholds evidence into one
+  verdict — the identical restraint 0.8.6's own "Deliberately excluded"
+  list already holds, extended here across the package boundary rather
+  than past it.
+- **Automatic publication selection or package-to-package evidence
+  merging.** Importing two packages that each bundle an anchor for the
+  same `publicationId` simply catalogs both, independently — exactly like
+  receiving the same evidence via two separate peer ANNOUNCEs already
+  does (0.8.4). Nothing in this milestone introduces a notion of "the
+  package that should win."
+- **Blockchain indexing, or any UI.** No view, panel, or button in this
+  codebase yet reads `pkg.anchors`, calls
+  `ImportPackageAnchorsUseCase`, or surfaces its categorized result to a
+  person — the identical restraint every anchor-evidence milestone since
+  0.8.0 already held before any UI consumed its own new mechanism.
+
+What's left, and deliberately unbuilt: any UI surface for package-bundled
+evidence, and any package-level provenance or trust model over it — sized
+on their own, if ForkBuild ever actually needs them, exactly like every
+"Deliberately excluded" list in this document before it.
