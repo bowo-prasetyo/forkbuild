@@ -13387,3 +13387,170 @@ UI surface for browsing or resolving a cataloged publication, a global
 or peer-federated discovery index, and any freshness/eviction policy —
 each sized on its own, exactly like every "Deliberately excluded" list
 in this document before it.
+
+## 0.7.3 — Peer Publication Exchange
+
+0.7.2 left exactly one thing named and unbuilt: "a live peer-gossip
+transport... 0.7.3's own job." `application/PublicationExchange.js`
+already moved a `DecentralizedPublication` envelope between replicas —
+validate → construct → verify → catalog — but only ever as a plain
+object in, a plain object out; every test up to and including 0.7.2's
+own flagship physically moved that object by hand (a pasted file). This
+milestone wires that same, completely unchanged exchange class to a
+LIVE, already-authenticated peer connection instead.
+
+The constraint this milestone's own design conversation stated first,
+and built everything else around: **do not make
+`application/LocalPublicationCatalog.js` network-aware.** The catalog
+still only ever knows how to answer `add()`/`has()`/`get()`/`list()`/
+`find*()` against whatever `application/PublicationExchange.js` hands
+it — nothing in this milestone teaches it about peers, connections, or
+transports at all. A transport was added AROUND `application/
+PublicationExchange.js`, never inside `application/
+LocalPublicationCatalog.js` or `application/PublicationResolver.js`.
+
+### What shipped
+
+- `application/PublicationPeerProtocol.js` — the smallest possible wire
+  wrapper carried over `peer/PeerMessageBus.js`, mirroring `core/
+  DeviceAuthorizationGossip.js`'s own shape one domain over: a `kind`
+  discriminator (only `ANNOUNCE` exists) plus the envelope itself,
+  unchanged from `DecentralizedPublication.toJSON()`. `REQUEST`/
+  `RESPONSE` were named in this milestone's own design conversation and
+  deliberately left unbuilt — see "Deliberately excluded" below.
+- `application/PublicationPeerExchange.js` — the transport. Attaches to
+  every peer on an injected `application/ConnectedPeerRegistry.js` (now
+  and as new ones connect, via its own `onChange`), subscribes to this
+  file's own namespaced protocol (`forkbuild:publication`), and runs
+  every incoming `ANNOUNCE` through `application/PublicationExchange.js#
+  importPublication()` **completely unchanged** — the identical
+  validate → construct → verify → catalog discipline a pasted file
+  already went through, now driven by a live wire instead. A malformed
+  wrapper or an envelope that fails any of those three checks is
+  dropped silently, exactly like `application/
+  DeviceAuthorizationPropagationUseCase.js#_handleGrant()` drops an
+  unverifiable grant — one peer's bad or forged message can never crash
+  this replica's message bus. `announce(publication)` is the export
+  side: `exportPublication()`, unchanged, wrapped in an `ANNOUNCE`
+  message, sent to every currently `AUTHENTICATED` peer.
+  `onPublicationReceived(callback)` fires `{ publication, isNew }` for
+  every successfully cataloged incoming announce, for a future
+  Discovery UI to consume without polling.
+- **No new transport hierarchy.** `peer/PeerMessageBus.js` (0.2.52)
+  already solved "how do independent decentralized protocols safely
+  share one authenticated peer connection" — protocol-namespaced
+  delivery gated on `PeerLifecycleState.AUTHENTICATED`, malformed/
+  oversized/duplicate hygiene, and, critically, already proven
+  transport-agnostic: `tests/PeerMessaging.test.js`'s own flagship runs
+  the identical multiplexing logic over BOTH `peer/
+  LocalPeerConnectionProvider.js` and `peer/
+  WebRtcPeerConnectionProvider.js`, unmodified. `application/
+  PublicationPeerExchange.js` is built directly on that bus — the same
+  shape every gossip-a-signed-record use case in this codebase already
+  uses (`application/IdentityLifecyclePropagationUseCase.js`,
+  `application/DeviceAuthorizationPropagationUseCase.js`) — rather than
+  a second, parallel `PublicationTransport`/`InMemoryPublicationTransport`
+  hierarchy invented from scratch. One consequence named directly: a
+  real WebRTC transport is no longer this milestone's successor's
+  actual work — `peer/PeerMessageBus.js` already runs over WebRTC
+  today.
+- `application/CreatePublicationPeerExchangeUseCase.js` — the
+  composition root, wiring `application/
+  CreatePublicationCatalogUseCase.js`'s own catalog + exchange pair to
+  a `PublicationPeerExchange`, taking `peerMessageBus`/
+  `connectedPeerRegistry` straight through as shared, app-wide
+  collaborators it never owns — the identical one-level-of-indirection
+  `application/CreateIdentityLifecyclePropagationUseCase.js` already
+  established for the same two collaborators.
+- `tests/PublicationPeerExchange.test.js` — three sections: the
+  `ANNOUNCE` wire shape in isolation; `PublicationPeerExchange`'s own
+  routing/gating logic against a stub bus (AUTHENTICATED-only sends,
+  auto-attach on registry change, malformed/forged drops that never
+  throw, `onPublicationReceived`, `dispose()`); and a FLAGSHIP running
+  the entire 0.7.2 Section C scenario again — Alice announces to Bob,
+  Bob resolves `CONTENT_UNAVAILABLE`, then `RESOLVED` once bytes
+  propagate — but this time over a REAL, live, authenticated
+  connection (`peer/LocalPeerConnectionProvider.js` + `application/
+  ConnectToPeerUseCase.js`, unmodified), with no file, no clipboard,
+  and no second call to `application/PublicationExchange.js` at all.
+
+### Deliberately excluded
+
+- **`PUBLICATION_REQUEST`/`PUBLICATION_RESPONSE`.** This milestone's
+  own design conversation named a pull-based counterpart to `ANNOUNCE`
+  — "send me what you have for this id/hash/kind" — and declined to
+  build it. `ANNOUNCE`/receive alone is already enough to prove the
+  transport; a request protocol raises its own new questions (who may
+  ask, how much, how often) with no reason to answer them yet. Adding
+  the two kinds later means adding two `kind` values to `application/
+  PublicationPeerProtocol.js` and two handlers to `application/
+  PublicationPeerExchange.js` — `ANNOUNCE` itself never changes shape.
+- **Content transfer of any kind.** `application/
+  PublicationPeerExchange.js` never calls `application/
+  PublicationResolver.js`, never touches a `ContentStore`, and never
+  learns what a `contentReference` even points at. A peer telling this
+  replica a publication exists is not the same fact as this replica
+  being able to retrieve what it points at — see docs/Principles.md,
+  "Discovery Is Not Resolution (0.7.2)," extended here to discovery
+  arriving over a live wire instead of a file.
+- **Peer trust, reputation, or a "trusted publisher" concept.**
+  `_handleIncoming()` never reads `meta.connectedPeer` — a publication
+  is exactly as valid received from Alice, from Charlie, or from a
+  pasted file, because its own signature is the only thing that ever
+  made it trustworthy. No `trustedPeer`, `trustedPublisher`, or
+  `peerScore` field exists anywhere in this milestone, and none should
+  ever be added — publisher identity and transport source stay two
+  separate facts.
+- **Real WebRTC.** `peer/WebRtcPeerConnectionProvider.js` already runs
+  under `peer/PeerMessageBus.js` unmodified, proven by `tests/
+  PeerMessaging.test.js`'s own flagship — swapping it in for `application/
+  PublicationPeerExchange.js` is composition-root wiring, not new
+  protocol work, and is left for whichever future milestone actually
+  needs it wired into the app.
+- **Any Discovery UI.** No component or view exists for any of this
+  milestone's own classes, and `application/
+  CreatePublicationPeerExchangeUseCase.js` is deliberately NOT wired
+  into `ui/main.js` or `application/CreateWorldViewUseCase.js` — there
+  is still nothing for a live announcement to feed. Sized as its own
+  future milestone, the identical "no UI surface" restraint 0.7.0/
+  0.7.1/0.7.2 already applied before it.
+- **A global or peer-federated discovery index.** Exactly as excluded
+  by 0.7.2's own entry, unchanged: this milestone only ever moves
+  envelopes between two directly connected, authenticated peers — it
+  builds no wider index of what the whole network knows.
+
+```text
+0.7.2   Decentralized Publication Discovery & Catalog             ✓
+             │
+             ▼
+0.7.3   Peer Publication Exchange                                 ✓
+             ├── application/PublicationPeerProtocol.js — the ANNOUNCE
+             │   wire wrapper; REQUEST/RESPONSE named, not built
+             ├── application/PublicationPeerExchange.js — attaches to
+             │   peer/PeerMessageBus.js, runs every incoming ANNOUNCE
+             │   through PublicationExchange#importPublication()
+             │   unchanged; never calls PublicationResolver.js; peer
+             │   identity stays informational only
+             ├── application/CreatePublicationPeerExchangeUseCase.js —
+             │   composition root, not wired into ui/
+             └── PublicationPeerExchange.test.js — 3 sections, flagship
+                 re-runs 0.7.2's CONTENT_UNAVAILABLE → RESOLVED scenario
+                 over a REAL live authenticated connection
+```
+
+> **0.7.0 built a signed locator. 0.7.1 proved it could be resolved
+> through a real network. 0.7.2 gave a replica somewhere to keep one it
+> had only seen. All three left the actual MOVING of an envelope
+> between replicas as a hand-off file. 0.7.3 replaces the file with a
+> live wire — by reusing the authenticated, protocol-multiplexed
+> connection this codebase already built for every other gossiped
+> record, never by inventing a second one. The catalog still knows
+> nothing about peers. The resolver still knows nothing about
+> discovery. Only the transport moved.**
+
+What's left, and deliberately unbuilt: a pull-based request/response
+protocol, any form of content transfer, peer trust or reputation, a
+Discovery UI, a global discovery index, and the app-wide wiring that
+would put a live announcement in front of an actual user — each sized
+on its own, exactly like every "Deliberately excluded" list in this
+document before it.
