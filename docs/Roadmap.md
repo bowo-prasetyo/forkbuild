@@ -12846,3 +12846,203 @@ global multi-hop cycle detection, a lineage publication log, a signed
 retraction protocol, and any ranking of contradicting claims — each
 sized on its own, exactly like every "Deliberately excluded" list in
 this document before it.
+
+## 0.7.0 — Decentralized Publication Protocol & Content Addressing
+
+0.5.2–0.6.8 built four independently signed claim types — place naming,
+blueprint attribution, blueprint lineage — plus a Document publication
+pipeline, and gave every one of them its own hand-rolled exchange
+transport: a peer message, a pasted file, a rendezvous lookup. 0.2.14
+already generalized ONE piece of that story for Documents specifically —
+"published content is identified by its content hash, not its storage
+location" — and named `IPFSContentStore`/`ArweaveContentStore`/
+`HttpContentStore` directly in `content/ContentStore.js`'s own header as
+work for later. This milestone is that "later," but scoped exactly the
+way the design conversation that proposed it insisted on from its first
+sentence: build the protocol-neutral abstraction FIRST, prove it works
+end to end with content already on file, and leave IPFS, a real
+discovery index, and blockchain anchoring as their own future
+milestones. No new storage backend ships in 0.7.0 — `content/
+LocalContentStore.js`, unmodified, is still the only `ContentStore` that
+exists.
+
+### What shipped
+
+- `core/DecentralizedPublication.js` — a thin, signed envelope around a
+  `core/ContentReference.js`, generalizing `publisher/Publication.js`'s
+  own signed-envelope shape to ANY signed content, not only a Document
+  snapshot. Self-describes twice over, on purpose: `kind`/`schemaVersion`
+  identify the ENVELOPE itself (`forkbuild.decentralized-publication`,
+  always), `contentKind`/`contentSchemaVersion` identify whatever it
+  WRAPS (`forkbuild.blueprint-attribution` today, anything self-
+  describing tomorrow) — so a receiver can always tell "is this even a
+  decentralized publication?" before it has to know or care what's
+  inside. A publication is its own first and only revision, the same
+  "republishing makes a NEW envelope" posture `publisher/Publication.js`
+  already established.
+- `SignatureType.DECENTRALIZED_PUBLICATION` +
+  `LocalAuthorizationVerifier#verifyDecentralizedPublication()` — a
+  REQUIRED signature, never tolerated unsigned (unlike the legacy-
+  tolerant `verifyPublication()` this file already carried from 0.2.16),
+  proving only "this publisher identity chose to publish this exact
+  `ContentReference` under this `contentKind`" — nothing about whether
+  the referenced bytes are true, well-formed, or even retrievable.
+- `application/DecentralizedPublicationValidator.js` — strict structural
+  validation of the envelope alone, the identical "well-formed ≠
+  authentic, never conflated" split every publication validator in this
+  codebase already keeps (`application/
+  BlueprintAttributionPublicationValidator.js`'s own header). Never
+  looks inside the wrapped content — that is a separate, per-`contentKind`
+  concern, one layer up.
+- `application/PublicationResolver.js` — the protocol-neutral pipeline:
+  `publish()` serializes signed content into any `ContentStore`,
+  wraps the resulting reference in a signed `DecentralizedPublication`;
+  `resolve()` runs the full ten-step discipline every exchange class in
+  this codebase already followed ad hoc since 0.5.3 — validate envelope
+  → construct envelope → verify envelope signature → retrieve bytes →
+  verify bytes against their own hash → validate content → construct
+  content → verify content's OWN signature → optional domain cross-check
+  → optional store — never retrieve → trust, and never partially
+  resolves on a failed step. Imports zero domain modules itself; a small
+  `kindPlugin` (`{ contentKind, validate, fromJSON, verify, crossCheck?,
+  store? }`) supplies whatever a specific content kind needs, reusing
+  what that domain already built rather than reimplementing it.
+- `application/BlueprintAttributionPublicationKind.js` — the one
+  concrete `kindPlugin` this milestone ships, proving the pipeline needs
+  nothing new: every function it hands `PublicationResolver` (`core/
+  BlueprintAttribution.js#fromJSON`, `application/
+  BlueprintAttributionPublicationValidator.js`, `identity/
+  LocalAuthorizationVerifier.js#verifyBlueprintAttribution`) already
+  existed before 0.7.0. A SECOND transport for a `BlueprintAttribution`,
+  never a replacement for `application/BlueprintAttributionExchange.js`'s
+  own 0.6.6 peer-gossip path — the identical attribution can travel
+  either way and a receiver ends up with the same, independently
+  verifiable object regardless of which one carried it.
+- `application/CreatePublicationResolverUseCase.js` — the composition
+  root wiring `content/LocalContentStore.js` +
+  `identity/LocalAuthorizationVerifier.js` into one `PublicationResolver`,
+  the same shape `application/CreatePublisherUseCase.js` and
+  `application/CreateBlueprintAttributionUseCase.js` already established,
+  so swapping in an IPFS-backed `ContentStore` later means changing
+  exactly this one file.
+- `tests/DecentralizedPublicationProtocol.test.js` — 3 sections, 40+
+  assertions: envelope construction/signing/serialization and every
+  structural-validation rejection; `verifyDecentralizedPublication()`
+  valid/unsigned/tampered/impersonated; and a full `PublicationResolver`
+  flagship — Alice signs and publishes a `BlueprintAttribution` through
+  her own `ContentStore`, Bob resolves it on a completely independent
+  replica bridged only by fetching identical bytes at the same
+  deterministic hash (exactly what a real IPFS-backed `ContentStore`
+  would do for Bob automatically), with wrong-`contentKind`,
+  missing-content, tampered-envelope, and fingerprint-cross-check-mismatch
+  rejections each proven, plus dedup-by-id on a repeated resolve.
+
+### Publication makes content discoverable; it never makes it authoritative
+
+See docs/Principles.md, "Publication Makes Content Discoverable; It Does
+Not Make It Authoritative (0.7.0)," for the full reasoning. The short
+version, named directly by this milestone's own design conversation: a
+locator (`ipfs://...`, `https://...`, a future `blockchain:...` anchor)
+is a way to ASK where bytes might be, never an answer to what they are
+(the content hash already answers that) or whether they're true (nothing
+ever answers that automatically). Blockchain inclusion, once 0.7.3 adds
+it, will prove only that a signer's key produced a given assertion at a
+given time — never that the assertion is accurate, the identical
+restraint `core/BlueprintAttribution.js` already drew for an unanchored
+attribution in 0.6.5, extended here to an anchored one.
+
+### Deliberately excluded
+
+- **Any actual IPFS, Arweave, or blockchain integration.** `content/
+  ContentStore.js`'s own 0.2.14 header already named
+  `IPFSContentStore`/`ArweaveContentStore`/`HttpContentStore` as future
+  work; this milestone still ships none of them.
+  `content/LocalContentStore.js` remains the only concrete `ContentStore`
+  in this codebase. This milestone's own design conversation was explicit
+  that the abstraction has to exist and be proven FIRST — a real backend
+  is exactly as swappable as `application/
+  CreatePublicationResolverUseCase.js`'s own header claims only once one
+  actually ships.
+- **A decentralized discovery index** (`bp:abc123 → [CID-1, CID-2,
+  CID-3]`) letting a caller find a publication without already knowing
+  its locator. Explicitly sized as its own future milestone (0.7.2) by
+  this milestone's own design conversation — `PublicationResolver`
+  resolves a publication it is HANDED; it never searches for one.
+- **Blockchain anchoring of compact hashes/references.** Sized as its
+  own future milestone (0.7.3) for the identical reason IPFS integration
+  is excluded above — the envelope this milestone builds is exactly what
+  a future anchor would wrap, unchanged.
+- **`kindPlugin`s for `PlaceNamingClaim`, `BlueprintLineageClaim`, a
+  whole `BlueprintPackage`, or a Document `Publication`.**
+  `application/BlueprintAttributionPublicationKind.js` is the one proof
+  this milestone ships that the generic pipeline needs nothing
+  content-specific added to it; wiring the remaining claim types through
+  it is mechanical repetition of the identical pattern, sized whenever
+  each one actually needs a content-addressed transport.
+- **Publication reputation, freshness, staleness, or conflict ranking
+  between several publications of the same content.** Sized as its own
+  future milestone (0.7.4), explicitly deferred until real decentralized
+  data exists to have opinions about — the same "confidence, never
+  authority" restraint every derived view in this codebase already
+  keeps for disagreeing claims, extended here to disagreeing locations.
+- **Unpublishing, revoking, or expiring a `DecentralizedPublication`.**
+  `content/ContentStore.js` is an immutable, append-only abstraction by
+  design (0.2.14); a `DecentralizedPublication` inherits that posture
+  wholesale rather than growing a retraction protocol this milestone's
+  own design conversation never asked for.
+- **Putting a `ContentReference` or locator into `core/BlueprintFingerprint.js`,
+  `core/Structure.js`, or any other domain object.** A fingerprint names
+  WHAT a design is; a locator names WHERE one copy of some bytes might be
+  found; a `DecentralizedPublication` is the only place the two ever meet,
+  and only ever as a reference, never as identity — the exact distinction
+  this milestone's own design conversation opened with.
+
+```text
+0.6.8   Blueprint Lineage & Revision Discovery                    ✓
+             │
+             ▼
+0.7.0   Decentralized Publication Protocol & Content Addressing  ✓
+             ├── core/DecentralizedPublication.js — signed envelope
+             │   around a ContentReference; kind/schemaVersion describe
+             │   the ENVELOPE, contentKind/contentSchemaVersion describe
+             │   what it WRAPS
+             ├── SignatureType.DECENTRALIZED_PUBLICATION +
+             │   verifyDecentralizedPublication() — REQUIRED signature,
+             │   proves only "who published this locator," never "is
+             │   the content true"
+             ├── application/PublicationResolver.js — publish()/
+             │   resolve(); the ten-step validate → construct → verify
+             │   → retrieve → verify-bytes → validate-content →
+             │   construct-content → verify-content → cross-check →
+             │   store discipline, generic over any ContentStore and
+             │   any per-kind plugin
+             ├── application/BlueprintAttributionPublicationKind.js —
+             │   the one concrete kindPlugin this milestone ships; a
+             │   SECOND transport alongside 0.6.6's own
+             │   BlueprintAttributionExchange, never a replacement
+             ├── application/CreatePublicationResolverUseCase.js —
+             │   composition root; swapping ContentStore backends later
+             │   means changing exactly this one file
+             └── DecentralizedPublicationProtocol.test.js — 3 sections,
+                 including a two-independent-replicas flagship bridged
+                 only by deterministic content hashing
+```
+
+> **0.2.14 gave a Document's published content a hash-based identity
+> independent of where it's stored. 0.5.2–0.6.8 gave four different
+> kinds of signed claim somewhere to travel, one hand-rolled transport
+> at a time. 0.7.0 is the milestone that finally asks the question all
+> five, together, left open: what would it take for ANY signed object —
+> not just a Document, not just one claim type — to be published through
+> a content-addressed backend neither the object nor the application
+> layer has to know the identity of? The answer is a signed envelope
+> around a content reference, a ten-step verification pipeline that
+> imports no domain module, and exactly one proof that the pattern
+> actually works. IPFS, discovery, and blockchain anchoring are the next
+> three milestones — 0.7.0 built the ground they all stand on.**
+
+What's left, and deliberately unbuilt: every concrete decentralized
+storage/anchoring backend, a discovery index, publication reputation and
+freshness, `kindPlugin`s for the other three claim types, and any form
+of unpublish/revoke — each sized on its own, exactly like every
+"Deliberately excluded" list in this document before it.

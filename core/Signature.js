@@ -181,7 +181,23 @@ export const SignatureType = Object.freeze({
     // either replica needs to resolve. See core/BlueprintLineageClaim.js's
     // own getSigningDescriptor() and docs/Principles.md, "Lineage Is A
     // Signed Claim, Never A Fact (0.6.8)."
-    BLUEPRINT_LINEAGE_CLAIM: 'blueprint-lineage-claim'
+    BLUEPRINT_LINEAGE_CLAIM: 'blueprint-lineage-claim',
+    // 0.7.0 — a REQUIRED signature (never optional — see this file's
+    // own "no unsigned claims" rule above), over a
+    // core/DecentralizedPublication.js envelope. Proves "identity X
+    // itself chose to publish this exact ContentReference, under this
+    // publicationId, claiming it holds content of this contentKind" —
+    // deliberately a NARROWER claim than every SignatureType above it:
+    // it says nothing about whether the referenced bytes are true,
+    // well-formed, or even retrievable, and nothing about whether X
+    // authored whatever the bytes turn out to contain. Several
+    // publications can wrap the SAME content hash under different
+    // locators, published by different identities, and none of them is
+    // more authoritative than another — see core/
+    // DecentralizedPublication.js's own header and docs/Principles.md,
+    // "Publication Makes Content Discoverable; It Does Not Make It
+    // Authoritative (0.7.0)."
+    DECENTRALIZED_PUBLICATION: 'decentralized-publication'
 });
 
 export class Signature {

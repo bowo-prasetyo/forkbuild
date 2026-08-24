@@ -18,6 +18,7 @@ import {
 import { getPlaceNamingClaimSigningDescriptor } from '../core/PlaceNamingClaim.js';
 import { getBlueprintAttributionSigningDescriptor } from '../core/BlueprintAttribution.js';
 import { getBlueprintLineageClaimSigningDescriptor } from '../core/BlueprintLineageClaim.js';
+import { getDecentralizedPublicationSigningDescriptor } from '../core/DecentralizedPublication.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -552,6 +553,39 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getBlueprintLineageClaimSigningDescriptor(record), record.signature, identity);
+    }
+
+    // 0.7.0 — a DecentralizedPublication envelope is NEVER tolerated
+    // unsigned, the same REQUIRED discipline as verifyBlueprintLineageClaim()
+    // above (unlike the legacy-tolerant verifyPublication() further up
+    // this file, which predates the "no unsigned claims" rule and must
+    // keep accepting pre-0.2.16 records). The publisher identity is
+    // carried inline on the envelope itself, the same shape
+    // verifyPublication() already checks against for the identical
+    // reason: a DecentralizedPublication has no separate
+    // "authorIdentityId" field to cross-check the signer against —
+    // publishing a locator is the one and only thing this envelope
+    // asserts, and the publisher IS the signer. This is STRUCTURAL
+    // verification only: it proves the named identity really did sign
+    // exactly this ContentReference/contentKind pair, and nothing about
+    // whether the bytes it points at are true, well-formed, or even
+    // retrievable — see application/PublicationResolver.js for every
+    // check that happens after this one succeeds.
+    verifyDecentralizedPublication(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no decentralized publication' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a decentralized publication must be signed' };
+        }
+        if (!record.publisherIdentity) {
+            return { valid: false, signed: true, reason: 'signature without publisher identity' };
+        }
+        return this.verifyDescriptor(
+            getDecentralizedPublicationSigningDescriptor(record),
+            record.signature,
+            record.publisherIdentity
+        );
     }
 
     // The core check, exposed for direct use (tests, future verifiers).
