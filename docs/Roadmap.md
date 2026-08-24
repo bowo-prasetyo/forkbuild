@@ -13911,3 +13911,198 @@ UI, a PlaceNamingClaim publish action, any new storage or anchoring
 backend, and any trust or reputation concept — each sized on its own,
 exactly like every "Deliberately excluded" list in this document before
 it.
+
+## 0.7.6 — Multi-Peer Publication Retrieval & Replication
+
+0.7.5's own "Deliberately excluded" list named this milestone directly:
+`ui/views/DecentralizedPublicationsView.js` asked exactly the FIRST
+currently authenticated peer for missing content, and both that file's
+own header and `application/PublicationResolutionCoordinator.js`'s own
+header said so — "multi-peer selection, racing, or fallback... sized as
+its own future milestone (0.7.6)." This milestone is that one. The
+question it answers is not "where else can content be published" —
+0.7.0 through 0.7.5 already built a complete decentralized publication
+loop — but "does the network behave correctly once there is more than
+one replica, more than one publisher for the same content, and a peer
+that simply isn't reachable anymore?"
+
+### What shipped
+
+- `application/PeerContentRetrievalCoordinator.js` — a NEW class, kept
+  deliberately separate from `application/PeerContentExchange.js` the
+  same way `application/PublicationResolutionCoordinator.js` was kept
+  separate from `application/PublicationResolver.js` in 0.7.5:
+  `PeerContentExchange` still only ever answers "send a request to THIS
+  peer"; this class answers "try THESE peers, in order, for this hash."
+  `retrieve(hash, peers, { timeoutMs })` tries each candidate in
+  `peers`, one at a time, up to `timeoutMs` per candidate, until one
+  answers with a hash-verified RESPONSE or every candidate is
+  exhausted. Returns an OPERATIONAL result —
+  `{ retrieved, hash, attemptedPeers, peer?, reason? }` — deliberately
+  never an `application/PublicationResolutionOutcome.js` value; see
+  "Resolution asks what; retrieval asks whether," below. Introduces no
+  ranking, no "preferred peer," no memory across calls.
+- `application/CreatePeerContentRetrievalCoordinatorUseCase.js` — takes
+  `peerContentExchange` as a parameter, constructing nothing else, the
+  identical shape every composition root since 0.7.4 already
+  established. Not wired into `ui/main.js` directly — `application/
+  CreatePublicationResolutionCoordinatorUseCase.js`'s own composition
+  root builds one internally, around the SAME `peerContentExchange` this
+  replica already has exactly one of.
+- `application/PublicationResolutionCoordinator.js` — `resolve()` now
+  accepts `peers`, an ORDERED array of candidates, alongside the
+  existing `peer` (singular), which still works completely unchanged as
+  a one-candidate shorthand — every 0.7.5 caller is unaffected. On
+  `CONTENT_UNAVAILABLE`, candidates are handed to a `application/
+  PeerContentRetrievalCoordinator.js` this class builds around its own
+  `peerContentExchange`. The result gains one new field, `retrieval`,
+  carrying that class's own operational result — present only when a
+  retrieval was actually attempted, never contaminating `outcome`.
+  `tests/PublicationResolutionCoordinator.test.js`'s own four sections
+  pass completely unmodified against this change.
+- `application/PublicationResolutionView.js` — `resolvePublicationView()`
+  now accepts `peers` too, and its returned shape gains `retrieval`,
+  passed straight through. A new `describeRetrieval(view)` gives a
+  short, human sentence for what a retrieval attempt actually did —
+  "Retrieved from a connected peer. The received bytes were accepted
+  only after their hash matched this publication's own content
+  reference" on success, or how many candidates were tried on failure —
+  teaching the security model in plain language without naming an
+  implementation detail. Returns `null` when no retrieval was ever
+  attempted, never inventing a sentence for it.
+- `ui/views/DecentralizedPublicationsView.js` — "Retrieve from Peers"
+  replaces 0.7.5's own "Retrieve from Connected Peer." The single
+  `retrievalPeer` (first authenticated peer) becomes `retrievalPeers`
+  (every currently authenticated peer, in registry order) — still a
+  single, explicit, named policy living in the UI layer, never inside
+  the coordinator. A `CONTENT_UNAVAILABLE` entry now shows "N connected
+  peers may have this content," and a resolved or unavailable entry
+  shows `describeRetrieval()`'s own sentence when a retrieval was
+  attempted, or a plain "Available locally" / "Unavailable locally"
+  sentence when it wasn't.
+- `tests/PeerContentRetrievalCoordinator.test.js` — four sections:
+  constructor requirements; `retrieve()` against a stub exchange (no
+  candidates, every candidate timing out, and — proven in BOTH orders —
+  a later candidate succeeding after an earlier one doesn't, with
+  `attemptedPeers` always recording every candidate tried); `application/
+  PublicationResolutionCoordinator.js`'s new `peers` option end to end
+  against a stub resolver, including the `retrieval` field and `peer`'s
+  continued one-candidate behavior; and a FLAGSHIP over four real, live,
+  authenticated connections — Alice publishes and is heard only by Bob;
+  Bob retrieves her bytes through `PublicationResolutionCoordinator`'s
+  own `peers` path; Alice disconnects and is disposed of entirely; Bob
+  relays her ORIGINAL, still-Alice-signed envelope to Carol and Dave;
+  Carol asks Dave first (he cataloged the locator but never fetched its
+  bytes, so he never answers) and falls through to Bob, through
+  `PeerContentRetrievalCoordinator` directly; Carol's own catalog still
+  holds exactly Alice's one publication after retrieving; and Bob
+  independently republishes the identical bytes under his own signed
+  envelope, producing a second, equally legitimate publication for the
+  same content hash, proving `application/
+  LocalPublicationCatalog.js#findByContentHash()`'s multi-publisher
+  contract under a live, multi-hop scenario for the first time.
+
+### Resolution asks what; retrieval asks whether
+
+See `docs/Principles.md`, "Replication Creates Availability; It Does Not
+Create Authority (0.7.6)," for the full reasoning. The short version:
+`application/PublicationResolutionOutcome.js` has answered "what is the
+state of this publication" since 0.7.1, and nothing about that contract
+changes here. `application/PeerContentRetrievalCoordinator.js#retrieve()`
+answers a narrower, different question — "did this attempt obtain
+verified bytes?" — on its own separate `retrieval` field, never merged
+into `outcome`. A caller that never asks for `peers` sees this milestone
+change nothing about it.
+
+### Deliberately excluded
+
+- **Racing or concurrent requests to more than one peer at once.**
+  `PeerContentRetrievalCoordinator#retrieve()` tries candidates strictly
+  IN ORDER, one at a time — never several simultaneously, never
+  preferring whichever answers fastest. Racing is real, additional
+  policy (and a real cost — bandwidth spent on answers that end up
+  discarded) this milestone names and declines to build; sequential
+  fallback already answers "does this replica behave like a replica
+  system," the question this milestone's own flagship was built to
+  prove.
+- **Peer trust, reputation, or a "preferred source" concept.** Exactly
+  the restraint `application/PeerContentExchange.js`'s own 0.7.4 header
+  already applies to WHO supplied bytes, extended here to WHICH ORDER
+  candidates happen to be tried in: an ordering is never a ranking. No
+  `trustedPeer`, `peerScore`, or "this peer answers faster" field exists
+  anywhere in this milestone, and none should ever be added.
+- **A `PublicationDetailPanel` or any new route.** The Publication
+  Center gained richer per-entry text (`describeRetrieval()`'s own
+  sentence, a connected-peer count), not a new screen. A dedicated
+  detail view — publication id, full content hash, publisher identity,
+  a per-hash list of every sibling publication — is real, useful UI
+  work this milestone names and leaves for its own future milestone,
+  sized the same way `docs/Roadmap.md`'s own 0.7.2 entry once sized
+  Discovery UI for 0.7.5.
+- **A "Republish" action, or any new code for independent republishing
+  at all.** No canonical publisher, no winner: proven directly by
+  `tests/PeerContentRetrievalCoordinator.test.js`'s own flagship, not
+  built as new code, since `application/
+  LocalPublicationCatalog.js#add()`'s own id-based deduplication and
+  `#findByContentHash()`'s own multi-entry return have made this true
+  since 0.7.2. This milestone adds a test, never a feature, for that
+  claim.
+- **Publication withdrawal, revocation, or expiry.** Still exactly as
+  unbuilt as 0.7.5 left it — `application/
+  LocalPublicationCatalog.js#remove()` remains LOCAL-ONLY and unreachable
+  from any UI in this milestone.
+- **Blockchain anchoring, or any new storage or transport backend.**
+  Still entirely out of scope. 0.7.0 through 0.7.6 form a complete
+  decentralized publication AND replication loop over the transports
+  already built (a local `ContentStore`, IPFS, and now multi-peer pull);
+  the next open question this document names is what a blockchain
+  anchor would actually contribute — publication timestamp or inclusion
+  evidence, most likely — without turning it into a global truth oracle,
+  which is real design work not started here.
+
+```text
+0.7.5   Decentralized Publication UX & Resolution                 ✓
+             │
+             ▼
+0.7.6   Multi-Peer Publication Retrieval & Replication             ✓
+             ├── application/PeerContentRetrievalCoordinator.js —
+             │   retrieve(hash, peers, options): tries candidates IN
+             │   ORDER, one at a time; returns an OPERATIONAL result,
+             │   never a PublicationResolutionOutcome value
+             ├── application/
+             │   CreatePeerContentRetrievalCoordinatorUseCase.js —
+             │   composition root, not wired into ui/main.js directly
+             ├── application/PublicationResolutionCoordinator.js —
+             │   `peers` (ordered array) alongside unchanged `peer`;
+             │   result gains a `retrieval` field, never merged into
+             │   `outcome`
+             ├── application/PublicationResolutionView.js —
+             │   `peers` passthrough + `retrieval` passthrough +
+             │   describeRetrieval()
+             ├── ui/views/DecentralizedPublicationsView.js — "Retrieve
+             │   from Peers," every authenticated peer as candidates,
+             │   "N connected peers may have this content"
+             └── PeerContentRetrievalCoordinator.test.js — 4 sections,
+                 flagship over 4 live connections: Bob retrieves from
+                 Alice, Alice disconnects, Carol falls through Dave to
+                 Bob, and an independent republish produces two
+                 legitimate publications for one hash
+```
+
+> **0.7.0 through 0.7.5 built and then surfaced a complete decentralized
+> publication loop, one layer at a time, and every layer stopped at
+> exactly one peer: one to announce to, one to ask. 0.7.6 is the proof
+> that the network survives past that one peer — that a replica which
+> retrieved content can pass it on without ever claiming to have
+> published it, that two independent identities can publish the
+> identical bytes without either one winning, and that a person three
+> hops from the original publisher can still get verified content once
+> that publisher is gone. Replication creates availability. It does not
+> create authority.**
+
+What's left, and deliberately unbuilt: racing or concurrent multi-peer
+requests, peer trust or reputation, a Publication detail screen,
+publication withdrawal in the UI, and any new storage or anchoring
+backend — each sized on its own, exactly like every "Deliberately
+excluded" list in this document before it. Blockchain/external
+anchoring (0.8.0) is next.

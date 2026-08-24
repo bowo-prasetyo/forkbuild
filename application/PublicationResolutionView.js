@@ -24,7 +24,7 @@ import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js'
 // and get back one flat, UI-ready shape —
 //
 //   { publication, contentKind, publisherIdentityId, outcome, resolved,
-//     reason, content, contentSummary }
+//     reason, content, contentSummary, retrieval }
 //
 // — never a ranking, never a verdict about whether the publication is
 // "trustworthy" beyond what application/PublicationResolver.js's own
@@ -33,6 +33,17 @@ import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js'
 // template never has to import PublicationResolutionOutcome itself just
 // to ask one boolean question.
 //
+// 0.7.6 — Multi-Peer Publication Retrieval & Replication. `peer` (a
+// single candidate) still works unchanged; `peers` (an ORDERED array of
+// candidates) is new, passed straight through to application/
+// PublicationResolutionCoordinator.js#resolve(), unmodified. `retrieval`
+// is that same call's own optional `retrieval` field, passed straight
+// through — the OPERATIONAL "did this attempt obtain bytes" fact,
+// deliberately kept separate from `outcome`, the RESOLUTION fact of
+// "what is the state of this publication." See application/
+// PeerContentRetrievalCoordinator.js's own header on why merging the two
+// would be exactly the contamination this file has refused since 0.7.5.
+//
 // A contentKind this replica's own kindPlugins registry has never heard
 // of (see application/CreatePublicationDisplayKindRegistryUseCase.js's
 // own header on why that registry is deliberately small and explicit,
@@ -40,7 +51,7 @@ import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js'
 // coordinator: `outcome` is null, `resolved` is false, and `reason`
 // explains why in a way a person can read, rather than this function
 // guessing at a kindPlugin that does not exist.
-export async function resolvePublicationView(publication, { coordinator, kindPlugins = {}, peer = null, timeoutMs } = {}) {
+export async function resolvePublicationView(publication, { coordinator, kindPlugins = {}, peer = null, peers = null, timeoutMs } = {}) {
     if (!publication) {
         throw new Error('resolvePublicationView: a DecentralizedPublication is required');
     }
@@ -57,11 +68,11 @@ export async function resolvePublicationView(publication, { coordinator, kindPlu
             publication, contentKind, publisherIdentityId,
             outcome: null, resolved: false,
             reason: `this replica does not yet know how to display a "${contentKind}" publication`,
-            content: null, contentSummary: null
+            content: null, contentSummary: null, retrieval: null
         };
     }
 
-    const result = await coordinator.resolve(publication.toJSON(), kindPlugin, { peer, timeoutMs });
+    const result = await coordinator.resolve(publication.toJSON(), kindPlugin, { peer, peers, timeoutMs });
     const resolved = result.outcome === PublicationResolutionOutcome.RESOLVED;
     return {
         publication: result.publication || publication,
@@ -71,7 +82,8 @@ export async function resolvePublicationView(publication, { coordinator, kindPlu
         resolved,
         reason: result.reason,
         content: result.content,
-        contentSummary: resolved && typeof kindPlugin.describe === 'function' ? kindPlugin.describe(result.content) : null
+        contentSummary: resolved && typeof kindPlugin.describe === 'function' ? kindPlugin.describe(result.content) : null,
+        retrieval: result.retrieval || null
     };
 }
 
@@ -93,4 +105,39 @@ export function describePublicationOutcome(outcome) {
         case PublicationResolutionOutcome.DOMAIN_CROSS_CHECK_FAILED: return 'Failed a domain-specific check';
         default: return 'Unsupported publication kind';
     }
+}
+
+// 0.7.6 — Multi-Peer Publication Retrieval & Replication.
+//
+// A short, human-readable EXPLANATION of a resolved view's `retrieval`
+// field — presentation only, exactly like describePublicationOutcome()
+// above, and read by the identical restraint: never a claim about who
+// is "trustworthy," only a plain description of what this replica
+// actually did. `view.retrieval` is null on a view resolved purely
+// locally (no peer was ever asked) — this function returns null too,
+// rather than inventing a sentence for an attempt that never happened.
+//
+// The deliberately narrow security lesson this sentence is written to
+// teach, without ever naming an implementation detail: bytes a peer
+// hands over are accepted ONLY after this replica independently
+// recomputed their hash and confirmed it against the publication's own
+// content reference (application/PeerContentExchange.js's own central
+// security rule, unchanged since 0.7.4) — never because of who the peer
+// happened to be. See docs/Principles.md, "Replication Creates
+// Availability; It Does Not Create Authority (0.7.6)."
+export function describeRetrieval(view) {
+    const retrieval = view && view.retrieval;
+    if (!retrieval) {
+        return null;
+    }
+    if (retrieval.retrieved) {
+        const count = retrieval.attemptedPeers ? retrieval.attemptedPeers.length : 1;
+        const tried = count > 1 ? ` (${count - 1} earlier candidate${count - 1 === 1 ? '' : 's'} did not answer in time)` : '';
+        return `Retrieved from a connected peer${tried}. The received bytes were accepted only after their hash matched this publication's own content reference.`;
+    }
+    const attempted = retrieval.attemptedPeers ? retrieval.attemptedPeers.length : 0;
+    if (attempted === 0) {
+        return 'No connected peer was asked for this content.';
+    }
+    return `Asked ${attempted} connected peer${attempted === 1 ? '' : 's'}; none responded with verified content before their own timeout.`;
 }

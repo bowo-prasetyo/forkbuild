@@ -302,9 +302,13 @@ const { peerContentExchange: publicationPeerContentExchange } = new CreatePeerCo
 });
 // application/PublicationResolutionCoordinator.js — the sequencing layer
 // this milestone adds on top of the four classes above: resolve
-// locally, and only ask a caller-CHOSEN peer for missing bytes when the
-// caller explicitly supplies one (see that class's own header on why it
-// never picks a peer, or retrieves anything, by itself).
+// locally, and only ask caller-CHOSEN candidates for missing bytes when
+// the caller explicitly supplies them (see that class's own header on
+// why it never picks a peer, or retrieves anything, by itself). As of
+// 0.7.6 this same instance also accepts an ORDERED `peers` array — see
+// application/PeerContentRetrievalCoordinator.js, built internally
+// around the identical `publicationPeerContentExchange` below; no
+// separate wiring is needed here for that.
 const { coordinator: publicationResolutionCoordinator } = new CreatePublicationResolutionCoordinatorUseCase().execute({
     publicationResolver,
     peerContentExchange: publicationPeerContentExchange
