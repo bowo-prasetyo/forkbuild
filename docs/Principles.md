@@ -8791,3 +8791,98 @@ reason: prove the exchange boundary works, in isolation, before building
 any real transport on top of it. A future WebRTC peer exchange,
 rendezvous relay, or DHT plugs into `exportAttribution()`/
 `importAttribution()` exactly as they stand today.
+
+### Attribution Resolution Ranks Presentation, Never Authorship (0.6.7)
+
+0.6.5 built the attribution model; 0.6.6 built the transport that lets a
+replica accumulate more than one signed attribution for the same
+fingerprint. Neither ever answered what a person should actually be
+SHOWN once several exist. `core/BlueprintAttributionView.js` is the
+direct `core/PlaceNamingView.js` counterpart, one domain over — and its
+entire design rests on generalizing that module's own restraint one
+notch further:
+
+> A valid signature proves who made the claim, not who actually made the
+> design.
+
+`core/PlaceNamingView.js` already answers "which name looks most
+agreed-on, and by how much?" without ever claiming the winner is
+correct — confidence, never authority. `core/BlueprintAttributionView.js`
+asks the equivalent question about authorship and answers it the same
+way, but with one structural difference the design conversation that
+proposed this milestone was explicit about: **names compete; authors
+never do.**
+
+**A `PlaceNamingView` entry picks a winner. An `attributionView()` entry
+never does.** A region has, at most, one PREFERRED name — that's the
+entire point of `preferredClaimedName()`. A blueprint can legitimately
+carry three attributed authors at once — an original creator, a
+collaborator who reworked it, an adapter who built on top — with no
+implication that any one of them is more "correct" than another.
+`attributionView()`'s own `authors` list is therefore never trimmed to a
+single answer the way a naming view's top entry is; every distinct
+attributing identity is always present. `score` orders that list only for
+STABLE, deterministic presentation — the identical distinct-identity
+counting core/PlaceNamingView.js already established, applied here to
+"how many of this one author's own signed claims for this design does
+this replica have on file," never a cross-author trust comparison.
+Labeling that count "supporting claims" rather than "votes" or "trust"
+throughout the UI is deliberate: a claim supports an assertion someone
+already made, it never adjudicates it.
+
+**`summarize()` stays exactly as it was; `communityView()` is a new,
+separate, additive method.** The design conversation considered folding
+the new ranked view directly into `summarize()`'s own return shape and
+rejected it, for the same reason `core/PlaceNamingView.js` has never been
+merged into `application/PlaceNamingClaimUseCase.js`: a flat, unranked
+read and a ranked, presentation-oriented derivation are two different
+questions, and answering both from one method invites exactly the kind of
+implicit coupling this architecture keeps refusing. Every pre-0.6.7 caller
+of `summarize()` — `ui/views/EditorView.js#exportStructure()` chief among
+them — keeps working, unchanged, reading the exact same flat shape it
+always has.
+
+**`receivedAt` finally gets consumed — but ranking still never sees it.**
+`application/LocalBlueprintAttributionPublicationLog.js`'s own 0.6.6
+header reserved its bookkeeping "for a future freshness policy... not
+wired into 0.6.5's own plain, unranked attribution list now." This
+milestone is that future policy, and it draws the boundary exactly where
+that header implied it should: `communityView()` attaches a `receivedAt`
+map for DISPLAY ("Received locally · Aug 24," never the claim's own
+self-reported, spoofable `createdAt`) alongside the ranked view, but
+`receivedAt` never once participates in `authorCount`, `score`, or
+ordering. A claim received a minute ago and one received a year ago
+count identically toward its author's own support — freshness is
+something a future policy could still choose to weigh, but this milestone
+explicitly declines to make that choice on anyone's behalf.
+
+**Never "Created by."** Every label this milestone's own UI work adds —
+"Community Attribution," "Attributed to," "Claimed authors," "Attribution
+claims" — was chosen to preserve the exact distinction `core/
+BlueprintAttribution.js`'s own 0.6.5 header drew and named "Attribution
+Is An External Assertion About A Fingerprint, Never Structure State."
+Resolving an `authorIdentityId` to a fabricated-looking human display
+name was considered and explicitly declined, for a structural reason
+beyond mere restraint: no directory mapping an arbitrary identity to a
+verified display name exists anywhere in this codebase (see
+`ui/components/WorldMembersPanel.js`'s own comment on why that
+resolution, where it exists at all, is a HOST-level, ALIAS-then-
+identityId concern, never baked into a shared derivation module) — so a
+component here can show only what it can actually verify: "You," or a
+truncated `authorIdentityId`, exactly `ui/components/PlaceNamingPanel.js`'s
+own `formatAuthor()` already established one domain over.
+
+**Blueprint lineage stays out of scope, on purpose.** The design
+conversation that proposed this milestone explicitly declined to add
+`parentBlueprintId`, `version`, `revision`, `createdBy`, `originalAuthor`,
+or `forkedFrom` anywhere. `core/BlueprintFingerprint.js` already gives a
+design CONTENT identity; `core/BlueprintAttribution.js` already gives an
+assertion about AUTHORSHIP. "This design appears to be a modification of
+that one" is a fundamentally different, much harder problem — similarity,
+not equality — and folding it in here, just because the words sound
+adjacent, would tangle four genuinely separate concepts this architecture
+has kept apart since 0.6.5: identity ≠ authorship ≠ lineage ≠ version. A
+future Blueprint Lineage milestone can build that relationship as its own
+concept, on its own terms, exactly the way this milestone built attribution
+resolution as its own concept rather than as a change to 0.6.6's exchange
+layer.

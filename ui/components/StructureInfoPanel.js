@@ -32,10 +32,8 @@ import { describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js
 // 0.6.5 — Blueprint Identity & Attribution. `attribution` is likewise
 // supplied by the caller (EditorView#inspectStructure(), which already
 // has a BlueprintAttributionUseCase — see that component's own header)
-// rather than computed here: `{ fingerprint, attributions, mine }`, the
-// exact shape application/BlueprintAttributionUseCase.js#summarize()
-// returns. This panel only ever RENDERS that summary and emits
-// 'claim-authorship' when a person acts on it — it never derives a
+// rather than computed here. This panel only ever RENDERS that view and
+// emits 'claim-authorship' when a person acts on it — it never derives a
 // fingerprint or touches a store itself, the same "Inspect ≠ edit"
 // restraint this panel's own 0.6.3 header already established for
 // every other fact shown here.
@@ -53,15 +51,41 @@ import { describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js
 // design by default (ui/views/EditorView.js#exportStructure()) — this
 // link exists for the narrower case of sharing just the one signed claim
 // on its own.
+//
+// 0.6.7 — Blueprint Attribution Resolution & Community Identity.
+// `attribution` is now application/BlueprintAttributionUseCase.js#
+// communityView()'s own shape — `{ fingerprint, authors, authorCount,
+// claims, mine, receivedAt }` — rather than summarize()'s flat
+// `{ fingerprint, attributions, mine }`. The single "N known authors"
+// fact this panel used to show is now a real "Community Attribution"
+// list, one row per DISTINCT attributing identity (never "Alice wins" —
+// see core/BlueprintAttributionView.js's own header on why authors never
+// compete the way place names do), plus an optional, collapsed
+// "Attribution Claims" history naming exactly when THIS replica first
+// received each claim. Deliberately still never renders "Created by" —
+// every label here stays "attributed to"/"claimed" — a valid signature
+// proves who made the CLAIM, never who actually made the design.
 export default {
     name: 'StructureInfoPanel',
     props: {
         structure: { type: Object, required: true },
         registry: { type: Object, default: null },
         source: { type: String, default: 'built-in' }, // 'built-in' | 'personal'
-        attribution: { type: Object, default: null } // { fingerprint, attributions, mine } | null
+        // application/BlueprintAttributionUseCase.js#communityView()'s
+        // own shape, or null while nothing has been derived yet.
+        attribution: { type: Object, default: null }
     },
     emits: ['place', 'export', 'close', 'claim-authorship', 'export-attribution'],
+    data() {
+        return {
+            // Local, component-only UI state, deliberately never
+            // persisted — this panel is recreated fresh (v-if) every
+            // time it opens, the same restraint ui/components/
+            // PlaceNamingPanel.js's own `advancedExpanded` already
+            // established for an identically-shaped "history" disclosure.
+            claimsExpanded: false
+        };
+    },
     computed: {
         bounds() {
             return SpatialBounds.fromBricks(this.structure.bricks, this.registry);
@@ -76,20 +100,29 @@ export default {
         sourceLabel() {
             return this.source === 'personal' ? 'My Structures' : 'Village Library';
         },
-        fingerprintLabel() {
-            return this.attribution && this.attribution.fingerprint
-                ? describeBlueprintFingerprint(this.attribution.fingerprint)
-                : '—';
+        hasAttribution() {
+            return !!(this.attribution && this.attribution.fingerprint);
         },
-        authorLabel() {
-            if (!this.attribution || !this.attribution.fingerprint) {
-                return '—';
-            }
-            if (this.attribution.mine) {
-                return 'You';
-            }
-            const count = this.attribution.attributions.length;
-            return count > 0 ? `${count} known ${count === 1 ? 'author' : 'authors'}` : 'Not yet attributed';
+        fingerprintLabel() {
+            return this.hasAttribution ? describeBlueprintFingerprint(this.attribution.fingerprint) : '—';
+        },
+        // Every distinct attributing identity, most-supported first —
+        // core/BlueprintAttributionView.js#rankAttributionsByAuthor()'s
+        // own output, already computed by the host. Never re-ranked or
+        // filtered here.
+        authors() {
+            return this.hasAttribution ? this.attribution.authors : [];
+        },
+        myAuthorId() {
+            return this.hasAttribution && this.attribution.mine ? this.attribution.mine.authorIdentityId : null;
+        },
+        // Every raw claim for this fingerprint, most recent first — used
+        // only by the collapsed "Attribution Claims" history below.
+        allClaims() {
+            return this.hasAttribution ? this.attribution.claims : [];
+        },
+        hasClaimHistory() {
+            return this.allClaims.length > 0;
         },
         // Never offered without a fingerprint to attribute, and never a
         // second time once THIS identity already has an attribution on
@@ -97,12 +130,51 @@ export default {
         // own header on why republishing is technically allowed but
         // never something this panel needs to invite.
         canClaimAuthorship() {
-            return !!(this.attribution && this.attribution.fingerprint && !this.attribution.mine);
+            return this.hasAttribution && !this.attribution.mine;
         }
     },
     methods: {
         round1(value) {
             return Math.round((Number(value) || 0) * 10) / 10;
+        },
+        // Mirrors ui/components/PlaceNamingPanel.js#formatAuthor() —
+        // "You" for the currently signed-in identity's own claims, a
+        // short truncated identityId for everyone else. Deliberately
+        // never a resolved human display name: nothing in this codebase
+        // hands a panel a directory mapping an arbitrary authorIdentityId
+        // to one, and inventing a fabricated-looking name here would
+        // undercut "attribution claims who signed it, never who a
+        // display name merely says they are."
+        formatAuthor(identityId) {
+            if (!identityId) return 'unknown';
+            if (identityId === this.myAuthorId) return 'You';
+            return identityId.length > 16 ? `${identityId.slice(0, 12)}…` : identityId;
+        },
+        formatWhen(value) {
+            if (!value) return '';
+            const date = value instanceof Date ? value : new Date(value);
+            return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+        },
+        // The one timing fact this panel is willing to show for a claim
+        // that isn't the viewer's own: WHEN THIS REPLICA FIRST RECEIVED
+        // IT, never the claim's own self-reported `createdAt` — see
+        // application/LocalBlueprintAttributionPublicationLog.js's own
+        // header on why a second, unsigned "publishedAt" would just be a
+        // spoofable shadow of a timestamp the claimant chose themselves.
+        // A claim THIS identity published directly (never "received" at
+        // all) instead shows its own signed `createdAt`, which is
+        // trustworthy precisely because the viewer is the one who signed
+        // it.
+        claimTimingLabel(claim) {
+            if (claim.authorIdentityId === this.myAuthorId) {
+                const when = this.formatWhen(claim.createdAt);
+                return when ? `Signed by you · ${when}` : 'Signed by you';
+            }
+            const receivedAt = this.attribution && this.attribution.receivedAt
+                ? this.attribution.receivedAt[claim.id]
+                : null;
+            const when = this.formatWhen(receivedAt);
+            return when ? `Received locally · ${when}` : 'Received locally';
         },
         onKeydown(event) {
             if (event.key === 'Escape') {
@@ -128,17 +200,61 @@ export default {
                     <dt>Footprint</dt><dd>{{ footprint }}</dd>
                     <dt>Height</dt><dd>{{ height }}</dd>
                     <dt>Source</dt><dd>{{ sourceLabel }}</dd>
-                    <dt v-if="attribution && attribution.fingerprint">Blueprint</dt>
-                    <dd v-if="attribution && attribution.fingerprint" :title="attribution.fingerprint">{{ fingerprintLabel }}</dd>
-                    <dt v-if="attribution && attribution.fingerprint">Author</dt>
-                    <dd v-if="attribution && attribution.fingerprint">
-                        {{ authorLabel }}
-                        <button v-if="canClaimAuthorship" class="inline-link-btn" @click="$emit('claim-authorship')">Claim authorship</button>
-                        <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('export-attribution')">Export Attribution</button>
-                    </dd>
+                    <dt v-if="hasAttribution">Blueprint</dt>
+                    <dd v-if="hasAttribution" :title="attribution.fingerprint">{{ fingerprintLabel }}</dd>
                 </dl>
 
                 <p v-if="structure.description" class="structure-info-description">{{ structure.description }}</p>
+
+                <!-- 0.6.7 — Blueprint Attribution Resolution & Community
+                     Identity. A real list, one row per DISTINCT
+                     attributing identity — never a single "N authors"
+                     count, and never a claim that any one of these
+                     "wins." See core/BlueprintAttributionView.js's own
+                     header. -->
+                <section v-if="hasAttribution" class="naming-panel-section structure-info-attribution">
+                    <h4 class="locations-panel-section-title">Community Attribution</h4>
+                    <p v-if="authors.length === 0" class="locations-panel-empty">
+                        No community attribution yet. You can publish a signed authorship claim.
+                    </p>
+                    <ul v-else class="naming-panel-list">
+                        <li v-for="author in authors" :key="author.authorIdentityId" class="naming-panel-item">
+                            <div class="naming-panel-item-info">
+                                <span class="naming-panel-item-name">{{ formatAuthor(author.authorIdentityId) }}</span>
+                                <span class="naming-panel-item-score">{{ author.score }} {{ author.score === 1 ? 'claim' : 'claims' }}</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <p v-if="attribution.mine" class="form-hint form-hint--neutral">
+                        ✓ You have signed an attribution claim
+                    </p>
+                    <div class="structure-info-attribution-actions">
+                        <button v-if="canClaimAuthorship" class="inline-link-btn" @click="$emit('claim-authorship')">Claim authorship</button>
+                        <button v-if="attribution.mine" class="inline-link-btn" @click="$emit('export-attribution')">Export Attribution</button>
+                    </div>
+
+                    <!-- Progressive disclosure, mirroring ui/components/
+                         PlaceNamingPanel.js's own "More" toggle — the raw
+                         claim ledger stays secondary to the community
+                         list above. -->
+                    <button
+                        v-if="hasClaimHistory"
+                        type="button"
+                        class="naming-panel-advanced-toggle"
+                        :aria-expanded="claimsExpanded"
+                        @click="claimsExpanded = !claimsExpanded"
+                    >
+                        {{ claimsExpanded ? '▾' : '▸' }} Attribution Claims ({{ allClaims.length }})
+                    </button>
+                    <ul v-if="claimsExpanded" class="naming-panel-list">
+                        <li v-for="claim in allClaims" :key="claim.id" class="naming-panel-item">
+                            <div class="naming-panel-item-info">
+                                <span class="naming-panel-item-name">{{ formatAuthor(claim.authorIdentityId) }}</span>
+                                <span class="naming-panel-item-meta">{{ claimTimingLabel(claim) }}</span>
+                            </div>
+                        </li>
+                    </ul>
+                </section>
 
                 <div class="modal-actions">
                     <button class="action-btn" @click="$emit('close')">Close</button>
