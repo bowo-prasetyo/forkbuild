@@ -14106,3 +14106,161 @@ publication withdrawal in the UI, and any new storage or anchoring
 backend — each sized on its own, exactly like every "Deliberately
 excluded" list in this document before it. Blockchain/external
 anchoring (0.8.0) is next.
+
+## 0.8.0 — Decentralized Publication Anchoring & External Evidence
+
+0.7.0's own header named this milestone before it had a number: "A
+future blockchain-anchored `ContentStore` is exactly that: one more
+retrieval mechanism, immutable and independently timestamped, never a
+promotion of anything it stores from claim to fact." 0.7.0 through 0.7.6
+built a complete decentralized publication and replication loop without
+ever needing to answer what an external anchor would actually be. This
+milestone answers exactly that question, and stops exactly where 0.7.0's
+own design conversation for THIS milestone insisted it should: build the
+protocol-neutral value object and its verification pipeline first, prove
+the one property that matters — several independent anchors for the same
+content survive without collapsing into each other — and leave any real
+backend, any storage/exchange layer, and any UI entirely for their own
+future milestones.
+
+### What shipped
+
+- `core/PublicationAnchor.js` — a new, thin, signed record distinct from
+  `core/DecentralizedPublication.js`: where a `DecentralizedPublication`
+  says "here is where a copy of these signed bytes can be found," a
+  `PublicationAnchor` says "this identity attests this exact
+  `publicationId`/`contentHash` pair was recorded by some external
+  system, at this `locator`, with this `proof`." Carries `publicationId`
+  AND `contentHash` together, deliberately redundant, so an anchor is a
+  self-contained record a caller can verify without first resolving the
+  publication it names. `anchoredAt` is the external system's OWN
+  reported timestamp, never treated as authoritative — the same
+  restraint this codebase already applies to a peer message's
+  `receivedAt`. `proof` is an opaque, anchorType-specific JSON blob this
+  class never interprets. An anchor is its own first and only revision,
+  the identical "republishing/re-anchoring makes a NEW record" posture
+  `core/DecentralizedPublication.js` already established.
+- `SignatureType.PUBLICATION_ANCHOR` +
+  `LocalAuthorizationVerifier#verifyPublicationAnchor()` — a REQUIRED
+  signature, never tolerated unsigned, proving only "this anchoring
+  identity really did sign exactly this publicationId/contentHash/
+  anchorType/locator/proof tuple" — nothing about whether the external
+  system actually recorded anything, nothing about the anchored
+  content's authenticity, and nothing about who authored it.
+- `application/PublicationAnchorValidator.js` — strict structural
+  validation of the anchor record alone, the identical "well-formed ≠
+  authentic, never conflated" split `application/
+  DecentralizedPublicationValidator.js` already keeps. Checks that
+  `proof`, if present, is JSON-serializable; never interprets what it
+  contains.
+- `application/AnchorVerificationOutcome.js` — names the difference
+  `application/PublicationResolutionOutcome.js` named for retrieval
+  availability in 0.7.1, applied here to proof confidence:
+  `VALID_PROOF_UNVERIFIED` is its own honest, NON-rejected outcome for
+  "genuinely signed, on-topic evidence whose proof nobody has
+  independently checked yet" — the only outcome this milestone's own
+  pipeline can produce today, since no anchorType-specific proof
+  verifier ships anywhere in this codebase.
+- `application/ExternalAnchorVerifier.js` — the pipeline: validate
+  envelope → construct → verify signature → optional cross-check against
+  an expected `contentHash`/`publicationId` → optional, caller-supplied,
+  anchorType-matched `proofVerifier`. Imports zero storage or transport
+  modules; never fetches anything; never resolves the anchored CONTENT
+  (that stays `application/PublicationResolver.js`'s own, completely
+  separate job).
+- `application/CreateExternalAnchorVerifierUseCase.js` — the composition
+  root wiring `identity/LocalAuthorizationVerifier.js` into one
+  `ExternalAnchorVerifier`, the same shape `application/
+  CreatePublicationResolverUseCase.js` already established.
+- `tests/PublicationAnchorProtocol.test.js` — 3 sections: record
+  construction/signing/serialization and every structural-validation
+  rejection; `verifyPublicationAnchor()` valid/unsigned/tampered/
+  impersonated; and a full `ExternalAnchorVerifier` flagship covering
+  every outcome — malformed envelope, altered-after-signing, content/
+  publication mismatch, no proof verifier available, a matching verifier
+  accepting or rejecting the proof — plus the architectural property
+  this milestone exists to prove: two anchors, different anchoring
+  identities, different anchorTypes, different locators, naming the
+  identical `publicationId`/`contentHash`, both verify completely
+  independently, neither one ever touching or superseding the other.
+
+```text
+0.7.6   Multi-Peer Publication Retrieval & Replication              ✓
+             │
+             ▼
+0.8.0   Decentralized Publication Anchoring & External Evidence     ✓
+             ├── core/PublicationAnchor.js — signed record distinct
+             │   from DecentralizedPublication: "this identity attests
+             │   this hash/publicationId was externally recorded here"
+             ├── SignatureType.PUBLICATION_ANCHOR +
+             │   verifyPublicationAnchor() — REQUIRED signature, proves
+             │   only "who attested this," never "is this true"
+             ├── application/ExternalAnchorVerifier.js — validate →
+             │   construct → verify signature → cross-check →
+             │   OPTIONAL anchorType-matched proofVerifier
+             ├── application/AnchorVerificationOutcome.js —
+             │   VALID_PROOF_UNVERIFIED as its own honest non-rejection,
+             │   the only outcome reachable with no backend built yet
+             ├── application/CreateExternalAnchorVerifierUseCase.js —
+             │   composition root; a real proofVerifier plugs in later
+             │   without changing this pipeline
+             └── PublicationAnchorProtocol.test.js — 3 sections,
+                 including two independent anchors for one content hash
+                 verifying without ever colliding
+```
+
+> **0.7.0 promised that a future anchor would be "one more retrieval
+> mechanism, immutable and independently timestamped, never a promotion
+> of anything it stores from claim to fact." 0.8.0 is the milestone that
+> keeps that promise on paper before a single byte of it touches a real
+> chain: a signed record narrower than any publication before it,
+> a verification pipeline that can honestly say "I checked the
+> signature, not the ledger," and a test proving that two people
+> anchoring the same content in two different systems never have to
+> agree, compete, or be reconciled. The real backend, the storage layer,
+> and the UI are all still ahead — 0.8.0 built the ground they'll stand
+> on, exactly the way 0.7.0 once did for publication itself.**
+
+### Deliberately excluded
+
+- **Any concrete anchor backend — a real blockchain, a timestamping
+  service, or even a local/test double.** `application/
+  ExternalAnchorVerifier.js`'s own `proofVerifier` is a plugin point
+  with nothing plugged into it yet. Sized as its own future milestone
+  (0.8.1, a deterministic local/test backend, per this document's own
+  proposal) for the identical reason 0.7.0 shipped no `ContentStore`
+  beyond the existing local one.
+- **Any storage, catalog, or exchange for anchors themselves.** Unlike a
+  `DecentralizedPublication`, which gained a catalog in 0.7.2 and a peer
+  transport in 0.7.3, a `PublicationAnchor` has nowhere to live yet
+  beyond a caller's own hands — no `LocalAnchorStore`, no discovery, no
+  peer message. `application/ExternalAnchorVerifier.js` only ever
+  answers "given an anchor I already have, can I verify it?"
+- **Any UI.** No Publication Center "Evidence" section, no "Anchor
+  Publication" action, nothing in `ui/views/
+  DecentralizedPublicationsView.js`. Sized as its own future milestone
+  once a real backend exists to anchor something in.
+- **Automatically anchoring a publication as part of publishing it.**
+  `application/PublicationResolver.js#publish()` is completely untouched
+  by this milestone. Publishing and anchoring stay two separate,
+  explicit acts — see `docs/Principles.md`, "External Anchoring Provides
+  Evidence; It Does Not Establish Authority (0.8.0)" — so that an
+  expensive or irreversible external operation never happens as a silent
+  side effect of ordinary publication.
+- **Conflicting-anchor resolution, ranking, or a "canonical anchor"
+  concept.** `tests/PublicationAnchorProtocol.test.js` proves the
+  opposite is already true by construction: independent anchors for the
+  same content simply coexist. A UI that has to DISPLAY several anchors
+  side by side, rather than a protocol change to make them agree, is
+  future work, not a gap in this milestone.
+- **A concrete `anchorType` vocabulary.** No enum of "bitcoin" /
+  "ethereum" / "arweave" / "local-test" exists anywhere in this
+  codebase — `anchorType` is an open string, exactly as protocol-neutral
+  as `core/ContentReference.js`'s own `uri` scheme has been since 0.2.14,
+  and stays that way until a real backend needs one.
+
+What's left, and deliberately unbuilt: a deterministic local/test anchor
+backend, any real external anchor integration, anchor discovery/exchange
+between replicas, Evidence UX and verification history, and
+conflicting-anchor display — each sized on its own, exactly like every
+"Deliberately excluded" list in this document before it.

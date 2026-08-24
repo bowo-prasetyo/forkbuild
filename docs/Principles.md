@@ -9477,3 +9477,91 @@ PublicationResolutionCoordinator.js`'s own "always safe, always current"
 restraint since 0.7.5.
 
 See `docs/Roadmap.md`, 0.7.6, for the full milestone entry.
+
+### External Anchoring Provides Evidence; It Does Not Establish Authority (0.8.0)
+
+0.7.0's own header already said the words this milestone was built to
+keep true the moment a real external system enters the picture:
+"Blockchain inclusion does not turn a claim into truth. If Alice signs
+'I created blueprint X' and that assertion is anchored where nobody can
+ever delete it, the anchor proves Alice's key produced that exact
+assertion at that exact time — nothing more." 0.7.0 through 0.7.6 built
+the complete decentralized publication and replication loop that
+sentence was written against; 0.8.0 is the first milestone that actually
+introduces the concept the sentence was warning about, and it introduces
+NOTHING that contradicts it. `core/PublicationAnchor.js` is a new kind of
+signed record, sized deliberately narrower than every publication or
+content object that came before it.
+
+**An anchor is evidence about a hash. It is never a verdict about the
+content.** A `PublicationAnchor`'s signature proves exactly one thing:
+the named `anchorIdentity` attested that this `contentHash`, for this
+`publicationId`, was recorded at this `locator` by whatever external
+system `anchorType` names. It proves nothing about whether the anchored
+content is authentic, nothing about who designed it, and nothing about
+whether the `publisherIdentity` that originally published it (a
+completely separate signature, checked separately — see `core/
+DecentralizedPublication.js`) is trustworthy. Four independent claims,
+never merged: "what are these bytes" (the content hash), "who chose to
+publish this locator" (a `DecentralizedPublication`'s own signature),
+"who designed this" (`core/BlueprintAttribution.js`'s own signature),
+and now "who attests this hash was externally recorded, and where" (a
+`PublicationAnchor`'s own signature). Adding a fourth claim to the list
+never lets it collapse into, outrank, or stand in for any of the other
+three.
+
+**`anchoredAt` is a report, never a fact this replica can independently
+establish.** The identical restraint this codebase already applies to a
+peer message's `receivedAt` ("Arrival Order Is Never Trust," 0.2.19)
+applies here to a second axis: an external system's own claimed record
+time. This replica can say "the external system reports this
+timestamp." It can never upgrade that report to "this publication was
+definitely created at this time" — the external system could be wrong,
+lag, or (for a `locator` this replica cannot itself query) simply be
+taken on faith. Nothing in `core/PublicationAnchor.js` or `application/
+ExternalAnchorVerifier.js` ever treats `anchoredAt` as more than what
+the anchoring identity chose to attest.
+
+**Signature validity, proof validity, and content authenticity are three
+different questions, verified in that order, and none is ever skipped or
+merged.** `identity/LocalAuthorizationVerifier.js#
+verifyPublicationAnchor()` answers only the first: did the named
+identity really sign exactly this tuple? `application/
+ExternalAnchorVerifier.js` answers the second, and only when a caller
+supplies a `proofVerifier` for the anchor's own `anchorType` — no such
+plugin exists yet anywhere in this codebase, on purpose (see
+`docs/Roadmap.md`), so `application/AnchorVerificationOutcome.js` names
+`VALID_PROOF_UNVERIFIED` as its own honest, non-rejected outcome rather
+than let "genuinely signed" quietly stand in for "proof independently
+confirmed." Whether the anchored CONTENT is authentic is the third
+question, and no anchor — proof-verified or not — ever answers it;
+`application/PublicationResolver.js`'s own ten-step discipline is the
+only place that question is ever asked.
+
+**Multiple independent anchors for the identical content are never
+collapsed, ranked, or reconciled — the same restraint this codebase has
+held for every other kind of competing evidence since 0.7.0.** Two
+anchoring identities, in two different external systems, naming two
+different locators, can both attest to the SAME `publicationId`/
+`contentHash`, and both verify completely independently — `tests/
+PublicationAnchorProtocol.test.js`'s own Section C proves exactly this:
+verifying a second anchor never touches, invalidates, or supersedes the
+first. This is `core/DecentralizedPublication.js`'s own "several
+independently signed facts, never reconciled into one" posture for
+competing LOCATIONS of the same content, extended here to competing
+PIECES OF EVIDENCE about the same content — see also `core/
+BlueprintAttributionView.js`/`core/BlueprintLineageView.js`, which have
+held the identical line for competing authorship claims since 0.6.x.
+
+**Publishing and anchoring are two different acts, and this milestone
+builds no path from one to the other.** A `DecentralizedPublication`
+answers "where can a copy of this be found"; a `PublicationAnchor`
+answers "what external evidence exists that this was recorded." Nothing
+in 0.8.0 makes creating one automatically create the other — no anchor
+is ever produced as a side effect of `application/
+PublicationResolver.js#publish()`, and no future milestone should make
+an expensive or irreversible external operation happen invisibly behind
+an ordinary publish action. A person (or a future UI) that wants
+external evidence asks for it explicitly, every time.
+
+See `docs/Roadmap.md`, 0.8.0, for the full milestone entry.

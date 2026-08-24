@@ -197,7 +197,22 @@ export const SignatureType = Object.freeze({
     // DecentralizedPublication.js's own header and docs/Principles.md,
     // "Publication Makes Content Discoverable; It Does Not Make It
     // Authoritative (0.7.0)."
-    DECENTRALIZED_PUBLICATION: 'decentralized-publication'
+    DECENTRALIZED_PUBLICATION: 'decentralized-publication',
+    // 0.8.0 — a REQUIRED signature over a core/PublicationAnchor.js
+    // record. Proves "identity X observed/recorded this exact
+    // contentHash, for this publicationId, in this external system" —
+    // an even NARROWER claim than DECENTRALIZED_PUBLICATION above it:
+    // it says nothing about whether the anchored content is true,
+    // well-formed, or even retrievable, nothing about who authored it,
+    // and nothing about who published it — only that the anchoring
+    // identity attests this hash was recorded where the anchor's own
+    // `locator` says it was. Several anchors, from different anchoring
+    // identities, in different external systems, can all name the SAME
+    // contentHash, and none of them is ever more authoritative than
+    // another — see core/PublicationAnchor.js's own header and
+    // docs/Principles.md, "External Anchoring Provides Evidence; It
+    // Does Not Establish Authority (0.8.0)."
+    PUBLICATION_ANCHOR: 'publication-anchor'
 });
 
 export class Signature {
