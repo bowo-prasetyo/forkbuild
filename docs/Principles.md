@@ -9132,3 +9132,69 @@ node resolves, unchanged, the moment the identical bytes exist on
 another); `tests/IpfsLiveIntegration.test.js` is the one file in this
 codebase that attempts to show the same thing against a real Kubo
 network, when one happens to be running.
+
+### Discovery Is Not Resolution (0.7.2)
+
+`application/PublicationResolver.js` has always answered exactly one
+question at a time: "here is a publication I already possess — can I
+retrieve and verify its content?" Nothing before 0.7.2 ever gave a
+replica anywhere to keep an envelope it had SEEN without immediately
+resolving it, which quietly conflated two facts that are not the same:
+knowing a publication exists, and being able to fetch what it points at
+right now. `application/LocalPublicationCatalog.js` exists to keep those
+facts apart, structurally rather than by convention.
+
+**A catalog entry records that a signed envelope was seen. It never
+records whether the content it points at is reachable.** Cataloging a
+`DecentralizedPublication` runs exactly three checks — is the envelope
+well-formed, does it construct, does its own signature verify — the
+identical first three steps `application/PublicationResolver.js#resolve()`
+already runs before it ever touches a `ContentStore`. It deliberately
+stops there. A publication whose bytes are temporarily unreachable
+(0.7.1's own `CONTENT_UNAVAILABLE`) is exactly as valid a catalog entry
+as one that resolves instantly — the catalog has no way to tell the
+difference, and asking it to try would mean fetching content merely to
+decide whether to remember a locator, the exact "retrieve → trust"
+shortcut `application/PublicationResolver.js`'s own header has refused
+since 0.7.0.
+
+**Resolution status is always derived, never stored.** `application/
+LocalPublicationCatalog.js` has no `status` field, no cached
+`RESOLVED`/`CONTENT_UNAVAILABLE` flag, nothing a background process
+would need to keep in sync as content propagates, gets garbage
+collected, or reappears. A caller that wants to know whether a cataloged
+publication currently resolves calls `application/
+PublicationResolver.js#resolve()` on it, on demand, every time — the
+same restraint `application/PublicationResolutionOutcome.js`'s own
+0.7.1 header already applied to a single resolution call, extended here
+across the CATALOG'S entire lifetime: a cached verdict about
+reachability is a verdict that can go silently wrong the moment the
+network changes underneath it, and this codebase would rather ask again
+than trust a stale answer.
+
+**A catalog indexes; it never adjudicates.** `application/
+LocalPublicationCatalog.js#findByContentHash()` can return several
+independently signed publications for the identical bytes, published by
+different identities, pointing at different backends — and returns all
+of them, in the order this replica happened to receive them, with no
+field anywhere ranking one over another. Adding a trust score,
+a "canonical" flag, or a "preferred publisher" concept would turn
+discovery into exactly the kind of adjudication `core/
+BlueprintAttributionView.js` and `core/BlueprintLineageView.js` already
+refuse for disagreeing claims one layer down — several independently
+signed facts, never reconciled into one, extended here to disagreeing
+LOCATIONS of the same content rather than disagreeing claims about it.
+
+**Exchanging a publication moves a locator, never its content.**
+`application/PublicationExchange.js` is the generalization of
+`application/PlaceNamingClaimExchange.js`/`application/
+BlueprintAttributionExchange.js` one layer up — the identical
+validate → construct → verify discipline, applied to the WRAPPER those
+two domains can optionally travel inside instead of to either domain
+directly. It never calls `application/PublicationResolver.js`, never
+touches a `ContentStore`, and never learns what a `contentKind` string
+means. A live transport — gossiping envelopes over an actual peer
+connection rather than a hand-off file — is deliberately still missing;
+this class only establishes what moves and how it is checked, exactly
+as boring on purpose as `application/PlaceNamingClaimExchange.js`'s own
+0.5.3 header insisted its own first transport had to be.

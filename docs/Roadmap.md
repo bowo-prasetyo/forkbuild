@@ -13243,3 +13243,147 @@ for IPFS publishing at all, a discovery index, blockchain anchoring, and
 any retry/backoff/persistence-guarantee policy — each sized on its own,
 exactly like every "Deliberately excluded" list in this document before
 it.
+
+## 0.7.2 — Decentralized Publication Discovery & Catalog
+
+0.7.0 gave any signed object a protocol-neutral locator. 0.7.1 proved
+that locator could be resolved through a real, network-backed
+`ContentStore`. Both, together, only ever answer one question: "I
+already have a `DecentralizedPublication` envelope in hand — can I get
+its content?" Neither ever gave a replica anywhere to keep an envelope
+it has SEEN, so a second replica could ask "what publications does this
+one know about?" This milestone is that missing piece, and — following
+its own design conversation's explicit instruction — nothing more: a
+local index over publications this replica has cataloged, a
+transport-neutral way to move envelopes (never their content) between
+replicas, and no ranking, reputation, or notion of "canonical" anywhere
+in it.
+
+### What shipped
+
+- `application/LocalPublicationCatalog.js` — a local, persisted index of
+  `DecentralizedPublication` envelopes this replica knows about:
+  `add()`/`has()`/`get()`/`remove()`/`list()`, plus `findByContentHash()`/
+  `findByContentKind()`/`findByPublisher()` for narrowing without
+  scanning application code. No `PublicationCatalogEntry` wrapper class
+  exists — a `core/DecentralizedPublication.js` instance is already the
+  slim, signed locator record a catalog needs to hold; every method
+  returns real instances, ready to hand straight to `application/
+  PublicationResolver.js#resolve()` unchanged. `receivedAt` — the one
+  fact no author could ever sign in advance — lives beside the signed
+  envelope in the same stored record, first-seen-wins, never resetting
+  on a re-add.
+- `application/PublicationExchange.js` — the generalization of
+  `application/PlaceNamingClaimExchange.js`/`application/
+  BlueprintAttributionExchange.js` one layer up: `exportPublication()`/
+  `importPublication()` move a `DecentralizedPublication` envelope
+  itself between replicas, running the same validate → construct →
+  verify discipline every exchange class in this codebase already
+  follows, and stopping there — it never retrieves or inspects the
+  wrapped content, never calls `application/PublicationResolver.js`.
+  Deliberately protocol-independent, exactly like its two domain-scoped
+  predecessors: today's transport is a plain object in, a plain object
+  out (a pasted file); a live peer-gossip transport is 0.7.3's own job,
+  unchanged from prior roadmap entries.
+- `application/CreatePublicationCatalogUseCase.js` — the composition
+  root wiring local storage and the verifier into a catalog + exchange
+  pair, the identical shape `application/
+  CreatePublicationResolverUseCase.js` already established for the
+  resolver side of this same milestone pair.
+- `tests/DecentralizedPublicationDiscovery.test.js` — three sections:
+  the catalog's own add/dedup/find behavior in isolation; the exchange's
+  full import discipline including tampered-envelope and
+  swapped-publisher rejections; and a flagship proving cataloging is not
+  resolving — Bob catalogs a publication whose bytes he does not yet
+  have, gets `CONTENT_UNAVAILABLE` from `application/
+  PublicationResolver.js#resolve()`, and then resolves the IDENTICAL
+  cataloged envelope to `RESOLVED` the moment its bytes propagate,
+  the catalog entry itself never changing shape across the transition.
+
+### Discovery is not resolution
+
+See docs/Principles.md, "Discovery Is Not Resolution (0.7.2)," for the
+full reasoning. The short version, named directly by this milestone's
+own design conversation: a catalog answers "what has this replica seen,"
+never "can I retrieve it right now" — that second question stays
+entirely `application/PublicationResolver.js#resolve()`'s own job,
+called separately, as many times as a caller likes, against a catalog
+entry that never changes in response. Collapsing the two — storing a
+`RESOLVED`/`CONTENT_UNAVAILABLE` flag on a catalog entry rather than
+deriving it fresh on demand — would let a catalog silently go stale the
+moment content propagates or disappears; this milestone refuses that
+shortcut structurally, by never storing a resolution outcome anywhere in
+`application/LocalPublicationCatalog.js` at all.
+
+### Deliberately excluded
+
+- **A resolution status field on a catalog entry.** See "Discovery is
+  not resolution" above — status is always derived, on demand, by
+  calling `application/PublicationResolver.js#resolve()` separately;
+  never cached, never stored, never allowed to go stale.
+- **Any ranking, trust score, "canonical," or "preferred" concept.** A
+  catalog with an opinion about which of several publications for the
+  same content matters most would be adjudicating, not indexing — the
+  exact line this milestone's own design conversation drew, and the
+  identical restraint `core/BlueprintAttributionView.js`/`core/
+  BlueprintLineageView.js` already hold for disagreeing claims, applied
+  here to disagreeing LOCATIONS.
+- **A live peer-gossip transport.** `application/PublicationExchange.js`
+  moves a plain envelope object in, a plain envelope object out — it has
+  no idea whether that object crossed a WebRTC connection, a pasted
+  file, or a QR code. Wiring an actual live transport on top of it is
+  0.7.3's own job, unchanged from 0.7.0's and 0.7.1's own roadmap
+  entries.
+- **A global or peer-federated discovery index.** `application/
+  LocalPublicationCatalog.js` only ever answers "what has THIS replica
+  cataloged" — never "what does the whole network know about." Building
+  a wider index without first having a live transport to feed it from
+  peers would be building on nothing; that ordering is exactly why 0.7.3
+  (exchange transport) precedes any future federated index.
+- **Publication search or discovery UX.** No component or view exists
+  for any of this milestone's own classes. Sized as its own future
+  milestone (0.7.4, unchanged from 0.7.0's/0.7.1's own roadmap entries)
+  — the identical "no UI surface" restraint both of those milestones
+  already applied to publishing/resolving through IPFS.
+- **Any policy for WHEN to catalog, re-catalog, or evict an entry
+  automatically.** `add()`/`remove()` are both simple, direct operations
+  a caller invokes explicitly; nothing here decides on its own that a
+  publication is stale, unwanted, or worth forgetting.
+
+```text
+0.7.1   IPFS Content Publication & Resolution                    ✓
+             │
+             ▼
+0.7.2   Decentralized Publication Discovery & Catalog             ✓
+             ├── application/LocalPublicationCatalog.js — add/has/get/
+             │   remove/list + findByContentHash/findByContentKind/
+             │   findByPublisher; no separate entry class, no stored
+             │   resolution status, no ranking
+             ├── application/PublicationExchange.js — validate →
+             │   construct → verify import discipline for an envelope
+             │   itself, transport-neutral, never touches wrapped content
+             ├── application/CreatePublicationCatalogUseCase.js —
+             │   composition root, mirrors
+             │   CreatePublicationResolverUseCase.js's own shape
+             └── DecentralizedPublicationDiscovery.test.js — 3 sections,
+                 including a CONTENT_UNAVAILABLE → RESOLVED flagship that
+                 leaves the catalog entry itself completely unchanged
+```
+
+> **0.7.0 built a signed locator. 0.7.1 proved it could be resolved
+> through a real network. Both left a replica with no way to say "here
+> is everything I've seen" without already holding every envelope in
+> hand. 0.7.2 is the missing index — deliberately boring, deliberately
+> opinion-free: catalog what arrived, exchange envelopes between
+> replicas without ever touching what they point at, and let
+> `application/PublicationResolver.js`, unchanged, keep answering
+> whether any of it can be retrieved right now. What's still missing is
+> a live transport to feed the catalog from a peer instead of a pasted
+> file, and a UI a person could actually look at — both named directly,
+> both deliberately left for 0.7.3 and 0.7.4.**
+
+What's left, and deliberately unbuilt: a live peer-gossip transport, any
+UI surface for browsing or resolving a cataloged publication, a global
+or peer-federated discovery index, and any freshness/eviction policy —
+each sized on its own, exactly like every "Deliberately excluded" list
+in this document before it.
