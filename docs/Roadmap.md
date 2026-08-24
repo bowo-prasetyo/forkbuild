@@ -15697,3 +15697,190 @@ What's left, and deliberately unbuilt: any UI surface for package-bundled
 evidence, and any package-level provenance or trust model over it — sized
 on their own, if ForkBuild ever actually needs them, exactly like every
 "Deliberately excluded" list in this document before it.
+
+## 0.8.8 — Explicit Publication Anchor Creation & Lifecycle
+
+0.8.0 through 0.8.7 gave this codebase every way to CONSUME external
+evidence about a publication — verify it, catalog it, show it, exchange
+it over peers, discover it historically, compare it, import it from a
+package — but never a deliberate way to CREATE one. A caller could always
+reach for `new core/PublicationAnchor.js` directly, but nothing in
+`application/` orchestrated looking up the publication, deriving its
+contentHash, signing with a real identity, and cataloging the result —
+the exact three-step discipline every other signed envelope in this
+codebase already gets from its own use case (`application/
+BlueprintAttributionUseCase.js#publish()`, `application/
+PlaceNamingClaimUseCase.js#publish()`). 0.8.8 closes that one remaining
+gap, and closes it as narrowly as it can be closed:
+
+```text
+Publication
+    ↓
+CreatePublicationAnchorUseCase   (new)
+    ↓
+PublicationAnchor                (core/PublicationAnchor.js, UNCHANGED)
+    ↓
+LocalPublicationAnchorCatalog    (application/LocalPublicationAnchorCatalog.js, UNCHANGED)
+```
+
+**CREATION IS NOT ANCHORING.** The new use case produces a signed CLAIM
+— "the current identity attests this publicationId/contentHash pair was
+recorded by some external system, at this locator, with this proof" — and
+nothing else. It never talks to Bitcoin, IPFS, or any other external
+system, never constructs a transaction, and never calls `application/
+ExternalAnchorVerifier.js`. Whether the claim's proof actually holds up
+remains a completely separate, later action, exactly as it already is for
+every anchor arriving by any other path. See `docs/Principles.md`,
+"Creating an Anchor Claim Does Not Create External Evidence (0.8.8)."
+
+- `application/CreatePublicationAnchorUseCase.js` — the one new class.
+  Constructed with a publication catalog, an identityProvider, an
+  authorization verifier, and an anchor catalog — the identical
+  four-collaborator shape `application/BlueprintAttributionUseCase.js`
+  already established (store/catalog, identity, verifier), with a
+  publication lookup standing in for that class's fingerprint
+  derivation. `execute(publicationId, { anchorType, locator, proof,
+  anchoredAt })`:
+  1. looks `publicationId` up in the publication catalog — throws if
+     unknown, exactly like `application/PlacePublicationUseCase.js`
+     already does for an unknown publication;
+  2. derives `contentHash` from the looked-up publication's OWN
+     `contentReference.hash` — there is no `contentHash` OPTION at all,
+     so a caller cannot supply one even by trying (see "publication
+     binding" below);
+  3. resolves the signing identity via `identity/
+     resolveSigningIdentityId.js` and `identityProvider.getSigningIdentity()`
+     — throws "sign in to create a publication anchor" if nobody is
+     authenticated, the identical refusal `BlueprintAttributionUseCase.js#
+     publish()` already gives for an unauthenticated author;
+  4. constructs a real `core/PublicationAnchor.js`, signs it with
+     `identityProvider.signCanonical()`, and verifies its OWN output
+     through `identity/LocalAuthorizationVerifier.js#
+     verifyPublicationAnchor()` before it ever reaches the catalog — the
+     same "never persist what wouldn't survive verification" discipline
+     `BlueprintAttributionUseCase.js#publish()` already applies;
+  5. catalogs the result through `application/
+     LocalPublicationAnchorCatalog.js#add()`, unchanged, and returns the
+     cataloged `PublicationAnchor` directly — no `{ anchor, stored }`
+     wrapper, since catalog insertion is guaranteed by the time
+     `execute()` returns.
+
+  No new field, method, or subclass was added to `core/
+  PublicationAnchor.js` anywhere in this milestone — the domain object
+  already represented a signed claim correctly; the missing piece was
+  always orchestration, never the record itself.
+
+- **Publication binding, not adjudication.** Unlike `application/
+  AddPublicationAnchorUseCase.js` (which exists precisely to catalog a
+  STRANGER's already-complete envelope unchanged, arbitrary
+  publicationId/contentHash included), `CreatePublicationAnchorUseCase`
+  is creating ForkBuild's OWN claim, so it is the one place in this
+  codebase that CAN cheaply guarantee its `publicationId`/`contentHash`
+  pair actually agrees with a publication this replica knows about — and
+  does, by deriving `contentHash` rather than accepting it. This is not
+  the evidence-comparison judgment 0.8.6's `derivePublicationEvidenceConvergence()`
+  already owns; it never compares two independent anchors against each
+  other, and never runs for an anchor arriving by any path other than
+  this one. The asymmetry is deliberate and permanent:
+
+  ```text
+  create locally   → validate against a known publication (0.8.8, here)
+  import (0.8.4/0.8.7) → preserve the external claim, unchanged
+  ```
+
+- `tests/PublicationAnchorCreation.test.js` (new) — Section A: flagship,
+  Alice creates an anchor for her own published content; the anchor
+  binds to the publication's own `contentReference.hash`, is genuinely
+  signed, lands in the catalog with zero extra calls, and immediately
+  participates in `derivePublicationEvidenceConvergence()` reporting no
+  content-binding conflict; Section B: an unknown `publicationId` throws,
+  and a stray `contentHash` field in the options is silently ignored —
+  the derived value always wins; Section C: creation with nobody signed
+  in throws rather than producing an unsigned anchor, and the anchor
+  that IS created verifies through the ordinary `identity/
+  LocalAuthorizationVerifier.js` path; Section D: a spy authorization
+  verifier proves `execute()` consults it exactly once (its own
+  self-check) and never touches a proof verifier at all, then the
+  identical created anchor is independently fed to `application/
+  ExternalAnchorVerifier.js` four separate times — `VALID_PROOF_UNVERIFIED`
+  with no proof verifier supplied, `VALID`/`INVALID_PROOF`/
+  `PROOF_UNAVAILABLE` depending only on what proof verifier is handed to
+  it afterward; Section E: the publication's own signed JSON is
+  byte-for-byte identical before and after anchoring it — anchoring
+  never mutates the publication it is about.
+
+```text
+0.8.7   External Evidence Import & Publication Package Integration   ✓
+             │
+             ▼
+0.8.8   Explicit Publication Anchor Creation & Lifecycle             ✓
+             ├── application/CreatePublicationAnchorUseCase.js — new;
+             │   publication → derived contentHash → sign → self-verify
+             │   → catalog; never calls ExternalAnchorVerifier; no new
+             │   field on core/PublicationAnchor.js
+             ├── publication binding: contentHash always derived from a
+             │   looked-up publication, never a caller-suppliable option
+             │   — the one asymmetry between CREATE and IMPORT
+             └── PublicationAnchorCreation.test.js (new) — binding,
+                 identity/signature, zero-proof-verifier-calls spy test,
+                 the same created anchor independently reaching all four
+                 ExternalAnchorVerifier outcomes, and a mutation-freedom
+                 proof over the publication itself
+```
+
+> **Creating an anchor claim does not create external evidence.**
+> `CreatePublicationAnchorUseCase` produces a genuinely signed assertion
+> that an external system recorded a publication — never a call to that
+> external system, never a proof check, and never an implication that
+> the recording actually happened. `tests/PublicationAnchorCreation.test.js`'s
+> own Section D proves this the same way every spy-verifier test since
+> 0.8.4 has: a spy consulted exactly once (the mandatory self-signature
+> check) and zero times for anything proof-related, and the SAME created
+> anchor going on to independently report all four of
+> `application/AnchorVerificationOutcome.js`'s values depending only on
+> what is asked of it afterward. See `docs/Principles.md`, "Creating an
+> Anchor Claim Does Not Create External Evidence (0.8.8)."
+
+### Deliberately excluded
+
+- **Bitcoin transaction construction, wallet/key management, UTXO
+  selection, fee estimation, broadcasting, or confirmation tracking.**
+  `execute()`'s `proof`/`locator`/`anchoredAt` parameters are always
+  externally supplied by the caller — this milestone represents "I have
+  evidence from an external system," never "ForkBuild performed the
+  external operation." Building the actual Bitcoin-anchoring operation
+  is explicitly left to a later milestone (0.8.9, per this document's
+  own sequencing), kept apart from this one so wallet/transaction
+  mechanics never contaminate the generic anchor-creation architecture.
+- **Automatic anchoring, scheduled anchoring, or anchoring as a
+  side-effect of publishing.** `CreatePublicationAnchorUseCase` is only
+  ever invoked explicitly, by a caller that already has real evidence
+  parameters in hand — nothing in `application/PlacePublicationUseCase.js`
+  or anywhere else in the publish path calls it.
+- **A persistent anchor status field (`PENDING`/`CONFIRMED`/`FAILED`) on
+  `core/PublicationAnchor.js`.** An external system's own state can
+  change after an anchor is created; that stays `application/
+  ExternalAnchorVerifier.js`'s live, re-askable question, never a value
+  frozen onto the signed envelope at creation time. A Bitcoin anchor
+  reporting `PROOF_UNAVAILABLE` today and `VALID` tomorrow, without the
+  anchor itself changing at all, is the intended shape — the same
+  temporal separation 0.8.1 already built.
+- **Anchor replacement, revocation, ranking, "best anchor" selection,
+  trust scores, quorum, or evidence consensus.** A locator correction or
+  a different anchorType still means creating a brand-new anchor with a
+  new id and a new signature — `core/PublicationAnchor.js`'s own header
+  has held anchors immutable since 0.8.0, and nothing here changes that.
+- **A second duplicate-anchor policy.** `execute()` calls `application/
+  LocalPublicationAnchorCatalog.js#add()` unchanged; that catalog's
+  existing first-seen-wins, id-based dedup is the only policy that ever
+  applies, identically to every other path an anchor can reach it by.
+- **Any UI.** No view, panel, or "Create Anchor" button in this codebase
+  yet calls `CreatePublicationAnchorUseCase` — the identical restraint
+  every anchor-evidence milestone since 0.8.0 already held before any UI
+  consumed its own new mechanism.
+
+What's left, and deliberately unbuilt: the actual external-system
+operation (a real Bitcoin-anchoring flow), any UI surface for triggering
+creation, and any status/confirmation model over a created claim — each
+sized on its own, exactly like every "Deliberately excluded" list in this
+document before it.

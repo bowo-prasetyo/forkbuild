@@ -10219,3 +10219,74 @@ receivedAt` remains this codebase's one place for local arrival
 metadata, unchanged.
 
 See `docs/Roadmap.md`, 0.8.7, for the full milestone entry.
+
+### Creating an Anchor Claim Does Not Create External Evidence (0.8.8)
+
+`application/CreatePublicationAnchorUseCase.js` is the first thing this
+codebase has ever built that produces a brand-new `core/
+PublicationAnchor.js` on ForkBuild's own initiative, rather than
+receiving one from a stranger (0.8.4's peer exchange) or a portable file
+(0.8.7's package import). That is a genuinely new capability, and it
+would be easy to let it quietly cross a line every milestone since 0.8.0
+has held: **ForkBuild can create a signed assertion that an external
+system recorded a publication, but the assertion becomes independently
+established evidence only through verification against that external
+system.**
+
+`execute()` never imports, constructs, or calls `application/
+ExternalAnchorVerifier.js`, anywhere. `tests/PublicationAnchorCreation.test.js`'s
+own Section D proves it with a spy authorization verifier: creating an
+anchor — deriving its contentHash, signing it, self-checking that
+signature, and cataloging it — consults the spy exactly once, for the
+mandatory signature self-check `application/
+BlueprintAttributionUseCase.js#publish()` already performs before
+persisting anything, and zero times for anything proof-related. The same
+section then takes the freshly created anchor and feeds it to a real
+`ExternalAnchorVerifier` four separate times, each with a different
+(or absent) proof verifier, and gets back all four of `application/
+AnchorVerificationOutcome.js`'s distinct values in turn —
+`VALID_PROOF_UNVERIFIED`, `VALID`, `INVALID_PROOF`, `PROOF_UNAVAILABLE`
+— proving that nothing about HOW an anchor was created (by hand here, by
+a stranger over a peer connection, unpacked from a package) has any
+bearing on what verifying it later can conclude.
+
+This gives the evidence architecture a fourth, permanently distinct
+question, cutting across every milestone since 0.8.0 rather than adding
+a new axis to any one of them:
+
+```text
+create a claim         (0.8.8, application/CreatePublicationAnchorUseCase.js)
+    ≠
+recording by the external system   (never this codebase's to perform)
+    ≠
+proof verification     (0.8.1, application/ExternalAnchorVerifier.js)
+    ≠
+authority               (never established anywhere in this codebase)
+```
+
+A Bitcoin anchor `CreatePublicationAnchorUseCase` creates today from a
+`txid` a caller already obtained can report `PROOF_UNAVAILABLE` this
+afternoon and `VALID` tomorrow, without the anchor itself changing at
+all — the identical temporal restraint 0.8.1 already established, now
+proven to hold across the creation boundary too, not just the import one.
+
+**Creation is also where this codebase's one deliberate CREATE/IMPORT
+asymmetry lives.** `CreatePublicationAnchorUseCase` derives `contentHash`
+from a looked-up publication's own `contentReference.hash` — there is no
+`contentHash` option a caller could supply instead — because this is the
+one path where the claim being produced is ForkBuild's own, not a
+stranger's already-signed envelope arriving over a peer connection
+(0.8.4) or inside a package (0.8.7). Guaranteeing a locally CREATED
+anchor cannot misname the publication it is about is not evidence
+adjudication — `application/PublicationEvidenceConvergence.js`'s
+restraint against ranking or reconciling independent anchors (0.8.6) is
+completely untouched, and an anchor arriving by any other path still
+carries its claims exactly as signed, unexamined against anything this
+replica separately believes:
+
+```text
+create locally    → validate against a known publication (0.8.8)
+import externally → preserve the external claim, unchanged (0.8.4/0.8.7)
+```
+
+See `docs/Roadmap.md`, 0.8.8, for the full milestone entry.
