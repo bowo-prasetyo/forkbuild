@@ -14756,3 +14756,212 @@ What's left, and deliberately unbuilt: anchor exchange over peers
 new evidence from inside this app at all — each sized on its own,
 exactly like every "Deliberately excluded" list in this document before
 it.
+
+## 0.8.4 — External Anchor Publication Over Peers
+
+0.8.3's own "Deliberately excluded" list named this milestone directly:
+"Peer anchor exchange... A `PublicationAnchorExchange` reusing
+`application/PublicationExchange.js`'s own proven shape remains its own
+future milestone, exactly as 0.8.1 and 0.8.2 both already named it."
+0.8.4 is that milestone, and the objective is deliberately narrow: allow
+replicas to exchange `PublicationAnchor` claims over authenticated peers,
+without ever exchanging or asserting verification results.
+
+```text
+Alice
+  │
+  ├── PublicationAnchor
+  │
+  ▼
+Anchor Catalog
+  │
+  ├──── authenticated peer ────► Bob
+  │                              │
+  │                              ▼
+  │                       Anchor Catalog
+  │                              │
+  │                              ▼
+  │                    Explicit verification
+  │                              │
+  │                              ▼
+  │                    ExternalAnchorVerifier
+```
+
+This reuses almost every piece of infrastructure 0.7.3 and 0.8.0-0.8.3
+already built — an authenticated peer transport
+(`peer/PeerMessageBus.js`), a proven gossip-wrapper/exchange shape
+(`application/PublicationPeerProtocol.js`/`application/
+PublicationPeerExchange.js`), anchor structural validation (`application/
+PublicationAnchorValidator.js`), anchor cataloging (`application/
+LocalPublicationAnchorCatalog.js`), and independent external verification
+(`application/ExternalAnchorVerifier.js`, still completely untouched).
+The only genuinely new piece is the signature-checking import boundary
+0.8.2's own header already named in advance and declined to build early:
+a `PublicationExchange`-shaped anchor exchange.
+
+- `application/PublicationAnchorPeerProtocol.js` — the wire shape,
+  mirroring `application/PublicationPeerProtocol.js`'s own restraint
+  exactly: one message kind, `ANNOUNCE`, wrapping a plain
+  `PublicationAnchor.toJSON()` envelope, completely unchanged from what
+  it already was. `toPublicationAnchorAnnounceMessage()`/
+  `isValidPublicationAnchorPeerMessage()` check only the OUTER wrapper's
+  own shape — never the anchor's own structural or signature validity,
+  exactly the same split the publication-side protocol module already
+  draws. No verification-result field exists anywhere in this shape, and
+  none should ever be added to it.
+- `application/PublicationAnchorExchange.js` — the new signature-checking
+  import boundary. `application/AddPublicationAnchorUseCase.js`'s own
+  0.8.2 header named this class by shape in advance, and it stays
+  unmodified: a caller that already trusts an anchor some other way still
+  uses the two-step, no-signature-check discipline that class always had.
+  This new class is a SECOND way in, for a caller — namely a peer
+  transport — that has no such standing trust: validate -> construct ->
+  verify SIGNATURE (via `identity/LocalAuthorizationVerifier.js#
+  verifyPublicationAnchor()`) -> catalog. Never calls `application/
+  ExternalAnchorVerifier.js`; never interprets `proof`. `exportAnchor()`/
+  `importAnchor()` mirror `application/PublicationExchange.js#
+  exportPublication()`/`importPublication()`'s own names and contract
+  exactly.
+- `application/PublicationAnchorPeerExchange.js` — the live transport,
+  mirroring `application/PublicationPeerExchange.js`'s own shape exactly:
+  attaches to every peer on an injected `ConnectedPeerRegistry` (now and
+  via its own `onChange`), `announce()` sends only to
+  `PeerLifecycleState.AUTHENTICATED` peers under this file's own
+  `forkbuild:anchor` protocol, `onAnchorReceived()` fires `{ anchor,
+  isNew }` for every successfully cataloged incoming ANNOUNCE, a
+  malformed or forged incoming message is dropped silently, and
+  `dispose()` detaches. THE central invariant of this milestone, enforced
+  by what `_handleIncoming()` does NOT call: never `application/
+  ExternalAnchorVerifier.js`. Peer identity is informational only —
+  exactly as `application/PublicationPeerExchange.js`'s own header
+  already establishes for a publication, `_handleIncoming()` here never
+  reads which connection a message arrived over either.
+- `application/CreatePublicationAnchorPeerExchangeUseCase.js` — the
+  composition root, mirroring `application/
+  CreatePublicationPeerExchangeUseCase.js`'s own shape: wires a fresh
+  `LocalPublicationAnchorCatalog`, a `LocalAuthorizationVerifier`, a
+  `PublicationAnchorExchange` over both, and a live
+  `PublicationAnchorPeerExchange` over an injected `peerMessageBus`/
+  `connectedPeerRegistry`. Returns its own `catalog` rather than reusing
+  `application/CreatePublicationAnchorCatalogUseCase.js`'s — same catalog
+  CLASS, paired with the signature-verifying exchange this milestone
+  needs instead of the structural-only one 0.8.2 paired it with.
+- `ui/main.js` — `publicationAnchorCatalog` now comes from this
+  milestone's own composition root instead of 0.8.2's, riding the SAME
+  `peerMessageBus`/`peerSessionManager.registry` every other peer
+  protocol in this file already shares. Still exactly ONE
+  `LocalPublicationAnchorCatalog` instance app-wide — the Publication
+  Center built in 0.8.3 needed no changes at all to start showing anchors
+  that arrived over the network: it already only ever reads from
+  `publicationAnchorCatalog`, and now that catalog is fed by more than
+  one path. `publicationAnchorPeerExchange` itself is also provided, for
+  any future UI that wants to announce an anchor explicitly — this
+  milestone adds no such UI itself.
+- `tests/PublicationAnchorPeerExchange.test.js` — the flagship: Alice
+  signs an anchor, Bob receives and catalogs it over a real live
+  authenticated connection, then relays the IDENTICAL claim onward to
+  Carol, who was never connected to Alice at all. All three replicas
+  come to hold the byte-identical signed anchor. Bob's own external
+  system then independently reports `VALID`; Carol's own external system
+  is deliberately made unreachable and independently reports
+  `PROOF_UNAVAILABLE` — for the exact same claim. Neither outcome is
+  ever transmitted or persisted anywhere the other replica could find it.
+  Plus the full invariant suite: unauthenticated peers never receive an
+  announcement, a malformed or forged announcement is silently dropped
+  and never catalogs, duplicate announcements collapse to one catalog
+  entry via 0.8.2's own id-based dedup, several independent and
+  differently-`anchorType`d anchors all coexist under live announce()
+  traffic, `application/PublicationAnchorPeerExchange.js` never once
+  consults `application/ExternalAnchorVerifier.js` (proven with a spying
+  verifier), the wire message itself never carries a verification field,
+  `receivedAt` stays local to each replica, and no notion of peer
+  identity ever gates whether a genuinely-signed anchor is accepted.
+
+```text
+0.8.3   Publication Center: External Evidence UX                    ✓
+             │
+             ▼
+0.8.4   External Anchor Publication Over Peers                      ✓
+             ├── application/PublicationAnchorPeerProtocol.js — the
+             │   ANNOUNCE wire shape; one message kind; no verification
+             │   field, ever
+             ├── application/PublicationAnchorExchange.js — the new
+             │   signature-checking import boundary 0.8.2 named and
+             │   deferred: validate -> construct -> verify SIGNATURE ->
+             │   catalog; never touches ExternalAnchorVerifier
+             ├── application/PublicationAnchorPeerExchange.js — live
+             │   transport over peer/PeerMessageBus.js; AUTHENTICATED-
+             │   only sends; never calls ExternalAnchorVerifier; peer
+             │   identity is informational only
+             ├── application/CreatePublicationAnchorPeerExchangeUseCase
+             │   .js — composition root, one catalog instance app-wide
+             ├── ui/main.js — publicationAnchorCatalog now fed live over
+             │   the network; the 0.8.3 Publication Center needed zero
+             │   changes to show what arrives
+             └── PublicationAnchorPeerExchange.test.js — the flagship:
+                 Alice → Bob → Carol, two hops, one identical claim;
+                 Bob verifies VALID, Carol independently reports
+                 PROOF_UNAVAILABLE for the SAME anchor; no outcome ever
+                 crosses the wire; full invariant suite
+```
+
+> **Peers exchange anchor claims, not verification results.** Alice does
+> not send `verified: true`, and Bob does not trust Alice's verification
+> — there is no such field anywhere in the wire shape to send in the
+> first place. What propagates is exactly what 0.8.0 already defined a
+> `PublicationAnchor` to be: a signed claim that some identity attests a
+> given hash was recorded somewhere. `application/
+> PublicationAnchorPeerExchange.js` moves that claim, unchanged, between
+> replicas; `application/ExternalAnchorVerifier.js`, completely untouched
+> by this milestone, remains the only thing that ever produces a
+> verification outcome, and it does so locally, on demand, per replica,
+> exactly as 0.8.3 already made explicit in the UI. `distributed claim ≠
+> shared observation ≠ shared verification capability ≠ shared
+> authority` — this milestone builds the first of those four, and
+> structurally forecloses ever building the other three by accident.
+
+### Deliberately excluded
+
+- **Requesting historical anchors.** No `REQUEST`/`RESPONSE` message kind
+  was added to `application/PublicationAnchorPeerProtocol.js` — a newly
+  joined replica discovers only anchors announced (or relayed) to it
+  after it connects, exactly the same restraint 0.7.3 originally drew for
+  publications before 0.7.6 later added retrieval. Historical anchor
+  discovery/synchronization for a newly joined replica is its own future
+  milestone, sized on its own once announce/receive alone has proven the
+  transport works.
+- **Verification results, confidence scores, or "checked by" fields
+  anywhere on the wire or in storage.** Not on `application/
+  PublicationAnchorPeerProtocol.js`'s own message shape, not on
+  `core/PublicationAnchor.js`, and not on `application/
+  LocalPublicationAnchorCatalog.js` — the identical restraint 0.8.2 and
+  0.8.3 already held for local verification, now extended to hold for
+  network transport too.
+- **A "trusted peer" or peer reputation concept for anchors.** Whether an
+  anchor is accepted depends entirely on its own signature, checked
+  inside `application/PublicationAnchorExchange.js`; which peer relayed
+  it is never consulted anywhere in this milestone, and no field or
+  method for tracking "how much to trust peer X's anchors" was added.
+- **Automatically re-verifying an anchor the moment it arrives.**
+  Receiving an anchor over a peer connection catalogs it; it never
+  triggers `application/ExternalAnchorVerifier.js` — the same explicit,
+  person-initiated "Verify Evidence" action 0.8.3 already built remains
+  the only way any anchor, locally created or peer-received, ever gets
+  verified.
+- **Any UI for explicitly announcing a specific anchor, or for showing
+  "N peers know about this evidence."** `ui/main.js` provides
+  `publicationAnchorPeerExchange` for a future UI to use, but this
+  milestone builds no button, no peer-count badge, and no new concept in
+  `ui/views/DecentralizedPublicationsView.js` — the existing "Known
+  Evidence" count already reads from the same catalog this milestone now
+  also feeds, with no changes required, exactly as intended.
+- **Multi-evidence convergence — agreement, contradiction, or any
+  temporal reasoning across several anchors.** Untouched, for the
+  identical reason every prior 0.8.x milestone left it untouched — see
+  `docs/Principles.md`, "External Anchoring Provides Evidence; It Does
+  Not Establish Authority (0.8.0)."
+
+What's left, and deliberately unbuilt: historical anchor discovery for a
+newly joined replica (0.8.5) and multi-evidence convergence (0.8.6) —
+each sized on its own, exactly like every "Deliberately excluded" list in
+this document before it.

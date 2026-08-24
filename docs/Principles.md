@@ -9798,3 +9798,117 @@ into a stronger claim, or derives "therefore this publication is
 authoritative" from any count of anchors, verified or not.
 
 See `docs/Roadmap.md`, 0.8.3, for the full milestone entry.
+
+### Signature Verification Is Not Proof Verification (0.8.4)
+
+0.8.0's own header already distinguished a `PublicationAnchor`'s
+signature from the external proof it names: "verifying an anchor's
+signature proves only that the named `anchorIdentity` really did sign
+exactly this tuple. Verifying the `proof` itself... is a SEPARATE,
+anchorType-specific question." 0.8.4 is the milestone that turns that
+distinction into an actual second class, because a peer transport finally
+needs it: `application/PublicationAnchorExchange.js` runs every incoming
+anchor through validate -> construct -> verify SIGNATURE -> catalog,
+stopping exactly where `application/AddPublicationAnchorUseCase.js`
+(0.8.2) already stopped one step earlier, and exactly where
+`application/ExternalAnchorVerifier.js` (0.8.0-0.8.1) goes one step
+further.
+
+**Three questions, three answerers, never conflated.** "Is this
+envelope well-formed?" is `application/PublicationAnchorValidator.js`,
+unchanged since 0.8.0. "Did the claimed identity really sign it?" is now
+`application/PublicationAnchorExchange.js#importAnchor()`, calling
+`identity/LocalAuthorizationVerifier.js#verifyPublicationAnchor()`
+directly — REQUIRED, never optional, for anything arriving over
+`application/PublicationAnchorPeerExchange.js`. "Does the external
+system actually substantiate the claim?" stays entirely
+`application/ExternalAnchorVerifier.js`'s own question, asked separately,
+asked explicitly, asked only when a person clicks "Verify Evidence" —
+`tests/PublicationAnchorPeerExchange.test.js`'s own Section B and C each
+prove this with a spy `ExternalAnchorVerifier` that would fail the
+moment `importAnchor()` — called any number of times — ever touched it,
+and never does.
+
+**A forged signature is refused before the catalog ever sees it; an
+unreachable external system never is.** This is the one behavioral
+difference between the two "add an anchor" paths this codebase now
+carries side by side: `application/AddPublicationAnchorUseCase.js`
+catalogs a well-formed-but-unsigned or forged anchor cleanly, because a
+caller using it already trusts the anchor some other way (its own
+freshly-signed record, an already-vetted import). `application/
+PublicationAnchorExchange.js` refuses the identical forged record
+outright, because an anchor arriving from a stranger over a peer
+connection carries no such standing trust — see `tests/
+PublicationAnchorPeerExchange.test.js` Section B, item 10, run against
+the exact tampering `tests/PublicationAnchorCatalog.test.js` Section D
+shows the OTHER use case tolerating. Neither use case was changed to
+agree with the other; they answer different questions for different
+callers, on purpose.
+
+See `docs/Roadmap.md`, 0.8.4, for the full milestone entry.
+
+### Peers Exchange Anchor Claims, Not Verification Results (0.8.4)
+
+0.7.3's own principle already drew this line for publications: "a peer
+connection transports... it does not resolve." 0.8.4 draws the identical
+line one evidence layer over, and states it as its own invariant because
+an anchor's very reason to exist is a VERIFIABLE claim about an external
+system — the temptation to shortcut peer-to-peer trust by also gossiping
+"and by the way, I checked, it's VALID" is real, and this milestone
+exists in part to structurally foreclose it.
+
+**What crosses the wire is exactly `PublicationAnchor.toJSON()`, nothing
+more.** `application/PublicationAnchorPeerProtocol.js#
+toPublicationAnchorAnnounceMessage()` wraps only `{ kind, envelope }` —
+`tests/PublicationAnchorPeerExchange.test.js` Section A asserts the
+wrapper carries exactly two keys, and Section C asserts the envelope a
+live `announce()` actually sends carries no `verified` or
+`verificationOutcome` field anywhere on it. No field for a verification
+outcome, a confidence score, or a "checked by" identity was added to the
+wire shape, to `core/PublicationAnchor.js`, or to `application/
+LocalPublicationAnchorCatalog.js` — an anchor's signed payload is
+unchanged from 0.8.0, byte for byte, whether it travelled zero peer hops
+or several.
+
+**Receiving an anchor is never verifying it.**
+`application/PublicationAnchorPeerExchange.js#_handleIncoming()` never
+calls `application/ExternalAnchorVerifier.js` — the single most important
+restraint this class exists to enforce, named directly in its own header.
+"Another replica told me about this evidence claim" and "the evidence has
+been verified" stay two separate facts a person can hold about the exact
+same anchor, exactly as separate as 0.8.2 already kept "cataloged" from
+"verified" for an anchor that arrived by any other means.
+
+**Authentication gates who a claim is sent to, never whether a received
+claim is believed.** `application/PublicationAnchorPeerExchange.js#
+announce()` sends only to peers `PeerLifecycleState.AUTHENTICATED` — the
+identical channel-level gate `application/PublicationPeerExchange.js`
+already applies to publications — but authentication is never asked to
+do double duty as an authority mechanism. An anchor's own signature,
+checked entirely inside `application/PublicationAnchorExchange.js`, is
+the only thing that ever makes it acceptable; `_handleIncoming()` never
+reads which connection a message arrived over, and this codebase adds no
+notion of a "trusted peer" or "trusted anchor source" anywhere in this
+milestone. `tests/PublicationAnchorPeerExchange.test.js` Section D proves
+this is not merely a missing feature but an observed property: the exact
+same claim, relayed through Bob, reaches Carol with an identical
+signature to the one Alice produced — Bob's participation as a relay
+changes the claim's PATH, never its CONTENT, and never grants Bob any
+say over whether Carol should believe it.
+
+**Verification stays local, and independently local, even for the
+identical claim.** Section D's flagship gives Bob and Carol the exact
+same signed anchor and two different, entirely honest, entirely
+independent answers: Bob's own external system reports `VALID`; Carol's
+own external system is unreachable and reports `PROOF_UNAVAILABLE`.
+Neither result is ever written back into the shared claim, ever
+transmitted to the other replica, or ever changes what the other replica
+is able to independently determine for itself. A network of replicas
+sharing anchors converges on a shared set of CLAIMS; it is never made to
+converge on a shared VERDICT, because no verdict this codebase computes
+was ever meant to be shared in the first place — see `docs/
+Principles.md`, "External Anchoring Provides Evidence; It Does Not
+Establish Authority (0.8.0)," which this milestone's transport extends
+across a network, not past.
+
+See `docs/Roadmap.md`, 0.8.4, for the full milestone entry.

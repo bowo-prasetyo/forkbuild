@@ -33,7 +33,7 @@ import { CreatePublicationPeerExchangeUseCase } from '../application/CreatePubli
 import { CreatePeerContentExchangeUseCase } from '../application/CreatePeerContentExchangeUseCase.js';
 import { CreatePublicationResolutionCoordinatorUseCase } from '../application/CreatePublicationResolutionCoordinatorUseCase.js';
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { CreatePublicationAnchorCatalogUseCase } from '../application/CreatePublicationAnchorCatalogUseCase.js';
+import { CreatePublicationAnchorPeerExchangeUseCase } from '../application/CreatePublicationAnchorPeerExchangeUseCase.js';
 import { CreateExternalAnchorVerifierUseCase } from '../application/CreateExternalAnchorVerifierUseCase.js';
 import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/CreateBitcoinAnchorProofVerifierUseCase.js';
 import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/CreatePublicationEvidenceCoordinatorUseCase.js';
@@ -339,7 +339,22 @@ const { kindPlugins: publicationDisplayKindPlugins } = new CreatePublicationDisp
 // "Verify" in the Publication Center — see application/
 // PublicationEvidenceCoordinator.js's own header on why discovery and
 // verification stay two separate calls.
-const { catalog: publicationAnchorCatalog } = new CreatePublicationAnchorCatalogUseCase().execute();
+//
+// 0.8.4 — External Anchor Publication Over Peers. `publicationAnchorCatalog`
+// now comes from application/CreatePublicationAnchorPeerExchangeUseCase.js
+// instead of application/CreatePublicationAnchorCatalogUseCase.js — the
+// SAME kind of LocalPublicationAnchorCatalog instance, now also fed live
+// by `publicationAnchorPeerExchange` riding the SAME peerMessageBus/
+// peerSessionManager.registry every other peer/PeerMessageBus.js protocol
+// in this file already does. An anchor a peer announces is cataloged the
+// moment it arrives — application/PublicationAnchorPeerExchange.js never
+// once calls `externalAnchorVerifier` below; verification stays exactly
+// where 0.8.3 already put it, an explicit "Verify Evidence" click in the
+// Publication Center, unchanged by this milestone.
+const { catalog: publicationAnchorCatalog, peerExchange: publicationAnchorPeerExchange } = new CreatePublicationAnchorPeerExchangeUseCase().execute({
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry
+});
 const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute();
 const { externalAnchorVerifier } = new CreateExternalAnchorVerifierUseCase().execute({
     proofVerifiers: [bitcoinProofVerifier]
@@ -378,5 +393,7 @@ app.provide('publicationDisplayKindPlugins', publicationDisplayKindPlugins);
 // 0.8.3 — Publication Center: External Evidence UX.
 app.provide('publicationAnchorCatalog', publicationAnchorCatalog);
 app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
+// 0.8.4 — External Anchor Publication Over Peers.
+app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 app.use(router);
 app.mount('#app');
