@@ -166,7 +166,22 @@ export const SignatureType = Object.freeze({
     // getSigningDescriptor() and docs/Principles.md, "Attribution Is An
     // External Assertion About A Fingerprint, Never Structure State
     // (0.6.5)."
-    BLUEPRINT_ATTRIBUTION: 'blueprint-attribution'
+    BLUEPRINT_ATTRIBUTION: 'blueprint-attribution',
+    // 0.6.8 — a REQUIRED signature (never optional — see this file's
+    // own "no unsigned claims" rule above), over a BlueprintLineageClaim
+    // (core/BlueprintLineageClaim.js's own wire shape). Proves "identity
+    // X itself asserts that the design fingerprinting to
+    // derivedFingerprint was derived from the design fingerprinting to
+    // sourceFingerprint" — deliberately the same shape of claim as
+    // BLUEPRINT_ATTRIBUTION above, one concept over: it never authorizes
+    // anything, never requires the signer to have authored either
+    // design, and several identities' lineage claims about the same pair
+    // of fingerprints disagreeing (or even directly contradicting one
+    // another) are all perfectly valid signed facts, not a conflict
+    // either replica needs to resolve. See core/BlueprintLineageClaim.js's
+    // own getSigningDescriptor() and docs/Principles.md, "Lineage Is A
+    // Signed Claim, Never A Fact (0.6.8)."
+    BLUEPRINT_LINEAGE_CLAIM: 'blueprint-lineage-claim'
 });
 
 export class Signature {

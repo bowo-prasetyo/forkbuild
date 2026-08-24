@@ -18,11 +18,14 @@ import { buildBlueprintPackage } from './BlueprintPackage.js';
 // header for the exact, deliberately-not-a-new-object shape). Every
 // existing caller that only ever passed a Structure keeps working
 // unchanged, producing exactly the package it always did.
+//
+// 0.6.8 — Blueprint Lineage & Revision Discovery. `lineageClaims` is the
+// identical additive passthrough, one concept over.
 export class ExportBlueprintUseCase {
-    execute(structure, { attributions = [] } = {}) {
+    execute(structure, { attributions = [], lineageClaims = [] } = {}) {
         if (!structure || !(structure instanceof Structure)) {
             throw new Error('ExportBlueprintUseCase: a valid Structure is required');
         }
-        return buildBlueprintPackage(structure, { attributions });
+        return buildBlueprintPackage(structure, { attributions, lineageClaims });
     }
 }

@@ -1,5 +1,6 @@
 import { Structure } from '../core/Structure.js';
 import { BlueprintAttribution } from '../core/BlueprintAttribution.js';
+import { BlueprintLineageClaim } from '../core/BlueprintLineageClaim.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -69,12 +70,23 @@ export const BLUEPRINT_KIND = 'forkbuild.blueprint';
 // than written out as `attributions: []` — a plain Structure-only export
 // stays byte-for-byte what it always was before this milestone, so
 // nothing downstream needs a version bump to keep parsing it.
-export function buildBlueprintPackage(structure, { attributions = [] } = {}) {
+//
+// `lineageClaims` (0.6.8): the exact same additive, optional,
+// omit-when-empty shape as `attributions` above, for signed
+// BlueprintLineageClaim instances instead. A Blueprint Package,
+// bundled attributions, and bundled lineage claims stay THREE
+// independent portable things — see core/BlueprintLineageClaim.js's own
+// header — this field is only ever the convenience of moving all of
+// them in one file at once, never a merger into one domain concept.
+export function buildBlueprintPackage(structure, { attributions = [], lineageClaims = [] } = {}) {
     if (!structure || !(structure instanceof Structure)) {
         throw new Error('BlueprintPackage: a Structure instance is required');
     }
     if (!Array.isArray(attributions) || attributions.some((a) => !(a instanceof BlueprintAttribution))) {
         throw new Error('BlueprintPackage: attributions must be an array of BlueprintAttribution instances');
+    }
+    if (!Array.isArray(lineageClaims) || lineageClaims.some((c) => !(c instanceof BlueprintLineageClaim))) {
+        throw new Error('BlueprintPackage: lineageClaims must be an array of BlueprintLineageClaim instances');
     }
     const pkg = {
         kind: BLUEPRINT_KIND,
@@ -83,6 +95,9 @@ export function buildBlueprintPackage(structure, { attributions = [] } = {}) {
     };
     if (attributions.length > 0) {
         pkg.attributions = attributions.map((attribution) => attribution.toJSON());
+    }
+    if (lineageClaims.length > 0) {
+        pkg.lineageClaims = lineageClaims.map((claim) => claim.toJSON());
     }
     return pkg;
 }

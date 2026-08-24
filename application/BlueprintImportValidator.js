@@ -3,6 +3,10 @@ import {
     validateBlueprintAttributionPublication,
     BlueprintAttributionPublicationError
 } from './BlueprintAttributionPublicationValidator.js';
+import {
+    validateBlueprintLineageClaimPublication,
+    BlueprintLineageClaimPublicationError
+} from './BlueprintLineageClaimPublicationValidator.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -146,6 +150,27 @@ export function validateBlueprintPackage(pkg, { registry = null } = {}) {
             } catch (e) {
                 if (e instanceof BlueprintAttributionPublicationError) {
                     throw new BlueprintPackageError(`BlueprintImport: attributions[${index}] is malformed — ${e.message}`);
+                }
+                throw e;
+            }
+        });
+    }
+
+    // 0.6.8 — Blueprint Lineage & Revision Discovery. `lineageClaims` is
+    // the identical OPTIONAL, structural-only bundle as `attributions`
+    // above, one concept over — see application/BlueprintPackage.js's own
+    // header on why the two stay independent, additive fields rather than
+    // ever merging into one.
+    if (pkg.lineageClaims !== undefined) {
+        if (!Array.isArray(pkg.lineageClaims)) {
+            throw new BlueprintPackageError('BlueprintImport: lineageClaims must be an array');
+        }
+        pkg.lineageClaims.forEach((claim, index) => {
+            try {
+                validateBlueprintLineageClaimPublication(claim);
+            } catch (e) {
+                if (e instanceof BlueprintLineageClaimPublicationError) {
+                    throw new BlueprintPackageError(`BlueprintImport: lineageClaims[${index}] is malformed — ${e.message}`);
                 }
                 throw e;
             }

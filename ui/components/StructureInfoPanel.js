@@ -1,5 +1,6 @@
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
+import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
 
 // 0.6.3 — Blueprint Authoring & Versioning UX. A read-only detail
 // surface for one Build Library entry — the Structure-catalog
@@ -65,6 +66,21 @@ import { describeBlueprintFingerprint } from '../../core/BlueprintFingerprint.js
 // received each claim. Deliberately still never renders "Created by" —
 // every label here stays "attributed to"/"claimed" — a valid signature
 // proves who made the CLAIM, never who actually made the design.
+//
+// 0.6.8 — Blueprint Lineage & Revision Discovery. `lineage` is
+// application/BlueprintLineageUseCase.js#lineageView()'s own
+// `{ fingerprint, derivedFrom, derivedDesigns, mine, hasCycleWarning }`,
+// and `similarityCandidates` is a SEPARATE, caller-computed, unsigned
+// evidence list (`{ structure, evidence }[]`, from core/
+// BlueprintSimilarity.js — never a claim). Both render inside one
+// collapsed-by-default "Possible Lineage" section, mirroring the
+// "Attribution Claims" history's own progressive disclosure — lineage is
+// exactly as secondary to the panel's main facts as an attribution
+// history already is. "Possible Predecessors" is the ONLY place this
+// panel ever emits 'claim-lineage': a person reads the evidence and
+// decides, this panel never decides for them (see core/
+// BlueprintSimilarity.js's own header on why similarity never becomes
+// lineage on its own).
 export default {
     name: 'StructureInfoPanel',
     props: {
@@ -73,9 +89,19 @@ export default {
         source: { type: String, default: 'built-in' }, // 'built-in' | 'personal'
         // application/BlueprintAttributionUseCase.js#communityView()'s
         // own shape, or null while nothing has been derived yet.
-        attribution: { type: Object, default: null }
+        attribution: { type: Object, default: null },
+        // application/BlueprintLineageUseCase.js#lineageView()'s own
+        // shape, or null while nothing has been derived yet.
+        lineage: { type: Object, default: null },
+        // core/BlueprintSimilarity.js evidence, pre-filtered/sorted by
+        // the caller — never computed in this panel (see this panel's
+        // own 0.6.3 "Inspect ≠ edit" header).
+        similarityCandidates: { type: Array, default: () => [] }
     },
-    emits: ['place', 'export', 'close', 'claim-authorship', 'export-attribution'],
+    emits: [
+        'place', 'export', 'close', 'claim-authorship', 'export-attribution',
+        'claim-lineage', 'export-lineage-claim'
+    ],
     data() {
         return {
             // Local, component-only UI state, deliberately never
@@ -83,7 +109,8 @@ export default {
             // time it opens, the same restraint ui/components/
             // PlaceNamingPanel.js's own `advancedExpanded` already
             // established for an identically-shaped "history" disclosure.
-            claimsExpanded: false
+            claimsExpanded: false,
+            lineageExpanded: false
         };
     },
     computed: {
@@ -131,6 +158,29 @@ export default {
         // never something this panel needs to invite.
         canClaimAuthorship() {
             return this.hasAttribution && !this.attribution.mine;
+        },
+        // 0.6.8 — Blueprint Lineage & Revision Discovery.
+        hasLineage() {
+            return !!(this.lineage && this.lineage.fingerprint);
+        },
+        derivedFromClaims() {
+            return this.hasLineage ? this.lineage.derivedFrom : [];
+        },
+        derivedDesignClaims() {
+            return this.hasLineage ? this.lineage.derivedDesigns : [];
+        },
+        hasCycleWarning() {
+            return this.hasLineage && this.lineage.hasCycleWarning;
+        },
+        // Whether the "Possible Lineage" section has anything at all to
+        // show — a design with no lineage claims AND no similarity
+        // candidates renders nothing here, the same "no section for
+        // nothing to say" restraint hasAttribution's own conditional
+        // rendering already keeps.
+        hasLineageContent() {
+            return this.derivedFromClaims.length > 0
+                || this.derivedDesignClaims.length > 0
+                || this.similarityCandidates.length > 0;
         }
     },
     methods: {
@@ -181,6 +231,16 @@ export default {
                 event.stopPropagation();
                 this.$emit('close');
             }
+        },
+        // 0.6.8 — Blueprint Lineage & Revision Discovery.
+        describeFingerprint(fingerprint) {
+            return describeBlueprintFingerprint(fingerprint);
+        },
+        describeSimilarity(evidence) {
+            return describeBlueprintSimilarity(evidence);
+        },
+        isMyLineageClaim(claim) {
+            return !!(this.lineage && this.lineage.mine && claim.id === this.lineage.mine.id);
         }
     },
     template: `
@@ -254,6 +314,70 @@ export default {
                             </div>
                         </li>
                     </ul>
+                </section>
+
+                <!-- 0.6.8 — Blueprint Lineage & Revision Discovery.
+                     Collapsed by default, exactly like the "Attribution
+                     Claims" history above — lineage is derived,
+                     never authoritative, and never a mutable version
+                     history (see core/BlueprintLineageClaim.js's own
+                     header). -->
+                <section v-if="hasLineageContent" class="naming-panel-section structure-info-lineage">
+                    <button
+                        type="button"
+                        class="naming-panel-advanced-toggle"
+                        :aria-expanded="lineageExpanded"
+                        @click="lineageExpanded = !lineageExpanded"
+                    >
+                        {{ lineageExpanded ? '▾' : '▸' }} Possible Lineage
+                    </button>
+                    <div v-if="lineageExpanded">
+                        <p v-if="hasCycleWarning" class="form-hint form-hint--neutral">
+                            ⚠ Possible lineage cycle — contradicting claims are on file for this design
+                        </p>
+
+                        <template v-if="derivedFromClaims.length">
+                            <h4 class="locations-panel-section-title">Derived From</h4>
+                            <ul class="naming-panel-list">
+                                <li v-for="claim in derivedFromClaims" :key="claim.id" class="naming-panel-item">
+                                    <div class="naming-panel-item-info">
+                                        <span class="naming-panel-item-name" :title="claim.sourceFingerprint">{{ describeFingerprint(claim.sourceFingerprint) }}</span>
+                                        <span class="naming-panel-item-meta">Claimed by {{ formatAuthor(claim.authorIdentityId) }}</span>
+                                    </div>
+                                    <button v-if="isMyLineageClaim(claim)" class="inline-link-btn" @click="$emit('export-lineage-claim', claim)">Export</button>
+                                </li>
+                            </ul>
+                        </template>
+
+                        <template v-if="derivedDesignClaims.length">
+                            <h4 class="locations-panel-section-title">Derived Designs</h4>
+                            <ul class="naming-panel-list">
+                                <li v-for="claim in derivedDesignClaims" :key="claim.id" class="naming-panel-item">
+                                    <div class="naming-panel-item-info">
+                                        <span class="naming-panel-item-name" :title="claim.derivedFingerprint">{{ describeFingerprint(claim.derivedFingerprint) }}</span>
+                                        <span class="naming-panel-item-meta">Claimed by {{ formatAuthor(claim.authorIdentityId) }}</span>
+                                    </div>
+                                    <button v-if="isMyLineageClaim(claim)" class="inline-link-btn" @click="$emit('export-lineage-claim', claim)">Export</button>
+                                </li>
+                            </ul>
+                        </template>
+
+                        <template v-if="similarityCandidates.length">
+                            <h4 class="locations-panel-section-title">Possible Predecessors</h4>
+                            <p class="form-hint form-hint--neutral">
+                                Evidence only — nothing here is asserted. Confirm one only if you know it's true.
+                            </p>
+                            <ul class="naming-panel-list">
+                                <li v-for="candidate in similarityCandidates" :key="candidate.structure.id" class="naming-panel-item">
+                                    <div class="naming-panel-item-info">
+                                        <span class="naming-panel-item-name">{{ candidate.structure.name }}</span>
+                                        <span class="naming-panel-item-meta">{{ describeSimilarity(candidate.evidence) }}</span>
+                                    </div>
+                                    <button class="inline-link-btn" @click="$emit('claim-lineage', candidate.structure)">Derived from this</button>
+                                </li>
+                            </ul>
+                        </template>
+                    </div>
                 </section>
 
                 <div class="modal-actions">
