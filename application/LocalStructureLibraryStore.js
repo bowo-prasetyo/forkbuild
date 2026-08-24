@@ -151,6 +151,31 @@ export class LocalStructureLibraryStore {
         return groupStructuresByCategory(this.listStructures());
     }
 
+    // 0.6.4 — Blueprint Discovery, Search & Library Organization.
+    // Exposes each stored Structure's own `savedAt` (see addStructure()'s
+    // own header on how it survives a metadata-only overwrite) keyed by
+    // id — added for core/sortStructures.js's 'recent' sort key, which
+    // needs an actual timestamp per id, not merely the recency ORDER
+    // listStructures() already returns. Never exposed on Structure
+    // itself (see that class's own header) — this is exactly the kind
+    // of library-membership-only metadata docs/Principles.md's "Library
+    // Membership Is Not Structure Identity" (0.4.3) already draws the
+    // line around; a built-in Structure simply never appears in the
+    // returned map.
+    getSavedAtById() {
+        const allKeys = this._storage.list();
+        const map = {};
+        for (const key of allKeys) {
+            if (key.startsWith(STORAGE_KEY_PREFIX)) {
+                const record = this._storage.load(key);
+                if (record && record.structure && typeof record.savedAt === 'number') {
+                    map[record.structure.id] = record.savedAt;
+                }
+            }
+        }
+        return map;
+    }
+
     // Mirrors core/StructureRegistry.js#search()'s own contract exactly
     // — matches a tag or array of tags against ANY of a structure's own
     // tags. ui/components/BuildLibraryPanel.js's existing name/category/tag

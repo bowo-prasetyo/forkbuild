@@ -11837,3 +11837,181 @@ Structure-level provenance metadata, personal-to-personal forking, a
 tags field nobody asked for, and cross-device library sync beyond
 Export/Import — each sized on its own, exactly like every "Deliberately
 excluded" list in this document before it.
+
+## 0.6.4 — Blueprint Discovery, Search & Library Organization
+
+0.6.3 gave a personal Structure a real authoring workflow — Build ->
+Select -> Create Blueprint -> My Structures -> Place -> Modify ->
+Create Blueprint again. What it didn't address is what a personal
+library looks like once that loop has run a few dozen times: `category`
+already existed on every Structure since 0.2.81 and was never once
+read by anything; search only ever matched name/category/tags, never
+the `description` field `CreateBlueprintDialog` collects; and there was
+no way to ask "what did I just use" at all. This milestone adds not one
+new editing primitive — it makes the metadata the library already
+collects actually work for a person scrolling past dozens of entries:
+
+    Build Library
+      [ Search... ]  [All] [Built-in] [My Structures]
+      [ Category ▼ ]  [ Sort ▼ ]
+      Recent
+      <category groups, filtered, sorted>
+      My Structures
+      <category groups, filtered, sorted>
+
+### What shipped
+
+- **`ui/components/BuildLibraryPanel.js#matches()`** (unchanged
+  function) is now also called with `structure.description` at every
+  Structures-tab call site — a phrase that appears only in a
+  blueprint's description now surfaces it, the same case-insensitive
+  substring rule name/category/tags already used.
+- **`ui/components/BuildLibraryPanel.js#buildCategoryOptions()`** (new,
+  exported for headless testing the same way `matches()`/`normalize()`
+  already are) — builds the `All (27) / Architecture (8) / ...` category
+  dropdown from whatever the current search + Built-in/My Structures tab
+  already narrowed down to, merging counts across BOTH the built-in and
+  personal group lists and preserving first-seen order across them.
+  `category` stays an ordinary string on `core/Structure.js` — no
+  hard-coded taxonomy is introduced anywhere in `core/`; the option list
+  is entirely DERIVED from whatever categories the library's own
+  contents happen to use today.
+- **`core/sortStructures.js`** (new) — a pure, stateless ordering
+  function (Name, Recently created, Brick count, Footprint, Height),
+  applied within each rendered category group, never merging groups
+  into one flat list. Every key breaks ties on `id`, so the same query
+  renders in the same order on every call. "Recently created" consults
+  an optional `savedAtById` map rather than a field on `Structure`
+  itself — see `application/LocalStructureLibraryStore.js#getSavedAtById()`
+  (new) below and docs/Principles.md, "Sorting Is Presentation, Never
+  Identity (0.6.4)."
+- **All / Built-in / My Structures source tabs** — three ordinary local
+  `ref`s in `BuildLibraryPanel.js`; picking "Built-in" empties the "My
+  Structures" section (including its Import button) entirely rather
+  than rendering it next to nothing, and vice versa. Neither library's
+  own data is duplicated or copied to build this — it's a presentation
+  filter over the same two group lists the panel already received.
+- **`application/LibraryUsageHistoryStore.js`** + **`application/CreateLibraryUsageHistoryUseCase.js`**
+  (new) — records which structure id was placed and when, backed by
+  `StorageProvider` exactly the same key-prefix-and-list() shape
+  `application/LocalWorldExperienceStore.js` (0.3.10) already
+  established for camera framing. Recorded at Place-intent
+  (`ui/views/EditorView.js#copyStructureIntoDocument()`, the same moment
+  `selectBrick()` already treats as "this is the one the user picked"),
+  never as a field on `Structure` and never crossing the
+  export/import boundary. See docs/Principles.md, "Usage History Is
+  Local Presentation Metadata, Never Structure State (0.6.4)."
+- **`ui/views/EditorView.js#resolveRecentStructures()`** (new) — the one
+  place that resolves a bare usage-history id against BOTH libraries
+  (personal first, then built-in), tagging each with its `source` the
+  same way `inspectStructure()` already does for the Info panel. An id
+  whose Structure was since removed simply fails to resolve and is
+  dropped — `ui/components/BuildLibraryPanel.js` never reaches into
+  either library itself, it only renders whatever `recentStructures`
+  it's handed.
+- **`ui/components/StructureLibraryCard.js`** (new) — the built-in
+  group, the personal group, and the new Recent section had rendered
+  the identical preview + name + "⋮" menu markup three times inline;
+  extracted into one component parameterized by `source`
+  (`'built-in' | 'personal'`), which decides the menu's contents exactly
+  the way the inline markup already did. No button's behavior changes —
+  every emit is the same verb `BuildLibraryPanel.js` already forwarded.
+- **`application/LocalStructureLibraryStore.js#getSavedAtById()`**
+  (new) — exposes each personal Structure's own `savedAt` (preserved
+  across a rename since 0.4.3) keyed by id, for `sortStructures()`'s
+  'recent' key. A built-in Structure never appears in the map.
+- **`tests/BlueprintDiscoveryLibrary.test.js`** (new) — Section A:
+  every `sortStructures()` key, deterministic, tie-broken by id, never
+  mutates its input. Section B: `buildCategoryOptions()` — merged
+  counts across sources, first-seen order, degrades gracefully when
+  empty. Section C: `LibraryUsageHistoryStore` — recency order, re-use
+  moves an id to the front without duplicating it, `limit`, `clear()`,
+  guards. Section D: `getSavedAtById()` survives a rename. Section E —
+  CAPSTONE: description search, cross-library category counts, a real
+  recency sort over real `savedAt` values, and Recent resolution
+  (including a removed personal Structure silently dropping out of a
+  stale Recent list) composed together exactly the way
+  `ui/views/EditorView.js` and `BuildLibraryPanel.js` do it, entirely
+  headlessly.
+
+### Deliberately excluded
+
+- **Fuzzy search.** `matches()` stays exactly the deterministic,
+  case-insensitive substring rule it always was — extended to one more
+  field (`description`), never replaced with ranked/fuzzy matching.
+  Simple search is easier to test and sufficient for a library this
+  size; a real need for fuzzy matching hasn't shown up yet.
+- **A hard-coded category vocabulary.** `buildCategoryOptions()` is
+  purely derivative — it reads whatever `category` strings the library
+  already contains and counts them. There is no `CategoryTaxonomy`
+  concept anywhere in `core/`, and adding one remains exactly the kind
+  of centrally-governed vocabulary this codebase has consistently
+  avoided for anything a user's own content populates.
+- **Favorites / starring.** Considered, per the design conversation,
+  and deliberately built as Recent (derived from real usage) instead —
+  a second, separately-maintained "starred" list is a real feature with
+  its own storage and its own UI, sized for its own milestone if a real
+  need for it (as opposed to recency) ever shows up.
+- **Ratings, likes, or any popularity signal.** `LibraryUsageHistoryStore`
+  records exactly one fact per id — when it was last used, for THIS
+  device alone. No use count, no aggregation, nothing that could
+  resemble a second decentralized reputation problem alongside Place
+  Naming Claims.
+- **Persisting the search/category/sort UI state itself.** `query`,
+  `sourceFilter`, `categoryFilter`, and `sortKey` are ordinary
+  `ref`s, reset on every tab switch, exactly like `query` already was
+  before this milestone — never written to `StorageProvider`. Usage
+  HISTORY persists (that's the entire point of Recent); which filter or
+  sort a person had open does not.
+- **A `Structure -> usage stats` field, or any field on `core/Structure.js`
+  at all.** Zero fields added. Recency for "Recently created" comes
+  from the personal library's own existing `savedAt` storage record,
+  newly exposed via `getSavedAtById()`; "used" comes from a wholly
+  separate store. `Structure` itself is exactly as unaware of how often
+  or recently it's browsed as it always was.
+- **Cloud sync, peer exchange, publishing, or any of 0.6.3's own
+  already-deferred list** (mutable Structure editing, `sourceStructureId`/
+  `version`/`parentBlueprintId`, personal-to-personal forking, cross-device
+  sync beyond Export/Import) — none of it revisited here.
+
+```text
+0.6.3   Blueprint Authoring & Versioning UX                       ✓
+             │
+             ▼
+0.6.4   Blueprint Discovery, Search & Library Organization        ✓
+             ├── matches() now also checks `description` — one new
+             │   field in an unchanged, deterministic substring rule
+             ├── buildCategoryOptions() — All/category counts derived
+             │   from whatever's currently visible, across both
+             │   libraries; `category` stays an ordinary string
+             ├── core/sortStructures.js — Name/Recent/Brick count/
+             │   Footprint/Height, presentation-only, id-tie-broken
+             ├── All / Built-in / My Structures source tabs — three
+             │   local refs, no data duplicated
+             ├── LibraryUsageHistoryStore + CreateLibraryUsageHistoryUseCase
+             │   — local "what did I just place," recorded at Place-
+             │   intent, never a field on Structure
+             ├── EditorView#resolveRecentStructures() — the one place
+             │   that resolves a usage-history id against both
+             │   libraries; a removed Structure silently drops out
+             ├── StructureLibraryCard — one card component replacing
+             │   three triplicated inline templates
+             ├── LocalStructureLibraryStore#getSavedAtById() — exposes
+             │   the personal library's own existing savedAt, keyed by
+             │   id, for the 'recent' sort key only
+             └── tests/BlueprintDiscoveryLibrary.test.js — every sort
+                 key, category-option merging, usage-history recency/
+                 dedup/limit/clear, getSavedAtById() surviving a rename,
+                 and a full headless capstone composing all of it
+```
+
+> **0.6.3 made authoring a blueprint feel like AUTHORING. 0.6.4 is the
+> milestone whose entire job was making the RESULT of a lot of authoring
+> stay browsable — not by adding anywhere to put more information, but
+> by finally reading the information the library already had.**
+
+What's left, and deliberately unbuilt: fuzzy search, a category
+taxonomy, favorites/starring, any popularity signal, persisted filter/
+sort UI state, and everything 0.6.3 already deferred — each sized on
+its own, exactly like every "Deliberately excluded" list in this
+document before it.

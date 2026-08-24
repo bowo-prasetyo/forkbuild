@@ -3,6 +3,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../../application/CreateStructureRegistryUseCase.js';
 import { CreatePersonalStructureLibraryUseCase } from '../../application/CreatePersonalStructureLibraryUseCase.js';
+import { CreateLibraryUsageHistoryUseCase } from '../../application/CreateLibraryUsageHistoryUseCase.js';
 import { ForkStructureUseCase } from '../../application/ForkStructureUseCase.js';
 import { CopyStructureIntoDocumentUseCase } from '../../application/CopyStructureIntoDocumentUseCase.js';
 import { CreateEditorContextUseCase } from '../../application/CreateEditorContextUseCase.js';
@@ -120,6 +121,9 @@ export default {
                         :palette-use-case="paletteUseCase"
                         :structure-groups="structureGroups"
                         :personal-structure-groups="personalStructureGroups"
+                        :registry="brickRegistry"
+                        :personal-saved-at-by-id="personalSavedAtById"
+                        :recent-structures="recentStructures"
                         :preview-service="libraryPreviewService"
                         @place="setTool(ToolId.PLACE)"
                         @fork="forkStructure"
@@ -192,6 +196,8 @@ export default {
         const structureRegistry = new CreateStructureRegistryUseCase().execute();
         // 0.4.3 — Personal Blueprint Library.
         const { personalStructureLibraryStore } = new CreatePersonalStructureLibraryUseCase().execute();
+        // 0.6.4 — Blueprint Discovery, Search & Library Organization.
+        const { libraryUsageHistoryStore } = new CreateLibraryUsageHistoryUseCase().execute();
         const forkStructureUseCase = new ForkStructureUseCase();
         const copyStructureIntoDocumentUseCase = new CopyStructureIntoDocumentUseCase();
         const editorContext = new CreateEditorContextUseCase().execute();
@@ -253,8 +259,46 @@ export default {
 		// Structure, renaming one, or removing one — so it's refreshed
 		// explicitly after each of those, rather than read once.
 		const personalStructureGroups = ref(personalStructureLibraryStore.groupByCategory());
+		// 0.6.4 — Blueprint Discovery, Search & Library Organization.
+		// Consulted only by core/sortStructures.js's 'recent' sort key —
+		// see application/LocalStructureLibraryStore.js#getSavedAtById()'s
+		// own header. Refreshed alongside personalStructureGroups
+		// whenever the personal library changes (below).
+		const personalSavedAtById = ref(personalStructureLibraryStore.getSavedAtById());
 		function refreshPersonalStructureGroups() {
 		    personalStructureGroups.value = personalStructureLibraryStore.groupByCategory();
+		    personalSavedAtById.value = personalStructureLibraryStore.getSavedAtById();
+		}
+
+		// 0.6.4 — Blueprint Discovery, Search & Library Organization.
+		// Resolves application/LibraryUsageHistoryStore.js's own bare ids
+		// against whichever library still recognizes each one — a
+		// structure that was removed, or a personal one that was renamed
+		// (renaming preserves its id, so this still finds it) since it
+		// was last used, either resolves to the current entry or, if
+		// truly gone, is silently dropped, per that store's own header.
+		// This is the ONE place that decides "built-in or personal" for
+		// a recent id — ui/components/BuildLibraryPanel.js never reaches
+		// into either library itself.
+		function resolveRecentStructures() {
+		    const ids = libraryUsageHistoryStore.listRecent(5);
+		    const resolved = [];
+		    for (const id of ids) {
+		        const personal = personalStructureLibraryStore.getStructure(id);
+		        if (personal) {
+		            resolved.push({ structure: personal, source: 'personal' });
+		            continue;
+		        }
+		        const builtIn = structureRegistry.get(id);
+		        if (builtIn) {
+		            resolved.push({ structure: builtIn, source: 'built-in' });
+		        }
+		    }
+		    return resolved;
+		}
+		const recentStructures = ref(resolveRecentStructures());
+		function refreshRecentStructures() {
+		    recentStructures.value = resolveRecentStructures();
 		}
 
 		// Reachable two ways: directly ("Remove"/"Rename" on a My
@@ -269,6 +313,7 @@ export default {
 		    }
 		    personalStructureLibraryStore.updateStructureMetadata(structure.id, { name: name.trim() });
 		    refreshPersonalStructureGroups();
+		    refreshRecentStructures(); // 0.6.4 — Recent shows the renamed name too, not a stale one
 		    feedback.show(`Renamed to "${name.trim()}"`);
 		}
 
@@ -278,6 +323,7 @@ export default {
 		    // application/LocalStructureLibraryStore.js's own header.
 		    personalStructureLibraryStore.removeStructure(structure.id);
 		    refreshPersonalStructureGroups();
+		    refreshRecentStructures(); // 0.6.4 — a removed Structure disappears from Recent too
 		    feedback.show(`Removed "${structure.name}" from My Structures`);
 		}
 
@@ -390,6 +436,15 @@ export default {
 		    const started = editorSession.beginStructureComposition(structure);
 		    if (started) {
 		        feedback.show(`Placing "${structure.name}" — click to place, R to rotate, Esc to cancel`);
+		        // 0.6.4 — Blueprint Discovery, Search & Library Organization.
+		        // Recorded at Place-intent (starting composition), not at
+		        // the later ground click that actually commits it — the
+		        // same moment selectBrick() already treats as "this is the
+		        // one the user picked." A cancelled placement (Esc) still
+		        // counts; see application/LibraryUsageHistoryStore.js's own
+		        // header on why a stale/optimistic entry is harmless.
+		        libraryUsageHistoryStore.recordUse(structure.id);
+		        refreshRecentStructures();
 		    }
 		}
 
@@ -1029,6 +1084,8 @@ export default {
             backToWorld,
             structureGroups,
             personalStructureGroups,
+            personalSavedAtById,
+            recentStructures,
             libraryPreviewService,
             forkStructure,
             forkStructureToLibrary,
