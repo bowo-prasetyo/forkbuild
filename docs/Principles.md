@@ -9198,3 +9198,69 @@ connection rather than a hand-off file — is deliberately still missing;
 this class only establishes what moves and how it is checked, exactly
 as boring on purpose as `application/PlaceNamingClaimExchange.js`'s own
 0.5.3 header insisted its own first transport had to be.
+
+### A Peer Connection Transports Publications; It Does Not Resolve Them (0.7.3)
+
+0.7.2 closed with one thing named and unbuilt: a live transport for
+`application/PublicationExchange.js`, which until 0.7.3 only ever moved
+a plain envelope object in, a plain envelope object out — a caller
+still had to physically carry that object from one replica to another
+by hand. `application/PublicationPeerExchange.js` is that transport,
+and the constraint this milestone's own design conversation stated
+before any code existed: **do not make `application/
+LocalPublicationCatalog.js` network-aware.** The catalog gained no new
+method, no new field, and no idea that a peer connection exists at
+all — a transport was built AROUND `application/
+PublicationExchange.js`, never threaded into `application/
+LocalPublicationCatalog.js` or `application/PublicationResolver.js`
+themselves.
+
+**A live announce runs through the exact same discipline a pasted file
+already did.** `application/PublicationPeerExchange.js#_handleIncoming()`
+calls `application/PublicationExchange.js#importPublication()`
+UNCHANGED — validate, construct, verify, catalog — the identical four
+steps 0.7.2's own flagship already proved against a hand-off JSON
+object, now driven by a message that arrived over `peer/
+PeerMessageBus.js` instead. Nothing about WHERE an envelope came from
+changes what it takes to be believed; see `docs/Principles.md`,
+"Exchanging A Publication Moves A Locator, Never Its Content" above,
+extended here from "moved by hand" to "moved live."
+
+**Discovery over a wire is still not resolution.** `application/
+PublicationPeerExchange.js` never calls `application/
+PublicationResolver.js`, never touches a `ContentStore`, and never asks
+whether the content a freshly-announced publication points at is
+actually reachable. `tests/PublicationPeerExchange.test.js`'s own
+flagship proves this directly, over a REAL authenticated connection
+rather than 0.7.2's hand-bridged one: Bob catalogs Alice's live
+announcement, resolves `CONTENT_UNAVAILABLE` against his own empty
+`ContentStore`, and only reaches `RESOLVED` once the bytes separately
+propagate — with no second peer exchange of any kind. See "Discovery
+Is Not Resolution (0.7.2)" above; a live transport changes nothing
+about that boundary.
+
+**No new transport hierarchy was invented.** `peer/PeerMessageBus.js`
+(0.2.52) already answers "how do independent decentralized protocols
+safely share one authenticated peer connection," proven transport-
+agnostic by `tests/PeerMessaging.test.js`'s own flagship running
+unmodified over both `peer/LocalPeerConnectionProvider.js` and `peer/
+WebRtcPeerConnectionProvider.js`. `application/
+PublicationPeerExchange.js` is built directly on that bus, the same
+shape `application/IdentityLifecyclePropagationUseCase.js` and
+`application/DeviceAuthorizationPropagationUseCase.js` already
+established for their own gossiped records, rather than a second,
+parallel transport abstraction duplicating hygiene that already
+existed. A consequence, not a coincidence: a future real WebRTC
+milestone is composition-root wiring, not new protocol work.
+
+**Peer identity stays informational, never authority.**
+`application/PublicationPeerExchange.js#_handleIncoming()` never reads
+`meta.connectedPeer` — a publication received from Alice, from
+Charlie, or from a pasted file is exactly as valid, because its own
+signature (verified entirely inside `application/
+PublicationExchange.js`, unchanged) is the only thing that ever made
+it trustworthy. No `trustedPeer`, `trustedPublisher`, or `peerScore`
+concept exists anywhere in this milestone, extending the identical
+"publisher identity ≠ transport source" invariant this codebase has
+held since `application/PlaceNamingClaimExchange.js`'s own 0.5.3
+header, now proven true of a live connection as much as a file.
