@@ -9653,3 +9653,72 @@ register it, and change nothing about `core/PublicationAnchor.js`,
 under a different `anchorType`.
 
 See `docs/Roadmap.md`, 0.8.1, for the full milestone entry.
+
+### Cataloging External Evidence Does Not Validate External Evidence (0.8.2)
+
+`application/LocalPublicationCatalog.js`'s own 0.7.2 header already drew
+this line for a different axis — "Discovery Is Not Resolution" — and
+0.8.2 draws the identical line for evidence instead of locators.
+`application/LocalPublicationAnchorCatalog.js#add()` records that a
+`PublicationAnchor` exists and that this replica has seen it. It never
+records, computes, or implies whether that anchor is genuinely signed,
+whether its proof holds up, or whether it should be trusted at all.
+
+**The catalog answers "what anchor claims do I know about?" The verifier
+answers "what can I independently establish about one of those claims
+right now?" Nothing in this codebase is ever allowed to collapse those
+into one question.** `application/AddPublicationAnchorUseCase.js` runs
+exactly two steps — validate the envelope's own structure, construct a
+real `PublicationAnchor` — and stops. It never calls `identity/
+LocalAuthorizationVerifier.js#verifyPublicationAnchor()`, never calls
+`application/ExternalAnchorVerifier.js#verify()`, and never touches a
+network. `tests/PublicationAnchorCatalog.test.js`'s own Section D proves
+this directly: an unsigned, outright forged anchor catalogs exactly as
+cleanly as a genuinely valid one, and a spy `proofVerifier` that would
+fail its own assertion if `AddPublicationAnchorUseCase` ever called it
+is never invoked by cataloging, under any circumstance.
+
+**No verification outcome is ever stored beside a cataloged anchor.**
+`application/LocalPublicationAnchorCatalog.js`'s stored record holds only
+the signed envelope itself and `receivedAt`, the one fact genuinely local
+to this replica and never part of what any identity signed — the same
+restraint `application/LocalPublicationCatalog.js` already applies to a
+`DecentralizedPublication`'s own `receivedAt`. No `verified`,
+`verificationOutcome`, `verificationTimestamp`, or `verificationReason`
+field exists anywhere in this class, and none should ever be added to
+it: a verification result computed once and cached beside the anchor it
+was computed for would silently reintroduce the exact "checked once,
+trusted forever" shortcut `application/ExternalAnchorVerifier.js`'s own
+0.8.0 header already refused — an external system's confirmation state
+can change (a transaction gets confirmed later; a previously-unreachable
+explorer comes back), and a stale cached "PROOF_UNAVAILABLE" or even a
+stale cached "VALID" would misrepresent it. Verification stays what
+0.8.0 already made it: computed fresh, every time, by calling
+`ExternalAnchorVerifier#verify()` again.
+
+**Multiple independent anchors for the same evidence are cataloged
+exactly as multiple independent anchors, never merged, ranked, or
+resolved to one.** `application/LocalPublicationAnchorCatalog.js#
+findByPublicationId()` and `#findByContentHash()` both always return
+every matching anchor this replica has cataloged, in the same
+deterministic most-recently-received order `#list()` uses — the
+identical "several independently signed facts, never reconciled into
+one" posture `docs/Principles.md`'s own 0.8.0 entry already held for
+verification, extended here to storage. `tests/
+PublicationAnchorCatalog.test.js`'s own Section C proves this with three
+coexisting anchors — two independent anchoring identities under two
+different anchorTypes for the identical publicationId/contentHash, plus
+a third, unrelated publication's own anchor — and confirms no lookup on
+this catalog ever narrows any of them down to a "canonical" one.
+
+**Cataloging an anchor still builds no path from evidence to peer
+exchange.** 0.8.2 deliberately ships no `PublicationAnchorExchange` and
+no anchor gossip — `application/AddPublicationAnchorUseCase.js` only
+ever admits an anchor a caller already holds, with no untrusted-arrival
+transport boundary for a signature check to guard. A future milestone
+that DOES add that transport reuses `application/
+PublicationExchange.js`'s own proven `validate → construct → verify
+signature → catalog` shape rather than inventing a new one, exactly as
+0.8.1's own "Deliberately excluded" list already anticipated.
+
+See `docs/Roadmap.md`, 0.8.2, for the full milestone entry.

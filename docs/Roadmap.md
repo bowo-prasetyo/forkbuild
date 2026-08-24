@@ -14456,3 +14456,140 @@ What's left, and deliberately unbuilt: a second real anchorType, anchor
 storage/catalog/peer exchange, Evidence UX, and automatic anchoring —
 each sized on its own, exactly like every "Deliberately excluded" list in
 this document before it.
+
+## 0.8.2 — Anchor Catalog & Evidence Discovery
+
+0.8.1's own "Deliberately excluded" list named this milestone directly:
+"anchor storage, catalog, or peer exchange... a `PublicationAnchor` still
+has nowhere to live beyond a caller's own hands." 0.8.2 gives it
+somewhere to live — the identical role `application/
+LocalPublicationCatalog.js` has played for a `DecentralizedPublication`
+since 0.7.2, applied one layer further down the same chain: not "where
+might a copy of these bytes be found," but "what external evidence
+claims does this replica know about." Nothing about what a
+`PublicationAnchor` is, what `application/ExternalAnchorVerifier.js#
+verify()` does, or what any of its outcomes mean changes in this
+milestone at all — see `docs/Principles.md`, "Cataloging External
+Evidence Does Not Validate External Evidence (0.8.2)."
+
+- `application/LocalPublicationAnchorCatalog.js` — the new local index:
+  `add()`, `has()`, `get()`, `remove()`, `list()`, `getReceivedAt()`,
+  `findByPublicationId()`, `findByContentHash()`, `findByAnchorType()`.
+  Stores real `PublicationAnchor` instances, never a second wrapper
+  class, exactly the shape `application/LocalPublicationCatalog.js` set
+  for `DecentralizedPublication` in 0.7.2. Deduplicates by the anchor's
+  own `id` — `core/PublicationAnchor.js` already mints one as part of
+  every anchor's signed payload, so no second fingerprinting scheme was
+  introduced. `receivedAt` is local-only metadata beside the signed
+  envelope, first-seen-wins on a re-add, ordered most-recently-received
+  first on `list()` — the identical three rules `application/
+  LocalPublicationCatalog.js` already established, for the identical
+  reasons. `add()` never calls a verifier, never checks a signature, and
+  never touches the network.
+- `application/AddPublicationAnchorUseCase.js` — the one place an anchor
+  record is admitted to the catalog: validate (`application/
+  PublicationAnchorValidator.js`) → construct
+  (`core/PublicationAnchor.js#fromJSON()`) → catalog. Deliberately two
+  steps, not the three `application/PublicationExchange.js#
+  importPublication()` runs for a `DecentralizedPublication` arriving
+  from a stranger — this milestone builds no peer transport for anchors
+  yet, so there is no untrusted-arrival boundary here that a signature
+  check would be guarding. A `PublicationAnchorExchange` that adds that
+  third step at an actual transport boundary is next milestone's own
+  concern, not this one's.
+- `application/CreatePublicationAnchorCatalogUseCase.js` — the
+  composition root: wires `storage/LocalStorageProvider.js` and returns
+  `{ catalog, addAnchor }`, so `ui/` never imports `application/
+  LocalPublicationAnchorCatalog.js` directly, mirroring `application/
+  CreatePublicationCatalogUseCase.js`'s own shape.
+- `tests/PublicationAnchorCatalog.test.js` — the flagship: Alice signs a
+  `PublicationAnchor`; Bob, with none of Alice's local state, catalogs it
+  through `AddPublicationAnchorUseCase` and then independently verifies
+  it through his own `ExternalAnchorVerifier` — two separate calls,
+  never one implying the other. Then: catalog CRUD and id-based dedup
+  (re-adding never resets `receivedAt` or creates a second entry, removal
+  never mutates the removed anchor); deterministic most-recently-received
+  ordering; three independent anchors for overlapping publicationIds/
+  contentHashes/anchorTypes all coexisting, with `findByPublicationId()`/
+  `findByContentHash()`/`findByAnchorType()` never selecting a "winner";
+  and the central property this milestone exists to prove — an unsigned/
+  forged anchor, and a genuinely signed one whose proof is currently
+  unavailable, both catalog exactly as cleanly as a fully valid one, the
+  catalog never stores a verification outcome anywhere on the record, and
+  a spy `proofVerifier` proves `AddPublicationAnchorUseCase` never
+  consults any verifier at all.
+
+```text
+0.8.1   External Anchor Proof Adapters & Verification Registry      ✓
+             │
+             ▼
+0.8.2   Anchor Catalog & Evidence Discovery                         ✓
+             ├── application/LocalPublicationAnchorCatalog.js — add/
+             │   has/get/remove/list/getReceivedAt/findByPublicationId/
+             │   findByContentHash/findByAnchorType; id-based dedup;
+             │   never calls a verifier, never stores an outcome
+             ├── application/AddPublicationAnchorUseCase.js — validate
+             │   → construct → catalog; deliberately no signature or
+             │   proof check — no peer transport exists yet to guard
+             ├── application/CreatePublicationAnchorCatalogUseCase.js —
+             │   composition root, mirroring
+             │   CreatePublicationCatalogUseCase.js's own shape
+             └── PublicationAnchorCatalog.test.js — the flagship: Alice
+                 signs, Bob catalogs, Bob independently verifies;
+                 CRUD/dedup/ordering; three independent anchors coexist,
+                 none canonical; unsigned/unavailable anchors stay
+                 cataloged, no verifier ever consulted by cataloging
+```
+
+> **An anchor catalog records evidence claims; it does not record their
+> truth. Verification remains a derived, repeatable operation.**
+> `application/LocalPublicationAnchorCatalog.js` answers "what anchor
+> claims do I know about?" `application/ExternalAnchorVerifier.js`
+> answers "what can I independently establish about one of those claims
+> right now?" Those are different questions, asked by different classes,
+> and 0.8.2 keeps them that way — the same discipline `application/
+> LocalPublicationCatalog.js` and `application/PublicationResolver.js`
+> have held apart since 0.7.2, now extended to evidence instead of
+> locators.
+
+### Deliberately excluded
+
+- **Anchor peer exchange.** No `PublicationAnchorExchange`, no gossip, no
+  transport-level signature check at an import boundary. `application/
+  AddPublicationAnchorUseCase.js` only ever admits an anchor a caller
+  already has in hand; a real peer-to-peer path — reusing the exact
+  `validate → construct → verify signature → catalog` pattern
+  `application/PublicationExchange.js` already proved — is sized as its
+  own future milestone, exactly as this document's own 0.8.1 entry
+  already named it.
+- **Automatic verification on add, or anywhere in this milestone.**
+  `application/AddPublicationAnchorUseCase.js` never calls `application/
+  ExternalAnchorVerifier.js`, and `application/
+  LocalPublicationAnchorCatalog.js` never stores a `verified`,
+  `verificationOutcome`, or `verificationTimestamp` field. Every
+  verification result is computed fresh, on demand, by a caller that
+  wants one — never cached beside the anchor it was computed for.
+- **Any ranking, trust score, or "canonical anchor" selection.**
+  `findByPublicationId()` and `findByContentHash()` both always return
+  every matching anchor this replica knows about, in the same
+  deterministic order `list()` uses, and neither method nor any other on
+  this catalog ever narrows that set down to "the" anchor for a
+  publication.
+- **`findByLocator()`, or any other lookup beyond the three named
+  above.** Not preemptively added — a caller that needs to search by
+  locator can filter `list()` itself; this catalog grows a new indexed
+  lookup only once a real caller needs one, the same restraint every
+  earlier catalog/store in this codebase has held.
+- **Any UI.** No Publication Center "Known Evidence" list, no per-anchor
+  status display. `docs/Roadmap.md`'s own next entry, Publication
+  Center: External Evidence UX, is where that belongs.
+- **Bitcoin transaction creation, automatic anchoring, wallet management,
+  or any change to `application/PublicationResolver.js`.** Untouched, for
+  the identical reason 0.8.0 and 0.8.1 both left it untouched — see
+  `docs/Principles.md`, "External Anchoring Provides Evidence; It Does
+  Not Establish Authority (0.8.0)."
+
+What's left, and deliberately unbuilt: Evidence UX in the Publication
+Center, anchor exchange over peers, and multi-evidence convergence —
+each sized on its own, exactly like every "Deliberately excluded" list in
+this document before it.
