@@ -4,13 +4,16 @@ import { validateBlueprintAttributionPublication } from './BlueprintAttributionP
 
 // 0.7.0 — Decentralized Publication Protocol & Content Addressing.
 //
-// The first (and, this milestone, only) concrete `kindPlugin` for
-// application/PublicationResolver.js — proof that the generic
-// ten-step pipeline that class's own header describes needs nothing new
-// from a domain to work with it: every function this plugin hands over
-// already existed before this milestone (core/BlueprintAttribution.js#
-// fromJSON, application/BlueprintAttributionPublicationValidator.js,
-// identity/LocalAuthorizationVerifier.js#verifyBlueprintAttribution).
+// The first concrete `kindPlugin` for application/PublicationResolver.js
+// — proof that the generic ten-step pipeline that class's own header
+// describes needs nothing new from a domain to work with it: every
+// function this plugin hands over already existed before this milestone
+// (core/BlueprintAttribution.js#fromJSON, application/
+// BlueprintAttributionPublicationValidator.js, identity/
+// LocalAuthorizationVerifier.js#verifyBlueprintAttribution). 0.7.1 adds
+// application/PlaceNamingClaimPublicationKind.js as a second, deliberately
+// differently-shaped plugin — see that file's own header for what its
+// existence actually proves.
 //
 // This is a SECOND transport for a BlueprintAttribution, never a
 // replacement for application/BlueprintAttributionExchange.js's own
@@ -19,8 +22,8 @@ import { validateBlueprintAttributionPublication } from './BlueprintAttributionP
 // identical, independently-verifiable core/BlueprintAttribution.js
 // either way. What a PublicationResolver adds is a locator an
 // attribution can be FOUND at without a peer connection or a hand-off
-// file at all — a content/LocalContentStore.js today, an IPFS-backed
-// ContentStore once 0.7.1 builds one, with no change required here.
+// file at all — a content/LocalContentStore.js, or, as of 0.7.1, a real
+// content/IpfsContentStore.js, with no change required here either way.
 //
 // `expectedFingerprint` carries forward the exact "genuine signature,
 // wrong subject" defense application/BlueprintAttributionExchange.js's

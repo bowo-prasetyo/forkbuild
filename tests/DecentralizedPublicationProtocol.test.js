@@ -9,6 +9,7 @@ import {
     DecentralizedPublicationError
 } from '../application/DecentralizedPublicationValidator.js';
 import { PublicationResolver } from '../application/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -43,6 +44,14 @@ function expectThrows(fn, message) {
     let threw = false;
     let error = null;
     try { fn(); } catch (e) { threw = true; error = e; }
+    assert(threw, message);
+    return error;
+}
+
+async function expectRejects(promiseFn, message) {
+    let threw = false;
+    let error = null;
+    try { await promiseFn(); } catch (e) { threw = true; error = e; }
     assert(threw, message);
     return error;
 }
@@ -164,6 +173,16 @@ async function run() {
 
     // ---------------------------------------------------------------
     // Section C — PublicationResolver, end to end
+    //
+    // 0.7.1 made publish()/resolve() async (a real network-backed
+    // ContentStore cannot be synchronous) and made resolve() return a
+    // structured `{ outcome, content, publication, reason }` instead of
+    // throwing per step — see application/PublicationResolutionOutcome.js.
+    // Every assertion below exercises that current shape; tests/
+    // IpfsPublicationResolution.test.js covers the same discipline
+    // against content/IpfsContentStore.js specifically, including the
+    // CONTENT_UNAVAILABLE outcome this LocalContentStore-only suite has
+    // no way to trigger.
     // ---------------------------------------------------------------
     {
         expectThrows(() => new PublicationResolver(null, new LocalAuthorizationVerifier()),
@@ -179,10 +198,10 @@ async function run() {
         const aliceContentStore = new LocalContentStore(new InMemoryStorageProvider());
         const aliceResolver = new PublicationResolver(aliceContentStore, new LocalAuthorizationVerifier());
 
-        expectThrows(() => aliceResolver.publish({ content: attribution, contentKind: BLUEPRINT_ATTRIBUTION_KIND, identityProvider: {} }),
+        await expectRejects(() => aliceResolver.publish({ content: attribution, contentKind: BLUEPRINT_ATTRIBUTION_KIND, identityProvider: {} }),
             '3. rejects publishing without a cryptographic identityProvider');
 
-        const publication = aliceResolver.publish({
+        const publication = await aliceResolver.publish({
             content: attribution,
             contentKind: BLUEPRINT_ATTRIBUTION_KIND,
             contentSchemaVersion: ATTRIBUTION_SCHEMA_VERSION,
@@ -199,9 +218,9 @@ async function run() {
 
         // --- Bob's replica: an independent ContentStore/store/verifier,
         //     bridged only by fetching the same bytes at the same hash —
-        //     exactly what a real IpfsContentStore#get() would do for
-        //     Bob automatically once 0.7.1 builds one. Never a shared
-        //     JS object, never Alice's own store.
+        //     exactly what a real IpfsContentStore#get() does for Bob
+        //     automatically (see tests/IpfsPublicationResolution.test.js).
+        //     Never a shared JS object, never Alice's own store.
         const bobContentStore = new LocalContentStore(new InMemoryStorageProvider());
         const bobAttributionStore = new LocalBlueprintAttributionStore(new InMemoryStorageProvider());
         const bobVerifier = new LocalAuthorizationVerifier();
@@ -215,44 +234,46 @@ async function run() {
 
         const wrongKindPlugin = createBlueprintAttributionPublicationKind({ verifier: bobVerifier, store: bobAttributionStore });
         wrongKindPlugin.contentKind = 'forkbuild.something-else';
-        expectThrows(() => bobResolver.resolve(publicationJson, wrongKindPlugin),
-            '9. rejects resolving a publication as the wrong contentKind');
+        const wrongKindResult = await bobResolver.resolve(publicationJson, wrongKindPlugin);
+        assert(wrongKindResult.outcome === PublicationResolutionOutcome.INVALID_ENVELOPE, '9. reports INVALID_ENVELOPE for the wrong contentKind');
 
         const emptyContentStore = new LocalContentStore(new InMemoryStorageProvider());
         const emptyResolver = new PublicationResolver(emptyContentStore, bobVerifier);
-        expectThrows(() => emptyResolver.resolve(publicationJson, kindPlugin),
-            '10. rejects resolving a publication whose referenced bytes are not in this ContentStore');
+        const unavailableResult = await emptyResolver.resolve(publicationJson, kindPlugin);
+        assert(unavailableResult.outcome === PublicationResolutionOutcome.CONTENT_UNAVAILABLE, '10. reports CONTENT_UNAVAILABLE when the referenced bytes are not in this ContentStore');
 
-        const tamperedEnvelope = { ...publicationJson, contentReference: { ...publicationJson.contentReference, hash: bridgedReference.hash } };
+        const tamperedEnvelope = { ...publicationJson };
         // Re-sign nothing — the signature above was for the ORIGINAL
-        // hash, so mutating contentReference (even to another valid
-        // hash) must invalidate the envelope's own signature.
+        // contentReference, so mutating it in any way must invalidate the
+        // envelope's own signature.
         tamperedEnvelope.contentReference = { ...publicationJson.contentReference, mediaType: 'text/plain' };
-        expectThrows(() => bobResolver.resolve(tamperedEnvelope, kindPlugin),
-            '11. rejects an envelope whose contentReference was altered after signing');
+        const tamperedResult = await bobResolver.resolve(tamperedEnvelope, kindPlugin);
+        assert(tamperedResult.outcome === PublicationResolutionOutcome.INVALID_PUBLICATION_SIGNATURE, '11. reports INVALID_PUBLICATION_SIGNATURE for an envelope altered after signing');
 
         const mismatchPlugin = createBlueprintAttributionPublicationKind({
             verifier: bobVerifier,
             store: bobAttributionStore,
             expectedFingerprint: 'bp:some-other-design'
         });
-        expectThrows(() => bobResolver.resolve(publicationJson, mismatchPlugin),
-            '12. rejects a resolved attribution whose fingerprint does not match an expected local fingerprint');
+        const mismatchResult = await bobResolver.resolve(publicationJson, mismatchPlugin);
+        assert(mismatchResult.outcome === PublicationResolutionOutcome.DOMAIN_CROSS_CHECK_FAILED, '12. reports DOMAIN_CROSS_CHECK_FAILED for a fingerprint that does not match an expected local fingerprint');
 
-        const result = bobResolver.resolve(publicationJson, kindPlugin);
-        assert(result.isNew === true, '13. first resolution is new');
-        assert(result.attribution.fingerprint === 'bp:farmstead-1', '14. resolved attribution carries the correct fingerprint');
-        assert(result.attribution.authorIdentityId === alice.getSigningIdentity().id, '15. resolved attribution carries the correct author');
-        assert(bobAttributionStore.has('bp:farmstead-1', attribution.id), '16. the resolved attribution is now in Bob\'s own store');
+        const result = await bobResolver.resolve(publicationJson, kindPlugin);
+        assert(result.outcome === PublicationResolutionOutcome.RESOLVED, '13. a genuine publication resolves');
+        assert(result.content.isNew === true, '14. first resolution is new');
+        assert(result.content.attribution.fingerprint === 'bp:farmstead-1', '15. resolved attribution carries the correct fingerprint');
+        assert(result.content.attribution.authorIdentityId === alice.getSigningIdentity().id, '16. resolved attribution carries the correct author');
+        assert(bobAttributionStore.has('bp:farmstead-1', attribution.id), '17. the resolved attribution is now in Bob\'s own store');
 
-        const secondResult = bobResolver.resolve(publicationJson, kindPlugin);
-        assert(secondResult.isNew === false, '17. re-resolving the same publication is a no-op, never an error');
+        const secondResult = await bobResolver.resolve(publicationJson, kindPlugin);
+        assert(secondResult.outcome === PublicationResolutionOutcome.RESOLVED, '18. re-resolving the same publication still resolves');
+        assert(secondResult.content.isNew === false, '19. re-resolving the same publication is a no-op, never an error');
 
         // Alice's own local state is completely untouched by anything
         // Bob did with his independent replica.
-        assert(aliceContentStore.has(publication.contentReference), '18. Alice\'s own content store still has her original bytes');
+        assert(aliceContentStore.has(publication.contentReference), '20. Alice\'s own content store still has her original bytes');
     }
-    console.log('✓ Section C: PublicationResolver — publish/resolve end to end, wrong-kind/missing/tampered/mismatch rejection, dedup');
+    console.log('✓ Section C: PublicationResolver — publish/resolve end to end, outcome-based failure reporting, dedup');
 
     console.log('\nAll Decentralized Publication Protocol tests passed.');
 }
