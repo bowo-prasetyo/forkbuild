@@ -9007,3 +9007,68 @@ button is the ONLY code path anywhere in this codebase that leads to
 similarity-suggested source — every click is a real, individual human
 decision, never a batch action, never a default, never something that
 fires above a threshold without someone choosing it.
+
+### Publication Makes Content Discoverable; It Does Not Make It Authoritative (0.7.0)
+
+0.2.14 already drew the boundary this milestone generalizes: "Published
+content is identified by its content hash, not its storage location.
+IPFS, Arweave, HTTP gateways, local storage, and future backends are
+retrieval mechanisms rather than content identities." 0.7.0's entire job
+is to let that same boundary hold for something other than a Document
+snapshot — a `BlueprintAttribution`, a `BlueprintLineageClaim`, a
+`PlaceNamingClaim`, anything already signed — without inventing a second
+notion of what "published" means for each one.
+
+**A locator is not an identity.** `core/ContentReference.js`'s own
+header already says as much for a content hash versus its `uri`; `core/
+DecentralizedPublication.js` extends the identical restraint one layer
+up. `ipfs://bafy...`, `https://mirror.example/...`, and a future
+`blockchain:...` anchor are three ways to ask "where might these bytes
+be?" — never three different answers to "what are these bytes?" (the
+hash already answered that) or "is this true?" (nothing ever answers
+that automatically). A `DecentralizedPublication`'s signature proves
+only that its own `publisherIdentity` chose to publish this exact
+`ContentReference` under this `contentKind` — never that the wrapped
+content is accurate, never that the signer of the WRAPPED content (a
+separate signature, checked separately) is trustworthy, and never that
+the content is even reachable at the locator it names.
+
+**Blockchain inclusion does not turn a claim into truth.** If Alice
+signs "I created blueprint X" and that assertion is anchored where
+nobody can ever delete it, the anchor proves Alice's key produced that
+exact assertion at that exact time — nothing more. It does not prove
+Alice designed X, the identical restraint `core/BlueprintAttribution.js`
+already established for an unanchored attribution in 0.6.5. A future
+blockchain-anchored `ContentStore` is exactly that: one more retrieval
+mechanism, immutable and independently timestamped, never a promotion
+of anything it stores from claim to fact.
+
+**The fingerprint of a design and the locator of a publication are two
+independent axes, and neither is ever written into the other.**
+`core/BlueprintFingerprint.js` names WHAT a design is; `core/
+ContentReference.js`'s own `uri` names WHERE one copy of some bytes
+might be found. The same fingerprint can be wrapped in any number of
+independent `DecentralizedPublication` envelopes — published by
+different identities, pointing at different storage backends, none more
+authoritative than another — the exact same "several independently
+signed facts, never reconciled into one" posture `core/
+BlueprintAttributionView.js` and `core/BlueprintLineageView.js` already
+hold for disagreeing claims, extended here to disagreeing LOCATIONS of
+the same content.
+
+**A resolver never trusts what it retrieves — it only ever verifies it.**
+`application/PublicationResolver.js` runs the identical discipline every
+exchange class in this codebase already followed ad hoc since 0.5.3
+(`application/PlaceNamingClaimExchange.js`,
+`application/BlueprintAttributionExchange.js`,
+`application/BlueprintLineageExchange.js`): validate the envelope,
+construct it, verify its signature, retrieve the referenced bytes,
+verify the bytes actually hash to what was signed, validate the wrapped
+content, construct it, verify ITS OWN signature, optionally cross-check
+it against something already local, and only then store it. Never:
+retrieve → trust. What 0.7.0 changes is making that discipline
+protocol-neutral and reusable across content kinds, rather than
+reimplemented once per domain — the resolver itself never imports a
+single domain module (no `BlueprintAttribution`, no `PlaceNamingClaim`),
+receiving instead a small `kindPlugin` supplying whatever
+validator/constructor/verifier that domain already built.
