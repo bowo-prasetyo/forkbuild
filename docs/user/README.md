@@ -89,7 +89,7 @@ Beyond individual bricks, the Editor's Build Library lets you build with
 whole structures at once — twenty ready-made ones spanning five
 categories, plus anything you save yourself:
 
-- **Compose** a structure straight into what you're building, or **fork**
+- **Place** a structure straight into what you're building, or **fork**
   one into a brand-new document of its own.
 - **Save your own** builds as reusable structures in **My Structures**,
   your personal blueprint library.

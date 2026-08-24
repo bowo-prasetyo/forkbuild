@@ -31,6 +31,11 @@ import { EditorActionContext } from './EditorActionContext.js';
 //       id: 'transform.alignLeft',        // unique, dotted, stable
 //       label: 'Align Left',              // palette/sidebar display
 //       category: 'Transform',            // grouping, palette sections
+//       tier: 'primary'|'common'|'advanced', // 0.6.2 — contextual action
+//                                          // hierarchy (see this field's
+//                                          // own note below); never
+//                                          // consulted by enabled()/
+//                                          // execute() — display-only
 //       description: '...',               // help text / docs
 //       shortcut: 'Ctrl/Cmd+K' | null,    // display string
 //       keys: [{ key, ctrl, shift, alt }] | null,  // machine matching
@@ -38,6 +43,21 @@ import { EditorActionContext } from './EditorActionContext.js';
 //       disabledReason: (context) => string | null,
 //       execute: (invocation) => void     // invocation: { context }
 //   }
+//
+// 0.6.2 — Editor UX Consolidation adds `tier` as pure display metadata,
+// the same "read by the UI, never by the registry itself" posture every
+// other cosmetic field here already has (shortcut/description). Three
+// values only, matching the design conversation's own bucket names:
+// PRIMARY (always visible — Rotate, Move), COMMON (Duplicate, Delete,
+// Copy/Paste, the always-reachable entry points), ADVANCED (Align,
+// Distribute, Repeat, Group management — real operations, just not
+// worth permanent screen space). ui/components/EditingSidebar.js reads
+// it to decide what stays always-visible vs. what collapses into an
+// "Advanced" ui/components/CollapsibleSection.js; the command palette
+// and keyboard dispatch stay tier-blind, exactly as before — EVERY
+// action is still reachable by search or shortcut regardless of tier,
+// per docs/Principles.md's own "no second, poorer surface" posture.
+// Unset defaults to 'common' via define()'s own spread below.
 export class EditorActionRegistry {
     constructor(actions = []) {
         this._actions = new Map();
@@ -159,6 +179,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         shortcut: null,
         keys: null,
         description: '',
+        tier: 'common', // 0.6.2 — see this file's own header
         enabled: () => true,
         disabledReason: () => null,
         ...partial
@@ -196,6 +217,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         id: `transform.nudge${suffix}`,
         label: `Move ${label}`,
         category: 'Transform',
+        tier: 'primary', // 0.6.2 — "Move" is a Primary bucket action
         shortcut,
         keys: [{ key: keyName }],
         description: `Nudge the selection ${label.toLowerCase()} by one grid step`,
@@ -217,6 +239,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         id: `transform.align${label.replace(/\s+/g, '')}`,
         label: `Align ${label}`,
         category: 'Transform',
+        tier: 'advanced', // 0.6.2
         description: `Align the selection to its ${label.toLowerCase()} reference on the world ${mode[0].toUpperCase()} axis`,
         enabled: (ctx) => editingAllowed(ctx) && ctx.selectionCount >= 2,
         disabledReason: (ctx) => (ctx.selectionCount >= 2 ? null : 'Select at least 2 bricks'),
@@ -230,6 +253,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         id: `transform.distribute${axis.toUpperCase()}`,
         label: `Distribute ${axis.toUpperCase()}`,
         category: 'Transform',
+        tier: 'advanced', // 0.6.2
         description: `Distribute the selection's centers evenly along world ${axis.toUpperCase()}`,
         enabled: (ctx) => editingAllowed(ctx) && ctx.selectionCount >= 3,
         disabledReason: (ctx) => (ctx.selectionCount >= 3 ? null : 'Select at least 3 bricks'),
@@ -239,10 +263,12 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         })
     }));
 
-    const groupAction = (suffix, label, methodName, unavailable, requirement, reason, done) => define({
+    const groupAction = (suffix, label, methodName, unavailable, requirement, reason, done, tier = 'advanced') => define({
         id: `group.${suffix}`,
         label,
         category: 'Groups',
+        tier, // 0.6.2 — every group operation is Advanced except the
+              // entry point itself (group.create, called with 'common')
         description: `${label} — operates on the resolved selection or the selected group`,
         enabled: (ctx) => editingAllowed(ctx) && requirement(ctx),
         disabledReason: (ctx) => (requirement(ctx) ? null : reason(ctx)),
@@ -300,7 +326,11 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             disabledReason: selectionRequired,
             execute: () => surfaceCall('duplicateSelection', 'Duplicate is not available on this surface', (duplicateSelection) => {
                 const newId = duplicateSelection();
-                feedback.show(newId ? 'Duplicated selection' : 'Nothing to duplicate');
+                // 0.6.2 — "what happens next": name the next likely
+                // action instead of only confirming the last one, the
+                // same contextual-hint posture the placement/collision
+                // feedback strings already used before this milestone.
+                feedback.show(newId ? 'Copy created — R to rotate, drag to move' : 'Nothing to duplicate');
             })
         }),
         define({
@@ -321,11 +351,12 @@ export function createStandardActions({ session, feedback, ui = {} }) {
         // -------------------------------------------------------- Groups
         groupAction('create', 'Create Group', 'createGroupFromSelection',
             'Groups are not available on this surface',
-            (ctx) => ctx.hasSelection, selectionRequired, 'Created group'),
+            (ctx) => ctx.hasSelection, selectionRequired, 'Created group', 'common'),
         define({
             id: 'group.rename',
             label: 'Rename Group',
             category: 'Groups',
+            tier: 'advanced', // 0.6.2
             description: 'Rename the selected group',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelectedGroup,
             disabledReason: (ctx) => (ctx.hasSelectedGroup ? null : 'Select a group'),
@@ -443,6 +474,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             id: 'transform.rotateClockwise',
             label: 'Rotate Clockwise',
             category: 'Transform',
+            tier: 'primary', // 0.6.2
             shortcut: 'R',
             keys: [{ key: 'r' }],
             description: 'Rotate the selection +90° around its pivot',
@@ -457,6 +489,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             id: 'transform.rotateCounterClockwise',
             label: 'Rotate Counter-Clockwise',
             category: 'Transform',
+            tier: 'primary', // 0.6.2
             shortcut: 'Shift+R',
             keys: [{ key: 'r', shift: true }],
             description: 'Rotate the selection −90° around its pivot',
@@ -473,6 +506,7 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             id: 'transform.numeric',
             label: 'Numeric Transform Panel',
             category: 'Transform',
+            tier: 'advanced', // 0.6.2
             description: 'Focus the numeric transform input in the sidebar',
             enabled: (ctx) => editingAllowed(ctx),
             execute: () => {
@@ -481,6 +515,35 @@ export function createStandardActions({ session, feedback, ui = {} }) {
                     feedback.show('Numeric transform ready');
                 } else {
                     feedback.show('Numeric panel is not available on this surface');
+                }
+            }
+        }),
+        // 0.6.2 — Editor UX Consolidation. RepeatSelectionUseCase and
+        // EditorSession#repeatSelection() have existed, fully wired and
+        // fully tested, since 0.4.9 — but 0.4.9 never gave "Repeat" a
+        // UI entry point of its own (no sidebar control, no palette
+        // action). This is that entry point, on the SAME "focus the
+        // panel, the panel itself calls the session directly" shape
+        // transform.numeric already established just above — Repeat's
+        // count/offset are user-tunable, not a fixed zero-arg trigger,
+        // so (like Align/Distribute/Numeric before it) execute() never
+        // repeats anything itself; ui/components/RepeatPanel.js does,
+        // via the SAME repeatSelection() this milestone did not have to
+        // touch.
+        define({
+            id: 'transform.repeat',
+            label: 'Repeat Selection',
+            category: 'Transform',
+            tier: 'advanced',
+            description: 'Focus the Repeat panel in the sidebar',
+            enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelection,
+            disabledReason: selectionRequired,
+            execute: () => {
+                if (typeof ui.focusRepeat === 'function') {
+                    ui.focusRepeat();
+                    feedback.show('Repeat panel ready');
+                } else {
+                    feedback.show('Repeat panel is not available on this surface');
                 }
             }
         }),

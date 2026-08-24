@@ -25,7 +25,9 @@ import Toolbar from '../components/Toolbar.js';
 import BuildLibraryPanel from '../components/BuildLibraryPanel.js';
 import EditingSidebar from '../components/EditingSidebar.js';
 import StructureInstancePanel from '../components/StructureInstancePanel.js';
+import SelectionInspector from '../components/SelectionInspector.js';
 import CommandPalette from '../components/CommandPalette.js';
+import KeyboardShortcutsOverlay from '../components/KeyboardShortcutsOverlay.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import { CreatePublisherUseCase } from '../../application/CreatePublisherUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
@@ -42,14 +44,15 @@ import { editorEntryContextFromQuery } from '../../core/EditorEntryContext.js';
 // shortcuts (undo/redo, delete, rotate, nudges, select all, copy/paste,
 // command palette) come from the EditorActionRegistry — one source of
 // truth shared with the palette, the sidebar, and the controls docs.
-// Escape follows the explicit priority chain: text input > palette >
-// gizmo gesture > selection. Tool switching (1/2) and Ctrl+S stay
+// Escape follows the explicit priority chain: text input > shortcuts
+// overlay > palette > gizmo gesture > selection. Tool switching (1/2),
+// Ctrl+S, and (0.6.2) '?' for the Keyboard Shortcuts overlay stay
 // view-local: they are not editing actions.
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, DocumentInfoPanel, MetadataEditorDialog },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -61,6 +64,7 @@ export default {
                 :feedback="feedback"
                 :entry-context="entryContext"
                 @back-to-world="backToWorld"
+                @open-shortcuts="shortcutsOpen = true"
             />
             <div class="editor-body">
                 <div class="sidebar">
@@ -87,10 +91,13 @@ export default {
                     <p v-if="activeTool === ToolId.COMPOSE_STRUCTURE" class="placement-hint">
                         Placing "{{ activeCompositionTitle }}" — hover the ground, R to rotate, click to place, Esc to cancel.
                     </p>
-                    <p v-if="activeTool === ToolId.SELECT && selectedPlacementInfo" class="placement-hint">
-                        Selected "{{ selectedPlacementInfo.title }}" — drag to move, R to rotate.
-                    </p>
                     <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
+                    <!-- 0.6.2 — the old "Selected X — drag to move, R to
+                         rotate" placement-hint paragraph that used to sit
+                         here was a second copy of the exact same line
+                         StructureInstancePanel's own hint already shows
+                         below — removed as a duplicate, not a
+                         regression; see this milestone's Roadmap entry. -->
                     <StructureInstancePanel
                         v-if="selectedPlacementInfo"
                         :info="selectedPlacementInfo"
@@ -99,6 +106,13 @@ export default {
                         @delete="deleteSelectedPlacement"
                         @edit-source="editSelectedPlacementSource"
                         @apply-transform="applySelectedPlacementTransform"
+                    />
+                    <SelectionInspector
+                        v-if="selectionSummary"
+                        :registry="actionRegistry"
+                        :get-context="getActionContext"
+                        :selection-count="selectionCount"
+                        :summary="selectionSummary"
                     />
                     <BuildLibraryPanel
                         :palette-use-case="paletteUseCase"
@@ -122,6 +136,7 @@ export default {
                         :apply-numeric="applyNumericTransform"
                         :align="alignSelection"
                         :distribute="distributeSelection"
+                        :repeat="repeatSelection"
                     />
                 </div>
                 <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
@@ -135,6 +150,11 @@ export default {
                 @close="closePalette"
             />
             <ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
+            <KeyboardShortcutsOverlay
+                v-if="shortcutsOpen"
+                :registry="actionRegistry"
+                @close="shortcutsOpen = false"
+            />
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
                 :info="documentInfo"
@@ -348,6 +368,16 @@ export default {
         // SELECTION_CHANGED.
         const selectionIsStructurePlacement = ref(false);
         const selectedPlacementInfo = ref(null);
+        // 0.6.2 — Editor UX Consolidation: the brick-selection
+        // counterpart to selectedPlacementInfo above, backing
+        // SelectionInspector — see
+        // application/EditorSession.js#getSelectionSummary()'s own
+        // header. Mirrors selectedPlacementInfo's exact refresh shape:
+        // set on SELECTION_CHANGED, and re-read after any pointer-up/
+        // key-down that could have moved the SAME still-selected bricks
+        // (see refreshSelectionSummary() below).
+        const selectionSummary = ref(null);
+        const shortcutsOpen = ref(false);
         let unsubTool = null;
         let unsubSelection = null;
         let unsubActiveStructure = null;
@@ -385,6 +415,31 @@ export default {
             }
         }
 
+        // 0.6.2 — refreshSelectionSummary()'s own reason for existing is
+        // identical to refreshSelectedPlacementInfo() just above: a
+        // nudge/rotate/apply on the SAME still-selected bricks changes
+        // their bounds without ever firing SELECTION_CHANGED, so
+        // SelectionInspector's live position readout would otherwise go
+        // stale the instant it started showing one.
+        function refreshSelectionSummary() {
+            if (!editorContext.selection.isEmpty && !editorContext.selection.isStructurePlacementSelection) {
+                selectionSummary.value = editorSession.getSelectionSummary();
+            }
+        }
+
+        // 0.6.2 — Editor UX Consolidation. RepeatPanel/EditingSidebar's
+        // own host callback — parallels alignSelection()/
+        // distributeSelection() immediately below: parse/UI concerns
+        // stay in the panel, this is nothing but the routing hop into
+        // EditorSession#repeatSelection() plus feedback.
+        function repeatSelection(options) {
+            const repeated = editorSession.repeatSelection(options);
+            feedback.show(repeated
+                ? `Repeated ${options.count} ${options.count === 1 ? 'copy' : 'copies'}`
+                : 'Repeat blocked — check the count/offset, or that the copies fit');
+            refreshSelectionSummary();
+        }
+
         function rotateSelectedPlacement(deltaRotation) {
             editorSession.rotateSelection(deltaRotation);
             refreshSelectedPlacementInfo();
@@ -407,7 +462,10 @@ export default {
         function duplicateSelectedPlacement() {
             const newId = editorSession.duplicateSelection();
             if (newId) {
-                feedback.show('Duplicated structure');
+                // 0.6.2 — "what happens next," the same posture
+                // application/EditorActionRegistry.js#selection.duplicate
+                // now uses for a brick selection's own Duplicate.
+                feedback.show('Copy created — R to rotate, drag to move');
             }
         }
 
@@ -606,6 +664,9 @@ export default {
                     selectedPlacementInfo.value = selection.isStructurePlacementSelection
                         ? editorSession.getSelectedPlacementInfo()
                         : null;
+                    selectionSummary.value = (!selection.isEmpty && !selection.isStructurePlacementSelection)
+                        ? editorSession.getSelectionSummary()
+                        : null;
                 }
             );
             unsubActiveStructure = editorContext.eventBus.subscribe(
@@ -702,6 +763,7 @@ export default {
             onPointerUp = (event) => {
                 editorSession.onPointerUp(event);
                 refreshSelectedPlacementInfo();
+                refreshSelectionSummary();
             };
             window.addEventListener('pointerup', onPointerUp);
 
@@ -710,6 +772,18 @@ export default {
                 if (InputRouter.isTextInputTarget(event.target)) {
                     if (event.key === 'Escape') {
                         event.target.blur();
+                    }
+                    return;
+                }
+                // 1.5. An open Keyboard Shortcuts overlay owns the
+                // keyboard next — same "the topmost open surface wins"
+                // priority the palette already had, just one layer
+                // earlier so `?`/Escape close it before anything below
+                // (tool shortcuts, the registry) ever sees the key.
+                if (shortcutsOpen.value) {
+                    if (event.key === 'Escape' || event.key === '?') {
+                        event.preventDefault();
+                        shortcutsOpen.value = false;
                     }
                     return;
                 }
@@ -739,6 +813,16 @@ export default {
                 if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
                     event.preventDefault();
                     saveDocumentUseCase.execute(documentManager);
+                    return;
+                }
+                // 4.1 — Editor UX Consolidation: '?' opens the Keyboard
+                // Shortcuts overlay. Placed after tool-switching/Save
+                // (neither uses '?') and before placement's own Rotate/
+                // Escape carve-outs below, so '?' never reaches those —
+                // it isn't a shortcut either mode defines.
+                if (event.key === '?' && !event.ctrlKey && !event.metaKey) {
+                    event.preventDefault();
+                    shortcutsOpen.value = true;
                     return;
                 }
                 // 4.5. Placement mode keeps its own Rotate (0.2.87) —
@@ -789,6 +873,7 @@ export default {
             onKeyDown = (event) => {
                 handleKeyDown(event);
                 refreshSelectedPlacementInfo();
+                refreshSelectionSummary();
             };
             window.addEventListener('keydown', onKeyDown);
         });
@@ -844,11 +929,14 @@ export default {
             selectionCount,
             selectionIsStructurePlacement,
             selectedPlacementInfo,
+            selectionSummary,
+            shortcutsOpen,
             rotateSelectedPlacement,
             duplicateSelectedPlacement,
             deleteSelectedPlacement,
             editSelectedPlacementSource,
             applySelectedPlacementTransform,
+            repeatSelection,
             actionRegistry,
             getActionContext,
             actionUi,

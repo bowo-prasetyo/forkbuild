@@ -75,7 +75,7 @@ export default {
             default: null
         }
     },
-    emits: ['back-to-world'],
+    emits: ['back-to-world', 'open-shortcuts'],
     setup(props, { emit }) {
         const dirty = ref(props.documentManager.state.dirty);
         const recentDocuments = ref(props.loadDocumentUseCase.listSavedDocuments());
@@ -195,7 +195,7 @@ export default {
             <!-- 0.6.1 — World ↔ Editor Continuity & Return Navigation.
                  Only renders once EditorView has decoded a real
                  EditorEntryContext WITH a return address — see that
-                 view's own `entryContext` ref header for exactly when
+                 view's own entryContext ref header for exactly when
                  that is (an "Edit a Copy" fork, and only for as long as
                  its own fork stays the open document). "Editing a copy
                  of ___" names what's open the same way EditorView's own
@@ -224,6 +224,12 @@ export default {
             <span class="toolbar-dirty" :class="{ 'toolbar-dirty--clean': !dirty }">
                 {{ dirty ? '● Unsaved changes' : 'Saved' }}
             </span>
+
+            <!-- 0.6.2 — Editor UX Consolidation: discoverability for the
+                 same overlay the '?' key opens (see EditorView's own
+                 keydown handler) — a viewer who never guesses that a
+                 shortcuts list exists can still find it. -->
+            <button class="toolbar-shortcuts" title="Keyboard shortcuts (?)" @click="$emit('open-shortcuts')">⌨ Shortcuts</button>
 
             <div class="toolbar-recent" v-if="recentDocuments.length">
                 <button

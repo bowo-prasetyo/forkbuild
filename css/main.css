@@ -165,6 +165,25 @@ html, body {
     color: #707070;
 }
 
+/* 0.6.2 — Editor UX Consolidation: opens
+   ui/components/KeyboardShortcutsOverlay.js — same visual weight as
+   .toolbar-new/.toolbar-back-to-world, deliberately never as loud as
+   .toolbar-save. */
+.toolbar-shortcuts {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #909090;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-shortcuts:hover {
+    background: #262626;
+    color: #d0d0d0;
+}
+
 /* 0.6.1 — World ↔ Editor Continuity & Return Navigation. Only
    rendered once EditorView has a real EditorEntryContext with a
    return address — see ui/components/Toolbar.js's own header. */
@@ -4071,6 +4090,17 @@ html, body {
 
 .structure-instance-apply {
     width: 100%;
+}
+
+/* 0.6.2 — Editor UX Consolidation: ui/components/SelectionInspector.js,
+   the brick-selection counterpart to StructureInstancePanel above.
+   Reuses every .structure-instance-* class wholesale (same card/hint/
+   action-button look, see that component's own header on why the two
+   stay separate components) — .selection-inspector-next is the one new
+   hook, a "what happens next" hint line one step quieter than the
+   position readout above it. */
+.selection-inspector-next {
+    color: #5a8a6f;
 }
 
 /* 0.3.0 — ui/components/WorldCollaboratorIndicator.js: deliberately as
