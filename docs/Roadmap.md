@@ -19813,3 +19813,236 @@ named as future work; and the unified Publication Center view naming
 "Evidence" and "Snapshot Placements" as siblings under one publication,
 which now has every prerequisite (creation, inspection, resolution, and
 provenance, symmetric on both sides) but still no milestone of its own.
+
+## 0.8.26 — Snapshot Placement Lifecycle & Stale Availability Semantics
+
+0.8.12 closed the identical gap on the anchor side of this codebase:
+`ExternalAnchorVerifier.verify()` reports only the CURRENT state of the
+external world, so a caller that overwrote its own prior result the
+moment a new one arrived could no longer tell "this anchor was never
+confirmable" apart from "this anchor WAS confirmed, and the explorer this
+replica happens to be pointed at is merely unreachable right now." 0.8.18
+through 0.8.25 built the complete, working, EXPLICIT lifecycle on the
+placement side — create, catalog, inspect, resolve — but every one of
+those milestones left the identical asymmetry 0.8.25's own "What's left"
+line named outright: a placement resolved successfully once and
+`STORE_UNAVAILABLE` the next time looked, on screen, exactly like a
+placement nobody had ever managed to resolve at all. This is the
+milestone that closes it — the placement-side counterpart of 0.8.12,
+mirrored deliberately, one axis over:
+
+> **A resolution result describes whether bytes can be retrieved now; it
+> does not rewrite the placement claim.**
+
+```text
+core/PublicationSnapshotPlacement.js       UNCHANGED — still exactly one
+                                            signed claim, forever
+        │
+        ▼
+SnapshotPlacementResolver.resolve()        UNCHANGED — still one honest
+        │                                  outcome per call, never cached
+        ▼
+SnapshotPlacementResolutionObservation     UNCHANGED (0.8.20) — one frozen
+        │                                  record of ONE call, at ONE
+        │                                  moment, APPENDED to this
+        │                                  replica's own session history
+        ▼
+SnapshotPlacementLifecycleState            NEW — names the CURRENT state
+        │                                  (`NOT_RESOLVED`/`RESOLVED`/
+        │                                  `UNAVAILABLE`/`HASH_MISMATCH`/
+        │                                  `INVALID_PLACEMENT`), a
+        │                                  narrower axis than
+        │                                  SnapshotPlacementResolutionOutcome
+        ▼
+SnapshotPlacementLifecycleView             NEW — derives, from that
+                                            history alone, whether the
+                                            CURRENT state should read as
+                                            "currently unavailable" or
+                                            "currently unavailable, but
+                                            resolved successfully earlier"
+```
+
+**`application/SnapshotPlacementResolutionObservation.js` gained nothing
+— it was already exactly what this milestone needed.** Its own 0.8.20
+header already stated the restraint this milestone finally puts to use:
+"NEVER PERSISTED, NEVER SHARED... a caller (`ui/views/
+DecentralizedPublicationsView.js`) that wants to keep the current outcome
+on screen holds it itself." What was missing was a caller that kept more
+than the single most recent one. `ui/views/DecentralizedPublicationsView
+.js` now keeps `entry.resolutionHistory`, keyed by placementId, appended
+to on every "Resolve Snapshot"/"Resolve Again" click — the placement-side
+sibling of `entry.verificationHistory` (0.8.12) one axis over, and
+nothing else about `resolvePlacement()` changed: the existing
+`entry.resolutions` map, feeding the unchanged badge/label, is still
+computed and overwritten exactly as 0.8.20 left it.
+
+**A COARSER axis than `SnapshotPlacementResolutionOutcome`, deliberately.**
+`application/SnapshotPlacementResolutionOutcome.js` names six things a
+single `resolve()` call can conclude, each individually distinct on
+screen (`application/SnapshotPlacementView.js#describeResolutionOutcome()`,
+unchanged). `application/SnapshotPlacementLifecycleState.js` answers a
+different, narrower question — given a WHOLE HISTORY of such calls, what
+should the CURRENT state read as — and collapses two of those six
+outcomes into one shared state on purpose:
+
+```text
+RESOLVED                     -> RESOLVED
+STORE_UNAVAILABLE            -> UNAVAILABLE  ┐ collapsed: neither says
+CONTENT_UNAVAILABLE          -> UNAVAILABLE  ┘ anything negative about
+                                              the placement's own claim
+CONTENT_HASH_MISMATCH        -> HASH_MISMATCH   (kept SEPARATE — see below)
+INVALID_ENVELOPE             -> INVALID_PLACEMENT ┐ collapsed: both mean
+INVALID_SIGNATURE            -> INVALID_PLACEMENT ┘ "not even a valid,
+                                                    signed placement"
+```
+
+**Case 3 is fundamentally different, and this milestone's own design
+conversation was explicit that the UI must never blur it into "the
+placement is unavailable."** A store that cannot presently be reached
+(`STORE_UNAVAILABLE`/`CONTENT_UNAVAILABLE`) says nothing negative about
+the placement's own claim — a caller with the right store available, or
+the same caller once the network recovers, can resolve the identical
+placement successfully. A store that DOES answer, with bytes that do not
+hash to the placement's own `contentHash` (`CONTENT_HASH_MISMATCH`), is a
+definite, different finding: the store is serving something else at this
+locator. `application/SnapshotPlacementLifecycleState.js` keeps
+`HASH_MISMATCH` permanently separate from `UNAVAILABLE` for exactly this
+reason, and `application/SnapshotPlacementLifecycleView.js#
+describeSnapshotPlacementLifecycleNote()` never softens a `HASH_MISMATCH`
+into "previously resolved" language, even directly after a genuine
+earlier `RESOLVED` observation — `tests/SnapshotPlacementLifecycle
+.test.js`'s own Section B and assertion 46 both make this the flagship
+assertion for this half of the milestone, not an incidental one.
+
+**A history of observations adds exactly one new fact — `everResolved` —
+never a new state of its own,** the identical restraint 0.8.12 already
+held for `everValid`. `application/SnapshotPlacementLifecycleView.js#
+deriveSnapshotPlacementLifecycle()` still reports the CURRENT state from
+nothing but the MOST RECENT observation, exactly as `application/
+SnapshotPlacementView.js` already did from a single result. There is
+deliberately no `PREVIOUSLY_RESOLVED_NOW_UNAVAILABLE` entry in
+`application/SnapshotPlacementLifecycleState.js` — `everResolved` rides
+alongside the current state as its own plain boolean, and
+`describeSnapshotPlacementLifecycleNote()` uses the COMBINATION —
+current state `UNAVAILABLE` and `everResolved` true — to add one optional
+sentence next to the UNCHANGED existing badge, never in place of it:
+"This snapshot was resolved successfully earlier; it is currently
+unavailable." Never "invalid," "corrupted," "lost," or "removed," because
+none of those is true — `tests/SnapshotPlacementLifecycle.test.js`'s own
+assertion 8 checks the actual wording, not just the state, for exactly
+this reason.
+
+**The flagship scenario, run against a real fake IPFS network exactly the
+way 0.8.12's own flagship ran against a real fake Bitcoin explorer:**
+`tests/SnapshotPlacementLifecycle.test.js`'s own Section A places a real
+snapshot on a fake IPFS node through the unmodified 0.8.18 creation
+pipeline, resolves it (`RESOLVED`), takes the node down (`CONTENT_UNAVAILABLE`
+— honestly, never `CONTENT_HASH_MISMATCH`, because nothing was actually
+retrieved to mismatch), and brings it back up (`RESOLVED` again) —
+asserting `placement.toJSON()` byte-identical after all three calls.
+Section C additionally proves `STORE_UNAVAILABLE` (no store registered at
+all) and `CONTENT_UNAVAILABLE` (a store registered, but its backend is
+down) derive the IDENTICAL `UNAVAILABLE` lifecycle state and the
+identical note behavior, even though they remain two different, honestly
+distinct outcomes on the unchanged per-attempt badge.
+
+**Resolution observations still never cross a replica boundary, and this
+milestone adds nothing that could make them.** `tests/
+SnapshotPlacementLifecycle.test.js`'s own Section E proves it directly:
+two independently constructed resolution coordinators, one with a store
+pointed at a fake IPFS network holding the real bytes and one pointed at
+a completely separate, never-populated network, resolve the IDENTICAL
+placement at essentially the same time and reach different, non-shared
+lifecycles — with a shared `LocalPublicationSnapshotPlacementCatalog`
+asserted completely unaffected by either. Section D additionally proves
+multiple independent placements — one resolved, one unavailable, one
+hash-mismatched — each derive their own lifecycle from their own
+observations alone, with nothing in `deriveSnapshotPlacementLifecycle()`'s
+own signature that could even accept a second placement's history to
+compare against.
+
+- `application/SnapshotPlacementLifecycleState.js` (new) — `NOT_RESOLVED`
+  / `RESOLVED` / `UNAVAILABLE` / `HASH_MISMATCH` / `INVALID_PLACEMENT`,
+  the placement-side sibling of `application/
+  AnchorVerificationLifecycleState.js` (0.8.12). Deliberately FIVE states,
+  not a re-derivation of `application/SnapshotPlacementResolutionOutcome.js`'s
+  own six — see this file's own header on exactly which outcomes collapse
+  together and which (`HASH_MISMATCH`) deliberately never do.
+- `application/SnapshotPlacementLifecycleView.js` (new) —
+  `deriveSnapshotPlacementLifecycle()`/`describeSnapshotPlacementLifecycleNote()`,
+  the placement-side sibling of `application/
+  PublicationAnchorVerificationLifecycleView.js` (0.8.12). Pure,
+  synchronous, side-effect-free; never calls `application/
+  SnapshotPlacementResolver.js`, never touches the catalog.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each entry now
+  also keeps `entry.resolutionHistory`, appended to (never overwritten)
+  on every "Resolve Snapshot"/"Resolve Again" click, feeding one new,
+  optional sentence shown alongside the UNCHANGED resolution badge/label.
+  Opening this page, listing known placements, or expanding "Show
+  Placements" still never calls `application/SnapshotPlacementResolver.js`
+  — only the existing explicit click does, exactly as 0.8.20 already
+  established.
+- `tests/SnapshotPlacementLifecycle.test.js` (new) — Section A: FLAGSHIP,
+  described above; Section B: `HASH_MISMATCH` stays permanently distinct
+  from `UNAVAILABLE` and never earns the soft note; Section C:
+  `STORE_UNAVAILABLE`/`CONTENT_UNAVAILABLE` derive the identical
+  lifecycle state; Section D: multiple independent placements, never
+  ranked; Section E: replica isolation; Section F:
+  `SnapshotPlacementLifecycleView.js`/`SnapshotPlacementResolutionObservation.js`
+  exercised directly as pure functions, covering every
+  `SnapshotPlacementResolutionOutcome` value.
+
+> **Resolving a placement observes present retrievability; it does not
+> rewrite the placement claim — and a HISTORY of such observations still
+> only ever describes what THIS replica has seen, never a new fact about
+> the claim itself.** See `docs/Principles.md`, "A Resolution Result
+> Describes Whether Bytes Can Be Retrieved Now; It Does Not Rewrite The
+> Placement Claim (0.8.26)."
+
+### Deliberately excluded
+
+- **Any field on `core/PublicationSnapshotPlacement.js` itself** —
+  `status`, `resolvedAt`, `lastResolvedAt`, `available`, `stale`, or
+  `confirmed`. `placement.toJSON()` is asserted byte-identical after
+  every resolution attempt in `tests/SnapshotPlacementLifecycle.test.js`'s
+  own Section A — the identical invariant 0.8.12 already proved for
+  `core/PublicationAnchor.js`.
+- **A sixth lifecycle state for "previously resolved, now unavailable."**
+  `everResolved` carries that fact as its own plain boolean instead — see
+  this milestone's own Roadmap text above and `application/
+  SnapshotPlacementLifecycleState.js`'s own header on why a state named
+  after two DIFFERENT observations, rather than the current one, would
+  have been a step toward exactly the kind of domain-sounding
+  aggregate-status field this codebase has consistently avoided.
+- **Collapsing `HASH_MISMATCH` into `UNAVAILABLE`.** Explicitly the
+  opposite of what this milestone's own design conversation asked for —
+  see "Case 3 is fundamentally different" above.
+- **A "previously resolved" note for `HASH_MISMATCH` or
+  `INVALID_PLACEMENT`.** Both are definite findings; softening either
+  with language implying "it used to work" would misrepresent what was
+  actually found. Only `UNAVAILABLE` — an honestly inconclusive state —
+  ever gets the note, mirroring exactly which anchor-side state
+  (`UNAVAILABLE`, never `REJECTED`) already earns 0.8.12's own note.
+- **A lifecycle note engine for anchors gaining any placement-specific
+  concept, or vice versa.** `application/
+  AnchorVerificationLifecycleState.js` and `application/
+  SnapshotPlacementLifecycleState.js` remain two separate files with two
+  separate value sets (five states each, but not the SAME five —
+  anchors have no `HASH_MISMATCH`-shaped state, and placements have no
+  `UNVERIFIED_PROOF`-shaped one), exactly as `application/
+  AnchorVerificationOutcome.js` and `application/
+  SnapshotPlacementResolutionOutcome.js` already remain two separate
+  files one layer down.
+- **Polling, a timer, a TTL, or any "last known good" fallback.** Nothing
+  in this milestone changes when `application/
+  SnapshotPlacementResolver.js` gets called — only an explicit "Resolve
+  Snapshot"/"Resolve Again" click ever does, exactly as 0.8.20 already
+  established, and exactly as 0.8.12 already established on the anchor
+  side.
+
+What's left, and deliberately unbuilt: the unified Publication Center
+view naming "Evidence" and "Snapshot Placements" as siblings under one
+publication — the SAME gap 0.8.25's own "What's left" line already named,
+now with every prerequisite in place on both sides (creation, inspection,
+resolution, provenance, AND lifecycle, symmetric on both sides) but still
+no milestone of its own.
