@@ -28,6 +28,8 @@ import { createResolutionObservation } from '../../application/SnapshotPlacement
 import { deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote } from '../../application/SnapshotPlacementLifecycleView.js';
 import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/PublicationDecentralizationView.js';
 import { describePublicationReplicaKnowledge } from '../../application/PublicationReplicaKnowledgeView.js';
+import { describeSynchronizationAttempt, describeSynchronizationButtonLabel } from '../../application/PublicationKnowledgeSynchronizationView.js';
+import { PublicationKnowledgeSynchronizationUiState } from '../../application/PublicationKnowledgeSynchronizationUiState.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -266,6 +268,14 @@ const DISCOVERY_BADGE_CLASSES = {
     [PublicationEvidenceDiscoveryUiState.UNAVAILABLE]: 'peer-badge--pending'
 };
 
+// 0.8.30 — Explicit Replica Knowledge Synchronization.
+const SYNCHRONIZATION_BADGE_CLASSES = {
+    [PublicationKnowledgeSynchronizationUiState.SYNCHRONIZING]: 'peer-badge--pending',
+    [PublicationKnowledgeSynchronizationUiState.SYNCHRONIZED]: 'peer-badge--authenticated',
+    [PublicationKnowledgeSynchronizationUiState.NO_NEW_CLAIMS]: 'peer-badge--unchecked',
+    [PublicationKnowledgeSynchronizationUiState.UNAVAILABLE]: 'peer-badge--pending'
+};
+
 function humanizeContentKind(contentKind) {
     if (!contentKind) return 'Unknown content';
     return contentKind
@@ -361,6 +371,12 @@ export default {
         // the identical degrade-gracefully posture `creationCoordinator`
         // above already holds for `availableAnchorTypes`.
         const evidenceDiscoveryCoordinator = inject('publicationEvidenceDiscoveryCoordinator', null);
+        // 0.8.30 — Explicit Replica Knowledge Synchronization. Optional —
+        // absent here (e.g. a test harness that never provides it),
+        // "Synchronize with Peers" simply never renders, the identical
+        // degrade-gracefully posture `evidenceDiscoveryCoordinator` above
+        // already holds.
+        const knowledgeSynchronizationCoordinator = inject('publicationKnowledgeSynchronizationCoordinator', null);
         // 0.8.14 — External Evidence Inspection & Locator UX. Optional —
         // absent here (as in a test harness that never provides it),
         // "Inspect Evidence" still shows application/
@@ -506,6 +522,14 @@ export default {
                 // PublicationEvidenceDiscoveryView.js's own header on the
                 // exact shape.
                 discoveryAttempt: null,
+                // 0.8.30 — Explicit Replica Knowledge Synchronization. A
+                // single ephemeral attempt object for THIS entry, the
+                // identical shape `discoveryAttempt` above holds — `null`
+                // until "Synchronize with Peers" is clicked; see
+                // `synchronizeWithPeers()`'s own comment below and
+                // application/PublicationKnowledgeSynchronizationView.js's
+                // own header on the exact shape.
+                synchronizationAttempt: null,
                 // 0.8.11 — Explicit External Anchoring UX. Keyed by
                 // anchorType; ephemeral for the lifetime of this page,
                 // exactly like `verifications` above — never read from or
@@ -1066,6 +1090,52 @@ export default {
             return describeDiscoveryButtonLabel({ discovering, hasDiscovered });
         }
 
+        // 0.8.30 — Explicit Replica Knowledge Synchronization. The
+        // combined sibling of `discoverFromPeers()` immediately above:
+        // ONE explicit click asks every authenticated peer about
+        // anchors AND placements together, through application/
+        // PublicationKnowledgeSynchronizationCoordinator.js#synchronize()
+        // — never triggered by opening this page or expanding either
+        // "Show Evidence" or "Show Placements", the identical restraint
+        // `discoverFromPeers()` already holds. A synchronized claim is
+        // already cataloged by the time synchronize() resolves — this
+        // just re-reads both local catalogs afterward through the
+        // UNCHANGED `loadEvidence()`/`loadPlacements()` this page already
+        // calls elsewhere, never a second import path.
+        async function synchronizeWithPeers(entry) {
+            if (!knowledgeSynchronizationCoordinator) return;
+            entry.synchronizationAttempt = { synchronizing: true, result: null, error: null };
+            try {
+                const result = await knowledgeSynchronizationCoordinator.synchronize(entry.publication.id);
+                entry.synchronizationAttempt = { synchronizing: false, result, error: null };
+                loadEvidence(entry);
+                loadPlacements(entry);
+                if (result.anchors.newlyImportedCount > 0) {
+                    entry.evidenceExpanded = true;
+                }
+                if (result.placements.newlyImportedCount > 0) {
+                    entry.placementsExpanded = true;
+                }
+            } catch (error) {
+                entry.synchronizationAttempt = { synchronizing: false, result: null, error: error.message };
+            }
+        }
+
+        function synchronizationView(entry) {
+            return describeSynchronizationAttempt(entry.synchronizationAttempt);
+        }
+
+        function synchronizationBadgeClass(entry) {
+            const state = synchronizationView(entry).state;
+            return SYNCHRONIZATION_BADGE_CLASSES[state] || null;
+        }
+
+        function synchronizationButtonLabel(entry) {
+            const synchronizing = Boolean(entry.synchronizationAttempt && entry.synchronizationAttempt.synchronizing);
+            const hasSynchronized = Boolean(entry.synchronizationAttempt && !synchronizing);
+            return describeSynchronizationButtonLabel({ synchronizing, hasSynchronized });
+        }
+
         function creationView(entry, anchorType) {
             return describeCreationAttempt(entry.creationAttempts[anchorType]);
         }
@@ -1183,7 +1253,8 @@ export default {
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
             placementInspectionKnowledge,
             availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel,
-            decentralizationContrast
+            decentralizationContrast,
+            knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel
         };
     },
     template: `
@@ -1286,6 +1357,29 @@ export default {
                         <p v-if="decentralizationContrast(entry)" class="evidence-convergence-conflict">
                             {{ decentralizationContrast(entry) }}
                         </p>
+
+                        <!-- 0.8.30 — Explicit Replica Knowledge Synchronization. ONE explicit
+                             action spanning both dimensions above, mirroring "Discover from
+                             Peers" below but never triggered by opening this page or expanding
+                             either disclosure — only this click ever asks a peer for anything.
+                             Hidden entirely when no knowledgeSynchronizationCoordinator was
+                             provided, exactly like "Discover from Peers" hides with no
+                             evidenceDiscoveryCoordinator. -->
+                        <div v-if="knowledgeSynchronizationCoordinator" class="evidence-discovery">
+                            <div class="evidence-discovery-header">
+                                <button class="action-btn action-btn--secondary"
+                                        :disabled="entry.synchronizationAttempt && entry.synchronizationAttempt.synchronizing"
+                                        @click="synchronizeWithPeers(entry)">
+                                    {{ synchronizationButtonLabel(entry) }}
+                                </button>
+                                <span v-if="synchronizationView(entry).label" class="peer-badge" :class="synchronizationBadgeClass(entry)">
+                                    {{ synchronizationView(entry).label }}
+                                </span>
+                            </div>
+                            <p v-if="synchronizationView(entry).message" class="form-hint form-hint--neutral">
+                                {{ synchronizationView(entry).message }}
+                            </p>
+                        </div>
                     </div>
 
                     <div v-if="entry.evidence" class="evidence-section">

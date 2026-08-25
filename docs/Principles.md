@@ -12409,3 +12409,78 @@ signature-verification code path anywhere in this milestone to audit,
 diverge from, or fall out of sync with the first.
 
 See `docs/Roadmap.md`, 0.8.29, for the full milestone entry.
+
+### Replica Synchronization Composes Existing Discovery, It Builds No Second Trust Boundary (0.8.30)
+
+0.8.29 asked how one replica hands another its knowledge, deliberately,
+offline. This milestone asks the LIVE question that one's own
+"Deliberately excluded" list named directly: two replicas that already
+know about the same publication, comparing what each holds and
+converging. The instinct such a question invites is to design something
+— a new request/response pair spanning both anchors and placements, a
+new provenance kind for "arrived via synchronization," some notion of
+which replica's claim set should win when they disagree. This milestone
+resists all three, and the resistance IS the milestone.
+
+**A question spanning two dimensions does not require a wire protocol
+spanning two dimensions.** By the time this milestone starts,
+`application/PublicationAnchorPeerProtocol.js` (0.8.4/0.8.5) and
+`application/PublicationSnapshotPlacementPeerProtocol.js` (0.8.19) each
+already answer "give me every claim you know about this publicationId,"
+completely, independently, over their own namespaced protocol strings.
+Neither needed to change. `application/
+PublicationKnowledgeSynchronizationCoordinator.js` introduces exactly one
+new idea — select the peer list ONCE, and hand the SAME array to both
+existing `discoverFromPeers()` calls — and nothing else. It never touches
+`peer/PeerMessageBus.js`, never defines a `kind` discriminator, and never
+gives a peer a third way to tell this replica about an anchor or a
+placement. Two peer-facing subsystems answering a shared question is not,
+by itself, evidence that a THIRD, unified subsystem needs to exist
+underneath them; sometimes the answer is a synthesis one layer up, the
+identical shape `application/PublicationDecentralizationView.js` (0.8.27)
+already proved for VIEWING two dimensions side by side, now proved again
+for ACTING on them together.
+
+**Reuse the existing trust boundary; never build a second one.** This is
+0.8.29's own principle, restated here because 0.8.30 needed it just as
+much and resisted the same temptation in a new place. A claim
+`synchronize()` newly catalogs crosses the IDENTICAL validate-construct-
+verify-SIGNATURE boundary it always has — `application/
+PublicationAnchorExchange.js#importAnchor()`/`application/
+PublicationSnapshotPlacementExchange.js#importPlacement()`, called from
+inside the UNCHANGED `PublicationAnchorPeerExchange`/
+`PublicationSnapshotPlacementPeerExchange` classes 0.8.4 and 0.8.19
+already built. There is no second signature check anywhere in this
+milestone, and there is no new acquisition kind either — `application/
+AnchorAcquisitionKind.js` (0.8.17) already explicitly declined a
+`PEER_ANNOUNCEMENT`/`PEER_DISCOVERY` split for the identical reason a
+`SYNC` kind would repeat here: a synchronized claim arrived over a live,
+authenticated peer connection, and that is exactly what `PEER` already
+means. FIRST-SEEN-WINS therefore needed no extension to hold across this
+new action — `tests/PublicationKnowledgeSynchronization.test.js`'s own
+Section E proves a claim already held via PACKAGE stays PACKAGE after
+`synchronize()` re-delivers the identical claim live, the SAME invariant
+0.8.29's own flagship proved for the raw peer-exchange classes, now
+proved again through a coordinator that never touches provenance itself
+at all — it only calls collaborators that already did.
+
+**Synchronization causes claims to become mutually known; it never
+adjudicates them.** Section F of this milestone's own test proves the
+sharpest version of this: Alice and Bob each independently sign an anchor
+for the same publication naming a DIFFERENT contentHash — a genuine,
+irreducible conflict — and synchronizing does not resolve it, hide it, or
+pick a side. Both claims land on both replicas, symmetrically, regardless
+of who initiated which `synchronize()` call, and each replica's own
+`application/PublicationEvidenceConvergenceView.js` (0.8.13) — completely
+unmodified by this milestone — independently reports CONFLICT from its
+own now-larger claim set. `PublicationKnowledgeSynchronizationCoordinator
+.js#synchronize()`'s own result carries no ranking field, no "winner," no
+count comparison between what this replica already had and what a peer
+offered — nothing resembling `if (anchorCountA > anchorCountB) preferPeer
+()`. A caller who wants to know whether its OWN claim set now conflicts
+with itself asks the SAME convergence view a synchronized replica would
+have asked anyway, exactly as if every claim had arrived any other way —
+because, as far as the trust boundary and the provenance store are
+concerned, it did.
+
+See `docs/Roadmap.md`, 0.8.30, for the full milestone entry.

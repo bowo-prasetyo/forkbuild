@@ -20495,3 +20495,223 @@ what durable publication knowledge each has, and exchanging only the
 claims one is missing, rather than one replica handing the other
 everything it knows regardless of overlap. See 0.8.30, a replica
 synchronization/diff layer, next.
+
+## 0.8.30 — Explicit Replica Knowledge Synchronization
+
+0.8.29's own closing question was: if two replicas already know about the
+same publication, how does one explicitly hand the other its knowledge?
+The answer was a package — a deliberate, one-shot, offline transfer. This
+milestone asks the question 0.8.29's own "Deliberately excluded" list
+named directly: what does it look like for two replicas to compare what
+they each already know, LIVE, and converge, rather than one replica
+handing the other a snapshot?
+
+The surprising answer this milestone's own design conversation reached:
+almost nothing needed to be built. Anchors (0.8.0-0.8.17) and placements
+(0.8.18-0.8.24) each already grew a COMPLETE peer discovery pipeline —
+`application/PublicationAnchorPeerProtocol.js`/`application/
+PublicationAnchorPeerExchange.js`/`application/
+PublicationAnchorDiscoveryCoordinator.js` on one side (0.8.4/0.8.5),
+`application/PublicationSnapshotPlacementPeerProtocol.js`/`application/
+PublicationSnapshotPlacementPeerExchange.js`/`application/
+PublicationSnapshotPlacementDiscoveryCoordinator.js` on the other
+(0.8.19), hand-mirrored down to the REQUEST/RESPONSE wire shape. Both
+already answer "ask every candidate peer what it knows about this
+publicationId, and catalog whatever comes back" — and both already
+behave as a genuine DIFF in effect, never a raw dump: `application/
+LocalPublicationAnchorCatalog.js#add()`/`application/
+LocalPublicationSnapshotPlacementCatalog.js#add()` dedupe by the claim's
+own `id`, so a claim a replica already holds comes back in a RESPONSE and
+is silently absorbed as `isNew: false`. Anchors even already got an
+application-facing "ask every authenticated peer" wrapper, at 0.8.16
+(`application/PublicationEvidenceDiscoveryCoordinator.js`). Placements
+never did — `application/
+CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js`'s own
+0.8.19 header named the gap directly and left it: "this milestone adds no
+such button itself." `publicationSnapshotPlacementDiscoveryCoordinator`
+has sat wired into `ui/main.js`, fully functional, unconsumed by any view,
+ever since.
+
+What was genuinely missing was never a wire protocol. It was one
+explicit action treating "what does this replica know about this
+publication?" as a SINGLE question spanning both dimensions, instead of
+two separately-triggered discovery calls a person has to remember to run
+twice, against two peer lists that could silently drift apart between the
+two clicks.
+
+```text
+"Synchronize with Peers"
+        │
+        ▼
+PublicationKnowledgeSynchronizationCoordinator#synchronize(publicationId)
+        │
+        ├── every currently AUTHENTICATED peer, in registry order (ONE list)
+        │
+        ├── PublicationAnchorDiscoveryCoordinator#discoverFromPeers()        (0.8.5, unchanged)
+        │       └── PublicationAnchorPeerExchange (0.8.4)
+        │               └── PublicationAnchorExchange#importAnchor()         (validate -> construct -> verify SIGNATURE)
+        │
+        └── PublicationSnapshotPlacementDiscoveryCoordinator#discoverFromPeers()  (0.8.19, unchanged)
+                └── PublicationSnapshotPlacementPeerExchange (0.8.19)
+                        └── PublicationSnapshotPlacementExchange#importPlacement() (validate -> construct -> verify SIGNATURE)
+```
+
+One new file, and its wiring:
+
+- `application/PublicationKnowledgeSynchronizationCoordinator.js` (new) —
+  takes the two LOW-LEVEL, caller-supplies-`peers` coordinators
+  (`PublicationAnchorDiscoveryCoordinator`/`
+  PublicationSnapshotPlacementDiscoveryCoordinator`, never `application/
+  PublicationEvidenceDiscoveryCoordinator.js`, which already picks its own
+  peer list internally with no way to share that choice with a second
+  call) plus a `ConnectedPeerRegistry`. `synchronize(publicationId,
+  options)` selects "every currently AUTHENTICATED peer, in registry
+  order" — the IDENTICAL policy `application/
+  PublicationEvidenceDiscoveryCoordinator.js` already applies one
+  dimension over — ONCE, and hands that SAME peer array to both
+  `discoverFromPeers()` calls, concurrently (the two protocols are already
+  independently namespaced — `forkbuild:anchor` and
+  `forkbuild:snapshot-placement` — so there is no shared mutable state for
+  concurrent requests to race over). It computes no diff of its own, ranks
+  no peer, and picks no "best" claim; it returns both dimensions' own
+  `{ discovered, newlyImportedCount, alreadyKnownCount }` results side by
+  side, a SYNTHESIS over two already-correct mechanisms exactly like
+  `application/PublicationDecentralizationView.js` (0.8.27) already is one
+  layer up, over the two convergence views this coordinator's own result
+  eventually feeds.
+- `application/CreatePublicationKnowledgeSynchronizationCoordinatorUseCase.js`
+  (new) — the identical thin, construct-nothing wiring shape `application/
+  CreatePublicationEvidenceDiscoveryCoordinatorUseCase.js` (0.8.16)
+  already established; `ui/main.js` threads it the SAME
+  `publicationAnchorDiscoveryCoordinator`/
+  `publicationSnapshotPlacementDiscoveryCoordinator`/
+  `peerSessionManager.registry` instances every other peer-facing class in
+  this file already shares — never a second, disconnected set.
+- `application/PublicationKnowledgeSynchronizationUiState.js`/`application/
+  PublicationKnowledgeSynchronizationView.js` (new) — `application/
+  PublicationEvidenceDiscoveryUiState.js`'s own five-state shape (0.8.16:
+  IDLE/DISCOVERING/DISCOVERED/NO_NEW_EVIDENCE/UNAVAILABLE), renamed for a
+  result spanning two dimensions
+  (IDLE/SYNCHRONIZING/SYNCHRONIZED/NO_NEW_CLAIMS/UNAVAILABLE) and worded
+  with the identical care: NO_NEW_CLAIMS is never "no claims exist," and
+  UNAVAILABLE is never a statement about whether more evidence or
+  placements exist anywhere this replica did not ask.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Synchronize with
+  Peers" button, placed inside the existing "Decentralization" section
+  0.8.27 already renders (never inside "External Evidence" or "Snapshot
+  Placements" individually — this action is explicitly about the
+  publication as a whole, the one place both dimensions already sit side
+  by side). Deliberately ADDITIVE: the existing anchor-only "Discover from
+  Peers" button is untouched and still there, exactly where 0.8.16 put it
+  — a person who wants only anchors still has that option; "Synchronize
+  with Peers" is the new, complete alternative. Never triggered by opening
+  the page or expanding either disclosure — only the click itself ever
+  asks a peer for anything, the identical restraint 0.8.16 already holds.
+  On success, this page's own already-existing `loadEvidence()`/
+  `loadPlacements()` re-read both local catalogs — never a second import
+  path, and never itself touching a catalog, exchange, or verifier
+  directly.
+
+> **Replica synchronization composes the discovery mechanisms that already
+> exist, one per dimension; it builds no second trust boundary, no second
+> wire protocol, and no third acquisition kind.** See `docs/Principles.md`,
+> "Replica Synchronization Composes Existing Discovery, It Builds No
+> Second Trust Boundary (0.8.30)."
+
+Provenance needed no new design at all. A claim `synchronize()` newly
+catalogs crosses the IDENTICAL `importAnchor()`/`importPlacement()`
+validate-construct-verify-SIGNATURE boundary it always has, one layer
+down inside the UNCHANGED peer-exchange classes, and is recorded
+`application/AnchorAcquisitionKind.js#PEER`/`application/
+PlacementAcquisitionKind.js#PEER` — never a new `SYNC` kind, by the SAME
+`knowledgeStore` parameter those classes already accept. A synchronized
+claim is, structurally, still "a peer told this replica about it." This
+means FIRST-SEEN-WINS (0.8.17/0.8.24) needs no extension to hold across
+this new action: a claim a replica already holds via PACKAGE (0.8.29)
+stays PACKAGE even after `synchronize()` re-delivers the identical claim
+over a live connection — the identical invariant 0.8.29's own flagship
+proved for the raw peer-exchange classes, now proved again through this
+milestone's own combined coordinator.
+
+- `tests/PublicationKnowledgeSynchronization.test.js` (new) — Section A:
+  constructor requirements; Section B: `synchronize()` against stub
+  discovery coordinators — both dimensions are asked with the IDENTICAL
+  peer array, zero peers resolves cleanly, tallies are a plain count of
+  each dimension's own `isNew` flags; Section C: the five UI states;
+  Section D — FLAGSHIP: Alice knows Anchor A/Placement X, Bob knows
+  Anchor B/Placement Y, Carol knows neither. Alice and Bob each run ONE
+  `synchronize()` call against each other and fully converge on BOTH
+  dimensions; Carol then runs ONE `synchronize()` call against Bob alone
+  and receives everything Bob independently knows — including what Bob
+  himself only just learned from Alice — without ever contacting Alice.
+  Re-synchronizing reports zero new claims on both dimensions. Every
+  claim Carol received is recorded PEER, and her own verification/
+  resolution state for each stays completely unestablished; Section E:
+  INVARIANT — FIRST-SEEN-WINS holds across the package/synchronize
+  boundary through this milestone's own coordinator; Section F: INVARIANT
+  — Alice and Bob each independently sign a conflicting anchor for the
+  same publication with a different contentHash; synchronizing catalogs
+  BOTH, symmetrically, regardless of who initiates, and each replica's
+  own `application/PublicationEvidenceConvergenceView.js` independently
+  reports CONFLICT — this milestone computes no diff, no ranking, and no
+  preference between them.
+
+### Deliberately excluded
+
+- **A new wire protocol** (`PublicationKnowledgeSyncProtocol.js`, a
+  `publication-knowledge-sync-request`/`-response` message pair spanning
+  both anchors and placements). Considered, in line with this milestone's
+  own early design conversation, and explicitly rejected: `application/
+  PublicationAnchorPeerProtocol.js`/`application/
+  PublicationSnapshotPlacementPeerProtocol.js` already answer "give me
+  every claim you know about this publicationId," and a new combined
+  protocol would duplicate that trust boundary rather than reuse it —
+  exactly the mistake 0.8.29's own principle, "Reuse the existing trust
+  boundary; never build a second one," already warned against one
+  milestone earlier.
+- **A new `SYNC` acquisition kind.** `application/AnchorAcquisitionKind.js`
+  (0.8.17) already explicitly declined a `PEER_ANNOUNCEMENT`/
+  `PEER_DISCOVERY` split; a `SYNC` kind would be the identical mistake
+  under a new name. A synchronized claim arrived over a live,
+  authenticated peer connection — it is PEER, full stop.
+- **Hashes, Bloom filters, vector clocks, or sequence numbers to minimize
+  what crosses the wire.** `synchronize()` still asks each peer for
+  EVERYTHING it knows about a publicationId, exactly as 0.8.5/0.8.19
+  already did — the existing `add()`-level dedup by claim `id` is enough
+  of a diff for a first milestone to establish the RIGHT SEMANTICS
+  (compare, then converge) without also committing to a transport
+  optimization this milestone's own design conversation never asked for.
+  Minimizing wire traffic for a replica with thousands of claims is
+  future work, layered on top of an unchanged `synchronize()` contract,
+  never a reason to delay this milestone.
+- **Publication envelope synchronization.** Scoped, like 0.8.29 before it,
+  to the two DURABLE CLAIM catalogs — this milestone assumes both
+  replicas already know about the publication itself (`application/
+  PublicationPeerProtocol.js` still carries only ANNOUNCE, unchanged); a
+  replica that does not is 0.8.28/0.8.29's own territory (offline
+  reconstruction, package import), not this one's.
+- **A "synchronize everything I don't have" mechanism spanning every
+  publication this replica knows about.** Scoped, exactly like 0.8.29's
+  own "Deliberately excluded" list already committed to, to ONE
+  explicitly selected publication between explicitly authenticated peers.
+  `SynchronizeEntireReplica()` raises pagination, bandwidth, and
+  per-publication authorization questions this milestone's own design
+  conversation never asked, and stays future work.
+- **A `CONFLICT` synchronization UI state.** Considered and rejected:
+  synchronization does not adjudicate conflicts, it only causes
+  conflicting claims to become MUTUALLY known. Whether a replica's own
+  known claim set conflicts with itself is exactly what `application/
+  PublicationEvidenceConvergenceView.js`/`application/
+  PublicationSnapshotPlacementConvergenceView.js` (0.8.13/0.8.23) already
+  answer, unmodified, the moment `loadEvidence()`/`loadPlacements()`
+  re-read the catalog after a sync — a second, redundant conflict signal
+  living inside `PublicationKnowledgeSynchronizationUiState.js` would only
+  ever restate what those views already say, or worse, disagree with them.
+
+What's left, and deliberately unbuilt: minimizing what actually crosses
+the wire during synchronization (delta encoding, a "since" cursor, a
+compact digest a peer can compare against before sending anything) for a
+replica whose known claim set has grown large; and a "synchronize every
+publication I know about with this peer" action, one level up from the
+one-publication-at-a-time action this milestone deliberately stayed
+scoped to.
