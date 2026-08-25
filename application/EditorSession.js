@@ -982,6 +982,31 @@ export class EditorSession {
         return this._commandHistory ? this._commandHistory.getRedoLabel() : null;
     }
 
+    // application/EditorActionRegistry.js's own history.undo/history.redo
+    // actions call session.undo()/session.redo() directly (via
+    // surfaceCall, which only ever checks the session itself — unlike
+    // EditorActionContext.capture()'s historyCall(), it never falls back
+    // to session.commandHistory). canUndo()/canRedo() above were always
+    // enough to make the shortcut/palette entry show as ENABLED; without
+    // these, pressing it then found no session.undo/redo to call and
+    // fell through to "Undo is not available on this surface" instead of
+    // ever reaching CommandHistory.
+    undo() {
+        if (!this._commandHistory) {
+            return false;
+        }
+        this._commandHistory.undo();
+        return true;
+    }
+
+    redo() {
+        if (!this._commandHistory) {
+            return false;
+        }
+        this._commandHistory.redo();
+        return true;
+    }
+
     // ------------------------------------------------------ lifecycle
 
     start(container) {
