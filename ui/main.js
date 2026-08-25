@@ -409,6 +409,17 @@ const { discoveryCoordinator: publicationAnchorDiscoveryCoordinator } = new Crea
 // one — provided here for a future UI to call; this milestone adds no
 // such button itself, the identical restraint 0.8.4/0.8.5 already held
 // for the anchor-side pair above before any UI consumed either.
+//
+// 0.8.21 — Persistent Snapshot Placement Catalog & Restart Recovery. The
+// use case below now also runs application/
+// RestorePublicationSnapshotPlacementCatalogUseCase.js once, synchronously,
+// before returning `catalog` — the identical silent, unconsumed
+// `restoreResult` this file already discards for
+// `publicationAnchorCatalog` above (see application/
+// CreatePublicationAnchorPeerExchangeUseCase.js, 0.8.15). Nothing here
+// needs to read it; a record left over from a prior process that no
+// longer validates or verifies is pruned before this replica's UI can
+// ever see it through `publicationSnapshotPlacementCatalog`.
 const {
     catalog: publicationSnapshotPlacementCatalog,
     peerExchange: publicationSnapshotPlacementPeerExchange

@@ -18631,11 +18631,284 @@ already holds for evidence.
 
 What's left, and deliberately unbuilt: explicit placement creation UX
 (mirroring 0.8.11's own path for anchors); a persistent placement
-catalog with restart-time re-validation and acquisition provenance
-(mirroring 0.8.15/0.8.17's own path); a resolution lifecycle/staleness
-view on top of `application/SnapshotPlacementResolutionObservation.js`
-(mirroring 0.8.12's own path); and multi-placement comparison across
-independent storage backends for the same publication (mirroring
-0.8.13's own path for evidence convergence) — each sized on its own,
-exactly like every "Deliberately excluded" list in this document before
-it.
+catalog with restart-time re-validation (mirroring 0.8.15's own path —
+shipped next, as 0.8.21); placement acquisition provenance (mirroring
+0.8.17's own path); a resolution lifecycle/staleness view on top of
+`application/SnapshotPlacementResolutionObservation.js` (mirroring
+0.8.12's own path); and multi-placement comparison across independent
+storage backends for the same publication (mirroring 0.8.13's own path
+for evidence convergence) — each sized on its own, exactly like every
+"Deliberately excluded" list in this document before it.
+
+## 0.8.21 — Persistent Snapshot Placement Catalog & Restart Recovery
+
+0.8.20's own closing note named this milestone directly: "a persistent
+placement catalog with restart-time re-validation and acquisition
+provenance (mirroring 0.8.15/0.8.17's own path)." 0.8.21 is the first
+half of that — the placement-side counterpart of 0.8.15's own "Persistent
+External Evidence Catalog & Restart Recovery," one axis over, from
+evidence claims to locator claims. By 0.8.20, a replica could create,
+catalog, exchange, discover, inspect, and resolve a `core/
+PublicationSnapshotPlacement.js` — but every one of those capabilities
+lived only as long as the process did. `application/
+LocalPublicationSnapshotPlacementCatalog.js` had always been backed by a
+real `storageProvider` since 0.8.18, so the placement catalog was never
+actually in-memory-only — a restarted replica already found its
+placements sitting in storage the moment it constructed a fresh catalog
+instance. What it never did was re-earn the trust each one originally had
+to pass through to get there: a catalog read has always turned whatever
+JSON happened to be sitting in storage straight into a
+`PublicationSnapshotPlacement`, with no re-validation and no signature
+check, whether that JSON arrived through `application/
+PublicationSnapshotPlacementExchange.js`'s own validate → construct →
+verify-signature gate or through a bug, a hand-edited devtools entry, or
+plain bit rot.
+
+```text
+create
+  ↓
+catalog
+  ↓
+peer exchange
+  ↓
+discovery
+  ↓
+inspect
+  ↓
+resolve
+```
+
+**PERSISTENCE MUST NOT TURN STORED PLACEMENT BYTES INTO TRUSTED DOMAIN
+OBJECTS.** This milestone draws the identical line 0.8.15 already drew
+for anchors, one layer down:
+
+```text
+persistent storage
+        │
+        │ untrusted
+        ▼
+ restoration boundary
+        │
+        ├── structural validation
+        ├── construct placement
+        └── verify signature
+                │
+                ▼
+          trusted catalog
+```
+
+`application/LocalPublicationSnapshotPlacementStore.js` (new) is the
+deliberately dumb persistent half of that split — the placement-side
+sibling of `application/LocalPublicationAnchorStore.js` (0.8.15). It
+`save()`s/`get()`s/`has()`s/`remove()`s/`list()`s RAW `{ placement:
+<plain JSON>, receivedAt: <ISO string> }` envelopes, first-seen-wins,
+exactly as `application/LocalPublicationAnchorStore.js` already does for
+anchors. It never validates, never constructs a
+`PublicationSnapshotPlacement`, never checks a signature, never contacts
+IPFS or any content store, and never holds a resolution observation of
+any kind — `application/LocalPublicationSnapshotPlacementCatalog.js`
+(0.8.18) now delegates to it internally, with its OWN constructor, public
+API, and every observed behavior completely unchanged, and under the
+IDENTICAL storage key it already wrote to before this milestone, so a
+replica upgrading from 0.8.18/0.8.19/0.8.20 needs no migration step of
+any kind.
+
+`application/RestorePublicationSnapshotPlacementCatalogUseCase.js` (new)
+is the one place that re-earns trust in a stored placement, run ONCE,
+EXPLICITLY, at startup — never lazily, never on every catalog read. It
+reuses the IDENTICAL validate → construct → verify-SIGNATURE boundary
+`application/PublicationSnapshotPlacementExchange.js` already established
+for a placement arriving from a stranger over a peer connection (0.8.19),
+and deliberately stops there:
+
+```text
+stored envelope
+      ↓
+validate
+      ↓
+construct
+      ↓
+verify signature
+      ↓
+catalog
+```
+
+```text
+restart
+  ↓
+restore placement
+  ↓
+NEVER: contact IPFS / check content
+```
+
+A record that fails structural validation or signature verification is
+categorized `INVALID_STRUCTURE`/`INVALID_SIGNATURE` and PRUNED — removed
+from the store, not merely skipped, the identical per-entry-tolerant
+shape `application/RestorePublicationAnchorCatalogUseCase.js` already
+established. A record that passes is left exactly where it already was —
+this class never calls `catalog.add()` and never touches `receivedAt`.
+Restoration never once calls `application/SnapshotPlacementResolver.js`
+— proven with a call-counting spy in this milestone's own test, not
+merely by omission — because restoration answers only "is this a
+structurally valid, correctly signed placement claim?", never "can I
+retrieve the snapshot right now?" That remains `application/
+SnapshotPlacementResolutionCoordinator.js`'s own explicit, separate
+`resolve()` call (0.8.20), unchanged and untouched by this milestone.
+
+`application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js` —
+modified; now also constructs the durable `LocalPublicationSnapshotPlacementStore`
+`catalog` delegates to, and runs
+`RestorePublicationSnapshotPlacementCatalogUseCase` over it once,
+synchronously, before `exchange`/`peerExchange` are ever handed to a
+caller — the identical addition `application/
+CreatePublicationAnchorPeerExchangeUseCase.js` already received in 0.8.15.
+`ui/main.js` — modified only in comment; the returned `restoreResult` is
+discarded exactly as silently as `publicationAnchorCatalog`'s own already
+is, needing no new UI surface to be useful.
+
+`receivedAt` keeps the identical distinction 0.8.15 already drew for
+anchors: `core/PublicationSnapshotPlacement.js` itself remains immutable
+and signed, and its own local catalog metadata (`receivedAt` — when THIS
+replica first learned the claim) survives a restart untouched, never
+confused with `placedAt` (the placing identity's own claimed placement
+time) or a resolution observation's own `observedAt` (when this replica
+last attempted to retrieve the bytes — never persisted at all, per
+`application/SnapshotPlacementResolutionObservation.js`'s own 0.8.20
+header). Three independent clocks, three independent claims, none of
+them conflated:
+
+```text
+placedAt     → claim's external placement time
+receivedAt   → when this replica learned the claim
+observedAt   → when this replica attempted resolution
+```
+
+- `application/LocalPublicationSnapshotPlacementStore.js` — new; the
+  placement-side sibling of `application/LocalPublicationAnchorStore.js`
+  (0.8.15). `save(placement, receivedAt)`/`get(placementId)`/
+  `has(placementId)`/`remove(placementId)`/`list()`, all operating on
+  plain JSON, first-seen-wins, defensive against a garbage entry already
+  sitting in raw storage
+- `application/LocalPublicationSnapshotPlacementCatalog.js` — modified
+  internally only; delegates to the new store instead of a
+  `storageProvider` directly; constructor, public API, and every
+  observed behavior unchanged; same storage key as before this milestone
+- `application/RestorePublicationSnapshotPlacementCatalogUseCase.js` —
+  new; `execute()` returns `{ restoredPlacements, rejectedPlacements }`;
+  exports `PlacementRestorationRejectionReason` (`INVALID_STRUCTURE`/
+  `INVALID_SIGNATURE`); never calls `application/
+  SnapshotPlacementResolver.js`
+- `application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js`
+  — modified; wires the new store and runs the restore pass once at
+  startup, before returning `catalog`/`exchange`/`peerExchange`; also
+  returns `restoreResult`, purely informational
+- `ui/main.js` — modified; comment only, noting the restore pass now
+  running silently inside the use case above
+- `tests/PersistentPublicationSnapshotPlacementCatalog.test.js` (new) —
+  Section A: `LocalPublicationSnapshotPlacementStore` — CRUD, first-seen-
+  wins, defensive reads over untrusted bytes; Section B:
+  `LocalPublicationSnapshotPlacementCatalog` delegates to the store —
+  unchanged API, shared physical storage, same storage key as before this
+  milestone; Section C: `RestorePublicationSnapshotPlacementCatalogUseCase`
+  — a genuinely signed placement restores cleanly, a structurally
+  malformed and a forged-signature record are each rejected AND pruned,
+  `SnapshotPlacementResolver` is NEVER consulted (call-counting spy);
+  Section D: FLAGSHIP — Alice creates and signs three independent
+  placements for one publication (different storage backends) plus one
+  for another; Bob catalogs all four through the ordinary
+  `PublicationSnapshotPlacementExchange` boundary, explicitly resolves one
+  as RESOLVED against his own registered local content store, then
+  restarts. A fresh process restores all four — byte-identical `toJSON()`,
+  `receivedAt` UNCHANGED, first-seen-wins still holds for a re-import,
+  `SnapshotPlacementResolver` never once consulted during restoration
+  (spy) — and only an explicit post-restart `resolve()` call retrieves
+  the bytes again. The persistent store is then corrupted a second time
+  with a forged signature and a malformed envelope alongside the four
+  genuine records; a second restart restores exactly the four originals
+  and prunes exactly the two corrupted additions
+
+```text
+0.8.20  Snapshot Placement Inspection & Explicit Resolution UX        ✓
+             │
+             ▼
+0.8.21  Persistent Snapshot Placement Catalog & Restart Recovery      ✓
+             ├── application/LocalPublicationSnapshotPlacementStore.js
+             │   — new; deliberately dumb persistent half, RAW JSON
+             │   envelopes, first-seen-wins, same storage key as before
+             ├── application/LocalPublicationSnapshotPlacementCatalog.js
+             │   — modified internally only; delegates to the new store;
+             │   public API and behavior completely unchanged
+             ├── application/
+             │   RestorePublicationSnapshotPlacementCatalogUseCase.js —
+             │   new; validate → construct → verify SIGNATURE → catalog;
+             │   prunes what fails; never resolves; never calls
+             │   SnapshotPlacementResolver
+             ├── application/
+             │   CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
+             │   — modified; runs the restore pass once at startup
+             ├── ui/main.js — modified; comment only
+             └── PersistentPublicationSnapshotPlacementCatalog.test.js
+                 (new) — store CRUD + catalog delegation + restore
+                 validation/pruning + FLAGSHIP: restart round trip with
+                 byte-identical placements, receivedAt preserved, a spy
+                 proving zero SnapshotPlacementResolver calls during
+                 restoration, and a second corrupted restart pruning only
+                 what fails
+```
+
+> **Restoring a snapshot placement re-establishes the signed claim, not
+> its current availability.** `application/
+> RestorePublicationSnapshotPlacementCatalogUseCase.js` answers exactly
+> one question — "did the claimed `placerIdentity` really sign exactly
+> this `publicationId`/`contentHash`/`storage`/`locator` tuple?" — and
+> never asks the second, entirely separate one `application/
+> SnapshotPlacementResolutionCoordinator.js#resolve()` (0.8.20) already
+> owns: "can this locator presently serve those bytes?" A restart is not
+> a re-resolution, and a persistent placement is not a persistent
+> resolution result — this milestone's own flagship test proves both
+> halves of that with a call-counting spy around `application/
+> SnapshotPlacementResolver.js`, not merely by omission: zero calls
+> during either of two independent restores, even though one of the
+> restored placements is later resolved successfully by an entirely
+> separate, explicit call. See docs/Principles.md, "Restoring A Snapshot
+> Placement Re-establishes The Signed Claim, Not Its Current Availability
+> (0.8.21)."
+
+### Deliberately excluded
+
+- **Placement acquisition provenance** (LOCAL vs. PEER vs. PACKAGE),
+  mirroring `application/LocalAnchorKnowledgeStore.js`/0.8.17's own path
+  for anchors. `application/LocalPublicationSnapshotPlacementStore.js`
+  records only `receivedAt`, nothing about HOW a placement reached this
+  replica. Its own future milestone, sized on its own — see this
+  document's own 0.8.22 entry.
+- **Any change to what a placement's own signed envelope carries.** No
+  `restoredAt`, `verified`, or persistence-related field was added to
+  `core/PublicationSnapshotPlacement.js` — restoration reads and prunes
+  through the store/catalog layer only, never touching the domain object
+  the signature actually covers.
+- **Persisting a resolution result anywhere**, still. This milestone
+  changes nothing about 0.8.20's own restraint: no `resolved`,
+  `resolutionOutcome`, or `lastResolvedAt` field exists anywhere durable.
+  A restored placement's resolution state starts every process exactly
+  where 0.8.20 already left it — unresolved, until an explicit
+  `resolve()` call says otherwise.
+- **A restore progress UI, toast, or notification of any kind.**
+  `restoreResult` is returned and immediately discarded in `ui/main.js`,
+  exactly as `publicationAnchorCatalog`'s own `restoreResult` already is
+  — this milestone is infrastructure hardening, not a new user-facing
+  surface, mirroring 0.8.15's own restraint exactly.
+- **Any ranking, migration tool, or storage-format versioning.** The
+  store's own envelope shape is unversioned, exactly as `application/
+  LocalPublicationAnchorStore.js`'s own is — a future incompatible change
+  to that shape is out of scope here, the same restraint every storage
+  seam in this codebase already holds until it is actually needed.
+
+What's left, and deliberately unbuilt: placement acquisition provenance
+(mirroring 0.8.17's own path for anchors — next, as 0.8.22);
+multi-placement comparison and conflict UX across independent storage
+backends for the same publication (mirroring 0.8.13's own path for
+evidence convergence); snapshot placement package integration (mirroring
+`application/ImportPackageAnchorsUseCase.js`'s own path, 0.8.7); and
+World View integration — each sized on its own, exactly like every
+"Deliberately excluded" list in this document before it.

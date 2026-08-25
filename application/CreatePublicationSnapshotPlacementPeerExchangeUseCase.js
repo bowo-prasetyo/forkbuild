@@ -1,5 +1,7 @@
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LocalPublicationSnapshotPlacementCatalog } from './LocalPublicationSnapshotPlacementCatalog.js';
+import { LocalPublicationSnapshotPlacementStore } from './LocalPublicationSnapshotPlacementStore.js';
+import { RestorePublicationSnapshotPlacementCatalogUseCase } from './RestorePublicationSnapshotPlacementCatalogUseCase.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PublicationSnapshotPlacementExchange } from './PublicationSnapshotPlacementExchange.js';
 import { PublicationSnapshotPlacementPeerExchange } from './PublicationSnapshotPlacementPeerExchange.js';
@@ -33,24 +35,34 @@ import { PublicationSnapshotPlacementPeerExchange } from './PublicationSnapshotP
 // ui/main.js) application/PublicationSnapshotPlacementPeerExchange.js's
 // own header already documents as never owned by it.
 //
-// Unlike application/CreatePublicationAnchorPeerExchangeUseCase.js, this
-// use case runs no restore-on-startup pass: application/
-// LocalPublicationSnapshotPlacementCatalog.js already persists directly
-// through its own `storageProvider` (0.8.18's own deliberate choice to
-// skip the separate Store-class durability seam anchors only grew in
-// 0.8.15), so there is nothing here to restore-and-re-verify at process
-// start yet. A future milestone can add that hardening the same way
-// 0.8.15 added it for anchors, without changing this use case's own
-// public surface — see docs/Roadmap.md, 0.8.18, "Deliberately excluded."
+// 0.8.21 — Persistent Snapshot Placement Catalog & Restart Recovery.
+//
+// Now also constructs the durable application/
+// LocalPublicationSnapshotPlacementStore.js `catalog` delegates to, and
+// runs application/RestorePublicationSnapshotPlacementCatalogUseCase.js
+// over it — ONCE, synchronously, before `exchange`/`peerExchange` are
+// ever handed to a caller — so any record left over from a PRIOR process
+// that no longer re-validates or re-verifies is pruned before this
+// replica's UI can ever read it through `catalog`. Returns the restore
+// pass's own result (`restoredPlacements`/`rejectedPlacements`)
+// alongside everything this use case already returned, purely
+// informational — see that class's own header for what each field
+// means. This supersedes this file's own pre-0.8.21 header note ("this
+// use case runs no restore-on-startup pass") — that gap is exactly what
+// this milestone closes, the same way 0.8.15 closed it for
+// application/CreatePublicationAnchorPeerExchangeUseCase.js.
 export class CreatePublicationSnapshotPlacementPeerExchangeUseCase {
     execute({ peerMessageBus, connectedPeerRegistry } = {}) {
         const storageProvider = new LocalStorageProvider();
         const catalog = new LocalPublicationSnapshotPlacementCatalog(storageProvider);
+        const store = new LocalPublicationSnapshotPlacementStore(storageProvider);
         const verifier = new LocalAuthorizationVerifier();
+
+        const restoreResult = new RestorePublicationSnapshotPlacementCatalogUseCase(store, verifier).execute();
 
         const exchange = new PublicationSnapshotPlacementExchange(catalog, verifier);
         const peerExchange = new PublicationSnapshotPlacementPeerExchange(exchange, peerMessageBus, connectedPeerRegistry);
 
-        return { catalog, exchange, peerExchange, verifier };
+        return { catalog, exchange, peerExchange, verifier, restoreResult };
     }
 }
