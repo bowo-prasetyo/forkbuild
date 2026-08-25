@@ -802,7 +802,7 @@ export default {
                                         </a>
                                     </div>
 
-                                    <!-- `proof` is shown raw and unexplained at the generic level —
+                                    <!-- "proof" is shown raw and unexplained at the generic level —
                                          see application/PublicationAnchorDetailView.js's own header
                                          on why this file never reaches into it. -->
                                     <details class="evidence-inspection-proof">
