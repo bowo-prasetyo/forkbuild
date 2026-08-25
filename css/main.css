@@ -4901,3 +4901,57 @@ html, body {
     background: rgba(144, 144, 144, 0.15);
     color: #909090;
 }
+
+/* 0.8.13 — Multi-Evidence Comparison & Conflict UX. Sits between
+   .evidence-summary and the per-anchor .evidence-list above/below it,
+   reusing .form-hint--neutral for every line of plain text — the one
+   deliberately NEW visual element is the amber .evidence-convergence-
+   conflict line, and even that is a warning about disagreement, never a
+   verdict about which claim to believe. Groups are laid out as equal,
+   same-sized cards in a row — no group is made larger, bolder, or
+   positioned first to imply it is more likely correct than another. */
+.evidence-convergence {
+    margin-top: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.evidence-convergence-title {
+    display: block;
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.evidence-convergence-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.evidence-convergence-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.5rem 0.7rem;
+    background: #1e1e1e;
+    border: 1px solid #2f2f2f;
+    border-radius: 5px;
+    min-width: 9rem;
+}
+
+.evidence-convergence-hash {
+    font-family: monospace;
+    font-size: 0.78rem;
+    color: #c9c9c9;
+    word-break: break-all;
+}
+
+.evidence-convergence-conflict {
+    margin: 0.6rem 0 0;
+    font-size: 0.78rem;
+    color: #e0a34c;
+}
