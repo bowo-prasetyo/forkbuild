@@ -7,6 +7,8 @@ import { publicationEvidenceView, describeKnownEvidenceCount } from '../../appli
 import { ExternalAnchorCreationUiState } from '../../application/ExternalAnchorCreationUiState.js';
 import { ExternalAnchorCreationOutcome } from '../../application/ExternalAnchorCreationOutcome.js';
 import { describeCreationAttempt, describeCreationButtonLabel } from '../../application/PublicationAnchorCreationView.js';
+import { createVerificationObservation } from '../../application/PublicationAnchorVerificationObservation.js';
+import { deriveAnchorVerificationLifecycle, describeAnchorVerificationLifecycleNote } from '../../application/PublicationAnchorVerificationLifecycleView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -82,6 +84,22 @@ import { describeCreationAttempt, describeCreationButtonLabel } from '../../appl
 // separate, unchanged 0.8.3 action. See application/
 // PublicationAnchorCreationView.js's own header and docs/Principles.md,
 // "External Anchoring Is An Explicit User Action (0.8.11)."
+//
+// 0.8.12 — External Anchor Lifecycle & Stale Evidence Semantics. Each
+// entry now also keeps `entry.verificationHistory` — every application/
+// PublicationAnchorVerificationObservation.js this replica has made for
+// one anchor THIS SESSION, appended to rather than overwritten. Clicking
+// "Verify Evidence"/"Verify Again" still shows the SAME badge/label it
+// always has (application/PublicationEvidenceView.js, unchanged); the
+// only new thing on screen is one optional extra sentence — application/
+// PublicationAnchorVerificationLifecycleView.js#
+// describeAnchorVerificationLifecycleNote() — that appears only when the
+// most recent check came back PROOF_UNAVAILABLE after an EARLIER check,
+// this session, reached VALID. It never says "invalid" or "revoked," and
+// it never appears for an anchor this replica has only ever checked
+// once. See docs/Principles.md, "A Verification Result Describes What
+// Can Be Established Now; It Does Not Rewrite The Historical Claim Being
+// Verified (0.8.12)."
 function humanizeContentKind(contentKind) {
     if (!contentKind) return 'Unknown content';
     return contentKind
@@ -203,6 +221,20 @@ export default {
                 evidence: null,
                 evidenceExpanded: false,
                 verifications: {},
+                // 0.8.12 — External Anchor Lifecycle & Stale Evidence
+                // Semantics. Keyed by anchorId, each value the ORDERED
+                // list of every application/
+                // PublicationAnchorVerificationObservation.js this replica
+                // has made for that anchor THIS SESSION — appended to,
+                // never overwritten, unlike `verifications` above (which
+                // still holds only the latest result, exactly as 0.8.3
+                // left it, feeding the unchanged badge/label). Ephemeral
+                // for the lifetime of this page, exactly like
+                // `verifications` and `creationAttempts` — never read
+                // from or written to anything durable. See application/
+                // PublicationAnchorVerificationObservation.js's own
+                // header.
+                verificationHistory: {},
                 // 0.8.11 — Explicit External Anchoring UX. Keyed by
                 // anchorType; ephemeral for the lifetime of this page,
                 // exactly like `verifications` above — never read from or
@@ -250,6 +282,25 @@ export default {
             });
             entry.verifications[anchor.id] = { outcome: result.outcome, reason: result.reason };
             entry.evidence = publicationEvidenceView(entry.evidenceAnchors, entry.verifications);
+            // 0.8.12 — record this attempt as its own observation, on top
+            // of whatever this replica already observed for this SAME
+            // anchor earlier this session, rather than replacing it — see
+            // `verificationHistory`'s own comment above.
+            const history = entry.verificationHistory[anchor.id] || (entry.verificationHistory[anchor.id] = []);
+            history.push(createVerificationObservation({ anchorId: anchor.id, outcome: result.outcome, reason: result.reason }));
+        }
+
+        // 0.8.12 — External Anchor Lifecycle & Stale Evidence Semantics.
+        // A single, optional sentence shown ALONGSIDE the existing
+        // verification badge/label (unchanged) — never a replacement for
+        // it. `null` in every case except the one this milestone exists
+        // to surface: this anchor was independently verified at some
+        // earlier point in this session, and the most recent check came
+        // back `PROOF_UNAVAILABLE`. See application/
+        // PublicationAnchorVerificationLifecycleView.js's own header.
+        function lifecycleNote(entry, anchorView) {
+            const lifecycle = deriveAnchorVerificationLifecycle(entry.verificationHistory[anchorView.anchorId]);
+            return describeAnchorVerificationLifecycleNote(lifecycle);
         }
 
         function evidenceBadgeClass(anchorView) {
@@ -407,7 +458,7 @@ export default {
             entries, loading, retrievalPeers, availableAnchorTypes,
             humanizeContentKind, shortId, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck,
-            describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass,
+            describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel
         };
     },
@@ -516,6 +567,9 @@ export default {
                                 </div>
                                 <p v-if="anchorView.verificationReason" class="form-hint form-hint--neutral">
                                     {{ anchorView.verificationReason }}
+                                </p>
+                                <p v-if="lifecycleNote(entry, anchorView)" class="form-hint form-hint--neutral">
+                                    {{ lifecycleNote(entry, anchorView) }}
                                 </p>
                                 <dl class="evidence-fields">
                                     <div class="evidence-field"><dt>Locator</dt><dd>{{ anchorView.locator }}</dd></div>
