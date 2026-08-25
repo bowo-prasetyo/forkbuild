@@ -10827,3 +10827,138 @@ locally known publication's own `contentReference.hash` here (that stays
 restraint onto the inspection screen.
 
 See `docs/Roadmap.md`, 0.8.14, for the full milestone entry.
+
+### A Persistent Store Is An Untrusted Byte Source, Not A Second Trust Root (0.8.15)
+
+`application/LocalPublicationAnchorCatalog.js` has taken a
+`StorageProvider` and written every `add()` straight through it since
+0.8.2 — this replica's anchor catalog was never actually in-memory-only,
+and surviving a page reload was never the gap. The gap 0.8.15 closes is
+narrower and easy to miss precisely because the data was already there:
+a catalog read has always turned whatever JSON happened to be sitting in
+storage directly into a `PublicationAnchor` instance, with no
+re-validation and no signature check. For a record THIS replica's own
+process just wrote, that is exactly the right amount of trust — it
+already passed `application/PublicationAnchorExchange.js`'s own validate
+→ construct → verify-signature gate on the way in, moments earlier, in
+the same process. For a record that was already sitting in storage
+before this process started, it is not: storage cannot distinguish
+"written by `PublicationAnchorExchange` after a genuine signature check"
+from "written by a bug in an earlier version of this codebase" from
+"hand-edited through devtools" from "corrupted by bit rot." All four look
+identical the moment they're read back.
+
+**`application/LocalPublicationAnchorStore.js` treats whatever is in
+storage as exactly what it is: an untrusted byte source, no more entitled
+to automatic trust than a peer message or an imported package.** This is
+why the class is deliberately, almost aggressively dumb — it never
+imports `core/PublicationAnchor.js`, never validates an envelope, never
+constructs an instance, and never checks a signature. `get()`/`list()`
+hand back the RAW `{ anchor: <plain JSON>, receivedAt: <ISO string> }`
+envelope exactly as stored, never a hydrated `PublicationAnchor` —
+because hydrating it would be an implicit trust decision this class has
+no business making. `tests/PersistentPublicationAnchorCatalog.test.js`'s
+own Section A proves the other half directly: a malformed record (even a
+bare `null`) injected straight into the raw storage backend, bypassing
+`save()` entirely, never crashes `has()`/`get()`/`list()`/`remove()` — it
+simply never matches anything a caller is looking for. A store that threw
+on garbage would be a store that assumed everything reaching it was
+already trustworthy, which is precisely the assumption this milestone
+exists to remove.
+
+**`application/LocalPublicationAnchorCatalog.js`'s own constructor,
+public API, and every observed behavior are completely unchanged.** Every
+call site written against it before 0.8.15 — `application/
+AddPublicationAnchorUseCase.js`, `application/
+PublicationAnchorExchange.js`, `application/
+ImportPackageAnchorsUseCase.js`, every one of the roughly twenty existing
+test files that construct it directly — keeps working identically. What
+changed is purely internal: the catalog now delegates to an internally
+constructed `LocalPublicationAnchorStore` instead of calling a
+`StorageProvider` itself. The catalog remains the one place that turns a
+raw envelope into a real `PublicationAnchor` (still via
+`PublicationAnchor.fromJSON()`, still with NO signature re-check on an
+ordinary read — see the next entry for why re-verifying on every read was
+never the fix), because a record reaching the catalog through `add()` was
+already gated on the way in by whichever caller called `add()`.
+`tests/PersistentPublicationAnchorCatalog.test.js`'s own Section B proves
+the store and the catalog genuinely share one physical storage, not a
+private copy each: a write through the catalog is immediately visible
+through an independently constructed store over the same
+`StorageProvider`, and a removal through the store is immediately
+invisible through the catalog.
+
+See `docs/Roadmap.md`, 0.8.15, for the full milestone entry.
+
+### Restoration Re-Earns Trust In The Claim; It Never Re-Asks The External System (0.8.15)
+
+Given `application/LocalPublicationAnchorStore.js`'s own untrusted-byte-
+source posture (previous entry), SOMETHING has to decide, at some point,
+which of the records already sitting in storage this replica is willing
+to vouch for again. Re-verifying on every ordinary catalog read was
+considered and rejected: it would make `get()`/`list()` — used
+constantly, throughout discovery, comparison, and inspection UX built in
+0.8.2 through 0.8.14 — expensive and asynchronous, for a check that only
+ever matters once, at the moment a record re-enters this replica's trust
+after having left it (i.e., after a restart). `application/
+RestorePublicationAnchorCatalogUseCase.js` is that one moment, made
+explicit: it runs ONCE, at startup, over every record application/
+LocalPublicationAnchorStore.js has on file, and never again afterward.
+
+**Restoration reuses the IDENTICAL validate → construct → verify-
+SIGNATURE boundary application/PublicationAnchorExchange.js already
+established for a stranger's anchor arriving over a peer connection
+(0.8.4) — and deliberately stops at the exact same place.** A record that
+fails structural validation or signature verification is PRUNED, not
+merely skipped: `store.remove()` withdraws it, so it cannot silently keep
+failing this exact check on every future restart with no way for a
+person to ever notice or clear it. `tests/
+PersistentPublicationAnchorCatalog.test.js`'s own Section C proves both
+failure modes distinctly — a structurally malformed record and a
+well-formed-but-tampered-after-signing one are each rejected AND
+removed, categorized `INVALID_STRUCTURE`/`INVALID_SIGNATURE`, the
+identical per-entry-tolerant shape `application/
+ImportPackageAnchorsUseCase.js` already established for a package's own
+bundled anchors (0.8.7) — one bad record in a store of several never
+aborts restoring the rest.
+
+**Restoration never once calls `application/ExternalAnchorVerifier.js`.**
+Signature verification answers "did the claimed identity really sign
+exactly this claim" — a question about the CLAIM's own integrity, fully
+answerable offline, from the record alone. Proof verification answers
+"can the external system currently substantiate what was claimed" — a
+question this replica already treats as a SEPARATE, explicit, per-click
+operation (0.8.3's own "Known Evidence Is Not Verified Evidence"; 0.8.14's
+own "Inspection Is Observation; Verification Is An Explicit Operation").
+A restart is not a reason to blur that line: `tests/
+PersistentPublicationAnchorCatalog.test.js`'s own Section C and its own
+flagship (Section D) each prove this with a call-counting spy around
+`ExternalAnchorVerifier.prototype.verify`, not merely by omission — zero
+calls, even for a `bitcoin-op-return` anchor that would match a real
+proof adapter if one were registered.
+
+**A record that passes restoration is left exactly where it already
+was.** `RestorePublicationAnchorCatalogUseCase` never calls
+`catalog.add()` and never touches `receivedAt` — there is no separate
+"now populate the catalog" step, because `application/
+LocalPublicationAnchorCatalog.js` was never actually unpopulated to begin
+with (see the previous entry). `tests/
+PersistentPublicationAnchorCatalog.test.js`'s own flagship makes this
+concrete: Bob catalogs four anchors in "process #1," restarts into a
+"process #2" built from fresh catalog/store/exchange instances over the
+identical underlying storage, and finds the identical anchor set —
+`toJSON()` byte-identical, `receivedAt` UNCHANGED to the millisecond, and
+a re-`importAnchor()` of the same claim after restart still reports
+`isNew: false` and still never resets `receivedAt`, exactly as
+first-seen-wins already promised before any of this milestone existed.
+What does NOT survive is `application/
+PublicationAnchorVerificationObservation.js`'s own ephemeral history: an
+anchor Bob explicitly verified `VALID` in process #1 reads back as
+`NOT_VERIFIED` in process #2, because that observation was never part of
+what `LocalPublicationAnchorStore` ever persisted — see docs/
+Principles.md's own 0.8.12 entry, "A Verification Result Describes What
+Can Be Established Now; It Does Not Rewrite The Historical Claim Being
+Verified," now proven across a process boundary, not merely within one
+session.
+
+See `docs/Roadmap.md`, 0.8.15, for the full milestone entry.

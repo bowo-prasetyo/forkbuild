@@ -1,6 +1,5 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-
-const STORAGE_KEY = 'publication-anchor-catalog:entries';
+import { LocalPublicationAnchorStore } from './LocalPublicationAnchorStore.js';
 
 // 0.8.2 — Anchor Catalog & Evidence Discovery.
 //
@@ -71,12 +70,32 @@ const STORAGE_KEY = 'publication-anchor-catalog:entries';
 // collapses them into one, never picks a "best" one, and holds no
 // ranking, trust score, or "canonical anchor" field anywhere in it —
 // see this milestone's own docs/Principles.md entry.
+//
+// 0.8.15 — Persistent External Evidence Catalog & Restart Recovery.
+//
+// This class's constructor and every method on it are UNCHANGED by
+// 0.8.15 — every caller written against it before this milestone (there
+// are many) keeps working identically. What changed is internal only:
+// where this class used to read/write a `StorageProvider` directly, it
+// now delegates to application/LocalPublicationAnchorStore.js, the named
+// durability seam 0.8.15 introduced. This class remains the one place
+// that turns a raw stored envelope into a real `PublicationAnchor`
+// instance — via `PublicationAnchor.fromJSON()`, exactly as before, and
+// still with NO signature re-verification on an ordinary read: an
+// application-authored write (through add(), from application/
+// AddPublicationAnchorUseCase.js or application/
+// PublicationAnchorExchange.js, both of which already gate what reaches
+// add() their own way) is trusted on the next read the same way it always
+// was. Re-establishing that trust for whatever was ALREADY sitting in
+// storage before this replica's own process started is a different
+// question — application/RestorePublicationAnchorCatalogUseCase.js's own,
+// asked once, explicitly, at startup, never here.
 export class LocalPublicationAnchorCatalog {
     constructor(storageProvider) {
         if (!storageProvider) {
             throw new Error('LocalPublicationAnchorCatalog: storageProvider is required');
         }
-        this._storageProvider = storageProvider;
+        this._store = new LocalPublicationAnchorStore(storageProvider);
     }
 
     // Records `anchor` (a PublicationAnchor instance the CALLER is
@@ -91,25 +110,23 @@ export class LocalPublicationAnchorCatalog {
         if (!anchor || typeof anchor.toJSON !== 'function' || !anchor.id) {
             throw new Error('LocalPublicationAnchorCatalog: a PublicationAnchor instance is required');
         }
-        const all = this._loadAll();
-        const index = all.findIndex((entry) => entry.anchor.id === anchor.id);
-        if (index !== -1) {
-            return { anchor: PublicationAnchor.fromJSON(all[index].anchor), isNew: false };
+        const existing = this._store.get(anchor.id);
+        if (existing) {
+            return { anchor: PublicationAnchor.fromJSON(existing.anchor), isNew: false };
         }
-        all.push({ anchor: anchor.toJSON(), receivedAt: new Date().toISOString() });
-        this._storageProvider.save(STORAGE_KEY, all);
+        this._store.save(anchor, new Date());
         return { anchor, isNew: true };
     }
 
     has(anchorId) {
-        return this._loadAll().some((entry) => entry.anchor.id === anchorId);
+        return this._store.has(anchorId);
     }
 
     // The cataloged PublicationAnchor for `anchorId`, or null if this
     // replica has never seen one. Never verifies anything — see this
     // class's own header.
     get(anchorId) {
-        const entry = this._loadAll().find((e) => e.anchor.id === anchorId);
+        const entry = this._store.get(anchorId);
         return entry ? PublicationAnchor.fromJSON(entry.anchor) : null;
     }
 
@@ -121,14 +138,7 @@ export class LocalPublicationAnchorCatalog {
     // — the returned/removed record is the same immutable envelope that
     // was added. Returns true if an entry existed and was removed.
     remove(anchorId) {
-        const all = this._loadAll();
-        const index = all.findIndex((entry) => entry.anchor.id === anchorId);
-        if (index === -1) {
-            return false;
-        }
-        all.splice(index, 1);
-        this._storageProvider.save(STORAGE_KEY, all);
-        return true;
+        return this._store.remove(anchorId);
     }
 
     // Every anchor known to this replica, most recently RECEIVED first —
@@ -138,13 +148,13 @@ export class LocalPublicationAnchorCatalog {
     // "newest to it" — the identical restraint application/
     // LocalPublicationCatalog.js#list() already applies to `publishedAt`).
     list() {
-        return this._sorted(this._loadAll()).map((entry) => PublicationAnchor.fromJSON(entry.anchor));
+        return this._sorted(this._store.list()).map((entry) => PublicationAnchor.fromJSON(entry.anchor));
     }
 
     // The ISO timestamp this replica first cataloged `anchorId` at, or
     // null if it has never been cataloged.
     getReceivedAt(anchorId) {
-        const entry = this._loadAll().find((e) => e.anchor.id === anchorId);
+        const entry = this._store.get(anchorId);
         return entry ? entry.receivedAt : null;
     }
 
@@ -172,15 +182,11 @@ export class LocalPublicationAnchorCatalog {
     }
 
     _filtered(predicate) {
-        return this._sorted(this._loadAll().filter(predicate))
+        return this._sorted(this._store.list().filter(predicate))
             .map((entry) => PublicationAnchor.fromJSON(entry.anchor));
     }
 
     _sorted(entries) {
         return [...entries].sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
-    }
-
-    _loadAll() {
-        return this._storageProvider.load(STORAGE_KEY) || [];
     }
 }
