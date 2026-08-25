@@ -1377,6 +1377,16 @@ export class EditorSession {
                 y1: event.clientY,
                 moved: false
             };
+            // renderer/CameraController.js's own 0.1.46 header: "an
+            // active editing gesture temporarily owns the pointer" — the
+            // gizmo already suspends OrbitControls for the length of its
+            // drag; the marquee needs the exact same exclusivity, or
+            // orbit keeps consuming the SAME pointer movement and pans
+            // the whole scene under the rectangle instead of just
+            // stretching it.
+            if (this._session) {
+                this._session.setControlsEnabled(false);
+            }
             return null;
         }
         if (this._inputDispatcher) {
@@ -1417,6 +1427,9 @@ export class EditorSession {
         if (this._marqueeState) {
             const { x0, y0, x1, y1, additive, moved } = this._marqueeState;
             this._marqueeState = null;
+            if (this._session) {
+                this._session.setControlsEnabled(true);
+            }
             if (moved) {
                 this.marqueeSelect({ x0, y0, x1, y1 }, { additive });
             } else if (this._inputDispatcher) {
@@ -1471,6 +1484,9 @@ export class EditorSession {
             return false;
         }
         this._marqueeState = null;
+        if (this._session) {
+            this._session.setControlsEnabled(true);
+        }
         return true;
     }
 
