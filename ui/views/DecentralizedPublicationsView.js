@@ -11,6 +11,7 @@ import { createVerificationObservation } from '../../application/PublicationAnch
 import { deriveAnchorVerificationLifecycle, describeAnchorVerificationLifecycleNote } from '../../application/PublicationAnchorVerificationLifecycleView.js';
 import { derivePublicationEvidenceConvergence } from '../../application/PublicationEvidenceConvergence.js';
 import { publicationEvidenceConvergenceView } from '../../application/PublicationEvidenceConvergenceView.js';
+import { publicationAnchorDetailView } from '../../application/PublicationAnchorDetailView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -118,6 +119,24 @@ import { publicationEvidenceConvergenceView } from '../../application/Publicatio
 // nothing new is stored, and nothing here ever ranks one content-hash
 // group over another. See docs/Principles.md, "Evidence Comparison Is
 // Not Adjudication (0.8.13)."
+//
+// 0.8.14 — External Evidence Inspection & Locator UX. Each anchor card
+// now also offers "Inspect Evidence," alongside the existing "Verify
+// Evidence"/"Verify Again" — two buttons that mean completely different
+// things. Clicking "Inspect Evidence" calls ONLY application/
+// PublicationAnchorDetailView.js#publicationAnchorDetailView() (a pure,
+// synchronous reshaping of the anchor this replica already has in
+// memory) and, separately, looks the anchor's own `anchorType` up in the
+// injected `externalAnchorEvidenceViewRegistry` for an OPTIONAL,
+// anchorType-specific presentation (application/
+// ExternalAnchorEvidenceViewRegistry.js) — never application/
+// ExternalAnchorVerifier.js, never the network, never the catalog.
+// `entry.inspections` is ephemeral per-anchor UI state, exactly like
+// `entry.verifications`/`entry.creationAttempts` above — never read from
+// or written to anything durable. See application/
+// PublicationAnchorDetailView.js's own header and docs/Principles.md,
+// "Inspection Is Observation; Verification Is An Explicit Operation
+// (0.8.14)."
 function humanizeContentKind(contentKind) {
     if (!contentKind) return 'Unknown content';
     return contentKind
@@ -194,6 +213,14 @@ export default {
         const peerSessionManager = inject('peerSessionManager');
         const evidenceCoordinator = inject('publicationEvidenceCoordinator');
         const creationCoordinator = inject('publicationAnchorCreationCoordinator');
+        // 0.8.14 — External Evidence Inspection & Locator UX. Optional —
+        // absent here (as in a test harness that never provides it),
+        // "Inspect Evidence" still shows application/
+        // PublicationAnchorDetailView.js's own generic shape; only the
+        // anchorType-specific section is skipped, exactly as
+        // `availableAnchorTypes` above degrades to an empty list with no
+        // `creationCoordinator`.
+        const evidenceViewRegistry = inject('externalAnchorEvidenceViewRegistry', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -274,6 +301,13 @@ export default {
                 // PublicationAnchorVerificationObservation.js's own
                 // header.
                 verificationHistory: {},
+                // 0.8.14 — External Evidence Inspection & Locator UX.
+                // Keyed by anchorId; ephemeral for the lifetime of this
+                // page, exactly like `verifications`/`verificationHistory`
+                // above — never read from or written to anything durable,
+                // and never touched by loadEvidence()/verifyAnchor(). See
+                // toggleInspect()'s own comment below.
+                inspections: {},
                 // 0.8.11 — Explicit External Anchoring UX. Keyed by
                 // anchorType; ephemeral for the lifetime of this page,
                 // exactly like `verifications` above — never read from or
@@ -373,6 +407,50 @@ export default {
         function lifecycleNote(entry, anchorView) {
             const lifecycle = deriveAnchorVerificationLifecycle(entry.verificationHistory[anchorView.anchorId]);
             return describeAnchorVerificationLifecycleNote(lifecycle);
+        }
+
+        // 0.8.14 — External Evidence Inspection & Locator UX. The one
+        // place this page calls application/PublicationAnchorDetailView.js
+        // (and, separately, `evidenceViewRegistry`) — always for exactly
+        // ONE anchor, always because a person clicked "Inspect Evidence."
+        // Both calls are pure and synchronous: nothing here awaits
+        // anything, touches evidenceCoordinator/creationCoordinator, or
+        // mutates `entry.evidenceAnchors`/`entry.evidence`/
+        // `entry.verifications`/`entry.verificationHistory`/
+        // `entry.convergence` — see tests/
+        // PublicationAnchorInspectionUX.test.js's own invariant section,
+        // which asserts exactly this against the real anchor/catalog.
+        // Toggling closed keeps the already-computed detail cached rather
+        // than discarding it — re-opening never needs to recompute, since
+        // nothing about a cataloged PublicationAnchor ever changes in
+        // place (core/PublicationAnchor.js's own header).
+        function toggleInspect(entry, anchorView) {
+            const state = entry.inspections[anchorView.anchorId]
+                || (entry.inspections[anchorView.anchorId] = { expanded: false, detail: null, typeSpecific: null });
+            state.expanded = !state.expanded;
+            if (state.expanded && !state.detail) {
+                const anchor = entry.evidenceAnchors.find((candidate) => candidate.id === anchorView.anchorId);
+                if (!anchor) return;
+                state.detail = publicationAnchorDetailView(anchor);
+                state.typeSpecific = (evidenceViewRegistry && evidenceViewRegistry.has(anchor.anchorType))
+                    ? evidenceViewRegistry.get(anchor.anchorType).describe(anchor)
+                    : null;
+            }
+        }
+
+        function inspectionExpanded(entry, anchorView) {
+            const state = entry.inspections[anchorView.anchorId];
+            return Boolean(state && state.expanded);
+        }
+
+        function inspectionDetail(entry, anchorView) {
+            const state = entry.inspections[anchorView.anchorId];
+            return state ? state.detail : null;
+        }
+
+        function inspectionTypeSpecific(entry, anchorView) {
+            const state = entry.inspections[anchorView.anchorId];
+            return state ? state.typeSpecific : null;
         }
 
         function evidenceBadgeClass(anchorView) {
@@ -531,7 +609,8 @@ export default {
             humanizeContentKind, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
-            createAnchor, creationView, creationBadgeClass, creationButtonLabel
+            createAnchor, creationView, creationBadgeClass, creationButtonLabel,
+            toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific
         };
     },
     template: `
@@ -677,10 +756,59 @@ export default {
                                     </div>
                                 </dl>
                                 <div class="identity-mgmt-actions">
+                                    <button class="action-btn action-btn--secondary" @click="toggleInspect(entry, anchorView)">
+                                        {{ inspectionExpanded(entry, anchorView) ? 'Hide Details' : 'Inspect Evidence' }}
+                                    </button>
                                     <button class="action-btn action-btn--secondary" :disabled="anchorView.checking"
                                             @click="verifyAnchor(entry, anchorView)">
                                         {{ anchorView.checking ? 'Verifying…' : (anchorView.verified ? 'Verify Again' : 'Verify Evidence') }}
                                     </button>
+                                </div>
+
+                                <!-- 0.8.14 — External Evidence Inspection & Locator UX. A purely
+                                     local, synchronous read of THIS anchor's own fields — never a
+                                     network request, never a call to evidenceCoordinator.verify().
+                                     "Inspect Evidence" and "Verify Evidence"/"Verify Again" above
+                                     stay two genuinely separate actions, exactly as this file's own
+                                     header states. -->
+                                <div v-if="inspectionExpanded(entry, anchorView) && inspectionDetail(entry, anchorView)"
+                                     class="evidence-inspection">
+                                    <span class="evidence-inspection-title">External Evidence</span>
+                                    <p class="form-hint form-hint--neutral">{{ inspectionDetail(entry, anchorView).bindingDescription }}</p>
+                                    <dl class="evidence-fields">
+                                        <div class="evidence-field">
+                                            <dt>{{ inspectionDetail(entry, anchorView).anchoredAtLabel }}</dt>
+                                            <dd>{{ formatWhen(inspectionDetail(entry, anchorView).anchoredAt) }}</dd>
+                                        </div>
+                                        <div class="evidence-field"><dt>External locator</dt><dd>{{ inspectionDetail(entry, anchorView).locator }}</dd></div>
+                                    </dl>
+
+                                    <!-- Only the ONE registered anchorType-specific adapter (e.g.
+                                         anchoring/BitcoinAnchorEvidenceView.js) ever produces this
+                                         section — a generic anchorType with no adapter shows the
+                                         fields above alone. -->
+                                    <div v-if="inspectionTypeSpecific(entry, anchorView)" class="evidence-inspection-adapter">
+                                        <span class="evidence-inspection-adapter-title">{{ inspectionTypeSpecific(entry, anchorView).summary }}</span>
+                                        <dl class="evidence-fields">
+                                            <div v-for="field in inspectionTypeSpecific(entry, anchorView).fields" :key="field.label" class="evidence-field">
+                                                <dt>{{ field.label }}</dt><dd>{{ field.value }}</dd>
+                                            </div>
+                                        </dl>
+                                        <a v-if="inspectionTypeSpecific(entry, anchorView).externalLocator"
+                                           class="action-btn action-btn--secondary"
+                                           :href="inspectionTypeSpecific(entry, anchorView).externalLocator.url"
+                                           target="_blank" rel="noopener noreferrer">
+                                            {{ inspectionTypeSpecific(entry, anchorView).externalLocator.label }}
+                                        </a>
+                                    </div>
+
+                                    <!-- `proof` is shown raw and unexplained at the generic level —
+                                         see application/PublicationAnchorDetailView.js's own header
+                                         on why this file never reaches into it. -->
+                                    <details class="evidence-inspection-proof">
+                                        <summary>Proof (raw, adapter-defined evidence)</summary>
+                                        <pre class="evidence-inspection-proof-json">{{ JSON.stringify(inspectionDetail(entry, anchorView).proof, null, 2) }}</pre>
+                                    </details>
                                 </div>
                             </div>
                         </div>

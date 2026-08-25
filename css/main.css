@@ -4955,3 +4955,62 @@ html, body {
     font-size: 0.78rem;
     color: #e0a34c;
 }
+
+/* 0.8.14 — External Evidence Inspection & Locator UX. A purely
+   informational panel opened by "Inspect Evidence" — visually similar
+   to .evidence-convergence above (same dark card, same neutral tone),
+   deliberately with no "verified"/"trusted" coloring anywhere: nothing
+   here was independently checked, only read back from the anchor
+   itself. */
+.evidence-inspection {
+    margin-top: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.evidence-inspection-title {
+    display: block;
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.evidence-inspection-adapter {
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.evidence-inspection-adapter-title {
+    display: block;
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+.evidence-inspection-proof {
+    margin-top: 0.75rem;
+}
+
+.evidence-inspection-proof summary {
+    cursor: pointer;
+    color: #909090;
+    font-size: 0.78rem;
+}
+
+.evidence-inspection-proof-json {
+    margin: 0.5rem 0 0;
+    padding: 0.5rem 0.6rem;
+    background: #101010;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #c9c9c9;
+    font-size: 0.72rem;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+}

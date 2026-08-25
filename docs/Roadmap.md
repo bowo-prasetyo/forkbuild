@@ -16897,3 +16897,221 @@ for following an anchor's own `locator` out to the external system it
 names, and evidence export/sharing — each its own, separately sized
 milestone, exactly like every "Deliberately excluded" list in this
 document before it.
+
+## 0.8.14 — External Evidence Inspection & Locator UX
+
+Every milestone since 0.8.3 taught the Publication Center to say
+something ABOUT an anchor — "this anchor exists," "it claims Hash X,"
+"it is independently verified/unavailable/rejected" (0.8.3), "these
+anchors agree/conflict" (0.8.13) — but never let a person look at the
+evidence itself. A `core/PublicationAnchor.js` carries `anchorType`,
+`locator`, `proof`, `anchoredAt`, `contentHash`, and `publicationId`;
+0.8.3's own evidence card already renders a few of those fields inline,
+but nothing has ever gathered ALL of them into one place, named what
+each one actually claims, or given a person a way to follow an anchor's
+own `locator` out to the external system it names. The central question
+this milestone answers:
+
+> **Given ONE anchor this replica already knows about, what exactly
+> does it claim, and where can a person go to look at the evidence
+> itself — without verifying anything, and without reinterpreting an
+> opaque `proof` at the generic level?**
+
+```text
+                            anchor
+                               │
+                               ▼
+              publicationAnchorDetailView()        (new, THIS MILESTONE)
+                               │
+                               ▼
+   { anchorId, anchorType, publicationId, contentHash, locator, proof,
+     anchoredAt, anchoredAtLabel, anchorIdentityId, bindingDescription }
+                               │
+                               │           anchor.anchorType
+                               │                   │
+                               │                   ▼
+                               │   ExternalAnchorEvidenceViewRegistry.get()   (new)
+                               │                   │
+                               │                   ▼
+                               │        BitcoinAnchorEvidenceView#describe()   (new)
+                               │                   │
+                               ▼                   ▼
+                          UI ("Inspect Evidence")
+```
+
+- `application/PublicationAnchorDetailView.js` (new) —
+  `publicationAnchorDetailView(anchor)`, the identical "pure, synchronous,
+  side-effect-free reshape" discipline application/
+  PublicationResolutionView.js/application/PublicationEvidenceView.js
+  already hold, applied here to the FULL anchor rather than a
+  verification result. Returns every field a `PublicationAnchor` itself
+  carries, with two deliberate choices: `proof` is returned exactly as
+  the anchor carries it — opaque, never reaching into `proof.txid`/
+  `proof.confirmations`/`proof.blockHeight` at this generic level — and
+  `anchoredAtLabel` is always the literal string "Claimed external
+  recording time," never "Verified at" or "Confirmed at," extending
+  core/PublicationAnchor.js's own 0.8.0 restraint onto the screen.
+  `describeAnchorBinding(publicationId, contentHash)` produces the one
+  sentence naming what the anchor's own signature binds together —
+  "This anchor claims that publication P was externally recorded with
+  content hash H" — worded as a claim, never as an established fact,
+  extending 0.8.7's own "a bundled anchor's claim is preserved, never
+  repaired" restraint onto the inspection screen.
+
+- `application/ExternalAnchorEvidenceViewRegistry.js` (new) — the
+  IDENTICAL `anchorType -> plugin` lookup seam application/
+  ExternalAnchorPublisherRegistry.js (0.8.10, creation) and application/
+  ExternalProofVerifierRegistry.js (0.8.1, verification) already
+  established, applied to a third, independent axis: presentation. A
+  registered evidenceView's own `describe(anchor)` must stay exactly as
+  pure as `publicationAnchorDetailView()` — no network, no verification,
+  no mutation. `application/PublicationAnchorDetailView.js` never
+  imports this registry, and this registry never imports a concrete
+  adapter — a caller (`ui/views/DecentralizedPublicationsView.js`) wires
+  the two together at the point of use, the same "generic pipeline,
+  concrete plugin wired at the composition root" split every sibling
+  registry already holds.
+
+- `anchoring/BitcoinAnchorEvidenceView.js` (new) — the FIRST concrete
+  anchor-type presentation adapter, registered under the identical
+  `bitcoin-op-return` anchorType anchoring/BitcoinAnchorPublisher.js/
+  anchoring/BitcoinOpReturnProofVerifier.js already use. `describe()`
+  turns `proof.txid`/`proof.network` into a `{ summary: 'Bitcoin', fields:
+  [{label, value}, ...], externalLocator }` shape, and constructs a
+  followable `https://mempool.space/tx/<txid>` (or `/<network>/tx/<txid>`)
+  destination — pure string/URL construction, never a fetch. It does
+  NOT verify the transaction, determine confirmations, decide whether it
+  is trustworthy, or decide whether it belongs to this publication —
+  those all stay anchoring/BitcoinOpReturnProofVerifier.js's own job,
+  completely unchanged. A missing or malformed `proof` (an anchor whose
+  publisher never populated one, a stranger's claim this replica has
+  never checked) degrades HONESTLY to "not available" and a null
+  `externalLocator` — never a guess, and never a throw.
+
+- `application/CreateExternalAnchorEvidenceViewRegistryUseCase.js` /
+  `application/CreateBitcoinAnchorEvidenceViewUseCase.js` (new) — the
+  identical composition-root wrappers application/
+  CreateExternalAnchorVerifierUseCase.js/application/
+  CreateBitcoinAnchorProofVerifierUseCase.js already established, so
+  `ui/main.js` never imports `anchoring/BitcoinAnchorEvidenceView.js`
+  directly and can pass a registry with zero plugins with no loss of
+  function — every anchor simply shows the generic detail view alone.
+
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each evidence
+  card gains an "Inspect Evidence"/"Hide Details" button, standing
+  alongside the existing "Verify Evidence"/"Verify Again" — two buttons
+  that mean completely different things. Clicking "Inspect Evidence"
+  calls ONLY `publicationAnchorDetailView()` and, separately, the
+  injected `externalAnchorEvidenceViewRegistry` — synchronous, no
+  `await`, and it never touches `evidenceCoordinator`,
+  `entry.verifications`, or `entry.verificationHistory`. The opened
+  panel shows the content binding claim, the "Claimed external recording
+  time," the locator, the Bitcoin-specific fields and its "View on block
+  explorer" link when one is available, and the raw `proof` behind a
+  `<details>` disclosure labeled "Proof (raw, adapter-defined evidence)"
+  — never reinterpreted. `entry.inspections` is ephemeral per-anchor UI
+  state, exactly like `entry.verifications`/`entry.creationAttempts`
+  above — never read from or written to anything durable.
+
+- `tests/PublicationAnchorInspectionUX.test.js` (new) — Section A:
+  `publicationAnchorDetailView()` argument handling and its full derived
+  shape, proving `proof` comes back byte-identical and opaque and that
+  `bindingDescription` is worded as a claim; Section B:
+  `ExternalAnchorEvidenceViewRegistry`'s own lookup discipline; Section
+  C: `BitcoinAnchorEvidenceView#describe()` — a well-formed proof
+  produces the correct mempool.space destination (mainnet and non-
+  mainnet paths both), a missing/malformed one degrades honestly, and it
+  never throws or mutates the anchor; Section D: FLAGSHIP — Alice
+  creates and signs a real `PublicationAnchor`, Bob receives it through
+  the identical `AddPublicationAnchorUseCase.js` boundary peer exchange
+  already uses and discovers it, then opens "Inspect Evidence" — proven,
+  with a call-counting spy around `ExternalAnchorVerifier`, to NEVER call
+  the verifier, mutate the anchor, change the catalog, create a
+  verification observation, or change the derived evidence convergence
+  (byte-identical before/after on all four). Bob then separately clicks
+  "Verify Evidence," proven to be the ONLY action that consults the
+  verifier or produces an observation.
+
+```text
+0.8.13  Multi-Evidence Comparison & Conflict UX                      ✓
+             │
+             ▼
+0.8.14  External Evidence Inspection & Locator UX                    ✓
+             ├── application/PublicationAnchorDetailView.js — new; the
+             │   full generic detail one anchor carries, `proof` returned
+             │   opaque, `anchoredAt` always labeled a CLAIM
+             ├── application/ExternalAnchorEvidenceViewRegistry.js —
+             │   new; the third `anchorType -> plugin` registry, this one
+             │   for presentation, mirroring the creation/verification
+             │   registries exactly
+             ├── anchoring/BitcoinAnchorEvidenceView.js — new; the first
+             │   anchor-type presentation adapter — a followable
+             │   mempool.space destination, never a verification
+             ├── ui/views/DecentralizedPublicationsView.js — modified;
+             │   "Inspect Evidence," synchronous and local, alongside
+             │   the unchanged "Verify Evidence"
+             └── PublicationAnchorInspectionUX.test.js (new) — argument
+                 handling + the registry + the Bitcoin adapter + FLAGSHIP
+                 (inspection proven to touch neither the verifier, the
+                 anchor, the catalog, nor the derived convergence)
+```
+
+> **Inspection is observation; verification is an explicit operation.**
+> Looking at an anchor's own claimed fields — its locator, its opaque
+> proof, its self-reported recording time, the exact publicationId/
+> contentHash pair it binds together — never changes what this replica
+> knows, never calls `ExternalAnchorVerifier`, and never produces a
+> verification observation. Only a SEPARATE, explicit "Verify Evidence"
+> click does any of that, exactly as 0.8.3 first established for
+> discovery vs. verification and 0.8.11 extended to creation vs.
+> verification. `tests/PublicationAnchorInspectionUX.test.js`'s own
+> flagship proves the anchor, the catalog, the verification history, and
+> the derived evidence convergence are all byte-identical before and
+> after Bob opens "Inspect Evidence." See `docs/Principles.md`,
+> "Inspection Is Observation; Verification Is An Explicit Operation
+> (0.8.14)."
+
+### Deliberately excluded
+
+- **Automatic explorer polling, or automatic verification when opening
+  details.** "Inspect Evidence" is a purely local read; it never fetches
+  anything, and opening it never triggers `ExternalAnchorVerifier` —
+  see this milestone's own flagship.
+- **Verification caching of any kind, and no "last verified globally."**
+  Nothing about how often "Verify Evidence" re-asks the external system
+  changes — still every click, per 0.8.12's own "Deliberately excluded"
+  list.
+- **Peer-synchronized observations.** Nothing changes about what travels
+  over `PublicationAnchorPeerExchange.js` — still `PublicationAnchor`
+  claims only, per 0.8.4/0.8.5.
+- **Confirmation countdowns, or any Bitcoin-specific state
+  (confirmations, block height, mempool status) shown anywhere.**
+  `anchoring/BitcoinAnchorEvidenceView.js` shows only `txid`/`network` —
+  determining confirmation depth stays anchoring/
+  BitcoinOpReturnProofVerifier.js's own job, a SEPARATE, explicit
+  "Verify Evidence" action.
+- **Anchor ranking, preferred evidence, or evidence trust scores of any
+  kind.** Inspecting one anchor says nothing about how it compares to
+  any other — that comparison stays exactly where 0.8.13 left it,
+  completely untouched by this milestone.
+- **Automatic conflict resolution, or any notion of "correcting" a
+  conflicting anchor.** Unchanged from 0.8.13.
+- **Wallet functionality, or automatic anchoring.** Unchanged from
+  0.8.9/0.8.11 — no private keys, no UTXO management, and inspecting an
+  anchor never creates one.
+- **A second, Bitcoin-aware branch inside
+  `application/PublicationAnchorDetailView.js`.** Every anchorType-
+  specific interpretation of `proof` lives behind `application/
+  ExternalAnchorEvidenceViewRegistry.js`'s own seam — there is no
+  `if (anchorType === 'bitcoin-op-return')` anywhere in the generic
+  detail view, and there never should be.
+
+What's left, and deliberately unbuilt: application/
+ExternalAnchorPublisherRegistry.js's own real wallet-backed Bitcoin
+broadcaster (0.8.9's, 0.8.11's, and 0.8.12's own unfinished item, STILL
+unfinished — this milestone added no broadcast capability of any kind),
+Bitcoin-specific confirmation/depth display (deliberately excluded
+above, since it is a verification-shaped question, not an inspection-
+shaped one), and evidence export/sharing — each its own, separately
+sized milestone, exactly like every "Deliberately excluded" list in this
+document before it.
