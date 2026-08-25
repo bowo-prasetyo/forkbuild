@@ -70,7 +70,18 @@ class FakeSession {
 function buildHarness(sessionState = {}, sessionOverride = null) {
     const session = sessionOverride || new FakeSession(sessionState);
     const feedback = { messages: [], show(message) { this.messages.push(message); } };
-    const ui = { toggled: 0, togglePalette() { this.toggled += 1; }, focusNumeric: null };
+    const ui = {
+        toggled: 0,
+        togglePalette() { this.toggled += 1; },
+        focusNumeric: null,
+        // group.rename can no longer rename to undefined by calling
+        // renameSelectedGroup() with nothing — it now collects a name
+        // through this hook first (application/EditorActionRegistry.js's
+        // own 0.6.2 comment on group.rename). A fixed non-null return is
+        // enough for every test below that only cares whether
+        // renameSelectedGroup ends up called at all.
+        promptRenameGroup() { return 'Renamed'; }
+    };
     const registry = new EditorActionRegistry(createStandardActions({ session, feedback, ui }));
     return { session, feedback, ui, registry };
 }

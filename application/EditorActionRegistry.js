@@ -360,8 +360,26 @@ export function createStandardActions({ session, feedback, ui = {} }) {
             description: 'Rename the selected group',
             enabled: (ctx) => editingAllowed(ctx) && ctx.hasSelectedGroup,
             disabledReason: (ctx) => (ctx.hasSelectedGroup ? null : 'Select a group'),
+            // renameSelectedGroup(name) has no default for `name` — this
+            // has to actually collect one before calling it, the same
+            // "ui hook, degrade to feedback if absent" posture
+            // structure.createFromSelection's ui.promptCreateStructure()
+            // already established below. Without ui.promptRenameGroup,
+            // calling rename() with nothing renamed the group to
+            // undefined instead of prompting for anything.
             execute: () => surfaceCall('renameSelectedGroup', 'Groups are not available on this surface', (rename) => {
-                rename();
+                if (typeof ui.promptRenameGroup !== 'function') {
+                    feedback.show('Groups are not available on this surface');
+                    return;
+                }
+                const groups = typeof session.getGroups === 'function' ? session.getGroups() : [];
+                const selectedId = typeof session.getSelectedGroupId === 'function' ? session.getSelectedGroupId() : null;
+                const current = groups.find((g) => g.id === selectedId);
+                const name = ui.promptRenameGroup(current ? current.name : '');
+                if (name === null) {
+                    return;
+                }
+                rename(name.trim() || null);
                 feedback.show('Renamed group');
             })
         }),

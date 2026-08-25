@@ -54,7 +54,17 @@ export default {
         // align/distribute above: this component stays dumb about what
         // "repeat" means, the host view routes it to
         // EditorSession#repeatSelection().
-        repeat: { type: Function, required: true }
+        repeat: { type: Function, required: true },
+        // Rename/Duplicate/Delete/+Sel/-Sel below all act on "the
+        // selected group" (EditorSession#_selectedGroupId) — this is
+        // the ONLY way this sidebar has to set which one that is, since
+        // the group list itself is otherwise just names and counts.
+        // Routed through the host view (like repeat above) because
+        // EditorSession#selectGroup() is deliberately a plain session
+        // state change, not a registry action: it produces no history
+        // entry and needs no enabled()/disabledReason() gating of its
+        // own — see ui/views/EditorView.js#selectGroup()'s own header.
+        selectGroup: { type: Function, required: true }
     },
     data() {
         return {
@@ -150,6 +160,16 @@ export default {
         },
         emptyStyle() {
             return { margin: '0', color: '#707070', fontSize: '11px', lineHeight: '1.5' };
+        },
+        groupItemStyle(selected) {
+            return {
+                padding: '3px 6px',
+                marginBottom: '2px',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                background: selected ? '#2a3a2a' : 'transparent',
+                border: selected ? '1px solid #4caf7d' : '1px solid transparent'
+            };
         }
     },
     template: `
@@ -225,9 +245,13 @@ export default {
                 <p v-if="!context.hasGroups" :style="emptyStyle()">
                     No groups yet — select bricks and create one.
                 </p>
-                <ul v-else :style="{ margin: '0 0 6px', padding: '0 0 0 16px', color: '#b0b0b0', fontSize: '12px' }">
-                    <li v-for="group in context.groups" :key="group.id">
-                        {{ group.name }} <span :style="{ color: '#707070' }">({{ group.memberCount }})</span>
+                <ul v-else :style="{ margin: '0 0 6px', padding: '0', listStyle: 'none', color: '#b0b0b0', fontSize: '12px' }">
+                    <li v-for="group in context.groups" :key="group.id"
+                        :style="groupItemStyle(group.id === context.selectedGroupId)"
+                        :title="'Select this group — Rename/Duplicate/Delete/+Sel/−Sel below act on whichever group is selected'"
+                        @click="selectGroup(group.id)"
+                    >
+                        {{ group.name || '(unnamed group)' }} <span :style="{ color: '#707070' }">({{ group.memberCount }})</span>
                     </li>
                 </ul>
                 <div :style="rowStyle()">
