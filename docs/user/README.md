@@ -18,8 +18,8 @@ top-level [docs/](..) folder.
 3. **[World View](03-WorldView.md)** — the shared 3D space every
    published creation lives in: flying around, orienting yourself and
    finding places, searching and exploring to find things, inspecting
-   bricks and placed structures, editing in place, and the operation
-   timeline.
+   bricks and placed structures, taking something into the Editor with
+   **Edit a Copy**, and the operation timeline.
 4. **[Publishing & Forking](04-PublishingAndForking.md)** — sharing
    your work, licenses, how forking works (including the automatic
    fork that happens the moment you edit a published creation), and
@@ -55,20 +55,22 @@ top-level [docs/](..) folder.
   viewport: handles, the pivot, snapping, committing, cancelling,
   undo, and how groups behave.
 
-## The two places you build
+## Where you build, where you explore
 
-ForkBuild has two editing surfaces, and they behave the same way:
+The Editor is the one place ForkBuild ever builds; World View is a
+read-only exploration surface:
 
 - **Editor** (`/editor`) — your private workspace. Place bricks from
   the palette, select them, and transform them with the keyboard or
   the gizmo. Save, load, and publish documents from the toolbar.
 - **World View** (`/world/:id`) — the shared spatial world. Fly between
   published worlds, search for and explore what's around you, inspect
-  bricks, walk your avatar across structures and terrain, and — with
-  the same gizmo — edit bricks in place alongside other builders.
+  bricks and placed structures, walk your avatar across structures and
+  terrain, and use **Edit a Copy** to open whatever you found in the
+  Editor, ready to build on.
 
-Whatever you do in either surface, every change is one undoable step,
-and `Ctrl/Cmd+Z` takes it back.
+Whatever you do in the Editor, every change is one undoable step, and
+`Ctrl/Cmd+Z` takes it back.
 
 ## Collaboration and exploration
 
@@ -76,9 +78,10 @@ ForkBuild gives you embodied collaboration and world discovery:
 
 - **Walk and navigate** — use WASD keys to walk your avatar across
   buildings and terrain, jump, climb, and explore vertical spaces.
-- **Build together** — see other builders' avatars, understand what
-  they're working on through spatial awareness, and place bricks
-  alongside them in real time.
+- **Build together** — see other builders' avatars and understand what
+  they're working on through spatial awareness, then use **Edit a
+  Copy** to take something you found into the Editor and build on it
+  yourself.
 - **Discover the world** — use the compass with contextual location
   markers to find nearby structures and terrain features like forests,
   rivers, and grasslands.

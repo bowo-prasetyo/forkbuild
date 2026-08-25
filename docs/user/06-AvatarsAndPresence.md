@@ -94,20 +94,22 @@ they're going.
 
 ### Spatial awareness and activity
 
-When other builders are present, you'll see contextual indicators showing what
+When other people are present, you'll see contextual indicators showing what
 they're doing:
 
-- "**Bob — Building House**" appears near their avatar when they're actively
-  placing or editing bricks.
-- "**Alice — Moving Structure**" indicates someone transforming a placed
-  structure.
+- "**Bob — exploring nearby**" appears near their avatar as they fly or walk
+  around.
+- "**Alice — inspecting a brick**" indicates someone's looking closely at
+  something, without changing it.
 
 These activity indicators are derived from spatial presence data and help you
-understand what others are working on without needing explicit communication.
+understand what others are looking at without needing explicit communication.
 
-> **Presence describes activity; commands establish shared reality.**
-> The activity indicator shows what someone is *doing*, but only the actual
-> world operations change the shared environment.
+> **Presence describes activity; it never changes anything on its own.**
+> The activity indicator shows what someone is *doing*, but World View itself
+> is read-only — only an actual mutation, always in the Editor now (except
+> Region/Landmark naming), changes the shared environment. See
+> [World View](03-WorldView.md#world-view-is-read-only--building-happens-in-the-editor).
 
 ## What's next?
 
