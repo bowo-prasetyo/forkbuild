@@ -21,6 +21,9 @@ import { SnapshotPlacementResolutionOutcome } from '../../application/SnapshotPl
 import { derivePublicationSnapshotPlacementConvergence } from '../../application/PublicationSnapshotPlacementConvergence.js';
 import { publicationSnapshotPlacementConvergenceView } from '../../application/PublicationSnapshotPlacementConvergenceView.js';
 import { describePlacementKnowledge } from '../../application/PublicationSnapshotPlacementKnowledgeView.js';
+import { SnapshotPlacementCreationUiState } from '../../application/SnapshotPlacementCreationUiState.js';
+import { SnapshotPlacementCreationOutcome } from '../../application/SnapshotPlacementCreationOutcome.js';
+import { describeCreationAttempt as describePlacementCreationAttempt, describeCreationButtonLabel as describePlacementCreationButtonLabel } from '../../application/SnapshotPlacementCreationView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -304,6 +307,19 @@ const CREATION_BADGE_CLASSES = {
     [ExternalAnchorCreationUiState.UNAVAILABLE]: 'peer-badge--pending'
 };
 
+// 0.8.25 — Explicit Snapshot Placement Creation UX. The placement-side
+// counterpart of CREATION_BADGE_CLASSES above, one axis over — CREATED
+// reads as "good" (green), exactly like the anchor side; UNAVAILABLE
+// reads as "honestly inconclusive" (amber), exactly like PROOF_UNAVAILABLE
+// / anchor-side UNAVAILABLE. There is no REJECTED entry here — see
+// application/SnapshotPlacementCreationUiState.js's own header on why
+// that state does not exist on the placement side at all.
+const PLACEMENT_CREATION_BADGE_CLASSES = {
+    [SnapshotPlacementCreationUiState.CREATING]: 'peer-badge--pending',
+    [SnapshotPlacementCreationUiState.CREATED]: 'peer-badge--authenticated',
+    [SnapshotPlacementCreationUiState.UNAVAILABLE]: 'peer-badge--pending'
+};
+
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
@@ -353,6 +369,12 @@ export default {
         // Knowledge" section, the identical degrade-gracefully posture
         // `anchorKnowledgeStore` above already holds.
         const placementKnowledgeStore = inject('placementKnowledgeStore', null);
+        // 0.8.25 — Explicit Snapshot Placement Creation UX. Optional —
+        // absent here (e.g. a test harness that never provides it), "Create
+        // Placement" simply never renders, the identical degrade-gracefully
+        // posture `creationCoordinator` above already holds for
+        // `availableAnchorTypes`.
+        const placementCreationCoordinator = inject('snapshotPlacementCreationCoordinator', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -366,6 +388,16 @@ export default {
         // as "Retrieve from Peers" already stays hidden with no
         // authenticated peer connected.
         const availableAnchorTypes = creationCoordinator ? creationCoordinator.availableAnchorTypes() : [];
+        // 0.8.25 — Explicit Snapshot Placement Creation UX. The
+        // placement-side counterpart of `availableAnchorTypes` above, one
+        // axis over — every storage type this replica can currently ask
+        // to place bytes onto, read ONCE at setup (application/
+        // SnapshotPlacementCreationCoordinator.js#availableStorageTypes()
+        // own header). Empty when no `placementCreationCoordinator` was
+        // provided, or when this replica has no content store registered
+        // at all — in either case no "Create Placement" control is ever
+        // offered.
+        const availableStorageTypes = placementCreationCoordinator ? placementCreationCoordinator.availableStorageTypes() : [];
 
         const entries = reactive([]);
         const loading = ref(true);
@@ -480,7 +512,14 @@ export default {
                 // NEVER recomputed from `entry.resolutions` — see
                 // `loadPlacements()`'s own comment below.
                 placementConvergence: null,
-                placementConvergenceView: null
+                placementConvergenceView: null,
+                // 0.8.25 — Explicit Snapshot Placement Creation UX. Keyed
+                // by storage type; ephemeral for the lifetime of this
+                // page, exactly like `creationAttempts` above — never
+                // read from or written to anything durable. See
+                // application/SnapshotPlacementCreationUiState.js's own
+                // header.
+                placementCreationAttempts: {}
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -769,6 +808,60 @@ export default {
             return state ? state.knowledge : null;
         }
 
+        // 0.8.25 — Explicit Snapshot Placement Creation UX. The one place
+        // this page calls application/
+        // SnapshotPlacementCreationCoordinator.js (through the
+        // coordinator) — always for exactly ONE storage type, always
+        // because a person clicked "Create <storage> Placement" on it.
+        // Never called from onMounted(), refreshList(), or
+        // loadPlacements() — merely opening or refreshing this page never
+        // triggers an external placement. Mirrors createAnchor() below
+        // exactly, one axis over.
+        //
+        // A thrown error (application/
+        // SnapshotPlacementCreationCoordinator.js#create() never catches
+        // one — see that class's own header) is caught HERE, at the UI
+        // boundary, and turned into its own honest display state via
+        // application/SnapshotPlacementCreationView.js#describeCreationAttempt()
+        // rather than crashing the page.
+        async function createPlacement(entry, storage) {
+            if (!placementCreationCoordinator) return;
+            entry.placementCreationAttempts[storage] = { creating: true, outcome: null, placement: null, reason: null, error: null };
+            try {
+                const result = await placementCreationCoordinator.create(entry.publication.id, storage);
+                entry.placementCreationAttempts[storage] = {
+                    creating: false, outcome: result.outcome, placement: result.placement, reason: result.reason, error: null
+                };
+                // Re-discover from the catalog so a CREATED placement
+                // immediately appears in the ordinary placement list below
+                // — a purely local catalog read (application/
+                // SnapshotPlacementResolutionCoordinator.js#discover()),
+                // never a resolution. Mirrors createAnchor()'s own
+                // identical re-discovery below, one axis over.
+                loadPlacements(entry);
+                if (result.outcome === SnapshotPlacementCreationOutcome.CREATED) {
+                    entry.placementsExpanded = true;
+                }
+            } catch (error) {
+                entry.placementCreationAttempts[storage] = { creating: false, outcome: null, placement: null, reason: null, error: error.message };
+            }
+        }
+
+        function placementCreationView(entry, storage) {
+            return describePlacementCreationAttempt(entry.placementCreationAttempts[storage]);
+        }
+
+        function placementCreationBadgeClass(entry, storage) {
+            const state = placementCreationView(entry, storage).state;
+            return PLACEMENT_CREATION_BADGE_CLASSES[state] || null;
+        }
+
+        function placementCreationButtonLabel(entry, storage) {
+            const view = placementCreationView(entry, storage);
+            const hasExisting = entry.placements.some((placement) => placement.storage === storage);
+            return describePlacementCreationButtonLabel(humanizeContentKind(storage), { creating: view.state === SnapshotPlacementCreationUiState.CREATING, hasExisting });
+        }
+
         // 0.8.11 — Explicit External Anchoring UX. The one place this
         // page calls application/PublicationAnchorCreationCoordinator.js
         // (through the coordinator) — always for exactly ONE anchorType,
@@ -978,7 +1071,8 @@ export default {
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
             placementResolutionCoordinator, describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass,
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
-            placementInspectionKnowledge
+            placementInspectionKnowledge,
+            availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel
         };
     },
     template: `
@@ -1239,6 +1333,44 @@ export default {
                             <button v-if="entry.placementsView.count > 0" class="action-btn action-btn--secondary" @click="togglePlacements(entry)">
                                 {{ entry.placementsExpanded ? 'Hide Placements' : 'Show Placements' }}
                             </button>
+                        </div>
+
+                        <!-- 0.8.25 — Explicit Snapshot Placement Creation UX. One card per
+                             storage type this replica can currently place bytes onto
+                             (application/SnapshotPlacementCreationCoordinator.js#
+                             availableStorageTypes()) — hidden entirely when this replica has no
+                             content store registered, exactly like "Create <type> Anchor" hides
+                             with no creationCoordinator. Creating is always a single, explicit
+                             click; the result of the most recent attempt is shown here and
+                             nowhere else persists it. Never called "Publish to <storage>" — a
+                             snapshot placement is a claim about WHERE bytes can presently be
+                             retrieved, never a second act of publishing. -->
+                        <div v-if="availableStorageTypes.length > 0" class="evidence-list">
+                            <div v-for="storage in availableStorageTypes" :key="storage" class="evidence-anchor-card">
+                                <div class="evidence-anchor-header">
+                                    <span class="evidence-anchor-type">{{ humanizeContentKind(storage) }}</span>
+                                    <span v-if="placementCreationView(entry, storage).label" class="peer-badge" :class="placementCreationBadgeClass(entry, storage)">
+                                        {{ placementCreationView(entry, storage).label }}
+                                    </span>
+                                </div>
+                                <p v-if="placementCreationView(entry, storage).message" class="form-hint form-hint--neutral">
+                                    {{ placementCreationView(entry, storage).message }}
+                                </p>
+                                <p v-if="placementCreationView(entry, storage).reason" class="form-hint form-hint--neutral">
+                                    {{ placementCreationView(entry, storage).reason }}
+                                </p>
+                                <dl v-if="placementCreationView(entry, storage).placement" class="evidence-fields">
+                                    <div class="evidence-field"><dt>Locator</dt><dd>{{ placementCreationView(entry, storage).placement.locator }}</dd></div>
+                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ placementCreationView(entry, storage).placement.contentHash }}</dd></div>
+                                </dl>
+                                <div class="identity-mgmt-actions">
+                                    <button class="action-btn action-btn--primary"
+                                            :disabled="placementCreationView(entry, storage).state === 'creating'"
+                                            @click="createPlacement(entry, storage)">
+                                        {{ placementCreationButtonLabel(entry, storage) }}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 0.8.23 — Multi-Placement Convergence & Relationship UX. Shown only

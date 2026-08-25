@@ -11951,3 +11951,102 @@ learned a claim, next to WHERE the claim says the bytes live, without
 ever blending the two into "therefore this is more likely to resolve."
 
 See `docs/Roadmap.md`, 0.8.24, for the full milestone entry.
+
+### Snapshot Placement Creation Is An Explicit User Action, Never A Second Publish (0.8.25)
+
+0.8.18 built a complete pipeline for orchestrating an external
+placement — `application/CreatePublicationSnapshotPlacementUseCase.js`,
+`content/IpfsContentStore.js`, `application/
+CreateExternalSnapshotPlacementUseCase.js` — and its own "Deliberately
+excluded" list, echoed again at 0.8.24, ended with the identical line
+0.8.8 through 0.8.10's own anchor-side pipeline once carried: no UI. This
+is the milestone that finally exposes it, drawing the identical hard line
+0.8.11 already drew through the Publication Center, one axis over:
+
+```text
+Discover  →  a local catalog read.        No side effect. No consent needed.
+Create    →  an external side effect.     Always one explicit click.
+Resolve   →  an external observation.     Always one explicit click, separate from Create.
+```
+
+**Discovering placements, listing which storage types this replica can
+place onto, and creating a placement are three different questions,
+answered by three different collaborators, and merely asking the first
+two never answers the third.** `application/
+SnapshotPlacementCreationCoordinator.js` (new) sits directly beside
+`application/SnapshotPlacementResolutionCoordinator.js` (0.8.20) rather
+than folding into it — the identical "one class, one axis" discipline
+0.8.11 already applied to anchors. `tests/
+SnapshotPlacementCreationUX.test.js`'s own Section C proves this with a
+spy wrapped around a real `IpfsContentStore`: `availableStorageTypes()`
+and `discover()` run freely, any number of times, with zero calls to
+`put()` — only an actual `create()` call, always the direct result of one
+person's click, ever reaches it.
+
+**Creating a placement never automatically resolves it.** The identical
+restraint 0.8.11 named as its single most important rule, applied here
+one axis over. The moment `application/
+CreateExternalSnapshotPlacementUseCase.js` (0.8.18, unmodified) reports
+`CREATED`, the resulting placement is re-discovered into the ordinary
+placement list — `application/SnapshotPlacementResolutionCoordinator.js#
+discover()`, the same purely local read every other cataloged placement
+already goes through — and shown exactly as unresolved, with its own
+separate "Resolve Snapshot" button, never pre-checked or pre-labeled.
+`tests/SnapshotPlacementCreationUX.test.js`'s own Section C proves this
+too: a `create()` call that succeeds never once touches a resolver spy
+sitting right next to it. A content store accepting bytes just now says
+nothing about whether it can still serve them a moment later — collapsing
+the two would silently reintroduce exactly the "retrieve → trust"
+shortcut `application/PublicationResolver.js`'s own 0.7.0 header already
+refused, one layer up.
+
+**There is no REJECTED state on the placement side, and inventing one
+would be dishonest.** `application/ExternalAnchorCreationUiState.js` has
+four values because a Bitcoin broadcaster can reach the network and
+receive a genuine, definite no. `application/
+SnapshotPlacementCreationOutcome.js`'s own 0.8.18 header already explains
+why placing content-addressed bytes has no equivalent: every
+`content/ContentStore.js` this codebase has ever shipped either accepts
+bytes or cannot presently be reached — there is no third answer. `application/
+SnapshotPlacementCreationUiState.js` therefore ships with exactly three
+non-idle values (`CREATING`/`CREATED`/`UNAVAILABLE`), and `tests/
+SnapshotPlacementCreationUX.test.js`'s own Section B asserts directly
+that `'REJECTED' in SnapshotPlacementCreationUiState` is `false` — not
+merely unused, but never defined at all. Mirroring a sibling module
+one axis over is this codebase's default discipline; this is the
+deliberate exception, made precisely because blind mirroring here would
+manufacture a UI state with no possible cause.
+
+**"Create <Storage> Placement," never "Publish to <Storage>."**
+`application/SnapshotPlacementCreationView.js#describeCreationButtonLabel()`
+and every button label in `ui/views/DecentralizedPublicationsView.js`'s
+own new "Snapshot Placements" card use the vocabulary `docs/Roadmap.md`'s
+own 0.8.25 entry fixes: a *publication* is an immutable local content
+identity (0.7.0), a placement is a signed claim about WHERE its bytes can
+presently be retrieved (0.8.18) — a second, independent fact about
+already-published content, never a second act of publishing it. Calling
+the button "Publish to IPFS" would collapse two genuinely different
+domain concepts this codebase has kept separate since 0.8.18; "Create
+IPFS Placement" does not.
+
+**The bridge is necessary, and it is exactly a bridge — nothing more.**
+`application/CreateExternalSnapshotPlacementUseCase.js` (0.8.18) was
+built and tested against `discovery/DiscoveryProvider.js`/`discovery/
+ContentResolver.js` — the older, pre-0.7.0 `Publication`/`Publisher`
+world `discovery/LocalDiscoveryProvider.js` still serves. The Publication
+Center this codebase actually ships has never used that world; it reads
+and writes `application/LocalPublicationCatalog.js` and a real
+`content/ContentStore.js` everywhere else. `discovery/
+PublicationCatalogDiscoveryProvider.js` and `discovery/
+PublicationCatalogContentResolver.js` (both new) are thin, synchronous,
+side-effect-free adapters — a method-name translation and a two-hop
+lookup, nothing else — that let this milestone wire the 0.8.18 pipeline
+against the SAME catalog and content store every other Publication Center
+feature already reads and writes, rather than either modifying 0.8.18's
+own already-tested collaborator contracts or standing up a second,
+disconnected publication index. `tests/SnapshotPlacementCreationUX.test.js`'s
+own Section G tests both bridge classes directly, against a real
+`LocalPublicationCatalog`/`PublicationResolver`/`LocalContentStore` —
+never a mock standing in for what the real classes already do.
+
+See `docs/Roadmap.md`, 0.8.25, for the full milestone entry.
