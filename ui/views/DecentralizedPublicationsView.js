@@ -12,6 +12,8 @@ import { deriveAnchorVerificationLifecycle, describeAnchorVerificationLifecycleN
 import { derivePublicationEvidenceConvergence } from '../../application/PublicationEvidenceConvergence.js';
 import { publicationEvidenceConvergenceView } from '../../application/PublicationEvidenceConvergenceView.js';
 import { publicationAnchorDetailView } from '../../application/PublicationAnchorDetailView.js';
+import { describeEvidenceDiscoveryAttempt, describeDiscoveryButtonLabel } from '../../application/PublicationEvidenceDiscoveryView.js';
+import { PublicationEvidenceDiscoveryUiState } from '../../application/PublicationEvidenceDiscoveryUiState.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -137,6 +139,35 @@ import { publicationAnchorDetailView } from '../../application/PublicationAnchor
 // PublicationAnchorDetailView.js's own header and docs/Principles.md,
 // "Inspection Is Observation; Verification Is An Explicit Operation
 // (0.8.14)."
+// 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
+// Each entry's "External Evidence" section now also offers an explicit
+// "Discover from Peers" action — the first UI consumer of application/
+// PublicationAnchorDiscoveryCoordinator.js's own 0.8.5 machinery, which
+// built with no UI consumer at all (see that milestone's own
+// docs/Roadmap.md entry: "Provided here for a future UI to call"), now
+// finally wired through the thin application-facing layer application/
+// PublicationEvidenceDiscoveryCoordinator.js adds above it. Opening this
+// page, listing known evidence, or expanding "Show Evidence" NEVER
+// triggers a discovery call — see this file's own onMounted()/
+// refreshList(), unchanged by this milestone. Only an explicit
+// "Discover from Peers" click does, exactly the same restraint 0.8.11
+// already holds for "Create <type> Anchor" and 0.8.3 already holds for
+// "Verify Evidence." `entry.discoveryAttempt` is ephemeral per-entry UI
+// state, exactly like `entry.creationAttempts`/`entry.verifications`
+// above — never read from or written to anything durable, and never
+// itself a verification: a discovered anchor lands in the ordinary
+// evidence list below exactly like any other cataloged anchor, "Not yet
+// verified," until a person separately clicks "Verify Evidence" on it.
+// See application/PublicationEvidenceDiscoveryCoordinator.js's own
+// header and docs/Principles.md, "Discovery Is Not Verification, And
+// 'No New Evidence' Is Not 'No Evidence' (0.8.16)."
+const DISCOVERY_BADGE_CLASSES = {
+    [PublicationEvidenceDiscoveryUiState.DISCOVERING]: 'peer-badge--pending',
+    [PublicationEvidenceDiscoveryUiState.DISCOVERED]: 'peer-badge--authenticated',
+    [PublicationEvidenceDiscoveryUiState.NO_NEW_EVIDENCE]: 'peer-badge--unchecked',
+    [PublicationEvidenceDiscoveryUiState.UNAVAILABLE]: 'peer-badge--pending'
+};
+
 function humanizeContentKind(contentKind) {
     if (!contentKind) return 'Unknown content';
     return contentKind
@@ -213,6 +244,12 @@ export default {
         const peerSessionManager = inject('peerSessionManager');
         const evidenceCoordinator = inject('publicationEvidenceCoordinator');
         const creationCoordinator = inject('publicationAnchorCreationCoordinator');
+        // 0.8.16 — Evidence Synchronization UX & Explicit Historical
+        // Discovery. Optional — absent here (e.g. a test harness that
+        // never provides it), "Discover from Peers" simply never renders,
+        // the identical degrade-gracefully posture `creationCoordinator`
+        // above already holds for `availableAnchorTypes`.
+        const evidenceDiscoveryCoordinator = inject('publicationEvidenceDiscoveryCoordinator', null);
         // 0.8.14 — External Evidence Inspection & Locator UX. Optional —
         // absent here (as in a test harness that never provides it),
         // "Inspect Evidence" still shows application/
@@ -308,6 +345,16 @@ export default {
                 // and never touched by loadEvidence()/verifyAnchor(). See
                 // toggleInspect()'s own comment below.
                 inspections: {},
+                // 0.8.16 — Evidence Synchronization UX & Explicit
+                // Historical Discovery. A single ephemeral attempt object
+                // for THIS entry — never keyed by anchorId, since
+                // discovery asks about the whole publication at once, not
+                // one anchor at a time. `null` until "Discover from
+                // Peers" is clicked; see `discoverFromPeers()`'s own
+                // comment below and application/
+                // PublicationEvidenceDiscoveryView.js's own header on the
+                // exact shape.
+                discoveryAttempt: null,
                 // 0.8.11 — Explicit External Anchoring UX. Keyed by
                 // anchorType; ephemeral for the lifetime of this page,
                 // exactly like `verifications` above — never read from or
@@ -499,6 +546,60 @@ export default {
             }
         }
 
+        // 0.8.16 — Evidence Synchronization UX & Explicit Historical
+        // Discovery. The one place this page calls application/
+        // PublicationEvidenceDiscoveryCoordinator.js — always for exactly
+        // ONE publication, always because a person clicked "Discover from
+        // Peers" on it. Never called from onMounted(), refreshList(), or
+        // loadEvidence() — see this file's own header and
+        // docs/Principles.md, "Discovery Is Not Verification, And 'No New
+        // Evidence' Is Not 'No Evidence' (0.8.16)."
+        //
+        // A discovered anchor is already cataloged by the time discover()
+        // resolves — application/PublicationAnchorPeerExchange.js#
+        // _importAndPublish() runs it through the identical validate ->
+        // construct -> verify-SIGNATURE boundary every other arrival
+        // path uses (0.8.4/0.8.5, unchanged) — so re-running
+        // loadEvidence() here is a purely local catalog re-read that
+        // simply picks up what discovery already cataloged, never a
+        // second network call and never a verification of anything.
+        //
+        // A thrown error (a local precondition failure — this coordinator
+        // never reaches the network itself on that path) is caught HERE,
+        // at the UI boundary, and turned into UNAVAILABLE via application/
+        // PublicationEvidenceDiscoveryView.js#describeEvidenceDiscoveryAttempt()
+        // rather than crashing the page — the identical pattern
+        // `createAnchor()` above already established.
+        async function discoverFromPeers(entry) {
+            if (!evidenceDiscoveryCoordinator) return;
+            entry.discoveryAttempt = { discovering: true, result: null, error: null };
+            try {
+                const result = await evidenceDiscoveryCoordinator.discover(entry.publication.id);
+                entry.discoveryAttempt = { discovering: false, result, error: null };
+                loadEvidence(entry);
+                if (result.newlyImportedCount > 0) {
+                    entry.evidenceExpanded = true;
+                }
+            } catch (error) {
+                entry.discoveryAttempt = { discovering: false, result: null, error: error.message };
+            }
+        }
+
+        function discoveryView(entry) {
+            return describeEvidenceDiscoveryAttempt(entry.discoveryAttempt);
+        }
+
+        function discoveryBadgeClass(entry) {
+            const state = discoveryView(entry).state;
+            return DISCOVERY_BADGE_CLASSES[state] || null;
+        }
+
+        function discoveryButtonLabel(entry) {
+            const discovering = Boolean(entry.discoveryAttempt && entry.discoveryAttempt.discovering);
+            const hasDiscovered = Boolean(entry.discoveryAttempt && !discovering);
+            return describeDiscoveryButtonLabel({ discovering, hasDiscovered });
+        }
+
         function creationView(entry, anchorType) {
             return describeCreationAttempt(entry.creationAttempts[anchorType]);
         }
@@ -610,7 +711,8 @@ export default {
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel,
-            toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific
+            toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific,
+            evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel
         };
     },
     template: `
@@ -673,6 +775,28 @@ export default {
                             <button v-if="entry.evidence.count > 0" class="action-btn action-btn--secondary" @click="toggleEvidence(entry)">
                                 {{ entry.evidenceExpanded ? 'Hide Evidence' : 'Show Evidence' }}
                             </button>
+                        </div>
+
+                        <!-- 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
+                             Deliberately NOT triggered by opening this page or expanding "Show
+                             Evidence" above — only this explicit click ever asks a peer for
+                             anything. Hidden entirely when no evidenceDiscoveryCoordinator was
+                             provided, exactly like "Create <type> Anchor" hides with no
+                             creationCoordinator. -->
+                        <div v-if="evidenceDiscoveryCoordinator" class="evidence-discovery">
+                            <div class="evidence-discovery-header">
+                                <button class="action-btn action-btn--secondary"
+                                        :disabled="entry.discoveryAttempt && entry.discoveryAttempt.discovering"
+                                        @click="discoverFromPeers(entry)">
+                                    {{ discoveryButtonLabel(entry) }}
+                                </button>
+                                <span v-if="discoveryView(entry).label" class="peer-badge" :class="discoveryBadgeClass(entry)">
+                                    {{ discoveryView(entry).label }}
+                                </span>
+                            </div>
+                            <p v-if="discoveryView(entry).message" class="form-hint form-hint--neutral">
+                                {{ discoveryView(entry).message }}
+                            </p>
                         </div>
 
                         <!-- 0.8.13 — Multi-Evidence Comparison & Conflict UX. Shown only while

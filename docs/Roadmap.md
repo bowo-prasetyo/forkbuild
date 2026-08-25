@@ -17348,3 +17348,256 @@ codebase holds (e.g. `application/LocalBlueprintAttributionStore.js`,
 `application/LocalBlueprintLineageClaimStore.js`), which this milestone
 deliberately scoped to the anchor catalog alone; and evidence export/
 sharing, still exactly as unbuilt as 0.8.14 left it.
+
+## 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery
+
+`application/PublicationAnchorDiscoveryCoordinator.js` has had the
+machinery for historical synchronization since 0.8.5, and 0.8.15 just
+gave the catalog it feeds durable state — but nothing between those two
+milestones ever gave a PERSON a way to trigger it. Opening the
+Publication Center has always shown exactly what this replica's own
+catalog already holds, and nothing in `ui/` has ever called
+`discoverFromPeers()`; that coordinator's own 0.8.5 header said so
+plainly ("provided here for a future UI to call... this milestone adds
+no such button itself"). The question this milestone asks is not "can
+this replica learn what its peers know" — it always could — but:
+
+> **How does a person EXPLICITLY ask currently authenticated peers for
+> historical evidence, and see, honestly, what that asking did or did
+> not turn up — without conflating "peers had nothing new to offer" with
+> "no evidence exists," and without discovery ever becoming a backdoor
+> into verification?**
+
+```text
+Publication Center
+       │
+       ▼
+Known external evidence ("N anchors known" — unchanged since 0.8.3)
+       │
+       ├── shown immediately, from the durable local catalog (0.8.15)
+       │
+       └── [Discover from Peers]   (NEW — never automatic)
+                  │
+                  ▼
+       PublicationEvidenceDiscoveryCoordinator   (new, application/)
+                  │
+          every AUTHENTICATED peer, registry order
+                  │
+                  ▼
+       PublicationAnchorDiscoveryCoordinator      (0.8.5, UNCHANGED)
+                  │
+             sequential REQUEST/RESPONSE
+                  │
+                  ▼
+       PublicationAnchorPeerExchange / PublicationAnchorExchange
+                  │
+           validate → construct → verify SIGNATURE only
+                  │
+                  ▼
+       LocalPublicationAnchorCatalog → LocalPublicationAnchorStore (0.8.15)
+```
+
+- `application/PublicationEvidenceDiscoveryCoordinator.js` (new) — the
+  thin, application-facing layer this milestone's own design calls for,
+  sitting directly above `PublicationAnchorDiscoveryCoordinator` without
+  changing it. `discover(publicationId, options)` obtains every
+  currently AUTHENTICATED peer from the injected `ConnectedPeerRegistry`,
+  in registry order — the IDENTICAL "authenticated peers, in registry
+  order, never ranked" policy `PublicationAnchorPeerExchange.js#
+  announce()` already bakes in one call away (0.8.4) — hands the full
+  list to `discoverFromPeers()` UNCHANGED, and tallies its own
+  `discovered` result into `newlyImportedCount`/`alreadyKnownCount` from
+  the `isNew` flag `LocalPublicationAnchorCatalog#add()` already computed
+  at import time (0.8.2). No new fields were added to
+  `PublicationAnchorDiscoveryCoordinator` itself for this — `discovered`
+  already carried everything this layer needed. This class never selects
+  a "best" peer, never ranks a peer by speed/reliability/anchor count,
+  never retries on its own, and never imports `ExternalAnchorVerifier`.
+  See this file's own header and docs/Principles.md, "Discovery Is Not
+  Verification, And 'No New Evidence' Is Not 'No Evidence' (0.8.16)."
+- `application/CreatePublicationEvidenceDiscoveryCoordinatorUseCase.js`
+  (new) — takes `anchorDiscoveryCoordinator`/`connectedPeerRegistry` as
+  parameters, constructing neither, the identical shape every sibling
+  `Create*CoordinatorUseCase` in `application/` already holds itself to.
+- `application/PublicationEvidenceDiscoveryUiState.js` (new) — names five
+  states a person can see: `IDLE`, `DISCOVERING`, `DISCOVERED`,
+  `NO_NEW_EVIDENCE`, `UNAVAILABLE`. `NO_NEW_EVIDENCE` means peers were
+  reached and answered with nothing this replica did not already know;
+  `UNAVAILABLE` means the discovery operation itself could not complete
+  (no authenticated peer to ask, or the attempt threw) — the two are
+  never merged, and neither is ever worded as "no evidence exists," the
+  identical restraint `AnchorVerificationOutcome.js` already draws
+  between `PROOF_UNAVAILABLE` and a definite rejection, applied here one
+  layer up, to discovery rather than verification. This is UI state,
+  never domain state — mirroring `ExternalAnchorCreationUiState.js`'s own
+  0.8.11 restraint exactly.
+- `application/PublicationEvidenceDiscoveryView.js` (new) —
+  `describeEvidenceDiscoveryAttempt()` turns an already-computed attempt
+  into one flat, presentation-only shape (`state`, `label`, `message`,
+  `newlyImportedCount`, `alreadyKnownCount`), pure and read-only, mirroring
+  `PublicationAnchorCreationView.js#describeCreationAttempt()`'s own
+  0.8.11 shape exactly. `describeDiscoveryButtonLabel()` is the separate
+  "what should this button say right now" helper ("Discover from Peers"
+  → "Asking Peers…" → "Discover Again").
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each entry's
+  "External Evidence" section now also shows a "Discover from Peers"
+  button directly under the existing "N anchors known" summary line —
+  ALWAYS shown (unlike "Retrieve from Peers," which hides entirely with
+  zero connected peers), because an honest `UNAVAILABLE` result line is
+  this milestone's own answer to "no peer to ask," never a hidden
+  control. Clicking it is the ONLY thing that ever calls
+  `publicationEvidenceDiscoveryCoordinator.discover()` — opening this
+  page, listing known evidence, and expanding "Show Evidence" behave
+  exactly as they did before this milestone, unchanged. A discovered
+  anchor is already cataloged by the time `discover()` resolves (the
+  identical peer-exchange ingestion boundary 0.8.4/0.8.5 already
+  established), so the click handler simply re-runs the existing, purely
+  local `loadEvidence()` afterward to pick it up — never a second network
+  call, never a verification. `entry.discoveryAttempt` is ephemeral
+  per-entry UI state, exactly like `entry.creationAttempts`/
+  `entry.verifications` above it — never read from or written to
+  anything durable.
+- `ui/main.js` (modified) — constructs
+  `publicationEvidenceDiscoveryCoordinator` from the SAME
+  `publicationAnchorDiscoveryCoordinator` instance 0.8.5 already
+  provided, alongside `peerSessionManager.registry` — the SAME
+  `ConnectedPeerRegistry` `publicationAnchorPeerExchange` already
+  attaches every connection to — and provides it alongside everything
+  else this composition root already assembles.
+- `css/main.css` (modified) — `.evidence-discovery`/
+  `.evidence-discovery-header`, styled to sit directly under
+  `.evidence-summary`; `UNAVAILABLE` reuses `.peer-badge--pending`, the
+  same "honestly inconclusive" amber every other `UNAVAILABLE`-shaped
+  state in this view already uses, never the red `.peer-badge--failed`
+  coloring a rejection would use.
+- `tests/PublicationEvidenceDiscoveryUX.test.js` (new) — Section A:
+  `PublicationEvidenceDiscoveryCoordinator` constructor requirements,
+  peer selection (AUTHENTICATED-only, registry order, never reordered or
+  ranked), and `newlyImportedCount`/`alreadyKnownCount` tallying; Section
+  B: the five UI states, with an explicit assertion that
+  `NO_NEW_EVIDENCE`'s own wording never contains anything resembling "no
+  evidence exists"; Section C: INVARIANT — three anchors with different
+  eventual proof outcomes (valid/unavailable/invalid) all discover
+  identically, proven with a call-counting spy showing
+  `ExternalAnchorVerifier.verify` calls = 0; Section D: INVARIANT —
+  discovering the same anchor twice reports 0 new the second time, never
+  duplicates the catalog entry, and never resets `receivedAt`; Section E:
+  INVARIANT — Alice's own local `VALID` verification observation for an
+  anchor never travels to Bob when he discovers that same anchor from
+  her, and the wire record itself carries no verification field to lose
+  in the first place; Section F: FLAGSHIP — Bob receives Anchor A
+  directly from Alice, restarts (A survives through 0.8.15's own
+  persistence alone, no network involved), explicitly discovers Anchor B
+  from Carol (B arrives, cataloged durably), and restarts again (A AND B
+  both survive) — proving persistence and discovery are genuinely
+  separate, composable mechanisms, exactly as this milestone's own design
+  names.
+
+```text
+0.8.15  Persistent External Evidence Catalog & Restart Recovery      ✓
+             │
+             ▼
+0.8.16  Evidence Synchronization UX & Explicit Historical Discovery  ✓
+             ├── application/PublicationEvidenceDiscoveryCoordinator.js
+             │   — new; the application-facing layer above 0.8.5's
+             │   discovery coordinator, picking every AUTHENTICATED peer
+             │   in registry order and tallying newly-imported/
+             │   already-known from isNew alone
+             ├── application/
+             │   CreatePublicationEvidenceDiscoveryCoordinatorUseCase.js
+             │   — new; composition-root wiring, constructs neither
+             │   collaborator
+             ├── application/PublicationEvidenceDiscoveryUiState.js —
+             │   new; IDLE/DISCOVERING/DISCOVERED/NO_NEW_EVIDENCE/
+             │   UNAVAILABLE, structurally distinct, never conflated
+             ├── application/PublicationEvidenceDiscoveryView.js — new;
+             │   pure attempt -> display shape + button label helper
+             ├── ui/views/DecentralizedPublicationsView.js — modified;
+             │   an always-visible, explicit "Discover from Peers"
+             │   action per entry, never triggered by opening the page
+             ├── ui/main.js — modified; wires the new coordinator over
+             │   the SAME discovery coordinator/peer registry instances
+             │   already threaded elsewhere
+             ├── css/main.css — modified; .evidence-discovery styling
+             └── PublicationEvidenceDiscoveryUX.test.js (new) — peer
+                 selection, UI state wording, discovery-never-verifies
+                 spy, duplicate-discovery stability, verification-
+                 history non-propagation, and FLAGSHIP
+                 persistence+discovery round trip
+```
+
+> **Discovery distributes claims a peer already offered through
+> established machinery; it never mints new trust, and finding nothing
+> new is never the same claim as finding nothing at all.** Every anchor
+> this milestone's own UI ever shows arrived through the IDENTICAL
+> validate → construct → verify-SIGNATURE boundary
+> `PublicationAnchorExchange.js` established in 0.8.4 and 0.8.15 already
+> proved holds across a restart — `PublicationEvidenceDiscoveryCoordinator`
+> adds no second way for an anchor to become trusted, only a person's own
+> explicit trigger for asking. And because `NO_NEW_EVIDENCE` and
+> `UNAVAILABLE` are kept permanently distinct — one means "peers answered
+> and had nothing new," the other means "this replica could not
+> presently ask" — a person can never read either as "this publication
+> has no evidence," an authority-like conclusion this codebase has
+> refused to let any single UI state assert since 0.8.3's own "Known
+> Evidence Is Not Verified Evidence, And Verified Evidence Is Not
+> Authority." See docs/Principles.md, "Discovery Is Not Verification, And
+> 'No New Evidence' Is Not 'No Evidence' (0.8.16)," and "Discovery Asks A
+> Collective Question; It Never Asks Which Peer To Trust (0.8.16)."
+
+### Deliberately excluded
+
+- **Automatic discovery on page load, or any background/periodic peer
+  polling.** Opening the Publication Center, listing known evidence, or
+  expanding "Show Evidence" NEVER call
+  `PublicationEvidenceDiscoveryCoordinator#discover()` — only an explicit
+  "Discover from Peers" click does. This is the single most important
+  constraint this milestone's own design named: several prior milestones
+  established "discovery is explicit, resolution is explicit,
+  verification is explicit" one action at a time, and this milestone
+  extends that property rather than quietly ending it the first time a
+  convenient automatic trigger appeared.
+- **Verification during discovery, or any change to when "Verify
+  Evidence" runs.** `PublicationEvidenceDiscoveryCoordinator` never
+  imports `application/ExternalAnchorVerifier.js`; a discovered anchor
+  lands in the ordinary evidence list exactly like any other cataloged
+  one, "Not yet verified," until a person separately clicks "Verify
+  Evidence" on it — proven with a call-counting spy in
+  `tests/PublicationEvidenceDiscoveryUX.test.js`'s own Section C, not
+  merely by omission.
+- **Synchronization of verification observations.** A peer's discovery
+  response has only ever carried plain `PublicationAnchor` envelopes
+  (0.8.5, unchanged) — never a verification outcome, never "which peer
+  told me this was VALID." Section E's own flagship proves Alice's local
+  `VALID` observation for an anchor never reaches Bob merely because he
+  discovers that same anchor from her.
+- **Peer reputation, peer ranking, "nearest"/"fastest"/"most reliable"
+  peer selection, or "most anchors" selection.** Peer selection stays
+  exactly what `PublicationAnchorPeerExchange.js#announce()` already
+  established: every currently AUTHENTICATED peer, in registry order,
+  asked collectively — never a policy that picks one peer over another.
+- **A "best evidence" or "canonical anchor" derivation over discovery
+  results.** `discovered` is reported exactly as `discoverFromPeers()`
+  returns it — unranked, exactly as 0.8.5/0.8.6/0.8.13 already established
+  for every other multi-anchor view in this codebase.
+- **Automatic conflict resolution, automatic anchor creation, or
+  automatic Bitcoin verification triggered by a discovery result.** A
+  newly discovered anchor is shown; nothing about it is ever acted on
+  automatically.
+- **A durable, cross-restart record of discovery ATTEMPTS.**
+  `entry.discoveryAttempt` is ephemeral per-page UI state, exactly like
+  `entry.verifications`/`entry.creationAttempts` — reopening the
+  Publication Center always starts back at `IDLE`; nothing about "when
+  was this publication last checked against peers" is ever persisted.
+  (The evidence itself IS durable — that is 0.8.15's own, unchanged,
+  contribution — only the fact of having asked is not.)
+- **Synchronization of any OTHER UI state** (which section is expanded,
+  which anchor's inspection panel is open, etc.). Unchanged from every
+  prior milestone.
+
+What's left, and deliberately unbuilt: relayed/transitive discovery (this
+replica asking a peer to ask ITS peers on this replica's own behalf —
+0.8.5's own "Deliberately excluded" list already declined this, and
+0.8.16 does not revisit it); a durable log of past discovery attempts for
+a person to review; and evidence export/sharing, still exactly as unbuilt
+as 0.8.14/0.8.15 left it.

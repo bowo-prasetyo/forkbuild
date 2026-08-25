@@ -35,6 +35,7 @@ import { CreatePublicationResolutionCoordinatorUseCase } from '../application/Cr
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
 import { CreatePublicationAnchorPeerExchangeUseCase } from '../application/CreatePublicationAnchorPeerExchangeUseCase.js';
 import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../application/CreatePublicationAnchorDiscoveryCoordinatorUseCase.js';
+import { CreatePublicationEvidenceDiscoveryCoordinatorUseCase } from '../application/CreatePublicationEvidenceDiscoveryCoordinatorUseCase.js';
 import { CreateExternalAnchorVerifierUseCase } from '../application/CreateExternalAnchorVerifierUseCase.js';
 import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/CreateBitcoinAnchorProofVerifierUseCase.js';
 import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/CreatePublicationEvidenceCoordinatorUseCase.js';
@@ -374,6 +375,21 @@ const { catalog: publicationAnchorCatalog, peerExchange: publicationAnchorPeerEx
 const { discoveryCoordinator: publicationAnchorDiscoveryCoordinator } = new CreatePublicationAnchorDiscoveryCoordinatorUseCase().execute({
     peerExchange: publicationAnchorPeerExchange
 });
+
+// 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
+// The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
+// this milestone's own design calls for — it wraps the SAME coordinator
+// (never a second one) alongside `peerSessionManager.registry`, the
+// identical `ConnectedPeerRegistry` instance `publicationAnchorPeerExchange`
+// above already attaches every connection to, so "authenticated peers, in
+// registry order" means the same thing here it already means for
+// `announce()`. Provided here for ui/views/DecentralizedPublicationsView.js's
+// own explicit "Discover from Peers" action — see application/
+// PublicationEvidenceDiscoveryCoordinator.js's own header.
+const { coordinator: publicationEvidenceDiscoveryCoordinator } = new CreatePublicationEvidenceDiscoveryCoordinatorUseCase().execute({
+    anchorDiscoveryCoordinator: publicationAnchorDiscoveryCoordinator,
+    connectedPeerRegistry: peerSessionManager.registry
+});
 const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute();
 const { externalAnchorVerifier } = new CreateExternalAnchorVerifierUseCase().execute({
     proofVerifiers: [bitcoinProofVerifier]
@@ -487,6 +503,8 @@ app.provide('publicationAnchorCreationCoordinator', publicationAnchorCreationCoo
 app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 // 0.8.5 — Historical Anchor Discovery & Synchronization.
 app.provide('publicationAnchorDiscoveryCoordinator', publicationAnchorDiscoveryCoordinator);
+// 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
+app.provide('publicationEvidenceDiscoveryCoordinator', publicationEvidenceDiscoveryCoordinator);
 // 0.8.14 — External Evidence Inspection & Locator UX.
 app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegistry);
 app.use(router);
