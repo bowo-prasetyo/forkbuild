@@ -1,5 +1,7 @@
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LocalPublicationAnchorCatalog } from './LocalPublicationAnchorCatalog.js';
+import { LocalPublicationAnchorStore } from './LocalPublicationAnchorStore.js';
+import { RestorePublicationAnchorCatalogUseCase } from './RestorePublicationAnchorCatalogUseCase.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PublicationAnchorExchange } from './PublicationAnchorExchange.js';
 import { PublicationAnchorPeerExchange } from './PublicationAnchorPeerExchange.js';
@@ -31,14 +33,31 @@ import { PublicationAnchorPeerExchange } from './PublicationAnchorPeerExchange.j
 // never constructed here — both are shared, app-wide collaborators (see
 // ui/main.js) application/PublicationAnchorPeerExchange.js's own header
 // already documents as never owned by it.
+//
+// 0.8.15 — Persistent External Evidence Catalog & Restart Recovery.
+//
+// Now also constructs the durable application/
+// LocalPublicationAnchorStore.js `catalog` delegates to, and runs
+// application/RestorePublicationAnchorCatalogUseCase.js over it — ONCE,
+// synchronously, before `exchange`/`peerExchange` are ever handed to a
+// caller — so any record left over from a PRIOR process that no longer
+// re-validates or re-verifies is pruned before this replica's UI can ever
+// read it through `catalog`. Returns the restore pass's own result
+// (`restoredAnchors`/`rejectedAnchors`) alongside everything this use
+// case already returned, purely informational — see that class's own
+// header for what each field means.
 export class CreatePublicationAnchorPeerExchangeUseCase {
     execute({ peerMessageBus, connectedPeerRegistry } = {}) {
         const storageProvider = new LocalStorageProvider();
         const catalog = new LocalPublicationAnchorCatalog(storageProvider);
+        const store = new LocalPublicationAnchorStore(storageProvider);
         const verifier = new LocalAuthorizationVerifier();
+
+        const restoreResult = new RestorePublicationAnchorCatalogUseCase(store, verifier).execute();
+
         const exchange = new PublicationAnchorExchange(catalog, verifier);
         const peerExchange = new PublicationAnchorPeerExchange(exchange, peerMessageBus, connectedPeerRegistry);
 
-        return { catalog, exchange, peerExchange, verifier };
+        return { catalog, exchange, peerExchange, verifier, restoreResult };
     }
 }

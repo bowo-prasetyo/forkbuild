@@ -17115,3 +17115,236 @@ above, since it is a verification-shaped question, not an inspection-
 shaped one), and evidence export/sharing — each its own, separately
 sized milestone, exactly like every "Deliberately excluded" list in this
 document before it.
+
+## 0.8.15 — Persistent External Evidence Catalog & Restart Recovery
+
+Every milestone from 0.8.2 through 0.8.14 built on top of one quiet
+assumption: that `application/LocalPublicationAnchorCatalog.js` would
+simply be there, already populated, the moment any of them asked it a
+question. It always was — the catalog has taken a `StorageProvider`
+since 0.8.2 and written every `add()` straight through it — but nothing
+in this codebase had ever NAMED that durability as its own concern, or
+drawn a boundary around what a restarted replica is entitled to trust
+about what it finds sitting in storage. A catalog read
+(`get()`/`list()`) has always turned whatever JSON happened to be on
+file directly into a `PublicationAnchor` instance, with no re-validation
+and no signature check — exactly appropriate for a record THIS replica's
+own process wrote (it already passed application/
+PublicationAnchorExchange.js's own validate → construct → verify-
+signature gate on the way in), and exactly the wrong amount of trust for
+whatever was already sitting in storage before this process started,
+which could just as easily be bit rot, a bug in an earlier version of
+this codebase, or a hand-edited devtools entry. The question this
+milestone asks is not "does the catalog survive a restart" — it always
+did — but:
+
+> **What is this replica actually entitled to trust about a record it
+> did not just receive, but merely FOUND already sitting in storage —
+> and where, precisely, does that trust get re-earned?**
+
+```text
+Peer / Package / Local creation
+            │
+            ▼
+PublicationAnchorExchange     (validate → construct → verify SIGNATURE)
+            │
+            ▼
+LocalPublicationAnchorCatalog ───────────────► LocalPublicationAnchorStore
+            │                    (0.8.2, unchanged     (new, THIS MILESTONE —
+            │                     public API)            durable bytes only,
+            ▼                                            never verified,
+   Discovery / Inspection /                              never hydrated)
+   Comparison / Verification                                     │
+                                                                   │ restart
+                                                                   ▼
+                                              RestorePublicationAnchorCatalogUseCase
+                                                (new — validate → construct →
+                                                 verify SIGNATURE, prune what fails,
+                                                 NEVER ExternalAnchorVerifier)
+```
+
+- `application/LocalPublicationAnchorStore.js` (new) — the durable half
+  of a split that already existed informally inside application/
+  LocalPublicationAnchorCatalog.js's own storage access, now named and
+  given a seam of its own: `save(anchor, receivedAt)` /
+  `get(anchorId)` / `has(anchorId)` / `remove(anchorId)` / `list()`.
+  DELIBERATELY DUMB — this class never imports core/PublicationAnchor.js,
+  never validates, never constructs, and never checks a signature.
+  `get()`/`list()` hand back the RAW envelope (`{ anchor: <plain JSON>,
+  receivedAt: <ISO string> }`), never a hydrated instance, because from
+  this class's own point of view whatever is in storage is exactly as
+  untrusted as a peer message or an imported package — see docs/
+  Principles.md, "A Persistent Store Is An Untrusted Byte Source, Not A
+  Second Trust Root (0.8.15)." `has()`/`get()`/`list()`/`remove()` are
+  all defensive against a malformed entry already on file (even a bare
+  `null`) — a garbage record never crashes a read, it just never matches
+  anything. `save()` enforces first-seen-wins itself (a re-save of an id
+  already on file is a no-op, never resetting `receivedAt`), rather than
+  merely relying on a caller to check first.
+
+- `application/LocalPublicationAnchorCatalog.js` (modified, internals
+  only) — constructor signature, every public method, and every observed
+  behavior are UNCHANGED; every one of the roughly twenty existing call
+  sites across `application/`, `ui/`, and `tests/` keeps working
+  identically, unmodified. What changed is that this class now delegates
+  to an internally constructed `LocalPublicationAnchorStore` instead of
+  calling a `StorageProvider` directly — the catalog remains the one
+  place that turns a raw stored envelope into a real `PublicationAnchor`
+  (still via `PublicationAnchor.fromJSON()`, still with no signature
+  re-check on an ordinary read), while the STORE underneath it becomes
+  the one place a startup restoration pass can reach in and prune a
+  record that no longer earns that trust.
+
+- `application/RestorePublicationAnchorCatalogUseCase.js` (new) — runs
+  ONCE, explicitly, at startup: walks every record application/
+  LocalPublicationAnchorStore.js has on file and re-runs each one through
+  the IDENTICAL validate → construct → verify-SIGNATURE boundary
+  application/PublicationAnchorExchange.js#importAnchor() already
+  established for an anchor arriving from a stranger over a peer
+  connection — and deliberately stops there. It never imports application/
+  ExternalAnchorVerifier.js, never touches the network, and never
+  re-checks whether the external system a restored anchor names actually
+  recorded anything; restarting this replica is an occasion to re-earn
+  trust in the CLAIM, never to re-litigate its PROOF. A record that fails
+  either step is PRUNED (removed from the store, not merely skipped) and
+  reported in `rejectedAnchors`, categorized `INVALID_STRUCTURE` or
+  `INVALID_SIGNATURE` — the identical per-entry-tolerant, categorized
+  rejection shape application/ImportPackageAnchorsUseCase.js already
+  established for a package's own bundled anchors (0.8.7). A record that
+  passes is reported in `restoredAnchors`, purely informationally — this
+  class never calls `catalog.add()` and never touches `receivedAt`,
+  because the catalog was never actually unpopulated to begin with (see
+  this class's own header). See docs/Principles.md, "Restoration Re-Earns
+  Trust In The Claim; It Never Re-Asks The External System (0.8.15)."
+
+- `application/CreatePublicationAnchorPeerExchangeUseCase.js` (modified)
+  — the composition root ui/main.js already used as "the one
+  `LocalPublicationAnchorCatalog` instance the replica uses anywhere"
+  (0.8.4's own header) now also constructs the durable
+  `LocalPublicationAnchorStore` `catalog` delegates to, and runs
+  `RestorePublicationAnchorCatalogUseCase` over it synchronously, before
+  `exchange`/`peerExchange` are ever handed back — so a page reload
+  prunes anything left over from a prior process before this replica's
+  own UI can ever read it through `catalog`. The restore pass's own
+  result (`restoredAnchors`/`rejectedAnchors`) is returned alongside
+  everything this use case already returned, purely informational; no UI
+  surfaces it — see "Deliberately excluded," below.
+
+- `tests/PersistentPublicationAnchorCatalog.test.js` (new) — Section A:
+  `LocalPublicationAnchorStore` CRUD, first-seen-wins, and defensive
+  reads over a deliberately corrupted raw backend; Section B: proves
+  `LocalPublicationAnchorCatalog` and an independently constructed
+  `LocalPublicationAnchorStore` share ONE physical storage, not a copy —
+  a write through one is immediately visible through the other; Section
+  C: `RestorePublicationAnchorCatalogUseCase` constructor requirements, a
+  genuinely signed record restoring cleanly, a structurally malformed AND
+  a well-formed-but-forged record both rejected AND pruned, and a
+  call-counting spy proving `ExternalAnchorVerifier` is never once
+  consulted; Section D: FLAGSHIP — Alice signs four anchors (three
+  independent ones for the same publication, one for another); Bob
+  catalogs all four through the ordinary import boundary in "process #1";
+  Bob's process ends; a brand-new "process #2" — fresh catalog/store/
+  exchange instances built over the SAME underlying storage, nothing else
+  carried over — restores at startup and re-discovers the identical
+  anchor set, `toJSON()` byte-identical, `receivedAt` UNCHANGED,
+  first-seen-wins intact on a re-arrival after restart, all three
+  independent anchors for the shared publication still unranked, and an
+  anchor Bob explicitly verified as `VALID` in process #1 reads back as
+  `NOT_VERIFIED` in process #2's own fresh, empty, session-local
+  verification history.
+
+```text
+0.8.14  External Evidence Inspection & Locator UX                    ✓
+             │
+             ▼
+0.8.15  Persistent External Evidence Catalog & Restart Recovery      ✓
+             ├── application/LocalPublicationAnchorStore.js — new; the
+             │   named durability seam — save/get/has/remove/list over
+             │   RAW, never-hydrated, never-verified envelopes
+             ├── application/LocalPublicationAnchorCatalog.js —
+             │   internals only; delegates to the store; public API and
+             │   every existing caller's behavior unchanged
+             ├── application/RestorePublicationAnchorCatalogUseCase.js —
+             │   new; validate → construct → verify SIGNATURE, prune what
+             │   fails, NEVER ExternalAnchorVerifier
+             ├── application/CreatePublicationAnchorPeerExchangeUseCase.js
+             │   — modified; runs restoration once, at startup, before
+             │   returning the catalog to any caller
+             └── PersistentPublicationAnchorCatalog.test.js (new) — store
+                 CRUD + defensive reads, shared-storage proof, restoration
+                 categorization/pruning/verifier-spy, and FLAGSHIP restart
+                 round trip (byte preservation, receivedAt, first-seen-
+                 wins, verification non-persistence, multi-anchor
+                 survival)
+```
+
+> **Persistence stores the claim, never its interpretation.** A restored
+> `PublicationAnchor` is byte-identical to the one that was originally
+> cataloged, and its `receivedAt` is exactly what THIS replica first
+> recorded, never the moment restoration happened to run — but nothing
+> about whether it was ever independently verified, what outcome that
+> verification reached, or whether it was ever considered stale travels
+> with it. `application/PublicationAnchorVerificationObservation.js`'s
+> own 0.8.12 header already said this plainly — "NEVER PERSISTED, NEVER
+> SHARED" — 0.8.15 is the milestone that actually puts a restart between
+> "verified" and "asked again," and proves the gap holds:
+> `tests/PersistentPublicationAnchorCatalog.test.js`'s own flagship has
+> Bob verify an anchor VALID, restart, and finds it NOT_VERIFIED again in
+> the new process's own empty session state. This is the identical
+> restraint 0.8.12 first drew for a single session extended across a
+> process boundary — see docs/Principles.md, "Observations Describe What
+> A Replica Established At A Particular Time; They Do Not Become
+> Properties Of The Anchor (0.8.12)," and this milestone's own two new
+> entries, "A Persistent Store Is An Untrusted Byte Source, Not A Second
+> Trust Root (0.8.15)" and "Restoration Re-Earns Trust In The Claim; It
+> Never Re-Asks The External System (0.8.15)."
+
+### Deliberately excluded
+
+- **Persisting `verified`, `verificationOutcome`, `everValid`, or any
+  other derived/observational field onto a stored anchor record.** The
+  store's own envelope is exactly `{ anchor, receivedAt }` — identical to
+  what application/LocalPublicationAnchorCatalog.js already persisted
+  before this milestone — never widened to carry a verification result.
+- **Automatic re-verification, or any external proof check, on restore.**
+  `application/RestorePublicationAnchorCatalogUseCase.js` never imports
+  `application/ExternalAnchorVerifier.js` — restoring an anchor is never
+  an occasion to automatically re-ask a block explorer, or anything else,
+  whether its proof still holds. A person still clicks "Verify Evidence"
+  explicitly, exactly as 0.8.3 first established.
+- **Anchor expiration, revocation, or any time-based invalidation of a
+  stored record.** A restored anchor that is a year old restores exactly
+  as cleanly as one from a minute ago; this milestone adds no concept of
+  a record going stale merely by sitting in storage.
+- **Conflict resolution, preferred-anchor selection, or reputation of any
+  kind carried through a restart.** Unchanged from 0.8.6/0.8.13 — several
+  independent anchors for one publication restore as several independent
+  anchors, still unranked, still none canonical.
+- **Automatic peer synchronization triggered by restoration.** Restoring
+  what this replica already had on file is a purely local operation;
+  nothing about `application/PublicationAnchorPeerExchange.js`'s own
+  0.8.4/0.8.5 behavior changes, and restoration never itself issues a
+  REQUEST for anything this replica is missing.
+- **A UI surface for restoration results.** `restoreResult` is returned
+  from `application/CreatePublicationAnchorPeerExchangeUseCase.js` purely
+  for a future caller (or a test) to inspect; nothing in `ui/` reads or
+  displays it. A person never sees "N anchors restored, M rejected"
+  anywhere on screen — evidence simply appears exactly where it always
+  did, per this milestone's own "Making the catalog durable should
+  require little or no change to evidence UX" design goal.
+- **A second persistence mechanism, or a change to `core/
+  PublicationAnchor.js`'s own schema.** `application/
+  LocalPublicationAnchorStore.js` persists the identical envelope shape
+  application/LocalPublicationAnchorCatalog.js already wrote before this
+  milestone; nothing about a `PublicationAnchor`'s own fields, its
+  `toJSON()`, or its signing descriptor changed.
+
+What's left, and deliberately unbuilt: a durable, cross-restart record of
+`rejectedAnchors` for a person to inspect later (today, a pruned record
+is simply gone the moment restoration runs — there is no "quarantine" or
+"recently rejected evidence" log anywhere); the identical restoration
+discipline applied to any OTHER durable, signed-envelope local store this
+codebase holds (e.g. `application/LocalBlueprintAttributionStore.js`,
+`application/LocalBlueprintLineageClaimStore.js`), which this milestone
+deliberately scoped to the anchor catalog alone; and evidence export/
+sharing, still exactly as unbuilt as 0.8.14 left it.
