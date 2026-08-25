@@ -27,6 +27,7 @@ import { describeCreationAttempt as describePlacementCreationAttempt, describeCr
 import { createResolutionObservation } from '../../application/SnapshotPlacementResolutionObservation.js';
 import { deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote } from '../../application/SnapshotPlacementLifecycleView.js';
 import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/PublicationDecentralizationView.js';
+import { describePublicationReplicaKnowledge } from '../../application/PublicationReplicaKnowledgeView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -562,6 +563,13 @@ export default {
                 // a knowledge/provenance record — see that file's own
                 // header on why neither has a parameter here at all.
                 decentralization: null,
+                // 0.8.28 — Offline Publication Reconstruction & Replica
+                // Knowledge. `entry.decentralization` above, plus exactly
+                // one new fact: whether THIS replica has ever cataloged
+                // the publication envelope itself. Recomputed alongside
+                // `decentralization` — see `recomputeReplicaKnowledge()`
+                // below.
+                replicaKnowledge: null,
                 // 0.8.25 — Explicit Snapshot Placement Creation UX. Keyed
                 // by storage type; ephemeral for the lifetime of this
                 // page, exactly like `creationAttempts` above — never
@@ -636,6 +644,25 @@ export default {
         function recomputeDecentralization(entry) {
             entry.decentralization = describePublicationDecentralization({
                 publicationId: entry.publication.id,
+                evidenceConvergenceView: entry.convergenceView,
+                placementConvergenceView: entry.placementConvergenceView
+            });
+            recomputeReplicaKnowledge(entry);
+        }
+
+        // 0.8.28 — Offline Publication Reconstruction & Replica
+        // Knowledge. `entry.publication` came from `catalog.list()` in
+        // the first place (see `refreshList()` above), so `hasPublication`
+        // is always true for an entry already on screen here — this
+        // still calls `catalog.has()` explicitly, rather than hard-coding
+        // `true`, so this function stays correct if a future caller ever
+        // builds an entry from something other than the catalog's own
+        // list. Never touches the network, a verifier, or a resolver —
+        // see application/PublicationReplicaKnowledgeView.js's own header.
+        function recomputeReplicaKnowledge(entry) {
+            entry.replicaKnowledge = describePublicationReplicaKnowledge({
+                publicationId: entry.publication.id,
+                hasPublication: catalog.has(entry.publication.id),
                 evidenceConvergenceView: entry.convergenceView,
                 placementConvergenceView: entry.placementConvergenceView
             });
@@ -1224,6 +1251,17 @@ export default {
                     <div v-if="entry.decentralization && (entry.decentralization.evidence.anchorCount > 0 || entry.decentralization.placements.placementCount > 0)"
                          class="decentralization-summary">
                         <span class="evidence-convergence-title">Decentralization</span>
+                        <!-- 0.8.28 — Offline Publication Reconstruction & Replica
+                             Knowledge. One plain fact ahead of the two dimension
+                             cards: does this replica have the publication itself
+                             cataloged, independent of how many anchor/placement
+                             claims it happens to also know. Never a completeness
+                             score, and never gated behind a "verified"/"resolved"
+                             check — see application/
+                             PublicationReplicaKnowledgeView.js's own header. -->
+                        <p v-if="entry.replicaKnowledge" class="form-hint form-hint--neutral">
+                            Publication: {{ entry.replicaKnowledge.hasPublication ? 'known locally' : 'not known locally' }}
+                        </p>
                         <div class="decentralization-dimensions">
                             <div class="decentralization-dimension">
                                 <span class="decentralization-dimension-title">External Evidence</span>

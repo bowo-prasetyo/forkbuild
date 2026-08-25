@@ -20204,3 +20204,105 @@ has ever built — creation, inspection, resolution, verification,
 convergence, lifecycle, provenance, and now this milestone's own
 side-by-side view — is in place on both sides; the offline
 reconstruction question itself has never been asked directly.
+
+## 0.8.28 — Offline Publication Reconstruction & Replica Knowledge
+
+0.8.27 asked "what does this replica know?" for evidence and placements
+side by side, but never asked the question a genuinely decentralized
+replica exists to answer: what can it know about a publication when the
+original publisher, every peer, and every external system are
+simultaneously unavailable? This milestone answers it directly, and does
+the smallest possible thing that could be called "answering": it adds
+exactly ONE new fact to `application/PublicationDecentralizationView.js`'s
+own result — `hasPublication`, whether this replica has ever cataloged
+the publication envelope itself (`application/LocalPublicationCatalog.js#
+has()`, 0.7.2) — and computes nothing else new.
+
+This milestone deliberately does NOT create a `DecentralizedPublication`
+domain object combining `Publication`, `PublicationAnchor`, and
+`PublicationSnapshotPlacement` — 0.8.27's own "Deliberately excluded"
+list already rejected that, and nothing here reopens it. Instead:
+`application/PublicationReplicaKnowledgeView.js#
+describePublicationReplicaKnowledge()` wraps `application/
+PublicationDecentralizationView.js#describePublicationDecentralization()`
+unchanged, adding the one new boolean beside its two dimension objects.
+
+- `application/PublicationReplicaKnowledgeView.js` (new) —
+  `describePublicationReplicaKnowledge({ publicationId, hasPublication,
+  evidenceConvergenceView, placementConvergenceView })`, pure and
+  stateless: no catalog, no store, no coordinator, no network. Returns
+  `{ publicationId, hasPublication, evidence: {...}, placements: {...} }`
+  — `evidence`/`placements` are `application/
+  PublicationDecentralizationView.js`'s own shape, byte-for-byte
+  unmodified. `hasPublication` coerces whatever it is handed to a plain
+  boolean and defaults to `false`, never `true`, when omitted. Re-exports
+  `describeDecentralizationRelationshipContrast()` unchanged — it reads
+  the identical `evidence`/`placements` shape either view produces.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each entry now
+  also keeps `entry.replicaKnowledge`, recomputed by
+  `recomputeReplicaKnowledge()` from `catalog.has(entry.publication.id)`
+  plus the same two convergence views `recomputeDecentralization()`
+  already uses, called from inside that same function so it is never
+  stale. Rendered as one plain-language line — "Publication: known
+  locally" / "Publication: not known locally" — at the top of the
+  existing "Decentralization" summary, never a new disclosure and never
+  gated behind a verification or resolution check.
+- `tests/PublicationReplicaKnowledgeView.test.js` (new) — Section A:
+  argument handling, including that `hasPublication` coerces any truthy
+  value to `true` and defaults to `false`, and that it is the ONLY field
+  this view adds over 0.8.27's own shape; Section B — FLAGSHIP: Alice
+  creates a publication, an anchor, and a placement, then is never
+  connected to anyone anywhere else in the test. Bob starts knowing
+  nothing, imports a Blueprint Package (Anchor A, Placement A) and a
+  hand-delivered publication envelope while entirely offline — no
+  network object exists in that part of the test at all — and derives a
+  complete replica knowledge view: publication known, one anchor, one
+  placement. Bob's knowledge then grows over a live peer connection to
+  Carol (Anchor B, Placement B, both agreeing) — Alice remains offline
+  throughout. External systems are then simulated unavailable (an anchor
+  verification observation reading `PROOF_UNAVAILABLE`, a placement
+  resolution observation reading `CONTENT_UNAVAILABLE`), and Bob's
+  replica knowledge view is proven byte-identical before and after. Bob
+  then "restarts" — fresh catalog/store instances over the identical
+  underlying storage — and his replica knowledge view is proven
+  byte-identical again: the publication, both anchors, both placements,
+  and each claim's own acquisition provenance all survive; only the
+  ephemeral, per-process observations could ever have changed, and they
+  were never part of this view to begin with. A closing regex sweep
+  finds no adjudicating, scoring, acquisition, lifecycle, or identity-name
+  vocabulary anywhere in the final serialized view.
+
+> **Replica knowledge describes what this replica possesses, not what
+> the world has proven.** See `docs/Principles.md`, "Replica Knowledge
+> Describes What This Replica Possesses, Not What The World Has Proven
+> (0.8.28)."
+
+### Deliberately excluded
+
+- **A `DecentralizedPublication` domain aggregate, again.** 0.8.27's own
+  "Deliberately excluded" list already rejected combining `Publication`,
+  `PublicationAnchor`, and `PublicationSnapshotPlacement` into one class.
+  This milestone reopens nothing: `hasPublication` is a plain boolean a
+  caller already computed, never a record this file looks up, wraps, or
+  stores.
+- **A numeric completeness or confidence score.** Considered and
+  rejected — a `completeness: 73%` or `confidence: 91%` field would
+  manufacture false precision over what are genuinely just structural
+  counts, and would immediately imply that a replica with more known
+  claims is more trustworthy than one with fewer. This file exposes
+  `hasPublication`/`anchorCount`/`placementCount` and nothing scored,
+  ranked, or averaged.
+- **Automatic content retrieval during knowledge derivation.** Considered
+  and rejected — `describePublicationReplicaKnowledge()` never downloads
+  a placement's snapshot and never queries an anchor's external system.
+  Knowing a claim exists and establishing that it currently holds up
+  stay two separate, explicit operations, exactly as 0.8.1's
+  `application/ExternalAnchorVerifier.js` and 0.8.18's `application/
+  SnapshotPlacementResolver.js` already drew that line.
+- **Folding verification/resolution state into the replica knowledge
+  view.** `entry.verifications`/`entry.resolutions` (however a caller
+  tracks them) stay exactly where 0.8.12/0.8.17/0.8.20/0.8.24/0.8.26
+  already put them — underneath the individual anchor/placement card,
+  never inside `entry.replicaKnowledge` itself. The flagship test proves
+  this as an invariant: the view is byte-identical whether or not those
+  observations have ever been made.
