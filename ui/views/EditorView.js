@@ -151,6 +151,7 @@ export default {
                         :align="alignSelection"
                         :distribute="distributeSelection"
                         :repeat="repeatSelection"
+                        :select-group="selectGroup"
                     />
                 </div>
                 <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
@@ -1004,6 +1005,22 @@ export default {
             refreshSelectionSummary();
         }
 
+        // EditingSidebar's own host callback for picking WHICH group the
+        // Advanced actions (Rename/Duplicate/Delete/+Sel/-Sel) act on —
+        // those all read EditorSession's _selectedGroupId, and nothing
+        // in the sidebar's group list ever set it, so every Advanced
+        // button stayed permanently disabled (a disabled <button> fires
+        // no click at all) no matter which group you meant. Unlike
+        // repeatSelection() above, selectGroup() is deliberately session
+        // state only — no command, no documentManager.onStateChanged()
+        // — so this bumps documentVersion itself to force
+        // getActionContext()'s callers (EditingSidebar/CommandPalette)
+        // to notice hasSelectedGroup/selectedGroupId actually changed.
+        function selectGroup(groupId) {
+            editorSession.selectGroup(groupId);
+            documentVersion.value++;
+        }
+
         function rotateSelectedPlacement(deltaRotation) {
             editorSession.rotateSelection(deltaRotation);
             refreshSelectedPlacementInfo();
@@ -1173,6 +1190,18 @@ export default {
         const actionUi = {
             togglePalette() {
                 paletteOpen.value = !paletteOpen.value;
+            },
+            // group.rename's own input-collection hook (same posture as
+            // structure.createFromSelection's ui.promptCreateStructure()
+            // below): EditorActionRegistry's execute() can't collect a
+            // new name itself, and renameSelectedGroup(name) has no
+            // default — called with none (the pre-fix behavior) it
+            // silently renamed the group to undefined. A native prompt,
+            // exactly ui/components/GroupsPanel.js's own (unused)
+            // renameGroup() already used, pre-filled with the current
+            // name; null means Cancel.
+            promptRenameGroup(currentName = '') {
+                return prompt('New group name:', currentName || '');
             },
             focusNumeric: null,
             // 0.6.3 — Blueprint Authoring & Versioning UX. Supersedes the
@@ -1591,6 +1620,7 @@ export default {
             editSelectedPlacementSource,
             applySelectedPlacementTransform,
             repeatSelection,
+            selectGroup,
             actionRegistry,
             getActionContext,
             actionUi,
