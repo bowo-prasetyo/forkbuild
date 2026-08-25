@@ -10668,3 +10668,80 @@ a validity window or an expiration — there is no code path anywhere in
 this milestone that reads an old observation instead of asking again.
 
 See `docs/Roadmap.md`, 0.8.12, for the full milestone entry.
+
+### Evidence Comparison Is Not Adjudication (0.8.13)
+
+`docs/Principles.md`, "Evidence Relationships Are Derived, Never
+Adjudicated (0.8.6)," drew the line for the DERIVATION: `application/
+PublicationEvidenceConvergence.js` may say that several anchors agree
+or disagree, and exactly how, and never anything about which one is
+right. 0.8.13 is the first milestone that puts that derivation on a
+screen a person actually looks at, which raises the identical question
+one layer up: can a PRESENTATION of a structural fact smuggle in the
+verdict the derivation itself refused to make? A content-hash group
+with two anchors and one with a single anchor are, honestly, different
+sizes — the temptation to let the bigger one look more legitimate is a
+presentation-layer temptation, not a data one, and this milestone's own
+design conversation named it directly before writing a line of UI code.
+
+**A larger content-hash group is never styled, ordered, worded, or
+counted as more likely correct than a smaller one.** `application/
+PublicationEvidenceConvergenceView.js#publicationEvidenceConvergenceView()`
+returns `contentGroups` sorted the identical deterministic way
+`application/PublicationEvidenceConvergence.js`'s own `contentHashGroups`
+already is — by `contentHash`, never by size — and `ui/views/
+DecentralizedPublicationsView.js` lays every group out as an
+equal-sized card in a row. Two anchors claiming Hash A and one claiming
+Hash B renders as "Hash A — 2 anchors" beside "Hash B — 1 anchor,"
+never as a ranked list, never with the larger group first by virtue of
+being larger, and never in a font, color, or position that reads as
+"more likely true." `tests/PublicationEvidenceConvergenceView.test.js`'s
+own Section B and flagship both scan the derived view's serialized form
+for "authority," "trust," "winner," "consensus," "correct," "malicious,"
+"reject," "best," "preferred," "confident," and "likely" — the identical
+sweep `tests/PublicationEvidenceConvergence.test.js`'s own flagship
+already ran one layer down, now proven to hold through the presentation
+shaping too.
+
+**`application/ContentBindingSetRelationship.js`'s own vocabulary is
+deliberately two values, and deliberately those two.** `AGREEMENT`/
+`CONFLICT` name a structural fact about the evidence SET — do these
+claims match each other or not — and nothing else was ever a candidate
+kept out of the final file: no `TRUSTED`/`UNTRUSTED`, no `BEST`/
+`PREFERRED`, no `CONFIDENT`/`LIKELY`. The one sentence this milestone
+writes to the screen when a conflict exists —
+`describeContentBindingSetRelationship()`'s "Evidence claims disagree
+about the content hash — N different content hashes are each claimed by
+at least one anchor" — says only that a conflict exists and how many
+claims are in it, never which claim a reader should believe.
+
+**Verification observations sit ALONGSIDE the structural comparison,
+never inside it.** `ui/views/DecentralizedPublicationsView.js`'s own
+`recomputeConvergence()` still passes this replica's own local
+`verificationByAnchorId` map into `derivePublicationEvidenceConvergence()`
+exactly as 0.8.6 already allowed, so each anchor's own `verification`
+field stays populated — but `publicationEvidenceConvergenceView()`'s own
+`contentGroups`/`hasConflict` never read that field at all, and `tests/
+PublicationEvidenceConvergenceView.test.js`'s own flagship proves it
+directly: Bob verifies three anchors for the identical publication with
+three DIFFERENT outcomes (`VALID`/`PROOF_UNAVAILABLE`/`INVALID_PROOF`),
+and the derived convergence view — `contentGroups`, `hasConflict`,
+`relationship`, `conflictDescription` — is asserted byte-identical
+before and after. An anchor independently verified and one whose
+verification is currently unavailable remain grouped under the
+identical content hash, exactly as honestly as they would have been had
+neither ever been checked at all.
+
+**No batch "Verify All" action exists, and none should be added under
+this milestone's own reasoning.** Each anchor keeps the individual,
+explicit "Verify Evidence"/"Verify Again" control 0.8.3 and 0.8.11
+already established — see those milestones' own `docs/Principles.md`
+entries, "Known Evidence Is Not Verified Evidence, And Verified Evidence
+Is Not Authority (0.8.3)" and "External Anchoring Is An Explicit User
+Action (0.8.11)." A batch action would not itself rank anchors, but it
+would quietly recast external verification as routine background
+housekeeping rather than a deliberate act a person chooses, one claim at
+a time — the same restraint those two milestones already drew, extended
+here rather than crossed.
+
+See `docs/Roadmap.md`, 0.8.13, for the full milestone entry.

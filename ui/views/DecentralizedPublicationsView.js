@@ -9,6 +9,8 @@ import { ExternalAnchorCreationOutcome } from '../../application/ExternalAnchorC
 import { describeCreationAttempt, describeCreationButtonLabel } from '../../application/PublicationAnchorCreationView.js';
 import { createVerificationObservation } from '../../application/PublicationAnchorVerificationObservation.js';
 import { deriveAnchorVerificationLifecycle, describeAnchorVerificationLifecycleNote } from '../../application/PublicationAnchorVerificationLifecycleView.js';
+import { derivePublicationEvidenceConvergence } from '../../application/PublicationEvidenceConvergence.js';
+import { publicationEvidenceConvergenceView } from '../../application/PublicationEvidenceConvergenceView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -100,6 +102,22 @@ import { deriveAnchorVerificationLifecycle, describeAnchorVerificationLifecycleN
 // once. See docs/Principles.md, "A Verification Result Describes What
 // Can Be Established Now; It Does Not Rewrite The Historical Claim Being
 // Verified (0.8.12)."
+//
+// 0.8.13 — Multi-Evidence Comparison & Conflict UX. Each entry now also
+// derives a "Content binding" overview from application/
+// PublicationEvidenceConvergence.js#derivePublicationEvidenceConvergence()
+// (0.8.6, unchanged) shaped for the screen by application/
+// PublicationEvidenceConvergenceView.js (new): how many DISTINCT content
+// hashes are claimed by this entry's known anchors, how many anchors
+// claim each one, and whether those claims conflict. This answers "how
+// does this evidence relate to itself?" — a question the per-anchor
+// evidence list below already let a person answer by hand, one card at a
+// time, but never stated directly. Shown only inside the same "Show
+// Evidence" disclosure the per-anchor list already uses, and computed
+// fresh every time `loadEvidence()`/`verifyAnchor()` already run —
+// nothing new is stored, and nothing here ever ranks one content-hash
+// group over another. See docs/Principles.md, "Evidence Comparison Is
+// Not Adjudication (0.8.13)."
 function humanizeContentKind(contentKind) {
     if (!contentKind) return 'Unknown content';
     return contentKind
@@ -110,6 +128,17 @@ function humanizeContentKind(contentKind) {
 
 function shortId(identityId) {
     return identityId ? identityId.slice(-14) : 'an unknown identity';
+}
+
+// 0.8.13 — Multi-Evidence Comparison & Conflict UX. Display-only
+// truncation for a content-hash group's heading, mirroring shortId()'s
+// own restraint immediately above: the FULL contentHash is still shown
+// verbatim, monospace, elsewhere on each anchor's own evidence card
+// (unchanged since 0.8.3) — this shortened form exists only so several
+// groups can be told apart at a glance in the "Content binding" summary.
+function shortHash(contentHash) {
+    if (!contentHash) return 'an unknown hash';
+    return contentHash.length > 18 ? `${contentHash.slice(0, 10)}…${contentHash.slice(-6)}` : contentHash;
 }
 
 const OUTCOME_BADGE_CLASSES = {
@@ -221,6 +250,16 @@ export default {
                 evidence: null,
                 evidenceExpanded: false,
                 verifications: {},
+                // 0.8.13 — Multi-Evidence Comparison & Conflict UX. The
+                // derived structural relationship among THIS entry's own
+                // `evidenceAnchors` — application/
+                // PublicationEvidenceConvergence.js's own result, and
+                // application/PublicationEvidenceConvergenceView.js's own
+                // shaping of it. Recomputed, never accumulated, every
+                // time `loadEvidence()`/`verifyAnchor()` already run —
+                // ephemeral exactly like `evidence` immediately above.
+                convergence: null,
+                convergenceView: null,
                 // 0.8.12 — External Anchor Lifecycle & Stale Evidence
                 // Semantics. Keyed by anchorId, each value the ORDERED
                 // list of every application/
@@ -258,6 +297,38 @@ export default {
             if (!evidenceCoordinator) return;
             entry.evidenceAnchors = evidenceCoordinator.discover(entry.publication.id);
             entry.evidence = publicationEvidenceView(entry.evidenceAnchors, entry.verifications);
+            recomputeConvergence(entry);
+        }
+
+        // 0.8.13 — Multi-Evidence Comparison & Conflict UX. Re-derives
+        // `entry.convergence`/`entry.convergenceView` from THIS entry's
+        // own `evidenceAnchors` — never a second discovery call, never
+        // touching application/ExternalAnchorVerifier.js itself.
+        // `verificationByAnchorId` carries this replica's own already-
+        // completed local observations (a "checking" in-flight
+        // placeholder is never passed through as an outcome) purely so
+        // application/PublicationEvidenceConvergence.js's own per-anchor
+        // `verification` field stays populated alongside the structural
+        // comparison — see that file's own header on why supplying it
+        // can never change `contentBindingConflict`/`contentHashGroups`
+        // themselves, which application/
+        // PublicationEvidenceConvergenceView.js's own `contentGroups`/
+        // `hasConflict` reflect unchanged either way.
+        function recomputeConvergence(entry) {
+            const verificationByAnchorId = {};
+            for (const anchorId of Object.keys(entry.verifications)) {
+                const result = entry.verifications[anchorId];
+                if (result && !result.checking && result.outcome) {
+                    verificationByAnchorId[anchorId] = result.outcome;
+                }
+            }
+            entry.convergence = derivePublicationEvidenceConvergence({
+                publicationId: entry.publication.id,
+                expectedContentHash: entry.publication.contentReference.hash,
+                anchors: entry.evidenceAnchors,
+                verificationByAnchorId
+            });
+            entry.convergenceView = publicationEvidenceConvergenceView(entry.convergence);
         }
 
         function toggleEvidence(entry) {
@@ -282,6 +353,7 @@ export default {
             });
             entry.verifications[anchor.id] = { outcome: result.outcome, reason: result.reason };
             entry.evidence = publicationEvidenceView(entry.evidenceAnchors, entry.verifications);
+            recomputeConvergence(entry);
             // 0.8.12 — record this attempt as its own observation, on top
             // of whatever this replica already observed for this SAME
             // anchor earlier this session, rather than replacing it — see
@@ -456,7 +528,7 @@ export default {
 
         return {
             entries, loading, retrievalPeers, availableAnchorTypes,
-            humanizeContentKind, shortId, formatWhen, badgeClass, statusLabel, availabilityText,
+            humanizeContentKind, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel
@@ -522,6 +594,30 @@ export default {
                             <button v-if="entry.evidence.count > 0" class="action-btn action-btn--secondary" @click="toggleEvidence(entry)">
                                 {{ entry.evidenceExpanded ? 'Hide Evidence' : 'Show Evidence' }}
                             </button>
+                        </div>
+
+                        <!-- 0.8.13 — Multi-Evidence Comparison & Conflict UX. Shown only while
+                             the per-anchor evidence list below is also expanded — a "how does this
+                             evidence relate to itself?" overview, never a substitute for reading the
+                             individual anchor cards. Groups are shown in application/
+                             PublicationEvidenceConvergence.js's own deterministic order (by
+                             contentHash, never by group size) — a group with more anchors is never
+                             styled, ordered, or worded as more likely correct than one with fewer. -->
+                        <div v-if="entry.evidenceExpanded && entry.convergenceView && entry.convergenceView.anchorCount > 1"
+                             class="evidence-convergence">
+                            <span class="evidence-convergence-title">Content binding</span>
+                            <div class="evidence-convergence-groups">
+                                <div v-for="group in entry.convergenceView.contentGroups" :key="group.contentHash"
+                                     class="evidence-convergence-group">
+                                    <span class="evidence-convergence-hash">{{ shortHash(group.contentHash) }}</span>
+                                    <span class="form-hint form-hint--neutral">
+                                        {{ group.anchorCount }} anchor{{ group.anchorCount === 1 ? '' : 's' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <p v-if="entry.convergenceView.hasConflict" class="evidence-convergence-conflict">
+                                ⚠ {{ entry.convergenceView.conflictDescription }}
+                            </p>
                         </div>
 
                         <!-- 0.8.11 — Explicit External Anchoring UX. One card per anchorType this

@@ -16710,3 +16710,190 @@ broadcaster (0.8.9's and 0.8.11's own unfinished item), genuine
 confirmation-change push notifications rather than an explicit re-check,
 and reorg detection — each sized on its own, exactly like every
 "Deliberately excluded" list in this document before it.
+
+## 0.8.13 — Multi-Evidence Comparison & Conflict UX
+
+0.8.6 gave this codebase a way to DERIVE how several anchors for one
+publication relate to each other — `application/
+PublicationEvidenceConvergence.js#derivePublicationEvidenceConvergence()`,
+grouping anchors by their own `contentHash` and reporting whether those
+groups conflict. 0.8.12 gave a single anchor's own verification history
+a lifecycle a person could read at a glance. Neither one ever reached
+the Publication Center's own screen: `ui/views/
+DecentralizedPublicationsView.js`'s "External Evidence" section has
+shown every known anchor as an independent card since 0.8.3, but never
+once told a person how those cards relate to EACH OTHER. A publication
+with three anchors — two claiming one content hash, one claiming a
+different one — looked, on screen, like three unrelated cards. The
+structural fact 0.8.6 already derived was sitting unused. The central
+question this milestone answers:
+
+> **What external evidence do I currently know about this publication,
+> how do those claims relate to each other, and what have I locally
+> observed about each one — without ever answering "which anchor is
+> correct"?**
+
+```text
+                anchors
+                   │
+                   ▼
+   derivePublicationEvidenceConvergence()   (0.8.6, UNCHANGED)
+                   │
+                   ▼
+    publicationEvidenceConvergenceView()   (new, THIS MILESTONE)
+                   │
+                   ▼
+       { anchorCount, contentGroups, hasConflict,
+         relationship, conflictDescription }
+```
+
+- `application/ContentBindingSetRelationship.js` (new) — a two-value
+  frozen vocabulary, `AGREEMENT`/`CONFLICT`, naming the one structural
+  fact this milestone puts on screen: whether every anchor known for a
+  publication claims the same `contentHash` or not. Deliberately not
+  `TRUSTED`/`UNTRUSTED`, `BEST`/`PREFERRED`, or `CONFIDENT`/`LIKELY` —
+  see application/ContentBindingRelationship.js's own header (0.8.6),
+  the identical restraint one level up: from "one anchor vs. an
+  expected hash" to "the whole evidence set vs. itself."
+
+- `application/PublicationEvidenceConvergenceView.js` (new) — the
+  presentation-shaping pass application/PublicationEvidenceView.js
+  (0.8.3) already does for a SINGLE anchor's verification result,
+  applied here to application/PublicationEvidenceConvergence.js's own
+  convergence result: `publicationEvidenceConvergenceView(convergence)`
+  reshapes it into `{ anchorCount, contentGroups, hasConflict,
+  relationship, conflictDescription }`. `contentGroups` is the same
+  `contentHashGroups` array 0.8.6 already computes, sorted the same
+  deterministic way (by `contentHash`, never by size), with an
+  `anchorCount` added per group for the screen. `conflictDescription`
+  is the ONE sentence this milestone writes to the page — "Evidence
+  claims disagree about the content hash — N different content hashes
+  are each claimed by at least one anchor" — present only when
+  `hasConflict` is true, and naming disagreement, never a winner. Pure,
+  synchronous, side-effect-free: no catalog, no verifier, no import of
+  `derivePublicationEvidenceConvergence()` itself — it only ever
+  reshapes a result a caller already computed.
+
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each entry
+  now also derives `entry.convergence`/`entry.convergenceView` from its
+  own `evidenceAnchors`, recomputed every time `loadEvidence()` or
+  `verifyAnchor()` already run (never a new network call, never new
+  storage). A "Content binding" card appears inside the SAME "Show
+  Evidence" disclosure the per-anchor list already uses, showing one
+  small tile per distinct content hash — its (truncated, monospace)
+  hash and how many anchors claim it — laid out as equal-sized cards in
+  a row, never ranked, sized, or ordered by count. The one new warning
+  line (`⚠ {conflictDescription}`) appears only when `hasConflict` is
+  true, styled with the SAME amber token (`#e0a34c`) this UI already
+  uses for "worth noticing, not a failure" (see `.placement-overlap-
+  warning`, 0.2.25). Per-anchor cards, their own verification badges,
+  and the individual "Verify Evidence"/"Verify Again" buttons are
+  completely unchanged — 0.8.13 adds a summary ABOVE them, never a
+  replacement for reading one.
+
+- `tests/PublicationEvidenceConvergenceView.test.js` (new) — Section A:
+  argument handling; Section B: the two structural relationships —
+  complete agreement (one content group, no conflict) and conflicting
+  content binding (the true, honest "2 anchors claim Hash A, 1 anchor
+  claims Hash B" counts, one non-adjudicating warning sentence, and a
+  regex sweep of the serialized view for any of "authority," "trust,"
+  "winner," "consensus," "correct," "malicious," "reject," "best,"
+  "preferred," "confident," or "likely"); Section C: FLAGSHIP — Bob
+  knows three anchors for one publication (two claim Hash X, one claims
+  Hash Y), derives "2 anchors -> Hash X, 1 anchor -> Hash Y" with a
+  detected conflict, then independently verifies all three anchors with
+  three DIFFERENT outcomes (VALID/PROOF_UNAVAILABLE/INVALID_PROOF) and
+  proves the derived convergence VIEW — `contentGroups`, `hasConflict`,
+  `relationship`, `conflictDescription` — is byte-identical before and
+  after, while each anchor still carries its own separate local
+  verification observation grouped correctly under its own content
+  hash. The real `ui/views/DecentralizedPublicationsView.js` component
+  was also mounted directly against seeded `LocalPublicationCatalog`/
+  `LocalPublicationAnchorCatalog` storage (three anchors, two content
+  hashes) with real Vue, confirming the "Content binding" card and its
+  conflict warning render correctly and that clicking "Verify Evidence"
+  on one anchor leaves the rendered convergence card unchanged.
+
+```text
+0.8.12  External Anchor Lifecycle & Stale Evidence Semantics         ✓
+             │
+             ▼
+0.8.13  Multi-Evidence Comparison & Conflict UX                      ✓
+             ├── application/ContentBindingSetRelationship.js — new;
+             │   AGREEMENT/CONFLICT, a structural fact about the whole
+             │   evidence set, never a verdict about which claim to
+             │   believe
+             ├── application/PublicationEvidenceConvergenceView.js —
+             │   new; pure presentation shaping of application/
+             │   PublicationEvidenceConvergence.js's own result (0.8.6,
+             │   unmodified) — { anchorCount, contentGroups,
+             │   hasConflict, relationship, conflictDescription }
+             ├── ui/views/DecentralizedPublicationsView.js — modified;
+             │   one "Content binding" card inside the existing "Show
+             │   Evidence" disclosure, above the unchanged per-anchor
+             │   list
+             └── PublicationEvidenceConvergenceView.test.js (new) —
+                 argument handling + the two relationships + FLAGSHIP
+                 (byte-identical convergence view before/after three
+                 independent, differing verification observations)
+```
+
+> **Evidence comparison is not adjudication.**
+> Grouping several anchors by the content hash they claim, and counting
+> how many anchors are in each group, is exactly as far as this
+> codebase ever goes — the count is reported honestly, and nothing
+> anywhere sums, sorts, weighs, or thresholds it into a decision about
+> which claim to believe. A content-hash group with more anchors is
+> never styled larger, listed first, colored differently, or worded as
+> more likely correct than one with fewer; a group's own local
+> verification observations (independently verified, unavailable,
+> rejected) sit alongside it, never inside it, and never change which
+> group it belongs to. See `docs/Principles.md`, "Evidence Comparison
+> Is Not Adjudication (0.8.13)."
+
+### Deliberately excluded
+
+- **A second comparison engine.** This milestone introduces no new way
+  to derive how anchors relate — `application/
+  PublicationEvidenceConvergence.js#derivePublicationEvidenceConvergence()`
+  (0.8.6) is reused completely unmodified; `application/
+  PublicationEvidenceConvergenceView.js` only ever reshapes its result
+  for the screen.
+- **Reputation, confidence, freshness, or trust scores of any kind, and
+  no canonical/ranked/"winning" anchor or content-hash group.** See
+  `docs/Principles.md`'s 0.8.6/0.8.10/0.8.11/0.8.12 entries, extended
+  here rather than crossed — `tests/
+  PublicationEvidenceConvergenceView.test.js`'s own Section B scans the
+  derived view's serialized form for exactly this vocabulary and finds
+  none.
+- **A "Verify All" batch action.** Each anchor keeps its own, individual
+  "Verify Evidence"/"Verify Again" control, exactly as 0.8.3 and 0.8.11
+  already established — introducing a batch verification action would
+  quietly suggest external verification is routine or automatic, which
+  it deliberately is not.
+- **Merging verification observations into the structural comparison.**
+  `verificationByAnchorId` still only ever populates the per-anchor
+  `verification` field application/PublicationEvidenceConvergence.js
+  already exposed in 0.8.6 — it can never change `contentGroups` or
+  `hasConflict`, and `tests/
+  PublicationEvidenceConvergenceView.test.js`'s own flagship proves this
+  directly rather than merely asserting it.
+- **Peer synchronization of verification results, or verification
+  caching of any kind.** Nothing changes about what travels over
+  `PublicationAnchorPeerExchange.js` (still `PublicationAnchor` claims
+  only, per 0.8.4/0.8.5) or about how often "Verify Evidence" re-asks
+  the external system (still every click, per 0.8.12's own "Deliberately
+  excluded" list).
+- **Automatic conflict resolution, re-anchoring, or any notion of
+  "correcting" a conflicting anchor.** A detected conflict is displayed
+  and nothing else — no anchor is ever hidden, demoted, or offered for
+  removal for disagreeing with another.
+
+What's left, and deliberately unbuilt: application/
+ExternalAnchorPublisherRegistry.js's own real wallet-backed Bitcoin
+broadcaster (0.8.9's, 0.8.11's, and 0.8.12's own unfinished item, still
+unfinished), a dedicated "Evidence Inspection / External Locator" view
+for following an anchor's own `locator` out to the external system it
+names, and evidence export/sharing — each its own, separately sized
+milestone, exactly like every "Deliberately excluded" list in this
+document before it.
