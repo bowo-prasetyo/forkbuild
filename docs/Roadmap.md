@@ -16080,3 +16080,230 @@ implementation, any wallet capability behind it, any UI surface for
 triggering creation, and any status/confirmation model over a created
 claim — each sized on its own, exactly like every "Deliberately excluded"
 list in this document before it.
+
+## 0.8.10 — External Anchor Creation Orchestration & Publisher Registry
+
+0.8.8 gave this codebase a generic way to create a signed anchor claim
+from evidence parameters already in hand. 0.8.9 gave it a Bitcoin-specific
+way to obtain those evidence parameters in the first place. Nothing yet
+connected the two — a caller had to look up a publication, derive its
+contentHash, call `anchoring/BitcoinAnchorPublisher.js#publish()` itself,
+and feed the result into `application/CreatePublicationAnchorUseCase.js#
+execute()` by hand, one step at a time, every time. 0.8.10 closes that
+one remaining gap, and closes it as narrowly as it can be closed:
+
+```text
+publicationId, anchorType
+        │
+        ▼
+CreateExternalPublicationAnchorUseCase.execute()   (new)
+        │
+        ├── publication lookup            — the caller's own catalog
+        ├── publisher selection           — ExternalAnchorPublisherRegistry (new)
+        ├── contentHash derivation        — publication's OWN
+        │                                   contentReference.hash
+        ├── publisher.publish(contentHash)
+        │
+        ▼
+CreatePublicationAnchorUseCase.execute(...)   (0.8.8, UNCHANGED)
+        │
+        ▼
+signed, cataloged PublicationAnchor
+```
+
+**ORCHESTRATES; NEVER RE-IMPLEMENTS.** The one hard constraint this
+milestone had to satisfy: `CreateExternalPublicationAnchorUseCase` must
+never become a second way to construct a `core/PublicationAnchor.js`. It
+never imports `core/PublicationAnchor.js` itself, never signs anything,
+and never touches an anchor catalog directly — every one of those
+responsibilities stays exactly where 0.8.8 already put them, reused
+unchanged. `tests/ExternalAnchorCreationOrchestration.test.js`'s own
+Section B proves this directly: a spy wrapped around a real
+`CreatePublicationAnchorUseCase` shows `execute()` is called exactly
+once, forwarding only the publisher's own `anchorType`/`locator`/`proof`
+— never an `anchoredAt`, and never a hand-built envelope.
+
+- `application/ExternalAnchorPublisherRegistry.js` — the creation-side
+  mirror of `application/ExternalProofVerifierRegistry.js` (0.8.1),
+  mapping `anchorType -> publisher` instead of `anchorType ->
+  proofVerifier`. `register(publisher)` keys by the publisher's OWN
+  `anchorType` (never a caller-supplied key that could drift), replacing
+  any publisher already registered for that anchorType; `get(anchorType)`
+  returns `null` for an unregistered one, never throwing itself. It never
+  publishes anything, never ranks publishers, never picks a "preferred"
+  anchorType, and never falls back from one anchorType to another — the
+  identical restraint the verifier registry already holds, applied here.
+
+- `application/CreateExternalPublicationAnchorUseCase.js` — the one new
+  orchestration class. Constructed with a publication catalog, an
+  `ExternalAnchorPublisherRegistry`, and an already-constructed
+  `CreatePublicationAnchorUseCase`. `execute(publicationId, anchorType)`:
+  1. looks `publicationId` up — throws if unknown, the identical refusal
+     `CreatePublicationAnchorUseCase` already gives;
+  2. resolves `anchorType` in the publisher registry — throws if no
+     publisher is registered for it, since (unlike the verification side)
+     there is no degraded-but-honest way to create external evidence
+     without one;
+  3. derives `contentHash` from the looked-up publication's own
+     `contentReference.hash` — `execute()` takes no `contentHash`
+     parameter at all, so nothing a caller supplies can ever reach the
+     publisher instead;
+  4. calls `publisher.publish(contentHash)` exactly once — never
+     retried internally;
+  5. on `{ published: true, locator, proof }`, forwards `anchorType`
+     (the publisher's own), `locator`, and `proof` — deliberately never
+     `anchoredAt` — into `createPublicationAnchorUseCase.execute()`
+     unchanged, returning `{ outcome: CREATED, anchor, reason: null }`;
+  6. on anything else — a definite rejection, an explicit "cannot
+     presently tell," or a publisher that simply throws — returns
+     `{ outcome, anchor: null, reason }` and never calls
+     `createPublicationAnchorUseCase` at all. A failure inside THAT use
+     case instead (e.g. nobody signed in) is never caught here; it
+     propagates exactly as 0.8.8 already throws it, since that is a
+     signing failure, not a publishing one.
+
+- `application/ExternalAnchorCreationOutcome.js` — names every way
+  `execute()` can end, the identical "name the difference structurally,
+  never by convention" discipline `application/
+  PublicationResolutionOutcome.js` (0.7.1) and `application/
+  AnchorVerificationOutcome.js` (0.8.1) already established, applied to a
+  third axis — did the external recording operation this codebase itself
+  just requested actually succeed:
+  - `CREATED` — a `PublicationAnchor` now exists and is cataloged;
+  - `PUBLISH_REJECTED` — the external system was reached and it said no;
+  - `PUBLISH_UNAVAILABLE` — the external system could not presently be
+    asked (no connectivity, a timeout, no funds, or a throwing publisher)
+    — never conflated with a definite rejection, since retrying later
+    may still succeed.
+
+  On any outcome other than `CREATED`, no `PublicationAnchor` exists.
+  ForkBuild is deliberately claiming that an external recording operation
+  it just requested succeeded; a failed or unreachable operation gets no
+  corresponding claim.
+
+- `application/CreateExternalPublicationAnchorOrchestratorUseCase.js` —
+  the identical composition-root shape `application/
+  CreateExternalAnchorVerifierUseCase.js` already established for
+  verification, mirrored here for creation: wires `identity/
+  LocalAuthorizationVerifier.js`, a `CreatePublicationAnchorUseCase`, and
+  an `ExternalAnchorPublisherRegistry` (registering every publisher in a
+  caller-supplied `publishers` array — e.g. a real `BitcoinAnchorPublisher`
+  from `application/CreateBitcoinAnchorPublisherUseCase.js`), so `ui/`
+  never needs to import any of those concrete classes itself.
+
+- **No deduplication, no "already anchored" check.** Anchoring the same
+  publication twice, on the same anchorType, produces two independent,
+  equally cataloged `PublicationAnchor` records — two separate external
+  recording operations really did happen, and both are legitimate
+  evidence. `CreateExternalPublicationAnchorUseCase` never inspects the
+  anchor catalog before publishing and never refuses a second anchor;
+  `application/LocalPublicationAnchorCatalog.js`'s own id-based dedup
+  remains the only place duplicate ENVELOPES, never duplicate evidence,
+  are ever collapsed. Introducing "one anchor per publication per
+  anchorType" here would be a hidden canonicalization policy this
+  codebase has refused at every prior evidence milestone (see 0.8.6's own
+  restraint against ranking or reconciling independent anchors).
+
+- **No "preferred" anchor type, and no automatic retry.** `anchorType` is
+  always supplied by the caller, explicitly — the registry resolves it,
+  never chooses it, and never falls back to a different one if the
+  requested publisher is unavailable. A `PUBLISH_UNAVAILABLE` outcome is
+  never retried internally either; the caller decides for itself whether
+  and when to call `execute()` again, keeping the external side effect
+  fully visible to whoever triggered it.
+
+- `tests/ExternalAnchorCreationOrchestration.test.js` (new) — Section A:
+  flagship, wired through the real composition root with a real
+  `BitcoinAnchorPublisher` over a fake Bitcoin network, produces a
+  cataloged, genuinely signed anchor Bob independently verifies as
+  `PROOF_UNAVAILABLE` while unconfirmed and `VALID` once the same fake
+  network confirms the same unchanged anchor; Section B: a spy around a
+  real `CreatePublicationAnchorUseCase` proves the orchestration
+  delegates to it exactly once, forwarding only `anchorType`/`locator`/
+  `proof`, never an `anchoredAt`, and never constructing a
+  `PublicationAnchor` by hand; Section C: a registry holding two
+  publishers resolves each anchorType to its own publisher only, an
+  unregistered anchorType refuses before any publisher is ever consulted,
+  and requesting one anchorType never invokes a different publisher's
+  code; Section D: a definite rejection, an explicit "unavailable," and a
+  throwing publisher all produce no `PublicationAnchor` and never reach
+  `CreatePublicationAnchorUseCase`; Section E: the publisher always
+  receives the publication's own `contentReference.hash`, never a
+  caller-suppliable one; Section F: a failing publisher is consulted
+  exactly once per `execute()` call — no internal retry loop; Section G:
+  anchoring the same publication twice on the same anchorType produces
+  two independent, equally cataloged anchors.
+
+```text
+0.8.9   Bitcoin Anchor Creation Adapter                              ✓
+             │
+             ▼
+0.8.10  External Anchor Creation Orchestration & Publisher Registry  ✓
+             ├── application/ExternalAnchorPublisherRegistry.js — new;
+             │   anchorType -> publisher, mirrors
+             │   ExternalProofVerifierRegistry.js exactly
+             ├── application/CreateExternalPublicationAnchorUseCase.js —
+             │   new; publication lookup -> publisher selection ->
+             │   contentHash derivation -> publish() -> delegates to
+             │   CreatePublicationAnchorUseCase (0.8.8, UNCHANGED)
+             ├── application/ExternalAnchorCreationOutcome.js — new;
+             │   CREATED / PUBLISH_REJECTED / PUBLISH_UNAVAILABLE
+             ├── application/
+             │   CreateExternalPublicationAnchorOrchestratorUseCase.js —
+             │   new composition-root seam, mirrors
+             │   CreateExternalAnchorVerifierUseCase.js
+             ├── no dedup, no preferred anchorType, no automatic retry
+             └── ExternalAnchorCreationOrchestration.test.js (new) —
+                 flagship + reuse-spy + publisher-selection +
+                 failure-modes + content-hash-invariant +
+                 no-retry + duplicate-anchoring sections
+```
+
+> **External anchor creation orchestrates external recording; it does
+> not make external recording automatic or authoritative.**
+> `CreateExternalPublicationAnchorUseCase` is invoked only when a caller
+> explicitly asks it to, for an anchorType the caller explicitly names,
+> and it never creates a `PublicationAnchor` unless the publisher it
+> consulted reported genuine success. It is connective tissue between two
+> already-independent classes (`application/
+> CreatePublicationAnchorUseCase.js`, `anchoring/
+> BitcoinAnchorPublisher.js`), never a third way to build an anchor and
+> never a policy layer deciding which external system a publication
+> "should" use. See `docs/Principles.md`, "A Publisher's Failure Is Not
+> the Orchestration's Failure — But It Is Still No Anchor (0.8.10)."
+
+### Deliberately excluded
+
+- **Automatic retry or backoff over `PUBLISH_UNAVAILABLE`.** `execute()`
+  consults its publisher exactly once. A caller wanting retry semantics
+  builds its own loop around repeated `execute()` calls — this milestone
+  deliberately ships none, keeping every external side effect an explicit,
+  caller-initiated action, exactly as 0.8.9 already left retry policy to
+  the caller at the publisher level.
+- **Deduplication, or any "this publication already has a Bitcoin
+  anchor" check.** See this milestone's own reasoning above — two
+  independent external recordings are two independent, equally legitimate
+  pieces of evidence, never collapsed into one.
+- **A "preferred" or "default" anchor type.** `anchorType` is always an
+  explicit argument; nothing in this milestone ever infers, ranks, or
+  falls back between registered publishers.
+- **Any new capability on `anchoring/BitcoinAnchorPublisher.js` itself.**
+  No fee estimation, confirmation polling, cancellation, or status/history
+  API was added to the publisher contract this milestone orchestrates —
+  the generic publisher contract stays exactly what 0.8.9 already
+  defined: `{ anchorType, publish(contentHash) }`.
+- **Any UI.** No "Create External Anchor" button, panel, or view in this
+  codebase yet calls `CreateExternalPublicationAnchorUseCase` or
+  `application/CreateExternalPublicationAnchorOrchestratorUseCase.js` —
+  the identical restraint every anchor-evidence milestone since 0.8.0
+  already held before any UI consumed its own new mechanism. A future
+  milestone can wire a Publication Center "External Evidence" panel
+  directly against this orchestration without either changing.
+
+What's left, and deliberately unbuilt: any UI surface for triggering
+orchestrated creation, a second concrete publisher to prove the registry
+against (beyond the fake publishers `tests/
+ExternalAnchorCreationOrchestration.test.js` already registers alongside
+a real `BitcoinAnchorPublisher`), and any retry/backoff policy over a
+`PUBLISH_UNAVAILABLE` outcome — each sized on its own, exactly like every
+"Deliberately excluded" list in this document before it.
