@@ -20306,3 +20306,192 @@ unchanged, adding the one new boolean beside its two dimension objects.
   never inside `entry.replicaKnowledge` itself. The flagship test proves
   this as an invariant: the view is byte-identical whether or not those
   observations have ever been made.
+
+What's left, and deliberately unbuilt: 0.8.28 answers what a replica can
+RECONSTRUCT offline; it never asks how one replica hands that
+reconstructed knowledge to another. A publication, its anchors, and its
+placements each still travel their OWN separate transport — a hand-off
+publication envelope, a Blueprint Package's `anchors`/`placements`
+fields borrowed from a Structure export that may have no Structure to
+export at all. There is no single portable file that carries "everything
+this replica knows about ONE publication" in one hand-off. See 0.8.29,
+immediately below.
+
+## 0.8.29 — Publication Replica Export & Offline Transfer
+
+0.8.28 asked what a replica can reconstruct when the original publisher,
+every peer, and every external system are simultaneously unavailable,
+and answered it by composing pieces that already existed. This milestone
+asks the inverse question its own "What's left" line named: how does a
+replica that HAS reconstructed a publication's knowledge hand that exact
+knowledge to another replica, in one deliberate, offline step?
+
+```text
+Publication Catalog
+      │
+      ├── Publication envelope                          (0.7.2)
+      │
+      ├── Anchor Catalog
+      │     └── signed evidence claims                   (0.8.4)
+      │
+      ├── Placement Catalog
+      │     └── signed retrieval-location claims          (0.8.19)
+      │
+      ├── Anchor Knowledge Store
+      │     └── LOCAL / PACKAGE / PEER                    (0.8.17)
+      │
+      └── Placement Knowledge Store
+            └── LOCAL / PACKAGE / PEER                    (0.8.24)
+```
+
+Three new files, and nothing else:
+
+- `application/PublicationReplicaPackage.js` (new) — the portable
+  envelope itself: `{ kind: 'forkbuild.publication-replica-package',
+  schemaVersion: 1, publication, anchors, placements }`. Deliberately NOT
+  a fourth field bolted onto `application/BlueprintPackage.js` (0.4.6) —
+  a Blueprint Package's whole reason for existing is moving a
+  `core/Structure.js`, and this milestone's own design conversation was
+  explicit that not every publication a replica knows about was ever
+  built from a Structure this replica has, or wants to export, at all. A
+  Publication Replica Package's ONE subject is a `core/
+  DecentralizedPublication.js` envelope; `anchors`/`placements` are
+  additive, omit-when-empty arrays of signed `core/PublicationAnchor.js`/
+  `core/PublicationSnapshotPlacement.js` instances, the identical
+  "omit when empty" shape `application/BlueprintPackage.js` already
+  established — deliberately reusing that exact field naming (not a new
+  vocabulary) so `application/ImportPackageAnchorsUseCase.js` (0.8.7) and
+  `application/ImportPackageSnapshotPlacementsUseCase.js` (0.8.22) work
+  UNCHANGED against this package too (see below). Structurally scoped to
+  exactly ONE publication: every bundled anchor/placement must name the
+  packaged publication's own `id`, enforced both at build time
+  (`buildPublicationReplicaPackage()`) and at import time (`application/
+  PublicationReplicaPackageValidator.js`, new, mirroring `application/
+  BlueprintImportValidator.js`'s own per-field structural-validation
+  discipline byte for byte).
+- `application/BuildPublicationReplicaPackageUseCase.js` (new) — given a
+  `publicationId`, reads `publicationCatalog.get()` plus
+  `anchorExchange.findByPublicationId()`/
+  `placementExchange.findByPublicationId()` (the SAME `application/
+  PublicationAnchorExchange.js`/`application/
+  PublicationSnapshotPlacementExchange.js` read passthrough 0.8.5 already
+  built for exactly this "read this replica's own catalog" case) and
+  calls `buildPublicationReplicaPackage()`. Performs NO verification and
+  NO resolution, and touches no network — exporting replica knowledge
+  transports claims this replica already has, exactly as they are, never
+  re-establishing whether any of them still hold up.
+- `application/ImportPublicationReplicaPackageUseCase.js` (new) — the
+  offline counterpart. Structurally validates the whole package first
+  (all-or-nothing, mirroring `validateBlueprintPackage()`), then imports
+  the publication via `application/PublicationExchange.js#
+  importPublication()` (0.7.2) and hands the SAME package, UNCHANGED, to
+  `application/ImportPackageAnchorsUseCase.js` and `application/
+  ImportPackageSnapshotPlacementsUseCase.js` — both already read only
+  `pkg.anchors`/`pkg.placements` off whatever object they're given, with
+  no coupling to a Blueprint Package's own `kind`/`schemaVersion`/
+  `structure` fields, so reusing them here required changing neither
+  file. This is this milestone's own central architectural rule, stated
+  plainly: **no new validation or verification implementation anywhere**
+  — every trust boundary a claim crosses on import is the exact same one
+  a peer-delivered or Blueprint-Package-delivered claim already crosses.
+  The publication's own import is tolerant of failure exactly like every
+  bundled anchor/placement already is — a forged publication envelope is
+  reported back as `rejectedPublication`, never thrown, and never blocks
+  its otherwise-validly-signed bundled anchors/placements from landing
+  (they name a `publicationId`, not a dependency on that publication
+  already being cataloged — the identical posture `application/
+  PublicationAnchorExchange.js` already holds for a peer-delivered
+  anchor, 0.8.4).
+
+The interesting part is provenance, and this milestone answers it by
+building nothing new at all. Alice exports Publication P, Anchor A, and
+Placement X; Bob imports them and — through `application/
+ImportPackageAnchorsUseCase.js`'s/`application/
+ImportPackageSnapshotPlacementsUseCase.js`'s own EXISTING, UNCHANGED
+`knowledgeStore` parameter — records both as `application/
+AnchorAcquisitionKind.js#PACKAGE`/`application/
+PlacementAcquisitionKind.js#PACKAGE`. If Carol later sends the IDENTICAL
+Anchor A to Bob over a live peer connection, `application/
+LocalAnchorKnowledgeStore.js`'s own FIRST-SEEN-WINS rule (0.8.17) —
+already exercised for every other acquisition-route combination — means
+Bob's record stays PACKAGE, never overwritten to PEER. A Publication
+Replica Package therefore transports Alice's CLAIMS, never Alice's own
+acquisition history: Bob's knowledge store never learns, or needs to
+know, how Alice originally came to know Anchor A. `tests/
+PublicationReplicaPackage.test.js`'s own flagship proves exactly this
+sequence as an invariant, not merely as an assertion.
+
+> **A replica package transfers durable claims, not the exporting
+> replica's own acquisition history.** See `docs/Principles.md`, "A
+> Replica Package Transfers Durable Claims, Not The Exporting Replica's
+> Own Acquisition History (0.8.29)."
+
+- `tests/PublicationReplicaPackage.test.js` (new) — Section A:
+  `buildPublicationReplicaPackage()` argument handling, including
+  refusing an unsigned publication/anchor/placement and refusing an
+  anchor/placement naming a different `publicationId` than the packaged
+  publication; Section B: `validatePublicationReplicaPackage()`
+  structural checks, every malformed field re-thrown as
+  `PublicationReplicaPackageError`, never a leaked
+  `DecentralizedPublicationError`/`PublicationAnchorError`/
+  `PublicationSnapshotPlacementError`; Section C — FLAGSHIP: Alice
+  creates a publication, an anchor, and a placement, builds ONE replica
+  package, and goes offline FOR GOOD — no peer connection to her is ever
+  established anywhere in this test. Bob starts knowing nothing, imports
+  the package while COMPLETELY OFFLINE, and reconstructs a full replica
+  knowledge view (`application/PublicationReplicaKnowledgeView.js`,
+  0.8.28, reused unchanged); his own re-export of what he just imported
+  round-trips BYTE-IDENTICAL to Alice's original package. Carol then
+  re-delivers the IDENTICAL anchor over a live peer connection — Bob's
+  knowledge store still reports PACKAGE, never PEER, proving
+  FIRST-SEEN-WINS holds across a package/peer boundary exactly as it
+  already holds across every other acquisition-route pair. A restart
+  (fresh catalog/store instances over the identical underlying storage)
+  leaves everything byte-identical again; Section D: per-claim import
+  tolerance — a forged anchor inside an otherwise-valid package never
+  blocks the publication or the placement from importing, and a forged
+  publication never blocks its otherwise-valid bundled anchors/
+  placements from importing either.
+
+### Deliberately excluded
+
+- **A general-purpose "export everything" mechanism.** Considered and
+  rejected — this milestone stays deliberately scoped to ONE publication
+  and its associated durable claims, exactly as this milestone's own
+  design conversation required. No multi-publication bundle, no
+  directory-of-packages export, no "export my whole catalog" button.
+- **Any replica synchronization or diff layer.** Two replicas comparing
+  what they each know and exchanging only the difference is genuinely
+  future work, not a smaller version of this milestone — see 0.8.30,
+  immediately below.
+- **Automatic verification or resolution during import.** Considered and
+  rejected for the identical reason 0.8.7/0.8.22 already rejected it for
+  package import generally: importing a package that bundles a
+  publication, two anchors, and a placement catalogs FOUR CLAIMS, and
+  proves nothing about any of them. A caller that wants to know whether
+  one still holds up calls `application/ExternalAnchorVerifier.js`/
+  `application/SnapshotPlacementResolver.js` separately, afterward,
+  exactly as if each claim had been cataloged any other way.
+- **A fourth `BlueprintPackage.js` field instead of a new package type.**
+  Explicitly considered, in line with 0.8.7's/0.8.22's own precedent of
+  adding `anchors`/`placements` as additive fields on that exact file —
+  and explicitly rejected here, because a Blueprint Package's own reason
+  for existing (moving a Structure) has nothing to do with this
+  milestone's own subject (moving a publication a replica may have
+  learned about without ever handling the Structure it names at all).
+  See this milestone's own Roadmap text above.
+- **Carrying acquisition provenance, verification history, resolution
+  history, `everValid`, `everResolved`, current availability, lifecycle
+  state, or convergence view inside the package.** The package transports
+  CLAIMS, never OBSERVATIONS — the identical distinction 0.8.28's own
+  "Deliberately excluded" list already drew for `application/
+  PublicationReplicaKnowledgeView.js`, extended here to what travels in a
+  file rather than what a view computes. `buildPublicationReplicaPackage()`
+  calls nothing but each domain object's own `toJSON()` — there is
+  structurally nowhere for any of those fields to even come from.
+
+What's left, and deliberately unbuilt: two replicas explicitly comparing
+what durable publication knowledge each has, and exchanging only the
+claims one is missing, rather than one replica handing the other
+everything it knows regardless of overlap. See 0.8.30, a replica
+synchronization/diff layer, next.
