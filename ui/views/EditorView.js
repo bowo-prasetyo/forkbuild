@@ -155,6 +155,11 @@ export default {
                 </div>
                 <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
                     <div ref="viewport" class="viewport"></div>
+                    <div
+                        v-if="marqueeRect"
+                        class="marquee-rect"
+                        :style="{ left: marqueeRect.left + 'px', top: marqueeRect.top + 'px', width: marqueeRect.width + 'px', height: marqueeRect.height + 'px' }"
+                    ></div>
                 </div>
             </div>
             <CommandPalette
@@ -1214,6 +1219,29 @@ export default {
         let onPointerUp = null;
         let onKeyDown = null;
 
+        // Shift+Drag marquee overlay (css/main.css .marquee-rect) — null
+        // whenever editorSession.isMarqueeActive() is false. Positioned
+        // in CSS pixels relative to the viewport container (the nearest
+        // `position: relative` ancestor the template already gives
+        // .marquee-rect's own `position: absolute`), recomputed from
+        // editorSession.getMarqueeRect()'s CLIENT-space corners on every
+        // pointer event the gesture touches.
+        const marqueeRect = ref(null);
+        function updateMarqueeRect() {
+            const rect = editorSession.getMarqueeRect();
+            if (!rect || !viewport.value) {
+                marqueeRect.value = null;
+                return;
+            }
+            const bounds = viewport.value.getBoundingClientRect();
+            marqueeRect.value = {
+                left: Math.min(rect.x0, rect.x1) - bounds.left,
+                top: Math.min(rect.y0, rect.y1) - bounds.top,
+                width: Math.abs(rect.x1 - rect.x0),
+                height: Math.abs(rect.y1 - rect.y0)
+            };
+        }
+
         onMounted(() => {
             editorSession.start(viewport.value);
 
@@ -1312,10 +1340,12 @@ export default {
 
             onPointerDown = (event) => {
                 editorSession.onPointerDown(event);
+                updateMarqueeRect();
             };
             viewport.value.addEventListener('pointerdown', onPointerDown);
             onPointerMove = (event) => {
                 editorSession.onPointerMove(event);
+                updateMarqueeRect();
             };
             viewport.value.addEventListener('pointermove', onPointerMove);
             // 0.2.92 — refreshSelectedPlacementInfo() runs after EVERY
@@ -1329,6 +1359,7 @@ export default {
             // currently selected (see its own definition above).
             onPointerUp = (event) => {
                 editorSession.onPointerUp(event);
+                updateMarqueeRect();
                 refreshSelectedPlacementInfo();
                 refreshSelectionSummary();
             };
@@ -1369,6 +1400,19 @@ export default {
                 //    cancels it inside the session).
                 if (editorSession.isGestureActive()) {
                     editorSession.onKeyDown(event);
+                    return;
+                }
+                // 3.5. An in-flight Shift+Drag marquee owns Escape next —
+                // application/InputRouter.js's own ESCAPE_PRIORITY:
+                // gesture > marquee > selection. Cancels the drag with no
+                // selection change, rather than falling through to step
+                // 5's registry Escape (selection.clear), which would also
+                // wipe out whatever was already selected before the drag
+                // started.
+                if (editorSession.isMarqueeActive() && event.key === 'Escape') {
+                    event.preventDefault();
+                    editorSession.cancelMarquee();
+                    updateMarqueeRect();
                     return;
                 }
                 // 4. View-local, non-action shortcuts.
@@ -1473,6 +1517,7 @@ export default {
 
         return {
             viewport,
+            marqueeRect,
             paletteUseCase,
             documentManager,
             saveDocumentUseCase,
