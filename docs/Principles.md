@@ -10556,3 +10556,115 @@ layer further out, at the one place a person could otherwise imagine it
 happening invisibly.
 
 See `docs/Roadmap.md`, 0.8.11, for the full milestone entry.
+
+### A Verification Result Describes What Can Be Established Now; It Does Not Rewrite The Historical Claim Being Verified (0.8.12)
+
+0.8.8 through 0.8.11 built the complete, working machinery to create,
+discover, and verify external evidence. None of those milestones ever
+asked what happens the SECOND time a person checks the same evidence —
+`ui/views/DecentralizedPublicationsView.js`'s own `entry.verifications`
+simply overwrote whatever the previous check had found. That is fine the
+first time a person clicks "Verify Evidence," and quietly wrong the
+moment the external world stops holding still: a Bitcoin transaction that
+was independently confirmed yesterday and reads `PROOF_UNAVAILABLE` today
+— because the explorer this replica happens to be pointed at is down,
+not because anything about the transaction changed — looked, before
+0.8.12, EXACTLY like an anchor nobody had ever managed to confirm at all.
+0.8.12 closes that gap with the smallest change that closes it:
+
+```text
+core/PublicationAnchor.js                 UNCHANGED — still exactly one
+                                           signed claim, forever
+        │
+        ▼
+ExternalAnchorVerifier.verify()           UNCHANGED — still one honest
+        │                                 outcome per call, never cached
+        ▼
+PublicationAnchorVerificationObservation  NEW — one frozen record of
+        │                                 ONE call, at ONE moment,
+        │                                 APPENDED to this replica's own
+        │                                 session history, never
+        │                                 overwriting the one before it
+        ▼
+PublicationAnchorVerificationLifecycleView  NEW — derives, from that
+                                           history alone, whether the
+                                           CURRENT state should read as
+                                           "currently unavailable" or
+                                           "currently unavailable, but
+                                           independently verified earlier"
+```
+
+**`core/PublicationAnchor.js` gained nothing.** No `status`,
+`verifiedAt`, `lastVerifiedAt`, `confirmationCount`, or `stale` field
+was added to it, and none of this milestone's new files import its
+mutating surface (it has none — see that class's own header, "Anchors
+are never updated in place"). `tests/PublicationAnchorLifecycle.test.js`'s
+own Section A makes this the flagship assertion, not an incidental one:
+the SAME anchor is verified four times, under three different simulated
+external conditions (unconfirmed, confirmed, explorer unreachable,
+explorer reachable again), and `anchor.toJSON()` is asserted
+byte-identical after every single one. Verifying an anchor is reading the
+external world through it, never writing to it.
+
+**A history of observations adds exactly one new fact — `everValid` —
+never a new state of its own.** `application/
+PublicationAnchorVerificationLifecycleView.js#deriveAnchorVerificationLifecycle()`
+still reports the CURRENT state (`NOT_VERIFIED`/`VERIFIED`/
+`UNVERIFIED_PROOF`/`UNAVAILABLE`/`REJECTED` — application/
+AnchorVerificationLifecycleState.js) from nothing but the MOST RECENT
+observation, exactly as `application/PublicationEvidenceView.js` already
+did from a single result. The temptation this milestone's own design
+conversation named explicitly, and declined, was inventing a sixth state
+— something like `PREVIOUSLY_VALID_NOW_UNAVAILABLE` — to carry that
+extra fact. That would have been a step toward exactly the `AnchorStatus`
+domain field 0.8.0 through 0.8.11 have consistently avoided: a state that
+sounds like it describes the ANCHOR, when it only ever describes what
+THIS replica happened to observe, in what order, this session. Instead,
+`everValid` rides alongside the current state as its own plain boolean,
+and `describeAnchorVerificationLifecycleNote()` uses the COMBINATION —
+current state `UNAVAILABLE` and `everValid` true — to add one optional
+sentence next to the UNCHANGED existing badge, never in place of it. The
+sentence itself is deliberately worded: "independently verified earlier;
+verification is currently unavailable" — never "invalid," "revoked," or
+"expired," because none of those is true. `tests/
+PublicationAnchorLifecycle.test.js`'s own assertion 12 checks the actual
+wording, not just the state, for exactly this reason.
+
+**Verification observations never cross a replica boundary, and this
+milestone adds nothing that could make them.**
+`application/PublicationAnchorVerificationObservation.js`'s own header
+states this as a hard rule, and `tests/
+PublicationAnchorLifecycle.test.js`'s own Section D proves it directly:
+two independently constructed `ExternalAnchorVerifier` instances, each
+pointed at a different fake Bitcoin network, verify the IDENTICAL anchor
+at essentially the same time — one finds a confirmed transaction and
+reports `VALID`, the other finds nothing at all and reports
+`PROOF_UNAVAILABLE` — and a shared `LocalPublicationAnchorCatalog` is
+asserted completely unaffected by either. This is the identical
+restraint `application/PublicationEvidenceConvergence.js`'s own header
+already held for a single replica's own `verificationByAnchorId` map
+(0.8.6, "Verification Observations Never Cross A Replica Boundary
+Through This Function") — 0.8.12 extends it from "one map, one moment"
+to "a whole session's history," without weakening it anywhere.
+
+**Multiple anchors still never influence each other's lifecycle, exactly
+as 0.8.6 and 0.8.10 already insist.** `tests/
+PublicationAnchorLifecycle.test.js`'s own Section C verifies three
+anchors for the SAME publication — one confirmed and correct, one
+unconfirmed, one confirmed but carrying the wrong data — and derives
+three independent lifecycles, one per anchor's own observation history,
+with nothing in `deriveAnchorVerificationLifecycle()`'s own signature
+that could even accept a second anchor's history to compare against.
+
+**Re-verification stays exactly as explicit, and exactly as
+un-cached, as 0.8.3 already made it.** Nothing in this milestone adds a
+timer, a poll, a TTL, or a "last known good" fallback — `tests/
+PublicationAnchorLifecycle.test.js`'s own Section E calls `verify()`
+three times with nothing changed (identical outcome every time) and then
+once more immediately after a real external change (the very next call
+reflects it). `application/PublicationAnchorVerificationObservation.js`'s
+own `observedAt` records only when THIS replica happened to look, never
+a validity window or an expiration — there is no code path anywhere in
+this milestone that reads an old observation instead of asking again.
+
+See `docs/Roadmap.md`, 0.8.12, for the full milestone entry.
