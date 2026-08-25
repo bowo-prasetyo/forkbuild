@@ -16307,3 +16307,242 @@ ExternalAnchorCreationOrchestration.test.js` already registers alongside
 a real `BitcoinAnchorPublisher`), and any retry/backoff policy over a
 `PUBLISH_UNAVAILABLE` outcome — each sized on its own, exactly like every
 "Deliberately excluded" list in this document before it.
+
+## 0.8.11 — Explicit External Anchoring UX
+
+0.8.8 through 0.8.10 built a complete, working pipeline for orchestrating
+an external recording, and every one of those milestones' own
+"Deliberately excluded" list ended with the identical line: no UI. 0.8.11
+is the milestone that finally exposes it — a person can now explicitly
+request external anchoring from the Publication Center, observe the
+creation result, and independently verify the resulting evidence, without
+automatic anchoring, retrying, ranking, or authority language anywhere in
+the flow:
+
+```text
+Publication Center
+      │
+      │ user explicitly clicks "Create Bitcoin Anchor"
+      ▼
+PublicationAnchorCreationCoordinator.create()   (new)
+      │
+      ▼
+CreateExternalPublicationAnchorUseCase.execute()   (0.8.10, UNCHANGED)
+      │
+      ▼
+BitcoinAnchorPublisher.publish()   (0.8.9, UNCHANGED)
+      │
+      ▼
+external transaction
+      │
+      ▼
+PublicationAnchor, cataloged
+      │
+      ▼
+re-discovered into the ordinary evidence list — "Not yet verified"
+      │
+      │ user explicitly clicks "Verify Evidence"   (0.8.3, UNCHANGED)
+      ▼
+ExternalAnchorVerifier.verify()
+```
+
+**A DELIBERATELY THIN COORDINATOR, NEVER A SECOND ORCHESTRATOR.**
+`application/PublicationAnchorCreationCoordinator.js` (new) sits beside
+`application/PublicationEvidenceCoordinator.js` (0.8.3), never inside it —
+discovering evidence and creating it stay two different collaborators
+answering two different questions, exactly as discovering and verifying
+already do. Its entire surface is two methods:
+
+- `availableAnchorTypes()` — a synchronous, side-effect-free read of
+  `ExternalAnchorPublisherRegistry#anchorTypes` (0.8.10). This is what
+  keeps the UI from ever offering an anchor type nobody can actually
+  create — `create()` throws for an anchorType with no registered
+  publisher, a genuine caller contract violation `application/
+  CreateExternalPublicationAnchorUseCase.js` itself declines to catch, so
+  a caller only ever offers what this method actually lists.
+- `create(publicationId, anchorType)` — forwards to `application/
+  CreateExternalPublicationAnchorUseCase.js#execute()` unchanged and
+  returns its `{ outcome, anchor, reason }` exactly as received. Never
+  selects an anchorType, never retries, never verifies, never modifies
+  `application/LocalPublicationAnchorCatalog.js` directly, never
+  interprets a Bitcoin transaction, and never ranks existing anchors.
+
+- `application/CreatePublicationAnchorCreationCoordinatorUseCase.js` —
+  the identical composition-root shape `application/
+  CreatePublicationEvidenceCoordinatorUseCase.js` already established:
+  takes an already-constructed `createExternalPublicationAnchorUseCase`
+  and `publisherRegistry` (both produced together by 0.8.10's own
+  `CreateExternalPublicationAnchorOrchestratorUseCase`), constructing
+  neither itself.
+
+- `application/ExternalAnchorCreationUiState.js` — names every state a
+  person can see while one "Create `<type>` Anchor" click resolves:
+  `IDLE`/`CREATING`/`CREATED`/`REJECTED`/`UNAVAILABLE`. The identical
+  "name the difference structurally, never by convention" discipline
+  `application/ExternalAnchorCreationOutcome.js` (0.8.10) already applies
+  to the EXTERNAL fact, applied here to a fourth axis: what one button
+  should show right now. This is UI state only — never written onto a
+  `core/PublicationAnchor.js`, never persisted anywhere, never added as
+  an `anchor.status`/`anchor.createdByUi`/`anchor.verified` field. It
+  lives only in `ui/views/DecentralizedPublicationsView.js`'s own
+  `entry.creationAttempts`, exactly as ephemeral as `entry.verifications`
+  (0.8.3) already is — reopening the Publication Center always starts
+  every button back at `IDLE`.
+
+- `application/PublicationAnchorCreationView.js` — the creation-side
+  mirror of `application/PublicationEvidenceView.js` (0.8.3): a pure,
+  side-effect-free `describeCreationAttempt()` that turns an
+  already-computed attempt into a flat, precise, presentation-only shape,
+  and `describeCreationButtonLabel()` for the button itself ("Create
+  Bitcoin Anchor" vs. "Create Another Bitcoin Anchor" once one already
+  exists — making a second, independent anchor's existence visually
+  obvious rather than implying a replacement). THE STRONGEST STATEMENT
+  THIS FILE EVER MAKES: "`<type>` evidence was recorded for this content
+  hash." Never "verified," "confirmed," or "trusted" — words this
+  milestone's own design conversation named explicitly as ones the UI
+  must never use for a freshly created anchor. A local precondition
+  failure (nobody signed in — `application/
+  CreateExternalPublicationAnchorUseCase.js` throws before any publisher
+  is ever consulted) is caught at the UI boundary, `ui/views/
+  DecentralizedPublicationsView.js#createAnchor()`, never inside the
+  coordinator, and reads to a person exactly like `UNAVAILABLE` — no
+  anchor was created either way — while its own specific reason ("sign in
+  to create a publication anchor") is still shown, never replaced with a
+  generic message.
+
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each entry's
+  "External Evidence" section now always renders (previously gated on
+  `count > 0`, since it had nothing else to show when empty) and offers
+  one "Create `<type>` Anchor" control per `availableAnchorTypes()`,
+  hidden entirely when this replica has no publisher configured — the
+  identical "hide the control rather than let it do nothing" restraint
+  already held for "Retrieve from Peers" with no connected peer (0.7.6).
+  Clicking it triggers exactly one `create()` call; on `CREATED`, the
+  entry's evidence is re-discovered (a purely local catalog read, never a
+  verification) so the new anchor appears immediately, "Not yet
+  verified," in the ordinary evidence list below, with its own separate,
+  completely unchanged "Verify Evidence" button.
+
+- `ui/main.js` (modified) — the first production wiring for the
+  CREATION-side pipeline. A real `BitcoinAnchorPublisher` is registered,
+  but its `broadcaster` is a small, explicit stub that always, and
+  honestly, resolves to `PUBLISH_UNAVAILABLE` with the real reason ("this
+  device has no Bitcoin wallet/broadcast capability configured yet") —
+  never a live network broadcaster, which `docs/Roadmap.md`'s own 0.8.9
+  entry already named as a future, separately sized concern (no private
+  keys, no UTXO management, no real signing live anywhere in this
+  application). This lets a person exercise the complete, real
+  "Create → observe the result" flow in the running app today, and see
+  the exact honest `PUBLISH_UNAVAILABLE` outcome this codebase already
+  has a name for, rather than hiding "Create Bitcoin Anchor" from the UI
+  entirely or fabricating a fake success. The moment a real wallet-backed
+  broadcaster exists, it plugs in here with zero changes anywhere else —
+  exactly the promise 0.8.10's own composition root already made.
+
+- `tests/PublicationAnchorCreationUX.test.js` (new) — Section A: flagship,
+  Alice's Publication Center lists Bitcoin as available, she explicitly
+  creates an anchor over a real `BitcoinAnchorPublisher` against a fake
+  Bitcoin network, the derived UI view says exactly "evidence was
+  recorded" and never "verified"/"confirmed"/"trusted", the new anchor is
+  discoverable "Not yet verified," and Bob independently verifies it —
+  `PROOF_UNAVAILABLE` while unconfirmed, `VALID` once the same fake
+  network confirms the same unchanged anchor; Section B: `CREATED`/
+  `PUBLISH_REJECTED`/`PUBLISH_UNAVAILABLE`, plus a caught local
+  precondition failure, each get their own distinct, non-collapsing UI
+  state; Section C: discovering evidence and listing available anchor
+  types never verify or publish anything, and creating consults its
+  publisher exactly once and the verifier not at all — no automatic
+  verification after creation; Section D: creating the same anchorType
+  twice produces two independent, equally discoverable, independently
+  verifiable anchors, never ranked; Section E: `availableAnchorTypes()`
+  is what keeps the UI from ever offering an anchorType with no
+  registered publisher; Section F: the composition root wires the SAME
+  already-constructed collaborators passed to it.
+
+```text
+0.8.10  External Anchor Creation Orchestration & Publisher Registry  ✓
+             │
+             ▼
+0.8.11  Explicit External Anchoring UX                               ✓
+             ├── application/PublicationAnchorCreationCoordinator.js —
+             │   new; availableAnchorTypes() / create(), a thin
+             │   pass-through to CreateExternalPublicationAnchorUseCase
+             │   (0.8.10, UNCHANGED)
+             ├── application/
+             │   CreatePublicationAnchorCreationCoordinatorUseCase.js —
+             │   new composition-root seam, mirrors
+             │   CreatePublicationEvidenceCoordinatorUseCase.js
+             ├── application/ExternalAnchorCreationUiState.js — new;
+             │   IDLE/CREATING/CREATED/REJECTED/UNAVAILABLE — UI state
+             │   only, never persisted, never added to PublicationAnchor
+             ├── application/PublicationAnchorCreationView.js — new;
+             │   pure display derivation, strongest statement ever made:
+             │   "<type> evidence was recorded for this content hash"
+             ├── ui/views/DecentralizedPublicationsView.js — modified;
+             │   "Create <type> Anchor" per available anchorType, never
+             │   auto-verifies what it just created
+             ├── ui/main.js — modified; real BitcoinAnchorPublisher wired
+             │   against an honest always-PUBLISH_UNAVAILABLE stub
+             │   broadcaster — no live wallet yet, no fabricated success
+             └── PublicationAnchorCreationUX.test.js (new) — flagship +
+                 outcome-states + separation + multi-anchor +
+                 available-types-gating + composition-root sections
+```
+
+> **Discovering evidence, creating it, and verifying it are three
+> different questions, and answering one never answers another.**
+> `application/PublicationAnchorCreationCoordinator.js` is a deliberately
+> thin pass-through to the unmodified 0.8.10 orchestration — it never
+> selects an anchor type, retries, verifies, or ranks anything, and
+> creating an anchor NEVER automatically verifies it: the result lands in
+> the ordinary evidence list, "Not yet verified," waiting for its own
+> separate, explicit click, exactly as `anchoring/
+> BitcoinAnchorPublisher.js`'s own header (0.8.9) already insists
+> broadcast acceptance is not confirmation. The UI's strongest permitted
+> statement is "evidence was recorded for this content hash" — never
+> "verified," "confirmed," or "trusted." See `docs/Principles.md`,
+> "External Anchoring Is An Explicit User Action (0.8.11)."
+
+### Deliberately excluded
+
+- **A live, real-network Bitcoin broadcaster.** `ui/main.js` wires a real
+  `BitcoinAnchorPublisher` against a stub `broadcaster` that always,
+  honestly, reports `PUBLISH_UNAVAILABLE` — no private-key generation,
+  wallet storage, UTXO management, fee estimation, or real transaction
+  signing/broadcast anywhere in this application. This is the identical
+  restraint `docs/Roadmap.md`'s own 0.8.9 entry already named as a
+  future, separately sized concern; 0.8.11 only makes the resulting
+  honest "unavailable" outcome visible in the running app, never
+  implements the wallet itself.
+- **Confirmation polling, or any automatic re-verification.** A created
+  anchor's status is never re-checked on a timer, on page focus, or any
+  other automatic trigger — verifying stays exactly as explicit a click
+  as it already was in 0.8.3.
+- **Anchor ranking, a "canonical" anchor, or collapsing multiple anchors
+  of the same type into one display slot.** Every discovered anchor, and
+  every just-created one, is shown independently — see this milestone's
+  own reasoning above and `docs/Principles.md`'s 0.8.6/0.8.10 entries.
+- **Anchor deletion or retraction.** A created `PublicationAnchor` is
+  permanent evidence of a real external operation that already happened;
+  nothing in this milestone lets a person remove one from the catalog.
+- **Automatic anchoring as a side effect of Save or Publish.** Nothing in
+  `application/SaveDocumentUseCase.js` or `application/
+  PublishDocumentUseCase.js` calls `application/
+  PublicationAnchorCreationCoordinator.js#create()`. External recording
+  is always the direct, deliberate result of one explicit click, never a
+  consequence of an unrelated action.
+- **A second anchor-type UI entry point outside the Publication Center.**
+  The action stays bound to a specific, already-known publication —
+  `ui/views/DecentralizedPublicationsView.js`'s own per-entry card — never
+  a global "anchor something" form that would require a person to paste
+  in a content hash by hand.
+- **Wallet UI, fee estimation, or transaction replacement (RBF/CPFP) of
+  any kind.** All of it depends on the live broadcaster this milestone
+  deliberately does not build.
+
+What's left, and deliberately unbuilt: a real wallet-backed Bitcoin
+broadcaster, confirmation-change notifications, and hardening the
+external-anchor lifecycle under more realistic external-system behavior
+(stale evidence, a confirmation that later reorgs away, many independent
+anchors accumulating over time) — each sized on its own, exactly like
+every "Deliberately excluded" list in this document before it.

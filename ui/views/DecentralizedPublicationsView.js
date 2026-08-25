@@ -4,6 +4,9 @@ import { PublicationResolutionOutcome } from '../../application/PublicationResol
 import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/PublicationResolutionView.js';
 import { AnchorVerificationOutcome } from '../../application/AnchorVerificationOutcome.js';
 import { publicationEvidenceView, describeKnownEvidenceCount } from '../../application/PublicationEvidenceView.js';
+import { ExternalAnchorCreationUiState } from '../../application/ExternalAnchorCreationUiState.js';
+import { ExternalAnchorCreationOutcome } from '../../application/ExternalAnchorCreationOutcome.js';
+import { describeCreationAttempt, describeCreationButtonLabel } from '../../application/PublicationAnchorCreationView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -61,6 +64,24 @@ import { publicationEvidenceView, describeKnownEvidenceCount } from '../../appli
 // answer fresh. See application/PublicationEvidenceView.js's own
 // header and docs/Principles.md, "Known Evidence Is Not Verified
 // Evidence, And Verified Evidence Is Not Authority (0.8.3)."
+//
+// 0.8.11 — Explicit External Anchoring UX. Each entry's "External
+// Evidence" section now also offers a "Create <type> Anchor" control per
+// application/PublicationAnchorCreationCoordinator.js#availableAnchorTypes()
+// — the first UI consumer of the orchestration 0.8.8-0.8.10 built with no
+// UI consumer at all (see each of those milestones' own "Deliberately
+// excluded" lists). Discovery, creation, and verification stay three
+// genuinely separate actions, over three separate collaborators, exactly
+// as 0.8.3 already established for the first two: opening this page,
+// listing known evidence, and toggling the evidence list open never
+// trigger a creation OR a verification; clicking "Create <type> Anchor"
+// triggers exactly one external recording attempt and NEVER an automatic
+// verification of what it just created (the resulting anchor lands in
+// the ordinary evidence list below, "Not yet verified," exactly like any
+// other cataloged anchor); clicking "Verify Evidence" remains its own
+// separate, unchanged 0.8.3 action. See application/
+// PublicationAnchorCreationView.js's own header and docs/Principles.md,
+// "External Anchoring Is An Explicit User Action (0.8.11)."
 function humanizeContentKind(contentKind) {
     if (!contentKind) return 'Unknown content';
     return contentKind
@@ -97,6 +118,24 @@ const EVIDENCE_BADGE_CLASSES = {
     [AnchorVerificationOutcome.INVALID_PROOF]: 'peer-badge--failed'
 };
 
+// 0.8.11 — Explicit External Anchoring UX. Reuses the identical
+// .peer-badge palette EVIDENCE_BADGE_CLASSES above already draws from —
+// CREATED reads as "good" (green), exactly like VALID; REJECTED reads as
+// a definite rejection (red), exactly like INVALID_PROOF (the external
+// system was reached and said no); UNAVAILABLE reads as "honestly
+// inconclusive" (amber), exactly like PROOF_UNAVAILABLE (nothing
+// external was reached at all, whether because of the publisher or
+// because application/PublicationAnchorCreationCoordinator.js#create()
+// itself threw — see application/PublicationAnchorCreationView.js's own
+// header on why those two share a state). CREATING gets the same amber
+// as any other in-flight check.
+const CREATION_BADGE_CLASSES = {
+    [ExternalAnchorCreationUiState.CREATING]: 'peer-badge--pending',
+    [ExternalAnchorCreationUiState.CREATED]: 'peer-badge--authenticated',
+    [ExternalAnchorCreationUiState.REJECTED]: 'peer-badge--failed',
+    [ExternalAnchorCreationUiState.UNAVAILABLE]: 'peer-badge--pending'
+};
+
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
@@ -107,6 +146,20 @@ export default {
         const publicationPeerContentExchange = inject('publicationPeerContentExchange');
         const peerSessionManager = inject('peerSessionManager');
         const evidenceCoordinator = inject('publicationEvidenceCoordinator');
+        const creationCoordinator = inject('publicationAnchorCreationCoordinator');
+
+        // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
+        // replica can currently ask to create evidence for, read ONCE at
+        // setup (a synchronous, side-effect-free registry read — see
+        // application/PublicationAnchorCreationCoordinator.js#
+        // availableAnchorTypes() own header) rather than per publication;
+        // which publishers exist is a property of this replica, not of
+        // any one entry. Empty when no `creationCoordinator` was provided,
+        // or when this replica has no publisher configured at all — in
+        // either case no "Create Anchor" control is ever offered, exactly
+        // as "Retrieve from Peers" already stays hidden with no
+        // authenticated peer connected.
+        const availableAnchorTypes = creationCoordinator ? creationCoordinator.availableAnchorTypes() : [];
 
         const entries = reactive([]);
         const loading = ref(true);
@@ -149,7 +202,13 @@ export default {
                 evidenceAnchors: [],
                 evidence: null,
                 evidenceExpanded: false,
-                verifications: {}
+                verifications: {},
+                // 0.8.11 — Explicit External Anchoring UX. Keyed by
+                // anchorType; ephemeral for the lifetime of this page,
+                // exactly like `verifications` above — never read from or
+                // written to anything durable. See application/
+                // ExternalAnchorCreationUiState.js's own header.
+                creationAttempts: {}
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -197,6 +256,61 @@ export default {
             if (anchorView.checking) return 'peer-badge--pending';
             if (!anchorView.verified) return 'peer-badge--unchecked';
             return EVIDENCE_BADGE_CLASSES[anchorView.verificationOutcome] || 'peer-badge--unchecked';
+        }
+
+        // 0.8.11 — Explicit External Anchoring UX. The one place this
+        // page calls application/PublicationAnchorCreationCoordinator.js
+        // (through the coordinator) — always for exactly ONE anchorType,
+        // always because a person clicked "Create <type> Anchor" on it.
+        // Never called from onMounted(), refreshList(), or loadEvidence()
+        // — merely opening or refreshing this page never triggers an
+        // external recording. See this file's own header and
+        // docs/Principles.md, "External Anchoring Is An Explicit User
+        // Action (0.8.11)."
+        //
+        // A thrown error (application/PublicationAnchorCreationCoordinator
+        // .js#create() never catches one — see that class's own header)
+        // is caught HERE, at the UI boundary, and turned into its own
+        // honest display state via application/
+        // PublicationAnchorCreationView.js#describeCreationAttempt()
+        // rather than crashing the page.
+        async function createAnchor(entry, anchorType) {
+            if (!creationCoordinator) return;
+            entry.creationAttempts[anchorType] = { creating: true, outcome: null, anchor: null, reason: null, error: null };
+            try {
+                const result = await creationCoordinator.create(entry.publication.id, anchorType);
+                entry.creationAttempts[anchorType] = {
+                    creating: false, outcome: result.outcome, anchor: result.anchor, reason: result.reason, error: null
+                };
+                // Re-discover from the catalog so a CREATED anchor
+                // immediately appears in the ordinary evidence list below
+                // — a purely local catalog read (application/
+                // PublicationEvidenceCoordinator.js#discover()), never a
+                // verification. See this file's own header, and
+                // application/PublicationEvidenceCoordinator.js's own, on
+                // why discovery and verification stay two separate calls.
+                loadEvidence(entry);
+                if (result.outcome === ExternalAnchorCreationOutcome.CREATED) {
+                    entry.evidenceExpanded = true;
+                }
+            } catch (error) {
+                entry.creationAttempts[anchorType] = { creating: false, outcome: null, anchor: null, reason: null, error: error.message };
+            }
+        }
+
+        function creationView(entry, anchorType) {
+            return describeCreationAttempt(entry.creationAttempts[anchorType]);
+        }
+
+        function creationBadgeClass(entry, anchorType) {
+            const state = creationView(entry, anchorType).state;
+            return CREATION_BADGE_CLASSES[state] || null;
+        }
+
+        function creationButtonLabel(entry, anchorType) {
+            const view = creationView(entry, anchorType);
+            const hasExisting = entry.evidenceAnchors.some((anchor) => anchor.anchorType === anchorType);
+            return describeCreationButtonLabel(humanizeContentKind(anchorType), { creating: view.state === ExternalAnchorCreationUiState.CREATING, hasExisting });
         }
 
         async function recheck(entry) {
@@ -290,10 +404,11 @@ export default {
         });
 
         return {
-            entries, loading, retrievalPeers,
+            entries, loading, retrievalPeers, availableAnchorTypes,
             humanizeContentKind, shortId, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck,
-            describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass
+            describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass,
+            createAnchor, creationView, creationBadgeClass, creationButtonLabel
         };
     },
     template: `
@@ -349,15 +464,51 @@ export default {
                         </button>
                     </div>
 
-                    <div v-if="entry.evidence && entry.evidence.count > 0" class="evidence-section">
+                    <div v-if="entry.evidence" class="evidence-section">
                         <div class="evidence-summary">
                             <span class="evidence-summary-title">External Evidence</span>
                             <span class="form-hint form-hint--neutral">{{ describeKnownEvidenceCount(entry.evidence) }}</span>
-                            <button class="action-btn action-btn--secondary" @click="toggleEvidence(entry)">
+                            <button v-if="entry.evidence.count > 0" class="action-btn action-btn--secondary" @click="toggleEvidence(entry)">
                                 {{ entry.evidenceExpanded ? 'Hide Evidence' : 'Show Evidence' }}
                             </button>
                         </div>
-                        <div v-if="entry.evidenceExpanded" class="evidence-list">
+
+                        <!-- 0.8.11 — Explicit External Anchoring UX. One card per anchorType this
+                             replica can currently create evidence for (application/
+                             PublicationAnchorCreationCoordinator.js#availableAnchorTypes()) — hidden
+                             entirely when this replica has no publisher configured, exactly like
+                             "Retrieve from Peers" hides with no connected peer. Creating is always a
+                             single, explicit click; the result of the most recent attempt is shown
+                             here and nowhere else persists it. -->
+                        <div v-if="availableAnchorTypes.length > 0" class="evidence-list">
+                            <div v-for="anchorType in availableAnchorTypes" :key="anchorType" class="evidence-anchor-card">
+                                <div class="evidence-anchor-header">
+                                    <span class="evidence-anchor-type">{{ humanizeContentKind(anchorType) }}</span>
+                                    <span v-if="creationView(entry, anchorType).label" class="peer-badge" :class="creationBadgeClass(entry, anchorType)">
+                                        {{ creationView(entry, anchorType).label }}
+                                    </span>
+                                </div>
+                                <p v-if="creationView(entry, anchorType).message" class="form-hint form-hint--neutral">
+                                    {{ creationView(entry, anchorType).message }}
+                                </p>
+                                <p v-if="creationView(entry, anchorType).reason" class="form-hint form-hint--neutral">
+                                    {{ creationView(entry, anchorType).reason }}
+                                </p>
+                                <dl v-if="creationView(entry, anchorType).anchor" class="evidence-fields">
+                                    <div class="evidence-field"><dt>Transaction</dt><dd>{{ creationView(entry, anchorType).anchor.locator }}</dd></div>
+                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ creationView(entry, anchorType).anchor.contentHash }}</dd></div>
+                                </dl>
+                                <div class="identity-mgmt-actions">
+                                    <button class="action-btn action-btn--primary"
+                                            :disabled="creationView(entry, anchorType).state === 'creating'"
+                                            @click="createAnchor(entry, anchorType)">
+                                        {{ creationButtonLabel(entry, anchorType) }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="entry.evidenceExpanded && entry.evidence.count > 0" class="evidence-list">
                             <div v-for="anchorView in entry.evidence.anchors" :key="anchorView.anchorId" class="evidence-anchor-card">
                                 <div class="evidence-anchor-header">
                                     <span class="evidence-anchor-type">{{ humanizeContentKind(anchorView.anchorType) }}</span>
