@@ -1,5 +1,6 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
+import { AnchorAcquisitionKind } from './AnchorAcquisitionKind.js';
 
 // 0.8.8 — Explicit Publication Anchor Creation & Lifecycle.
 //
@@ -57,8 +58,24 @@ import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.j
 // same way application/BlueprintAttributionUseCase.js#publish() already
 // resolves an author — never a hidden "currentUser" global, and never
 // defaulted to anything if nobody is signed in.
+//
+// 0.8.17 — Evidence Provenance & Observation Boundary. Also records an
+// application/AnchorAcquisitionKind.js#LOCAL knowledge entry (see the
+// optional `knowledgeStore` constructor parameter) — never a change to
+// what this class creates or catalogs, purely additional, local-only
+// bookkeeping about HOW this replica came to know about its own freshly
+// signed claim.
 export class CreatePublicationAnchorUseCase {
-    constructor(publicationCatalog, identityProvider, verifier, anchorCatalog) {
+    // knowledgeStore: OPTIONAL, an application/LocalAnchorKnowledgeStore.js
+    // instance (0.8.17). When supplied, a successfully created anchor also
+    // records an AnchorAcquisitionKind.LOCAL knowledge entry for itself —
+    // "this replica learned this claim by creating it," the one
+    // acquisition kind no other entry point can ever record. Omitted
+    // entirely (as every caller before 0.8.17 already does), this class
+    // behaves exactly as it always did: knowledge tracking is additive,
+    // local-only bookkeeping, never a precondition for creating an
+    // anchor. See application/AnchorKnowledgeRecord.js's own header.
+    constructor(publicationCatalog, identityProvider, verifier, anchorCatalog, knowledgeStore = null) {
         if (!publicationCatalog) {
             throw new Error('CreatePublicationAnchorUseCase: a publication catalog is required');
         }
@@ -75,6 +92,7 @@ export class CreatePublicationAnchorUseCase {
         this._identityProvider = identityProvider;
         this._verifier = verifier;
         this._anchorCatalog = anchorCatalog;
+        this._knowledgeStore = knowledgeStore;
     }
 
     // Creates, signs, and catalogs a new PublicationAnchor for
@@ -138,6 +156,9 @@ export class CreatePublicationAnchorUseCase {
         }
 
         const { anchor: cataloged } = this._anchorCatalog.add(anchor);
+        if (this._knowledgeStore) {
+            this._knowledgeStore.record(cataloged.id, AnchorAcquisitionKind.LOCAL);
+        }
         return cataloged;
     }
 }

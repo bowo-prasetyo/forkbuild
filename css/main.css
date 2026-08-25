@@ -4992,6 +4992,16 @@ html, body {
     margin-bottom: 0.4rem;
 }
 
+/* 0.8.17 — Evidence Provenance & Observation Boundary. Same separator
+   treatment as .evidence-inspection-adapter directly above — a distinct
+   subsection within "Inspect Evidence," never restyled to look more or
+   less prominent than the claim it sits below. */
+.evidence-inspection-knowledge {
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid #2a2a2a;
+}
+
 .evidence-inspection-proof {
     margin-top: 0.75rem;
 }

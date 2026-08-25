@@ -1,4 +1,5 @@
 import { PublicationAnchorError } from './PublicationAnchorValidator.js';
+import { AnchorAcquisitionKind } from './AnchorAcquisitionKind.js';
 
 // 0.8.7 — External Evidence Import & Publication Package Integration.
 //
@@ -64,11 +65,21 @@ export const PackageAnchorImportReason = Object.freeze({
 export class ImportPackageAnchorsUseCase {
     // anchorExchange: an application/PublicationAnchorExchange.js instance
     // — the one and only anchor-import boundary this class ever calls.
-    constructor(anchorExchange) {
+    // knowledgeStore: OPTIONAL, an application/LocalAnchorKnowledgeStore.js
+    // instance (0.8.17). When supplied, every successfully imported anchor
+    // — new or already-known, `isNew` either way — also records an
+    // application/AnchorAcquisitionKind.js#PACKAGE knowledge entry. Called
+    // unconditionally, on every anchor, every time: FIRST-SEEN-WINS inside
+    // application/LocalAnchorKnowledgeStore.js#record() is what makes that
+    // safe — an anchor Bob already knows as PEER keeps reporting PEER even
+    // after a package import of the identical anchor calls record() again
+    // with PACKAGE. See that file's own header.
+    constructor(anchorExchange, knowledgeStore = null) {
         if (!anchorExchange || typeof anchorExchange.importAnchor !== 'function') {
             throw new Error('ImportPackageAnchorsUseCase: a PublicationAnchorExchange is required');
         }
         this._anchorExchange = anchorExchange;
+        this._knowledgeStore = knowledgeStore;
     }
 
     // `pkg`: a Blueprint Package (application/BlueprintPackage.js) that
@@ -98,6 +109,9 @@ export class ImportPackageAnchorsUseCase {
         for (const anchorJson of anchors) {
             try {
                 const { anchor, isNew } = this._anchorExchange.importAnchor(anchorJson);
+                if (this._knowledgeStore) {
+                    this._knowledgeStore.record(anchor.id, AnchorAcquisitionKind.PACKAGE);
+                }
                 if (isNew) {
                     importedAnchors.push(anchor);
                 } else {

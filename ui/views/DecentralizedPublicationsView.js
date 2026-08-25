@@ -14,6 +14,7 @@ import { publicationEvidenceConvergenceView } from '../../application/Publicatio
 import { publicationAnchorDetailView } from '../../application/PublicationAnchorDetailView.js';
 import { describeEvidenceDiscoveryAttempt, describeDiscoveryButtonLabel } from '../../application/PublicationEvidenceDiscoveryView.js';
 import { PublicationEvidenceDiscoveryUiState } from '../../application/PublicationEvidenceDiscoveryUiState.js';
+import { describeAnchorKnowledge } from '../../application/PublicationAnchorKnowledgeView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -258,6 +259,13 @@ export default {
         // `availableAnchorTypes` above degrades to an empty list with no
         // `creationCoordinator`.
         const evidenceViewRegistry = inject('externalAnchorEvidenceViewRegistry', null);
+        // 0.8.17 — Evidence Provenance & Observation Boundary. Optional —
+        // absent here (as in a test harness that never provides it),
+        // "Inspect Evidence" simply shows no "Local Knowledge" section;
+        // every other field of application/PublicationAnchorDetailView.js's
+        // own shape is untouched. See `toggleInspect()`'s own comment
+        // below.
+        const anchorKnowledgeStore = inject('anchorKnowledgeStore', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -473,7 +481,7 @@ export default {
         // place (core/PublicationAnchor.js's own header).
         function toggleInspect(entry, anchorView) {
             const state = entry.inspections[anchorView.anchorId]
-                || (entry.inspections[anchorView.anchorId] = { expanded: false, detail: null, typeSpecific: null });
+                || (entry.inspections[anchorView.anchorId] = { expanded: false, detail: null, typeSpecific: null, knowledge: null });
             state.expanded = !state.expanded;
             if (state.expanded && !state.detail) {
                 const anchor = entry.evidenceAnchors.find((candidate) => candidate.id === anchorView.anchorId);
@@ -481,6 +489,17 @@ export default {
                 state.detail = publicationAnchorDetailView(anchor);
                 state.typeSpecific = (evidenceViewRegistry && evidenceViewRegistry.has(anchor.anchorType))
                     ? evidenceViewRegistry.get(anchor.anchorType).describe(anchor)
+                    : null;
+                // 0.8.17 — Evidence Provenance & Observation Boundary. A
+                // purely local, synchronous read — application/
+                // LocalAnchorKnowledgeStore.js#get() never touches the
+                // network and never mutates anything, the identical
+                // "Inspection Is Observation" restraint this file's own
+                // header already holds for `publicationAnchorDetailView()`
+                // above, extended to cover this replica's own acquisition
+                // bookkeeping.
+                state.knowledge = anchorKnowledgeStore
+                    ? describeAnchorKnowledge(anchorKnowledgeStore.get(anchor.id))
                     : null;
             }
         }
@@ -498,6 +517,12 @@ export default {
         function inspectionTypeSpecific(entry, anchorView) {
             const state = entry.inspections[anchorView.anchorId];
             return state ? state.typeSpecific : null;
+        }
+
+        // 0.8.17 — Evidence Provenance & Observation Boundary.
+        function inspectionKnowledge(entry, anchorView) {
+            const state = entry.inspections[anchorView.anchorId];
+            return state ? state.knowledge : null;
         }
 
         function evidenceBadgeClass(anchorView) {
@@ -711,7 +736,7 @@ export default {
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel,
-            toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific,
+            toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel
         };
     },
@@ -933,6 +958,28 @@ export default {
                                         <summary>Proof (raw, adapter-defined evidence)</summary>
                                         <pre class="evidence-inspection-proof-json">{{ JSON.stringify(inspectionDetail(entry, anchorView).proof, null, 2) }}</pre>
                                     </details>
+
+                                    <!-- 0.8.17 — Evidence Provenance & Observation Boundary.
+                                         Deliberately separate from the "External Evidence" block
+                                         above: everything above describes what the anchor CLAIMS;
+                                         this describes how THIS replica came to know the claim at
+                                         all — see application/PublicationAnchorKnowledgeView.js's own
+                                         header on why the wording here never names a peer and never
+                                         reads as a trust signal. -->
+                                    <div v-if="inspectionKnowledge(entry, anchorView) && inspectionKnowledge(entry, anchorView).known"
+                                         class="evidence-inspection-knowledge">
+                                        <span class="evidence-inspection-title">Local Knowledge</span>
+                                        <dl class="evidence-fields">
+                                            <div class="evidence-field">
+                                                <dt>Acquisition</dt>
+                                                <dd>{{ inspectionKnowledge(entry, anchorView).acquisitionLabel }}</dd>
+                                            </div>
+                                            <div class="evidence-field">
+                                                <dt>{{ inspectionKnowledge(entry, anchorView).firstSeenAtLabel }}</dt>
+                                                <dd>{{ formatWhen(inspectionKnowledge(entry, anchorView).firstSeenAt) }}</dd>
+                                            </div>
+                                        </dl>
+                                    </div>
                                 </div>
                             </div>
                         </div>

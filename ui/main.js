@@ -358,7 +358,14 @@ const { kindPlugins: publicationDisplayKindPlugins } = new CreatePublicationDisp
 // once calls `externalAnchorVerifier` below; verification stays exactly
 // where 0.8.3 already put it, an explicit "Verify Evidence" click in the
 // Publication Center, unchanged by this milestone.
-const { catalog: publicationAnchorCatalog, peerExchange: publicationAnchorPeerExchange } = new CreatePublicationAnchorPeerExchangeUseCase().execute({
+// 0.8.17 — Evidence Provenance & Observation Boundary. `anchorKnowledgeStore`
+// is the one LocalAnchorKnowledgeStore instance this replica uses
+// anywhere — returned here already wired into `publicationAnchorPeerExchange`
+// (PEER acquisition) and threaded below into
+// CreateExternalPublicationAnchorOrchestratorUseCase.js (LOCAL
+// acquisition), the same "one instance, threaded everywhere" discipline
+// `publicationAnchorCatalog` itself already holds.
+const { catalog: publicationAnchorCatalog, peerExchange: publicationAnchorPeerExchange, knowledgeStore: anchorKnowledgeStore } = new CreatePublicationAnchorPeerExchangeUseCase().execute({
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry
 });
@@ -446,7 +453,9 @@ const { createExternalPublicationAnchorUseCase, publisherRegistry: externalAncho
         publicationCatalog,
         anchorCatalog: publicationAnchorCatalog,
         identityProvider,
-        publishers: [bitcoinAnchorPublisher]
+        publishers: [bitcoinAnchorPublisher],
+        // 0.8.17 — Evidence Provenance & Observation Boundary.
+        knowledgeStore: anchorKnowledgeStore
     });
 const { coordinator: publicationAnchorCreationCoordinator } = new CreatePublicationAnchorCreationCoordinatorUseCase().execute({
     createExternalPublicationAnchorUseCase,
@@ -505,6 +514,8 @@ app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 app.provide('publicationAnchorDiscoveryCoordinator', publicationAnchorDiscoveryCoordinator);
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 app.provide('publicationEvidenceDiscoveryCoordinator', publicationEvidenceDiscoveryCoordinator);
+// 0.8.17 — Evidence Provenance & Observation Boundary.
+app.provide('anchorKnowledgeStore', anchorKnowledgeStore);
 // 0.8.14 — External Evidence Inspection & Locator UX.
 app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegistry);
 app.use(router);

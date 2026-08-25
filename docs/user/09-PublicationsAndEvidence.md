@@ -248,6 +248,20 @@ And two buttons:
   local read of what's already on your device — it never touches the
   network and never changes what **Verify Evidence** would later find.
 
+  A separate **Local Knowledge** section, at the bottom, answers a
+  different question — not "what does this evidence claim," but "how did
+  *this device* come to know about it":
+
+  | Field | Meaning |
+  |---|---|
+  | **Acquisition** | *Learned locally* (you created it), *Learned via package import* (it arrived bundled in a package you imported), or *Learned via peer exchange* (a peer sent or synchronized it to you). |
+  | **First seen by this replica** | When this device first learned the claim — never reset by learning it again some other way later. |
+
+  This is bookkeeping about your own device's history, nothing more. It
+  never names *which* peer, and it's never a hint about which evidence to
+  trust more — see [Verification outcomes](#verification-outcomes) below
+  for the only thing that actually speaks to whether a claim holds up.
+
 ### Verification outcomes
 
 | Label | Meaning |
@@ -276,8 +290,10 @@ confirmed.
 Evidence you've cataloged — your own, a peer's, or something you
 discovered — is stored on this device and is still there after you close
 the tab and come back, exactly like everything else this app saves locally.
-**Verification results are not** — they're only ever known for the current
-visit. Reload the page and every anchor you'd checked goes back to "Not yet
+So does each anchor's **Local Knowledge** (see above) — how and when your
+device first learned it stays exactly as it was the first time, even if the
+identical evidence later reaches you a second way. **Verification results
+are not** — they're only ever known for the current visit. Reload the page and every anchor you'd checked goes back to "Not yet
 verified" until you check it again; nothing about that is a bug; it simply
 reflects that "was this true a moment ago" and "is this device holding a
 genuine claim" are two different facts, and only the second one is worth

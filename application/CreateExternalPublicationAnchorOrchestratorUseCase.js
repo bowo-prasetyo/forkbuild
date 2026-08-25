@@ -33,10 +33,17 @@ import { ExternalAnchorPublisherRegistry } from './ExternalAnchorPublisherRegist
 // refuses to proceed for any of them, exactly as it would for a single
 // missing publisher.
 export class CreateExternalPublicationAnchorOrchestratorUseCase {
-    execute({ publicationCatalog, anchorCatalog, identityProvider, publishers = [] } = {}) {
+    // knowledgeStore: OPTIONAL (0.8.17) — passed straight through to
+    // application/CreatePublicationAnchorUseCase.js, so a locally created
+    // anchor also records its own LOCAL knowledge entry. See that class's
+    // own header; this use case constructs no knowledge store of its own,
+    // the same "storage lives elsewhere, wiring lives here" restraint
+    // this class's own header already holds for `publicationCatalog`/
+    // `anchorCatalog`.
+    execute({ publicationCatalog, anchorCatalog, identityProvider, publishers = [], knowledgeStore = null } = {}) {
         const verifier = new LocalAuthorizationVerifier();
         const createPublicationAnchorUseCase = new CreatePublicationAnchorUseCase(
-            publicationCatalog, identityProvider, verifier, anchorCatalog
+            publicationCatalog, identityProvider, verifier, anchorCatalog, knowledgeStore
         );
         const publisherRegistry = new ExternalAnchorPublisherRegistry();
         for (const publisher of publishers) {
