@@ -10290,3 +10290,81 @@ import externally → preserve the external claim, unchanged (0.8.4/0.8.7)
 ```
 
 See `docs/Roadmap.md`, 0.8.8, for the full milestone entry.
+
+### Broadcast Acceptance Is Not Anchor Validity (0.8.9)
+
+`anchoring/BitcoinAnchorPublisher.js` is the first thing this codebase has
+ever built that performs a real external-system OPERATION rather than
+merely checking or claiming one — it asks Bitcoin to record a
+contentHash. That is new enough ground that it would be easy to let a
+successful broadcast quietly start meaning more than it does. It does
+not. A `{ published: true, locator, proof }` result means exactly one
+thing: **the external system accepted this transaction for broadcast —
+nothing about whether it will confirm, nothing about whether it already
+has, and nothing about whether the claim eventually built from it will
+verify.**
+
+This gives the evidence architecture a lifecycle with four permanently
+distinct steps, each owned by a different class that never imports the
+others:
+
+```text
+create the transaction     (0.8.9, anchoring/BitcoinAnchorPublisher.js)
+    ≠
+broadcast acceptance       (a network-layer fact, not evidence at all)
+    ≠
+create the claim            (0.8.8, application/CreatePublicationAnchorUseCase.js)
+    ≠
+proof verification          (0.8.1, application/ExternalAnchorVerifier.js)
+```
+
+`tests/BitcoinAnchorCreationAdapter.test.js`'s own Section A and B prove
+this directly, against one shared fake Bitcoin network rather than two
+disconnected fakes: Alice's publisher broadcasts a transaction that is
+accepted but unconfirmed; the `PublicationAnchor` built from that
+evidence, fed to a real `ExternalAnchorVerifier` by Bob — who holds none
+of Alice's publisher or broadcaster state — reports `PROOF_UNAVAILABLE`,
+never `VALID`, while the transaction remains unconfirmed. The SAME fake
+network then confirms the SAME transaction, and the SAME anchor,
+byte-for-byte unchanged, now reports `VALID`. Nothing about the anchor
+itself ever moved; only the external world did. This is the identical
+temporal restraint 0.8.1 already established for evidence arriving by any
+other path, now proven to hold from the very moment of creation, not just
+afterward.
+
+**Creating the transaction is not creating the claim.**
+`BitcoinAnchorPublisher#publish()` never imports, constructs, or calls
+`core/PublicationAnchor.js` or `application/CreatePublicationAnchorUseCase.js` —
+it returns plain evidence parameters, `{ locator, proof }`, and stops.
+Whether those parameters go on to become a signed `PublicationAnchor` at
+all is entirely the caller's own next, explicit step, exactly as
+`application/CreatePublicationAnchorUseCase.js`'s own header already
+insists evidence parameters are always supplied BY the caller, never
+fetched or constructed by that use case itself. A caller could just as
+easily discard a `{ published: false }` result, retry a broadcast, or
+hold onto accepted evidence for hours before ever creating a claim from
+it — none of that is this class's concern.
+
+**No manufactured `anchoredAt`.** A successful `publish()` result never
+reports a timestamp — broadcast time is not confirmation time is not
+block time, and this class has no way to honestly claim any of them
+before the transaction confirms. Rather than inventing a value that would
+look like it came from Bitcoin itself, a successful result simply omits
+`anchoredAt`, letting `CreatePublicationAnchorUseCase`'s own existing
+"defaults to now" behavior apply — the identical restraint `core/
+PublicationAnchor.js`'s own header already holds for `anchoredAt` in
+general: "the EXTERNAL system's OWN reported timestamp — never treated as
+authoritative."
+
+**Creation and verification stay two independent classes, deliberately
+not unified.** `BitcoinAnchorPublisher` and `anchoring/
+BitcoinOpReturnProofVerifier.js` (0.8.1) both speak Bitcoin, and it would
+be tempting to give them a shared `ExternalAnchorAdapter` base. They
+answer two different questions with two different failure models —
+"can I ask this external system to record this hash?" (broadcast
+accepted / rejected / presently unavailable) versus "can this evidence be
+independently established?" (proof valid / invalid / presently
+unavailable) — and nothing in this codebase yet needs them reconciled
+into one hierarchy merely because both happen to target the same chain.
+
+See `docs/Roadmap.md`, 0.8.9, for the full milestone entry.

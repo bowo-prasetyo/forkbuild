@@ -15884,3 +15884,199 @@ operation (a real Bitcoin-anchoring flow), any UI surface for triggering
 creation, and any status/confirmation model over a created claim — each
 sized on its own, exactly like every "Deliberately excluded" list in this
 document before it.
+
+## 0.8.9 — Bitcoin Anchor Creation Adapter
+
+0.8.8 closed the generic side of anchor creation: a caller with evidence
+parameters in hand can sign and catalog a `PublicationAnchor`. What that
+milestone deliberately left unbuilt was the OTHER half of the Bitcoin
+integration: actually asking Bitcoin to record a contentHash and getting
+real evidence parameters back. `anchoring/BitcoinOpReturnProofVerifier.js`
+(0.8.1) already answers "can I verify this claimed Bitcoin evidence?" —
+0.8.9 answers "can I explicitly create the external evidence that claim
+will later describe?" — and nothing more:
+
+```text
+Publication
+    │
+    ▼
+contentHash
+    │
+    ▼
+BitcoinAnchorPublisher.publish()   (new — Bitcoin-specific)
+    │
+    ▼
+{ locator, proof }                  evidence parameters, NOT an anchor
+    │
+    ▼
+CreatePublicationAnchorUseCase.execute()   (0.8.8, UNCHANGED)
+    │
+    ▼
+PublicationAnchor
+```
+
+**CREATE TRANSACTION AND CREATE CLAIM STAY TWO EXPLICIT STEPS.** Nothing
+in this milestone teaches `core/PublicationAnchor.js` or `application/
+CreatePublicationAnchorUseCase.js` anything about Bitcoin — the new
+publisher never imports either. A caller wanting a genuinely Bitcoin-backed
+anchor calls `BitcoinAnchorPublisher#publish()` FIRST, gets back
+`{ locator, proof }`, and feeds that straight into `execute()` as the exact
+same externally-supplied evidence parameters 0.8.8 already accepted from
+anywhere else. This is the architectural promise 0.8.8's own "Deliberately
+excluded" list made explicit, kept: wallet/transaction mechanics stay
+entirely apart from the generic anchor-creation pipeline.
+
+- `anchoring/BitcoinAnchorPublisher.js` — the one new class, and the
+  creation-side mirror of `anchoring/BitcoinOpReturnProofVerifier.js`
+  (never a shared base class with it — see this milestone's own
+  reasoning below). Constructed with `{ network, broadcaster }`; a
+  `broadcaster` is an injected capability responsible for constructing,
+  signing, and broadcasting the actual Bitcoin transaction — the identical
+  `fetchImpl`-style injection point `content/IpfsContentStore.js` and
+  `anchoring/BitcoinOpReturnProofVerifier.js` already established, for the
+  identical reason: every test in this codebase supplies a fake one, so
+  this class's own orchestration is fully covered without this codebase
+  ever taking on real signing/broadcast responsibility.
+  `publish(contentHash)` asks the broadcaster to carry the RAW contentHash
+  hex in an OP_RETURN output — no new encoding, no publicationId on-chain,
+  exactly the wire contract `BitcoinOpReturnProofVerifier` already checks
+  — and resolves to exactly one of:
+  - `{ published: true, locator, proof }` — `proof` is `{ txid, network }`,
+    byte-for-byte the shape `BitcoinOpReturnProofVerifier` already expects;
+  - `{ published: false, reason }` — the broadcaster reached a DEFINITE no
+    (e.g. rejected as non-standard);
+  - `{ published: false, unavailable: true, reason }` — cannot PRESENTLY
+    broadcast (no connectivity, no funds currently available); a
+    broadcaster that throws is treated identically, never as a rejection.
+
+  A successful result never includes `anchoredAt` — this class has no
+  meaningful external record time to report (broadcast time is not
+  confirmation time is not block time), so `CreatePublicationAnchorUseCase`'s
+  own honest "now" default applies unchanged, rather than this class
+  inventing a value that would look like it came from Bitcoin itself.
+
+- `application/CreateBitcoinAnchorPublisherUseCase.js` — the identical
+  composition-root shape `application/CreateBitcoinAnchorProofVerifierUseCase.js`
+  already established, so a caller can obtain a real
+  `BitcoinAnchorPublisher` without ever importing `anchoring/
+  BitcoinAnchorPublisher.js` directly. Still takes the `broadcaster` as a
+  caller-supplied parameter — this use case wires the publisher, never the
+  wallet/transaction capability behind it.
+
+- **Broadcast acceptance is not anchor validity.** A `published: true`
+  result means only "the network accepted this transaction for broadcast"
+  — never confirmation, never proof. The `PublicationAnchor` created from
+  it reports `PROOF_UNAVAILABLE` from `application/ExternalAnchorVerifier.js`
+  the moment it exists, for as long as the transaction remains
+  unconfirmed, and `VALID` once it confirms — the SAME anchor, completely
+  unchanged, exactly the temporal separation 0.8.1 already established for
+  every other Bitcoin anchor regardless of how it arrived.
+
+- **No shared base class with `ProofVerifier`.** `BitcoinAnchorPublisher`
+  and `BitcoinOpReturnProofVerifier` answer two different questions —
+  "can I ask this external system to record this hash?" vs. "can this
+  evidence be independently established?" — with two different failure
+  models. They are never unified under one `ExternalAnchorAdapter`
+  abstraction merely because both speak Bitcoin; each stays independently
+  constructible, independently testable, and neither imports the other.
+
+- `tests/BitcoinAnchorCreationAdapter.test.js` (new) — entirely
+  network-free, against the identical fake-Bitcoin-network technique
+  `tests/BitcoinOpReturnProofVerifier.test.js` and `tests/
+  ExternalAnchorProofAdapters.test.js` already established (a shared
+  `Map<txid, tx>` a fake broadcaster writes into and a fake explorer reads
+  from — standing in for the public chain, never one participant's private
+  state). Section A: flagship — Alice's publisher broadcasts, the
+  resulting evidence feeds `CreatePublicationAnchorUseCase` unchanged, and
+  Bob — with none of Alice's publisher/broadcaster state, only the anchor
+  and his own proofVerifier pointed at the same fake network — verifies it
+  and gets `PROOF_UNAVAILABLE` while unconfirmed; Section B: the fake
+  network confirms the SAME transaction, without the anchor changing at
+  all, and Bob's identical verification now reports `VALID`; Section C:
+  the OP_RETURN payload the publisher asked to be broadcast is the raw
+  contentHash, byte for byte — no second encoding; Section D: a throwing
+  broadcaster, an explicitly-unavailable one, and a definitely-rejecting
+  one all stay distinguishable from each other and from success, and a
+  malformed contentHash is refused before the broadcaster is ever
+  consulted; Section E: a successful `publish()` never returns an
+  `anchoredAt`, and the created anchor gets `CreatePublicationAnchorUseCase`'s
+  own honest "now" default instead.
+
+```text
+0.8.8   Explicit Publication Anchor Creation & Lifecycle             ✓
+             │
+             ▼
+0.8.9   Bitcoin Anchor Creation Adapter                              ✓
+             ├── anchoring/BitcoinAnchorPublisher.js — new; broadcasts
+             │   raw contentHash via an injected broadcaster, returns
+             │   { locator, proof } evidence, never an anchor, never an
+             │   anchoredAt
+             ├── application/CreateBitcoinAnchorPublisherUseCase.js —
+             │   new composition-root seam, mirrors
+             │   CreateBitcoinAnchorProofVerifierUseCase.js
+             ├── no shared base class with ProofVerifier — creation and
+             │   verification stay two independent Bitcoin-specific
+             │   classes
+             └── BitcoinAnchorCreationAdapter.test.js (new) — network-free
+                 flagship: publish → CreatePublicationAnchorUseCase →
+                 PROOF_UNAVAILABLE while unconfirmed → VALID once the
+                 SAME fake network confirms the SAME unchanged anchor
+```
+
+> **External recording is an explicit operation; its result is still only
+> evidence.** `BitcoinAnchorPublisher#publish()` asks Bitcoin to record a
+> contentHash and reports whether that broadcast was accepted — never
+> whether it confirmed, and never a `PublicationAnchor`. Creating the
+> signed claim from the resulting evidence remains `application/
+> CreatePublicationAnchorUseCase.js`'s own separate, explicit step (0.8.8),
+> and verifying that claim's proof against the real external system
+> remains `application/ExternalAnchorVerifier.js`'s own separate, explicit
+> step (0.8.1) — three questions, asked three separate times, by three
+> classes that never import each other. See `docs/Principles.md`,
+> "Broadcast Acceptance Is Not Anchor Validity (0.8.9)."
+
+### Deliberately excluded
+
+- **Wallet management of any kind.** No private-key generation, seed
+  phrases, HD wallets, persistent wallet storage, UTXO management,
+  automatic fee optimization, coin selection, custody, or exchange
+  integration. `BitcoinAnchorPublisher` takes a `broadcaster` as a
+  required constructor parameter — real signing/broadcast capability is
+  always the CALLER's own, exactly as `anchoring/
+  BitcoinOpReturnProofVerifier.js` already requires a real `fetchImpl` and
+  never invents one.
+- **A live, real-network broadcaster implementation.** Every test in this
+  milestone runs against a fake, in-memory broadcaster — the same
+  restraint 0.8.1 already held for the verifier side (see `docs/
+  Roadmap.md`, 0.8.1: "this codebase ships no live-network test for this
+  class"). Wiring a real Bitcoin RPC node or wallet service behind the
+  `broadcaster` contract is a future, separately sized concern.
+- **A persistent broadcast/confirmation status field.** `publish()`'s
+  result is consumed once, immediately, by whatever calls it — nothing in
+  this milestone stores "pending"/"broadcast"/"confirmed" anywhere.
+  Confirmation status stays `application/ExternalAnchorVerifier.js`'s own
+  live, re-askable question, exactly as 0.8.8 already insisted.
+  Retry/backoff policy over `unavailable` broadcasts is left to the
+  caller.
+- **Automatic anchoring, or anchoring as a side-effect of publishing or of
+  creating a `PublicationAnchor`.** `BitcoinAnchorPublisher#publish()` is
+  only ever invoked explicitly. Nothing in `application/
+  CreatePublicationAnchorUseCase.js` or anywhere in the publish path calls
+  it — the identical restraint 0.8.8 already held for anchor creation
+  itself, now held one layer further out.
+- **Any UI.** No "Anchor on Bitcoin" button, panel, or view in this
+  codebase yet calls `BitcoinAnchorPublisher` or `application/
+  CreateBitcoinAnchorPublisherUseCase.js` — the identical restraint every
+  anchor-evidence milestone since 0.8.0 already held before any UI
+  consumed its own new mechanism.
+- **A shared `ExternalAnchorAdapter` abstraction unifying creation and
+  verification.** See this milestone's own reasoning above — the two
+  operations have different failure models and responsibilities, and nothing
+  currently needs them to share a common base class merely because both
+  happen to speak Bitcoin.
+
+What's left, and deliberately unbuilt: a real (non-fake) broadcaster
+implementation, any wallet capability behind it, any UI surface for
+triggering creation, and any status/confirmation model over a created
+claim — each sized on its own, exactly like every "Deliberately excluded"
+list in this document before it.
