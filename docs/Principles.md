@@ -11445,3 +11445,159 @@ exactly what "Inspect Placement"/"Resolve Snapshot" need, and nothing a
 future creation-UX milestone would also need to touch.
 
 See `docs/Roadmap.md`, 0.8.20, for the full milestone entry.
+
+### A Placement's Persistent Store Is An Untrusted Byte Source Too (0.8.21)
+
+`application/LocalPublicationSnapshotPlacementCatalog.js` has taken a
+`storageProvider` and written every `add()` straight through it since
+0.8.18 — this replica's placement catalog was never actually
+in-memory-only, and surviving a page reload was never the gap. The gap
+0.8.21 closes is the identical one 0.8.15 already closed for anchors, one
+axis over: a catalog read has always turned whatever JSON happened to be
+sitting in storage directly into a `PublicationSnapshotPlacement`
+instance, with no re-validation and no signature check. For a record THIS
+replica's own process just wrote, that is exactly the right amount of
+trust — it already passed `application/
+PublicationSnapshotPlacementExchange.js`'s own validate → construct →
+verify-signature gate on the way in, moments earlier, in the same
+process. For a record that was already sitting in storage before this
+process started, it is not: storage cannot distinguish "written by
+`PublicationSnapshotPlacementExchange` after a genuine signature check"
+from "written by a bug in an earlier version of this codebase" from
+"hand-edited through devtools" from "corrupted by bit rot." All four look
+identical the moment they're read back.
+
+**`application/LocalPublicationSnapshotPlacementStore.js` treats whatever
+is in storage as exactly what it is: an untrusted byte source, no more
+entitled to automatic trust than a peer message or an imported package.**
+This is why the class is deliberately, almost aggressively dumb — it
+never imports `core/PublicationSnapshotPlacement.js`, never validates an
+envelope, never constructs an instance, never checks a signature, and
+never contacts a content store or IPFS. `get()`/`list()` hand back the RAW
+`{ placement: <plain JSON>, receivedAt: <ISO string> }` envelope exactly
+as stored, never a hydrated `PublicationSnapshotPlacement` — because
+hydrating it would be an implicit trust decision this class has no
+business making. `tests/PersistentPublicationSnapshotPlacementCatalog
+.test.js`'s own Section A proves the other half directly: a malformed
+record (even a bare `null`) injected straight into the raw storage
+backend, bypassing `save()` entirely, never crashes
+`has()`/`get()`/`list()`/`remove()` — it simply never matches anything a
+caller is looking for. A store that threw on garbage would be a store
+that assumed everything reaching it was already trustworthy, which is
+precisely the assumption this milestone exists to remove.
+
+**`application/LocalPublicationSnapshotPlacementCatalog.js`'s own
+constructor, public API, and every observed behavior are completely
+unchanged.** Every call site written against it before 0.8.21 —
+`application/AddPublicationSnapshotPlacementUseCase.js`, `application/
+PublicationSnapshotPlacementExchange.js`, every existing test file that
+constructs it directly — keeps working identically, and keeps reading and
+writing under the IDENTICAL storage key it already used before this
+milestone: a replica upgrading from 0.8.18/0.8.19/0.8.20 finds every
+placement it already cataloged exactly where the new store expects it,
+with no migration step of any kind. What changed is purely internal: the
+catalog now delegates to an internally constructed
+`LocalPublicationSnapshotPlacementStore` instead of calling a
+`storageProvider` itself. The catalog remains the one place that turns a
+raw envelope into a real `PublicationSnapshotPlacement` (still via
+`PublicationSnapshotPlacement.fromJSON()`, still with NO signature
+re-check on an ordinary read — see the next entry for why re-verifying on
+every read was never the fix), because a record reaching the catalog
+through `add()` was already gated on the way in by whichever caller
+called `add()`. `tests/PersistentPublicationSnapshotPlacementCatalog
+.test.js`'s own Section B proves the store and the catalog genuinely
+share one physical storage, not a private copy each: a write through the
+catalog is immediately visible through an independently constructed store
+over the same `storageProvider`, and a removal through the store is
+immediately invisible through the catalog.
+
+See `docs/Roadmap.md`, 0.8.21, for the full milestone entry.
+
+### Restoring A Snapshot Placement Re-establishes The Signed Claim, Not Its Current Availability (0.8.21)
+
+Given `application/LocalPublicationSnapshotPlacementStore.js`'s own
+untrusted-byte-source posture (previous entry), SOMETHING has to decide,
+at some point, which of the records already sitting in storage this
+replica is willing to vouch for again. Re-verifying on every ordinary
+catalog read was considered and rejected, for the identical reason 0.8.15
+already rejected it for anchors: it would make `get()`/`list()` — used
+constantly, throughout discovery, peer exchange, and inspection UX built
+in 0.8.18 through 0.8.20 — expensive and asynchronous, for a check that
+only ever matters once, at the moment a record re-enters this replica's
+trust after having left it (i.e., after a restart). `application/
+RestorePublicationSnapshotPlacementCatalogUseCase.js` is that one moment,
+made explicit: it runs ONCE, at startup, over every record application/
+LocalPublicationSnapshotPlacementStore.js has on file, and never again
+afterward.
+
+**Restoration reuses the IDENTICAL validate → construct → verify-
+SIGNATURE boundary `application/PublicationSnapshotPlacementExchange.js`
+already established for a stranger's placement arriving over a peer
+connection (0.8.19) — and deliberately stops at the exact same place.** A
+record that fails structural validation or signature verification is
+PRUNED, not merely skipped: `store.remove()` withdraws it, so it cannot
+silently keep failing this exact check on every future restart with no
+way for a person to ever notice or clear it. `tests/
+PersistentPublicationSnapshotPlacementCatalog.test.js`'s own Section C
+proves both failure modes distinctly — a structurally malformed record
+and a well-formed-but-tampered-after-signing one are each rejected AND
+removed, categorized `INVALID_STRUCTURE`/`INVALID_SIGNATURE`, the
+identical per-entry-tolerant shape `application/
+RestorePublicationAnchorCatalogUseCase.js` (0.8.15) already established —
+one bad record in a store of several never aborts restoring the rest.
+Section D's own second restart, over a store deliberately corrupted a
+SECOND time after an already-successful first restore, proves the same
+tolerance holds indefinitely, not merely on a store's very first restart.
+
+**Restoration never once calls `application/SnapshotPlacementResolver.js`
+.** Signature verification answers "did the claimed `placerIdentity`
+really sign exactly this claim" — a question about the CLAIM's own
+integrity, fully answerable offline, from the record alone. Resolution
+answers "can the named storage backend currently serve those exact
+bytes" — a question this replica already treats as a SEPARATE, explicit,
+per-click operation (0.8.20's own "Inspection Is Local Observation.
+Resolution Is Explicit Retrieval."). A restart is not a reason to blur
+that line:
+
+```text
+restart
+  ↓
+restore placement
+  ↓
+NEVER: contact IPFS / check content
+```
+
+`tests/PersistentPublicationSnapshotPlacementCatalog.test.js`'s own
+Section C and its own flagship (Section D) each prove this with a
+call-counting spy around `SnapshotPlacementResolver.prototype.resolve`,
+not merely by omission — zero calls, even for an `ipfs` placement that
+would match a registered store if one were available. The flagship goes
+one step further than 0.8.15's own anchor-side test: it shows a
+placement Bob explicitly resolved to `RESOLVED` in process #1 restoring
+cleanly into process #2 with no resolution state attached anywhere, and
+only THEN, through a completely separate, explicit `resolve()` call, does
+process #2 independently re-establish `RESOLVED` for itself — proving
+restoration and resolution are two calls with two different answers to
+two different questions, never one operation wearing two names.
+
+**A record that passes restoration is left exactly where it already
+was.** `RestorePublicationSnapshotPlacementCatalogUseCase` never calls
+`catalog.add()` and never touches `receivedAt` — there is no separate
+"now populate the catalog" step, because `application/
+LocalPublicationSnapshotPlacementCatalog.js` was never actually
+unpopulated to begin with (see the previous entry). `tests/
+PersistentPublicationSnapshotPlacementCatalog.test.js`'s own flagship
+makes this concrete: Bob catalogs four placements in "process #1,"
+restarts into a "process #2" built from fresh catalog/store/exchange
+instances over the identical underlying storage, and finds the identical
+placement set — `toJSON()` byte-identical, `receivedAt` UNCHANGED to the
+millisecond, and a re-`importPlacement()` of the same claim after restart
+still reports `isNew: false` and still never resets `receivedAt`, exactly
+as first-seen-wins already promised before any of this milestone existed.
+Three independent placements for the same publication, on three different
+storage backends, all survive the restart individually — still unranked,
+still with no "canonical placement" selected among them, exactly the
+posture `core/PublicationSnapshotPlacement.js`'s own header already
+requires.
+
+See `docs/Roadmap.md`, 0.8.21, for the full milestone entry.

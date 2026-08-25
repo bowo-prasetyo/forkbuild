@@ -1,6 +1,5 @@
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-
-const STORAGE_KEY = 'publication-snapshot-placement-catalog:entries';
+import { LocalPublicationSnapshotPlacementStore } from './LocalPublicationSnapshotPlacementStore.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.
 //
@@ -51,20 +50,36 @@ const STORAGE_KEY = 'publication-snapshot-placement-catalog:entries';
 // "best" one, and holds no ranking, trust score, or "canonical
 // placement" field anywhere in it.
 //
-// Persists directly through a `storageProvider` — this milestone
-// deliberately skips the separate LocalPublicationAnchorStore-style
-// durability seam application/LocalPublicationAnchorCatalog.js only
-// grew in 0.8.15, once restart recovery became its own sized concern.
-// Nothing about this foundation milestone depends on that seam existing
-// yet; a future milestone can introduce one for placements the same way,
-// without changing this class's own public surface, exactly as 0.8.15
-// changed application/LocalPublicationAnchorCatalog.js's internals only.
+// 0.8.21 — Persistent Snapshot Placement Catalog & Restart Recovery.
+//
+// This class's constructor and every method on it are UNCHANGED by
+// 0.8.21 — every caller written against it before this milestone (0.8.18
+// through 0.8.20, plus every existing test file that constructs it
+// directly) keeps working identically. What changed is internal only:
+// where this class used to read/write a `storageProvider` directly, it
+// now delegates to application/LocalPublicationSnapshotPlacementStore.js,
+// the named durability seam this milestone introduces — the exact "grow
+// a Store class, keep the catalog's own surface untouched" move
+// application/LocalPublicationAnchorCatalog.js's own header already
+// describes for 0.8.15, applied here one axis over. This class remains
+// the one place that turns a raw stored envelope into a real
+// `PublicationSnapshotPlacement` instance — via `PublicationSnapshotPlacement
+// .fromJSON()`, exactly as before, and still with NO signature
+// re-verification on an ordinary read: an application-authored write
+// (through add(), from application/AddPublicationSnapshotPlacementUseCase.js
+// or application/PublicationSnapshotPlacementExchange.js, both of which
+// already gate what reaches add() their own way) is trusted on the next
+// read the same way it always was. Re-establishing that trust for
+// whatever was ALREADY sitting in storage before this replica's own
+// process started is a different question — application/
+// RestorePublicationSnapshotPlacementCatalogUseCase.js's own, asked once,
+// explicitly, at startup, never here.
 export class LocalPublicationSnapshotPlacementCatalog {
     constructor(storageProvider) {
         if (!storageProvider) {
             throw new Error('LocalPublicationSnapshotPlacementCatalog: storageProvider is required');
         }
-        this._storageProvider = storageProvider;
+        this._store = new LocalPublicationSnapshotPlacementStore(storageProvider);
     }
 
     // Records `placement` (a PublicationSnapshotPlacement instance the
@@ -80,25 +95,23 @@ export class LocalPublicationSnapshotPlacementCatalog {
         if (!placement || typeof placement.toJSON !== 'function' || !placement.id) {
             throw new Error('LocalPublicationSnapshotPlacementCatalog: a PublicationSnapshotPlacement instance is required');
         }
-        const entries = this._load();
-        const existing = entries.find((entry) => entry.placement.id === placement.id);
+        const existing = this._store.get(placement.id);
         if (existing) {
             return { placement: PublicationSnapshotPlacement.fromJSON(existing.placement), isNew: false };
         }
-        entries.push({ placement: placement.toJSON(), receivedAt: new Date().toISOString() });
-        this._save(entries);
+        this._store.save(placement, new Date());
         return { placement, isNew: true };
     }
 
     has(placementId) {
-        return this._load().some((entry) => entry.placement.id === placementId);
+        return this._store.has(placementId);
     }
 
     // The cataloged PublicationSnapshotPlacement for `placementId`, or
     // null if this replica has never seen one. Never verifies anything —
     // see this class's own header.
     get(placementId) {
-        const entry = this._load().find((e) => e.placement.id === placementId);
+        const entry = this._store.get(placementId);
         return entry ? PublicationSnapshotPlacement.fromJSON(entry.placement) : null;
     }
 
@@ -109,13 +122,7 @@ export class LocalPublicationSnapshotPlacementCatalog {
     // replica that still has it. Returns true if an entry existed and
     // was removed.
     remove(placementId) {
-        const entries = this._load();
-        const next = entries.filter((entry) => entry.placement.id !== placementId);
-        if (next.length === entries.length) {
-            return false;
-        }
-        this._save(next);
-        return true;
+        return this._store.remove(placementId);
     }
 
     // Every placement known to this replica, most recently RECEIVED
@@ -126,13 +133,13 @@ export class LocalPublicationSnapshotPlacementCatalog {
     // LocalPublicationAnchorCatalog.js#list() already applies to
     // `anchoredAt`).
     list() {
-        return this._sorted(this._load()).map((entry) => PublicationSnapshotPlacement.fromJSON(entry.placement));
+        return this._sorted(this._store.list()).map((entry) => PublicationSnapshotPlacement.fromJSON(entry.placement));
     }
 
     // The ISO timestamp this replica first cataloged `placementId` at, or
     // null if it has never been cataloged.
     getReceivedAt(placementId) {
-        const entry = this._load().find((e) => e.placement.id === placementId);
+        const entry = this._store.get(placementId);
         return entry ? entry.receivedAt : null;
     }
 
@@ -160,19 +167,11 @@ export class LocalPublicationSnapshotPlacementCatalog {
     }
 
     _filtered(predicate) {
-        return this._sorted(this._load().filter(predicate))
+        return this._sorted(this._store.list().filter(predicate))
             .map((entry) => PublicationSnapshotPlacement.fromJSON(entry.placement));
     }
 
     _sorted(entries) {
         return [...entries].sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
-    }
-
-    _load() {
-        return this._storageProvider.load(STORAGE_KEY) || [];
-    }
-
-    _save(entries) {
-        this._storageProvider.save(STORAGE_KEY, entries);
     }
 }
