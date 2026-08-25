@@ -41,6 +41,8 @@ import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/Crea
 import { CreateBitcoinAnchorPublisherUseCase } from '../application/CreateBitcoinAnchorPublisherUseCase.js';
 import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/CreateExternalPublicationAnchorOrchestratorUseCase.js';
 import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePublicationAnchorCreationCoordinatorUseCase.js';
+import { CreateBitcoinAnchorEvidenceViewUseCase } from '../application/CreateBitcoinAnchorEvidenceViewUseCase.js';
+import { CreateExternalAnchorEvidenceViewRegistryUseCase } from '../application/CreateExternalAnchorEvidenceViewRegistryUseCase.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -435,6 +437,21 @@ const { coordinator: publicationAnchorCreationCoordinator } = new CreatePublicat
     publisherRegistry: externalAnchorPublisherRegistry
 });
 
+// 0.8.14 — External Evidence Inspection & Locator UX. The presentation-
+// side counterpart of `externalAnchorPublisherRegistry`/
+// `proofVerifierRegistry` above: a THIRD, independent `anchorType ->
+// plugin` registry, this one answering "how should this anchor's own
+// proof read on a screen, and where does 'view external evidence' go?"
+// `bitcoinAnchorEvidenceView` never talks to a block explorer or wallet
+// — see anchoring/BitcoinAnchorEvidenceView.js's own header — so, unlike
+// `bitcoinProofVerifier`/`bitcoinAnchorPublisher` above, it needs no
+// fake/no-op collaborator standing in for a capability this replica
+// doesn't have yet.
+const { bitcoinAnchorEvidenceView } = new CreateBitcoinAnchorEvidenceViewUseCase().execute();
+const { evidenceViewRegistry: externalAnchorEvidenceViewRegistry } = new CreateExternalAnchorEvidenceViewRegistryUseCase().execute({
+    evidenceViews: [bitcoinAnchorEvidenceView]
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -470,5 +487,7 @@ app.provide('publicationAnchorCreationCoordinator', publicationAnchorCreationCoo
 app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 // 0.8.5 — Historical Anchor Discovery & Synchronization.
 app.provide('publicationAnchorDiscoveryCoordinator', publicationAnchorDiscoveryCoordinator);
+// 0.8.14 — External Evidence Inspection & Locator UX.
+app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegistry);
 app.use(router);
 app.mount('#app');

@@ -10745,3 +10745,85 @@ a time — the same restraint those two milestones already drew, extended
 here rather than crossed.
 
 See `docs/Roadmap.md`, 0.8.13, for the full milestone entry.
+
+### Inspection Is Observation; Verification Is An Explicit Operation (0.8.14)
+
+`docs/Principles.md`'s 0.8.3 entry, "Known Evidence Is Not Verified
+Evidence, And Verified Evidence Is Not Authority," drew the line between
+DISCOVERING an anchor (a synchronous, local catalog read) and VERIFYING
+one (an explicit, separate, potentially network-touching action). 0.8.14
+adds a THIRD action to that same line — INSPECTING an anchor, looking at
+everything it claims — and the design question this milestone's own
+conversation asked before writing a line of code was whether inspection
+could stay just as inert as discovery, or whether merely looking closely
+at an anchor would quietly start doing more.
+
+**Opening "Inspect Evidence" never calls `application/
+ExternalAnchorVerifier.js`, never touches the network, never modifies
+`application/LocalPublicationAnchorCatalog.js`, never creates a
+verification observation, and never mutates the anchor itself.**
+`application/PublicationAnchorDetailView.js#publicationAnchorDetailView()`
+is a pure, synchronous reshape of state this replica already holds in
+memory — the identical restraint application/
+PublicationResolutionView.js/application/PublicationEvidenceView.js
+already hold for their own derived views, applied here to the anchor's
+full field set rather than a verification result. `tests/
+PublicationAnchorInspectionUX.test.js`'s own flagship proves this
+directly, not merely by omission: Bob receives an anchor Alice created
+and signed, snapshots the anchor's own `toJSON()`, the catalog's full
+contents, an (initially empty) verification-observation history, and the
+derived `application/PublicationEvidenceConvergence.js` result — opens
+"Inspect Evidence" — and re-checks all four are byte-identical, while a
+call-counting spy around `ExternalAnchorVerifier` proves it was never
+once consulted. Only Bob's SEPARATE, later "Verify Evidence" click moves
+any of those numbers.
+
+**A generic anchor detail view never reinterprets an anchorType-specific
+`proof`.** `proof` is opaque by design since core/PublicationAnchor.js's
+own 0.8.0 header ("Verifying the `proof` itself... is a SEPARATE,
+anchorType-specific question this milestone deliberately does not
+answer") — `application/PublicationAnchorDetailView.js` honors that at
+the presentation layer too, returning `proof` exactly as the anchor
+carries it, with no `proof.txid`/`proof.confirmations`/
+`proof.blockHeight` read anywhere in that file. Anchor-type-specific
+interpretation lives behind its own seam, `application/
+ExternalAnchorEvidenceViewRegistry.js` — the THIRD `anchorType -> plugin`
+registry this codebase now holds, after `application/
+ExternalAnchorPublisherRegistry.js` (0.8.10, creation) and `application/
+ExternalProofVerifierRegistry.js` (0.8.1, verification) — so `anchoring/
+BitcoinAnchorEvidenceView.js` is the only place in this codebase a
+Bitcoin-shaped `proof.txid`/`proof.network` is ever read, and there is no
+`if (anchorType === 'bitcoin-op-return')` branch anywhere in the generic
+detail view.
+
+**A presentation adapter is held to the identical purity discipline as
+the generic view it supplements.** `anchoring/BitcoinAnchorEvidenceView.js
+#describe()` derives a followable `https://mempool.space/tx/<txid>`
+destination from `proof.txid`/`proof.network` — pure string construction,
+never a fetch — and explicitly does NOT verify the transaction, determine
+its confirmation count, decide whether it is trustworthy, or decide
+whether it belongs to the publication being inspected: all three stay
+`anchoring/BitcoinOpReturnProofVerifier.js`'s own job, completely
+unchanged by this milestone. A missing or malformed `proof` degrades
+honestly to "not available" and a `null` `externalLocator` — `tests/
+PublicationAnchorInspectionUX.test.js`'s own Section C proves this never
+guesses and never throws.
+
+**`anchoredAt` is never relabeled into an authority timestamp merely
+because it is now shown in more detail.** core/PublicationAnchor.js's own
+0.8.0 header already establishes that `anchoredAt` is the external
+system's OWN reported timestamp, never something this replica
+independently established — `application/PublicationAnchorDetailView.js`
+carries that restraint onto the screen literally, attaching the fixed
+label "Claimed external recording time" to the field rather than letting
+each screen invent its own wording (and risk "Verified at" or "Confirmed
+at" creeping in one day). The anchor's own claimed publicationId/
+contentHash pair gets the identical treatment: `describeAnchorBinding()`
+says only "This anchor claims that publication P was externally recorded
+with content hash H" — worded as a claim, never cross-checked against a
+locally known publication's own `contentReference.hash` here (that stays
+`application/ExternalAnchorVerifier.js`'s own job), extending 0.8.7's own
+"a bundled anchor's claim is preserved, never silently repaired"
+restraint onto the inspection screen.
+
+See `docs/Roadmap.md`, 0.8.14, for the full milestone entry.
