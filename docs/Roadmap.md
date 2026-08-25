@@ -18912,3 +18912,237 @@ evidence convergence); snapshot placement package integration (mirroring
 `application/ImportPackageAnchorsUseCase.js`'s own path, 0.8.7); and
 World View integration — each sized on its own, exactly like every
 "Deliberately excluded" list in this document before it.
+
+## 0.8.22 — Snapshot Placement Package Integration
+
+**A note on numbering before this milestone's own content.** 0.8.21's own
+"Deliberately excluded" list pointed the number 0.8.22 at placement
+acquisition provenance ("its own future milestone, sized on its own —
+see this document's own 0.8.22 entry"), with package integration named
+only as unordered future work. Revisiting the two side by side, package
+integration is the smaller, more mechanically-proven step — it has a
+direct, already-shipped precedent (0.8.7, for anchors) to mirror exactly,
+where provenance would be inventing a new vocabulary
+(`PlacementAcquisitionKind`) from scratch. It is built here, as 0.8.22,
+ahead of provenance; provenance is retargeted to 0.8.24 below, after
+multi-placement convergence (0.8.23). Nothing about 0.8.21's own content
+changes — only which number the next two milestones land under.
+
+0.8.7 closed the identical gap for anchors: `application/
+BlueprintPackage.js` (0.4.6, already extended by 0.6.6's `attributions`
+and 0.6.8's `lineageClaims`) gained a fourth additive field so a
+Blueprint Package could also carry signed external-evidence claims. The
+placement side has had no such path at all — a `PublicationSnapshotPlacement`
+could be created locally (0.8.18), exchanged with a live peer (0.8.19),
+inspected and resolved (0.8.20), and survive a restart (0.8.21), but
+never once traveled inside the one portable container this codebase
+already uses to move a design between installations. 0.8.22 closes that
+gap, at exactly the same package/import BOUNDARY 0.8.7 already
+established, without merging what a package IS with what a placement IS:
+
+```text
+BlueprintPackage                          PublicationSnapshotPlacement
+    structure                                 "which identity attests
+    attributions   (0.6.6)                      this exact contentHash
+    lineageClaims  (0.6.8)                       can ALSO be retrieved
+    anchors        (0.8.7)                       from this locator, via
+    placements     (0.8.22, new)  ◄───────────── this storage backend?"
+```
+
+**No new architectural question needed asking.** 0.8.7's own design
+conversation already inspected whether a separate `PublicationPackage`
+container should exist instead of extending `BlueprintPackage` further,
+and settled it: no such container exists anywhere in this codebase, and
+`attributions`/`lineageClaims`/`anchors` already establish exactly what a
+Blueprint Package IS — a general-purpose, additive, omit-when-empty
+TRANSPORT convenience for moving several independent signed envelope
+types alongside a design in one file, never a merger of them into one
+domain concept. `placements` is a fifth instance of that same
+convenience, nothing more. A `PublicationSnapshotPlacement` still
+describes a locator for a PUBLICATION's bytes, never a fact about the
+Structure itself — that never changes; only how far it can ride in one
+file does.
+
+- `application/BlueprintPackage.js` — `buildBlueprintPackage(structure,
+  { attributions, lineageClaims, anchors, placements })` gains the
+  fourth additive, optional array, following `anchors`' own exact shape:
+  each entry must be a real `core/PublicationSnapshotPlacement.js`
+  instance (never a plain object), the built package carries exactly
+  `placement.toJSON()` for each — never a `resolved`, `resolutionOutcome`,
+  or `availability` field, none of which this codebase has ever attached
+  to a placement's own signed envelope — and the `placements` key is
+  omitted ENTIRELY when the array is empty, so a package built with no
+  placements is byte-identical to one built before this milestone
+  existed. `application/ExportBlueprintUseCase.js` passes the new
+  parameter straight through, unchanged in every other respect.
+- `application/BlueprintImportValidator.js` — `validateBlueprintPackage()`
+  gains the identical OPTIONAL, structural-only check `anchors` already
+  established: each bundled placement is run through `application/
+  PublicationSnapshotPlacementValidator.js#validatePublicationSnapshotPlacement()`
+  — is this even a well-formed placement envelope? — with a malformed
+  entry re-thrown as this module's own `BlueprintPackageError`, never a
+  leaked `PublicationSnapshotPlacementError`. Signature verification is
+  deliberately OUT of scope here, exactly as it already is for every
+  other field this validator checks.
+- `application/ImportPackageSnapshotPlacementsUseCase.js` — the one new
+  use case, and the one place this milestone actually connects package
+  import to the placement layer. `application/ImportBlueprintUseCase.js`
+  itself is UNCHANGED — it still only ever returns a `Structure`; reading
+  `pkg.placements` back out and importing them is this class's own job,
+  mirroring the exact "caller's own job" split `application/
+  ImportPackageAnchorsUseCase.js` already established for `pkg.anchors`.
+  Every bundled placement is handed, completely unchanged, to
+  `application/PublicationSnapshotPlacementExchange.js#importPlacement()`
+  — the SAME validate → construct → verify SIGNATURE → catalog boundary
+  0.8.19 already built for a placement arriving from a stranger over a
+  peer connection. **No second placement-validation implementation was
+  written.** A package is untrusted, portable data, exactly like a peer
+  message; there is no reason its placements deserve a looser gate.
+  Returns `{ importedPlacements, skippedPlacements, rejectedPlacements }`:
+  `importedPlacements` are real, newly-cataloged
+  `PublicationSnapshotPlacement` instances; `skippedPlacements` are
+  `{ placement, reason: 'duplicate' }` — a placement this replica's
+  catalog already knew, never an error; `rejectedPlacements` are
+  `{ placement, reason, message }`, with `reason` one of
+  `'invalid-structure'` (failed `PublicationSnapshotPlacementValidator`)
+  or `'invalid-signature'` (parsed, but did not verify) — never collapsed
+  into a bare `success: false`. One malformed or forged placement in a
+  bundle of several never blocks an otherwise-valid sibling from
+  importing, mirroring `application/PublicationSnapshotPlacementPeerExchange.js`'s
+  own per-envelope tolerance for a RESPONSE batch (0.8.19). Deliberately
+  no `knowledgeStore` constructor parameter yet, unlike
+  `ImportPackageAnchorsUseCase` (which gained one in 0.8.17) — no
+  placement-side acquisition-provenance store exists yet for it to
+  record into; see this milestone's own "Deliberately excluded" list and
+  the retargeted 0.8.24 below.
+- **No cross-check between a bundled placement's `publicationId`/
+  `contentHash` and "the package's own publication."** This codebase has
+  no notion of "the publication a Blueprint Package is about" — a
+  `BlueprintPackage` bundles a `Structure`, never a
+  `DecentralizedPublication` — so there is nothing for
+  `ImportPackageSnapshotPlacementsUseCase` to compare a bundled placement
+  against, and it does not invent one. A placement's claims are
+  preserved exactly as received; whether they agree with what a caller
+  separately knows about a publication is a question for future
+  multi-placement convergence work (0.8.23), asked afterward, over the
+  catalog — never this milestone's.
+- `tests/PublicationSnapshotPlacementPackageImport.test.js` — Section A:
+  `BlueprintPackage`'s new `placements` field, byte-identical when
+  omitted, unmutated `placement.toJSON()` when present, rejects a
+  non-instance entry, multiple independent and differently-`storage`d
+  placements all preserved with no dedup or ranking; Section B:
+  `BlueprintImportValidator`'s structural rejection of a malformed
+  bundled placement, surfaced as `BlueprintPackageError`; Section C:
+  `ImportPackageSnapshotPlacementsUseCase`'s imported/skipped/rejected
+  categorization, one bad placement never blocking a good sibling in the
+  same bundle, re-import converging harmlessly, and a RESOLUTION
+  ISOLATION proof with a spy `SnapshotPlacementResolver` — package
+  import results in zero calls to it, an explicit `resolve()` afterward
+  results in exactly one; Section D — FLAGSHIP: Alice bundles a
+  Blueprint, an attribution, a lineage claim, a Bitcoin anchor, AND a
+  snapshot placement into ONE package; Bob imports it on a completely
+  independent replica (`Structure` via the unmodified
+  `ImportBlueprintUseCase`, the anchor via the unmodified
+  `ImportPackageAnchorsUseCase`, the placement via
+  `ImportPackageSnapshotPlacementsUseCase`), catalogs both the anchor and
+  the placement, confirms the placement is discoverable/inspectable with
+  the resolver spy still at zero calls, and only then explicitly
+  resolves it against his own registered local content store —
+  `RESOLVED`, with the exact retrieved bytes proven equal to what that
+  store already held. A second, differently-stored placement (an IPFS
+  locator) arrives via a second package and is shown to coexist,
+  unranked, unresolved, alongside the first — proving package transport,
+  signature validity, and retrieval availability stay three separate
+  questions, exactly as every placement milestone since 0.8.18 already
+  insisted.
+
+```text
+0.8.21  Persistent Snapshot Placement Catalog & Restart Recovery      ✓
+             │
+             ▼
+0.8.22  Snapshot Placement Package Integration                       ✓
+             ├── application/BlueprintPackage.js — fourth additive,
+             │   optional field: `placements`, omitted entirely when
+             │   empty, exactly `placement.toJSON()` per entry, no
+             │   resolution or availability field ever attached
+             ├── application/BlueprintImportValidator.js — structural-
+             │   only check via PublicationSnapshotPlacementValidator,
+             │   malformed entries surfaced as BlueprintPackageError
+             ├── application/ExportBlueprintUseCase.js — modified;
+             │   straight passthrough of the new `placements` parameter
+             ├── application/
+             │   ImportPackageSnapshotPlacementsUseCase.js — new;
+             │   validate → construct → verify SIGNATURE → catalog via
+             │   PublicationSnapshotPlacementExchange; never resolves;
+             │   categorized imported/skipped(duplicate)/
+             │   rejected(invalid-structure/invalid-signature)
+             └── tests/PublicationSnapshotPlacementPackageImport.test.js
+                 (new) — package field + validator + importer
+                 categorization + RESOLUTION ISOLATION (spy) + FLAGSHIP:
+                 five-kind bundle (Blueprint/attribution/lineage/anchor/
+                 placement), independent import, cataloged-before-
+                 resolved, explicit resolve() succeeds against Bob's own
+                 local content store, a second differently-stored
+                 placement coexists unranked and unresolved
+```
+
+> **Package Import Preserves Placement Claims; It Does Not Establish
+> Retrieval Availability.** `application/
+> ImportPackageSnapshotPlacementsUseCase.js` answers exactly one
+> question — "is this a well-formed, genuinely signed placement claim?" —
+> and never asks the second, entirely separate one `application/
+> SnapshotPlacementResolver.js` already owns: "can this locator presently
+> serve those exact bytes?" Importing a package that bundles three
+> placements catalogs three LOCATOR CLAIMS, and retrieves not a single
+> byte from any of them. This milestone's own flagship test proves both
+> halves of that with a call-counting spy around `SnapshotPlacementResolver`
+> — zero calls across two independent package imports — and only an
+> explicit, separately-invoked `resolve()` call, standing in for a user
+> pressing "Resolve Snapshot," ever retrieves and hash-verifies the
+> actual bytes. See docs/Principles.md, "Package Import Is Placement
+> Ingestion, Not Placement Resolution (0.8.22)," and "Package Import
+> Preserves Placement Claims; It Does Not Establish Retrieval
+> Availability (0.8.22)."
+
+### Deliberately excluded
+
+- **Placement acquisition provenance** (LOCAL vs. PEER vs. PACKAGE),
+  mirroring `application/LocalAnchorKnowledgeStore.js`/0.8.17's own path
+  for anchors. `application/ImportPackageSnapshotPlacementsUseCase.js`'s
+  constructor deliberately takes no `knowledgeStore` parameter yet — see
+  that file's own header on the identical, non-breaking, additive move
+  0.8.17 made for `ImportPackageAnchorsUseCase` once a knowledge store
+  actually existed to record into. Retargeted here, explicitly, to
+  0.8.24 (after 0.8.23's multi-placement convergence) — see this
+  document's own opening note above on why the numbering moved.
+- **Multi-placement convergence or relationship derivation of any kind.**
+  This milestone never compares a bundled placement's `contentHash`
+  against another placement's, another package's `structure`, or
+  anything else known about the publication — it only imports and
+  catalogs the signed claim as-is. `CONTENT_AGREEMENT`/
+  `CONTENT_CONFLICT`/storage-diversity derivation, mirroring
+  `application/PublicationEvidenceConvergence.js`'s own path for anchors
+  (0.8.6/0.8.13), is its own future milestone — next, as 0.8.23.
+- **Any change to what a placement's own signed envelope carries.** No
+  `importedFromPackage`, `packageId`, or similar field was added to
+  `core/PublicationSnapshotPlacement.js` — the signed envelope a package
+  carries is identical to the one a peer connection would have carried
+  for the same claim, mirroring `application/ImportPackageAnchorsUseCase.js`'s
+  own restraint (0.8.7) exactly.
+- **A `PublicationPackage` container, or any other new portable
+  envelope.** `application/BlueprintPackage.js` remains the one and only
+  portable container this codebase has, extended a fifth time rather
+  than duplicated — see this milestone's own opening note on why that
+  question needed no re-litigating.
+- **Any package-import UI.** No screen, button, or notification exists
+  anywhere for importing a package's bundled placements — this milestone
+  is transport plumbing, proven by test, exactly the same restraint
+  0.8.7's own "Deliberately excluded" list already held for anchors.
+
+What's left, and deliberately unbuilt: multi-placement convergence and
+conflict UX across independent storage backends for the same publication
+(mirroring `application/PublicationEvidenceConvergence.js`'s own path,
+0.8.6/0.8.13 — next, as 0.8.23); placement acquisition provenance
+(mirroring 0.8.17's own path for anchors — retargeted here to 0.8.24);
+and World View integration — each sized on its own, exactly like every
+"Deliberately excluded" list in this document before it.
