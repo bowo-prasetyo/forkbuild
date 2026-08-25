@@ -39,9 +39,11 @@ top-level [docs/](..) folder.
    calls.
 9. **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
    signed authorship and place-name claims, catalog status, retrieving
-   content from peers, and optional external evidence: creating,
-   discovering from peers, verifying, and inspecting anchors like a
-   Bitcoin timestamp.
+   content from peers, optional external evidence: creating, discovering
+   from peers, verifying, and inspecting anchors like a Bitcoin timestamp,
+   and optional snapshot placements: creating, inspecting, resolving, and
+   comparing locators like an IPFS node that can currently serve a
+   claim's content.
 
 ## Reference
 
