@@ -10,6 +10,10 @@ export class LocalContentStore extends ContentStore {
         this._storageProvider = storageProvider;
     }
 
+    // 0.8.18 — matches the `storage: 'local'` this class's own put()
+    // already stamps onto every ContentReference it returns.
+    get storage() { return 'local'; }
+
     put(bytes) {
         const text = typeof bytes === 'string' ? bytes : new TextDecoder().decode(bytes);
         const hash = computeContentHash(text);
