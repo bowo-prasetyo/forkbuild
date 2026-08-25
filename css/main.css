@@ -4956,6 +4956,50 @@ html, body {
     color: #e0a34c;
 }
 
+/* 0.8.27 — Unified Publication Decentralization View. Sits ABOVE
+   .evidence-section/the placement equivalent, always visible once either
+   dimension has a known claim — never gated behind "Show Evidence"/"Show
+   Placements" the way .evidence-convergence above is. Reuses the
+   identical dark-card, neutral-tone language .evidence-convergence
+   already established; the two .decentralization-dimension cards are
+   equal-width siblings in a row, neither styled, sized, or ordered to
+   read as more significant than the other, and .evidence-convergence-
+   conflict (reused, unchanged) is the only "look at this" color either
+   one ever earns — for the contrast SENTENCE, never for one dimension
+   over the other. */
+.decentralization-summary {
+    margin-top: 1rem;
+    padding: 0.75rem 0.9rem;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.decentralization-dimensions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.decentralization-dimension {
+    flex: 1 1 12rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.5rem 0.7rem;
+    background: #1e1e1e;
+    border: 1px solid #2f2f2f;
+    border-radius: 5px;
+}
+
+.decentralization-dimension-title {
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.8rem;
+    margin-bottom: 0.15rem;
+}
+
 /* 0.8.14 — External Evidence Inspection & Locator UX. A purely
    informational panel opened by "Inspect Evidence" — visually similar
    to .evidence-convergence above (same dark card, same neutral tone),

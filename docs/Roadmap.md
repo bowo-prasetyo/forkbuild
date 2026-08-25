@@ -20045,4 +20045,162 @@ view naming "Evidence" and "Snapshot Placements" as siblings under one
 publication — the SAME gap 0.8.25's own "What's left" line already named,
 now with every prerequisite in place on both sides (creation, inspection,
 resolution, provenance, AND lifecycle, symmetric on both sides) but still
-no milestone of its own.
+no milestone of its own. See 0.8.27, immediately below.
+
+## 0.8.27 — Unified Publication Decentralization View
+
+0.8.0-0.8.17 built the anchor subsystem; 0.8.18-0.8.26 built its
+structurally symmetrical sibling for placements:
+
+```text
+Anchors:    claim -> inspect -> verify  -> verification lifecycle
+Placements: claim -> inspect -> resolve -> availability  lifecycle
+```
+
+Both are now complete, and both have sat in `ui/views/
+DecentralizedPublicationsView.js` as two separately-expanded sections —
+"External Evidence" and "Snapshot Placements" — since 0.8.20, with
+nothing anywhere combining them. This milestone is deliberately the
+SMALLEST possible thing that could be called "combining": it does not
+introduce a new domain aggregate, does not compute anything the existing
+convergence derivations haven't already computed, and does not rank one
+dimension over the other. It takes the two convergence VIEWS a caller
+already has — `application/PublicationEvidenceConvergenceView.js`
+(0.8.13) and `application/PublicationSnapshotPlacementConvergenceView.js`
+(0.8.23) — and places them side by side under one `publicationId`, so a
+screen can finally show "what external evidence claims do I know?" and
+"what locations do I know that claim this snapshot is retrievable?" as
+PARALLEL SIBLINGS instead of two sections a person has to remember to
+compare by eye.
+
+The one substantive idea this milestone adds is the CONTRAST: evidence
+conflict does not imply placement conflict, and multiple agreeing
+placements do not establish that any external evidence claim is true.
+Both statements were already TRUE before this milestone — the two
+convergence derivations have never shared a parameter — but neither one
+was ever visible on screen as a single fact a person could read at a
+glance. `application/PublicationDecentralizationView.js#
+describeDecentralizationRelationshipContrast()` is the one sentence this
+milestone adds to say so, and ONLY when the two dimensions' relationships
+actually diverge; it stays silent whenever they agree with each other,
+both conflict, or either is unknown.
+
+- `application/PublicationDecentralizationView.js` (new) —
+  `describePublicationDecentralization({ publicationId,
+  evidenceConvergenceView, placementConvergenceView })`, pure and
+  stateless: no catalog, no coordinator, no store, no network, and no
+  import of `application/PublicationEvidenceConvergence.js` or
+  `application/PublicationSnapshotPlacementConvergence.js` themselves —
+  it only ever reshapes the two VIEWS a caller already computed. Returns
+  `{ publicationId, evidence: { known, anchorCount, relationship,
+  hasConflict, contentGroups }, placements: { known, placementCount,
+  relationship, hasConflict, storageTypes, storageTypeCount,
+  locatorCount, contentGroups } }` — no field anywhere named
+  `decentralizationScore`, `confidence`, `trustLevel`, `preferredSource`,
+  `bestEvidence`, or `bestPlacement`. Also exports
+  `describeDecentralizationRelationshipContrast()`, the one contrast
+  sentence described above.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each entry now
+  also keeps `entry.decentralization`, recomputed by
+  `recomputeDecentralization()` from whichever of `entry.convergenceView`/
+  `entry.placementConvergenceView` already exist, called from BOTH
+  `recomputeConvergence()` and `recomputePlacementConvergence()` so it
+  is never stale after either dimension alone changes. Rendered as a new
+  "Decentralization" summary, ALWAYS visible once either dimension has a
+  known claim — deliberately NOT gated behind "Show Evidence"/"Show
+  Placements" the way the existing per-dimension "Content binding"/
+  "Placement relationships" cards are, since the whole point is to make
+  the two dimensions comparable without expanding both disclosures.
+- `css/main.css` (modified) — `.decentralization-summary`/
+  `.decentralization-dimensions`/`.decentralization-dimension`, reusing
+  the identical dark-card, neutral-tone language `.evidence-convergence`
+  already established; the two dimension cards are equal-width siblings,
+  neither styled, sized, or ordered to read as more significant.
+- `tests/PublicationDecentralizationView.test.js` (new) — Section A:
+  argument handling, including an explicit assertion that no verdict
+  field of any kind appears anywhere in the combined result; Section B:
+  the contrast sentence, in both directions, and its five silent cases;
+  Section C — FLAGSHIP: Alice, Bob, Carol, and Dave, spanning EVERY
+  acquisition route this codebase has ever built (LOCAL, live peer
+  ANNOUNCE, Blueprint Package import), across BOTH subsystems
+  simultaneously, over the SAME peer connections (two independent
+  `PeerMessageBus` instances per identity, one per subsystem, both
+  attached to the identical `connectedPeerRegistry` — the same
+  composition `ui/App.js`'s own production wiring already uses).
+  Historical peer discovery converges all four replicas onto the
+  identical evidence set (Anchor A and Carol's conflicting Anchor B) AND
+  the identical placement set (Alice's and Carol's agreeing placements).
+  Dave — who acquired every single claim from peers alone, never from
+  the original publisher, a package, or his own local creation — derives
+  a decentralization view BYTE-IDENTICAL to Alice's, Bob's, and Carol's
+  own. The scenario is built so evidence CONFLICTS while placements
+  AGREE, and Dave's own derived contrast sentence names exactly that
+  asymmetry. Dave then independently verifies Anchor A and resolves
+  Placement A — his own local observations — and his decentralization
+  view is proven byte-identical before and after. A regex sweep of the
+  serialized view finds no adjudicating vocabulary (authority, trust,
+  winner, best, confident, canonical, score, …) AND no acquisition or
+  lifecycle vocabulary of any kind (peer, package, acquisition,
+  firstSeen, verif, resolv, lifecycle, …) — both stay exactly where they
+  already lived, per-claim, entirely outside this file.
+
+> **Publication decentralization is two separate dimensions — external
+> evidence and snapshot placement availability — combined for display,
+> never adjudicated into one verdict.** See `docs/Principles.md`,
+> "Publication Decentralization Is Two Separate Dimensions, Never One
+> Combined Verdict (0.8.27)."
+
+### Deliberately excluded
+
+- **A `DecentralizedPublication` domain aggregate.** This milestone's own
+  design conversation considered and explicitly rejected this. This
+  codebase has `Publication`, `PublicationAnchor`, and
+  `PublicationSnapshotPlacement` — three independently meaningful
+  domain objects — and no evidence yet that a fourth aggregate combining
+  them is a genuine domain concept rather than a convenient screen
+  shape. `application/PublicationDecentralizationView.js` lives in the
+  application/view layer for exactly this reason: it stays trivially
+  removable if this replica's own architecture never needs it to be
+  anything more.
+- **`evidenceLifecycle`/`placementLifecycle`/`knowledgeByAnchorId`/
+  `knowledgeByPlacementId` parameters.** An earlier design for this
+  function's signature accepted these as OPTIONAL, inert-when-absent
+  parameters. Rejected: a lifecycle is a LOCAL OBSERVATION about ONE
+  claim, and an acquisition record is a LOCAL FACT about how ONE claim
+  was learned — neither is a property of the shared claim SET, and
+  neither is a property of how the two dimensions relate to each other.
+  `application/PublicationDecentralizationView.js`'s own signature has
+  no parameter capable of receiving either one AT ALL, rather than
+  accepting one that would sit inert — see `tests/
+  PublicationDecentralizationView.test.js`'s own flagship regex sweep,
+  which would fail the moment either concept leaked in.
+- **A ranking, ordering, or precedence between "peer," "package," and
+  "local" acquisition, or between the two dimensions themselves.**
+  Neither `application/PublicationAnchorKnowledgeView.js` (0.8.17) nor
+  `application/PublicationSnapshotPlacementKnowledgeView.js` (0.8.24)
+  gained a new field, and this milestone adds no comparison operator
+  anywhere that could rank one acquisition kind, or one dimension, above
+  another.
+- **Merging "Content binding" and "Placement relationships" into one
+  card.** The two per-dimension convergence cards 0.8.13 and 0.8.23
+  already built stay exactly where they are, inside their own "Show
+  Evidence"/"Show Placements" disclosures — the new "Decentralization"
+  summary sits ABOVE both, as a THIRD, always-visible element, never a
+  replacement for either.
+- **Collapsing the lifecycle notes (0.8.12/0.8.26) or the knowledge
+  sections (0.8.17/0.8.24) into the new summary.** Both stay exactly
+  where 0.8.12/0.8.17/0.8.24/0.8.26 already put them — underneath each
+  individual anchor/placement card, never inside `entry.decentralization`
+  itself.
+
+What's left, and deliberately unbuilt: 0.8.28's own question, named at
+the end of this milestone's own design conversation — given only what a
+NEW replica has received (a Blueprint Package, a publication record, its
+anchors, its placements, and its own acquisition provenance for each),
+what exactly can it reconstruct about a publication WITHOUT the original
+publisher, without peer availability, without external verification, and
+without external storage availability? Every prerequisite this codebase
+has ever built — creation, inspection, resolution, verification,
+convergence, lifecycle, provenance, and now this milestone's own
+side-by-side view — is in place on both sides; the offline
+reconstruction question itself has never been asked directly.

@@ -12176,3 +12176,83 @@ instead of asking again.
 See `docs/Roadmap.md`, 0.8.26, for the full milestone entry.
 
 See `docs/Roadmap.md`, 0.8.25, for the full milestone entry.
+
+### Publication Decentralization Is Two Separate Dimensions, Never One Combined Verdict (0.8.27)
+
+0.8.0 through 0.8.26 built two structurally symmetrical subsystems —
+anchors (claim, inspect, verify, verification lifecycle) and placements
+(claim, inspect, resolve, availability lifecycle) — and never combined
+them. This milestone is deliberately the smallest possible thing that
+could be called "combining": `application/
+PublicationDecentralizationView.js#describePublicationDecentralization()`
+takes the two convergence VIEWS a caller already computed — `application/
+PublicationEvidenceConvergenceView.js` (0.8.13) and `application/
+PublicationSnapshotPlacementConvergenceView.js` (0.8.23) — and places
+them side by side under one `publicationId`. It computes nothing those
+two files haven't already computed, and it never produces a field that
+reads as a verdict spanning the two dimensions: no `decentralizationScore`,
+no `confidence`, no `trustLevel`, no `preferredSource`, no `bestEvidence`,
+no `bestPlacement`. `tests/PublicationDecentralizationView.test.js`'s own
+Section A asserts directly that none of those six names ever appear on
+the combined result.
+
+**Evidence conflict does not imply placement conflict, and multiple
+agreeing placements do not establish that any external evidence claim is
+true.** Both statements were already true before this milestone — the
+two convergence derivations have never shared a parameter, and nothing
+in either one's own signature could accept the other's result even by
+accident. What this milestone adds is exactly one sentence,
+`describeDecentralizationRelationshipContrast()`, that states the fact
+when the two dimensions' relationships DIVERGE — worded differently
+depending on which direction the divergence runs, and naming neither
+dimension more trustworthy, more available, or more likely correct than
+the other. It stays silent whenever the two dimensions agree with each
+other, whenever they both conflict (a shared property, not a divergence,
+and still not a verdict about which claim is right), and whenever either
+dimension is unknown. `tests/PublicationDecentralizationView.test.js`'s
+own flagship builds a scenario — Dave's own converged evidence set
+conflicts (Anchor A vs. Carol's Anchor B) while his converged placement
+set agrees (Alice's and Carol's placements) — specifically so this
+sentence has something real to say, and asserts its wording never crosses
+into "correct," "winner," "trust," "best," or "preferred" language.
+
+**Lifecycle and provenance are excluded from this function's SIGNATURE,
+not merely from its output.** An earlier design considered accepting
+`evidenceLifecycle`/`placementLifecycle`/`knowledgeByAnchorId`/
+`knowledgeByPlacementId` as optional parameters that would simply sit
+inert in the returned shape. That design was rejected: a verification/
+resolution lifecycle (`application/
+PublicationAnchorVerificationLifecycleView.js`, 0.8.12; `application/
+SnapshotPlacementLifecycleView.js`, 0.8.26) is a LOCAL OBSERVATION about
+ONE claim this replica happened to check, and an acquisition record
+(`application/PublicationAnchorKnowledgeView.js`, 0.8.17; `application/
+PublicationSnapshotPlacementKnowledgeView.js`, 0.8.24) is a LOCAL FACT
+about how THIS replica happened to learn ONE claim — neither is a
+property of the shared claim set, and neither is a property of how the
+evidence dimension relates to the placement dimension. Giving this
+function a parameter for either, even one that would do nothing today,
+would have been an open invitation for a future milestone to quietly fold
+one in. `application/PublicationDecentralizationView.js` has no parameter
+capable of receiving either at all — a caller still shows a lifecycle
+note or a provenance line exactly where 0.8.12/0.8.17/0.8.24/0.8.26
+already put them, underneath the individual anchor/placement card, never
+inside the combined view. `tests/PublicationDecentralizationView.test.js`'s
+own flagship proves this directly, twice: Dave's decentralization view is
+byte-identical before and after he independently verifies Anchor A and
+resolves Placement A (his own local observations change nothing), and a
+regex sweep of the serialized view finds no acquisition or lifecycle
+vocabulary of any kind — no "peer," "package," "acquisition," "firstSeen,"
+"verif," "resolv," or "lifecycle" — anywhere inside it, despite Dave's
+own knowledge stores recording PEER acquisition for every single claim he
+holds.
+
+**No new domain aggregate.** This milestone's own design conversation
+considered and explicitly rejected a `DecentralizedPublication` class
+combining `Publication`, `PublicationAnchor`, and
+`PublicationSnapshotPlacement`. This codebase has three independently
+meaningful domain objects and no evidence yet that a fourth, combining
+aggregate is a genuine domain concept rather than a convenient screen
+shape — `application/PublicationDecentralizationView.js` lives in the
+application/view layer specifically so it stays trivially removable if
+this replica's own architecture never needs it to be anything more. See
+`docs/Roadmap.md`, 0.8.27, for the full milestone entry.

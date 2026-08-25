@@ -26,6 +26,7 @@ import { SnapshotPlacementCreationOutcome } from '../../application/SnapshotPlac
 import { describeCreationAttempt as describePlacementCreationAttempt, describeCreationButtonLabel as describePlacementCreationButtonLabel } from '../../application/SnapshotPlacementCreationView.js';
 import { createResolutionObservation } from '../../application/SnapshotPlacementResolutionObservation.js';
 import { deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote } from '../../application/SnapshotPlacementLifecycleView.js';
+import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/PublicationDecentralizationView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -549,6 +550,18 @@ export default {
                 // `loadPlacements()`'s own comment below.
                 placementConvergence: null,
                 placementConvergenceView: null,
+                // 0.8.27 — Unified Publication Decentralization View. The
+                // pure combination of THIS entry's own `convergenceView`
+                // and `placementConvergenceView` above — application/
+                // PublicationDecentralizationView.js's own reshaping,
+                // never a new derivation. Recomputed by
+                // `recomputeDecentralization()` whenever EITHER
+                // `recomputeConvergence()` or `recomputePlacementConvergence()`
+                // already runs, so it is always current regardless of
+                // which of the two loads first. Never fed a lifecycle or
+                // a knowledge/provenance record — see that file's own
+                // header on why neither has a parameter here at all.
+                decentralization: null,
                 // 0.8.25 — Explicit Snapshot Placement Creation UX. Keyed
                 // by storage type; ephemeral for the lifetime of this
                 // page, exactly like `creationAttempts` above — never
@@ -606,6 +619,30 @@ export default {
                 verificationByAnchorId
             });
             entry.convergenceView = publicationEvidenceConvergenceView(entry.convergence);
+            recomputeDecentralization(entry);
+        }
+
+        // 0.8.27 — Unified Publication Decentralization View. Re-derives
+        // `entry.decentralization` from THIS entry's own already-computed
+        // `convergenceView`/`placementConvergenceView` — never a second
+        // discovery, verification, or resolution call, and never itself
+        // touching a catalog, coordinator, or the network. Safe to call
+        // before either convergence view exists yet (both start `null`,
+        // and application/PublicationDecentralizationView.js's own
+        // `known: false` degrade handles that); called from BOTH
+        // `recomputeConvergence()` and `recomputePlacementConvergence()`
+        // so the combined view is never stale after either dimension
+        // alone changes.
+        function recomputeDecentralization(entry) {
+            entry.decentralization = describePublicationDecentralization({
+                publicationId: entry.publication.id,
+                evidenceConvergenceView: entry.convergenceView,
+                placementConvergenceView: entry.placementConvergenceView
+            });
+        }
+
+        function decentralizationContrast(entry) {
+            return describeDecentralizationRelationshipContrast(entry.decentralization);
         }
 
         function toggleEvidence(entry) {
@@ -756,6 +793,7 @@ export default {
                 placements: entry.placements
             });
             entry.placementConvergenceView = publicationSnapshotPlacementConvergenceView(entry.placementConvergence);
+            recomputeDecentralization(entry);
         }
 
         function togglePlacements(entry) {
@@ -1117,7 +1155,8 @@ export default {
             placementResolutionCoordinator, describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass, placementLifecycleNote,
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
             placementInspectionKnowledge,
-            availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel
+            availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel,
+            decentralizationContrast
         };
     },
     template: `
@@ -1171,6 +1210,44 @@ export default {
                         <button class="action-btn action-btn--secondary" :disabled="entry.checking" @click="recheck(entry)">
                             {{ entry.checking ? 'Checking…' : 'Re-check' }}
                         </button>
+                    </div>
+
+                    <!-- 0.8.27 — Unified Publication Decentralization View. Always visible
+                         (never gated behind "Show Evidence"/"Show Placements") the moment
+                         either dimension has at least one known claim — the two parallel
+                         summaries application/PublicationDecentralizationView.js combines,
+                         side by side, so a person can compare them without expanding both
+                         disclosures below. Neither card is styled, ordered, or worded as more
+                         significant than the other; the optional contrast sentence beneath
+                         states only that the two dimensions' relationships DIFFER, never which
+                         one to believe. -->
+                    <div v-if="entry.decentralization && (entry.decentralization.evidence.anchorCount > 0 || entry.decentralization.placements.placementCount > 0)"
+                         class="decentralization-summary">
+                        <span class="evidence-convergence-title">Decentralization</span>
+                        <div class="decentralization-dimensions">
+                            <div class="decentralization-dimension">
+                                <span class="decentralization-dimension-title">External Evidence</span>
+                                <p class="form-hint form-hint--neutral">
+                                    {{ entry.decentralization.evidence.anchorCount }} anchor claim{{ entry.decentralization.evidence.anchorCount === 1 ? '' : 's' }}
+                                </p>
+                                <p v-if="entry.decentralization.evidence.relationship" class="form-hint form-hint--neutral">
+                                    Relationship: {{ entry.decentralization.evidence.relationship === 'conflict' ? 'Conflict' : 'Agreement' }}
+                                </p>
+                            </div>
+                            <div class="decentralization-dimension">
+                                <span class="decentralization-dimension-title">Snapshot Placements</span>
+                                <p class="form-hint form-hint--neutral">
+                                    {{ entry.decentralization.placements.placementCount }} placement claim{{ entry.decentralization.placements.placementCount === 1 ? '' : 's' }}
+                                    · {{ entry.decentralization.placements.storageTypeCount }} storage type{{ entry.decentralization.placements.storageTypeCount === 1 ? '' : 's' }}
+                                </p>
+                                <p v-if="entry.decentralization.placements.relationship" class="form-hint form-hint--neutral">
+                                    Relationship: {{ entry.decentralization.placements.relationship === 'conflict' ? 'Conflict' : 'Agreement' }}
+                                </p>
+                            </div>
+                        </div>
+                        <p v-if="decentralizationContrast(entry)" class="evidence-convergence-conflict">
+                            {{ decentralizationContrast(entry) }}
+                        </p>
                     </div>
 
                     <div v-if="entry.evidence" class="evidence-section">
