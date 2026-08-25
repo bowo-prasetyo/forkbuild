@@ -420,9 +420,17 @@ const { discoveryCoordinator: publicationAnchorDiscoveryCoordinator } = new Crea
 // needs to read it; a record left over from a prior process that no
 // longer validates or verifies is pruned before this replica's UI can
 // ever see it through `publicationSnapshotPlacementCatalog`.
+//
+// 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
+// `placementKnowledgeStore` is the one LocalPlacementKnowledgeStore
+// instance this replica uses anywhere — returned here already wired into
+// `publicationSnapshotPlacementPeerExchange` (PEER acquisition), the
+// identical "one instance, threaded everywhere" discipline
+// `anchorKnowledgeStore` above already holds one axis over.
 const {
     catalog: publicationSnapshotPlacementCatalog,
-    peerExchange: publicationSnapshotPlacementPeerExchange
+    peerExchange: publicationSnapshotPlacementPeerExchange,
+    knowledgeStore: placementKnowledgeStore
 } = new CreatePublicationSnapshotPlacementPeerExchangeUseCase().execute({
     peerMessageBus,
     connectedPeerRegistry: peerSessionManager.registry
@@ -617,5 +625,7 @@ app.provide('publicationSnapshotPlacementDiscoveryCoordinator', publicationSnaps
 // 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
 app.provide('publicationSnapshotPlacementResolutionCoordinator', publicationSnapshotPlacementResolutionCoordinator);
 app.provide('snapshotPlacementViewRegistry', snapshotPlacementViewRegistry);
+// 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
+app.provide('placementKnowledgeStore', placementKnowledgeStore);
 app.use(router);
 app.mount('#app');

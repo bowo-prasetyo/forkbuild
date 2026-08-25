@@ -11852,3 +11852,102 @@ now do so with the boundary already drawn, rather than needing to draw
 it retroactively.
 
 See `docs/Roadmap.md`, 0.8.23, for the full milestone entry.
+
+### Acquisition Provenance Is Not Placement Rank (0.8.24)
+
+`docs/Principles.md`, "Acquisition Provenance Is Not Evidence Rank
+(0.8.17)," drew a line for anchors the moment a replica gained a way to
+record how it learned a claim: the record names HOW, never how much to
+TRUST. This milestone draws the identical line for placements, and for
+the identical reason — 0.8.18 through 0.8.23 gave this codebase three
+genuinely different ways for a replica to come to know about a placement
+claim (signing one itself, 0.8.18; importing one bundled in a package,
+0.8.22; receiving one over a peer connection, whether ANNOUNCE or
+RESPONSE, 0.8.19) but never anywhere to record WHICH of the three
+happened, or when. The temptation, the moment such a record exists, is to
+let it become a tie-breaker: "prefer the placement I created myself,"
+"resolve a peer-sourced locator before a package-bundled one," "show the
+earliest-learned placement first." This codebase has refused that
+temptation at every prior placement-side layer that could have offered
+one — no canonical placement (0.8.18), no ranked storage backend or
+locator (0.8.23), no peer reputation (0.8.19) — and 0.8.24 draws the
+identical line for its own new concept, `application/
+PlacementAcquisitionKind.js` and `application/
+SnapshotPlacementKnowledgeRecord.js`.
+
+**`PlacementAcquisitionKind` has exactly three values, and none of them
+compares to another.** `LOCAL`, `PACKAGE`, and `PEER` are unordered
+labels, never an enum a caller could sort by, filter "better than," or
+default-select on. No file in this codebase ever writes `if (acquisition
+=== LOCAL) { preferIt() }`, and none should ever be added that does.
+`tests/PlacementKnowledgeProvenance.test.js`'s own Section H proves the
+point structurally: two sets of placements that assign every acquisition
+kind the OPPOSITE way — P1/P2/P3 as PEER/LOCAL/PACKAGE in one scenario,
+LOCAL/PACKAGE/PEER in the other — produce a byte-identical
+`derivePublicationSnapshotPlacementConvergence()` result, because that
+function has no parameter capable of reading acquisition data in the
+first place; the two live in entirely separate collaborators, and
+`docs/Roadmap.md`'s own 0.8.23 "Deliberately excluded" list already named
+this exact boundary before this milestone's `PlacementAcquisitionKind`
+even existed to test it against.
+
+**A `PublicationSnapshotPlacement`'s own signed payload is never
+touched.** Every one of this milestone's three recording call sites —
+`application/CreatePublicationSnapshotPlacementUseCase.js`, `application/
+ImportPackageSnapshotPlacementsUseCase.js`, `application/
+PublicationSnapshotPlacementPeerExchange.js` — calls `application/
+LocalPlacementKnowledgeStore.js#record()` as a SEPARATE step alongside
+the existing, unchanged `LocalPublicationSnapshotPlacementCatalog#add()`-
+triggering call, never as a parameter threaded into it. That class's own
+`add(placement)` public contract is exactly what it was before this
+milestone. Two replicas that hold the byte-identical, identically signed
+placement can hold two completely different `SnapshotPlacementKnowledgeRecord`s
+for it — one `LOCAL`, one `PEER` — and neither replica's record says
+anything about the other's.
+
+**FIRST-SEEN-WINS is what makes "how I learned it" a genuine, stable fact
+about MY history, not a flag that flips with whatever arrived most
+recently.** `application/LocalPlacementKnowledgeStore.js#record()` never
+overwrites an existing entry, regardless of which acquisition kind a
+later call supplies — a placement a replica first received over a peer
+connection reports `PEER` forever afterward, even after that replica
+later imports the identical placement from a package, or restarts and
+receives it again. `tests/PlacementKnowledgeProvenance.test.js`'s own
+Section E proves this for every ordered pair of acquisition kinds, and
+Section G proves it concretely for the milestone's own worked example:
+Bob receives P1 over a peer connection, later imports the identical P1
+from a package, and restarts — P1 reports `PEER` at every step — while
+P2 (Bob's own creation) and P3 (a package import with no prior peer
+contact) settle into `LOCAL` and `PACKAGE` respectively, producing
+exactly the P1→PEER/P2→LOCAL/P3→PACKAGE table alongside a placement
+catalog that never once refers to acquisition at all.
+
+**Deliberately no `peerId`, no `RESTORED` kind, no `PEER_ANNOUNCEMENT`/
+`PEER_DISCOVERY` split.** Each of these was considered and declined, for
+the identical reason `application/AnchorAcquisitionKind.js`'s own 0.8.17
+header already gives: none of them describe a genuinely different way a
+replica came to know a claim, and each would invite exactly the ranking
+this entry exists to forbid. `peerId` would let "which peer" quietly
+become a data point for judging a claim's retrievability, `RESTORED`
+would conflate surviving a restart with a new acquisition (surviving one
+is 0.8.21's own job, entirely separate — see `application/
+RestorePublicationSnapshotPlacementCatalogUseCase.js`), and splitting
+`PEER` by transport would document a wire-protocol implementation detail
+no UI or caller has ever needed.
+
+**The UI names how, never who, and never scores — nor does it imply
+availability.** `application/PublicationSnapshotPlacementKnowledgeView.js#
+describePlacementKnowledge()` produces "Learned via peer exchange," never
+"Source: Alice ✓" and never "Reliable source" — `tests/
+PlacementKnowledgeProvenance.test.js`'s own Section C asserts directly
+that no acquisition label this file ever produces names a specific
+identity or contains any word resembling "trust," "verified,"
+"authority," "reliable," or "rank." Local Knowledge, shown in
+`ui/views/DecentralizedPublicationsView.js`'s own "Inspect Placement"
+panel, is presented as a distinct subsection from the placement's own
+claimed fields, for the identical reason 0.8.20 already keeps a raw
+`locator` unreinterpreted at the generic level: naming HOW a replica
+learned a claim, next to WHERE the claim says the bytes live, without
+ever blending the two into "therefore this is more likely to resolve."
+
+See `docs/Roadmap.md`, 0.8.24, for the full milestone entry.

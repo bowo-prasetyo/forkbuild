@@ -8,6 +8,7 @@ import {
     toPublicationSnapshotPlacementResponseMessage,
     isValidPublicationSnapshotPlacementPeerMessage
 } from './PublicationSnapshotPlacementPeerProtocol.js';
+import { PlacementAcquisitionKind } from './PlacementAcquisitionKind.js';
 
 const PLACEMENT_RECEIVED_EVENT = 'PublicationSnapshotPlacementPeerExchangeReceived';
 
@@ -64,9 +65,32 @@ const PLACEMENT_RECEIVED_EVENT = 'PublicationSnapshotPlacementPeerExchangeReceiv
 // resolvable. This class introduces no concept of a "trusted peer" or
 // peer reputation score for placements, and none should ever be added to
 // it.
+//
+// 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
+//
+// `_importAndPublish()` now also records a LOCAL-ONLY application/
+// PlacementAcquisitionKind.js#PEER knowledge entry for every placement it
+// successfully imports (see the optional `knowledgeStore` constructor
+// option). This is NOT wire traffic — no PEER knowledge record, and no
+// field naming which peer this placement arrived from, is ever sent,
+// received, or exists anywhere in application/
+// PublicationSnapshotPlacementPeerProtocol.js's own message shapes. It is
+// this replica's own bookkeeping about its own history, written after
+// import succeeds — mirrors application/PublicationAnchorPeerExchange.js's
+// own identical 0.8.17 addition.
 export class PublicationSnapshotPlacementPeerExchange {
+    // knowledgeStore: OPTIONAL, an application/LocalPlacementKnowledgeStore.js
+    // instance (0.8.24). When supplied, every placement this class
+    // successfully imports — via ANNOUNCE or RESPONSE, `isNew` either way
+    // — also records an application/PlacementAcquisitionKind.js#PEER
+    // knowledge entry; see `_importAndPublish()` below, the ONE place
+    // both ingestion paths already converge. Deliberately records no
+    // peerId, connectionId, or remote identity alongside it — see
+    // application/PlacementAcquisitionKind.js's own header on why PEER is
+    // where THIS codebase draws the line, never "PEER, from Alice."
     constructor(placementExchange, peerMessageBus, connectedPeerRegistry, {
-        protocol = PublicationSnapshotPlacementPeerExchange.DEFAULT_PROTOCOL
+        protocol = PublicationSnapshotPlacementPeerExchange.DEFAULT_PROTOCOL,
+        knowledgeStore = null
     } = {}) {
         if (!placementExchange
             || typeof placementExchange.importPlacement !== 'function'
@@ -84,6 +108,7 @@ export class PublicationSnapshotPlacementPeerExchange {
         this._bus = peerMessageBus;
         this._registry = connectedPeerRegistry;
         this._protocol = protocol;
+        this._knowledgeStore = knowledgeStore;
         this._eventBus = new EventBus();
 
         for (const peer of this._registry.list()) {
@@ -285,13 +310,24 @@ export class PublicationSnapshotPlacementPeerExchange {
     }
 
     // The ONE place both ANNOUNCE (`_handleIncoming()`) and RESPONSE
-    // (`_handleResponse()`) ingestion converge.
+    // (`_handleResponse()`) ingestion converge, and therefore the one
+    // place a PEER knowledge record is ever written (0.8.24) — every
+    // placement that reaches this replica over a peer connection, by
+    // either transport, records identically. Called unconditionally on
+    // every successful import, `isNew` either way; application/
+    // LocalPlacementKnowledgeStore.js#record()'s own first-seen-wins
+    // discipline is what keeps a re-announce or re-synchronize of an
+    // already-known placement from ever overwriting an earlier LOCAL or
+    // PACKAGE acquisition.
     _importAndPublish(envelope) {
         let result;
         try {
             result = this._exchange.importPlacement(envelope);
         } catch {
             return;
+        }
+        if (this._knowledgeStore) {
+            this._knowledgeStore.record(result.placement.id, PlacementAcquisitionKind.PEER);
         }
         this._eventBus.publish(PLACEMENT_RECEIVED_EVENT, result);
     }

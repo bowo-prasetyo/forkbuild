@@ -19355,3 +19355,264 @@ Publication Center view presenting "External Evidence" and "Snapshot
 Placements" as the two orthogonal dimensions they have always been,
 neither authoritative over the other — each sized on its own, exactly
 like every "Deliberately excluded" list in this document before it.
+
+## 0.8.24 — Snapshot Placement Provenance & Observation Boundary
+
+0.8.18 through 0.8.23 gave this codebase every way to create, catalog,
+persist, exchange, discover, inspect, and compare snapshot placements —
+but never anywhere to answer the same, much older question 0.8.17 already
+asked and answered for anchors:
+
+> **How did THIS replica come to know about a given placement claim at
+> all — and can that be recorded without it quietly becoming a trust,
+> ranking, or availability signal?**
+
+By 0.8.23 there are three genuinely distinct paths a placement can reach
+a replica through — `CreatePublicationSnapshotPlacementUseCase` (LOCAL,
+0.8.18), `ImportPackageSnapshotPlacementsUseCase` (PACKAGE, 0.8.22), and
+`PublicationSnapshotPlacementPeerExchange` (PEER, both ANNOUNCE and
+RESPONSE, 0.8.19) — and `LocalPublicationSnapshotPlacementCatalog` has
+always treated all three identically, on purpose: "a known signed
+`PublicationSnapshotPlacement`," nothing more, per that file's own
+header. That restraint is exactly right for what the catalog is FOR. It
+leaves a genuinely different, smaller question unanswered — not "is this
+a placement," but "how did I personally come to hold it" — a fact about
+THIS replica's own local history, never about the claim's own
+availability or standing. This is the placement-side counterpart of
+0.8.17's own milestone, mirrored deliberately, the same way every
+placement-side module since 0.8.18 has mirrored its anchor-side
+precedent.
+
+```text
+Local creation           ImportPackageSnapshotPlacementsUseCase   PublicationSnapshotPlacementPeerExchange
+(CreatePublicationSnapshot    (0.8.22)                              (ANNOUNCE / RESPONSE, 0.8.19)
+  PlacementUseCase, 0.8.18)
+        │                          │                                   │
+        │ LOCAL                    │ PACKAGE                           │ PEER
+        └──────────────┬───────────┴───────────────┬───────────────────┘
+                        │                           │
+                        ▼                           ▼
+       LocalPublicationSnapshotPlacementCatalog  LocalPlacementKnowledgeStore   (NEW)
+       "what placements do I know about?"        "how — and when — did I
+                        │                          learn each one?"
+                        ▼                           │
+              (unchanged since 0.8.18)               ▼
+                                       PublicationSnapshotPlacementKnowledgeView (NEW)
+                                       "Learned locally" / "…via package
+                                        import" / "…via peer exchange" —
+                                        never "Source: Alice"
+```
+
+- `application/PlacementAcquisitionKind.js` (new) — the entire
+  vocabulary: `LOCAL`, `PACKAGE`, `PEER`. Three values, unordered, and
+  deliberately no fourth — `RESTORED` and `PEER_ANNOUNCEMENT`/
+  `PEER_DISCOVERY` are both declined for the identical reasons
+  `application/AnchorAcquisitionKind.js` (0.8.17) already declined them.
+  See this file's own header and `docs/Principles.md`, "Acquisition
+  Provenance Is Not Placement Rank (0.8.24)."
+- `application/SnapshotPlacementKnowledgeRecord.js` (new) — `{
+  placementId, firstSeenAt, acquisition: { kind } }`, constructed and
+  validated the same way `application/AnchorKnowledgeRecord.js` (0.8.17)
+  constructs its own sibling record, plus `toJSON()`/`fromJSON()` for the
+  durable store below. Deliberately carries no `peerId`.
+- `application/LocalPlacementKnowledgeStore.js` (new) — the durable,
+  FIRST-SEEN-WINS store this milestone's entire design rests on:
+  `record(placementId, acquisitionKind, firstSeenAt)` never overwrites a
+  placementId already on file, `get()`/`has()`/`list()`/`remove()`
+  mirroring `application/LocalAnchorKnowledgeStore.js`'s own shape one
+  layer over. Sits ALONGSIDE `application/
+  LocalPublicationSnapshotPlacementCatalog.js`, never inside it — that
+  class's own `add(placement)` public contract is UNCHANGED by this
+  milestone. Unlike the placement catalog, this store has no restoration
+  use case: a stray or tampered knowledge record carries no authority to
+  lose.
+- `application/CreatePlacementKnowledgeStoreUseCase.js` (new) — the
+  composition-root wiring for the store above, the identical shape
+  `application/CreateAnchorKnowledgeStoreUseCase.js` (0.8.17) already
+  established.
+- `application/PublicationSnapshotPlacementKnowledgeView.js` (new) —
+  `describePlacementKnowledge(record)`, pure and synchronous, the
+  identical restraint `application/PublicationAnchorKnowledgeView.js`
+  (0.8.17) already holds. Produces "Learned locally" / "Learned via
+  package import" / "Learned via peer exchange" — never a peer's name,
+  never a checkmark, never a word resembling "trust," "reliability," or
+  "availability."
+- `application/CreatePublicationSnapshotPlacementUseCase.js` (modified)
+  — an OPTIONAL fifth constructor parameter, `knowledgeStore`; when
+  supplied, a successfully created placement also records a LOCAL
+  knowledge entry for itself. Every existing caller that omits it
+  (every one before this milestone) behaves exactly as before.
+- `application/ImportPackageSnapshotPlacementsUseCase.js` (modified) —
+  an OPTIONAL second constructor parameter, `knowledgeStore`, exactly the
+  addition this file's own pre-0.8.24 header already named as future
+  work; every successfully imported placement (new OR already-known)
+  records a PACKAGE entry, unconditionally — FIRST-SEEN-WINS inside the
+  store is what makes calling this on a duplicate safe.
+- `application/PublicationSnapshotPlacementPeerExchange.js` (modified) —
+  an OPTIONAL `knowledgeStore` option; `_importAndPublish()`, the ONE
+  method both ANNOUNCE and RESPONSE ingestion already converge through,
+  now also records a PEER entry for every placement it successfully
+  imports. No wire shape in `application/
+  PublicationSnapshotPlacementPeerProtocol.js` changed at all — a
+  knowledge record is never sent, never received, purely this replica's
+  own bookkeeping written after import already succeeded.
+- `application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js`
+  / `application/CreateSnapshotPlacementOrchestratorUseCase.js`
+  (modified) — thread the ONE `LocalPlacementKnowledgeStore` instance
+  this replica uses anywhere into `peerExchange` (PEER) and, when a
+  caller supplies one, `createPublicationSnapshotPlacementUseCase`
+  (LOCAL) respectively — the identical "one instance, threaded
+  everywhere" discipline `publicationSnapshotPlacementCatalog` itself
+  already holds. `CreateSnapshotPlacementOrchestratorUseCase.js`'s own
+  creation pipeline is not currently wired into `ui/main.js` (no "Create
+  Placement" UI action exists yet, mirroring anchors before 0.8.11), so
+  its `knowledgeStore` parameter stays additive and unused by the running
+  app today — the identical shape `ImportPackageAnchorsUseCase.js`'s own
+  0.8.17 parameter already sits in for anchors.
+- `ui/main.js` (modified) — constructs `placementKnowledgeStore` once
+  (returned from `CreatePublicationSnapshotPlacementPeerExchangeUseCase`,
+  the same place `catalog`/`peerExchange` already come from), and
+  provides it as `placementKnowledgeStore` for `ui/views/
+  DecentralizedPublicationsView.js` to consume.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — "Inspect
+  Placement" now also shows a "Local Knowledge" section, separate from
+  "Snapshot Placement," reading `Acquisition` and `First seen by this
+  replica` — a purely local, synchronous `placementKnowledgeStore.get()`
+  read computed alongside the existing
+  `publicationSnapshotPlacementDetailView()` call inside
+  `togglePlacementInspect()`, under the identical "Inspection Is
+  Observation" restraint 0.8.14/0.8.20 already established. Optional — a
+  test harness (or any caller) that never provides
+  `placementKnowledgeStore` simply shows no Local Knowledge section.
+- `tests/PlacementKnowledgeProvenance.test.js` (new) — Section A:
+  `PlacementAcquisitionKind`/`SnapshotPlacementKnowledgeRecord`
+  vocabulary, validation, immutability, JSON round-trip; Section B:
+  `LocalPlacementKnowledgeStore` CRUD plus FIRST-SEEN-WINS and durability
+  across a simulated restart; Section C: `describePlacementKnowledge()`
+  wording, with an explicit check that no acquisition label ever names a
+  peer or reads as a trust/availability signal; Section D: each of the
+  three wiring points records its own kind (and every one still works
+  with no `knowledgeStore` supplied at all); Section E: INVARIANT —
+  first-seen-wins holds for every ordered pair of acquisition kinds;
+  Section F: FLAGSHIP (restart) — Bob receives a placement from Alice
+  over a live ANNOUNCE (PEER), restarts (both the placement and its PEER
+  knowledge survive via 0.8.21's own persistence, unchanged), and later
+  imports the identical placement from a package without his knowledge
+  ever flipping to PACKAGE; Section G: FLAGSHIP — the milestone's own
+  three-placement scenario (P1 via peer exchange, P2 created locally, P3
+  via package import) produces exactly the P1→PEER/P2→LOCAL/P3→PACKAGE
+  knowledge table while the placement catalog itself stays completely
+  independent of it; Section H: INVARIANT — acquisition provenance never
+  enters `derivePublicationSnapshotPlacementConvergence()` — two
+  oppositely-acquired but structurally identical placement sets converge
+  to a byte-identical result.
+
+```text
+0.8.23  Multi-Placement Convergence & Relationship UX                   ✓
+             │
+             ▼
+0.8.24  Snapshot Placement Provenance & Observation Boundary            ✓
+             ├── application/PlacementAcquisitionKind.js — new; LOCAL/
+             │   PACKAGE/PEER, three unordered values, no fourth
+             ├── application/SnapshotPlacementKnowledgeRecord.js — new;
+             │   the { placementId, firstSeenAt, acquisition: { kind } }
+             │   shape
+             ├── application/LocalPlacementKnowledgeStore.js — new;
+             │   durable, FIRST-SEEN-WINS, sits alongside the catalog,
+             │   never inside it
+             ├── application/CreatePlacementKnowledgeStoreUseCase.js —
+             │   new; composition-root wiring
+             ├── application/PublicationSnapshotPlacementKnowledgeView.js
+             │   — new; pure record -> display shape, deliberately
+             │   understated wording
+             ├── application/CreatePublicationSnapshotPlacementUseCase.js
+             │   — modified; optional knowledgeStore -> records LOCAL
+             ├── application/ImportPackageSnapshotPlacementsUseCase.js —
+             │   modified; optional knowledgeStore -> records PACKAGE
+             ├── application/PublicationSnapshotPlacementPeerExchange.js
+             │   — modified; optional knowledgeStore -> records PEER for
+             │   ANNOUNCE and RESPONSE alike, through _importAndPublish()
+             ├── application/
+             │   CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
+             │   / CreateSnapshotPlacementOrchestratorUseCase.js —
+             │   modified; thread the one knowledgeStore instance through
+             ├── ui/main.js — modified; constructs and provides
+             │   placementKnowledgeStore
+             ├── ui/views/DecentralizedPublicationsView.js — modified;
+             │   "Inspect Placement" gains a Local Knowledge section
+             └── PlacementKnowledgeProvenance.test.js (new) — vocabulary,
+                 store CRUD + first-seen-wins + durability, view wording,
+                 all-three-paths wiring, cross-path first-seen-wins
+                 invariant, restart FLAGSHIP, the milestone's own P1/P2/P3
+                 FLAGSHIP, and convergence non-interference
+```
+
+> **Provenance answers how a replica came to know a placement claim; it
+> never answers whether the placement is currently retrievable, and it
+> never ranks one acquisition path above another.** `application/
+> LocalPlacementKnowledgeStore.js` is durable, local-only bookkeeping —
+> never signed, never carried across `application/
+> PublicationSnapshotPlacementExchange.js`'s own export/import boundary,
+> never a second trust root. Two replicas holding the byte-identical,
+> identically signed placement can hold two entirely different knowledge
+> records for it, and neither is wrong. See `docs/Principles.md`,
+> "Acquisition Provenance Is Not Placement Rank (0.8.24)."
+
+### Deliberately excluded
+
+- **`peerId`, or any field naming which specific peer a placement
+  arrived from.** Mirrors `application/AnchorAcquisitionKind.js`'s own
+  0.8.17 restraint exactly.
+- **A `RESTORED` acquisition kind.** Surviving a restart re-earns trust
+  in a placement already on file (`application/
+  RestorePublicationSnapshotPlacementCatalogUseCase.js`, 0.8.21) — it is
+  not a new way a replica learned the claim.
+- **Splitting `PEER` into `PEER_ANNOUNCEMENT`/`PEER_DISCOVERY`.** Both
+  transports establish the identical fact — "another authenticated
+  replica supplied a signed placement claim."
+- **Any ranking, filtering, sorting, or preference derived from
+  `acquisition.kind` or `firstSeenAt`.** No file in this codebase reads a
+  `SnapshotPlacementKnowledgeRecord` to decide which placement to show
+  first, resolve first, or treat as canonical.
+- **Any interaction between acquisition provenance and
+  `derivePublicationSnapshotPlacementConvergence()` (0.8.23), even an
+  optional parameter that would sit inert.** That function has no
+  parameter capable of receiving acquisition data at all — see `tests/
+  PlacementKnowledgeProvenance.test.js`'s own Section H, and
+  `application/PublicationSnapshotPlacementConvergence.js`'s own header.
+- **Changing `LocalPublicationSnapshotPlacementCatalog#add()`'s public
+  contract.** Acquisition metadata is maintained ALONGSIDE the catalog,
+  in a separate collaborator, never threaded into `add()` as a second
+  parameter. `application/PublicationSnapshotPlacementExchange.js#
+  importPlacement()`'s own signature is UNCHANGED too.
+- **A knowledge-record restoration/re-verification pass.** A knowledge
+  record carries no signature and asserts nothing about any other
+  replica; at worst a tampered one mislabels this replica's own "Learned
+  via" badge for one placement id.
+- **Synchronizing, exporting, or sharing knowledge records over a peer
+  connection or inside a Blueprint Package.** `application/
+  SnapshotPlacementKnowledgeRecord.js` never appears in `application/
+  PublicationSnapshotPlacementPeerProtocol.js`'s own wire shapes, and
+  `application/PublicationSnapshotPlacementExchange.js#exportPlacement()`
+  /`importPlacement()` remain exactly what they were.
+- **Any UI wording that names a peer, shows a checkmark, or otherwise
+  reads as an authority or availability claim.** See `application/
+  PublicationSnapshotPlacementKnowledgeView.js`'s own header for the
+  exact, deliberately understated wording this milestone settled on.
+- **Wiring `CreateSnapshotPlacementOrchestratorUseCase.js`'s
+  `knowledgeStore` parameter into `ui/main.js`.** That composition root's
+  creation pipeline is not itself wired into the running app yet (no
+  "Create Placement" UI action exists) — the identical gap `application/
+  ImportPackageAnchorsUseCase.js`'s own 0.8.17 `knowledgeStore` parameter
+  still sits in for anchors today. A future milestone that wires either
+  creation flow into `ui/main.js` threads the shared knowledge store
+  through at that point, with zero changes to any file this milestone
+  touches.
+
+What's left, and deliberately unbuilt: any UI affordance to filter or
+group the placement list by acquisition kind; a way to bulk-inspect every
+known placement's provenance at once, rather than one at a time via
+"Inspect Placement"; and the unified Publication Center view 0.8.23's own
+"Deliberately excluded" list already named — now that both the anchor and
+placement sides carry the identical provenance layer, 0.8.25 is free to
+build that view without either domain lending the other any authority.
