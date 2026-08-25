@@ -35,7 +35,13 @@ top-level [docs/](..) folder.
    connecting directly to other people, remembering, friending, and
    blocking.
 8. **[Chat & Conversations](08-ChatAndConversations.md)** — direct,
-   friends-only messaging, offline delivery, and read receipts.
+   friends-only messaging, offline delivery, read receipts, and voice
+   calls.
+9. **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
+   signed authorship and place-name claims, catalog status, retrieving
+   content from peers, and optional external evidence: creating,
+   discovering from peers, verifying, and inspecting anchors like a
+   Bitcoin timestamp.
 
 ## Reference
 

@@ -19,10 +19,17 @@ also automatically given a position in the shared world, so **Explore**
 always has somewhere to take people — see
 [Finding worlds](03-WorldView.md#finding-worlds).
 
-> **Note:** In this version, publishing stores your creation locally so the
-> full publish → discover → fork flow works end to end. Decentralized
-> publishing (e.g. to a blockchain) is on the roadmap — the experience you're
-> practicing now is exactly how it will feel.
+> **Note:** Publishing here stores your Document/World locally on this
+> device (and on any peer's device it later reaches) so the full
+> publish → discover → fork flow works end to end. A real, backend-agnostic
+> decentralized storage network for this specific flow is still on the
+> roadmap — but ForkBuild does already have a separate, working
+> decentralized-publication system for a different kind of content:
+> signed authorship and place-name claims, exchanged directly between
+> peers with independently checkable external evidence. See
+> [Publications & External Evidence](09-PublicationsAndEvidence.md) if
+> you're curious — it's optional depth, not required for anything in this
+> guide.
 
 ## Choosing a license
 
