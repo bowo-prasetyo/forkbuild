@@ -35,6 +35,8 @@ import { CreatePublicationResolutionCoordinatorUseCase } from '../application/Cr
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
 import { CreatePublicationAnchorPeerExchangeUseCase } from '../application/CreatePublicationAnchorPeerExchangeUseCase.js';
 import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../application/CreatePublicationAnchorDiscoveryCoordinatorUseCase.js';
+import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
+import { CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase } from '../application/CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js';
 import { CreatePublicationEvidenceDiscoveryCoordinatorUseCase } from '../application/CreatePublicationEvidenceDiscoveryCoordinatorUseCase.js';
 import { CreateExternalAnchorVerifierUseCase } from '../application/CreateExternalAnchorVerifierUseCase.js';
 import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/CreateBitcoinAnchorProofVerifierUseCase.js';
@@ -383,6 +385,36 @@ const { discoveryCoordinator: publicationAnchorDiscoveryCoordinator } = new Crea
     peerExchange: publicationAnchorPeerExchange
 });
 
+// 0.8.19 — Snapshot Placement Discovery & Peer Synchronization. The first
+// wiring for the placement catalog/exchange pipeline 0.8.18 built with no
+// peer transport at all (see that milestone's own "Deliberately
+// excluded" list) — the exact same "foundation ships unwired, transport
+// wires it into ui/main.js" shape 0.8.0/0.8.4 already established for
+// anchors. `publicationSnapshotPlacementCatalog` is the one
+// LocalPublicationSnapshotPlacementCatalog instance this replica uses
+// anywhere, riding the SAME peerMessageBus/peerSessionManager.registry
+// every other peer/PeerMessageBus.js protocol in this file already does.
+// A placement a peer announces or synchronizes is cataloged the moment it
+// arrives — application/PublicationSnapshotPlacementPeerExchange.js never
+// once calls application/SnapshotPlacementResolver.js; resolution stays
+// an explicit, separate, on-demand call, unwired here, exactly as
+// docs/Roadmap.md's own 0.8.18 entry already established for creation.
+// `publicationSnapshotPlacementDiscoveryCoordinator` wraps the SAME
+// `publicationSnapshotPlacementPeerExchange` instance — never a second
+// one — provided here for a future UI to call; this milestone adds no
+// such button itself, the identical restraint 0.8.4/0.8.5 already held
+// for the anchor-side pair above before any UI consumed either.
+const {
+    catalog: publicationSnapshotPlacementCatalog,
+    peerExchange: publicationSnapshotPlacementPeerExchange
+} = new CreatePublicationSnapshotPlacementPeerExchangeUseCase().execute({
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry
+});
+const { discoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator } = new CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase().execute({
+    peerExchange: publicationSnapshotPlacementPeerExchange
+});
+
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 // The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
 // this milestone's own design calls for — it wraps the SAME coordinator
@@ -518,5 +550,9 @@ app.provide('publicationEvidenceDiscoveryCoordinator', publicationEvidenceDiscov
 app.provide('anchorKnowledgeStore', anchorKnowledgeStore);
 // 0.8.14 — External Evidence Inspection & Locator UX.
 app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegistry);
+// 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
+app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
+app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
+app.provide('publicationSnapshotPlacementDiscoveryCoordinator', publicationSnapshotPlacementDiscoveryCoordinator);
 app.use(router);
 app.mount('#app');
