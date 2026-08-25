@@ -1,4 +1,5 @@
 import { PublicationSnapshotPlacementError } from './PublicationSnapshotPlacementValidator.js';
+import { PlacementAcquisitionKind } from './PlacementAcquisitionKind.js';
 
 // 0.8.22 — Snapshot Placement Package Integration.
 //
@@ -66,22 +67,27 @@ export class ImportPackageSnapshotPlacementsUseCase {
     // instance — the one and only placement-import boundary this class
     // ever calls.
     //
-    // Deliberately no second, optional constructor argument yet — unlike
-    // application/ImportPackageAnchorsUseCase.js, which grew an OPTIONAL
-    // `knowledgeStore` parameter in 0.8.17 once application/
-    // LocalAnchorKnowledgeStore.js existed. No placement-side equivalent
-    // (a "PlacementAcquisitionKind"/knowledge store) exists yet — see
-    // docs/Roadmap.md, 0.8.24 — so there is nothing to record acquisition
-    // provenance into. When that milestone lands, it can add the
-    // identical optional second parameter here, exactly the same
-    // non-breaking, additive move 0.8.17 already made for anchors,
-    // without touching this constructor's existing single-argument
-    // callers.
-    constructor(placementExchange) {
+    // knowledgeStore: OPTIONAL, an application/LocalPlacementKnowledgeStore.js
+    // instance (0.8.24 — Snapshot Placement Provenance & Observation
+    // Boundary). This file's own pre-0.8.24 header named this exact,
+    // additive move as future work once a "PlacementAcquisitionKind"/
+    // knowledge store existed — that milestone has now landed. When
+    // supplied, every successfully imported placement — new or
+    // already-known, `isNew` either way — also records an application/
+    // PlacementAcquisitionKind.js#PACKAGE knowledge entry. Called
+    // unconditionally, on every placement, every time: FIRST-SEEN-WINS
+    // inside application/LocalPlacementKnowledgeStore.js#record() is what
+    // makes that safe — a placement Bob already knows as PEER keeps
+    // reporting PEER even after a package import of the identical
+    // placement calls record() again with PACKAGE. See that file's own
+    // header, and application/ImportPackageAnchorsUseCase.js's own
+    // identical 0.8.17 parameter.
+    constructor(placementExchange, knowledgeStore = null) {
         if (!placementExchange || typeof placementExchange.importPlacement !== 'function') {
             throw new Error('ImportPackageSnapshotPlacementsUseCase: a PublicationSnapshotPlacementExchange is required');
         }
         this._placementExchange = placementExchange;
+        this._knowledgeStore = knowledgeStore;
     }
 
     // `pkg`: a Blueprint Package (application/BlueprintPackage.js) that
@@ -114,6 +120,9 @@ export class ImportPackageSnapshotPlacementsUseCase {
         for (const placementJson of placements) {
             try {
                 const { placement, isNew } = this._placementExchange.importPlacement(placementJson);
+                if (this._knowledgeStore) {
+                    this._knowledgeStore.record(placement.id, PlacementAcquisitionKind.PACKAGE);
+                }
                 if (isNew) {
                     importedPlacements.push(placement);
                 } else {

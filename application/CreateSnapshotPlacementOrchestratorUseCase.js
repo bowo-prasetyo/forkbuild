@@ -32,11 +32,21 @@ import { SnapshotPlacementResolver } from './SnapshotPlacementResolver.js';
 // usable, empty SnapshotPlacementStoreRegistry; every storage name
 // simply has no registered store, and `execute()` refuses to proceed for
 // any of them, exactly as it would for a single missing store.
+// 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
+//
+// `knowledgeStore`: OPTIONAL (mirrors application/
+// CreateExternalPublicationAnchorOrchestratorUseCase.js's own identical
+// 0.8.17 parameter) — passed straight through to application/
+// CreatePublicationSnapshotPlacementUseCase.js, so a locally created
+// placement also records its own LOCAL knowledge entry. This use case
+// constructs no knowledge store of its own, the same "storage lives
+// elsewhere, wiring lives here" restraint this class's own header already
+// holds for `placementCatalog`.
 export class CreateSnapshotPlacementOrchestratorUseCase {
-    execute({ discoveryProvider, contentResolver, placementCatalog, identityProvider, stores = [] } = {}) {
+    execute({ discoveryProvider, contentResolver, placementCatalog, identityProvider, stores = [], knowledgeStore = null } = {}) {
         const verifier = new LocalAuthorizationVerifier();
         const createPublicationSnapshotPlacementUseCase = new CreatePublicationSnapshotPlacementUseCase(
-            discoveryProvider, identityProvider, verifier, placementCatalog
+            discoveryProvider, identityProvider, verifier, placementCatalog, knowledgeStore
         );
         const storeRegistry = new SnapshotPlacementStoreRegistry();
         for (const contentStore of stores) {

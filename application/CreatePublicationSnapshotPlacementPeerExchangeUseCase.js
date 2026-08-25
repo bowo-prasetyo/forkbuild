@@ -5,6 +5,7 @@ import { RestorePublicationSnapshotPlacementCatalogUseCase } from './RestorePubl
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PublicationSnapshotPlacementExchange } from './PublicationSnapshotPlacementExchange.js';
 import { PublicationSnapshotPlacementPeerExchange } from './PublicationSnapshotPlacementPeerExchange.js';
+import { CreatePlacementKnowledgeStoreUseCase } from './CreatePlacementKnowledgeStoreUseCase.js';
 
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 //
@@ -51,6 +52,14 @@ import { PublicationSnapshotPlacementPeerExchange } from './PublicationSnapshotP
 // use case runs no restore-on-startup pass") — that gap is exactly what
 // this milestone closes, the same way 0.8.15 closed it for
 // application/CreatePublicationAnchorPeerExchangeUseCase.js.
+//
+// 0.8.24 — Snapshot Placement Provenance & Observation Boundary. Also
+// constructs and returns `knowledgeStore` (application/
+// CreatePlacementKnowledgeStoreUseCase.js), wired into `peerExchange` so
+// every placement arriving over a live peer connection records how it
+// arrived — the identical addition application/
+// CreatePublicationAnchorPeerExchangeUseCase.js already made for anchors
+// in 0.8.17.
 export class CreatePublicationSnapshotPlacementPeerExchangeUseCase {
     execute({ peerMessageBus, connectedPeerRegistry } = {}) {
         const storageProvider = new LocalStorageProvider();
@@ -60,9 +69,21 @@ export class CreatePublicationSnapshotPlacementPeerExchangeUseCase {
 
         const restoreResult = new RestorePublicationSnapshotPlacementCatalogUseCase(store, verifier).execute();
 
-        const exchange = new PublicationSnapshotPlacementExchange(catalog, verifier);
-        const peerExchange = new PublicationSnapshotPlacementPeerExchange(exchange, peerMessageBus, connectedPeerRegistry);
+        // 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
+        // The one `LocalPlacementKnowledgeStore` instance this replica
+        // uses anywhere — threaded into `peerExchange` below so a live
+        // ANNOUNCE/RESPONSE records PEER knowledge, and returned here so
+        // a caller (see ui/main.js) can thread the SAME instance into
+        // application/CreateSnapshotPlacementOrchestratorUseCase.js
+        // (LOCAL) and application/ImportPackageSnapshotPlacementsUseCase.js
+        // (PACKAGE) — one store, fed by all three acquisition paths,
+        // exactly the "one instance, threaded everywhere" discipline
+        // `catalog` above already holds.
+        const { knowledgeStore } = new CreatePlacementKnowledgeStoreUseCase().execute();
 
-        return { catalog, exchange, peerExchange, verifier, restoreResult };
+        const exchange = new PublicationSnapshotPlacementExchange(catalog, verifier);
+        const peerExchange = new PublicationSnapshotPlacementPeerExchange(exchange, peerMessageBus, connectedPeerRegistry, { knowledgeStore });
+
+        return { catalog, exchange, peerExchange, verifier, restoreResult, knowledgeStore };
     }
 }

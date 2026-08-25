@@ -20,6 +20,7 @@ import { publicationSnapshotPlacementDetailView } from '../../application/Public
 import { SnapshotPlacementResolutionOutcome } from '../../application/SnapshotPlacementResolutionOutcome.js';
 import { derivePublicationSnapshotPlacementConvergence } from '../../application/PublicationSnapshotPlacementConvergence.js';
 import { publicationSnapshotPlacementConvergenceView } from '../../application/PublicationSnapshotPlacementConvergenceView.js';
+import { describePlacementKnowledge } from '../../application/PublicationSnapshotPlacementKnowledgeView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -214,6 +215,14 @@ import { publicationSnapshotPlacementConvergenceView } from '../../application/P
 // `loadPlacements()`'s own comment below and docs/Principles.md,
 // "Multi-Placement Convergence Is Independent Of Resolution Observation
 // (0.8.23)."
+// 0.8.24 — Snapshot Placement Provenance & Observation Boundary. "Inspect
+// Placement" now also shows a "Local Knowledge" section, mirroring the
+// identical section 0.8.17 already added to "Inspect Evidence" one axis
+// over — see `togglePlacementInspect()`'s own comment below. Reading it
+// is a purely local, synchronous `placementKnowledgeStore.get()` call,
+// computed alongside the existing `publicationSnapshotPlacementDetailView()`
+// call, under the identical "Inspection Is Observation" restraint 0.8.14/
+// 0.8.20 already established for that call.
 const PLACEMENT_BADGE_CLASSES = {
     [SnapshotPlacementResolutionOutcome.RESOLVED]: 'peer-badge--authenticated',
     [SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE]: 'peer-badge--pending',
@@ -338,6 +347,12 @@ export default {
         // generic shape; only the storage-specific section is skipped,
         // exactly as `evidenceViewRegistry` above degrades for anchors.
         const placementViewRegistry = inject('snapshotPlacementViewRegistry', null);
+        // 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
+        // Optional — absent here (as in a test harness that never
+        // provides it), "Inspect Placement" simply shows no "Local
+        // Knowledge" section, the identical degrade-gracefully posture
+        // `anchorKnowledgeStore` above already holds.
+        const placementKnowledgeStore = inject('placementKnowledgeStore', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -713,7 +728,7 @@ export default {
         // — mirrors toggleInspect() above exactly, one axis over.
         function togglePlacementInspect(entry, placementView) {
             const state = entry.placementInspections[placementView.placementId]
-                || (entry.placementInspections[placementView.placementId] = { expanded: false, detail: null, typeSpecific: null });
+                || (entry.placementInspections[placementView.placementId] = { expanded: false, detail: null, typeSpecific: null, knowledge: null });
             state.expanded = !state.expanded;
             if (state.expanded && !state.detail) {
                 const placement = entry.placements.find((candidate) => candidate.id === placementView.placementId);
@@ -721,6 +736,14 @@ export default {
                 state.detail = publicationSnapshotPlacementDetailView(placement);
                 state.typeSpecific = (placementViewRegistry && placementViewRegistry.has(placement.storage))
                     ? placementViewRegistry.get(placement.storage).describe(placement)
+                    : null;
+                // 0.8.24 — Snapshot Placement Provenance & Observation
+                // Boundary. A purely local, synchronous read — application/
+                // LocalPlacementKnowledgeStore.js#get() never touches the
+                // network and never mutates anything, mirroring
+                // toggleInspect()'s own identical 0.8.17 read above.
+                state.knowledge = placementKnowledgeStore
+                    ? describePlacementKnowledge(placementKnowledgeStore.get(placement.id))
                     : null;
             }
         }
@@ -738,6 +761,12 @@ export default {
         function placementInspectionTypeSpecific(entry, placementView) {
             const state = entry.placementInspections[placementView.placementId];
             return state ? state.typeSpecific : null;
+        }
+
+        // 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
+        function placementInspectionKnowledge(entry, placementView) {
+            const state = entry.placementInspections[placementView.placementId];
+            return state ? state.knowledge : null;
         }
 
         // 0.8.11 — Explicit External Anchoring UX. The one place this
@@ -948,7 +977,8 @@ export default {
             toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
             placementResolutionCoordinator, describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass,
-            togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific
+            togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
+            placementInspectionKnowledge
         };
     },
     template: `
@@ -1305,6 +1335,28 @@ export default {
                                            target="_blank" rel="noopener noreferrer">
                                             {{ placementInspectionTypeSpecific(entry, placementView).externalLocator.label }}
                                         </a>
+                                    </div>
+
+                                    <!-- 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
+                                         Deliberately separate from the "Snapshot Placement" block above:
+                                         everything above describes what the placement CLAIMS; this
+                                         describes how THIS replica came to know the claim at all — see
+                                         application/PublicationSnapshotPlacementKnowledgeView.js's own
+                                         header on why the wording here never names a peer and never
+                                         reads as a trust or availability signal. -->
+                                    <div v-if="placementInspectionKnowledge(entry, placementView) && placementInspectionKnowledge(entry, placementView).known"
+                                         class="evidence-inspection-knowledge">
+                                        <span class="evidence-inspection-title">Local Knowledge</span>
+                                        <dl class="evidence-fields">
+                                            <div class="evidence-field">
+                                                <dt>Acquisition</dt>
+                                                <dd>{{ placementInspectionKnowledge(entry, placementView).acquisitionLabel }}</dd>
+                                            </div>
+                                            <div class="evidence-field">
+                                                <dt>{{ placementInspectionKnowledge(entry, placementView).firstSeenAtLabel }}</dt>
+                                                <dd>{{ formatWhen(placementInspectionKnowledge(entry, placementView).firstSeenAt) }}</dd>
+                                            </div>
+                                        </dl>
                                     </div>
                                 </div>
                             </div>

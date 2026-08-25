@@ -1,5 +1,6 @@
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
+import { PlacementAcquisitionKind } from './PlacementAcquisitionKind.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.
 //
@@ -44,8 +45,25 @@ import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.j
 // `identityProvider` this class was constructed with — never a hidden
 // "currentUser" global, and never defaulted to anything if nobody is
 // signed in.
+//
+// 0.8.24 — Snapshot Placement Provenance & Observation Boundary. Also
+// records an application/PlacementAcquisitionKind.js#LOCAL knowledge
+// entry (see the optional `knowledgeStore` constructor parameter) —
+// never a change to what this class creates or catalogs, purely
+// additional, local-only bookkeeping about HOW this replica came to know
+// about its own freshly signed claim. Mirrors application/
+// CreatePublicationAnchorUseCase.js's own 0.8.17 addition exactly.
 export class CreatePublicationSnapshotPlacementUseCase {
-    constructor(discoveryProvider, identityProvider, verifier, placementCatalog) {
+    // knowledgeStore: OPTIONAL, an application/LocalPlacementKnowledgeStore.js
+    // instance (0.8.24). When supplied, a successfully created placement
+    // also records a PlacementAcquisitionKind.LOCAL knowledge entry for
+    // itself — "this replica learned this claim by creating it," the one
+    // acquisition kind no other entry point can ever record. Omitted
+    // entirely (as every caller before 0.8.24 already does), this class
+    // behaves exactly as it always did: knowledge tracking is additive,
+    // local-only bookkeeping, never a precondition for creating a
+    // placement.
+    constructor(discoveryProvider, identityProvider, verifier, placementCatalog, knowledgeStore = null) {
         if (!discoveryProvider) {
             throw new Error('CreatePublicationSnapshotPlacementUseCase: a publication discovery provider is required');
         }
@@ -62,6 +80,7 @@ export class CreatePublicationSnapshotPlacementUseCase {
         this._identityProvider = identityProvider;
         this._verifier = verifier;
         this._placementCatalog = placementCatalog;
+        this._knowledgeStore = knowledgeStore;
     }
 
     // Creates, signs, and catalogs a new PublicationSnapshotPlacement for
@@ -122,6 +141,9 @@ export class CreatePublicationSnapshotPlacementUseCase {
         }
 
         const { placement: cataloged } = this._placementCatalog.add(placement);
+        if (this._knowledgeStore) {
+            this._knowledgeStore.record(cataloged.id, PlacementAcquisitionKind.LOCAL);
+        }
         return cataloged;
     }
 }
