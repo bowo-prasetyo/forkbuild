@@ -12335,3 +12335,77 @@ new domain object either. `hasPublication` is a plain boolean the CALLER
 already knows — ordinarily `application/LocalPublicationCatalog.js#
 has()` (0.7.2) — never a record this view looks up or wraps itself. See
 `docs/Roadmap.md`, 0.8.28, for the full milestone entry.
+
+### A Replica Package Transfers Durable Claims, Not The Exporting Replica's Own Acquisition History (0.8.29)
+
+0.8.28 proved a replica can RECONSTRUCT a publication's knowledge without
+the original publisher, any peer, or any external system online.
+0.8.29 asks the inverse question: how does one replica hand that
+reconstructed knowledge to another, deliberately, offline? The answer
+this milestone gives is a package — `application/
+PublicationReplicaPackage.js` — that bundles exactly one publication
+plus the signed anchor/placement claims that name it, and two use cases
+(`application/BuildPublicationReplicaPackageUseCase.js`/`application/
+ImportPublicationReplicaPackageUseCase.js`) that move it in and out of a
+replica's own catalogs. The one design question this raises that 0.8.7's
+and 0.8.22's own package-import milestones never had to answer — a
+Blueprint Package carries no acquisition history to lose, because a
+`core/Structure.js` was never acquired FROM anyone in the first place —
+is what happens to an anchor's or a placement's own PACKAGE/PEER/LOCAL
+provenance (`application/AnchorAcquisitionKind.js`/`application/
+PlacementAcquisitionKind.js`, 0.8.17/0.8.24) when it travels inside one
+replica's export and lands in another's import.
+
+The answer is: nothing happens to it, because the package never carries
+it to begin with. Suppose Alice created Anchor A locally, verified it
+five times, and has known it for a year. She exports a Publication
+Replica Package naming her publication, Anchor A, and a placement. Bob
+imports it. `application/ImportPackageAnchorsUseCase.js`'s own
+`knowledgeStore` parameter — reused here completely UNCHANGED — records
+exactly one fact about Anchor A in Bob's own `application/
+LocalAnchorKnowledgeStore.js`: that BOB acquired it via PACKAGE. Alice's
+own five verifications, her own year of history, and her own
+LOCAL-acquisition record for the identical anchor never travel at all —
+`buildPublicationReplicaPackage()` calls nothing but `anchor.toJSON()`,
+and a `PublicationAnchor`'s own `toJSON()` has no acquisition field to
+serialize in the first place (see 0.8.17's own principle, "Acquisition
+Provenance Is Not Evidence Rank," on why that field lives in a knowledge
+STORE, never on the claim itself). Bob's own knowledge store answers
+exactly one question — "how did I, Bob, come to know this claim?" — and
+a package changes that answer no more than a peer message or a hand-off
+envelope already did.
+
+This is what makes the interesting case work without any new machinery.
+If Carol later sends Bob the IDENTICAL Anchor A over a live peer
+connection, `application/LocalAnchorKnowledgeStore.js`'s own
+FIRST-SEEN-WINS rule (0.8.17, already exercised for every other
+acquisition-route pair — LOCAL-before-PACKAGE, PACKAGE-before-PEER,
+PEER-before-PACKAGE) applies exactly as it always has: Bob's record for
+Anchor A stays PACKAGE, never becomes PEER. Not because this milestone
+added a special case for packages, but because a Publication Replica
+Package was never able to smuggle Alice's own acquisition history into
+Bob's store to begin with — there was never anything there for
+FIRST-SEEN-WINS to have to out-compete. `tests/
+PublicationReplicaPackage.test.js`'s own flagship proves this exact
+sequence — Alice exports, goes offline for good, Bob imports and derives
+full replica knowledge, Carol re-delivers the same anchor over a live
+peer connection, Bob's own PACKAGE record is unmoved — as an invariant.
+
+**Reuse the existing trust boundary; never build a second one.** Every
+claim a Publication Replica Package carries crosses the IDENTICAL
+validate-construct-verify boundary it would cross arriving any other
+way: `application/PublicationExchange.js#importPublication()` for the
+publication, `application/PublicationAnchorExchange.js#importAnchor()`
+for each anchor, `application/
+PublicationSnapshotPlacementExchange.js#importPlacement()` for each
+placement. `application/ImportPublicationReplicaPackageUseCase.js` does
+not merely call the SAME exchange classes 0.8.7's/0.8.22's own package
+importers already call — it calls those importers THEMSELVES,
+unmodified, because a Publication Replica Package bundles its
+`anchors`/`placements` under the identical field names a Blueprint
+Package already established, and neither importer has ever cared which
+kind of package handed it that array. There is no second
+signature-verification code path anywhere in this milestone to audit,
+diverge from, or fall out of sync with the first.
+
+See `docs/Roadmap.md`, 0.8.29, for the full milestone entry.
