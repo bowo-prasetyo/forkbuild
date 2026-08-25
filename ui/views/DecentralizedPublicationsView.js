@@ -18,6 +18,8 @@ import { describeAnchorKnowledge } from '../../application/PublicationAnchorKnow
 import { snapshotPlacementView, describeKnownPlacementCount } from '../../application/SnapshotPlacementView.js';
 import { publicationSnapshotPlacementDetailView } from '../../application/PublicationSnapshotPlacementDetailView.js';
 import { SnapshotPlacementResolutionOutcome } from '../../application/SnapshotPlacementResolutionOutcome.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../../application/PublicationSnapshotPlacementConvergence.js';
+import { publicationSnapshotPlacementConvergenceView } from '../../application/PublicationSnapshotPlacementConvergenceView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -192,6 +194,26 @@ import { SnapshotPlacementResolutionOutcome } from '../../application/SnapshotPl
 // See application/SnapshotPlacementView.js's own header and
 // docs/Principles.md, "Resolving A Placement Observes Present
 // Availability; It Does Not Rewrite The Placement Claim (0.8.20)."
+// 0.8.23 — Multi-Placement Convergence & Relationship UX. Each entry's
+// "Snapshot Placements" section now also derives a "Placement
+// relationships" overview from application/
+// PublicationSnapshotPlacementConvergence.js#
+// derivePublicationSnapshotPlacementConvergence() shaped for the screen
+// by application/PublicationSnapshotPlacementConvergenceView.js — the
+// identical idea 0.8.13 already applied to "External Evidence" above
+// ("Content binding"), applied here to placements: how many placements
+// are known, across how many storage backends and distinct locations,
+// and whether their claimed content hashes agree. Deliberately a
+// SEPARATE card from "Content binding" — an anchor answers "what
+// external evidence claims do I know?" while a placement answers "what
+// locations do I know that claim this snapshot is retrievable?," and
+// this page keeps that distinction visible exactly as it already keeps
+// "External Evidence" and "Snapshot Placements" themselves separate
+// sections (0.8.20). Recomputed fresh every time `loadPlacements()`
+// already runs — never once threaded through `entry.resolutions`: see
+// `loadPlacements()`'s own comment below and docs/Principles.md,
+// "Multi-Placement Convergence Is Independent Of Resolution Observation
+// (0.8.23)."
 const PLACEMENT_BADGE_CLASSES = {
     [SnapshotPlacementResolutionOutcome.RESOLVED]: 'peer-badge--authenticated',
     [SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE]: 'peer-badge--pending',
@@ -430,7 +452,20 @@ export default {
                 placementsView: null,
                 placementsExpanded: false,
                 resolutions: {},
-                placementInspections: {}
+                placementInspections: {},
+                // 0.8.23 — Multi-Placement Convergence & Relationship UX.
+                // The derived structural relationship among THIS entry's
+                // own `placements` — application/
+                // PublicationSnapshotPlacementConvergence.js's own
+                // result, and application/
+                // PublicationSnapshotPlacementConvergenceView.js's own
+                // shaping of it. Recomputed, never accumulated, every
+                // time `loadPlacements()` already runs — ephemeral
+                // exactly like `placementsView` immediately above, and
+                // NEVER recomputed from `entry.resolutions` — see
+                // `loadPlacements()`'s own comment below.
+                placementConvergence: null,
+                placementConvergenceView: null
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -605,6 +640,32 @@ export default {
             if (!placementResolutionCoordinator) return;
             entry.placements = placementResolutionCoordinator.discover(entry.publication.id);
             entry.placementsView = snapshotPlacementView(entry.placements, entry.resolutions);
+            recomputePlacementConvergence(entry);
+        }
+
+        // 0.8.23 — Multi-Placement Convergence & Relationship UX.
+        // Re-derives `entry.placementConvergence`/
+        // `entry.placementConvergenceView` from THIS entry's own
+        // `placements` — never a second discovery call, and never
+        // touching application/SnapshotPlacementResolver.js. Unlike
+        // `recomputeConvergence()` above (which passes this replica's
+        // own `verificationByAnchorId` observations alongside the
+        // structural comparison, per application/
+        // PublicationEvidenceConvergence.js's own OPTIONAL parameter for
+        // exactly that), application/
+        // PublicationSnapshotPlacementConvergence.js has NO parameter
+        // capable of accepting `entry.resolutions` at all — this
+        // function is called from `loadPlacements()` only, never from
+        // `resolvePlacement()`, so a resolution result never even has
+        // the opportunity to influence the placements handed in here.
+        // See docs/Principles.md, "Multi-Placement Convergence Is
+        // Independent Of Resolution Observation (0.8.23)."
+        function recomputePlacementConvergence(entry) {
+            entry.placementConvergence = derivePublicationSnapshotPlacementConvergence({
+                publicationId: entry.publication.id,
+                placements: entry.placements
+            });
+            entry.placementConvergenceView = publicationSnapshotPlacementConvergenceView(entry.placementConvergence);
         }
 
         function togglePlacements(entry) {
@@ -1148,6 +1209,39 @@ export default {
                             <button v-if="entry.placementsView.count > 0" class="action-btn action-btn--secondary" @click="togglePlacements(entry)">
                                 {{ entry.placementsExpanded ? 'Hide Placements' : 'Show Placements' }}
                             </button>
+                        </div>
+
+                        <!-- 0.8.23 — Multi-Placement Convergence & Relationship UX. Shown only
+                             while the per-placement list below is also expanded — a "how does
+                             this placement set relate to itself?" overview, never a substitute
+                             for reading the individual placement cards. Groups are shown in
+                             application/PublicationSnapshotPlacementConvergence.js's own
+                             deterministic order (by contentHash, never by group size) — a group
+                             with more placements is never styled, ordered, or worded as more
+                             likely correct, more available, or more trustworthy than one with
+                             fewer. Deliberately a separate card from "Content binding" above —
+                             see this file's own 0.8.23 header. -->
+                        <div v-if="entry.placementsExpanded && entry.placementConvergenceView && entry.placementConvergenceView.placementCount > 1"
+                             class="evidence-convergence">
+                            <span class="evidence-convergence-title">Placement relationships</span>
+                            <p class="form-hint form-hint--neutral">
+                                {{ entry.placementConvergenceView.placementCount }} known placements
+                                · {{ entry.placementConvergenceView.storageTypeCount }} storage backend{{ entry.placementConvergenceView.storageTypeCount === 1 ? '' : 's' }}
+                                · {{ entry.placementConvergenceView.locatorCount }} distinct location{{ entry.placementConvergenceView.locatorCount === 1 ? '' : 's' }}
+                            </p>
+                            <div class="evidence-convergence-groups">
+                                <div v-for="group in entry.placementConvergenceView.contentGroups" :key="group.contentHash"
+                                     class="evidence-convergence-group">
+                                    <span class="evidence-convergence-hash">{{ shortHash(group.contentHash) }}</span>
+                                    <span class="form-hint form-hint--neutral">
+                                        {{ group.placementCount }} placement{{ group.placementCount === 1 ? '' : 's' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="form-hint form-hint--neutral">Content binding: {{ entry.placementConvergenceView.relationship === 'conflict' ? 'CONFLICT' : 'AGREEMENT' }}</p>
+                            <p v-if="entry.placementConvergenceView.hasConflict" class="evidence-convergence-conflict">
+                                ⚠ {{ entry.placementConvergenceView.conflictDescription }}
+                            </p>
                         </div>
 
                         <div v-if="entry.placementsExpanded && entry.placementsView.count > 0" class="evidence-list">
