@@ -5014,3 +5014,23 @@ html, body {
     white-space: pre-wrap;
     word-break: break-all;
 }
+
+/* 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
+   Sits directly under .evidence-summary, ahead of the anchor-creation and
+   per-anchor evidence lists — "Discover from Peers" is always offered
+   (unlike "Retrieve from Peers," which hides with zero connected peers),
+   so its own result line covers the "nobody was there to ask" case
+   honestly rather than the button simply vanishing. .peer-badge--pending
+   is reused for UNAVAILABLE, the same "honestly inconclusive" amber every
+   other UNAVAILABLE-shaped state in this view already uses — never the
+   red .peer-badge--failed coloring, since nothing was rejected. */
+.evidence-discovery {
+    margin-top: 0.6rem;
+}
+
+.evidence-discovery-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}

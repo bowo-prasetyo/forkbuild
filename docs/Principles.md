@@ -10962,3 +10962,107 @@ Verified," now proven across a process boundary, not merely within one
 session.
 
 See `docs/Roadmap.md`, 0.8.15, for the full milestone entry.
+
+### Discovery Is Not Verification, And 'No New Evidence' Is Not 'No Evidence' (0.8.16)
+
+`application/PublicationAnchorDiscoveryCoordinator.js` has been able to
+ask peers for historical anchor claims since 0.8.5. What it never had,
+until this milestone, was a person able to trigger it — and the moment a
+"Discover from Peers" button exists on screen, a new, sharper version of
+a rule this codebase has held since 0.8.3 ("Known Evidence Is Not
+Verified Evidence, And Verified Evidence Is Not Authority") becomes
+possible to violate by accident: a discovery button that quietly also
+verifies, or a result screen that quietly implies "nothing new" means
+"nothing at all."
+
+**`application/PublicationEvidenceDiscoveryCoordinator.js` never imports
+`application/ExternalAnchorVerifier.js`.** Discovery answers "what claims
+did these peers offer?" — a question fully answered by the SAME
+validate → construct → verify-SIGNATURE boundary
+`application/PublicationAnchorExchange.js` already established for every
+other arrival path (ANNOUNCE in 0.8.4, RESPONSE in 0.8.5, restoration in
+0.8.15). Whether a discovered anchor's PROOF holds up is a completely
+separate question, answered only by a later, separate, explicit "Verify
+Evidence" click — unchanged since 0.8.3. `tests/
+PublicationEvidenceDiscoveryUX.test.js`'s own Section C proves this with
+a call-counting spy, not merely by omission: three anchors with wildly
+different eventual proof outcomes (valid, unavailable, invalid) all
+discover identically, because discovery never once asks.
+
+**`NO_NEW_EVIDENCE` and `UNAVAILABLE` are kept permanently distinct, and
+neither is ever worded as "no evidence exists."** `application/
+PublicationEvidenceDiscoveryUiState.js` names both explicitly precisely
+because they answer different questions: `NO_NEW_EVIDENCE` means peers
+were reached and answered, and had nothing this replica did not already
+know — a statement about THIS discovery attempt, never about the total
+evidence that exists anywhere. `UNAVAILABLE` means the discovery
+operation itself could not complete (no authenticated peer was there to
+ask, or the attempt itself failed) — a statement about this replica's own
+present inability to ask, never about whether evidence exists. Collapsing
+either into "no evidence exists" would be an authority-like conclusion no
+single UI state in this codebase has ever been allowed to assert — the
+identical restraint `application/AnchorVerificationOutcome.js` already
+holds between `PROOF_UNAVAILABLE` ("couldn't currently confirm") and a
+definite rejection, applied here one layer up, to the act of asking
+rather than the act of checking. `tests/
+PublicationEvidenceDiscoveryUX.test.js`'s own Section B asserts this
+directly: `NO_NEW_EVIDENCE`'s own message text is checked to never
+contain anything resembling "no evidence exists" or "does not exist."
+
+**A discovered anchor is a claim, not a verdict, exactly like any other
+cataloged anchor.** `application/PublicationEvidenceDiscoveryCoordinator
+.js#discover()`'s own result lands a newly discovered anchor in the
+catalog through the identical peer-exchange ingestion boundary 0.8.4/0.8.5
+already established; ui/views/DecentralizedPublicationsView.js's own
+`discoverFromPeers()` re-reads that catalog locally afterward
+(`loadEvidence()`, unchanged since 0.8.3) rather than treating discovery
+itself as a second way to populate the evidence list. A discovered anchor
+therefore shows "Not yet verified" exactly like a locally created one or
+one that arrived via ordinary ANNOUNCE — discovery changes how an anchor
+got INTO this replica's catalog, never what this replica is entitled to
+believe about it once it's there.
+
+See `docs/Roadmap.md`, 0.8.16, for the full milestone entry.
+
+### Discovery Asks A Collective Question; It Never Asks Which Peer To Trust (0.8.16)
+
+`application/PublicationAnchorDiscoveryCoordinator.js`'s own 0.8.5 header
+already drew this distinction for its own `discoverFromPeers()`: unlike
+`application/PeerContentRetrievalCoordinator.js`'s single right-answer
+race, historical anchor discovery asks EVERY candidate, in order, and
+unions whatever each one offers, because "which anchors exist" has no
+single correct answer the way "do these bytes match this hash" does.
+`application/PublicationEvidenceDiscoveryCoordinator.js` — the
+application-facing layer this milestone adds directly above that
+coordinator — inherits this restraint at the one place a new policy
+question could otherwise sneak in: WHICH peers to ask in the first place.
+
+**Peer selection is "every currently AUTHENTICATED peer, in registry
+order" — the IDENTICAL policy `application/
+PublicationAnchorPeerExchange.js#announce()` already bakes in one call
+away (0.8.4) — and nothing more sophisticated than that.** This class
+introduces no concept of a "nearest," "fastest," "most reliable," or
+"most anchors" peer, and none should ever be added to it: those are all
+answers to "which peer should I trust," a question this codebase has
+never asked about a peer CONNECTION (see the 0.2.49 entry, "A Peer
+Connection Authenticates A Key, Not An Account") and now deliberately
+declines to ask about peer SELECTION for evidence discovery either.
+`tests/PublicationEvidenceDiscoveryUX.test.js`'s own Section A proves the
+selection itself is mechanical and order-preserving: a `CONNECTING`
+(not-yet-authenticated) peer sitting between two `AUTHENTICATED` ones is
+silently skipped, never reordered, and the two real candidates are asked
+in exactly the order the registry lists them.
+
+**The RESULT stays a union, never a race, one layer up from where 0.8.5
+first established it.** `PublicationEvidenceDiscoveryCoordinator#
+discover()` passes the complete peer list to `discoverFromPeers()`
+UNCHANGED and reports back everything that call reports — every anchor
+any asked peer offered, `newlyImportedCount`/`alreadyKnownCount` a plain
+tally of `isNew`, never a ranking, never a "most anchors" peer singled
+out, never a "best" evidence set assembled from parts of what different
+peers said. Two peers offering the identical anchor converge to one
+cataloged entry for the identical reason 0.8.5 already established:
+`application/LocalPublicationAnchorCatalog.js#add()` dedupes by the
+anchor's own id, not by which peer said it first or most confidently.
+
+See `docs/Roadmap.md`, 0.8.16, for the full milestone entry.
