@@ -24,6 +24,8 @@ import { describePlacementKnowledge } from '../../application/PublicationSnapsho
 import { SnapshotPlacementCreationUiState } from '../../application/SnapshotPlacementCreationUiState.js';
 import { SnapshotPlacementCreationOutcome } from '../../application/SnapshotPlacementCreationOutcome.js';
 import { describeCreationAttempt as describePlacementCreationAttempt, describeCreationButtonLabel as describePlacementCreationButtonLabel } from '../../application/SnapshotPlacementCreationView.js';
+import { createResolutionObservation } from '../../application/SnapshotPlacementResolutionObservation.js';
+import { deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote } from '../../application/SnapshotPlacementLifecycleView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -226,6 +228,26 @@ import { describeCreationAttempt as describePlacementCreationAttempt, describeCr
 // computed alongside the existing `publicationSnapshotPlacementDetailView()`
 // call, under the identical "Inspection Is Observation" restraint 0.8.14/
 // 0.8.20 already established for that call.
+//
+// 0.8.26 — Snapshot Placement Lifecycle & Stale Availability Semantics.
+// Each entry now also keeps `entry.resolutionHistory` — every
+// application/SnapshotPlacementResolutionObservation.js this replica has
+// made for one placement THIS SESSION, appended to rather than
+// overwritten, the placement-side sibling of `entry.verificationHistory`
+// (0.8.12) one axis over. Clicking "Resolve Snapshot"/"Resolve Again"
+// still shows the SAME badge/label it always has (application/
+// SnapshotPlacementView.js, unchanged); the only new thing on screen is
+// one optional extra sentence — application/
+// SnapshotPlacementLifecycleView.js#describeSnapshotPlacementLifecycleNote()
+// — that appears only when the most recent resolution came back
+// UNAVAILABLE after an EARLIER resolution, this session, reached
+// RESOLVED. It never says "invalid" or "corrupted," it never appears for
+// a placement this replica has only ever resolved once, and it never
+// appears for a HASH_MISMATCH — a store answering with the wrong bytes
+// stays its own definite finding, never softened by an earlier success.
+// See docs/Principles.md, "A Resolution Result Describes Whether Bytes
+// Can Be Retrieved Now; It Does Not Rewrite The Placement Claim
+// (0.8.26)."
 const PLACEMENT_BADGE_CLASSES = {
     [SnapshotPlacementResolutionOutcome.RESOLVED]: 'peer-badge--authenticated',
     [SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE]: 'peer-badge--pending',
@@ -499,6 +521,20 @@ export default {
                 placementsView: null,
                 placementsExpanded: false,
                 resolutions: {},
+                // 0.8.26 — Snapshot Placement Lifecycle & Stale
+                // Availability Semantics. Keyed by placementId, each
+                // value the ORDERED list of every application/
+                // SnapshotPlacementResolutionObservation.js this replica
+                // has made for that placement THIS SESSION — appended to,
+                // never overwritten, unlike `resolutions` above (which
+                // still holds only the latest result, exactly as 0.8.20
+                // left it, feeding the unchanged badge/label). Ephemeral
+                // for the lifetime of this page, exactly like
+                // `resolutions` and `verificationHistory` above — never
+                // read from or written to anything durable. See
+                // application/SnapshotPlacementResolutionObservation.js's
+                // own header.
+                resolutionHistory: {},
                 placementInspections: {},
                 // 0.8.23 — Multi-Placement Convergence & Relationship UX.
                 // The derived structural relationship among THIS entry's
@@ -730,17 +766,7 @@ export default {
         // SnapshotPlacementResolutionCoordinator.js#resolve() — always
         // for exactly ONE placement, always because a person clicked
         // "Resolve Snapshot" on it. Mirrors verifyAnchor() above exactly,
-        // one axis over — except this milestone deliberately stops at
-        // `entry.resolutions` (the single most recent result), never
-        // growing an `entry.resolutionHistory` the way 0.8.12 later did
-        // for anchors. application/
-        // SnapshotPlacementResolutionObservation.js exists so a caller
-        // CAN keep such a history — see that file's own header — but no
-        // UI here holds one yet, since nothing has asked for a "resolved
-        // earlier, now unavailable" lifecycle note on the placement side.
-        // A future milestone can add that layer on top of this one
-        // exactly the way 0.8.12 added it on top of 0.8.3, without
-        // changing this function at all.
+        // one axis over.
         async function resolvePlacement(entry, placementView) {
             const placement = entry.placements.find((candidate) => candidate.id === placementView.placementId);
             if (!placement || !placementResolutionCoordinator) return;
@@ -749,6 +775,25 @@ export default {
             const result = await placementResolutionCoordinator.resolve(placement);
             entry.resolutions[placement.id] = { outcome: result.outcome, reason: result.reason };
             entry.placementsView = snapshotPlacementView(entry.placements, entry.resolutions);
+            // 0.8.26 — record this attempt as its own observation, on top
+            // of whatever this replica already observed for this SAME
+            // placement earlier this session, rather than replacing it —
+            // see `resolutionHistory`'s own comment above.
+            const history = entry.resolutionHistory[placement.id] || (entry.resolutionHistory[placement.id] = []);
+            history.push(createResolutionObservation({ placementId: placement.id, outcome: result.outcome, reason: result.reason }));
+        }
+
+        // 0.8.26 — Snapshot Placement Lifecycle & Stale Availability
+        // Semantics. A single, optional sentence shown ALONGSIDE the
+        // existing resolution badge/label (unchanged) — never a
+        // replacement for it. `null` in every case except the one this
+        // milestone exists to surface: this placement was independently
+        // resolved at some earlier point in this session, and the most
+        // recent check came back UNAVAILABLE. See application/
+        // SnapshotPlacementLifecycleView.js's own header.
+        function placementLifecycleNote(entry, placementView) {
+            const lifecycle = deriveSnapshotPlacementLifecycle(entry.resolutionHistory[placementView.placementId]);
+            return describeSnapshotPlacementLifecycleNote(lifecycle);
         }
 
         function placementBadgeClass(placementView) {
@@ -1069,7 +1114,7 @@ export default {
             createAnchor, creationView, creationBadgeClass, creationButtonLabel,
             toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
-            placementResolutionCoordinator, describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass,
+            placementResolutionCoordinator, describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass, placementLifecycleNote,
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
             placementInspectionKnowledge,
             availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel
@@ -1414,6 +1459,9 @@ export default {
                                 </div>
                                 <p v-if="placementView.resolutionReason" class="form-hint form-hint--neutral">
                                     {{ placementView.resolutionReason }}
+                                </p>
+                                <p v-if="placementLifecycleNote(entry, placementView)" class="form-hint form-hint--neutral">
+                                    {{ placementLifecycleNote(entry, placementView) }}
                                 </p>
                                 <dl class="evidence-fields">
                                     <div class="evidence-field"><dt>Locator</dt><dd>{{ placementView.locator }}</dd></div>

@@ -12049,4 +12049,130 @@ own Section G tests both bridge classes directly, against a real
 `LocalPublicationCatalog`/`PublicationResolver`/`LocalContentStore` —
 never a mock standing in for what the real classes already do.
 
+### A Resolution Result Describes Whether Bytes Can Be Retrieved Now; It Does Not Rewrite The Placement Claim (0.8.26)
+
+0.8.18 through 0.8.25 built the complete, working machinery to create,
+catalog, inspect, and resolve snapshot placements. None of those
+milestones ever asked what happens the SECOND time a person checks the
+same placement — `ui/views/DecentralizedPublicationsView.js`'s own
+`entry.resolutions` simply overwrote whatever the previous check had
+found, exactly the gap 0.8.12 already closed on the anchor side and
+0.8.25's own "What's left" line named outright. That is fine the first
+time a person clicks "Resolve Snapshot," and quietly wrong the moment the
+external world stops holding still: a placement resolved successfully
+yesterday and reporting `STORE_UNAVAILABLE` today — because the IPFS node
+this replica happens to be pointed at is down, not because the placing
+identity's claim changed in any way — looked, before 0.8.26, EXACTLY like
+a placement nobody had ever managed to resolve at all. 0.8.26 closes that
+gap with the identical shape 0.8.12 already used one axis over — see
+`docs/Roadmap.md`, 0.8.26, for the full diagram and milestone entry.
+
+**`core/PublicationSnapshotPlacement.js` gained nothing.** No `status`,
+`resolvedAt`, `lastResolvedAt`, `available`, or `stale` field was added to
+it, and none of this milestone's new files import its mutating surface
+(it has none — see that class's own header, "Placements are never updated
+in place"). `tests/SnapshotPlacementLifecycle.test.js`'s own Section A
+makes this the flagship assertion, not an incidental one: the SAME
+placement is resolved three times, against a real fake IPFS network under
+three different simulated conditions (available, node down, node
+recovered), and `placement.toJSON()` is asserted byte-identical after
+every single one. Resolving a placement is asking the storage world
+through it, never writing to it.
+
+**A history of observations adds exactly one new fact — `everResolved` —
+never a new state of its own,** the identical restraint 0.8.12 already
+held for `everValid`. `application/SnapshotPlacementLifecycleView.js#
+deriveSnapshotPlacementLifecycle()` still reports the CURRENT state
+(`NOT_RESOLVED`/`RESOLVED`/`UNAVAILABLE`/`HASH_MISMATCH`/
+`INVALID_PLACEMENT` — `application/SnapshotPlacementLifecycleState.js`)
+from nothing but the MOST RECENT observation, exactly as `application/
+SnapshotPlacementView.js` already did from a single result. The
+temptation 0.8.12 already named and declined for anchors — inventing a
+sixth state like `PREVIOUSLY_RESOLVED_NOW_UNAVAILABLE` — would have been
+the identical step toward a domain-sounding aggregate-status field this
+codebase has consistently avoided since 0.8.0, applied here to a
+different domain object. Instead, `everResolved` rides alongside the
+current state as its own plain boolean, and
+`describeSnapshotPlacementLifecycleNote()` uses the COMBINATION — current
+state `UNAVAILABLE` and `everResolved` true — to add one optional
+sentence next to the UNCHANGED existing badge, never in place of it. The
+sentence itself is deliberately worded: "resolved successfully earlier;
+it is currently unavailable" — never "invalid," "corrupted," "lost," or
+"removed," because none of those is true. `tests/
+SnapshotPlacementLifecycle.test.js`'s own assertion 8 checks the actual
+wording, not just the state, for exactly this reason.
+
+**A THIRD kind of finding exists here that has no anchor-side
+equivalent, and this milestone's own design conversation was explicit
+that it must never be softened the way `UNAVAILABLE` is.** An anchor's
+verification outcomes split cleanly into "the external system could not
+presently be reached" (`PROOF_UNAVAILABLE`) and "the external system was
+reached, and definitively rejects this proof" (four separate `REJECTED`
+outcomes) — two buckets, and 0.8.12's note logic only ever softens the
+first. A placement's resolution outcomes have a THIRD shape entirely:
+`CONTENT_HASH_MISMATCH` means a store WAS reached, and DID answer, with
+bytes that simply are not the bytes this placement claims. That is not
+"temporarily unreachable" (`STORE_UNAVAILABLE`/`CONTENT_UNAVAILABLE`,
+which say nothing negative about the claim) and it is not "not even a
+validly signed record" (`INVALID_ENVELOPE`/`INVALID_SIGNATURE`,
+structural rejections with no retrieval attempted at all) — it is a
+definite, independent finding that the locator is presently serving
+something else. `application/SnapshotPlacementLifecycleState.js` keeps
+`HASH_MISMATCH` permanently separate from both, and
+`describeSnapshotPlacementLifecycleNote()` never applies its
+"previously resolved" softening to it, even directly after a genuine
+earlier `RESOLVED` observation in the SAME session. `tests/
+SnapshotPlacementLifecycle.test.js`'s own Section B is built specifically
+to prove this: a placement resolves correctly once, the underlying fake
+IPFS network is then made to serve different bytes at the identical CID,
+and the resulting `HASH_MISMATCH` lifecycle carries `everResolved: true`
+alongside a `null` note — the fact that it once worked is preserved and
+inspectable, but never used to make a definite wrong-bytes finding read
+as merely inconclusive.
+
+**Resolution observations still never cross a replica boundary, and this
+milestone adds nothing that could make them.** `application/
+SnapshotPlacementResolutionObservation.js`'s own 0.8.20 header already
+states this as a hard rule; `tests/SnapshotPlacementLifecycle.test.js`'s
+own Section E proves it directly, the identical technique 0.8.12's own
+Section D already used for anchors: two independently constructed
+resolution coordinators, one with an `IpfsContentStore` pointed at a fake
+network holding the real bytes and one pointed at a completely separate,
+never-populated fake network, resolve the IDENTICAL placement at
+essentially the same time — one finds the bytes and reports `RESOLVED`,
+the other finds nothing at all and reports `CONTENT_UNAVAILABLE` — and a
+shared `LocalPublicationSnapshotPlacementCatalog` is asserted completely
+unaffected by either. This is the identical restraint `application/
+PublicationSnapshotPlacementConvergence.js`'s own header already held for
+a single replica's own resolution-observation boundary (0.8.23,
+"Multi-Placement Convergence Is Independent Of Resolution Observation") —
+0.8.26 extends it from "one map, one moment" to "a whole session's
+history," without weakening it anywhere; multi-placement convergence
+still has no parameter capable of accepting `entry.resolutionHistory` at
+all.
+
+**Multiple placements still never influence each other's lifecycle,
+exactly as 0.8.23 and 0.8.24 already insist for convergence and
+provenance.** `tests/SnapshotPlacementLifecycle.test.js`'s own Section D
+resolves three independent placements for the SAME publication — one
+reachable and correct, one unreachable, one reachable but serving wrong
+bytes — and derives three independent lifecycles, one per placement's own
+observation history, with nothing in `deriveSnapshotPlacementLifecycle()`'s
+own signature that could even accept a second placement's history to
+compare against.
+
+**Re-resolution stays exactly as explicit, and exactly as un-cached, as
+0.8.20 already made it.** Nothing in this milestone adds a timer, a poll,
+a TTL, or a "last known good" fallback — `application/
+SnapshotPlacementResolver.js` is still called only from one place in
+`ui/views/DecentralizedPublicationsView.js`, only in response to an
+explicit "Resolve Snapshot"/"Resolve Again" click. `tests/
+SnapshotPlacementLifecycle.test.js`'s own Section A calls `resolve()`
+three times with the external world DELIBERATELY changed between each
+call (never idle) and every call reflects the real, current state — there
+is no code path anywhere in this milestone that reads an old observation
+instead of asking again.
+
+See `docs/Roadmap.md`, 0.8.26, for the full milestone entry.
+
 See `docs/Roadmap.md`, 0.8.25, for the full milestone entry.
