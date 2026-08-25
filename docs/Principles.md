@@ -11601,3 +11601,117 @@ posture `core/PublicationSnapshotPlacement.js`'s own header already
 requires.
 
 See `docs/Roadmap.md`, 0.8.21, for the full milestone entry.
+
+### Package Import Is Placement Ingestion, Not Placement Resolution (0.8.22)
+
+0.8.19 drew this line for a peer connection: `application/
+PublicationSnapshotPlacementExchange.js#importPlacement()` validates an
+envelope, constructs it, and verifies its SIGNATURE — and stops there,
+never once calling `application/SnapshotPlacementResolver.js`. 0.8.22
+draws the identical line for the other way a placement can now arrive:
+bundled inside an `application/BlueprintPackage.js`. Importing a package
+that carries three placements catalogs three LOCATOR CLAIMS. It
+retrieves not a single byte from any of them.
+
+**`application/ImportPackageSnapshotPlacementsUseCase.js` calls
+`PublicationSnapshotPlacementExchange#importPlacement()` and nothing
+else.** No new call to `application/SnapshotPlacementResolver.js` exists
+anywhere in this class, or anywhere else this milestone touches —
+`tests/PublicationSnapshotPlacementPackageImport.test.js`'s own Section C
+proves this with a spy `SnapshotPlacementResolver` that increments a
+counter every time it is consulted: importing a package bundling a
+genuine placement, a forged one, and a structurally malformed one leaves
+that counter at zero throughout. An explicit `resolve()` call
+afterward — a deliberate, separate action — is what moves the counter to
+one, exactly mirroring the identical spy-resolver proof `tests/
+PublicationSnapshotPlacementPeerExchange.test.js` already ran for
+peer-delivered placements in 0.8.19.
+
+**A package is untrusted, portable data — exactly like a peer message —
+so its placements get exactly the same gate, never a looser one.** A
+forged or tampered placement bundled in a package is rejected at the
+identical `identity/LocalAuthorizationVerifier.js#
+verifyPublicationSnapshotPlacement()` boundary a forged placement
+arriving over `application/PublicationSnapshotPlacementPeerExchange.js`
+already is. Nothing about arriving inside a `.json` file someone emailed,
+rather than over a live authenticated connection, earns a placement any
+more standing trust — and nothing about traveling in a file earns it any
+more RETRIEVABILITY either: a bundled placement whose locator is
+currently unreachable is exactly as importable as one that resolves
+perfectly, because this class never once checks.
+
+**The Section D flagship makes the positive case.** Bob imports a
+package bundling a Blueprint, an attribution, a lineage claim, a Bitcoin
+anchor, and a snapshot placement from Alice, catalogs both the anchor and
+the placement, and confirms the placement is fully discoverable and
+inspectable via `findByPublicationId()` — entirely BEFORE he ever calls
+`SnapshotPlacementResolver.resolve()` on it, with a call-counting spy
+proving zero calls happened up to that point. Placement discovery and
+placement resolution stay two separate steps, in that order, exactly as
+every placement milestone since 0.8.18 has insisted — package transport
+is simply a fourth way to reach the first step, never a shortcut past the
+second.
+
+See `docs/Roadmap.md`, 0.8.22, for the full milestone entry.
+
+### Package Import Preserves Placement Claims; It Does Not Establish Retrieval Availability (0.8.22)
+
+A `BlueprintPackage` bundles a `Structure`; a `PublicationSnapshotPlacement`
+describes a locator for a `DecentralizedPublication`'s bytes. This
+codebase has never had a concept of "the publication a given Blueprint
+Package is about" — no field on `application/BlueprintPackage.js` names
+one, and 0.8.22 does not invent one merely because a package can now
+also carry placements, the identical restraint 0.8.7 already held for
+anchors.
+
+**`application/ImportPackageSnapshotPlacementsUseCase.js` never
+cross-checks a bundled placement's `publicationId`/`contentHash` against
+anything about the package it arrived in, because there is nothing
+structurally binding the two.** A placement naming
+`publicationId: "pub-x"` bundled inside a package whose `structure` has
+nothing at all to do with `pub-x` is exactly as importable as one that
+agrees — this class has no basis to judge "agreement" in the first
+place, and does not pretend to. The placement's own
+`publicationId`/`contentHash`/`storage`/`locator` fields are preserved
+byte-for-byte, exactly as `application/
+PublicationSnapshotPlacementExchange.js` already preserves them for a
+peer-delivered placement.
+
+**Suppose a package contains a Publication claiming `contentHash: AAA`
+and a bundled placement claiming `contentHash: BBB`.** The package
+importer does not rewrite the placement to `AAA`, does not reject it for
+disagreeing, and does not flag anything — it catalogs exactly what was
+signed. Whether a bundled placement's claims agree with what a caller
+separately knows is a question for future multi-placement convergence
+work (`docs/Roadmap.md`, 0.8.23), asked afterward, never this milestone's
+to pre-empt. See `docs/Principles.md`, "Evidence Relationships Are
+Derived, Never Adjudicated (0.8.6)" — a package importer that "fixed" a
+bundled placement's `contentHash` to match its own package would be
+adjudicating a claim under a different name, the exact outcome that
+principle already forbids, drawn here across locators instead of
+evidence.
+
+**Importing a placement establishes nothing about whether it can
+currently be resolved.** The Section D flagship proves this concretely:
+Bob catalogs Alice's bundled placement, confirms it is discoverable, and
+only THEN explicitly resolves it — against his own separately-registered
+local content store — to `RESOLVED`, with the retrieved bytes checked
+byte-for-byte against what that store already held. A second,
+differently-stored placement (IPFS) arrives via a second package and is
+never resolved at all in this milestone's own test, deliberately, to
+prove the point by omission: an unresolved placement is exactly as
+cataloged, exactly as discoverable, and exactly as legitimate a claim as
+a resolved one. Package transport, signature validity, and retrieval
+availability stay three separate questions — see `docs/Principles.md`,
+"A Placement Is A Locator, Not Evidence Of History (0.8.18)."
+
+**No provenance of the package itself is ever written into the
+placement.** No `importedFromPackage`, `packageId`, or similar field was
+added to `core/PublicationSnapshotPlacement.js` — the signed envelope a
+package carries is identical to the one a peer connection would have
+carried for the same claim, and stays exactly as portable leaving this
+milestone's own import path as it was arriving. `application/
+LocalPublicationSnapshotPlacementCatalog.js#receivedAt` remains this
+codebase's one place for local arrival metadata, unchanged.
+
+See `docs/Roadmap.md`, 0.8.22, for the full milestone entry.

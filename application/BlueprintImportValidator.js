@@ -8,6 +8,10 @@ import {
     BlueprintLineageClaimPublicationError
 } from './BlueprintLineageClaimPublicationValidator.js';
 import { validatePublicationAnchor, PublicationAnchorError } from './PublicationAnchorValidator.js';
+import {
+    validatePublicationSnapshotPlacement,
+    PublicationSnapshotPlacementError
+} from './PublicationSnapshotPlacementValidator.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -198,6 +202,34 @@ export function validateBlueprintPackage(pkg, { registry = null } = {}) {
             } catch (e) {
                 if (e instanceof PublicationAnchorError) {
                     throw new BlueprintPackageError(`BlueprintImport: anchors[${index}] is malformed — ${e.message}`);
+                }
+                throw e;
+            }
+        });
+    }
+
+    // 0.8.22 — Snapshot Placement Package Integration. `placements` is
+    // the identical OPTIONAL, structural-only bundle as
+    // `attributions`/`lineageClaims`/`anchors` above, one locator layer
+    // over — see application/BlueprintPackage.js's own header. Each entry
+    // only ever needs to be a well-formed application/
+    // PublicationSnapshotPlacementValidator.js envelope here; whether it
+    // is genuinely SIGNED is application/
+    // PublicationSnapshotPlacementExchange.js's own job, one step later,
+    // exactly the same split this validator already holds for every
+    // other bundled field. A malformed entry is re-thrown as this
+    // module's own BlueprintPackageError, never a leaked
+    // PublicationSnapshotPlacementError.
+    if (pkg.placements !== undefined) {
+        if (!Array.isArray(pkg.placements)) {
+            throw new BlueprintPackageError('BlueprintImport: placements must be an array');
+        }
+        pkg.placements.forEach((placement, index) => {
+            try {
+                validatePublicationSnapshotPlacement(placement);
+            } catch (e) {
+                if (e instanceof PublicationSnapshotPlacementError) {
+                    throw new BlueprintPackageError(`BlueprintImport: placements[${index}] is malformed — ${e.message}`);
                 }
                 throw e;
             }

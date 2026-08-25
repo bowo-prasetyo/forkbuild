@@ -26,11 +26,15 @@ import { buildBlueprintPackage } from './BlueprintPackage.js';
 // `anchors` is the identical additive passthrough, one concept further —
 // see application/BlueprintPackage.js's own header for why this stays a
 // signed core/PublicationAnchor.js array, never a verification result.
+//
+// 0.8.22 — Snapshot Placement Package Integration. `placements` is the
+// identical additive passthrough, one locator layer further — a signed
+// core/PublicationSnapshotPlacement.js array, never a resolution result.
 export class ExportBlueprintUseCase {
-    execute(structure, { attributions = [], lineageClaims = [], anchors = [] } = {}) {
+    execute(structure, { attributions = [], lineageClaims = [], anchors = [], placements = [] } = {}) {
         if (!structure || !(structure instanceof Structure)) {
             throw new Error('ExportBlueprintUseCase: a valid Structure is required');
         }
-        return buildBlueprintPackage(structure, { attributions, lineageClaims, anchors });
+        return buildBlueprintPackage(structure, { attributions, lineageClaims, anchors, placements });
     }
 }

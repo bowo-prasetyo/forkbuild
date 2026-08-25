@@ -2,6 +2,7 @@ import { Structure } from '../core/Structure.js';
 import { BlueprintAttribution } from '../core/BlueprintAttribution.js';
 import { BlueprintLineageClaim } from '../core/BlueprintLineageClaim.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
+import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -98,7 +99,22 @@ export const BLUEPRINT_KIND = 'forkbuild.blueprint';
 // (see application/ExternalAnchorVerifier.js and application/
 // LocalPublicationAnchorCatalog.js for where those live instead, and stay
 // living).
-export function buildBlueprintPackage(structure, { attributions = [], lineageClaims = [], anchors = [] } = {}) {
+//
+// `placements` (0.8.22): the identical additive, optional, omit-when-
+// empty shape once more, for signed core/PublicationSnapshotPlacement.js
+// instances. Named "Snapshot Placement Package Integration" — the
+// missing transport path 0.8.7 already opened for anchors, drawn one
+// evidence layer over for locators: `anchors` bundles signed claims
+// about a publication's EXTERNAL EVIDENCE, `placements` bundles signed
+// claims about a publication's RETRIEVABILITY. The two stay orthogonal —
+// see core/PublicationSnapshotPlacement.js's own header, "PLACEMENT IS
+// NOT ANCHORING" — and this field merges neither into the other, nor
+// into the Structure itself. Each entry is exactly `placement.toJSON()`
+// — never a resolution outcome, an availability state, or any other
+// locally-derived field (see application/SnapshotPlacementResolver.js
+// and application/LocalPublicationSnapshotPlacementCatalog.js for where
+// those live instead, and stay living).
+export function buildBlueprintPackage(structure, { attributions = [], lineageClaims = [], anchors = [], placements = [] } = {}) {
     if (!structure || !(structure instanceof Structure)) {
         throw new Error('BlueprintPackage: a Structure instance is required');
     }
@@ -110,6 +126,9 @@ export function buildBlueprintPackage(structure, { attributions = [], lineageCla
     }
     if (!Array.isArray(anchors) || anchors.some((a) => !(a instanceof PublicationAnchor))) {
         throw new Error('BlueprintPackage: anchors must be an array of PublicationAnchor instances');
+    }
+    if (!Array.isArray(placements) || placements.some((p) => !(p instanceof PublicationSnapshotPlacement))) {
+        throw new Error('BlueprintPackage: placements must be an array of PublicationSnapshotPlacement instances');
     }
     const pkg = {
         kind: BLUEPRINT_KIND,
@@ -124,6 +143,9 @@ export function buildBlueprintPackage(structure, { attributions = [], lineageCla
     }
     if (anchors.length > 0) {
         pkg.anchors = anchors.map((anchor) => anchor.toJSON());
+    }
+    if (placements.length > 0) {
+        pkg.placements = placements.map((placement) => placement.toJSON());
     }
     return pkg;
 }
