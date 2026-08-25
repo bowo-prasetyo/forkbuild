@@ -10443,3 +10443,116 @@ effect, and nothing in this codebase gets to decide on a caller's behalf
 when or how often to repeat one.
 
 See `docs/Roadmap.md`, 0.8.10, for the full milestone entry.
+
+### External Anchoring Is An Explicit User Action (0.8.11)
+
+0.8.8 through 0.8.10 built a complete pipeline for orchestrating an
+external recording — `application/CreatePublicationAnchorUseCase.js`,
+`anchoring/BitcoinAnchorPublisher.js`, `application/
+CreateExternalPublicationAnchorUseCase.js` — and every one of those
+milestones' own "Deliberately excluded" list ended with the identical
+line: no UI. That restraint was correct while the pipeline itself was
+still being proven, but it cannot be permanent — a capability nobody can
+reach is not, in any sense that matters to a person using ForkBuild, a
+capability at all. 0.8.11 is the milestone that finally exposes it, and
+it does so by drawing one hard line through the Publication Center:
+
+```text
+Discover  →  a local catalog read.        No side effect. No consent needed.
+Create    →  an external side effect.     Always one explicit click.
+Verify    →  an external observation.     Always one explicit click, separate from Create.
+```
+
+**Discovering evidence, listing which anchor types this replica can
+create, and creating an anchor are three different questions, answered by
+three different collaborators, and merely asking the first two never
+answers the third.** `application/PublicationAnchorCreationCoordinator.js`
+(new) sits directly beside `application/PublicationEvidenceCoordinator.js`
+(0.8.3) rather than folding into it — the same "one class, one axis"
+discipline `application/ExternalAnchorCreationOutcome.js` already applied
+to outcomes, applied here to the coordinators built on top of them.
+Opening the Publication Center, listing cataloged publications, expanding
+or collapsing the evidence list, and reading `availableAnchorTypes()` are
+ALL synchronous, side-effect-free, local reads. `tests/
+PublicationAnchorCreationUX.test.js`'s own Section C proves this with a
+spy wrapped around a real `BitcoinAnchorPublisher`: those reads run
+freely, any number of times, with zero calls to `publish()` — only an
+actual `create()` call, always the direct result of one person's click,
+ever reaches it.
+
+**Creating an anchor never automatically verifies it.** This is the
+single most important restraint this milestone holds, and the one most
+tempting to break: broadcasting a Bitcoin transaction and then
+immediately checking whether it confirmed FEELS like one action to a
+person, and chaining them in code is one line. 0.8.11 does not take that
+line. The moment `application/CreateExternalPublicationAnchorUseCase.js`
+(0.8.10, unmodified) reports `CREATED`, the resulting anchor is
+re-discovered into the ordinary evidence list — application/
+PublicationEvidenceCoordinator.js#discover(), the same purely local read
+every other cataloged anchor already goes through — and shown exactly as
+"Not yet verified," with its own separate "Verify Evidence" button, never
+pre-checked or pre-labeled. `tests/PublicationAnchorCreationUX.test.js`'s
+own Section C proves this too: a `create()` call that succeeds never once
+touches a verifier spy sitting right next to it. The reason is not
+caution for its own sake — it is honesty about what a fresh broadcast
+actually means. `anchoring/BitcoinAnchorPublisher.js` (0.8.9) already
+established that broadcast acceptance is not confirmation; verifying
+immediately after creation would either report a true-but-misleadingly-
+timed `PROOF_UNAVAILABLE` (technically correct, needlessly alarming a
+person one second after a successful action) or tempt a future milestone
+into inventing a "just wait and retry" loop this codebase has explicitly
+declined to build at every layer beneath it (0.8.9's own publisher never
+retries; 0.8.10's own orchestrator never retries). Leaving verification a
+separate, later, equally explicit click keeps that restraint intact one
+layer further out, and keeps visible the exact lifecycle `tests/
+PublicationAnchorCreationUX.test.js`'s own flagship section demonstrates
+end to end: the SAME anchor, completely unchanged, reporting
+`PROOF_UNAVAILABLE` immediately after creation and `VALID` only once the
+external world — never this codebase — actually changes.
+
+**The UI never says more than the pipeline underneath it has actually
+established.** `application/PublicationAnchorCreationView.js`'s own
+header names the exact ceiling: "`<type>` evidence was recorded for this
+content hash" is the strongest sentence a successful creation is ever
+allowed to produce — never "verified," "confirmed," or "trusted," each of
+which would claim a fact only an explicit, separate `verify()` call can
+ever establish. A `PUBLISH_REJECTED` result and a `PUBLISH_UNAVAILABLE`
+result stay visibly distinct, exactly as `application/
+ExternalAnchorCreationOutcome.js` (0.8.10) itself distinguishes them — a
+definite external "no" reads differently from "could not presently
+tell," because retrying is reasonable after the second and pointless
+after the first. A local precondition failure — nobody signed in, so
+`application/CreateExternalPublicationAnchorUseCase.js` throws before any
+publisher is ever consulted — is caught at the UI boundary (ui/views/
+DecentralizedPublicationsView.js#createAnchor(), never inside
+`application/PublicationAnchorCreationCoordinator.js` itself, which stays
+as thin a pass-through as `application/PublicationEvidenceCoordinator.js`
+already is) and reported honestly as its own case: to a person, it reads
+exactly like "external system unreachable" — no anchor was created either
+way — while the specific reason ("sign in to create a publication
+anchor") is still shown, never replaced with a generic message.
+
+**Multiple independent anchors are shown, never collapsed, exactly as
+0.8.6 and 0.8.10 already insist at the data layer.** Clicking "Create
+Bitcoin Anchor" a second time for a publication that already has one
+produces a second, equally valid, equally visible anchor — this
+milestone's own button label change ("Create Another Bitcoin Anchor")
+makes that explicit rather than implying a replacement, but nothing in
+`application/PublicationAnchorCreationCoordinator.js` or the pipeline
+beneath it ever refuses, deduplicates, or ranks a second recording. See
+`docs/Principles.md`, "A Publisher's Failure Is Not the Orchestration's
+Failure — But It Is Still No Anchor (0.8.10)," for why that restraint
+already existed one layer down; this milestone only makes it visible.
+
+**No anchoring as a side effect of anything else.** Nothing in
+`application/SaveDocumentUseCase.js`, `application/
+PublishDocumentUseCase.js`, or anywhere else in this codebase calls
+`application/PublicationAnchorCreationCoordinator.js#create()`. An
+external recording costs real resources on a real external system and is
+never triggered by anything other than the specific click this milestone
+names — the identical restraint 0.8.9 already held for `publish()` itself
+("Automatic anchoring... is only ever invoked explicitly"), held here one
+layer further out, at the one place a person could otherwise imagine it
+happening invisibly.
+
+See `docs/Roadmap.md`, 0.8.11, for the full milestone entry.

@@ -38,6 +38,9 @@ import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../applicati
 import { CreateExternalAnchorVerifierUseCase } from '../application/CreateExternalAnchorVerifierUseCase.js';
 import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/CreateBitcoinAnchorProofVerifierUseCase.js';
 import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/CreatePublicationEvidenceCoordinatorUseCase.js';
+import { CreateBitcoinAnchorPublisherUseCase } from '../application/CreateBitcoinAnchorPublisherUseCase.js';
+import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/CreateExternalPublicationAnchorOrchestratorUseCase.js';
+import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePublicationAnchorCreationCoordinatorUseCase.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -378,6 +381,60 @@ const { coordinator: publicationEvidenceCoordinator } = new CreatePublicationEvi
     externalAnchorVerifier
 });
 
+// 0.8.11 — Explicit External Anchoring UX. The first UI wiring for the
+// CREATION-side pipeline 0.8.8-0.8.10 built with no UI consumer at all
+// (see each of those milestones' own "Deliberately excluded" lists) —
+// the exact same "read-side got wired in 0.8.3, write-side stays unwired
+// until its own milestone" shape this file's own 0.8.3 comment above
+// already states, now finally closed for creation too.
+//
+// `bitcoinBroadcaster` is deliberately NOT a real Bitcoin broadcaster.
+// anchoring/BitcoinAnchorPublisher.js's own header (0.8.9) and
+// docs/Roadmap.md's own "Deliberately excluded" list for 0.8.9 both name
+// wallet/transaction-signing capability as a future, separately sized
+// concern this codebase has never built — no private keys, no UTXO
+// management, no real network broadcast live anywhere in this
+// application. Rather than hide "Create Bitcoin Anchor" from the running
+// app entirely until that future milestone lands, this replica wires a
+// REAL BitcoinAnchorPublisher against a broadcaster that always, and
+// honestly, reports PUBLISH_UNAVAILABLE with the actual reason —
+// satisfying anchoring/BitcoinAnchorPublisher.js's own `broadcaster`
+// contract exactly, never fabricating a `broadcast: true` result. This
+// lets a person exercise the full explicit "Create -> observe the
+// result" flow for real, today, and see the exact honest outcome
+// application/ExternalAnchorCreationOutcome.js already names for
+// this situation — never a crash, never a silent no-op button. The
+// moment a real wallet-backed broadcaster exists, it plugs in here with
+// zero changes to anything else in this file, ui/views/
+// DecentralizedPublicationsView.js, or any application/ class — exactly
+// the "future milestone can wire this without either changing" promise
+// docs/Roadmap.md's own 0.8.10 entry already made for this composition
+// root.
+const bitcoinBroadcaster = {
+    async broadcast() {
+        return {
+            broadcast: false,
+            unavailable: true,
+            reason: 'This device has no Bitcoin wallet/broadcast capability configured yet.'
+        };
+    }
+};
+const { bitcoinAnchorPublisher } = new CreateBitcoinAnchorPublisherUseCase().execute({
+    network: 'mainnet',
+    broadcaster: bitcoinBroadcaster
+});
+const { createExternalPublicationAnchorUseCase, publisherRegistry: externalAnchorPublisherRegistry } =
+    new CreateExternalPublicationAnchorOrchestratorUseCase().execute({
+        publicationCatalog,
+        anchorCatalog: publicationAnchorCatalog,
+        identityProvider,
+        publishers: [bitcoinAnchorPublisher]
+    });
+const { coordinator: publicationAnchorCreationCoordinator } = new CreatePublicationAnchorCreationCoordinatorUseCase().execute({
+    createExternalPublicationAnchorUseCase,
+    publisherRegistry: externalAnchorPublisherRegistry
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -407,6 +464,8 @@ app.provide('publicationDisplayKindPlugins', publicationDisplayKindPlugins);
 // 0.8.3 — Publication Center: External Evidence UX.
 app.provide('publicationAnchorCatalog', publicationAnchorCatalog);
 app.provide('publicationEvidenceCoordinator', publicationEvidenceCoordinator);
+// 0.8.11 — Explicit External Anchoring UX.
+app.provide('publicationAnchorCreationCoordinator', publicationAnchorCreationCoordinator);
 // 0.8.4 — External Anchor Publication Over Peers.
 app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 // 0.8.5 — Historical Anchor Discovery & Synchronization.
