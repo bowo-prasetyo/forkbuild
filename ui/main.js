@@ -51,6 +51,10 @@ import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpf
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
 import { CreateSnapshotPlacementViewRegistryUseCase } from '../application/CreateSnapshotPlacementViewRegistryUseCase.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
+import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
+import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -483,6 +487,66 @@ const { placementViewRegistry: snapshotPlacementViewRegistry } = new CreateSnaps
     placementViews: [localSnapshotPlacementView, ipfsSnapshotPlacementView]
 });
 
+// 0.8.25 — Explicit Snapshot Placement Creation UX. The first UI wiring
+// for the CREATION-side pipeline 0.8.18 built with no UI consumer at all
+// (see that milestone's own "Deliberately excluded" list, and
+// application/CreateSnapshotPlacementOrchestratorUseCase.js's own comment
+// above on why the RESOLUTION wiring reaches for its own composition
+// root instead) — the exact same "read-side got wired first, write-side
+// stays unwired until its own milestone" shape 0.8.11 already closed for
+// anchor evidence.
+//
+// `publicationCatalogDiscoveryProvider`/`publicationCatalogContentResolver`
+// bridge application/CreateExternalSnapshotPlacementUseCase.js's own
+// 0.8.18 collaborator shapes (discovery/DiscoveryProvider.js#findById(),
+// discovery/ContentResolver.js#resolve()/verify()) onto the SAME
+// `publicationCatalog`/`publicationContentStore` this replica's real
+// Publication Center already reads and writes everywhere else — never a
+// second, disconnected publication index. See discovery/
+// PublicationCatalogDiscoveryProvider.js's and discovery/
+// PublicationCatalogContentResolver.js's own headers for why that bridge
+// is necessary at all.
+//
+// `stores` registers the SAME two content/ContentStore.js instances
+// (`publicationContentStore` for `local`, a real content/IpfsContentStore
+// .js for `ipfs`) the RESOLUTION wiring above already registers — so a
+// placement created here is, from the moment of its own creation,
+// immediately resolvable through the identical stores, never a
+// coincidence of two independently configured registries agreeing.
+// `knowledgeStore` threads the SAME `placementKnowledgeStore` instance
+// `publicationSnapshotPlacementPeerExchange` above already writes into,
+// so a locally created placement records its own LOCAL acquisition entry
+// right alongside PACKAGE/PEER entries for placements this replica
+// learned about some other way — see application/
+// CreateSnapshotPlacementOrchestratorUseCase.js's own 0.8.24 comment.
+//
+// Only `createExternalSnapshotPlacementUseCase` and `storeRegistry` are
+// actually consumed below — `snapshotPlacementResolver`/`verifier`/
+// `createPublicationSnapshotPlacementUseCase` are silently discarded, the
+// identical "unconsumed collaborator from a composition root built for a
+// wider purpose" posture this file already holds for `restoreResult`
+// elsewhere (see application/CreatePublicationAnchorPeerExchangeUseCase.js,
+// 0.8.15) — resolution stays wired exactly once, through
+// `publicationSnapshotPlacementResolutionCoordinator` above, never
+// duplicated by a second resolver this page never uses.
+const publicationCatalogDiscoveryProvider = new PublicationCatalogDiscoveryProvider(publicationCatalog);
+const publicationCatalogContentResolver = new PublicationCatalogContentResolver(publicationCatalog, publicationContentStore);
+const {
+    createExternalSnapshotPlacementUseCase,
+    storeRegistry: snapshotPlacementStoreRegistry
+} = new CreateSnapshotPlacementOrchestratorUseCase().execute({
+    discoveryProvider: publicationCatalogDiscoveryProvider,
+    contentResolver: publicationCatalogContentResolver,
+    placementCatalog: publicationSnapshotPlacementCatalog,
+    identityProvider,
+    stores: [publicationContentStore, new IpfsContentStore()],
+    knowledgeStore: placementKnowledgeStore
+});
+const { coordinator: snapshotPlacementCreationCoordinator } = new CreateSnapshotPlacementCreationCoordinatorUseCase().execute({
+    createExternalSnapshotPlacementUseCase,
+    storeRegistry: snapshotPlacementStoreRegistry
+});
+
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 // The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
 // this milestone's own design calls for — it wraps the SAME coordinator
@@ -627,5 +691,7 @@ app.provide('publicationSnapshotPlacementResolutionCoordinator', publicationSnap
 app.provide('snapshotPlacementViewRegistry', snapshotPlacementViewRegistry);
 // 0.8.24 — Snapshot Placement Provenance & Observation Boundary.
 app.provide('placementKnowledgeStore', placementKnowledgeStore);
+// 0.8.25 — Explicit Snapshot Placement Creation UX.
+app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoordinator);
 app.use(router);
 app.mount('#app');

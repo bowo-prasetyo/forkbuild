@@ -19614,5 +19614,202 @@ group the placement list by acquisition kind; a way to bulk-inspect every
 known placement's provenance at once, rather than one at a time via
 "Inspect Placement"; and the unified Publication Center view 0.8.23's own
 "Deliberately excluded" list already named — now that both the anchor and
-placement sides carry the identical provenance layer, 0.8.25 is free to
-build that view without either domain lending the other any authority.
+placement sides carry the identical provenance layer, a future milestone
+is free to build that view without either domain lending the other any
+authority.
+
+## 0.8.25 — Explicit Snapshot Placement Creation UX
+
+0.8.18 gave this codebase a complete pipeline for placing a locally
+published snapshot's own bytes onto a real, pluggable storage backend —
+`application/CreateExternalSnapshotPlacementUseCase.js`,
+`content/IpfsContentStore.js`, `application/
+SnapshotPlacementStoreRegistry.js` — and 0.8.19 through 0.8.24 built
+everything downstream of a placement already existing: catalog,
+persistence, peer synchronization, inspection, explicit resolution,
+package transport, multi-placement convergence, and provenance. Every one
+of those milestones took the SAME placements as given. None of them ever
+asked the one question 0.8.11 already answered for anchors:
+
+> **How does a person actually CREATE a placement, from inside the app
+> they are using right now?**
+
+0.8.24's own "Deliberately excluded" list named the gap outright:
+`CreateSnapshotPlacementOrchestratorUseCase.js`'s creation pipeline
+"is not currently wired into `ui/main.js` (no 'Create Placement' UI
+action exists yet, mirroring anchors before 0.8.11)." This is the
+milestone that finally closes it — the placement-side counterpart of
+0.8.11, mirrored deliberately, completing the explicit
+create → catalog → inspect → resolve lifecycle 0.8.18/0.8.20 already
+established the second and fourth steps of.
+
+```text
+Publication Center
+       │
+       │ "Create Ipfs Placement"
+       ▼
+SnapshotPlacementCreationCoordinator          (new)
+       │
+       │ exactly one attempt
+       ▼
+CreateExternalSnapshotPlacementUseCase        (0.8.18, unmodified)
+       │
+       ├── publication lookup     — discovery/PublicationCatalogDiscoveryProvider.js  (new)
+       ├── local integrity check  — discovery/PublicationCatalogContentResolver.js    (new)
+       ├── storage registry lookup — application/SnapshotPlacementStoreRegistry.js    (0.8.18)
+       ├── retrieve local bytes   — discovery/PublicationCatalogContentResolver.js    (new)
+       ├── store.put(bytes)
+       └── CreatePublicationSnapshotPlacementUseCase.execute(...)  (0.8.18/0.8.24)
+                │
+                ├── sign placement
+                └── catalog placement
+                         │
+                         ▼
+                  Placement appears in "Snapshot Placements"
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+        Inspect Placement      Resolve Snapshot
+          (0.8.20)                (0.8.20)
+```
+
+**A NEW BRIDGE, NOT A CHANGE TO 0.8.18.** `application/
+CreateExternalSnapshotPlacementUseCase.js` and `application/
+CreatePublicationSnapshotPlacementUseCase.js` were built and tested
+(`tests/DecentralizedSnapshotPlacement.test.js`, `tests/
+PublicationSnapshotPlacementInspectionUX.test.js`) against `discovery/
+DiscoveryProvider.js#findById()` / `discovery/ContentResolver.js#
+resolve()`/`verify()` — the older, pre-0.7.0 `Publication`/`Publisher`
+world `discovery/LocalDiscoveryProvider.js` still serves. The Publication
+Center this codebase actually ships (`ui/views/
+DecentralizedPublicationsView.js`, wired in `ui/main.js`) has never used
+that world: it reads and writes `application/LocalPublicationCatalog.js`
+(method `get(publicationId)`, not `findById()`) and a real
+`content/ContentStore.js` keyed by content hash, not by publicationId.
+`discovery/PublicationCatalogDiscoveryProvider.js` and `discovery/
+PublicationCatalogContentResolver.js` (both new) are the thin adapters
+that make the two already-shipped worlds interoperate — neither modifies
+an 0.8.18 file, neither introduces a third publication index, and neither
+does anything beyond a method-name translation and a two-hop lookup. See
+`docs/Principles.md`, "Snapshot Placement Creation Is An Explicit User
+Action, Never A Second Publish (0.8.25)."
+
+- `application/SnapshotPlacementCreationUiState.js` (new) — `IDLE` /
+  `CREATING` / `CREATED` / `UNAVAILABLE`. Deliberately THREE non-idle
+  values, not `application/ExternalAnchorCreationUiState.js`'s own four —
+  no `REJECTED`, because `application/
+  SnapshotPlacementCreationOutcome.js` has no outcome capable of
+  producing one (see that file's own 0.8.18 header on why placing
+  content-addressed bytes has no "definite no" the way a Bitcoin
+  broadcast does).
+- `application/SnapshotPlacementCreationView.js` (new) —
+  `describeCreationAttempt()`/`describeCreationButtonLabel()`, the
+  placement-side counterpart of `application/
+  PublicationAnchorCreationView.js` (0.8.11). The strongest statement it
+  ever makes: "A snapshot placement was recorded for `<storage>`." Never
+  "decentralized," "permanent," "verified," "confirmed," or "available
+  everywhere."
+- `application/SnapshotPlacementCreationCoordinator.js` (new) —
+  `availableStorageTypes()` / `create(publicationId, storage)`, a
+  deliberately thin pass-through to `application/
+  CreateExternalSnapshotPlacementUseCase.js#execute()`. Never selects a
+  storage type, never retries, never resolves what it just created, never
+  ranks existing placements.
+- `application/CreateSnapshotPlacementCreationCoordinatorUseCase.js`
+  (new) — composition-root wiring, taking both collaborators as
+  parameters and constructing neither, mirroring `application/
+  CreatePublicationAnchorCreationCoordinatorUseCase.js` exactly.
+- `discovery/PublicationCatalogDiscoveryProvider.js` (new) — bridges
+  `application/LocalPublicationCatalog.js#get()` onto `discovery/
+  DiscoveryProvider.js#findById()`.
+- `discovery/PublicationCatalogContentResolver.js` (new) — bridges
+  `application/LocalPublicationCatalog.js` + a `content/ContentStore.js`
+  onto `discovery/ContentResolver.js#resolve()`/`verify()`, reading a
+  publication's own locally stored bytes back the same way `application/
+  PublicationResolver.js` (0.7.0/0.7.1) already wrote them.
+- `ui/main.js` (modified) — wires the two bridge classes above against
+  the SAME `publicationCatalog`/`publicationContentStore` this replica's
+  Publication Center already reads and writes everywhere else, calls
+  `application/CreateSnapshotPlacementOrchestratorUseCase.js` (0.8.18)
+  for the first time (threading the SAME `publicationSnapshotPlacementCatalog`/
+  `placementKnowledgeStore` instances 0.8.19/0.8.24 already constructed),
+  and provides `snapshotPlacementCreationCoordinator`.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — the "Snapshot
+  Placements" section gains one card per available storage type, mirroring
+  the "External Evidence" section's own 0.8.11 "Create `<type>` Anchor"
+  cards exactly, one axis over. Creating is always a single, explicit
+  click, hidden entirely when no `snapshotPlacementCreationCoordinator`
+  was provided; a created placement is re-discovered into the ordinary
+  placement list and never auto-resolved.
+- `tests/SnapshotPlacementCreationUX.test.js` (new) — Section A: FLAGSHIP,
+  built against the REAL `LocalPublicationCatalog`/`DecentralizedPublication`
+  model (never the older `Publisher` world 0.8.18's own test used) —
+  Alice creates an IPFS placement, the UI states exactly "a snapshot
+  placement was recorded," and Bob independently resolves it against the
+  same fake IPFS network; Section B: CREATED/UNAVAILABLE, plus a caught
+  local precondition failure, each get their own honest UI state, and
+  `'REJECTED' in SnapshotPlacementCreationUiState` is proven `false`;
+  Section C: separation — discovery/listing never place anything,
+  creating consults its store exactly once and the resolver not at all;
+  Section D: two independent placements for the same storage type;
+  Section E: `availableStorageTypes()` gates what the UI may offer;
+  Section F: composition-root wiring; Section G: the two 0.8.25 bridge
+  classes tested directly against a real catalog/content store.
+
+> **Creating a placement is exactly as explicit, and exactly as separate
+> from resolving it, as creating an anchor already is from verifying it.**
+> `application/SnapshotPlacementCreationCoordinator.js#create()` never
+> calls `application/SnapshotPlacementResolutionCoordinator.js#resolve()`,
+> and a freshly created placement shows up in the ordinary placement list
+> exactly as unresolved — never pre-checked, never labeled "available."
+> See `docs/Principles.md`, "Snapshot Placement Creation Is An Explicit
+> User Action, Never A Second Publish (0.8.25)."
+
+### Deliberately excluded
+
+- **Modifying `application/CreateExternalSnapshotPlacementUseCase.js`,
+  `application/CreatePublicationSnapshotPlacementUseCase.js`, or any
+  other 0.8.18 file.** Both already have their own established,
+  already-tested collaborator contracts; this milestone bridges onto
+  them, never changes them.
+- **A `REJECTED` value on `application/
+  SnapshotPlacementCreationUiState.js`, or any UI branch implying a
+  storage backend can definitively refuse well-formed bytes.** See this
+  milestone's own `docs/Principles.md` entry for why inventing one would
+  be dishonest.
+- **Any automatic resolution after creation.** The identical restraint
+  0.8.11 already holds for verification, unchanged here.
+- **A "preferred" or "default" storage backend, or any ranking of
+  `availableStorageTypes()`.** Every registered storage type is offered,
+  in registry order, none favored.
+- **Deduplication, or an "already placed" check before creating.** Placing
+  the same publication on the same storage backend twice still produces
+  two independent, equally valid placements — `application/
+  CreateExternalSnapshotPlacementUseCase.js`'s own 0.8.18 header already
+  established this; this milestone's UI does not add a check that file
+  itself deliberately omits.
+- **Changing `discovery/DiscoveryProvider.js`, `discovery/
+  ContentResolver.js`, or `application/LocalPublicationCatalog.js`'s own
+  public contracts.** The two new bridge classes adapt between them; none
+  of the three existing classes gains, loses, or renames a method.
+- **A `list()`/`findByAuthor()`/`findByParentId()`/`findByDocumentId()`
+  implementation on `discovery/PublicationCatalogDiscoveryProvider.js`.**
+  Nothing in the 0.8.18 creation pipeline this class exists to unblock
+  ever calls them, and `application/LocalPublicationCatalog.js` has no
+  `author`/`parentDocumentId`/`documentId` concept to fabricate one from.
+- **Wiring `local` placement creation any differently from `ipfs`
+  placement creation.** Both are ordinary, registered `content/
+  ContentStore.js` instances in the SAME `SnapshotPlacementStoreRegistry`
+  — "a replica can claim it can serve its own bytes" is exactly as valid
+  a placement as any external one, per `content/LocalSnapshotPlacementView.js`'s
+  own 0.8.18 existence.
+
+What's left, and deliberately unbuilt: the placement-side lifecycle
+question 0.8.12 already answered for anchors — a placement that resolved
+successfully earlier in a session and now reports `STORE_UNAVAILABLE`
+gets no lifecycle note yet, the identical gap `application/
+SnapshotPlacementResolutionObservation.js`'s own 0.8.20 header already
+named as future work; and the unified Publication Center view naming
+"Evidence" and "Snapshot Placements" as siblings under one publication,
+which now has every prerequisite (creation, inspection, resolution, and
+provenance, symmetric on both sides) but still no milestone of its own.
