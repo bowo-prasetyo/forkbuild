@@ -8,6 +8,7 @@ import {
     toPublicationAnchorResponseMessage,
     isValidPublicationAnchorPeerMessage
 } from './PublicationAnchorPeerProtocol.js';
+import { AnchorAcquisitionKind } from './AnchorAcquisitionKind.js';
 
 const ANCHOR_RECEIVED_EVENT = 'PublicationAnchorPeerExchangeReceived';
 
@@ -76,9 +77,32 @@ const ANCHOR_RECEIVED_EVENT = 'PublicationAnchorPeerExchangeReceived';
 // toPublicationAnchorResponseMessage()'s own header). Synchronization
 // distributes CLAIMS this replica did not have yet; it never distributes
 // what any replica has concluded about them.
+//
+// 0.8.17 — Evidence Provenance & Observation Boundary.
+//
+// `_importAndPublish()` now also records a LOCAL-ONLY application/
+// AnchorAcquisitionKind.js#PEER knowledge entry for every anchor it
+// successfully imports (see the optional `knowledgeStore` constructor
+// parameter). This is NOT wire traffic — no PEER knowledge record, and
+// no field naming which peer this anchor arrived from, is ever sent,
+// received, or exists anywhere in application/
+// PublicationAnchorPeerProtocol.js's own message shapes. It is this
+// replica's own bookkeeping about its own history, written after
+// import succeeds, exactly the way `receivedAt` already is one layer
+// down inside application/LocalPublicationAnchorStore.js.
 export class PublicationAnchorPeerExchange {
+    // knowledgeStore: OPTIONAL, an application/LocalAnchorKnowledgeStore.js
+    // instance (0.8.17). When supplied, every anchor this class
+    // successfully imports — via ANNOUNCE or RESPONSE, `isNew` either way
+    // — also records an application/AnchorAcquisitionKind.js#PEER
+    // knowledge entry; see `_importAndPublish()` below, the ONE place
+    // both ingestion paths already converge. Deliberately records no
+    // peerId, connectionId, or remote identity alongside it — see this
+    // milestone's own docs/Roadmap.md entry on why PEER is where THIS
+    // codebase draws the line, never "PEER, from Alice."
     constructor(anchorExchange, peerMessageBus, connectedPeerRegistry, {
-        protocol = PublicationAnchorPeerExchange.DEFAULT_PROTOCOL
+        protocol = PublicationAnchorPeerExchange.DEFAULT_PROTOCOL,
+        knowledgeStore = null
     } = {}) {
         if (!anchorExchange
             || typeof anchorExchange.importAnchor !== 'function'
@@ -96,6 +120,7 @@ export class PublicationAnchorPeerExchange {
         this._bus = peerMessageBus;
         this._registry = connectedPeerRegistry;
         this._protocol = protocol;
+        this._knowledgeStore = knowledgeStore;
         this._eventBus = new EventBus();
 
         for (const peer of this._registry.list()) {
@@ -305,12 +330,26 @@ export class PublicationAnchorPeerExchange {
         }
     }
 
+    // 0.8.17 — Evidence Provenance & Observation Boundary. The ONE place
+    // both ANNOUNCE (`_handleIncoming()`) and RESPONSE (`_handleResponse
+    // ()`) ingestion converge, and therefore the one place a PEER
+    // knowledge record is ever written — every anchor that reaches this
+    // replica over a peer connection, by either transport, records
+    // identically. Called unconditionally on every successful import,
+    // `isNew` either way; application/LocalAnchorKnowledgeStore.js#
+    // record()'s own first-seen-wins discipline is what keeps a
+    // re-announce or re-synchronize of an already-known anchor from ever
+    // overwriting an earlier LOCAL or PACKAGE acquisition. See this
+    // class's own header.
     _importAndPublish(envelope) {
         let result;
         try {
             result = this._exchange.importAnchor(envelope);
         } catch {
             return;
+        }
+        if (this._knowledgeStore) {
+            this._knowledgeStore.record(result.anchor.id, AnchorAcquisitionKind.PEER);
         }
         this._eventBus.publish(ANCHOR_RECEIVED_EVENT, result);
     }

@@ -17601,3 +17601,270 @@ replica asking a peer to ask ITS peers on this replica's own behalf —
 0.8.16 does not revisit it); a durable log of past discovery attempts for
 a person to review; and evidence export/sharing, still exactly as unbuilt
 as 0.8.14/0.8.15 left it.
+
+## 0.8.17 — Evidence Provenance & Observation Boundary
+
+0.8.0 through 0.8.16 gave this codebase every way to create, catalog,
+persist, exchange, discover, inspect, compare, and verify external
+evidence — but never anywhere to answer a much smaller, much older
+question none of those milestones ever needed to ask:
+
+> **How did THIS replica come to know about a given anchor claim at
+> all — and can that be recorded without it quietly becoming a trust,
+> ranking, or authority signal?**
+
+By 0.8.16 there are three genuinely distinct paths an anchor can reach a
+replica through — `CreatePublicationAnchorUseCase` (LOCAL, 0.8.8),
+`ImportPackageAnchorsUseCase` (PACKAGE, 0.8.7), and
+`PublicationAnchorPeerExchange` (PEER, both ANNOUNCE and RESPONSE, 0.8.4/
+0.8.5) — and `LocalPublicationAnchorCatalog` has always treated all three
+identically, on purpose: "a known signed `PublicationAnchor`," nothing
+more, per that file's own header. That restraint is exactly right for
+what the catalog is FOR. It leaves a genuinely different, smaller
+question unanswered: not "is this evidence," but "how did I personally
+come to hold it" — a fact about THIS replica's own local history, never
+about the claim's own truth or standing.
+
+```text
+Local creation           ImportPackageAnchorsUseCase       PublicationAnchorPeerExchange
+(CreatePublicationAnchor      (0.8.7)                        (ANNOUNCE 0.8.4 / RESPONSE 0.8.5)
+     UseCase, 0.8.8)
+        │                          │                                   │
+        │ LOCAL                    │ PACKAGE                           │ PEER
+        └──────────────┬───────────┴───────────────┬───────────────────┘
+                        │                           │
+                        ▼                           ▼
+         LocalPublicationAnchorCatalog     LocalAnchorKnowledgeStore   (NEW)
+         "what anchors do I know about?"   "how — and when — did I
+                        │                    learn each one?"
+                        ▼                           │
+              (unchanged since 0.8.2)                ▼
+                                          PublicationAnchorKnowledgeView (NEW)
+                                          "Learned locally" / "…via
+                                           package import" / "…via peer
+                                           exchange" — never "Source: Alice"
+```
+
+- `application/AnchorAcquisitionKind.js` (new) — the entire vocabulary:
+  `LOCAL`, `PACKAGE`, `PEER`. Three values, unordered, and deliberately
+  no fourth. `RESTORED` was considered and declined — surviving a
+  restart is not a new way a replica learns a claim, it's `application/
+  RestorePublicationAnchorCatalogUseCase.js` (0.8.15) re-earning trust in
+  something already on file; `PEER_ANNOUNCEMENT`/`PEER_DISCOVERY` was
+  considered and declined too — both transports mean exactly "another
+  authenticated replica supplied a signed anchor claim," and splitting
+  them would document a wire-protocol detail no caller has ever needed.
+  See this file's own header and `docs/Principles.md`, "Acquisition
+  Provenance Is Not Evidence Rank (0.8.17)."
+- `application/AnchorKnowledgeRecord.js` (new) — `{ anchorId,
+  firstSeenAt, acquisition: { kind } }`, constructed and validated the
+  same way `application/PublicationAnchorVerificationObservation.js`
+  (0.8.12) constructs its own sibling record, plus `toJSON()`/`fromJSON()`
+  for the durable store below. Deliberately carries no `peerId` — see
+  this file's own header on why naming a specific peer here was ruled
+  out even as an optional field.
+- `application/LocalAnchorKnowledgeStore.js` (new) — the durable,
+  FIRST-SEEN-WINS store this milestone's entire design rests on:
+  `record(anchorId, acquisitionKind, firstSeenAt)` never overwrites an
+  anchorId already on file, `get()`/`has()`/`list()`/`remove()` mirroring
+  `application/LocalPublicationAnchorStore.js`'s own shape one layer up.
+  Sits ALONGSIDE `application/LocalPublicationAnchorCatalog.js`, never
+  inside it — that class's own `add(anchor)` public contract is
+  UNCHANGED by this milestone, exactly as this milestone's own design
+  conversation insisted on. Unlike the anchor catalog, this store has no
+  restoration use case: a stray or tampered knowledge record carries no
+  authority to lose (see that file's own header for the full reasoning).
+- `application/CreateAnchorKnowledgeStoreUseCase.js` (new) — the
+  composition-root wiring for the store above, the identical shape
+  `application/CreatePublicationAnchorCatalogUseCase.js` (0.8.2) already
+  established for the catalog.
+- `application/PublicationAnchorKnowledgeView.js` (new) —
+  `describeAnchorKnowledge(record)`, pure and synchronous, the identical
+  restraint `application/PublicationAnchorDetailView.js` (0.8.14) already
+  holds. Produces "Learned locally" / "Learned via package import" /
+  "Learned via peer exchange" — never a peer's name, never a checkmark,
+  never a word resembling "trust" or "authority."
+- `application/CreatePublicationAnchorUseCase.js` (modified) — an
+  OPTIONAL fifth constructor parameter, `knowledgeStore`; when supplied,
+  a successfully created anchor also records a LOCAL knowledge entry for
+  itself. Every existing caller that omits it (every one before this
+  milestone) behaves exactly as before.
+- `application/ImportPackageAnchorsUseCase.js` (modified) — an OPTIONAL
+  second constructor parameter, `knowledgeStore`; every successfully
+  imported anchor (new OR already-known) records a PACKAGE entry,
+  unconditionally — FIRST-SEEN-WINS inside the store is what makes
+  calling this on a duplicate safe.
+- `application/PublicationAnchorPeerExchange.js` (modified) — an
+  OPTIONAL `knowledgeStore` option; `_importAndPublish()`, the ONE method
+  both ANNOUNCE and RESPONSE ingestion already converge through, now also
+  records a PEER entry for every anchor it successfully imports. No wire
+  shape in `application/PublicationAnchorPeerProtocol.js` changed at all
+  — a knowledge record is never sent, never received, purely this
+  replica's own bookkeeping written after import already succeeded.
+- `application/CreatePublicationAnchorPeerExchangeUseCase.js` /
+  `application/CreateExternalPublicationAnchorOrchestratorUseCase.js`
+  (modified) — thread the ONE `LocalAnchorKnowledgeStore` instance this
+  replica uses anywhere into `peerExchange` (PEER) and
+  `createPublicationAnchorUseCase` (LOCAL) respectively, the identical
+  "one instance, threaded everywhere" discipline `publicationAnchorCatalog`
+  itself already holds.
+- `ui/main.js` (modified) — constructs `anchorKnowledgeStore` once,
+  threads it into both composition-root use cases above, and provides it
+  as `anchorKnowledgeStore` for `ui/views/DecentralizedPublicationsView.js`
+  to consume.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — "Inspect
+  Evidence" now also shows a "Local Knowledge" section, separate from
+  "External Evidence," reading `Acquisition` and `First seen by this
+  replica` — a purely local, synchronous `anchorKnowledgeStore.get()`
+  read computed alongside the existing `publicationAnchorDetailView()`
+  call inside `toggleInspect()`, under the identical "Inspection Is
+  Observation" restraint 0.8.14 already established for that call.
+  Optional — a test harness (or any caller) that never provides
+  `anchorKnowledgeStore` simply shows no Local Knowledge section, the
+  same degrade-gracefully posture `evidenceViewRegistry` already holds.
+- `css/main.css` (modified) — `.evidence-inspection-knowledge`, styled
+  identically to `.evidence-inspection-adapter`'s own separator treatment.
+- `docs/user/09-PublicationsAndEvidence.md` (modified) — documents the
+  new "Local Knowledge" section and notes that, unlike verification
+  results, it survives a reload.
+- `tests/AnchorKnowledgeProvenance.test.js` (new) — Section A:
+  `AnchorAcquisitionKind`/`AnchorKnowledgeRecord` vocabulary, validation,
+  immutability, JSON round-trip; Section B: `LocalAnchorKnowledgeStore`
+  CRUD plus FIRST-SEEN-WINS and durability across a simulated restart;
+  Section C: `describeAnchorKnowledge()` wording, with an explicit check
+  that no acquisition label ever names a peer or reads as a trust signal;
+  Section D: each of the three wiring points records its own kind (and
+  every one still works with no `knowledgeStore` supplied at all);
+  Section E: INVARIANT — first-seen-wins holds for every ordered pair of
+  acquisition kinds, not merely the one PEER-then-PACKAGE example this
+  milestone's own design conversation used; Section F: FLAGSHIP — Bob
+  receives Anchor A from Alice over a live ANNOUNCE (PEER), restarts (A
+  and its PEER knowledge both survive via 0.8.15's own persistence,
+  unchanged), later imports the identical anchor from a package (his
+  knowledge stays PEER, never overwritten to PACKAGE), and independently
+  verifies it VALID — with the knowledge record and the verification
+  outcome proven to never read, influence, or overwrite one another.
+
+```text
+0.8.16  Evidence Synchronization UX & Explicit Historical Discovery      ✓
+             │
+             ▼
+0.8.17  Evidence Provenance & Observation Boundary                      ✓
+             ├── application/AnchorAcquisitionKind.js — new; LOCAL/
+             │   PACKAGE/PEER, three unordered values, no fourth
+             ├── application/AnchorKnowledgeRecord.js — new; the
+             │   { anchorId, firstSeenAt, acquisition: { kind } } shape
+             ├── application/LocalAnchorKnowledgeStore.js — new; durable,
+             │   FIRST-SEEN-WINS, sits alongside the catalog, never
+             │   inside it
+             ├── application/CreateAnchorKnowledgeStoreUseCase.js — new;
+             │   composition-root wiring
+             ├── application/PublicationAnchorKnowledgeView.js — new;
+             │   pure record -> display shape, deliberately understated
+             │   wording
+             ├── application/CreatePublicationAnchorUseCase.js —
+             │   modified; optional knowledgeStore -> records LOCAL
+             ├── application/ImportPackageAnchorsUseCase.js — modified;
+             │   optional knowledgeStore -> records PACKAGE
+             ├── application/PublicationAnchorPeerExchange.js —
+             │   modified; optional knowledgeStore -> records PEER for
+             │   ANNOUNCE and RESPONSE alike, through _importAndPublish()
+             ├── application/CreatePublicationAnchorPeerExchangeUseCase.js
+             │   / CreateExternalPublicationAnchorOrchestratorUseCase.js
+             │   — modified; thread the one knowledgeStore instance
+             │   through
+             ├── ui/main.js — modified; constructs and provides
+             │   anchorKnowledgeStore
+             ├── ui/views/DecentralizedPublicationsView.js — modified;
+             │   "Inspect Evidence" gains a Local Knowledge section
+             ├── css/main.css — modified; .evidence-inspection-knowledge
+             ├── docs/user/09-PublicationsAndEvidence.md — modified
+             └── AnchorKnowledgeProvenance.test.js (new) — vocabulary,
+                 store CRUD + first-seen-wins + durability, view wording,
+                 all-three-paths wiring, cross-path first-seen-wins
+                 invariant, and FLAGSHIP
+```
+
+> **Provenance answers how a replica came to know a claim; it never
+> answers whether the claim is true, and it never ranks one path above
+> another.** `application/LocalAnchorKnowledgeStore.js` is durable,
+> local-only bookkeeping — never signed, never carried across
+> `application/PublicationAnchorExchange.js`'s own export/import
+> boundary, never a second trust root the way a tampered
+> `LocalPublicationAnchorStore.js` entry could have been before 0.8.15's
+> own restoration pass. Two replicas holding the byte-identical,
+> identically signed anchor can hold two entirely different knowledge
+> records for it, and neither is wrong — "Replicas can agree on a claim
+> while having different histories of how they learned it" is not a bug
+> this milestone patches over, it is the property this milestone exists
+> to make legible. See `docs/Principles.md`, "Acquisition Provenance Is
+> Not Evidence Rank (0.8.17)."
+
+### Deliberately excluded
+
+- **`peerId`, or any field naming which specific peer an anchor arrived
+  from.** `AnchorKnowledgeRecord` carries `acquisition.kind` alone.
+  Recording a peer identity here would be one field away from "trust
+  peer X's anchors more" — the exact slope this milestone's own design
+  conversation flagged and this codebase has never let happen anywhere
+  else (peer connections, peer selection for discovery, evidence
+  comparison). See `application/AnchorAcquisitionKind.js`'s own header.
+- **A `RESTORED` acquisition kind.** Surviving a restart re-earns trust
+  in an anchor already on file (`application/
+  RestorePublicationAnchorCatalogUseCase.js`, 0.8.15) — it is not a new
+  way a replica learned the claim, so the original kind is preserved
+  unchanged across a restart instead.
+- **Splitting `PEER` into `PEER_ANNOUNCEMENT`/`PEER_DISCOVERY`.** Both
+  transports establish the identical fact — "another authenticated
+  replica supplied a signed anchor claim" — and this milestone declined
+  to document a wire-protocol detail as if it were evidence semantics.
+- **Any ranking, filtering, sorting, or preference derived from
+  `acquisition.kind` or `firstSeenAt`.** No file in this codebase reads
+  an `AnchorKnowledgeRecord` to decide which anchor to show first, trust
+  more, verify first, or treat as canonical — see `docs/Principles.md`'s
+  own entry.
+- **Changing `LocalPublicationAnchorCatalog#add()`'s public contract.**
+  This milestone's own design conversation named this explicitly as a
+  constraint: acquisition metadata is maintained ALONGSIDE the catalog,
+  in a separate collaborator, never threaded into `add()` as a second
+  parameter every existing caller would have had to learn about.
+  Deliberately for the same reason, `application/
+  PublicationAnchorExchange.js#importAnchor()`'s own signature is
+  UNCHANGED too — the two callers that need to distinguish PACKAGE from
+  PEER (`ImportPackageAnchorsUseCase`/`PublicationAnchorPeerExchange`)
+  already know which one they are; recording knowledge is their own,
+  separate call.
+- **A knowledge-record restoration/re-verification pass, mirroring
+  0.8.15's own `RestorePublicationAnchorCatalogUseCase`.** A knowledge
+  record carries no signature and asserts nothing about any other
+  replica; at worst a tampered one mislabels this replica's own "Learned
+  via" badge for one anchor id. There is nothing here for a restoration
+  pass to re-earn.
+- **Synchronizing, exporting, or sharing knowledge records over a peer
+  connection or inside a Blueprint Package.** `application/
+  AnchorKnowledgeRecord.js` never appears in
+  `application/PublicationAnchorPeerProtocol.js`'s own wire shapes, and
+  `application/PublicationAnchorExchange.js#exportAnchor()`/
+  `importAnchor()` remain exactly what they were — a PublicationAnchor
+  envelope, nothing more.
+- **Any UI wording that names a peer, shows a checkmark, or otherwise
+  reads as an authority claim** ("Source: Alice ✓"). See
+  `application/PublicationAnchorKnowledgeView.js`'s own header for the
+  exact, deliberately understated wording this milestone settled on.
+- **A knowledge record for `application/AddPublicationAnchorUseCase.js`
+  (the generic 0.8.2 structural-only catalog entry point).** That class
+  is not currently wired into `ui/main.js`'s own running composition —
+  it accepts an already-complete, arbitrary envelope for a caller that
+  already trusts it some other way, with no single acquisition context
+  this milestone could attribute to it. A future caller of that class
+  that DOES have such a context records knowledge itself, the identical
+  pattern this milestone establishes at its own three call sites.
+
+What's left, and deliberately unbuilt: any UI affordance to filter or
+group the evidence list by acquisition kind (every anchor still lists in
+the identical, unranked order it always has); a way to bulk-inspect every
+known anchor's provenance at once, rather than one at a time via "Inspect
+Evidence"; and a knowledge record for evidence arriving through a future,
+not-yet-built acquisition path — this milestone's own three-value
+vocabulary is deliberately sized to what exists today, never pre-built
+for a mechanism that doesn't exist yet.

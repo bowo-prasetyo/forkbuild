@@ -5,6 +5,7 @@ import { RestorePublicationAnchorCatalogUseCase } from './RestorePublicationAnch
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PublicationAnchorExchange } from './PublicationAnchorExchange.js';
 import { PublicationAnchorPeerExchange } from './PublicationAnchorPeerExchange.js';
+import { CreateAnchorKnowledgeStoreUseCase } from './CreateAnchorKnowledgeStoreUseCase.js';
 
 // 0.8.4 — External Anchor Publication Over Peers.
 //
@@ -46,6 +47,12 @@ import { PublicationAnchorPeerExchange } from './PublicationAnchorPeerExchange.j
 // (`restoredAnchors`/`rejectedAnchors`) alongside everything this use
 // case already returned, purely informational — see that class's own
 // header for what each field means.
+//
+// 0.8.17 — Evidence Provenance & Observation Boundary. Also constructs
+// and returns `knowledgeStore` (application/
+// CreateAnchorKnowledgeStoreUseCase.js), wired into `peerExchange` so
+// every anchor arriving over a live peer connection records how it
+// arrived. See that use case's own header.
 export class CreatePublicationAnchorPeerExchangeUseCase {
     execute({ peerMessageBus, connectedPeerRegistry } = {}) {
         const storageProvider = new LocalStorageProvider();
@@ -55,9 +62,21 @@ export class CreatePublicationAnchorPeerExchangeUseCase {
 
         const restoreResult = new RestorePublicationAnchorCatalogUseCase(store, verifier).execute();
 
-        const exchange = new PublicationAnchorExchange(catalog, verifier);
-        const peerExchange = new PublicationAnchorPeerExchange(exchange, peerMessageBus, connectedPeerRegistry);
+        // 0.8.17 — Evidence Provenance & Observation Boundary. The one
+        // `LocalAnchorKnowledgeStore` instance this replica uses anywhere
+        // — threaded into `peerExchange` below so a live ANNOUNCE/RESPONSE
+        // records PEER knowledge, and returned here so a caller (see
+        // ui/main.js) can thread the SAME instance into
+        // application/CreateExternalPublicationAnchorOrchestratorUseCase.js
+        // (LOCAL) and, when wired, application/
+        // ImportPackageAnchorsUseCase.js (PACKAGE) — one store, fed by all
+        // three acquisition paths, exactly the "one instance, threaded
+        // everywhere" discipline `catalog` above already holds.
+        const { knowledgeStore } = new CreateAnchorKnowledgeStoreUseCase().execute();
 
-        return { catalog, exchange, peerExchange, verifier, restoreResult };
+        const exchange = new PublicationAnchorExchange(catalog, verifier);
+        const peerExchange = new PublicationAnchorPeerExchange(exchange, peerMessageBus, connectedPeerRegistry, { knowledgeStore });
+
+        return { catalog, exchange, peerExchange, verifier, restoreResult, knowledgeStore };
     }
 }

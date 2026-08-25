@@ -11066,3 +11066,88 @@ cataloged entry for the identical reason 0.8.5 already established:
 anchor's own id, not by which peer said it first or most confidently.
 
 See `docs/Roadmap.md`, 0.8.16, for the full milestone entry.
+
+### Acquisition Provenance Is Not Evidence Rank (0.8.17)
+
+0.8.4 through 0.8.16 gave this codebase three genuinely different ways
+for a replica to come to know about an anchor claim — signing one itself
+(0.8.8), importing one bundled in a package (0.8.7), and receiving one
+over a peer connection, whether ANNOUNCE (0.8.4) or RESPONSE (0.8.5) —
+but never anywhere to record WHICH of the three happened, or when. The
+temptation, the moment such a record exists, is to let it become a
+tie-breaker: "prefer the anchor I created myself," "trust a peer-sourced
+claim less than a package I chose to import," "show the earliest-learned
+anchor first." This codebase has refused that temptation at every prior
+layer that could have offered one — no canonical anchor (0.8.2), no
+"best" verification outcome (0.8.6), no peer reputation (0.8.4), no
+"most reliable" peer for discovery (0.8.16) — and 0.8.17 draws the
+identical line for its own new concept, `application/
+AnchorAcquisitionKind.js` and `application/AnchorKnowledgeRecord.js`.
+
+**`AnchorAcquisitionKind` has exactly three values, and none of them
+compares to another.** `LOCAL`, `PACKAGE`, and `PEER` are unordered
+labels, never an enum a caller could sort by, filter "better than," or
+default-select on. No file in this codebase ever writes `if (acquisition
+=== LOCAL) { trustMore() }`, and none should ever be added that does.
+`tests/AnchorKnowledgeProvenance.test.js`'s own Section F proves the
+point structurally: Bob's independently computed `VALID` verification
+outcome for an anchor he received over a peer connection is byte-for-byte
+identical to what he would compute for an anchor he signed himself —
+`acquisition.kind` is never an input `application/
+ExternalAnchorVerifier.js` reads, because that class has no way to read
+it at all; the two live in entirely separate collaborators.
+
+**A `PublicationAnchor`'s own signed payload is never touched.** Every
+one of this milestone's three recording call sites —
+`application/CreatePublicationAnchorUseCase.js`, `application/
+ImportPackageAnchorsUseCase.js`, `application/
+PublicationAnchorPeerExchange.js` — calls `application/
+LocalAnchorKnowledgeStore.js#record()` as a SEPARATE step alongside the
+existing, unchanged `LocalPublicationAnchorCatalog#add()`-triggering
+call, never as a parameter threaded into it. `application/
+LocalPublicationAnchorCatalog.js#add(anchor)`'s own public contract is
+exactly what it was before this milestone — see that file's own header,
+which this milestone deliberately declined to touch. Two replicas that
+hold the byte-identical, identically signed anchor can hold two
+completely different `AnchorKnowledgeRecord`s for it — one `LOCAL`, one
+`PEER` — and neither replica's record says anything about the other's.
+
+**FIRST-SEEN-WINS is what makes "how I learned it" a genuine, stable fact
+about MY history, not a flag that flips with whatever arrived most
+recently.** `application/LocalAnchorKnowledgeStore.js#record()` never
+overwrites an existing entry, regardless of which acquisition kind a
+later call supplies — an anchor a replica first received over a peer
+connection reports `PEER` forever afterward, even after that replica
+later imports the identical anchor from a package, or restarts and
+receives it again. `tests/AnchorKnowledgeProvenance.test.js`'s own
+Section E proves this for every ordered pair of acquisition kinds, not
+merely the one PEER-then-PACKAGE case this milestone's own design
+conversation used as its illustrative example.
+
+**Deliberately no `peerId`, no `RESTORED` kind, no `PEER_ANNOUNCEMENT`/
+`PEER_DISCOVERY` split.** Each of these was considered and declined, for
+the identical reason: none of them describe a genuinely different way a
+replica came to know a claim, and each would invite exactly the ranking
+this entry exists to forbid. `peerId` would let "which peer" quietly
+become a data point for judging a claim, `RESTORED` would conflate
+surviving a restart with a new acquisition (surviving one is 0.8.15's own
+job, entirely separate — see `application/
+RestorePublicationAnchorCatalogUseCase.js`), and splitting `PEER` by
+transport would document a wire-protocol implementation detail no UI or
+caller has ever needed. See `application/AnchorAcquisitionKind.js`'s own
+header for the full reasoning on each.
+
+**The UI names how, never who, and never scores.** `application/
+PublicationAnchorKnowledgeView.js#describeAnchorKnowledge()` produces
+"Learned via peer exchange," never "Source: Alice ✓" — `tests/
+AnchorKnowledgeProvenance.test.js`'s own Section C asserts directly that
+no acquisition label this file ever produces names a specific identity or
+contains any word resembling "trust," "verified," or "authority." Local
+Knowledge, shown in ui/views/DecentralizedPublicationsView.js's own
+"Inspect Evidence" panel, is presented as a distinct subsection from
+External Evidence for the identical reason 0.8.14 already keeps a raw
+`proof` unreinterpreted at the generic level: naming HOW a replica
+learned a claim, next to WHAT the claim itself says, without ever
+blending the two into one combined verdict.
+
+See `docs/Roadmap.md`, 0.8.17, for the full milestone entry.
