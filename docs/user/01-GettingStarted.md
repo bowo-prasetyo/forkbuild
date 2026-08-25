@@ -10,11 +10,13 @@ URL), and you'll land on the **Home** screen.
 
 The bar at the top is always visible:
 
-`ForkBuild Home Editor Repository My Avatar My Identities Peers Conversations About [Login]`
+`ForkBuild Home Editor Repository My Worlds My Avatar My Identities Peers Conversations Publications About [Login]`
 
 - **Home** — the landing page
 - **Editor** — where you build
 - **Repository** — browse everyone's published creations
+- **My Worlds** — Worlds you've actually visited on this device, see
+  [My Worlds](03-WorldView.md#my-worlds--worlds-youve-actually-been-to)
 - **My Avatar** — how you appear to others in World View, see
   [Avatars & Presence](06-AvatarsAndPresence.md)
 - **My Identities** — the cryptographic identities stored on this device, see
@@ -23,6 +25,9 @@ The bar at the top is always visible:
   [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)
 - **Conversations** — your direct messages, see
   [Chat & Conversations](08-ChatAndConversations.md)
+- **Publications** — signed authorship/place-name claims and their
+  external evidence, see
+  [Publications & External Evidence](09-PublicationsAndEvidence.md)
 - **About** — version info
 
 ## Logging in

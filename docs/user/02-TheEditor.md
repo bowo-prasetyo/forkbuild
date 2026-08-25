@@ -289,6 +289,27 @@ This is how you hand a build to a friend, or carry your own structures
 between your own devices: export on one side, send the file however you
 like, import on the other.
 
+### Claiming authorship
+
+A structure with a Blueprint identity (most saved ones have one) can also
+carry a **Community Attribution** — a signed record of who's claimed to
+have designed it. Open the structure's **Info** panel from its card and
+you'll find:
+
+- **Claim authorship** — signs a claim, under your current identity, that
+  you're one of its authors. Several people can each claim the same design
+  independently; nobody's claim ever overrides or replaces another's.
+- **Export Attribution** / **Publish to Network** — once you've claimed
+  it, share that claim as a file or announce it to your connected peers.
+
+This is optional, and entirely separate from placing, forking, or sharing
+the structure itself — it exists for situations where you want to attach
+your name to a design in a way other people can independently verify, not
+merely trust. See
+[Publications & External Evidence](09-PublicationsAndEvidence.md) for what
+happens to a claim once you've published it, and how to attach independent
+external evidence to it.
+
 ## Structure instances: a live reference
 
 Placing (above) copies a structure's bricks into your document once.

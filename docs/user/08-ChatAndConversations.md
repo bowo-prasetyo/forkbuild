@@ -37,6 +37,40 @@ their identity, relationship, friendship, live connection state, and
 message/pending counts. There's no typing indicator, editing, deletion,
 reactions, attachments, or group chat — it's deliberately just messages.
 
+## Voice calls
+
+A **📞 Call** button sits next to the compose box whenever at least one of
+that friend's currently-reachable devices supports voice — you don't need
+to know which of their devices will actually pick up; calling reaches
+their identity, not one specific connection.
+
+- Click **Call** to place a call — you'll see **Calling…** until they
+  answer.
+- On the receiving end, an incoming call shows **Accept** / **Decline**.
+- Once connected, the bar shows **On call** plus **Mute** / **Unmute**,
+  and — once your microphone is actually attached — pickers for which
+  **Microphone** and (if your browser supports it) **Speaker** to use.
+- The end button reads **Cancel** while you're still waiting for them to
+  pick up, and **Hang Up** once you're actually talking.
+
+You're limited to one call at a time across this whole device — the Call
+button is disabled for anyone else while you're on a call. If your
+microphone disappears mid-call (unplugged, permission revoked), a small
+banner says so; the call itself keeps running, in case it reconnects.
+
+A call that ends before you're connected explains why, briefly:
+
+| Message | Meaning |
+|---|---|
+| **Call declined.** | They clicked Decline. |
+| **They're already on another call.** | They're busy elsewhere. |
+| **No answer.** | Nobody picked up in time. |
+| **Couldn't access your microphone.** | Your browser denied or lacks microphone access. |
+| **Call failed to connect.** | A connection-level failure — worth trying again. |
+
+An ordinary hang-up (yours or theirs) shows no message at all — the call
+bar simply disappearing is the whole story.
+
 ## Sending while someone's offline
 
 You can send a message to an offline friend — it doesn't require them to be

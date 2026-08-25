@@ -177,6 +177,12 @@ claim history, import/export) sits behind one **More** disclosure, so the
 common case — "what do people call this, and what do I call it?" — never
 competes with everything else the naming system can do.
 
+> Publishing a name announces it to your connected peers the same way
+> claiming authorship of a structure does — see
+> [Publications & External Evidence](09-PublicationsAndEvidence.md) if
+> you want to see every claim this device has published or learned about,
+> in one place.
+
 ## Camera vs. Editing
 
 The header shows two things that can genuinely differ:
@@ -200,6 +206,20 @@ the exact same spot in the world — focusing one, then the other, moves the
 camera nowhere the second time, yet the header still tells you which one
 you're now editing. Flying around and looking at things never changes what
 you're editing on its own; only actually selecting a brick or a document does.
+
+## My Worlds — worlds you've actually been to
+
+Click **My Worlds** in the top bar to see every World this device has
+visited before, most-recently-visited first, each showing its title,
+author, and structure/landmark counts where known. Click any card to fly
+straight back in.
+
+This is a purely local, personal history — never a shared or published
+list, and not the same as the Repository or a search result: a World only
+appears here once you've actually entered it, and it stays here (on this
+device only) even if you never publish or share anything of your own.
+Haven't visited anywhere yet? **Browse the Repository** to find your first
+one.
 
 ## Finding worlds
 
