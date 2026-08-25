@@ -11323,3 +11323,125 @@ two milestones would have added calendar time without adding any new
 invariant to prove.
 
 See `docs/Roadmap.md`, 0.8.19, for the full milestone entry.
+
+### Resolving A Placement Observes Present Availability; It Does Not Rewrite The Placement Claim (0.8.20)
+
+`docs/Principles.md`'s 0.8.14 entry, "Inspection Is Observation;
+Verification Is An Explicit Operation," drew a three-way line for
+anchors: DISCOVERING one (a synchronous, local catalog read), INSPECTING
+one (looking at everything it claims, still purely local), and VERIFYING
+one (an explicit, separate, potentially network-touching action). 0.8.20
+draws the identical three-way line for placements, and the design
+question this milestone's own conversation asked before writing a line
+of code was the same one 0.8.14 asked: does looking closely at a
+placement, or asking whether it currently resolves, quietly start doing
+more than looking?
+
+**Opening "Inspect Placement" never calls `application/
+SnapshotPlacementResolver.js`, never touches the network, never modifies
+`application/LocalPublicationSnapshotPlacementCatalog.js`, and never
+mutates the placement itself.** `application/
+PublicationSnapshotPlacementDetailView.js#publicationSnapshotPlacementDetailView()`
+is a pure, synchronous reshape of state this replica already holds in
+memory — the identical restraint `application/
+PublicationAnchorDetailView.js` already holds for anchors, applied here
+to a placement's full field set rather than an anchor's. `tests/
+PublicationSnapshotPlacementInspectionUX.test.js`'s own flagship proves
+this directly, not merely by omission: it wraps `application/
+SnapshotPlacementResolver.js#resolve()` itself with a call-counting spy,
+opens "Inspect Placement" on a placement Bob received through the
+identical structural-only boundary `application/
+PublicationSnapshotPlacementPeerExchange.js`'s own ingestion uses, and
+proves the resolver was never once consulted and the placement/catalog
+stayed byte-identical throughout. Only Bob's SEPARATE, later "Resolve
+Snapshot" click moves either number.
+
+**A generic placement detail view never reinterprets a storage-specific
+`locator`.** `locator` is opaque by design since `core/
+PublicationSnapshotPlacement.js`'s own 0.8.18 header ("a placement
+attests that a storage backend can PRESENTLY SERVE the bytes for a
+hash... whether the locator actually still serves those bytes right now
+is a SEPARATE, later question") — `application/
+PublicationSnapshotPlacementDetailView.js` honors that at the
+presentation layer too, returning `locator` exactly as the placement
+carries it, with no `locator.cid`/`locator.gateway`/`locator.path` read
+anywhere in that file. Storage-specific interpretation lives behind its
+own seam, `application/SnapshotPlacementViewRegistry.js` — a SECOND,
+independent `storage -> plugin` registry alongside `application/
+SnapshotPlacementStoreRegistry.js` (0.8.18, retrieval) — so `content/
+IpfsSnapshotPlacementView.js` is the only place in this codebase an
+`ipfs://`-shaped locator is ever parsed for presentation, and there is
+no `if (storage === 'ipfs')` branch anywhere in the generic detail view.
+
+**A presentation adapter is held to the identical purity discipline as
+the generic view it supplements, and degrades honestly rather than
+guessing.** `content/IpfsSnapshotPlacementView.js#describe()` derives a
+followable `https://ipfs.io/ipfs/<cid>` destination from an `ipfs://`
+locator — pure string construction, never a fetch — and explicitly does
+NOT check whether the CID is pinned, reachable, or currently serves
+those bytes: all three stay `application/SnapshotPlacementResolver.js`'s
+own job, completely unchanged by this milestone. `content/
+LocalSnapshotPlacementView.js` goes further and NEVER produces an
+external link at all for a `local` placement — a storage key on this
+device has nothing honest to point at from outside it, and inventing a
+`file://` path that could never actually resolve on another replica
+would be exactly the kind of guess `tests/
+PublicationSnapshotPlacementInspectionUX.test.js`'s own Section C proves
+neither adapter ever makes.
+
+**Resolution observes present availability; it never rewrites the
+placement's own signed claim.** `application/
+SnapshotPlacementResolutionCoordinator.js#resolve()` writes its result
+nowhere durable — not to `core/PublicationSnapshotPlacement.js`, not to
+`application/LocalPublicationSnapshotPlacementCatalog.js`, and not to
+any new storage this milestone might have been tempted to add. A signed
+placement remains historically intact whether or not this replica can
+presently retrieve its bytes, exactly as `docs/Principles.md`'s own
+0.8.18 entry already established that "a placement is a locator, not
+evidence of history": IPFS serving content proves nothing about when it
+was first placed, and IPFS momentarily failing to serve it proves
+nothing about whether the placement claim itself was ever genuine. This
+milestone's own flagship test proves the point directly, not merely by
+omission: Bob and Carol hold the byte-for-byte IDENTICAL placement Alice
+created and signed — received through the same structural-only ingestion
+boundary, never through two different claims — yet Bob's own configured
+IPFS store resolves it `RESOLVED` while Carol, with no store registered
+for `ipfs` at all, honestly and independently resolves the SAME claim
+`STORE_UNAVAILABLE`. Two separate `application/
+SnapshotPlacementResolutionObservation.js` records, one per replica, name
+the identical `placementId` with two different outcomes; neither is ever
+written back into the shared claim, ever compared against the other, or
+ever changes what the other replica can determine for itself.
+
+**Six resolution outcomes stay six, never collapsed into "available" or
+"unavailable."** `application/SnapshotPlacementView.js#
+describeResolutionOutcome()` gives every `application/
+SnapshotPlacementResolutionOutcome.js` (0.8.18) value its own distinct
+label — mirroring `application/PublicationEvidenceView.js#
+describeVerificationOutcome()`'s own restraint exactly. `STORE_UNAVAILABLE`
+("this replica has no backend configured for this storage") and
+`CONTENT_UNAVAILABLE` ("a backend was consulted, and could not presently
+produce the bytes") describe two different kinds of gap a person needs
+to be able to tell apart — one says "you would need different software
+to check this," the other says "the software is right, but nothing
+answered right now" — and `CONTENT_HASH_MISMATCH` is a DEFINITE finding
+about a backend actively serving the wrong bytes, never conflated with
+either honestly-inconclusive outcome.
+
+**This milestone finally wires `application/
+SnapshotPlacementResolver.js` into the running app — through a NEW,
+narrowly-scoped composition root, deliberately not the one 0.8.18 already
+built for creation.** `application/
+CreateSnapshotPlacementOrchestratorUseCase.js` (0.8.18) wires BOTH
+creation and resolution together, because 0.8.18 needed both at once to
+prove its own flagship. This milestone needs only resolution, and
+reaching for that heavier composition root would have silently required
+wiring the creation pipeline's own `publisher/Publication.js`-side
+`discoveryProvider`/`contentResolver` into `ui/main.js` too — dependency
+0.8.18's and 0.8.19's own "Deliberately excluded" lists both left
+unbuilt on purpose. `application/
+CreateSnapshotPlacementResolutionCoordinatorUseCase.js` (new) wires
+exactly what "Inspect Placement"/"Resolve Snapshot" need, and nothing a
+future creation-UX milestone would also need to touch.
+
+See `docs/Roadmap.md`, 0.8.20, for the full milestone entry.

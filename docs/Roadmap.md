@@ -18349,3 +18349,293 @@ inspecting a placement or triggering discovery/resolution explicitly
 (the natural next milestone); and discovery scoped to anything broader
 than `publicationId` — each sized on its own, exactly like every
 "Deliberately excluded" list in this document before it.
+
+## 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX
+
+0.8.19's own "Deliberately excluded" list named this milestone by name:
+"any UI surface for inspecting a placement or triggering discovery/
+resolution explicitly (the natural next milestone)." 0.8.20 is that
+milestone — the placement side of exactly what 0.8.3 was for evidence,
+five milestones after 0.8.0 shipped anchoring with no UI at all. By
+0.8.19, a replica could create, catalog, exchange, and discover a
+`core/PublicationSnapshotPlacement.js` — but a person could still not
+answer three different questions this milestone's own design
+conversation named directly:
+
+```text
+Catalog:     "What placement claims do I know?"
+Inspection:  "What does this placement say?"
+Resolution:  "Can I retrieve matching bytes now?"
+```
+
+**INSPECTION IS LOCAL OBSERVATION. RESOLUTION IS EXPLICIT RETRIEVAL.**
+Keeping those two actions separate preserves the identical architectural
+discipline 0.8.14 already established for anchor evidence
+("Inspection Is Observation; Verification Is An Explicit Operation") —
+applied here one axis over, to a locator instead of a proof:
+
+```text
+core/PublicationSnapshotPlacement.js (0.8.18, already signed, cataloged)
+          │
+          ├── application/PublicationSnapshotPlacementDetailView.js  (new)
+          │       "what does this placement claim?" — pure, synchronous,
+          │       never touches a resolver
+          │
+          ├── application/SnapshotPlacementViewRegistry.js  (new)
+          │       storage -> presentation plugin, e.g. content/
+          │       IpfsSnapshotPlacementView.js's own gateway link
+          │
+          └── application/SnapshotPlacementResolutionCoordinator.js  (new)
+                  discover()  — synchronous, local catalog read
+                  resolve()   — asynchronous, may reach a real storage
+                                 backend through application/
+                                 SnapshotPlacementResolver.js (0.8.18,
+                                 unchanged, and — as of this milestone —
+                                 finally wired into the running app)
+```
+
+**THIS MILESTONE WIRES application/SnapshotPlacementResolver.js FOR THE
+FIRST TIME — BUT DELIBERATELY NOT THROUGH application/
+CreateSnapshotPlacementOrchestratorUseCase.js.** That composition root
+(0.8.18) also wires the CREATION half of this subsystem
+(`CreatePublicationSnapshotPlacementUseCase`/
+`CreateExternalSnapshotPlacementUseCase`), which needs a `publisher/
+Publication.js`-side `discoveryProvider`/`contentResolver` this replica
+has never wired into `ui/main.js` — 0.8.18's and 0.8.19's own
+"Deliberately excluded" lists both left ALL of "UX of any kind" and
+"wiring into ui/main.js" as future work, and this milestone is scoped
+narrowly to INSPECTION and RESOLUTION, exactly as 0.8.3 was scoped to
+DISCOVERY and VERIFICATION for anchors before 0.8.11 gave them their own
+creation UX six milestones later. `application/
+CreateSnapshotPlacementResolutionCoordinatorUseCase.js` (new) wires
+exactly what resolution needs instead: a fresh
+`identity/LocalAuthorizationVerifier.js`, an `application/
+SnapshotPlacementStoreRegistry.js` (0.8.18, unchanged) built from
+whichever concrete `content/ContentStore.js` instances a caller hands
+in, and an `application/SnapshotPlacementResolver.js` (0.8.18, unchanged)
+over both — the identical "generic pipeline, concrete plugin wired
+outside it" split `application/CreateExternalAnchorVerifierUseCase.js`
+already holds for evidence.
+
+- `application/PublicationSnapshotPlacementDetailView.js` — new; the
+  placement-side sibling of `application/
+  PublicationAnchorDetailView.js` (0.8.14). `publicationSnapshotPlacementDetailView(placement)`
+  derives `{ placementId, publicationId, contentHash, storage, locator,
+  placedAt, placedAtLabel, placerIdentityId, bindingDescription }` —
+  `locator` returned exactly opaque, never parsed into a `cid`/`gateway`/
+  `path` field of its own; `placedAtLabel` fixed to "Claimed placement
+  time," never "Confirmed at"/"Pinned at"/"Stored at";
+  `describePlacementBinding()` worded as a claim ("claims... can be
+  retrieved from"), never an established fact
+- `application/SnapshotPlacementViewRegistry.js` — new; a SECOND,
+  independent `storage -> plugin` registry alongside `application/
+  SnapshotPlacementStoreRegistry.js` (0.8.18, retrieval) — the identical
+  relationship `application/ExternalAnchorEvidenceViewRegistry.js`
+  (0.8.14) already holds to `application/
+  ExternalProofVerifierRegistry.js` (0.8.1). Named after its own
+  placement-side siblings (`SnapshotPlacement*`, no `External`/
+  `Publication` prefix), not after the anchor-side registry's own
+  vocabulary
+- `content/IpfsSnapshotPlacementView.js` / `content/
+  LocalSnapshotPlacementView.js` — new; pure presentation adapters,
+  registered under the identical `storage` names `content/
+  IpfsContentStore.js`/`content/LocalContentStore.js` already
+  self-identify as (0.8.18). The IPFS adapter derives a followable
+  `https://ipfs.io/ipfs/<cid>` destination from an `ipfs://<cid>`
+  locator, degrading honestly to "not available" for anything malformed
+  or missing, mirroring `anchoring/BitcoinAnchorEvidenceView.js`'s own
+  restraint exactly; the local adapter shows the raw storage key and
+  NEVER fabricates an external link — a `local` locator names a key on
+  this device, and there is nothing external to point at
+- `application/CreateIpfsSnapshotPlacementViewUseCase.js` / `application/
+  CreateLocalSnapshotPlacementViewUseCase.js` / `application/
+  CreateSnapshotPlacementViewRegistryUseCase.js` — new composition roots,
+  mirror `application/CreateBitcoinAnchorEvidenceViewUseCase.js`/
+  `application/CreateExternalAnchorEvidenceViewRegistryUseCase.js`
+  exactly
+- `application/SnapshotPlacementResolutionObservation.js` — new;
+  `createResolutionObservation({ placementId, outcome, reason,
+  observedAt })`, the placement-side sibling of `application/
+  PublicationAnchorVerificationObservation.js` (0.8.12). Shipped now,
+  before any UI keeps a per-placement history with it — the identical
+  precedent 0.8.2 already set for `AddPublicationAnchorUseCase` existing
+  before any peer transport consumed it. Exercised directly by this
+  milestone's own flagship test; a future milestone can build a
+  lifecycle/staleness view on top of it, mirroring 0.8.12's own path,
+  without changing this file at all
+- `application/SnapshotPlacementResolutionCoordinator.js` — new;
+  `discover(publicationId)` (synchronous, local, never touches the
+  resolver) / `resolve(placement)` (asynchronous, exactly one placement
+  per call), mirrors `application/PublicationEvidenceCoordinator.js`
+  (0.8.3) exactly, one axis over
+- `application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js` —
+  new composition root; see this milestone's own reasoning above for why
+  it is NOT `application/CreateSnapshotPlacementOrchestratorUseCase.js`
+  (0.8.18)
+- `application/SnapshotPlacementView.js` — new; `snapshotPlacementView(placements,
+  resolutions)`/`describeSnapshotPlacement()`/`describeResolutionOutcome()`/
+  `describeKnownPlacementCount()`, the placement-side sibling of
+  `application/PublicationEvidenceView.js` (0.8.3). All six
+  `application/SnapshotPlacementResolutionOutcome.js` (0.8.18) values get
+  their own distinct label — "Content available," "Retrieved content
+  does not match this placement," "No storage backend configured,"
+  "Content unavailable," "Invalid placement," "Invalid signature" —
+  never collapsed into a shared "unavailable" bucket, mirroring
+  `describeVerificationOutcome()`'s own restraint
+- `content/IpfsContentStore.js` — no changes; instantiated fresh in
+  `ui/main.js` and registered into this milestone's own store registry
+  for `ipfs`, the first time this class is wired into the running app at
+  all, alongside the SAME `content/LocalContentStore.js` instance
+  (`publicationContentStore`) the 0.7.0 publication pipeline already
+  uses, registered for `local`
+- `ui/main.js` — modified; wires `application/
+  CreateSnapshotPlacementResolutionCoordinatorUseCase.js` and
+  `application/CreateSnapshotPlacementViewRegistryUseCase.js`, providing
+  `publicationSnapshotPlacementResolutionCoordinator`/
+  `snapshotPlacementViewRegistry` to the running app
+- `ui/views/DecentralizedPublicationsView.js` — modified; each cataloged
+  publication now shows a "Snapshot Placements" section, deliberately
+  SEPARATE from "External Evidence" — a placement and an anchor answer
+  two different questions, and this page keeps that distinction visible
+  rather than merging both lists. A plain "N placements known" count,
+  computed the moment the page's own list loads (cheap, local, no
+  network); a "Show Placements" toggle; per placement, an explicit
+  "Inspect Placement" button (pure, synchronous, never touches the
+  resolver) and a SEPARATE "Resolve Snapshot" button (the only action
+  that ever calls `application/SnapshotPlacementResolver.js`). A
+  resolution result lives only in the component's own ephemeral
+  `entry.resolutions`, never written back into `application/
+  LocalPublicationSnapshotPlacementCatalog.js` or the placement itself —
+  the identical restraint 0.8.3 already established for anchor
+  verification results
+- `tests/PublicationSnapshotPlacementInspectionUX.test.js` (new) —
+  Section A: `publicationSnapshotPlacementDetailView()` — argument
+  handling, the opaque `locator`, claim-worded `bindingDescription`;
+  Section B: `SnapshotPlacementViewRegistry` — storage-keyed lookup,
+  null on a miss, last-write-wins; Section C:
+  `IpfsSnapshotPlacementView`/`LocalSnapshotPlacementView#describe()` —
+  a followable gateway link from a well-formed `ipfs://` locator, honest
+  degradation for anything malformed, and no external link ever
+  fabricated for `local`; Section D: FLAGSHIP — Alice publishes a World
+  locally and places its snapshot on a fake IPFS network; Bob receives
+  the placement through the identical structural-only boundary
+  `application/PublicationSnapshotPlacementPeerExchange.js`'s own
+  ingestion uses (`application/AddPublicationSnapshotPlacementUseCase.js`)
+  and opens "Inspect Placement" — proven, with a call-counting spy
+  around `application/SnapshotPlacementResolver.js`, never to consult it,
+  never to touch the catalog, and never to mutate the placement — then
+  separately clicks "Resolve Snapshot" and RESOLVES against his own
+  registered IPFS store, byte-identical to Alice's own locally stored
+  snapshot. Carol receives the IDENTICAL, byte-for-byte placement
+  through the same boundary, but her own replica has no `ipfs` store
+  registered at all; her own independent "Resolve Snapshot" honestly
+  reports `STORE_UNAVAILABLE` for the exact same claim Bob just
+  resolved. Two `createResolutionObservation()` records, one per
+  replica, name the identical `placementId` with two different
+  outcomes — neither ever written back into the shared claim
+
+```text
+0.8.19  Snapshot Placement Discovery & Peer Synchronization           ✓
+             │
+             ▼
+0.8.20  Snapshot Placement Inspection & Explicit Resolution UX        ✓
+             ├── application/PublicationSnapshotPlacementDetailView.js
+             │   — new; locator returned opaque, worded as a claim
+             ├── application/SnapshotPlacementViewRegistry.js — new;
+             │   a SECOND storage -> plugin registry, for presentation
+             ├── content/IpfsSnapshotPlacementView.js /
+             │   LocalSnapshotPlacementView.js — new; pure presentation
+             │   adapters, never resolve or mutate anything
+             ├── application/CreateIpfsSnapshotPlacementViewUseCase.js /
+             │   CreateLocalSnapshotPlacementViewUseCase.js /
+             │   CreateSnapshotPlacementViewRegistryUseCase.js — new
+             │   composition roots
+             ├── application/SnapshotPlacementResolutionObservation.js
+             │   — new; shipped before any UI history consumes it
+             ├── application/SnapshotPlacementResolutionCoordinator.js
+             │   — new; discover() (local) and resolve() (one
+             │   placement, explicit), stateless
+             ├── application/
+             │   CreateSnapshotPlacementResolutionCoordinatorUseCase.js
+             │   — new; deliberately NOT the 0.8.18 orchestrator
+             ├── application/SnapshotPlacementView.js — new; six
+             │   distinct resolution-outcome labels, never collapsed
+             ├── ui/main.js — modified; first real wiring of
+             │   SnapshotPlacementResolver, local + real IPFS stores
+             ├── ui/views/DecentralizedPublicationsView.js — modified;
+             │   "Snapshot Placements" section, separate from "External
+             │   Evidence"; "Inspect Placement" always local, "Resolve
+             │   Snapshot" always explicit
+             └── PublicationSnapshotPlacementInspectionUX.test.js (new)
+                 — detail view + registry + adapters + FLAGSHIP: Bob
+                 resolves RESOLVED, Carol independently resolves
+                 STORE_UNAVAILABLE for the byte-identical claim
+```
+
+> **Resolving a placement observes present availability; it does not
+> rewrite the placement claim.** `application/
+> SnapshotPlacementResolutionCoordinator.js#resolve()` never writes its
+> own result back into `core/PublicationSnapshotPlacement.js` or
+> `application/LocalPublicationSnapshotPlacementCatalog.js` — a signed
+> placement remains historically intact whether or not this replica can
+> presently retrieve its bytes, exactly as a Bitcoin anchor remains
+> intact whether or not this replica's own block explorer happens to be
+> reachable right now. This milestone's own flagship test proves the
+> point directly rather than merely by omission: Bob and Carol hold the
+> byte-for-byte identical placement Alice created and signed, and reach
+> two entirely different, entirely honest resolution outcomes — RESOLVED
+> and STORE_UNAVAILABLE — neither of which is ever shared, persisted, or
+> reconciled between them. See docs/Principles.md, "Resolving A
+> Placement Observes Present Availability; It Does Not Rewrite The
+> Placement Claim (0.8.20)."
+
+### Deliberately excluded
+
+- **Any placement CREATION UX.** No "Place on IPFS" button exists
+  anywhere in this milestone — `application/
+  CreateExternalSnapshotPlacementUseCase.js` (0.8.18) still has no UI
+  caller, and this milestone's own `application/
+  CreateSnapshotPlacementResolutionCoordinatorUseCase.js` deliberately
+  avoids the heavier `application/
+  CreateSnapshotPlacementOrchestratorUseCase.js` specifically so it never
+  needs the creation-side `discoveryProvider`/`contentResolver` at all.
+  Creation UX is its own future milestone, exactly as 0.8.11 was for
+  anchors, six milestones after 0.8.0.
+- **A resolution lifecycle / stale-placement note**, mirroring 0.8.12's
+  own "was independently verified earlier; verification is currently
+  unavailable" sentence for anchors. `application/
+  SnapshotPlacementResolutionObservation.js` exists and is exercised
+  directly by this milestone's own test, but no `entry.resolutionHistory`
+  accumulates observations in the UI, and no lifecycle-derivation module
+  reads one. Nothing has asked for that nuance on the placement side yet
+  — a future milestone can add it on top of this one exactly the way
+  0.8.12 added it on top of 0.8.3, without changing anything shipped
+  here.
+- **Any ranking, "best placement," or "canonical resolution" of any
+  kind.** `application/SnapshotPlacementView.js#snapshotPlacementView()`
+  returns every known placement in the catalog's own order, each with
+  its own independently derived resolution state; nothing anywhere sums,
+  weighs, or picks among them, the identical restraint 0.8.3 already
+  held for anchor evidence.
+- **Wiring a real Arweave or HTTP-mirror store**, or any second concrete
+  IPFS gateway choice beyond `https://ipfs.io/ipfs/<cid>`. `content/
+  ContentStore.js`'s own header has named Arweave/HTTP as future work
+  since 0.2.14; this milestone changes that estimate for neither.
+- **Persisting a resolution result anywhere.** No `resolved`,
+  `resolutionOutcome`, or `lastResolvedAt` field was added to `core/
+  PublicationSnapshotPlacement.js`, `application/
+  LocalPublicationSnapshotPlacementCatalog.js`, or any new storage. A
+  result lives only in the Vue component's own reactive session state,
+  for exactly as long as that page stays open — the identical restraint
+  0.8.3 already held for anchor verification results.
+
+What's left, and deliberately unbuilt: explicit placement creation UX
+(mirroring 0.8.11's own path for anchors); a persistent placement
+catalog with restart-time re-validation and acquisition provenance
+(mirroring 0.8.15/0.8.17's own path); a resolution lifecycle/staleness
+view on top of `application/SnapshotPlacementResolutionObservation.js`
+(mirroring 0.8.12's own path); and multi-placement comparison across
+independent storage backends for the same publication (mirroring
+0.8.13's own path for evidence convergence) — each sized on its own,
+exactly like every "Deliberately excluded" list in this document before
+it.
