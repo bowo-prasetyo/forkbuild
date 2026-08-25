@@ -11715,3 +11715,140 @@ LocalPublicationSnapshotPlacementCatalog.js#receivedAt` remains this
 codebase's one place for local arrival metadata, unchanged.
 
 See `docs/Roadmap.md`, 0.8.22, for the full milestone entry.
+
+### Multi-Placement Convergence Mirrors Multi-Evidence Convergence, Never Copies It (0.8.23)
+
+`docs/Principles.md`, "Evidence Relationships Are Derived, Never
+Adjudicated (0.8.6)," drew the line for anchors: several independent
+claims about the same publication can be compared structurally, and
+never adjudicated. This milestone draws the identical line for
+placements — but drawing an IDENTICAL line is not the same as writing an
+IDENTICAL function, and `application/PublicationSnapshotPlacementConvergence.js`
+is deliberately not `application/PublicationEvidenceConvergence.js` with
+the nouns swapped.
+
+**An anchor and a placement answer two different questions, and the
+difference is not cosmetic.** An anchor asks "what external evidence
+claims do I know?" — evidence FOR a hash a publication already claims.
+A placement asks "what locations do I know that claim this snapshot is
+retrievable?" — locators toward where bytes can be fetched, independent
+of any claim about history. That difference shows up as two concrete
+asymmetries in this milestone's own derivation function, not merely in
+its prose:
+
+**No `expectedContentHash` parameter exists, and none was added.**
+`derivePublicationEvidenceConvergence()` accepts an OPTIONAL
+`expectedContentHash` so each anchor's own claim can be compared against
+a locally resolved publication's own `contentReference.hash` — that
+comparison is what makes an anchor evidence in the first place.
+`derivePublicationSnapshotPlacementConvergence()` has no such parameter,
+anywhere in its signature, because a placement's purpose was never to be
+measured against a "correct" hash — only to say where bytes can be
+found. Placements are compared only against EACH OTHER, and the
+resulting `AGREEMENT`/`CONFLICT` (`application/
+SnapshotPlacementRelationship.js`) is silent on whether either group
+matches what the publication itself claims — a genuinely different, and
+deliberately unasked, question.
+
+**Storage diversity and locator diversity are reported because they are
+meaningful specifically for placements, and have no natural equivalent
+on the anchor side.** `application/PublicationSnapshotPlacementConvergence.js`'s
+own `storageTypes`/`locators`/`locatorCount` name a fact — how many
+independent backends, and how many independent locations, currently
+claim to serve this content — that an `anchorType` never captures for an
+anchor (an anchor's `anchorType` names WHICH external system recorded a
+claim, never WHERE to go retrieve anything). `tests/
+PublicationSnapshotPlacementConvergence.test.js`'s own Section B proves
+these are two genuinely separate axes: three placements on three
+different storage backends (storage diversity) is a structurally
+different fact from two placements on the SAME backend at two different
+locators (locator diversity), and this milestone's own return shape
+reports both, honestly, with neither one folded into the other.
+
+**A second, deliberately STRICTER boundary exists on the resolution
+side — see the next entry.**
+
+See `docs/Roadmap.md`, 0.8.23, for the full milestone entry.
+
+### Multi-Placement Convergence Is Independent Of Resolution Observation (0.8.23)
+
+`docs/Principles.md`, "Evidence Comparison Is Not Adjudication (0.8.13),"
+established that verification observations sit ALONGSIDE the structural
+comparison for anchors, never inside it: `application/
+PublicationEvidenceConvergence.js` accepts an OPTIONAL
+`verificationByAnchorId` map so each anchor's own local verification
+result can populate its own entry, without ever being able to change
+`contentBindingConflict` itself. This milestone draws that boundary one
+notch stricter for placements, and the difference is deliberate, not an
+oversight.
+
+**`derivePublicationSnapshotPlacementConvergence()` has no
+resolution-observation parameter of any shape — not even one a caller
+could choose not to pass.** Where the anchor-side function's signature
+literally contains a slot a caller COULD misuse (pass a resolution-like
+map in, and trust it not to leak into `contentBindingConflict`), the
+placement-side function's signature contains no such slot at all. A
+future change that wanted to smuggle a resolution outcome into placement
+convergence would have to add a new parameter to do it — it cannot
+happen by accident, and it cannot happen through a parameter that
+already exists for something else.
+
+**The diagram this milestone's own design conversation drew is the
+architecture, not merely an illustration of it:**
+
+```text
+                    placement convergence
+                           ▲
+                           │
+                 placement claims
+                           │
+             ┌─────────────┴─────────────┐
+             │                           │
+        resolution A                resolution B
+        local observation           local observation
+```
+
+Resolution tells us what THIS REPLICA established, locally, at a
+particular moment — `application/SnapshotPlacementResolutionObservation.js`
+(0.8.20) continues to exist for exactly that, entirely outside this
+milestone's own two new files. It is not, and must never become, a
+ranking mechanism over placement claims.
+
+**`tests/PublicationSnapshotPlacementConvergence.test.js`'s own flagship
+proves this concretely, not merely by omission.** Bob resolves all four
+of his known placements to four DIFFERENT outcomes — `RESOLVED`,
+`STORE_UNAVAILABLE`, `CONTENT_HASH_MISMATCH`, and one left deliberately
+unresolved — the exact spread this milestone's own design conversation
+named. His derived convergence result, recomputed over the identical
+placement set, is asserted `JSON.stringify`-equal before and after: a
+placement resolving to `RESOLVED` never promotes its content-hash group,
+and a placement resolving to `CONTENT_HASH_MISMATCH` — a definite,
+unambiguous finding that a storage backend served the WRONG bytes —
+never demotes it out of the group it structurally belongs to, or excludes
+it from `placementCount`. `tests/
+PublicationSnapshotPlacementConvergenceView.test.js`'s own Section C
+proves the identical invariant one layer up, at the presentation shape,
+with a full-object equality check rather than a field-by-field one.
+
+**`ui/views/DecentralizedPublicationsView.js`'s own
+`recomputePlacementConvergence()` is called only from `loadPlacements()`,
+never from `resolvePlacement()`.** Clicking "Resolve Snapshot" on one
+placement updates `entry.resolutions` and `entry.placementsView` exactly
+as 0.8.20 already established — and never touches
+`entry.placementConvergence`/`entry.placementConvergenceView` at all.
+The "Placement relationships" card on screen is provably unaffected by
+which placements a person has, or has not, clicked "Resolve Snapshot"
+on.
+
+**Availability remains explicitly deferred, not merely unbuilt by
+accident.** No global statement like "IPFS placement is currently
+available" exists anywhere in this milestone's own files — see
+`docs/Roadmap.md`, 0.8.23's own "Deliberately excluded" list.
+Availability is inherently observational and replica/time-dependent,
+exactly as `application/SnapshotPlacementResolutionOutcome.js`'s own
+0.8.18 header already established; a future milestone that wants to
+build ON TOP of the resolution/convergence split this entry names can
+now do so with the boundary already drawn, rather than needing to draw
+it retroactively.
+
+See `docs/Roadmap.md`, 0.8.23, for the full milestone entry.

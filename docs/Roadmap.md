@@ -19146,3 +19146,212 @@ conflict UX across independent storage backends for the same publication
 (mirroring 0.8.17's own path for anchors — retargeted here to 0.8.24);
 and World View integration — each sized on its own, exactly like every
 "Deliberately excluded" list in this document before it.
+
+## 0.8.23 — Multi-Placement Convergence & Relationship UX
+
+0.8.22 closed the package-transport symmetry gap between anchors and
+placements. This milestone closes a different, longer-standing gap: a
+`PublicationSnapshotPlacement` has never had a way to be compared against
+its OWN siblings — three placements known for the same publication have
+sat side by side in the "Snapshot Placements" list since 0.8.20 with no
+way to ask, structurally, whether they agree with each other at all.
+0.8.6/0.8.13 already answered the identical question for anchors; this
+milestone is that same answer, asked of placements — deliberately NOT a
+copy-paste of the anchor-side files with the nouns swapped, because a
+placement and an anchor answer two different questions:
+
+```text
+An anchor asks:      "What external evidence claims do I know?"
+A placement asks:    "What locations do I know that claim this
+                       snapshot is retrievable?"
+```
+
+`application/PublicationEvidenceConvergence.js`'s own `expectedContentHash`/
+`contentBinding`/`matchingAnchorIds`/`divergentAnchorIds` exist because an
+anchor's whole purpose is to be compared against a publication's own
+claimed hash — that comparison IS what makes it evidence. A placement's
+purpose is to say where bytes can be fetched; this milestone's own
+derivation therefore compares placements only against EACH OTHER, never
+against a caller-supplied "expected" hash, and reports two axes that have
+no natural equivalent on the anchor side at all — **storage diversity**
+(how many distinct backends: IPFS, Arweave, local, …) and **locator
+diversity** (how many distinct locations, even on the SAME backend).
+
+- `application/SnapshotPlacementRelationship.js` — new; `AGREEMENT`/
+  `CONFLICT`, the placement-side counterpart of `application/
+  ContentBindingSetRelationship.js` (0.8.13) — a structural fact about
+  the whole placement SET, never a verdict about which storage backend
+  to trust, prefer, or believe still serves real bytes. Kept as its own
+  file rather than reusing the anchor-side vocabulary, mirroring
+  `core/PublicationSnapshotPlacement.js`'s own "PLACEMENT IS NOT
+  ANCHORING" restraint (0.8.18) one layer up.
+- `application/PublicationSnapshotPlacementConvergence.js` — new;
+  `derivePublicationSnapshotPlacementConvergence({ publicationId,
+  placements })` — pure, stateless, no catalog/resolver import anywhere
+  in the file, mirroring `application/PublicationEvidenceConvergence.js`'s
+  own discipline exactly: placements deduplicated by `id`, excluded when
+  they name a different `publicationId`, sorted deterministically by
+  `placementId` so the identical underlying set always produces a
+  byte-identical result regardless of input order. Returns `{
+  publicationId, placementCount, storageTypes, locators, locatorCount,
+  placements, contentHashGroups, contentBindingConflict }`. **No
+  `verificationByAnchorId`-shaped parameter of any kind** — see this
+  milestone's own "Deliberately excluded" list below on why that is the
+  one deliberately STRICTER boundary this file draws than its anchor-side
+  counterpart.
+- `application/PublicationSnapshotPlacementConvergenceView.js` — new;
+  pure presentation shaping of the above (0.8.13's own
+  `PublicationEvidenceConvergenceView.js`, mirrored) — `{ placementCount,
+  storageTypes, storageTypeCount, locatorCount, contentGroups,
+  relationship, hasConflict, conflictDescription }`. A content-hash group
+  with more placements is never styled, ordered, or worded as more
+  likely correct, more available, or more trustworthy than one with
+  fewer.
+- `ui/views/DecentralizedPublicationsView.js` — modified; one "Placement
+  relationships" card inside the existing "Show Placements" disclosure,
+  mirroring "Content binding"'s own placement (0.8.13) one section over —
+  deliberately a SEPARATE card, never merged into "Content binding"
+  itself, exactly as "External Evidence" and "Snapshot Placements" have
+  been kept as separate sections since 0.8.20. `recomputePlacementConvergence()`
+  is called only from `loadPlacements()` — never from `resolvePlacement()`
+  — so a resolution result never has the opportunity to reach the
+  placements handed to the derivation in the first place.
+- `tests/PublicationSnapshotPlacementConvergence.test.js` (new) —
+  Section A: argument handling; Section B: complete agreement,
+  conflicting content binding, storage diversity, locator diversity,
+  duplicate placement knowledge; Section C — FLAGSHIP: Alice creates a
+  publication and three agreeing placements (two IPFS, one local). Bob
+  acquires the three through THREE DIFFERENT ACQUISITION ROUTES — a live
+  peer ANNOUNCE (`PublicationSnapshotPlacementPeerExchange`, 0.8.19), a
+  Blueprint Package import (`ImportPackageSnapshotPlacementsUseCase`,
+  0.8.22), and a direct local add (`AddPublicationSnapshotPlacementUseCase`,
+  0.8.18) — while Carol independently creates a fourth, conflicting
+  placement. Historical peer discovery
+  (`PublicationSnapshotPlacementDiscoveryCoordinator`, 0.8.19, unmodified)
+  converges Alice, Bob, and Carol onto the identical four-placement set;
+  every replica's own independently derived convergence reports the
+  identical honest 3-vs-1 conflict with no field anywhere declaring
+  Alice's three claims to beat Carol's one (a regex sweep of the
+  serialized result finds no "authority," "trust," "winner," "best,"
+  "preferred," "canonical," or similar vocabulary). A second act then
+  proves the milestone's other central claim: Bob resolves all four
+  placements to four DIFFERENT outcomes (`RESOLVED`,
+  `STORE_UNAVAILABLE`, `CONTENT_HASH_MISMATCH`, and one left
+  unresolved), and his derived convergence result is proven
+  byte-identical before and after.
+- `tests/PublicationSnapshotPlacementConvergenceView.test.js` (new) —
+  the identical argument-handling/relationship/FLAGSHIP structure
+  `PublicationEvidenceConvergenceView.test.js` already established for
+  the anchor side (0.8.13), mirrored one domain over, with the flagship's
+  own invariant proof strengthened into a full `JSON.stringify(viewBefore)
+  === JSON.stringify(viewAfter)` equality across four independently
+  resolved placements rather than three.
+
+```text
+0.8.22  Snapshot Placement Package Integration                       ✓
+             │
+             ▼
+0.8.23  Multi-Placement Convergence & Relationship UX                ✓
+             ├── application/SnapshotPlacementRelationship.js — new;
+             │   AGREEMENT/CONFLICT, a structural fact about the whole
+             │   placement set, never a verdict about which storage
+             │   backend to trust
+             ├── application/PublicationSnapshotPlacementConvergence.js
+             │   — new; derivePublicationSnapshotPlacementConvergence()
+             │   — { placementCount, storageTypes, locators,
+             │   locatorCount, contentHashGroups, contentBindingConflict }
+             │   — no resolution-observation parameter of any kind
+             ├── application/
+             │   PublicationSnapshotPlacementConvergenceView.js — new;
+             │   pure presentation shaping — { placementCount,
+             │   storageTypeCount, locatorCount, contentGroups,
+             │   hasConflict, relationship, conflictDescription }
+             ├── ui/views/DecentralizedPublicationsView.js — modified;
+             │   one "Placement relationships" card inside the existing
+             │   "Show Placements" disclosure, above the unchanged
+             │   per-placement list
+             ├── tests/PublicationSnapshotPlacementConvergence.test.js
+             │   (new) — argument handling + named scenarios + FLAGSHIP
+             │   (three acquisition routes converging, honest 3-vs-1
+             │   conflict, resolution-observation isolation)
+             └── tests/
+                 PublicationSnapshotPlacementConvergenceView.test.js
+                 (new) — argument handling + the two relationships +
+                 FLAGSHIP (byte-identical view before/after four
+                 independently resolved placements)
+```
+
+> **A placement's relationships are derived from its claims, never from
+> its resolutions.**
+> Grouping several placements by the content hash they claim, and
+> counting how many placements are in each group — across however many
+> storage backends and however many distinct locations — is exactly as
+> far as this codebase ever goes. The count is reported honestly, and
+> nothing anywhere sums, sorts, weighs, or thresholds it into a decision
+> about which storage backend to trust. A content-hash group with more
+> placements is never styled larger, listed first, colored differently,
+> or worded as more likely correct, more available, or more reliable
+> than one with fewer — and, one deliberate step stricter than the
+> anchor side's own 0.8.13 restraint, a placement's own resolution
+> outcome (`RESOLVED`, `STORE_UNAVAILABLE`, `CONTENT_HASH_MISMATCH`, …)
+> never even reaches the function that derives this relationship in the
+> first place. See `docs/Principles.md`, "Evidence Relationships Are
+> Derived, Never Adjudicated (0.8.6)," and "Multi-Placement Convergence
+> Is Independent Of Resolution Observation (0.8.23)."
+
+### Deliberately excluded
+
+- **An `expectedContentHash` parameter, or any per-placement comparison
+  against one.** Unlike `application/PublicationEvidenceConvergence.js`'s
+  own `expectedContentHash`/`contentBinding`/`matchingAnchorIds`/
+  `divergentAnchorIds`, `derivePublicationSnapshotPlacementConvergence()`
+  only ever compares placements against EACH OTHER. This is not an
+  oversight — see this milestone's own opening note on why an anchor's
+  whole purpose is to be evidence FOR a claimed hash, while a placement's
+  purpose is to say where bytes live, a question this milestone answers
+  without needing a "correct" hash to measure against at all.
+- **Any resolution-observation parameter, even an optional one that
+  would sit inert.** `application/PublicationEvidenceConvergence.js`
+  accepts an OPTIONAL `verificationByAnchorId` map so a caller's own
+  local verification observations can ride alongside the structural
+  comparison, on each anchor's own entry, without ever influencing
+  `contentBindingConflict`. `derivePublicationSnapshotPlacementConvergence()`
+  has no equivalent parameter of any shape — not even one a caller could
+  choose not to pass. `application/
+  SnapshotPlacementResolutionObservation.js` (0.8.20) continues to exist,
+  entirely outside this file, entirely local, entirely ephemeral — see
+  `ui/views/DecentralizedPublicationsView.js`'s own
+  `recomputePlacementConvergence()`, called only from `loadPlacements()`,
+  never from `resolvePlacement()`.
+- **"Availability convergence," or any global statement about whether a
+  storage backend is "currently available."** This milestone derives
+  only what placements CLAIM, never what any replica has separately
+  OBSERVED by resolving one. `application/
+  SnapshotPlacementResolutionCoordinator.js#resolve()` remains
+  replica-local and time-dependent, exactly as 0.8.20 already
+  established, and nothing here aggregates resolution outcomes across
+  placements, across replicas, or across time.
+- **Reputation, confidence, freshness, or trust scores of any kind, and
+  no canonical/ranked/"winning" placement or content-hash group.**
+  Mirrors `docs/Principles.md`'s 0.8.6/0.8.13 entries exactly, extended
+  here across locators instead of evidence — `tests/
+  PublicationSnapshotPlacementConvergenceView.test.js`'s own Section B
+  and flagship both scan the derived view's serialized form for this
+  vocabulary and find none.
+- **Placement acquisition provenance** (LOCAL vs. PEER vs. PACKAGE),
+  mirroring `application/LocalAnchorKnowledgeStore.js`/0.8.17's own path
+  for anchors. Still retargeted to 0.8.24, exactly as 0.8.22's own
+  "Deliberately excluded" list already named — this milestone's own
+  flagship test demonstrates all three acquisition routes concretely,
+  in its own setup, but records no first-seen-wins provenance anywhere;
+  that remains 0.8.24's own job.
+- **A "Verify All"-style batch resolution action.** Each placement keeps
+  its own, individual "Resolve Snapshot"/"Resolve Again" control, exactly
+  as 0.8.20 already established — unchanged by this milestone.
+
+What's left, and deliberately unbuilt: placement acquisition provenance
+(mirroring 0.8.17's own path for anchors — 0.8.24); and a unified
+Publication Center view presenting "External Evidence" and "Snapshot
+Placements" as the two orthogonal dimensions they have always been,
+neither authoritative over the other — each sized on its own, exactly
+like every "Deliberately excluded" list in this document before it.
