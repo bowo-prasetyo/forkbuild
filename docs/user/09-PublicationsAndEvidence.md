@@ -5,8 +5,12 @@ layer than the Repository you already know from
 [Publishing & Forking](04-PublishingAndForking.md). Where the Repository is
 about *Documents and Worlds*, Publications is about **signed claims**: "I
 authored this structure" or "I'm calling this place X" — and, once you have
-one, optional **external evidence** you can attach to it, like a Bitcoin
-transaction that timestamps it independently of ForkBuild itself.
+one, two independent kinds of optional depth you can attach to it:
+**external evidence** that the claim was recorded somewhere independent of
+ForkBuild, like a Bitcoin transaction that timestamps it; and **snapshot
+placements** that name where the claim's own content can currently be
+retrieved from, like an IPFS node. Neither one is required by the other,
+and neither is required to use the rest of ForkBuild.
 
 None of this is required to use ForkBuild. Skip this guide entirely if you
 just want to build, publish Documents, and explore — everything in
@@ -92,8 +96,16 @@ from last time.
 │  External Evidence                             │
 │  No external evidence known                    │
 │  [Discover from Peers]                         │
+│                                                 │
+│  Snapshot Placements                           │
+│  No snapshot placements known                  │
 └───────────────────────────────────────────────┘
 ```
+
+Below **External Evidence**, every card also has its own **Snapshot
+Placements** section — a third, independent question neither the status
+badge above nor External Evidence answers. See
+[Snapshot Placements](#snapshot-placements) below.
 
 Each card shows:
 
@@ -285,6 +297,146 @@ confirmed.
 > evidence is discovered, not when you expand the list. You decide, per
 > anchor, when it's worth the round trip.
 
+## Snapshot Placements
+
+Every publication card also has its own **Snapshot Placements** section —
+a third question, independent of both the status badge at the top of the
+card and External Evidence above it:
+
+| Question | Where it's answered |
+|---|---|
+| Does *this device* have the bytes right now? | The card's own status badge |
+| Was this claim recorded by an outside system, at some point? | **External Evidence** |
+| Where else, right now, can the bytes be fetched from? | **Snapshot Placements** |
+
+A **snapshot placement** is a signed claim, made by whoever created it,
+that a specific storage backend — today, **IPFS** or this device's own
+**Local** storage — can presently serve the bytes for this publication's
+content hash. It's not a copy of the claim itself, not a guarantee the
+backend will still have the bytes tomorrow, and not a ranking of one
+backend over another: several independent placements, on different
+backends, from different people, coexist side by side, and none is ever
+preferred.
+
+> **A placement is a locator, not evidence of history.** A Bitcoin anchor
+> recording a hash proves nothing about whether the bytes can still be
+> fetched anywhere; a storage backend serving the bytes proves nothing
+> about when the claim was first made. The two answer genuinely different
+> questions, on purpose — see [External Evidence](#external-evidence)
+> above for the first.
+
+### Creating a placement
+
+If this device has at least one storage backend configured — this build
+always ships **Local** (this device's own storage) and **IPFS** (a real
+IPFS node's HTTP API, expected at `http://127.0.0.1:5001`) — you'll see a
+card per backend:
+
+- **Create Local Placement** / **Create Ipfs Placement** — takes the bytes
+  this device already holds for this publication and hands them to that
+  backend. Clicking it always produces one of two honest outcomes:
+  - **Placement created** — the backend accepted the bytes, and a new
+    signed placement immediately appears in the list below.
+  - **No placement was created** — the backend couldn't currently be
+    reached (for **IPFS**, this is what you'll see unless a real IPFS node
+    is actually running and reachable at that address), or this device
+    has no local content for this publication to place at all.
+- Clicking again after a success offers **Create Another … Placement** — a
+  second, fully independent placement, never a replacement for the first.
+
+The strongest thing this ever tells you is *"a snapshot placement was
+recorded for `<storage>`."* Never "decentralized," "permanent," or
+"available everywhere" — a created placement only means a storage backend
+accepted these bytes just now.
+
+### The Snapshot Placements list
+
+```
+Snapshot Placements
+
+3 placements known                              [Show Placements]
+```
+
+Click **Show Placements** to see every placement known for this
+publication — one you created, one a connected peer sent you, or one that
+arrived bundled inside an imported Blueprint Package (see
+[The Editor](02-TheEditor.md#structures-composing-forking-and-your-personal-library)
+for exporting/importing blueprints). Each card shows:
+
+| Field | Meaning |
+|---|---|
+| **Locator** | Where the storage backend says to find the bytes — an opaque string this app never tries to parse or improve on. |
+| **Placed** | The *claimed* placement time — claimed, because nobody has resolved it yet unless you ask. |
+| **Publication** / **Content hash** | Exactly what this placement's signature binds together. |
+| **Placed by** | The identity that signed this placement. |
+
+And two buttons, kept deliberately separate:
+
+- **Inspect Placement** — a purely local read of the placement's own
+  claimed fields, plus, for a recognized backend like IPFS, a followable
+  gateway link. Never touches the network, never checks whether the bytes
+  are actually still there.
+- **Resolve Snapshot** (or **Resolve Again**) — the one action that
+  actually reaches out to the named storage backend, right now, and
+  reports what it currently finds.
+
+### Resolution outcomes
+
+| Badge | Meaning |
+|---|---|
+| **Content available** | The backend was reached and served bytes that match this placement's content hash. |
+| **No storage backend configured** | This device has no backend registered for this placement's storage type. |
+| **Content unavailable** | The backend was reached, but it doesn't currently have the bytes. |
+| **Retrieved content does not match this placement** | The backend answered, but with the wrong bytes — a definite finding, not a maybe. |
+| **Invalid placement** / **Invalid signature** | The placement record itself is malformed, or wasn't genuinely signed. |
+
+Resolving a placement never rewrites the placement itself, and the result
+is never shared with anyone or written back to the catalog — it lives only
+on this page, for as long as it stays open. Two different people can hold
+the byte-identical, identically signed placement and get two entirely
+different, entirely honest resolution outcomes (say, because only one of
+them has an IPFS node running) — neither one is wrong.
+
+### Local Knowledge
+
+Expand **Inspect Placement** and, below the placement's own claimed
+fields, you may see a separate **Local Knowledge** section — not "what
+does this placement claim," but "how did *this device* come to know about
+it":
+
+| Field | Meaning |
+|---|---|
+| **Acquisition** | *Learned locally* (you created it), *Learned via package import* (it arrived bundled in a package you imported), or *Learned via peer exchange* (a connected peer sent it to you). |
+| **First seen by this replica** | When this device first learned the claim — never reset by learning it again some other way later. |
+
+Just like the equivalent section for external evidence, this is
+bookkeeping about your own device's history, nothing more — never a
+peer's name, never a hint about which placement to trust more.
+
+### Placement relationships
+
+When more than one placement is known and the list is expanded, a
+**Placement relationships** card appears above the per-placement list:
+
+```
+Placement relationships
+
+3 known placements · 2 storage backends · 3 distinct locations
+
+  a1b2c3d4e6…f9a0  2 placements      b3c4d5e6f7…a1b2  1 placement
+
+Content binding: AGREEMENT
+```
+
+It summarizes how the whole known set relates to *itself* — how many
+distinct storage backends and physical locations are represented, and
+whether every placement agrees on the content hash (**AGREEMENT**) or not
+(**CONFLICT**, shown with a warning). Exactly like **Content binding** for
+external evidence, a bigger group is never styled, ordered, or worded as
+more likely correct — and unlike that comparison, this one is never
+affected by whether you've actually resolved any of the placements; it's
+derived purely from the claims themselves, every time.
+
 ## What survives a reload
 
 Evidence you've cataloged — your own, a peer's, or something you
@@ -299,11 +451,21 @@ reflects that "was this true a moment ago" and "is this device holding a
 genuine claim" are two different facts, and only the second one is worth
 keeping around.
 
+**Snapshot Placements follow the identical rule.** A cataloged placement
+and its own **Local Knowledge** are stored on this device and survive a
+reload exactly like evidence does. **Resolution results do not** — every
+placement you'd resolved goes back to "Not yet resolved" until you click
+**Resolve Snapshot** again, for the same reason a verification result
+resets: "was this retrievable a moment ago" and "is this device holding a
+genuine claim" are two different facts, and only the second is worth
+keeping around.
+
 ## What's next?
 
-Publications and their evidence are entirely optional depth on top of
-everything else ForkBuild does. If you came here from
-[Publishing & Forking](04-PublishingAndForking.md), that's still where
-sharing your actual builds happens — head back there, or to
+Publications, their evidence, and their snapshot placements are entirely
+optional depth on top of everything else ForkBuild does. If you came here
+from [Publishing & Forking](04-PublishingAndForking.md), that's still
+where sharing your actual builds happens — head back there, or to
 [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) to connect
-with more people whose publications and evidence you might want to see.
+with more people whose publications, evidence, and placements you might
+want to see.
