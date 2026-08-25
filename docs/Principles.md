@@ -10368,3 +10368,78 @@ unavailable) — and nothing in this codebase yet needs them reconciled
 into one hierarchy merely because both happen to target the same chain.
 
 See `docs/Roadmap.md`, 0.8.9, for the full milestone entry.
+
+### A Publisher's Failure Is Not the Orchestration's Failure — But It Is Still No Anchor (0.8.10)
+
+`application/CreateExternalPublicationAnchorUseCase.js` is the first
+class in this codebase that both TRIGGERS a real external operation
+(0.8.9's own new ground) AND decides, immediately afterward, whether a
+signed claim gets created from it. That combination invites two opposite
+mistakes: treating a publisher's ordinary "not right now" as a crash this
+orchestration itself failed to handle, or — worse — creating the anchor
+anyway on the theory that the recording will probably go through
+eventually. This milestone commits to neither.
+
+```text
+publisher succeeds  ──────────────────────────────▶  anchor MAY be created
+publisher rejected  ──────────────────────────────▶  NO PublicationAnchor
+publisher unavailable ────────────────────────────▶  NO PublicationAnchor
+```
+
+A `PUBLISH_REJECTED` or `PUBLISH_UNAVAILABLE` result from
+`application/ExternalAnchorCreationOutcome.js` is not an exception this
+orchestration failed to catch — it is the orchestration correctly
+reporting an ordinary, expected fact about the external world, the
+identical "unavailable is not a crash" discipline `application/
+PublicationResolver.js` (0.7.1) already established for content
+retrieval and `application/ExternalAnchorVerifier.js` (0.8.1) already
+established for proof verification, applied here to a third operation:
+requesting a recording in the first place. `execute()` still throws — but
+only for what those two classes also reserve throwing for: a genuine
+caller contract violation (an unknown `publicationId`, an `anchorType`
+nobody registered a publisher for) that has no honest degraded outcome to
+report, never for the publisher's own ordinary operational failure.
+
+**Orchestrating is not authorizing a second construction path.**
+`CreateExternalPublicationAnchorUseCase` could, technically, build a
+`core/PublicationAnchor.js` itself once a publisher succeeds — it has
+every field it would need. It deliberately does not. Every successful
+run still ends by calling the real, unmodified `application/
+CreatePublicationAnchorUseCase.js#execute()` (0.8.8) — the one place this
+codebase signs an anchor claim — so that class's own identity resolution,
+self-verification, and publication-binding guarantees apply exactly once,
+regardless of how many different external systems eventually get
+orchestration classes of their own. `tests/
+ExternalAnchorCreationOrchestration.test.js`'s own Section B proves this
+with a spy wrapped around a real `CreatePublicationAnchorUseCase`: called
+exactly once per successful `execute()`, never zero, never twice, and
+never bypassed by a hand-built envelope.
+
+**Duplicate external evidence is not an error.** A publication anchored
+twice on the same anchorType — two genuinely separate Bitcoin
+transactions, say — produces two independent `PublicationAnchor` records,
+and `CreateExternalPublicationAnchorUseCase` never checks the anchor
+catalog before publishing to prevent this. Refusing a second anchor
+because a first one already exists would be a hidden canonicalization
+policy — deciding, on this replica's own authority, that only one
+recording per publication "counts" — exactly the kind of adjudication
+`application/PublicationEvidenceConvergence.js` (0.8.6) already refuses
+to perform between independent anchors arriving by any other path. This
+orchestration extends that same restraint to anchors it creates itself:
+it is no more entitled to declare one of its own recordings canonical
+than it is to declare a stranger's.
+
+**No preferred anchor type; no automatic retry.** `application/
+ExternalAnchorPublisherRegistry.js` resolves an explicit `anchorType`
+string to a publisher — it never chooses one on the caller's behalf,
+mirroring `application/ExternalProofVerifierRegistry.js`'s own restraint
+against ranking or preferring verifiers (0.8.1). And a
+`PUBLISH_UNAVAILABLE` outcome is never retried internally; `execute()`
+consults its publisher exactly once, leaving retry/backoff policy
+entirely to the caller, exactly as `anchoring/BitcoinAnchorPublisher.js`
+itself already left it (0.8.9). Both restraints exist for the same
+reason: an external recording operation is a visible, consequential side
+effect, and nothing in this codebase gets to decide on a caller's behalf
+when or how often to repeat one.
+
+See `docs/Roadmap.md`, 0.8.10, for the full milestone entry.
