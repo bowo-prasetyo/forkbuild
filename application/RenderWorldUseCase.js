@@ -73,6 +73,15 @@ export class RenderWorldUseCase {
             // point } | null, completely independent of pick()'s brick
             // raycast.
             pickPlacement: (screenX, screenY) => pickingService.pickPlacement(screenX, screenY),
+            // Marquee containment (Shift+Drag) — see
+            // renderer/PickingService.js#pickInRectangle()'s own header.
+            // Client-space rectangle in, one { brickId, buildingId,
+            // documentId } entry per contained brick out. This is the
+            // wire application/EditorSession.js#marqueeSelect() has
+            // guarded against since 0.1.45 (`typeof
+            // this._session.pickRectangle !== 'function'`) — without it,
+            // marqueeSelect() always no-ops.
+            pickRectangle: (x0, y0, x1, y1) => pickingService.pickInRectangle(x0, y0, x1, y1),
             setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
             // 0.6.0 — Context-Preserving Fork-to-Edit. The same pair
             // application/RenderWorldViewUseCase.js already exposes for

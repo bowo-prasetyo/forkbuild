@@ -74,6 +74,13 @@ import { SelectionBoundsService } from './SelectionBoundsService.js';
 // second. See frameCameraOn()'s own header.
 const ENTRY_CAMERA_OFFSET = { x: 12, y: 12, z: 12 };
 
+// docs/user/02-TheEditor.md's own Selecting-bricks table: Shift+Click
+// ADDS the one clicked brick; Shift+Drag DRAWS A BOX. Below this many
+// client pixels of movement a Shift+mousedown-then-up is a click, not a
+// drag — same distinction ui/views/WorldView.js's own DRAG_THRESHOLD_PX
+// already draws for orbit-vs-pick, applied here to marquee-vs-click.
+const MARQUEE_DRAG_THRESHOLD_PX = 6;
+
 export class EditorSession {
     constructor({
         registry,
@@ -210,6 +217,11 @@ export class EditorSession {
         this._gizmoSubscriptions = [];
         this._clipboardState = null;
         this._selectedGroupId = null;
+        // Shift+Drag marquee (see onPointerDown()/onPointerMove()/
+        // onPointerUp() below) — null whenever no Shift-held drag is in
+        // flight, matching isGestureActive()'s own "null/false means
+        // idle" posture for the gizmo.
+        this._marqueeState = null;
 
         this._pasteCount = 0;
     }
@@ -1346,6 +1358,27 @@ export class EditorSession {
             && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
             return null;
         }
+        // Shift+Drag marquee (application/tools/SelectionTool.js's own
+        // header: "the tool never sees it") — a Shift-held left button
+        // starts tracking a drag rectangle here instead of reaching
+        // SelectionTool at all. Checked AFTER the gizmo above, so
+        // Shift-clicking a gizmo handle still reaches it for precision
+        // mode (docs/user/ControlsReference.md: "Shift while gizmo-
+        // dragging or nudging -> Precision mode") rather than being
+        // hijacked into a marquee. Whether this ends up a marquee or an
+        // ordinary Shift-click is only decided on release, once we know
+        // whether the pointer actually moved — see onPointerUp() below.
+        if (event.button === 0 && event.shiftKey) {
+            this._marqueeState = {
+                additive: !!(event.ctrlKey || event.metaKey),
+                x0: event.clientX,
+                y0: event.clientY,
+                x1: event.clientX,
+                y1: event.clientY,
+                moved: false
+            };
+            return null;
+        }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerDown(event);
         }
@@ -1353,6 +1386,16 @@ export class EditorSession {
     }
 
     onPointerMove(event) {
+        if (this._marqueeState) {
+            this._marqueeState.x1 = event.clientX;
+            this._marqueeState.y1 = event.clientY;
+            const dx = this._marqueeState.x1 - this._marqueeState.x0;
+            const dy = this._marqueeState.y1 - this._marqueeState.y0;
+            if (Math.hypot(dx, dy) > MARQUEE_DRAG_THRESHOLD_PX) {
+                this._marqueeState.moved = true;
+            }
+            return null;
+        }
         if (this._session) {
             const result = this._session.gizmoPointerMove(
                 event.clientX,
@@ -1371,6 +1414,22 @@ export class EditorSession {
     }
 
     onPointerUp(event) {
+        if (this._marqueeState) {
+            const { x0, y0, x1, y1, additive, moved } = this._marqueeState;
+            this._marqueeState = null;
+            if (moved) {
+                this.marqueeSelect({ x0, y0, x1, y1 }, { additive });
+            } else if (this._inputDispatcher) {
+                // Never moved past the threshold — an ordinary
+                // Shift(+Ctrl/Cmd)-click, replayed now through the exact
+                // same pick path a non-Shift click already takes
+                // (SelectionTool.onPointerDown decides additive/toggle
+                // from the event's own modifiers).
+                this._inputDispatcher.dispatchPointerDown(event);
+                this._inputDispatcher.dispatchPointerUp(event);
+            }
+            return null;
+        }
         if (this._session) {
             const result = this._session.gizmoPointerUp(
                 event.clientX,
@@ -1387,6 +1446,32 @@ export class EditorSession {
             this._inputDispatcher.dispatchPointerUp(event);
         }
         return null;
+    }
+
+    // ------------------------------------------------------- marquee UI
+    // Read by ui/views/EditorView.js to draw the `.marquee-rect` overlay
+    // (css/main.css) and to route Escape to cancelMarquee() ahead of
+    // selection.clear — see application/InputRouter.js's own
+    // ESCAPE_PRIORITY: gesture > marquee > selection.
+
+    isMarqueeActive() {
+        return !!this._marqueeState;
+    }
+
+    getMarqueeRect() {
+        if (!this._marqueeState) {
+            return null;
+        }
+        const { x0, y0, x1, y1 } = this._marqueeState;
+        return { x0, y0, x1, y1 };
+    }
+
+    cancelMarquee() {
+        if (!this._marqueeState) {
+            return false;
+        }
+        this._marqueeState = null;
+        return true;
     }
 
     onKeyDown(event) {
