@@ -1080,6 +1080,17 @@ export default {
         const updateDocumentMetadataUseCase = new UpdateDocumentMetadataUseCase();
         const documentInfo = ref(null);
         const showMetadataEditor = ref(false);
+        // Bumped by refreshDocumentInfo() below on every
+        // documentManager.onStateChanged() — i.e. every CommandHistory
+        // execute/undo/redo, group create/rename/duplicate/delete
+        // included. getActionContext() reads it purely so Vue tracks it
+        // as a dependency: EditingSidebar's `context` computed otherwise
+        // only depends on selectionCount/paletteOpen/activeTool/
+        // selectionIsStructurePlacement, none of which change when a
+        // group is created — so its groups list (and canUndo/canRedo)
+        // would stay cached at their pre-mutation values, showing "No
+        // groups yet" forever even after a real group was created.
+        const documentVersion = ref(0);
         let unsubDocumentState = null;
 
         // 0.6.1 — World ↔ Editor Continuity & Return Navigation. The
@@ -1103,6 +1114,7 @@ export default {
         let arrivalDocumentId = null;
 
         function refreshDocumentInfo() {
+            documentVersion.value++;
             const document = documentManager.document;
             if (!document) {
                 documentInfo.value = null;
@@ -1203,13 +1215,22 @@ export default {
         const actionRegistry = new EditorActionRegistry(
             createStandardActions({ session: editorSession, feedback, ui: actionUi })
         );
-        const getActionContext = () => EditorActionContext.capture({
-            session: editorSession,
-            selectionCount: selectionCount.value,
-            paletteOpen: paletteOpen.value,
-            activeTool: activeTool.value,
-            selectionIsStructurePlacement: selectionIsStructurePlacement.value
-        });
+        const getActionContext = () => {
+            // Read (never used) purely so any Vue computed built on top
+            // of getActionContext() — EditingSidebar's own `context`
+            // chief among them — picks up documentVersion as a tracked
+            // dependency too, not just selectionCount/paletteOpen/
+            // activeTool/selectionIsStructurePlacement below. See
+            // documentVersion's own declaration for why that matters.
+            void documentVersion.value;
+            return EditorActionContext.capture({
+                session: editorSession,
+                selectionCount: selectionCount.value,
+                paletteOpen: paletteOpen.value,
+                activeTool: activeTool.value,
+                selectionIsStructurePlacement: selectionIsStructurePlacement.value
+            });
+        };
         function closePalette() {
             paletteOpen.value = false;
         }
