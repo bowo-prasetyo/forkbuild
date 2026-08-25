@@ -12256,3 +12256,82 @@ shape — `application/PublicationDecentralizationView.js` lives in the
 application/view layer specifically so it stays trivially removable if
 this replica's own architecture never needs it to be anything more. See
 `docs/Roadmap.md`, 0.8.27, for the full milestone entry.
+
+### Replica Knowledge Describes What This Replica Possesses, Not What The World Has Proven (0.8.28)
+
+Every prerequisite for this question was already in place by 0.8.27:
+creation, inspection, resolution, verification, convergence, lifecycle,
+provenance, and a side-by-side view of both dimensions at once. What had
+never been asked directly is the question a genuinely decentralized
+replica exists to answer: what can this replica know about a publication
+when the original publisher, every peer, and every external system it
+names are simultaneously unavailable? `application/
+PublicationReplicaKnowledgeView.js#describePublicationReplicaKnowledge()`
+answers it by adding exactly one new fact to `application/
+PublicationDecentralizationView.js`'s own result — `hasPublication`,
+whether this replica has ever cataloged the publication envelope itself
+— and computing nothing else new. `tests/
+PublicationReplicaKnowledgeView.test.js`'s own flagship proves the claim
+directly: Bob reconstructs a complete replica knowledge view — the
+publication, one anchor, one placement — from a Blueprint Package and a
+hand-delivered publication envelope while Alice, the original publisher,
+is never connected to anyone anywhere in the test.
+
+**Known is not available.** A replica can hold `KNOWN + UNAVAILABLE` as a
+completely ordinary, non-contradictory pair of facts about the identical
+claim — "I know a placement claims this snapshot lives at this locator"
+is true whether or not this replica can presently retrieve a single byte
+from that locator, and "I know an anchor claims this hash was recorded
+externally" is true whether or not this replica can presently check that
+record. Neither fact ever regresses to "the claim doesn't exist" — it
+was never about the claim in the first place, only about whether THIS
+replica could presently establish it. `tests/
+PublicationReplicaKnowledgeView.test.js`'s own flagship proves this as an
+invariant, not merely an assertion: Bob's replica knowledge view is
+byte-identical whether his own anchor verification observation reads
+`PROOF_UNAVAILABLE`/his placement resolution observation reads
+`CONTENT_UNAVAILABLE`, or neither observation has been made at all —
+because those observations were never a parameter this view's own
+signature could accept to begin with, the identical restraint
+`application/PublicationDecentralizationView.js` (0.8.27) already
+enforces for lifecycle and provenance, extended here to the one new fact
+this milestone adds.
+
+**Offline reconstruction is not content retrieval.** `hasPublication:
+true` beside a known IPFS placement claim means exactly "this replica has
+seen a signed envelope claiming this publication, and a signed envelope
+claiming this snapshot sits at this locator" — it never means the
+snapshot's bytes were fetched, and a known Bitcoin anchor claim never
+means this replica queried Bitcoin. Retrieval stays `application/
+SnapshotPlacementResolver.js`'s job; proof verification stays
+`application/ExternalAnchorVerifier.js`'s job; both remain separate,
+explicit operations a caller runs afterward, exactly as before this
+milestone. `application/PublicationReplicaKnowledgeView.js` imports
+neither file, and imports no catalog, store, coordinator, or network
+dependency of any kind — it only ever reshapes a boolean and two
+convergence views a caller already computed.
+
+**No numeric completeness or confidence score.** This milestone's own
+design conversation considered, and rejected, a `completeness` percentage
+or a `confidence` score summarizing how much of a publication this
+replica has reconstructed. Either would manufacture false precision over
+facts that are genuinely just structural counts (`hasPublication`,
+`anchorCount`, `placementCount`) and would immediately imply an authority
+model this codebase has refused since 0.7.0 — that some replica's
+knowledge is more "complete," and therefore more trustworthy, than
+another's with fewer claims. `application/
+PublicationReplicaKnowledgeView.js`'s own result carries exactly the same
+plain structural facts `application/PublicationDecentralizationView.js`
+already exposed, plus `hasPublication` — nothing scored, ranked, or
+averaged. `tests/PublicationReplicaKnowledgeView.test.js`'s own Section A
+asserts directly that no `completeness`, `confidence`, `trustLevel`, or
+`decentralizationScore` field ever appears anywhere in the result.
+
+**No new domain aggregate, again.** Exactly as 0.7.0 never merged
+`Publication` and `DecentralizedPublication`'s wrapped content into one
+class, and 0.8.27 never merged `Publication`, `PublicationAnchor`, and
+`PublicationSnapshotPlacement` into one aggregate, this milestone adds no
+new domain object either. `hasPublication` is a plain boolean the CALLER
+already knows — ordinarily `application/LocalPublicationCatalog.js#
+has()` (0.7.2) — never a record this view looks up or wraps itself. See
+`docs/Roadmap.md`, 0.8.28, for the full milestone entry.
