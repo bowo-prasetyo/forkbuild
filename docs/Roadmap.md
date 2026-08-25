@@ -18148,3 +18148,204 @@ own path; any UI surface for triggering or inspecting a placement; and a
 second concrete storage backend beyond IPFS — each sized on its own,
 exactly like every "Deliberately excluded" list in this document before
 it.
+
+## 0.8.19 — Snapshot Placement Discovery & Peer Synchronization
+
+0.8.18 built a complete, cataloged, independently resolvable
+`core/PublicationSnapshotPlacement.js` — but only for a replica that
+already holds one. Its own "Deliberately excluded" list named the gap
+directly: "no `PublicationSnapshotPlacementPeerExchange` transport does
+[exist yet]. A future milestone can build one the same way 0.8.4 built
+one for anchors, without changing anything shipped here." This is that
+milestone — the same capability `core/PublicationAnchor.js` gained in
+0.8.4 (push) and 0.8.5 (pull), applied to a placement instead of an
+anchor:
+
+> A replica needs to be able to learn that other replicas know about
+> snapshot placements, without automatically assuming those placements
+> are usable.
+
+```text
+PublicationSnapshotPlacement (0.8.18, already signed, already cataloged)
+          │
+          ▼
+application/PublicationSnapshotPlacementPeerExchange.js   (new)
+          │
+          ├── announce()          — push, to every AUTHENTICATED peer
+          │
+          └── requestPlacements() — pull, to exactly one chosen peer
+                    │
+                    ▼
+             other replicas, independently cataloged,
+             independently (never) resolved
+```
+
+**UNLIKE ANCHORS, ONE MILESTONE SHIPS ALL THREE MESSAGE KINDS.** 0.8.4
+shipped ANNOUNCE alone, and 0.8.5 — a separate milestone — added
+REQUEST/RESPONSE on top of it. There is no equivalent reason to split
+placement discovery the same way: `application/
+PublicationSnapshotPlacementPeerProtocol.js` (new) ships `ANNOUNCE`,
+`REQUEST`, and `RESPONSE` together, on the identical wire shape 0.8.4/
+0.8.5 already proved out one domain over — `{ kind, envelope }` for
+ANNOUNCE, `{ kind, publicationId }` for REQUEST, `{ kind, publicationId,
+placements }` for RESPONSE, bounded at `MAX_PLACEMENTS_PER_RESPONSE`
+(64, the identical ceiling `MAX_ANCHORS_PER_RESPONSE` already set).
+
+**THE CATALOG STAYS NON-VALIDATING; A NEW SIGNATURE-CHECKING IMPORT
+BOUNDARY SITS IN FRONT OF THE WIRE, NOT INSIDE THE CATALOG.**
+`application/LocalPublicationSnapshotPlacementCatalog.js` is unchanged
+by this milestone, byte for byte — it still only ever answers "what
+placement claims do I know about," never "can this placement currently
+retrieve the correct bytes." `application/
+PublicationSnapshotPlacementExchange.js` (new) is the placement-side
+`application/PublicationAnchorExchange.js` (0.8.4): validate the
+envelope, construct a real `PublicationSnapshotPlacement` instance,
+verify its SIGNATURE via `identity/LocalAuthorizationVerifier.js#
+verifyPublicationSnapshotPlacement()` (0.8.18, unchanged), then catalog.
+It is a SECOND way to reach the catalog, never a replacement for
+`application/AddPublicationSnapshotPlacementUseCase.js` (0.8.18, still
+structural-only, still unsigned-tolerant, still exactly right for a
+caller that already trusts a placement some other way) — the identical
+two-path shape 0.8.4 already established for anchors.
+
+**PEERS EXCHANGE PLACEMENT CLAIMS, NEVER RESOLUTION RESULTS.**
+`application/PublicationSnapshotPlacementPeerExchange.js` (new) never
+calls `application/SnapshotPlacementResolver.js` from any handler —
+`_handleIncoming()`, `_handleRequest()`, and `_handleResponse()` alike.
+A peer announcing or synchronizing a placement only ever says "another
+replica holds a signed claim that this content can be retrieved from
+this locator" — never "the locator currently serves those bytes."
+Whether it actually does is `application/SnapshotPlacementResolver.js`'s
+own separate, on-demand question, asked locally, by whichever replica
+wants a live answer, exactly as separate as an anchor's signature was
+already kept from its proof in 0.8.4. See docs/Principles.md, "Peers
+Exchange Placement Claims, Not Resolution Results (0.8.19)."
+
+**REQUEST IS SCOPED TO `publicationId` ONLY**, the identical restraint
+`application/PublicationAnchorPeerProtocol.js` already held for anchors
+(0.8.5) — no `contentHash`, no `storage`, no general filter object, and
+no `NOT_FOUND` reply; a peer that knows nothing about a requested
+publication simply never responds. Broader discovery is left for a
+future milestone to add on demand.
+
+- `application/PublicationSnapshotPlacementPeerProtocol.js` — new;
+  `ANNOUNCE`/`REQUEST`/`RESPONSE`, `MAX_PLACEMENTS_PER_RESPONSE = 64`,
+  mirrors `application/PublicationAnchorPeerProtocol.js` (0.8.4/0.8.5)
+- `application/PublicationSnapshotPlacementExchange.js` — new; validate
+  -> construct -> verify SIGNATURE -> catalog, plus
+  `findByPublicationId()`, mirrors `application/
+  PublicationAnchorExchange.js` (0.8.4/0.8.5)
+- `application/PublicationSnapshotPlacementPeerExchange.js` — new;
+  `announce()`/`requestPlacements()`/`onPlacementReceived()`/`dispose()`,
+  never once calls `application/SnapshotPlacementResolver.js`, mirrors
+  `application/PublicationAnchorPeerExchange.js` (0.8.4/0.8.5)
+- `application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js`
+  — new composition root; owns its own `LocalPublicationSnapshotPlacementCatalog`
+  instance (paired with the signature-checking `PublicationSnapshotPlacementExchange`,
+  never `AddPublicationSnapshotPlacementUseCase`'s structural-only path),
+  mirrors `application/CreatePublicationAnchorPeerExchangeUseCase.js`
+  minus its restore-on-startup pass — 0.8.18's own catalog already
+  persists directly through its `storageProvider`, so there is nothing
+  yet to restore-and-re-verify at process start (see "Deliberately
+  excluded," below)
+- `application/PublicationSnapshotPlacementDiscoveryCoordinator.js` /
+  `application/CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js`
+  — new; asks every candidate peer in order, unions whatever each offers,
+  never races to a single winner, mirrors `application/
+  PublicationAnchorDiscoveryCoordinator.js` (0.8.5)
+- `ui/main.js` — modified; wires `publicationSnapshotPlacementPeerExchange`
+  onto the SAME `peerMessageBus`/`peerSessionManager.registry` every other
+  peer protocol in this file already rides, and provides it (plus its
+  catalog and discovery coordinator) to the running app — no UI button
+  consumes any of it yet, the identical restraint 0.8.4/0.8.5 already
+  held for the anchor-side pair before 0.8.11/0.8.16 gave them one
+- `tests/PublicationSnapshotPlacementPeerExchange.test.js` (new) —
+  Section A: protocol wire shapes; Section B: the new signature-checking
+  exchange, forged envelopes rejected, `SnapshotPlacementResolver` never
+  consulted; Section C: routing/gating against a stub transport,
+  AUTHENTICATED-only sends, malformed/forged drops, bounded RESPONSE,
+  unsigned entries skipped when building a RESPONSE; Section D:
+  FLAGSHIP — late joiner, Carol discovers two pre-existing placements
+  (different storage backends) from Bob purely via REQUEST/RESPONSE,
+  then Bob and Carol independently resolve the identical claim as
+  RESOLVED / STORE_UNAVAILABLE; Section E: FLAGSHIP — Alice → Bob →
+  Carol over live authenticated connections, the claim propagates two
+  hops byte-identical, no resolution outcome ever crosses the wire
+
+```text
+0.8.18  Decentralized Snapshot Placement Foundation                   ✓
+             │
+             ▼
+0.8.19  Snapshot Placement Discovery & Peer Synchronization           ✓
+             ├── application/PublicationSnapshotPlacementPeerProtocol.js
+             │   — new; ANNOUNCE/REQUEST/RESPONSE, one milestone, unlike
+             │   anchors' own two
+             ├── application/PublicationSnapshotPlacementExchange.js —
+             │   new; the signature-checking import boundary
+             ├── application/PublicationSnapshotPlacementPeerExchange.js
+             │   — new; never once calls SnapshotPlacementResolver
+             ├── application/
+             │   CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
+             │   — new composition root
+             ├── application/PublicationSnapshotPlacementDiscoveryCoordinator.js
+             │   / CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js
+             │   — new
+             ├── ui/main.js — modified; wired onto the shared
+             │   peerMessageBus, no UI button yet
+             └── PublicationSnapshotPlacementPeerExchange.test.js (new)
+                 — protocol + exchange + routing/gating + two flagships
+                 (late joiner, live three-hop relay)
+```
+
+> **A placement claim crossing the wire is never a resolution result.**
+> `application/PublicationSnapshotPlacementPeerExchange.js` moves signed
+> LOCATOR CLAIMS between replicas — never whether any replica has
+> actually confirmed a locator currently serves its bytes. Two replicas
+> holding the byte-identical placement can independently resolve it to
+> two different, equally honest outcomes — one `RESOLVED`, one
+> `STORE_UNAVAILABLE` or `CONTENT_UNAVAILABLE` — and neither outcome is
+> ever written back into the shared claim, ever transmitted to the other
+> replica, or ever changes what the other replica can determine for
+> itself. See docs/Principles.md, "Peers Exchange Placement Claims, Not
+> Resolution Results (0.8.19)."
+
+### Deliberately excluded
+
+- **A persistent Store-class durability seam for the placement catalog**
+  (mirroring 0.8.15's own `LocalPublicationAnchorStore` and its
+  restore-on-startup pass for anchors). 0.8.18's own catalog already
+  persists directly through a plain `storageProvider`; a future milestone
+  can add restart-time re-validation the same way 0.8.15 added it for
+  anchors, without changing anything shipped here.
+- **Placement acquisition provenance** (mirroring 0.8.17's own
+  `LocalAnchorKnowledgeStore` — recording whether a cataloged placement
+  arrived LOCAL, PEER, or PACKAGE). No consumer needs it yet; a future
+  milestone can add it on top of `_importAndPublish()`'s own single
+  convergence point, the same way 0.8.17 added it for anchors.
+- **Any UI surface.** `publicationSnapshotPlacementPeerExchange` and its
+  discovery coordinator are wired into `ui/main.js` and provided to the
+  running app, but no view calls `announce()`, `requestPlacements()`, or
+  `discoverFromPeers()` — the identical "transport wires in unwired"
+  restraint 0.8.4/0.8.5 already held for anchors before 0.8.11/0.8.16
+  gave them one.
+- **Discovery by `contentHash` or `storage`, or a combined filter.**
+  `REQUEST` stays scoped to `publicationId` only, the identical
+  restraint `application/PublicationAnchorPeerProtocol.js` already held
+  since 0.8.5.
+- **Relayed/transitive discovery.** `_handleRequest()` answers only from
+  this replica's own catalog, never forwards a REQUEST to a third peer
+  on the requester's behalf — the identical restraint 0.8.5 already held
+  for anchors.
+- **A "best placement" or "preferred storage backend" selection of any
+  kind**, anywhere in this milestone. `PublicationSnapshotPlacementDiscoveryCoordinator
+  #discoverFromPeers()` returns the UNION of what every asked peer
+  offered, unranked, exactly as `PublicationAnchorDiscoveryCoordinator`
+  already does for anchor evidence sets.
+
+What's left, and deliberately unbuilt: restart-recovery hardening for
+the placement catalog and acquisition provenance for placements, both
+mirroring 0.8.15/0.8.17's own path for anchors; any UI surface for
+inspecting a placement or triggering discovery/resolution explicitly
+(the natural next milestone); and discovery scoped to anything broader
+than `publicationId` — each sized on its own, exactly like every
+"Deliberately excluded" list in this document before it.

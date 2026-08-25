@@ -11218,3 +11218,108 @@ lookup tables a future store implementation would have to be registered
 in twice, for no genuine architectural reason.
 
 See `docs/Roadmap.md`, 0.8.18, for the full milestone entry.
+
+### Peers Exchange Placement Claims, Not Resolution Results (0.8.19)
+
+"Peers Exchange Anchor Claims, Not Verification Results (0.8.4)" and
+"Synchronization Distributes Claims, Not Verification, Truth, Or
+Authority (0.8.5)" drew this line for evidence. 0.8.19 draws the
+identical line for locators, and states it as its own invariant for the
+identical reason those two did: a placement's very reason to exist is a
+RESOLVABLE claim about a storage backend, and the temptation to shortcut
+peer-to-peer trust by also gossiping "and by the way, I checked, it
+resolves" is exactly as real here as it was for evidence.
+
+**What crosses the wire is exactly `PublicationSnapshotPlacement.toJSON()`,
+nothing more.** `application/PublicationSnapshotPlacementPeerProtocol.js#
+toPublicationSnapshotPlacementAnnounceMessage()` wraps only `{ kind,
+envelope }` — `tests/PublicationSnapshotPlacementPeerExchange.test.js`
+Section A asserts the wrapper carries exactly two keys, and Section C
+asserts the envelope a live `announce()` actually sends carries no
+`resolved` or `resolutionOutcome` field anywhere on it. No field for a
+resolution outcome, a "last confirmed available" timestamp, or a
+"checked by" identity was added to the wire shape, to `core/
+PublicationSnapshotPlacement.js`, or to `application/
+LocalPublicationSnapshotPlacementCatalog.js` — a placement's signed
+payload is unchanged from 0.8.18, byte for byte, whether it travelled
+zero peer hops or several.
+
+**Receiving a placement is never resolving it.** `application/
+PublicationSnapshotPlacementPeerExchange.js#_handleIncoming()` never
+calls `application/SnapshotPlacementResolver.js` — from ANY of its three
+handlers, `_handleIncoming()`, `_handleRequest()`, or `_handleResponse()`
+alike. "Another replica told me about this locator claim" and "the
+locator has been confirmed to serve those bytes" stay two separate facts
+a person can hold about the exact same placement, exactly as separate as
+0.8.18 already kept "cataloged" from "resolved" for a placement that
+arrived by any other means.
+
+**Every placement in a RESPONSE is verified exactly as strictly as one
+ANNOUNCE always was — there is no bulk-trust shortcut.**
+`_handleResponse()` runs each envelope in the batch through the IDENTICAL
+`application/PublicationSnapshotPlacementExchange.js#importPlacement()`
+call an ANNOUNCE already used: validate, construct, verify SIGNATURE,
+catalog. `tests/PublicationSnapshotPlacementPeerExchange.test.js`'s own
+Section C proves a forged placement anywhere in a RESPONSE array is
+rejected exactly like a forged ANNOUNCE, and that one bad envelope never
+blocks a genuine sibling elsewhere in the same array. Synchronizing ten
+placements at once is never treated as ten times more trustworthy than
+synchronizing one; each one still stands or falls entirely on its own
+signature.
+
+**A RESPONSE carries claims, never metadata about how this replica came
+to know them, and never a resolution result.** `application/
+PublicationSnapshotPlacementPeerProtocol.js#
+toPublicationSnapshotPlacementResponseMessage()`'s own wire shape is
+`{ kind, publicationId, placements }` — plain `PublicationSnapshotPlacement
+.toJSON()` envelopes, nothing else. No `receivedAt`, no resolution
+outcome, and no "which peer told me this" field was added anywhere.
+`receivedAt` stays exactly what 0.8.18 already made it: the LOCAL moment
+a replica's OWN catalog first saw a placement, never a value carried
+over from whichever peer relayed it — `tests/
+PublicationSnapshotPlacementPeerExchange.test.js` Section D's own
+late-joiner flagship makes this concrete: Bob has held two placements
+for some time by the moment Carol connects and requests them, yet
+Carol's own `receivedAt` is recorded fresh, at the moment SHE first heard
+about them, never copied from Bob's.
+
+**Authentication gates who a claim is sent to, never whether a received
+claim is believed.** `application/PublicationSnapshotPlacementPeerExchange
+.js#announce()` sends only to peers `PeerLifecycleState.AUTHENTICATED`,
+the identical channel-level gate `application/PublicationAnchorPeerExchange
+.js` already applies — but authentication is never asked to do double
+duty as an authority mechanism. A placement's own signature, checked
+entirely inside `application/PublicationSnapshotPlacementExchange.js`,
+is the only thing that ever makes it acceptable; no handler ever reads
+which connection a message arrived over, and this codebase adds no
+notion of a "trusted peer" or "trusted storage locator" anywhere in this
+milestone.
+
+**Resolution stays local, and independently local, even for the
+identical claim.** `tests/PublicationSnapshotPlacementPeerExchange.test.js`
+Sections D and E each give two replicas the exact same signed placement
+and two different, entirely honest, entirely independent answers — one
+replica's own configured content store resolves it `RESOLVED`; the
+other, lacking a store for that `storage`, reports `STORE_UNAVAILABLE`.
+Neither result is ever written back into the shared claim, ever
+transmitted to the other replica, or ever changes what the other replica
+is able to independently determine for itself. A network of replicas
+sharing placements converges on a shared SET of locator claims; it is
+never made to converge on a shared verdict about which of them
+currently work, because no such verdict was ever meant to be shared in
+the first place — see `docs/Principles.md`, "A Placement Is A Locator,
+Not Evidence Of History (0.8.18)," which this milestone's transport
+extends across a network, not past.
+
+**One milestone, not two — and that is a deliberate departure from the
+anchor precedent, not an oversight.** 0.8.4 shipped ANNOUNCE alone, and
+0.8.5 — a separate milestone — added REQUEST/RESPONSE. This milestone
+ships all three message kinds together: there is no intermediate state
+in which a placement-discovery replica can push claims but not pull
+historical ones, because nothing about a locator claim's own
+trustworthiness differs between the two transports — both routes run
+through the identical `importPlacement()` call, so splitting them into
+two milestones would have added calendar time without adding any new
+invariant to prove.
+
+See `docs/Roadmap.md`, 0.8.19, for the full milestone entry.
