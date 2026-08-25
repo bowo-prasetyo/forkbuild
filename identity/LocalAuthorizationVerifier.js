@@ -20,6 +20,7 @@ import { getBlueprintAttributionSigningDescriptor } from '../core/BlueprintAttri
 import { getBlueprintLineageClaimSigningDescriptor } from '../core/BlueprintLineageClaim.js';
 import { getDecentralizedPublicationSigningDescriptor } from '../core/DecentralizedPublication.js';
 import { getPublicationAnchorSigningDescriptor } from '../core/PublicationAnchor.js';
+import { getPublicationSnapshotPlacementSigningDescriptor } from '../core/PublicationSnapshotPlacement.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
@@ -618,6 +619,38 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
             getPublicationAnchorSigningDescriptor(record),
             record.signature,
             record.anchorIdentity
+        );
+    }
+
+    // 0.8.18 — a PublicationSnapshotPlacement is NEVER tolerated
+    // unsigned, the same REQUIRED discipline as verifyPublicationAnchor()
+    // above. The placing identity is carried inline on the record
+    // itself, the identical shape verifyPublicationAnchor() already
+    // checks against for the identical reason: a
+    // PublicationSnapshotPlacement has no separate "authorIdentityId"
+    // field to cross-check the signer against — attesting to a
+    // retrieval locator is the one and only thing this record asserts,
+    // and the placing identity IS the signer. This is STRUCTURAL
+    // verification only: it proves the named identity really did sign
+    // exactly this publicationId/contentHash/storage/locator tuple, and
+    // nothing about whether that locator can actually still serve those
+    // bytes right now — see application/SnapshotPlacementResolver.js
+    // for the retrieval and content-hash check that happens after this
+    // one succeeds.
+    verifyPublicationSnapshotPlacement(record) {
+        if (!record) {
+            return { valid: false, signed: false, reason: 'no publication snapshot placement' };
+        }
+        if (!record.signature) {
+            return { valid: false, signed: false, reason: 'a publication snapshot placement must be signed' };
+        }
+        if (!record.placerIdentity) {
+            return { valid: false, signed: true, reason: 'signature without placer identity' };
+        }
+        return this.verifyDescriptor(
+            getPublicationSnapshotPlacementSigningDescriptor(record),
+            record.signature,
+            record.placerIdentity
         );
     }
 

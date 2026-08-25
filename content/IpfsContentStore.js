@@ -73,6 +73,10 @@ export class IpfsContentStore extends ContentStore {
 
     get apiUrl() { return this._apiUrl; }
 
+    // 0.8.18 — matches the `storage: 'ipfs'` this class's own put()
+    // already stamps onto every ContentReference it returns.
+    get storage() { return 'ipfs'; }
+
     // put(bytes) -> Promise<ContentReference>. Pins by default
     // (`pin=true`) — an unpinned add is one garbage-collection pass away
     // from silently vanishing, which would make application/

@@ -212,7 +212,26 @@ export const SignatureType = Object.freeze({
     // another — see core/PublicationAnchor.js's own header and
     // docs/Principles.md, "External Anchoring Provides Evidence; It
     // Does Not Establish Authority (0.8.0)."
-    PUBLICATION_ANCHOR: 'publication-anchor'
+    PUBLICATION_ANCHOR: 'publication-anchor',
+    // 0.8.18 — a REQUIRED signature over a core/
+    // PublicationSnapshotPlacement.js record. Proves "identity X attests
+    // this exact contentHash, for this publicationId, can be retrieved
+    // from this locator, on this storage backend" — a claim about
+    // RETRIEVABILITY, orthogonal to what PUBLICATION_ANCHOR above
+    // claims about external RECORDING: an anchor says nothing about
+    // where to fetch bytes, and a placement says nothing about when or
+    // whether an external system ever recorded anything. Like
+    // PUBLICATION_ANCHOR, it says nothing about whether the placed
+    // content is true, well-formed, authored by anyone in particular,
+    // or actually still being served this very moment — see
+    // application/SnapshotPlacementResolver.js for that check. Several
+    // placements, from different placing identities, on different
+    // storage backends, can all name the SAME contentHash, and none of
+    // them is ever more authoritative than another — see core/
+    // PublicationSnapshotPlacement.js's own header and docs/
+    // Principles.md, "A Placement Is A Locator, Not Evidence Of History
+    // (0.8.18)."
+    PUBLICATION_SNAPSHOT_PLACEMENT: 'publication-snapshot-placement'
 });
 
 export class Signature {

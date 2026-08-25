@@ -17868,3 +17868,283 @@ Evidence"; and a knowledge record for evidence arriving through a future,
 not-yet-built acquisition path — this milestone's own three-value
 vocabulary is deliberately sized to what exists today, never pre-built
 for a mechanism that doesn't exist yet.
+
+## 0.8.18 — Decentralized Snapshot Placement Foundation
+
+0.7.0 through 0.7.6 built a complete decentralized publication pipeline
+— a signed, protocol-neutral envelope (`core/DecentralizedPublication.js`)
+that moves ANY signed content through ANY `content/ContentStore.js`
+backend, proven against two content kinds
+(`application/BlueprintAttributionPublicationKind.js`, `application/
+PlaceNamingClaimPublicationKind.js`) and a real network-backed store
+(`content/IpfsContentStore.js`, 0.7.1). 0.8.0 through 0.8.17 built an
+equally complete evidence subsystem on top of it — `core/
+PublicationAnchor.js`, its verification, its catalog, its peer exchange,
+its own creation orchestration, all the way to provenance tracking.
+
+Neither of those ever touched the one thing a person actually publishes
+day to day: `publisher/Publication.js`, the signed record `publisher/
+LocalPublisherProvider.js` produces when a World is published, and the
+snapshot bytes it stores. That store has been hard-coded to `content/
+LocalContentStore.js` since 0.2.14 — nothing in this codebase has ever
+let a Publication's own bytes reach `content/IpfsContentStore.js`, or
+any future backend, at all. A Publication is also immutable the moment
+it is signed (see its own header: "republishing creates a NEW
+publication"), so the fix cannot be "let LocalPublisherProvider choose a
+different store" — a Publication's `contentReference` is folded into
+what was signed, permanently, and mutating it after the fact would
+invalidate that signature.
+
+What is missing is not a second way to publish — it is a way to make an
+ALREADY-published, ALREADY-local snapshot's bytes ADDITIONALLY
+retrievable somewhere else, without touching the original Publication at
+all:
+
+```text
+publisher/Publication.js            "what was published, and what is
+   │  (already signed, immutable)     its content's ONE TRUE hash?"
+   │
+   ▼
+CreateExternalSnapshotPlacementUseCase.execute()   (new)
+   │
+   ├── publication lookup        — discoveryProvider (existing)
+   ├── local integrity check     — contentResolver.verify()  (existing)
+   ├── store selection           — SnapshotPlacementStoreRegistry (new)
+   ├── local bytes retrieval     — contentResolver.resolve()  (existing)
+   ├── store.put(bytes)          — content/IpfsContentStore.js (existing,
+   │                                UNCHANGED)
+   │
+   ▼
+CreatePublicationSnapshotPlacementUseCase.execute(...)   (new)
+   │
+   ▼
+signed, cataloged PublicationSnapshotPlacement
+```
+
+**A PLACEMENT IS A LOCATOR, NEVER A SECOND PUBLICATION.**
+`core/PublicationSnapshotPlacement.js` (new) is deliberately the same
+shape of thing `core/PublicationAnchor.js` already is — a small, signed,
+independently cataloged record naming a `publicationId`/`contentHash`
+pair — but answering an entirely different question. An anchor attests
+that an EXTERNAL system RECORDED a hash (evidence toward "did this exist,
+unaltered, at some point"). A placement attests that a storage backend
+can PRESENTLY SERVE the bytes for a hash (a locator toward "where can I
+retrieve this, right now"). The two are orthogonal: Bitcoin recording a
+hash proves nothing about retrievability, and IPFS serving content
+proves nothing about when it was first recorded. Modeling them as two
+separate signed records, rather than one blurred "evidence" envelope,
+keeps each one honest about what it actually claims. See docs/
+Principles.md, "A Placement Is A Locator, Not Evidence Of History
+(0.8.18)."
+
+**ONE REGISTRY, NOT TWO.** Anchor evidence needed two separate registries
+— `application/ExternalProofVerifierRegistry.js` (0.8.1) for verifying,
+`application/ExternalAnchorPublisherRegistry.js` (0.8.10) for creating —
+because creating an anchor and verifying its proof are different
+capabilities on different classes (`anchoring/BitcoinAnchorPublisher.js`,
+`anchoring/BitcoinOpReturnProofVerifier.js`). A `content/ContentStore.js`
+already provides BOTH halves of a placement's own lifecycle on one
+object — `put()` places bytes, `get()` retrieves them back — so
+`application/SnapshotPlacementStoreRegistry.js` (new) is the ONE
+registry both `application/CreateExternalSnapshotPlacementUseCase.js`
+and `application/SnapshotPlacementResolver.js` share, keyed by a store's
+own new `storage` self-identification (`content/ContentStore.js`'s own
+0.8.18 addition, mirrored onto `content/LocalContentStore.js` — `'local'`
+— and `content/IpfsContentStore.js` — `'ipfs'` — matching the `storage`
+value each already stamps onto every `ContentReference` its `put()`
+returns). Neither the registry nor either use case imports a concrete
+store — a caller wires them together at `application/
+CreateSnapshotPlacementOrchestratorUseCase.js`, the identical
+"generic pipeline, concrete plugin wired outside it" split every
+registry in this codebase already holds.
+
+**RESOLUTION REUSES `ContentReference`; IT DOES NOT REINVENT IT.**
+`application/SnapshotPlacementResolver.js` (new) never re-implements
+content retrieval. Given a cataloged placement, it builds an AD-HOC
+`core/ContentReference.js` from the placement's own `contentHash`/
+`locator`/`storage` — the identical class `content/ContentStore.js#get()`
+has always accepted — and calls the resolved store's unmodified `get()`,
+then the reference's own unmodified `verify()`. No new retrieval
+mechanism was written; the entire "does this backend still serve these
+exact bytes" check is the same one `application/PublicationResolver.js`
+has run since 0.7.0, aimed at a different reference.
+
+- `core/PublicationSnapshotPlacement.js` — new; `publicationId`/
+  `contentHash`/`storage`/`locator`/`placedAt`/`placerIdentity`/
+  `signature`, immutable, its own first and only revision, mirrors
+  `core/PublicationAnchor.js`'s structure and every one of its
+  restraints (no ranking, no canonical placement, several independent
+  placements for the same hash all coexist)
+- `core/Signature.js` — modified; new `SignatureType.
+  PUBLICATION_SNAPSHOT_PLACEMENT`
+- `content/ContentStore.js` — modified; new `storage` getter (throws by
+  default, mirrors `anchoring/ProofVerifier.js#anchorType`)
+- `content/LocalContentStore.js` / `content/IpfsContentStore.js` —
+  modified; `storage` returns `'local'` / `'ipfs'`, matching what each
+  already stamps onto its own `ContentReference` output — no other
+  behavior touched
+- `application/PublicationSnapshotPlacementValidator.js` — new;
+  structural-only, mirrors `application/PublicationAnchorValidator.js`
+- `identity/LocalAuthorizationVerifier.js` — modified;
+  `verifyPublicationSnapshotPlacement()`, mirrors
+  `verifyPublicationAnchor()` exactly
+- `application/CreatePublicationSnapshotPlacementUseCase.js` — new;
+  publication lookup -> contentHash derivation -> sign -> verify own
+  output -> catalog, mirrors `application/
+  CreatePublicationAnchorUseCase.js` (0.8.8); accepts an externally
+  supplied `storage`/`locator` and never talks to a real store itself
+- `application/AddPublicationSnapshotPlacementUseCase.js` — new;
+  structural validate-then-catalog only, no signature check, mirrors
+  `application/AddPublicationAnchorUseCase.js` (0.8.2) — shipped now,
+  before any peer transport exists, the identical precedent 0.8.2 itself
+  set for anchors
+- `application/LocalPublicationSnapshotPlacementCatalog.js` — new;
+  first-seen-wins, sorted by local `receivedAt`, `findByPublicationId`/
+  `findByContentHash`/`findByStorage`, persists directly through a
+  `storageProvider` (no separate Store-class durability seam yet — see
+  "Deliberately excluded" below)
+- `application/SnapshotPlacementStoreRegistry.js` — new; `storage ->
+  ContentStore`, ONE registry shared by creation and resolution — see
+  this milestone's own reasoning above
+- `application/SnapshotPlacementCreationOutcome.js` — new; `CREATED` /
+  `PLACEMENT_UNAVAILABLE` — no `PLACEMENT_REJECTED` counterpart, since a
+  content-addressed store has no notion of definitively refusing
+  well-formed bytes the way a Bitcoin broadcaster can refuse a
+  transaction
+- `application/CreateExternalSnapshotPlacementUseCase.js` — new;
+  publication lookup -> local integrity check -> store selection ->
+  local bytes retrieval -> `store.put()` -> delegates to
+  `CreatePublicationSnapshotPlacementUseCase` (UNCHANGED), mirrors
+  `application/CreateExternalPublicationAnchorUseCase.js` (0.8.10); no
+  dedup, no "already placed" check, no automatic retry, no preferred
+  storage backend
+- `application/SnapshotPlacementResolutionOutcome.js` — new; `RESOLVED`
+  / `INVALID_ENVELOPE` / `INVALID_SIGNATURE` / `STORE_UNAVAILABLE` /
+  `CONTENT_UNAVAILABLE` / `CONTENT_HASH_MISMATCH`, five permanently
+  distinct outcomes, mirrors `application/
+  PublicationResolutionOutcome.js` (0.7.1)
+- `application/SnapshotPlacementResolver.js` — new; validate envelope ->
+  construct -> verify signature -> resolve a store -> retrieve bytes via
+  an ad-hoc `ContentReference` -> verify bytes, never retrieve -> trust
+- `application/CreatePublicationSnapshotPlacementCatalogUseCase.js` /
+  `application/CreateSnapshotPlacementOrchestratorUseCase.js` — new
+  composition roots, mirror `application/
+  CreatePublicationAnchorCatalogUseCase.js` / `application/
+  CreateExternalPublicationAnchorOrchestratorUseCase.js` (0.8.2/0.8.10)
+- `tests/DecentralizedSnapshotPlacement.test.js` (new) — Section A:
+  flagship, Alice publishes a World locally and places its snapshot on a
+  fake IPFS network; Bob, a second replica with no access to Alice's own
+  storage, resolves the byte-identical snapshot purely from the
+  cataloged placement and his own IPFS store pointed at the same
+  network, and the original Publication's own `contentReference` is
+  proven unchanged throughout; Section B: the registry resolves by a
+  store's own `storage` name, never a caller-supplied key; Section C: an
+  unknown publication, an unregistered storage, and a local integrity
+  failure all throw, and a throwing store yields
+  `PLACEMENT_UNAVAILABLE` with no cataloged placement; Section D: all
+  five resolution outcomes are exercised and proven permanently
+  distinct; Section E: two independent placements for one publication,
+  on two different storage backends, both coexist, cataloged, unranked;
+  Section F: model invariants — required fields, signature immutability,
+  round-tripping, structural add
+
+```text
+0.8.17  Evidence Provenance & Observation Boundary                    ✓
+             │
+             ▼
+0.8.18  Decentralized Snapshot Placement Foundation                   ✓
+             ├── core/PublicationSnapshotPlacement.js — new; the
+             │   locator-side sibling of core/PublicationAnchor.js
+             ├── core/Signature.js — modified;
+             │   PUBLICATION_SNAPSHOT_PLACEMENT
+             ├── content/ContentStore.js (+LocalContentStore/
+             │   IpfsContentStore) — modified; a store now names its own
+             │   `storage`
+             ├── application/PublicationSnapshotPlacementValidator.js —
+             │   new
+             ├── identity/LocalAuthorizationVerifier.js — modified;
+             │   verifyPublicationSnapshotPlacement()
+             ├── application/CreatePublicationSnapshotPlacementUseCase.js
+             │   / AddPublicationSnapshotPlacementUseCase.js — new
+             ├── application/LocalPublicationSnapshotPlacementCatalog.js
+             │   — new
+             ├── application/SnapshotPlacementStoreRegistry.js — new;
+             │   ONE registry, not two — see this milestone's own
+             │   reasoning
+             ├── application/SnapshotPlacementCreationOutcome.js /
+             │   CreateExternalSnapshotPlacementUseCase.js — new
+             ├── application/SnapshotPlacementResolutionOutcome.js /
+             │   SnapshotPlacementResolver.js — new
+             ├── application/
+             │   CreatePublicationSnapshotPlacementCatalogUseCase.js /
+             │   CreateSnapshotPlacementOrchestratorUseCase.js — new
+             │   composition roots
+             └── DecentralizedSnapshotPlacement.test.js (new) —
+                 flagship (place on fake IPFS, resolve on a second
+                 replica) + registry + creation-failure-modes +
+                 resolution-outcomes + multi-placement-coexistence +
+                 model-invariants sections
+```
+
+> **A placement makes content retrievable; it does not make it
+> canonical, authentic, or the only copy.** `core/
+> PublicationSnapshotPlacement.js` never replaces, mutates, or
+> supersedes a `publisher/Publication.js`'s own `contentReference` —
+> that reference remains exactly what it always was, permanently, the
+> moment it was signed. A placement is purely additive: one more place
+> the same bytes, for the same hash, can be found. Several placements
+> for the same content, from different placing identities, on different
+> storage backends, are all equally valid and none is ever preferred.
+> See docs/Principles.md, "A Placement Is A Locator, Not Evidence Of
+> History (0.8.18)."
+
+### Deliberately excluded
+
+- **Wrapping `publisher/Publication.js` itself as a `core/
+  DecentralizedPublication.js` content kind.** That would be a
+  genuinely separate improvement — making a Publication's own metadata
+  record (not its bytes) discoverable through the 0.7.x protocol,
+  exactly like `application/BlueprintAttributionPublicationKind.js`
+  already does for attribution — but it answers a different question
+  ("can any replica discover THAT this was published") than this
+  milestone does ("can any replica retrieve the ALREADY-known bytes").
+  Building it here would have quietly doubled this milestone's scope
+  onto an orthogonal axis.
+- **Peer exchange for placements.** `application/
+  AddPublicationSnapshotPlacementUseCase.js` exists (mirroring 0.8.2's
+  own identical precedent for anchors), but no `PublicationSnapshotPlacementPeerExchange`
+  transport does. A future milestone can build one the same way 0.8.4
+  built one for anchors, without changing anything shipped here.
+- **Historical discovery, a persistent Store-class durability seam
+  (mirroring 0.8.15's own `LocalPublicationAnchorStore`), UX of any
+  kind, or wiring into `ui/main.js`.** The identical restraint 0.8.0 and
+  0.8.10 both held before any UI or durability hardening consumed their
+  own new mechanism — see 0.8.10's own "Deliberately excluded" list for
+  the precedent.
+- **A `PLACEMENT_REJECTED` outcome, or any anchorType-style "definite
+  refusal" branch.** See `application/
+  SnapshotPlacementCreationOutcome.js`'s own header — no adapter in this
+  codebase can produce that behavior honestly, so no outcome pretends
+  one can.
+- **A concrete Arweave, HTTP-mirror, or any second storage backend.**
+  `content/IpfsContentStore.js` (0.7.1, unmodified) is the one concrete
+  adapter this milestone proves the registry against, exactly as the
+  user's own request for this milestone asked for — "IPFS as the first
+  concrete adapter." `content/ContentStore.js`'s own header has named
+  Arweave and HTTP as future work since 0.2.14; nothing here changes
+  that estimate.
+- **Any deduplication, "already placed" check, ranking, or "canonical
+  placement" field.** See this milestone's own header and `core/
+  PublicationSnapshotPlacement.js`'s own header — the identical
+  restraint every evidence milestone since 0.8.0 has held, applied here
+  to locators instead of proofs.
+
+What's left, and deliberately unbuilt: wrapping a Publication's own
+metadata as a decentralized-publication content kind (a separate,
+orthogonal improvement — see above); a peer transport or historical
+discovery for placements, mirroring 0.8.4/0.8.5's own path for anchors;
+restart-recovery hardening for the placement catalog, mirroring 0.8.15's
+own path; any UI surface for triggering or inspecting a placement; and a
+second concrete storage backend beyond IPFS — each sized on its own,
+exactly like every "Deliberately excluded" list in this document before
+it.

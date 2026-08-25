@@ -11151,3 +11151,70 @@ learned a claim, next to WHAT the claim itself says, without ever
 blending the two into one combined verdict.
 
 See `docs/Roadmap.md`, 0.8.17, for the full milestone entry.
+
+### A Placement Is A Locator, Not Evidence Of History (0.8.18)
+
+`core/ContentReference.js` has, since 0.2.14, drawn exactly one hash per
+piece of content and allowed multiple retrieval URIs for it in
+principle — but nothing before 0.8.18 ever let a SECOND URI reach a
+hash that already belonged to an immutable, already-signed `publisher/
+Publication.js`. A Publication's own `contentReference` is folded into
+what was signed, permanently; mutating it after the fact to point
+somewhere new would invalidate the very signature that makes the
+Publication trustworthy in the first place. `core/
+PublicationSnapshotPlacement.js` is the answer that never touches that
+signed record at all: a SEPARATE, independently signed claim — "this
+contentHash can ALSO be retrieved from this locator, on this storage
+backend" — additive to a Publication, never a revision of it.
+
+**A PLACEMENT AND AN ANCHOR ANSWER ORTHOGONAL QUESTIONS.** `core/
+PublicationAnchor.js` (0.8.0) attests that an EXTERNAL system RECORDED a
+hash at some point — evidence toward "did this exist, unaltered, at
+some point in time." `core/PublicationSnapshotPlacement.js` attests that
+a storage backend can PRESENTLY SERVE the bytes for a hash — a locator
+toward "where can I retrieve this, right now." Bitcoin recording a hash
+in an OP_RETURN output proves nothing about retrievability (Bitcoin
+never stores content); IPFS serving content proves nothing about when it
+was first recorded, or whether it was ever recorded anywhere else at
+all. Modeling these as one merged "evidence" envelope would let either
+question quietly stand in for the other — a placement that "looks like"
+evidence of history, or an anchor that "looks like" a place to fetch
+bytes — when neither one actually is. Keeping them as two entirely
+separate signed record types, verified by two entirely separate classes
+(`application/ExternalAnchorVerifier.js`, `application/
+SnapshotPlacementResolver.js`), makes it structurally impossible to
+conflate what each one actually claims.
+
+**NEITHER A PLACEMENT NOR ITS SUCCESSFUL RESOLUTION MAKES CONTENT
+CANONICAL OR AUTHENTIC.** Resolving a `PublicationSnapshotPlacement` —
+`application/SnapshotPlacementResolver.js#resolve()` reaching `RESOLVED`
+— proves only that the named storage backend, right now, serves bytes
+that hash to exactly what the placing identity claimed. It never
+compares those bytes against a locally known `publisher/Publication.js`,
+never says this is THE copy, and never ranks it against any other
+placement naming the same `contentHash`. Two placements — different
+identities, different storage backends, different locators — for the
+identical content are both simply true, the identical "several
+independently signed facts, never reconciled into one" posture `core/
+PublicationAnchor.js`'s own header already holds for competing
+EVIDENCE, extended here to competing LOCATORS.
+
+**ONE REGISTRY WHERE ANCHORING NEEDED TWO, BECAUSE THE UNDERLYING
+CAPABILITY IS ALREADY UNIFIED.** `application/
+ExternalProofVerifierRegistry.js` and `application/
+ExternalAnchorPublisherRegistry.js` stayed separate because verifying an
+anchor's proof and creating one are different capabilities implemented
+by different classes with no shared object underneath. A `content/
+ContentStore.js` already implements both halves a placement's lifecycle
+needs — `put()` to place bytes, `get()` to retrieve them — on the SAME
+object, self-identifying via its own new `storage` getter (mirroring the
+`storage` value it already stamps onto every `ContentReference` its
+`put()` returns). `application/SnapshotPlacementStoreRegistry.js` is
+therefore deliberately the one lookup table both `application/
+CreateExternalSnapshotPlacementUseCase.js` and `application/
+SnapshotPlacementResolver.js` share — introducing a second, parallel
+registry here would have split one already-unified capability into two
+lookup tables a future store implementation would have to be registered
+in twice, for no genuine architectural reason.
+
+See `docs/Roadmap.md`, 0.8.18, for the full milestone entry.
