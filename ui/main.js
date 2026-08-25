@@ -46,6 +46,11 @@ import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../applicati
 import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePublicationAnchorCreationCoordinatorUseCase.js';
 import { CreateBitcoinAnchorEvidenceViewUseCase } from '../application/CreateBitcoinAnchorEvidenceViewUseCase.js';
 import { CreateExternalAnchorEvidenceViewRegistryUseCase } from '../application/CreateExternalAnchorEvidenceViewRegistryUseCase.js';
+import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
+import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
+import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
+import { CreateSnapshotPlacementViewRegistryUseCase } from '../application/CreateSnapshotPlacementViewRegistryUseCase.js';
+import { IpfsContentStore } from '../content/IpfsContentStore.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -415,6 +420,50 @@ const { discoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator }
     peerExchange: publicationSnapshotPlacementPeerExchange
 });
 
+// 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX. The
+// first real wiring of application/SnapshotPlacementResolver.js (0.8.18)
+// into this running app — 0.8.18's and 0.8.19's own "Deliberately
+// excluded" lists both left resolution completely unwired, the identical
+// gap 0.8.3 closed for anchor VERIFICATION five milestones after 0.8.0
+// built it. See application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js's
+// own header for why this reaches for a NEW, narrowly-scoped composition
+// root rather than application/CreateSnapshotPlacementOrchestratorUseCase.js
+// (0.8.18) — that one also wires the creation pipeline, which stays
+// unwired here on purpose.
+//
+// `stores` registers the SAME `publicationContentStore` (a
+// content/LocalContentStore.js, already this replica's one 'local'
+// content backend — see the 0.7.0 wiring above) for `local` placements,
+// and a real content/IpfsContentStore.js for `ipfs` placements. The
+// latter talks to a Kubo node at its own default `http://127.0.0.1:5001`
+// — almost certainly unreachable from inside a browser with no local
+// IPFS daemon running, exactly the situation anchoring/
+// BitcoinOpReturnProofVerifier.js's own real, live wiring above is
+// already in for a person with no Bitcoin node of their own. Registering
+// it anyway, rather than leaving `ipfs` unregistered, is the more honest
+// choice: a placement that really did claim IPFS storage gets an honest
+// CONTENT_UNAVAILABLE from a real, consulted store when nothing answers,
+// never the different claim STORE_UNAVAILABLE would make ("this replica
+// isn't even configured to try").
+const {
+    coordinator: publicationSnapshotPlacementResolutionCoordinator
+} = new CreateSnapshotPlacementResolutionCoordinatorUseCase().execute({
+    placementCatalog: publicationSnapshotPlacementCatalog,
+    stores: [publicationContentStore, new IpfsContentStore()]
+});
+
+// The presentation-side counterpart of the resolution wiring above: a
+// SECOND, independent `storage -> plugin` registry, this one answering
+// "how should this placement's own locator read on a screen, and where
+// does 'view externally' go?" Mirrors application/
+// CreateExternalAnchorEvidenceViewRegistryUseCase.js's own shape exactly,
+// one axis over.
+const { localSnapshotPlacementView } = new CreateLocalSnapshotPlacementViewUseCase().execute();
+const { ipfsSnapshotPlacementView } = new CreateIpfsSnapshotPlacementViewUseCase().execute();
+const { placementViewRegistry: snapshotPlacementViewRegistry } = new CreateSnapshotPlacementViewRegistryUseCase().execute({
+    placementViews: [localSnapshotPlacementView, ipfsSnapshotPlacementView]
+});
+
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 // The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
 // this milestone's own design calls for — it wraps the SAME coordinator
@@ -554,5 +603,8 @@ app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegi
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
 app.provide('publicationSnapshotPlacementDiscoveryCoordinator', publicationSnapshotPlacementDiscoveryCoordinator);
+// 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
+app.provide('publicationSnapshotPlacementResolutionCoordinator', publicationSnapshotPlacementResolutionCoordinator);
+app.provide('snapshotPlacementViewRegistry', snapshotPlacementViewRegistry);
 app.use(router);
 app.mount('#app');

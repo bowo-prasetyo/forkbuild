@@ -15,6 +15,9 @@ import { publicationAnchorDetailView } from '../../application/PublicationAnchor
 import { describeEvidenceDiscoveryAttempt, describeDiscoveryButtonLabel } from '../../application/PublicationEvidenceDiscoveryView.js';
 import { PublicationEvidenceDiscoveryUiState } from '../../application/PublicationEvidenceDiscoveryUiState.js';
 import { describeAnchorKnowledge } from '../../application/PublicationAnchorKnowledgeView.js';
+import { snapshotPlacementView, describeKnownPlacementCount } from '../../application/SnapshotPlacementView.js';
+import { publicationSnapshotPlacementDetailView } from '../../application/PublicationSnapshotPlacementDetailView.js';
+import { SnapshotPlacementResolutionOutcome } from '../../application/SnapshotPlacementResolutionOutcome.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -162,6 +165,42 @@ import { describeAnchorKnowledge } from '../../application/PublicationAnchorKnow
 // See application/PublicationEvidenceDiscoveryCoordinator.js's own
 // header and docs/Principles.md, "Discovery Is Not Verification, And
 // 'No New Evidence' Is Not 'No Evidence' (0.8.16)."
+//
+// 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX. Each
+// entry now also shows a "Snapshot Placements" section, deliberately
+// separate from "External Evidence" above — a placement (core/
+// PublicationSnapshotPlacement.js, 0.8.18) and an anchor (core/
+// PublicationAnchor.js, 0.8.0) answer two different questions ("where
+// can I retrieve this, right now" vs. "did an external system record
+// this, at some point"), and this page keeps that distinction visible
+// rather than merging both into one shared "evidence" list. Every
+// placement this replica has cataloged for a publication is discovered
+// the moment the list itself loads (application/
+// SnapshotPlacementResolutionCoordinator.js#discover(), a synchronous
+// catalog read with no network access) — opening this page never calls
+// application/SnapshotPlacementResolver.js. "Inspect Placement" is a
+// second, separate, purely local action — application/
+// PublicationSnapshotPlacementDetailView.js#
+// publicationSnapshotPlacementDetailView() plus an OPTIONAL storage-
+// specific application/SnapshotPlacementViewRegistry.js adapter, exactly
+// mirroring "Inspect Evidence" (0.8.14) one axis over. Only an explicit
+// "Resolve Snapshot" click ever calls application/
+// SnapshotPlacementResolutionCoordinator.js#resolve() — a resolution
+// result lives only in this component's own `entry.resolutions`,
+// ephemeral session state, never written back into application/
+// LocalPublicationSnapshotPlacementCatalog.js or the placement itself.
+// See application/SnapshotPlacementView.js's own header and
+// docs/Principles.md, "Resolving A Placement Observes Present
+// Availability; It Does Not Rewrite The Placement Claim (0.8.20)."
+const PLACEMENT_BADGE_CLASSES = {
+    [SnapshotPlacementResolutionOutcome.RESOLVED]: 'peer-badge--authenticated',
+    [SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE]: 'peer-badge--pending',
+    [SnapshotPlacementResolutionOutcome.CONTENT_UNAVAILABLE]: 'peer-badge--pending',
+    [SnapshotPlacementResolutionOutcome.INVALID_ENVELOPE]: 'peer-badge--failed',
+    [SnapshotPlacementResolutionOutcome.INVALID_SIGNATURE]: 'peer-badge--failed',
+    [SnapshotPlacementResolutionOutcome.CONTENT_HASH_MISMATCH]: 'peer-badge--failed'
+};
+
 const DISCOVERY_BADGE_CLASSES = {
     [PublicationEvidenceDiscoveryUiState.DISCOVERING]: 'peer-badge--pending',
     [PublicationEvidenceDiscoveryUiState.DISCOVERED]: 'peer-badge--authenticated',
@@ -266,6 +305,17 @@ export default {
         // own shape is untouched. See `toggleInspect()`'s own comment
         // below.
         const anchorKnowledgeStore = inject('anchorKnowledgeStore', null);
+        // 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
+        // Optional — absent here (e.g. a test harness that never
+        // provides it), "Snapshot Placements" simply never renders, the
+        // identical degrade-gracefully posture `evidenceCoordinator`
+        // above already holds.
+        const placementResolutionCoordinator = inject('publicationSnapshotPlacementResolutionCoordinator', null);
+        // Optional — absent here, "Inspect Placement" still shows
+        // application/PublicationSnapshotPlacementDetailView.js's own
+        // generic shape; only the storage-specific section is skipped,
+        // exactly as `evidenceViewRegistry` above degrades for anchors.
+        const placementViewRegistry = inject('snapshotPlacementViewRegistry', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -368,10 +418,23 @@ export default {
                 // exactly like `verifications` above — never read from or
                 // written to anything durable. See application/
                 // ExternalAnchorCreationUiState.js's own header.
-                creationAttempts: {}
+                creationAttempts: {},
+                // 0.8.20 — Snapshot Placement Inspection & Explicit
+                // Resolution UX. `placements`/`placementsView` mirror
+                // `evidenceAnchors`/`evidence` above exactly, one axis
+                // over; `resolutions`/`placementInspections` mirror
+                // `verifications`/`inspections` — every one of them
+                // ephemeral for the lifetime of this page, never read
+                // from or written to anything durable.
+                placements: [],
+                placementsView: null,
+                placementsExpanded: false,
+                resolutions: {},
+                placementInspections: {}
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
+            entries.forEach(loadPlacements);
         }
 
         // 0.8.3 — Publication Center: External Evidence UX. DISCOVERY
@@ -529,6 +592,91 @@ export default {
             if (anchorView.checking) return 'peer-badge--pending';
             if (!anchorView.verified) return 'peer-badge--unchecked';
             return EVIDENCE_BADGE_CLASSES[anchorView.verificationOutcome] || 'peer-badge--unchecked';
+        }
+
+        // 0.8.20 — Snapshot Placement Inspection & Explicit Resolution
+        // UX. DISCOVERY only: a synchronous local catalog read through
+        // application/SnapshotPlacementResolutionCoordinator.js#
+        // discover(), never a call to application/
+        // SnapshotPlacementResolver.js. Re-running this is always cheap
+        // and safe — mirrors loadEvidence() above exactly, one axis
+        // over.
+        function loadPlacements(entry) {
+            if (!placementResolutionCoordinator) return;
+            entry.placements = placementResolutionCoordinator.discover(entry.publication.id);
+            entry.placementsView = snapshotPlacementView(entry.placements, entry.resolutions);
+        }
+
+        function togglePlacements(entry) {
+            entry.placementsExpanded = !entry.placementsExpanded;
+        }
+
+        // The one place this page calls application/
+        // SnapshotPlacementResolutionCoordinator.js#resolve() — always
+        // for exactly ONE placement, always because a person clicked
+        // "Resolve Snapshot" on it. Mirrors verifyAnchor() above exactly,
+        // one axis over — except this milestone deliberately stops at
+        // `entry.resolutions` (the single most recent result), never
+        // growing an `entry.resolutionHistory` the way 0.8.12 later did
+        // for anchors. application/
+        // SnapshotPlacementResolutionObservation.js exists so a caller
+        // CAN keep such a history — see that file's own header — but no
+        // UI here holds one yet, since nothing has asked for a "resolved
+        // earlier, now unavailable" lifecycle note on the placement side.
+        // A future milestone can add that layer on top of this one
+        // exactly the way 0.8.12 added it on top of 0.8.3, without
+        // changing this function at all.
+        async function resolvePlacement(entry, placementView) {
+            const placement = entry.placements.find((candidate) => candidate.id === placementView.placementId);
+            if (!placement || !placementResolutionCoordinator) return;
+            entry.resolutions[placement.id] = { checking: true };
+            entry.placementsView = snapshotPlacementView(entry.placements, entry.resolutions);
+            const result = await placementResolutionCoordinator.resolve(placement);
+            entry.resolutions[placement.id] = { outcome: result.outcome, reason: result.reason };
+            entry.placementsView = snapshotPlacementView(entry.placements, entry.resolutions);
+        }
+
+        function placementBadgeClass(placementView) {
+            if (placementView.checking) return 'peer-badge--pending';
+            if (!placementView.resolved) return 'peer-badge--unchecked';
+            return PLACEMENT_BADGE_CLASSES[placementView.resolutionOutcome] || 'peer-badge--unchecked';
+        }
+
+        // 0.8.20 — the one place this page calls application/
+        // PublicationSnapshotPlacementDetailView.js (and, separately,
+        // `placementViewRegistry`) — always for exactly ONE placement,
+        // always because a person clicked "Inspect Placement." Both
+        // calls are pure and synchronous: nothing here awaits anything,
+        // touches placementResolutionCoordinator, or mutates
+        // `entry.placements`/`entry.placementsView`/`entry.resolutions`
+        // — mirrors toggleInspect() above exactly, one axis over.
+        function togglePlacementInspect(entry, placementView) {
+            const state = entry.placementInspections[placementView.placementId]
+                || (entry.placementInspections[placementView.placementId] = { expanded: false, detail: null, typeSpecific: null });
+            state.expanded = !state.expanded;
+            if (state.expanded && !state.detail) {
+                const placement = entry.placements.find((candidate) => candidate.id === placementView.placementId);
+                if (!placement) return;
+                state.detail = publicationSnapshotPlacementDetailView(placement);
+                state.typeSpecific = (placementViewRegistry && placementViewRegistry.has(placement.storage))
+                    ? placementViewRegistry.get(placement.storage).describe(placement)
+                    : null;
+            }
+        }
+
+        function placementInspectionExpanded(entry, placementView) {
+            const state = entry.placementInspections[placementView.placementId];
+            return Boolean(state && state.expanded);
+        }
+
+        function placementInspectionDetail(entry, placementView) {
+            const state = entry.placementInspections[placementView.placementId];
+            return state ? state.detail : null;
+        }
+
+        function placementInspectionTypeSpecific(entry, placementView) {
+            const state = entry.placementInspections[placementView.placementId];
+            return state ? state.typeSpecific : null;
         }
 
         // 0.8.11 — Explicit External Anchoring UX. The one place this
@@ -737,7 +885,9 @@ export default {
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel,
             toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
-            evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel
+            evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
+            placementResolutionCoordinator, describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass,
+            togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific
         };
     },
     template: `
@@ -979,6 +1129,88 @@ export default {
                                                 <dd>{{ formatWhen(inspectionKnowledge(entry, anchorView).firstSeenAt) }}</dd>
                                             </div>
                                         </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
+                         Deliberately a SEPARATE section from "External Evidence" above —
+                         a placement and an anchor answer two different questions, and this
+                         page keeps that distinction visible rather than merging both lists.
+                         Discovery here is exactly as inert as evidence discovery above:
+                         loading this list on page load never calls SnapshotPlacementResolver. -->
+                    <div v-if="entry.placementsView" class="evidence-section">
+                        <div class="evidence-summary">
+                            <span class="evidence-summary-title">Snapshot Placements</span>
+                            <span class="form-hint form-hint--neutral">{{ describeKnownPlacementCount(entry.placementsView) }}</span>
+                            <button v-if="entry.placementsView.count > 0" class="action-btn action-btn--secondary" @click="togglePlacements(entry)">
+                                {{ entry.placementsExpanded ? 'Hide Placements' : 'Show Placements' }}
+                            </button>
+                        </div>
+
+                        <div v-if="entry.placementsExpanded && entry.placementsView.count > 0" class="evidence-list">
+                            <div v-for="placementView in entry.placementsView.placements" :key="placementView.placementId" class="evidence-anchor-card">
+                                <div class="evidence-anchor-header">
+                                    <span class="evidence-anchor-type">{{ humanizeContentKind(placementView.storage) }}</span>
+                                    <span class="peer-badge" :class="placementBadgeClass(placementView)">{{ placementView.resolutionLabel }}</span>
+                                </div>
+                                <p v-if="placementView.resolutionReason" class="form-hint form-hint--neutral">
+                                    {{ placementView.resolutionReason }}
+                                </p>
+                                <dl class="evidence-fields">
+                                    <div class="evidence-field"><dt>Locator</dt><dd>{{ placementView.locator }}</dd></div>
+                                    <div class="evidence-field"><dt>Placed</dt><dd>{{ formatWhen(placementView.placedAt) }}</dd></div>
+                                    <div class="evidence-field"><dt>Publication</dt><dd>{{ placementView.publicationId }}</dd></div>
+                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ placementView.contentHash }}</dd></div>
+                                    <div v-if="placementView.placerIdentityId" class="evidence-field">
+                                        <dt>Placed by</dt><dd>{{ shortId(placementView.placerIdentityId) }}</dd>
+                                    </div>
+                                </dl>
+                                <div class="identity-mgmt-actions">
+                                    <button class="action-btn action-btn--secondary" @click="togglePlacementInspect(entry, placementView)">
+                                        {{ placementInspectionExpanded(entry, placementView) ? 'Hide Details' : 'Inspect Placement' }}
+                                    </button>
+                                    <button class="action-btn action-btn--secondary" :disabled="placementView.checking"
+                                            @click="resolvePlacement(entry, placementView)">
+                                        {{ placementView.checking ? 'Resolving…' : (placementView.resolved ? 'Resolve Again' : 'Resolve Snapshot') }}
+                                    </button>
+                                </div>
+
+                                <!-- A purely local, synchronous read of THIS placement's own fields —
+                                     never a network request, never a call to
+                                     placementResolutionCoordinator.resolve(). "Inspect Placement" and
+                                     "Resolve Snapshot"/"Resolve Again" above stay two genuinely
+                                     separate actions, exactly as this file's own 0.8.20 header states. -->
+                                <div v-if="placementInspectionExpanded(entry, placementView) && placementInspectionDetail(entry, placementView)"
+                                     class="evidence-inspection">
+                                    <span class="evidence-inspection-title">Snapshot Placement</span>
+                                    <p class="form-hint form-hint--neutral">{{ placementInspectionDetail(entry, placementView).bindingDescription }}</p>
+                                    <dl class="evidence-fields">
+                                        <div class="evidence-field">
+                                            <dt>{{ placementInspectionDetail(entry, placementView).placedAtLabel }}</dt>
+                                            <dd>{{ formatWhen(placementInspectionDetail(entry, placementView).placedAt) }}</dd>
+                                        </div>
+                                        <div class="evidence-field"><dt>Locator</dt><dd>{{ placementInspectionDetail(entry, placementView).locator }}</dd></div>
+                                    </dl>
+
+                                    <!-- Only a registered storage-specific adapter (e.g.
+                                         content/IpfsSnapshotPlacementView.js) ever produces this section —
+                                         a generic storage with no adapter shows the fields above alone. -->
+                                    <div v-if="placementInspectionTypeSpecific(entry, placementView)" class="evidence-inspection-adapter">
+                                        <span class="evidence-inspection-adapter-title">{{ placementInspectionTypeSpecific(entry, placementView).summary }}</span>
+                                        <dl class="evidence-fields">
+                                            <div v-for="field in placementInspectionTypeSpecific(entry, placementView).fields" :key="field.label" class="evidence-field">
+                                                <dt>{{ field.label }}</dt><dd>{{ field.value }}</dd>
+                                            </div>
+                                        </dl>
+                                        <a v-if="placementInspectionTypeSpecific(entry, placementView).externalLocator"
+                                           class="action-btn action-btn--secondary"
+                                           :href="placementInspectionTypeSpecific(entry, placementView).externalLocator.url"
+                                           target="_blank" rel="noopener noreferrer">
+                                            {{ placementInspectionTypeSpecific(entry, placementView).externalLocator.label }}
+                                        </a>
                                     </div>
                                 </div>
                             </div>
