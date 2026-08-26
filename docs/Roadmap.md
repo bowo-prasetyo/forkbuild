@@ -22212,3 +22212,172 @@ own header named and explicitly declined to build — letting replicas
 compare which publication snapshots they currently hold, without
 transferring any bytes automatically, once "possession" itself has had
 time to prove out as a stable, well-understood local concept first.
+
+## 0.8.40 — Snapshot Possession Observation Exchange
+
+0.8.39's own closing line named this milestone directly: local possession
+now has a small, well-defined, purely local shape; the natural next step is
+to let one replica ask another, explicitly, whether it currently possesses
+a particular snapshot — without turning the answer into a placement, an
+evidence claim, or a persistent fact. The core principle:
+
+> A peer's possession response is an observation about that peer at a
+> moment in time, not a durable claim about content availability.
+
+```text
+   application/CheckLocalSnapshotContentAvailabilityUseCase.js#execute()   (0.8.33, UNCHANGED — the RESPONDING side's own check)
+              │
+              ▼
+   application/PublicationSnapshotPossessionPeerExchange.js                (new — REQUEST/RESPONSE transport, never bytes)
+              │
+              ▼
+   application/ObservePeerSnapshotPossessionUseCase.js                     (new — one peer, one timeout, one observation)
+              │
+              ▼
+     application/SnapshotPeerPossessionObservation.js                      (new — { peerId, publicationId, contentHash, state, observedAt })
+              │
+              ▼  (NO automatic merge into any durable store)
+   ui/views/DecentralizedPublicationsView.js — "Peer Snapshot Possession"
+```
+
+Six new files, all under `application/`:
+
+- `application/PeerSnapshotPossessionProtocol.js` (new) — the WIRE shape:
+  `REQUEST { publicationId, contentHash }` /
+  `RESPONSE { publicationId, contentHash, possession }`, where `possession`
+  is exactly one of `PeerSnapshotPossessionWireState.AVAILABLE`/
+  `NOT_AVAILABLE` — never a third, `CONTENT_HASH_MISMATCH`-shaped wire
+  value; a peer's own local storage-integrity diagnosis stays that peer's
+  own business, collapsed to NOT_AVAILABLE on the wire. Unlike every
+  sibling `*PeerProtocol.js` in this codebase, a REQUEST here always gets a
+  RESPONSE — there is no "a peer that doesn't have it stays silent"
+  convention, because answering "no" is exactly as cheap and exactly as
+  informative as answering "yes," and doing so is what keeps a genuine
+  non-response (peer unreachable, message lost) honestly distinguishable
+  from an explicit "not available" answer.
+- `application/PublicationSnapshotPossessionPeerExchange.js` (new) — the
+  transport, structurally the same shape every `*PeerExchange.js` in this
+  codebase already holds (attach to `application/
+  ConnectedPeerRegistry.js` peers, subscribe to its own DEFAULT_PROTOCOL
+  over `peer/PeerMessageBus.js`), narrowed to exactly two responsibilities:
+  `requestPossession(peer, { publicationId, contentHash })` sends a REQUEST
+  to one caller-chosen AUTHENTICATED peer; the responding side always
+  answers, computed by handing a bare `{ id, contentReference }` shape
+  built from the REQUEST's own fields to `application/
+  CheckLocalSnapshotContentAvailabilityUseCase.js` (0.8.33) UNCHANGED — the
+  identical semantic definition of "possession" `application/
+  PublicationSnapshotPossessionView.js` (0.8.39) already gives the local
+  "Local Snapshot" UI. Never inspects a placement, an anchor, or a catalog
+  on either side; never transfers a byte.
+- `application/SnapshotPeerPossessionState.js` (new) — the REQUESTER-side,
+  three-value observation enum: `AVAILABLE`, `NOT_AVAILABLE`, and
+  `UNAVAILABLE` (no RESPONSE arrived before the timeout) — distinct from
+  the wire's own two-value `PeerSnapshotPossessionWireState`, because
+  UNAVAILABLE, by construction, never crosses the wire.
+- `application/SnapshotPeerPossessionObservation.js` (new) —
+  `toSnapshotPeerPossessionObservation({ peerId, publicationId,
+  contentHash, state, observedAt })`, a frozen record of what one peer said
+  about one contentHash at one moment this replica's own clock recorded.
+  Never persisted, never mutated, never re-derived from a later check — a
+  caller wanting to know whether a peer STILL reports AVAILABLE makes a
+  NEW request and receives a NEW observation with its own, later,
+  `observedAt`. Also exports `isPeerSnapshotPossessed()`, mirroring
+  `application/PublicationSnapshotPossessionView.js#isSnapshotPossessed()`.
+- `application/ObservePeerSnapshotPossessionUseCase.js` (new) — the
+  requesting-side promise wrapper, mirroring `application/
+  MaterializeSnapshotFromPeerUseCase.js`'s (0.8.37) own request-and-wait
+  shape exactly, but resolving to an observation rather than storing bytes.
+  Takes no publication catalog, no content store, and no placement
+  catalog — there is nothing here for it to write to. Deliberately
+  single-peer, no fallback, no ranking, no automatic retry.
+- `application/SnapshotPeerPossessionCoordinator.js` (new) — a
+  deliberately thin pass-through in front of the use case above, mirroring
+  every sibling `*Coordinator.js`.
+
+Plus `application/CreatePublicationSnapshotPossessionPeerExchangeUseCase.js`
+(composition-root wiring, mirroring 0.8.37's own identical shape) and
+`application/SnapshotPeerPossessionUiState.js`/`application/
+SnapshotPeerPossessionView.js` (UI-only state and copy, mirroring 0.8.37's
+own identical pair one axis over).
+
+`ui/views/DecentralizedPublicationsView.js` gains a "Peer Snapshot
+Possession" section, deliberately separate from "Get Snapshot from Peer"
+immediately above it, with its OWN peer dropdown and its OWN selected
+peer — asking whether a peer has bytes, and asking that same peer FOR
+bytes, are two independent actions a person takes separately, never
+bundled into one click. A person explicitly chooses one authenticated peer
+and clicks "Check with Peer"; the result reads "Peer reports snapshot
+available" or "Peer reports snapshot not available" — a report about what
+the peer said, never "Peer has a verified copy" or "Peer is a reliable
+source." No peer is ever queried automatically, and no ranked or
+"recommended" peer list is ever assembled on a person's behalf.
+
+> **A peer's possession response is an observation about that peer at a
+> moment in time, not a durable claim about content availability.** See
+> `docs/Principles.md`, "Peer Possession Responses Are Observations, Not
+> Placement Claims (0.8.40)."
+
+The FLAGSHIP test (`tests/PublicationSnapshotPossessionExchange.test.js`)
+proves the milestone's own central claim directly: Alice and Carol both
+independently possess a snapshot's bytes; Bob possesses nothing. Bob asks
+Alice, then Carol — both report AVAILABLE — while Bob's own local
+possession (`CheckLocalSnapshotContentAvailabilityUseCase`) stays
+NOT_AVAILABLE throughout, and a shared `LocalPublicationSnapshotPlacementCatalog`
+stays empty across the entire scenario — proving neither answer became a
+placement, a locator, or a trust claim. Only a SEPARATE, explicit "Get
+Snapshot from Peer" (0.8.37) click against Alice actually gives Bob
+possession — demonstrating that knowing a peer possesses content is not
+itself possessing it. A closing test proves staleness directly: Bob's
+first observation of Alice reads AVAILABLE; Alice's own bytes are then
+deleted; a second, later request against Alice honestly reports
+NOT_AVAILABLE; the FIRST observation's own `state` never changes to match —
+it remains a frozen fact about what Alice said at the earlier moment,
+never a live view of Alice's current possession.
+
+### Deliberately excluded
+
+- **A `CONTENT_HASH_MISMATCH`-shaped wire value.** The network question
+  stays exactly "do you have bytes matching this hash" — a peer's own
+  local storage-integrity diagnosis is that peer's own business, and
+  `application/PeerSnapshotPossessionProtocol.js` collapses it to
+  NOT_AVAILABLE before anything reaches the wire.
+- **Persisting a possession observation anywhere.** No `POSSESSION` value
+  was added to `application/SnapshotMaterializationSourceKind.js`, and no
+  observation is ever written into `application/
+  LocalPlacementKnowledgeStore.js`, `application/
+  LocalAnchorKnowledgeStore.js`, a publication catalog, a placement
+  catalog, or a Publication Replica Package. An observation lives only in
+  whatever ephemeral component state `ui/views/
+  DecentralizedPublicationsView.js` keeps for the lifetime of the page —
+  `entry.peerPossessionAttempt`, replaced (never accumulated into a
+  history) by the next check.
+- **Automatically creating a placement from an AVAILABLE answer.** This
+  milestone's own flagship test names this directly: Bob asking Alice and
+  Carol, and both answering AVAILABLE, never creates a `core/
+  PublicationSnapshotPlacement.js` for either of them. A placement remains
+  something a person creates explicitly (`application/
+  SnapshotPlacementCreationCoordinator.js`, 0.8.25) or receives explicitly
+  (announce/synchronize, 0.8.19) — never something this exchange
+  synthesizes as a side effect of an answer.
+- **Automatically querying every connected peer.** The identical restraint
+  every `*PeerExchange.js`/`*FromPeerUseCase` in this codebase already
+  holds: a person explicitly picks ONE authenticated peer from a dropdown
+  and clicks "Check with Peer" — never a coordinator that asks everyone
+  connected, ranks the answers, or falls back to a second peer
+  automatically.
+- **Any score, ranking, staleness policy, or trust derived from a possession
+  observation.** A peer reporting AVAILABLE is not thereby "more
+  reliable," a peer reporting NOT_AVAILABLE has cast no doubt on any
+  placement or anchor it separately holds, and an observation's own age is
+  never compared against a freshness threshold to decide whether it is
+  still "good enough" — the observation simply names when it was made and
+  leaves every judgment about that timestamp to whoever reads it.
+
+Local possession (0.8.39) and the ability to ask one peer about it (this
+milestone) now both exist as small, well-defined, independently honest
+facts. What remains deliberately unbuilt: automatic possession
+synchronization across many peers at once, a persisted possession cache,
+and any mechanism that turns "several peers reported AVAILABLE" into a
+retrieval recommendation — each would need its own design conversation
+about staleness, scale, and trust that this milestone deliberately declines
+to have in advance of an actual, demonstrated need.

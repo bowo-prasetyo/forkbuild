@@ -42,6 +42,8 @@ import { describePlacementMaterializationAttempt, describePlacementMaterializati
 import { SnapshotPeerMaterializationUiState } from '../../application/SnapshotPeerMaterializationUiState.js';
 import { describePeerMaterializationAttempt, describePeerMaterializationButtonLabel } from '../../application/SnapshotPeerMaterializationView.js';
 import { PeerSnapshotMaterializationOutcome } from '../../application/PeerSnapshotMaterializationOutcome.js';
+import { SnapshotPeerPossessionUiState } from '../../application/SnapshotPeerPossessionUiState.js';
+import { describePeerPossessionAttempt, describePeerPossessionButtonLabel } from '../../application/SnapshotPeerPossessionView.js';
 import { SnapshotContentTransferOutcome } from '../../application/SnapshotContentTransferOutcome.js';
 import { SnapshotPlacementMaterializationOutcome } from '../../application/SnapshotPlacementMaterializationOutcome.js';
 import { StoreSnapshotContentOutcome } from '../../application/StoreSnapshotContentOutcome.js';
@@ -429,6 +431,18 @@ const PEER_MATERIALIZATION_BADGE_CLASSES = {
     [SnapshotPeerMaterializationUiState.HASH_MISMATCH]: 'peer-badge--failed'
 };
 
+// 0.8.40 — Snapshot Possession Observation Exchange. AVAILABLE/NOT_AVAILABLE
+// are both simply ordinary, informative answers — neither is styled as
+// "success" or "failure" the way STORED/HASH_MISMATCH above are for an
+// actual materialization; only CHECKING (pending) and UNAVAILABLE (no
+// answer at all) get their own distinct treatment.
+const PEER_POSSESSION_BADGE_CLASSES = {
+    [SnapshotPeerPossessionUiState.CHECKING]: 'peer-badge--pending',
+    [SnapshotPeerPossessionUiState.AVAILABLE]: 'peer-badge--authenticated',
+    [SnapshotPeerPossessionUiState.NOT_AVAILABLE]: 'peer-badge--pending',
+    [SnapshotPeerPossessionUiState.UNAVAILABLE]: 'peer-badge--pending'
+};
+
 const PLACEMENT_BADGE_CLASSES = {
     [SnapshotPlacementResolutionOutcome.RESOLVED]: 'peer-badge--authenticated',
     [SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE]: 'peer-badge--pending',
@@ -617,6 +631,15 @@ export default {
         // degrade-gracefully posture `snapshotPlacementMaterializationCoordinator`
         // above already holds for "Materialize Snapshot".
         const snapshotPeerMaterializationCoordinator = inject('snapshotPeerMaterializationCoordinator', null);
+        // 0.8.40 — Snapshot Possession Observation Exchange. Optional —
+        // absent here, "Peer Snapshot Possession" simply never renders,
+        // the identical degrade-gracefully posture every optional
+        // coordinator above already holds. Deliberately independent of
+        // `snapshotPeerMaterializationCoordinator` immediately above: one
+        // asks a peer for bytes, this one only ever asks a peer a
+        // question — see application/ObservePeerSnapshotPossessionUseCase.js's
+        // own header on why neither ever calls the other.
+        const snapshotPeerPossessionCoordinator = inject('snapshotPeerPossessionCoordinator', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -874,6 +897,24 @@ export default {
                 // `materializationAttempt` above exactly, one axis over.
                 peerMaterializationSelectedPeerId: '',
                 peerMaterializationAttempt: null,
+                // 0.8.40 — Snapshot Possession Observation Exchange.
+                // `peerPossessionSelectedPeerId` is whichever
+                // `retrievalPeers` connectionId a person has picked from
+                // this entry's own "Peer Snapshot Possession" dropdown —
+                // a SEPARATE choice from `peerMaterializationSelectedPeerId`
+                // above; asking whether a peer has bytes and asking that
+                // same peer FOR bytes remain two independent actions, each
+                // with their own selected peer. `peerPossessionAttempt` is
+                // a single ephemeral observation attempt for THIS entry,
+                // `null` until "Check with Peer" is explicitly clicked —
+                // never a history, mirroring `localSnapshotAvailability`
+                // (0.8.33) rather than `materializationHistory` (0.8.38):
+                // an observation is a fact about one moment, and a NEW
+                // check simply replaces it, exactly as application/
+                // SnapshotPeerPossessionObservation.js's own header
+                // describes.
+                peerPossessionSelectedPeerId: '',
+                peerPossessionAttempt: null,
                 // 0.8.38 — Snapshot Materialization History & Source
                 // Inspection. The ORDERED, ephemeral sequence of every
                 // application/SnapshotMaterializationAttempt.js this entry
@@ -1610,6 +1651,59 @@ export default {
             });
         }
 
+        // 0.8.40 — Snapshot Possession Observation Exchange. The
+        // question-only sibling of `selectedPeerForMaterialization()`/
+        // `requestSnapshotFromPeer()` immediately above, one axis over:
+        // always for exactly ONE already-authenticated peer a person
+        // picked from THIS entry's own "Peer Snapshot Possession"
+        // dropdown, always because they clicked "Check with Peer"/"Check
+        // with Peer Again" on it. Never called from onMounted(),
+        // refreshList(), or any other action — only this explicit click
+        // ever asks a peer whether it possesses anything. Never touches
+        // `entry.peerMaterializationAttempt`, `recordMaterializationSource()`,
+        // or `recordMaterializationHistoryEntry()` — an observation is not
+        // a materialization, and never becomes one automatically; see
+        // application/ObservePeerSnapshotPossessionUseCase.js's own
+        // header.
+        function selectedPeerForPossessionCheck(entry) {
+            return retrievalPeers.value.find((peer) => peer.connectionId === entry.peerPossessionSelectedPeerId) || null;
+        }
+
+        async function checkSnapshotPossessionWithPeer(entry) {
+            const peer = selectedPeerForPossessionCheck(entry);
+            if (!peer || !snapshotPeerPossessionCoordinator) return;
+            entry.peerPossessionAttempt = { checking: true };
+            try {
+                const observation = await snapshotPeerPossessionCoordinator.observe({
+                    peer, publicationId: entry.publication.id, contentHash: entry.publication.contentReference.hash
+                });
+                entry.peerPossessionAttempt = {
+                    checking: false, error: null,
+                    peerId: observation.peerId, state: observation.state,
+                    publicationId: observation.publicationId, contentHash: observation.contentHash, observedAt: observation.observedAt
+                };
+            } catch (error) {
+                entry.peerPossessionAttempt = { checking: false, state: null, error: error.message };
+            }
+        }
+
+        function peerPossessionView(entry) {
+            return describePeerPossessionAttempt(entry.peerPossessionAttempt);
+        }
+
+        function peerPossessionBadgeClass(entry) {
+            const state = peerPossessionView(entry).state;
+            return PEER_POSSESSION_BADGE_CLASSES[state] || null;
+        }
+
+        function peerPossessionButtonLabel(entry) {
+            const view = peerPossessionView(entry);
+            return describePeerPossessionButtonLabel({
+                checking: view.checking,
+                checked: view.state !== SnapshotPeerPossessionUiState.IDLE
+            });
+        }
+
         // 0.8.20 — the one place this page calls application/
         // PublicationSnapshotPlacementDetailView.js (and, separately,
         // `placementViewRegistry`) — always for exactly ONE placement,
@@ -1985,6 +2079,8 @@ export default {
             placementMaterializationView, placementMaterializationBadgeClass, placementMaterializationButtonLabel,
             snapshotPeerMaterializationCoordinator, requestSnapshotFromPeer,
             peerMaterializationView, peerMaterializationBadgeClass, peerMaterializationButtonLabel,
+            snapshotPeerPossessionCoordinator, checkSnapshotPossessionWithPeer,
+            peerPossessionView, peerPossessionBadgeClass, peerPossessionButtonLabel,
             materializationHistoryView, materializationSourceCountsSentence, toggleMaterializationHistory
         };
     },
@@ -2187,6 +2283,59 @@ export default {
                             </template>
                             <p v-if="peerMaterializationView(entry).message" class="form-hint form-hint--neutral">
                                 {{ peerMaterializationView(entry).message }}
+                            </p>
+                        </div>
+
+                        <!-- 0.8.40 — Snapshot Possession Observation Exchange. A
+                             DELIBERATELY SEPARATE section from "Get Snapshot from
+                             Peer" immediately above, with its own peer dropdown and
+                             its own selected peer — asking whether a peer has bytes,
+                             and asking that same peer FOR bytes, are two independent
+                             actions a person takes separately, never bundled into
+                             one click. Clicking "Check with Peer" never transfers a
+                             byte, never creates a placement, and never feeds
+                             "Materialization History" below — it produces exactly
+                             one ephemeral application/
+                             SnapshotPeerPossessionObservation.js record, replaced
+                             (never accumulated) by the next check. The result wording
+                             is deliberately a REPORT ("Peer reports snapshot
+                             available/not available"), never a verdict about the
+                             peer's trustworthiness — see application/
+                             SnapshotPeerPossessionView.js's own header and
+                             docs/Principles.md, "Peer Possession Responses Are
+                             Observations, Not Placement Claims (0.8.40)." -->
+                        <div v-if="snapshotPeerPossessionCoordinator" class="evidence-list">
+                            <span class="evidence-convergence-title">Peer Snapshot Possession</span>
+                            <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
+                                No authenticated peer is connected right now — connect to one first from
+                                <router-link to="/peers">Peers</router-link>.
+                            </p>
+                            <template v-else>
+                                <label class="form-field">
+                                    <span class="form-label">Peer</span>
+                                    <select v-model="entry.peerPossessionSelectedPeerId" class="form-input">
+                                        <option value="" disabled>Choose an authenticated peer…</option>
+                                        <option v-for="peer in retrievalPeers" :key="peer.connectionId" :value="peer.connectionId">
+                                            {{ peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer') }}
+                                        </option>
+                                    </select>
+                                </label>
+                                <div class="evidence-discovery-header">
+                                    <button class="action-btn action-btn--secondary"
+                                            :disabled="peerPossessionView(entry).checking || !entry.peerPossessionSelectedPeerId"
+                                            @click="checkSnapshotPossessionWithPeer(entry)">
+                                        {{ peerPossessionButtonLabel(entry) }}
+                                    </button>
+                                    <span v-if="peerPossessionView(entry).label" class="peer-badge" :class="peerPossessionBadgeClass(entry)">
+                                        {{ peerPossessionView(entry).label }}
+                                    </span>
+                                </div>
+                            </template>
+                            <p v-if="peerPossessionView(entry).message" class="form-hint form-hint--neutral">
+                                {{ peerPossessionView(entry).message }}
+                            </p>
+                            <p v-if="peerPossessionView(entry).observedAt" class="form-hint form-hint--neutral">
+                                Observed: {{ formatWhen(peerPossessionView(entry).observedAt) }}
                             </p>
                         </div>
 

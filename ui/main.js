@@ -65,6 +65,9 @@ import { SnapshotPlacementMaterializationCoordinator } from '../application/Snap
 import { CreatePublicationSnapshotContentPeerExchangeUseCase } from '../application/CreatePublicationSnapshotContentPeerExchangeUseCase.js';
 import { MaterializeSnapshotFromPeerUseCase } from '../application/MaterializeSnapshotFromPeerUseCase.js';
 import { SnapshotPeerMaterializationCoordinator } from '../application/SnapshotPeerMaterializationCoordinator.js';
+import { CreatePublicationSnapshotPossessionPeerExchangeUseCase } from '../application/CreatePublicationSnapshotPossessionPeerExchangeUseCase.js';
+import { ObservePeerSnapshotPossessionUseCase } from '../application/ObservePeerSnapshotPossessionUseCase.js';
+import { SnapshotPeerPossessionCoordinator } from '../application/SnapshotPeerPossessionCoordinator.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -629,6 +632,30 @@ const materializeSnapshotFromPeerUseCase = new MaterializeSnapshotFromPeerUseCas
 );
 const snapshotPeerMaterializationCoordinator = new SnapshotPeerMaterializationCoordinator(materializeSnapshotFromPeerUseCase);
 
+// 0.8.40 — Snapshot Possession Observation Exchange. The question-only
+// sibling of the wiring immediately above: "does the selected peer
+// currently possess bytes for this hash?" rather than "give me the
+// bytes." Reuses the SAME `localSnapshotContentAvailabilityUseCase`
+// (0.8.33) every "Check Local Snapshot" click already goes through — the
+// RESPONDING side of `publicationSnapshotPossessionPeerExchange` answers a
+// peer's REQUEST with literally that same local check, never a second
+// definition of possession — and rides the SAME `peerMessageBus`/
+// `peerSessionManager.registry` every other peer/PeerMessageBus.js
+// protocol in this file already does, under its own
+// 'forkbuild:snapshot-possession' namespace, entirely independent of
+// `publicationSnapshotContentPeerExchange` (0.8.37) immediately above.
+// application/SnapshotPeerPossessionCoordinator.js forwards straight to
+// application/ObservePeerSnapshotPossessionUseCase.js; see that use case's
+// own header on why it never stores a byte, creates a placement, or asks
+// more than the one peer a person explicitly selected.
+const { peerExchange: publicationSnapshotPossessionPeerExchange } = new CreatePublicationSnapshotPossessionPeerExchangeUseCase().execute({
+    checkLocalSnapshotContentAvailabilityUseCase: localSnapshotContentAvailabilityUseCase,
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry
+});
+const observePeerSnapshotPossessionUseCase = new ObservePeerSnapshotPossessionUseCase(publicationSnapshotPossessionPeerExchange);
+const snapshotPeerPossessionCoordinator = new SnapshotPeerPossessionCoordinator(observePeerSnapshotPossessionUseCase);
+
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 // The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
 // this milestone's own design calls for — it wraps the SAME coordinator
@@ -801,5 +828,7 @@ app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterial
 app.provide('snapshotPlacementMaterializationCoordinator', snapshotPlacementMaterializationCoordinator);
 // 0.8.37 — Explicit Peer Snapshot Content Transfer.
 app.provide('snapshotPeerMaterializationCoordinator', snapshotPeerMaterializationCoordinator);
+// 0.8.40 — Snapshot Possession Observation Exchange.
+app.provide('snapshotPeerPossessionCoordinator', snapshotPeerPossessionCoordinator);
 app.use(router);
 app.mount('#app');
