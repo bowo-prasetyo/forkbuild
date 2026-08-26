@@ -5088,3 +5088,63 @@ html, body {
     gap: 0.6rem;
     flex-wrap: wrap;
 }
+
+/* 0.8.31 — Replica Knowledge Provenance & Synchronization Inspection.
+   .replica-sync-breakdown reuses .evidence-fields verbatim (same dl/dt/dd
+   shape "Local Knowledge" already uses) for the two-row "New claims" /
+   "Already known" breakdown sitting under the combined synchronization
+   message — no new visual language, since this is the same kind of plain
+   fact application/PublicationKnowledgeSynchronizationView.js's own
+   message text already states, just also broken out by dimension. */
+.replica-sync-breakdown {
+    margin-top: 0.5rem;
+}
+
+/* .replica-knowledge is the "Show/Hide Replica Knowledge" disclosure
+   sitting inside .decentralization-summary, mirroring .evidence-discovery
+   immediately above in placement and restraint — a plain button, no color
+   of its own, since opening it changes nothing about what is known, only
+   how much of it is currently shown. .replica-knowledge-detail lays its
+   two dimensions side by side exactly like .decentralization-dimensions
+   already does one card up. Each .replica-knowledge-claim reuses
+   .evidence-fields' own dl/dt/dd rows (the identical shape "Local
+   Knowledge" inside "Inspect Evidence"/"Inspect Placement" already uses)
+   so a single claim row here and a single claim's own inspection panel
+   never read as two different kinds of information. */
+.replica-knowledge {
+    margin-top: 0.75rem;
+}
+
+.replica-knowledge-detail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.6rem;
+}
+
+.replica-knowledge-dimension {
+    flex: 1 1 16rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.5rem 0.7rem;
+    background: #1e1e1e;
+    border: 1px solid #2f2f2f;
+    border-radius: 5px;
+}
+
+.replica-knowledge-claim-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.replica-knowledge-claim {
+    padding: 0.5rem 0.6rem;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
