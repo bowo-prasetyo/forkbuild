@@ -21778,3 +21778,184 @@ transfer, reusing this SAME `StoreSnapshotContentUseCase` boundary as its
 third caller rather than inventing a third storage path (0.8.37), and the
 selective-claim-exchange work 0.8.30/0.8.31/0.8.32 have each deferred in
 turn. Both remain open.
+
+## 0.8.37 — Explicit Peer Snapshot Content Transfer
+
+0.8.36 closed the gap between the two EXISTING explicit snapshot sources
+by giving them one shared storage boundary. It named, but deliberately
+did not build, the third caller that boundary was already general enough
+to accept: "explicit peer-backed snapshot transfer, reusing this SAME
+`StoreSnapshotContentUseCase` boundary as its third caller rather than
+inventing a third storage path." This milestone is that third caller.
+
+```text
+                 EXPLICIT USER ACTION
+              "Get Snapshot from Peer"
+                         │
+                         ▼
+              choose one authenticated peer
+                         │
+                         ▼
+        request { publicationId, contentHash }   (application/
+                         │                         PublicationSnapshotContentPeerExchange.js)
+                         ▼
+              peer answers from its OWN
+              local ContentStore, or stays silent
+                         │
+                         ▼
+          application/StoreSnapshotContentUseCase.js
+            verify hash → ContentStore.put()
+            STORED / ALREADY_AVAILABLE / HASH_MISMATCH
+```
+
+This is deliberately NOT `application/PeerContentExchange.js` (0.7.4)
+reused or extended. That class already has a job: wired into `application/
+PublicationResolutionCoordinator.js` (0.7.5/0.7.6), it asks EVERY
+connected peer, automatically, the instant a publication resolves
+`CONTENT_UNAVAILABLE`, authorized by whether this replica's own
+`application/LocalPublicationCatalog.js` already knows a locator for the
+requested hash — and it verifies and stores the bytes itself, inline, the
+moment a RESPONSE arrives. This milestone's own shape is the opposite:
+one person, looking at one publication's "Local Snapshot" card, picks
+exactly one already-authenticated peer and clicks a button. Bending 0.7.4's
+class to also serve that click would either weaken its own automatic,
+catalog-gated authorization or duplicate `StoreSnapshotContentUseCase`'s
+own verify-then-store shape a third time. Building a second, narrower,
+purely-transport class instead is the identical choice that already keeps
+`application/PublicationPeerExchange.js`, `application/
+PublicationAnchorPeerExchange.js`, and `application/
+PublicationSnapshotPlacementPeerExchange.js` three separate classes rather
+than one generic "gossip a signed thing" superclass.
+
+Six new files, all under `application/`:
+
+- `application/PeerSnapshotContentProtocol.js` (new) — the WIRE shape:
+  REQUEST `{ publicationId, contentHash }`, RESPONSE `{ publicationId,
+  contentHash, content }`. `publicationId` travels for correlation and
+  display only, never as an authorization input on either side — see
+  `application/PublicationSnapshotContentPeerExchange.js`'s own header.
+  No `NOT_FOUND` kind, for the identical reason every sibling
+  `*PeerProtocol.js` module already gives: a peer that does not currently
+  hold the requested bytes simply never answers. Size-capped at
+  `MAX_SNAPSHOT_CONTENT_BYTES`, identical to `application/
+  PeerContentProtocol.js`'s own `MAX_CONTENT_BYTES`, enforced on both the
+  sending and receiving side.
+- `application/PublicationSnapshotContentPeerExchange.js` (new) — the
+  transport. `request(peer, { publicationId, contentHash })` asks exactly
+  one caller-chosen peer; `onContentReceived()` fires for every
+  structurally valid RESPONSE, **unverified, on purpose** — this class
+  never calls `core/ContentReference.js#verify()` and never writes to a
+  `ContentStore`. The responding side answers a REQUEST strictly by
+  asking its own local `content/ContentStore.js` whether `contentHash`'s
+  bytes are present — never a placement, never IPFS, never another peer,
+  never an anchor, and (unlike 0.7.4's own class) never a catalog lookup
+  of any kind. A peer possessing bytes is a content fact; this class never
+  asks it to also assert a placement, an anchor, or where those bytes
+  originally came from.
+- `application/CreatePublicationSnapshotContentPeerExchangeUseCase.js`
+  (new) — the composition root, mirroring `application/
+  CreatePeerContentExchangeUseCase.js`'s own shape: `contentStore` is
+  never constructed here, `peerMessageBus`/`connectedPeerRegistry` are
+  passed straight through, both shared app-wide collaborators this
+  milestone does not own.
+- `application/PeerSnapshotMaterializationOutcome.js` (new) — the
+  peer-backed sibling of `application/
+  SnapshotPlacementMaterializationOutcome.js`, one axis over: `STORED`,
+  `ALREADY_AVAILABLE`, `HASH_MISMATCH`, and `UNAVAILABLE`. `UNAVAILABLE`
+  is deliberately the SAME outcome whether the selected peer does not
+  currently hold the bytes, is unreachable, or simply never replies — the
+  wire protocol carries no signal that could honestly tell those cases
+  apart, so this enum does not invent one either.
+- `application/MaterializeSnapshotFromPeerUseCase.js` (new) — the use
+  case that actually closes the gap: sends one REQUEST to one
+  caller-chosen peer, waits up to a bounded timeout for a matching
+  RESPONSE, and — only if one arrives — hands the received bytes,
+  UNVERIFIED, to the SAME `application/StoreSnapshotContentUseCase.js`
+  instance `application/ImportPublicationSnapshotTransferPackageUseCase.js`
+  (0.8.32) and `application/MaterializeSnapshotFromPlacementUseCase.js`
+  (0.8.35) are already wired against. Tags every result with `source: {
+  kind: SnapshotMaterializationSourceKind.PEER }`. Deliberately
+  single-peer: never discovers a peer, never selects a "best" one among
+  several connected, never tries a second peer after the first times out,
+  never retries automatically.
+- `application/SnapshotPeerMaterializationCoordinator.js` (new) — the
+  identical thin-pass-through shape `application/
+  SnapshotPlacementMaterializationCoordinator.js` (0.8.35) already
+  established, one axis over: `materialize({ peer, publicationId,
+  contentHash })` forwards straight to the use case above, unchanged.
+
+Plus `application/SnapshotPeerMaterializationUiState.js` and
+`application/SnapshotPeerMaterializationView.js` (new), the identical
+pure-presentation shape `application/
+SnapshotPlacementMaterializationUiState.js`/`View.js` already established
+— `IDLE`/`REQUESTING`/`STORED`/`ALREADY_AVAILABLE`/`UNAVAILABLE`/
+`HASH_MISMATCH`, and a button that reads "Get Snapshot from Peer" the
+first time, "Get Snapshot from Peer Again" after a completed attempt.
+
+> **A peer authenticates a connection, never the bytes it sends over it.**
+> See `docs/Principles.md`, "Peer Content Transfer Is Transport;
+> Verification And Storage Stay Centralized (0.8.37)."
+
+One existing file changes shape, never contract:
+
+- `application/SnapshotMaterializationSourceKind.js` (modified) — adds a
+  third, equally-unranked value, `PEER`, alongside the existing `PACKAGE`
+  and `PLACEMENT` — still no `PREFERRED`, `BEST`, `TRUSTED`, `PRIMARY`, or
+  `SECONDARY`. `application/SnapshotMaterializationView.js`'s own
+  `describeSnapshotMaterializationSourceLabel()` now also returns "Peer"
+  for it, with no adjective in front, exactly like its two siblings.
+
+`ui/main.js` (modified) wires the third caller through the SAME
+`storeSnapshotContentUseCase`/`publicationCatalog` every other local
+read/write in this file already goes through, and rides the SAME
+`peerMessageBus`/`peerSessionManager.registry` every other peer protocol
+already does, under its own `'forkbuild:snapshot-content-transfer'`
+namespace — entirely independent of `publicationPeerContentExchange`
+(0.7.4), which is untouched. `ui/views/DecentralizedPublicationsView.js`
+(modified) adds "Get Snapshot from Peer" to the existing "Local Snapshot"
+section: a person picks one already-authenticated peer from a plain
+dropdown (`retrievalPeers`, the SAME authenticated-peer list "Retrieve
+from Peers" already computes) and clicks the button — this page never
+selects, ranks, or automatically falls back to a different peer on their
+behalf.
+
+### Deliberately excluded
+
+- **Reusing or extending `application/PeerContentExchange.js` (0.7.4).**
+  See this milestone's own header above for why that class's automatic,
+  catalog-gated, multi-peer, verify-inline shape is a different job from
+  this one's explicit, catalog-free, single-peer, transport-only shape.
+- **Multi-peer search or automatic fallback.** This milestone never asks
+  a second peer automatically after the first times out or answers
+  `UNAVAILABLE`. If the selected peer does not help, a person chooses a
+  different one themselves — the identical restraint `application/
+  PeerContentRetrievalCoordinator.js`'s own multi-peer trying-in-order
+  shape (0.7.6) deliberately is NOT reused here, on purpose: that shape
+  exists for automatic resolution, not an explicit single-peer click.
+- **Peer ranking.** No "most reliable peer," no reputation score, no
+  ordering of `retrievalPeers` by anything other than connection order.
+- **Content gossip or automatic synchronization.** Receiving bytes from a
+  peer never announces them to anyone else, and never causes any other
+  replica to acquire them.
+- **Placement creation as a side effect of peer transfer.** Obtaining
+  bytes from a peer never creates an `application/
+  PublicationSnapshotPlacement.js` recording that this replica now holds
+  them, or that the peer it came from does.
+- **Persistent provenance for a peer-backed attempt.** `entry.
+  peerMaterializationAttempt` is ephemeral, session-lifetime UI state,
+  exactly like every ephemeral attempt record before it — reopening the
+  Publication Center starts it back at `null`.
+- **A `NOT_FOUND` wire message, or any wire-level distinction between "the
+  peer does not have it" and "the peer never answered."** See `application/
+  PeerSnapshotContentProtocol.js`'s own header — this protocol's REQUEST/
+  RESPONSE shape structurally cannot tell those cases apart, and this
+  milestone does not pretend otherwise by inventing a state for it.
+
+What's left, and still deliberately unbuilt: the selective-claim-exchange
+work 0.8.30/0.8.31/0.8.32 have each deferred in turn, and any future
+question of whether a person should be able to see, in one place, every
+mechanism (package, placement, or peer) that might currently produce a
+given publication's bytes — the "unified acquisition UI" 0.8.34's,
+0.8.35's, and 0.8.36's own "Deliberately excluded" lists have each, in
+turn, declined to build. Three sources now feed one storage boundary;
+comparing them side by side remains a deliberate non-goal.
