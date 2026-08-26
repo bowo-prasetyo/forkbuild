@@ -28,6 +28,7 @@ import { createResolutionObservation } from '../../application/SnapshotPlacement
 import { deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote } from '../../application/SnapshotPlacementLifecycleView.js';
 import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/PublicationDecentralizationView.js';
 import { describePublicationReplicaKnowledge } from '../../application/PublicationReplicaKnowledgeView.js';
+import { describePublicationReplicaKnowledgeDetail, describeAcquisitionBreakdown } from '../../application/PublicationReplicaKnowledgeDetailView.js';
 import { describeSynchronizationAttempt, describeSynchronizationButtonLabel } from '../../application/PublicationKnowledgeSynchronizationView.js';
 import { PublicationKnowledgeSynchronizationUiState } from '../../application/PublicationKnowledgeSynchronizationUiState.js';
 
@@ -252,6 +253,25 @@ import { PublicationKnowledgeSynchronizationUiState } from '../../application/Pu
 // See docs/Principles.md, "A Resolution Result Describes Whether Bytes
 // Can Be Retrieved Now; It Does Not Rewrite The Placement Claim
 // (0.8.26)."
+//
+// 0.8.31 — Replica Knowledge Provenance & Synchronization Inspection. The
+// "Decentralization" card (0.8.27) now also offers a "Replica Knowledge"
+// disclosure — a claim-level INVENTORY, never a verdict, of exactly how
+// this replica came to know each anchor/placement it already lists above.
+// `entry.replicaKnowledgeDetail` is application/
+// PublicationReplicaKnowledgeDetailView.js's own result, recomputed
+// (never accumulated) by `recomputeReplicaKnowledgeDetail()` every time
+// `loadEvidence()`/`loadPlacements()`/`verifyAnchor()`/`resolvePlacement()`
+// already run — the identical "always current, never stale" restraint
+// `recomputeDecentralization()` already holds one card above. Opening
+// this disclosure never itself reads a store or calls a coordinator; only
+// those four existing actions do, exactly as before this milestone.
+// `entry.replicaKnowledgeExpanded` gates VISIBILITY only, mirroring
+// `evidenceExpanded`/`placementsExpanded` above — the underlying
+// computation is always fresh whether or not a person has ever opened it.
+// See application/PublicationReplicaKnowledgeDetailView.js's own header
+// and docs/Principles.md, "Replica Knowledge Explains What Is Known And
+// How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)."
 const PLACEMENT_BADGE_CLASSES = {
     [SnapshotPlacementResolutionOutcome.RESOLVED]: 'peer-badge--authenticated',
     [SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE]: 'peer-badge--pending',
@@ -594,6 +614,18 @@ export default {
                 // `decentralization` — see `recomputeReplicaKnowledge()`
                 // below.
                 replicaKnowledge: null,
+                // 0.8.31 — Replica Knowledge Provenance & Synchronization
+                // Inspection. The claim-level sibling of `replicaKnowledge`
+                // immediately above — application/
+                // PublicationReplicaKnowledgeDetailView.js's own result,
+                // recomputed by `recomputeReplicaKnowledgeDetail()`
+                // alongside `loadEvidence()`/`loadPlacements()`/
+                // `verifyAnchor()`/`resolvePlacement()`. `replicaKnowledgeExpanded`
+                // gates only whether the "Replica Knowledge" disclosure is
+                // open on screen, mirroring `evidenceExpanded`/
+                // `placementsExpanded` below.
+                replicaKnowledgeDetail: null,
+                replicaKnowledgeExpanded: false,
                 // 0.8.25 — Explicit Snapshot Placement Creation UX. Keyed
                 // by storage type; ephemeral for the lifetime of this
                 // page, exactly like `creationAttempts` above — never
@@ -620,6 +652,7 @@ export default {
             entry.evidenceAnchors = evidenceCoordinator.discover(entry.publication.id);
             entry.evidence = publicationEvidenceView(entry.evidenceAnchors, entry.verifications);
             recomputeConvergence(entry);
+            recomputeReplicaKnowledgeDetail(entry);
         }
 
         // 0.8.13 — Multi-Evidence Comparison & Conflict UX. Re-derives
@@ -696,6 +729,63 @@ export default {
             return describeDecentralizationRelationshipContrast(entry.decentralization);
         }
 
+        // 0.8.31 — Replica Knowledge Provenance & Synchronization
+        // Inspection. Builds the two claim arrays application/
+        // PublicationReplicaKnowledgeDetailView.js expects straight from
+        // THIS entry's own already-loaded `evidenceAnchors`/`placements`
+        // plus a purely local, synchronous read of `anchorKnowledgeStore`/
+        // `placementKnowledgeStore` (the identical "Inspection Is
+        // Observation" read `toggleInspect()`/`togglePlacementInspect()`
+        // already perform per-claim, done here for every known claim at
+        // once) and THIS entry's own `verificationHistory`/
+        // `resolutionHistory` (0.8.12/0.8.26, unchanged). Never touches
+        // the network, a verifier, or a resolver — see that file's own
+        // header. Called explicitly wherever the claim set or a
+        // verification/resolution observation could have changed, rather
+        // than chained through `recomputeDecentralization()`, so a fresh
+        // `verificationHistory`/`resolutionHistory` entry (pushed AFTER
+        // `verifyAnchor()`/`resolvePlacement()` already call
+        // `recomputeConvergence()`) is never one action stale.
+        function recomputeReplicaKnowledgeDetail(entry) {
+            const evidenceClaims = entry.evidenceAnchors.map((anchor) => ({
+                anchorId: anchor.id,
+                knowledgeRecord: anchorKnowledgeStore ? anchorKnowledgeStore.get(anchor.id) : null,
+                verificationObservations: entry.verificationHistory[anchor.id] || []
+            }));
+            const placementClaims = entry.placements.map((placement) => ({
+                placementId: placement.id,
+                knowledgeRecord: placementKnowledgeStore ? placementKnowledgeStore.get(placement.id) : null,
+                resolutionObservations: entry.resolutionHistory[placement.id] || []
+            }));
+            entry.replicaKnowledgeDetail = describePublicationReplicaKnowledgeDetail({
+                publicationId: entry.publication.id,
+                hasPublication: catalog.has(entry.publication.id),
+                evidenceConvergenceView: entry.convergenceView,
+                placementConvergenceView: entry.placementConvergenceView,
+                evidenceClaims,
+                placementClaims
+            });
+        }
+
+        function toggleReplicaKnowledge(entry) {
+            entry.replicaKnowledgeExpanded = !entry.replicaKnowledgeExpanded;
+        }
+
+        // A plain, non-judgmental tally of how many of a dimension's
+        // claims were learned each way — "2 learned via peer exchange, 1
+        // learned via package import" — never a ranking. See application/
+        // PublicationReplicaKnowledgeDetailView.js#describeAcquisitionBreakdown()'s
+        // own header.
+        function acquisitionBreakdownSentence(claims) {
+            const counts = describeAcquisitionBreakdown(claims);
+            const parts = [];
+            if (counts.peer > 0) parts.push(`${counts.peer} learned via peer exchange`);
+            if (counts.package > 0) parts.push(`${counts.package} learned via package import`);
+            if (counts.local > 0) parts.push(`${counts.local} learned locally`);
+            if (!parts.length) return null;
+            return parts.join(' · ');
+        }
+
         function toggleEvidence(entry) {
             entry.evidenceExpanded = !entry.evidenceExpanded;
         }
@@ -725,6 +815,10 @@ export default {
             // `verificationHistory`'s own comment above.
             const history = entry.verificationHistory[anchor.id] || (entry.verificationHistory[anchor.id] = []);
             history.push(createVerificationObservation({ anchorId: anchor.id, outcome: result.outcome, reason: result.reason }));
+            // 0.8.31 — re-derive AFTER the history push above, so this
+            // anchor's own `verificationState` reflects the attempt that
+            // just completed rather than the one before it.
+            recomputeReplicaKnowledgeDetail(entry);
         }
 
         // 0.8.12 — External Anchor Lifecycle & Stale Evidence Semantics.
@@ -819,6 +913,7 @@ export default {
             entry.placements = placementResolutionCoordinator.discover(entry.publication.id);
             entry.placementsView = snapshotPlacementView(entry.placements, entry.resolutions);
             recomputePlacementConvergence(entry);
+            recomputeReplicaKnowledgeDetail(entry);
         }
 
         // 0.8.23 — Multi-Placement Convergence & Relationship UX.
@@ -870,6 +965,10 @@ export default {
             // see `resolutionHistory`'s own comment above.
             const history = entry.resolutionHistory[placement.id] || (entry.resolutionHistory[placement.id] = []);
             history.push(createResolutionObservation({ placementId: placement.id, outcome: result.outcome, reason: result.reason }));
+            // 0.8.31 — re-derive AFTER the history push above, so this
+            // placement's own `resolutionState` reflects the attempt that
+            // just completed rather than the one before it.
+            recomputeReplicaKnowledgeDetail(entry);
         }
 
         // 0.8.26 — Snapshot Placement Lifecycle & Stale Availability
@@ -1254,7 +1353,8 @@ export default {
             placementInspectionKnowledge,
             availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel,
             decentralizationContrast,
-            knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel
+            knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
+            toggleReplicaKnowledge, acquisitionBreakdownSentence
         };
     },
     template: `
@@ -1379,6 +1479,102 @@ export default {
                             <p v-if="synchronizationView(entry).message" class="form-hint form-hint--neutral">
                                 {{ synchronizationView(entry).message }}
                             </p>
+                            <!-- 0.8.31 — Replica Knowledge Provenance & Synchronization
+                                 Inspection. The per-dimension breakdown behind the single
+                                 combined message immediately above — application/
+                                 PublicationKnowledgeSynchronizationView.js's own
+                                 newAnchorCount/alreadyKnownAnchorCount/newPlacementCount/
+                                 alreadyKnownPlacementCount fields, UNCHANGED since 0.8.30,
+                                 simply shown as their own two short rows rather than only
+                                 folded into prose. Shown once a synchronize() attempt has
+                                 actually completed (newAnchorCount is null before then);
+                                 never a new tally of its own. -->
+                            <dl v-if="synchronizationView(entry).newAnchorCount !== null" class="evidence-fields replica-sync-breakdown">
+                                <div class="evidence-field">
+                                    <dt>New claims</dt>
+                                    <dd>Evidence: {{ synchronizationView(entry).newAnchorCount }} · Placements: {{ synchronizationView(entry).newPlacementCount }}</dd>
+                                </div>
+                                <div class="evidence-field">
+                                    <dt>Already known</dt>
+                                    <dd>Evidence: {{ synchronizationView(entry).alreadyKnownAnchorCount }} · Placements: {{ synchronizationView(entry).alreadyKnownPlacementCount }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- 0.8.31 — Replica Knowledge Provenance & Synchronization
+                             Inspection. A claim-level INVENTORY, never a verdict — see
+                             application/PublicationReplicaKnowledgeDetailView.js's own
+                             header. Deliberately its own disclosure, separate from "Show
+                             Evidence"/"Show Placements" below (which list the CLAIMS
+                             themselves): this one answers "how did THIS replica come to
+                             know each one, and what has it independently observed about it
+                             right now," side by side, for every known claim at once, rather
+                             than one "Inspect Evidence"/"Inspect Placement" click at a
+                             time. -->
+                        <div v-if="entry.replicaKnowledgeDetail" class="replica-knowledge">
+                            <button class="action-btn action-btn--secondary" @click="toggleReplicaKnowledge(entry)">
+                                {{ entry.replicaKnowledgeExpanded ? 'Hide Replica Knowledge' : 'Show Replica Knowledge' }}
+                            </button>
+                            <div v-if="entry.replicaKnowledgeExpanded" class="replica-knowledge-detail">
+                                <div class="replica-knowledge-dimension">
+                                    <span class="decentralization-dimension-title">Evidence</span>
+                                    <p class="form-hint form-hint--neutral">
+                                        {{ entry.replicaKnowledgeDetail.evidence.count }} claim{{ entry.replicaKnowledgeDetail.evidence.count === 1 ? '' : 's' }}
+                                        <template v-if="acquisitionBreakdownSentence(entry.replicaKnowledgeDetail.evidence.claims)"> · {{ acquisitionBreakdownSentence(entry.replicaKnowledgeDetail.evidence.claims) }}</template>
+                                    </p>
+                                    <ul v-if="entry.replicaKnowledgeDetail.evidence.claims.length" class="replica-knowledge-claim-list">
+                                        <li v-for="claim in entry.replicaKnowledgeDetail.evidence.claims" :key="claim.anchorId" class="replica-knowledge-claim">
+                                            <dl class="evidence-fields">
+                                                <div class="evidence-field">
+                                                    <dt>Anchor</dt>
+                                                    <dd>{{ shortId(claim.anchorId) }}</dd>
+                                                </div>
+                                                <div class="evidence-field">
+                                                    <dt>Acquisition</dt>
+                                                    <dd>{{ claim.acquisitionLabel }}</dd>
+                                                </div>
+                                                <div class="evidence-field" v-if="claim.firstSeenAt">
+                                                    <dt>First seen</dt>
+                                                    <dd>{{ formatWhen(claim.firstSeenAt) }}</dd>
+                                                </div>
+                                                <div class="evidence-field">
+                                                    <dt>Verification</dt>
+                                                    <dd>{{ claim.verificationStateLabel }}</dd>
+                                                </div>
+                                            </dl>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="replica-knowledge-dimension">
+                                    <span class="decentralization-dimension-title">Placements</span>
+                                    <p class="form-hint form-hint--neutral">
+                                        {{ entry.replicaKnowledgeDetail.placements.count }} claim{{ entry.replicaKnowledgeDetail.placements.count === 1 ? '' : 's' }}
+                                        <template v-if="acquisitionBreakdownSentence(entry.replicaKnowledgeDetail.placements.claims)"> · {{ acquisitionBreakdownSentence(entry.replicaKnowledgeDetail.placements.claims) }}</template>
+                                    </p>
+                                    <ul v-if="entry.replicaKnowledgeDetail.placements.claims.length" class="replica-knowledge-claim-list">
+                                        <li v-for="claim in entry.replicaKnowledgeDetail.placements.claims" :key="claim.placementId" class="replica-knowledge-claim">
+                                            <dl class="evidence-fields">
+                                                <div class="evidence-field">
+                                                    <dt>Placement</dt>
+                                                    <dd>{{ shortId(claim.placementId) }}</dd>
+                                                </div>
+                                                <div class="evidence-field">
+                                                    <dt>Acquisition</dt>
+                                                    <dd>{{ claim.acquisitionLabel }}</dd>
+                                                </div>
+                                                <div class="evidence-field" v-if="claim.firstSeenAt">
+                                                    <dt>First seen</dt>
+                                                    <dd>{{ formatWhen(claim.firstSeenAt) }}</dd>
+                                                </div>
+                                                <div class="evidence-field">
+                                                    <dt>Resolution</dt>
+                                                    <dd>{{ claim.resolutionStateLabel }}</dd>
+                                                </div>
+                                            </dl>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

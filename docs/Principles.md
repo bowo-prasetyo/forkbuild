@@ -12484,3 +12484,77 @@ because, as far as the trust boundary and the provenance store are
 concerned, it did.
 
 See `docs/Roadmap.md`, 0.8.30, for the full milestone entry.
+
+## Replica Knowledge Explains What Is Known And How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)
+
+`application/PublicationReplicaKnowledgeDetailView.js` places two facts
+that have existed since 0.8.12/0.8.17/0.8.24/0.8.26 on the same row, for
+the first time: how THIS replica came to know each individual claim, and
+what it has separately, independently established about it right now.
+Doing that for every known claim at once — a full inventory, rather than
+one claim inspected at a time — is exactly the shape a ranking would be
+easiest to smuggle into, and this file's own tests, and its own header,
+exist to prove it never does.
+
+`application/PublicationDecentralizationView.js` (0.8.27) already drew the
+line one card up: a SYNTHESIS is never an ADJUDICATION. This principle is
+that same line, held at the one layer where it is hardest to hold —
+looking at a whole table of claims, each with its own provenance and its
+own lifecycle, sorted by nothing in particular, ranked by nothing at all.
+No field anywhere in this file's output ever reads `confidence`, `trust`,
+`score`, `preferredClaim`, `bestPlacement`, `reputation`, `authority`, or
+`completeness`. A claim learned via `PACKAGE` sits in the identical shape
+as one learned via `PEER`; a claim independently `VERIFIED` this session
+sits in the identical shape as one this replica has never checked at all.
+Nothing about EARLIER, MORE, or VERIFIED reads as BETTER anywhere in this
+screen.
+
+**Acquisition provenance is not evidence rank, restated one more time at
+the one place it is most tempting to break.** `application/
+AnchorAcquisitionKind.js` (0.8.17) established this for a single claim's
+own badge; `application/PublicationDecentralizationView.js` (0.8.27)
+restated it for two dimensions compared side by side. This milestone is
+the version of the same rule that matters most: a full, unranked table of
+every claim this replica knows, each labeled by how it arrived. Nothing
+here would need to change, structurally, to add a ranking — no new field,
+no new import, no new derivation — which is exactly why the discipline has
+to be enforced by review and by test (`tests/
+PublicationReplicaKnowledgeDetailView.test.js`'s own Section A directly
+asserts none of that vocabulary appears anywhere in this file's output)
+rather than by any structural impossibility. There is nothing in this
+codebase stopping a future milestone from adding a `confidence` field
+here; there is a great deal in this codebase's own history explaining why
+it should not.
+
+**No peer identity, anywhere, even though the machinery underneath knows
+it.** `application/PublicationKnowledgeSynchronizationCoordinator.js`
+(0.8.30) authenticates every peer it talks to, and could trivially record
+which one supplied which claim. `acquisitionLabel` says "Learned via peer
+exchange," never "Learned from Alice" — the identical understated wording
+`application/PublicationAnchorKnowledgeView.js` (0.8.17) chose for a
+single claim's own badge, now shown across an entire table where naming a
+source would read far more like an authority claim than it ever did one
+row at a time. The inference this refuses is specific and easy to state:
+Alice supplied this claim, therefore Alice is trustworthy, therefore the
+claim is trustworthy. This codebase has refused that inference since
+0.8.17; this milestone is the version of the refusal that mattered most to
+get right, because a claim-level provenance table is exactly where a
+"Source" column would look most natural, and would do the most damage.
+
+**Durable claim and provenance; ephemeral verification and resolution —
+proven on the same row, not just asserted in two separate files.**
+`tests/PublicationReplicaKnowledgeDetailView.test.js`'s own flagship
+verifies one anchor and resolves one placement, then strips only the two
+ephemeral fields (`verificationState`/`resolutionState`) from the
+before/after views and asserts everything else — the claim set, each
+dimension's relationship, and every claim's own
+`acquisitionKind`/`acquisitionLabel`/`firstSeenAt` — is byte-identical.
+This is the four-axis table `docs/Roadmap.md`'s own 0.8.31 entry draws
+directly: claim and provenance are durable facts about this replica's
+history that never change once established; verification and resolution
+are ephemeral observations that reflect only the most recent check, reset
+by every fresh page load, and never persisted. Neither axis leaks into
+the other, and this milestone changes nothing about how either one is
+computed — it only ever places them on the same row for a person to read.
+
+See `docs/Roadmap.md`, 0.8.31, for the full milestone entry.

@@ -20715,3 +20715,179 @@ replica whose known claim set has grown large; and a "synchronize every
 publication I know about with this peer" action, one level up from the
 one-publication-at-a-time action this milestone deliberately stayed
 scoped to.
+
+## 0.8.31 — Replica Knowledge Provenance & Synchronization Inspection
+
+0.8.30 made two replicas converge with one click. It also made the result
+harder to read: "4 new claims" tells a person that something happened, but
+not what this replica now knows, or how it came to know any one piece of
+it. Every fact needed to answer that already exists — `application/
+PublicationReplicaKnowledgeView.js` (0.8.28) already reports whether a
+publication is known and whether its two dimensions agree with
+themselves; `application/AnchorAcquisitionKind.js`/`application/
+PlacementAcquisitionKind.js` (0.8.17/0.8.24) already record LOCAL/
+PACKAGE/PEER per claim; `application/
+PublicationAnchorVerificationLifecycleView.js`/`application/
+SnapshotPlacementLifecycleView.js` (0.8.12/0.8.26) already derive a
+current observation state per claim. Nothing has ever placed a single
+claim's provenance and its lifecycle on the SAME row, next to an inventory
+of every other claim this replica knows. This milestone is exactly that —
+and nothing else:
+
+```text
+describePublicationReplicaKnowledge()             (0.8.28, UNCHANGED)
+                     │
+                     ▼
+   describePublicationReplicaKnowledgeDetail()      (THIS MILESTONE)
+                     │
+                     ▼
+   { publicationId, publicationKnown,
+     evidence:   { count, relationship, claims: [...] },
+     placements: { count, relationship, claims: [...] } }
+```
+
+One new file, and its UI consumer:
+
+- `application/PublicationReplicaKnowledgeDetailView.js` (new) — wraps
+  `describePublicationReplicaKnowledge()` (0.8.28, unchanged) for the two
+  dimension-level facts, and adds exactly one thing per dimension: a
+  `claims` array. Each row is a SYNTHESIS of two already-existing pure
+  views, never a new derivation — `application/
+  PublicationAnchorKnowledgeView.js#describeAnchorKnowledge()` (0.8.17)
+  for `acquisitionKind`/`acquisitionLabel`/`firstSeenAt`, and
+  `application/PublicationAnchorVerificationLifecycleView.js#
+  deriveAnchorVerificationLifecycle()` (0.8.12) for
+  `verificationState`/`verificationStateLabel`; the placement side reuses
+  `application/PublicationSnapshotPlacementKnowledgeView.js`/`application/
+  SnapshotPlacementLifecycleView.js` unchanged, one axis over. Also
+  exports `describeAcquisitionBreakdown()`, a plain tally of how many of a
+  dimension's claims were learned each way — "2 learned via peer exchange,
+  1 learned via package import" — never a ranking. Imports no catalog, no
+  store, no verifier, no resolver, and no network: every fact it reports
+  was already computed by its caller and handed in as a plain argument,
+  the identical division of labor `application/
+  PublicationReplicaKnowledgeView.js`'s own `hasPublication` already
+  established.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Show/Hide Replica
+  Knowledge" disclosure inside the existing "Decentralization" card
+  (0.8.27), listing every known anchor/placement claim with its own
+  Acquisition/First seen/Verification (or Resolution) row. Deliberately
+  its own disclosure, separate from "Show Evidence"/"Show Placements" —
+  those list the claims themselves; this one answers how each was learned
+  and what has independently been established about it, for every known
+  claim at once, rather than one "Inspect Evidence"/"Inspect Placement"
+  click at a time. `recomputeReplicaKnowledgeDetail()` is a purely local,
+  synchronous read of `anchorKnowledgeStore`/`placementKnowledgeStore`
+  (the SAME per-claim read `toggleInspect()`/`togglePlacementInspect()`
+  already perform, done here for every claim at once) plus this entry's
+  own `verificationHistory`/`resolutionHistory` (0.8.12/0.8.26,
+  unchanged) — never a network call, and never triggered by opening this
+  page. The existing "Synchronize with Peers" result (0.8.30) also grows
+  one small addition: the SAME `newAnchorCount`/`alreadyKnownAnchorCount`/
+  `newPlacementCount`/`alreadyKnownPlacementCount` fields `application/
+  PublicationKnowledgeSynchronizationView.js` already computed are now
+  also shown as their own two short rows ("New claims" / "Already known"),
+  rather than only folded into one sentence.
+
+> **Replica knowledge explains what is known and how it was acquired; it
+> does not judge what should be trusted.** See `docs/Principles.md`,
+> "Replica Knowledge Explains What Is Known And How It Was Acquired; It
+> Does Not Judge What Should Be Trusted (0.8.31)."
+
+No peer identity appears anywhere in this view, even though the
+synchronization machinery that supplied a PEER claim knows perfectly well
+which authenticated peer answered. `acquisitionLabel` is always one of
+`application/PublicationAnchorKnowledgeView.js`'s own three understated
+strings — "Learned locally"/"Learned via package import"/"Learned via
+peer exchange" — never "Learned from Alice." This is the identical
+restraint 0.8.17 already established, now proven again at the one place a
+future milestone would be most tempted to break it: a screen showing every
+claim's provenance side by side is exactly the shape a per-peer trust
+column would be easiest to add. It has nowhere to go here — this file has
+no parameter capable of receiving a peer identity at all.
+
+- `tests/PublicationReplicaKnowledgeDetailView.test.js` (new) — Section A:
+  argument handling, degrade behavior with no claims supplied, and the
+  understated wording for a claim with no local knowledge record at all.
+  Section B — FLAGSHIP: Alice knows Anchor A/Placement X, Bob knows Anchor
+  B, Carol knows Placement Y, Dave starts knowing nothing. Dave imports
+  Anchor A/Placement X from an offline Publication Replica Package
+  (PACKAGE), then connects LIVE to both Bob and Carol AT ONCE and runs ONE
+  `PublicationKnowledgeSynchronizationCoordinator#synchronize()` call,
+  receiving Anchor B and Placement Y together — each from the one peer who
+  has it, neither peer aware of what the other supplied. Dave's own
+  replica knowledge detail view shows all four claims with correct
+  provenance (A/X -> PACKAGE, B/Y -> PEER). Re-synchronizing changes
+  nothing (FIRST-SEEN-WINS, proven through this milestone's own view).
+  Restarting Dave (fresh catalog/store instances over the identical
+  underlying storage) leaves the view byte-identical. Dave then
+  deliberately verifies Anchor A and resolves Placement X — and with the
+  two ephemeral `verificationState`/`resolutionState` fields stripped from
+  both views, EVERYTHING ELSE (the claim set, each dimension's
+  relationship, and every claim's own acquisition/firstSeenAt, including
+  Anchor B's and Placement Y's own still-untouched lifecycle) is
+  byte-identical before and after. This is the four-axis table this
+  milestone's own design conversation asked for, proven directly rather
+  than merely asserted:
+
+```text
+                   Durable                 Ephemeral
+                 ──────────              ───────────
+Claim              ✓
+Provenance         ✓
+Verification                              ✓
+Resolution                                ✓
+```
+
+### Deliberately excluded
+
+- **A `SynchronizationRecord`, or any persisted "at 09:36 I synchronized
+  with Alice and received X" history.** Considered directly, and
+  rejected, per this milestone's own design conversation: this codebase
+  remembers that a claim is known and how it was FIRST acquired
+  (`AnchorKnowledgeRecord`/`SnapshotPlacementKnowledgeRecord`, durable
+  since 0.8.17/0.8.24) — it does not need to remember the operational
+  event that delivered it. Persisting a synchronization log would be this
+  codebase's first step toward an audit-log system, a scope this
+  milestone's own review explicitly declined to open.
+- **`confidence`/`trust`/`score`/`preferredClaim`/`bestPlacement`/
+  `reputation`/`authority`/`completeness`, anywhere in `application/
+  PublicationReplicaKnowledgeDetailView.js`'s own output.** This file is
+  an INVENTORY, never an ADJUDICATOR — the identical rule `application/
+  PublicationDecentralizationView.js` (0.8.27) already enforces one card
+  up, restated here because a claim-level provenance list is the shape a
+  ranking would be easiest to smuggle into.
+- **Naming a peer in `acquisitionLabel`, or adding a `sourcePeerId` field
+  anywhere on a claim row.** See this milestone's own principle above —
+  "Alice supplied this claim, therefore Alice is trustworthy, therefore
+  the claim is trustworthy" is exactly the inference 0.8.17 already
+  refused, and a per-claim provenance screen is where it would be easiest
+  to reintroduce by accident.
+- **Automatic verification or resolution triggered by opening the
+  "Replica Knowledge" disclosure.** Expanding it only ever reads
+  `anchorKnowledgeStore`/`placementKnowledgeStore` and this entry's own
+  already-collected `verificationHistory`/`resolutionHistory` — it never
+  calls `ExternalAnchorVerifier`/`SnapshotPlacementResolver`. "Verify
+  Evidence"/"Resolve Snapshot" remain the only two actions that ever do,
+  exactly as 0.8.3/0.8.20 already established.
+- **A new wire protocol, a new acquisition kind, or any change to
+  `PublicationKnowledgeSynchronizationCoordinator#synchronize()`'s own
+  result shape.** This milestone is read-only over facts 0.8.12/0.8.17/
+  0.8.24/0.8.26/0.8.28/0.8.30 already compute or persist; it introduces no
+  new way for a claim to arrive, and no new field for a coordinator to
+  return.
+- **Selective claim exchange / synchronization efficiency** (delta
+  encoding, a "since" cursor, a compact digest). 0.8.30's own "What's
+  left" line named this as the next architectural step, and this
+  milestone's own design conversation reaffirmed the order: making the
+  current knowledge model visible and testable comes first; minimizing
+  what crosses the wire is layered on top of an unchanged `synchronize()`
+  contract, later.
+
+What's left, and deliberately unbuilt: selective claim exchange —
+replicas explicitly comparing what each already knows before a
+`synchronize()` call, and requesting only what the other side is missing,
+rather than asking for everything every time. That was 0.8.30's own
+closing question, restated here because this milestone's own review
+reaffirmed it as the right next step once replica knowledge itself was
+visible and inspectable.
