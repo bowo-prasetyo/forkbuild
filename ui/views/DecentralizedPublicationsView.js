@@ -2075,8 +2075,8 @@ export default {
                              two separate, un-merged facts, shown side by side, never
                              combined into one score. Visible only once a local
                              availability check has ever completed for this entry, this
-                             browsing session (mirrors `localSnapshotAvailabilityView
-                             (entry).checked` exactly) — before that, whether bytes are
+                             browsing session (mirrors localSnapshotAvailabilityView
+                             (entry).checked exactly) — before that, whether bytes are
                              currently possessed is simply not yet observed, and this
                              line stays silent rather than guessing. -->
                         <p v-if="localSnapshotContentAvailabilityUseCase && localSnapshotAvailabilityView(entry).checked" class="form-hint form-hint--neutral">
