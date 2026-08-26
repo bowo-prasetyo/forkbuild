@@ -21570,3 +21570,211 @@ Five new files, all under `application/`:
 What's left, and deliberately unbuilt: the unified acquisition UI named
 directly above (0.8.36), and the selective-claim-exchange work
 0.8.30/0.8.31/0.8.32 have each deferred in turn. Both remain open.
+
+## 0.8.36 — Unified Explicit Snapshot Materialization Sources
+
+0.8.34 and 0.8.35 each built a complete, independent explicit path from
+"bytes exist somewhere" to "this replica possesses them": an offline
+Publication Snapshot Transfer Package (0.8.32/0.8.34) and a resolved
+`PublicationSnapshotPlacement` (0.8.20/0.8.35). Each path grew its own
+`verify()`-then-`has()`-then-`put()` shape, independently, because at the
+time neither one existed yet for the other to share. Two milestones later,
+the risk that shape always carried became worth closing: nothing stopped
+the two paths from quietly drifting into subtly different storage or
+integrity rules the next time either one changed.
+
+```text
+                    Snapshot bytes
+                         ▲
+             ┌───────────┴───────────┐
+             │                       │
+   Transfer Package             Placement
+      (0.8.34)                  (0.8.35)
+             │                       │
+       explicit user            explicit user
+          action                    action
+             │                       │
+             └───────────┬───────────┘
+                          ▼
+            application/StoreSnapshotContentUseCase.js
+              verify hash → ContentStore.put()
+              STORED / ALREADY_AVAILABLE / HASH_MISMATCH
+```
+
+This milestone reads the earlier text some of 0.8.34's and 0.8.35's own
+"Deliberately excluded" lists used to describe this entry — "a unified
+acquisition UI... side by side," "a unified picker" — and deliberately
+does NOT build that. A picker or comparison view would need to rank,
+recommend, or otherwise weigh one source against the other, exactly the
+system 0.8.20/0.8.23/0.8.34/0.8.35 have each, in turn, refused to build.
+What this milestone actually closes is narrower and structural: ONE shared
+storage boundary both existing coordinators now feed, plus a small,
+unordered vocabulary for naming — never ranking — which of the two
+supplied a given replica's bytes. The "unified acquisition UI comparing
+every source side by side" those earlier entries gestured at remains
+unbuilt, on purpose, and is renamed below to what it would actually have
+to be if anyone ever builds it: automatic source discovery and ranking —
+still refused.
+
+Five new files, all under `application/`:
+
+- `application/StoreSnapshotContentOutcome.js` (new) — the same "one enum,
+  one file" shape `application/SnapshotContentTransferOutcome.js` (0.8.32)
+  and `application/SnapshotPlacementMaterializationOutcome.js` (0.8.35)
+  already established, narrowed to the three values the SHARED boundary
+  itself can produce: `STORED`, `ALREADY_AVAILABLE`, `HASH_MISMATCH`.
+  Deliberately NOT a replacement for either existing outer vocabulary —
+  both keep their own distinct values unchanged; this is the strictly
+  narrower INNER vocabulary each of them now maps onto.
+- `application/StoreSnapshotContentUseCase.js` (new) — THE shared
+  hash-verify-then-store boundary: `execute({ contentHash, bytes })`
+  recomputes the hash of exactly the bytes it was handed, checks it
+  against the caller's own claimed `contentHash`
+  (`core/ContentReference.js#verify()`, unchanged), and only on a match
+  runs the identical `has()`-then-`put()` shape against this replica's own
+  local `content/ContentStore.js` that `application/
+  ImportPublicationSnapshotTransferPackageUseCase.js` (0.8.32) and
+  `application/MaterializeSnapshotFromPlacementUseCase.js` (0.8.35) used
+  to each implement independently. Has no notion of a "source" at all —
+  it never asks whether `bytes` came from a package or a placement, and
+  never branches on it. See that file's own header for why hash
+  verification is now THE one content trust boundary, exercised exactly
+  once per write, regardless of caller.
+- `application/SnapshotMaterializationSourceKind.js` (new) — a small,
+  deliberately UNORDERED vocabulary naming which explicit mechanism
+  supplied a completed materialization's bytes: `PACKAGE` (application/
+  ImportPublicationSnapshotTransferPackageUseCase.js) and `PLACEMENT`
+  (application/MaterializeSnapshotFromPlacementUseCase.js). No `PREFERRED`,
+  `BEST`, `TRUSTED`, `PRIMARY`, or `SECONDARY` — two values sitting in one
+  frozen object, neither ranked over the other. A completely different
+  axis from `application/AcquisitionKind.js`'s own PEER/PACKAGE/LOCAL
+  (0.8.17), which answers how a replica learned a CLAIM exists; this file
+  answers which action put BYTES on disk.
+- `application/SnapshotMaterializationAttempt.js` (new) — the identical
+  "plain, frozen record of one call" shape `application/
+  SnapshotPlacementResolutionObservation.js` (0.8.20) already established,
+  one axis over: `{ source: { kind }, outcome, contentReference,
+  publicationId, contentHash }`. Ephemeral and NEVER persisted — never
+  written onto a publication, an anchor, a placement, a convergence
+  result, a replica synchronization, or an `application/
+  PublicationReplicaPackage.js`. Built by a caller (the two existing
+  coordinators' own callers, or a test) from whatever an outer result
+  already reports; this file never calls either coordinator itself.
+- `application/SnapshotMaterializationView.js` (new) — pure, read-only
+  presentation, mirroring `application/SnapshotContentMaterializationView.js`
+  (0.8.34) and `application/SnapshotPlacementMaterializationView.js`
+  (0.8.35) one layer above both of them: `describeSnapshotMaterializationSourceLabel()`
+  returns "Transfer package" or "Placement," with no adjective in front
+  of either. `describeLocalSnapshotMaterializationSource()` reports
+  whether a given attempt represents possession (STORED/ALREADY_AVAILABLE)
+  and, only then, that source's own label — feeding one new "Source: …"
+  line on the existing "Local Snapshot" summary (0.8.33), never a second,
+  competing possession fact.
+
+> **A shared storage boundary does not merge the sources that feed it.**
+> See `docs/Principles.md`, "A Shared Storage Boundary Does Not Merge The
+> Sources That Feed It (0.8.36)."
+
+Two existing files change shape, never contract:
+
+- `application/ImportPublicationSnapshotTransferPackageUseCase.js`
+  (modified) — its constructor now takes an `application/
+  StoreSnapshotContentUseCase.js` instance instead of a raw
+  `content/ContentStore.js`, and its own `execute()` delegates hash
+  verification and storage to it, mapping `StoreSnapshotContentOutcome`
+  straight onto its own unchanged `SnapshotContentTransferOutcome` values.
+  Its outer contract is otherwise identical — same three outcomes, same
+  `publicationKnown` restraint (0.8.32, unchanged) — plus one new,
+  additive `source: { kind: PACKAGE }` field on every result.
+- `application/MaterializeSnapshotFromPlacementUseCase.js` (modified) —
+  the identical change, one axis over: its constructor now takes the SAME
+  `StoreSnapshotContentUseCase` instance `ImportPublicationSnapshotTransferPackageUseCase`
+  is wired against, `execute()` delegates storage to it after resolution
+  reports RESOLVED, and its own unchanged five-value
+  `SnapshotPlacementMaterializationOutcome` and `publicationKnown`
+  restraint (0.8.35) are untouched — plus the same additive
+  `source: { kind: PLACEMENT }` field.
+
+- `tests/SnapshotMaterializationUnification.test.js` (new) — Section A:
+  `StoreSnapshotContentUseCase` constructor/argument validation and
+  `execute()` over all three outcomes; `SnapshotMaterializationSourceKind`/
+  `SnapshotMaterializationAttempt` validation; the view functions,
+  including a forbidden-words check proving neither source label is ever
+  "preferred," "best," "trusted," "primary," or "secondary." Section B —
+  FLAGSHIP: Alice publishes a publication and creates a real IPFS
+  placement for it. Bob, who already knows the publication and the
+  placement but does not possess the bytes, clicks "Materialize Snapshot"
+  and obtains them through the PLACEMENT route. Carol, an entirely
+  separate replica who never learns about the placement, receives an
+  offline transfer package instead and clicks "Import Snapshot." Both
+  replicas end up holding byte-identical content, both independently
+  report `AVAILABLE` through the SAME, unchanged 0.8.33 check, and each
+  one's own `SnapshotMaterializationAttempt` names a different source with
+  neither described as better. Section C: content possession is
+  idempotent across acquisition mechanisms, in BOTH orders — a replica
+  that imports a package first and then materializes the identical
+  publication's placement gets `ALREADY_AVAILABLE`, never a second
+  `STORED`, with the placement's own JSON byte-identical before and after
+  and no duplicate placement record created; a replica that materializes
+  first and imports second gets the identical invariant in reverse.
+- `ui/main.js` (modified) — constructs exactly ONE `StoreSnapshotContentUseCase`
+  over the SAME `publicationContentStore` every other local read/write in
+  this file already goes through, and wires BOTH `ImportPublicationSnapshotTransferPackageUseCase`
+  and `MaterializeSnapshotFromPlacementUseCase` against that SAME
+  instance — never two disconnected ones that could quietly drift apart.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — adds
+  `entry.lastMaterializationAttempt`, an ephemeral, session-lifetime
+  `SnapshotMaterializationAttempt` set whenever EITHER "Import Snapshot"
+  or "Materialize Snapshot" actually stores bytes (never on a rejected or
+  unavailable attempt), and one new, silent-until-populated "Source: …"
+  line on the existing "Local Snapshot" summary. Both action-specific
+  panels — "Import Snapshot" and "Materialize Snapshot"/"Materialize
+  Again," with their own existing labels, messages, and badges — are
+  completely unchanged; this milestone adds a shared FACT above them, not
+  a shared ACTION or a merged picker.
+
+### Deliberately excluded
+
+- **`availableSources(publicationId)`, automatic placement discovery, or
+  any ranking of PACKAGE against PLACEMENT.** See `application/
+  StoreSnapshotContentUseCase.js`'s own header. A person still explicitly
+  chooses "Import Snapshot" or "Materialize Snapshot" on one specific
+  card; this milestone never assembles, ranks, or recommends a list of
+  sources on their behalf. The identical restraint 0.8.20/0.8.23/0.8.34/
+  0.8.35 already hold, carried forward unchanged.
+- **A unified picker or side-by-side comparison view.** The literal
+  reading of "unified acquisition UI" 0.8.34's and 0.8.35's own
+  "Deliberately excluded" lists gestured at. Building it now, before any
+  third source exists, would be exactly the premature ranking
+  infrastructure this codebase has refused at every layer since 0.8.16 —
+  see `docs/Principles.md`, "Discovery Asks A Collective Question; It
+  Never Asks Which Peer To Trust (0.8.16)," one axis under.
+- **Persistent content provenance — remembering, on the publication or
+  anywhere durable, which source most recently supplied a replica's
+  bytes.** `entry.lastMaterializationAttempt` is ephemeral, session-lifetime
+  UI state, exactly like `entry.materializationAttempt` (0.8.34) and
+  `entry.materializations` (0.8.35) before it — reopening the Publication
+  Center starts it back at `null`. Whether users genuinely need a durable
+  record of "how did these bytes get here" is a question this milestone
+  deliberately leaves for later, after proving the two paths converge
+  safely.
+- **Automatic fallback from one source to the other.** A `HASH_MISMATCH`
+  or `UNAVAILABLE` result from one route never triggers this codebase to
+  silently try the other route on a person's behalf.
+- **Peer-backed content exchange.** `application/StoreSnapshotContentUseCase.js`
+  is deliberately general enough for a future peer-delivered byte stream
+  to feed it too, but this milestone wires no such third caller — see
+  "What's left" below.
+- **Putting snapshot bytes into `application/PublicationReplicaPackage.js`.**
+  0.8.32's own separation — replica package carries knowledge/claims,
+  transfer package carries bytes — is unchanged and unmentioned by
+  anything in this milestone.
+- **Content synchronization, or possession automatically propagating
+  between replicas.** Each replica's own `StoreSnapshotContentUseCase`
+  instance answers only for that replica's own local `ContentStore`.
+
+What's left, and deliberately unbuilt: explicit peer-backed snapshot
+transfer, reusing this SAME `StoreSnapshotContentUseCase` boundary as its
+third caller rather than inventing a third storage path (0.8.37), and the
+selective-claim-exchange work 0.8.30/0.8.31/0.8.32 have each deferred in
+turn. Both remain open.

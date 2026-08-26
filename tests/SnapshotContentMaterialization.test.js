@@ -2,6 +2,7 @@ import { SnapshotContentMaterializationCoordinator } from '../application/Snapsh
 import { SnapshotContentMaterializationUiState } from '../application/SnapshotContentMaterializationUiState.js';
 import { describeMaterializationAttempt, describeMaterializationButtonLabel } from '../application/SnapshotContentMaterializationView.js';
 import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
 import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
 import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
 import { PublicationSnapshotTransferPackageError } from '../application/PublicationSnapshotTransferPackageValidator.js';
@@ -99,7 +100,7 @@ function makeReplica() {
     const publicationExchange = new PublicationExchange(publicationCatalog, new LocalAuthorizationVerifier());
     const anchorExchange = new PublicationAnchorExchange(anchorCatalog, new LocalAuthorizationVerifier());
     const placementExchange = new PublicationSnapshotPlacementExchange(placementCatalog, new LocalAuthorizationVerifier());
-    const importUseCase = new ImportPublicationSnapshotTransferPackageUseCase(contentStore, publicationCatalog);
+    const importUseCase = new ImportPublicationSnapshotTransferPackageUseCase(new StoreSnapshotContentUseCase(contentStore), publicationCatalog);
     const materializationCoordinator = new SnapshotContentMaterializationCoordinator(importUseCase);
     const availabilityUseCase = new CheckLocalSnapshotContentAvailabilityUseCase(contentStore);
     return {
@@ -165,7 +166,7 @@ async function run() {
         const pkg = await new BuildPublicationSnapshotTransferPackageUseCase({ publicationCatalog: daveCatalog, contentStore: daveContentStore }).execute('pub-section-a');
 
         const directResult = await new ImportPublicationSnapshotTransferPackageUseCase(
-            new LocalContentStore(new InMemoryStorageProvider()), new LocalPublicationCatalog(new InMemoryStorageProvider())
+            new StoreSnapshotContentUseCase(new LocalContentStore(new InMemoryStorageProvider())), new LocalPublicationCatalog(new InMemoryStorageProvider())
         ).execute(pkg);
         const { materializationCoordinator: freshCoordinator } = makeReplica();
         const coordinatorResult = await freshCoordinator.import(pkg);
