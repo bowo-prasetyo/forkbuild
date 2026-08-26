@@ -37,6 +37,9 @@ import { SnapshotContentMaterializationUiState } from '../../application/Snapsho
 import { describeMaterializationAttempt, describeMaterializationButtonLabel } from '../../application/SnapshotContentMaterializationView.js';
 import { SnapshotPlacementMaterializationUiState } from '../../application/SnapshotPlacementMaterializationUiState.js';
 import { describePlacementMaterializationAttempt, describePlacementMaterializationButtonLabel } from '../../application/SnapshotPlacementMaterializationView.js';
+import { SnapshotPeerMaterializationUiState } from '../../application/SnapshotPeerMaterializationUiState.js';
+import { describePeerMaterializationAttempt, describePeerMaterializationButtonLabel } from '../../application/SnapshotPeerMaterializationView.js';
+import { PeerSnapshotMaterializationOutcome } from '../../application/PeerSnapshotMaterializationOutcome.js';
 import { SnapshotContentTransferOutcome } from '../../application/SnapshotContentTransferOutcome.js';
 import { SnapshotPlacementMaterializationOutcome } from '../../application/SnapshotPlacementMaterializationOutcome.js';
 import { StoreSnapshotContentOutcome } from '../../application/StoreSnapshotContentOutcome.js';
@@ -372,6 +375,21 @@ const PLACEMENT_MATERIALIZATION_BADGE_CLASSES = {
     [SnapshotPlacementMaterializationUiState.INVALID_PLACEMENT]: 'peer-badge--failed'
 };
 
+// 0.8.37 — Explicit Peer Snapshot Content Transfer. The peer-backed
+// sibling of PLACEMENT_MATERIALIZATION_BADGE_CLASSES above, one axis over
+// — STORED and ALREADY_AVAILABLE both read as "good" (green); UNAVAILABLE
+// reads as "honestly inconclusive" (amber), since a peer not answering in
+// time is never distinguishable from a peer that simply does not hold the
+// bytes (see application/PeerSnapshotMaterializationOutcome.js's own
+// header); HASH_MISMATCH reads as a definite rejection (red).
+const PEER_MATERIALIZATION_BADGE_CLASSES = {
+    [SnapshotPeerMaterializationUiState.REQUESTING]: 'peer-badge--pending',
+    [SnapshotPeerMaterializationUiState.STORED]: 'peer-badge--authenticated',
+    [SnapshotPeerMaterializationUiState.ALREADY_AVAILABLE]: 'peer-badge--authenticated',
+    [SnapshotPeerMaterializationUiState.UNAVAILABLE]: 'peer-badge--pending',
+    [SnapshotPeerMaterializationUiState.HASH_MISMATCH]: 'peer-badge--failed'
+};
+
 const PLACEMENT_BADGE_CLASSES = {
     [SnapshotPlacementResolutionOutcome.RESOLVED]: 'peer-badge--authenticated',
     [SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE]: 'peer-badge--pending',
@@ -554,6 +572,12 @@ export default {
         // `placementResolutionCoordinator` above already holds for
         // "Resolve Snapshot".
         const snapshotPlacementMaterializationCoordinator = inject('snapshotPlacementMaterializationCoordinator', null);
+        // 0.8.37 — Explicit Peer Snapshot Content Transfer. Optional —
+        // absent here (e.g. a test harness that never provides it), "Get
+        // Snapshot from Peer" simply never renders, the identical
+        // degrade-gracefully posture `snapshotPlacementMaterializationCoordinator`
+        // above already holds for "Materialize Snapshot".
+        const snapshotPeerMaterializationCoordinator = inject('snapshotPeerMaterializationCoordinator', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -798,7 +822,19 @@ export default {
                 // "Source: …" line below, alongside `localSnapshotAvailability`
                 // above, which independently answers whether bytes are
                 // present RIGHT NOW.
-                lastMaterializationAttempt: null
+                lastMaterializationAttempt: null,
+                // 0.8.37 — Explicit Peer Snapshot Content Transfer.
+                // `peerMaterializationSelectedPeerId` is whichever
+                // `retrievalPeers` connectionId a person has picked from
+                // this entry's own dropdown — the person's own explicit
+                // choice of PEER, never a peer this page selects, ranks,
+                // or falls back through on their behalf.
+                // `peerMaterializationAttempt` is a single ephemeral
+                // attempt object for THIS entry, `null` until "Get
+                // Snapshot from Peer" is explicitly clicked, mirroring
+                // `materializationAttempt` above exactly, one axis over.
+                peerMaterializationSelectedPeerId: '',
+                peerMaterializationAttempt: null
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -1336,6 +1372,57 @@ export default {
             });
         }
 
+        // 0.8.37 — Explicit Peer Snapshot Content Transfer. The peer-backed
+        // sibling of materializePlacement() immediately above, one axis
+        // over: always for exactly ONE already-authenticated peer a person
+        // picked from THIS entry's own dropdown, always because they
+        // clicked "Get Snapshot from Peer"/"Get Snapshot from Peer Again"
+        // on it. This page never selects, ranks, or falls back to a
+        // different peer on their behalf — see application/
+        // MaterializeSnapshotFromPeerUseCase.js's own header. Never called
+        // from onMounted(), refreshList(), or any other action — only this
+        // explicit click ever asks a peer for bytes.
+        function selectedPeerForMaterialization(entry) {
+            return retrievalPeers.value.find((peer) => peer.connectionId === entry.peerMaterializationSelectedPeerId) || null;
+        }
+
+        async function requestSnapshotFromPeer(entry) {
+            const peer = selectedPeerForMaterialization(entry);
+            if (!peer || !snapshotPeerMaterializationCoordinator) return;
+            entry.peerMaterializationAttempt = { requesting: true };
+            try {
+                const result = await snapshotPeerMaterializationCoordinator.materialize({
+                    peer, publicationId: entry.publication.id, contentHash: entry.publication.contentReference.hash
+                });
+                entry.peerMaterializationAttempt = {
+                    requesting: false, error: null,
+                    outcome: result.outcome, reason: result.reason, contentReference: result.contentReference,
+                    publicationId: result.publicationId, contentHash: result.contentHash, publicationKnown: result.publicationKnown
+                };
+                recordMaterializationSource(entry, result.source, result.outcome === PeerSnapshotMaterializationOutcome.STORED
+                    || result.outcome === PeerSnapshotMaterializationOutcome.ALREADY_AVAILABLE, result.contentReference, result.publicationId);
+            } catch (error) {
+                entry.peerMaterializationAttempt = { requesting: false, outcome: null, error: error.message };
+            }
+        }
+
+        function peerMaterializationView(entry) {
+            return describePeerMaterializationAttempt(entry.peerMaterializationAttempt);
+        }
+
+        function peerMaterializationBadgeClass(entry) {
+            const state = peerMaterializationView(entry).state;
+            return PEER_MATERIALIZATION_BADGE_CLASSES[state] || null;
+        }
+
+        function peerMaterializationButtonLabel(entry) {
+            const view = peerMaterializationView(entry);
+            return describePeerMaterializationButtonLabel({
+                requesting: view.requesting,
+                materialized: view.state !== SnapshotPeerMaterializationUiState.IDLE
+            });
+        }
+
         // 0.8.20 — the one place this page calls application/
         // PublicationSnapshotPlacementDetailView.js (and, separately,
         // `placementViewRegistry`) — always for exactly ONE placement,
@@ -1707,7 +1794,9 @@ export default {
             snapshotContentMaterializationCoordinator, onMaterializationFileChosen, importSnapshotContent,
             materializationView, materializationBadgeClass, materializationButtonLabel,
             snapshotPlacementMaterializationCoordinator, materializePlacement,
-            placementMaterializationView, placementMaterializationBadgeClass, placementMaterializationButtonLabel
+            placementMaterializationView, placementMaterializationBadgeClass, placementMaterializationButtonLabel,
+            snapshotPeerMaterializationCoordinator, requestSnapshotFromPeer,
+            peerMaterializationView, peerMaterializationBadgeClass, peerMaterializationButtonLabel
         };
     },
     template: `
@@ -1782,7 +1871,7 @@ export default {
                          each hidden on its own when its own coordinator/use case was not
                          provided; this outer wrapper renders only when at least one of
                          them was. -->
-                    <div v-if="localSnapshotContentAvailabilityUseCase || snapshotContentMaterializationCoordinator" class="decentralization-summary">
+                    <div v-if="localSnapshotContentAvailabilityUseCase || snapshotContentMaterializationCoordinator || snapshotPeerMaterializationCoordinator" class="decentralization-summary">
                         <span class="evidence-convergence-title">Local Snapshot</span>
 
                         <div v-if="localSnapshotContentAvailabilityUseCase" class="evidence-discovery-header">
@@ -1847,6 +1936,47 @@ export default {
                             </template>
                             <p v-if="entry.materializationFormOpen && materializationView(entry).message" class="form-hint form-hint--neutral">
                                 {{ materializationView(entry).message }}
+                            </p>
+                        </div>
+
+                        <!-- 0.8.37 — Explicit Peer Snapshot Content Transfer. The person
+                             chooses the peer — never a coordinator, never a ranked list,
+                             never an automatic fallback to a second peer if the first
+                             one is unavailable. Requesting always asks for exactly this
+                             entry's own contentHash from exactly the selected peer; a
+                             peer that does not currently possess the bytes, or that never
+                             answers, reports the same UNAVAILABLE outcome as a genuine
+                             timeout — see application/PeerSnapshotMaterializationOutcome.js's
+                             own header. See application/
+                             MaterializeSnapshotFromPeerUseCase.js's own header. -->
+                        <div v-if="snapshotPeerMaterializationCoordinator" class="evidence-list">
+                            <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
+                                No authenticated peer is connected right now — connect to one first from
+                                <router-link to="/peers">Peers</router-link>.
+                            </p>
+                            <template v-else>
+                                <label class="form-field">
+                                    <span class="form-label">Peer</span>
+                                    <select v-model="entry.peerMaterializationSelectedPeerId" class="form-input">
+                                        <option value="" disabled>Choose an authenticated peer…</option>
+                                        <option v-for="peer in retrievalPeers" :key="peer.connectionId" :value="peer.connectionId">
+                                            {{ peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer') }}
+                                        </option>
+                                    </select>
+                                </label>
+                                <div class="evidence-discovery-header">
+                                    <button class="action-btn action-btn--secondary"
+                                            :disabled="peerMaterializationView(entry).requesting || !entry.peerMaterializationSelectedPeerId"
+                                            @click="requestSnapshotFromPeer(entry)">
+                                        {{ peerMaterializationButtonLabel(entry) }}
+                                    </button>
+                                    <span v-if="peerMaterializationView(entry).label" class="peer-badge" :class="peerMaterializationBadgeClass(entry)">
+                                        {{ peerMaterializationView(entry).label }}
+                                    </span>
+                                </div>
+                            </template>
+                            <p v-if="peerMaterializationView(entry).message" class="form-hint form-hint--neutral">
+                                {{ peerMaterializationView(entry).message }}
                             </p>
                         </div>
                     </div>

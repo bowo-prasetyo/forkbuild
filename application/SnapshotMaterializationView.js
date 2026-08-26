@@ -17,22 +17,24 @@ import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
 // SnapshotPlacementMaterializationCoordinator.js, and never itself stores
 // a byte.
 //
-// THE ONE RULE THIS FILE EXISTS TO ENFORCE: the two sources are named,
-// never ranked. `describeSnapshotMaterializationSourceLabel()` returns
-// "Transfer package" or "Placement" with no adjective in front of
-// either — never "recommended," "preferred," or "verified via." A
+// THE ONE RULE THIS FILE EXISTS TO ENFORCE: the sources are named, never
+// ranked. `describeSnapshotMaterializationSourceLabel()` returns "Transfer
+// package," "Placement," or "Peer" (0.8.37) with no adjective in front of
+// any of them — never "recommended," "preferred," or "verified via." A
 // publication whose bytes arrived through a placement is exactly as
-// locally possessed as one whose bytes arrived through a package; this
-// file's only job is to say which one actually happened, so a person
-// reading "Local Snapshot" can see the fact without either sentence
-// implying the other route would have been worse. See application/
+// locally possessed as one whose bytes arrived through a package or a
+// peer; this file's only job is to say which one actually happened, so a
+// person reading "Local Snapshot" can see the fact without any sentence
+// implying another route would have been worse. See application/
 // SnapshotMaterializationSourceKind.js's own header and docs/
 // Principles.md, "A Shared Storage Boundary Does Not Merge The Sources
-// That Feed It (0.8.36)."
+// That Feed It (0.8.36)" and "Peer Content Transfer Is Transport;
+// Verification And Storage Stay Centralized (0.8.37)."
 export function describeSnapshotMaterializationSourceLabel(kind) {
     switch (kind) {
         case SnapshotMaterializationSourceKind.PACKAGE: return 'Transfer package';
         case SnapshotMaterializationSourceKind.PLACEMENT: return 'Placement';
+        case SnapshotMaterializationSourceKind.PEER: return 'Peer';
         default: return null;
     }
 }

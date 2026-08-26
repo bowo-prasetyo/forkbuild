@@ -13022,3 +13022,112 @@ proving the two EXISTING explicit sources converge on one boundary safely,
 not adding a third.
 
 See `docs/Roadmap.md`, 0.8.36, for the full milestone entry.
+
+## Peer Content Transfer Is Transport; Verification And Storage Stay Centralized (0.8.37)
+
+0.8.36 built one shared boundary — `application/
+StoreSnapshotContentUseCase.js` — for the two explicit sources that
+existed at the time, and named the third caller it was already general
+enough to accept without inventing a new storage path: a peer, asked
+directly, by a person who chose it. This milestone builds that caller,
+and in doing so draws a line this codebase had not yet needed to draw
+explicitly: a peer connection authenticates who you are talking to; it
+never authenticates what they hand you.
+
+**Peer authentication authenticates the communication participant;
+content-hash verification authenticates the content against its claim.**
+These are two different mechanisms answering two different questions, and
+0.8.37 is the first milestone to build a class whose entire job is
+carrying bytes across the first boundary while deliberately refusing to
+also perform the second. `application/
+PublicationSnapshotContentPeerExchange.js#onContentReceived()` fires for
+every structurally valid RESPONSE from an authenticated peer — UNVERIFIED,
+on purpose. Being authenticated only ever proved which key sent a
+message; it never proved the message's own claim about its bytes. The
+ONLY thing that ever makes those bytes trustworthy is `application/
+MaterializeSnapshotFromPeerUseCase.js` handing them, unchanged, to
+`application/StoreSnapshotContentUseCase.js`, which recomputes their hash
+and checks it against exactly the `contentHash` this replica itself asked
+for. This milestone's own flagship test proves the point operationally: an
+authenticated peer that answers with bytes not matching its own claimed
+hash is rejected exactly as completely as an unauthenticated stranger
+would be — authentication bought it a channel, never a byte's worth of
+trust in what traveled over it.
+
+**A peer possessing bytes is a content fact, never an assertion about a
+placement, an anchor, or where those bytes came from.** `application/
+PublicationSnapshotContentPeerExchange.js`'s own responding side answers a
+REQUEST by asking exactly one question of exactly one collaborator — does
+this replica's own local `content/ContentStore.js` currently hold bytes
+for this hash? — and nothing else. It never resolves a placement, never
+consults IPFS, never asks a third peer, never inspects an anchor, and
+(unlike `application/PeerContentExchange.js`'s 0.7.4 automatic-retrieval
+sibling) never even consults a catalog. A peer that answers is saying
+"I happen to have these bytes right now," full stop; it is never saying
+"a placement I hold names this locator authoritative" or "I verified this
+with an external system." Conflating those would let a private, purely
+local fact about one replica's own storage masquerade as a claim about
+the wider network — exactly the layering this codebase has kept apart
+since a placement was first defined as a locator, not evidence of history
+(0.8.18).
+
+**Silence is the only honest answer to "I don't have it," and this
+codebase does not pretend otherwise by inventing a state that could tell
+"doesn't have it" apart from "never answered."** `application/
+PeerSnapshotContentProtocol.js` carries no `NOT_FOUND` kind — a peer that
+does not currently hold the requested bytes simply never sends a
+RESPONSE, the identical restraint every sibling `*PeerProtocol.js` module
+in this codebase already holds. `application/
+PeerSnapshotMaterializationOutcome.js#UNAVAILABLE` is therefore
+deliberately the SAME value whether the selected peer lacks the bytes, is
+unreachable, or is simply slow — nothing on the requesting side could ever
+honestly distinguish those cases, so nothing pretends to. This is not
+merely economy of design: a wire protocol that COULD tell peers apart by
+their reason for not answering would leak information a peer may have
+every reason not to disclose (what it does or does not choose to serve),
+for a distinction the requester cannot act on differently anyway. One
+flagship test makes this concrete: a peer that has no bytes for a hash
+answers with the exact same silence a peer that never received the
+message would produce, and this replica's own use case reports the exact
+same honest `UNAVAILABLE` either way — never a resolved placement, never
+a request quietly forwarded to a third peer on the first peer's behalf.
+
+**Explicit, single-peer selection is a deliberately different shape from
+automatic, multi-peer retrieval — and building the second is not a reason
+to bend the first into it.** `application/PeerContentExchange.js` (0.7.4)
+already exists, already asks every connected peer automatically the
+moment a publication resolves `CONTENT_UNAVAILABLE`, and already
+verifies-and-stores inline the instant a RESPONSE arrives. This milestone
+builds a second, narrower class instead of reusing or extending that one,
+because the two describe genuinely different actions: one is a system
+deciding, on a person's behalf, to ask everyone it can reach; the other is
+a person deciding, explicitly, to ask ONE peer they chose. `application/
+MaterializeSnapshotFromPeerUseCase.js` never discovers a peer, never
+selects a "best" one among several connected, never tries a second peer
+after the first times out, and never retries automatically — the person
+clicking "Get Snapshot from Peer" on one specific, already-selected peer
+is the only mechanism this milestone ever offers for choosing who to ask.
+Two classes, two protocols, two authorization boundaries, sharing nothing
+but `peer/PeerMessageBus.js`'s own multiplexing — the identical restraint
+that already keeps `application/PublicationPeerExchange.js`, `application/
+PublicationAnchorPeerExchange.js`, and `application/
+PublicationSnapshotPlacementPeerExchange.js` three separate classes rather
+than one generic superclass, now proven to hold for content transport too.
+
+**A third source does not change how the first two compare to each
+other, or invite a fourth axis to rank all three.** `application/
+SnapshotMaterializationSourceKind.js` now holds `PACKAGE`, `PLACEMENT`,
+and `PEER` in the identical frozen, unordered object 0.8.36 established —
+adding a value is not the same act as adding a hierarchy. A publication
+whose bytes arrived through an authenticated peer is exactly as locally
+possessed as one whose bytes arrived through an offline package or a
+resolved placement; `application/
+SnapshotMaterializationView.js#describeSnapshotMaterializationSourceLabel()`
+returns "Peer" with no adjective in front, the identical restraint it
+already held for "Transfer package" and "Placement." This milestone
+explicitly declines to build the "unified acquisition UI comparing every
+source side by side" that 0.8.34, 0.8.35, and 0.8.36 have each, in turn,
+named and refused — three sources now feed one storage boundary; ranking
+or comparing them remains exactly as premature as it was with two.
+
+See `docs/Roadmap.md`, 0.8.37, for the full milestone entry.

@@ -62,6 +62,9 @@ import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/
 import { SnapshotContentMaterializationCoordinator } from '../application/SnapshotContentMaterializationCoordinator.js';
 import { MaterializeSnapshotFromPlacementUseCase } from '../application/MaterializeSnapshotFromPlacementUseCase.js';
 import { SnapshotPlacementMaterializationCoordinator } from '../application/SnapshotPlacementMaterializationCoordinator.js';
+import { CreatePublicationSnapshotContentPeerExchangeUseCase } from '../application/CreatePublicationSnapshotContentPeerExchangeUseCase.js';
+import { MaterializeSnapshotFromPeerUseCase } from '../application/MaterializeSnapshotFromPeerUseCase.js';
+import { SnapshotPeerMaterializationCoordinator } from '../application/SnapshotPeerMaterializationCoordinator.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -603,6 +606,29 @@ const materializeSnapshotFromPlacementUseCase = new MaterializeSnapshotFromPlace
 );
 const snapshotPlacementMaterializationCoordinator = new SnapshotPlacementMaterializationCoordinator(materializeSnapshotFromPlacementUseCase);
 
+// 0.8.37 — Explicit Peer Snapshot Content Transfer. The THIRD explicit
+// caller of the SAME `storeSnapshotContentUseCase`/`publicationCatalog`
+// every other local read/write in this file already goes through — never
+// a second, disconnected store or catalog. `publicationSnapshotContentPeerExchange`
+// rides the SAME `peerMessageBus`/`peerSessionManager.registry` every
+// other peer/PeerMessageBus.js protocol in this file already does, under
+// its own 'forkbuild:snapshot-content-transfer' namespace — entirely
+// independent of `publicationPeerContentExchange` (0.7.4) immediately
+// above, which stays wired exactly as before, unchanged. application/
+// SnapshotPeerMaterializationCoordinator.js forwards straight to
+// application/MaterializeSnapshotFromPeerUseCase.js; see that use case's
+// own header on why it adds no peer ranking, fallback, or automatic
+// retrieval.
+const { peerExchange: publicationSnapshotContentPeerExchange } = new CreatePublicationSnapshotContentPeerExchangeUseCase().execute({
+    contentStore: publicationContentStore,
+    peerMessageBus,
+    connectedPeerRegistry: peerSessionManager.registry
+});
+const materializeSnapshotFromPeerUseCase = new MaterializeSnapshotFromPeerUseCase(
+    publicationSnapshotContentPeerExchange, storeSnapshotContentUseCase, publicationCatalog
+);
+const snapshotPeerMaterializationCoordinator = new SnapshotPeerMaterializationCoordinator(materializeSnapshotFromPeerUseCase);
+
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 // The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
 // this milestone's own design calls for — it wraps the SAME coordinator
@@ -773,5 +799,7 @@ app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvail
 app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterializationCoordinator);
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization.
 app.provide('snapshotPlacementMaterializationCoordinator', snapshotPlacementMaterializationCoordinator);
+// 0.8.37 — Explicit Peer Snapshot Content Transfer.
+app.provide('snapshotPeerMaterializationCoordinator', snapshotPeerMaterializationCoordinator);
 app.use(router);
 app.mount('#app');
