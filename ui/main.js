@@ -57,6 +57,8 @@ import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../applicatio
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { SnapshotContentMaterializationCoordinator } from '../application/SnapshotContentMaterializationCoordinator.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -560,6 +562,17 @@ const { coordinator: snapshotPlacementCreationCoordinator } = new CreateSnapshot
 // CheckLocalSnapshotContentAvailabilityUseCase.js's own header.
 const localSnapshotContentAvailabilityUseCase = new CheckLocalSnapshotContentAvailabilityUseCase(publicationContentStore);
 
+// 0.8.34 — Explicit Snapshot Materialization UX. The offline import side
+// application/ImportPublicationSnapshotTransferPackageUseCase.js (0.8.32)
+// already implemented with no UI consumer at all — wired here through the
+// SAME `publicationContentStore`/`publicationCatalog` every other local
+// read/write in this file already goes through, never a second, disconnected
+// store or catalog. application/SnapshotContentMaterializationCoordinator.js
+// forwards straight to it; see that class's own header on why it adds no
+// source-discovery of its own for this first version.
+const importPublicationSnapshotTransferPackageUseCase = new ImportPublicationSnapshotTransferPackageUseCase(publicationContentStore, publicationCatalog);
+const snapshotContentMaterializationCoordinator = new SnapshotContentMaterializationCoordinator(importPublicationSnapshotTransferPackageUseCase);
+
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 // The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
 // this milestone's own design calls for — it wraps the SAME coordinator
@@ -727,5 +740,6 @@ app.provide('placementKnowledgeStore', placementKnowledgeStore);
 app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoordinator);
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
 app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
+app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterializationCoordinator);
 app.use(router);
 app.mount('#app');

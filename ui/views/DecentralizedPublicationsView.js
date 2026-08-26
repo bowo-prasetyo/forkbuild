@@ -33,6 +33,8 @@ import { describeSynchronizationAttempt, describeSynchronizationButtonLabel } fr
 import { PublicationKnowledgeSynchronizationUiState } from '../../application/PublicationKnowledgeSynchronizationUiState.js';
 import { LocalSnapshotContentAvailabilityOutcome } from '../../application/LocalSnapshotContentAvailabilityOutcome.js';
 import { describeLocalSnapshotContentAvailability, describeAvailabilityCheckButtonLabel } from '../../application/LocalSnapshotContentAvailabilityView.js';
+import { SnapshotContentMaterializationUiState } from '../../application/SnapshotContentMaterializationUiState.js';
+import { describeMaterializationAttempt, describeMaterializationButtonLabel } from '../../application/SnapshotContentMaterializationView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -300,6 +302,25 @@ const LOCAL_SNAPSHOT_AVAILABILITY_BADGE_CLASSES = {
     [LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH]: 'peer-badge--failed'
 };
 
+// 0.8.34 — Explicit Snapshot Materialization UX. Reuses the identical
+// .peer-badge palette every sibling *CreationUiState above already draws
+// from — IMPORTED and ALREADY_AVAILABLE both read as "good" (green): a
+// duplicate import is never a failure, exactly as application/
+// SnapshotContentTransferOutcome.js's own ALREADY_STORED header already
+// states. REJECTED reads as a definite rejection (red), exactly like
+// ExternalAnchorCreationUiState.REJECTED — the package was read and its
+// own bytes demonstrably did not match its own claimed hash. UNAVAILABLE
+// reads as "honestly inconclusive" (amber) — nothing was ever attempted,
+// whether because the input was malformed or because application/
+// SnapshotContentMaterializationCoordinator.js#import() itself threw.
+const MATERIALIZATION_BADGE_CLASSES = {
+    [SnapshotContentMaterializationUiState.IMPORTING]: 'peer-badge--pending',
+    [SnapshotContentMaterializationUiState.IMPORTED]: 'peer-badge--authenticated',
+    [SnapshotContentMaterializationUiState.ALREADY_AVAILABLE]: 'peer-badge--authenticated',
+    [SnapshotContentMaterializationUiState.UNAVAILABLE]: 'peer-badge--pending',
+    [SnapshotContentMaterializationUiState.REJECTED]: 'peer-badge--failed'
+};
+
 const PLACEMENT_BADGE_CLASSES = {
     [SnapshotPlacementResolutionOutcome.RESOLVED]: 'peer-badge--authenticated',
     [SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE]: 'peer-badge--pending',
@@ -469,6 +490,12 @@ export default {
         // degrade-gracefully posture `placementResolutionCoordinator`
         // above already holds.
         const localSnapshotContentAvailabilityUseCase = inject('localSnapshotContentAvailabilityUseCase', null);
+        // 0.8.34 — Explicit Snapshot Materialization UX. Optional —
+        // absent here (e.g. a test harness that never provides it),
+        // "Import Snapshot" simply never renders, the identical
+        // degrade-gracefully posture `localSnapshotContentAvailabilityUseCase`
+        // immediately above already holds.
+        const snapshotContentMaterializationCoordinator = inject('snapshotContentMaterializationCoordinator', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -678,7 +705,20 @@ export default {
                 // `recomputeDecentralization()` above — a local content
                 // check is its own explicit action, exactly like
                 // `resolutions`/`verifications`.
-                localSnapshotAvailability: null
+                localSnapshotAvailability: null,
+                // 0.8.34 — Explicit Snapshot Materialization UX. `materializationFormOpen`
+                // gates only whether the file-picker/paste panel is on
+                // screen — opening it never imports anything, mirroring
+                // IdentityManagementView.js#showImportForm's own restraint.
+                // `materializationImportText` is whatever a chosen file's
+                // contents, or a person's own paste, currently holds — read
+                // only when "Import Snapshot" is explicitly clicked.
+                // `materializationAttempt` is a single ephemeral attempt
+                // object for THIS entry, `null` until that click, mirroring
+                // `localSnapshotAvailability` immediately above exactly.
+                materializationFormOpen: false,
+                materializationImportText: '',
+                materializationAttempt: null
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -803,6 +843,75 @@ export default {
         function localSnapshotAvailabilityButtonLabel(entry) {
             const view = localSnapshotAvailabilityView(entry);
             return describeAvailabilityCheckButtonLabel({ checking: view.checking, checked: view.checked });
+        }
+
+        // 0.8.34 — Explicit Snapshot Materialization UX. `event.target.
+        // files[0]` is whatever file a person just chose through the
+        // "Import Snapshot" panel's own file input — read as text and
+        // placed into `entry.materializationImportText`, exactly mirroring
+        // IdentityManagementView.js#onImportFileChosen()'s own shape.
+        // Never itself parses JSON or imports anything; only the explicit
+        // "Import Snapshot" click below does.
+        function onMaterializationFileChosen(entry, event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => { entry.materializationImportText = String(reader.result || ''); };
+            reader.readAsText(file);
+        }
+
+        // 0.8.34 — Explicit Snapshot Materialization UX. The one place
+        // this page calls application/
+        // SnapshotContentMaterializationCoordinator.js#import() — always
+        // for whatever `entry.materializationImportText` currently holds,
+        // always because a person clicked "Import Snapshot". `JSON.parse`
+        // and the coordinator call are each wrapped separately, mirroring
+        // EditorView.js#importBlueprint()'s own two-stage "is this even
+        // JSON" / "is this a valid package" error handling — a malformed
+        // PublicationSnapshotTransferPackageError and a bad-JSON paste
+        // both land in the identical UNAVAILABLE display state (see
+        // application/SnapshotContentMaterializationView.js's own header
+        // on why). A completed attempt replaces whatever this entry's own
+        // previous attempt reported — a fresh result, never a merge with
+        // the one before it.
+        async function importSnapshotContent(entry) {
+            if (!snapshotContentMaterializationCoordinator) return;
+            let pkg;
+            try {
+                pkg = JSON.parse(entry.materializationImportText);
+            } catch (e) {
+                entry.materializationAttempt = {
+                    importing: false, outcome: null, error: 'That is not valid JSON — choose a file, or paste the contents, of an exported Publication Snapshot Transfer Package.'
+                };
+                return;
+            }
+            entry.materializationAttempt = { importing: true };
+            try {
+                const result = await snapshotContentMaterializationCoordinator.import(pkg);
+                entry.materializationAttempt = {
+                    importing: false, error: null,
+                    outcome: result.outcome, contentReference: result.contentReference,
+                    publicationId: result.publicationId, publicationKnown: result.publicationKnown
+                };
+            } catch (error) {
+                entry.materializationAttempt = {
+                    importing: false, outcome: null,
+                    error: error.message.replace(/^PublicationSnapshotTransferPackage:\s*/, '')
+                };
+            }
+        }
+
+        function materializationView(entry) {
+            return describeMaterializationAttempt(entry.materializationAttempt);
+        }
+
+        function materializationBadgeClass(entry) {
+            const state = materializationView(entry).state;
+            return MATERIALIZATION_BADGE_CLASSES[state] || null;
+        }
+
+        function materializationButtonLabel(entry) {
+            return describeMaterializationButtonLabel({ importing: materializationView(entry).importing });
         }
 
         // 0.8.31 — Replica Knowledge Provenance & Synchronization
@@ -1432,7 +1541,9 @@ export default {
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
             localSnapshotContentAvailabilityUseCase, checkLocalSnapshotAvailability, localSnapshotAvailabilityView,
-            localSnapshotAvailabilityBadgeClass, localSnapshotAvailabilityButtonLabel
+            localSnapshotAvailabilityBadgeClass, localSnapshotAvailabilityButtonLabel,
+            snapshotContentMaterializationCoordinator, onMaterializationFileChosen, importSnapshotContent,
+            materializationView, materializationBadgeClass, materializationButtonLabel
         };
     },
     template: `
@@ -1499,11 +1610,18 @@ export default {
                          Deliberately its own section, separate from "Decentralization"
                          below: that card describes DISTRIBUTED claims this replica
                          knows about; this one describes a fact about THIS replica's own
-                         present content state. Hidden entirely when no
-                         localSnapshotContentAvailabilityUseCase was provided. -->
-                    <div v-if="localSnapshotContentAvailabilityUseCase" class="decentralization-summary">
+                         present content state.
+                         0.8.34 — Explicit Snapshot Materialization UX adds "Import
+                         Snapshot" to this SAME section — the explicit action that
+                         connects 0.8.32's own offline transfer pipeline to 0.8.33's own
+                         inspection above. The two remain two independent capabilities,
+                         each hidden on its own when its own coordinator/use case was not
+                         provided; this outer wrapper renders only when at least one of
+                         them was. -->
+                    <div v-if="localSnapshotContentAvailabilityUseCase || snapshotContentMaterializationCoordinator" class="decentralization-summary">
                         <span class="evidence-convergence-title">Local Snapshot</span>
-                        <div class="evidence-discovery-header">
+
+                        <div v-if="localSnapshotContentAvailabilityUseCase" class="evidence-discovery-header">
                             <button class="action-btn action-btn--secondary"
                                     :disabled="localSnapshotAvailabilityView(entry).checking"
                                     @click="checkLocalSnapshotAvailability(entry)">
@@ -1513,9 +1631,48 @@ export default {
                                 {{ localSnapshotAvailabilityView(entry).label }}
                             </span>
                         </div>
-                        <p v-if="localSnapshotAvailabilityView(entry).message" class="form-hint form-hint--neutral">
+                        <p v-if="localSnapshotContentAvailabilityUseCase && localSnapshotAvailabilityView(entry).message" class="form-hint form-hint--neutral">
                             {{ localSnapshotAvailabilityView(entry).message }}
                         </p>
+
+                        <!-- 0.8.34 — Explicit Snapshot Materialization UX. Never triggered
+                             by opening this page, checking local availability, or expanding
+                             any disclosure — only this explicit "Import Snapshot" click
+                             (after choosing a file or pasting a package) ever imports a
+                             single byte. The source is always exactly what a person
+                             explicitly supplies here — a Publication Snapshot Transfer
+                             Package (0.8.32) — never a list this page discovers or ranks on
+                             their behalf (see application/
+                             SnapshotContentMaterializationCoordinator.js's own header on
+                             why `availableSources()` does not exist yet). -->
+                        <div v-if="snapshotContentMaterializationCoordinator" class="evidence-list">
+                            <button v-if="!entry.materializationFormOpen" class="action-btn action-btn--secondary"
+                                    @click="entry.materializationFormOpen = true">
+                                Import Snapshot
+                            </button>
+                            <template v-else>
+                                <label class="form-field">
+                                    <span class="form-label">Publication Snapshot Transfer Package</span>
+                                    <input type="file" accept="application/json" class="form-input"
+                                           @change="onMaterializationFileChosen(entry, $event)" />
+                                </label>
+                                <textarea v-model="entry.materializationImportText" class="form-input" rows="4"
+                                          placeholder="…or paste the exported Publication Snapshot Transfer Package JSON here"></textarea>
+                                <div class="evidence-discovery-header">
+                                    <button class="action-btn action-btn--primary"
+                                            :disabled="materializationView(entry).importing"
+                                            @click="importSnapshotContent(entry)">
+                                        {{ materializationButtonLabel(entry) }}
+                                    </button>
+                                    <span v-if="materializationView(entry).label" class="peer-badge" :class="materializationBadgeClass(entry)">
+                                        {{ materializationView(entry).label }}
+                                    </span>
+                                </div>
+                            </template>
+                            <p v-if="entry.materializationFormOpen && materializationView(entry).message" class="form-hint form-hint--neutral">
+                                {{ materializationView(entry).message }}
+                            </p>
+                        </div>
                     </div>
 
                     <!-- 0.8.27 — Unified Publication Decentralization View. Always visible
