@@ -13497,3 +13497,87 @@ guarantees for a single request — `observePeers()` adds no fallback logic
 of its own on top of that guarantee.
 
 See `docs/Roadmap.md`, 0.8.41, for the full milestone entry.
+
+## A Source Selection Is A Person's Own Action, Never An Application Recommendation (0.8.42)
+
+**A `SnapshotMaterializationSourceSelection` names a choice already made;
+it never makes one.** `application/
+SnapshotMaterializationSourceSelection.js#createSnapshotMaterializationSourceSelection()`
+accepts a `kind` and exactly the payload that kind needs — a `pkg`, a
+`placement`, or a `peer` plus `publicationId`/`contentHash` — all already
+in the caller's own hand. It never looks up a package, discovers a
+placement, or selects a peer on its own; the one thing it enforces is
+that the payload actually matches the `kind` given, throwing on a
+mismatch rather than quietly accepting an incomplete or contradictory
+selection.
+
+**Composition, not a fourth materialization implementation.** `application/
+SnapshotMaterializationSelectionCoordinator.js#materialize()` dispatches
+a selection to exactly the one, already-existing, already-tested
+coordinator its own `kind` names — `application/
+SnapshotContentMaterializationCoordinator.js` (0.8.34), `application/
+SnapshotPlacementMaterializationCoordinator.js` (0.8.35), or `application/
+SnapshotPeerMaterializationCoordinator.js` (0.8.37) — and returns that
+coordinator's own result completely unchanged. It contains no hash
+verification, no storage call, and no signature check; those still live
+exactly once, downstream, inside application/
+StoreSnapshotContentUseCase.js and the three use cases already feeding
+it. A test in `tests/SnapshotMaterializationSelectionCoordinator.test.js`
+asserts this directly: dispatching a selection of one kind never calls
+either of the other two underlying coordinators.
+
+**No discovery, no ranking, no retry, no fallback, ever, inside the
+dispatcher.** `SnapshotMaterializationSelectionCoordinator` never
+assembles a list of candidate sources, never picks a "best" one, never
+tries a second source after the first selection fails, and never asks a
+different peer or resolves a different placement on a person's behalf. A
+coordinator that was never wired for a given kind throws immediately
+rather than silently falling through to a different source — a genuine
+caller contract violation, not a degrade path.
+
+See `docs/Roadmap.md`, 0.8.42, for the full milestone entry.
+
+## An Observation Can Inform A Person's Choice Without Becoming An Application Decision (0.8.42)
+
+**A possession observation and a materialization attempt remain two
+independently true (or false) facts, at two independently timestamped
+moments, even when the second one is triggered directly from the first
+one's own row on screen.** Clicking "Get Snapshot from Alice" on a "Peer
+Snapshot Possession Comparison" row (0.8.41) that reported AVAILABLE
+never rewrites that row, never touches `entry.
+peerPossessionObservationHistory`, and never changes `peerRow.state` —
+`ui/views/DecentralizedPublicationsView.js#materializeFromComparisonPeer()`
+writes its own result into a wholly separate, per-peer
+`entry.peerPossessionComparisonMaterializations` entry instead. The
+milestone's own flagship test in `tests/
+SnapshotMaterializationSelectionCoordinator.test.js` (Section C) proves
+this directly and structurally: Alice's own possession observation is
+asserted byte-identical, still reading AVAILABLE, both before and after a
+materialization attempt against her that honestly resolves UNAVAILABLE
+because she has since gone offline.
+
+**A failed attempt against the chosen source never triggers a different
+one.** When Alice's own materialization attempt fails, nothing in this
+codebase automatically tries Carol — even though the same comparison row
+list shows Carol also reporting AVAILABLE — and nothing creates a
+placement, modifies placement convergence, or lowers any score attached
+to Alice. Bob, who reported NOT_AVAILABLE on the same comparison, is
+never contacted at all: an observation only ever offers an action for a
+row that reported possession, and even then only when a person clicks it
+themselves. Choosing Carol afterward is a second, wholly independent
+action a person takes deliberately — never a fallback this codebase
+performs on their behalf.
+
+**Only a row that reported possession gets an action at all, and the
+action is always named after the specific row it came from.** `ui/views/
+DecentralizedPublicationsView.js`'s own "Get Snapshot from `<peer>`"
+button renders only when `peerRow.possessed` is true, never for a row
+that reported NOT_AVAILABLE or could not be determined — mirroring the
+milestone's own design conversation directly: "Alice and Carol simply get
+an explicit action... The application should not say 'Alice is the best
+source.'" No comparison row is ever described as better, more reliable,
+or more likely to succeed than another; each row's own button is offered
+purely because that peer said, at one past moment, that it possessed the
+bytes — nothing more.
+
+See `docs/Roadmap.md`, 0.8.42, for the full milestone entry.
