@@ -13131,3 +13131,101 @@ named and refused — three sources now feed one storage boundary; ranking
 or comparing them remains exactly as premature as it was with two.
 
 See `docs/Roadmap.md`, 0.8.37, for the full milestone entry.
+
+## Materialization History Describes Byte Acquisition, Not Source Trust (0.8.38)
+
+**A materialization source identifies the mechanism through which bytes
+were supplied to the local content store. It does not establish
+authority, reliability, authenticity, persistence, preference, or
+ranking for that source.** `application/SnapshotMaterializationHistory.js`
+and `application/SnapshotMaterializationHistoryView.js` exist to let a
+person see, over one browsing session, how their own replica's "Local
+Snapshot" came to hold what it holds — every explicit "Import Snapshot,"
+"Materialize Snapshot," and "Get Snapshot from Peer" attempt that
+actually reached `application/StoreSnapshotContentUseCase.js`, in the
+order it happened, including the ones that were rejected. Nowhere in
+that history is a source ever called "trusted," "best," "verified,"
+"reliable," "preferred," or "canonical" — `describeSnapshotMaterializationSourceLabel()`
+(0.8.36/0.8.37) already holds that restraint for a single attempt; this
+milestone's own `describeSnapshotMaterializationOutcomeLabel()` extends
+it, unchanged, to a whole sequence of them.
+
+**This history is a different fact from acquisition provenance, and the
+two must never collapse into one axis.** `application/
+AnchorAcquisitionKind.js` (0.8.17) and `application/
+PlacementAcquisitionKind.js` (0.8.24) answer "how did this replica come
+to KNOW this claim exists?" — a fact about a LOCATOR, recorded once, at
+first sight, and never revisited. `application/
+SnapshotMaterializationHistory.js` answers a completely different
+question: "how did BYTES actually arrive in my own `content/
+ContentStore.js`, this session?" A replica can know a placement's own
+locator for months, learned via peer gossip, before ever successfully
+materializing bytes from it at all — the acquisition kind and the
+eventual materialization history describe two independent moments,
+possibly separated by an arbitrary amount of time, and neither implies
+anything about the other. Conflating them would let "I learned about this
+placement from Alice" quietly become "Alice supplied these bytes," which
+is not necessarily even true — a placement's own locator and a
+placement's own resolved bytes are already two independently verified
+facts (0.8.20/0.8.35); folding a THIRD axis, acquisition, into that pair
+would only re-introduce the exact ambiguity those milestones were built
+to keep apart.
+
+**A history is a sequence to be appended to, never a single fact to be
+overwritten — and a rejected attempt belongs in it exactly as much as a
+successful one.** Before this milestone, `entry.lastMaterializationAttempt`
+(0.8.36) was the only trace any materialization attempt left behind, and
+it held only the SINGLE most recent SUCCESSFUL one — a HASH_MISMATCH
+attempt, or an attempt superseded by a later one, vanished the instant
+the next attempt completed. `application/
+SnapshotMaterializationHistory.js#appendSnapshotMaterializationHistoryEntry()`
+never overwrites, never deduplicates, and never filters down to "the one
+that mattered": every attempt that reached the shared storage boundary
+gets its own entry, in order, rejection included. This milestone's own
+flagship test proves why that restraint matters operationally: a peer
+that answers with tampered bytes leaves a `HASH_MISMATCH` entry in the
+history, and a fresh `application/
+CheckLocalSnapshotContentAvailabilityUseCase.js` (0.8.33) call run
+immediately afterward still, correctly, reports `NOT_AVAILABLE` — the
+history records that an attempt was MADE, never that it SUCCEEDED, and
+nothing about a rejected entry sitting in the history is ever allowed to
+imply possession the unchanged 0.8.33 check itself does not independently
+confirm.
+
+**An attempt that never reached the storage boundary leaves no trace in
+the history, because nothing about "how bytes reached the content store"
+actually happened.** A placement whose resolution answers `UNAVAILABLE`
+or `INVALID_PLACEMENT`, or a peer request that simply times out, never
+once calls `application/StoreSnapshotContentUseCase.js` — the three
+mapping functions `ui/views/DecentralizedPublicationsView.js` uses to
+build a history entry (`mapPackageOutcomeToStoreOutcome()`/
+`mapPlacementOutcomeToStoreOutcome()`/`mapPeerOutcomeToStoreOutcome()`)
+each return `null` for exactly those outcomes, and a `null` mapped
+outcome means `recordMaterializationHistoryEntry()` records nothing.
+This is not an oversight or an economy of storage — it is the same
+honesty restraint `application/PeerSnapshotContentProtocol.js`'s own
+header already holds for silence ("`UNAVAILABLE` is deliberately the SAME
+outcome whether the selected peer does not currently hold the bytes, is
+unreachable, or simply never replies"): a history that recorded an entry
+for an attempt that never reached the boundary at all would be narrating
+a storage decision that never actually happened.
+
+**A count of attempts per source is a historical fact, never a
+recommendation, and this codebase draws that line explicitly rather than
+leaving it to be inferred.** `application/
+SnapshotMaterializationHistory.js#describeSnapshotMaterializationSourceCounts()`
+tallies how many recorded attempts named each of `PACKAGE`, `PLACEMENT`,
+and `PEER` — mirroring `application/
+PublicationReplicaKnowledgeDetailView.js#describeAcquisitionBreakdown()`'s
+own shape (0.8.31) exactly, one axis over — and counts EVERY attempt,
+rejected ones included, because the question it answers is "how many
+times was this mechanism explicitly tried," never "how many times did it
+succeed" or "which one should be tried next." There is no `preferredSource`,
+no `sourceScore`, no `sourceReliability`, no `sourceConfidence` anywhere
+in this codebase, and this milestone's own flagship test proves the
+point directly: three replicas obtaining byte-identical content through
+three different sources produce a combined tally of exactly 1/1/1 — a
+plain fact about what happened, never evidence that one mechanism
+outperformed the others.
+
+See `docs/Roadmap.md`, 0.8.38, for the full milestone entry.

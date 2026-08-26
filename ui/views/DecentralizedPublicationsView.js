@@ -45,6 +45,8 @@ import { SnapshotPlacementMaterializationOutcome } from '../../application/Snaps
 import { StoreSnapshotContentOutcome } from '../../application/StoreSnapshotContentOutcome.js';
 import { createSnapshotMaterializationAttempt } from '../../application/SnapshotMaterializationAttempt.js';
 import { describeLocalSnapshotMaterializationSource } from '../../application/SnapshotMaterializationView.js';
+import { appendSnapshotMaterializationHistoryEntry, describeSnapshotMaterializationSourceCounts } from '../../application/SnapshotMaterializationHistory.js';
+import { describeSnapshotMaterializationHistory } from '../../application/SnapshotMaterializationHistoryView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -306,6 +308,22 @@ import { describeLocalSnapshotMaterializationSource } from '../../application/Sn
 // CheckLocalSnapshotContentAvailabilityUseCase.js's own header and
 // docs/Principles.md, "Local Content Availability Is An Observation, Not
 // A Verdict (0.8.33)."
+//
+// 0.8.38 — Snapshot Materialization History & Source Inspection. "Local
+// Snapshot" now also offers a "Materialization History" disclosure, one
+// axis past 0.8.36's own "Source: …" line: where that line names only
+// the SINGLE most recent action that actually stored bytes, `entry.
+// materializationHistory` is the full ORDERED sequence of every "Import
+// Snapshot"/"Materialize Snapshot"/"Get Snapshot from Peer" attempt this
+// entry has seen THIS SESSION that actually reached application/
+// StoreSnapshotContentUseCase.js — appended to by `recordMaterializationHistoryEntry()`
+// alongside each of the three existing recording call sites, never a
+// fourth action of its own. Includes a rejected HASH_MISMATCH attempt,
+// which `lastMaterializationAttempt` never records at all. Deliberately
+// never ranks, scores, or picks a "preferred" source out of the history
+// it narrates — see application/SnapshotMaterializationHistoryView.js's
+// own header and docs/Principles.md, "Materialization History Describes
+// Byte Acquisition, Not Source Trust (0.8.38)."
 //
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization. Each
 // placement card in "Snapshot Placements" below now also offers
@@ -834,7 +852,21 @@ export default {
                 // Snapshot from Peer" is explicitly clicked, mirroring
                 // `materializationAttempt` above exactly, one axis over.
                 peerMaterializationSelectedPeerId: '',
-                peerMaterializationAttempt: null
+                peerMaterializationAttempt: null,
+                // 0.8.38 — Snapshot Materialization History & Source
+                // Inspection. The ORDERED, ephemeral sequence of every
+                // application/SnapshotMaterializationAttempt.js this entry
+                // has seen THIS SESSION from ANY of the three explicit
+                // actions above, appended to by `recordMaterializationHistoryEntry()`
+                // below — never overwritten, and never filtered down to
+                // only the successful ones `lastMaterializationAttempt`
+                // above already tracks. `materializationHistoryExpanded`
+                // gates only whether the "Materialization History"
+                // disclosure is on screen, mirroring
+                // `replicaKnowledgeExpanded` above. See application/
+                // SnapshotMaterializationHistory.js's own header.
+                materializationHistory: [],
+                materializationHistoryExpanded: false
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -1011,6 +1043,13 @@ export default {
                 };
                 recordMaterializationSource(entry, result.source, result.outcome === SnapshotContentTransferOutcome.STORED
                     || result.outcome === SnapshotContentTransferOutcome.ALREADY_STORED, result.contentReference, result.publicationId);
+                recordMaterializationHistoryEntry(entry, {
+                    sourceKind: result.source.kind,
+                    outcome: mapPackageOutcomeToStoreOutcome(result.outcome),
+                    publicationId: result.publicationId,
+                    contentHash: pkg.contentHash,
+                    contentReference: result.contentReference
+                });
             } catch (error) {
                 entry.materializationAttempt = {
                     importing: false, outcome: null,
@@ -1048,6 +1087,92 @@ export default {
 
         function localSnapshotMaterializationSourceView(entry) {
             return describeLocalSnapshotMaterializationSource(entry.lastMaterializationAttempt);
+        }
+
+        // 0.8.38 — Snapshot Materialization History & Source Inspection.
+        // Each of the three explicit actions' own use case reports the
+        // outcome in ITS OWN outer vocabulary (application/
+        // SnapshotContentTransferOutcome.js, application/
+        // SnapshotPlacementMaterializationOutcome.js, application/
+        // PeerSnapshotMaterializationOutcome.js) — these three functions
+        // map each of those onto the shared inner application/
+        // StoreSnapshotContentOutcome.js vocabulary application/
+        // StoreSnapshotContentUseCase.js itself always resolves to,
+        // exactly the mapping each use case's own header already
+        // documents. Returning `null` for
+        // SnapshotPlacementMaterializationOutcome.UNAVAILABLE/
+        // INVALID_PLACEMENT and PeerSnapshotMaterializationOutcome.UNAVAILABLE
+        // is deliberate: those outcomes mean resolution or transport never
+        // reached application/StoreSnapshotContentUseCase.js at all, so
+        // recording a history entry for them would narrate a storage
+        // decision that never actually happened.
+        function mapPackageOutcomeToStoreOutcome(outcome) {
+            switch (outcome) {
+                case SnapshotContentTransferOutcome.STORED: return StoreSnapshotContentOutcome.STORED;
+                case SnapshotContentTransferOutcome.ALREADY_STORED: return StoreSnapshotContentOutcome.ALREADY_AVAILABLE;
+                case SnapshotContentTransferOutcome.CONTENT_HASH_MISMATCH: return StoreSnapshotContentOutcome.HASH_MISMATCH;
+                default: return null;
+            }
+        }
+
+        function mapPlacementOutcomeToStoreOutcome(outcome) {
+            switch (outcome) {
+                case SnapshotPlacementMaterializationOutcome.STORED: return StoreSnapshotContentOutcome.STORED;
+                case SnapshotPlacementMaterializationOutcome.ALREADY_AVAILABLE: return StoreSnapshotContentOutcome.ALREADY_AVAILABLE;
+                case SnapshotPlacementMaterializationOutcome.HASH_MISMATCH: return StoreSnapshotContentOutcome.HASH_MISMATCH;
+                default: return null;
+            }
+        }
+
+        function mapPeerOutcomeToStoreOutcome(outcome) {
+            switch (outcome) {
+                case PeerSnapshotMaterializationOutcome.STORED: return StoreSnapshotContentOutcome.STORED;
+                case PeerSnapshotMaterializationOutcome.ALREADY_AVAILABLE: return StoreSnapshotContentOutcome.ALREADY_AVAILABLE;
+                case PeerSnapshotMaterializationOutcome.HASH_MISMATCH: return StoreSnapshotContentOutcome.HASH_MISMATCH;
+                default: return null;
+            }
+        }
+
+        // Appends ONE application/SnapshotMaterializationAttempt.js entry
+        // to `entry.materializationHistory` for EVERY completed attempt
+        // that actually reached application/StoreSnapshotContentUseCase.js
+        // — STORED, ALREADY_AVAILABLE, AND HASH_MISMATCH alike — unlike
+        // `recordMaterializationSource()` above, which only ever updates
+        // `lastMaterializationAttempt` on a successful one. `outcome` here
+        // is already one of application/StoreSnapshotContentOutcome.js's
+        // three values (the caller having already run it through one of
+        // the three mapping functions above); `null` means the underlying
+        // action never reached that boundary at all, and nothing is
+        // recorded. See application/SnapshotMaterializationHistory.js's
+        // own header on why this is APPENDED, never overwritten.
+        function recordMaterializationHistoryEntry(entry, { sourceKind, outcome, publicationId, contentHash, contentReference }) {
+            if (!sourceKind || !outcome) return;
+            const attempt = createSnapshotMaterializationAttempt({ sourceKind, outcome, contentReference, publicationId, contentHash });
+            entry.materializationHistory = appendSnapshotMaterializationHistoryEntry(entry.materializationHistory, attempt);
+        }
+
+        function materializationHistoryView(entry) {
+            return describeSnapshotMaterializationHistory(entry.materializationHistory);
+        }
+
+        // A plain, non-judgmental tally of how many recorded history
+        // entries named each source — "1 via transfer package, 1 via
+        // placement, 2 via peer" — mirroring `acquisitionBreakdownSentence()`
+        // above exactly, one axis over. Never a ranking: see application/
+        // SnapshotMaterializationHistory.js#describeSnapshotMaterializationSourceCounts()'s
+        // own header.
+        function materializationSourceCountsSentence(entry) {
+            const counts = describeSnapshotMaterializationSourceCounts(entry.materializationHistory);
+            const parts = [];
+            if (counts.package > 0) parts.push(`${counts.package} via transfer package`);
+            if (counts.placement > 0) parts.push(`${counts.placement} via placement`);
+            if (counts.peer > 0) parts.push(`${counts.peer} via peer`);
+            if (!parts.length) return null;
+            return parts.join(' · ');
+        }
+
+        function toggleMaterializationHistory(entry) {
+            entry.materializationHistoryExpanded = !entry.materializationHistoryExpanded;
         }
 
         function materializationView(entry) {
@@ -1350,6 +1475,13 @@ export default {
                 };
                 recordMaterializationSource(entry, result.source, result.outcome === SnapshotPlacementMaterializationOutcome.STORED
                     || result.outcome === SnapshotPlacementMaterializationOutcome.ALREADY_AVAILABLE, result.contentReference, result.publicationId);
+                recordMaterializationHistoryEntry(entry, {
+                    sourceKind: result.source.kind,
+                    outcome: mapPlacementOutcomeToStoreOutcome(result.outcome),
+                    publicationId: result.publicationId,
+                    contentHash: result.contentHash,
+                    contentReference: result.contentReference
+                });
             } catch (error) {
                 entry.materializations[placement.id] = { materializing: false, outcome: null, error: error.message };
             }
@@ -1401,6 +1533,13 @@ export default {
                 };
                 recordMaterializationSource(entry, result.source, result.outcome === PeerSnapshotMaterializationOutcome.STORED
                     || result.outcome === PeerSnapshotMaterializationOutcome.ALREADY_AVAILABLE, result.contentReference, result.publicationId);
+                recordMaterializationHistoryEntry(entry, {
+                    sourceKind: result.source.kind,
+                    outcome: mapPeerOutcomeToStoreOutcome(result.outcome),
+                    publicationId: result.publicationId,
+                    contentHash: result.contentHash,
+                    contentReference: result.contentReference
+                });
             } catch (error) {
                 entry.peerMaterializationAttempt = { requesting: false, outcome: null, error: error.message };
             }
@@ -1796,7 +1935,8 @@ export default {
             snapshotPlacementMaterializationCoordinator, materializePlacement,
             placementMaterializationView, placementMaterializationBadgeClass, placementMaterializationButtonLabel,
             snapshotPeerMaterializationCoordinator, requestSnapshotFromPeer,
-            peerMaterializationView, peerMaterializationBadgeClass, peerMaterializationButtonLabel
+            peerMaterializationView, peerMaterializationBadgeClass, peerMaterializationButtonLabel,
+            materializationHistoryView, materializationSourceCountsSentence, toggleMaterializationHistory
         };
     },
     template: `
@@ -1978,6 +2118,50 @@ export default {
                             <p v-if="peerMaterializationView(entry).message" class="form-hint form-hint--neutral">
                                 {{ peerMaterializationView(entry).message }}
                             </p>
+                        </div>
+
+                        <!-- 0.8.38 — Snapshot Materialization History & Source
+                             Inspection. The ORDERED narration of EVERY explicit
+                             "Import Snapshot"/"Materialize Snapshot"/"Get
+                             Snapshot from Peer" attempt this entry has seen THIS
+                             SESSION that actually reached application/
+                             StoreSnapshotContentUseCase.js — including a
+                             rejected HASH_MISMATCH attempt, never only the
+                             successful ones "Source: …" above already names.
+                             Deliberately a plain narration, never a ranking: no
+                             source is called better, more reliable, or more
+                             trustworthy than another — see application/
+                             SnapshotMaterializationHistoryView.js's own header
+                             and docs/Principles.md, "Materialization History
+                             Describes Byte Acquisition, Not Source Trust
+                             (0.8.38)." -->
+                        <div v-if="materializationHistoryView(entry).count > 0" class="evidence-list">
+                            <button class="action-btn action-btn--secondary" @click="toggleMaterializationHistory(entry)">
+                                {{ entry.materializationHistoryExpanded ? 'Hide Materialization History' : 'Show Materialization History' }}
+                            </button>
+                            <div v-if="entry.materializationHistoryExpanded">
+                                <p v-if="materializationSourceCountsSentence(entry)" class="form-hint form-hint--neutral">
+                                    {{ materializationSourceCountsSentence(entry) }}
+                                </p>
+                                <ul class="replica-knowledge-claim-list">
+                                    <li v-for="(attempt, index) in materializationHistoryView(entry).attempts" :key="index" class="replica-knowledge-claim">
+                                        <dl class="evidence-fields">
+                                            <div class="evidence-field">
+                                                <dt>Source</dt>
+                                                <dd>{{ attempt.sourceLabel }}</dd>
+                                            </div>
+                                            <div class="evidence-field">
+                                                <dt>Outcome</dt>
+                                                <dd>{{ attempt.outcomeLabel }}</dd>
+                                            </div>
+                                            <div class="evidence-field">
+                                                <dt>When</dt>
+                                                <dd>{{ formatWhen(attempt.observedAt) }}</dd>
+                                            </div>
+                                        </dl>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
 
