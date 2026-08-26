@@ -41,9 +41,14 @@ top-level [docs/](..) folder.
    signed authorship and place-name claims, catalog status, retrieving
    content from peers, optional external evidence: creating, discovering
    from peers, verifying, and inspecting anchors like a Bitcoin timestamp,
-   and optional snapshot placements: creating, inspecting, resolving, and
-   comparing locators like an IPFS node that can currently serve a
-   claim's content.
+   optional snapshot placements: creating, inspecting, resolving,
+   materializing, and comparing locators like an IPFS node that can
+   currently serve a claim's content, a **Local Snapshot** section for
+   checking, importing, and pulling in the actual bytes this device holds
+   (from a placement, a peer, or an offline file), and a
+   **Decentralization** overview comparing your evidence and placements,
+   synchronizing knowledge with peers, and seeing how each claim was
+   learned.
 
 ## Reference
 
