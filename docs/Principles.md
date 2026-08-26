@@ -13323,3 +13323,93 @@ for sharing it across replicas remains explicitly future work, not
 something this milestone reaches for just because the shape now exists.
 
 See `docs/Roadmap.md`, 0.8.39, for the full milestone entry.
+
+## Peer Possession Responses Are Observations, Not Placement Claims (0.8.40)
+
+**A replica's statement that it currently possesses snapshot bytes does not
+establish a placement, evidence claim, authority relationship, or
+guarantee of future availability.** `application/
+PublicationSnapshotPossessionPeerExchange.js` lets one replica ask another,
+explicitly, "do you currently have bytes matching this hash?" — and the
+answer that comes back, `application/
+SnapshotPeerPossessionObservation.js`'s own `{ peerId, publicationId,
+contentHash, state, observedAt }`, is a fact about what that ONE peer said,
+at that ONE moment, never a distributed claim this replica now holds
+evidence for. It is never signed, never gossiped further, never merged
+into `application/LocalPlacementKnowledgeStore.js` or `application/
+LocalAnchorKnowledgeStore.js`, and never added as a fourth value to
+`application/SnapshotMaterializationSourceKind.js` — a peer saying "I have
+this" is not this replica materializing anything, and carries no bytes to
+materialize from in the first place.
+
+**Possession observation and content transfer stay two independent
+protocols, deliberately never merged into one.** `application/
+PublicationSnapshotPossessionPeerExchange.js` never returns bytes, and
+`application/PublicationSnapshotContentPeerExchange.js` (0.8.37) is never
+consulted, invoked, or implied by an AVAILABLE answer. A peer can honestly
+answer AVAILABLE and subsequently fail to supply the bytes when actually
+asked — its own store may have changed in the interval, or the two
+questions may simply carry different authorization/availability
+boundaries — and that is not a contradiction, because "do you have it?"
+and "give it to me" are different observations about different moments.
+This milestone's own flagship test proves the point directly: Bob learns
+that both Alice and Carol report AVAILABLE, and his own local possession
+(`application/CheckLocalSnapshotContentAvailabilityUseCase.js`, 0.8.33)
+stays NOT_AVAILABLE the entire time — only a SEPARATE, explicit "Get
+Snapshot from Peer" click against Alice, running entirely through 0.8.37's
+own unchanged transport, ever gives Bob the bytes. Knowing a peer possesses
+content and possessing it are two different facts, and no code path in
+this codebase promotes one into the other automatically.
+
+**A REQUEST always gets a RESPONSE — the one place this protocol's wire
+behavior deliberately differs from every sibling `*PeerProtocol.js` in this
+codebase.** `application/PeerSnapshotContentProtocol.js` (0.8.37) and
+`application/PublicationSnapshotPlacementPeerProtocol.js` (0.8.19) both
+have peers stay silent rather than say "no," because for THOSE protocols
+silence and "no" are the identical observable outcome from the requester's
+side. Possession is different: answering NOT_AVAILABLE costs nothing and
+is exactly as informative as answering AVAILABLE, and doing so is what
+keeps a genuine non-response — the peer unreachable, or a message lost in
+transit — honestly distinguishable, as `application/
+SnapshotPeerPossessionState.js`'s own three-value UNAVAILABLE, from an
+explicit "I don't have it" answer. `application/
+PeerSnapshotPossessionProtocol.js`'s own wire vocabulary stays at exactly
+two values for that RESPONSE, `AVAILABLE`/`NOT_AVAILABLE` — never a third,
+`CONTENT_HASH_MISMATCH`-shaped value exposing a peer's own local
+storage-integrity diagnosis onto the network. That diagnosis stays that
+peer's own business; the question this protocol answers stays exactly "do
+you have bytes matching this hash," and `application/
+PublicationSnapshotPossessionPeerExchange.js#_handleRequest()` collapses
+CONTENT_HASH_MISMATCH into NOT_AVAILABLE before anything reaches the wire,
+reusing `application/CheckLocalSnapshotContentAvailabilityUseCase.js`
+(0.8.33) UNCHANGED — the identical semantic definition of "possession"
+0.8.39's own local "Local Snapshot" UI already established, never a second,
+independently-defined notion of what possessing a snapshot means.
+
+**An observation is a frozen fact about the past, never a live view of a
+peer's current state.** Once `application/
+ObservePeerSnapshotPossessionUseCase.js` builds an `application/
+SnapshotPeerPossessionObservation.js` record, nothing in this codebase ever
+mutates it, re-validates it against a fresh answer, or expires it
+automatically. This milestone's own flagship test proves this directly: an
+observation of Alice taken while she genuinely holds the bytes stays
+`AVAILABLE` even after Alice's own store is later emptied and a SECOND,
+later observation of her honestly reads `NOT_AVAILABLE` — the first
+observation's own `state` never changes to match. A caller that wants to
+know whether a peer STILL reports AVAILABLE makes a new request and reads
+its own, separately-timestamped `observedAt`; nothing reaches backward to
+update an observation already handed out.
+
+**No automatic peer selection, ranking, or trust derived from a possession
+observation.** The choice of which single, already-authenticated peer to
+ask is always a person's own, made by picking one from a dropdown and
+clicking "Check with Peer" — `application/
+ObservePeerSnapshotPossessionUseCase.js` and `application/
+SnapshotPeerPossessionCoordinator.js` never discover a peer, never try a
+second one after a timeout, and never ask more than the one peer they were
+told to. A peer reporting AVAILABLE is not thereby more trustworthy, more
+"decentralized," or preferred for a future transfer over one reporting
+NOT_AVAILABLE — this milestone introduces no score, and none should ever
+be added to it.
+
+See `docs/Roadmap.md`, 0.8.40, for the full milestone entry.
