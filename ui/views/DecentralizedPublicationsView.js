@@ -2460,7 +2460,7 @@ export default {
                              UX. A composed SUMMARY, sitting above every specialized
                              disclosure this card already offers below it — never a
                              replacement for any of them. Current possession is always
-                             read from `localSnapshotAvailabilityView(entry)` (0.8.33)
+                             read from localSnapshotAvailabilityView(entry) (0.8.33)
                              unchanged; acquisition history is always a plain COUNT,
                              never the full per-attempt narration "Materialization
                              History" below already shows. Visible only once at least
