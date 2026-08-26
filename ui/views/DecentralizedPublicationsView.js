@@ -1644,7 +1644,7 @@ export default {
                              Package (0.8.32) — never a list this page discovers or ranks on
                              their behalf (see application/
                              SnapshotContentMaterializationCoordinator.js's own header on
-                             why `availableSources()` does not exist yet). -->
+                             why availableSources() does not exist yet). -->
                         <div v-if="snapshotContentMaterializationCoordinator" class="evidence-list">
                             <button v-if="!entry.materializationFormOpen" class="action-btn action-btn--secondary"
                                     @click="entry.materializationFormOpen = true">
