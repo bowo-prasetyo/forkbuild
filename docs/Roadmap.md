@@ -22531,3 +22531,143 @@ to materialize from remains exactly the choice 0.8.42's own "Explicit
 Snapshot Source Selection UX" would need to design conversation-by-
 conversation, never inferred from how many peers happened to answer
 AVAILABLE.
+
+## 0.8.42 — Explicit Snapshot Source Selection & Materialization UX
+
+0.8.36 unified where materialized bytes are STORED (`application/
+StoreSnapshotContentUseCase.js`) without ever unifying which explicit
+action gets to CHOOSE a source; 0.8.40/0.8.41 gave a replica a way to ask
+one or several peers whether they currently possess something, without
+ever turning that answer into an action. This milestone closes the gap
+between the two: a person can now turn an already-known source — a
+package they chose, a placement they already inspected, or a peer they
+watched report AVAILABLE — directly into a materialization attempt,
+through one small, deliberately boring dispatcher, without the
+application ever discovering, ranking, or silently choosing a source on
+its own. The core principle:
+
+> A source selection is a person's own action, never an application
+> recommendation. An observation can inform that choice without becoming
+> the choice itself.
+
+```text
+                ┌─ Placement claim ──→ Resolve ──→ Materialize
+Publication ────┼─ Peer possession ──→ Observe ──→ (0.8.42) Get Snapshot
+                └─ Content transfer ─→ Materialize
+
+   application/SnapshotMaterializationSourceSelection.js       (new — a frozen,
+              │                                                 caller-built choice)
+              ▼
+   application/SnapshotMaterializationSelectionCoordinator.js  (new — dispatches,
+              │                                                 never discovers/ranks)
+   ┌──────────┼──────────┐
+   ▼          ▼          ▼
+ PACKAGE   PLACEMENT    PEER
+   │          │          │
+   ▼          ▼          ▼
+ application/SnapshotContentMaterializationCoordinator.js (0.8.34)
+ application/SnapshotPlacementMaterializationCoordinator.js (0.8.35)
+ application/SnapshotPeerMaterializationCoordinator.js (0.8.37)
+   — all three UNCHANGED, all three still feeding the ONE
+     application/StoreSnapshotContentUseCase.js (0.8.36)
+```
+
+Two new files, both under `application/`:
+
+- `application/SnapshotMaterializationSourceSelection.js` (new) —
+  `createSnapshotMaterializationSourceSelection({ kind, pkg, placement,
+  peer, publicationId, contentHash })` builds one frozen record naming
+  which of application/SnapshotMaterializationSourceKind.js's own three
+  values (0.8.36) a person chose, plus exactly the payload that choice
+  needs: `{ kind: 'package', pkg }`, `{ kind: 'placement', placement }`,
+  or `{ kind: 'peer', peer, publicationId, contentHash }`. It never
+  discovers a package, a placement, or a peer itself — every field is
+  supplied already in hand by the caller — and it validates that the
+  payload actually matches the chosen kind, throwing on a mismatch rather
+  than silently accepting an incomplete selection.
+- `application/SnapshotMaterializationSelectionCoordinator.js` (new) —
+  `materialize(selection)` dispatches to EXACTLY the one existing
+  coordinator `selection.kind` names — `application/
+  SnapshotContentMaterializationCoordinator.js`, `application/
+  SnapshotPlacementMaterializationCoordinator.js`, or `application/
+  SnapshotPeerMaterializationCoordinator.js` — and returns that
+  coordinator's own result completely unchanged. It contains no hash
+  verification, no storage call, and no signature check of its own; those
+  already live exactly once, downstream, inside the three use cases those
+  coordinators already front. It never discovers, compares, selects,
+  ranks, retries, or falls back — the entire decision was already made
+  before `materialize()` was ever called.
+
+`ui/views/DecentralizedPublicationsView.js` gains one small, additive
+piece of UX on top of the "Peer Snapshot Possession Comparison" section
+0.8.41 already built: a row that reported possession (`peerRow.possessed`)
+now shows a "Get Snapshot from `<peer>`" button, wired through the new
+`snapshotMaterializationSelectionCoordinator`. Clicking it builds a PEER
+selection for exactly that row's own peer and runs exactly the same
+`application/MaterializeSnapshotFromPeerUseCase.js` (0.8.37) "Get Snapshot
+from Peer" already runs — never a fourth materialization mechanism. Each
+row's own materialization attempt is tracked independently
+(`entry.peerPossessionComparisonMaterializations`, keyed by peerId) and
+never touches `entry.peerPossessionObservationHistory` — a row's
+"Reports"/"Observed" fields describe what that peer SAID at one past
+moment; the button's own result describes a brand-new, separately-timed
+attempt to actually obtain bytes, which may honestly fail even while the
+row still reads "Available," and does not rewrite the row when it does.
+
+> **A source selection is a person's own action, never an application
+> recommendation.** See `docs/Principles.md`, "A Source Selection Is A
+> Person's Own Action, Never An Application Recommendation (0.8.42)," and
+> "An Observation Can Inform A Person's Choice Without Becoming An
+> Application Decision (0.8.42)."
+
+The FLAGSHIP test (`tests/SnapshotMaterializationSelectionCoordinator.test.js`,
+Section C) proves the milestone's own central claim directly: Alice and
+Carol both report AVAILABLE, Bob reports NOT_AVAILABLE, and an IPFS
+placement resolves UNAVAILABLE. The person explicitly chooses Alice —
+who has since gone offline — and the materialization attempt honestly
+resolves UNAVAILABLE. Nothing automatically tries Carol, nothing touches
+the placement, and Alice's own possession observation is asserted
+byte-identical before and after, still reading AVAILABLE — a frozen fact
+about the past that the failed attempt never reaches backward to correct.
+Bob, who reported NOT_AVAILABLE, is never contacted at all. The person
+then explicitly chooses Carol — a wholly separate, independently-tracked
+call — and succeeds. Section B separately proves the coordinator's own
+dispatch discipline: a selection of one kind never calls either of the
+other two coordinators, and an unwired coordinator throws rather than
+silently falling through to a different source.
+
+### Deliberately excluded
+
+- **Automatic source selection, discovery, or ranking.** `application/
+  SnapshotMaterializationSelectionCoordinator.js` never assembles a list
+  of candidate sources, never picks one for a person, and never retries a
+  failed selection against a different source. The choice of package,
+  placement, or peer is always made before `materialize()` is ever
+  called.
+- **Peer reputation, reliability scores, or trust derived from a
+  materialization outcome.** Alice failing once does not lower any score
+  — there is no score anywhere in this milestone — and does not prevent a
+  person from choosing Alice again later.
+- **A fourth materialization mechanism.** Every `materialize()` call
+  still ends inside one of the three, unchanged, 0.8.34/0.8.35/0.8.37
+  coordinators, still feeding the ONE `application/
+  StoreSnapshotContentUseCase.js` (0.8.36). No new hash verification or
+  storage code was written.
+- **Creating a placement, or modifying placement convergence, from a
+  possession observation or a materialization attempt.** Exactly as
+  0.8.40/0.8.41 already held for an observation alone, extended here to
+  an observation that led to an explicit, even a failed, materialization
+  click.
+- **Persisting a selection, or a comparison-row materialization attempt,
+  anywhere.** `application/SnapshotMaterializationSourceSelection.js`
+  records are never written to a catalog, a placement, or a Publication
+  Replica Package; `entry.peerPossessionComparisonMaterializations` lives
+  only in `ui/views/DecentralizedPublicationsView.js`'s own ephemeral
+  per-entry state, exactly like every sibling `entry.*Attempt`/`entry.
+  *Materializations` field before it.
+- **Rewiring the existing single-source "Import Snapshot"/"Materialize
+  Snapshot"/"Get Snapshot from Peer" actions (0.8.34/0.8.35/0.8.37)
+  through the new coordinator.** Those three buttons keep calling their
+  own coordinators directly, unchanged — the new dispatcher is additive
+  infrastructure for the genuinely missing peer-row action, not a
+  mandatory migration of already-working, already-tested call sites.

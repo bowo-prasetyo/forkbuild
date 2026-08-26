@@ -68,6 +68,7 @@ import { SnapshotPeerMaterializationCoordinator } from '../application/SnapshotP
 import { CreatePublicationSnapshotPossessionPeerExchangeUseCase } from '../application/CreatePublicationSnapshotPossessionPeerExchangeUseCase.js';
 import { ObservePeerSnapshotPossessionUseCase } from '../application/ObservePeerSnapshotPossessionUseCase.js';
 import { SnapshotPeerPossessionCoordinator } from '../application/SnapshotPeerPossessionCoordinator.js';
+import { SnapshotMaterializationSelectionCoordinator } from '../application/SnapshotMaterializationSelectionCoordinator.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -656,6 +657,23 @@ const { peerExchange: publicationSnapshotPossessionPeerExchange } = new CreatePu
 const observePeerSnapshotPossessionUseCase = new ObservePeerSnapshotPossessionUseCase(publicationSnapshotPossessionPeerExchange);
 const snapshotPeerPossessionCoordinator = new SnapshotPeerPossessionCoordinator(observePeerSnapshotPossessionUseCase);
 
+// 0.8.42 — Explicit Snapshot Source Selection & Materialization UX. The
+// missing dispatcher in front of the three coordinators immediately
+// above: given one application/SnapshotMaterializationSourceSelection.js
+// record, application/SnapshotMaterializationSelectionCoordinator.js calls
+// the ONE of `snapshotContentMaterializationCoordinator`/
+// `snapshotPlacementMaterializationCoordinator`/
+// `snapshotPeerMaterializationCoordinator` its own `kind` names, unchanged
+// — the SAME three instances every other explicit materialization action
+// on this page already uses, never a second, disconnected set. See that
+// class's own header on why it adds no source discovery, ranking, or
+// fallback of its own.
+const snapshotMaterializationSelectionCoordinator = new SnapshotMaterializationSelectionCoordinator({
+    packageCoordinator: snapshotContentMaterializationCoordinator,
+    placementCoordinator: snapshotPlacementMaterializationCoordinator,
+    peerCoordinator: snapshotPeerMaterializationCoordinator
+});
+
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 // The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
 // this milestone's own design calls for — it wraps the SAME coordinator
@@ -834,5 +852,7 @@ app.provide('snapshotPeerMaterializationCoordinator', snapshotPeerMaterializatio
 // application/SnapshotPeerPossessionCoordinator.js) — no second
 // coordinator, no second exchange, and no second wiring block here.
 app.provide('snapshotPeerPossessionCoordinator', snapshotPeerPossessionCoordinator);
+// 0.8.42 — Explicit Snapshot Source Selection & Materialization UX.
+app.provide('snapshotMaterializationSelectionCoordinator', snapshotMaterializationSelectionCoordinator);
 app.use(router);
 app.mount('#app');

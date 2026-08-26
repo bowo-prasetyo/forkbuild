@@ -53,6 +53,8 @@ import { appendSnapshotMaterializationHistoryEntry, describeSnapshotMaterializat
 import { describeSnapshotMaterializationHistory } from '../../application/SnapshotMaterializationHistoryView.js';
 import { appendSnapshotPeerPossessionObservationHistoryEntry, latestSnapshotPeerPossessionObservationsByPeer } from '../../application/SnapshotPeerPossessionObservationHistory.js';
 import { describeSnapshotPeerPossessionComparison, describeSnapshotPeerPossessionStateLabel, describeSnapshotPeerPossessionObservationHistory } from '../../application/SnapshotPeerPossessionComparisonView.js';
+import { createSnapshotMaterializationSourceSelection } from '../../application/SnapshotMaterializationSourceSelection.js';
+import { SnapshotMaterializationSourceKind } from '../../application/SnapshotMaterializationSourceKind.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -642,6 +644,15 @@ export default {
         // question — see application/ObservePeerSnapshotPossessionUseCase.js's
         // own header on why neither ever calls the other.
         const snapshotPeerPossessionCoordinator = inject('snapshotPeerPossessionCoordinator', null);
+        // 0.8.42 — Explicit Snapshot Source Selection & Materialization UX.
+        // Optional — absent here, "Get Snapshot" never renders on a Peer
+        // Snapshot Possession Comparison row, the identical
+        // degrade-gracefully posture every coordinator above already
+        // holds. Used ONLY to turn an already-rendered peer observation
+        // row into an explicit action — see `materializeFromComparisonPeer()`
+        // below; never used to discover, rank, or automatically choose a
+        // peer on a person's behalf.
+        const snapshotMaterializationSelectionCoordinator = inject('snapshotMaterializationSelectionCoordinator', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -956,7 +967,20 @@ export default {
                 peerPossessionCompareSelectedPeerIds: [],
                 peerPossessionObservationHistory: [],
                 peerPossessionComparisonChecking: false,
-                peerPossessionComparisonHistoryExpanded: false
+                peerPossessionComparisonHistoryExpanded: false,
+                // 0.8.42 — Explicit Snapshot Source Selection &
+                // Materialization UX. `peerPossessionComparisonMaterializations`
+                // is keyed by peerId, exactly mirroring `materializations`
+                // above (keyed by placementId) one axis over: one ephemeral
+                // application/MaterializeSnapshotFromPeerUseCase.js-shaped
+                // attempt per peer row in "Peer Snapshot Possession
+                // Comparison," each independent of every other peer's own
+                // attempt AND of `peerPossessionAttempt`/
+                // `peerMaterializationAttempt` above — clicking "Get
+                // Snapshot from Alice" never touches Carol's own state, and
+                // never touches Alice's own POSSESSION OBSERVATION either;
+                // see `materializeFromComparisonPeer()` below.
+                peerPossessionComparisonMaterializations: {}
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -1803,6 +1827,75 @@ export default {
             return describeSnapshotPeerPossessionStateLabel(peerRow.state);
         }
 
+        // 0.8.42 — Explicit Snapshot Source Selection & Materialization UX.
+        // The missing link this milestone exists to add: turning ONE
+        // already-rendered "Peer Snapshot Possession Comparison" row into
+        // an explicit action, without turning the OBSERVATION that row
+        // shows into an automatic materialization. Always for exactly the
+        // ONE peer named on the row a person clicked "Get Snapshot from
+        // <peer>" on — never every AVAILABLE peer, never a "best" peer
+        // this page picked on their behalf. Routes through application/
+        // SnapshotMaterializationSelectionCoordinator.js, wrapping a PEER
+        // selection (application/SnapshotMaterializationSourceSelection.js)
+        // around EXACTLY the same underlying application/
+        // MaterializeSnapshotFromPeerUseCase.js "Get Snapshot from Peer"
+        // (0.8.37) already runs — never a fourth materialization
+        // mechanism. This function never reads, writes, or otherwise
+        // touches `entry.peerPossessionObservationHistory` — the row's own
+        // AVAILABLE/NOT_AVAILABLE/UNAVAILABLE label is a possession
+        // OBSERVATION, a frozen fact about a past moment, and stays
+        // exactly what it already said no matter what this materialization
+        // ATTEMPT — a brand new, independently-timed fact — goes on to
+        // report. See docs/Principles.md, "An Observation Can Inform A
+        // Person's Choice Without Becoming An Application Decision
+        // (0.8.42)."
+        async function materializeFromComparisonPeer(entry, peerId) {
+            const peer = retrievalPeers.value.find((candidate) => candidate.connectionId === peerId);
+            if (!peer || !snapshotMaterializationSelectionCoordinator) return;
+            entry.peerPossessionComparisonMaterializations[peerId] = { requesting: true };
+            try {
+                const selection = createSnapshotMaterializationSourceSelection({
+                    kind: SnapshotMaterializationSourceKind.PEER,
+                    peer, publicationId: entry.publication.id, contentHash: entry.publication.contentReference.hash
+                });
+                const result = await snapshotMaterializationSelectionCoordinator.materialize(selection);
+                entry.peerPossessionComparisonMaterializations[peerId] = {
+                    requesting: false, error: null,
+                    outcome: result.outcome, reason: result.reason, contentReference: result.contentReference,
+                    publicationId: result.publicationId, contentHash: result.contentHash, publicationKnown: result.publicationKnown
+                };
+                recordMaterializationSource(entry, result.source, result.outcome === PeerSnapshotMaterializationOutcome.STORED
+                    || result.outcome === PeerSnapshotMaterializationOutcome.ALREADY_AVAILABLE, result.contentReference, result.publicationId);
+                recordMaterializationHistoryEntry(entry, {
+                    sourceKind: result.source.kind,
+                    outcome: mapPeerOutcomeToStoreOutcome(result.outcome),
+                    publicationId: result.publicationId,
+                    contentHash: result.contentHash,
+                    contentReference: result.contentReference
+                });
+            } catch (error) {
+                entry.peerPossessionComparisonMaterializations[peerId] = { requesting: false, outcome: null, error: error.message };
+            }
+        }
+
+        function comparisonPeerMaterializationView(entry, peerId) {
+            return describePeerMaterializationAttempt(entry.peerPossessionComparisonMaterializations[peerId]);
+        }
+
+        function comparisonPeerMaterializationBadgeClass(entry, peerId) {
+            const state = comparisonPeerMaterializationView(entry, peerId).state;
+            return PEER_MATERIALIZATION_BADGE_CLASSES[state] || null;
+        }
+
+        function comparisonPeerMaterializationButtonLabel(entry, peerRow) {
+            const view = comparisonPeerMaterializationView(entry, peerRow.peerId);
+            const peerLabel = peerPossessionRowLabel(peerRow.peerId);
+            if (view.requesting) return 'Requesting…';
+            return view.state !== SnapshotPeerMaterializationUiState.IDLE
+                ? `Get Snapshot from ${peerLabel} Again`
+                : `Get Snapshot from ${peerLabel}`;
+        }
+
         // The FULL chronological narration — every recorded observation,
         // including repeat checks of the same peer — for the "Possession
         // Observation History" disclosure, deliberately separate from the
@@ -2210,7 +2303,9 @@ export default {
             materializationHistoryView, materializationSourceCountsSentence, toggleMaterializationHistory,
             togglePeerPossessionCompareSelection, checkSnapshotPossessionWithSelectedPeers,
             peerPossessionComparisonView, peerPossessionComparisonRowBadgeClass, peerPossessionComparisonRowLabel,
-            peerPossessionObservationHistoryView, togglePeerPossessionComparisonHistory, peerPossessionRowLabel
+            peerPossessionObservationHistoryView, togglePeerPossessionComparisonHistory, peerPossessionRowLabel,
+            snapshotMaterializationSelectionCoordinator, materializeFromComparisonPeer,
+            comparisonPeerMaterializationView, comparisonPeerMaterializationBadgeClass, comparisonPeerMaterializationButtonLabel
         };
     },
     template: `
@@ -2535,6 +2630,31 @@ export default {
                                                 <dd>{{ formatWhen(peerRow.observedAt) }}</dd>
                                             </div>
                                         </dl>
+                                        <!-- 0.8.42 — Explicit Snapshot Source Selection &
+                                             Materialization UX. An explicit action, shown
+                                             ONLY for a row that reported possession — never
+                                             a recommendation, never rendered for Bob's own
+                                             "Not available" row. Clicking it never changes
+                                             the "Reports"/"Observed" fields above: those
+                                             describe what this peer SAID at one moment; this
+                                             button describes a brand new, separately-timed
+                                             attempt to actually obtain the bytes, which may
+                                             honestly fail even though the row still reads
+                                             "Available." -->
+                                        <template v-if="snapshotMaterializationSelectionCoordinator && peerRow.possessed">
+                                            <button class="action-btn action-btn--secondary"
+                                                    :disabled="comparisonPeerMaterializationView(entry, peerRow.peerId).requesting"
+                                                    @click="materializeFromComparisonPeer(entry, peerRow.peerId)">
+                                                {{ comparisonPeerMaterializationButtonLabel(entry, peerRow) }}
+                                            </button>
+                                            <span v-if="comparisonPeerMaterializationView(entry, peerRow.peerId).label"
+                                                  class="peer-badge" :class="comparisonPeerMaterializationBadgeClass(entry, peerRow.peerId)">
+                                                {{ comparisonPeerMaterializationView(entry, peerRow.peerId).label }}
+                                            </span>
+                                            <p v-if="comparisonPeerMaterializationView(entry, peerRow.peerId).message" class="form-hint form-hint--neutral">
+                                                {{ comparisonPeerMaterializationView(entry, peerRow.peerId).message }}
+                                            </p>
+                                        </template>
                                     </li>
                                 </ul>
                             </div>
