@@ -13999,3 +13999,61 @@ already prove holds for a real plan, so a hand-modified or otherwise
 tampered plan is refused here too, independently, proven directly in
 `tests/BitcoinAnchorPsbtConstruction.test.js`'s own Section E. See
 `docs/Roadmap.md`, 0.8.48, for the full milestone entry.
+
+## Real Bytes Are Still Not A Signature (0.8.49)
+
+**`anchoring/BitcoinAnchorPsbtSerializer.js#serialize()` turns a real
+`BitcoinAnchorPsbtBuilder` description into genuine BIP174 wire bytes —
+the real magic bytes, real compact-size integers, real key-value maps —
+and it is still never a signature.** Producing the actual bytes a wallet
+would need is a mechanical, fully specified transform: reversing a txid
+into wire byte order, encoding a length as a compact-size integer,
+concatenating a value and a script into a witness-utxo value field. None
+of that is custody, and none of it is signing, exactly as 0.8.47's
+arithmetic over UTXOs and 0.8.48's structuring of a PSBT description were
+never custody either. There is no private key, no signature, and no
+`partialSig`/`finalScriptSig`/`finalScriptWitness` field anywhere in this
+class's own output — proven directly in
+`tests/BitcoinAnchorPsbtSerialization.test.js`'s own Section E, which goes
+one step further than 0.8.47/0.8.48's own forbidden-vocabulary scans ever
+needed to: if a caller's description already carries any of that
+vocabulary, `serialize()` throws outright rather than silently producing
+an unsigned-looking PSBT that quietly dropped it.
+
+**A serializer that only ever reads the two BIP174 fields it is allowed to
+write.** `serialize()` recognizes exactly `witnessUtxo` and
+`nonWitnessUtxo` on an input — the identical two shapes
+`BitcoinAnchorPsbtBuilder` already produces — and nothing else. This
+matters because "ignore what you don't recognize" is the wrong default
+here: a caller that mistakenly handed this class an already-signed PSBT
+description, expecting its signature to be carried through, would get back
+bytes that look like a valid, complete unsigned PSBT while having silently
+lost the one thing that made the input signed. Refusing outright is the
+only honest response to that shape of mistake.
+
+**A parser exists, but only to prove one thing: that serialization round
+trips exactly.** `parse()` is the precise inverse of `serialize()` — real
+BIP174 bytes back to the identical `{ globalUnsignedTx, inputs }` shape —
+and `tests/BitcoinAnchorPsbtSerialization.test.js`'s own Section D asserts
+`parse(serialize(d).bytes)` (and the same for `.hex` and `.base64`)
+reproduces `d` exactly, for both a segwit and a legacy description. It is
+deliberately not a general PSBT reader: it recognizes only the two
+per-input key types this class itself ever writes, and throws on anything
+else — a `partialSig`, a BIP32 derivation path, an `xpub` — the shape a
+real, wallet-signed PSBT would actually carry. Reading such a PSBT is a
+real capability this milestone does not build; refusing to guess at one is
+the difference between an honest boundary and a silent misread.
+
+**A serialization boundary, held deliberately narrow.** `serialize()`
+consumes exactly the minimal shape BIP174 itself needs —
+`{ globalUnsignedTx, inputs }` — never the full `BitcoinAnchorPsbtBuilder`
+result shape with its own ForkBuild-specific bookkeeping (`network`,
+`anchorType`, `outputs`, `feeSats`, `totalInputSats`). A real 0.8.48
+result satisfies this shape with those extra fields simply unused. This is
+the same architectural boundary 0.8.48 itself drew between a plan and a
+PSBT description, drawn one layer further out: whatever a future wallet
+integration eventually needs from ForkBuild's own domain layer, it should
+never need to understand wire-format concerns to get it, and whatever this
+class needs from upstream, it should never need to understand ForkBuild's
+own anchor bookkeeping to produce. See `docs/Roadmap.md`, 0.8.49, for the
+full milestone entry.

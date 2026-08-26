@@ -23470,3 +23470,167 @@ wired to a signed output, real UTXO discovery, real address validation,
 and any UI surface for triggering construction — each its own, separately
 sized milestone, exactly like every "Deliberately excluded" list in this
 document before it.
+
+## 0.8.49 — Real BIP-174 PSBT Serialization
+
+0.8.48's own "Deliberately excluded" list named exactly what came next:
+"real BIP174 binary/base64 PSBT serialization... a future concern, most
+naturally alongside whatever milestone actually hands a PSBT to a real
+external wallet." A wallet cannot sign a plain JS object — it needs actual
+bytes, in the exact shape BIP174 defines. 0.8.49 turns a 0.8.48
+PSBT-shaped description into exactly that, and stops there — still
+entirely offline, still never signing, still never broadcasting, still
+never touching a wallet:
+
+```text
+{ globalUnsignedTx, inputs, outputs, ... }      a PSBT-SHAPED
+                                                 DESCRIPTION (0.8.48)
+        │
+        ▼
+BitcoinAnchorPsbtSerializer.serialize()   (new — Bitcoin-specific)
+        │
+        ▼
+{ bytes, hex, base64 }              a REAL BIP174 PSBT, still unsigned
+        │
+        ▼
+(a future milestone: handing this to an external wallet — NOT this one)
+```
+
+**REAL BYTES ARE STILL NOT A SIGNATURE.** `serialize()` produces the exact
+magic bytes, compact-size integers, and key-value maps BIP174 defines —
+the genuine wire format, not another intermediate description of it. It
+is still never signed: no private key, no signature, no `partialSig`,
+`finalScriptSig`, or `finalScriptWitness` field exists anywhere in this
+class's own vocabulary, and a fifth check goes further than 0.8.47/0.8.48
+ever needed to — if a caller's description carries any of that vocabulary
+already, `serialize()` throws rather than silently leaving it unencoded.
+
+- `anchoring/BitcoinAnchorPsbtSerializer.js` — the one new class. No
+  constructor configuration — a pure, stateless codec, like 0.8.48's own
+  builder. Consumes exactly the minimal shape BIP174 itself needs —
+  `{ globalUnsignedTx, inputs }` — never the full 0.8.48 result shape, so
+  a real `BitcoinAnchorPsbtBuilder` result satisfies it with its
+  ForkBuild-specific bookkeeping (`network`, `anchorType`, `outputs`,
+  `feeSats`, `totalInputSats`) simply ignored. This is the serialization
+  boundary itself: if 0.8.48's own result ever grows new fields, or a
+  hand-built minimal PSBT description is handed in instead, this class
+  does not change.
+  - `serialize(description)` is synchronous (no network, no async work of
+    any kind) and either returns `{ bytes, hex, base64 }` or throws —
+    every failure is a caller-contract violation, exactly as 0.8.48's own
+    `build()` throws rather than reporting an operational outcome.
+    `description.inputs[i]` must name the identical `(txid, vout)` as
+    `globalUnsignedTx.inputs[i]`, in the same order — BIP174's per-input
+    maps are positional, so this class checks that correspondence
+    explicitly rather than trusting it silently held.
+  - Every input must carry exactly one of `witnessUtxo` or
+    `nonWitnessUtxo` — the identical two shapes 0.8.48 already produces —
+    encoded as `PSBT_IN_WITNESS_UTXO`/`PSBT_IN_NON_WITNESS_UTXO`. Every
+    output gets its own (empty, at this unsigned stage) BIP174 output map,
+    exactly as the spec requires one per output regardless of content.
+  - A txid is byte-reversed exactly once, here, to match Bitcoin's own
+    little-endian wire convention — a detail 0.8.47/0.8.48 never needed to
+    confront because neither ever produced real bytes.
+  - `parse(psbt)` — accepting a `Uint8Array`, hex string, or base64
+    string — is the exact inverse, decoding real BIP174 bytes back into
+    the identical `{ globalUnsignedTx, inputs }` shape `serialize()`
+    consumed. It exists only to prove the round trip
+    (`parse(serialize(d).bytes)` reproduces `d` exactly), never as a
+    general-purpose PSBT reader: it recognizes only the two per-input key
+    types this class itself ever writes, and throws on anything else — a
+    `partialSig`, a BIP32 derivation path, an `xpub` — rather than
+    silently misreading an already-signed real-world PSBT as though it
+    were the plain unsigned one this class only ever produces.
+
+- `application/CreateBitcoinAnchorPsbtSerializerUseCase.js` — the
+  identical composition-root shape `application/
+  CreateBitcoinAnchorPsbtBuilderUseCase.js` already established. Takes no
+  arguments — this serializer carries no policy of its own.
+
+- **Deterministic, byte for byte.** Given the same description,
+  `serialize()` always produces byte-identical output — no randomness, no
+  iteration order that could vary, no timestamp — proven directly in
+  `tests/BitcoinAnchorPsbtSerialization.test.js` by serializing the
+  identical description twice and comparing the result exactly, and by
+  cross-checking the real implementation's output against a wholly
+  independent, hand-written reference encoder for both a segwit and a
+  legacy description.
+
+- **No wallet management, still.** No key generation, no address
+  decoding, no UTXO discovery, no network call of any kind — this class
+  only ever transforms bytes it was directly handed, into other bytes.
+
+> **Real bytes are still not a signature.** Encoding the exact wire format
+> a real BIP174 PSBT would use is a mechanical, fully specified transform
+> over caller-supplied facts, never custody, never a signature. See
+> `docs/Principles.md`, "Real Bytes Are Still Not A Signature (0.8.49)."
+
+- `tests/BitcoinAnchorPsbtSerialization.test.js` (new) — entirely
+  synchronous and network-free. Section A: flagship — a segwit description
+  with a change output serializes to exactly the bytes an independent
+  reference encoder computes by hand, byte for byte, magic bytes and
+  OP_RETURN script included; Section B: a legacy description's
+  `nonWitnessUtxo` is carried onto the wire completely opaquely, also
+  verified against an independent reference encoding; Section C:
+  multi-input descriptions preserve order exactly, and serializing the
+  same description twice is byte-identical; Section D: round trip —
+  `parse(serialize(d))` reproduces the exact description shape, for raw
+  bytes, hex, and base64 alike; Section E: a missing unsigned tx, a
+  length/order mismatch between `description.inputs` and
+  `globalUnsignedTx.inputs`, both/neither `witnessUtxo`/`nonWitnessUtxo`,
+  malformed hex, an out-of-range field, and any signing-material field
+  (`partialSig`, `privateKey`, ...) are all refused before any byte is
+  produced; Section F: `parse()` refuses bad magic bytes, truncated bytes,
+  and a hand-crafted PSBT carrying a field this class does not recognize —
+  the shape a signed or partially-signed real-world PSBT would actually
+  have — rather than silently misreading it.
+
+```text
+0.8.48  Bitcoin Anchor PSBT Construction                              ✓
+             │
+             ▼
+0.8.49  Real BIP-174 PSBT Serialization                               ✓
+             ├── anchoring/BitcoinAnchorPsbtSerializer.js — new; encodes
+             │   a 0.8.48 PSBT description into real, spec-shaped BIP174
+             │   bytes (and back, for round-trip verification only)
+             ├── application/CreateBitcoinAnchorPsbtSerializerUseCase.js
+             │   — new composition-root seam, mirrors
+             │   CreateBitcoinAnchorPsbtBuilderUseCase.js
+             ├── refuses to encode any signing-material field, rather
+             │   than silently dropping it
+             └── still no wallet — serialize()/parse() only ever
+                 transform bytes they are directly handed
+```
+
+### Deliberately excluded
+
+- **Signing, of any kind.** No private keys, no signature generation, no
+  `partialSig`, `finalScriptSig`, or `finalScriptWitness` ever appears in
+  this class's own output, and a description that already carries any of
+  that vocabulary is refused outright rather than silently re-encoded
+  without it.
+- **Broadcasting.** Nothing in this milestone calls a network, a
+  broadcaster, or `anchoring/BitcoinAnchorPublisher.js`.
+- **A general-purpose PSBT parser.** `parse()` exists solely to prove
+  `serialize()`'s own round trip. It recognizes only the two per-input key
+  types this class itself ever writes and throws on any other real BIP174
+  field (a signature, a BIP32 derivation path, an `xpub`) — reading a
+  real, wallet-produced (signed or partially-signed) PSBT is a future
+  concern this class does not take on.
+- **Wallet connection, UTXO discovery, or any UI.** `serialize()`/`parse()`
+  only ever transform bytes or objects they are directly handed — no
+  wallet is connected, no UTXO is discovered, and no "Export PSBT" surface
+  anywhere in this codebase yet calls this class.
+- **Address decoding of any kind.** A `scriptPubKey` is encoded exactly as
+  supplied, hex bytes copied verbatim — no base58/bech32 decoding, no
+  correspondence check against any address, the identical restraint
+  0.8.47/0.8.48 already held.
+
+What's left, and deliberately unbuilt: an explicit wallet-signing/handoff
+boundary that hands this serialized PSBT to a real external wallet and
+gets a signed one back, a PSBT finalizer that turns a sufficiently-signed
+PSBT into a broadcastable raw transaction, a real (non-fake) broadcaster,
+real UTXO discovery, real address validation, and any UI surface for
+triggering serialization — each its own, separately sized milestone,
+exactly like every "Deliberately excluded" list in this document before
+it.
