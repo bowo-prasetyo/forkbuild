@@ -22381,3 +22381,153 @@ and any mechanism that turns "several peers reported AVAILABLE" into a
 retrieval recommendation — each would need its own design conversation
 about staleness, scale, and trust that this milestone deliberately declines
 to have in advance of an actual, demonstrated need.
+
+## 0.8.41 — Peer Snapshot Possession Comparison & Observation History
+
+0.8.40 gave a replica a way to ask ONE explicitly chosen peer whether it
+currently possesses a snapshot's bytes, and named the result an
+observation — a frozen fact about one peer at one moment, never a
+placement claim. This milestone makes that observation composable and
+inspectable, without adding a fourth way to obtain bytes and without
+turning a set of observations into anything more than what was actually
+said. The core principle:
+
+> Peer possession observations describe what peers report; they do not
+> become placement claims.
+
+```text
+   application/SnapshotPeerPossessionCoordinator.js#observePeers()        (new — caller-supplied peer list, asked in parallel)
+              │
+              ▼
+   application/SnapshotPeerPossessionObservationHistory.js                (new — append-only, non-mutating accumulation)
+              │
+              ▼
+   application/SnapshotPeerPossessionComparisonView.js                    (new — pure, factual comparison + full history narration)
+              │
+              ▼  (NO ranking, NO placement, NO transfer)
+   ui/views/DecentralizedPublicationsView.js — "Peer Snapshot Possession Comparison"
+```
+
+Two new files, both under `application/`:
+
+- `application/SnapshotPeerPossessionObservationHistory.js` (new) —
+  `appendSnapshotPeerPossessionObservationHistoryEntry(history, observation)`,
+  the identical append-only, non-mutating shape `application/
+  SnapshotMaterializationHistory.js` (0.8.38) already established, one
+  domain over: every observation is appended, never overwrites an earlier
+  one, and a peer asked repeatedly ends up with MULTIPLE entries, not one
+  entry that got refreshed. Also exports
+  `latestSnapshotPeerPossessionObservationsByPeer(history, {
+  publicationId, contentHash })` — the one place this milestone lets
+  "current" mean anything at all: a reduction to each peer's own
+  MOST RECENT entry, in first-seen order, never a live re-check of
+  anyone.
+- `application/SnapshotPeerPossessionComparisonView.js` (new) —
+  `describeSnapshotPeerPossessionComparison(publicationId, contentHash,
+  observations)` turns an (ordinarily already latest-per-peer) list of
+  observations into `{ publicationId, contentHash, peers: [{ peerId,
+  state, possessed, observedAt }], availableCount, notAvailableCount,
+  unavailableCount }` — peers in the exact order given, three exact
+  counts, and nothing else. Also exports
+  `describeSnapshotPeerPossessionStateLabel(state)` (`"Available"`, `"Not
+  available"`, `"Could not determine"` — the third label deliberately NOT
+  collapsed into the second, preserving 0.8.40's own UNAVAILABLE
+  distinction) and `describeSnapshotPeerPossessionObservationHistory(history)`,
+  the full chronological narration of every recorded observation,
+  mirroring `application/SnapshotMaterializationHistoryView.js`'s own
+  shape one domain over.
+
+Plus one addition to an existing file:
+`application/SnapshotPeerPossessionCoordinator.js` gains
+`observePeers({ peers, publicationId, contentHash })` — the SAME
+`observe()` this coordinator already exposes, called once per entry of a
+CALLER-SUPPLIED `peers` array, in parallel, resolved back in `peers`' own
+order regardless of which peer answers first. No discovery, no ranking,
+no selection, no retry, no fallback — the identical restraint `observe()`
+itself already holds, extended to a list instead of one entry. This is
+the ONLY change to an existing file in this milestone; no other 0.8.40
+file changes shape.
+
+`ui/views/DecentralizedPublicationsView.js` gains a "Peer Snapshot
+Possession Comparison" section, deliberately separate from "Peer
+Snapshot Possession" (0.8.40) immediately above it, with its own
+checked-box peer selection (never a single dropdown choice) and its own
+ephemeral, per-entry history (`entry.peerPossessionObservationHistory`).
+A person checks the boxes for however many authenticated peers they want
+to ask, clicks "Check Selected Peers," and sees each peer's own row —
+"Available," "Not available," or "Could not determine" — alongside a
+plain count of each, and can expand "Show Observation History" to see
+every check made this session, including repeats. Neither section ever
+reads the other's state, and neither ever calls `application/
+MaterializeSnapshotFromPeerUseCase.js` (0.8.37) or `application/
+SnapshotPlacementCreationCoordinator.js` (0.8.25) automatically.
+
+> **Peer possession observations describe what peers report; they do not
+> become placement claims.** See `docs/Principles.md`, "Peer Possession
+> Observations Describe What Peers Report; They Do Not Become Placement
+> Claims (0.8.41)."
+
+The FLAGSHIP test (`tests/SnapshotPeerPossessionObservationHistory.test.js`,
+Section D) proves the milestone's own central claims directly, over real,
+live, authenticated connections: Xavier asks Alice, Bob, Carol, and Dave —
+who never answers at all — via a single `observePeers()` call, and gets
+back AVAILABLE/NOT_AVAILABLE/AVAILABLE/UNAVAILABLE, in that order,
+regardless of which peer's RESPONSE actually arrives first. Those four
+observations accumulate into a history; a shared `LocalPublicationSnapshotPlacementCatalog`'s
+own derived convergence is asserted BYTE-IDENTICAL, via `application/
+PublicationSnapshotPlacementConvergence.js`, both before and after. Alice's
+own bytes are then deleted, and a second, later `observePeers()` call
+against her alone honestly reports NOT_AVAILABLE — appended as a FIFTH
+history entry, never overwriting the first, which still reads AVAILABLE.
+The comparison, recomputed from `latestSnapshotPeerPossessionObservationsByPeer()`,
+reflects only Alice's newest answer. Throughout, Xavier's own content
+store never receives a single byte, and the placement catalog stays
+empty.
+
+### Deliberately excluded
+
+- **A fourth way to obtain bytes.** `observePeers()` returns observations,
+  never content — the exact same restraint `application/
+  ObservePeerSnapshotPossessionUseCase.js` (0.8.40) already holds for a
+  single peer, extended to several. PACKAGE, PLACEMENT, and PEER (0.8.36)
+  remain the only three explicit materialization sources in this
+  codebase; nothing here adds a fourth.
+- **`bestPeer`, `preferredPeer`, `recommendedPeer`, `trustedPeer`,
+  `reliability`, `confidence`, `score`, or `rank`.** None of these fields
+  exist anywhere in `application/SnapshotPeerPossessionComparisonView.js`'s
+  own output, and a test asserts their absence directly. If Alice reports
+  AVAILABLE and Bob reports NOT_AVAILABLE, the comparison says exactly
+  that — never which one a person "should" ask.
+- **Automatic peer discovery, selection, or retry inside `observePeers()`.**
+  The `peers` array is always a person's own checked-box selection; the
+  coordinator never assembles it, pads it out with additional peers, tries
+  a second peer after a timeout, or asks anyone not explicitly named.
+- **Persisting the observation history anywhere.** `entry.
+  peerPossessionObservationHistory` lives only in `ui/views/
+  DecentralizedPublicationsView.js`'s own ephemeral per-entry state,
+  exactly like `entry.materializationHistory` (0.8.38) and `entry.
+  peerPossessionAttempt` (0.8.40) before it — reset to empty the moment
+  the Publication Center is reopened. No history entry is ever written
+  into a catalog, a Publication Replica Package, or any store.
+  `SnapshotPeerPossessionObservationHistory.js` itself has no persistence
+  code at all — there is nothing in this file FOR it to write to.
+- **Automatic materialization from an AVAILABLE comparison row.** Exactly
+  as 0.8.40 already established for a single "Check with Peer" answer: an
+  AVAILABLE row in the comparison is not thereby fetched, and a person
+  still makes a separate, explicit "Get Snapshot from Peer" (0.8.37)
+  click to actually obtain bytes from a peer the comparison named.
+- **Retrofitting the single-peer "Check with Peer" flow (0.8.40) into a
+  history.** `entry.peerPossessionAttempt` still holds exactly one
+  ephemeral attempt, replaced (never accumulated) by the next click — this
+  milestone adds a wholly separate, additive multi-peer action and
+  history alongside it, rather than changing 0.8.40's own already-shipped
+  behavior.
+
+0.8.40 answered "can a replica ask a peer whether it has something?" This
+milestone answers "can a replica ask several, and look at the answers
+together, honestly?" What remains deliberately unbuilt: any mechanism
+that turns a comparison into a decision on a person's behalf — which peer
+to materialize from remains exactly the choice 0.8.42's own "Explicit
+Snapshot Source Selection UX" would need to design conversation-by-
+conversation, never inferred from how many peers happened to answer
+AVAILABLE.

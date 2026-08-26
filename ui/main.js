@@ -828,7 +828,11 @@ app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterial
 app.provide('snapshotPlacementMaterializationCoordinator', snapshotPlacementMaterializationCoordinator);
 // 0.8.37 — Explicit Peer Snapshot Content Transfer.
 app.provide('snapshotPeerMaterializationCoordinator', snapshotPeerMaterializationCoordinator);
-// 0.8.40 — Snapshot Possession Observation Exchange.
+// 0.8.40 — Snapshot Possession Observation Exchange. 0.8.41 — Peer
+// Snapshot Possession Comparison & Observation History adds
+// `observePeers()` directly onto this SAME coordinator instance (see
+// application/SnapshotPeerPossessionCoordinator.js) — no second
+// coordinator, no second exchange, and no second wiring block here.
 app.provide('snapshotPeerPossessionCoordinator', snapshotPeerPossessionCoordinator);
 app.use(router);
 app.mount('#app');
