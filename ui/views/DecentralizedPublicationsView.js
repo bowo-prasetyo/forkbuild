@@ -31,6 +31,8 @@ import { describePublicationReplicaKnowledge } from '../../application/Publicati
 import { describePublicationReplicaKnowledgeDetail, describeAcquisitionBreakdown } from '../../application/PublicationReplicaKnowledgeDetailView.js';
 import { describeSynchronizationAttempt, describeSynchronizationButtonLabel } from '../../application/PublicationKnowledgeSynchronizationView.js';
 import { PublicationKnowledgeSynchronizationUiState } from '../../application/PublicationKnowledgeSynchronizationUiState.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../../application/LocalSnapshotContentAvailabilityOutcome.js';
+import { describeLocalSnapshotContentAvailability, describeAvailabilityCheckButtonLabel } from '../../application/LocalSnapshotContentAvailabilityView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -272,6 +274,32 @@ import { PublicationKnowledgeSynchronizationUiState } from '../../application/Pu
 // See application/PublicationReplicaKnowledgeDetailView.js's own header
 // and docs/Principles.md, "Replica Knowledge Explains What Is Known And
 // How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)."
+//
+// 0.8.33 — Local Snapshot Content Availability & Integrity UX. Each entry
+// now also offers a "Local Snapshot" section, deliberately separate from
+// "Decentralization" above: that card describes DISTRIBUTED claims this
+// replica knows about (evidence, placements); this one describes a fact
+// about THIS replica's own present content state, computed by application/
+// CheckLocalSnapshotContentAvailabilityUseCase.js reading ONLY the local
+// content/ContentStore.js — never a placement, never the network. Opening
+// this page, expanding any disclosure, or synchronizing with peers NEVER
+// triggers a check; only an explicit "Check Local Snapshot" click does,
+// the identical restraint 0.8.20/0.8.3 already hold for "Resolve
+// Snapshot"/"Verify Evidence". `entry.localSnapshotAvailability` is
+// ephemeral session state, exactly like `entry.resolutions` above — never
+// read from or written to anything durable, and never itself a
+// materialization action: a completed check reports what is already true
+// of this replica's own storage right now; it never imports, retrieves,
+// or writes a single byte. See application/
+// CheckLocalSnapshotContentAvailabilityUseCase.js's own header and
+// docs/Principles.md, "Local Content Availability Is An Observation, Not
+// A Verdict (0.8.33)."
+const LOCAL_SNAPSHOT_AVAILABILITY_BADGE_CLASSES = {
+    [LocalSnapshotContentAvailabilityOutcome.AVAILABLE]: 'peer-badge--authenticated',
+    [LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE]: 'peer-badge--unchecked',
+    [LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH]: 'peer-badge--failed'
+};
+
 const PLACEMENT_BADGE_CLASSES = {
     [SnapshotPlacementResolutionOutcome.RESOLVED]: 'peer-badge--authenticated',
     [SnapshotPlacementResolutionOutcome.STORE_UNAVAILABLE]: 'peer-badge--pending',
@@ -435,6 +463,12 @@ export default {
         // posture `creationCoordinator` above already holds for
         // `availableAnchorTypes`.
         const placementCreationCoordinator = inject('snapshotPlacementCreationCoordinator', null);
+        // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
+        // Optional — absent here (e.g. a test harness that never provides
+        // it), "Local Snapshot" simply never renders, the identical
+        // degrade-gracefully posture `placementResolutionCoordinator`
+        // above already holds.
+        const localSnapshotContentAvailabilityUseCase = inject('localSnapshotContentAvailabilityUseCase', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -632,7 +666,19 @@ export default {
                 // read from or written to anything durable. See
                 // application/SnapshotPlacementCreationUiState.js's own
                 // header.
-                placementCreationAttempts: {}
+                placementCreationAttempts: {},
+                // 0.8.33 — Local Snapshot Content Availability &
+                // Integrity UX. A single ephemeral attempt object for
+                // THIS entry — `null` until "Check Local Snapshot" is
+                // clicked, then `{ checking: true }`, then application/
+                // CheckLocalSnapshotContentAvailabilityUseCase.js#
+                // execute()'s own resolved shape. Never read from or
+                // written to anything durable, and never recomputed by
+                // any of `loadEvidence()`/`loadPlacements()`/
+                // `recomputeDecentralization()` above — a local content
+                // check is its own explicit action, exactly like
+                // `resolutions`/`verifications`.
+                localSnapshotAvailability: null
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -727,6 +773,36 @@ export default {
 
         function decentralizationContrast(entry) {
             return describeDecentralizationRelationshipContrast(entry.decentralization);
+        }
+
+        // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
+        // The one place this page calls application/
+        // CheckLocalSnapshotContentAvailabilityUseCase.js — always for
+        // exactly this entry's own publication, always because a person
+        // clicked "Check Local Snapshot". Mirrors resolvePlacement()/
+        // verifyAnchor() above exactly: a plain in-flight marker while
+        // the (local, but still async) ContentStore read is underway,
+        // then the resolved observation, replacing whatever this entry's
+        // own previous check reported — a fresh read, never a merge with
+        // the one before it.
+        async function checkLocalSnapshotAvailability(entry) {
+            if (!localSnapshotContentAvailabilityUseCase) return;
+            entry.localSnapshotAvailability = { checking: true };
+            entry.localSnapshotAvailability = await localSnapshotContentAvailabilityUseCase.execute(entry.publication);
+        }
+
+        function localSnapshotAvailabilityView(entry) {
+            return describeLocalSnapshotContentAvailability(entry.localSnapshotAvailability);
+        }
+
+        function localSnapshotAvailabilityBadgeClass(entry) {
+            const outcome = localSnapshotAvailabilityView(entry).outcome;
+            return outcome ? (LOCAL_SNAPSHOT_AVAILABILITY_BADGE_CLASSES[outcome] || null) : null;
+        }
+
+        function localSnapshotAvailabilityButtonLabel(entry) {
+            const view = localSnapshotAvailabilityView(entry);
+            return describeAvailabilityCheckButtonLabel({ checking: view.checking, checked: view.checked });
         }
 
         // 0.8.31 — Replica Knowledge Provenance & Synchronization
@@ -1354,7 +1430,9 @@ export default {
             availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
-            toggleReplicaKnowledge, acquisitionBreakdownSentence
+            toggleReplicaKnowledge, acquisitionBreakdownSentence,
+            localSnapshotContentAvailabilityUseCase, checkLocalSnapshotAvailability, localSnapshotAvailabilityView,
+            localSnapshotAvailabilityBadgeClass, localSnapshotAvailabilityButtonLabel
         };
     },
     template: `
@@ -1408,6 +1486,36 @@ export default {
                         <button class="action-btn action-btn--secondary" :disabled="entry.checking" @click="recheck(entry)">
                             {{ entry.checking ? 'Checking…' : 'Re-check' }}
                         </button>
+                    </div>
+
+                    <!-- 0.8.33 — Local Snapshot Content Availability & Integrity UX. A
+                         replica-local OBSERVATION of whether THIS device's own
+                         content/ContentStore.js currently holds bytes for this
+                         publication's own contentReference, and whether those bytes
+                         still hash to it — never a network call, never a check of any
+                         anchor or placement, and never itself an import/materialization
+                         action (see application/
+                         CheckLocalSnapshotContentAvailabilityUseCase.js's own header).
+                         Deliberately its own section, separate from "Decentralization"
+                         below: that card describes DISTRIBUTED claims this replica
+                         knows about; this one describes a fact about THIS replica's own
+                         present content state. Hidden entirely when no
+                         localSnapshotContentAvailabilityUseCase was provided. -->
+                    <div v-if="localSnapshotContentAvailabilityUseCase" class="decentralization-summary">
+                        <span class="evidence-convergence-title">Local Snapshot</span>
+                        <div class="evidence-discovery-header">
+                            <button class="action-btn action-btn--secondary"
+                                    :disabled="localSnapshotAvailabilityView(entry).checking"
+                                    @click="checkLocalSnapshotAvailability(entry)">
+                                {{ localSnapshotAvailabilityButtonLabel(entry) }}
+                            </button>
+                            <span v-if="localSnapshotAvailabilityView(entry).checked" class="peer-badge" :class="localSnapshotAvailabilityBadgeClass(entry)">
+                                {{ localSnapshotAvailabilityView(entry).label }}
+                            </span>
+                        </div>
+                        <p v-if="localSnapshotAvailabilityView(entry).message" class="form-hint form-hint--neutral">
+                            {{ localSnapshotAvailabilityView(entry).message }}
+                        </p>
                     </div>
 
                     <!-- 0.8.27 — Unified Publication Decentralization View. Always visible

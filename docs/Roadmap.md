@@ -21059,3 +21059,162 @@ selective-claim-exchange work 0.8.30/0.8.31 already deferred twice. Both
 remain open; this milestone's own review chose content transfer first
 because it closes a gap no amount of more-efficient claim exchange would
 ever have closed on its own.
+
+## 0.8.33 — Local Snapshot Content Availability & Integrity UX
+
+0.8.32's own "Deliberately excluded" list named this milestone directly: a
+"Local Content Availability view (a pure read of whether this replica's
+own `ContentStore` currently holds bytes for a publication's content
+hash, with no network call)." 0.8.32 gave a replica an offline path to
+OBTAIN a snapshot's bytes; nothing in this codebase, before this
+milestone, could answer the plainer question sitting underneath every
+milestone since 0.8.28: does THIS replica, right now, actually have them?
+`application/PublicationReplicaKnowledgeView.js` (0.8.28) already answers
+"does this replica know the publication envelope itself" without ever
+touching `content/ContentStore.js`; this milestone answers the content-side
+twin of that question, deliberately kept just as small:
+
+```text
+                    Publication
+                        │
+          ┌─────────────┼─────────────┐
+          │             │             │
+       CONTENT       EVIDENCE      PLACEMENT
+          │             │             │
+   Do I possess     What claims    Where can
+   the bytes?       exist?         I retrieve?
+```
+
+Three new files, all under `application/`:
+
+- `application/LocalSnapshotContentAvailabilityOutcome.js` (new) — three
+  values, the same "one outcome enum per pipeline" shape `application/
+  SnapshotContentTransferOutcome.js` (0.8.32) and `application/
+  SnapshotPlacementResolutionOutcome.js` (0.8.18/0.8.20) already
+  established one layer over: `NOT_AVAILABLE` (no bytes under this hash,
+  right now), `AVAILABLE` (bytes present AND verified against the
+  publication's own `contentHash`), and `CONTENT_HASH_MISMATCH` (bytes
+  present under this hash, but they no longer verify — storage-layer
+  damage or tampering, a DEFINITE finding, never conflated with
+  `NOT_AVAILABLE`).
+- `application/CheckLocalSnapshotContentAvailabilityUseCase.js` (new) —
+  the one place this milestone touches a `content/ContentStore.js`.
+  Deliberately scoped to exactly ONE store — this replica's own LOCAL
+  one, the identical store `application/
+  BuildPublicationSnapshotTransferPackageUseCase.js` (0.8.32) already
+  reads from on the export side. Accepts the publication itself (not a
+  bare id plus a second catalog lookup), mirroring `application/
+  SnapshotPlacementResolutionCoordinator.js#resolve(placement)` and
+  `application/PublicationEvidenceCoordinator.js#verify(anchor)` one axis
+  over. `execute()` calls `contentStore.has(reference)`; if absent,
+  `NOT_AVAILABLE`. If present, it reads the bytes and calls `core/
+  ContentReference.js#verify()` — recomputing the hash and comparing it
+  against the publication's own claimed one — reporting `AVAILABLE` or
+  `CONTENT_HASH_MISMATCH` accordingly. Never accepts a store registry,
+  never consults a placement's `storage`/`locator`, and never calls
+  `application/SnapshotPlacementResolver.js` — checking "do I already
+  have this?" and checking "can this be retrieved from a claimed
+  location?" stay two independent operations. Nothing is cached: calling
+  this twice re-reads the `ContentStore` both times.
+- `application/LocalSnapshotContentAvailabilityView.js` (new) — pure,
+  synchronous reshaping of an already-computed observation into a label,
+  a message, and a button-label, mirroring `application/
+  SnapshotPlacementView.js` (0.8.20) one axis over. `describeLocal
+  SnapshotContentAvailability(attempt)` accepts `null` (idle), `{
+  checking: true }` (in flight), or the use case's own resolved shape.
+  The `AVAILABLE` message is deliberately exact: "Local snapshot is
+  available and matches the publication's content hash." — never
+  "verified," "trusted," "authentic," or "confirmed," each of which would
+  claim something about the publication this milestone never checks.
+
+> **Local content availability is an observation about this replica's
+> present content state; it does not validate external claims, modify
+> placements, or establish trust.** See `docs/Principles.md`, "Local
+> Content Availability Is An Observation, Not A Verdict (0.8.33)."
+
+- `tests/LocalSnapshotContentAvailability.test.js` (new) — Section A:
+  constructor/argument handling. Section B: the pure view functions over
+  every outcome plus the idle/checking states, including the exact
+  `AVAILABLE` sentence. Section C — FLAGSHIP: Alice publishes a
+  publication, holds its bytes locally, places it on IPFS, and builds
+  both a Publication Replica Package (0.8.29) and a Publication Snapshot
+  Transfer Package (0.8.32). Bob imports only the replica package: he
+  knows the publication and exactly where its placement CLAIMS the bytes
+  are retrievable, and his own local availability check reports
+  `NOT_AVAILABLE`. Carol imports the replica package AND the transfer
+  package: her check reports `AVAILABLE`. Dave imports the replica and
+  transfer packages, then has his underlying storage corrupted in place,
+  bypassing `put()` entirely (simulating real storage damage, never
+  anything a normal transfer could itself cause) — his check reports
+  `CONTENT_HASH_MISMATCH`, proven distinct from Bob's `NOT_AVAILABLE`.
+  Section D: re-checking is always a fresh read, never cached — deleting
+  the bytes between two checks flips `AVAILABLE` back to `NOT_AVAILABLE`,
+  and restoring them flips it back again.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each entry now
+  offers a "Local Snapshot" section: a badge/label/message, an explicit
+  "Check Local Snapshot" button, and nothing else. Opening this page,
+  expanding any disclosure, or synchronizing with peers never triggers a
+  check — only the explicit click does, the identical restraint 0.8.20/
+  0.8.3 already hold for "Resolve Snapshot"/"Verify Evidence." Kept
+  deliberately separate from the "Decentralization" card immediately
+  below it: that card describes distributed claims this replica knows
+  about (evidence, placements); this section describes a fact about this
+  replica's own present content state. Hidden entirely with no
+  `localSnapshotContentAvailabilityUseCase` provided.
+- `ui/main.js` (modified) — constructs one
+  `CheckLocalSnapshotContentAvailabilityUseCase`, over the SAME
+  `publicationContentStore` every other local content read in this file
+  already goes through, and provides it under
+  `localSnapshotContentAvailabilityUseCase`.
+
+### Deliberately excluded
+
+- **Any "Import Snapshot" or materialization action.** This milestone
+  only reads whatever this replica's `ContentStore` already holds; it
+  never writes to it, never imports a transfer package, and never
+  resolves a placement. Making local materialization itself a first-class
+  Publication Center workflow — choosing a source and actually obtaining
+  the bytes from inside this page — is a natural next milestone, left
+  for later exactly as 0.8.29's own transfer mechanism preceded 0.8.28's
+  inspection views chronologically the other way around, but the same
+  discipline: transfer/materialization and inspection stay separate
+  milestones.
+- **A persistent "content status" field on a publication, or any
+  acquisition-provenance record for a local availability check.** Unlike
+  a placement or an anchor, "do I have the bytes right now" is not a
+  claim anything signs or a fact that accumulates history — it is a
+  live property of this replica's own storage, exactly as volatile as
+  the storage itself. If the bytes are deleted a moment after `AVAILABLE`
+  is reported, the very next check reports `NOT_AVAILABLE`; nothing
+  about this milestone remembers the earlier answer. See `tests/
+  LocalSnapshotContentAvailability.test.js`'s own Section D.
+  `application/SnapshotContentTransferOutcome.js`'s own "Deliberately
+  excluded" list (0.8.32) already gave the identical reasoning for why no
+  `ContentAcquisitionKind` enum exists for content the way one exists for
+  anchors/placements; this milestone extends that same restraint to a
+  status derived FROM the content, not just to the content's own
+  transfer.
+- **A `decentralizationScore`, or folding this observation into the
+  existing "Decentralization" card (0.8.27).** Evidence and placements
+  are both DISTRIBUTED claims this replica has collected from elsewhere;
+  local content availability is a REPLICA-LOCAL fact about this one
+  device. Merging the three into one number, or one card, would destroy
+  exactly the discipline every milestone since 0.8.3 has held: a person
+  reading this page sees "Evidence: conflict," "Placements: agreement,"
+  and "Local snapshot: available" side by side, none of them adjusted to
+  agree with the others.
+- **Cross-checking a mismatch against any anchor or placement, or
+  triggering `application/ExternalAnchorVerifier.js`/`application/
+  SnapshotPlacementResolver.js` as a side effect of a local check.** A
+  `CONTENT_HASH_MISMATCH` describes THIS replica's own storage; it proves
+  nothing about whether the publication itself, or any placement naming
+  it, is legitimate. See `application/
+  CheckLocalSnapshotContentAvailabilityUseCase.js`'s own header.
+
+What's left, and deliberately unbuilt: the "Import Snapshot" workflow
+named above (choosing a source — a transfer package, an IPFS placement,
+another available placement — and explicitly materializing the bytes from
+inside the Publication Center, never an automatic "best" choice, exactly
+as the existing placement convergence system already holds no ranking
+semantics), and the selective-claim-exchange work 0.8.30/0.8.31/0.8.32
+have each deferred in turn. Both remain open.
