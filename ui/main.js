@@ -56,6 +56,7 @@ import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/Creat
 import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -548,6 +549,17 @@ const { coordinator: snapshotPlacementCreationCoordinator } = new CreateSnapshot
     storeRegistry: snapshotPlacementStoreRegistry
 });
 
+// 0.8.33 — Local Snapshot Content Availability & Integrity UX. Reads
+// through the SAME `publicationContentStore` (this replica's own 'local'
+// content/ContentStore.js) every other local content read in this file
+// already goes through — deliberately never the `stores`/registry list
+// above, which also knows how to reach `ipfs`: checking whether THIS
+// replica already possesses bytes is a different question from resolving
+// a placement's claimed locator, and stays answerable with no store
+// registry, no placement, and no network object at all. See application/
+// CheckLocalSnapshotContentAvailabilityUseCase.js's own header.
+const localSnapshotContentAvailabilityUseCase = new CheckLocalSnapshotContentAvailabilityUseCase(publicationContentStore);
+
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 // The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
 // this milestone's own design calls for — it wraps the SAME coordinator
@@ -713,5 +725,7 @@ app.provide('snapshotPlacementViewRegistry', snapshotPlacementViewRegistry);
 app.provide('placementKnowledgeStore', placementKnowledgeStore);
 // 0.8.25 — Explicit Snapshot Placement Creation UX.
 app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoordinator);
+// 0.8.33 — Local Snapshot Content Availability & Integrity UX.
+app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
 app.use(router);
 app.mount('#app');

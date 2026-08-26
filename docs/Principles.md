@@ -12649,3 +12649,100 @@ without claims, or both — and a reader of either package's own file never
 has to guess which kind of fact it is holding.
 
 See `docs/Roadmap.md`, 0.8.32, for the full milestone entry.
+
+## Local Content Availability Is An Observation, Not A Verdict (0.8.33)
+
+`docs/Principles.md`, "Known Is Not Available (0.8.28)," drew a line
+between what a replica knows and what has been externally proven or
+successfully retrieved. "Knowledge Of Content Is Not Possession Of
+Content (0.8.32)" drew the identical line for a snapshot's own bytes: a
+replica can know exactly where a placement claims content is retrievable
+and still not possess a single byte of it. Both of those milestones left
+one plain question unanswered: once a replica MIGHT possess the bytes —
+because it published them itself, because a transfer package arrived,
+because a peer sent them — how does anyone find out, without guessing
+from context clues scattered across three other subsystems? This
+milestone is the smallest possible answer, and it is deliberately an
+OBSERVATION, never a verdict:
+
+**Local content availability describes THIS replica's present storage,
+and nothing else.** `application/
+CheckLocalSnapshotContentAvailabilityUseCase.js` asks exactly one
+question — does `content/ContentStore.js`, right now, hold bytes for this
+publication's own `contentReference`, and do those bytes still hash to
+it? It never asks whether an anchor verifies, never asks whether a
+placement resolves, and never asks whether the publication envelope
+itself is signed by anyone this replica trusts. `tests/
+LocalSnapshotContentAvailability.test.js`'s own flagship proves this
+directly: Bob, Carol, and Dave all know the identical publication — same
+envelope, same placement claim — and receive three different answers
+(`NOT_AVAILABLE`, `AVAILABLE`, `CONTENT_HASH_MISMATCH`) purely because
+their own local storage differs. Nothing about the publication itself
+changed between the three checks.
+
+**"No bytes here" and "the wrong bytes are here" are different facts,
+never conflated.** `application/
+LocalSnapshotContentAvailabilityOutcome.js` draws the identical
+distinction `application/SnapshotPlacementResolutionOutcome.js` (0.8.18)
+already drew between `CONTENT_UNAVAILABLE` and `CONTENT_HASH_MISMATCH`
+one layer over: `NOT_AVAILABLE` says this replica has never stored
+anything under this hash; `CONTENT_HASH_MISMATCH` says it has, and what
+is stored there no longer verifies. The second is a strictly more
+alarming finding than the first — it means this replica's own storage
+disagrees with itself, not merely that a byte transfer has yet to happen
+— and collapsing the two into a shared "not available" bucket would throw
+that difference away. `tests/LocalSnapshotContentAvailability.test.js`'s
+own flagship proves the two are never equal, even incidentally: Bob's
+`NOT_AVAILABLE` and Dave's `CONTENT_HASH_MISMATCH` are asserted distinct
+by direct comparison, not merely by each individually matching its own
+expected enum value.
+
+**The strongest sentence this milestone will say is exact, and stops
+exactly there.** `application/LocalSnapshotContentAvailabilityView.js`'s
+own `AVAILABLE` message reads: "Local snapshot is available and matches
+the publication's content hash." Not "verified" — this milestone checks
+no signature and consults no external system. Not "trusted" or
+"authentic" — those describe a claim about the PUBLICATION being
+believed, and this observation is only ever about BYTES matching a HASH
+already claimed by an envelope this replica accepted for entirely
+separate reasons, at some earlier point, through some earlier milestone.
+Not "confirmed" — confirmation implies checking against some independent
+source, and `core/ContentReference.js#verify()` checks the bytes only
+against the hash they are already filed under, in this replica's own
+storage. Every word this milestone's own view functions choose describes
+exactly the computation that produced it, no more.
+
+**No status is remembered; every check re-reads the present.** This
+milestone introduces no `ContentAvailabilityKind`, no lifecycle record,
+and no field on a publication or a catalog entry. `application/
+CheckLocalSnapshotContentAvailabilityUseCase.js`'s own header states the
+reason directly: unlike an anchor or a placement, "do I have the bytes
+right now" is not a claim anyone signs and not a fact that accumulates a
+history worth recording — it is exactly as volatile as the underlying
+storage. `tests/LocalSnapshotContentAvailability.test.js`'s own Section D
+proves this operationally: the identical publication reports `AVAILABLE`,
+then `NOT_AVAILABLE` after its bytes are removed, then `AVAILABLE` again
+after they are restored — three checks, three fresh reads, no memory of
+one influencing the next. The UI layer's own `entry.
+localSnapshotAvailability` mirrors every other ephemeral per-entry result
+this codebase already holds (`entry.resolutions`, `entry.verifications`)
+for the identical reason: session-lifetime display state, never anything
+durable.
+
+**A fourth fact, deliberately never a fourth score.** `docs/
+Roadmap.md`'s own 0.8.33 entry draws the shape directly: evidence and
+placements (0.8.27's "Decentralization" card) are both DISTRIBUTED claims
+this replica has collected from elsewhere about a publication; local
+content availability is a REPLICA-LOCAL fact about this one device's own
+storage, sitting beside those two claims rather than folded into them.
+`docs/Principles.md`'s own closing line under "Unified Publication
+Decentralization View" already warned against inventing a
+`decentralizationScore`; this milestone extends that same restraint one
+axis further; a person reading the Publication Center sees "Evidence:
+conflict," "Placements: agreement," and "Local snapshot: available" as
+three separate, non-contradictory sentences, exactly as `docs/
+Principles.md`'s own "Known Is Not Available (0.8.28)" already
+established KNOWN and AVAILABLE could coexist without either one
+adjusting to agree with the other.
+
+See `docs/Roadmap.md`, 0.8.33, for the full milestone entry.
