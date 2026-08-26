@@ -51,7 +51,7 @@ import { StoreSnapshotContentOutcome } from '../../application/StoreSnapshotCont
 import { createSnapshotMaterializationAttempt } from '../../application/SnapshotMaterializationAttempt.js';
 import { describeLocalSnapshotMaterializationSource } from '../../application/SnapshotMaterializationView.js';
 import { appendSnapshotMaterializationHistoryEntry, describeSnapshotMaterializationSourceCounts } from '../../application/SnapshotMaterializationHistory.js';
-import { describeSnapshotMaterializationHistory } from '../../application/SnapshotMaterializationHistoryView.js';
+import { describeSnapshotMaterializationHistoryDetails } from '../../application/SnapshotMaterializationHistoryDetailView.js';
 import { appendSnapshotPeerPossessionObservationHistoryEntry, latestSnapshotPeerPossessionObservationsByPeer } from '../../application/SnapshotPeerPossessionObservationHistory.js';
 import { describeSnapshotPeerPossessionComparison, describeSnapshotPeerPossessionStateLabel, describeSnapshotPeerPossessionObservationHistory } from '../../application/SnapshotPeerPossessionComparisonView.js';
 import { createSnapshotMaterializationSourceSelection } from '../../application/SnapshotMaterializationSourceSelection.js';
@@ -966,6 +966,18 @@ export default {
                 // SnapshotMaterializationHistory.js's own header.
                 materializationHistory: [],
                 materializationHistoryExpanded: false,
+                // 0.8.44 — Explicit Snapshot Acquisition Attempt
+                // Inspection. Keyed by an entry's own position in
+                // `materializationHistory` above (that array is only ever
+                // appended to, never reordered — see application/
+                // SnapshotMaterializationHistory.js's own header — so an
+                // index stays a stable identity for one attempt for the
+                // life of this page). Gates only whether ONE row's own
+                // extra fields (Publication, Content hash) are on screen;
+                // never itself a second history, and never anything the
+                // row's own facts didn't already carry. Mirrors
+                // `entry.inspections` (0.8.17) one axis over.
+                materializationHistoryEntryExpanded: {},
                 // 0.8.41 — Peer Snapshot Possession Comparison & Observation
                 // History. A DELIBERATELY SEPARATE selection and history
                 // from `peerPossessionSelectedPeerId`/`peerPossessionAttempt`
@@ -1364,8 +1376,27 @@ export default {
             entry.materializationHistory = appendSnapshotMaterializationHistoryEntry(entry.materializationHistory, attempt);
         }
 
-        function materializationHistoryView(entry) {
-            return describeSnapshotMaterializationHistory(entry.materializationHistory);
+        // 0.8.44 — Explicit Snapshot Acquisition Attempt Inspection.
+        // Composes application/SnapshotMaterializationHistoryDetailView.js's
+        // own describeSnapshotMaterializationHistoryDetails() over this
+        // entry's existing `materializationHistory` (0.8.38) — the
+        // IDENTICAL sequence materializationSourceCountsSentence() below
+        // and the "Snapshot Acquisition" summary already read, never a
+        // second, separately-tracked history.
+        function materializationHistoryDetailsView(entry) {
+            return describeSnapshotMaterializationHistoryDetails(entry.materializationHistory);
+        }
+
+        // Per-attempt disclosure state, addressed by that attempt's own
+        // stable index (see `entry.materializationHistoryEntryExpanded`'s
+        // own header). Toggling one row never touches another, and never
+        // touches the outer "Show/Hide Acquisition History" state above it.
+        function isMaterializationHistoryEntryExpanded(entry, index) {
+            return Boolean(entry.materializationHistoryEntryExpanded[index]);
+        }
+
+        function toggleMaterializationHistoryEntry(entry, index) {
+            entry.materializationHistoryEntryExpanded[index] = !entry.materializationHistoryEntryExpanded[index];
         }
 
         // A plain, non-judgmental tally of how many recorded history
@@ -2373,7 +2404,8 @@ export default {
             peerMaterializationView, peerMaterializationBadgeClass, peerMaterializationButtonLabel,
             snapshotPeerPossessionCoordinator, checkSnapshotPossessionWithPeer,
             peerPossessionView, peerPossessionBadgeClass, peerPossessionButtonLabel,
-            materializationHistoryView, materializationSourceCountsSentence, toggleMaterializationHistory,
+            materializationHistoryDetailsView, materializationSourceCountsSentence, toggleMaterializationHistory,
+            isMaterializationHistoryEntryExpanded, toggleMaterializationHistoryEntry,
             togglePeerPossessionCompareSelection, checkSnapshotPossessionWithSelectedPeers,
             peerPossessionComparisonView, peerPossessionComparisonRowBadgeClass, peerPossessionComparisonRowLabel,
             peerPossessionObservationHistoryView, togglePeerPossessionComparisonHistory, peerPossessionRowLabel,
@@ -2461,9 +2493,11 @@ export default {
                              disclosure this card already offers below it — never a
                              replacement for any of them. Current possession is always
                              read from localSnapshotAvailabilityView(entry) (0.8.33)
-                             unchanged; acquisition history is always a plain COUNT,
-                             never the full per-attempt narration "Materialization
-                             History" below already shows. Visible only once at least
+                             unchanged; acquisition history is always a plain COUNT
+                             here, never the full per-attempt narration "Show
+                             Acquisition History" immediately below already shows
+                             (0.8.44 — Explicit Snapshot Acquisition Attempt
+                             Inspection). Visible only once at least
                              one check or one attempt has ever happened THIS session —
                              an untouched entry shows nothing here, rather than "0
                              attempts." See application/PublicationSnapshotAcquisitionView.js's
@@ -2488,6 +2522,63 @@ export default {
                                 "Import Snapshot," a placement's own "Materialize Snapshot," or a peer's own "Get
                                 Snapshot from Peer" — to try again.
                             </p>
+
+                            <!-- 0.8.44 — Explicit Snapshot Acquisition Attempt
+                                 Inspection. The ORDERED narration of EVERY explicit
+                                 "Import Snapshot"/"Materialize Snapshot"/"Get Snapshot
+                                 from Peer" attempt this entry has seen THIS SESSION
+                                 that actually reached application/
+                                 StoreSnapshotContentUseCase.js — including a rejected
+                                 HASH_MISMATCH attempt, never only the successful ones
+                                 "Source: …" below already names. Nested directly under
+                                 "Snapshot Acquisition" above: the summary immediately
+                                 above already reports a plain COUNT ("4 attempts · 2
+                                 stored · 1 already available · 1 hash mismatch"); this
+                                 disclosure is the SAME history, inspectable one attempt
+                                 at a time — never a replacement for that summary, and
+                                 never a replacement for "Current possession" above it
+                                 (see docs/Principles.md, "Current Snapshot Possession
+                                 Is Independent Of How The Snapshot Was Acquired
+                                 (0.8.43)"). Each row shows a compact "source → outcome"
+                                 summary; expanding a single row reveals the two facts
+                                 the compact row leaves out — Outcome (the full
+                                 sentence), Publication, and Content hash — never a new
+                                 fact this attempt didn't already carry. Deliberately a
+                                 plain narration, never a ranking: no source is called
+                                 better, more reliable, or more trustworthy than another
+                                 — see application/
+                                 SnapshotMaterializationHistoryDetailView.js's own
+                                 header and docs/Principles.md, "Materialization History
+                                 Describes Byte Acquisition, Not Source Trust
+                                 (0.8.38)." -->
+                            <div v-if="materializationHistoryDetailsView(entry).count > 0" class="evidence-list">
+                                <button class="action-btn action-btn--secondary" @click="toggleMaterializationHistory(entry)">
+                                    {{ entry.materializationHistoryExpanded ? 'Hide Acquisition History' : 'Show Acquisition History' }}
+                                </button>
+                                <div v-if="entry.materializationHistoryExpanded">
+                                    <ul class="replica-knowledge-claim-list">
+                                        <li v-for="(item, index) in materializationHistoryDetailsView(entry).entries" :key="index" class="replica-knowledge-claim">
+                                            <button class="action-btn action-btn--secondary" @click="toggleMaterializationHistoryEntry(entry, index)">
+                                                {{ formatWhen(item.observedAt) }} — {{ item.sourceLabel }} → {{ item.outcomeShortLabel }}
+                                            </button>
+                                            <dl v-if="isMaterializationHistoryEntryExpanded(entry, index)" class="evidence-fields">
+                                                <div class="evidence-field">
+                                                    <dt>Outcome</dt>
+                                                    <dd>{{ item.outcomeLabel }}</dd>
+                                                </div>
+                                                <div class="evidence-field">
+                                                    <dt>Publication</dt>
+                                                    <dd>{{ item.publicationId }}</dd>
+                                                </div>
+                                                <div class="evidence-field">
+                                                    <dt>Content hash</dt>
+                                                    <dd>{{ item.contentHash }}</dd>
+                                                </div>
+                                            </dl>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 0.8.39 — Local Snapshot Possession & Replica Content
@@ -2790,50 +2881,6 @@ export default {
                                         </li>
                                     </ul>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- 0.8.38 — Snapshot Materialization History & Source
-                             Inspection. The ORDERED narration of EVERY explicit
-                             "Import Snapshot"/"Materialize Snapshot"/"Get
-                             Snapshot from Peer" attempt this entry has seen THIS
-                             SESSION that actually reached application/
-                             StoreSnapshotContentUseCase.js — including a
-                             rejected HASH_MISMATCH attempt, never only the
-                             successful ones "Source: …" above already names.
-                             Deliberately a plain narration, never a ranking: no
-                             source is called better, more reliable, or more
-                             trustworthy than another — see application/
-                             SnapshotMaterializationHistoryView.js's own header
-                             and docs/Principles.md, "Materialization History
-                             Describes Byte Acquisition, Not Source Trust
-                             (0.8.38)." -->
-                        <div v-if="materializationHistoryView(entry).count > 0" class="evidence-list">
-                            <button class="action-btn action-btn--secondary" @click="toggleMaterializationHistory(entry)">
-                                {{ entry.materializationHistoryExpanded ? 'Hide Materialization History' : 'Show Materialization History' }}
-                            </button>
-                            <div v-if="entry.materializationHistoryExpanded">
-                                <p v-if="materializationSourceCountsSentence(entry)" class="form-hint form-hint--neutral">
-                                    {{ materializationSourceCountsSentence(entry) }}
-                                </p>
-                                <ul class="replica-knowledge-claim-list">
-                                    <li v-for="(attempt, index) in materializationHistoryView(entry).attempts" :key="index" class="replica-knowledge-claim">
-                                        <dl class="evidence-fields">
-                                            <div class="evidence-field">
-                                                <dt>Source</dt>
-                                                <dd>{{ attempt.sourceLabel }}</dd>
-                                            </div>
-                                            <div class="evidence-field">
-                                                <dt>Outcome</dt>
-                                                <dd>{{ attempt.outcomeLabel }}</dd>
-                                            </div>
-                                            <div class="evidence-field">
-                                                <dt>When</dt>
-                                                <dd>{{ formatWhen(attempt.observedAt) }}</dd>
-                                            </div>
-                                        </dl>
-                                    </li>
-                                </ul>
                             </div>
                         </div>
                     </div>
