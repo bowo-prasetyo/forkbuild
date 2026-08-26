@@ -13673,3 +13673,58 @@ invalidates, or automatically re-materializes a mismatched local
 snapshot. See `docs/Roadmap.md`, 0.8.43, for the full milestone entry.
 
 See `docs/Roadmap.md`, 0.8.42, for the full milestone entry.
+
+## History Records What Happened During An Explicit Acquisition Attempt; Inspection Must Not Reinterpret Why It Happened (0.8.44)
+
+**`application/SnapshotMaterializationHistoryDetailView.js`'s two functions
+— `describeSnapshotMaterializationHistoryEntry(attempt)` and
+`describeSnapshotMaterializationHistoryDetails(history)` — add exactly ONE
+new field beyond what `application/SnapshotMaterializationHistoryView.js`
+(0.8.38) already narrates for every attempt: a short `outcomeShortLabel`
+("Stored"/"Already available"/"Hash mismatch") alongside the SAME full
+sentence (`outcomeLabel`) that file already returns.** Everything else —
+`sourceLabel`, `observedAt`, `possessed`, `publicationId`, `contentHash` —
+is carried through unchanged. Neither function performs a new content
+check, resolves a placement, contacts a peer, or modifies the history or
+any attempt inside it; both are synchronous, take no coordinator, catalog,
+or store, and are proven pure and non-mutating directly in
+`tests/SnapshotMaterializationHistoryDetailView.test.js` (Section B).
+
+**Making a fact inspectable is not the same as explaining it, and this
+milestone is careful never to blur that line.** A person opening "Show
+Acquisition History" and expanding one row sees exactly what
+`application/StoreSnapshotContentUseCase.js` (0.8.36) already recorded for
+that one attempt — which source, what outcome, when, for which publication
+and content hash — never a sentence inferring why a `HASH_MISMATCH`
+happened, never a suggestion about which source to try next, and never a
+field like `confidence`, `trust`, `quality`, `preferredSource`, or
+`bestSource` anywhere in the composed shape; both flagship sections below
+assert this recursively.
+
+**The two FLAGSHIP invariants `tests/SnapshotMaterializationHistoryDetailView.test.js`
+(Sections C and D) prove, at the per-attempt inspection layer, are the
+identical pair `application/PublicationSnapshotAcquisitionView.js`'s own
+flagship (0.8.43) already proved one layer up, at the count layer — now
+restated for the full narration a person actually reads when they expand
+one row.** Section C: Bob and Carol materialize a snapshot through an
+identical one-entry PLACEMENT history; both currently read `AVAILABLE`, and
+their own per-attempt detail narrations are byte-identical. Bob's bytes are
+then deleted underneath him — his current possession now reads
+`NOT_AVAILABLE` while Carol's still reads `AVAILABLE`, yet his own detail
+narration is asserted UNCHANGED, because `describeSnapshotMaterializationHistoryDetails()`
+was never even given his current possession to react to. Section D: Alice
+(a single PACKAGE attempt) and Bob (a rejected PEER attempt, then a
+recovering PLACEMENT attempt) both end up possessing byte-identical content
+and both currently report `AVAILABLE`, while their own detail narrations
+remain entirely different — two entries naming a rejection and a recovery
+for Bob, one entry naming a single success for Alice. Identical possession
+never collapses two genuinely different histories into one.
+
+**This is the same restraint `application/SnapshotMaterializationHistory.js`
+(0.8.38) and `application/PublicationSnapshotAcquisitionView.js` (0.8.43)
+already established, extended one layer further toward the person actually
+reading it.** Where 0.8.38 refused to let a count rank one source over
+another, and 0.8.43 refused to let a count decide current possession, this
+milestone refuses to let a PER-ATTEMPT narration do either — inspecting a
+history in detail is still just reading it, never re-judging it. See
+`docs/Roadmap.md`, 0.8.44, for the full milestone entry.

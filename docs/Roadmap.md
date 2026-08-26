@@ -22807,3 +22807,108 @@ two attempts that were actually explicit actions.
   about this replica's own acquisition history or current content state —
   "Peer Snapshot Possession Comparison" stays its own, independently
   gated disclosure, exactly as before this milestone.
+
+## 0.8.44 — Explicit Snapshot Acquisition Attempt Inspection
+
+0.8.43's "Snapshot Acquisition" summary made acquisition history visible as
+a plain COUNT — "4 attempts · 2 stored · 1 already available · 1 hash
+mismatch" — sitting directly beside current possession. A count answers
+"how many," never "which ones, and what happened to each." The full,
+ordered per-attempt narration has existed since 0.8.38
+(`application/SnapshotMaterializationHistoryView.js#describeSnapshotMaterializationHistory()`),
+but a person could only reach it through a separate "Materialization
+History" disclosure, further down the same card, disconnected from the
+summary that had just told them how many attempts there were. This
+milestone makes the existing history genuinely INSPECTABLE from that
+summary, one attempt at a time, without adding a single new fact:
+
+> History records what happened during an explicit acquisition attempt;
+> inspection must not reinterpret why it happened.
+
+```text
+   describeSnapshotMaterializationHistory()                (0.8.38, UNCHANGED)
+              │
+              ▼
+   describeSnapshotMaterializationHistoryDetails()/
+   describeSnapshotMaterializationHistoryEntry()                   (new)
+              │
+              ▼
+     { count, entries: [{ sourceLabel, outcomeLabel, outcomeShortLabel,
+                           observedAt, possessed, publicationId,
+                           contentHash }, ...] }
+```
+
+One new module, under `application/`:
+
+- `application/SnapshotMaterializationHistoryDetailView.js` (new) —
+  `describeSnapshotMaterializationHistoryDetails(history)` composes
+  `describeSnapshotMaterializationHistory()`'s own per-attempt narration
+  (0.8.38) and adds exactly one further, non-evaluative field:
+  `outcomeShortLabel` ("Stored"/"Already available"/"Hash mismatch"), a
+  condensed counterpart to the existing full-sentence `outcomeLabel`
+  ("Snapshot stored locally"), suited to a compact chronological row. Every
+  other field — `sourceLabel`, `observedAt`, `possessed`, `publicationId`,
+  `contentHash` — is carried through unchanged, in the same oldest-first
+  order the underlying history already holds. `describeSnapshotMaterializationHistoryEntry(attempt)`
+  is the identical description for one attempt in isolation. Neither
+  function performs a new content check, resolves a placement, contacts a
+  peer, or modifies the history or any attempt inside it — both are pure,
+  synchronous, and take no coordinator, catalog, or store.
+
+`ui/views/DecentralizedPublicationsView.js` relocates its existing
+"Materialization History" disclosure to sit directly beneath the "Snapshot
+Acquisition" summary (0.8.43) it already narrates a count for — the same
+underlying `entry.materializationHistory` (0.8.38), never a second,
+separately-tracked history — and renames it "Show/Hide Acquisition
+History" to match the section it now lives inside. Each row shows a
+compact "`observed — source → outcome`" summary; a person can expand any
+ONE row to reveal the two facts the compact row leaves out — the full
+outcome sentence, the publication, and the content hash — without
+affecting any other row, and without affecting the outer disclosure or the
+"Current possession"/count sentences above it, which stay exactly as 0.8.43
+already built them.
+
+The FLAGSHIP tests (`tests/SnapshotMaterializationHistoryDetailView.test.js`,
+Sections C and D) restate 0.8.43's own two flagship invariants one layer
+down, at the full per-attempt narration a person actually reads on
+expanding a row, rather than at the summary count above it. Section C: Bob
+and Carol materialize identically through one PLACEMENT attempt and both
+read AVAILABLE; Bob's bytes are then deleted underneath him — his current
+possession now differs from Carol's, yet his own per-attempt detail
+narration is asserted byte-identical to hers, both before and after the
+deletion, because the detail view was never given possession to react to
+in the first place. Section D: Alice (one PACKAGE attempt) and Bob (a
+rejected PEER attempt, then a recovering PLACEMENT attempt) both end up
+AVAILABLE with byte-identical content, while their own detail narrations
+remain entirely different, two entries against one.
+
+> **History records what happened during an explicit acquisition attempt;
+> inspection must not reinterpret why it happened.** See
+> `docs/Principles.md`, "History Records What Happened During An Explicit
+> Acquisition Attempt; Inspection Must Not Reinterpret Why It Happened
+> (0.8.44)."
+
+### Deliberately excluded
+
+- **A new content check, placement resolution, or peer contact.**
+  Inspecting history is reading a record of what already happened; it is
+  never itself a fourth way to acquire bytes, and touches no store,
+  coordinator, or use case.
+- **Any mutation of history or possession.** Expanding a row never rewrites
+  `entry.materializationHistory`, never appends a new entry, and never
+  changes `localSnapshotAvailabilityView(entry)`'s own current possession
+  reading — proven directly, non-recursively, in the flagship test's own
+  Section B.
+- **Ranking, inferring reliability, or inferring causality.** No source is
+  ever called better, more reliable, or more trustworthy than another; a
+  `HASH_MISMATCH` entry is never turned into a placement, an evidence
+  claim, or a statement about WHY it happened — only that it did.
+- **Any evaluative vocabulary anywhere in the composed shape.** No
+  `confidence`, `trust`, `quality`, `preferredSource`, `bestSource`, or
+  similar field — the flagship test asserts this recursively, over every
+  field the composed detail view returns.
+- **Replacing the existing possession view, or the 0.8.43 summary it sits
+  beside.** "Current possession" and the plain outcome/source count
+  sentences stay exactly where 0.8.43 put them; this milestone only adds a
+  way to inspect the SAME history those counts already summarize, one
+  attempt at a time.

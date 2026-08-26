@@ -161,6 +161,36 @@ nothing else: it never checks a signature, never asks whether a placement
 resolves, and never touches the network unless you explicitly click one of
 the retrieval actions below it.
 
+### At a glance: Snapshot Acquisition
+
+Once you've checked local availability at least once, or made at least one
+of the attempts described below, a **Snapshot Acquisition** summary opens
+this section — a small, composed view sitting above everything else here,
+never a replacement for it:
+
+```
+Snapshot Acquisition
+Current possession: Available
+Acquisition history: 4 attempts · 2 stored · 1 already available · 1 hash mismatch
+1 via transfer package · 2 via placement · 1 via peer
+
+Show Acquisition History
+```
+
+**Current possession** always mirrors the same check described just below.
+**Acquisition history** is a plain count of every explicit attempt this
+session — never a verdict, and never used to correct or second-guess
+current possession. The two are reported entirely independently: a history
+that shows a stored attempt doesn't mean the bytes are still here (they
+could have been deleted since), and a history showing only a rejected
+attempt doesn't mean they're missing now (a later, unrecorded success could
+have replaced them). If this replica doesn't currently possess a valid
+snapshot, one honest hint appears pointing at the three actions further
+down this same section — never an automatic retry.
+
+Click **Show Acquisition History** to inspect that same count one attempt
+at a time — see [Every attempt, in order](#every-attempt-in-order) below.
+
 ### Checking what you already have
 
 ```
@@ -265,22 +295,32 @@ trimmed down to only the latest answer per peer.
 ### Every attempt, in order
 
 Once at least one of Import Snapshot, Get Snapshot from Peer, or
-Materialize Snapshot has been attempted for this entry, a
-**Materialization History** disclosure appears — click **Show
-Materialization History** to see a tally (e.g. *"1 via transfer package ·
-1 via placement · 2 via peer"*) followed by every attempt this session, in
-order, including ones that were rejected for a hash mismatch (which the
-one-line **Source:** note above never records, since it only ever names
-the most recent *success*). Each row shows:
+Materialize Snapshot has been attempted for this entry, a **Show
+Acquisition History** button appears nested under **Snapshot Acquisition**
+above — click it to see every attempt this session, in order, including
+ones that were rejected for a hash mismatch (which the one-line
+**Source:** note above never records, since it only ever names the most
+recent *success*). Each attempt is its own compact row:
+
+```
+20:14 — Placement → Stored
+20:16 — Peer → Hash mismatch
+```
+
+Click any one row to expand it and see the facts the compact row leaves
+out:
 
 | Field | Meaning |
 |---|---|
-| **Source** | Transfer package, Placement, or Peer. |
-| **Outcome** | *Snapshot stored locally*, *Snapshot was already available*, or *Content hash mismatch*. |
-| **When** | When this replica made the attempt. |
+| **Outcome** | The full sentence — *Snapshot stored locally*, *Snapshot was already available*, or *Content hash mismatch*. |
+| **Publication** | Which publication this attempt was for. |
+| **Content hash** | The content hash this attempt was made against. |
 
-It's a plain narration of what happened and when — never a ranking, and
-never a claim that one source is more trustworthy than another.
+Expanding one row never affects any other row, and never affects the
+**Current possession** line or the count sentences above — it's a plain
+narration of what happened and when, never a ranking, and never a claim
+that one source is more trustworthy than another, or an explanation of
+*why* a hash mismatch happened.
 
 ## Decentralization: Evidence and Placements at a glance
 
@@ -705,7 +745,7 @@ keeping around.
 **Check Local Snapshot** result, an **Import Snapshot** / **Materialize
 Snapshot** / **Get Snapshot from Peer** attempt and its **Source:** note,
 a **Peer Snapshot Possession** check, a possession comparison and its
-**Observation History**, and the **Materialization History** log all reset
+**Observation History**, and the **Acquisition History** log all reset
 the moment you reload — none of them is a claim anyone signed, so none of
 them is worth remembering past this visit. The one thing that *does*
 survive is the actual bytes: once a materialization action succeeds, the
