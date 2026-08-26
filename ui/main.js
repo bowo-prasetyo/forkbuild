@@ -38,6 +38,7 @@ import { CreatePublicationAnchorDiscoveryCoordinatorUseCase } from '../applicati
 import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
 import { CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase } from '../application/CreatePublicationSnapshotPlacementDiscoveryCoordinatorUseCase.js';
 import { CreatePublicationEvidenceDiscoveryCoordinatorUseCase } from '../application/CreatePublicationEvidenceDiscoveryCoordinatorUseCase.js';
+import { CreatePublicationKnowledgeSynchronizationCoordinatorUseCase } from '../application/CreatePublicationKnowledgeSynchronizationCoordinatorUseCase.js';
 import { CreateExternalAnchorVerifierUseCase } from '../application/CreateExternalAnchorVerifierUseCase.js';
 import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/CreateBitcoinAnchorProofVerifierUseCase.js';
 import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/CreatePublicationEvidenceCoordinatorUseCase.js';
@@ -561,6 +562,23 @@ const { coordinator: publicationEvidenceDiscoveryCoordinator } = new CreatePubli
     anchorDiscoveryCoordinator: publicationAnchorDiscoveryCoordinator,
     connectedPeerRegistry: peerSessionManager.registry
 });
+
+// 0.8.30 — Explicit Replica Knowledge Synchronization. The unified
+// sibling of `publicationEvidenceDiscoveryCoordinator` immediately
+// above: wraps the SAME `publicationAnchorDiscoveryCoordinator` AND
+// `publicationSnapshotPlacementDiscoveryCoordinator` (0.8.19, provided
+// above but never before consumed by any UI — see that coordinator's own
+// wiring comment) over the SAME `peerSessionManager.registry`, so one
+// explicit "Synchronize with Peers" click asks every authenticated peer
+// about anchors and placements together, in one call, against one peer
+// list. Provided here for ui/views/DecentralizedPublicationsView.js's
+// own explicit "Synchronize with Peers" action — see application/
+// PublicationKnowledgeSynchronizationCoordinator.js's own header.
+const { coordinator: publicationKnowledgeSynchronizationCoordinator } = new CreatePublicationKnowledgeSynchronizationCoordinatorUseCase().execute({
+    anchorDiscoveryCoordinator: publicationAnchorDiscoveryCoordinator,
+    placementDiscoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator,
+    connectedPeerRegistry: peerSessionManager.registry
+});
 const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute();
 const { externalAnchorVerifier } = new CreateExternalAnchorVerifierUseCase().execute({
     proofVerifiers: [bitcoinProofVerifier]
@@ -678,6 +696,8 @@ app.provide('publicationAnchorPeerExchange', publicationAnchorPeerExchange);
 app.provide('publicationAnchorDiscoveryCoordinator', publicationAnchorDiscoveryCoordinator);
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 app.provide('publicationEvidenceDiscoveryCoordinator', publicationEvidenceDiscoveryCoordinator);
+// 0.8.30 — Explicit Replica Knowledge Synchronization.
+app.provide('publicationKnowledgeSynchronizationCoordinator', publicationKnowledgeSynchronizationCoordinator);
 // 0.8.17 — Evidence Provenance & Observation Boundary.
 app.provide('anchorKnowledgeStore', anchorKnowledgeStore);
 // 0.8.14 — External Evidence Inspection & Locator UX.
