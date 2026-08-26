@@ -5,12 +5,16 @@ layer than the Repository you already know from
 [Publishing & Forking](04-PublishingAndForking.md). Where the Repository is
 about *Documents and Worlds*, Publications is about **signed claims**: "I
 authored this structure" or "I'm calling this place X" — and, once you have
-one, two independent kinds of optional depth you can attach to it:
+one, several independent kinds of optional depth you can attach to it:
 **external evidence** that the claim was recorded somewhere independent of
-ForkBuild, like a Bitcoin transaction that timestamps it; and **snapshot
+ForkBuild, like a Bitcoin transaction that timestamps it; **snapshot
 placements** that name where the claim's own content can currently be
-retrieved from, like an IPFS node. Neither one is required by the other,
-and neither is required to use the rest of ForkBuild.
+retrieved from, like an IPFS node; a **Local Snapshot** section that reports
+what your own device already holds and lets you actually pull those bytes
+in, from a placement, from a peer, or from a file someone hands you; and a
+**Decentralization** overview that puts your evidence and placements side by
+side. None of these are required by any other, and none are required to use
+the rest of ForkBuild.
 
 None of this is required to use ForkBuild. Skip this guide entirely if you
 just want to build, publish Documents, and explore — everything in
@@ -102,10 +106,14 @@ from last time.
 └───────────────────────────────────────────────┘
 ```
 
-Below **External Evidence**, every card also has its own **Snapshot
-Placements** section — a third, independent question neither the status
-badge above nor External Evidence answers. See
-[Snapshot Placements](#snapshot-placements) below.
+Below the status badge, every card also has its own **Local Snapshot**
+section (what *this device* actually holds, and how to get it),
+**Decentralization** overview (evidence and placements side by side),
+**External Evidence** section, and **Snapshot Placements** section — four
+independent questions, none of which answer each other. See
+[Local Snapshot](#local-snapshot),
+[Decentralization](#decentralization-evidence-and-placements-at-a-glance),
+and [Snapshot Placements](#snapshot-placements) below.
 
 Each card shows:
 
@@ -140,6 +148,212 @@ Each card shows:
 None of these is a claim about whether the underlying *design or name is
 good* — only about whether the signed record and its content check out
 mechanically.
+
+## Local Snapshot
+
+Every publication card also has its own **Local Snapshot** section — a
+question none of the other sections on this page answer: *does this
+particular device, right now, actually hold the bytes for this
+publication's content?* External Evidence and Snapshot Placements (below)
+both describe **distributed claims** — things somebody, somewhere, has
+signed. Local Snapshot describes a fact about **your own storage**, and
+nothing else: it never checks a signature, never asks whether a placement
+resolves, and never touches the network unless you explicitly click one of
+the retrieval actions below it.
+
+### Checking what you already have
+
+```
+Local Snapshot
+
+[Check Local Snapshot]   Available
+
+Publication: known locally · Snapshot: available
+```
+
+Click **Check Local Snapshot** (or **Check Again**) to find out. It always
+produces one of three honest, exact answers:
+
+| Badge | Meaning |
+|---|---|
+| **Available** | This device holds bytes for this publication's content, and they still match its hash. |
+| **Not available** | This device has never stored anything under this hash. |
+| **Hash mismatch** | This device *has* something stored under this hash — and it no longer matches. This is a stronger, more alarming finding than "Not available": your own storage disagrees with itself. |
+
+Two people can hold the byte-identical, identically signed publication and
+get different answers here, purely because their own devices' storage
+differs — that's expected, not a bug. Once you've checked at least once
+this session, a short composed line appears underneath: *"Publication:
+known locally / not known locally · Snapshot: available / not available"*
+— the two separate facts of whether your device has ever cataloged the
+publication's signed envelope at all, and whether it currently possesses
+valid bytes for it.
+
+### Bringing the bytes in
+
+Checking only tells you what's already there. Three separate, explicit
+actions can actually bring bytes onto your device — each is its own click,
+none is ever triggered automatically by opening the page, checking
+availability, or by each other:
+
+**Import Snapshot** — click it to reveal a file picker and a paste box for
+a **Publication Snapshot Transfer Package**: a portable JSON bundle of one
+publication's content, however you obtained it (a file someone emailed
+you, a paste from a chat). Choose a file or paste its contents, then click
+**Import Snapshot** again to actually import it. Outcomes:
+
+| Badge | Meaning |
+|---|---|
+| **Imported** | The package's bytes were stored and verified against its own claimed hash. |
+| **Already available** | This device already had matching bytes — never treated as a failure. |
+| **Import rejected** | The package's own bytes didn't match its own claimed hash. |
+| **Snapshot was not imported** | What you supplied wasn't a valid package at all (bad JSON, wrong shape). |
+
+**Get Snapshot from Peer** — choose one currently authenticated peer from
+the dropdown and click **Get Snapshot from Peer** (or **…Again**) to ask
+that specific peer, directly, for the bytes. Nothing here ranks peers,
+races several of them, or automatically tries a second peer if the first
+doesn't answer — it always asks exactly the one you picked. Outcomes:
+
+| Badge | Meaning |
+|---|---|
+| **Obtained** | The peer sent bytes, and they matched this publication's content hash. |
+| **Already available** | This device already had matching bytes. |
+| **Not available right now** | The peer didn't answer, or doesn't currently hold the bytes — the two look identical from here, honestly. |
+| **Rejected** | The peer answered, but with bytes that didn't match the claimed hash. |
+
+Once either of these — or a **Materialize Snapshot** click from a
+placement card (see [Snapshot Placements](#snapshot-placements)) — has
+actually stored bytes this session, a one-line **Source:** note appears in
+this section naming which of the three ("Transfer package," "Placement,"
+or "Peer") most recently succeeded. It's stated plainly, never as
+"preferred" or "recommended" — the three are just three different ways
+bytes ended up here.
+
+### Asking a peer what they have, without asking for the bytes
+
+A separate **Peer Snapshot Possession** control lets you ask a connected
+peer a question, without requesting a single byte: choose a peer and click
+**Check with Peer** (or **…Again**). This is deliberately independent from
+**Get Snapshot from Peer** above — one asks "do you have this?", the other
+asks "give me this" — each with its own peer selection. Outcomes are
+phrased as reports, never verdicts:
+
+| Badge | Meaning |
+|---|---|
+| **Peer reports snapshot available** | That peer says it currently holds the bytes. |
+| **Peer reports snapshot not available** | That peer says it doesn't. |
+| **No answer from peer** | The peer didn't respond — indistinguishable from a peer that simply isn't there right now. |
+
+Once an answer comes back, an **Observed:** line shows exactly when that
+peer reported it. A single check like this replaces the previous one for
+that entry; it's a fact about one moment, not a running history.
+
+### Comparing several peers at once
+
+**Peer Snapshot Possession Comparison** extends the same idea to more than
+one peer at a time. Tick the checkbox next to every connected peer you
+want to ask, then click **Check Selected Peers** (or **…Again**). The
+result is a per-peer table — Peer, Reports (**Available** / **Not
+available** / **Could not determine**), and when it was observed — plus a
+running count across the group. Nothing here ranks or recommends a peer;
+it only reports what each one said. Every check you run also joins an
+**Observation History** you can expand with **Show Observation History**
+— a full chronological log of every comparison check this session, never
+trimmed down to only the latest answer per peer.
+
+### Every attempt, in order
+
+Once at least one of Import Snapshot, Get Snapshot from Peer, or
+Materialize Snapshot has been attempted for this entry, a
+**Materialization History** disclosure appears — click **Show
+Materialization History** to see a tally (e.g. *"1 via transfer package ·
+1 via placement · 2 via peer"*) followed by every attempt this session, in
+order, including ones that were rejected for a hash mismatch (which the
+one-line **Source:** note above never records, since it only ever names
+the most recent *success*). Each row shows:
+
+| Field | Meaning |
+|---|---|
+| **Source** | Transfer package, Placement, or Peer. |
+| **Outcome** | *Snapshot stored locally*, *Snapshot was already available*, or *Content hash mismatch*. |
+| **When** | When this replica made the attempt. |
+
+It's a plain narration of what happened and when — never a ranking, and
+never a claim that one source is more trustworthy than another.
+
+## Decentralization: Evidence and Placements at a glance
+
+Every publication card also has a **Decentralization** section, visible as
+soon as it has at least one known anchor or placement — a combined view
+that puts [External Evidence](#external-evidence) and
+[Snapshot Placements](#snapshot-placements) side by side so you don't have
+to expand both lists separately just to compare them.
+
+```
+Decentralization
+
+Publication: known locally
+
+External Evidence                    Snapshot Placements
+2 anchor claims                      3 placement claims · 2 storage types
+Relationship: Agreement              Relationship: Conflict
+
+⚠ Known snapshot placements conflict, while external evidence claims
+  agree with each other. Multiple agreeing placements do not establish
+  that any external evidence claim is true.
+
+[Synchronize with Peers]
+```
+
+At the top, **Publication: known locally / not known locally** states one
+plain fact ahead of everything else: whether this replica has the signed
+publication envelope itself cataloged at all — independent of how many
+anchor or placement claims it happens to also know about. Unlike Local
+Snapshot's version of this line above, this one is always shown, with
+nothing to click first — it's recomputed fresh every time the page or
+either list below it loads.
+
+Below that, two cards — **External Evidence** and **Snapshot Placements**
+— each show how many claims are known and whether they agree
+(**Agreement**) or disagree (**Conflict**) about the content hash. Neither
+card is ever styled or worded as more significant than the other. If the
+two dimensions' relationships genuinely differ — one agrees while the
+other conflicts — an extra sentence says so explicitly, without ever
+implying that agreement in one dimension makes the other more (or less)
+trustworthy.
+
+### Synchronizing with peers
+
+If a **Synchronize with Peers** button is present, clicking it (or
+**Synchronize Again**) asks every currently connected peer, in turn,
+for anything they know — evidence and placements alike — that this
+replica doesn't already have, in one combined action. It's never
+triggered by opening the page or expanding a disclosure, only by this
+explicit click. Afterward you'll see a summary sentence, plus a
+breakdown:
+
+| Field | Meaning |
+|---|---|
+| **New claims** | How many new anchors and how many new placements were received. |
+| **Already known** | How many of each peers offered that this replica already had. |
+
+### Replica Knowledge
+
+Click **Show Replica Knowledge** to expand a claim-by-claim inventory of
+*how this replica came to know* every anchor and placement it lists above
+— never a verdict about which to trust, just an accounting. For each
+known anchor and placement you'll see:
+
+| Field | Meaning |
+|---|---|
+| **Acquisition** | *Learned locally*, *Learned via package import*, or *Learned via peer exchange* — the same three sources the per-claim **Local Knowledge** sections below already use. |
+| **First seen** | When this replica first learned the claim. |
+| **Verification** / **Resolution** | This replica's current lifecycle state for that claim — *Not yet verified/resolved*, *Verified*/*Resolved*, *Verified (proof unverified)*, *Currently unavailable*, *Rejected*, *Content hash mismatch*, or *Invalid placement*, matching the badges you'd see by inspecting that claim individually. |
+
+This disclosure never itself checks anything over the network — it's a
+recomputed snapshot of state you've already gathered by verifying evidence
+or resolving placements elsewhere on the card.
 
 ## External Evidence
 
@@ -300,12 +514,11 @@ confirmed.
 ## Snapshot Placements
 
 Every publication card also has its own **Snapshot Placements** section —
-a third question, independent of both the status badge at the top of the
-card and External Evidence above it:
+one of several independent questions a card can answer:
 
 | Question | Where it's answered |
 |---|---|
-| Does *this device* have the bytes right now? | The card's own status badge |
+| Does *this device* have the bytes right now? | The card's own status badge, or the more precise, hash-checked [Local Snapshot](#local-snapshot) section |
 | Was this claim recorded by an outside system, at some point? | **External Evidence** |
 | Where else, right now, can the bytes be fetched from? | **Snapshot Placements** |
 
@@ -370,7 +583,7 @@ for exporting/importing blueprints). Each card shows:
 | **Publication** / **Content hash** | Exactly what this placement's signature binds together. |
 | **Placed by** | The identity that signed this placement. |
 
-And two buttons, kept deliberately separate:
+And, kept deliberately separate, up to three buttons:
 
 - **Inspect Placement** — a purely local read of the placement's own
   claimed fields, plus, for a recognized backend like IPFS, a followable
@@ -378,7 +591,26 @@ And two buttons, kept deliberately separate:
   are actually still there.
 - **Resolve Snapshot** (or **Resolve Again**) — the one action that
   actually reaches out to the named storage backend, right now, and
-  reports what it currently finds.
+  reports what it currently finds. This only ever *observes* whether the
+  bytes are retrievable — it never writes anything to this device's own
+  storage.
+- **Materialize Snapshot** (or **Materialize Again**) — a third, separate
+  action that runs the identical resolution **Resolve Snapshot** does and,
+  only if it succeeds, actually writes the retrieved bytes into this
+  device's own storage. This is the bridge between "I know where this
+  could be retrieved from" (Resolve) and "I now possess it" (see
+  [Local Snapshot](#local-snapshot) above). Choosing which placement to
+  materialize from is always your own explicit click on one specific
+  card — this page never picks a "best" placement or tries a second one
+  automatically if the first fails. Outcomes:
+
+  | Badge | Meaning |
+  |---|---|
+  | **Materialized** | The backend was reached, served matching bytes, and they're now stored on this device. |
+  | **Already available** | This device already had matching bytes — never a failure. |
+  | **Not available right now** | The backend couldn't be reached, or doesn't currently have the bytes. |
+  | **Rejected** | The backend answered with bytes that didn't match the placement's claimed hash. |
+  | **Invalid placement** | The placement record itself is malformed, or wasn't genuinely signed. |
 
 ### Resolution outcomes
 
@@ -396,6 +628,15 @@ on this page, for as long as it stays open. Two different people can hold
 the byte-identical, identically signed placement and get two entirely
 different, entirely honest resolution outcomes (say, because only one of
 them has an IPFS node running) — neither one is wrong.
+
+If a placement resolved successfully earlier in this visit but a later
+check comes back unavailable, you'll see one extra line: *"This snapshot
+was resolved successfully earlier; it is currently unavailable."* Exactly
+like the equivalent note for evidence above, it's never downgraded to
+"invalid" or "corrupted" — a store being temporarily unreachable doesn't
+erase what you already confirmed — and it never appears after a **Retrieved
+content does not match this placement** finding, which stays its own
+definite result regardless of any earlier success.
 
 ### Local Knowledge
 
@@ -460,12 +701,32 @@ resets: "was this retrievable a moment ago" and "is this device holding a
 genuine claim" are two different facts, and only the second is worth
 keeping around.
 
+**Everything in Local Snapshot is session-only, with one exception.** A
+**Check Local Snapshot** result, an **Import Snapshot** / **Materialize
+Snapshot** / **Get Snapshot from Peer** attempt and its **Source:** note,
+a **Peer Snapshot Possession** check, a possession comparison and its
+**Observation History**, and the **Materialization History** log all reset
+the moment you reload — none of them is a claim anyone signed, so none of
+them is worth remembering past this visit. The one thing that *does*
+survive is the actual bytes: once a materialization action succeeds, the
+content itself is written to this device's own storage and stays there —
+only the on-screen record of how and when you got it disappears.
+
+**Decentralization behaves differently again.** The evidence/placement
+counts, their Agreement/Conflict relationship, and the "Publication: known
+locally" line are never something you have to check first — they're
+recomputed fresh from your own device's catalog every time the page loads,
+so there's nothing to reset. Only an explicit **Synchronize with Peers**
+result (the New claims / Already known breakdown) resets on reload,
+exactly like a verification or resolution result would.
+
 ## What's next?
 
-Publications, their evidence, and their snapshot placements are entirely
-optional depth on top of everything else ForkBuild does. If you came here
-from [Publishing & Forking](04-PublishingAndForking.md), that's still
-where sharing your actual builds happens — head back there, or to
+Publications, their evidence, their snapshot placements, and the local
+content behind them are entirely optional depth on top of everything else
+ForkBuild does. If you came here from
+[Publishing & Forking](04-PublishingAndForking.md), that's still where
+sharing your actual builds happens — head back there, or to
 [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) to connect
 with more people whose publications, evidence, and placements you might
 want to see.
