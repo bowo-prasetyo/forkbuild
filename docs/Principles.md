@@ -13944,3 +13944,58 @@ combinations — `tests/BitcoinAnchorTransactionConstruction.test.js`'s own
 Section C proves the order-independence directly, feeding the identical
 UTXO set in two different array orders and asserting byte-identical
 selection. See `docs/Roadmap.md`, 0.8.47, for the full milestone entry.
+
+## A PSBT Is A Description, Not A Signature (0.8.48)
+
+**`anchoring/BitcoinAnchorPsbtBuilder.js#build()` turns a real
+`BitcoinAnchorTransactionBuilder` plan, plus the previous-output data a
+signer would need, into a PSBT-shaped description — never signed bytes,
+never a signature, never anything a private key has touched.** Its
+result — `{ globalUnsignedTx, inputs, outputs }` — names an unsigned
+transaction's exact shape (which inputs, which scripts, which values) in
+the same vocabulary a real BIP174 PSBT uses, without this codebase ever
+serializing real binary/base64 PSBT bytes. That remains a deliberately
+later concern: exactly as 0.8.47 restrained itself from real transaction
+serialization ("no varint encoding, no script bytes") rather than claim it
+prematurely, 0.8.48 restrains itself from real BIP174 wire-format
+encoding — producing every piece of information such an encoding would
+need, structured and strongly validated, and stopping there.
+
+**`witnessUtxo` is UTXO-describing data, not signing material — never
+confused with the BIP174 fields that only exist once a real signer has
+acted.** A PSBT's `witness_utxo` field names the previous output being
+spent (its value and scriptPubKey) so a signer knows what it is signing;
+it is present in every unsigned PSBT, by design. `finalScriptWitness`,
+`finalScriptSig`, and `partialSig` are the fields that actually carry
+signing material, and none of them, nor a bare signature, private key,
+seed, or WIF, ever appears in a result `BitcoinAnchorPsbtBuilder` builds —
+`tests/BitcoinAnchorPsbtConstruction.test.js`'s own Section F asserts both
+halves of this directly: `witnessUtxo` must be present, that forbidden
+vocabulary never may.
+
+**No address decoding, still.** Exactly as `BitcoinAnchorTransactionBuilder`
+carries `changeAddress` through as an opaque string, `BitcoinAnchorPsbtBuilder`
+never derives a scriptPubKey from an address itself — no base58/bech32
+decoding anywhere in this codebase. A change output's real scriptPubKey is
+always caller-supplied (`changeScriptPubKey`); this class validates its
+shape (present, hex, non-empty), never the cryptographic correspondence
+between that script and the plan's own `changeAddress`. That correspondence
+remains the caller's/wallet's own responsibility, exactly as address
+validation itself remained 0.8.47's own excluded concern.
+
+**Legacy (`p2pkh`) inputs are carried opaquely, on purpose — the exact
+asymmetry with segwit inputs is intentional, not an oversight.** A
+witness input's `witnessUtxo.valueSats` is cross-checked directly against
+the plan's own selected value; a legacy input's `nonWitnessUtxo` is the
+full previous transaction, and this class deliberately never parses
+transaction bytes to extract or cross-check a value from it — the same
+restraint against raw transaction parsing 0.8.47 already held.
+
+**Every validation is independent, not inherited trust.** `build()` never
+assumes its `plan` argument genuinely came from a real
+`BitcoinAnchorTransactionBuilder#build()` call — it re-derives and
+re-checks the identical input/output/fee invariant 0.8.47's own tests
+already prove holds for a real plan, so a hand-modified or otherwise
+tampered plan is refused here too, independently, proven directly in
+`tests/BitcoinAnchorPsbtConstruction.test.js`'s own Section E. See
+`docs/Roadmap.md`, 0.8.48, for the full milestone entry.
