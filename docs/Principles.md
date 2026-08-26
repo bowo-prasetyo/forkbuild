@@ -12558,3 +12558,94 @@ the other, and this milestone changes nothing about how either one is
 computed — it only ever places them on the same row for a person to read.
 
 See `docs/Roadmap.md`, 0.8.31, for the full milestone entry.
+
+## Knowledge Of Content Is Not Possession Of Content (0.8.32)
+
+Every milestone since 0.8.28 has drawn a line between what a replica
+KNOWS and what has been externally PROVEN or successfully RETRIEVED — a
+publication can be known without being verified, a placement can be known
+without being resolved, and a whole replica knowledge view can report
+both facts about the same claim without contradiction (`docs/
+Principles.md`, "Known Is Not Available (0.8.28)"). This milestone draws
+the identical line one layer down, for the one thing every anchor and
+every placement claim is ultimately ABOUT: the snapshot's own bytes.
+`application/PublicationReplicaPackage.js` (0.8.29) lets a replica
+transfer everything it KNOWS about a publication — including a placement
+claiming exactly where the bytes can supposedly be found — without
+transferring a single byte of the bytes themselves. Before this
+milestone, there was no offline operation that closed that gap; a
+replica's only paths to actual content were `application/
+PublicationResolver.js` (a live content-addressed fetch) and `application/
+PeerContentExchange.js` (a live, request/response pull from an
+authenticated peer). Both require a network. Neither can run entirely
+offline the way `application/ImportPublicationReplicaPackageUseCase.js`
+already can.
+
+**Content transfer and placement resolution are two independent paths to
+the same bytes, and neither implies the other.** `tests/
+PublicationSnapshotTransferPackage.test.js`'s own flagship proves this
+directly rather than merely asserting it: Bob imports a Publication
+Replica Package offline (he now knows the publication, its anchor, and
+its IPFS placement) and explicitly does NOT yet possess the snapshot —
+then imports a Publication Snapshot Transfer Package, ALSO offline, and
+obtains the actual bytes without ever constructing, referencing, or
+calling `application/SnapshotPlacementResolver.js`, or any network object
+of any kind, anywhere in the test. Carol, receiving only the replica
+package, is left in the mirror-image state: she knows exactly where the
+snapshot is CLAIMED to be retrievable, and does not possess it. Both are
+completely ordinary, non-contradictory facts about the identical
+publication — the exact same non-contradiction 0.8.28 already established
+for KNOWN and VERIFIED, now established for KNOWN and POSSESSED.
+
+**The only thing that ever makes a transfer trustworthy is the hash,
+restated for a file instead of a live message.** `application/
+PeerContentExchange.js`'s own header states its central security rule
+once, for a live RESPONSE: peer identity is never content authenticity,
+and the only thing that makes received bytes trustworthy is `core/
+ContentReference.js#verify()` — recomputing the hash of exactly the bytes
+received and checking it against exactly the hash being claimed.
+`application/ImportPublicationSnapshotTransferPackageUseCase.js` applies
+the identical rule to an offline package: a well-formed envelope (correct
+`kind`, correct `schemaVersion`, a non-empty `content` string) proves
+NOTHING about whether `content` is the content it claims to be. Only
+`verify()` does. A package that fails this check is never partially
+trusted, never stored under a "maybe" state, and never distinguished from
+one that simply arrived corrupted by accident — `tests/
+PublicationSnapshotTransferPackage.test.js`'s own Section D proves
+tampered content is rejected as `CONTENT_HASH_MISMATCH` with nothing
+written to the `ContentStore` at all.
+
+**`publicationKnown` observes; it never gates.** The single new fact
+`application/ImportPublicationSnapshotTransferPackageUseCase.js` reports
+alongside every transfer outcome — whether this replica's own publication
+catalog currently has an envelope for the package's `publicationId` — is
+read the same way `application/PublicationReplicaKnowledgeView.js`
+(0.8.28) already reads `hasPublication`: a live, independent, boolean
+observation, computed fresh on every call, never cached, and never a
+precondition checked before step 4 of this milestone's own pipeline runs.
+`tests/PublicationSnapshotTransferPackage.test.js`'s own Section D proves
+the order does not matter: Eve receives a snapshot's bytes before she has
+ever heard of the publication they belong to (`publicationKnown: false`,
+`STORED` all the same), and receives the identical package again after
+finally learning the publication (`publicationKnown: true`,
+`ALREADY_STORED`) — the same bytes, stored either way, described more
+completely the second time only because more happened to be true about
+this replica by then, never because anything about the transfer itself
+changed.
+
+**Two packages, deliberately, permanently, never one.** `application/
+PublicationReplicaPackage.js` (0.8.29) transfers claims: a publication
+envelope, plus the signed anchors and placements that name it.
+`application/PublicationSnapshotTransferPackage.js` (this milestone)
+transfers exactly one thing: bytes, addressed by their own hash. This
+milestone's own design conversation considered folding `content` into
+the replica package directly, and rejected it for the same reason
+`application/PublicationReplicaPackage.js`'s own header already gives for
+staying scoped to one publication at a time: a package that tries to be
+"everything about this publication, whatever happens to be handy" stops
+being able to answer any one question cleanly. Keeping the two packages
+independent means a replica can transfer claims without content, content
+without claims, or both — and a reader of either package's own file never
+has to guess which kind of fact it is holding.
+
+See `docs/Roadmap.md`, 0.8.32, for the full milestone entry.
