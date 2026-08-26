@@ -17,6 +17,7 @@ import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlace
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 
 import { MaterializeSnapshotFromPlacementUseCase } from '../application/MaterializeSnapshotFromPlacementUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
 import { SnapshotPlacementMaterializationCoordinator } from '../application/SnapshotPlacementMaterializationCoordinator.js';
 import { SnapshotPlacementMaterializationOutcome } from '../application/SnapshotPlacementMaterializationOutcome.js';
 import { SnapshotPlacementMaterializationUiState } from '../application/SnapshotPlacementMaterializationUiState.js';
@@ -178,7 +179,7 @@ function makeReplica({ placement, node, knowsPublication = null }) {
     const { coordinator: resolutionCoordinator } = new CreateSnapshotPlacementResolutionCoordinatorUseCase().execute({
         placementCatalog, stores: [ipfsStore]
     });
-    const materializeUseCase = new MaterializeSnapshotFromPlacementUseCase(resolutionCoordinator, contentStore, publicationCatalog);
+    const materializeUseCase = new MaterializeSnapshotFromPlacementUseCase(resolutionCoordinator, new StoreSnapshotContentUseCase(contentStore), publicationCatalog);
     const materializationCoordinator = new SnapshotPlacementMaterializationCoordinator(materializeUseCase);
     return { placementCatalog, publicationCatalog, contentStore, ipfsStore, resolutionCoordinator, materializeUseCase, materializationCoordinator };
 }
@@ -210,9 +211,9 @@ async function run() {
         assert(threw, '1. use case constructor requires a resolution coordinator');
         threw = false;
         try { new MaterializeSnapshotFromPlacementUseCase({ resolve: () => {} }, null, {}); } catch (e) { threw = true; }
-        assert(threw, '2. use case constructor requires a local ContentStore');
+        assert(threw, '2. use case constructor requires a StoreSnapshotContentUseCase');
         threw = false;
-        try { new MaterializeSnapshotFromPlacementUseCase({ resolve: () => {} }, { put: () => {}, has: () => {} }, null); } catch (e) { threw = true; }
+        try { new MaterializeSnapshotFromPlacementUseCase({ resolve: () => {} }, { execute: () => {} }, null); } catch (e) { threw = true; }
         assert(threw, '3. use case constructor requires a publication catalog');
 
         threw = false;
@@ -406,7 +407,7 @@ async function run() {
             const { coordinator: resolutionCoordinator } = new CreateSnapshotPlacementResolutionCoordinatorUseCase().execute({
                 placementCatalog: bobPlacementCatalog, stores: []
             });
-            const materializeUseCase = new MaterializeSnapshotFromPlacementUseCase(resolutionCoordinator, bobContentStore, bobPublicationCatalog);
+            const materializeUseCase = new MaterializeSnapshotFromPlacementUseCase(resolutionCoordinator, new StoreSnapshotContentUseCase(bobContentStore), bobPublicationCatalog);
             const coordinator = new SnapshotPlacementMaterializationCoordinator(materializeUseCase);
             const attempt = await clickMaterialize(coordinator, placement);
             assert(attempt.outcome === SnapshotPlacementMaterializationOutcome.UNAVAILABLE,

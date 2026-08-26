@@ -12933,3 +12933,92 @@ job was proving the placement-backed path alone works end to end, not
 merging it with the path 0.8.34 already built.
 
 See `docs/Roadmap.md`, 0.8.35, for the full milestone entry.
+
+## A Shared Storage Boundary Does Not Merge The Sources That Feed It (0.8.36)
+
+0.8.32 and 0.8.35 each built a complete, independent explicit path from
+"bytes exist somewhere" to "this replica possesses them," and each grew
+its own copy of the identical three-step shape: verify the claimed hash,
+check whether this replica already holds it, write it if not. Two
+milestones is enough for a duplicated shape to start drifting; this
+milestone closes that risk by extracting the shape once, into
+`application/StoreSnapshotContentUseCase.js`, and wiring both existing
+paths through the SAME instance. What it deliberately does not do is
+collapse the two paths themselves into one.
+
+**A shared boundary is not a shared decision.** `application/
+StoreSnapshotContentUseCase.js` has no notion of "package" or "placement"
+at all — it accepts `{ contentHash, bytes }` and answers exactly one
+question, the same way regardless of who asked: do these bytes verify,
+and does this replica already have them? Sharing that ANSWER across two
+callers is what makes the two paths trustworthy in the identical way,
+forever, without either one needing its own copy of `core/
+ContentReference.js#verify()` to stay correct. It does not make the two
+callers interchangeable, does not let one stand in for the other, and
+does not give this codebase a single "acquire snapshot content" action
+where two used to exist. `application/ImportPublicationSnapshotTransferPackageUseCase.js`
+and `application/MaterializeSnapshotFromPlacementUseCase.js` remain two
+separate classes, each still requiring its own separate explicit user
+action, each still returning its own separate outer outcome vocabulary
+un-merged (`application/SnapshotContentTransferOutcome.js` and
+`application/SnapshotPlacementMaterializationOutcome.js`, both unchanged).
+Only the narrow inner question — verify, then store — now has one answer
+instead of two.
+
+**Naming a source is not ranking it.** `application/
+SnapshotMaterializationSourceKind.js` holds exactly two values, PACKAGE
+and PLACEMENT, in a frozen object with no ordering, no default, and no
+adjective attached to either. A person who obtained a publication's bytes
+through a resolved IPFS placement possesses them exactly as completely as
+a person who obtained the identical bytes through an offline transfer
+package — this milestone's own flagship test proves it operationally,
+byte for byte. `application/SnapshotMaterializationView.js#describeSnapshotMaterializationSourceLabel()`
+returns "Transfer package" or "Placement" and nothing more: never
+"verified," "trusted," "authentic," "preferred," "recommended," or
+"primary." The UI's new "Source: …" line exists to answer "which
+explicit action put these bytes here," a plain historical fact about THIS
+attempt, never a claim that the fact could have come out better another
+way.
+
+**This milestone still refuses automatic source selection — the
+identical refusal 0.8.16, 0.8.20, 0.8.23, 0.8.34, and 0.8.35 have each
+already made on their own axis.** No `availableSources()` that discovers
+every way a publication's bytes might be obtainable and hands a caller a
+list to rank. No automatic fallback from a `HASH_MISMATCH` or
+`UNAVAILABLE` result on one source to quietly trying the other. No picker
+comparing a package against a placement side by side, even though a
+shared storage boundary would make such a picker mechanically trivial to
+wire up — see `application/StoreSnapshotContentUseCase.js`'s own header
+on why building it now, before more than two sources even exist, would be
+exactly the premature ranking system this codebase has refused at every
+layer since discovery first asked "did anyone see new evidence" instead
+of "which peer should I trust" (0.8.16). A person still clicks "Import
+Snapshot" or "Materialize Snapshot" on one specific package or one
+specific placement card; this milestone only guarantees that whichever
+one they click, the bytes land the same way.
+
+**Content possession is idempotent across acquisition mechanisms.** A
+replica that already holds a publication's bytes — obtained through
+either source — and then successfully completes the OTHER source's own
+action for the identical publication reports `ALREADY_AVAILABLE` (or its
+outer twin, `ALREADY_STORED`), never a second `STORED`, and never
+rewrites anything: not the bytes themselves, not the placement, not its
+provenance, not its resolution history, not a new knowledge record.
+`tests/SnapshotMaterializationUnification.test.js`'s own Section C proves
+this in both orders — package-then-placement and placement-then-package —
+because a boundary that behaved differently depending on which caller
+reached it a second time would not actually be shared.
+
+**What this milestone deliberately still refuses to build.** No
+persistent content provenance — this replica does not remember, anywhere
+durable, which source most recently supplied a publication's bytes;
+`entry.lastMaterializationAttempt` lives only as long as the Publication
+Center page does, exactly like every ephemeral attempt record before it.
+No peer-backed content exchange yet, though `application/
+StoreSnapshotContentUseCase.js` is deliberately general enough to accept
+a peer-delivered byte stream as a third caller without changing shape —
+that remains 0.8.37, open on purpose: this milestone's entire job was
+proving the two EXISTING explicit sources converge on one boundary safely,
+not adding a third.
+
+See `docs/Roadmap.md`, 0.8.36, for the full milestone entry.

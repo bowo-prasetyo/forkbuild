@@ -37,6 +37,11 @@ import { SnapshotContentMaterializationUiState } from '../../application/Snapsho
 import { describeMaterializationAttempt, describeMaterializationButtonLabel } from '../../application/SnapshotContentMaterializationView.js';
 import { SnapshotPlacementMaterializationUiState } from '../../application/SnapshotPlacementMaterializationUiState.js';
 import { describePlacementMaterializationAttempt, describePlacementMaterializationButtonLabel } from '../../application/SnapshotPlacementMaterializationView.js';
+import { SnapshotContentTransferOutcome } from '../../application/SnapshotContentTransferOutcome.js';
+import { SnapshotPlacementMaterializationOutcome } from '../../application/SnapshotPlacementMaterializationOutcome.js';
+import { StoreSnapshotContentOutcome } from '../../application/StoreSnapshotContentOutcome.js';
+import { createSnapshotMaterializationAttempt } from '../../application/SnapshotMaterializationAttempt.js';
+import { describeLocalSnapshotMaterializationSource } from '../../application/SnapshotMaterializationView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -779,7 +784,21 @@ export default {
                 // `localSnapshotAvailability` immediately above exactly.
                 materializationFormOpen: false,
                 materializationImportText: '',
-                materializationAttempt: null
+                materializationAttempt: null,
+                // 0.8.36 — Unified Explicit Snapshot Materialization
+                // Sources. The most recent SUCCESSFUL application/
+                // SnapshotMaterializationAttempt.js this entry has seen,
+                // from EITHER "Import Snapshot" or "Materialize Snapshot"
+                // — whichever explicit action most recently actually
+                // stored bytes. `null` until one of them succeeds at
+                // least once, in this browsing session. Never itself a
+                // third action, never read by either action's own click
+                // handler, and never persisted — see that file's own
+                // header. Feeds only the shared "Local Snapshot" summary's
+                // "Source: …" line below, alongside `localSnapshotAvailability`
+                // above, which independently answers whether bytes are
+                // present RIGHT NOW.
+                lastMaterializationAttempt: null
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -954,12 +973,45 @@ export default {
                     outcome: result.outcome, contentReference: result.contentReference,
                     publicationId: result.publicationId, publicationKnown: result.publicationKnown
                 };
+                recordMaterializationSource(entry, result.source, result.outcome === SnapshotContentTransferOutcome.STORED
+                    || result.outcome === SnapshotContentTransferOutcome.ALREADY_STORED, result.contentReference, result.publicationId);
             } catch (error) {
                 entry.materializationAttempt = {
                     importing: false, outcome: null,
                     error: error.message.replace(/^PublicationSnapshotTransferPackage:\s*/, '')
                 };
             }
+        }
+
+        // 0.8.36 — Unified Explicit Snapshot Materialization Sources.
+        // Builds `entry.lastMaterializationAttempt` from whichever
+        // explicit action just completed — "Import Snapshot" or
+        // "Materialize Snapshot" — ONLY when that action actually
+        // resulted in this replica possessing the bytes. A rejected or
+        // unavailable attempt leaves `entry.lastMaterializationAttempt`
+        // exactly as it was: the shared "Local Snapshot" summary's own
+        // "Source: …" line always names the last action that actually
+        // succeeded, never the most recent attempt regardless of
+        // outcome. Deliberately collapses STORED and ALREADY_AVAILABLE
+        // onto the identical application/StoreSnapshotContentOutcome.js
+        // STORED for this purpose — the action-specific badge above
+        // already shows that distinction; this line exists only to name
+        // WHICH source, never to repeat what that badge already says.
+        // See application/SnapshotMaterializationAttempt.js and
+        // application/SnapshotMaterializationView.js's own headers.
+        function recordMaterializationSource(entry, source, stored, contentReference, publicationId) {
+            if (!stored || !source) return;
+            entry.lastMaterializationAttempt = createSnapshotMaterializationAttempt({
+                sourceKind: source.kind,
+                outcome: StoreSnapshotContentOutcome.STORED,
+                contentReference,
+                publicationId,
+                contentHash: contentReference ? contentReference.hash : null
+            });
+        }
+
+        function localSnapshotMaterializationSourceView(entry) {
+            return describeLocalSnapshotMaterializationSource(entry.lastMaterializationAttempt);
         }
 
         function materializationView(entry) {
@@ -1260,6 +1312,8 @@ export default {
                     outcome: result.outcome, reason: result.reason, contentReference: result.contentReference,
                     placementId: result.placementId, publicationId: result.publicationId, publicationKnown: result.publicationKnown
                 };
+                recordMaterializationSource(entry, result.source, result.outcome === SnapshotPlacementMaterializationOutcome.STORED
+                    || result.outcome === SnapshotPlacementMaterializationOutcome.ALREADY_AVAILABLE, result.contentReference, result.publicationId);
             } catch (error) {
                 entry.materializations[placement.id] = { materializing: false, outcome: null, error: error.message };
             }
@@ -1649,6 +1703,7 @@ export default {
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
             localSnapshotContentAvailabilityUseCase, checkLocalSnapshotAvailability, localSnapshotAvailabilityView,
             localSnapshotAvailabilityBadgeClass, localSnapshotAvailabilityButtonLabel,
+            localSnapshotMaterializationSourceView,
             snapshotContentMaterializationCoordinator, onMaterializationFileChosen, importSnapshotContent,
             materializationView, materializationBadgeClass, materializationButtonLabel,
             snapshotPlacementMaterializationCoordinator, materializePlacement,
@@ -1742,6 +1797,18 @@ export default {
                         </div>
                         <p v-if="localSnapshotContentAvailabilityUseCase && localSnapshotAvailabilityView(entry).message" class="form-hint form-hint--neutral">
                             {{ localSnapshotAvailabilityView(entry).message }}
+                        </p>
+
+                        <!-- 0.8.36 — Unified Explicit Snapshot Materialization Sources. Names
+                             WHICH explicit action most recently actually stored these bytes —
+                             "Import Snapshot" or "Materialize Snapshot" — with no adjective in
+                             front of either (see application/SnapshotMaterializationView.js's
+                             own header on why neither source is ever called "preferred" or
+                             "recommended"). Shown only once at least one of the two actions has
+                             actually succeeded THIS session; silent otherwise, and never itself
+                             a third action. -->
+                        <p v-if="localSnapshotMaterializationSourceView(entry).possessed" class="form-hint form-hint--neutral">
+                            Source: {{ localSnapshotMaterializationSourceView(entry).sourceLabel }}
                         </p>
 
                         <!-- 0.8.34 — Explicit Snapshot Materialization UX. Never triggered

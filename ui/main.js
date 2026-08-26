@@ -57,6 +57,7 @@ import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../applicatio
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
 import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
 import { SnapshotContentMaterializationCoordinator } from '../application/SnapshotContentMaterializationCoordinator.js';
 import { MaterializeSnapshotFromPlacementUseCase } from '../application/MaterializeSnapshotFromPlacementUseCase.js';
@@ -564,15 +565,25 @@ const { coordinator: snapshotPlacementCreationCoordinator } = new CreateSnapshot
 // CheckLocalSnapshotContentAvailabilityUseCase.js's own header.
 const localSnapshotContentAvailabilityUseCase = new CheckLocalSnapshotContentAvailabilityUseCase(publicationContentStore);
 
+// 0.8.36 — Unified Explicit Snapshot Materialization Sources. ONE shared
+// hash-verify-then-store boundary, over the SAME `publicationContentStore`
+// every other local read/write in this file already goes through — never
+// a second, disconnected store. Both the offline-package path (0.8.32,
+// immediately below) and the placement-backed path (0.8.35, immediately
+// after it) are wired against this SAME instance, so neither one can
+// silently drift into its own storage or integrity rules. See application/
+// StoreSnapshotContentUseCase.js's own header.
+const storeSnapshotContentUseCase = new StoreSnapshotContentUseCase(publicationContentStore);
+
 // 0.8.34 — Explicit Snapshot Materialization UX. The offline import side
 // application/ImportPublicationSnapshotTransferPackageUseCase.js (0.8.32)
 // already implemented with no UI consumer at all — wired here through the
-// SAME `publicationContentStore`/`publicationCatalog` every other local
+// SAME `storeSnapshotContentUseCase`/`publicationCatalog` every other local
 // read/write in this file already goes through, never a second, disconnected
 // store or catalog. application/SnapshotContentMaterializationCoordinator.js
 // forwards straight to it; see that class's own header on why it adds no
 // source-discovery of its own for this first version.
-const importPublicationSnapshotTransferPackageUseCase = new ImportPublicationSnapshotTransferPackageUseCase(publicationContentStore, publicationCatalog);
+const importPublicationSnapshotTransferPackageUseCase = new ImportPublicationSnapshotTransferPackageUseCase(storeSnapshotContentUseCase, publicationCatalog);
 const snapshotContentMaterializationCoordinator = new SnapshotContentMaterializationCoordinator(importPublicationSnapshotTransferPackageUseCase);
 
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization. The
@@ -580,7 +591,7 @@ const snapshotContentMaterializationCoordinator = new SnapshotContentMaterializa
 // the SAME `publicationSnapshotPlacementResolutionCoordinator` (0.8.20)
 // "Resolve Snapshot" already calls, so a placement that resolves for one
 // action resolves identically for the other, and the SAME
-// `publicationContentStore`/`publicationCatalog` every other local
+// `storeSnapshotContentUseCase`/`publicationCatalog` every other local
 // read/write in this file already goes through — never a second,
 // disconnected store, catalog, or resolver. application/
 // SnapshotPlacementMaterializationCoordinator.js forwards straight to
@@ -588,7 +599,7 @@ const snapshotContentMaterializationCoordinator = new SnapshotContentMaterializa
 // coordinator's own header on why it adds no placement ranking or
 // automatic fallback.
 const materializeSnapshotFromPlacementUseCase = new MaterializeSnapshotFromPlacementUseCase(
-    publicationSnapshotPlacementResolutionCoordinator, publicationContentStore, publicationCatalog
+    publicationSnapshotPlacementResolutionCoordinator, storeSnapshotContentUseCase, publicationCatalog
 );
 const snapshotPlacementMaterializationCoordinator = new SnapshotPlacementMaterializationCoordinator(materializeSnapshotFromPlacementUseCase);
 

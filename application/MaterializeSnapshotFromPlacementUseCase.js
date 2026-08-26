@@ -1,8 +1,16 @@
-import { ContentReference } from '../core/ContentReference.js';
 import { SnapshotPlacementResolutionOutcome } from './SnapshotPlacementResolutionOutcome.js';
 import { SnapshotPlacementMaterializationOutcome } from './SnapshotPlacementMaterializationOutcome.js';
+import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
+import { SnapshotMaterializationSourceKind } from './SnapshotMaterializationSourceKind.js';
 
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization.
+// 0.8.36 — Unified Explicit Snapshot Materialization Sources: storage now
+// runs through the SAME application/StoreSnapshotContentUseCase.js
+// application/ImportPublicationSnapshotTransferPackageUseCase.js (0.8.32)
+// also feeds — see that class's own header. This class's OWN outer
+// contract does not change: the same five application/
+// SnapshotPlacementMaterializationOutcome.js values, the same mapping from
+// resolution outcomes, plus one new, additive `source` field (see below).
 //
 // application/ImportPublicationSnapshotTransferPackageUseCase.js (0.8.32)
 // turns an explicitly SUPPLIED package into local possession. This class
@@ -13,7 +21,8 @@ import { SnapshotPlacementMaterializationOutcome } from './SnapshotPlacementMate
 // check out, and can it presently produce bytes matching its own claimed
 // hash — and, only once both are true, adding exactly one more step
 // resolution itself has never taken: writing those bytes into this
-// replica's own content/ContentStore.js.
+// replica's own content/ContentStore.js, through the SAME shared boundary
+// the offline-package path now also uses.
 //
 //   placement (an already-known, already-cataloged
 //              PublicationSnapshotPlacement — never a bare id
@@ -27,25 +36,32 @@ import { SnapshotPlacementMaterializationOutcome } from './SnapshotPlacementMate
 //   ┌────┴─────────────────────────────────────────────┐
 //   │ RESOLVED                                          │ anything else
 //   ▼                                                    ▼
-// localContentStore.has(reference)               map the SAME resolution
-//   │                              │              outcome onto ONE of this
-//   │ true                         │ false        class's own failure
-//   ▼                              ▼              values — see application/
-// ALREADY_AVAILABLE          localContentStore    SnapshotPlacementMaterializationOutcome.js's
-//                             .put(bytes)          own header for the table
-//                                  │
-//                                  ▼
-//                                STORED
+// storeSnapshotContentUseCase.execute(               map the SAME resolution
+//   { contentHash: placement.contentHash,             outcome onto ONE of this
+//     bytes: resolution.bytes })                       class's own failure
+//   │                              │                    values — see this
+//   │ ALREADY_AVAILABLE            │ STORED              file's own mapping
+//   ▼                              ▼                     table below
+// ALREADY_AVAILABLE              STORED
 //
 // THE ONE RULE THIS FILE EXISTS TO ENFORCE: resolution observes whether a
 // placement can currently provide the claimed bytes; materialization
-// turns successfully retrieved bytes into local possession. This class
-// never re-verifies a signature, never re-hashes anything resolution
-// already hashed, and never resolves more than the ONE placement it was
-// asked about — no ranking, no trying a second placement when the first
-// fails, no "best source." See docs/Principles.md, "Placement Resolution
-// Observes Present Availability; Materialization Turns It Into Possession
-// (0.8.35)."
+// turns successfully retrieved bytes into local possession, through the
+// SAME hash-verify-then-store boundary every other explicit source now
+// shares. This class never re-verifies a signature — resolution already
+// did — and never resolves more than the ONE placement it was asked
+// about — no ranking, no trying a second placement when the first fails,
+// no "best source." Handing resolution's own already-verified bytes to
+// application/StoreSnapshotContentUseCase.js means that boundary verifies
+// the hash a second time; this is not a second, independent trust
+// decision — it is the SAME check (core/ContentReference.js#verify())
+// applied once, at the one place bytes are ever written, regardless of
+// which caller reached it, exactly the discipline application/
+// StoreSnapshotContentUseCase.js's own header exists to guarantee. See
+// docs/Principles.md, "Placement Resolution Observes Present
+// Availability; Materialization Turns It Into Possession (0.8.35)," and
+// "A Shared Storage Boundary Does Not Merge The Sources That Feed It
+// (0.8.36)."
 //
 // Deliberately never modifies the placement, its provenance
 // (application/LocalPlacementKnowledgeStore.js), or resolution history
@@ -60,27 +76,26 @@ export class MaterializeSnapshotFromPlacementUseCase {
     // SnapshotPlacementResolutionCoordinator.js instance — the SAME one
     // "Resolve Snapshot" already uses, never a second resolver wired
     // against a different store registry.
-    // localContentStore: a content/ContentStore.js instance — this
-    // replica's own LOCAL store, the ONLY place this class ever writes
-    // bytes to, regardless of which storage backend the placement itself
-    // named. Mirrors application/
-    // ImportPublicationSnapshotTransferPackageUseCase.js's own
-    // `contentStore` exactly.
+    // storeSnapshotContentUseCase: an application/
+    // StoreSnapshotContentUseCase.js instance — the ONE shared boundary
+    // this class now writes bytes through, the SAME instance application/
+    // ImportPublicationSnapshotTransferPackageUseCase.js (0.8.32) is wired
+    // against, never a second, disconnected one.
     // publicationCatalog: an application/LocalPublicationCatalog.js
     // instance, used ONLY to report whether `placement.publicationId` is
     // known to this replica right now — read-only, never a precondition.
-    constructor(resolutionCoordinator, localContentStore, publicationCatalog) {
+    constructor(resolutionCoordinator, storeSnapshotContentUseCase, publicationCatalog) {
         if (!resolutionCoordinator || typeof resolutionCoordinator.resolve !== 'function') {
             throw new Error('MaterializeSnapshotFromPlacementUseCase: a SnapshotPlacementResolutionCoordinator is required');
         }
-        if (!localContentStore || typeof localContentStore.put !== 'function' || typeof localContentStore.has !== 'function') {
-            throw new Error('MaterializeSnapshotFromPlacementUseCase: a local ContentStore is required');
+        if (!storeSnapshotContentUseCase || typeof storeSnapshotContentUseCase.execute !== 'function') {
+            throw new Error('MaterializeSnapshotFromPlacementUseCase: a StoreSnapshotContentUseCase is required');
         }
         if (!publicationCatalog || typeof publicationCatalog.get !== 'function') {
             throw new Error('MaterializeSnapshotFromPlacementUseCase: a publication catalog is required');
         }
         this._resolutionCoordinator = resolutionCoordinator;
-        this._localContentStore = localContentStore;
+        this._storeSnapshotContentUseCase = storeSnapshotContentUseCase;
         this._publicationCatalog = publicationCatalog;
     }
 
@@ -93,10 +108,10 @@ export class MaterializeSnapshotFromPlacementUseCase {
     // PLACEMENT_NOT_FOUND outcome unnecessary.
     //
     // Returns `{ outcome, placementId, publicationId, contentHash,
-    // contentReference, publicationKnown, reason }`:
+    // contentReference, publicationKnown, reason, source }`:
     //   outcome            — one of application/
     //                         SnapshotPlacementMaterializationOutcome.js's
-    //                         own five values
+    //                         own five values, UNCHANGED from before 0.8.36
     //   contentReference   — the core/ContentReference.js this replica
     //                         now holds bytes under (STORED/
     //                         ALREADY_AVAILABLE), or null otherwise
@@ -106,6 +121,12 @@ export class MaterializeSnapshotFromPlacementUseCase {
     //   reason             — the underlying resolution's own `reason`,
     //                         unchanged, on any non-storing outcome; null
     //                         on STORED/ALREADY_AVAILABLE
+    //   source             — `{ kind: SnapshotMaterializationSourceKind.PLACEMENT }`,
+    //                         always this same value, on every outcome —
+    //                         new in 0.8.36, purely additive, naming WHICH
+    //                         explicit action produced this result for a
+    //                         caller building an application/
+    //                         SnapshotMaterializationAttempt.js record
     async execute(placement) {
         if (!placement || typeof placement.toJSON !== 'function') {
             throw new Error('MaterializeSnapshotFromPlacementUseCase: execute() requires a PublicationSnapshotPlacement instance');
@@ -113,19 +134,21 @@ export class MaterializeSnapshotFromPlacementUseCase {
 
         const resolution = await this._resolutionCoordinator.resolve(placement);
         const publicationKnown = Boolean(this._publicationCatalog.get(placement.publicationId));
+        const source = Object.freeze({ kind: SnapshotMaterializationSourceKind.PLACEMENT });
 
         if (resolution.outcome === SnapshotPlacementResolutionOutcome.RESOLVED) {
-            const reference = new ContentReference({ hash: placement.contentHash });
-            const alreadyStored = await this._localContentStore.has(reference);
-            const storedReference = await this._localContentStore.put(resolution.bytes);
+            const stored = await this._storeSnapshotContentUseCase.execute({ contentHash: placement.contentHash, bytes: resolution.bytes });
             return {
-                outcome: alreadyStored ? SnapshotPlacementMaterializationOutcome.ALREADY_AVAILABLE : SnapshotPlacementMaterializationOutcome.STORED,
+                outcome: stored.outcome === StoreSnapshotContentOutcome.ALREADY_AVAILABLE
+                    ? SnapshotPlacementMaterializationOutcome.ALREADY_AVAILABLE
+                    : SnapshotPlacementMaterializationOutcome.STORED,
                 placementId: placement.id,
                 publicationId: placement.publicationId,
                 contentHash: placement.contentHash,
-                contentReference: storedReference,
+                contentReference: stored.contentReference,
                 publicationKnown,
-                reason: null
+                reason: null,
+                source
             };
         }
 
@@ -136,7 +159,8 @@ export class MaterializeSnapshotFromPlacementUseCase {
             contentHash: placement.contentHash,
             contentReference: null,
             publicationKnown,
-            reason: resolution.reason
+            reason: resolution.reason,
+            source
         };
     }
 

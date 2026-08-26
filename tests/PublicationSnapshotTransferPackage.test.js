@@ -9,6 +9,7 @@ import {
 } from '../application/PublicationSnapshotTransferPackageValidator.js';
 import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
 import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
 import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
 import { buildPublicationReplicaPackage } from '../application/PublicationReplicaPackage.js';
 import { ImportPublicationReplicaPackageUseCase } from '../application/ImportPublicationReplicaPackageUseCase.js';
@@ -222,7 +223,7 @@ async function run() {
         assert((await bobContentStore.has(contentReference)) === false,
             '3. Before importing the transfer package, Bob does NOT possess the snapshot bytes, even though he already knows the placement claiming where they can be found');
 
-        let bobSnapshotImporter = new ImportPublicationSnapshotTransferPackageUseCase(bobContentStore, bobPublicationCatalog);
+        let bobSnapshotImporter = new ImportPublicationSnapshotTransferPackageUseCase(new StoreSnapshotContentUseCase(bobContentStore), bobPublicationCatalog);
         const bobTransferResult = await bobSnapshotImporter.execute(transferPackage);
         assert(bobTransferResult.outcome === SnapshotContentTransferOutcome.STORED, '4. Bob imports the transfer package offline — outcome is STORED');
         assert(bobTransferResult.publicationKnown === true, '5. publicationKnown reports true — Bob already knew this publication from the replica package');
@@ -291,7 +292,7 @@ async function run() {
         // bytes are stored regardless — never gated. ---
         const eveContentStore = new LocalContentStore(new InMemoryStorageProvider());
         const evePublicationCatalog = new LocalPublicationCatalog(new InMemoryStorageProvider());
-        const eveImporter = new ImportPublicationSnapshotTransferPackageUseCase(eveContentStore, evePublicationCatalog);
+        const eveImporter = new ImportPublicationSnapshotTransferPackageUseCase(new StoreSnapshotContentUseCase(eveContentStore), evePublicationCatalog);
 
         const eveFirstResult = await eveImporter.execute(transferPackage);
         assert(eveFirstResult.outcome === SnapshotContentTransferOutcome.STORED, '1. Eve stores the bytes even though she has never heard of this publication');
@@ -310,7 +311,7 @@ async function run() {
         // contentHash is rejected outright, and nothing is stored. ---
         const tamperedPackage = { ...transferPackage, content: 'these-are-not-the-original-bytes' };
         const frankContentStore = new LocalContentStore(new InMemoryStorageProvider());
-        const frankImporter = new ImportPublicationSnapshotTransferPackageUseCase(frankContentStore, new LocalPublicationCatalog(new InMemoryStorageProvider()));
+        const frankImporter = new ImportPublicationSnapshotTransferPackageUseCase(new StoreSnapshotContentUseCase(frankContentStore), new LocalPublicationCatalog(new InMemoryStorageProvider()));
         const frankResult = await frankImporter.execute(tamperedPackage);
         assert(frankResult.outcome === SnapshotContentTransferOutcome.CONTENT_HASH_MISMATCH, '6. tampered content is rejected as CONTENT_HASH_MISMATCH');
         assert(frankResult.contentReference === null, '7. no contentReference is reported for a rejected transfer');

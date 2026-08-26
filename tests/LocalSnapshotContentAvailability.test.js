@@ -10,6 +10,7 @@ import { buildPublicationReplicaPackage } from '../application/PublicationReplic
 import { ImportPublicationReplicaPackageUseCase } from '../application/ImportPublicationReplicaPackageUseCase.js';
 import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
 import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
 import { PublicationExchange } from '../application/PublicationExchange.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
@@ -208,7 +209,7 @@ async function run() {
         const carolAnchorExchange = new PublicationAnchorExchange(carolAnchorCatalog, new LocalAuthorizationVerifier());
         const carolPlacementExchange = new PublicationSnapshotPlacementExchange(carolPlacementCatalog, new LocalAuthorizationVerifier());
         new ImportPublicationReplicaPackageUseCase(carolPublicationExchange, carolAnchorExchange, carolPlacementExchange).execute(replicaPackage);
-        await new ImportPublicationSnapshotTransferPackageUseCase(carolContentStore, carolPublicationCatalog).execute(transferPackage);
+        await new ImportPublicationSnapshotTransferPackageUseCase(new StoreSnapshotContentUseCase(carolContentStore), carolPublicationCatalog).execute(transferPackage);
 
         const carolChecker = new CheckLocalSnapshotContentAvailabilityUseCase(carolContentStore);
         const carolResult = await carolChecker.execute(carolPublicationCatalog.get(PUBLICATION_ID));
@@ -231,7 +232,7 @@ async function run() {
         const daveAnchorExchange = new PublicationAnchorExchange(daveAnchorCatalog, new LocalAuthorizationVerifier());
         const davePlacementExchange = new PublicationSnapshotPlacementExchange(davePlacementCatalog, new LocalAuthorizationVerifier());
         new ImportPublicationReplicaPackageUseCase(davePublicationExchange, daveAnchorExchange, davePlacementExchange).execute(replicaPackage);
-        await new ImportPublicationSnapshotTransferPackageUseCase(daveContentStore, davePublicationCatalog).execute(transferPackage);
+        await new ImportPublicationSnapshotTransferPackageUseCase(new StoreSnapshotContentUseCase(daveContentStore), davePublicationCatalog).execute(transferPackage);
 
         // Corrupt the bytes in place, directly through the underlying
         // storage — bypassing put() entirely, exactly as real storage
