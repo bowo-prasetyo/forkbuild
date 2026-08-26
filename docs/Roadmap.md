@@ -21959,3 +21959,136 @@ given publication's bytes — the "unified acquisition UI" 0.8.34's,
 0.8.35's, and 0.8.36's own "Deliberately excluded" lists have each, in
 turn, declined to build. Three sources now feed one storage boundary;
 comparing them side by side remains a deliberate non-goal.
+
+## 0.8.38 — Snapshot Materialization History & Source Inspection
+
+0.8.36 unified the three explicit ways bytes reach a replica's own
+`content/ContentStore.js` onto one shared storage boundary; 0.8.37 proved
+that boundary is general enough to hold a third source without ranking it
+above the first two. All three milestones left the SAME question
+unanswered: once a "Local Snapshot" card has seen several of these
+attempts over one browsing session — a rejected package, a successful
+placement, a peer that timed out and then answered — where did any of
+that go? `entry.lastMaterializationAttempt` (0.8.36) only ever held the
+single most recent SUCCESSFUL one; everything else was silently
+discarded the moment a newer attempt replaced it. This milestone is the
+missing memory: an ordered, ephemeral, append-only history of EVERY
+attempt that actually reached `application/StoreSnapshotContentUseCase.js`
+this session, including the rejected ones.
+
+```text
+   "Import Snapshot"        "Materialize Snapshot"      "Get Snapshot from Peer"
+   (application/            (application/                (application/
+    ImportPublicationSnapshotTransferPackageUseCase.js)   MaterializeSnapshotFromPlacementUseCase.js)   MaterializeSnapshotFromPeerUseCase.js)
+          │                          │                            │
+          └──────────────┬───────────┴──────────────┬─────────────┘
+                          │                          │
+                map outer outcome            application/
+                onto the shared inner        StoreSnapshotContentUseCase.js
+                StoreSnapshotContentOutcome  itself already resolved to
+                          │                  exactly one of these three
+                          ▼
+        STORED / ALREADY_AVAILABLE / HASH_MISMATCH
+                          │
+                          ▼
+   application/SnapshotMaterializationHistory.js
+     appendSnapshotMaterializationHistoryEntry(history, attempt)
+                          │
+                          ▼
+        entry.materializationHistory  (APPENDED TO, NEVER OVERWRITTEN)
+```
+
+Two new files, both under `application/`:
+
+- `application/SnapshotMaterializationHistory.js` (new) —
+  `appendSnapshotMaterializationHistoryEntry(history, attempt)`, a pure,
+  non-mutating append (mirroring every other accumulating record in this
+  codebase's own "always return a new frozen array" discipline), plus
+  `describeSnapshotMaterializationSourceCounts(history)`, a plain tally of
+  how many recorded attempts named each source — `{ package, placement,
+  peer }` — counting EVERY attempt regardless of outcome, since the
+  question it answers is "how many times was each mechanism explicitly
+  tried," never "how many times did it succeed." No `preferredSource`, no
+  `sourceScore`, nothing here ever picks a highest count and calls it
+  best.
+- `application/SnapshotMaterializationHistoryView.js` (new) — the pure
+  presentation layer: `describeSnapshotMaterializationOutcomeLabel()`
+  ("Snapshot stored locally" / "Snapshot was already available" /
+  "Content hash mismatch") and `describeSnapshotMaterializationHistory()`,
+  which turns a history array into `{ count, attempts: [{ sourceLabel,
+  outcomeLabel, observedAt, possessed, publicationId, contentHash }] }`,
+  in the SAME chronological order the history itself already holds —
+  never sorted, grouped, or reordered by source or outcome.
+
+> **Materialization history records how bytes were supplied; it does not
+> judge the source, alter the content claim, or establish trust.** See
+> `docs/Principles.md`, "Materialization History Describes Byte
+> Acquisition, Not Source Trust (0.8.38)."
+
+Two existing files change shape, never contract:
+
+- `application/SnapshotMaterializationAttempt.js` (modified) — gains one
+  new, additive field, `observedAt` (a `Date`, defaulting to `new Date()`
+  exactly like `application/SnapshotPlacementResolutionObservation.js`'s
+  own field, 0.8.20), so a SEQUENCE of these records can be told apart by
+  when each happened. The four fields 0.8.36 already established
+  (`source`, `outcome`, `contentReference`, `publicationId`,
+  `contentHash`) are unchanged.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each entry now
+  also keeps `entry.materializationHistory` (an array, starting empty)
+  and `entry.materializationHistoryExpanded` (a disclosure toggle,
+  mirroring `entry.replicaKnowledgeExpanded`). `recordMaterializationHistoryEntry()`
+  is called alongside the EXISTING `recordMaterializationSource()` at all
+  three of "Import Snapshot"'s/"Materialize Snapshot"'s/"Get Snapshot
+  from Peer"'s own completion points — never a fourth action of its own.
+  Three small, private mapping functions (`mapPackageOutcomeToStoreOutcome()`/
+  `mapPlacementOutcomeToStoreOutcome()`/`mapPeerOutcomeToStoreOutcome()`)
+  translate each action's own outer outcome vocabulary onto the shared
+  inner `StoreSnapshotContentOutcome` a history entry is built from,
+  returning `null` — recording nothing — for `SnapshotPlacementMaterializationOutcome
+  .UNAVAILABLE`/`.INVALID_PLACEMENT` and `PeerSnapshotMaterializationOutcome
+  .UNAVAILABLE`: those outcomes mean resolution or transport never
+  reached `StoreSnapshotContentUseCase` at all, so recording a history
+  entry for them would narrate a storage decision that never happened. A
+  new "Materialization History" disclosure inside the EXISTING "Local
+  Snapshot" section (never inside "Decentralization" — that card
+  describes distributed claims; this history describes how THIS
+  replica's own possession of bytes came to be) lists every recorded
+  attempt's source, outcome, and timestamp, plus the plain source-count
+  tally, only once `entry.materializationHistory` holds at least one
+  entry.
+
+### Deliberately excluded
+
+- **Persisting the history.** `entry.materializationHistory` is ephemeral,
+  session-lifetime UI state, exactly like `entry.materializationAttempt`
+  (0.8.34) and `entry.materializations` (0.8.35) before it — reopening
+  the Publication Center starts it back at `[]`. It is never written onto
+  a `core/DecentralizedPublication.js`, a `core/
+  PublicationSnapshotPlacement.js`, a catalog, or a package, and two
+  replicas that materialize the identical bytes through the identical
+  sequence of sources each hold their own, entirely separate history.
+- **A `preferredSource`, `sourceScore`, or any ranking derived from the
+  counts.** `describeSnapshotMaterializationSourceCounts()` returns a
+  count, never a recommendation — see this milestone's own header above
+  and `docs/Principles.md`.
+- **Recording an attempt that never reached the shared storage boundary.**
+  A placement that could not be resolved (`UNAVAILABLE`/
+  `INVALID_PLACEMENT`) or a peer request that timed out (`UNAVAILABLE`)
+  leaves NO trace in the history — see the mapping functions' own
+  behavior above. This is a deliberate honesty constraint, not an
+  oversight: the history answers "how did bytes reach my content store,"
+  and nothing reached it in those cases.
+- **The "unified acquisition UI comparing every source side by side"**
+  0.8.34, 0.8.35, 0.8.36, and 0.8.37 have each, in turn, already declined
+  to build. A chronological history of what already happened is not that
+  UI — it never compares sources to help a person choose one, since by
+  the time an attempt is in the history, the choice was already made and
+  acted on.
+
+What's left, and still deliberately unbuilt: the selective-claim-exchange
+work 0.8.30/0.8.31/0.8.32 have each deferred in turn, and the natural next
+question this milestone's own design conversation raised but did not
+build — content POSSESSION synchronization, letting replicas explicitly
+compare which publication snapshots they currently hold, without
+transferring any bytes automatically. That remains a future milestone.
