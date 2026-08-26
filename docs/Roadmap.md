@@ -23150,3 +23150,163 @@ forbidden-vocabulary scan (extended in this milestone to also catch
   `null` until their own composing view has ever actually been supplied —
   never a false `0` before that — proven directly in the flagship test's
   own Section C.
+
+## 0.8.47 — Bitcoin Anchor Transaction Construction
+
+0.8.9's own "Deliberately excluded" list named exactly what
+`anchoring/BitcoinAnchorPublisher.js` left unbuilt: "wallet management...
+UTXO selection, automatic fee optimization, coin selection." Everything
+since — 0.8.10 through 0.8.14 — built around that gap without closing it:
+orchestration, a publisher registry, evidence inspection, all still
+handing a caller's `broadcaster` the bare contentHash and trusting it to
+silently construct, sign, AND broadcast as one opaque step. 0.8.47 opens
+that step up, but only the deterministic, entirely offline half of it —
+which UTXOs to spend, how large the fee is, and whether change comes
+back:
+
+```text
+contentHash, utxos, changeAddress
+        │
+        ▼
+BitcoinAnchorTransactionBuilder.build()        (new — Bitcoin-specific)
+        │
+        ▼
+{ inputs, outputs, feeSats }          an UNSIGNED PLAN, never a transaction
+        │
+        ▼
+(a future milestone: wallet signing — NOT this one)
+        │
+        ▼
+(a future milestone: broadcaster.broadcast() — NOT this one)
+```
+
+**A PLAN IS NOT A TRANSACTION.** `build()` never produces signed bytes,
+never produces raw transaction hex, and is never handed to a network —
+its result is a small, structured description of which caller-supplied
+UTXOs to spend and which outputs to create, exactly the raw material a
+real signer would need, and nothing closer to "broadcastable" than that.
+This class does not import `anchoring/BitcoinAnchorPublisher.js`, and
+`BitcoinAnchorPublisher.js` is unchanged by this milestone — connecting a
+plan to a signature to a broadcast stays deliberately unbuilt, exactly as
+0.8.9's own sequencing already reserved it.
+
+- `anchoring/BitcoinAnchorTransactionBuilder.js` — the one new class.
+  Constructed with `{ network, feeRateSatsPerVByte, dustThresholdSats,
+  changeScriptType }` — a fee/dust POLICY, never a wallet. `build({
+  contentHash, utxos, changeAddress })` is synchronous (no network, no
+  async work of any kind) and resolves to exactly one of:
+  - `{ built: true, network, inputs, outputs, feeSats, totalInputSats,
+    estimatedVBytes }` — `outputs[0]` is always `{ type: 'op_return',
+    dataHex: contentHash, valueSats: 0 }`, the identical raw-hex,
+    no-second-encoding payload `BitcoinAnchorPublisher` and
+    `BitcoinOpReturnProofVerifier` already agree on; a second
+    `{ type: 'change', address, valueSats }` entry is present only when
+    the leftover clears `dustThresholdSats`.
+  - `{ built: false, reason }` — the supplied utxos cannot cover even the
+    estimated fee.
+
+  Coin selection is a plain, deterministic greedy accumulation —
+  largest-value-first, with a stable txid/vout tie-break so array order
+  never changes the result — never an optimal (branch-and-bound,
+  privacy-aware) selector. Fee and output sizes are ESTIMATES, using the
+  same round vbyte figures most wallets use before a real signer exists
+  to measure the real thing (`p2wpkh` input ≈ 68 vbytes, output ≈ 31,
+  `p2pkh`/`p2tr` also supported) — never a claim about the eventual
+  signed transaction's real, consensus-measured weight. A leftover too
+  small to clear `dustThresholdSats` is folded entirely into `feeSats`,
+  never manufactured into a sub-dust change output a real network would
+  refuse to relay.
+
+- `application/CreateBitcoinAnchorTransactionBuilderUseCase.js` — the
+  identical composition-root shape `application/
+  CreateBitcoinAnchorPublisherUseCase.js` already established, wiring the
+  builder's fee/dust policy only.
+
+- **No wallet management, still.** No private-key generation, no address
+  derivation or validation (`changeAddress` is carried through verbatim),
+  no UTXO discovery — `utxos` is always a caller-supplied array, the
+  identical restraint `BitcoinAnchorPublisher` already holds toward its
+  own `broadcaster`.
+
+> **A transaction plan is not a transaction.** Selecting UTXOs and sizing
+> a fee is arithmetic over caller-supplied facts, never custody, never a
+> signature, and never a broadcast. `anchoring/
+> BitcoinAnchorTransactionBuilder.js`'s own header states this
+> explicitly, and every accepted plan satisfies one checked invariant:
+> total input value equals total output value plus the fee, exactly —
+> nothing created, nothing destroyed. See `docs/Principles.md`, "A
+> Transaction Plan Is Not A Transaction (0.8.47)."
+
+- `tests/BitcoinAnchorTransactionConstruction.test.js` (new) — entirely
+  synchronous and network-free. Section A: flagship — a comfortably
+  funded utxo builds a plan with a real change output, and the
+  input/output/fee invariant holds exactly; Section B: a leftover too
+  small for a real change output is folded entirely into the fee, never
+  manufactured into a dust output; Section C: one utxo alone cannot
+  cover the fee, so a second is accumulated, in a deterministic order
+  that does not depend on the order utxos were supplied in; Section D:
+  utxos too small for any fee report `built: false` with an explicit
+  reason, never a partial plan; Section E: a malformed contentHash, an
+  empty utxos array, a malformed utxo entry, and a missing changeAddress
+  are all refused before any selection is attempted; Section F: a higher
+  configured fee rate produces a proportionally higher fee, and a built
+  plan never carries a private key, signature, witness data, or raw
+  transaction hex — a forbidden-vocabulary scan proves it directly.
+
+```text
+0.8.46  Unified Snapshot State Inspection                             ✓
+             │
+             ▼
+0.8.47  Bitcoin Anchor Transaction Construction                       ✓
+             ├── anchoring/BitcoinAnchorTransactionBuilder.js — new;
+             │   deterministic UTXO selection + fee/change computation,
+             │   returns an UNSIGNED plan, never signed bytes
+             ├── application/CreateBitcoinAnchorTransactionBuilderUseCase.js
+             │   — new composition-root seam, mirrors
+             │   CreateBitcoinAnchorPublisherUseCase.js
+             ├── never wired to BitcoinAnchorPublisher.js — plan, sign,
+             │   and broadcast stay three separate, still-unconnected
+             │   steps
+             └── no wallet management — utxos and changeAddress are
+                 always caller-supplied, no keys, no address validation
+```
+
+### Deliberately excluded
+
+- **Signing, of any kind.** No private keys, no signature generation, no
+  witness data, no raw transaction serialization (no varint encoding, no
+  script bytes). `build()`'s result is consumed by a future wallet-signing
+  capability — this milestone builds the plan that capability would need,
+  never the capability itself.
+- **Broadcasting.** Nothing in this milestone calls a network, a
+  broadcaster, or `anchoring/BitcoinAnchorPublisher.js`. Wiring a signed
+  version of this plan into an actual broadcast is a future, separately
+  sized milestone, exactly as 0.8.9's own sequencing already named.
+- **UTXO discovery of any kind.** `utxos` is always caller-supplied — this
+  class never queries a wallet, a node, or a block explorer for spendable
+  outputs. Fetching real UTXOs for a real address is a future concern.
+- **Address validation.** `changeAddress` is carried through as an opaque
+  string — no base58/bech32 checksum verification, no network-prefix
+  check. A malformed address is the caller's own mistake to catch before
+  a real wallet ever signs against this plan.
+- **Optimal coin selection, privacy-aware selection, or manual UTXO
+  choice.** Selection is a plain, deterministic largest-value-first
+  accumulation — good enough to verify by hand, never claimed to minimize
+  fees or maximize privacy across alternative combinations.
+- **RBF (Replace-By-Fee) signaling, locktime, sequence numbers, or
+  multiple OP_RETURN/change outputs.** The plan this class builds is
+  always exactly one OP_RETURN output and at most one change output —
+  richer transaction shapes are a future concern if a real need for them
+  ever appears.
+- **Any UI.** No "Build Transaction" button or panel anywhere in this
+  codebase yet calls `BitcoinAnchorTransactionBuilder` or `application/
+  CreateBitcoinAnchorTransactionBuilderUseCase.js` — the identical
+  restraint every anchor-evidence milestone since 0.8.9 already held
+  before any UI consumed its own new mechanism.
+
+What's left, and deliberately unbuilt: a wallet-signing boundary that
+turns this plan into a real signed transaction, a real (non-fake)
+broadcaster wired to that signed output, real UTXO discovery, real
+address validation, and any UI surface for triggering construction —
+each its own, separately sized milestone, exactly like every
+"Deliberately excluded" list in this document before it.
