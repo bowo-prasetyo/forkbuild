@@ -13229,3 +13229,97 @@ plain fact about what happened, never evidence that one mechanism
 outperformed the others.
 
 See `docs/Roadmap.md`, 0.8.38, for the full milestone entry.
+
+## Current Snapshot Possession Is A Local Observation, Not A Distributed Claim (0.8.39)
+
+**A replica can know that it possesses a valid snapshot without that fact
+becoming a publication claim, a placement claim, or a decentralization
+score.** `application/PublicationSnapshotPossessionView.js` exists to give
+that one, present-tense fact — "does this replica's own `content/
+ContentStore.js` currently hold bytes matching this publication's claimed
+hash?" — a small, pure shape of its own: `{ publicationId, contentHash,
+possession: { state } }`. It introduces NO new content checker: `state`
+is `application/LocalSnapshotContentAvailabilityOutcome.js`'s own three
+0.8.33 values, reused unchanged, because the question this milestone asks
+was already fully answered by `application/
+CheckLocalSnapshotContentAvailabilityUseCase.js` — what this milestone
+adds is a name for the fact, and a shape small enough that nothing else
+can be smuggled in beside it. Recomputed fresh every time the underlying
+check runs, never persisted, never compared across replicas, never
+attached to a placement or an anchor. A replica reporting `AVAILABLE` for
+a publication with zero known placements and zero known anchors is not
+thereby "more decentralized," and a replica reporting `NOT_AVAILABLE` for
+a publication with three independently-verified placements has cast no
+doubt on any of them — `application/PublicationDecentralizationView.js`
+(0.8.27) describes DISTRIBUTED claims; this file describes a fact about
+ONE replica's own present bytes, and the two dimensions never merge into
+one score.
+
+**Replica knowledge, materialization history, and current content
+possession are three independent facts, and no one of them may be
+inferred from the other two.** `application/
+PublicationReplicaKnowledgeView.js` (0.8.28) answers "what distributed
+claims does this replica know about?" `application/
+SnapshotMaterializationHistory.js` (0.8.38) answers "what byte-acquisition
+attempts has this replica made, this session?" `application/
+PublicationSnapshotPossessionView.js` (this milestone) answers "does this
+replica currently hold valid bytes?" This milestone's own flagship test
+proves all three vary independently at once: Bob and Carol arrive at the
+identical `AVAILABLE` possession through two different materialization
+sources (an offline transfer package, a resolved IPFS placement) — proving
+current possession never reveals which mechanism supplied it. Dave (who
+never attempted anything — an EMPTY materialization history) and Eve (who
+attempted "Get Snapshot from Peer" against a peer that answered with
+tampered bytes — a materialization history holding exactly one REJECTED
+entry) both arrive at the identical `NOT_AVAILABLE` possession — proving a
+history's length, or its content, never determines current possession
+either way; an empty history and a history full of failed attempts read
+identically to a fresh check of what is actually on disk right now. And
+every one of the four replicas — Bob, Carol, Dave, and Eve alike — reports
+the identical replica knowledge (one known anchor, one known placement,
+`hasPublication: true`) throughout, regardless of what any of them ever
+possessed — proving that dimension never moves in response to either of
+the other two. See `tests/PublicationReplicaContentKnowledge.test.js`'s
+own flagship section for the full scenario.
+
+**A knowledge dimension that is "tiny" earns that description by staying
+tiny, not by claiming to be complete.** `application/
+PublicationReplicaContentKnowledgeView.js#describePublicationReplicaContentKnowledge()`
+composes exactly two already-established facts — `hasPublication` (a
+plain boolean the caller supplies, mirroring `application/
+PublicationReplicaKnowledgeView.js`'s own 0.8.28 parameter of the identical
+name) and `hasValidSnapshot` (derived from the possession view above) —
+into `{ publicationId, hasPublication, hasValidSnapshot }`, and nothing
+else. It is NOT a replacement for, or a superset of, `application/
+PublicationReplicaKnowledgeView.js`: it carries no evidence, no
+placements, and no anchor/placement counts of its own. Every one of the
+four `hasPublication`/`hasValidSnapshot` pairings — including the unusual
+but entirely ordinary case of a replica possessing bytes for a publication
+it has never itself cataloged — is reported plainly, as a genuinely
+ordinary state, never rejected, coerced, or treated as more "complete"
+than another. Resist renaming this object "complete replica knowledge" or
+"full replica state": a replica reporting `hasPublication: true` alongside
+`hasValidSnapshot: true` and zero known anchors and zero known placements
+(bytes arrived through an offline transfer package that carried no
+evidence or placement claims at all) is not "less complete" than one
+reporting all five dimensions populated — there is no notion of
+completeness anywhere in this milestone, on purpose.
+
+**This milestone deliberately builds no synchronization, no announcement,
+and no exchange of possession across replicas.** A claim that another
+replica possesses bytes is fundamentally different from actually
+possessing them — a possession announcement would immediately need to
+answer whether it is signed, whether it expires, whether it is stale,
+whether it belongs in convergence, whether it interacts with peer trust,
+and whether it can be used to discover materialization sources, none of
+which this milestone touches. `application/
+PublicationSnapshotPossessionView.js` and `application/
+PublicationReplicaContentKnowledgeView.js` both stay strictly LOCAL:
+neither imports a peer exchange, a network primitive, or a knowledge
+store, mirroring `application/CheckLocalSnapshotContentAvailabilityUseCase.js`'s
+own 0.8.33 restraint one layer up. Local possession earns a completely
+well-defined, small, honest shape FIRST; a bounded observation protocol
+for sharing it across replicas remains explicitly future work, not
+something this milestone reaches for just because the shape now exists.
+
+See `docs/Roadmap.md`, 0.8.39, for the full milestone entry.

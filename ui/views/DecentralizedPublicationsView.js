@@ -33,6 +33,8 @@ import { describeSynchronizationAttempt, describeSynchronizationButtonLabel } fr
 import { PublicationKnowledgeSynchronizationUiState } from '../../application/PublicationKnowledgeSynchronizationUiState.js';
 import { LocalSnapshotContentAvailabilityOutcome } from '../../application/LocalSnapshotContentAvailabilityOutcome.js';
 import { describeLocalSnapshotContentAvailability, describeAvailabilityCheckButtonLabel } from '../../application/LocalSnapshotContentAvailabilityView.js';
+import { describePublicationSnapshotPossession } from '../../application/PublicationSnapshotPossessionView.js';
+import { describePublicationReplicaContentKnowledge } from '../../application/PublicationReplicaContentKnowledgeView.js';
 import { SnapshotContentMaterializationUiState } from '../../application/SnapshotContentMaterializationUiState.js';
 import { describeMaterializationAttempt, describeMaterializationButtonLabel } from '../../application/SnapshotContentMaterializationView.js';
 import { SnapshotPlacementMaterializationUiState } from '../../application/SnapshotPlacementMaterializationUiState.js';
@@ -324,6 +326,25 @@ import { describeSnapshotMaterializationHistory } from '../../application/Snapsh
 // it narrates — see application/SnapshotMaterializationHistoryView.js's
 // own header and docs/Principles.md, "Materialization History Describes
 // Byte Acquisition, Not Source Trust (0.8.38)."
+//
+// 0.8.39 — Local Snapshot Possession & Replica Content Knowledge. "Local
+// Snapshot" now also shows one small, tiny composed line — "Publication:
+// known/not known locally · Snapshot: available/not available" — once a
+// local availability check has ever completed for this entry, THIS
+// session. `replicaContentKnowledgeView(entry)` composes `catalog.has()`
+// (a plain boolean; every entry already on screen came from `catalog.
+// list()`, exactly like `recomputeReplicaKnowledge()` above already
+// assumes) with `currentPossessionView(entry)` — a pure reshaping of
+// whatever `entry.localSnapshotAvailability` (0.8.33) currently holds,
+// touching no store of its own. Carries NO anchor/placement counts —
+// those remain exactly where the "Decentralization" card below already
+// shows them, on its own independently-gated card; this line and that
+// card are two separate, un-merged facts, shown side by side, never
+// combined into one score. See application/
+// PublicationSnapshotPossessionView.js's and application/
+// PublicationReplicaContentKnowledgeView.js's own headers, and
+// docs/Principles.md, "Current Snapshot Possession Is A Local
+// Observation, Not A Distributed Claim (0.8.39)."
 //
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization. Each
 // placement card in "Snapshot Placements" below now also offers
@@ -991,6 +1012,33 @@ export default {
         function localSnapshotAvailabilityButtonLabel(entry) {
             const view = localSnapshotAvailabilityView(entry);
             return describeAvailabilityCheckButtonLabel({ checking: view.checking, checked: view.checked });
+        }
+
+        // 0.8.39 — Local Snapshot Possession & Replica Content Knowledge.
+        // A pure reshaping of THIS entry's own `localSnapshotAvailability`
+        // (whatever "Check Local Snapshot" above most recently reported) into
+        // application/PublicationSnapshotPossessionView.js's own small
+        // `{ publicationId, contentHash, possession: { state } }` shape —
+        // never a second check, never touching content/ContentStore.js
+        // itself. `state` is `null` until "Check Local Snapshot" is clicked
+        // at least once, mirroring `localSnapshotAvailabilityView(entry)
+        // .checked` exactly.
+        function currentPossessionView(entry) {
+            return describePublicationSnapshotPossession(entry.localSnapshotAvailability);
+        }
+
+        // The tiny, deliberately non-"complete" composed fact application/
+        // PublicationReplicaContentKnowledgeView.js exists to report:
+        // whether THIS replica knows the publication's own envelope, and
+        // whether it currently possesses valid bytes for it — nothing about
+        // evidence or placement counts, which the existing "Decentralization"
+        // summary below already shows on its own, independently gated card.
+        function replicaContentKnowledgeView(entry) {
+            return describePublicationReplicaContentKnowledge({
+                publicationId: entry.publication.id,
+                hasPublication: catalog.has(entry.publication.id),
+                possession: currentPossessionView(entry)
+            });
         }
 
         // 0.8.34 — Explicit Snapshot Materialization UX. `event.target.
@@ -1929,6 +1977,7 @@ export default {
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
             localSnapshotContentAvailabilityUseCase, checkLocalSnapshotAvailability, localSnapshotAvailabilityView,
             localSnapshotAvailabilityBadgeClass, localSnapshotAvailabilityButtonLabel,
+            currentPossessionView, replicaContentKnowledgeView,
             localSnapshotMaterializationSourceView,
             snapshotContentMaterializationCoordinator, onMaterializationFileChosen, importSnapshotContent,
             materializationView, materializationBadgeClass, materializationButtonLabel,
@@ -2013,6 +2062,27 @@ export default {
                          them was. -->
                     <div v-if="localSnapshotContentAvailabilityUseCase || snapshotContentMaterializationCoordinator || snapshotPeerMaterializationCoordinator" class="decentralization-summary">
                         <span class="evidence-convergence-title">Local Snapshot</span>
+
+                        <!-- 0.8.39 — Local Snapshot Possession & Replica Content
+                             Knowledge. The tiny, deliberately non-"complete" composed
+                             fact application/PublicationReplicaContentKnowledgeView.js
+                             exists to report — whether this replica knows the
+                             publication's own envelope, and whether it currently
+                             possesses valid bytes for it. Carries no anchor/placement
+                             counts of its own; those stay exactly where the existing
+                             "Decentralization" card below already shows them, on its
+                             own independently-gated card — this line and that card are
+                             two separate, un-merged facts, shown side by side, never
+                             combined into one score. Visible only once a local
+                             availability check has ever completed for this entry, this
+                             browsing session (mirrors `localSnapshotAvailabilityView
+                             (entry).checked` exactly) — before that, whether bytes are
+                             currently possessed is simply not yet observed, and this
+                             line stays silent rather than guessing. -->
+                        <p v-if="localSnapshotContentAvailabilityUseCase && localSnapshotAvailabilityView(entry).checked" class="form-hint form-hint--neutral">
+                            Publication: {{ replicaContentKnowledgeView(entry).hasPublication ? 'known locally' : 'not known locally' }}
+                            · Snapshot: {{ replicaContentKnowledgeView(entry).hasValidSnapshot ? 'available' : 'not available' }}
+                        </p>
 
                         <div v-if="localSnapshotContentAvailabilityUseCase" class="evidence-discovery-header">
                             <button class="action-btn action-btn--secondary"
