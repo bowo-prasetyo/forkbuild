@@ -22092,3 +22092,123 @@ question this milestone's own design conversation raised but did not
 build — content POSSESSION synchronization, letting replicas explicitly
 compare which publication snapshots they currently hold, without
 transferring any bytes automatically. That remains a future milestone.
+
+## 0.8.39 — Local Snapshot Possession & Replica Content Knowledge
+
+0.8.38's own "what's left" named the natural next question directly:
+content POSSESSION synchronization. Before any of that can be built,
+"possession" itself needs a small, well-defined, purely LOCAL shape — one
+that never becomes a publication claim, a placement claim, or a
+decentralization score, so a future synchronization layer has something
+honest to eventually exchange. This milestone builds exactly that shape,
+and deliberately nothing more:
+
+> A replica can know that it possesses a valid snapshot without that
+> fact becoming a publication claim, a placement claim, or a
+> decentralization score.
+
+```text
+   application/CheckLocalSnapshotContentAvailabilityUseCase.js#execute()   (0.8.33, UNCHANGED)
+              │
+              ▼
+   describePublicationSnapshotPossession()                                 (application/PublicationSnapshotPossessionView.js, new)
+              │
+              ▼
+     { publicationId, contentHash, possession: { state } }
+              │
+              ▼  (composed with a plain `hasPublication` boolean)
+   describePublicationReplicaContentKnowledge()                            (application/PublicationReplicaContentKnowledgeView.js, new)
+              │
+              ▼
+     { publicationId, hasPublication, hasValidSnapshot }
+```
+
+Two new files, both under `application/`:
+
+- `application/PublicationSnapshotPossessionView.js` (new) —
+  `describePublicationSnapshotPossession(attempt)`, a pure reshaping of
+  `application/CheckLocalSnapshotContentAvailabilityUseCase.js`'s own
+  0.8.33 resolved result into `{ publicationId, contentHash, possession:
+  { state } }`. `state` reuses `application/
+  LocalSnapshotContentAvailabilityOutcome.js`'s own three values
+  unchanged — this file introduces NO second content checker and no new
+  hashing. `possession.state` is `null` when no check has yet completed
+  ("not yet observed," never a fabricated outcome). Also exports
+  `isSnapshotPossessed(possessionView)`, a single honest boolean — TRUE
+  only for `AVAILABLE`.
+- `application/PublicationReplicaContentKnowledgeView.js` (new) —
+  `describePublicationReplicaContentKnowledge({ publicationId,
+  hasPublication, possession })`, composing a plain `hasPublication`
+  boolean (the caller's own, mirroring `application/
+  PublicationReplicaKnowledgeView.js`'s 0.8.28 parameter of the identical
+  name) with a possession view into `{ publicationId, hasPublication,
+  hasValidSnapshot }`. Deliberately tiny — no evidence, no placements, no
+  counts of any kind; a caller that wants those still reads `application/
+  PublicationReplicaKnowledgeView.js`, unchanged, side by side.
+
+> **Current snapshot possession is a local observation, not a
+> distributed claim.** See `docs/Principles.md`, "Current Snapshot
+> Possession Is A Local Observation, Not A Distributed Claim (0.8.39)."
+
+No existing file changes shape. `application/
+CheckLocalSnapshotContentAvailabilityUseCase.js`, `application/
+LocalSnapshotContentAvailabilityView.js`, `application/
+PublicationReplicaKnowledgeView.js`, and `application/
+SnapshotMaterializationHistory.js`/`application/
+SnapshotMaterializationHistoryView.js` are all reused exactly as they
+already stood — this milestone is purely a new, small composition over
+facts those five files already establish.
+
+The FLAGSHIP test (`tests/PublicationReplicaContentKnowledge.test.js`)
+proves the milestone's own central claim directly: Alice publishes a
+publication, anchors it externally, places a snapshot of it on IPFS, and
+builds ONE Publication Replica Package (0.8.29) — no bytes — handed to
+four separate replicas. Bob imports a Publication Snapshot Transfer
+Package (0.8.32) on top of it; Carol materializes the snapshot from the
+placement (0.8.35); Dave does nothing further; Eve attempts "Get Snapshot
+from Peer" (0.8.37) against a peer that answers with tampered bytes. All
+four report IDENTICAL replica knowledge (one known anchor, one known
+placement) throughout. Bob and Carol both end up `hasValidSnapshot: true`
+through two entirely different mechanisms. Dave (an EMPTY materialization
+history) and Eve (a history holding exactly one REJECTED entry) both end
+up `hasValidSnapshot: false` — proving a rejected, or even absent, history
+never implies, and never rules out, anything about current possession one
+way or the other.
+
+### Deliberately excluded
+
+- **A new content checker, or a second content-availability enum.**
+  `application/PublicationSnapshotPossessionView.js` reuses `application/
+  CheckLocalSnapshotContentAvailabilityUseCase.js` and `application/
+  LocalSnapshotContentAvailabilityOutcome.js` unchanged. This milestone
+  names and shapes an existing fact; it never recomputes one.
+- **Merging possession into `application/
+  PublicationReplicaKnowledgeView.js`'s own 0.8.28 shape**, or calling
+  `application/PublicationReplicaContentKnowledgeView.js`'s own result
+  "complete replica knowledge." Every one of the four `hasPublication`/
+  `hasValidSnapshot` pairings is an entirely ordinary, non-contradictory
+  state, and none is ever treated as more complete than another.
+- **Possession synchronization, announcement, or exchange across
+  replicas.** A claim that another replica possesses bytes is
+  fundamentally different from actually possessing them, and would
+  immediately raise questions this milestone does not answer: whether an
+  announcement is signed, whether it expires, whether it is stale,
+  whether it belongs in convergence, how it interacts with peer trust,
+  and whether it can be used to discover materialization sources. Local
+  possession earns a completely well-defined, small, honest shape FIRST;
+  a bounded observation protocol for sharing it remains explicit future
+  work, not something this milestone reaches for just because the shape
+  now exists.
+- **Any score, ranking, or preference derived from possession.** A
+  replica possessing a snapshot is not thereby "more decentralized," and
+  a replica not possessing one has cast no doubt on any placement or
+  anchor it separately knows about — `application/
+  PublicationDecentralizationView.js` (0.8.27) and this milestone's own
+  files describe two dimensions that never merge into one.
+
+What's left, and still deliberately unbuilt: **0.8.40 — Snapshot
+Possession Exchange**, the bounded observation protocol this milestone's
+own header named and explicitly declined to build — letting replicas
+compare which publication snapshots they currently hold, without
+transferring any bytes automatically, once "possession" itself has had
+time to prove out as a stable, well-understood local concept first.
