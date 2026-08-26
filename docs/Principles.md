@@ -14176,3 +14176,48 @@ vocabulary to cover them is real, separately sized future work, exactly as
 vocabulary named itself as a deliberate, not-yet-taken widening one
 milestone earlier. See `docs/Roadmap.md`, 0.8.51, for the full milestone
 entry.
+
+## Broadcasting Submits; It Does Not Decide (0.8.52)
+
+**`anchoring/BitcoinAnchorTransactionBroadcaster.js#broadcast()` never
+asks whether a transaction is valid — that question was already closed,
+cryptographically, one milestone earlier.** By the time bytes reach this
+class, `anchoring/BitcoinAnchorSignedPsbtFinalizer.js` (0.8.51) has already
+proven every input's signature genuinely authorizes spending the coin it
+claims to. This class's only remaining job is mechanical: hand those exact
+bytes to an external submission endpoint, and report exactly what that
+endpoint said. It is, deliberately, the smallest class in the entire
+Bitcoin sequence — no PSBT parsing, no cryptography, no policy.
+
+**Accepts only finalized transaction bytes — never a PSBT, never anything
+still needing signing.** `broadcast({ txid, rawTransaction })` takes
+exactly the two fields the finalizer produces on success. There is no code
+path anywhere in this file that walks or interprets PSBT bytes. This
+completes the trust boundary the whole 0.8.47→0.8.51 sequence was built
+toward: construction never signs, PSBT description never signs, inspection
+never verifies, finalization never broadcasts, and broadcasting never
+decides. Each stage does exactly one thing, and nothing upstream of it is
+ever re-trusted by the stage that follows.
+
+**The reported txid is never taken from the broadcaster's own response.**
+An injected broadcaster talks to a real external system — an Esplora
+instance, a node, a hosted service — and that system's own self-reported
+identifier for "the transaction I just accepted" is exactly the kind of
+unverified external claim this codebase has refused to take at face value
+at every prior boundary. Rather than trust it, this class always reports
+back the one txid it already knows is correct: the one the finalizer
+derived, cryptographically, from the exact bytes being submitted, before
+the broadcaster was ever consulted. A broadcaster that claims a different,
+malformed, or empty txid on the very same successful acceptance changes
+nothing about what gets reported — proven directly in
+`tests/BitcoinAnchorTransactionBroadcasting.test.js`, Section G.
+
+**Rejection is reported, not worked around.** This class holds no retry
+logic, no fee-bump path, and no fallback that would ever submit anything
+other than the exact bytes it was handed. This is not mere caution — this
+transaction's OP_RETURN output carries a content hash, and any component
+that quietly substituted a different transaction to "get a broadcast
+through" would be silently anchoring a different hash than the one the
+application believed it was anchoring. A rejected broadcast stays
+rejected; the caller decides what happens next, this class never does.
+See `docs/Roadmap.md`, 0.8.52, for the full milestone entry.

@@ -24050,14 +24050,210 @@ discovery, real address validation, a real wallet integration, and any UI
 surface — each its own, separately sized milestone, exactly like every
 "Deliberately excluded" list in this document before it.
 
-## 0.8.52 — Bitcoin Transaction Broadcasting (not yet built)
+## 0.8.52 — Bitcoin Anchor Transaction Broadcasting
 
-The next milestone this sequence reserves: an explicit
-`BitcoinAnchorTransactionBroadcaster` that takes 0.8.51's own `{
-finalized: true, rawTransaction }` result and an injected broadcasting
-capability (an Esplora-style HTTP API, a Bitcoin Core RPC client, or a
-fake, in every test — the identical injected-capability restraint
-`anchoring/BitcoinAnchorPublisher.js` has held since 0.8.9), and reports a
-tri-state outcome (`BROADCAST` / `BROADCAST_REJECTED` /
-`BROADCAST_UNAVAILABLE`) — never deciding whether a transaction is GOOD,
-only reporting what the external submission endpoint said. Not yet built.
+0.8.51's own "Deliberately excluded" list named exactly what came next:
+"Nothing in this milestone calls a network, a broadcaster, or
+`anchoring/BitcoinAnchorPublisher.js`. A `{ finalized: true }` result is
+real transaction bytes, never a txid Bitcoin itself has seen — see
+'0.8.52.'" This milestone is that broadcaster, held to one governing
+principle:
+
+> Broadcasting submits a locally finalized transaction; it does not
+> decide whether the transaction is valid.
+
+```text
+{ finalized: true, txid, rawTransaction: { bytes, hex } }   0.8.51's own
+        │                                                    output
+        ▼
+BitcoinAnchorTransactionBroadcaster                           (new)
+        │
+        │  hands `rawTransaction.hex` to an injected `broadcaster`,
+        │  unmodified — never re-signs, re-builds, or retries
+        ▼
+        injected broadcaster (Esplora, Bitcoin Core RPC, a future
+        backend, or a fake, in every test)
+        │
+   ┌────┴────┐
+   ▼         ▼
+accepted   rejected / unavailable
+   │
+   ▼
+{ broadcasted: true, txid }     — `txid` is always the CALLER'S OWN
+                                   already-verified txid, never one
+                                   read from the broadcaster's response
+{ broadcasted: false, reason }
+{ broadcasted: false, unavailable: true, reason }
+```
+
+**BROADCASTING SUBMITS; IT DOES NOT DECIDE.** `broadcast()` never
+inspects, re-signs, re-serializes, or second-guesses the transaction it is
+handed — that question was already closed, cryptographically, by
+`BitcoinAnchorSignedPsbtFinalizer#finalize()` one milestone earlier. This
+class does exactly one thing: hand the exact hex the finalizer produced to
+an injected capability, and translate whatever that capability reports
+into a narrow, three-outcome vocabulary. It is, deliberately, the smallest
+class in this entire Bitcoin sequence.
+
+**ACCEPTS ONLY FINALIZED TRANSACTION BYTES, NEVER A PSBT.** `broadcast()`
+takes exactly the two fields `BitcoinAnchorSignedPsbtFinalizer#finalize()`
+produces on success — `txid` and `rawTransaction` — never a PSBT, never a
+`description`, never anything that still needs signing or finalizing.
+There is no PSBT-parsing code anywhere in this file. This is the trust
+boundary the whole 0.8.47→0.8.51 sequence was built toward: by the time
+anything reaches this class, "is this transaction valid" is already a
+closed question, answered once, by the one class equipped to answer it.
+
+**THE REPORTED `txid` IS NEVER TAKEN FROM THE BROADCASTER'S OWN
+RESPONSE.** The only `txid` this class ever reports is the one the caller
+supplied — the one the finalizer already derived, cryptographically, from
+the exact bytes being submitted. Whatever an injected broadcaster's
+response claims about "the" txid (if anything) is read only far enough to
+decide accepted/rejected/unavailable, then discarded. An external
+broadcasting endpoint is exactly the kind of untrusted external system
+this codebase has refused to take at face value at every boundary before
+this one — see `tests/BitcoinAnchorTransactionBroadcasting.test.js`,
+Section G: "no broadcaster response, however it answers, ever changes the
+reported txid," proven against a broadcaster that claims a different,
+malformed, or empty txid on the very same successful acceptance.
+
+**NEVER RE-SIGNS, RE-BUILDS, OR RETRIES WITH A DIFFERENT TRANSACTION.** A
+rejection is reported and stops there. This class holds no retry logic, no
+fee-bump path, and no fallback that would submit anything other than the
+exact bytes it was handed. This matters specifically because this
+transaction's OP_RETURN output carries a content hash — quietly
+substituting a different transaction to "get a broadcast through" would
+mean silently anchoring a different hash than the one the application
+believed it was anchoring.
+
+- `anchoring/BitcoinAnchorTransactionBroadcaster.js` — the one new domain
+  class. `broadcast({ txid, rawTransaction })`:
+  1. Validates `txid` (a real 32-byte hex transaction id) and
+     `rawTransaction` (a `{ bytes, hex }` pair that must agree with each
+     other) — both are this codebase's own already-known-good internal
+     artifacts, produced by the finalizer, so a malformed one throws
+     immediately, before the injected broadcaster is ever consulted —
+     exactly the caller-contract posture `anchoring/BitcoinAnchorPublisher.js`
+     already holds toward its own `contentHash`.
+  2. Hands `rawTransaction.hex`, unmodified, to the injected
+     `broadcaster.broadcast(rawTransactionHex)`.
+  3. Translates the result: `{ broadcast: true }` → `{ broadcasted: true,
+     txid }` (the caller's own txid, never the broadcaster's); `{
+     broadcast: false, reason }` → a definite rejection; `{ broadcast:
+     false, unavailable: true, reason }`, a throw, or any malformed
+     response → `{ broadcasted: false, unavailable, reason }`. Never
+     throws for the injected broadcaster's own operational failure.
+- `anchoring/BitcoinEsploraTransactionBroadcaster.js` — the first real,
+  concrete `broadcaster`. Talks to the identical family of Esplora-
+  compatible servers `anchoring/BitcoinOpReturnProofVerifier.js` (0.8.1)
+  already reads from, for the one write operation Esplora exposes: `POST
+  /tx`, body the raw transaction hex, response the accepted txid as plain
+  text (read, then discarded by the outer class) on 2xx, an error message
+  on failure. A 4xx is a definite rejection (the endpoint parsed the
+  request and gave a verdict on THIS transaction); a 5xx, a network
+  failure, a timeout, or an unreadable response body are all
+  `unavailable` — the identical confirmed/unavailable/rejected split
+  `BitcoinOpReturnProofVerifier` already holds for reading, held here for
+  writing.
+- `application/CreateBitcoinAnchorTransactionBroadcasterUseCase.js` and
+  `application/CreateBitcoinEsploraTransactionBroadcasterUseCase.js` — the
+  identical composition-root shape every prior Bitcoin use case in this
+  sequence already established.
+
+> **Broadcasting submits; it does not decide.** By the time a transaction
+> reaches `BitcoinAnchorTransactionBroadcaster`, every question about
+> whether it is VALID was already answered, once, by
+> `BitcoinAnchorSignedPsbtFinalizer`. This class's only job is submission
+> and translation: hand the exact bytes to an external endpoint, and
+> report exactly what that endpoint said, in this codebase's own narrow
+> vocabulary — never inventing a txid, never retrying with different
+> bytes, never deciding a rejected transaction deserved to be accepted.
+> See `docs/Principles.md`, "Broadcasting Submits; It Does Not Decide
+> (0.8.52)."
+
+- `tests/BitcoinAnchorTransactionBroadcasting.test.js` (new) — the
+  flagship builds the COMPLETE real chain: a real transaction plan, a real
+  PSBT, a real secp256k1 signature, real cryptographic finalization
+  (reusing `anchoring/BitcoinAnchorTransactionBuilder.js`,
+  `BitcoinAnchorPsbtBuilder.js`, and `BitcoinAnchorSignedPsbtFinalizer.js`
+  directly — never a hand-built stand-in), then hands the result to a fake
+  injected broadcaster and proves it receives the finalizer's own bytes,
+  byte for byte. Section A: flagship; Section B: a definite rejection;
+  Section C: network unavailable; Section D: a timeout; Section E: a
+  throwing broadcaster; Section F: a malformed broadcaster response
+  (`undefined`, `null`, a bare string, `{ broadcast: 'yes' }`) never
+  crashes; Section G: THE CORE INVARIANT — no broadcaster response ever
+  changes the reported txid; Section H: duplicate submissions are
+  deterministic; Section I/J: a malformed `txid` or `rawTransaction`
+  throws before the broadcaster is ever consulted; Section K: the
+  constructor requires a real broadcaster.
+- `tests/BitcoinEsploraTransactionBroadcaster.test.js` (new) — deterministic
+  HTTP-layer coverage against an injected `fetchImpl`, mirroring
+  `tests/BitcoinOpReturnProofVerifier.test.js`'s own technique: 2xx
+  acceptance, 4xx rejection, 5xx/network-failure/unreadable-body
+  unavailability, and a final section proving the adapter's own output
+  composes end to end with `BitcoinAnchorTransactionBroadcaster` — including
+  that the outer class ignores the adapter's own echoed txid entirely.
+
+```text
+0.8.51  Bitcoin Signed PSBT Finalization & Cryptographic               ✓
+        Signature Verification
+             │
+             ▼
+0.8.52  Bitcoin Anchor Transaction Broadcasting                        ✓
+             ├── anchoring/BitcoinAnchorTransactionBroadcaster.js — new;
+             │   submits finalized bytes, decides nothing, never trusts
+             │   a broadcaster's own self-reported txid
+             ├── anchoring/BitcoinEsploraTransactionBroadcaster.js — new;
+             │   the first real, concrete broadcasting adapter
+             ├── two new composition-root use cases
+             └── ForkBuild can now, for the first time, submit a real
+                 anchor transaction to the Bitcoin network — the full
+                 content hash → plan → PSBT → signature → finalization →
+                 broadcast → txid path is real, end to end
+```
+
+### Deliberately excluded
+
+- **Reconnecting a successful broadcast to `BitcoinAnchorPublisher` or
+  `CreatePublicationAnchorUseCase`.** This milestone's `{ broadcasted:
+  true, txid }` is not yet wired into anything that produces a real
+  `PublicationAnchor` — that reconnection is real, separately sized work.
+  See "0.8.53," below.
+- **Confirmation observation.** A `{ broadcasted: true }` result means
+  only "the network accepted this transaction for broadcast" — it says
+  nothing about confirmation, block height, or block hash. Confirmation
+  stays a separate, later concern, exactly as `anchoring/
+  BitcoinAnchorPublisher.js`'s own header already drew this line in 0.8.9.
+  See "0.8.54," below.
+- **Retry, fee-bump, or replace-by-fee logic.** A rejected or unavailable
+  broadcast is reported and stops there. This class never re-signs,
+  re-builds, or resubmits a different transaction on a caller's behalf —
+  see this milestone's own "One important security rule," above.
+- **Any UI surface.** No "Broadcast Transaction" button, and no change to
+  `ui/DecentralizedPublicationsView.js` exists anywhere in this codebase
+  yet — exactly as every milestone in this Bitcoin sequence has stayed
+  backend-only before it.
+- **Bitcoin Core RPC, or any second concrete broadcasting adapter.**
+  `anchoring/BitcoinEsploraTransactionBroadcaster.js` is the first
+  concrete `broadcaster`; the injected-capability seam
+  `anchoring/BitcoinAnchorTransactionBroadcaster.js` holds means a second
+  adapter (Bitcoin Core RPC, a hosted service) is additive, real,
+  separately sized future work, never a change to this milestone's own
+  domain class.
+
+What's left, and deliberately unbuilt: reconnecting a successful broadcast
+to the generic anchor-creation pipeline, confirmation observation, any
+retry/fee-bump logic, any UI surface, and a second concrete broadcasting
+adapter — each its own, separately sized milestone, exactly like every
+"Deliberately excluded" list in this document before it.
+
+## 0.8.53 — Bitcoin Anchor Publication Lifecycle (not yet built)
+
+The next milestone this sequence reserves: connecting 0.8.52's own `{
+broadcasted: true, txid }` result back into `anchoring/
+BitcoinAnchorPublisher.js` and `application/
+CreatePublicationAnchorUseCase.js`, so a successful broadcast can produce
+a real `PublicationAnchor` — without treating broadcast acceptance as
+confirmation, and without changing what a `PublicationAnchor` means. Not
+yet built.
