@@ -20891,3 +20891,171 @@ rather than asking for everything every time. That was 0.8.30's own
 closing question, restated here because this milestone's own review
 reaffirmed it as the right next step once replica knowledge itself was
 visible and inspectable.
+
+## 0.8.32 — Explicit Snapshot Content Transfer
+
+0.8.31's own closing line pointed at selective claim exchange as the next
+architectural step. This milestone's own review deliberately took a
+different one first, because a gap sat underneath every replica-knowledge
+milestone since 0.8.28 that selective exchange would only make more
+efficient, never close: a replica can now transfer and synchronize
+CLAIMS about a publication — that it exists, that evidence anchors it,
+that a placement names where its bytes are retrievable — and still cannot
+transfer the bytes themselves as a first-class offline operation.
+`application/PublicationReplicaPackage.js` (0.8.29) bundles a publication
+envelope plus signed anchors/placements; none of the three is the
+snapshot's own content. This milestone adds the fourth, deliberately kept
+separate from the other three:
+
+```text
+Publication Replica Package (0.8.29, UNCHANGED)
+    publication + anchors + placements    "what does this replica know?"
+
+Publication Snapshot Transfer Package (THIS MILESTONE)
+    content                               "here are the actual bytes"
+```
+
+Five new files, all under `application/`:
+
+- `application/PublicationSnapshotTransferPackage.js` (new) — the
+  portable, JSON-safe envelope: `{ kind, schemaVersion, publicationId,
+  contentHash, content }`. `buildPublicationSnapshotTransferPackage()` is
+  PURE DATA ASSEMBLY, the identical restraint every `*Package.js` module
+  in this codebase already holds (`application/BlueprintPackage.js`,
+  0.4.6; `application/PublicationReplicaPackage.js`, 0.8.29) — structural
+  checks only (a non-empty `publicationId`, a `contentReference` with a
+  valid hash, non-empty `content`), and deliberately NO hash-equality
+  verification. `contentHash`'s own format check reuses `application/
+  PeerContentProtocol.js#isValidContentHash()` (0.7.4) unchanged — the
+  identical shape a content hash already takes traveling over a LIVE peer
+  connection, applied here to the same field traveling in an offline
+  file instead.
+- `application/PublicationSnapshotTransferPackageValidator.js` (new) —
+  strict, side-effect-free structural validation, the same split
+  `application/PublicationReplicaPackageValidator.js` (0.8.29) already
+  draws between itself and a bundled claim's signature verification: this
+  file only ever asks "is this well-formed?" and never asks "does
+  `content` actually hash to `contentHash`?" — that question is a TRUST
+  question, answered one layer up.
+- `application/SnapshotContentTransferOutcome.js` (new) — three values,
+  the same "one outcome enum per pipeline" shape `application/
+  PublicationResolutionOutcome.js` (0.7.1) already established one layer
+  over: `STORED`, `ALREADY_STORED` (the ordinary cost of the same
+  snapshot arriving twice — never an error), and
+  `CONTENT_HASH_MISMATCH` (nothing is ever stored for this one).
+- `application/BuildPublicationSnapshotTransferPackageUseCase.js` (new) —
+  the export side. Reads a publication's own `contentReference` from the
+  injected `publicationCatalog`, reads the bytes for that reference from
+  the injected `contentStore` (`content/ContentStore.js`, the identical
+  boundary every other content read in this codebase already goes
+  through), and hands both to the builder above, unchanged. Throws for an
+  uncataloged `publicationId`, exactly like `application/
+  BuildPublicationReplicaPackageUseCase.js` already does — AND throws for
+  a cataloged publication this replica does not currently hold bytes for.
+  That second throw is the whole point: knowing a publication and
+  possessing its content are independent facts, on the export side just
+  as much as the import side, and this class refuses to manufacture a
+  package for bytes it cannot actually supply.
+- `application/ImportPublicationSnapshotTransferPackageUseCase.js` (new)
+  — the import side, and the offline counterpart of `application/
+  PeerContentExchange.js#_handleResponse()` (0.7.4). Validates the
+  package structurally, then applies that class's own central rule,
+  restated for a file instead of a live message: THE ONLY THING THAT
+  EVER MAKES THIS TRUSTWORTHY is `core/ContentReference.js#verify()` —
+  recomputing the hash of exactly the bytes received and checking it
+  against exactly the hash the package itself claims. A mismatch reports
+  `CONTENT_HASH_MISMATCH` and stores nothing. A match stores the bytes
+  through the injected `contentStore`, unconditionally, and separately
+  reports `publicationKnown` — a plain, live read of whether this
+  replica's own `publicationCatalog` currently has an envelope for
+  `pkg.publicationId` — as an independent observation, NEVER a
+  precondition for storing anything. This class never touches a
+  publication, an anchor, or a placement, never calls `application/
+  ExternalAnchorVerifier.js` or `application/
+  SnapshotPlacementResolver.js`, and never resolves a placement as a
+  side effect of possessing the bytes a placement happens to name.
+
+> **Knowledge of content is not possession of content.** See
+> `docs/Principles.md`, "Knowledge Of Content Is Not Possession Of
+> Content (0.8.32)."
+
+- `tests/PublicationSnapshotTransferPackage.test.js` (new) — Section A:
+  `buildPublicationSnapshotTransferPackage()` argument handling and its
+  own deterministic-output invariant. Section B:
+  `validatePublicationSnapshotTransferPackage()` structural checks.
+  Section C — FLAGSHIP: Alice publishes a publication, holds its bytes
+  locally, anchors it, places it on IPFS, builds BOTH a Publication
+  Replica Package and a Publication Snapshot Transfer Package, then goes
+  offline for good — no network object of any kind is ever constructed
+  for her anywhere in this test. Bob imports the replica package offline
+  (now knows the publication, the anchor, and the placement, and
+  explicitly does NOT yet possess the bytes), then separately imports the
+  transfer package offline and obtains the actual snapshot — proving,
+  directly, that he never needed to resolve the IPFS placement to possess
+  it. Carol, by contrast, imports only the replica package: she knows
+  exactly where the snapshot is claimed to be retrievable, and does not
+  possess it — the flagship's own contrasting proof of this milestone's
+  own principle. A restart (fresh `ContentStore` instance over Bob's
+  identical underlying storage) leaves his content byte-identical.
+  Section D: content tampered in transit is rejected as
+  `CONTENT_HASH_MISMATCH` with nothing stored; re-importing an identical
+  package reports `ALREADY_STORED`; `publicationKnown` is proven
+  order-independent — a replica can receive the bytes before it has ever
+  heard of the publication they belong to, exactly as validly as after —
+  and never gates storage either way; and the two build-side error cases
+  named above are each exercised directly.
+
+### Deliberately excluded
+
+- **Bundling `content` into `application/PublicationReplicaPackage.js`
+  itself.** Considered directly, and rejected — see this milestone's own
+  design conversation. A replica package would grow into an increasingly
+  large "everything about this publication" container, and the clean
+  separation `application/PublicationReplicaPackage.js`'s own header
+  already draws (a publication envelope plus the claims that name it,
+  and nothing else) would blur into "also sometimes the content, if it
+  happened to be handy." The two packages stay two independent files with
+  two independent purposes; a future milestone MAY add a higher-level
+  export operation that produces both together, but the underlying
+  protocols themselves stay independent, permanently.
+- **A `ContentAcquisitionKind` enum, or any acquisition-provenance record
+  for content the way `application/AnchorAcquisitionKind.js`/
+  `application/PlacementAcquisitionKind.js` (0.8.17/0.8.24) already track
+  for claims.** A content hash is its own, complete, permanent identity —
+  unlike an anchor or a placement, there is no meaningful sense in which
+  "the same content, learned twice" is even a distinguishable event worth
+  a knowledge store recording: `content/LocalContentStore.js#put()` is
+  already idempotent by construction, exactly as `application/
+  PeerContentExchange.js`'s own header already states for the live
+  transport this milestone mirrors offline.
+- **Cross-checking `pkg.contentHash` against a locally known
+  publication's own `contentReference.hash`, or rejecting a transfer
+  package whose `publicationId` names a publication this replica has
+  never heard of.** `publicationKnown` in this milestone's own return
+  shape is READ-ONLY, informational, and never a gate — see this
+  milestone's own principle. A snapshot's bytes are authenticated
+  entirely by their own hash; nothing about a publication envelope's
+  presence, absence, or own claimed hash is ever consulted to decide
+  whether to store them.
+- **A "Local Content Availability" view** ("is this replica currently
+  holding bytes matching a publication's content hash?"), and any UX
+  surfacing an "Import Snapshot" action. Both are natural next steps once
+  content transfer itself exists, and both are deliberately left for a
+  later milestone — this one only builds the transfer mechanism, exactly
+  as `application/PublicationReplicaPackage.js` (0.8.29) built the claim
+  transfer mechanism one milestone before its own knowledge views
+  (0.8.28, in that case, chronologically first — but the same discipline:
+  transfer and inspection stay separate milestones).
+- **External verification or placement resolution triggered by
+  possessing content.** Importing a snapshot transfer package proves
+  nothing about any anchor and resolves no placement — see this
+  milestone's own principle, and `application/
+  ImportPublicationSnapshotTransferPackageUseCase.js`'s own header.
+
+What's left, and deliberately unbuilt: a Local Content Availability view
+(a pure read of whether this replica's own `ContentStore` currently holds
+bytes for a publication's content hash, with no network call), and the
+selective-claim-exchange work 0.8.30/0.8.31 already deferred twice. Both
+remain open; this milestone's own review chose content transfer first
+because it closes a gap no amount of more-efficient claim exchange would
+ever have closed on its own.
