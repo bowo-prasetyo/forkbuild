@@ -57,6 +57,8 @@ import { describeSnapshotPeerPossessionComparison, describeSnapshotPeerPossessio
 import { describeSnapshotPeerPossessionObservationDetails } from '../../application/SnapshotPeerPossessionObservationDetailView.js';
 import { createSnapshotMaterializationSourceSelection } from '../../application/SnapshotMaterializationSourceSelection.js';
 import { SnapshotMaterializationSourceKind } from '../../application/SnapshotMaterializationSourceKind.js';
+import { describeSnapshotStateInspection } from '../../application/SnapshotStateInspectionView.js';
+import { SnapshotPlacementRelationship } from '../../application/SnapshotPlacementRelationship.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1230,6 +1232,41 @@ export default {
             const state = snapshotAcquisitionView(entry).possession.state;
             return state === LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE
                 || state === LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH;
+        }
+
+        // 0.8.46 — Unified Snapshot State Inspection. Composes FOUR facts
+        // this page already computes for its own independent disclosures —
+        // `currentPossessionView(entry)` (0.8.39), `snapshotAcquisitionView(entry)`
+        // (0.8.43), THIS entry's own `entry.placementConvergenceView`
+        // (0.8.23, null until "Show Placements" has ever loaded placements),
+        // and `peerPossessionComparisonView(entry)` (0.8.41) — into
+        // application/SnapshotStateInspectionView.js's own small, composed
+        // `{ possession, acquisition, placements, peerObservations }` shape.
+        // Never a fifth check, never a new store: pure, synchronous
+        // re-reading of state this page already holds, exactly mirroring
+        // `snapshotAcquisitionView(entry)`'s own restraint one layer up. See
+        // application/SnapshotStateInspectionView.js's own header and
+        // docs/Principles.md, "A Snapshot's Independently Observed Facts Are
+        // Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)."
+        function snapshotStateInspectionView(entry) {
+            return describeSnapshotStateInspection({
+                publicationId: entry.publication.id,
+                contentHash: entry.publication.contentReference.hash,
+                possessionView: currentPossessionView(entry),
+                acquisitionView: snapshotAcquisitionView(entry),
+                placementConvergenceView: entry.placementConvergenceView,
+                peerPossessionComparisonView: peerPossessionComparisonView(entry)
+            });
+        }
+
+        // A plain word for `snapshotStateInspectionView(entry).placements
+        // .relationship` — mirrors the inline string comparison "Snapshot
+        // Placements" already uses further down this same file
+        // (`entry.placementConvergenceView.relationship === 'conflict'`),
+        // just named once here rather than repeated a second time.
+        function snapshotStatePlacementRelationshipLabel(view) {
+            if (!view || !view.placements) return null;
+            return view.placements.relationship === SnapshotPlacementRelationship.CONFLICT ? 'Conflict' : 'Agreement';
         }
 
         // 0.8.34 — Explicit Snapshot Materialization UX. `event.target.
@@ -2431,6 +2468,7 @@ export default {
             localSnapshotAvailabilityBadgeClass, localSnapshotAvailabilityButtonLabel,
             currentPossessionView, replicaContentKnowledgeView,
             snapshotAcquisitionView, snapshotAcquisitionOutcomeCountsSentence, snapshotAcquisitionNeedsSourceHint,
+            snapshotStateInspectionView, snapshotStatePlacementRelationshipLabel,
             localSnapshotMaterializationSourceView,
             snapshotContentMaterializationCoordinator, onMaterializationFileChosen, importSnapshotContent,
             materializationView, materializationBadgeClass, materializationButtonLabel,
@@ -2955,6 +2993,78 @@ export default {
                                     </ul>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 0.8.46 — Unified Snapshot State Inspection. A pure MAP over
+                         four facts this page already computes for their own
+                         independent disclosures — "Current possession" (0.8.39),
+                         "Snapshot Acquisition" (0.8.43/0.8.44, immediately above),
+                         "Snapshot Placements" (0.8.20/0.8.23, further below), and
+                         "Peer Snapshot Possession Comparison" (0.8.41, immediately
+                         above) — composed side by side by application/
+                         SnapshotStateInspectionView.js#describeSnapshotStateInspection(),
+                         never replacing any one of them and never resolving their
+                         combination into a single verdict. It is entirely ordinary
+                         for this card to show local possession AVAILABLE, a
+                         placement relationship of Conflict, and a mix of "available"/
+                         "not available" peer reports all at once — none of the four
+                         dimensions is corrected, weighted, or read in light of the
+                         other three. Each sub-section is hidden on its own, exactly
+                         like its own full disclosure elsewhere on this card, until
+                         that dimension has ever actually been observed THIS session
+                         — never shown as a false "0" before that. See application/
+                         SnapshotStateInspectionView.js's own header and
+                         docs/Principles.md, "A Snapshot's Independently Observed
+                         Facts Are Exposed Side By Side, Never Collapsed Into One
+                         Verdict (0.8.46)." -->
+                    <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionOutcomeCountsSentence(entry) || entry.placementConvergenceView || peerPossessionComparisonView(entry).peers.length > 0"
+                         class="decentralization-summary">
+                        <span class="evidence-convergence-title">Snapshot State</span>
+
+                        <div class="evidence-list">
+                            <span class="evidence-convergence-title">Content</span>
+                            <dl class="evidence-fields">
+                                <div class="evidence-field">
+                                    <dt>Publication</dt>
+                                    <dd>{{ entry.publication.id }}</dd>
+                                </div>
+                                <div class="evidence-field">
+                                    <dt>Content hash</dt>
+                                    <dd>{{ entry.publication.contentReference.hash }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="evidence-list">
+                            <span class="evidence-convergence-title">Local possession</span>
+                            <p class="form-hint form-hint--neutral">
+                                {{ localSnapshotAvailabilityView(entry).checked ? localSnapshotAvailabilityView(entry).message : 'Not yet checked.' }}
+                            </p>
+                        </div>
+
+                        <div v-if="snapshotAcquisitionOutcomeCountsSentence(entry)" class="evidence-list">
+                            <span class="evidence-convergence-title">Acquisition</span>
+                            <p class="form-hint form-hint--neutral">{{ snapshotAcquisitionOutcomeCountsSentence(entry) }}</p>
+                        </div>
+
+                        <div v-if="entry.placementConvergenceView" class="evidence-list">
+                            <span class="evidence-convergence-title">Placements</span>
+                            <p class="form-hint form-hint--neutral">
+                                {{ snapshotStatePlacementRelationshipLabel(snapshotStateInspectionView(entry)) }} ·
+                                {{ entry.placementConvergenceView.placementCount }} known placement{{ entry.placementConvergenceView.placementCount === 1 ? '' : 's' }} ·
+                                {{ entry.placementConvergenceView.storageTypeCount }} storage backend{{ entry.placementConvergenceView.storageTypeCount === 1 ? '' : 's' }} ·
+                                {{ entry.placementConvergenceView.locatorCount }} distinct location{{ entry.placementConvergenceView.locatorCount === 1 ? '' : 's' }}
+                            </p>
+                        </div>
+
+                        <div v-if="peerPossessionComparisonView(entry).peers.length > 0" class="evidence-list">
+                            <span class="evidence-convergence-title">Peer observations</span>
+                            <p class="form-hint form-hint--neutral">
+                                {{ peerPossessionComparisonView(entry).availableCount }} available ·
+                                {{ peerPossessionComparisonView(entry).notAvailableCount }} not available ·
+                                {{ peerPossessionComparisonView(entry).unavailableCount }} could not determine
+                            </p>
                         </div>
                     </div>
 

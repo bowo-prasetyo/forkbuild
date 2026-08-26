@@ -13806,3 +13806,83 @@ separately-timed acquisition attempt — inspectable in its own history — but
 an observation is never itself an acquisition attempt, a placement, or an
 automatic trigger for either. See `docs/Roadmap.md`, 0.8.45, for the full
 milestone entry.
+
+## A Snapshot's Independently Observed Facts Are Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)
+
+**`application/SnapshotStateInspectionView.js`'s `describeSnapshotStateInspection()`
+composes FOUR already-independent views — local possession (0.8.39),
+acquisition history (0.8.43), placement convergence (0.8.23), and peer
+possession comparison (0.8.41) — into one small, structured shape, and
+adds no fifth interpretation on top of them.** It is entirely valid,
+ordinary output for this function to report local possession `AVAILABLE`,
+a placement relationship of `CONFLICT`, two peers reporting `AVAILABLE`
+and one reporting `NOT_AVAILABLE`, and an acquisition history of three
+stored attempts, ALL AT ONCE — the function never resolves that
+combination into "healthy," "degraded," "trustworthy," "mostly
+decentralized," or any other state a person did not directly observe on
+one of the four underlying dimensions. There is no `snapshotHealth`,
+`snapshotConfidence`, `snapshotScore`, `recommendedSource`, `bestPeer`,
+`preferredPlacement`, or `availabilityPercentage` anywhere in this file,
+and none should ever be added — the flagship test's own forbidden-
+vocabulary scan checks every one of the composed view's fields directly,
+across four deliberately mismatched scenarios at once, rather than
+trusting this header alone.
+
+**Each of the three optional dimensions carries its own honest `null`,
+distinct from a computed, empty result — the same "not yet observed"
+discipline application/PublicationSnapshotPossessionView.js's own `state:
+null` already established, extended here across three more fields.** A
+caller that has never loaded placements for an entry supplies no
+`placementConvergenceView`, and `placements` reports `null` — never a
+false `placementCount: 0` implying placements were checked and none were
+found. Once placements ARE loaded, even to zero, `placements` reports a
+present object with `placementCount: 0` — a structurally different, and
+equally honest, result. `tests/SnapshotStateInspectionView.test.js`
+(Section C) proves this distinction holds across all three optional
+dimensions at once.
+
+**The function reads each of its four inputs for exactly the one fact it
+was given to carry, and never reaches into one composed view to read or
+correct another.** `acquisitionView` — application/
+PublicationSnapshotAcquisitionView.js's own composed result — happens to
+carry a `possession` field of its own, since it was itself built by
+composing a possession view; this file never reads that field. The
+top-level `possession` reported here comes ONLY from the separately
+supplied `possessionView`, mirroring application/
+PublicationSnapshotAcquisitionView.js's own restraint toward
+`materializationHistory` one layer down: each source stands on its own,
+and no field is ever inferred, corrected, or overridden from a sibling's
+own already-composed shape.
+
+**The FLAGSHIP test (`tests/SnapshotStateInspectionView.test.js`, Section
+D) is deliberately uncomfortable, by design.** Four replicas — Alice,
+Bob, Carol, and Dave — each observe the identical publication, yet carry
+four RADICALLY different combinations across all four dimensions at once:
+Alice possesses valid bytes acquired via one PACKAGE attempt, with her
+own placements in Agreement and two peers reporting AVAILABLE; Bob does
+NOT presently possess valid bytes despite one PLACEMENT attempt, his own
+placements likewise in Agreement, and one peer reporting AVAILABLE;
+Carol possesses valid bytes acquired via one PEER attempt, yet her own
+known placements CONFLICT, and one peer reports NOT_AVAILABLE; Dave's
+local bytes presently read CONTENT_HASH_MISMATCH despite two acquisition
+attempts (one rejected, one recovering), his own placements also
+CONFLICT, and his one peer contact reports UNAVAILABLE ("could not
+determine," never "not available"). The unified view exposes all four
+combinations faithfully and asserts them pairwise DIFFERENT — the
+composed shape never converges four genuinely different snapshots'
+worth of facts into fewer than four distinct results, and never invents a
+fifth, shared descriptor across any pair of them.
+
+**This reinforces, one layer up, every restraint 0.8.23, 0.8.39, 0.8.41,
+and 0.8.43 already established on their own.** Local possession remains a
+present-tense fact about THIS replica's own storage, never evidence
+toward decentralization. Acquisition history remains a record of past
+attempts, never a determinant of present possession. Placement
+convergence remains a structural fact about a claim SET, never an
+adjudication of which claim is correct. Peer possession observations
+remain reports of what peers said at one moment, never a reliability
+metric or a current claim about a peer. This milestone changes none of
+those four standing rules — it only gives a person one place to read all
+four at once, and holds itself to the identical restraint each of them
+already modeled. See `docs/Roadmap.md`, 0.8.46, for the full milestone
+entry.

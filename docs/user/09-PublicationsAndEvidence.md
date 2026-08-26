@@ -359,6 +359,47 @@ also deliberately no percentage, score, or "most reliable peer" summary
 anywhere in this history, however tempting one might look after several
 checks — it's a factual log, never a reliability ranking.
 
+### Snapshot State: everything in one place
+
+Once you've checked local availability, made at least one attempt to
+bring bytes in, loaded this publication's placements, or compared at
+least one peer, a **Snapshot State** section opens beneath everything
+above — one place that shows all four of those facts side by side:
+
+```
+Snapshot State
+
+Content
+  Publication: pub-a1b2c3
+  Content hash: 9f8e...
+
+Local possession
+  Available and matches content hash
+
+Acquisition
+  3 attempts · 2 stored · 1 hash mismatch
+
+Placements
+  Conflict · 2 known placements · 2 storage backends · 2 distinct locations
+
+Peer observations
+  2 available · 1 not available · 1 could not determine
+```
+
+Each of the five parts — Content, Local possession, Acquisition,
+Placements, Peer observations — only appears once you've actually caused
+that particular fact to be observed this session; nothing here is ever
+shown as a false "zero" before that. And nothing here is ever combined
+into a single verdict, either: it's entirely normal to see local
+possession read **Available** while Placements reads **Conflict** and
+Peer observations shows a mix of answers, all on the same card, at the
+same time. This section never decides whether that combination is
+"healthy" or "risky" — it only shows you, plainly, what's known. Each of
+the individual sections above and below — **Snapshot Acquisition**,
+**Peer Snapshot Possession Comparison**, **Snapshot Placements** — still
+has its own full detail; **Snapshot State** is a map of them, never a
+replacement for any one of them.
+
 ## Decentralization: Evidence and Placements at a glance
 
 Every publication card also has a **Decentralization** section, visible as

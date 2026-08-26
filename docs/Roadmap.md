@@ -23027,3 +23027,126 @@ observations.
   separate, un-merged sequences, exactly as 0.8.38/0.8.40/0.8.41 already
   established; this milestone adds an inspection layer to the second one
   without touching the first.
+
+## 0.8.46 — Unified Snapshot State Inspection
+
+0.8.44 made local acquisition history inspectable one attempt at a time.
+0.8.45 did the same for peer possession observation history. Between
+0.8.39, 0.8.23, 0.8.41, and 0.8.43, this replica now accumulates FOUR
+independent facts about one snapshot: whether this replica presently
+possesses valid bytes (0.8.39), how those bytes were explicitly acquired
+(0.8.43), what this replica knows about where the snapshot can be fetched
+and whether those claims agree (0.8.23), and what a chosen set of peers
+most recently reported when asked (0.8.41). Until now, seeing all four at
+once meant reading four separate disclosures on the same "Local Snapshot"
+card. This milestone adds exactly one thing — a single composed MAP over
+all four, and nothing else:
+
+> A snapshot can have many independently observed facts; the unified view
+> exposes them side by side without deciding what they mean together.
+
+```text
+   describePublicationSnapshotPossession()                (0.8.39, UNCHANGED)
+   describePublicationSnapshotAcquisition()                (0.8.43, UNCHANGED)
+   publicationSnapshotPlacementConvergenceView()           (0.8.23, UNCHANGED)
+   describeSnapshotPeerPossessionComparison()              (0.8.41, UNCHANGED)
+              │
+              ▼
+   describeSnapshotStateInspection()                             (new)
+              │
+              ▼
+     { publicationId, contentHash,
+       possession: { state },
+       acquisition: { attemptCount, storedCount, alreadyAvailableCount,
+                       hashMismatchCount, sources } | null,
+       placements: { placementCount, storageTypeCount, locatorCount,
+                      relationship, hasConflict } | null,
+       peerObservations: { peerCount, availableCount, notAvailableCount,
+                            unavailableCount } | null }
+```
+
+One new module, under `application/`:
+
+- `application/SnapshotStateInspectionView.js` (new) —
+  `describeSnapshotStateInspection({ publicationId, contentHash,
+  possessionView, acquisitionView, placementConvergenceView,
+  peerPossessionComparisonView })` takes FOUR already-computed views — the
+  SAME four every existing disclosure on the "Local Snapshot" card already
+  produces — and reshapes them into one small, composed object. Each of
+  the three optional dimensions (`acquisition`, `placements`,
+  `peerObservations`) is reported `null` when its own composing view was
+  never supplied — "this dimension has never been computed THIS session,"
+  never "known to be zero" — structurally distinct from a computed-but-
+  empty dimension, which is reported present with honest all-zero counts.
+  `possession` is always present, mirroring `describePublicationSnapshotPossession()`'s
+  own `state: null` convention for "not yet observed." The function reads
+  `acquisitionView` only for its own `acquisition` counts, never for the
+  `possession` field it also happens to carry — `possessionView`, supplied
+  separately, is the one and only source for the top-level `possession`
+  field, the identical "independent facts, never cross-checked"
+  discipline application/PublicationSnapshotAcquisitionView.js's own
+  header already applies one layer down. Pure, synchronous, and takes no
+  coordinator, catalog, store, or network — it computes nothing a caller
+  could not already compute itself by calling all four composed functions
+  separately and reading their results side by side.
+
+`ui/views/DecentralizedPublicationsView.js`'s "Local Snapshot" card gains
+one new "Snapshot State" disclosure, sitting directly below "Snapshot
+Acquisition" and "Peer Snapshot Possession Comparison" — a MAP over facts
+those existing sections (and "Snapshot Placements," further down the same
+entry) already narrate in full, never a replacement for any of them. Each
+of its five sub-sections — Content, Local possession, Acquisition,
+Placements, Peer observations — is hidden on its own until that dimension
+has actually been observed THIS session, exactly mirroring the "no false
+zero" restraint every one of the sections it composes already holds.
+
+The FLAGSHIP test (`tests/SnapshotStateInspectionView.test.js`, Section D)
+is deliberately uncomfortable: four replicas — Alice, Bob, Carol, and
+Dave — each observe the SAME publication but carry four RADICALLY
+different combinations of possession, acquisition history, placement
+relationship, and peer observations (Alice: AVAILABLE / one PACKAGE
+attempt / Agreement / 2 peers AVAILABLE; Bob: NOT_AVAILABLE / one
+PLACEMENT attempt / Agreement / 1 peer AVAILABLE; Carol: AVAILABLE / one
+PEER attempt / Conflict / 1 peer NOT_AVAILABLE; Dave: CONTENT_HASH_MISMATCH
+/ PACKAGE + PEER attempts / Conflict / 1 peer UNAVAILABLE). The unified
+view exposes all four combinations faithfully — asserted pairwise
+DIFFERENT — and never manufactures a fifth, shared state across them; a
+forbidden-vocabulary scan (extended in this milestone to also catch
+`health`, `degraded`, `healthy`, `trustworthy`, `confident`, and
+`decentralized`) runs over every one of the four composed views.
+
+> **A snapshot can have many independently observed facts; the unified
+> view exposes them side by side without deciding what they mean
+> together.** See `docs/Principles.md`, "A Snapshot's Independently
+> Observed Facts Are Exposed Side By Side, Never Collapsed Into One
+> Verdict (0.8.46)."
+
+### Deliberately excluded
+
+- **`snapshotHealth`, `snapshotConfidence`, `snapshotScore`,
+  `recommendedSource`, `bestPeer`, `preferredPlacement`, or
+  `availabilityPercentage`.** No field anywhere in the composed shape
+  resolves the four dimensions into a single judgment — the flagship
+  test's own extended forbidden-vocabulary scan checks for this directly,
+  over every one of four genuinely different scenarios at once.
+- **Automatic refresh, automatic materialization, automatic placement
+  creation, or automatic peer selection.** This milestone adds a read-only
+  MAP over facts a person already caused to be computed by clicking
+  something else on this same card; it introduces no new trigger of any
+  kind.
+- **Persistence of peer observations, persistence of current possession,
+  or cross-replica observation merging.** Every one of the four composed
+  dimensions is read fresh from ephemeral, per-session state this page
+  already held before this milestone — `entry.materializationHistory`
+  (0.8.38), `entry.placementConvergenceView` (0.8.23),
+  `entry.peerPossessionObservationHistory` (0.8.41) — and this milestone
+  adds no store, no write, and no synchronization of any of them.
+- **A new content check, placement resolution, or peer contact.** Composing
+  four already-computed views is reading four records of what already
+  happened; it is never itself a way to acquire bytes, discover a
+  placement, or contact a peer.
+- **Collapsing "not yet computed" into "computed and found nothing."**
+  `acquisition`, `placements`, and `peerObservations` are each reported
+  `null` until their own composing view has ever actually been supplied —
+  never a false `0` before that — proven directly in the flagship test's
+  own Section C.
