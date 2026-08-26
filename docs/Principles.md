@@ -14122,3 +14122,57 @@ codebase supplies a fake wallet, exactly as every anchoring/ test before
 it supplies a fake broadcaster — a real wallet integration is its own,
 separately sized, future concern. See `docs/Roadmap.md`, 0.8.50, for the
 full milestone entry.
+
+## Signing Material Is Not Yet A Signature Until It Verifies (0.8.51)
+
+**`anchoring/BitcoinAnchorSignedPsbtFinalizer.js#finalize()` never calls a
+signed PSBT "finalized" merely because it carries the right SHAPE of
+signing material.** 0.8.50's own boundary was deliberately shallow — it is
+right there in its own name: `BitcoinAnchorSignedPsbtInspector` proves a
+wallet attached SOMETHING recognized (`partialSig`, `finalScriptSig`,
+`finalScriptWitness`) to the exact transaction ForkBuild asked to have
+signed, and stops. It never asks whether that something actually
+authorizes spending the coin it claims to. This codebase has now built
+enough of the Bitcoin pipeline that pretending "carries signing material"
+means "is spendable" would be a real, consequential lie — the kind every
+milestone before this one has refused to tell itself.
+
+**Two separate facts, both proven, neither assumed.** For every `p2wpkh`
+input, this class proves (1) the claimed public key's HASH160 actually
+matches the 20-byte hash embedded in the exact `witnessUtxo` scriptPubKey
+the original description named — the key has authority over THIS script,
+not merely A valid-looking key — and only then (2) that the claimed
+signature is a genuine ECDSA signature, by that same key, over this exact
+transaction's own BIP143 sighash, independently re-derived from
+`description.globalUnsignedTx` rather than trusted from the signed PSBT's
+own bytes. Either check failing refuses the whole PSBT. A transaction is
+never "mostly verified" — the same all-or-nothing posture
+`anchoring/BitcoinAnchorSignedPsbtInspector.js` already held toward
+transaction identity.
+
+**Real cryptography, not a plausible-looking placeholder.** This codebase
+has no package manager and no external crypto library anywhere in it.
+Rather than stub out verification behind a comment promising to fill it in
+later, this milestone implements SHA-256, RIPEMD-160, secp256k1 point
+arithmetic, ECDSA verification, and DER signature decoding from first
+principles, in plain JavaScript. `tests/BitcoinAnchorPsbtFinalization.test.js`
+holds itself to the identical bar: every signature its fixtures exercise is
+produced by a SECOND, independent implementation of that same
+cryptography, sharing no code with the class under test — proving the two
+independently-written implementations agree, not merely that one
+implementation is internally consistent with itself.
+
+**Narrowed to what can actually be verified correctly, not guessed at.**
+`anchoring/BitcoinAnchorPsbtBuilder.js` already describes three script
+types — `p2wpkh`, `p2tr`, `p2pkh` — because describing a UTXO and proving a
+signature over it are different amounts of work. This milestone
+cryptographically finalizes `p2wpkh` alone, and refuses `p2tr` (a different
+signature scheme entirely, BIP340 Schnorr) and `p2pkh` (which would require
+parsing an arbitrary previous transaction to recover its scriptPubKey)
+with an explicit, named reason — `{ finalized: false, reason }`, never a
+throw, and never a result that quietly pretends success. Widening this
+vocabulary to cover them is real, separately sized future work, exactly as
+`anchoring/BitcoinAnchorSignedPsbtInspector.js`'s own narrow BIP174 field
+vocabulary named itself as a deliberate, not-yet-taken widening one
+milestone earlier. See `docs/Roadmap.md`, 0.8.51, for the full milestone
+entry.
