@@ -59,6 +59,8 @@ import { PublicationCatalogContentResolver } from '../discovery/PublicationCatal
 import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
 import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
 import { SnapshotContentMaterializationCoordinator } from '../application/SnapshotContentMaterializationCoordinator.js';
+import { MaterializeSnapshotFromPlacementUseCase } from '../application/MaterializeSnapshotFromPlacementUseCase.js';
+import { SnapshotPlacementMaterializationCoordinator } from '../application/SnapshotPlacementMaterializationCoordinator.js';
 
 const identityProvider = new CreateIdentityProviderUseCase().execute();
 const identityUseCase = new IdentityUseCase(identityProvider);
@@ -573,6 +575,23 @@ const localSnapshotContentAvailabilityUseCase = new CheckLocalSnapshotContentAva
 const importPublicationSnapshotTransferPackageUseCase = new ImportPublicationSnapshotTransferPackageUseCase(publicationContentStore, publicationCatalog);
 const snapshotContentMaterializationCoordinator = new SnapshotContentMaterializationCoordinator(importPublicationSnapshotTransferPackageUseCase);
 
+// 0.8.35 — Explicit Placement-Backed Snapshot Materialization. The
+// placement-backed sibling of the wiring immediately above — it reuses
+// the SAME `publicationSnapshotPlacementResolutionCoordinator` (0.8.20)
+// "Resolve Snapshot" already calls, so a placement that resolves for one
+// action resolves identically for the other, and the SAME
+// `publicationContentStore`/`publicationCatalog` every other local
+// read/write in this file already goes through — never a second,
+// disconnected store, catalog, or resolver. application/
+// SnapshotPlacementMaterializationCoordinator.js forwards straight to
+// application/MaterializeSnapshotFromPlacementUseCase.js; see that
+// coordinator's own header on why it adds no placement ranking or
+// automatic fallback.
+const materializeSnapshotFromPlacementUseCase = new MaterializeSnapshotFromPlacementUseCase(
+    publicationSnapshotPlacementResolutionCoordinator, publicationContentStore, publicationCatalog
+);
+const snapshotPlacementMaterializationCoordinator = new SnapshotPlacementMaterializationCoordinator(materializeSnapshotFromPlacementUseCase);
+
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
 // The thin, application-facing layer ABOVE `publicationAnchorDiscoveryCoordinator`
 // this milestone's own design calls for — it wraps the SAME coordinator
@@ -741,5 +760,7 @@ app.provide('snapshotPlacementCreationCoordinator', snapshotPlacementCreationCoo
 // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
 app.provide('localSnapshotContentAvailabilityUseCase', localSnapshotContentAvailabilityUseCase);
 app.provide('snapshotContentMaterializationCoordinator', snapshotContentMaterializationCoordinator);
+// 0.8.35 — Explicit Placement-Backed Snapshot Materialization.
+app.provide('snapshotPlacementMaterializationCoordinator', snapshotPlacementMaterializationCoordinator);
 app.use(router);
 app.mount('#app');

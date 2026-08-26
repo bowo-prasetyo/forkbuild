@@ -21389,3 +21389,184 @@ above), a unified acquisition UI that lets a person compare every source
 for a publication's bytes side by side (0.8.36), and the
 selective-claim-exchange work 0.8.30/0.8.31/0.8.32 have each deferred in
 turn. All three remain open.
+
+## 0.8.35 — Explicit Placement-Backed Snapshot Materialization
+
+0.8.34's own "Deliberately excluded" list named this milestone directly:
+"An explicit 'Store Snapshot Locally' action after a successful placement
+resolution remains a distinct, future milestone (0.8.35)." 0.8.20 built
+"Resolve Snapshot" — retrieve a placement's claimed bytes into memory,
+verify them, and report the outcome; keep nothing. 0.8.34 built "Import
+Snapshot" — turn an explicitly SUPPLIED offline package into local
+possession. Neither one ever wrote a placement's own retrieved bytes into
+this replica's own `content/ContentStore.js`. This milestone is the
+missing bridge between the two remaining independent paths to the same
+question — "can this locator produce bytes?" and "does this replica now
+possess them?":
+
+```text
+KNOWLEDGE
+   │
+   ├── publication known
+   ├── placement known
+   └── content hash known
+          │
+          ▼
+      RESOLUTION            "Can I retrieve the bytes now?"     (0.8.20, unchanged)
+          │
+          ▼
+      MATERIALIZATION       "Store those bytes locally."        THIS MILESTONE
+          │
+          ▼
+      POSSESSION            checked by 0.8.33's own
+                             "Check Local Snapshot" — unchanged
+```
+
+Five new files, all under `application/`:
+
+- `application/SnapshotPlacementMaterializationOutcome.js` (new) — the
+  same "one enum, one file" shape `application/
+  SnapshotContentTransferOutcome.js` (0.8.32) already established for the
+  offline-package path, one axis over: `STORED`, `ALREADY_AVAILABLE`, and
+  three failure values that are each a direct, lossless MAPPING of one or
+  more `application/SnapshotPlacementResolutionOutcome.js` values, never a
+  second competing resolution vocabulary — `UNAVAILABLE` (from
+  `.STORE_UNAVAILABLE`/`.CONTENT_UNAVAILABLE`, deliberately not
+  distinguished, the identical coarsening `application/
+  SnapshotPlacementLifecycleView.js` (0.8.26) already applies one layer
+  under), `HASH_MISMATCH` (from `.CONTENT_HASH_MISMATCH`), and
+  `INVALID_PLACEMENT` (from `.INVALID_ENVELOPE`/`.INVALID_SIGNATURE`).
+- `application/MaterializeSnapshotFromPlacementUseCase.js` (new) — accepts
+  an already-discovered `PublicationSnapshotPlacement` INSTANCE, never a
+  bare placementId this class would have to look up itself (mirroring
+  `application/SnapshotPlacementResolutionCoordinator.js#resolve(placement)`
+  exactly, so no `PLACEMENT_NOT_FOUND` outcome is ever needed). Runs it
+  through the SAME `application/SnapshotPlacementResolutionCoordinator.js`
+  "Resolve Snapshot" already uses — never a second, independently
+  configured resolver — and, only on `RESOLVED`, writes the retrieved
+  bytes into a caller-supplied LOCAL `content/ContentStore.js` via the
+  identical `has()`-then-`put()` shape `application/
+  ImportPublicationSnapshotTransferPackageUseCase.js` (0.8.32) already
+  uses one layer under. `publicationKnown` is reported as a plain,
+  independent observation — never a gate on storing the bytes — the exact
+  invariant that class's own header establishes, carried over unchanged.
+  Never modifies the placement, its provenance (`application/
+  LocalPlacementKnowledgeStore.js`), or its resolution history
+  (`application/SnapshotPlacementResolutionObservation.js`).
+- `application/SnapshotPlacementMaterializationCoordinator.js` (new) — a
+  deliberately thin pass-through, the identical restraint `application/
+  SnapshotContentMaterializationCoordinator.js` (0.8.34) already holds one
+  axis over. Its one method, `materialize(placement)`, forwards straight
+  to the use case's own `execute()`, unchanged. Deliberately
+  single-placement, with no ranking: never discovers a placement, never
+  selects a "best" or "preferred" one among several a publication might
+  have, and never tries a second placement after the first fails. The
+  choice of WHICH placement to materialize from is always the person's own
+  explicit click on ONE specific placement card.
+- `application/SnapshotPlacementMaterializationUiState.js` (new) — the
+  same "name the difference structurally, not by convention" shape
+  `application/SnapshotContentMaterializationUiState.js` (0.8.34) already
+  established, one axis over: `IDLE`, `MATERIALIZING`, `STORED`,
+  `ALREADY_AVAILABLE`, `UNAVAILABLE`, `HASH_MISMATCH`, `INVALID_PLACEMENT`.
+- `application/SnapshotPlacementMaterializationView.js` (new) — pure,
+  synchronous reshaping of an already-computed attempt into a label, a
+  message, and a button label, mirroring `application/
+  SnapshotContentMaterializationView.js` (0.8.34) one axis over. The
+  `STORED` message is deliberately exact: "Snapshot was materialized from
+  this placement and matches its own claimed content hash." — never
+  "verified," "trusted," "authentic," "permanent," or "canonical."
+  `publicationKnown` decides which of two equally true sentences is shown,
+  never whether the materialization itself succeeds. Unlike `application/
+  SnapshotContentMaterializationView.js#describeMaterializationButtonLabel()`
+  (always "Import Snapshot" again), the button label mirrors `application/
+  SnapshotPlacementView.js`'s own "Resolve Snapshot"/"Resolve Again" shape:
+  "Materialize Snapshot" the first time, "Materialize Again" after any
+  completed attempt — a placement's own present availability can change
+  between attempts (0.8.20/0.8.26), so a second click meaningfully means
+  "check again, and keep the bytes this time if it works."
+
+> **Placement resolution observes present availability; materialization
+> turns it into possession.** See `docs/Principles.md`, "Placement
+> Resolution Observes Present Availability; Materialization Turns It Into
+> Possession (0.8.35)."
+
+- `tests/SnapshotPlacementMaterialization.test.js` (new) — Section A:
+  constructor/argument validation for both new classes, uncaught
+  contract-violation errors for a non-placement argument, and
+  `materialize()`'s unchanged pass-through behavior. Section B: the pure
+  view functions over every outcome plus idle/materializing, the exact
+  permitted sentences, and a forbidden-words check. Section C — FLAGSHIP:
+  Alice's real Publication Center (the SAME `application/
+  LocalPublicationCatalog.js`/`core/DecentralizedPublication.js` model
+  `ui/views/DecentralizedPublicationsView.js` actually renders) creates an
+  IPFS placement for a real publication. Bob already knows both the
+  publication and the placement but does not possess the bytes; he clicks
+  "Materialize Snapshot" and obtains them (`STORED`, `publicationKnown`),
+  and a completely separate, unmodified "Check Local Snapshot" now reports
+  `AVAILABLE` — the exact bridge this milestone exists to build.
+  Materializing again reports `ALREADY_AVAILABLE`, bytes unchanged; the
+  placement's own JSON is byte-identical before and after both attempts.
+  Section D: an IPFS outage (`CONTENT_UNAVAILABLE`) and no registered
+  store (`STORE_UNAVAILABLE`) both map onto the identical `UNAVAILABLE`;
+  a store answering with the wrong bytes maps `CONTENT_HASH_MISMATCH` onto
+  `HASH_MISMATCH`; a tampered placement maps `INVALID_SIGNATURE` onto
+  `INVALID_PLACEMENT`. Nothing is ever stored on any of the four.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — each placement
+  card in "Snapshot Placements" now also offers "Materialize
+  Snapshot"/"Materialize Again," a THIRD action alongside the existing
+  "Inspect Placement"/"Resolve Snapshot" (0.8.20), never triggered by
+  either of them or by opening this page/expanding "Show Placements."
+  `entry.materializations`, keyed by placementId, is ephemeral session
+  state exactly like `entry.resolutions` — never persisted. Hidden
+  entirely with no `snapshotPlacementMaterializationCoordinator` provided.
+- `ui/main.js` (modified) — constructs one
+  `MaterializeSnapshotFromPlacementUseCase` over the SAME
+  `publicationSnapshotPlacementResolutionCoordinator` (0.8.20) "Resolve
+  Snapshot" already uses and the SAME `publicationContentStore`/
+  `publicationCatalog` every other local read/write in this file already
+  goes through — never a second, disconnected resolver, store, or
+  catalog. Wraps it in one `SnapshotPlacementMaterializationCoordinator`
+  and provides it under `snapshotPlacementMaterializationCoordinator`.
+
+### Deliberately excluded
+
+- **Ranking placements, or trying a second placement after the first
+  fails.** See `application/SnapshotPlacementMaterializationCoordinator.js`'s
+  own header. A publication with placements on both IPFS and another
+  backend never gets a "best source" or "recommended source" — the
+  person clicks "Materialize from IPFS" or "Materialize from <other>,"
+  never a button this page assembled or ranked on their behalf. The
+  identical restraint 0.8.20/0.8.23 already hold for "Resolve Snapshot"
+  and placement convergence.
+- **A second, competing resolution vocabulary.** `application/
+  SnapshotPlacementMaterializationOutcome.js` has exactly five values,
+  three of them direct mappings of existing `application/
+  SnapshotPlacementResolutionOutcome.js` values — never a parallel set of
+  reasons resolution itself already names. See that file's own header.
+- **Automatically materializing a placement the moment it resolves, or
+  the moment it is discovered.** "Resolve Snapshot" (0.8.20) still only
+  ever observes; "Materialize Snapshot" (this milestone) is always its
+  own separate, explicit click. Wiring one to automatically trigger the
+  other would collapse discovery, resolution, and materialization into
+  one, exactly the collapse `docs/Principles.md`'s own "Knowledge Of
+  Content Is Not Possession Of Content (0.8.32)" already warns against.
+- **A persistent materialization history, or any lifecycle record for a
+  materialization attempt.** `entry.materializations[placementId]` is
+  ephemeral, session-lifetime UI state, exactly like `entry.
+  materializationAttempt` (0.8.34) and `entry.resolutions` (0.8.20)
+  before it.
+- **Modifying the placement, its provenance, or its resolution history as
+  a side effect of a successful materialization.** `application/
+  MaterializeSnapshotFromPlacementUseCase.js` touches exactly two things:
+  `application/SnapshotPlacementResolutionCoordinator.js#resolve()`
+  (read-only) and this replica's own local `content/ContentStore.js`
+  (write). See that class's own header.
+- **A unified acquisition UI comparing every source for a publication's
+  bytes side by side.** Still 0.8.36, named directly in 0.8.34's own
+  entry above — this milestone adds a SECOND explicit path to local
+  possession (a resolved placement), alongside the offline package
+  (0.8.34); it does not merge the two into one combined picker.
+
+What's left, and deliberately unbuilt: the unified acquisition UI named
+directly above (0.8.36), and the selective-claim-exchange work
+0.8.30/0.8.31/0.8.32 have each deferred in turn. Both remain open.
