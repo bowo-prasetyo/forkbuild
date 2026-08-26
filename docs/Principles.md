@@ -14057,3 +14057,68 @@ never need to understand wire-format concerns to get it, and whatever this
 class needs from upstream, it should never need to understand ForkBuild's
 own anchor bookkeeping to produce. See `docs/Roadmap.md`, 0.8.49, for the
 full milestone entry.
+
+## A Wallet's Claim Is Not The Signature (0.8.50)
+
+**`anchoring/BitcoinAnchorWalletSigner.js#requestSignature()` asks an
+injected `wallet` to sign a real unsigned PSBT, and never calls the result
+"signed" on the wallet's own say-so.** A wallet reporting `{ signed: true
+}` is exactly as trustworthy as `anchoring/BitcoinAnchorPublisher.js`'s own
+`broadcaster` reporting `{ broadcast: true }` was in 0.8.9 — an external
+claim about the world this codebase does not control, never inherited as
+fact. `anchoring/BitcoinAnchorSignedPsbtInspector.js` exists for exactly
+this reason: it independently re-derives, from the claimed signed PSBT's
+own bytes, the one invariant that actually matters, and refuses outright
+the instant it does not hold.
+
+**The invariant is structural, not a trust score.** This codebase has
+consistently separated observation from adjudication — a peer's claim, a
+broadcast's acceptance, a snapshot's possession are all reported as what
+was OBSERVED, never smoothed into a confidence number. A signed PSBT does
+not need a trust score; it needs one precise check: does the decoded
+`PSBT_GLOBAL_UNSIGNED_TX` section — which, in Bitcoin's own transaction
+format, already carries every output's real value and script and every
+input's real `(txid, vout, sequence)`, regardless of signing state — still
+name the EXACT same transaction the original description named, field by
+field, in order? A wallet that signs a substituted output, a changed
+value, or a reordered input fails this check, and
+`BitcoinAnchorWalletSigner` reports `{ signed: false, reason }` — never
+`{ signed: true }` — no matter what the wallet itself claimed.
+
+**"Signed" means "carries recognized signing material," never "valid."**
+`BitcoinAnchorSignedPsbtInspector` checks that each input now carries at
+least one of `partialSig`, `finalScriptSig`, or `finalScriptWitness` that
+was not present before — proving the wallet actually DID something, not
+that what it did will satisfy the script it claims to satisfy. Verifying a
+signature cryptographically, and determining whether a PSBT is complete
+enough to broadcast, are both explicitly a future finalizer's job (see
+`docs/Roadmap.md`, "0.8.51 — Bitcoin Signed PSBT Finalization"). Confusing
+"carries signing material" with "is a valid, broadcastable transaction"
+would be exactly the kind of manufactured confidence this codebase has
+never allowed itself elsewhere.
+
+**A narrow, explicit signing vocabulary, refused rather than silently
+widened.** The inspector recognizes exactly six BIP174 input field types —
+the two previous-output fields every unsigned PSBT already carries, plus
+`partialSig`, `sighashType`, `finalScriptSig`, and `finalScriptWitness`,
+the four a signing wallet could add. A BIP32 derivation path, a
+redeem/witness script, an `xpub`, any proprietary field — the kind of
+extra bookkeeping a real-world wallet might well attach — is refused, not
+silently tolerated. A real wallet integration may need that vocabulary
+widened deliberately, later; guessing at it now, in order to seem more
+compatible, is exactly the silent-tolerance failure mode
+`anchoring/BitcoinAnchorPsbtSerializer.js`'s own `parse()` already refused
+for the identical reason one milestone earlier.
+
+**ForkBuild never receives a private key, never generates one, never
+derives a seed, never stores a wallet secret — in this class or anywhere
+else in this codebase.** `BitcoinAnchorWalletSigner` only ever hands bytes
+to an injected `wallet` capability and inspects what comes back; whether
+the user approves the transaction, and how the key that signs it is held,
+is entirely that wallet's own concern, the identical restraint
+`anchoring/BitcoinAnchorPublisher.js` already held toward its own injected
+`broadcaster` for "construct, sign, broadcast." Every test in this
+codebase supplies a fake wallet, exactly as every anchoring/ test before
+it supplies a fake broadcaster — a real wallet integration is its own,
+separately sized, future concern. See `docs/Roadmap.md`, 0.8.50, for the
+full milestone entry.

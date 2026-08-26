@@ -23634,3 +23634,197 @@ real UTXO discovery, real address validation, and any UI surface for
 triggering serialization — each its own, separately sized milestone,
 exactly like every "Deliberately excluded" list in this document before
 it.
+
+## 0.8.50 — Explicit Bitcoin Wallet Signing
+
+0.8.49's own "Deliberately excluded" list named exactly what came next:
+"an explicit wallet-signing/handoff boundary that hands this serialized
+PSBT to a real external wallet and gets a signed one back." 0.8.50 builds
+that boundary, held to one governing principle:
+
+> ForkBuild requests authorization; the wallet controls the keys and
+> performs the signing.
+
+```text
+{ globalUnsignedTx, inputs, ... }        a PSBT-SHAPED
+                                          DESCRIPTION (0.8.48)
+        │
+        ▼
+BitcoinAnchorPsbtSerializer.serialize()          (0.8.49)
+        │
+        ▼
+an unsigned BIP174 PSBT
+        │
+        ▼
+┌─────────────────────┐
+│ an injected `wallet`  │   user reviews, user approves, wallet signs —
+│  (never this class)   │   entirely outside ForkBuild's own walls
+└──────────┬────────────┘
+           ▼
+a claimed SIGNED PSBT
+           │
+           ▼
+BitcoinAnchorSignedPsbtInspector.inspect()      (new)
+           │
+           ▼
+{ signed: true, psbt, signedInputs }
+| { signed: false, reason }
+| { signed: false, unavailable: true, reason }
+```
+
+**FORKBUILD NEVER RECEIVES A PRIVATE KEY, NEVER GENERATES ONE, NEVER
+DERIVES A SEED, NEVER STORES A WALLET SECRET.** `BitcoinAnchorWalletSigner`
+does not generate keys, does not decide whether a user approves a
+transaction, and does not broadcast. It asks an injected `wallet` — a real
+one, or, in every test in this codebase, a fake one — to sign a real
+unsigned PSBT, and reports back either a signature or a reason it could
+not get one. Custody, approval, and the private key itself stay entirely
+the wallet's own concern, exactly as `broadcaster` already stayed entirely
+`BitcoinAnchorPublisher`'s own caller's concern.
+
+- `anchoring/BitcoinAnchorSignedPsbtInspector.js` — the inspection
+  boundary this milestone's own "don't merely trust that the wallet
+  returns a signed PSBT" principle demanded. `inspect({ description,
+  signedPsbt })` independently decodes a claimed signed PSBT — recognizing
+  exactly six BIP174 input field types (`non_witness_utxo`,
+  `witness_utxo`, `partial_sig`, `sighash_type`, `final_scriptsig`,
+  `final_scriptwitness`) and nothing else — and checks:
+  - **Transaction identity.** The decoded `PSBT_GLOBAL_UNSIGNED_TX`
+    section — which, in Bitcoin's own transaction format, already names
+    every output's real value and script, and every input's real `(txid,
+    vout, sequence)`, regardless of signing state — must match the
+    original description's own `globalUnsignedTx`, field by field, in
+    order. A substituted output, a changed value, or a reordered input is
+    refused here, before this codebase ever calls the result "signed."
+  - **Unchanged prevouts.** Each input's `witnessUtxo`/`nonWitnessUtxo`
+    must still name exactly what the original description named.
+  - **Actual signing material.** Each input must now carry at least one
+    of `partialSig`, `finalScriptSig`, or `finalScriptWitness` — a claimed
+    "signed" PSBT that is still just the unsigned PSBT again is refused.
+  - Resolves to `{ intact: true, signedInputs }` or `{ intact: false,
+    reason }` — never throws for a malformed or substituted `signedPsbt`,
+    the identical untrusted-external-input posture
+    `BitcoinAnchorPublisher` already holds toward its own `broadcaster`.
+    It throws only for a malformed `description` — this codebase's own
+    already-known-good internal artifact, independently re-validated via
+    `BitcoinAnchorPsbtSerializer#serialize()`.
+  - Never verifies a signature cryptographically, and never determines
+    broadcast-readiness — see "Deliberately excluded," below.
+
+- `anchoring/BitcoinAnchorWalletSigner.js` — the orchestration this
+  milestone is named for. `requestSignature({ description })` serializes
+  the description into a real unsigned PSBT (0.8.49), hands it to the
+  constructor-injected `wallet` via `wallet.signPsbt(unsignedPsbt)`,
+  and — only if the wallet claims success — runs the result through
+  `BitcoinAnchorSignedPsbtInspector` before ever reporting `signed: true`.
+  A wallet's own claim is never enough on its own. Mirrors
+  `BitcoinAnchorPublisher`'s tri-state broadcaster contract exactly:
+  `{ signed: true, psbt }` / `{ signed: false, reason }` (a definite
+  decline) / `{ signed: false, unavailable: true, reason }` (cannot
+  presently tell — a locked or unreachable wallet). A throwing wallet is
+  caught and reported as `unavailable`, never as a decline. Still never
+  broadcasts — no import of `anchoring/BitcoinAnchorPublisher.js` appears
+  anywhere in this milestone.
+
+- `application/CreateBitcoinAnchorSignedPsbtInspectorUseCase.js` and
+  `application/CreateBitcoinAnchorWalletSignerUseCase.js` — the identical
+  composition-root shapes `CreateBitcoinAnchorPsbtSerializerUseCase.js`
+  and `CreateBitcoinAnchorPublisherUseCase.js` already established. The
+  inspector takes no arguments (a pure, stateless check); the signer's use
+  case takes the caller-supplied `wallet`, wiring the signer without ever
+  choosing the wallet capability behind it.
+
+> **A wallet's claim is not the signature.** A wallet reporting
+> `{ signed: true }` is exactly as trustworthy as a broadcaster reporting
+> `{ broadcast: true }` was in 0.8.9 — an external claim, never inherited
+> as fact. `BitcoinAnchorSignedPsbtInspector` re-derives the one invariant
+> that actually matters — did signing preserve the exact transaction
+> ForkBuild asked to have signed — independently, every time, and refuses
+> outright the moment it does not hold. See `docs/Principles.md`, "A
+> Wallet's Claim Is Not The Signature (0.8.50)."
+
+- `tests/BitcoinAnchorWalletSigning.test.js` (new) — entirely synchronous
+  and network-free except for the injected fake wallets' own (also fake,
+  immediate) async resolution. Section A: flagship — the inspector
+  recognizes a correctly-signed segwit PSBT as intact; Section B:
+  flagship, end to end — the signer drives a real plan through a real
+  description to a signed result via an injected wallet that signs
+  correctly; Section C: a legacy `finalScriptSig` is recognized the same
+  way; Section D: a not-yet-finalized `partialSig` alone counts as signed;
+  Section E: THE CORE INVARIANT — a wallet-claimed signature over a
+  substituted transaction (a changed output value) is refused, by the
+  inspector directly and by the signer's own wallet-response boundary
+  alike; Section F: a changed claimed prevout is refused; Section G: a
+  "signed" PSBT carrying no signing material at all is refused; Section H:
+  an unrecognized input field is refused, not silently ignored; Section I:
+  multi-input descriptions are checked input by input, so one tampered or
+  still-unsigned input among several signed ones is still caught, and
+  named by index; Section J: a definite decline, an unavailable wallet
+  (a throw), and a wallet-contract violation (`signed: true` with no
+  `psbt`) stay distinguishable; Section K: a missing/incapable wallet and
+  a malformed description are refused before the wallet is ever consulted;
+  Section L: the inspector accepts a signed PSBT as raw bytes, hex, or
+  base64 alike.
+
+```text
+0.8.49  Real BIP-174 PSBT Serialization                                ✓
+             │
+             ▼
+0.8.50  Explicit Bitcoin Wallet Signing                               ✓
+             ├── anchoring/BitcoinAnchorSignedPsbtInspector.js — new;
+             │   independently checks a claimed signed PSBT's
+             │   transaction identity, prevouts, and signing material
+             │   against the original description
+             ├── anchoring/BitcoinAnchorWalletSigner.js — new;
+             │   serializes, hands off to an injected `wallet`, and
+             │   never trusts its claim without inspection
+             ├── application/CreateBitcoinAnchorSignedPsbtInspectorUseCase.js
+             │   and CreateBitcoinAnchorWalletSignerUseCase.js — new
+             │   composition-root seams
+             ├── no private key, no key generation, no seed, no wallet
+             │   secret ever held by this codebase
+             └── still no broadcast — a signed PSBT, never a raw
+                 transaction, never a txid
+```
+
+### Deliberately excluded
+
+- **Real signing.** No private keys, no signature generation exists
+  anywhere in this codebase. `BitcoinAnchorWalletSigner` only ever hands
+  bytes to an injected `wallet` and inspects what comes back — the
+  identical restraint `BitcoinAnchorPublisher` already holds toward its
+  own injected `broadcaster`.
+- **A real, non-fake wallet integration.** Every test in this codebase
+  supplies a fake `wallet` object, exactly as every anchoring/ test before
+  it supplies a fake `broadcaster`. Connecting to a real browser extension,
+  hardware wallet, or wallet app is real UI/integration work this
+  milestone does not take on.
+- **Cryptographic signature verification.** `BitcoinAnchorSignedPsbtInspector`
+  checks that signing material is PRESENT and that the transaction it
+  covers is UNCHANGED — it never verifies a `partialSig` or
+  `finalScriptWitness` actually satisfies the claimed script. That is a
+  real signer's own responsibility, and a future finalizer's concern (see
+  "0.8.51 — Bitcoin Signed PSBT Finalization," below).
+- **Finalization.** Turning a sufficiently-signed PSBT into a
+  broadcastable raw transaction — validating completeness, deriving a
+  final `scriptSig`/witness — is explicitly left to 0.8.51.
+- **Broadcasting.** Nothing in this milestone calls a network, a
+  broadcaster, or `anchoring/BitcoinAnchorPublisher.js`.
+- **A general-purpose PSBT reader.** The inspector recognizes exactly six
+  BIP174 input field types and refuses anything else — a BIP32 derivation
+  path, a redeem/witness script, an `xpub`, any proprietary field — rather
+  than silently tolerating a real-world wallet's extra bookkeeping. A
+  future milestone may widen this vocabulary deliberately; this one does
+  not.
+- **Any UI surface.** No "Review & Sign" screen, no wallet-connection
+  button, and no change to `ui/DecentralizedPublicationsView.js` exists
+  anywhere in this codebase yet — exactly as 0.8.47/0.8.48/0.8.49 each
+  stayed backend-only before it.
+
+What's left, and deliberately unbuilt: a PSBT finalizer that turns a
+sufficiently-signed PSBT into a broadcastable raw transaction, a real
+(non-fake) broadcaster wired to a signed and finalized output, real UTXO
+discovery, real address validation, a real wallet integration, and any UI
+surface for triggering or reviewing a signing request — each its own,
+separately sized milestone, exactly like every "Deliberately excluded"
+list in this document before it.
