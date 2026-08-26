@@ -35,6 +35,7 @@ import { LocalSnapshotContentAvailabilityOutcome } from '../../application/Local
 import { describeLocalSnapshotContentAvailability, describeAvailabilityCheckButtonLabel } from '../../application/LocalSnapshotContentAvailabilityView.js';
 import { describePublicationSnapshotPossession } from '../../application/PublicationSnapshotPossessionView.js';
 import { describePublicationReplicaContentKnowledge } from '../../application/PublicationReplicaContentKnowledgeView.js';
+import { describePublicationSnapshotAcquisition } from '../../application/PublicationSnapshotAcquisitionView.js';
 import { SnapshotContentMaterializationUiState } from '../../application/SnapshotContentMaterializationUiState.js';
 import { describeMaterializationAttempt, describeMaterializationButtonLabel } from '../../application/SnapshotContentMaterializationView.js';
 import { SnapshotPlacementMaterializationUiState } from '../../application/SnapshotPlacementMaterializationUiState.js';
@@ -376,6 +377,29 @@ import { SnapshotMaterializationSourceKind } from '../../application/SnapshotMat
 // See application/SnapshotPlacementMaterializationCoordinator.js's own
 // header and docs/Principles.md, "Placement Resolution Observes Present
 // Availability; Materialization Turns It Into Possession (0.8.35)."
+//
+// 0.8.43 — Unified Snapshot Acquisition Outcome & Possession UX. "Local
+// Snapshot" now opens with a "Snapshot Acquisition" summary, sitting ABOVE
+// every specialized disclosure it already offers (the current-possession
+// check, "Materialization History," "Peer Snapshot Possession Comparison")
+// — a composed view, never a replacement for any of them. `snapshotAcquisitionView(entry)`
+// is a pure reshaping of two facts this page already computes independently
+// — `currentPossessionView(entry)` (0.8.39) and `entry.materializationHistory`
+// (0.8.38) — through application/PublicationSnapshotAcquisitionView.js; it
+// touches no store, no coordinator, and no use case of its own, and never
+// triggers a check or a materialization attempt merely by being read.
+// Visible only once at least one of those two facts has ever been
+// observed THIS session, mirroring the existing "Publication: known/not
+// known locally" line's own `.checked` gate one level up. When current
+// possession is NOT_AVAILABLE or CONTENT_HASH_MISMATCH, the summary adds
+// one short, honest hint pointing at the sources already offered further
+// down this same card ("Import Snapshot," a placement's own "Materialize
+// Snapshot," a peer's own "Get Snapshot from Peer") — never a new,
+// fourth materialization mechanism, and never an automatic retry: see
+// application/PublicationSnapshotAcquisitionView.js's own header and
+// docs/Principles.md, "Current Snapshot Possession Is Independent Of How
+// The Snapshot Was Acquired (0.8.43)" and "Acquisition History Explains
+// Past Attempts; It Does Not Determine Present Possession (0.8.43)."
 const LOCAL_SNAPSHOT_AVAILABILITY_BADGE_CLASSES = {
     [LocalSnapshotContentAvailabilityOutcome.AVAILABLE]: 'peer-badge--authenticated',
     [LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE]: 'peer-badge--unchecked',
@@ -1132,6 +1156,54 @@ export default {
                 hasPublication: catalog.has(entry.publication.id),
                 possession: currentPossessionView(entry)
             });
+        }
+
+        // 0.8.43 — Unified Snapshot Acquisition Outcome & Possession UX.
+        // Composes THIS entry's own `currentPossessionView(entry)` (0.8.39)
+        // and `entry.materializationHistory` (0.8.38) — both already
+        // computed by this page for their own existing disclosures — into
+        // application/PublicationSnapshotAcquisitionView.js's own small
+        // `{ possession, acquisition }` shape. Never a third check, never a
+        // second history: pure, synchronous re-reading of state this page
+        // already holds.
+        function snapshotAcquisitionView(entry) {
+            return describePublicationSnapshotAcquisition({
+                publicationId: entry.publication.id,
+                contentHash: entry.publication.contentReference.hash,
+                possessionView: currentPossessionView(entry),
+                materializationHistory: entry.materializationHistory
+            });
+        }
+
+        // A plain, non-judgmental count sentence over `snapshotAcquisitionView
+        // (entry).acquisition` — "4 attempts · 2 stored · 1 already available
+        // · 1 hash mismatch" — mirroring `materializationSourceCountsSentence()`
+        // below exactly, one axis over (outcome counts rather than source
+        // counts). `null` when no attempt has ever been recorded, so the
+        // "Snapshot Acquisition" summary stays silent rather than showing
+        // "0 attempts."
+        function snapshotAcquisitionOutcomeCountsSentence(entry) {
+            const acquisition = snapshotAcquisitionView(entry).acquisition;
+            if (acquisition.attemptCount === 0) return null;
+            const parts = [`${acquisition.attemptCount} attempt${acquisition.attemptCount === 1 ? '' : 's'}`];
+            if (acquisition.storedCount > 0) parts.push(`${acquisition.storedCount} stored`);
+            if (acquisition.alreadyAvailableCount > 0) parts.push(`${acquisition.alreadyAvailableCount} already available`);
+            if (acquisition.hashMismatchCount > 0) parts.push(`${acquisition.hashMismatchCount} hash mismatch`);
+            return parts.join(' · ');
+        }
+
+        // True only once a local availability check has actually completed
+        // AND reported this replica does not currently possess valid bytes
+        // — NOT_AVAILABLE or CONTENT_HASH_MISMATCH. Gates a single hint
+        // sentence pointing at the sources already offered further down
+        // this same "Local Snapshot" card; never itself a source, a check,
+        // or a materialization attempt. `null`/not-yet-checked reports
+        // `false` here — this page never nudges a person toward a source
+        // before it has any honest basis to.
+        function snapshotAcquisitionNeedsSourceHint(entry) {
+            const state = snapshotAcquisitionView(entry).possession.state;
+            return state === LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE
+                || state === LocalSnapshotContentAvailabilityOutcome.CONTENT_HASH_MISMATCH;
         }
 
         // 0.8.34 — Explicit Snapshot Materialization UX. `event.target.
@@ -2291,6 +2363,7 @@ export default {
             localSnapshotContentAvailabilityUseCase, checkLocalSnapshotAvailability, localSnapshotAvailabilityView,
             localSnapshotAvailabilityBadgeClass, localSnapshotAvailabilityButtonLabel,
             currentPossessionView, replicaContentKnowledgeView,
+            snapshotAcquisitionView, snapshotAcquisitionOutcomeCountsSentence, snapshotAcquisitionNeedsSourceHint,
             localSnapshotMaterializationSourceView,
             snapshotContentMaterializationCoordinator, onMaterializationFileChosen, importSnapshotContent,
             materializationView, materializationBadgeClass, materializationButtonLabel,
@@ -2382,6 +2455,40 @@ export default {
                          them was. -->
                     <div v-if="localSnapshotContentAvailabilityUseCase || snapshotContentMaterializationCoordinator || snapshotPeerMaterializationCoordinator" class="decentralization-summary">
                         <span class="evidence-convergence-title">Local Snapshot</span>
+
+                        <!-- 0.8.43 — Unified Snapshot Acquisition Outcome & Possession
+                             UX. A composed SUMMARY, sitting above every specialized
+                             disclosure this card already offers below it — never a
+                             replacement for any of them. Current possession is always
+                             read from `localSnapshotAvailabilityView(entry)` (0.8.33)
+                             unchanged; acquisition history is always a plain COUNT,
+                             never the full per-attempt narration "Materialization
+                             History" below already shows. Visible only once at least
+                             one check or one attempt has ever happened THIS session —
+                             an untouched entry shows nothing here, rather than "0
+                             attempts." See application/PublicationSnapshotAcquisitionView.js's
+                             own header and docs/Principles.md, "Current Snapshot
+                             Possession Is Independent Of How The Snapshot Was Acquired
+                             (0.8.43)" and "Acquisition History Explains Past Attempts;
+                             It Does Not Determine Present Possession (0.8.43)." -->
+                        <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionView(entry).acquisition.attemptCount > 0" class="evidence-list">
+                            <span class="evidence-convergence-title">Snapshot Acquisition</span>
+                            <p class="form-hint form-hint--neutral">
+                                Current possession:
+                                {{ localSnapshotAvailabilityView(entry).checked ? localSnapshotAvailabilityView(entry).message : 'Not yet checked.' }}
+                            </p>
+                            <p v-if="snapshotAcquisitionOutcomeCountsSentence(entry)" class="form-hint form-hint--neutral">
+                                Acquisition history: {{ snapshotAcquisitionOutcomeCountsSentence(entry) }}
+                            </p>
+                            <p v-if="materializationSourceCountsSentence(entry)" class="form-hint form-hint--neutral">
+                                {{ materializationSourceCountsSentence(entry) }}
+                            </p>
+                            <p v-if="snapshotAcquisitionNeedsSourceHint(entry)" class="form-hint form-hint--neutral">
+                                This replica does not currently possess a valid snapshot. Choose a source below —
+                                "Import Snapshot," a placement's own "Materialize Snapshot," or a peer's own "Get
+                                Snapshot from Peer" — to try again.
+                            </p>
+                        </div>
 
                         <!-- 0.8.39 — Local Snapshot Possession & Replica Content
                              Knowledge. The tiny, deliberately non-"complete" composed
