@@ -21218,3 +21218,174 @@ inside the Publication Center, never an automatic "best" choice, exactly
 as the existing placement convergence system already holds no ranking
 semantics), and the selective-claim-exchange work 0.8.30/0.8.31/0.8.32
 have each deferred in turn. Both remain open.
+
+## 0.8.34 — Explicit Snapshot Materialization UX
+
+0.8.33's own "Deliberately excluded" list named this milestone directly:
+"Any 'Import Snapshot' or materialization action... a natural next
+milestone." 0.8.32 built the offline mechanism that transfers a
+publication's actual bytes; 0.8.33 built the inspection that answers
+whether this replica currently holds them. Neither one, on its own, gave a
+person anything to click. This milestone is the connective tissue between
+the two — a single explicit action, from inside the Publication Center,
+that turns "I know about this snapshot" into "I explicitly obtained the
+actual bytes":
+
+```text
+Replica knows Publication
+        │
+        ├── Has snapshot locally?  ────────────────────  0.8.33 (unchanged)
+        │
+        └── Does not have snapshot
+                │
+                ▼
+        Explicitly import snapshot  ─── THIS MILESTONE
+                │
+                ▼
+        0.8.32 transfer pipeline (unchanged)
+                │
+                ▼
+        Check content hash
+                │
+        ┌───────┴────────┐
+        ▼                ▼
+     STORED        ALREADY_STORED
+```
+
+Three new files, all under `application/`:
+
+- `application/SnapshotContentMaterializationUiState.js` (new) — the same
+  "name the difference structurally, not by convention" shape `application/
+  ExternalAnchorCreationUiState.js` (0.8.11) and `application/
+  SnapshotPlacementCreationUiState.js` (0.8.25) already established, one
+  axis over: `IDLE`, `IMPORTING`, `IMPORTED` (`SnapshotContentTransferOutcome
+  .STORED`), `ALREADY_AVAILABLE` (`.ALREADY_STORED`), `UNAVAILABLE` (a local
+  precondition failure — malformed input, or the coordinator itself
+  threw — no transfer was ever attempted), and `REJECTED` (`
+  .CONTENT_HASH_MISMATCH` — the package WAS well-formed, but its own
+  content did not hash to its own claimed hash). Unlike the placement
+  side (which has no `REJECTED` at all, since `.STORE_UNAVAILABLE`/`.
+  CONTENT_UNAVAILABLE` both stay honestly inconclusive), content transfer
+  keeps `REJECTED`: a content-hash mismatch is a definite, unambiguous
+  negative finding, exactly as `application/
+  SnapshotContentTransferOutcome.js`'s own header already establishes one
+  layer under.
+- `application/SnapshotContentMaterializationCoordinator.js` (new) — a
+  deliberately thin pass-through, the identical restraint every sibling
+  `*CreationCoordinator.js` already holds. Its one method, `import(pkg)`,
+  forwards straight to `application/
+  ImportPublicationSnapshotTransferPackageUseCase.js`(0.8.32)#`execute()`,
+  unchanged. Deliberately **no** `availableSources(publicationId)` — an
+  earlier design sketch for this milestone considered a method that would
+  discover every way a publication's bytes might currently be obtainable
+  (a transfer package on disk, a resolvable placement, a peer
+  announcement) and let a caller choose among them; building that now
+  would invent source-selection infrastructure this first version does not
+  need. For a first explicit "Import Snapshot" action, "the source" is
+  simply whatever Publication Snapshot Transfer Package a person
+  explicitly supplies — a chosen file, or pasted JSON — never a list this
+  class assembles or ranks on their behalf.
+- `application/SnapshotContentMaterializationView.js` (new) — pure,
+  synchronous reshaping of an already-computed attempt into a label, a
+  message, and a button label, mirroring `application/
+  PublicationAnchorCreationView.js` (0.8.11) one axis over. The `IMPORTED`
+  message is deliberately exact: "Snapshot was imported and matches the
+  publication's content hash." — never "verified," "trusted,"
+  "authentic," "permanent," or "canonical." `publicationKnown` — carried
+  through unchanged from the 0.8.32 use case's own result — decides which
+  of two equally true sentences is shown, never whether the import itself
+  succeeds: when the imported publication is not currently cataloged, the
+  message instead reads "Snapshot imported. The publication is not
+  currently known locally." — preserving, at this new UI layer, the exact
+  invariant `application/
+  ImportPublicationSnapshotTransferPackageUseCase.js`'s own header already
+  states: `publicationKnown` never gates storage.
+
+> **Snapshot materialization is an explicit user action that connects two
+> already-independent capabilities; it invents no third one.** See
+> `docs/Principles.md`, "Snapshot Materialization Is An Explicit User
+> Action, Distinct From Every Other Way A Replica Learns About Content
+> (0.8.34)."
+
+- `tests/SnapshotContentMaterialization.test.js` (new) — Section A:
+  coordinator constructor/argument handling, `import()`'s unchanged
+  pass-through behavior, and the deliberate absence of
+  `availableSources()`. Section B: the pure view functions over every
+  outcome plus idle/importing, the exact permitted sentences, and a
+  forbidden-words check. Section C — FLAGSHIP: Alice publishes a
+  publication, holds its bytes locally, and exports a transfer package.
+  Bob already knows the publication (he imported only a Publication
+  Replica Package, 0.8.29) but does not possess the bytes; he clicks
+  "Import Snapshot" and obtains them (`IMPORTED`), and an explicit,
+  separate "Check Local Snapshot" now reports `AVAILABLE` — the exact
+  connection this milestone exists to make. Clicking "Import Snapshot"
+  again on the identical package reports `ALREADY_AVAILABLE`, bytes
+  unchanged. A tampered package is `REJECTED`, and Bob's already-stored
+  bytes are unaffected. Carol receives a valid transfer package for a
+  publication she has never cataloged: the bytes are still stored, and
+  the UI names the uncataloged publication explicitly rather than
+  silently pretending it is known. Section D: a malformed paste (invalid
+  JSON) and a structurally invalid package (a real
+  `PublicationSnapshotTransferPackageError`) both land in the identical,
+  honest `UNAVAILABLE` state — mirroring `ui/views/
+  EditorView.js#importBlueprint()`'s own two-stage error handling.
+- `ui/views/DecentralizedPublicationsView.js` (modified) — the existing
+  "Local Snapshot" section (0.8.33) now also offers "Import Snapshot": a
+  file picker plus a paste-JSON textarea, an explicit button, and the
+  result of the most recent attempt shown as a badge/message, nowhere
+  else persisted. Never triggered by opening this page, checking local
+  availability, or expanding any disclosure — only the explicit click
+  does. Hidden entirely with no `snapshotContentMaterializationCoordinator`
+  provided; the "Check Local Snapshot" control stays independently hidden
+  with no `localSnapshotContentAvailabilityUseCase` provided — the two
+  capabilities remain two independent, separately-gated controls sharing
+  one section heading, never one control that silently assumes the other.
+- `ui/main.js` (modified) — constructs one
+  `ImportPublicationSnapshotTransferPackageUseCase` over the SAME
+  `publicationContentStore`/`publicationCatalog` every other local
+  read/write in this file already goes through, wraps it in one
+  `SnapshotContentMaterializationCoordinator`, and provides it under
+  `snapshotContentMaterializationCoordinator`.
+
+### Deliberately excluded
+
+- **`availableSources(publicationId)`, or any automatic discovery of
+  where a publication's bytes might be obtainable.** See `application/
+  SnapshotContentMaterializationCoordinator.js`'s own header. This
+  milestone's entire job is connecting an EXPLICITLY supplied transfer
+  package to the EXISTING 0.8.32 pipeline — not building a second,
+  parallel source-ranking system placement resolution (0.8.18-0.8.20)
+  deliberately never built either.
+- **Automatic materialization from a discovered or resolved placement.**
+  A placement's own "Resolve Snapshot" (0.8.20) retrieves bytes into
+  memory for inspection; it does not, and still does not after this
+  milestone, write anything into `content/ContentStore.js`. Wiring
+  "Resolve Snapshot" to automatically call "Import Snapshot" would
+  collapse three deliberately independent operations — discovery,
+  resolution, and materialization — into one, exactly the collapse
+  `docs/Principles.md`'s own "Known Is Not Available (0.8.28)" and
+  "Knowledge Of Content Is Not Possession Of Content (0.8.32)" already
+  warn against one axis over. An explicit "Store Snapshot Locally" action
+  after a successful placement resolution remains a distinct, future
+  milestone (0.8.35).
+- **A persistent materialization history, or any lifecycle record for an
+  import attempt.** `entry.materializationAttempt` is ephemeral,
+  session-lifetime UI state, exactly like `entry.localSnapshotAvailability`
+  (0.8.33) and `entry.creationAttempts` (0.8.11) before it — reopening the
+  Publication Center always starts back at `IDLE`.
+- **Retrying a rejected or unavailable import automatically.** A `REJECTED`
+  or `UNAVAILABLE` attempt simply sits on screen until a person explicitly
+  clicks "Import Snapshot" again, exactly as every sibling
+  `*CreationCoordinator.js` already holds for its own failed attempts.
+- **Verifying an anchor, resolving a placement, or modifying the
+  publication as a side effect of a successful import.** `application/
+  SnapshotContentMaterializationCoordinator.js#import()` touches exactly
+  one thing: `content/ContentStore.js`, through the unchanged 0.8.32
+  pipeline. See that class's own header.
+
+What's left, and deliberately unbuilt: 0.8.35's own "Store Snapshot
+Locally" action after an explicit placement resolution (named directly
+above), a unified acquisition UI that lets a person compare every source
+for a publication's bytes side by side (0.8.36), and the
+selective-claim-exchange work 0.8.30/0.8.31/0.8.32 have each deferred in
+turn. All three remain open.
