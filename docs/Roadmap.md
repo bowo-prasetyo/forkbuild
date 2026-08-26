@@ -23828,3 +23828,236 @@ discovery, real address validation, a real wallet integration, and any UI
 surface for triggering or reviewing a signing request — each its own,
 separately sized milestone, exactly like every "Deliberately excluded"
 list in this document before it.
+
+## 0.8.51 — Bitcoin Signed PSBT Finalization & Cryptographic Signature Verification
+
+0.8.50's own "Deliberately excluded" list named exactly what came next:
+"Cryptographic signature verification... is a real signer's own
+responsibility, and a future finalizer's concern," and "Finalization...
+is explicitly left to 0.8.51." This milestone is that finalizer, held to
+one governing distinction 0.8.50 itself already drew:
+
+> "Signed" means "carries recognized signing material." It does not mean
+> "valid."
+
+```text
+{ globalUnsignedTx, inputs, ... }          the original DESCRIPTION
+        │                                    (0.8.48/0.8.49)
+        │
+        ├──────────────────────────────┐
+        │                              │
+        ▼                              ▼
+(handed to a wallet, elsewhere)   BitcoinAnchorSignedPsbtInspector
+        │                              │  structural integrity  (0.8.50)
+        ▼                              ▼
+a claimed SIGNED PSBT ───────────► { intact: true, signedInputs }
+                                         │
+                                         ▼
+                        BitcoinAnchorSignedPsbtFinalizer      (new)
+                                         │
+                                         │  cryptographic verification
+                                         ▼
+                    { finalized: true, txid, rawTransaction }
+                  | { finalized: false, reason }
+```
+
+**AN OFFLINE CRYPTOGRAPHIC BOUNDARY, NOTHING MORE.** `finalize()` performs
+no network call, imports nothing from `anchoring/BitcoinAnchorPublisher.js`,
+and never broadcasts. It answers exactly the one question 0.8.50
+deliberately left open: given the signing material a wallet claims to have
+produced, does it actually satisfy the script being spent, for the exact
+sighash this transaction implies? Only if every input answers yes does this
+class assemble the real, broadcastable transaction bytes. Broadcasting
+itself is the next, separately sized milestone — see "0.8.52," below.
+
+**DELIBERATELY NARROWED TO P2WPKH ALONE.** `anchoring/BitcoinAnchorPsbtBuilder.js`
+already accepts three script types — `p2wpkh`, `p2tr`, `p2pkh` — because
+0.8.47/0.8.48 only ever needed to DESCRIBE a UTXO, never spend one. This
+milestone cryptographically finalizes `p2wpkh` inputs only. A `p2pkh` input
+would require parsing an arbitrary previous transaction's raw bytes
+(`nonWitnessUtxo`) to recover the exact scriptPubKey being spent — a raw
+transaction parser this milestone does not build. A `p2tr` input would
+require an entirely different signature scheme (BIP340 Schnorr) and sighash
+algorithm (BIP341) — cryptography this milestone does not implement. Both
+are refused with an explicit, named reason — `{ finalized: false, reason }`,
+never a throw, and never a result that quietly pretends success — rather
+than widening this class's scope beyond what it can verify correctly. This
+is the exact restraint this milestone's own planning insisted on: make the
+finalizer initially support only the input types it can fully verify and
+finalize correctly, and explicitly leave the rest unsupported rather than
+pretending they are finalized.
+
+- `anchoring/BitcoinAnchorSignedPsbtFinalizer.js` — the one new class.
+  `finalize({ description, signedPsbt })`:
+  1. Independently re-validates `description` via
+     `BitcoinAnchorPsbtSerializer#serialize()`, exactly as 0.8.50's own
+     inspector does — throws only for a malformed `description`, this
+     codebase's own already-known-good internal artifact.
+  2. Re-runs `BitcoinAnchorSignedPsbtInspector#inspect()` on `signedPsbt` —
+     never trusting that a caller already did. Only a signed PSBT the
+     inspector itself calls `intact: true` is ever considered for
+     cryptographic verification; a substituted transaction is refused here,
+     via the inspector's own reason, before any cryptography is attempted.
+  3. For each input:
+     - A `p2tr` or `p2pkh` `scriptType` is refused —
+       `{ finalized: false, reason }` — never a throw.
+     - Extracts the claimed signature and public key from either an
+       already-`finalScriptWitness` input (exactly 2 witness stack items:
+       signature, pubkey — anything else is refused) or a single
+       `partialSig` (more than one is refused as unsupported multisig).
+       Because every `scriptType` this class supports is always
+       single-key, a `partialSig` is genuinely FINALIZED here, in the
+       literal BIP174 sense, not merely checked.
+     - Only `SIGHASH_ALL` (`0x01`) is supported; any other trailing
+       sighash-type byte is refused, named explicitly.
+     - The public key must be a 33-byte compressed secp256k1 key; anything
+       else (an uncompressed or x-only key) is refused.
+     - **Spendability, checked, never assumed:** the public key's
+       HASH160 must match the 20-byte hash embedded in the exact
+       `witnessUtxo` scriptPubKey the original description named — proving
+       the key even has authority over this UTXO's script.
+     - **The signature, checked, never assumed:** the DER-decoded `(r, s)`
+       must be a cryptographically valid ECDSA signature, by that same
+       key, over this exact transaction's own BIP143 sighash, computed
+       independently from `description.globalUnsignedTx`.
+     - Any of these failing refuses the WHOLE PSBT — this class never
+       finalizes a transaction where even one input's authority is
+       unproven.
+  4. Only once every input verifies does it assemble the real segwit-wire
+     transaction bytes (marker `0x00`, flag `0x01`, each input's witness
+     stack, `txid` computed from the non-witness serialization) and
+     resolve `{ finalized: true, txid, rawTransaction: { bytes, hex },
+     verifiedInputs }`.
+  - **Real cryptography, from first principles, zero dependencies.** This
+    codebase has no package manager and no external crypto library
+    anywhere in it. SHA-256, RIPEMD-160, secp256k1 point arithmetic
+    (point addition/doubling, scalar multiplication, point decompression),
+    ECDSA verification, and DER signature decoding are all implemented
+    here, in plain JavaScript with `BigInt`, and were cross-checked
+    (during this milestone's own development, never at runtime) against
+    Node's own `crypto` module across dozens of independently generated
+    real secp256k1 keys and signatures.
+
+- `application/CreateBitcoinAnchorSignedPsbtFinalizerUseCase.js` — the
+  identical composition-root shape
+  `CreateBitcoinAnchorSignedPsbtInspectorUseCase.js` already established.
+  The finalizer takes no arguments (a pure, stateless, offline check), so
+  neither does this use case.
+
+> **Signing material is not yet a signature until it verifies.**
+> `BitcoinAnchorSignedPsbtInspector` (0.8.50) proves a wallet did SOMETHING
+> — attached a `partialSig`, a `finalScriptSig`, a `finalScriptWitness` —
+> to the exact transaction ForkBuild asked to have signed. It never proves
+> that what was attached actually authorizes spending the UTXO it claims
+> to. `BitcoinAnchorSignedPsbtFinalizer` closes that gap the only way that
+> is actually trustworthy: by independently deriving the same BIP143
+> sighash a correct signer would have signed, and mathematically verifying
+> the claimed signature against it and against the public key's own proven
+> authority over the script. See `docs/Principles.md`, "Signing Material
+> Is Not Yet A Signature Until It Verifies (0.8.51)."
+
+- `tests/BitcoinAnchorPsbtFinalization.test.js` (new) — every signature in
+  this file is REAL: the test file implements its own independent
+  secp256k1/SHA-256/RIPEMD-160/ECDSA-signing, sharing no code with
+  `anchoring/BitcoinAnchorSignedPsbtFinalizer.js` itself, to generate real
+  keys and sign real BIP143 sighashes from scratch — the identical
+  "wholly independent, hand-rolled fixture" discipline
+  `tests/BitcoinAnchorWalletSigning.test.js` already established for PSBT
+  byte encoding, extended here to real cryptography. Section A: flagship —
+  a genuinely signed p2wpkh PSBT is cryptographically verified and
+  finalized into real, broadcastable transaction bytes; Section B: a real,
+  not-yet-finalized `partialSig` is itself finalized; Section C:
+  multi-input — every input's own real signature is verified
+  independently, and a fully-correct multi-input finalizes cleanly;
+  Section D: THE CORE INVARIANT — a public key that does not correspond to
+  the scriptPubKey being spent is refused, even with an otherwise
+  perfectly well-formed signature; Section E: a cryptographically valid
+  signature over the WRONG sighash (the right key, the wrong message) is
+  refused; Section F: only `SIGHASH_ALL` is supported; Section G: more
+  than one `partialSig` on a single input (multisig) is refused, named
+  explicitly; Section H: `p2tr` and `p2pkh` scriptTypes are refused as
+  not-yet-supported, an operational outcome, never a throw; Section I:
+  multi-input — tampering with just one of several otherwise
+  correctly-signed inputs is still caught, and named by index; Section J:
+  structural integrity is re-checked, not assumed — a substituted
+  transaction is refused via the inspector's own reason, before any
+  cryptography is attempted; Section K: a malformed `finalScriptWitness`
+  shape is refused; Section L: an uncompressed public key is refused;
+  Section M: a malformed description throws, before any signed PSBT is
+  ever considered.
+
+```text
+0.8.50  Explicit Bitcoin Wallet Signing                                ✓
+             │
+             ▼
+0.8.51  Bitcoin Signed PSBT Finalization & Cryptographic               ✓
+        Signature Verification
+             ├── anchoring/BitcoinAnchorSignedPsbtFinalizer.js — new;
+             │   cryptographically verifies real secp256k1 ECDSA
+             │   signatures over a real BIP143 sighash, for p2wpkh
+             │   inputs only, and assembles the finalized transaction
+             ├── application/CreateBitcoinAnchorSignedPsbtFinalizerUseCase.js
+             │   — new composition-root seam
+             ├── SHA-256, RIPEMD-160, and secp256k1 ECDSA verification,
+             │   implemented from first principles — zero external
+             │   dependencies, cross-checked against Node's own crypto
+             │   module during development
+             ├── p2tr and p2pkh are explicitly refused as not-yet-
+             │   supported — never silently mis-finalized
+             └── still no broadcast — a finalized transaction, never a
+                 network call, never a txid Bitcoin itself has seen
+```
+
+### Deliberately excluded
+
+- **`p2pkh` (legacy) finalization.** Requires parsing an arbitrary
+  previous transaction's raw bytes (`nonWitnessUtxo`) to recover the exact
+  scriptPubKey being spent — a general raw-transaction parser this
+  milestone does not build. A `p2pkh` input is refused with an explicit
+  reason, never silently mis-finalized.
+- **`p2tr` (taproot) finalization.** Requires BIP340 Schnorr signature
+  verification and the BIP341 taproot sighash algorithm — an entirely
+  different cryptographic scheme this milestone does not implement. A
+  `p2tr` input is refused with an explicit reason, for the identical
+  reason.
+- **Multisig.** More than one `partialSig` on a single input is refused as
+  unsupported — this codebase never selects or describes a multisig UTXO
+  anywhere, and this milestone does not add script-satisfaction logic
+  beyond the single-key case.
+- **Any sighash type other than `SIGHASH_ALL`.** `SIGHASH_NONE`,
+  `SIGHASH_SINGLE`, and the `ANYONECANPAY` variants are all refused,
+  explicitly, rather than silently computing the wrong sighash preimage
+  for a variant this class was never taught to build.
+- **Broadcasting.** Nothing in this milestone calls a network, a
+  broadcaster, or `anchoring/BitcoinAnchorPublisher.js`. A `{ finalized:
+  true }` result is real transaction bytes, never a txid Bitcoin itself
+  has seen — see "0.8.52," below.
+- **Fee/change verification against the finalized transaction's own real
+  weight.** This milestone verifies signatures and assembles bytes; it
+  does not re-derive whether the fee 0.8.47 originally estimated remains
+  accurate against the finalized transaction's own real (now-known)
+  witness sizes. A future milestone may add that cross-check; this one
+  does not.
+- **Any UI surface.** No "Review & Broadcast" screen, and no change to
+  `ui/DecentralizedPublicationsView.js` exists anywhere in this codebase
+  yet — exactly as every milestone in this Bitcoin sequence has stayed
+  backend-only before it.
+
+What's left, and deliberately unbuilt: `p2pkh` and `p2tr` cryptographic
+finalization, multisig support, sighash types other than `SIGHASH_ALL`, a
+real (non-fake) broadcaster wired to a finalized transaction, real UTXO
+discovery, real address validation, a real wallet integration, and any UI
+surface — each its own, separately sized milestone, exactly like every
+"Deliberately excluded" list in this document before it.
+
+## 0.8.52 — Bitcoin Transaction Broadcasting (not yet built)
+
+The next milestone this sequence reserves: an explicit
+`BitcoinAnchorTransactionBroadcaster` that takes 0.8.51's own `{
+finalized: true, rawTransaction }` result and an injected broadcasting
+capability (an Esplora-style HTTP API, a Bitcoin Core RPC client, or a
+fake, in every test — the identical injected-capability restraint
+`anchoring/BitcoinAnchorPublisher.js` has held since 0.8.9), and reports a
+tri-state outcome (`BROADCAST` / `BROADCAST_REJECTED` /
+`BROADCAST_UNAVAILABLE`) — never deciding whether a transaction is GOOD,
+only reporting what the external submission endpoint said. Not yet built.
