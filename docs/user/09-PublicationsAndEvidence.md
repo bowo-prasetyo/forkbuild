@@ -290,7 +290,9 @@ running count across the group. Nothing here ranks or recommends a peer;
 it only reports what each one said. Every check you run also joins an
 **Observation History** you can expand with **Show Observation History**
 — a full chronological log of every comparison check this session, never
-trimmed down to only the latest answer per peer.
+trimmed down to only the latest answer per peer. Each row in that log is
+its own compact summary you can click to expand — see
+[Every observation, in order](#every-observation-in-order) below.
 
 ### Every attempt, in order
 
@@ -321,6 +323,41 @@ Expanding one row never affects any other row, and never affects the
 narration of what happened and when, never a ranking, and never a claim
 that one source is more trustworthy than another, or an explanation of
 *why* a hash mismatch happened.
+
+### Every observation, in order
+
+Once at least one **Check Selected Peers** click has completed, a **Show
+Observation History** button appears nested under **Peer Snapshot
+Possession Comparison** above (see
+[Comparing several peers at once](#comparing-several-peers-at-once)) —
+click it to see every observation this session, in order, including
+repeat checks of the same peer. Each observation is its own compact row:
+
+```
+20:21:04 — Alice → Available
+20:21:07 — Dave → Could not determine
+```
+
+Click any one row to expand it and see the facts the compact row leaves
+out:
+
+| Field | Meaning |
+|---|---|
+| **Reported** | The full sentence — *Peer reports snapshot available*, *Peer reports snapshot not available*, or *No answer from peer*. |
+| **Publication** | Which publication this observation was for. |
+| **Content hash** | The content hash this observation was made against. |
+
+Expanding one row never affects any other row, and never affects the
+comparison table or its counts above. This is the same distinction drawn
+throughout this section, restated one more time because it's easy to
+lose sight of once a history builds up: an observation records what a
+peer said *at that moment* — it's never rewritten by anything that peer
+does afterward. If Alice reports **Available** at 20:21 and later deletes
+her own copy, that row still reads **Available** at 20:21; only a *new*,
+later check can honestly report otherwise, as its own new row. There's
+also deliberately no percentage, score, or "most reliable peer" summary
+anywhere in this history, however tempting one might look after several
+checks — it's a factual log, never a reliability ranking.
 
 ## Decentralization: Evidence and Placements at a glance
 

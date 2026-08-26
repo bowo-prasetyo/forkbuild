@@ -54,6 +54,7 @@ import { appendSnapshotMaterializationHistoryEntry, describeSnapshotMaterializat
 import { describeSnapshotMaterializationHistoryDetails } from '../../application/SnapshotMaterializationHistoryDetailView.js';
 import { appendSnapshotPeerPossessionObservationHistoryEntry, latestSnapshotPeerPossessionObservationsByPeer } from '../../application/SnapshotPeerPossessionObservationHistory.js';
 import { describeSnapshotPeerPossessionComparison, describeSnapshotPeerPossessionStateLabel, describeSnapshotPeerPossessionObservationHistory } from '../../application/SnapshotPeerPossessionComparisonView.js';
+import { describeSnapshotPeerPossessionObservationDetails } from '../../application/SnapshotPeerPossessionObservationDetailView.js';
 import { createSnapshotMaterializationSourceSelection } from '../../application/SnapshotMaterializationSourceSelection.js';
 import { SnapshotMaterializationSourceKind } from '../../application/SnapshotMaterializationSourceKind.js';
 
@@ -1004,6 +1005,19 @@ export default {
                 peerPossessionObservationHistory: [],
                 peerPossessionComparisonChecking: false,
                 peerPossessionComparisonHistoryExpanded: false,
+                // 0.8.45 — Explicit Peer Possession Observation Inspection.
+                // Keyed by an observation's own position in
+                // `peerPossessionObservationHistory` above (that array is
+                // only ever appended to, never reordered — see application/
+                // SnapshotPeerPossessionObservationHistory.js's own header —
+                // so an index stays a stable identity for one observation
+                // for the life of this page). Gates only whether ONE row's
+                // own extra fields (the full state sentence, Publication,
+                // Content hash) are on screen; never itself a second
+                // history, and never anything the row's own facts didn't
+                // already carry. Mirrors `entry.materializationHistoryEntryExpanded`
+                // (0.8.44) exactly, one domain over.
+                peerPossessionObservationHistoryEntryExpanded: {},
                 // 0.8.42 — Explicit Snapshot Source Selection &
                 // Materialization UX. `peerPossessionComparisonMaterializations`
                 // is keyed by peerId, exactly mirroring `materializations`
@@ -2011,6 +2025,28 @@ export default {
             entry.peerPossessionComparisonHistoryExpanded = !entry.peerPossessionComparisonHistoryExpanded;
         }
 
+        // 0.8.45 — Explicit Peer Possession Observation Inspection.
+        // Composes application/SnapshotPeerPossessionObservationDetailView.js's
+        // own describeSnapshotPeerPossessionObservationDetails() over this
+        // entry's existing `peerPossessionObservationHistory` (0.8.41) — the
+        // IDENTICAL sequence `peerPossessionObservationHistoryView()` above
+        // already reads, never a second, separately-tracked history.
+        function peerPossessionObservationDetailsView(entry) {
+            return describeSnapshotPeerPossessionObservationDetails(entry.peerPossessionObservationHistory);
+        }
+
+        // Per-observation disclosure state, addressed by that observation's
+        // own stable index (see `entry.peerPossessionObservationHistoryEntryExpanded`'s
+        // own header). Toggling one row never touches another, and never
+        // touches the outer "Show/Hide Observation History" state above it.
+        function isPeerPossessionObservationHistoryEntryExpanded(entry, index) {
+            return Boolean(entry.peerPossessionObservationHistoryEntryExpanded[index]);
+        }
+
+        function togglePeerPossessionObservationHistoryEntry(entry, index) {
+            entry.peerPossessionObservationHistoryEntryExpanded[index] = !entry.peerPossessionObservationHistoryEntryExpanded[index];
+        }
+
         // Display-only: turns a bare `peerId` (an application/
         // SnapshotPeerPossessionObservation.js connectionId) back into a
         // readable label, for a comparison row or a history row alike. A
@@ -2409,6 +2445,7 @@ export default {
             togglePeerPossessionCompareSelection, checkSnapshotPossessionWithSelectedPeers,
             peerPossessionComparisonView, peerPossessionComparisonRowBadgeClass, peerPossessionComparisonRowLabel,
             peerPossessionObservationHistoryView, togglePeerPossessionComparisonHistory, peerPossessionRowLabel,
+            peerPossessionObservationDetailsView, isPeerPossessionObservationHistoryEntryExpanded, togglePeerPossessionObservationHistoryEntry,
             snapshotMaterializationSelectionCoordinator, materializeFromComparisonPeer,
             comparisonPeerMaterializationView, comparisonPeerMaterializationBadgeClass, comparisonPeerMaterializationButtonLabel
         };
@@ -2857,25 +2894,61 @@ export default {
                                 </ul>
                             </div>
 
-                            <div v-if="peerPossessionObservationHistoryView(entry).count > 0">
+                            <!-- 0.8.45 — Explicit Peer Possession Observation
+                                 Inspection. The ORDERED narration of EVERY
+                                 recorded "Check Selected Peers" observation
+                                 this entry has collected THIS SESSION —
+                                 including repeat checks of the same peer,
+                                 never only the latest-per-peer rows the
+                                 comparison above already shows. Nested
+                                 directly under the comparison, mirroring
+                                 application/
+                                 SnapshotMaterializationHistoryDetailView.js's
+                                 (0.8.44) own "Show/Hide Acquisition
+                                 History" disclosure exactly, one domain
+                                 over: each row shows a compact
+                                 "peer → reported" summary; expanding a
+                                 single row reveals the two facts the
+                                 compact row leaves out — the full-sentence
+                                 report, Publication, and Content hash —
+                                 never a new fact this observation didn't
+                                 already carry, and never a rewrite of an
+                                 earlier observation even once the peer's
+                                 own current possession has since changed
+                                 (see application/
+                                 SnapshotPeerPossessionObservation.js's own
+                                 header). Deliberately a plain narration,
+                                 never a ranking, and never an availability
+                                 percentage: no peer is called more
+                                 reliable, more trustworthy, or "best" than
+                                 another — see application/
+                                 SnapshotPeerPossessionObservationDetailView.js's
+                                 own header and docs/Principles.md, "Peer
+                                 Possession Observations Describe What Peers
+                                 Report; They Do Not Become Placement Claims
+                                 (0.8.41)." -->
+                            <div v-if="peerPossessionObservationDetailsView(entry).count > 0">
                                 <button class="action-btn action-btn--secondary" @click="togglePeerPossessionComparisonHistory(entry)">
                                     {{ entry.peerPossessionComparisonHistoryExpanded ? 'Hide Observation History' : 'Show Observation History' }}
                                 </button>
                                 <div v-if="entry.peerPossessionComparisonHistoryExpanded">
                                     <ul class="replica-knowledge-claim-list">
-                                        <li v-for="(observation, index) in peerPossessionObservationHistoryView(entry).observations" :key="index" class="replica-knowledge-claim">
-                                            <dl class="evidence-fields">
-                                                <div class="evidence-field">
-                                                    <dt>Peer</dt>
-                                                    <dd>{{ peerPossessionRowLabel(observation.peerId) }}</dd>
-                                                </div>
+                                        <li v-for="(item, index) in peerPossessionObservationDetailsView(entry).entries" :key="index" class="replica-knowledge-claim">
+                                            <button class="action-btn action-btn--secondary" @click="togglePeerPossessionObservationHistoryEntry(entry, index)">
+                                                {{ formatWhen(item.observedAt) }} — {{ peerPossessionRowLabel(item.peerId) }} → {{ item.stateShortLabel }}
+                                            </button>
+                                            <dl v-if="isPeerPossessionObservationHistoryEntryExpanded(entry, index)" class="evidence-fields">
                                                 <div class="evidence-field">
                                                     <dt>Reported</dt>
-                                                    <dd>{{ observation.stateLabel }}</dd>
+                                                    <dd>{{ item.stateLabel }}</dd>
                                                 </div>
                                                 <div class="evidence-field">
-                                                    <dt>Observed</dt>
-                                                    <dd>{{ formatWhen(observation.observedAt) }}</dd>
+                                                    <dt>Publication</dt>
+                                                    <dd>{{ item.publicationId }}</dd>
+                                                </div>
+                                                <div class="evidence-field">
+                                                    <dt>Content hash</dt>
+                                                    <dd>{{ item.contentHash }}</dd>
                                                 </div>
                                             </dl>
                                         </li>

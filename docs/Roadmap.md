@@ -22912,3 +22912,118 @@ remain entirely different, two entries against one.
   sentences stay exactly where 0.8.43 put them; this milestone only adds a
   way to inspect the SAME history those counts already summarize, one
   attempt at a time.
+
+## 0.8.45 — Explicit Peer Possession Observation Inspection
+
+0.8.44 made LOCAL acquisition history inspectable one attempt at a time.
+This milestone is its parallel on the PEER side: 0.8.41's "Peer Snapshot
+Possession Comparison" already accumulates every "Check Selected Peers"
+observation into an ordered `application/
+SnapshotPeerPossessionObservationHistory.js` sequence and narrates it, as a
+flat list, in a "Show/Hide Observation History" disclosure — but that list
+gave no single observation its own inspectable row, and carried no short
+label suited to a condensed chronological summary. This milestone adds
+exactly that, and nothing else:
+
+> A peer possession observation records what a peer reported at a
+> particular time; inspection must not turn that observation into a
+> current claim about the peer.
+
+```text
+   describeSnapshotPeerPossessionObservationHistory()        (0.8.41, UNCHANGED)
+              │
+              ▼
+   describeSnapshotPeerPossessionObservationDetails()/
+   describeSnapshotPeerPossessionObservationDetail()                (new)
+              │
+              ▼
+     { count, entries: [{ peerId, publicationId, contentHash, state,
+                           stateLabel, stateShortLabel, observedAt }, ...] }
+```
+
+One new module, under `application/`:
+
+- `application/SnapshotPeerPossessionObservationDetailView.js` (new) —
+  `describeSnapshotPeerPossessionObservationDetails(observations)` takes an
+  array of `application/SnapshotPeerPossessionObservation.js` records (the
+  SAME shape `entry.peerPossessionObservationHistory` already holds) and,
+  for each one, brings together TWO ALREADY-EXISTING sentences this
+  codebase produces elsewhere for the same `state` — application/
+  SnapshotPeerPossessionView.js#describePeerPossessionAttempt()'s own
+  full-sentence `label` ("Peer reports snapshot available"), here named
+  `stateLabel`, and application/SnapshotPeerPossessionComparisonView.js#
+  describeSnapshotPeerPossessionStateLabel()'s own short word
+  ("Available"), here named `stateShortLabel` — mirroring 0.8.44's own
+  `outcomeLabel`/`outcomeShortLabel` split exactly, one domain over.
+  `peerId`, `publicationId`, `contentHash`, `state`, and `observedAt` are
+  carried through unchanged. `describeSnapshotPeerPossessionObservationDetail(observation)`
+  is the identical description for one observation in isolation. Neither
+  function contacts a peer, performs a new local content check, resolves a
+  placement, or modifies the observation or the array it was given — both
+  are pure, synchronous, and take no coordinator, catalog, or store.
+  `UNAVAILABLE` still reads `stateShortLabel: 'Could not determine'`, never
+  "Not available" — the same three-way distinction 0.8.41 already drew,
+  preserved unchanged here.
+
+`ui/views/DecentralizedPublicationsView.js`'s existing "Peer Snapshot
+Possession Comparison" section keeps its own "Show/Hide Observation
+History" disclosure exactly where 0.8.41 put it, but each row now shows a
+compact "`observed — peer → reported`" summary and can be independently
+expanded to reveal the two facts the compact row leaves out — the
+full-sentence report, the publication, and the content hash — mirroring
+0.8.44's own per-row expansion state (`entry.materializationHistoryEntryExpanded`)
+one domain over, via a new `entry.peerPossessionObservationHistoryEntryExpanded`
+map keyed by the observation's own stable position in the history.
+Expanding one row never touches another, never touches the outer
+disclosure, and never touches the "Peer Snapshot Possession Comparison"
+summary or its counts above it, which stay exactly as 0.8.41 already built
+them.
+
+The FLAGSHIP tests (`tests/SnapshotPeerPossessionObservationDetailView.test.js`,
+Sections C and D) restate the two histories' independence at the
+per-observation narration a person actually reads on expanding a row.
+Section C: Alice reports AVAILABLE to Bob at one moment; her own bytes are
+then deleted, and a fresh, later check honestly reports NOT_AVAILABLE — a
+SECOND observation is appended, but Bob's FIRST observation's own detail
+narration is asserted byte-identical before and after, because inspection
+was never given Alice's current state to react to. Section D: replica X's
+history holds one observation (Alice → AVAILABLE); replica Y's history
+holds two (Alice → NOT_AVAILABLE, then Alice → AVAILABLE); their
+latest-per-peer comparisons are byte-identical, while their own complete
+detail histories remain different — reinforcing the standing distinction
+between latest observation, comparison projection, and historical
+observations.
+
+> **A peer possession observation records what a peer reported at a
+> particular time; inspection must not turn that observation into a
+> current claim about the peer.** See `docs/Principles.md`, "A Peer
+> Possession Observation Records What A Peer Reported At A Particular Time;
+> Inspection Must Not Turn It Into A Current Claim About The Peer
+> (0.8.45)."
+
+### Deliberately excluded
+
+- **Peer reliability, an availability percentage, a peer score, or source
+  ranking.** No `3 AVAILABLE / 4 observations` tally, no "best peer" or
+  "most reliable peer," and no automatic peer selection or automatic
+  retry — an observation ledger is a factual record, never a reliability
+  metric, however tempting the history makes a ratio look. The flagship
+  test's own forbidden-vocabulary scan checks for this directly.
+- **Placement creation, materialization, or persistence of observations.**
+  Inspecting a history is reading a record of what peers already reported;
+  it never creates a `core/PublicationSnapshotPlacement.js`, never
+  transfers a single byte, and never writes an observation anywhere beyond
+  the ephemeral, per-session array 0.8.41 already scoped it to.
+- **Synchronization of observation histories between replicas.** Replica
+  X's and replica Y's own histories in the flagship test stay entirely
+  separate, local facts — this milestone never merges, shares, or
+  reconciles them.
+- **Any new semantic state.** `UNAVAILABLE` still means only "no answer
+  arrived," never "the peer does not have it" — `stateShortLabel` reuses
+  0.8.41's own three labels verbatim, and introduces no fourth state.
+- **Feeding acquisition history from peer observations, or vice versa.**
+  Snapshot acquisition history (what THIS replica attempted) and peer
+  possession observation history (what OTHER replicas reported) remain two
+  separate, un-merged sequences, exactly as 0.8.38/0.8.40/0.8.41 already
+  established; this milestone adds an inspection layer to the second one
+  without touching the first.
