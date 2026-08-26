@@ -13728,3 +13728,81 @@ another, and 0.8.43 refused to let a count decide current possession, this
 milestone refuses to let a PER-ATTEMPT narration do either — inspecting a
 history in detail is still just reading it, never re-judging it. See
 `docs/Roadmap.md`, 0.8.44, for the full milestone entry.
+
+## A Peer Possession Observation Records What A Peer Reported At A Particular Time; Inspection Must Not Turn It Into A Current Claim About The Peer (0.8.45)
+
+**`application/SnapshotPeerPossessionObservationDetailView.js`'s two
+functions — `describeSnapshotPeerPossessionObservationDetail(observation)`
+and `describeSnapshotPeerPossessionObservationDetails(observations)` — add
+no new fact to an observation, and bring together exactly TWO
+ALREADY-EXISTING sentences this codebase produces elsewhere for the same
+`state`.** `stateLabel` is `application/SnapshotPeerPossessionView.js#describePeerPossessionAttempt()`'s
+own full sentence ("Peer reports snapshot available"), unchanged since
+0.8.40. `stateShortLabel` is `application/SnapshotPeerPossessionComparisonView.js#describeSnapshotPeerPossessionStateLabel()`'s
+own short word ("Available"), unchanged since 0.8.41. `peerId`,
+`publicationId`, `contentHash`, `state`, and `observedAt` are carried
+through unchanged from the observation itself. Neither function contacts a
+peer, performs a new local content check, resolves a placement, or
+modifies the observation or the array it was given; both are synchronous,
+take no coordinator, catalog, or store, and are proven pure and
+non-mutating directly in `tests/SnapshotPeerPossessionObservationDetailView.test.js`
+(Section B). This is 0.8.44's own `outcomeLabel`/`outcomeShortLabel` split
+applied to the peer domain, one milestone over — the identical restraint,
+never a new one.
+
+**`UNAVAILABLE` still means only "no answer arrived before the timeout,"
+never "the peer does not have it," and this milestone changes that in no
+way.** `stateShortLabel` for `UNAVAILABLE` reads "Could not determine" —
+the identical three-way distinction `application/SnapshotPeerPossessionState.js`
+(0.8.40) and `application/SnapshotPeerPossessionComparisonView.js` (0.8.41)
+already drew, preserved unchanged at this new inspection layer. Inspection
+never collapses "the peer said no" into "nothing came back," and never
+invents a fourth state.
+
+**Making one observation inspectable is not the same as making it more
+current, and this milestone is careful never to blur that line.** A person
+opening "Show Observation History" and expanding one row sees exactly what
+that peer reported, and exactly when — never a sentence suggesting the peer
+still holds those bytes NOW, never a suggestion about which peer to prefer,
+and never a field like `reliability`, `availabilityPercentage`, `score`,
+`sourceRanking`, `bestPeer`, or `mostReliablePeer` anywhere in the composed
+shape; both flagship sections below assert this recursively. Even though a
+history of repeated observations makes a ratio like "3 AVAILABLE / 4
+observations" tempting to compute, this milestone deliberately never
+computes one — an observation ledger is a factual record of what was said,
+never a reliability metric of who is more likely to still have it.
+
+**The two FLAGSHIP invariants `tests/SnapshotPeerPossessionObservationDetailView.test.js`
+(Sections C and D) prove are the peer-domain restatement of 0.8.44's own
+pair, one domain over — same observations, different later reality; same
+current observations, different histories.** Section C: Alice reports
+`AVAILABLE` to Bob at one moment; her own bytes are then deleted
+underneath her, and a fresh, LATER check honestly reports `NOT_AVAILABLE` —
+a SECOND observation is appended, but Bob's FIRST observation's own detail
+narration is asserted byte-identical before and after, because
+`describeSnapshotPeerPossessionObservationDetails()` was never even given
+Alice's current state to react to. "Alice reported AVAILABLE at 20:21" is a
+frozen fact about the past, and stays exactly that. Section D: replica X's
+history holds one observation (Alice → `AVAILABLE`); replica Y's history
+holds two (Alice → `NOT_AVAILABLE`, then, later, Alice → `AVAILABLE`).
+Their `latestSnapshotPeerPossessionObservationsByPeer()`-derived
+comparisons are byte-identical — both currently read `AVAILABLE` — while
+their own complete detail histories remain different, two entries against
+one. Identical current observations never collapse two genuinely different
+histories into one — the identical statement 0.8.44's own Section D already
+made about acquisition history, restated here about observation history.
+
+**This reinforces the standing three-way distinction 0.8.40/0.8.41 already
+drew between latest observation, comparison projection, and historical
+observations, and extends 0.8.44's own restraint — that inspecting a
+history in detail is still just reading it, never re-judging it — across
+both of this system's parallel histories.** Snapshot acquisition history
+(0.8.38, inspectable per-attempt since 0.8.44) describes what THIS replica
+attempted; peer possession observation history (0.8.40/0.8.41, inspectable
+per-observation since this milestone) describes what OTHER replicas
+reported. Neither feeds the other: a peer reporting `AVAILABLE` may lead a
+person to click "Get Snapshot from Peer" (0.8.42), which becomes its own,
+separately-timed acquisition attempt — inspectable in its own history — but
+an observation is never itself an acquisition attempt, a placement, or an
+automatic trigger for either. See `docs/Roadmap.md`, 0.8.45, for the full
+milestone entry.
