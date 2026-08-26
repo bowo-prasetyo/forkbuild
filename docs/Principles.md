@@ -13886,3 +13886,61 @@ those four standing rules — it only gives a person one place to read all
 four at once, and holds itself to the identical restraint each of them
 already modeled. See `docs/Roadmap.md`, 0.8.46, for the full milestone
 entry.
+
+## A Transaction Plan Is Not A Transaction (0.8.47)
+
+**`anchoring/BitcoinAnchorTransactionBuilder.js#build()` selects
+caller-supplied UTXOs and computes a fee, and stops exactly there.** Its
+result — `{ inputs, outputs, feeSats }` — is a description of what a
+transaction WOULD look like, never bytes a network could relay, never
+anything a private key has touched. There is no signature field, no
+witness data, no raw transaction hex, anywhere in a successful result —
+`tests/BitcoinAnchorTransactionConstruction.test.js`'s own Section F
+scans a built plan directly for exactly this vocabulary (`privateKey`,
+`signature`, `witness`, `txHex`, `seed`, `wif`) rather than trusting this
+header alone. Selecting which coins to spend and sizing a fee is
+arithmetic over facts the caller already handed in; it is never custody,
+and this class never behaves as though it were.
+
+**This class is never wired to `anchoring/BitcoinAnchorPublisher.js`
+(0.8.9), on purpose, in this milestone.** `BitcoinAnchorPublisher` already
+answers "can I ask Bitcoin to record this hash?" by delegating
+construct-sign-broadcast as one opaque unit to an injected `broadcaster`.
+`BitcoinAnchorTransactionBuilder` answers a narrower, EARLIER question —
+"what would spending these specific coins to carry this hash look like?"
+— and neither file imports the other. Connecting "here is a plan" to
+"here is that plan, signed" to "here is that signed plan, broadcast"
+remains three separate, explicit steps, exactly as 0.8.9's own header
+already reserved that sequencing for a later milestone. Collapsing them
+into one call would recreate the exact wallet-custody surface 0.8.9
+deliberately declined to take on.
+
+**Fee and size are estimates offered for POLICY purposes — sizing a fee
+rate into a fee amount — never a claim about consensus-measured
+transaction weight.** `BitcoinAnchorTransactionBuilder` never serializes
+an actual Bitcoin transaction: no compact-size integers, no script
+opcodes beyond a documented OP_RETURN push-length calculation used only
+to estimate an output's byte count, no witness structure. A real signer's
+eventual output can legitimately differ in exact byte count from
+`estimatedVBytes`; this class never claims otherwise, and nothing
+downstream should ever treat `estimatedVBytes` as authoritative.
+
+**Every accepted plan satisfies one invariant, checked directly in the
+flagship test: total input value equals the sum of every output's value
+plus `feeSats`, exactly.** Nothing is created or destroyed that is not
+explicitly named as the fee. A leftover too small to clear
+`dustThresholdSats` is never rounded into a change output the network
+would refuse to relay as dust — it is folded entirely into `feeSats`
+instead, and the invariant still holds, proven directly in
+`tests/BitcoinAnchorTransactionConstruction.test.js`'s own Section B.
+
+**Coin selection is deterministic, not optimal.** Given the same UTXOs —
+in any supplied order — the same `contentHash`, `changeAddress`, and fee
+policy, `build()` always selects the identical inputs: largest-value-
+first, tie-broken by txid/vout so array order can never change the
+result. This is a plain greedy accumulation a person can verify by hand,
+never a claim to minimize fees or maximize privacy across alternative
+combinations — `tests/BitcoinAnchorTransactionConstruction.test.js`'s own
+Section C proves the order-independence directly, feeding the identical
+UTXO set in two different array orders and asserting byte-identical
+selection. See `docs/Roadmap.md`, 0.8.47, for the full milestone entry.
