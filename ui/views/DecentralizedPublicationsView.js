@@ -35,6 +35,8 @@ import { LocalSnapshotContentAvailabilityOutcome } from '../../application/Local
 import { describeLocalSnapshotContentAvailability, describeAvailabilityCheckButtonLabel } from '../../application/LocalSnapshotContentAvailabilityView.js';
 import { SnapshotContentMaterializationUiState } from '../../application/SnapshotContentMaterializationUiState.js';
 import { describeMaterializationAttempt, describeMaterializationButtonLabel } from '../../application/SnapshotContentMaterializationView.js';
+import { SnapshotPlacementMaterializationUiState } from '../../application/SnapshotPlacementMaterializationUiState.js';
+import { describePlacementMaterializationAttempt, describePlacementMaterializationButtonLabel } from '../../application/SnapshotPlacementMaterializationView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -296,6 +298,31 @@ import { describeMaterializationAttempt, describeMaterializationButtonLabel } fr
 // CheckLocalSnapshotContentAvailabilityUseCase.js's own header and
 // docs/Principles.md, "Local Content Availability Is An Observation, Not
 // A Verdict (0.8.33)."
+//
+// 0.8.35 — Explicit Placement-Backed Snapshot Materialization. Each
+// placement card in "Snapshot Placements" below now also offers
+// "Materialize Snapshot," alongside the existing "Inspect Placement"/
+// "Resolve Snapshot" (0.8.20) — a THIRD, genuinely separate action, never
+// triggered by opening this page, expanding "Show Placements," inspecting
+// a placement, or resolving one. Only this explicit click ever calls
+// application/SnapshotPlacementMaterializationCoordinator.js#materialize(),
+// which runs the SAME resolution "Resolve Snapshot" already runs
+// (application/SnapshotPlacementResolutionCoordinator.js, unchanged) and,
+// only once it succeeds, writes the retrieved bytes into this replica's
+// own content/ContentStore.js — the missing bridge between "where can this
+// be retrieved from" (0.8.20) and "does this replica actually possess the
+// bytes" (0.8.33), named directly in 0.8.34's own docs/Roadmap.md entry as
+// this milestone. `entry.materializations` is keyed by placementId,
+// ephemeral session state exactly like `entry.resolutions` above — never
+// read from or written to anything durable, and never itself resolves or
+// modifies the placement (application/
+// MaterializeSnapshotFromPlacementUseCase.js never touches it). Choosing
+// WHICH placement to materialize from is always the person's own explicit
+// click on ONE specific card — this page never ranks placements, never
+// tries a second one after the first fails, and offers no "best source."
+// See application/SnapshotPlacementMaterializationCoordinator.js's own
+// header and docs/Principles.md, "Placement Resolution Observes Present
+// Availability; Materialization Turns It Into Possession (0.8.35)."
 const LOCAL_SNAPSHOT_AVAILABILITY_BADGE_CLASSES = {
     [LocalSnapshotContentAvailabilityOutcome.AVAILABLE]: 'peer-badge--authenticated',
     [LocalSnapshotContentAvailabilityOutcome.NOT_AVAILABLE]: 'peer-badge--unchecked',
@@ -319,6 +346,25 @@ const MATERIALIZATION_BADGE_CLASSES = {
     [SnapshotContentMaterializationUiState.ALREADY_AVAILABLE]: 'peer-badge--authenticated',
     [SnapshotContentMaterializationUiState.UNAVAILABLE]: 'peer-badge--pending',
     [SnapshotContentMaterializationUiState.REJECTED]: 'peer-badge--failed'
+};
+
+// 0.8.35 — Explicit Placement-Backed Snapshot Materialization. The
+// placement-backed sibling of MATERIALIZATION_BADGE_CLASSES above, one
+// axis over: STORED and ALREADY_AVAILABLE both read as "good" (green) —
+// a duplicate materialization is never a failure. UNAVAILABLE reads as
+// "honestly inconclusive" (amber) — the identical outcome "Resolve
+// Snapshot" itself already shows amber for STORE_UNAVAILABLE/
+// CONTENT_UNAVAILABLE (see PLACEMENT_BADGE_CLASSES above). HASH_MISMATCH
+// and INVALID_PLACEMENT both read as definite rejections (red) — a
+// placement whose own bytes, or whose own signature, demonstrably did
+// not check out.
+const PLACEMENT_MATERIALIZATION_BADGE_CLASSES = {
+    [SnapshotPlacementMaterializationUiState.MATERIALIZING]: 'peer-badge--pending',
+    [SnapshotPlacementMaterializationUiState.STORED]: 'peer-badge--authenticated',
+    [SnapshotPlacementMaterializationUiState.ALREADY_AVAILABLE]: 'peer-badge--authenticated',
+    [SnapshotPlacementMaterializationUiState.UNAVAILABLE]: 'peer-badge--pending',
+    [SnapshotPlacementMaterializationUiState.HASH_MISMATCH]: 'peer-badge--failed',
+    [SnapshotPlacementMaterializationUiState.INVALID_PLACEMENT]: 'peer-badge--failed'
 };
 
 const PLACEMENT_BADGE_CLASSES = {
@@ -496,6 +542,13 @@ export default {
         // degrade-gracefully posture `localSnapshotContentAvailabilityUseCase`
         // immediately above already holds.
         const snapshotContentMaterializationCoordinator = inject('snapshotContentMaterializationCoordinator', null);
+        // 0.8.35 — Explicit Placement-Backed Snapshot Materialization.
+        // Optional — absent here (e.g. a test harness that never provides
+        // it), "Materialize Snapshot" simply never renders on a placement
+        // card, the identical degrade-gracefully posture
+        // `placementResolutionCoordinator` above already holds for
+        // "Resolve Snapshot".
+        const snapshotPlacementMaterializationCoordinator = inject('snapshotPlacementMaterializationCoordinator', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -628,6 +681,14 @@ export default {
                 placementsView: null,
                 placementsExpanded: false,
                 resolutions: {},
+                // 0.8.35 — Explicit Placement-Backed Snapshot
+                // Materialization. Keyed by placementId, exactly like
+                // `resolutions` immediately above — ephemeral for the
+                // lifetime of this page, never read from or written to
+                // anything durable, and never touched by loadPlacements()/
+                // resolvePlacement(). See `materializePlacement()`'s own
+                // comment below.
+                materializations: {},
                 // 0.8.26 — Snapshot Placement Lifecycle & Stale
                 // Availability Semantics. Keyed by placementId, each
                 // value the ORDERED list of every application/
@@ -1175,6 +1236,52 @@ export default {
             return PLACEMENT_BADGE_CLASSES[placementView.resolutionOutcome] || 'peer-badge--unchecked';
         }
 
+        // 0.8.35 — Explicit Placement-Backed Snapshot Materialization. The
+        // one place this page calls application/
+        // SnapshotPlacementMaterializationCoordinator.js#materialize() —
+        // always for exactly ONE placement, always because a person
+        // clicked "Materialize Snapshot"/"Materialize Again" on it.
+        // Mirrors resolvePlacement() immediately above almost exactly,
+        // one axis over — the one difference is what a SUCCESSFUL
+        // attempt means: resolvePlacement() only ever observes; a
+        // successful materialize() call actually writes bytes into this
+        // replica's own content/ContentStore.js. Never called from
+        // onMounted(), refreshList(), loadPlacements(), or
+        // resolvePlacement() itself — only this explicit click ever
+        // materializes anything.
+        async function materializePlacement(entry, placementView) {
+            const placement = entry.placements.find((candidate) => candidate.id === placementView.placementId);
+            if (!placement || !snapshotPlacementMaterializationCoordinator) return;
+            entry.materializations[placement.id] = { materializing: true };
+            try {
+                const result = await snapshotPlacementMaterializationCoordinator.materialize(placement);
+                entry.materializations[placement.id] = {
+                    materializing: false, error: null,
+                    outcome: result.outcome, reason: result.reason, contentReference: result.contentReference,
+                    placementId: result.placementId, publicationId: result.publicationId, publicationKnown: result.publicationKnown
+                };
+            } catch (error) {
+                entry.materializations[placement.id] = { materializing: false, outcome: null, error: error.message };
+            }
+        }
+
+        function placementMaterializationView(entry, placementView) {
+            return describePlacementMaterializationAttempt(entry.materializations[placementView.placementId]);
+        }
+
+        function placementMaterializationBadgeClass(entry, placementView) {
+            const state = placementMaterializationView(entry, placementView).state;
+            return PLACEMENT_MATERIALIZATION_BADGE_CLASSES[state] || null;
+        }
+
+        function placementMaterializationButtonLabel(entry, placementView) {
+            const view = placementMaterializationView(entry, placementView);
+            return describePlacementMaterializationButtonLabel({
+                materializing: view.materializing,
+                materialized: view.state !== SnapshotPlacementMaterializationUiState.IDLE
+            });
+        }
+
         // 0.8.20 — the one place this page calls application/
         // PublicationSnapshotPlacementDetailView.js (and, separately,
         // `placementViewRegistry`) — always for exactly ONE placement,
@@ -1543,7 +1650,9 @@ export default {
             localSnapshotContentAvailabilityUseCase, checkLocalSnapshotAvailability, localSnapshotAvailabilityView,
             localSnapshotAvailabilityBadgeClass, localSnapshotAvailabilityButtonLabel,
             snapshotContentMaterializationCoordinator, onMaterializationFileChosen, importSnapshotContent,
-            materializationView, materializationBadgeClass, materializationButtonLabel
+            materializationView, materializationBadgeClass, materializationButtonLabel,
+            snapshotPlacementMaterializationCoordinator, materializePlacement,
+            placementMaterializationView, placementMaterializationBadgeClass, placementMaterializationButtonLabel
         };
     },
     template: `
@@ -2150,7 +2259,31 @@ export default {
                                             @click="resolvePlacement(entry, placementView)">
                                         {{ placementView.checking ? 'Resolving…' : (placementView.resolved ? 'Resolve Again' : 'Resolve Snapshot') }}
                                     </button>
+                                    <!-- 0.8.35 — Explicit Placement-Backed Snapshot Materialization. A
+                                         THIRD, genuinely separate action from "Inspect Placement" and
+                                         "Resolve Snapshot" above — never triggered by either of them, and
+                                         never by opening this page or expanding "Show Placements". Only
+                                         this explicit click runs the SAME resolution "Resolve Snapshot"
+                                         already runs and, only once it succeeds, writes the retrieved
+                                         bytes into this replica's own content/ContentStore.js. Hidden
+                                         entirely with no snapshotPlacementMaterializationCoordinator
+                                         provided. -->
+                                    <button v-if="snapshotPlacementMaterializationCoordinator" class="action-btn action-btn--primary"
+                                            :disabled="placementMaterializationView(entry, placementView).materializing"
+                                            @click="materializePlacement(entry, placementView)">
+                                        {{ placementMaterializationButtonLabel(entry, placementView) }}
+                                    </button>
                                 </div>
+                                <div v-if="snapshotPlacementMaterializationCoordinator && placementMaterializationView(entry, placementView).label"
+                                     class="evidence-discovery-header">
+                                    <span class="peer-badge" :class="placementMaterializationBadgeClass(entry, placementView)">
+                                        {{ placementMaterializationView(entry, placementView).label }}
+                                    </span>
+                                </div>
+                                <p v-if="snapshotPlacementMaterializationCoordinator && placementMaterializationView(entry, placementView).message"
+                                   class="form-hint form-hint--neutral">
+                                    {{ placementMaterializationView(entry, placementView).message }}
+                                </p>
 
                                 <!-- A purely local, synchronous read of THIS placement's own fields —
                                      never a network request, never a call to

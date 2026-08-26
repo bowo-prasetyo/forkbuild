@@ -12835,3 +12835,101 @@ resolution, and materialization remain three genuinely independent
 operations, never one that silently implies another.
 
 See `docs/Roadmap.md`, 0.8.34, for the full milestone entry.
+
+## Placement Resolution Observes Present Availability; Materialization Turns It Into Possession (0.8.35)
+
+0.8.20 drew a careful line and held it for fifteen milestones: resolving a
+`PublicationSnapshotPlacement` retrieves bytes into memory long enough to
+verify them, reports what happened, and keeps nothing. 0.8.26 hardened
+that line into a lifecycle — an `UNAVAILABLE` result after an earlier
+`RESOLVED` reads as "unavailable right now," never "invalid" or
+"corrupted," because resolving never rewrites the claim it observed. That
+discipline was correct, and this milestone does not weaken it. What it
+adds is the one thing resolving a placement was never meant to do:
+actually keeping the bytes.
+
+**Resolution and materialization ask genuinely different questions, and
+this milestone keeps them different classes.** `application/
+SnapshotPlacementResolutionCoordinator.js#resolve()` still answers "can
+this locator's signature and its claimed bytes currently be verified?" —
+unchanged, called from the identical "Resolve Snapshot" button, by the
+identical class, since 0.8.20. `application/
+MaterializeSnapshotFromPlacementUseCase.js` answers a strictly later
+question: "given that resolution already succeeded, should this replica
+now keep those bytes?" It runs the exact same resolution underneath —
+never a second, differently configured resolver — and adds exactly one
+new step past it: writing verified bytes into `content/ContentStore.js`.
+A placement that resolves for "Resolve Snapshot" resolves identically for
+"Materialize Snapshot," because both paths share one resolution
+coordinator, one store registry, one signature verifier. There is no
+second, competing notion of "resolved" this milestone quietly introduces.
+
+**A resolution outcome and a materialization outcome are not the same
+vocabulary, even where they overlap.** `application/
+SnapshotPlacementMaterializationOutcome.js` has five values; three of them
+are direct, lossless, documented mappings of `application/
+SnapshotPlacementResolutionOutcome.js`'s own five — `STORE_UNAVAILABLE`
+and `CONTENT_UNAVAILABLE` both collapse into one coarser `UNAVAILABLE`,
+the identical coarsening `application/SnapshotPlacementLifecycleView.js`
+(0.8.26) already applies for the identical reason: a caller asking "did
+materializing work?" does not need, and should not be handed, a second
+reason to weigh — resolution's own per-attempt label already carries the
+finer distinction, unchanged, one layer under. Nowhere does this
+milestone invent a new explanation for why a store failed to answer; it
+only ever asks resolution, once, and relays what it already knows.
+
+**A placement is chosen, never discovered by this new machinery.**
+`application/MaterializeSnapshotFromPlacementUseCase.js#execute()` and
+`application/SnapshotPlacementMaterializationCoordinator.js#materialize()`
+both accept an already-hydrated `PublicationSnapshotPlacement` INSTANCE —
+never a bare `placementId` this milestone would have to look up itself.
+This is not an incidental implementation shortcut: it is what keeps a
+`PLACEMENT_NOT_FOUND` outcome unnecessary, and it is what keeps this
+milestone from ever needing its own placement catalog lookup, discovery
+call, or ranking policy. The instance a person materializes from is
+always the SAME instance `application/
+SnapshotPlacementResolutionCoordinator.js#discover()` already put on
+screen — exactly mirroring the identical choice `resolve(placement)`
+itself has required since 0.8.20. A publication with placements on three
+different storage backends never gets a "best source" computed on its
+behalf; it gets three buttons, each naming its own backend, each
+resolving and materializing independently, none of them ranked, tried as
+a fallback for another, or hidden behind a "recommended" label. See
+`application/SnapshotPlacementMaterializationCoordinator.js`'s own header
+for why building that ranking now, before more than two competing sources
+even exist side by side, would be exactly the premature system 0.8.34's
+own `SnapshotContentMaterializationCoordinator.js` already declined to
+build one layer under (`availableSources()`), and 0.8.23 already declined
+to build for placement convergence a layer under that.
+
+**`publicationKnown` still never gates materialization.** 0.8.32
+established this invariant for the offline-package path; this milestone
+carries it, unchanged, onto the placement-backed path. `application/
+MaterializeSnapshotFromPlacementUseCase.js` reports whether
+`placement.publicationId` is presently cataloged as a plain, independent
+observation — never a precondition for writing the bytes a resolved
+placement handed back. `tests/SnapshotPlacementMaterialization.test.js`'s
+own flagship proves this operationally exactly as `tests/
+SnapshotContentMaterialization.test.js`'s own Carol already did one layer
+under.
+
+**What this milestone deliberately still refuses to build.** No
+automatic materialization the moment a placement resolves or is
+discovered — "Resolve Snapshot" and "Materialize Snapshot" remain two
+separate, explicit clicks, exactly as discovery and resolution themselves
+stayed two separate clicks starting in 0.8.20. No new provenance kind: a
+successfully materialized placement's own `application/
+LocalPlacementKnowledgeStore.js` entry is completely untouched — how this
+replica came to KNOW the placement (PEER/PACKAGE/LOCAL) is an entirely
+different fact from whether this replica has since chosen to keep the
+bytes it names, and this milestone never conflates the two. No
+persistence of a materialization attempt: `entry.
+materializations[placementId]` lives only as long as the Publication
+Center page does, exactly like `entry.resolutions` (0.8.20) and `entry.
+materializationAttempt` (0.8.34) before it. And no unified picker letting
+a person compare an offline package against a resolvable placement side
+by side — that remains 0.8.36, open on purpose: this milestone's entire
+job was proving the placement-backed path alone works end to end, not
+merging it with the path 0.8.34 already built.
+
+See `docs/Roadmap.md`, 0.8.35, for the full milestone entry.
