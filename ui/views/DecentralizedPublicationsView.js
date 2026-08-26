@@ -51,6 +51,8 @@ import { createSnapshotMaterializationAttempt } from '../../application/Snapshot
 import { describeLocalSnapshotMaterializationSource } from '../../application/SnapshotMaterializationView.js';
 import { appendSnapshotMaterializationHistoryEntry, describeSnapshotMaterializationSourceCounts } from '../../application/SnapshotMaterializationHistory.js';
 import { describeSnapshotMaterializationHistory } from '../../application/SnapshotMaterializationHistoryView.js';
+import { appendSnapshotPeerPossessionObservationHistoryEntry, latestSnapshotPeerPossessionObservationsByPeer } from '../../application/SnapshotPeerPossessionObservationHistory.js';
+import { describeSnapshotPeerPossessionComparison, describeSnapshotPeerPossessionStateLabel, describeSnapshotPeerPossessionObservationHistory } from '../../application/SnapshotPeerPossessionComparisonView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -928,7 +930,33 @@ export default {
                 // `replicaKnowledgeExpanded` above. See application/
                 // SnapshotMaterializationHistory.js's own header.
                 materializationHistory: [],
-                materializationHistoryExpanded: false
+                materializationHistoryExpanded: false,
+                // 0.8.41 — Peer Snapshot Possession Comparison & Observation
+                // History. A DELIBERATELY SEPARATE selection and history
+                // from `peerPossessionSelectedPeerId`/`peerPossessionAttempt`
+                // above: this milestone never retrofits the single-peer
+                // "Check with Peer" flow into a history, it only ADDS a new,
+                // explicit multi-peer action alongside it.
+                // `peerPossessionCompareSelectedPeerIds` is the set of
+                // `retrievalPeers` connectionIds a person has checked the
+                // box for — the person's own explicit, caller-supplied
+                // list application/SnapshotPeerPossessionCoordinator.js#
+                // observePeers() requires, never a list this page assembles
+                // or ranks on their behalf.
+                // `peerPossessionObservationHistory` is the append-only,
+                // ephemeral application/
+                // SnapshotPeerPossessionObservationHistory.js sequence every
+                // observation from "Check Selected Peers" (below) has
+                // joined THIS SESSION — never overwritten, and never
+                // filtered down to only the current answer; see that file's
+                // own header. `peerPossessionComparisonHistoryExpanded`
+                // gates only whether the full chronological history
+                // disclosure is on screen, mirroring
+                // `materializationHistoryExpanded` immediately above.
+                peerPossessionCompareSelectedPeerIds: [],
+                peerPossessionObservationHistory: [],
+                peerPossessionComparisonChecking: false,
+                peerPossessionComparisonHistoryExpanded: false
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -1704,6 +1732,104 @@ export default {
             });
         }
 
+        // 0.8.41 — Peer Snapshot Possession Comparison & Observation
+        // History. `togglePeerPossessionCompareSelection()` is the ONLY
+        // place `entry.peerPossessionCompareSelectedPeerIds` ever changes —
+        // a plain checkbox toggle, never touched by any automatic
+        // discovery, ranking, or "select all" gesture. `selectedPeersFor
+        // PossessionComparison()` turns those checked-box connectionIds
+        // back into real, currently-authenticated ConnectedPeer objects —
+        // a peer that disconnects between being checked and the click is
+        // silently dropped from the list actually asked, exactly mirroring
+        // `selectedPeerForPossessionCheck()`/`selectedPeerForMaterialization()`'s
+        // own identical restraint one axis over.
+        function togglePeerPossessionCompareSelection(entry, connectionId) {
+            const index = entry.peerPossessionCompareSelectedPeerIds.indexOf(connectionId);
+            if (index === -1) {
+                entry.peerPossessionCompareSelectedPeerIds.push(connectionId);
+            } else {
+                entry.peerPossessionCompareSelectedPeerIds.splice(index, 1);
+            }
+        }
+
+        function selectedPeersForPossessionComparison(entry) {
+            return retrievalPeers.value.filter((peer) => entry.peerPossessionCompareSelectedPeerIds.includes(peer.connectionId));
+        }
+
+        // The explicit "Check Selected Peers" action — the ONLY place
+        // application/SnapshotPeerPossessionCoordinator.js#observePeers()
+        // is ever called. Every observation it returns is APPENDED to
+        // `entry.peerPossessionObservationHistory`, never replacing an
+        // earlier one — this is the one deliberate difference from
+        // `checkSnapshotPossessionWithPeer()` immediately above, whose own
+        // single `entry.peerPossessionAttempt` is still replaced each
+        // click. Neither function ever calls the other, and neither
+        // function's own state is ever read by the other's view.
+        async function checkSnapshotPossessionWithSelectedPeers(entry) {
+            const peers = selectedPeersForPossessionComparison(entry);
+            if (peers.length === 0 || !snapshotPeerPossessionCoordinator) return;
+            entry.peerPossessionComparisonChecking = true;
+            try {
+                const observations = await snapshotPeerPossessionCoordinator.observePeers({
+                    peers, publicationId: entry.publication.id, contentHash: entry.publication.contentReference.hash
+                });
+                let history = entry.peerPossessionObservationHistory;
+                for (const observation of observations) {
+                    history = appendSnapshotPeerPossessionObservationHistoryEntry(history, observation);
+                }
+                entry.peerPossessionObservationHistory = history;
+            } finally {
+                entry.peerPossessionComparisonChecking = false;
+            }
+        }
+
+        // Pure, synchronous: always recomputed from `entry.
+        // peerPossessionObservationHistory`'s own latest-per-peer
+        // reduction, never a separately maintained "current" field —
+        // exactly the same "derive, don't cache" discipline `currentPossessionView()`
+        // above already holds for local possession.
+        function peerPossessionComparisonView(entry) {
+            const latest = latestSnapshotPeerPossessionObservationsByPeer(entry.peerPossessionObservationHistory, {
+                publicationId: entry.publication.id, contentHash: entry.publication.contentReference.hash
+            });
+            return describeSnapshotPeerPossessionComparison(entry.publication.id, entry.publication.contentReference.hash, latest);
+        }
+
+        function peerPossessionComparisonRowBadgeClass(peerRow) {
+            return PEER_POSSESSION_BADGE_CLASSES[peerRow.state] || null;
+        }
+
+        function peerPossessionComparisonRowLabel(peerRow) {
+            return describeSnapshotPeerPossessionStateLabel(peerRow.state);
+        }
+
+        // The FULL chronological narration — every recorded observation,
+        // including repeat checks of the same peer — for the "Possession
+        // Observation History" disclosure, deliberately separate from the
+        // latest-per-peer comparison above.
+        function peerPossessionObservationHistoryView(entry) {
+            return describeSnapshotPeerPossessionObservationHistory(entry.peerPossessionObservationHistory);
+        }
+
+        function togglePeerPossessionComparisonHistory(entry) {
+            entry.peerPossessionComparisonHistoryExpanded = !entry.peerPossessionComparisonHistoryExpanded;
+        }
+
+        // Display-only: turns a bare `peerId` (an application/
+        // SnapshotPeerPossessionObservation.js connectionId) back into a
+        // readable label, for a comparison row or a history row alike. A
+        // peer that has since disconnected — an observation is a
+        // historical fact, and stays on screen after the peer it named is
+        // gone — falls back to `shortId(peerId)` rather than disappearing
+        // or being relabeled "Unknown peer," which is reserved for a
+        // genuinely null peerId.
+        function peerPossessionRowLabel(peerId) {
+            if (!peerId) return 'Unknown peer';
+            const peer = retrievalPeers.value.find((candidate) => candidate.connectionId === peerId);
+            if (peer) return peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer');
+            return shortId(peerId);
+        }
+
         // 0.8.20 — the one place this page calls application/
         // PublicationSnapshotPlacementDetailView.js (and, separately,
         // `placementViewRegistry`) — always for exactly ONE placement,
@@ -2081,7 +2207,10 @@ export default {
             peerMaterializationView, peerMaterializationBadgeClass, peerMaterializationButtonLabel,
             snapshotPeerPossessionCoordinator, checkSnapshotPossessionWithPeer,
             peerPossessionView, peerPossessionBadgeClass, peerPossessionButtonLabel,
-            materializationHistoryView, materializationSourceCountsSentence, toggleMaterializationHistory
+            materializationHistoryView, materializationSourceCountsSentence, toggleMaterializationHistory,
+            togglePeerPossessionCompareSelection, checkSnapshotPossessionWithSelectedPeers,
+            peerPossessionComparisonView, peerPossessionComparisonRowBadgeClass, peerPossessionComparisonRowLabel,
+            peerPossessionObservationHistoryView, togglePeerPossessionComparisonHistory, peerPossessionRowLabel
         };
     },
     template: `
@@ -2337,6 +2466,104 @@ export default {
                             <p v-if="peerPossessionView(entry).observedAt" class="form-hint form-hint--neutral">
                                 Observed: {{ formatWhen(peerPossessionView(entry).observedAt) }}
                             </p>
+                        </div>
+
+                        <!-- 0.8.41 — Peer Snapshot Possession Comparison &
+                             Observation History. A DELIBERATELY SEPARATE
+                             section from "Peer Snapshot Possession" immediately
+                             above, with its own peer selection (a checked-box
+                             SET, not a single dropdown choice) and its own
+                             ephemeral history — asking several peers at once
+                             and inspecting the answers side-by-side is a
+                             distinct action from checking one. "Check Selected
+                             Peers" never ranks, prefers, or recommends a peer;
+                             it only reports what each one said, and how many
+                             said what. See application/
+                             SnapshotPeerPossessionComparisonView.js's own
+                             header and docs/Principles.md, "Peer Possession
+                             Observations Describe What Peers Report; They Do
+                             Not Become Placement Claims (0.8.41)." -->
+                        <div v-if="snapshotPeerPossessionCoordinator" class="evidence-list">
+                            <span class="evidence-convergence-title">Peer Snapshot Possession Comparison</span>
+                            <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
+                                No authenticated peer is connected right now — connect to one first from
+                                <router-link to="/peers">Peers</router-link>.
+                            </p>
+                            <template v-else>
+                                <ul class="replica-knowledge-claim-list">
+                                    <li v-for="peer in retrievalPeers" :key="peer.connectionId" class="replica-knowledge-claim">
+                                        <label>
+                                            <input type="checkbox"
+                                                   :checked="entry.peerPossessionCompareSelectedPeerIds.includes(peer.connectionId)"
+                                                   @change="togglePeerPossessionCompareSelection(entry, peer.connectionId)">
+                                            {{ peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer') }}
+                                        </label>
+                                    </li>
+                                </ul>
+                                <div class="evidence-discovery-header">
+                                    <button class="action-btn action-btn--secondary"
+                                            :disabled="entry.peerPossessionComparisonChecking || entry.peerPossessionCompareSelectedPeerIds.length === 0"
+                                            @click="checkSnapshotPossessionWithSelectedPeers(entry)">
+                                        {{ entry.peerPossessionComparisonChecking ? 'Checking…' : (peerPossessionObservationHistoryView(entry).count > 0 ? 'Check Selected Peers Again' : 'Check Selected Peers') }}
+                                    </button>
+                                </div>
+                            </template>
+
+                            <div v-if="peerPossessionComparisonView(entry).peers.length > 0">
+                                <p class="form-hint form-hint--neutral">
+                                    {{ peerPossessionComparisonView(entry).availableCount }} available ·
+                                    {{ peerPossessionComparisonView(entry).notAvailableCount }} not available ·
+                                    {{ peerPossessionComparisonView(entry).unavailableCount }} could not determine
+                                </p>
+                                <ul class="replica-knowledge-claim-list">
+                                    <li v-for="peerRow in peerPossessionComparisonView(entry).peers" :key="peerRow.peerId" class="replica-knowledge-claim">
+                                        <dl class="evidence-fields">
+                                            <div class="evidence-field">
+                                                <dt>Peer</dt>
+                                                <dd>{{ peerPossessionRowLabel(peerRow.peerId) }}</dd>
+                                            </div>
+                                            <div class="evidence-field">
+                                                <dt>Reports</dt>
+                                                <dd>
+                                                    <span class="peer-badge" :class="peerPossessionComparisonRowBadgeClass(peerRow)">
+                                                        {{ peerPossessionComparisonRowLabel(peerRow) }}
+                                                    </span>
+                                                </dd>
+                                            </div>
+                                            <div class="evidence-field">
+                                                <dt>Observed</dt>
+                                                <dd>{{ formatWhen(peerRow.observedAt) }}</dd>
+                                            </div>
+                                        </dl>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div v-if="peerPossessionObservationHistoryView(entry).count > 0">
+                                <button class="action-btn action-btn--secondary" @click="togglePeerPossessionComparisonHistory(entry)">
+                                    {{ entry.peerPossessionComparisonHistoryExpanded ? 'Hide Observation History' : 'Show Observation History' }}
+                                </button>
+                                <div v-if="entry.peerPossessionComparisonHistoryExpanded">
+                                    <ul class="replica-knowledge-claim-list">
+                                        <li v-for="(observation, index) in peerPossessionObservationHistoryView(entry).observations" :key="index" class="replica-knowledge-claim">
+                                            <dl class="evidence-fields">
+                                                <div class="evidence-field">
+                                                    <dt>Peer</dt>
+                                                    <dd>{{ peerPossessionRowLabel(observation.peerId) }}</dd>
+                                                </div>
+                                                <div class="evidence-field">
+                                                    <dt>Reported</dt>
+                                                    <dd>{{ observation.stateLabel }}</dd>
+                                                </div>
+                                                <div class="evidence-field">
+                                                    <dt>Observed</dt>
+                                                    <dd>{{ formatWhen(observation.observedAt) }}</dd>
+                                                </div>
+                                            </dl>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 0.8.38 — Snapshot Materialization History & Source

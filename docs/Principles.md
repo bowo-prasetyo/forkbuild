@@ -13413,3 +13413,87 @@ NOT_AVAILABLE — this milestone introduces no score, and none should ever
 be added to it.
 
 See `docs/Roadmap.md`, 0.8.40, for the full milestone entry.
+
+## Peer Possession Observations Describe What Peers Report; They Do Not Become Placement Claims (0.8.41)
+
+**Collecting several peers' possession observations together — comparing
+them, counting them, keeping every one of them on file — never turns the
+COLLECTION into something more authoritative than any single observation
+already was.** `application/SnapshotPeerPossessionCoordinator.js#observePeers()`
+lets a person ask several caller-chosen, already-authenticated peers the
+identical `application/PeerSnapshotPossessionProtocol.js` question at
+once; `application/SnapshotPeerPossessionObservationHistory.js` keeps
+every answer, forever (for the lifetime of the page), in the order it
+arrived; `application/SnapshotPeerPossessionComparisonView.js` shows them
+side by side. At no point does any of this become a placement, a trust
+signal, or a recommendation — the identical restraint `docs/Principles.md`'s
+own "Peer Possession Responses Are Observations, Not Placement Claims
+(0.8.40)" already established for ONE observation, extended here to MANY.
+
+**A history is a ledger of what was asked and answered, never a cache of
+what is currently true.** `appendSnapshotPeerPossessionObservationHistoryEntry()`
+only ever appends — it never overwrites an existing entry, never merges
+two observations of the same peer into one, and never expires an entry
+because a newer one exists. Asking Alice three times produces THREE
+entries in the history, not one entry that got "refreshed." The one place
+this milestone lets "current" mean anything at all is
+`latestSnapshotPeerPossessionObservationsByPeer()` — a REDUCTION computed
+fresh from the full history every time it is asked for, never a second,
+independently-maintained "latest" field that could drift from the history
+it was supposedly derived from. A caller wanting to know what a peer
+reports "now" always re-derives it from the history that already exists,
+rather than consulting some separate cached answer.
+
+**A comparison reports exactly what was observed and how many said what —
+nothing a person did not directly tell it.** `describeSnapshotPeerPossessionComparison()`'s
+own output carries `peers` (in the caller's own given order — never
+re-sorted by state, recency, or any other judgment) and three exact
+counts: `availableCount`, `notAvailableCount`, `unavailableCount`. It
+carries no `bestPeer`, no `preferredPeer`, no `recommendedPeer`, no
+`trustedPeer`, no `reliability`, no `confidence`, no `score`, and no
+`rank` — and a test in `tests/SnapshotPeerPossessionObservationHistory.test.js`
+asserts every one of those fields' absence directly, the same "assert the
+forbidden vocabulary is actually absent, not merely unused today"
+discipline `tests/SnapshotMaterializationHistory.test.js` (0.8.38) already
+holds for source labels. If Alice reports AVAILABLE and Bob reports
+NOT_AVAILABLE, the comparison says exactly that; it never picks a winner.
+
+**The three-way vocabulary 0.8.40 established stays three-way all the way
+to the screen.** `describeSnapshotPeerPossessionStateLabel()` labels
+UNAVAILABLE "Could not determine" — deliberately NOT "Not available," and
+deliberately never merged with NOT_AVAILABLE's own count in
+`describeSnapshotPeerPossessionComparison()`'s output. "The peer said no"
+and "nothing came back" remain two different facts, all the way from
+`application/SnapshotPeerPossessionState.js`'s own three-value enum
+(0.8.40) through to the comparison a person actually reads.
+
+**Composing many observations changes nothing about what a single
+observation already could not do.** No `POSSESSION`-shaped value was
+added to `application/SnapshotMaterializationSourceKind.js`; no
+observation, singular or collected, is ever written into `application/
+LocalPlacementKnowledgeStore.js`, `application/LocalAnchorKnowledgeStore.js`,
+a publication catalog, a placement catalog, or a Publication Replica
+Package; and no `PublicationSnapshotPlacement` is ever synthesized because
+several peers happened to answer AVAILABLE. The flagship test in
+`tests/SnapshotPeerPossessionObservationHistory.test.js` asserts this
+directly and structurally, not merely by absence of code that would do
+it: `application/PublicationSnapshotPlacementConvergence.js`'s own derived
+convergence over a real, shared placement catalog is asserted
+BYTE-IDENTICAL before and after every round of observations — including a
+round where one peer's own possession genuinely changed between checks.
+An observation, or a thousand of them, remains exactly what 0.8.40 named
+it: a fact about what a peer said, never a claim about where content can
+be found.
+
+**The choice of which peers to ask stays a person's own, extended from one
+to several without introducing any new discovery.** `observePeers()`
+takes a `peers` array and asks exactly those peers, in parallel — it
+never discovers a peer, never pads the list out with additional peers it
+considers relevant, never retries a peer that timed out, and never falls
+back to a different peer after one fails to answer. A peer that never
+answers resolves to its own honest UNAVAILABLE observation, exactly as
+`application/ObservePeerSnapshotPossessionUseCase.js` (0.8.40) already
+guarantees for a single request — `observePeers()` adds no fallback logic
+of its own on top of that guarantee.
+
+See `docs/Roadmap.md`, 0.8.41, for the full milestone entry.
