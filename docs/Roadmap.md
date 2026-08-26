@@ -22671,3 +22671,139 @@ silently falling through to a different source.
   own coordinators directly, unchanged — the new dispatcher is additive
   infrastructure for the genuinely missing peer-row action, not a
   mandatory migration of already-working, already-tested call sites.
+
+## 0.8.43 — Unified Snapshot Acquisition Outcome & Possession UX
+
+0.8.32–0.8.42 built an entire lifecycle of small, independent facts around
+a single publication's snapshot — placement resolution (0.8.18/0.8.20),
+peer possession observation (0.8.40/0.8.41), materialization history
+(0.8.38), and current local possession (0.8.33/0.8.39) — each carefully
+kept from merging into any of the others. Those facts still live in
+separate places, though, and a person has had to open several different
+disclosures to answer one simple question: **after several acquisition
+attempts, what does this replica currently possess, and what happened
+along the way?** This milestone composes the two facts closest to that
+question — current possession and acquisition history — into a single
+small summary, while refusing, on purpose, to turn that composition into a
+score or a verdict. The core principle:
+
+> Current snapshot possession is independent of how the snapshot was
+> acquired. Acquisition history explains past attempts; it does not
+> determine present possession.
+
+```text
+   describePublicationSnapshotPossession()               (0.8.39, UNCHANGED)
+   describeSnapshotMaterializationSourceCounts()/
+   describeSnapshotMaterializationOutcomeCounts()   (0.8.38/0.8.43, UNCHANGED)
+              │
+              ▼
+   describePublicationSnapshotAcquisition()                   (new)
+              │
+              ▼
+     { publicationId, contentHash,
+       possession: { state },
+       acquisition: { attemptCount, storedCount, alreadyAvailableCount,
+                       hashMismatchCount, sources: { package, placement, peer } } }
+```
+
+Two small changes, both under `application/`:
+
+- `application/SnapshotMaterializationHistory.js` gains one new function,
+  alongside its own existing `describeSnapshotMaterializationSourceCounts()`
+  (0.8.38): `describeSnapshotMaterializationOutcomeCounts(history)` tallies
+  the identical history array by OUTCOME instead of by source — "2 stored,
+  1 already available, 1 hash mismatch" — the one missing count this
+  milestone needed and the existing file was already the right home for.
+- `application/PublicationSnapshotAcquisitionView.js` (new) —
+  `describePublicationSnapshotAcquisition({ publicationId, contentHash,
+  possessionView, materializationHistory })` composes application/
+  PublicationSnapshotPossessionView.js's own result (0.8.39) with the two
+  count functions above into one small, frozen shape. It reports
+  `possession.state` EXACTLY as `possessionView` already holds it — never
+  inferring, correcting, or overriding current possession from whatever
+  the history narrates — and reports `acquisition` as plain counts only.
+  It touches no store, no coordinator, no use case, and no placement or
+  peer possession comparison of its own; every fact it composes was
+  already computed by its own caller.
+
+`ui/views/DecentralizedPublicationsView.js` gains one small, additive
+piece of UX: "Local Snapshot" now opens with a "Snapshot Acquisition"
+summary, sitting above every specialized disclosure it already offers
+below it (the possession check, "Materialization History," "Peer Snapshot
+Possession Comparison") — a composed SUMMARY, never a replacement for any
+of them, exactly mirroring `application/PublicationSnapshotAcquisitionView.js`'s
+own restraint. It shows the current possession sentence already computed
+by `localSnapshotAvailabilityView(entry)` (0.8.33, unchanged), a plain
+count sentence over the acquisition history ("4 attempts · 2 stored · 1
+already available · 1 hash mismatch"), and the existing per-source count
+sentence 0.8.38 already built. When current possession is NOT_AVAILABLE or
+CONTENT_HASH_MISMATCH, it adds one short, honest hint pointing at the
+sources already offered further down the same card — "Import Snapshot," a
+placement's own "Materialize Snapshot," a peer's own "Get Snapshot from
+Peer" — never a new, fourth materialization mechanism, and never an
+automatic retry. Detection is not deletion: nothing in this milestone ever
+deletes, invalidates, or automatically re-materializes a mismatched local
+snapshot on a person's behalf.
+
+> **Current snapshot possession is independent of how the snapshot was
+> acquired; acquisition history explains past attempts, it does not
+> determine present possession.** See `docs/Principles.md`, "Current
+> Snapshot Possession Is Independent Of How The Snapshot Was Acquired
+> (0.8.43)," and "Acquisition History Explains Past Attempts; It Does Not
+> Determine Present Possession (0.8.43)."
+
+The FLAGSHIP test (`tests/PublicationSnapshotAcquisitionView.test.js`,
+Section E) proves the milestone's own central claim directly, in both
+directions, over real `content/LocalContentStore.js` instances. Bob and
+Carol each materialize a snapshot through the identical one-entry
+PLACEMENT history and both currently report AVAILABLE — their composed
+acquisition summaries are byte-identical. Bob's bytes are then deleted
+underneath him: his own history stays byte-identical to Carol's, yet his
+current possession now reads NOT_AVAILABLE while Carol's still reads
+AVAILABLE — identical history, different possession. Separately, Alice
+(PACKAGE), Bob (PLACEMENT), Carol (PEER), and Dave (a rejected PEER
+attempt, then a recovering PLACEMENT attempt) all end up possessing
+byte-identical content and all report AVAILABLE, while each retains its
+own, entirely different acquisition history — identical possession,
+different history. Section D separately proves the corruption/recovery
+path this milestone's own design conversation named directly: possession
+moves from AVAILABLE, through storage corruption that is never itself an
+acquisition attempt (and so leaves no trace in the history), to
+CONTENT_HASH_MISMATCH, then through an explicit re-materialization from a
+different source, back to AVAILABLE — while the history narrates only the
+two attempts that were actually explicit actions.
+
+### Deliberately excluded
+
+- **A new state machine, or any aggregate "health" value, over the
+  composed facts.** `application/PublicationSnapshotAcquisitionView.js`
+  introduces no `SNAPSHOT_HEALTHY`/`SNAPSHOT_DEGRADED`/`SNAPSHOT_RECOVERED`
+  enum, no percentage, and no single rolled-up status. It composes exactly
+  two already-independent facts into one small object; it never collapses
+  them into a third, new one.
+- **Any evaluative vocabulary anywhere in the composed shape.** No
+  `confidence`, `quality`, `reliability`, `bestSource`, `preferredSource`,
+  or `successRate` — `acquisition` carries plain counts only, exactly like
+  every file it composes already restricts itself to. The flagship test
+  asserts this directly, recursively, over every field the composed view
+  returns.
+- **Inferring current possession from materialization history, or vice
+  versa.** A "stored" history entry never implies current possession, and
+  a "hash mismatch" history entry never implies its absence — `possession.state`
+  is always read from `possessionView` alone, exactly as `application/
+  PublicationSnapshotPossessionView.js` (0.8.39) already reports it.
+- **Automatic repair, invalidation, or deletion of a corrupted local
+  snapshot.** Detecting `CONTENT_HASH_MISMATCH` never itself deletes
+  anything from `content/ContentStore.js`; a person still makes the
+  identical explicit choice of source 0.8.34/0.8.35/0.8.37/0.8.42 already
+  offer, now with one honest hint pointing at where those choices already
+  live.
+- **A fourth materialization mechanism, or a unified source picker.** The
+  "Snapshot Acquisition" summary's own hint points at the three already-
+  existing, already-separate action surfaces this same card offers below
+  it; it introduces no new button, dropdown, or coordinator of its own.
+- **Composing peer possession comparison (0.8.41) into this same view.**
+  A peer's own reported possession is a claim about THAT PEER, never
+  about this replica's own acquisition history or current content state —
+  "Peer Snapshot Possession Comparison" stays its own, independently
+  gated disclosure, exactly as before this milestone.

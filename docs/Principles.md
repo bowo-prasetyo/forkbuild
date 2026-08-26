@@ -13580,4 +13580,96 @@ or more likely to succeed than another; each row's own button is offered
 purely because that peer said, at one past moment, that it possessed the
 bytes — nothing more.
 
+## Current Snapshot Possession Is Independent Of How The Snapshot Was Acquired (0.8.43)
+
+**`application/PublicationSnapshotAcquisitionView.js#describePublicationSnapshotAcquisition()`
+reports `possession.state` exactly as its own `possessionView` parameter
+already holds it — never inferred, corrected, or overridden by whatever
+`materializationHistory` happens to narrate alongside it.** A history
+showing a successful "stored" entry through PEER, sitting beside a
+`possessionView` reporting `NOT_AVAILABLE`, is reported exactly that way:
+the bytes materialized once and could have been deleted since. A history
+showing only a rejected `HASH_MISMATCH` entry, sitting beside a
+`possessionView` reporting `AVAILABLE`, is equally reported exactly that
+way: a later, unrecorded check, or a successful attempt this particular
+history never happened to capture, could have replaced the bad bytes.
+Neither combination is flagged as inconsistent, neither is "corrected"
+toward whichever fact looks more current, and neither ever raises an
+error — both are entirely ordinary, unremarkable states this file exists
+specifically to let stand unresolved.
+
+**The flagship test in `tests/PublicationSnapshotAcquisitionView.test.js`
+(Section E, Invariant 1) proves this directly and structurally, over real
+`content/LocalContentStore.js` instances, not merely hand-built fixtures.**
+Bob and Carol each materialize a snapshot through an identical one-entry
+PLACEMENT history, recorded at the identical moment — their own composed
+acquisition summaries are asserted byte-identical. Bob's underlying bytes
+are then deleted directly from his own storage, never through any
+explicit action this codebase tracks. His own `materializationHistory` is
+asserted, again, to be byte-identical to Carol's — nothing about the
+deletion touches it — while his current possession now reads
+`NOT_AVAILABLE` and Carol's still reads `AVAILABLE`. The identical
+history now underlies two different, genuinely true, current-possession
+facts.
+
+**This is the same restraint `application/PublicationSnapshotPossessionView.js`
+(0.8.39) and `application/PublicationReplicaContentKnowledgeView.js`
+(0.8.39) already established, extended one composition further.** Just as
+replica knowledge, materialization history, and current content
+possession were already three independent facts a caller could combine
+without merging, this milestone's own composed view is a fourth
+combination that still refuses to let any one of its two inputs decide
+the other. See `docs/Roadmap.md`, 0.8.43, for the full milestone entry.
+
+## Acquisition History Explains Past Attempts; It Does Not Determine Present Possession (0.8.43)
+
+**`application/PublicationSnapshotAcquisitionView.js`'s own `acquisition`
+field is a plain, non-judgmental tally — `attemptCount`, `storedCount`,
+`alreadyAvailableCount`, `hashMismatchCount`, and a per-source `sources`
+breakdown — built entirely from counting functions that already existed
+or that this same milestone added beside them:
+`application/SnapshotMaterializationHistory.js#describeSnapshotMaterializationSourceCounts()`
+(0.8.38) and its own new sibling `describeSnapshotMaterializationOutcomeCounts()`
+(0.8.43).** Neither counts anything this codebase did not already record
+as an explicit "Import Snapshot"/"Materialize Snapshot"/"Get Snapshot from
+Peer" attempt that reached `application/StoreSnapshotContentUseCase.js`
+(0.8.36) — an event outside that boundary, such as storage corruption or a
+byte deletion, is never itself an acquisition attempt, and produces no
+history entry of its own.
+
+**The flagship test's own Section D proves this directly: possession
+moves from `AVAILABLE`, through storage corruption simulated by writing
+directly underneath `content/LocalContentStore.js` (never through any
+`StoreSnapshotContentUseCase.js` call), to `CONTENT_HASH_MISMATCH` — and
+the acquisition history is asserted UNCHANGED across that entire step,
+still holding exactly the one entry it held before the corruption
+happened.** Only the SUBSEQUENT explicit re-materialization, from a
+deliberately different source, both recovers possession back to
+`AVAILABLE` and adds a second, genuinely new entry to the history. A
+count of past attempts is never treated as a prediction, a guarantee, or
+a substitute for the one authoritative present-tense fact —
+`application/PublicationSnapshotPossessionView.js`'s own `possession.state`
+— and no field anywhere in this milestone's own shape is named
+`confidence`, `quality`, `reliability`, `bestSource`, `preferredSource`,
+or `successRate`; the flagship test asserts this recursively, over every
+field the composed view returns, across all four of its own flagship
+replicas.
+
+**No new state machine.** `describePublicationSnapshotAcquisition()`
+introduces no `SNAPSHOT_HEALTHY`/`SNAPSHOT_DEGRADED`/`SNAPSHOT_RECOVERED`
+enum and no rolled-up percentage or verdict over its two composed facts —
+it remains exactly the small object diagrammed in its own header,
+`{ possession, acquisition }`, sitting beside `application/
+PublicationSnapshotPossessionView.js` (0.8.39) and `application/
+SnapshotMaterializationHistoryView.js` (0.8.38) rather than replacing
+either of them. `ui/views/DecentralizedPublicationsView.js`'s own
+"Snapshot Acquisition" summary is additive UX in the identical spirit:
+when current possession is `NOT_AVAILABLE` or `CONTENT_HASH_MISMATCH`, it
+offers one short hint pointing at the three already-existing, already-
+separate materialization actions this same card offers further down —
+never a new source-selection mechanism, and never an automatic retry.
+Detection is not deletion: nothing in this milestone ever deletes,
+invalidates, or automatically re-materializes a mismatched local
+snapshot. See `docs/Roadmap.md`, 0.8.43, for the full milestone entry.
+
 See `docs/Roadmap.md`, 0.8.42, for the full milestone entry.

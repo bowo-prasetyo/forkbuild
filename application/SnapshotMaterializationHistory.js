@@ -1,3 +1,5 @@
+import { StoreSnapshotContentOutcome } from './StoreSnapshotContentOutcome.js';
+
 // 0.8.38 — Snapshot Materialization History & Source Inspection.
 //
 // application/SnapshotMaterializationAttempt.js (0.8.36/0.8.38) names ONE
@@ -75,6 +77,33 @@ export function describeSnapshotMaterializationSourceCounts(history) {
         const kind = attempt && attempt.source && attempt.source.kind;
         if (kind && Object.prototype.hasOwnProperty.call(counts, kind)) {
             counts[kind] += 1;
+        }
+    }
+    return counts;
+}
+
+// 0.8.43 — Unified Snapshot Acquisition Outcome & Possession UX. The
+// identical non-judgmental tally `describeSnapshotMaterializationSourceCounts()`
+// immediately above already performs by SOURCE, one axis over: by OUTCOME.
+// "2 stored, 1 already available, 1 hash mismatch" — application/
+// PublicationSnapshotAcquisitionView.js's own sole reason for existing.
+// Counts every recorded attempt exactly once, under whichever of
+// application/StoreSnapshotContentOutcome.js's three values it holds; an
+// attempt whose `outcome` is somehow none of the three (never possible
+// through this codebase's own recording call sites, but this function does
+// not assume that) is silently counted nowhere, exactly as
+// `describeSnapshotMaterializationSourceCounts()` already tolerates an
+// unrecognized `source.kind`. THE ONE RULE THIS FUNCTION EXISTS TO
+// ENFORCE, restated one axis over: a count, never a ranking — no outcome
+// is ever described as more common, more expected, or more significant
+// than another.
+export function describeSnapshotMaterializationOutcomeCounts(history) {
+    const counts = { stored: 0, alreadyAvailable: 0, hashMismatch: 0 };
+    for (const attempt of (Array.isArray(history) ? history : [])) {
+        switch (attempt && attempt.outcome) {
+            case StoreSnapshotContentOutcome.STORED: counts.stored += 1; break;
+            case StoreSnapshotContentOutcome.ALREADY_AVAILABLE: counts.alreadyAvailable += 1; break;
+            case StoreSnapshotContentOutcome.HASH_MISMATCH: counts.hashMismatch += 1; break;
         }
     }
     return counts;
