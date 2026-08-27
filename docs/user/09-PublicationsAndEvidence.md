@@ -13,8 +13,11 @@ retrieved from, like an IPFS node; a **Local Snapshot** section that reports
 what your own device already holds and lets you actually pull those bytes
 in, from a placement, from a peer, or from a file someone hands you; and a
 **Decentralization** overview that puts your evidence and placements side by
-side. None of these are required by any other, and none are required to use
-the rest of ForkBuild.
+side; and, separately, a full [Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)
+that connects a real browser wallet and walks a real transaction all the
+way from observed funding to a broadcast, confirmed anchor on the Bitcoin
+network. None of these are required by any other, and none are required to
+use the rest of ForkBuild.
 
 None of this is required to use ForkBuild. Skip this guide entirely if you
 just want to build, publish Documents, and explore — everything in
@@ -629,6 +632,321 @@ confirmed.
 > evidence is discovered, not when you expand the list. You decide, per
 > anchor, when it's worth the round trip.
 
+### Bitcoin Anchor: confirmation and content-proof reconciliation
+
+Every **Bitcoin Op Return** anchor's own expanded card also has a second,
+independent way of checking on it, alongside **Verify Evidence** above: a
+**Bitcoin Anchor** section that asks two narrower, more mechanical
+questions and shows the answers side by side — never merged into one
+verdict.
+
+```
+Bitcoin Anchor
+
+Transaction: a1b2c3…
+Content hash: 9f8e…
+
+Confirmation
+  Transaction confirmed
+  Block height: 920123 · Confirmations: 6
+
+Content proof
+  Hash matches OP_RETURN
+
+[Reconcile Again]   [Show Confirmation History]
+```
+
+Click **Reconcile** (or **Reconcile Again**) — the one action in this
+section — to ask, right now:
+
+- **Confirmation** — has the Bitcoin network actually mined this
+  transaction into a block?
+
+  | Badge | Meaning |
+  |---|---|
+  | **Transaction confirmed** | Found, and mined — shown with its block height, block hash, and confirmation count. |
+  | **Transaction not confirmed** | Not found, or found but not yet mined — this app doesn't distinguish "still in the mempool" from "never broadcast." |
+  | **Confirmation status unavailable** | The confirmation source couldn't currently be reached. |
+
+- **Content proof** — does this specific transaction's OP_RETURN output
+  actually carry the content hash the anchor claims?
+
+  | Badge | Meaning |
+  |---|---|
+  | **Hash matches OP_RETURN** | It does. |
+  | **Hash does not match OP_RETURN** | It doesn't, or the proof itself is malformed. |
+  | **Content proof unavailable** | Couldn't currently be checked. |
+
+A transaction reading **Transaction confirmed** right next to a content
+proof reading **Hash does not match OP_RETURN** is a real, legitimate
+combination this section shows you plainly, exactly as it found it — never
+resolved, hidden, or explained away.
+
+Every **Reconcile** click's confirmation joins a **Show Confirmation
+History** log for this anchor — the same kind of append-only, oldest-first,
+never-rewritten record described in
+[Every attempt, in order](#every-attempt-in-order) above. Content proof has
+no history of its own: an OP_RETURN output's own hash match doesn't evolve
+the way confirmation depth does, so only the current reconciliation's
+content proof is ever shown.
+
+## The Bitcoin Anchor Pipeline
+
+Everything above in [External Evidence](#external-evidence) either creates
+an anchor through **Create Bitcoin Op Return Anchor** — which, in this
+build, always reports **No anchor was created**, since nothing behind that
+button holds a real wallet — or inspects an anchor that already exists.
+Separately from that, the Publications page has a full, step-by-step
+pipeline that connects an actual browser wallet, builds a real transaction
+plan for a publication's content hash, has the wallet sign it, verifies
+and finalizes that signature cryptographically, broadcasts it, and lets
+you check whether it's been mined — each stage its own explicit click,
+never chained or automated.
+
+> **This moves real bitcoin, on Bitcoin mainnet.** Every step from
+> **Create Transaction Plan** onward operates on your connected wallet's
+> real spendable funds, and **Broadcast Transaction** submits a real
+> transaction to the public Bitcoin network. There is no test mode, no
+> testnet switch, and no simulated broadcaster anywhere in this pipeline.
+> Only proceed past **Sign Reviewed Transaction** with a wallet and an
+> amount you're genuinely willing to spend.
+
+### What you'll need
+
+- A Bitcoin wallet browser extension — today, specifically **UniSat**
+  (`window.unisat`). No other wallet extension is supported yet; without
+  one installed, connecting reports the wallet **unavailable** rather than
+  failing silently.
+- A wallet account funded with real, spendable bitcoin, using a **native
+  SegWit address** (one starting `bc1q…`). This pipeline can *observe*
+  funding for other address types, but can only carry a **Taproot**
+  (`bc1p…`) or **legacy** (`1…`/`3…`) account through to a *signable*
+  transaction — for anything else, the review step honestly reports it
+  isn't reviewable yet, rather than guessing.
+- At least one publication already on your own Publications page (see
+  [Where a publication comes from](#where-a-publication-comes-from)) — the
+  transaction plan anchors that publication's own content hash.
+
+### Connecting a wallet
+
+The **Bitcoin Wallet** control lives inside an existing **Bitcoin Op
+Return** anchor's own expanded card — click **Show Evidence** on a
+publication that already has one (see
+[The evidence list](#the-evidence-list)), then look underneath that
+anchor's own fields. Since **Create Bitcoin Op Return Anchor** never
+actually succeeds in this build, you'll need to have received an anchor
+from a peer, or imported one, before you have a card to expand — see
+[Where a publication comes from](#where-a-publication-comes-from) and
+[Discover from Peers](#discover-from-peers).
+
+```
+Bitcoin Wallet
+
+[Connect Bitcoin Wallet]
+```
+
+Click **Connect Bitcoin Wallet**. Your browser's wallet extension asks you
+to approve the connection — nothing here can approve it for you, and
+ForkBuild never sees a private key, a seed phrase, or a wallet password;
+it only ever receives a public account address, a network name, and a
+narrow signing capability for as long as the connection stays open.
+Outcomes:
+
+| State | Meaning |
+|---|---|
+| **Connected** | Shows the connected **Account** and **Network**. |
+| **Disconnected** | Either you haven't connected yet, or you declined the extension's own approval prompt. |
+| **Wallet unavailable** | No extension is installed, it's locked, or it couldn't currently be reached. |
+
+Connecting here connects the wallet for the **whole page** — the same
+connection powers Bitcoin Funding, transaction review, and signing
+everywhere else, not just this one card. Click **Disconnect** to drop it.
+Nothing about the connection is remembered after you reload the page —
+you'll need to connect again next time.
+
+If the connected wallet's own network doesn't match what a given
+transaction needs, you'll see an explicit mismatch warning rather than a
+silent failure — ForkBuild never switches networks, disconnects, or picks
+a different wallet on your behalf; you reconnect the right one yourself.
+
+### Observing funding
+
+Once a wallet is connected, a page-level **Bitcoin Funding** panel appears
+near the top of the Publications page, above the list of publications:
+
+```
+Bitcoin Funding
+
+Network: mainnet
+Account: …a1b2c3
+
+[Observe Wallet Funding]
+```
+
+Click **Observe Wallet Funding** (or **Refresh Funding**) to ask what the
+connected account can currently spend. This is a plain, one-off read —
+nothing is selected, reserved, or spent by observing it, and nothing here
+re-checks itself automatically; it's a fact about the moment you clicked,
+and can already be stale by the time you look at it again. Outcomes:
+
+| State | Meaning |
+|---|---|
+| **Funding observed** | Shows the number of UTXOs found (expand **Show Funding Inputs** to see each one), their total value, the account's own script type, and the change destination — always the same account, since this build never asks a wallet extension which address to send change to. |
+| **Unsupported address format** | A real address ForkBuild simply has no fee-estimation support for yet (for example, a legacy P2SH `3…` address). |
+| **Funding unavailable** | The funding source couldn't currently be reached. |
+
+If the wallet has since reconnected on a different network than this
+observation was made on, a staleness warning says so — refresh funding
+before relying on it.
+
+### Building a transaction plan
+
+Each publication's own card also has a **Bitcoin Anchor Transaction**
+section:
+
+```
+Bitcoin Anchor Transaction
+
+[Create Transaction Plan]
+```
+
+**Create Transaction Plan** is disabled until you've observed funding at
+least once, and never re-observes it on its own — it always plans against
+whatever funding you most recently observed, however stale that's become.
+Click it to select UTXOs (largest first, deterministically — never an
+"optimal" or privacy-aware selection) and compute a fee for anchoring
+**this publication's own content hash**. Outcomes:
+
+| State | Meaning |
+|---|---|
+| **Transaction plan constructed** | Shows the network, content hash, how many inputs were selected, the fee, the change, the total input value, and the full input/output list — plus, separately, when funding was observed and when the plan itself was built, since the two are genuinely different moments. |
+| **Unable to construct transaction** | Most commonly, the observed funding can't even cover the fee. |
+
+A fresh **Create Transaction Plan** click always replaces whatever was
+previously under review, signed, finalized, or broadcast — so nothing
+downstream can ever be left pointing at a stale plan.
+
+### Reviewing and signing
+
+A successful plan immediately populates a page-level **Review Bitcoin
+Anchor Transaction** panel — no extra click needed, since reviewing
+touches no wallet and commits to nothing:
+
+```
+Review Bitcoin Anchor Transaction
+
+Network: mainnet          Content hash: 9f8e…
+Fee: 400 sat               Change: 4200 sat
+Total input: 10000 sat
+
+Inputs                                Outputs
+…                                     …
+
+Wallet: ✓ Network matches.
+
+[Sign Reviewed Transaction]
+```
+
+This shows you exactly what you're about to authorize — no verdict, no
+"safe" or "recommended" label, just the plan's own facts — plus whether
+your connected wallet's network matches this specific transaction's own
+network (never a page-wide default). Click **Sign Reviewed Transaction** —
+disabled until a matching wallet is connected — and your wallet extension
+asks you to approve signing. ForkBuild independently re-checks, byte for
+byte, that what's about to be signed is still exactly what was reviewed;
+if the plan changed in between (say, you rebuilt it), the wallet is never
+even asked. Outcomes:
+
+| State | Meaning |
+|---|---|
+| **Wallet returned a signed PSBT** | The wallet signed. This means only that ForkBuild independently confirmed the response carries recognized signing material for exactly this transaction — **not** that the signature has been cryptographically verified yet; that's the next, separate step. |
+| **Signing declined** | You (or the wallet) definitely declined. |
+| **Wallet unavailable** | No wallet connected, or it couldn't be reached. |
+| **Signing failed** | The wallet claimed success but returned something unusable. |
+
+### Verifying and finalizing
+
+Once the wallet returns a signed PSBT, a **Verify & Finalize Transaction**
+button appears:
+
+```
+[Verify & Finalize Transaction]
+
+✓ Verified
+Verified inputs: 1 / 1
+Transaction ID: 7f3a…
+
+▸ Raw transaction bytes
+```
+
+This is the one step that actually, cryptographically checks the
+signature — recomputing the exact hash a correct signature would have
+covered and verifying it against the claimed key and signature, entirely
+offline. Outcomes:
+
+| State | Meaning |
+|---|---|
+| **Transaction finalized** | The signature checked out. Shows the real transaction ID and, behind a **Raw transaction bytes** disclosure, the actual finalized bytes. |
+| **Signature did not verify** | It didn't — a wrong key, a wrong signature, or a signature over the wrong data. |
+| **Finalization failed** | Some other unacceptable result, distinct from a definite bad signature. |
+
+Today, this can only finalize a **native SegWit (P2WPKH)** input — the one
+script type this pipeline can fully decode and verify. A Taproot or legacy
+account's transaction review will already have told you it wasn't
+reviewable, before you ever reached this step.
+
+### Broadcasting
+
+Once finalized, a **Broadcast** section appears with the transaction's own
+ID and a **Broadcast Transaction** button. Click it to submit the exact
+finalized bytes — nothing is re-signed, re-built, or substituted — to the
+real Bitcoin network:
+
+| State | Meaning |
+|---|---|
+| **Transaction broadcasted** | The network accepted it. This means only that it was accepted for broadcast — **not** that it's been mined yet; see Observing confirmation, next. |
+| **Transaction rejected** | The network refused it outright. |
+| **Broadcast unavailable** | Couldn't currently reach the network. |
+
+A rejected or unavailable attempt is the end of that attempt — click
+**Broadcast Again** to resubmit the identical, already-finalized bytes;
+nothing here retries automatically or substitutes a different transaction.
+
+### Observing confirmation
+
+Once broadcast, a separate **Confirmation** section appears, with its own
+**Observe Confirmation** button — reaching a broadcasted state never
+checks confirmation automatically; you ask, explicitly, every time:
+
+| Badge | Meaning |
+|---|---|
+| **Transaction confirmed** | Mined — shows the block height, block hash, and confirmation count. |
+| **Transaction not confirmed** | Not yet mined (or not found at all — this app doesn't distinguish the two). |
+| **Confirmation status unavailable** | Couldn't currently be checked. |
+
+Each click appends to its own **Show Confirmation History** log for this
+specific broadcast — oldest first, never rewritten by a later check, and
+kept entirely separate from the
+[Bitcoin Anchor reconciliation history](#bitcoin-anchor-confirmation-and-content-proof-reconciliation)
+described above, which tracks **Reconcile** clicks against an
+already-cataloged publication anchor instead. The two are never merged:
+one is about a transaction you just walked through this pipeline
+yourself, the other about a signed anchor claim someone (possibly you,
+earlier) already published.
+
+### What this pipeline does not do
+
+However far you take a transaction through this pipeline — even all the
+way to **Transaction confirmed** — it never, on its own, creates a
+cataloged **External Evidence** entry on this or anyone else's
+Publications page. Nothing here calls the same code
+**Create Bitcoin Op Return Anchor** does, and this pipeline's own
+construction, review, signing, broadcast, and confirmation results are all
+ephemeral: shown for this visit, and replaced or cleared the moment you
+build a new plan, sign again, or reload the page. Publishing your own
+real, on-chain-anchored transaction as an evidence claim other people can
+discover is separate work this build doesn't yet connect for you.
+
 ## Snapshot Placements
 
 Every publication card also has its own **Snapshot Placements** section —
@@ -837,6 +1155,17 @@ recomputed fresh from your own device's catalog every time the page loads,
 so there's nothing to reset. Only an explicit **Synchronize with Peers**
 result (the New claims / Already known breakdown) resets on reload,
 exactly like a verification or resolution result would.
+
+**The [Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) is entirely
+session-only, with no exception.** Unlike Local Snapshot's one exception
+for actual bytes, nothing here is ever written anywhere durable: your
+wallet connection, observed funding, transaction plan, review, signature,
+finalized bytes, broadcast result, and confirmation history all disappear
+the moment you reload — even after a real transaction has been broadcast
+to the Bitcoin network. The transaction itself stays on the Bitcoin
+network, of course; only ForkBuild's own on-screen record of walking you
+through it is gone. Reconnect the wallet and observe funding again to
+pick up where you left off.
 
 ## What's next?
 

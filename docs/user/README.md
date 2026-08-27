@@ -45,10 +45,12 @@ top-level [docs/](..) folder.
    materializing, and comparing locators like an IPFS node that can
    currently serve a claim's content, a **Local Snapshot** section for
    checking, importing, and pulling in the actual bytes this device holds
-   (from a placement, a peer, or an offline file), and a
-   **Decentralization** overview comparing your evidence and placements,
-   synchronizing knowledge with peers, and seeing how each claim was
-   learned.
+   (from a placement, a peer, or an offline file), a **Decentralization**
+   overview comparing your evidence and placements, synchronizing
+   knowledge with peers, and seeing how each claim was learned, and the
+   **Bitcoin Anchor Pipeline** — connecting a real browser wallet and
+   walking a real transaction through funding, construction, review,
+   signing, cryptographic verification, broadcast, and confirmation.
 
 ## Reference
 
