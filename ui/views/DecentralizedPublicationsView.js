@@ -59,6 +59,11 @@ import { createSnapshotMaterializationSourceSelection } from '../../application/
 import { SnapshotMaterializationSourceKind } from '../../application/SnapshotMaterializationSourceKind.js';
 import { describeSnapshotStateInspection } from '../../application/SnapshotStateInspectionView.js';
 import { SnapshotPlacementRelationship } from '../../application/SnapshotPlacementRelationship.js';
+import { BitcoinAnchorConfirmationState } from '../../application/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorContentProofState } from '../../application/BitcoinAnchorContentProofState.js';
+import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../../application/BitcoinAnchorConfirmationObservationHistory.js';
+import { describeBitcoinAnchorConfirmationObservationHistoryDetails, describeBitcoinAnchorConfirmationObservationDetail } from '../../application/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
+import { describeBitcoinAnchorContentProof } from '../../application/BitcoinAnchorContentProofView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -576,6 +581,28 @@ const PLACEMENT_CREATION_BADGE_CLASSES = {
     [SnapshotPlacementCreationUiState.UNAVAILABLE]: 'peer-badge--pending'
 };
 
+// 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI. Two
+// DELIBERATELY SEPARATE badge maps, one per independent observation
+// application/BitcoinAnchorProofReconciliationView.js's own `reconcile()`
+// reports — never merged into one "anchor health" map, the identical
+// restraint every badge map above already holds for its own single
+// dimension. NOT_CONFIRMED reads the identical amber
+// "honestly inconclusive" `peer-badge--pending` UNAVAILABLE already does
+// on this map — both are simply "not yet CONFIRMED," and this map does
+// not rank one above the other. HASH_MISMATCH is the one red entry on
+// either map: a definite, reported rejection, exactly like REJECTED
+// above.
+const BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES = {
+    [BitcoinAnchorConfirmationState.CONFIRMED]: 'peer-badge--authenticated',
+    [BitcoinAnchorConfirmationState.NOT_CONFIRMED]: 'peer-badge--pending',
+    [BitcoinAnchorConfirmationState.UNAVAILABLE]: 'peer-badge--pending'
+};
+const BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES = {
+    [BitcoinAnchorContentProofState.HASH_MATCH]: 'peer-badge--authenticated',
+    [BitcoinAnchorContentProofState.HASH_MISMATCH]: 'peer-badge--failed',
+    [BitcoinAnchorContentProofState.UNAVAILABLE]: 'peer-badge--pending'
+};
+
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
@@ -680,6 +707,17 @@ export default {
         // below; never used to discover, rank, or automatically choose a
         // peer on a person's behalf.
         const snapshotMaterializationSelectionCoordinator = inject('snapshotMaterializationSelectionCoordinator', null);
+        // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
+        // Optional — absent here, the "Bitcoin Anchor" section simply never
+        // renders on any evidence card, the identical degrade-gracefully
+        // posture every optional coordinator above already holds. The ONE
+        // place this page ever asks the Bitcoin network about confirmation
+        // or content-hash proof — see `reconcileBitcoinAnchor()` below, and
+        // application/BitcoinAnchorProofReconciliationView.js's own header
+        // on why it composes, rather than duplicates, application/
+        // BitcoinAnchorConfirmationObserver.js and anchoring/
+        // BitcoinOpReturnProofVerifier.js.
+        const bitcoinAnchorProofReconciliationView = inject('bitcoinAnchorProofReconciliationView', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -1032,7 +1070,61 @@ export default {
                 // Snapshot from Alice" never touches Carol's own state, and
                 // never touches Alice's own POSSESSION OBSERVATION either;
                 // see `materializeFromComparisonPeer()` below.
-                peerPossessionComparisonMaterializations: {}
+                peerPossessionComparisonMaterializations: {},
+                // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
+                // The one new state this milestone adds: making 0.8.54's
+                // confirmation observer, 0.8.55's reconciliation view, and
+                // 0.8.56's confirmation history OBSERVABLE, without
+                // introducing any new fact those three files do not already
+                // produce. Every key below is keyed by anchorId, exactly
+                // mirroring `entry.inspections`/`entry.placementInspections`
+                // one axis over — a publication could in principle carry
+                // more than one `bitcoin-op-return` anchor (0.8.11's own
+                // Section D already proves creating the same anchorType
+                // twice succeeds), and each anchor's own confirmation/proof
+                // state stays entirely independent of every other anchor's.
+                //
+                // `bitcoinAnchorReconciliations[anchorId]` is a single
+                // ephemeral attempt object — `{ reconciling, error,
+                // publicationId, anchorId, contentHash, transaction,
+                // contentProof }` — the SAME shape application/
+                // BitcoinAnchorProofReconciliationView.js#reconcile() itself
+                // returns, merged with two UI-only flags, mirroring
+                // `entry.peerPossessionAttempt` (0.8.40): a NEW reconcile
+                // click simply REPLACES it — the current reconciliation
+                // describes what both independent observations say RIGHT
+                // NOW, never a history of its own.
+                //
+                // `bitcoinAnchorConfirmationHistories[anchorId]` is the
+                // DELIBERATELY SEPARATE, append-only application/
+                // BitcoinAnchorConfirmationObservationHistory.js sequence —
+                // every reconcile() click's own `transaction.confirmation`
+                // joins this array, never replacing an earlier entry,
+                // mirroring `entry.peerPossessionObservationHistory`
+                // (0.8.41) one domain over. There is no equivalent history
+                // for `contentProof` — see this milestone's own design
+                // conversation and docs/Principles.md, "Confirmation And
+                // Content-Proof Histories Stay Separate, Never Unified,
+                // Because They Are Independent Observations (0.8.57)": only
+                // confirmation status changes shape over time in a way
+                // worth narrating (NOT_CONFIRMED -> CONFIRMED as blocks
+                // accumulate); a content-hash match against an immutable
+                // OP_RETURN output does not evolve the same way, so this
+                // milestone builds no history for it, exactly as
+                // `bitcoinAnchorContentProofView()` below only ever reads
+                // the CURRENT reconciliation's own `contentProof`.
+                //
+                // `bitcoinAnchorConfirmationHistoryExpanded`/
+                // `bitcoinAnchorConfirmationHistoryEntryExpanded` gate only
+                // whether the "Confirmation History" disclosure, and one of
+                // its own rows, are on screen — mirroring
+                // `entry.peerPossessionComparisonHistoryExpanded`/
+                // `entry.peerPossessionObservationHistoryEntryExpanded`
+                // (0.8.41/0.8.45) exactly, one domain over.
+                bitcoinAnchorReconciliations: {},
+                bitcoinAnchorConfirmationHistories: {},
+                bitcoinAnchorConfirmationHistoryExpanded: {},
+                bitcoinAnchorConfirmationHistoryEntryExpanded: {}
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -1647,6 +1739,127 @@ export default {
         function inspectionKnowledge(entry, anchorView) {
             const state = entry.inspections[anchorView.anchorId];
             return state ? state.knowledge : null;
+        }
+
+        // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
+        //
+        // The ONE explicit action this section offers, and the ONLY place
+        // this page ever calls `bitcoinAnchorProofReconciliationView.
+        // reconcile()`. Never triggered by opening this page, expanding
+        // evidence, or any other disclosure — mirroring
+        // `checkSnapshotPossessionWithPeer()`'s own restraint one domain
+        // over. A single click asks BOTH independent questions at once
+        // (confirmation status, content-hash proof) because that is
+        // exactly what `reconcile()` itself already does, concurrently, in
+        // one call — see that class's own header on why this is a
+        // COMPOSITION, never a second verification, and never two separate
+        // buttons pretending to be independent when the domain layer
+        // beneath them only ever offers one combined read.
+        //
+        // The reconciliation result REPLACES `entry.
+        // bitcoinAnchorReconciliations[anchorId]` — it describes what both
+        // observations say right now, never a history of its own — while
+        // its own `transaction.confirmation` is separately APPENDED to
+        // `entry.bitcoinAnchorConfirmationHistories[anchorId]`, never
+        // replacing an earlier entry there. Both updates always happen
+        // together, from the SAME reconcile() result, so the two views
+        // below can never disagree about what the most recent click
+        // reported.
+        async function reconcileBitcoinAnchor(entry, anchorView) {
+            if (!bitcoinAnchorProofReconciliationView) return;
+            const anchor = entry.evidenceAnchors.find((candidate) => candidate.id === anchorView.anchorId);
+            if (!anchor) return;
+            entry.bitcoinAnchorReconciliations[anchorView.anchorId] = { reconciling: true, error: null };
+            try {
+                const result = await bitcoinAnchorProofReconciliationView.reconcile(anchor);
+                entry.bitcoinAnchorReconciliations[anchorView.anchorId] = { reconciling: false, error: null, ...result };
+                const history = entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || [];
+                entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] =
+                    appendBitcoinAnchorConfirmationObservationHistoryEntry(history, result.transaction.confirmation);
+            } catch (error) {
+                entry.bitcoinAnchorReconciliations[anchorView.anchorId] = { reconciling: false, error: error.message };
+            }
+        }
+
+        // Pure, synchronous: always re-derived from THIS entry's own
+        // `bitcoinAnchorReconciliations[anchorId]` — never a second,
+        // separately maintained "current" field. `confirmation` projects
+        // application/BitcoinAnchorConfirmationObservationHistoryDetailView.js's
+        // own `describeBitcoinAnchorConfirmationObservationDetail()`
+        // UNCHANGED over the most recent reconciliation's own
+        // `transaction.confirmation` — the SAME per-observation shape
+        // `bitcoinAnchorConfirmationHistoryView()` below already uses for
+        // every history row, so a person sees one consistent vocabulary
+        // whether they are looking at "right now" or at history.
+        // `contentProof` projects application/BitcoinAnchorContentProofView.js's
+        // own `describeBitcoinAnchorContentProof()`, unchanged, the same
+        // way. NEITHER field is ever combined with the other into a third,
+        // aggregate field — a caller wanting both places them side by
+        // side, exactly as `entry.bitcoinAnchorReconciliations[anchorId]`
+        // itself already keeps them: two sibling keys on one object, never
+        // one merged verdict.
+        function bitcoinAnchorReconciliationView(entry, anchorView) {
+            const state = entry.bitcoinAnchorReconciliations[anchorView.anchorId];
+            if (!state) return { reconciling: false, error: null, confirmation: null, contentProof: null };
+            return {
+                reconciling: Boolean(state.reconciling),
+                error: state.error || null,
+                confirmation: state.transaction ? describeBitcoinAnchorConfirmationObservationDetail(state.transaction.confirmation) : null,
+                contentProof: state.contentProof ? describeBitcoinAnchorContentProof(state.contentProof) : null
+            };
+        }
+
+        function bitcoinAnchorConfirmationBadgeClass(entry, anchorView) {
+            const confirmation = bitcoinAnchorReconciliationView(entry, anchorView).confirmation;
+            return confirmation ? (BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES[confirmation.state] || null) : null;
+        }
+
+        function bitcoinAnchorContentProofBadgeClass(entry, anchorView) {
+            const contentProof = bitcoinAnchorReconciliationView(entry, anchorView).contentProof;
+            return contentProof ? (BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES[contentProof.state] || null) : null;
+        }
+
+        function bitcoinAnchorReconcileButtonLabel(entry, anchorView) {
+            const view = bitcoinAnchorReconciliationView(entry, anchorView);
+            if (view.reconciling) return 'Reconciling…';
+            return view.confirmation ? 'Reconcile Again' : 'Reconcile';
+        }
+
+        // The FULL chronological narration of every "Reconcile" click's own
+        // confirmation observation for THIS anchor — composes application/
+        // BitcoinAnchorConfirmationObservationHistoryDetailView.js's own
+        // `describeBitcoinAnchorConfirmationObservationHistoryDetails()`
+        // over `entry.bitcoinAnchorConfirmationHistories[anchorId]`,
+        // exactly mirroring `peerPossessionObservationDetailsView()` one
+        // domain over — never a second history, and never anything the
+        // history itself did not already carry.
+        function bitcoinAnchorConfirmationHistoryView(entry, anchorView) {
+            return describeBitcoinAnchorConfirmationObservationHistoryDetails(entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || []);
+        }
+
+        function toggleBitcoinAnchorConfirmationHistory(entry, anchorView) {
+            entry.bitcoinAnchorConfirmationHistoryExpanded[anchorView.anchorId] = !entry.bitcoinAnchorConfirmationHistoryExpanded[anchorView.anchorId];
+        }
+
+        function isBitcoinAnchorConfirmationHistoryExpanded(entry, anchorView) {
+            return Boolean(entry.bitcoinAnchorConfirmationHistoryExpanded[anchorView.anchorId]);
+        }
+
+        // Per-observation disclosure state, addressed by that
+        // observation's own stable index within THIS anchor's own history
+        // — mirroring `togglePeerPossessionObservationHistoryEntry()`
+        // exactly, one domain over. Toggling one row never touches
+        // another row, another anchor's own history, or the outer
+        // "Show/Hide Confirmation History" state above it.
+        function toggleBitcoinAnchorConfirmationHistoryEntry(entry, anchorView, index) {
+            const bucket = entry.bitcoinAnchorConfirmationHistoryEntryExpanded[anchorView.anchorId]
+                || (entry.bitcoinAnchorConfirmationHistoryEntryExpanded[anchorView.anchorId] = {});
+            bucket[index] = !bucket[index];
+        }
+
+        function isBitcoinAnchorConfirmationHistoryEntryExpanded(entry, anchorView, index) {
+            const bucket = entry.bitcoinAnchorConfirmationHistoryEntryExpanded[anchorView.anchorId];
+            return Boolean(bucket && bucket[index]);
         }
 
         function evidenceBadgeClass(anchorView) {
@@ -2485,7 +2698,11 @@ export default {
             peerPossessionObservationHistoryView, togglePeerPossessionComparisonHistory, peerPossessionRowLabel,
             peerPossessionObservationDetailsView, isPeerPossessionObservationHistoryEntryExpanded, togglePeerPossessionObservationHistoryEntry,
             snapshotMaterializationSelectionCoordinator, materializeFromComparisonPeer,
-            comparisonPeerMaterializationView, comparisonPeerMaterializationBadgeClass, comparisonPeerMaterializationButtonLabel
+            comparisonPeerMaterializationView, comparisonPeerMaterializationBadgeClass, comparisonPeerMaterializationButtonLabel,
+            bitcoinAnchorProofReconciliationView, reconcileBitcoinAnchor, bitcoinAnchorReconciliationView,
+            bitcoinAnchorConfirmationBadgeClass, bitcoinAnchorContentProofBadgeClass, bitcoinAnchorReconcileButtonLabel,
+            bitcoinAnchorConfirmationHistoryView, toggleBitcoinAnchorConfirmationHistory, isBitcoinAnchorConfirmationHistoryExpanded,
+            toggleBitcoinAnchorConfirmationHistoryEntry, isBitcoinAnchorConfirmationHistoryEntryExpanded
         };
     },
     template: `
@@ -3355,6 +3572,103 @@ export default {
                                             @click="verifyAnchor(entry, anchorView)">
                                         {{ anchorView.checking ? 'Verifying…' : (anchorView.verified ? 'Verify Again' : 'Verify Evidence') }}
                                     </button>
+                                </div>
+
+                                <!-- 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI. A
+                                     SEPARATE section from "Verify Evidence" immediately above and
+                                     from "Inspect Evidence" immediately below: this displays what
+                                     application/BitcoinAnchorProofReconciliationView.js's own
+                                     `reconcile()` reports RIGHT NOW, side by side, for THIS one
+                                     `bitcoin-op-return` anchor — never a combined verdict. A
+                                     transaction reported CONFIRMED here and a content proof
+                                     reported HASH_MISMATCH right beside it is not an error this
+                                     section resolves, hides, or explains away — it is exactly the
+                                     honest combination application/
+                                     BitcoinAnchorProofReconciliationView.js's own header names as
+                                     the entire point of reconciliation. See docs/Principles.md,
+                                     "The UI Displays Observations; It Does Not Turn Them Into A
+                                     Verdict (0.8.57)." -->
+                                <div v-if="anchorView.anchorType === 'bitcoin-op-return' && bitcoinAnchorProofReconciliationView"
+                                     class="evidence-inspection">
+                                    <span class="evidence-inspection-title">Bitcoin Anchor</span>
+                                    <dl class="evidence-fields">
+                                        <div class="evidence-field"><dt>Transaction</dt><dd>{{ anchorView.locator }}</dd></div>
+                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ anchorView.contentHash }}</dd></div>
+                                    </dl>
+
+                                    <p v-if="!bitcoinAnchorReconciliationView(entry, anchorView).confirmation && !bitcoinAnchorReconciliationView(entry, anchorView).reconciling"
+                                       class="form-hint form-hint--neutral">
+                                        Not yet checked this session.
+                                    </p>
+                                    <p v-if="bitcoinAnchorReconciliationView(entry, anchorView).error" class="form-hint form-hint--neutral">
+                                        {{ bitcoinAnchorReconciliationView(entry, anchorView).error }}
+                                    </p>
+
+                                    <!-- Confirmation — application/BitcoinAnchorConfirmationState.js's
+                                         own vocabulary, projected UNCHANGED through application/
+                                         BitcoinAnchorConfirmationObservationHistoryDetailView.js. -->
+                                    <div v-if="bitcoinAnchorReconciliationView(entry, anchorView).confirmation" class="evidence-inspection-adapter">
+                                        <span class="evidence-inspection-adapter-title">Confirmation</span>
+                                        <span class="peer-badge" :class="bitcoinAnchorConfirmationBadgeClass(entry, anchorView)">
+                                            {{ bitcoinAnchorReconciliationView(entry, anchorView).confirmation.stateLabel }}
+                                        </span>
+                                        <dl v-if="bitcoinAnchorReconciliationView(entry, anchorView).confirmation.blockHeight !== null" class="evidence-fields">
+                                            <div class="evidence-field"><dt>Block</dt><dd>{{ bitcoinAnchorReconciliationView(entry, anchorView).confirmation.blockHeight }}</dd></div>
+                                            <div class="evidence-field"><dt>Confirmations</dt><dd>{{ bitcoinAnchorReconciliationView(entry, anchorView).confirmation.confirmationCount }}</dd></div>
+                                        </dl>
+                                        <p v-if="bitcoinAnchorReconciliationView(entry, anchorView).confirmation.reason" class="form-hint form-hint--neutral">
+                                            {{ bitcoinAnchorReconciliationView(entry, anchorView).confirmation.reason }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Content proof — application/BitcoinAnchorContentProofState.js's
+                                         own, SEPARATE vocabulary — never merged with Confirmation above. -->
+                                    <div v-if="bitcoinAnchorReconciliationView(entry, anchorView).contentProof" class="evidence-inspection-adapter">
+                                        <span class="evidence-inspection-adapter-title">Content proof</span>
+                                        <span class="peer-badge" :class="bitcoinAnchorContentProofBadgeClass(entry, anchorView)">
+                                            {{ bitcoinAnchorReconciliationView(entry, anchorView).contentProof.stateLabel }}
+                                        </span>
+                                        <p v-if="bitcoinAnchorReconciliationView(entry, anchorView).contentProof.reason" class="form-hint form-hint--neutral">
+                                            {{ bitcoinAnchorReconciliationView(entry, anchorView).contentProof.reason }}
+                                        </p>
+                                    </div>
+
+                                    <div class="identity-mgmt-actions">
+                                        <button class="action-btn action-btn--secondary"
+                                                :disabled="bitcoinAnchorReconciliationView(entry, anchorView).reconciling"
+                                                @click="reconcileBitcoinAnchor(entry, anchorView)">
+                                            {{ bitcoinAnchorReconcileButtonLabel(entry, anchorView) }}
+                                        </button>
+                                        <button v-if="bitcoinAnchorConfirmationHistoryView(entry, anchorView).count > 0"
+                                                class="action-btn action-btn--secondary"
+                                                @click="toggleBitcoinAnchorConfirmationHistory(entry, anchorView)">
+                                            {{ isBitcoinAnchorConfirmationHistoryExpanded(entry, anchorView) ? 'Hide Confirmation History' : 'Show Confirmation History' }}
+                                        </button>
+                                    </div>
+
+                                    <!-- The full chronological narration of every past "Reconcile"
+                                         click's own confirmation observation for THIS anchor — a
+                                         later CONFIRMED entry never rewrites or discards an earlier
+                                         NOT_CONFIRMED one; see application/
+                                         BitcoinAnchorConfirmationObservationHistory.js's own header. -->
+                                    <div v-if="isBitcoinAnchorConfirmationHistoryExpanded(entry, anchorView)">
+                                        <ul class="replica-knowledge-claim-list">
+                                            <li v-for="(item, index) in bitcoinAnchorConfirmationHistoryView(entry, anchorView).entries" :key="index" class="replica-knowledge-claim">
+                                                <button class="action-btn action-btn--secondary"
+                                                        @click="toggleBitcoinAnchorConfirmationHistoryEntry(entry, anchorView, index)">
+                                                    {{ formatWhen(item.observedAt) }} — {{ item.stateShortLabel }}
+                                                </button>
+                                                <dl v-if="isBitcoinAnchorConfirmationHistoryEntryExpanded(entry, anchorView, index)" class="evidence-fields">
+                                                    <div class="evidence-field"><dt>State</dt><dd>{{ item.stateLabel }}</dd></div>
+                                                    <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ item.txid }}</dd></div>
+                                                    <div v-if="item.blockHash" class="evidence-field"><dt>Block hash</dt><dd>{{ item.blockHash }}</dd></div>
+                                                    <div v-if="item.blockHeight !== null" class="evidence-field"><dt>Block height</dt><dd>{{ item.blockHeight }}</dd></div>
+                                                    <div v-if="item.confirmationCount !== null" class="evidence-field"><dt>Confirmations</dt><dd>{{ item.confirmationCount }}</dd></div>
+                                                    <div v-if="item.reason" class="evidence-field"><dt>Reason</dt><dd>{{ item.reason }}</dd></div>
+                                                </dl>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
 
                                 <!-- 0.8.14 — External Evidence Inspection & Locator UX. A purely

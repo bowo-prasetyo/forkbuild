@@ -24979,3 +24979,220 @@ detection and cross-observation comparison, persistence of any kind, and
 automatic population or polling — each its own, separately sized
 milestone, exactly like every "Deliberately excluded" list in this
 document before it.
+
+## 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI
+
+0.8.56's own "Deliberately excluded" list named exactly this milestone:
+"No 'Check Confirmation' button, no 'Bitcoin Anchor Confirmation History'
+panel, and no change to `ui/DecentralizedPublicationsView.js` exists
+anywhere in this codebase yet... Wiring `anchoring/
+BitcoinAnchorConfirmationObserver.js` and `anchoring/
+BitcoinEsploraTransactionConfirmationObserver.js` into `ui/main.js` for the
+first time, and adding an explicitly-triggered action to the Publication
+Center, stays real, separately sized future work." This is that UI, and
+nothing else — the first milestone in the entire 0.8.47→0.8.56 Bitcoin
+sequence to reach a screen. It adds no new Bitcoin primitive, no new
+network protocol, and no new fact: every observation this section displays
+was already produced, unchanged, by `application/
+BitcoinAnchorProofReconciliationView.js` (0.8.55), `application/
+BitcoinAnchorConfirmationObservationHistory.js` (0.8.56), and `application/
+BitcoinAnchorConfirmationObservationHistoryDetailView.js` (0.8.56).
+
+```text
+Publication Center
+  └── External Evidence
+        └── bitcoin-op-return anchor
+              └── Bitcoin Anchor                                  (new)
+                    ├── Transaction / Content hash
+                    ├── Confirmation
+                    │     ├── current: reconcile()'s own
+                    │     │   transaction.confirmation, projected
+                    │     │   through describeBitcoinAnchorConfirmation-
+                    │     │   ObservationDetail()               (0.8.56)
+                    │     └── "Show Confirmation History" — every past
+                    │         reconcile() click's own confirmation,
+                    │         oldest first, never rewritten           (0.8.56)
+                    ├── Content proof
+                    │     └── current: reconcile()'s own contentProof,
+                    │         projected through the new
+                    │         describeBitcoinAnchorContentProof()
+                    └── [ Reconcile / Reconcile Again ]  (new — the ONE
+                          place this page ever calls reconcile())
+```
+
+**THE UI DISPLAYS OBSERVATIONS; IT DOES NOT TURN THEM INTO A VERDICT.**
+This is the one rule every other decision in this milestone serves. There
+is no "Anchor is valid," "Anchor is trustworthy," or "Anchor is healthy"
+label anywhere in this section — Confirmation and Content proof are two
+separate badges, each reading exactly one of `application/
+BitcoinAnchorConfirmationState.js`'s or `application/
+BitcoinAnchorContentProofState.js`'s own vocabulary, never combined into a
+third field. A transaction reported `CONFIRMED` next to a content proof
+reported `HASH_MISMATCH` is not an error this screen resolves, hides, or
+explains away — it is exactly the honest, structurally legitimate
+combination `application/BitcoinAnchorProofReconciliationView.js`'s own
+header already named as the entire point of reconciliation, and this
+milestone's own flagship test proves the UI can display it without ever
+computing an aggregate.
+
+**ONE EXPLICIT ACTION, NOT TWO PRETENDING TO BE INDEPENDENT.** A single
+"Reconcile"/"Reconcile Again" click is the only thing that ever calls
+`bitcoinAnchorProofReconciliationView.reconcile()` — never triggered by
+opening the Publication Center, expanding evidence, or any other
+disclosure. It asks both questions (confirmation status, content-hash
+proof) in the one call the domain layer beneath it already offers,
+because `reconcile()` itself already runs both, concurrently, exactly as
+0.8.55 built it — two separate buttons here would only fake an
+independence the composed view underneath does not actually have. Nothing
+polls, retries, rebroadcasts, modifies the anchor, modifies the content,
+or creates a new placement; a timeout or unreachable source simply reads
+"Confirmation status unavailable"/"Content proof unavailable" — the
+identical honest `UNAVAILABLE` vocabulary 0.8.54/0.8.55 already named,
+never a crash and never a guess that the transaction will "never confirm."
+
+**CONFIRMATION AND CONTENT-PROOF HISTORIES STAY SEPARATE, NEVER UNIFIED,
+BECAUSE THEY ARE INDEPENDENT OBSERVATIONS.** Every "Reconcile" click's own
+`transaction.confirmation` joins `entry.
+bitcoinAnchorConfirmationHistories[anchorId]` — the SAME append-only
+`application/BitcoinAnchorConfirmationObservationHistory.js` sequence
+0.8.56 already built, never mutated, never reordered, never rewritten by
+a later click. There is no equivalent history for `contentProof`, and no
+unified "Anchor History" mixing the two: an OP_RETURN output's own
+content-hash match does not evolve the way confirmation depth does, so
+this milestone builds no history for it — only the CURRENT reconciliation's
+own `contentProof` is ever shown. Keeping the two apart is a deliberate
+continuation of 0.8.55's own restraint, one layer up, in the UI that
+finally displays it.
+
+- `application/BitcoinAnchorContentProofView.js` — new; the ONE new
+  application-layer file this milestone adds, and the smallest possible
+  one: `describeBitcoinAnchorContentProofStateLabel(state)` names all
+  three `application/BitcoinAnchorContentProofState.js` values in a full
+  sentence ("Hash matches OP_RETURN" / "Hash does not match OP_RETURN" /
+  "Content proof unavailable"), mirroring `application/
+  BitcoinAnchorConfirmationObservationHistoryView.js`'s own
+  `describeBitcoinAnchorConfirmationStateLabel()` (0.8.54/0.8.56) one
+  domain over — the one label vocabulary 0.8.55's own reconciliation view
+  never needed, because nothing before this milestone ever put a
+  content-proof state on a screen. `describeBitcoinAnchorContentProof(contentProof)`
+  projects `state`/`contentHash`/`reason`/`observedAt` through unchanged,
+  adding only `stateLabel`. Pure, stateless, frozen output — no
+  constructor, no network access, no history of its own.
+- `ui/views/DecentralizedPublicationsView.js` — the "Bitcoin Anchor"
+  section, rendered per `bitcoin-op-return` anchor alongside the existing
+  0.8.3/0.8.14 "External Evidence" card, gated entirely on an optional
+  `bitcoinAnchorProofReconciliationView` injection (absent -> the section
+  simply never renders, the identical degrade-gracefully posture every
+  optional coordinator on this page already holds). New per-entry state,
+  every key mapped by anchorId exactly like `entry.inspections`/`entry.
+  placementInspections`: `bitcoinAnchorReconciliations` (the current
+  reconciliation, replaced by each click, mirroring `entry.
+  peerPossessionAttempt`), `bitcoinAnchorConfirmationHistories`
+  (append-only, mirroring `entry.peerPossessionObservationHistory`),
+  `bitcoinAnchorConfirmationHistoryExpanded`/
+  `bitcoinAnchorConfirmationHistoryEntryExpanded` (disclosure state only).
+  New functions: `reconcileBitcoinAnchor()` (the one explicit action),
+  `bitcoinAnchorReconciliationView()` (pure projection of the current
+  reconciliation), `bitcoinAnchorConfirmationHistoryView()` /
+  `toggleBitcoinAnchorConfirmationHistory()` /
+  `toggleBitcoinAnchorConfirmationHistoryEntry()` (the "Show Confirmation
+  History" disclosure, mirroring 0.8.44/0.8.45's own inspection layer).
+- `ui/main.js` — the first real wiring of `anchoring/
+  BitcoinAnchorConfirmationObserver.js` and `anchoring/
+  BitcoinEsploraTransactionConfirmationObserver.js` into this running app.
+  `bitcoinEsploraTransactionConfirmationObserver` needs no fake standing
+  in for a missing capability — reading public confirmation status
+  requires no wallet and no private key, exactly like the existing
+  `bitcoinProofVerifier` this reconciliation view REUSES unchanged rather
+  than constructing a second, disconnected instance, the identical "one
+  instance, threaded everywhere" discipline this file already holds for
+  every other collaborator.
+
+> **The UI displays observations; it does not turn them into a verdict.**
+> Confirmation and Content proof are two independently badged facts, never
+> merged into an "Anchor is valid"/"healthy"/"trustworthy" field — a
+> transaction can read `CONFIRMED` and `HASH_MISMATCH` at the same time,
+> and this section shows exactly that, side by side, honestly. See
+> `docs/Principles.md`, "The UI Displays Observations; It Does Not Turn
+> Them Into A Verdict (0.8.57)."
+
+- `tests/BitcoinAnchorProofConfirmationInspectionUX.test.js` (new) — the
+  flagship drives the REAL `BitcoinAnchorProofReconciliationView` through
+  three "Reconcile" clicks against the SAME anchor exactly the way
+  `reconcileBitcoinAnchor()` itself does: `NOT_CONFIRMED` (content proof
+  independently `HASH_MATCH`), then `CONFIRMED` at block 920123 with 6
+  confirmations, then `UNAVAILABLE` once the confirmation source becomes
+  unreachable — confirming the confirmation history accumulates all three,
+  in order, with the CONFIRMED entry from click 2 remaining the SAME
+  frozen object after click 3 appends past it. Further sections cover: a
+  `CONFIRMED` + `HASH_MISMATCH` reconciliation whose projected display
+  object carries neither a `valid`/`healthy`/`trusted`/`anchorHealth`/
+  `verdict`/`overall` field at any level; confirmation history and
+  content-proof observation staying genuinely separate — two
+  reconciliations accumulate exactly two confirmation-history entries and
+  no unified "Bitcoin Anchor History"; `application/
+  BitcoinAnchorContentProofView.js` naming all three states honestly,
+  returning `null` for no observation, and adding exactly one field
+  (`stateLabel`) to an existing observation; and an exhaustive sweep
+  confirming no `confidence`/`reliability`/`score`/`status` field exists
+  anywhere this milestone's own composition touches.
+
+```text
+0.8.56  Bitcoin Anchor Confirmation Observation History                ✓
+             │
+             ▼
+0.8.57  Bitcoin Anchor Proof & Confirmation Inspection UI              ✓
+             ├── application/BitcoinAnchorContentProofView.js — new;
+             │   the content-proof label vocabulary 0.8.55 never needed
+             ├── ui/views/DecentralizedPublicationsView.js — new
+             │   "Bitcoin Anchor" section: current reconciliation, shown
+             │   side by side, plus the 0.8.56 confirmation history,
+             │   finally on a screen
+             ├── ui/main.js — the first real wiring of
+             │   BitcoinAnchorConfirmationObserver /
+             │   BitcoinEsploraTransactionConfirmationObserver
+             └── ForkBuild can now, for the first time, look at a Bitcoin
+                 anchor's own confirmation and content-proof observations
+                 — including their most honestly awkward combination —
+                 without opening a console
+```
+
+### Deliberately excluded
+
+- **A combined "anchor health"/"valid"/"trustworthy" verdict, anywhere.**
+  The entire point of this milestone — see this file's own header rule,
+  restated at the top of this entry. A future milestone that wants to
+  score or rank these two observations against each other is real,
+  separately sized future work this milestone deliberately does not do.
+- **A unified "Bitcoin Anchor History" mixing confirmation and
+  content-proof events.** Confirmation history and content-proof
+  observation stay two separate sections — see this entry's own
+  "Confirmation And Content-Proof Histories Stay Separate" rule above.
+- **Automatic polling, retry, or rebroadcast of any kind.** "Reconcile"
+  is a single explicit click; nothing in this milestone calls
+  `reconcile()` on a caller's behalf, on a timer, or in response to any
+  other action on this page.
+- **Any change to `anchoring/BitcoinAnchorConfirmationObserver.js`,
+  `anchoring/BitcoinOpReturnProofVerifier.js`, `application/
+  BitcoinAnchorProofReconciliationView.js`, or `application/
+  BitcoinAnchorConfirmationObservationHistory.js` themselves.** All four
+  stay exactly as 0.8.1/0.8.54/0.8.55/0.8.56 left them — this milestone
+  only ever reads and displays their existing outputs.
+- **Reorganization detection, or any comparison between two
+  observations.** Unchanged from 0.8.56's own identical exclusion — this
+  UI displays the history 0.8.56 already built; it does not add
+  cross-observation comparison of its own.
+- **Wallet connection, wallet selection UX, or any change to how a
+  Bitcoin anchor is created or signed.** This milestone is read-only —
+  "Reconcile" never touches `application/
+  BitcoinAnchorPublicationCoordinator.js` (0.8.53) or any signing
+  pathway. An explicit wallet-connection UX is real, separately sized
+  future work.
+- **IPFS placement UX of any kind.** A deliberately separate concern with
+  its own distinct trust and write/read semantics, sized for its own,
+  later milestone — never bolted onto this one.
+
+What's left, and deliberately unbuilt: a combined anchor verdict, a
+unified Bitcoin history, automatic polling, reorganization detection, and
+wallet-connection UX — each its own, separately sized milestone, exactly
+like every "Deliberately excluded" list in this document before it.
