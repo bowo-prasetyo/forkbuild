@@ -24780,3 +24780,202 @@ verdict/score, confirmation observation history and reorganization
 detection, and automatic re-verification or polling — each its own,
 separately sized milestone, exactly like every "Deliberately excluded"
 list in this document before it.
+
+## 0.8.56 — Bitcoin Anchor Confirmation Observation History
+
+0.8.54's own "Deliberately excluded" list named exactly this milestone:
+"Confirmation observation history, or reorganization detection... A
+caller that wants a history keeps it." 0.8.55's own list repeated the
+identical restraint one milestone later. This is that caller-kept
+history, and the per-observation inspection layer to go with it —
+`anchoring/BitcoinAnchorConfirmationObserver.js`'s own repeated, fresh
+`observeConfirmation()` reads turned into a durable, append-only session
+record, mirroring the identical `application/
+SnapshotMaterializationHistory.js` (0.8.38) → `application/
+SnapshotMaterializationHistoryDetailView.js` (0.8.44) shape this codebase
+already established for snapshot acquisition, one domain over — and
+nothing else. Given:
+
+```text
+10:00  NOT_CONFIRMED
+10:10  CONFIRMED block A / height 900000
+10:30  CONFIRMED block A / height 900001
+```
+
+the history holds all three observations, forever — the CONFIRMED entry
+at 10:10 never rewrites the NOT_CONFIRMED entry from 10:00, and the
+height-900001 observation at 10:30 never rewrites the height-900000 one
+from 10:10.
+
+```text
+already-known txid
+        │
+        ▼
+BitcoinAnchorConfirmationObserver.observeConfirmation()        (0.8.54)
+        │
+        ▼
+   one fresh, frozen observation
+        │
+        │  appendBitcoinAnchorConfirmationObservationHistoryEntry()  (new)
+        ▼
+[obs1, obs2, obs3, ...]                                    (append-only)
+        │
+        ├── latestBitcoinAnchorConfirmationObservation()               (new)
+        │
+        ▼
+describeBitcoinAnchorConfirmationObservationHistory()                  (new)
+        │
+        ▼
+describeBitcoinAnchorConfirmationObservationHistoryDetails()           (new)
+```
+
+**AN OBSERVATION DESCRIBES THE NETWORK AT THE TIME IT WAS MADE, NOT THE
+CURRENT STATE OF THE TRANSACTION.** This is the one invariant every file
+in this milestone exists to protect. A history is APPENDED TO, NEVER
+OVERWRITTEN, NEVER MUTATED, and never reordered, deduplicated, or
+filtered down to "the current answer" — every explicit "Check
+Confirmation" click gets its own entry, in the order it happened, even
+one that reports the identical state and block as the entry before it.
+"What did ForkBuild know at 10:10?" is answered by reading that entry
+directly out of the history, never by re-deriving it from today's state.
+
+**NO REORGANIZATION DETECTION.** The example sequence above, by itself,
+is ordinary confirmation-count progress on a single block — the two
+CONFIRMED entries name the SAME `blockHash` and simply climb in
+`blockHeight`/`confirmationCount` as more blocks are mined on top. A
+history whose two CONFIRMED entries named two DIFFERENT `blockHash`
+values for the identical txid would look different — a possible chain
+reorganization — but this milestone does not compare entries against one
+another, does not flag disagreement, and introduces no `REORG_DETECTED`
+or similar vocabulary anywhere. It only ever preserves the block identity
+`anchoring/BitcoinAnchorConfirmationObserver.js`'s own header already
+promised it would keep, so that a later, separately sized milestone can
+compare sequential observations and name what a disagreement between them
+means — real, deliberately unbuilt future work.
+
+**NEVER AUTOMATICALLY POPULATED.** Nothing in this milestone calls
+`observeConfirmation()` on a caller's behalf, on a timer, or in response
+to reaching any `application/BitcoinAnchorPublicationLifecycleState.js`
+value. A history grows by exactly one entry per explicit
+`observeConfirmation()` call a caller already chose to make — the
+identical "no polling loop, timer, or retry" restraint `anchoring/
+BitcoinAnchorConfirmationObserver.js`'s own header already holds for a
+single observation, held here for the sequence as a whole.
+
+- `application/BitcoinAnchorConfirmationObservationHistory.js` — new; the
+  append-only accumulation, mirroring `application/
+  SnapshotMaterializationHistory.js` (0.8.38) and `application/
+  SnapshotPeerPossessionObservationHistory.js` (0.8.41)'s own identical
+  shape exactly. `appendBitcoinAnchorConfirmationObservationHistoryEntry(history, observation)`
+  never mutates the array it was given; `latestBitcoinAnchorConfirmationObservation(history)`
+  reads the single most recent entry (by `observedAt`, ties broken by
+  later array position) without re-querying anything.
+- `application/BitcoinAnchorConfirmationObservationHistoryView.js` — new;
+  the chronological narration layer, mirroring `application/
+  SnapshotMaterializationHistoryView.js` (0.8.38) one domain over.
+  `describeBitcoinAnchorConfirmationStateLabel(state)` names all three
+  `application/BitcoinAnchorConfirmationState.js` values in a full
+  sentence ("Transaction confirmed" / "Transaction not confirmed" /
+  "Confirmation status unavailable"); `describeBitcoinAnchorConfirmationObservationHistory(history)`
+  narrates a whole history, oldest first, carrying `blockHash`/
+  `blockHeight`/`confirmationCount`/`reason`/`observedAt` through
+  unchanged.
+- `application/BitcoinAnchorConfirmationObservationHistoryDetailView.js`
+  — new; the per-observation inspection layer, mirroring `application/
+  SnapshotMaterializationHistoryDetailView.js` (0.8.44) and `application/
+  SnapshotPeerPossessionObservationDetailView.js` (0.8.45) one domain
+  over. Adds exactly one new, UI-ready convenience — a short
+  `stateShortLabel` ("Confirmed"/"Not confirmed"/"Unavailable") alongside
+  the same full `stateLabel` — for a condensed, chronological row like
+  "10:10 — Confirmed at block 900000" next to an expanded single-
+  observation panel. Every level of the result is frozen.
+
+> **An observation describes the network at the time it was made, not the
+> current state of the transaction.** Neither the history nor its
+> inspection layer ever turns "what was reported at 10:10" into "what is
+> true now," never compares one observation against another, and never
+> adds a `confidence`, `reliability`, `reorganization`, or
+> `mostReliableObservation` field. See `docs/Principles.md`, "An
+> Observation Describes The Network At The Time It Was Made, Not The
+> Current State Of The Transaction (0.8.56)."
+
+- `tests/BitcoinAnchorConfirmationObservationHistory.test.js` (new) — the
+  flagship runs the REAL `BitcoinAnchorConfirmationObserver` (0.8.54)
+  three times against the identical txid — `NOT_CONFIRMED`, then
+  `CONFIRMED` at height 900000, then `CONFIRMED` at height 900001 — and
+  confirms the history accumulates all three, unmodified, in order, with
+  the earlier entries never rewritten by a later one. Further sections
+  cover: append-only, non-mutating accumulation, including a no-op append
+  for a missing observation; `latestBitcoinAnchorConfirmationObservation()`
+  against an empty history, a single entry, out-of-order `observedAt`
+  values, and a tie broken by array position; every state's own full
+  label, including an unrecognized state naming nothing; history
+  narration carrying an `UNAVAILABLE` observation's own `reason` through
+  unchanged, and narrating a null history as empty rather than throwing;
+  per-observation inspection adding a short label alongside the same full
+  label and freezing every level; an exhaustive sweep confirming no
+  `confidence`/`reliability`/`score`/`status`/`reorganization` field
+  exists anywhere in either layer's output; and every function in this
+  milestone being pure, with none of them accepting an observer,
+  coordinator, or `confirmationSource` of their own.
+
+```text
+0.8.55  Bitcoin Anchor Proof Reconciliation                            ✓
+             │
+             ▼
+0.8.56  Bitcoin Anchor Confirmation Observation History                ✓
+             ├── application/
+             │   BitcoinAnchorConfirmationObservationHistory.js — new;
+             │   append-only accumulation of observeConfirmation() reads,
+             │   never overwritten, never mutated
+             ├── application/
+             │   BitcoinAnchorConfirmationObservationHistoryView.js —
+             │   new; chronological narration, oldest first
+             ├── application/
+             │   BitcoinAnchorConfirmationObservationHistoryDetailView.js
+             │   — new; per-observation inspection, symmetrical with
+             │   0.8.44/0.8.45's own snapshot-side inspection layer
+             └── ForkBuild can now, for the first time, keep and inspect
+                 a full session's worth of Bitcoin confirmation
+                 observations for one transaction — never rewriting an
+                 earlier observation just because a later one arrived
+```
+
+### Deliberately excluded
+
+- **Any UI surface.** No "Check Confirmation" button, no "Bitcoin Anchor
+  Confirmation History" panel, and no change to `ui/
+  DecentralizedPublicationsView.js` exists anywhere in this codebase
+  yet — exactly as every milestone in this Bitcoin sequence has stayed
+  backend-only before it. Wiring `anchoring/
+  BitcoinAnchorConfirmationObserver.js` and `anchoring/
+  BitcoinEsploraTransactionConfirmationObserver.js` into `ui/main.js` for
+  the first time, and adding an explicitly-triggered action to the
+  Publication Center, stays real, separately sized future work.
+- **Reorganization detection, or any comparison between two
+  observations.** This milestone preserves every observation's own
+  `blockHash` alongside `blockHeight`/`confirmationCount`, exactly as
+  0.8.54 already promised it would, but neither the history nor its
+  inspection layer compares one entry against another, flags
+  disagreement, or names a `REORG_DETECTED` outcome — comparing sequential
+  observations and naming what a disagreement between them means stays
+  real, separately sized future work.
+- **Persistence, sharing, or transmission of any kind.** This history
+  lives only in whatever ephemeral component state a future caller keeps
+  for the lifetime of a page, reset to empty the moment it is reopened —
+  never written onto a `core/PublicationAnchor.js`, a catalog, or a
+  Publication Replica Package.
+- **Automatic population, polling, or retry.** Nothing in this milestone
+  calls `observeConfirmation()` on a caller's behalf — a history grows by
+  exactly one entry per explicit call a caller already chose to make.
+- **Any change to `anchoring/BitcoinAnchorConfirmationObserver.js`,
+  `application/BitcoinAnchorConfirmationState.js`, or `application/
+  BitcoinAnchorProofReconciliationView.js` themselves.** All three stay
+  exactly as 0.8.54 and 0.8.55 left them — this milestone only ever reads
+  their existing outputs.
+
+What's left, and deliberately unbuilt: any UI surface, reorganization
+detection and cross-observation comparison, persistence of any kind, and
+automatic population or polling — each its own, separately sized
+milestone, exactly like every "Deliberately excluded" list in this
+document before it.
