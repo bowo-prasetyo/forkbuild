@@ -27,6 +27,9 @@ import { describeCreationAttempt as describePlacementCreationAttempt, describeCr
 import { IpfsRemotePublicationState } from '../../application/IpfsRemotePublicationState.js';
 import { describeIpfsRemotePublication, describeIpfsRemotePublishingConfiguration } from '../../application/IpfsRemotePublicationView.js';
 import { IpfsRemotePublishingConfiguration } from '../../application/IpfsRemotePublishingConfiguration.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../../application/IpfsPublicationRecord.js';
+import { IpfsPublicationContentVerificationCoordinatorState } from '../../application/IpfsPublicationContentVerificationCoordinatorState.js';
+import { describeIpfsPublicationContentVerification } from '../../application/IpfsPublicationContentVerificationView.js';
 import { createResolutionObservation } from '../../application/SnapshotPlacementResolutionObservation.js';
 import { deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote } from '../../application/SnapshotPlacementLifecycleView.js';
 import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/PublicationDecentralizationView.js';
@@ -730,6 +733,22 @@ const IPFS_REMOTE_PUBLICATION_BADGE_CLASSES = {
     [IpfsRemotePublicationState.FAILED]: 'peer-badge--failed'
 };
 
+// 0.8.70 — IPFS Publication & Content Verification UI. Mirrors
+// IPFS_REMOTE_PUBLICATION_BADGE_CLASSES immediately above exactly, one
+// stage later in the same pipeline: VERIFYING reads pending, HASH_MATCH
+// reads the SAME "authenticated" green every other acceptance
+// observation on this page already uses, and HASH_MISMATCH/UNAVAILABLE/
+// FAILED all read the identical "actionable, resolvable failure" red —
+// HASH_MISMATCH is a real, definite fact, never softened to look less
+// alarming than an outright failure.
+const IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES = {
+    [IpfsPublicationContentVerificationCoordinatorState.VERIFYING]: 'peer-badge--pending',
+    [IpfsPublicationContentVerificationCoordinatorState.HASH_MATCH]: 'peer-badge--authenticated',
+    [IpfsPublicationContentVerificationCoordinatorState.HASH_MISMATCH]: 'peer-badge--failed',
+    [IpfsPublicationContentVerificationCoordinatorState.UNAVAILABLE]: 'peer-badge--failed',
+    [IpfsPublicationContentVerificationCoordinatorState.FAILED]: 'peer-badge--failed'
+};
+
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
@@ -805,6 +824,12 @@ export default {
         // comment).
         const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
         const publicationCatalogContentResolver = inject('publicationCatalogContentResolver', null);
+        // 0.8.70 — IPFS Publication & Content Verification UI. Optional —
+        // absent here (e.g. a test harness that never provides it), the
+        // "Content retrieval" sub-section simply never renders, the
+        // identical degrade-gracefully posture every other optional
+        // coordinator on this page already holds.
+        const ipfsPublicationContentVerificationCoordinator = inject('ipfsPublicationContentVerificationCoordinator', null);
         // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
         // Optional — absent here (e.g. a test harness that never provides
         // it), "Local Snapshot" simply never renders, the identical
@@ -1373,6 +1398,27 @@ export default {
                 ipfsRemotePublishingConfigureFormOpen: false,
                 ipfsRemotePublishingDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
                 ipfsRemotePublicationOutcome: null,
+                // 0.8.70 — IPFS Publication & Content Verification UI.
+                // `ipfsPublicationRecord` is the exact application/
+                // IpfsPublicationRecord.js captured the moment
+                // `ipfsRemotePublicationOutcome` last reached PUBLISHED —
+                // `null` until then, and reset to `null` every time a
+                // fresh publish attempt or a (re)configuration retires
+                // the previous one, mirroring `ipfsRemotePublicationOutcome`
+                // 's own "a fresh attempt retires whatever was previously
+                // in-flight" restraint. `ipfsPublicationContentVerification`
+                // is a single ephemeral outcome object for THIS entry,
+                // `null` until "Verify IPFS Content" is explicitly
+                // clicked — it is deliberately NEVER reset by a fresh
+                // verification of the SAME record (a "Verify Again" click
+                // simply replaces it), only by a fresh publish attempt
+                // binding a NEW record, so that a stale record's own last
+                // observation can never be mistaken for the current
+                // record's. Neither field is ever read from or written to
+                // localStorage, IndexedDB, a cookie, or anything else
+                // durable.
+                ipfsPublicationRecord: null,
+                ipfsPublicationContentVerification: null,
                 // 0.8.33 — Local Snapshot Content Availability &
                 // Integrity UX. A single ephemeral attempt object for
                 // THIS entry — `null` until "Check Local Snapshot" is
@@ -3484,9 +3530,13 @@ export default {
                 });
             } catch (error) {
                 entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.FAILED, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: error.message };
+                entry.ipfsPublicationRecord = null;
+                entry.ipfsPublicationContentVerification = null;
                 return;
             }
             entry.ipfsRemotePublicationOutcome = null;
+            entry.ipfsPublicationRecord = null;
+            entry.ipfsPublicationContentVerification = null;
             entry.ipfsRemotePublishingConfigureFormOpen = false;
         }
 
@@ -3497,6 +3547,8 @@ export default {
         function clearIpfsRemotePublishingConfiguration(entry) {
             entry.ipfsRemotePublishingConfiguration = null;
             entry.ipfsRemotePublicationOutcome = null;
+            entry.ipfsPublicationRecord = null;
+            entry.ipfsPublicationContentVerification = null;
             entry.ipfsRemotePublishingConfigureFormOpen = false;
         }
 
@@ -3526,6 +3578,14 @@ export default {
             if (!configuration) return;
 
             entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.PUBLISHING, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: null };
+            // 0.8.70 — a fresh publish attempt retires whatever record and
+            // verification observation the PREVIOUS attempt bound, exactly
+            // like finalizeBitcoinAnchorSignedPsbt() retires the previous
+            // broadcast/confirmation context above — a newly (re)published
+            // entry always starts unverified again, never inheriting a
+            // stale record's own last observation.
+            entry.ipfsPublicationRecord = null;
+            entry.ipfsPublicationContentVerification = null;
             try {
                 const contentHash = entry.publication.contentReference.hash;
                 const isValid = publicationCatalogContentResolver.verify(entry.publication.id, contentHash);
@@ -3535,6 +3595,19 @@ export default {
                 const snapshotJson = publicationCatalogContentResolver.resolve(entry.publication.id);
                 const bytes = JSON.stringify(snapshotJson);
                 entry.ipfsRemotePublicationOutcome = await ipfsRemotePublicationCoordinator.publish({ bytes, configuration });
+                // 0.8.70 — the ONE place this page ever constructs an
+                // application/IpfsPublicationRecord.js: immediately after a
+                // REAL PUBLISHED outcome, from that outcome's own
+                // contentHash/locator/publishedAt — never re-derived, never
+                // typed in, never reused from a different entry.
+                if (entry.ipfsRemotePublicationOutcome.state === IpfsRemotePublicationState.PUBLISHED) {
+                    entry.ipfsPublicationRecord = new IpfsPublicationRecord({
+                        contentHash: entry.ipfsRemotePublicationOutcome.contentHash,
+                        locator: entry.ipfsRemotePublicationOutcome.locator,
+                        publishedAt: entry.ipfsRemotePublicationOutcome.publishedAt,
+                        publicationMethod: IpfsPublicationMethod.REMOTE_PINNING
+                    });
+                }
             } catch (error) {
                 entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.FAILED, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: error.message };
             }
@@ -3550,6 +3623,62 @@ export default {
 
         function isIpfsRemotePublishing(entry) {
             return ipfsRemotePublicationView(entry).state === IpfsRemotePublicationState.PUBLISHING;
+        }
+
+        // 0.8.70 — IPFS Publication & Content Verification UI. THE ONE
+        // place this page ever calls application/
+        // IpfsPublicationContentVerificationCoordinator.js#verify() —
+        // never triggered automatically by reaching PUBLISHED, opening
+        // this section, configuring a gateway, opening a different
+        // publication, or observing a Bitcoin confirmation elsewhere on
+        // this same page. Reads entry.ipfsPublicationRecord — the exact
+        // record publishToRemoteIpfs() bound above — never a CID or
+        // content hash reconstructed from whatever this section currently
+        // displays, so switching between publications can never verify
+        // one publication's locator against a different publication's
+        // content hash. A thrown error is caught HERE, at the UI
+        // boundary, mirroring publishToRemoteIpfs()'s and
+        // observeBitcoinAnchorBroadcastConfirmation()'s own identical
+        // restraint.
+        async function verifyIpfsPublicationContent(entry) {
+            if (!ipfsPublicationContentVerificationCoordinator) return;
+            const record = entry.ipfsPublicationRecord;
+            if (!record) return;
+
+            entry.ipfsPublicationContentVerification = {
+                state: IpfsPublicationContentVerificationCoordinatorState.VERIFYING,
+                contentHash: null, locator: null, reason: null, observedAt: null
+            };
+            try {
+                entry.ipfsPublicationContentVerification = await ipfsPublicationContentVerificationCoordinator.verify(record);
+            } catch (error) {
+                entry.ipfsPublicationContentVerification = {
+                    state: IpfsPublicationContentVerificationCoordinatorState.FAILED,
+                    contentHash: null, locator: null, reason: error.message, observedAt: new Date()
+                };
+            }
+        }
+
+        function ipfsPublicationContentVerificationView(entry) {
+            return describeIpfsPublicationContentVerification(entry.ipfsPublicationContentVerification);
+        }
+
+        function ipfsPublicationContentVerificationBadgeClass(entry) {
+            return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[ipfsPublicationContentVerificationView(entry).state] || 'peer-badge--pending';
+        }
+
+        function isVerifyingIpfsPublicationContent(entry) {
+            return ipfsPublicationContentVerificationView(entry).state === IpfsPublicationContentVerificationCoordinatorState.VERIFYING;
+        }
+
+        // "Verify IPFS Content" the first time a record exists with no
+        // observation yet; "Verify Again" for every click after — the
+        // identical relabeling reconcileBitcoinAnchor()'s own
+        // bitcoinAnchorReconcileButtonLabel() already performs one domain
+        // over.
+        function ipfsPublicationContentVerifyButtonLabel(entry) {
+            if (isVerifyingIpfsPublicationContent(entry)) return 'Verifying…';
+            return entry.ipfsPublicationContentVerification ? 'Verify Again' : 'Verify IPFS Content';
         }
 
         // 0.8.11 — Explicit External Anchoring UX. The one place this
@@ -3816,6 +3945,10 @@ export default {
             ipfsRemotePublishingConfigurationView, publishToRemoteIpfs,
             ipfsRemotePublicationView, ipfsRemotePublicationBadgeClass, isIpfsRemotePublishing,
             IpfsRemotePublicationState,
+            ipfsPublicationContentVerificationCoordinator,
+            verifyIpfsPublicationContent, ipfsPublicationContentVerificationView, ipfsPublicationContentVerificationBadgeClass,
+            isVerifyingIpfsPublicationContent, ipfsPublicationContentVerifyButtonLabel,
+            IpfsPublicationContentVerificationCoordinatorState,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -5748,6 +5881,40 @@ export default {
                                         This is an observation of what the provider just said, not a promise
                                         that it will still be retrievable later, and not a cataloged Snapshot
                                         Placement.
+                                    </p>
+                                </template>
+                            </div>
+
+                            <!-- 0.8.70 — IPFS Publication & Content Verification UI.
+                                 Deliberately a SEPARATE evidence-inspection-adapter box from
+                                 "Remote IPFS" above, never collapsed into it — publishing is an
+                                 action, verification is an observation, and PUBLISHED +
+                                 UNAVAILABLE (or PUBLISHED + HASH_MISMATCH) must remain a
+                                 legitimate, honestly displayed combination, exactly like Broadcast
+                                 and Confirmation above stay two separate boxes one domain over.
+                                 Gated on entry.ipfsPublicationRecord — the exact record the most
+                                 recent PUBLISHED outcome bound — never on whatever this section
+                                 currently displays, so this box never appears for an entry that has
+                                 never actually published. No aggregate "IPFS status" is computed
+                                 anywhere in this box. -->
+                            <div v-if="ipfsPublicationContentVerificationCoordinator && entry.ipfsPublicationRecord" class="evidence-inspection-adapter">
+                                <span class="evidence-inspection-adapter-title">Content retrieval</span>
+                                <div class="identity-mgmt-actions">
+                                    <button type="button" class="action-btn action-btn--primary"
+                                            :disabled="isVerifyingIpfsPublicationContent(entry)"
+                                            @click="verifyIpfsPublicationContent(entry)">
+                                        {{ ipfsPublicationContentVerifyButtonLabel(entry) }}
+                                    </button>
+                                </div>
+                                <template v-if="entry.ipfsPublicationContentVerification">
+                                    <span class="peer-badge" :class="ipfsPublicationContentVerificationBadgeClass(entry)">
+                                        {{ ipfsPublicationContentVerificationView(entry).stateLabel }}
+                                    </span>
+                                    <p v-if="ipfsPublicationContentVerificationView(entry).reason" class="form-hint form-hint--neutral">
+                                        {{ ipfsPublicationContentVerificationView(entry).reason }}
+                                    </p>
+                                    <p v-if="ipfsPublicationContentVerificationView(entry).observedAt" class="form-hint form-hint--neutral">
+                                        Observed {{ formatWhen(ipfsPublicationContentVerificationView(entry).observedAt) }}
                                     </p>
                                 </template>
                             </div>

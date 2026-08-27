@@ -66,6 +66,8 @@ import { CreateBitcoinAnchorTransactionBroadcasterUseCase } from '../application
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
+import { CreateIpfsPublicationContentVerifierUseCase } from '../application/CreateIpfsPublicationContentVerifierUseCase.js';
+import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../application/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -1001,6 +1003,25 @@ const { coordinator: bitcoinAnchorConfirmationCoordinator } = new CreateBitcoinA
 // between calls.
 const { coordinator: ipfsRemotePublicationCoordinator } = new CreateIpfsRemotePublicationCoordinatorUseCase().execute();
 
+// 0.8.70 — IPFS Publication & Content Verification UI. The first UI
+// wiring for application/IpfsPublicationContentVerifier.js (0.8.69) —
+// never reachable from this running app before now, exactly as that
+// milestone's own "Deliberately excluded" list named directly: "no
+// 'Observe Content' button... left deliberately unwired until its own
+// inspection-UI milestone gives a person a place to see it." The
+// contentStore is a fresh content/IpfsGatewayContentStore.js — the SAME
+// class already used, immediately above, to resolve `ipfs://` snapshot
+// placements through a public gateway with no local Kubo daemon
+// required — never a second, disconnected reader. Sharing ONE
+// ipfsPublicationContentVerificationCoordinator instance app-wide is
+// exactly as safe as sharing ipfsRemotePublicationCoordinator is — it
+// holds no credential and no publication-specific state between calls.
+const { ipfsPublicationContentVerifier } = new CreateIpfsPublicationContentVerifierUseCase().execute({
+    contentStore: new IpfsGatewayContentStore()
+});
+const { coordinator: ipfsPublicationContentVerificationCoordinator } =
+    new CreateIpfsPublicationContentVerificationCoordinatorUseCase().execute({ ipfsPublicationContentVerifier });
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -1073,6 +1094,8 @@ app.provide('bitcoinAnchorConfirmationCoordinator', bitcoinAnchorConfirmationCoo
 // implementation already does" rather than inventing a new one.
 app.provide('publicationCatalogContentResolver', publicationCatalogContentResolver);
 app.provide('ipfsRemotePublicationCoordinator', ipfsRemotePublicationCoordinator);
+// 0.8.70 — IPFS Publication & Content Verification UI.
+app.provide('ipfsPublicationContentVerificationCoordinator', ipfsPublicationContentVerificationCoordinator);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
