@@ -25196,3 +25196,213 @@ What's left, and deliberately unbuilt: a combined anchor verdict, a
 unified Bitcoin history, automatic polling, reorganization detection, and
 wallet-connection UX — each its own, separately sized milestone, exactly
 like every "Deliberately excluded" list in this document before it.
+
+## 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX
+
+0.8.57's own "Deliberately excluded" list named exactly this milestone:
+"Wallet connection, wallet selection UX, or any change to how a Bitcoin
+anchor is created or signed... An explicit wallet-connection UX is real,
+separately sized future work." This is that work, and nothing else.
+`anchoring/BitcoinAnchorWalletSigner.js` (0.8.50) has required an
+already-connected `wallet` since the day it was built; no class anywhere in
+this codebase has ever OBTAINED one from a real person's own browser
+extension. This milestone crosses that boundary — from an injected wallet
+CAPABILITY to a person explicitly granting one — and stops there:
+
+```text
+   window.unisat (or nothing — no extension installed)
+           │
+           ▼
+   BitcoinInjectedProviderWalletAdapter.connect()          (new)
+           │
+           ▼
+   BitcoinWalletConnection.connect()                       (new)
+           │
+           ├─ definite decline ──► { connected: false, reason }
+           ├─ cannot presently tell ──► { connected: false,
+           │                             unavailable: true, reason }
+           ▼
+   { connected: true, account, network }
+           │
+           ▼
+   .wallet  →  anchoring/BitcoinAnchorWalletSigner.js       (0.8.50,
+               (the EXACT, unchanged `{ signPsbt }` contract)  UNCHANGED)
+```
+
+> **ForkBuild requests a signature; the wallet decides whether to provide
+> it. ForkBuild never becomes the wallet.** A connection grants ForkBuild a
+> CAPABILITY — never a secret, and never trust. See `docs/Principles.md`,
+> "A Connection Grants A Capability; It Does Not Grant Trust (0.8.58)."
+
+**ANCHORING/BITCOINANCHORWALLETSIGNER.JS IS UNCHANGED — THIS MILESTONE
+SITS ABOVE ITS EXISTING BOUNDARY, NEVER INSIDE IT.** `BitcoinAnchorWalletSigner`
+still requires only `{ wallet: { signPsbt } }` at construction, still
+never receives a private key, seed, WIF, or wallet password, and still
+independently re-inspects every claimed signature via `anchoring/
+BitcoinAnchorSignedPsbtInspector.js` exactly as 0.8.50 built it. This
+milestone's own `anchoring/BitcoinWalletConnection.js` is the missing
+piece BEFORE that class is ever constructed: obtaining a real `wallet`
+capability from a person's own explicit action, never a new signing
+pathway of its own.
+
+**A CAPABILITY, NEVER A SECRET.** `BitcoinWalletConnection` never
+receives, stores, or asks for a private key, a seed phrase, a WIF, or a
+wallet encryption password. An injected `provider`'s own `connect()`
+result carries an `account` (a public address) and a `wallet` object
+exposing exactly `signPsbt()` — structurally incapable of carrying
+anything else. `.wallet` is never persisted anywhere and exists only as
+long as the connection stays `CONNECTED`; `disconnect()` — and nothing
+else — discards it.
+
+**CONNECTED IS NEVER TRUSTED.** `application/
+BitcoinWalletConnectionState.js` names four states — `DISCONNECTED`,
+`CONNECTING`, `CONNECTED`, `UNAVAILABLE` — and nothing in this codebase
+treats `CONNECTED` as authorization for anything. It names only that a
+signing capability is presently available, never that the wallet, the
+account, or the person behind it is trustworthy. Every actual signature
+is still independently inspected by `anchoring/
+BitcoinAnchorSignedPsbtInspector.js`, entirely untouched by this
+milestone.
+
+**A DEFINITE DECLINE IS NEVER CONFUSED WITH AN UNAVAILABLE WALLET.**
+Mirrors `anchoring/BitcoinAnchorWalletSigner.js`'s own `wallet.signPsbt()`
+tri-state contract precisely, one step earlier in the same handshake — see
+`anchoring/BitcoinWalletConnection.js`'s own header for the full
+`provider.connect()` contract. A person explicitly declining a connection
+request is a REAL, meaningful outcome (`{ connected: false, reason }`,
+resulting state `DISCONNECTED`); an extension that is locked, unreachable,
+or not installed at all is a genuinely different, retriable outcome
+(`{ connected: false, unavailable: true, reason }`, resulting state
+`UNAVAILABLE`). Neither collapses into a generic "connection failed."
+
+**A NETWORK MISMATCH IS REPORTED, NEVER RESOLVED.** `application/
+BitcoinWalletConnectionView.js#describeBitcoinWalletConnection()` compares
+a connected wallet's own reported `network` against a caller-supplied
+`expectedNetwork` (this replica's own Bitcoin mainnet, matching `anchoring/
+BitcoinAnchorTransactionBuilder.js`'s own default) and names the
+disagreement as `networkMismatch: true` — it does not disconnect, switch
+networks, or select a different wallet on a person's behalf. No automatic
+network switching, wallet switching, retry, or alternative-wallet
+selection exists anywhere in this milestone.
+
+**ONE CONCRETE ADAPTER, NEVER A "SUPPORT EVERY WALLET" MILESTONE.**
+`anchoring/BitcoinInjectedProviderWalletAdapter.js` adapts exactly one
+real, long-stable, publicly documented browser wallet API (`window.unisat`'s
+own `requestAccounts()`/`getNetwork()`/`signPsbt()`) into the narrow
+`provider` contract `BitcoinWalletConnection` requires — never a
+speculative "generic Bitcoin wallet" shape this codebase has no way to
+verify against anything real. No extension installed is a first-class,
+expected outcome (`unavailable`), never a throw. Adapting a second,
+differently-shaped wallet extension is real, separately sized future work.
+
+- `anchoring/BitcoinWalletConnection.js` — new; the connection lifecycle
+  (`connect()`/`disconnect()`/`.status`/`.account`/`.network`/`.wallet`)
+  described above. Never automatic — no auto-connect on construction, no
+  reconnect-on-page-load, no polling for a newly installed extension.
+- `anchoring/BitcoinInjectedProviderWalletAdapter.js` — new; the one
+  concrete browser-wallet adapter described above.
+- `application/BitcoinWalletConnectionState.js` — new; the four-value
+  vocabulary `BitcoinWalletConnection` reports through.
+- `application/BitcoinWalletConnectionView.js` — new;
+  `describeBitcoinWalletConnectionStateLabel()` and
+  `describeBitcoinWalletConnection()`, mirroring `application/
+  BitcoinAnchorContentProofView.js`'s own shape (0.8.57) one domain over —
+  pure, stateless, frozen output, adding `stateLabel`/`networkMismatch` to
+  an existing connection's own state and nothing else.
+- `application/CreateBitcoinWalletConnectionUseCase.js` /
+  `application/CreateBitcoinInjectedProviderWalletAdapterUseCase.js` — new
+  composition-root factories, mirroring `application/
+  CreateBitcoinAnchorWalletSignerUseCase.js`'s own shape exactly.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Bitcoin Wallet"
+  section on each `bitcoin-op-return` evidence card, gated entirely on an
+  optional `bitcoinWalletConnection` injection (absent -> the section
+  simply never renders) and deliberately independent of the "Bitcoin
+  Anchor" reconciliation section immediately below it (0.8.57's own
+  section needs no wallet at all). Shows connection status, account,
+  network, a network-mismatch warning, and "Connect Bitcoin Wallet"/
+  "Disconnect" — the ONE explicit action pair that ever calls
+  `bitcoinWalletConnection.connect()`/`.disconnect()`. `bitcoinWalletConnection`
+  is ONE instance shared across every evidence card, never one per anchor
+  — connecting once is reflected everywhere.
+- `ui/main.js` — the first real wiring of `anchoring/
+  BitcoinWalletConnection.js`, choosing `window.unisat` as the
+  `injectedProvider` when present in this browser, `null` otherwise (a
+  first-class, expected outcome, never worked around).
+
+- `tests/BitcoinWalletConnectionUX.test.js` (new) — the flagship connects
+  a fake, UniSat-shaped provider end to end, through the REAL, unchanged
+  `BitcoinAnchorWalletSigner`, to a genuine `signed: true` result over a
+  real plan/description/PSBT (0.8.47-0.8.50) — then disconnects and
+  confirms every trace of the signing capability, account, and network is
+  gone. Further sections cover: a definite decline, a locked/unreachable
+  wallet, a missing extension, and a throwing provider all staying
+  distinguishable; a network mismatch being reported, never auto-corrected,
+  and never blocking the connection itself from existing; a
+  `connected: true` result withholding account/network/wallet being a
+  caller-contract violation that throws, not an operational outcome; the
+  full label vocabulary and `describeBitcoinWalletConnection()`'s own
+  fixed field set (never `valid`/`trusted`/`authorized`); and
+  `BitcoinInjectedProviderWalletAdapter`'s own translation of UniSat's real
+  API — an unrecognized network name, an incomplete provider, and a
+  definite `signPsbt()` rejection each staying honestly distinguishable.
+
+```text
+0.8.57  Bitcoin Anchor Proof & Confirmation Inspection UI              ✓
+             │
+             ▼
+0.8.58  Explicit Bitcoin Wallet Connection & Signing UX                ✓
+             ├── anchoring/BitcoinWalletConnection.js — new; connection
+             │   lifecycle, never a new signing pathway
+             ├── anchoring/BitcoinInjectedProviderWalletAdapter.js — new;
+             │   the one concrete browser-wallet adapter this milestone
+             │   ships
+             ├── ui/views/DecentralizedPublicationsView.js — new
+             │   "Bitcoin Wallet" section: Connect/Disconnect, account,
+             │   network, network-mismatch warning
+             ├── ui/main.js — the first real wiring of a Bitcoin wallet
+             │   connection into this running app
+             └── ForkBuild can now, for the first time, obtain a real
+                 signing capability from a person's own browser wallet —
+                 never a secret, never assumed trustworthy, and never
+                 anything anchoring/BitcoinAnchorWalletSigner.js itself
+                 had to change to accept
+```
+
+### Deliberately excluded
+
+- **Actually signing, finalizing, or broadcasting a real Bitcoin anchor
+  transaction from this UI.** This milestone connects a wallet and proves
+  its own `.wallet` capability satisfies `BitcoinAnchorWalletSigner`'s
+  contract in tests — it never wires that connection into `application/
+  BitcoinAnchorPublicationCoordinator.js` (0.8.53) or adds a "Sign"/
+  "Publish" button anywhere on this page. Reviewing a real transaction
+  plan before signing it is real, separately sized future work — see
+  `docs/Roadmap.md`, "0.8.59 — Bitcoin Anchor Transaction Review UI," and
+  wiring the full sign-and-publish pipeline into this page is
+  "0.8.60 — Bitcoin Anchor Publication UX Integration."
+- **Automatic network switching, wallet switching, retry, or alternative-
+  wallet selection.** A network mismatch is named, never resolved — see
+  this entry's own header rule. A person reconnects a different wallet
+  explicitly; nothing in this milestone does it for them.
+- **A second wallet adapter.** `BitcoinInjectedProviderWalletAdapter`
+  adapts exactly one real, documented API. Adapting Xverse, Leather, OKX,
+  or any other extension's own differently-shaped API is real, separately
+  sized future work — see this entry's own header rule.
+- **Listening for wallet-side account or network change events,
+  auto-reconnect on page load, or persistence of any kind.** A connection
+  lives only as long as this page's own session; reopening the page always
+  starts `DISCONNECTED`, exactly as `anchoring/BitcoinWalletConnection.js`'s
+  own header requires ("A CAPABILITY, NEVER A SECRET" — never written to
+  storage). If the real extension changes accounts or networks out from
+  under an already-connected session, this milestone does not detect it.
+- **Any change to `anchoring/BitcoinAnchorWalletSigner.js`,
+  `anchoring/BitcoinAnchorSignedPsbtInspector.js`, or any class from
+  0.8.47 through 0.8.57.** All of them stay exactly as built — this
+  milestone only ever feeds `anchoring/BitcoinAnchorWalletSigner.js` a
+  `wallet` obtained a new way.
+
+What's left, and deliberately unbuilt: an actual sign-and-publish action
+from this UI, automatic network/wallet switching, a second wallet adapter,
+and any persistence or event listening for the connection itself — each
+its own, separately sized milestone, exactly like every "Deliberately
+excluded" list in this document before it.

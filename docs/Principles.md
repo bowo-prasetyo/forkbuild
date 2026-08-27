@@ -14558,3 +14558,98 @@ conversation anticipated: "You've already created the application-layer
 detail view, so the UI should simply project it."
 
 See `docs/Roadmap.md`, 0.8.57, for the full milestone entry.
+
+## A Connection Grants A Capability; It Does Not Grant Trust (0.8.58)
+
+`anchoring/BitcoinAnchorWalletSigner.js` (0.8.50) drew a line this
+codebase has held ever since: ForkBuild never receives a private key,
+never generates one, never derives a seed, never stores a wallet secret.
+It has always held that line from the position of a `wallet` already
+handed to it, connected. `anchoring/BitcoinWalletConnection.js` is the
+missing step before that one — obtaining a `wallet` from a real person's
+own browser extension for the first time — and it holds the identical
+line, restated at the boundary where it is actually crossed:
+
+> ForkBuild requests a signature; the wallet decides whether to provide
+> it. ForkBuild never becomes the wallet.
+
+A `provider.connect()` result carries exactly an `account` (a public
+address) and a `wallet` object exposing exactly `signPsbt()` — structurally
+incapable of carrying a private key, a seed phrase, a WIF, or a wallet
+password, because this codebase never asks a provider for one. `.wallet`
+is never persisted anywhere, never written to storage, and exists only as
+long as `BitcoinWalletConnection`'s own status stays `CONNECTED`;
+`disconnect()`, and nothing else in this codebase, discards it.
+
+**Connected is a fact about availability, never a judgment about trust.**
+`application/BitcoinWalletConnectionState.js` names four states —
+`DISCONNECTED`, `CONNECTING`, `CONNECTED`, `UNAVAILABLE` — and `CONNECTED`
+means only that a signing capability and an account are presently
+available. Nothing in `BitcoinWalletConnection` or `BitcoinAnchorWalletSigner`
+treats that as authorization for anything: every actual signature is
+still independently inspected by `anchoring/
+BitcoinAnchorSignedPsbtInspector.js`, entirely unchanged by this
+milestone. A connected wallet on a compromised machine, controlled by a
+person other than the one operating ForkBuild, or simply pointed at the
+wrong account, is still just `CONNECTED` — this codebase draws no
+inference from the state name beyond what it structurally means. This is
+the identical restraint `docs/Principles.md`, "Replica Knowledge Explains
+What Is Known And How It Was Acquired; It Does Not Judge What Should Be
+Trusted (0.8.31)," already held for a completely different kind of
+knowledge — held here, for the first time, for a live capability rather
+than a recorded observation.
+
+**A definite decline is never confused with an unavailable wallet.** A
+person explicitly declining a connection request in their own extension's
+popup is a real, meaningful outcome — `{ connected: false, reason }`,
+resulting state `DISCONNECTED` again, never a persisted "rejected" state
+of its own. An extension that is locked, unreachable, or was never
+installed at all is a genuinely different, retriable outcome —
+`{ connected: false, unavailable: true, reason }`, resulting state
+`UNAVAILABLE`. Collapsing the two into one "connection failed" would
+erase the one distinction that actually matters to a person looking at
+the screen: whether trying again might help. This is `anchoring/
+BitcoinAnchorWalletSigner.js`'s own tri-state `wallet.signPsbt()` contract
+(0.8.50), held one handshake earlier, by `anchoring/
+BitcoinInjectedProviderWalletAdapter.js` and `anchoring/
+BitcoinWalletConnection.js` alike.
+
+**A capability is requested explicitly, and revoked honestly.** Nothing
+in this milestone auto-connects on construction, reconnects on page load,
+polls for a newly installed extension, or listens for the wallet's own
+account/network change events — every connection is the result of one
+explicit "Connect Bitcoin Wallet" click, and every disconnection is the
+result of one explicit "Disconnect" click. `disconnect()`'s own guarantee
+is narrower than it might sound: most browser wallet extensions offer no
+real way for a website to revoke a permission grant it was given, so this
+method's only unconditional promise is that ForkBuild's OWN reference to
+the signing capability is discarded — it calls the provider's own
+`disconnect()` when one happens to exist, best-effort, but never claims to
+revoke a browser extension's own permission grant, which this codebase has
+no way to control.
+
+**A network mismatch is reported, never resolved on a person's behalf.**
+`application/BitcoinWalletConnectionView.js#describeBitcoinWalletConnection()`
+compares a connected wallet's own reported network against this replica's
+expected one and names the disagreement — `networkMismatch: true` — but
+does not disconnect the wallet, does not switch networks, and does not
+pick a different wallet. No automatic network switching, wallet
+switching, retry, or alternative-wallet selection exists anywhere in this
+milestone; a mismatch is exactly the kind of fact `docs/Principles.md`,
+"The UI Displays Observations; It Does Not Turn Them Into A Verdict
+(0.8.57)," already required this page hold honest about — extended here
+from a transaction's own confirmation status to a wallet's own reported
+network.
+
+**One concrete adapter, translating faithfully, never widening.**
+`anchoring/BitcoinInjectedProviderWalletAdapter.js` adapts exactly one
+real, long-stable, publicly documented browser wallet API into the narrow
+`provider` contract `BitcoinWalletConnection` requires — never a
+speculative "generic Bitcoin wallet" shape this codebase has no way to
+verify against anything real, and never a second capability beyond what
+the real extension itself already offers. No extension installed is a
+first-class, expected outcome, reported the identical honest way a locked
+or unreachable one is — never a crash, and never a fake capability
+standing in for a missing one.
+
+See `docs/Roadmap.md`, 0.8.58, for the full milestone entry.

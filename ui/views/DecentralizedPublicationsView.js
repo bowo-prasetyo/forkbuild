@@ -64,6 +64,8 @@ import { BitcoinAnchorContentProofState } from '../../application/BitcoinAnchorC
 import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../../application/BitcoinAnchorConfirmationObservationHistory.js';
 import { describeBitcoinAnchorConfirmationObservationHistoryDetails, describeBitcoinAnchorConfirmationObservationDetail } from '../../application/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
 import { describeBitcoinAnchorContentProof } from '../../application/BitcoinAnchorContentProofView.js';
+import { BitcoinWalletConnectionState } from '../../application/BitcoinWalletConnectionState.js';
+import { describeBitcoinWalletConnection } from '../../application/BitcoinWalletConnectionView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -603,6 +605,26 @@ const BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES = {
     [BitcoinAnchorContentProofState.UNAVAILABLE]: 'peer-badge--pending'
 };
 
+// 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX. A wallet
+// connection's own badge, deliberately unrelated to either badge map
+// above — Confirmation and Content proof describe a TRANSACTION already
+// on Bitcoin's own network; this describes whether a browser wallet
+// extension currently grants ForkBuild a signing CAPABILITY, a completely
+// independent fact. UNAVAILABLE reads as the one red entry here — unlike
+// the Confirmation map above, where UNAVAILABLE is deliberately amber
+// alongside NOT_CONFIRMED (Bitcoin gives no definite "never confirms"
+// verdict), a wallet extension being missing/locked/unreachable IS a
+// definite, actionable fact a person can resolve right now (install or
+// unlock it) — see anchoring/BitcoinInjectedProviderWalletAdapter.js's
+// own header on why that outcome is never confused with a mid-flight
+// state.
+const BITCOIN_WALLET_CONNECTION_BADGE_CLASSES = {
+    [BitcoinWalletConnectionState.CONNECTED]: 'peer-badge--authenticated',
+    [BitcoinWalletConnectionState.CONNECTING]: 'peer-badge--pending',
+    [BitcoinWalletConnectionState.DISCONNECTED]: 'peer-badge--pending',
+    [BitcoinWalletConnectionState.UNAVAILABLE]: 'peer-badge--failed'
+};
+
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
@@ -718,6 +740,22 @@ export default {
         // BitcoinAnchorConfirmationObserver.js and anchoring/
         // BitcoinOpReturnProofVerifier.js.
         const bitcoinAnchorProofReconciliationView = inject('bitcoinAnchorProofReconciliationView', null);
+        // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
+        // Optional — absent here, the "Bitcoin Wallet" section simply never
+        // renders, the identical degrade-gracefully posture every optional
+        // coordinator on this page already holds. Deliberately independent
+        // of `bitcoinAnchorProofReconciliationView` immediately above:
+        // reading confirmation/content-proof status needs no wallet at
+        // all, and connecting a wallet reads or changes no anchor, no
+        // publication, and no confirmation history — see
+        // anchoring/BitcoinWalletConnection.js's own header on why this is
+        // the ONE place this page ever asks a browser wallet extension for
+        // an account or a signing capability. This single injected
+        // instance is shared across every evidence card on this page —
+        // connecting once is reflected everywhere, exactly like
+        // `bitcoinAnchorProofReconciliationView` above being one shared
+        // reconciliation view rather than one per card.
+        const bitcoinWalletConnection = inject('bitcoinWalletConnection', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -744,6 +782,27 @@ export default {
 
         const entries = reactive([]);
         const loading = ref(true);
+
+        // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX. ONE
+        // shared reactive mirror of `bitcoinWalletConnection`'s own
+        // `status`/`account`/`network` — never per-publication, unlike
+        // `entry.bitcoinAnchorReconciliations` above, because a browser
+        // wallet extension is a single, session-wide capability, not a
+        // fact about any one publication's own evidence. Vue cannot see
+        // through a plain class instance's own mutations, so
+        // `connectBitcoinWallet()`/`disconnectBitcoinWallet()` below copy
+        // `bitcoinWalletConnection`'s own state into this object after
+        // every call — the same "the UI owns the reactive result of an
+        // injected collaborator's own call" discipline `entry.
+        // bitcoinAnchorReconciliations[anchorId]` already holds, one level
+        // less nested because there is exactly one wallet, not one per
+        // anchor.
+        const bitcoinWalletConnectionState = reactive({
+            status: BitcoinWalletConnectionState.DISCONNECTED,
+            account: null,
+            network: null,
+            reason: null
+        });
 
         // Every currently AUTHENTICATED peer, in registry order — the
         // full candidate list this page now hands to application/
@@ -1862,6 +1921,80 @@ export default {
             return Boolean(bucket && bucket[index]);
         }
 
+        // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
+        //
+        // The ONE place this page ever calls
+        // `bitcoinWalletConnection.connect()` — never triggered
+        // automatically on page load, on opening the Publication Center,
+        // or on expanding any evidence card; only an explicit "Connect
+        // Bitcoin Wallet" click. Mirrors `reconcileBitcoinAnchor()` above:
+        // the injected collaborator performs the action and returns a
+        // result, and this page copies that result into its own reactive
+        // state rather than relying on Vue to see through the collaborator's
+        // own internal mutation.
+        async function connectBitcoinWallet() {
+            if (!bitcoinWalletConnection) return;
+            bitcoinWalletConnectionState.status = BitcoinWalletConnectionState.CONNECTING;
+            bitcoinWalletConnectionState.reason = null;
+            let result;
+            try {
+                result = await bitcoinWalletConnection.connect();
+            } catch (error) {
+                // A provider-contract violation — see anchoring/
+                // BitcoinWalletConnection.js's own header on why this is
+                // the one case connect() itself throws rather than
+                // resolving. Reported here exactly like any other
+                // unavailable outcome; never left showing "Connecting…"
+                // forever.
+                bitcoinWalletConnectionState.status = bitcoinWalletConnection.status;
+                bitcoinWalletConnectionState.account = null;
+                bitcoinWalletConnectionState.network = null;
+                bitcoinWalletConnectionState.reason = error.message;
+                return;
+            }
+            bitcoinWalletConnectionState.status = bitcoinWalletConnection.status;
+            bitcoinWalletConnectionState.account = bitcoinWalletConnection.account;
+            bitcoinWalletConnectionState.network = bitcoinWalletConnection.network;
+            bitcoinWalletConnectionState.reason = result.connected ? null : result.reason;
+        }
+
+        // Local-only, honestly — see anchoring/BitcoinWalletConnection.js's
+        // own header, "DISCONNECT IS LOCAL-ONLY, HONESTLY." Never claims to
+        // revoke the browser extension's own permission grant.
+        function disconnectBitcoinWallet() {
+            if (!bitcoinWalletConnection) return;
+            bitcoinWalletConnection.disconnect();
+            bitcoinWalletConnectionState.status = bitcoinWalletConnection.status;
+            bitcoinWalletConnectionState.account = null;
+            bitcoinWalletConnectionState.network = null;
+            bitcoinWalletConnectionState.reason = null;
+        }
+
+        // Pure projection of `bitcoinWalletConnectionState` through
+        // application/BitcoinWalletConnectionView.js's own
+        // `describeBitcoinWalletConnection()` — the identical "the UI
+        // projects an application-layer describe function, unchanged"
+        // discipline `bitcoinAnchorReconciliationView()` above already
+        // holds. `expectedNetwork` matches anchoring/
+        // BitcoinAnchorTransactionBuilder.js's own default network — this
+        // page anchors to Bitcoin mainnet exclusively, so a wallet
+        // connected to any other network is always, honestly, a mismatch.
+        function bitcoinWalletConnectionView() {
+            return describeBitcoinWalletConnection(bitcoinWalletConnectionState, { expectedNetwork: 'mainnet' });
+        }
+
+        function bitcoinWalletConnectionBadgeClass() {
+            return BITCOIN_WALLET_CONNECTION_BADGE_CLASSES[bitcoinWalletConnectionView().state] || 'peer-badge--pending';
+        }
+
+        function isBitcoinWalletConnected() {
+            return bitcoinWalletConnectionView().state === BitcoinWalletConnectionState.CONNECTED;
+        }
+
+        function isBitcoinWalletConnecting() {
+            return bitcoinWalletConnectionView().state === BitcoinWalletConnectionState.CONNECTING;
+        }
+
         function evidenceBadgeClass(anchorView) {
             if (anchorView.checking) return 'peer-badge--pending';
             if (!anchorView.verified) return 'peer-badge--unchecked';
@@ -2702,7 +2835,9 @@ export default {
             bitcoinAnchorProofReconciliationView, reconcileBitcoinAnchor, bitcoinAnchorReconciliationView,
             bitcoinAnchorConfirmationBadgeClass, bitcoinAnchorContentProofBadgeClass, bitcoinAnchorReconcileButtonLabel,
             bitcoinAnchorConfirmationHistoryView, toggleBitcoinAnchorConfirmationHistory, isBitcoinAnchorConfirmationHistoryExpanded,
-            toggleBitcoinAnchorConfirmationHistoryEntry, isBitcoinAnchorConfirmationHistoryEntryExpanded
+            toggleBitcoinAnchorConfirmationHistoryEntry, isBitcoinAnchorConfirmationHistoryEntryExpanded,
+            bitcoinWalletConnection, bitcoinWalletConnectionState, connectBitcoinWallet, disconnectBitcoinWallet,
+            bitcoinWalletConnectionView, bitcoinWalletConnectionBadgeClass, isBitcoinWalletConnected, isBitcoinWalletConnecting
         };
     },
     template: `
@@ -3572,6 +3707,52 @@ export default {
                                             @click="verifyAnchor(entry, anchorView)">
                                         {{ anchorView.checking ? 'Verifying…' : (anchorView.verified ? 'Verify Again' : 'Verify Evidence') }}
                                     </button>
+                                </div>
+
+                                <!-- 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX. A
+                                     wallet connection is unrelated to, and renders independently
+                                     of, the "Bitcoin Anchor" reconciliation card immediately below
+                                     — reading confirmation/content-proof status (0.8.54-0.8.57)
+                                     needs no wallet and no private key at all, exactly as that
+                                     section's own header already established. This is the ONE
+                                     place this page ever asks a browser wallet extension for an
+                                     account or a signing capability; see anchoring/
+                                     BitcoinWalletConnection.js's own header on why ForkBuild only
+                                     ever receives a capability, never a secret. See
+                                     docs/Principles.md, "A Connection Grants A Capability; It Does
+                                     Not Grant Trust (0.8.58)." -->
+                                <div v-if="anchorView.anchorType === 'bitcoin-op-return' && bitcoinWalletConnection"
+                                     class="evidence-inspection">
+                                    <span class="evidence-inspection-title">Bitcoin Wallet</span>
+                                    <div class="evidence-inspection-adapter">
+                                        <span class="peer-badge" :class="bitcoinWalletConnectionBadgeClass()">
+                                            {{ bitcoinWalletConnectionView().stateLabel }}
+                                        </span>
+                                        <dl v-if="isBitcoinWalletConnected()" class="evidence-fields">
+                                            <div class="evidence-field"><dt>Account</dt><dd>{{ shortId(bitcoinWalletConnectionView().account) }}</dd></div>
+                                            <div class="evidence-field"><dt>Network</dt><dd>{{ bitcoinWalletConnectionView().network }}</dd></div>
+                                        </dl>
+                                        <!-- No automatic network switching, wallet switching, or
+                                             retry — the mismatch is only ever named, never resolved
+                                             on a person's behalf. See anchoring/
+                                             BitcoinWalletConnection.js's own header. -->
+                                        <p v-if="bitcoinWalletConnectionView().networkMismatch" class="form-hint form-hint--neutral">
+                                            Wallet network ({{ bitcoinWalletConnectionView().network }}) does not match this anchor's network ({{ bitcoinWalletConnectionView().expectedNetwork }}). Connect a wallet on the matching network to continue.
+                                        </p>
+                                        <p v-if="bitcoinWalletConnectionState.reason" class="form-hint form-hint--neutral">
+                                            {{ bitcoinWalletConnectionState.reason }}
+                                        </p>
+                                    </div>
+                                    <div class="identity-mgmt-actions">
+                                        <button v-if="!isBitcoinWalletConnected()" class="action-btn action-btn--secondary"
+                                                :disabled="isBitcoinWalletConnecting()"
+                                                @click="connectBitcoinWallet()">
+                                            {{ isBitcoinWalletConnecting() ? 'Connecting…' : 'Connect Bitcoin Wallet' }}
+                                        </button>
+                                        <button v-else class="action-btn action-btn--secondary" @click="disconnectBitcoinWallet()">
+                                            Disconnect
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <!-- 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI. A
