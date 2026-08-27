@@ -24443,13 +24443,182 @@ any UI surface, automatic UTXO/fee/wallet discovery, and retry logic —
 each its own, separately sized milestone, exactly like every "Deliberately
 excluded" list in this document before it.
 
-## 0.8.54 — Bitcoin Anchor Confirmation Observation (not yet built)
+## 0.8.54 — Bitcoin Anchor Confirmation Observation
 
-The next milestone this sequence reserves: a separate, explicitly
-triggered "Check Bitcoin Anchor" action that queries `anchoring/
-BitcoinOpReturnProofVerifier.js`'s own Esplora-compatible infrastructure
-and reports factual fields — `txid`, `blockHash`, `blockHeight`,
-`confirmationCount`, `observedAt` — distinguishing `CONFIRMED` /
-`NOT_CONFIRMED` / `UNAVAILABLE`. Never a score, a confidence percentage, or
-a "strength" rating; never automatically triggered by 0.8.53's own
-`publishAnchor()`. Not yet built.
+0.8.53's own "Deliberately excluded" list named exactly what this
+milestone is: "Reaching `BROADCASTED` never triggers a query against
+Esplora or any other block explorer — that stays a separate, later,
+explicitly-triggered action." This is that action, and nothing more: a
+separate, explicitly triggered "Check Bitcoin Anchor" query that reports
+factual fields about an already-broadcast transaction —
+`txid`, `blockHash`, `blockHeight`, `confirmationCount`, `observedAt` —
+distinguishing `CONFIRMED` / `NOT_CONFIRMED` / `UNAVAILABLE`.
+
+```text
+already-known txid (a PublicationAnchor's own proof.txid)
+        │
+        ▼
+BitcoinAnchorConfirmationObserver.observeConfirmation()      (new)
+        │
+        ▼
+injected `confirmationSource`
+(Esplora, Bitcoin Core RPC, a future backend, or a fake in every test)
+        │
+   ┌────┴────┬────────────────┐
+   ▼         ▼                ▼
+CONFIRMED  NOT_CONFIRMED   UNAVAILABLE
+```
+
+**NEVER A SCORE, A CONFIDENCE PERCENTAGE, OR A "STRENGTH" RATING.** The
+three-value `application/BitcoinAnchorConfirmationState.js` vocabulary
+reports only what the network currently says: found and mined into a
+block (with `blockHash`/`blockHeight`/`confirmationCount`), found but not
+yet mined, or cannot presently tell. There is no fourth "definitely never
+confirming" value — unlike a broadcast-time rejection, Bitcoin gives no
+equivalent definite verdict for a transaction that is simply not (yet)
+found, exactly the restraint `anchoring/BitcoinOpReturnProofVerifier.js`
+already held for its own 404 handling since 0.8.1.
+
+**NEVER AUTOMATICALLY TRIGGERED.** Nothing in `application/
+BitcoinAnchorPublicationCoordinator.js` (0.8.53) calls this class, and
+this class never calls back into that pipeline. A caller decides when to
+ask, and asks again, explicitly, for a fresher answer — there is no
+polling loop, timer, or retry anywhere in this milestone.
+
+**EVERY OBSERVATION IS A FRESH READ, NEVER CACHED OR REMEMBERED.**
+`observeConfirmation()` holds no state across calls and returns a new,
+frozen record every time. Block metadata (`blockHash`/`blockHeight`/
+`confirmationCount`) is always reported together, never collapsed into a
+bare boolean — the information a later, separately sized milestone would
+need to notice a chain reorganization (a later observation naming a
+different `blockHash` for the same txid) is preserved, even though this
+milestone does not itself detect or reason about reorganizations.
+
+**INDEPENDENT OF OP_RETURN PROOF VERIFICATION.** This milestone answers
+only "has this transaction been included in the chain, and what does the
+network currently report about it" — never whether any output carries a
+particular content hash, which stays entirely `anchoring/
+BitcoinOpReturnProofVerifier.js`'s own, separate question.
+
+- `application/BitcoinAnchorConfirmationState.js` — new; the three-value
+  vocabulary above, named structurally rather than by convention, the
+  identical discipline `application/BitcoinAnchorPublicationLifecycleState.js`
+  already established for anchor publication, held here for confirmation
+  observation.
+- `anchoring/BitcoinAnchorConfirmationObserver.js` — new; the one domain
+  class. `observeConfirmation(txid)` validates `txid` as a trusted
+  internal artifact (a caller-contract violation throws before the
+  injected `confirmationSource` is ever consulted, exactly as `anchoring/
+  BitcoinAnchorTransactionBroadcaster.js` already validates its own
+  `txid`), consults the injected `confirmationSource`, and translates its
+  answer into `{ state, txid, blockHash, blockHeight, confirmationCount,
+  reason, observedAt }`. A `confirmed: true` report with incomplete or
+  malformed block metadata is reported `UNAVAILABLE`, never taken at face
+  value.
+- `anchoring/BitcoinEsploraTransactionConfirmationObserver.js` — new; the
+  first concrete `confirmationSource`, reading the SAME Esplora-compatible
+  `GET /tx/:txid` / `GET /blocks/tip/height` wire protocol `anchoring/
+  BitcoinOpReturnProofVerifier.js` already reads, but sharing no code with
+  it — a self-contained adapter, mirroring exactly the `anchoring/
+  BitcoinAnchorTransactionBroadcaster.js` / `anchoring/
+  BitcoinEsploraTransactionBroadcaster.js` split 0.8.52 established. Never
+  throws — every distinguishable failure (not found, unreachable, a
+  non-2xx response, an unparseable body) is translated into the
+  `confirmationSource` protocol's own `{ found: false }` form.
+- two new composition-root use cases — `application/
+  CreateBitcoinAnchorConfirmationObserverUseCase.js` and `application/
+  CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js` —
+  mirroring exactly the shape 0.8.52's own two use cases already
+  established.
+
+> **A confirmation observation reports what is; it does not decide what
+> it means.** `BitcoinAnchorConfirmationObserver` never asks whether an
+> anchor is trustworthy, never decides to rebroadcast or replace a
+> transaction, and never collapses "found, unconfirmed" and "cannot
+> presently tell" into the same outcome — one is a real, positive fact,
+> the other is an honest "ask again later." See `docs/Principles.md`,
+> "Confirmation Observation Reports What Is; It Does Not Decide What It
+> Means (0.8.54)."
+
+- `tests/BitcoinAnchorConfirmationObservation.test.js` (new) — the
+  flagship feeds a real, cryptographically-derived txid (built the same
+  hand-rolled way `tests/BitcoinAnchorTransactionBroadcasting.test.js`
+  already does) through to a `CONFIRMED` observation with real block
+  metadata. Further sections cover: `NOT_CONFIRMED` as a real, positive
+  fact; a not-found transaction as `UNAVAILABLE`, never a rejection; a
+  throwing `confirmationSource` translated to `UNAVAILABLE` without
+  propagating; malformed source responses handled without crashing;
+  incomplete/malformed block metadata on a `confirmed: true` report never
+  promoted to `CONFIRMED`; block metadata preserved exactly and every
+  observation frozen; repeated observations as independent, fresh reads
+  (including one naming a different `blockHash`, never reconciled or
+  hidden); a malformed txid throwing before the source is ever consulted;
+  the constructor requiring a real `confirmationSource`; and this class
+  never asking the source for anything beyond `fetchConfirmation(txid)` —
+  no broadcasting, no signing, no transaction reconstruction.
+- `tests/BitcoinEsploraTransactionConfirmationObserver.test.js` (new) —
+  deterministic, network-free wire-level coverage of the concrete adapter:
+  a confirmed transaction with correctly derived `confirmationCount`; an
+  unconfirmed transaction that never queries the tip-height endpoint; a
+  404, a 5xx, a throwing `fetchImpl`, and an unparseable body all reported
+  as not found, never a throw; a failure deriving `confirmationCount`
+  after the transaction was itself found and confirmed still reported as
+  not found, never a partial `CONFIRMED`; and composition end to end with
+  `BitcoinAnchorConfirmationObserver`.
+
+```text
+0.8.53  Bitcoin Anchor Publication Lifecycle                           ✓
+             │
+             ▼
+0.8.54  Bitcoin Anchor Confirmation Observation                        ✓
+             ├── application/BitcoinAnchorConfirmationState.js — new;
+             │   the named CONFIRMED/NOT_CONFIRMED/UNAVAILABLE vocabulary
+             ├── anchoring/BitcoinAnchorConfirmationObserver.js — new;
+             │   validates txid, consults an injected confirmationSource,
+             │   never takes partial "confirmed" claims at face value
+             ├── anchoring/BitcoinEsploraTransactionConfirmationObserver.js
+             │   — new; the first concrete confirmationSource, reading
+             │   the same Esplora wire protocol anchoring/
+             │   BitcoinOpReturnProofVerifier.js already reads
+             ├── two new composition-root use cases
+             └── ForkBuild can now, for the first time, explicitly ask
+                 what the Bitcoin network currently reports about an
+                 already-broadcast anchor transaction — separately from
+                 publishing it, and separately from OP_RETURN proof
+                 verification
+```
+
+### Deliberately excluded
+
+- **Any UI surface.** No "Check Bitcoin Anchor" button, and no change to
+  `ui/DecentralizedPublicationsView.js` exists anywhere in this codebase
+  yet — exactly as every milestone in this Bitcoin sequence has stayed
+  backend-only before it.
+- **Automatic confirmation polling, a timer, or retry logic.** A caller
+  decides for itself when to call `observeConfirmation()` again — this
+  class never loops, backs off, or schedules a future check on the
+  caller's behalf.
+- **Confirmation observation history, or reorganization detection.** This
+  milestone preserves the block metadata a future history would need
+  (`blockHash` alongside `blockHeight`/`confirmationCount`, never
+  collapsed away), but keeps no history of its own and does not itself
+  compare one observation against an earlier one. A caller that wants a
+  history keeps it; this class only ever answers "what does the network
+  report right now."
+- **Reconciling confirmation with OP_RETURN proof verification, or a
+  combined "anchor health" verdict.** Confirmation status
+  (`anchoring/BitcoinAnchorConfirmationObserver.js`) and content-hash
+  proof (`anchoring/BitcoinOpReturnProofVerifier.js`) stay two
+  independent, separately reported facts — never merged into one score.
+- **Bitcoin Core RPC, or any second concrete confirmationSource.**
+  `anchoring/BitcoinEsploraTransactionConfirmationObserver.js` is the
+  first concrete `confirmationSource`; the injected-capability seam
+  `anchoring/BitcoinAnchorConfirmationObserver.js` holds means a second
+  adapter is additive, real, separately sized future work.
+
+What's left, and deliberately unbuilt: any UI surface, automatic polling
+or retry, confirmation observation history and reorganization detection,
+reconciling confirmation with OP_RETURN proof verification, and a second
+concrete confirmationSource — each its own, separately sized milestone,
+exactly like every "Deliberately excluded" list in this document before
+it.
