@@ -26896,3 +26896,181 @@ What's left, and deliberately unbuilt: an explicit remote IPFS publishing
 provider — so publishing to IPFS no longer requires a locally running
 Kubo node either — with its own PUBLISHED/UNAVAILABLE/REJECTED outcomes,
 is 0.8.67's own job, next.
+
+## 0.8.67 — Explicit Remote IPFS Publishing via a Pinning Provider
+
+0.8.66's own "Deliberately excluded" list named this milestone directly:
+"Remote IPFS publishing... an explicit, write-capable publishing
+provider is its own, separately sized milestone (0.8.67)." 0.8.66 gave
+an ordinary person the ability to RESOLVE `ipfs://` content with no Kubo
+node running. It deliberately did not give them the ability to PUBLISH
+it — `content/IpfsGatewayContentStore.js#put()` stays exactly what it
+already was, unimplemented, because a read-only HTTPS gateway genuinely
+cannot accept content. This milestone builds the other side, as its own,
+separately sized adapter, never as a new capability bolted onto the
+gateway:
+
+```text
+Local Kubo      (content/IpfsContentStore.js, 0.7.1)         — resolve, publish
+Remote Gateway  (content/IpfsGatewayContentStore.js, 0.8.66) — resolve only
+Remote Pinning  (content/IpfsRemotePinningContentStore.js, 0.8.67) — publish only
+```
+
+Three new files, each holding exactly one responsibility:
+
+```text
+bytes
+  │
+  ▼
+content/IpfsRemotePinningContentStore.js   — computes the LOCAL content
+  │                                            hash, delegates publishing
+  │                                            to an injected provider
+  ▼
+content/PinningProvider.js                 — the one abstract capability
+  │                                            ForkBuild actually needs:
+  │                                            put(bytes) -> { cid }
+  ▼
+content/HttpPinningProvider.js             — the one concrete, generic
+                                               HTTP JSON implementation
+                                               this codebase ships
+```
+
+**ForkBuild depends on a capability, never on a brand.** `content/
+PinningProvider.js` is a narrow, storage-agnostic contract — one method,
+one shape — with no notion of Pinata, Filebase, web3.storage, or any
+other commercial service anywhere in it. `content/HttpPinningProvider.js`
+is the one concrete adapter this codebase ships, and it stays neutral
+the same way: `endpoint`, `headers`, `fileFieldName`, and `cidField` are
+all caller-supplied constructor arguments, never hard-coded to one
+provider's own wire shape. Pointing an instance at a different
+provider's own upload endpoint never touches either file.
+
+**The CID stays a locator — exactly as it always has.** `content/
+IpfsRemotePinningContentStore.js#put()` computes its returned
+ContentReference's `hash` locally, from the bytes, BEFORE the provider
+is ever consulted — the identical discipline `content/IpfsContentStore
+.js`'s own 0.7.1 header already established. The provider only ever
+supplies the `uri`. A caller reading `contentReference.hash` cannot tell
+whether a Kubo node, a remote pinning provider, or (once resolved) a
+gateway ever touched these bytes.
+
+**Two failure modes, because a real remote SERVICE can genuinely refuse.**
+`application/SnapshotPlacementCreationOutcome.js`'s own 0.8.18 header
+explained precisely why it has no REJECTED counterpart: "a
+content-addressed store has no notion of definitively REFUSING
+well-formed bytes... inventing a 'rejected' outcome with no real adapter
+behavior to back it would be exactly the kind of speculative, unbacked
+branch this codebase's own outcome enums have always refused." A remote
+pinning SERVICE is the first real adapter in this codebase that
+genuinely can refuse — an invalid or expired credential, a quota limit,
+a payload too large — a fact fundamentally different from merely being
+unreachable right now. `content/HttpPinningProvider.js` reports that
+distinction at its own layer, honestly, the moment it exists: a 4xx
+response throws the new `PinningRejectedError`; every other failure
+(unreachable, timeout, 5xx, a response this class cannot parse) throws
+the SAME `ContentUnavailableError` `content/IpfsContentStore.js` and
+`content/IpfsGatewayContentStore.js` already throw, imported rather than
+reinvented. `content/IpfsRemotePinningContentStore.js#put()` never
+catches, reclassifies, or retries either one — both propagate to the
+caller completely unchanged, exactly as `content/ContentStore.js#put()`'s
+own contract already promises (resolve, or reject).
+
+**Credentials are injected, never owned.** Nothing in `content/
+HttpPinningProvider.js` or `content/IpfsRemotePinningContentStore.js`
+reads a secret from a shared constant, an embedded default, or any
+persisted storage this codebase controls. A concrete provider instance
+is constructed with whatever credential or headers it needs already
+supplied by whatever collected them — this milestone builds no
+credential-collection mechanism of its own. See `docs/Principles.md`, "A
+Capability Is Exposed Only Where It Exists; A Credential Is Never Owned
+(0.8.67)."
+
+**Creation only, the exact mirror image of the gateway's resolution
+only.** `content/IpfsRemotePinningContentStore.js#get()`/`#has()` are
+NOT overridden — they inherit `content/ContentStore.js`'s own
+unimplemented throw, the identical signal `content/
+IpfsGatewayContentStore.js#put()` already gives for the one capability
+it does not have. Resolving an already-placed `ipfs://` locator stays
+exactly what it already was — `content/IpfsGatewayContentStore.js`,
+completely unchanged by this milestone.
+
+```text
+0.8.66  IPFS Remote Gateway Resolution                                 ✓
+             │
+             ▼
+0.8.67  Explicit Remote IPFS Publishing via a Pinning Provider         ✓
+             ├── content/PinningProvider.js — new; the one abstract
+             │   capability ForkBuild needs from a remote pinning
+             │   service: put(bytes) -> { cid }
+             ├── content/HttpPinningProvider.js — new; one concrete,
+             │   provider-neutral generic HTTP JSON implementation,
+             │   distinguishing a definitive PinningRejectedError from
+             │   a transient ContentUnavailableError
+             ├── content/IpfsRemotePinningContentStore.js — new; a
+             │   third, independent content/ContentStore.js, publish-
+             │   only, delegating to an injected PinningProvider
+             └── An ordinary ForkBuild user can now, in principle,
+                 publish ipfs:// content with no daemon installed or
+                 running — the content hash still stays computed
+                 locally, still outranks the CID
+```
+
+### Deliberately excluded
+
+- **Any UI.** No credential-entry form, no "Publish using Local Kubo" /
+  "Publish using Remote IPFS" choice on screen, no wiring into `ui/
+  main.js` at all. This is the identical gap `application/
+  CreateSnapshotPlacementOrchestratorUseCase.js`'s own 0.8.18 "Deliberately
+  excluded" list already left open for seven milestones before `ui/
+  main.js` first wired ANY snapshot placement creation in at 0.8.25 —
+  a real, fully tested domain capability, built and left deliberately
+  unwired until its own UI milestone gives a person a safe, explicit way
+  to supply a credential. Building that UI without a considered design
+  for where a credential is collected and how long it lives in memory
+  would be exactly the kind of unbacked, speculative feature this
+  codebase's own conventions already refuse.
+- **A second, explicit `application/SnapshotPlacementStoreRegistry.js`
+  registration alongside Kubo's.** `content/
+  IpfsRemotePinningContentStore.js` self-identifies `storage: 'ipfs'`,
+  the same scheme every other IPFS adapter in this codebase already
+  shares — deliberately, so a placement it creates resolves through the
+  SAME `content/IpfsGatewayContentStore.js` registration every other
+  `ipfs://` placement already does. Because a registry holds exactly one
+  store per storage name, offering this store as an explicit alternative
+  to Kubo (never a silent replacement) needs its OWN, separately
+  constructed registry and coordinator, mirrored the identical way
+  0.8.66 already separated resolution from creation — real composition-
+  root wiring with no UI to trigger it yet would be dead weight, so it
+  waits for the same milestone that builds the credential UI.
+- **A concrete, named commercial provider integration.** `content/
+  HttpPinningProvider.js` is deliberately generic — configured entirely
+  by constructor arguments, never hard-coded to one service's own API
+  quirks. Shipping a preset for a specific named provider is a real,
+  separately sized concern this milestone leaves unbuilt.
+- **Threading `PinningRejectedError` through `application/
+  SnapshotPlacementCreationOutcome.js` or `application/
+  CreateExternalSnapshotPlacementUseCase.js`.** That shared, storage-
+  agnostic pipeline still catches every `store.put()` failure as one
+  undifferentiated `PLACEMENT_UNAVAILABLE`, unchanged. Teaching it to
+  surface a definitive rejection distinctly, for every storage backend
+  that might one day report one, is real, separately sized outcome-model
+  work — not a side effect of adding one new backend.
+- **Publication identity binding, or independently re-verifying a
+  publish by resolving it back through the gateway.** `content/
+  IpfsRemotePinningContentStore.js#put()` trusts the CID the provider
+  hands back exactly as much (and as little) as `content/
+  IpfsContentStore.js#put()` already trusts Kubo's own — neither one
+  reads its own just-written content back to double-check it. Binding a
+  publish to an independently verified retrieval is 0.8.68's own job.
+- **Any change to `content/IpfsContentStore.js`, `content/
+  IpfsGatewayContentStore.js`, `core/ContentReference.js`, or
+  `application/SnapshotPlacementStoreRegistry.js`.** All of them stay
+  exactly as built — this milestone only ever adds a third, independent
+  adapter alongside them.
+
+What's left, and deliberately unbuilt: independently verifying that
+content published through this milestone's own pipeline actually
+resolves, through the gateway, to bytes that still hash to what was
+published — binding a ForkBuild `ContentReference` to its own CID with a
+real, re-checked guarantee rather than a one-time trust of whatever the
+provider returned — is 0.8.68's own job, next.

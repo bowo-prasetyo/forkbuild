@@ -15251,3 +15251,72 @@ the gateway for ordinary resolution never hides or silently replaces
 Kubo's own publish capability anywhere else in this replica.
 
 See `docs/Roadmap.md`, 0.8.66, for the full milestone entry.
+
+## A Capability Is Exposed Only Where It Exists; A Credential Is Never Owned (0.8.67)
+
+`content/IpfsGatewayContentStore.js`'s own 0.8.66 header drew a hard line
+between what a public HTTPS gateway genuinely can and cannot do: resolve,
+never publish. `content/IpfsRemotePinningContentStore.js` (0.8.67) draws
+the identical line for the opposite direction — a remote pinning service
+genuinely can publish, and this class exposes exactly that one
+capability, never a second one it does not have.
+
+**A capability should be exposed only where that capability actually
+exists.** `content/PinningProvider.js` is deliberately narrow: one
+method, `put(bytes) -> { cid }`, because that is the one thing ForkBuild
+actually needs from a remote pinning service. It is not handed a
+generic HTTP client, not a full REST SDK, not read access, not the
+ability to unpin or list what it has pinned — none of that exists in
+this codebase because none of it is needed yet. `content/
+IpfsRemotePinningContentStore.js` itself keeps the same restraint one
+layer up: `get()`/`has()` are not overridden with a hand-written "not
+supported" throw; they simply inherit `content/ContentStore.js`'s own
+unimplemented base method, the identical signal `content/
+IpfsGatewayContentStore.js#put()` already gives for the capability it
+does not have. Creation and resolution stay two adapters, each honest
+about which single half of the job it actually does.
+
+**ForkBuild depends on a capability, never on a brand.** This codebase
+never imports or names Pinata, Filebase, web3.storage, or any other
+commercial pinning service. It depends on `content/PinningProvider.js`'s
+own narrow contract, injected at construction — the identical "generic
+pipeline, concrete plugin wired outside it" split every registry in this
+codebase already holds (see `application/
+SnapshotPlacementStoreRegistry.js`'s own header). `content/
+HttpPinningProvider.js`, the one concrete example this codebase ships,
+stays neutral the same way: its endpoint, headers, and response-field
+names are all caller-supplied, never hard-coded to one provider's own
+wire shape.
+
+**The application receives a capability, not custody.** A browser
+application has no safe way to hold a shared secret — anyone who can
+read its source can read a constant embedded in it. `content/
+HttpPinningProvider.js` is therefore constructed with whatever
+credential or headers it needs already supplied by its caller; nothing
+in this file or in `content/IpfsRemotePinningContentStore.js` reads a
+secret from a shared constant, an embedded default, or any storage this
+codebase controls on a person's behalf. This milestone builds no
+credential-collection mechanism of its own for exactly that reason —
+see `docs/Roadmap.md`, 0.8.67's own "Deliberately excluded" list — the
+identical restraint this codebase's own Bitcoin wallet integration
+already holds: a private key is never generated, stored, or transmitted
+by ForkBuild itself, only ever supplied by an external signer at the
+moment it is genuinely needed.
+
+**Two failure modes, because a real remote service can genuinely
+refuse.** `application/SnapshotPlacementCreationOutcome.js`'s own 0.8.18
+header explained why it built no REJECTED outcome: no real adapter in
+this codebase, until now, could report one. `content/
+HttpPinningProvider.js` is the first that can, and it says so honestly
+the moment it exists — a 4xx response is `PinningRejectedError`, a
+definitive refusal nothing about retrying fixes; every other failure is
+the SAME `ContentUnavailableError` `content/IpfsContentStore.js` and
+`content/IpfsGatewayContentStore.js` already throw. `content/
+IpfsRemotePinningContentStore.js#put()` never catches, reclassifies, or
+retries either one. Threading that distinction further up, into the
+shared placement-creation pipeline every storage backend shares, is
+left for a later milestone — a new fact reported honestly at its own
+layer is not the same thing as every caller already knowing what to do
+with it.
+
+See `docs/Roadmap.md`, 0.8.67, for the full milestone entry.
