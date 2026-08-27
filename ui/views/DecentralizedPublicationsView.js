@@ -69,6 +69,8 @@ import { describeBitcoinWalletConnection } from '../../application/BitcoinWallet
 import { describeBitcoinAnchorTransactionReview } from '../../application/BitcoinAnchorTransactionReviewView.js';
 import { BitcoinAnchorFundingObservationState } from '../../application/BitcoinAnchorFundingObservationState.js';
 import { describeBitcoinAnchorFunding } from '../../application/BitcoinAnchorFundingView.js';
+import { BitcoinAnchorTransactionConstructionState } from '../../application/BitcoinAnchorTransactionConstructionState.js';
+import { describeBitcoinAnchorTransactionConstruction } from '../../application/BitcoinAnchorTransactionConstructionView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -644,6 +646,21 @@ const BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES = {
     [BitcoinAnchorFundingObservationState.UNAVAILABLE]: 'peer-badge--failed'
 };
 
+// 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Mirrors
+// BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES immediately above, one step later in
+// the pipeline: CONSTRUCTING reads amber (an attempt is in flight, not yet
+// a fact), CONSTRUCTED reads the same "authenticated" green a real,
+// deterministic plan earns, and FAILED reads red — the identical
+// "actionable, resolvable failure" red the wallet-connection badge map
+// uses, never the softer amber UNSUPPORTED gets on the funding map (a
+// FAILED construction can be retried with different funding, not merely
+// waited out).
+const BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES = {
+    [BitcoinAnchorTransactionConstructionState.CONSTRUCTING]: 'peer-badge--pending',
+    [BitcoinAnchorTransactionConstructionState.CONSTRUCTED]: 'peer-badge--authenticated',
+    [BitcoinAnchorTransactionConstructionState.FAILED]: 'peer-badge--failed'
+};
+
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
@@ -805,6 +822,19 @@ export default {
         // excluded" list. This page only ever displays what it is handed;
         // it never builds a plan or a PSBT itself.
         const bitcoinAnchorTransactionReview = inject('bitcoinAnchorTransactionReview', null);
+        // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
+        // Optional — absent here, no "Create Transaction Plan" action ever
+        // renders, the identical degrade-gracefully posture every optional
+        // coordinator on this page already holds. ONE shared instance,
+        // exactly like `bitcoinWalletFundingObserver`/`bitcoinWalletConnection`
+        // above: constructing a plan for one publication uses no state that
+        // is specific to any other. See application/
+        // BitcoinAnchorTransactionConstructionCoordinator.js's own header
+        // on why this is a deliberately thin wiring on top of the unchanged
+        // 0.8.47 builder — it never observes funding itself, so this page
+        // still requires an explicit, already-OBSERVED `bitcoinAnchorFundingState.observation`
+        // before "Create Transaction Plan" does anything.
+        const bitcoinAnchorTransactionConstructionCoordinator = inject('bitcoinAnchorTransactionConstructionCoordinator', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -965,6 +995,16 @@ export default {
                 // written to anything durable. See application/
                 // ExternalAnchorCreationUiState.js's own header.
                 creationAttempts: {},
+                // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction
+                // UI. A single ephemeral outcome object for THIS entry —
+                // never keyed by anything, since one publication has at
+                // most one transaction plan under construction at a time,
+                // exactly like `discoveryAttempt` above. `null` until
+                // "Create Transaction Plan" is clicked; see
+                // `constructBitcoinAnchorTransaction()`'s own comment below
+                // and application/BitcoinAnchorTransactionConstructionCoordinator.js#construct()'s
+                // own return shape.
+                bitcoinAnchorTransactionConstruction: null,
                 // 0.8.20 — Snapshot Placement Inspection & Explicit
                 // Resolution UX. `placements`/`placementsView` mirror
                 // `evidenceAnchors`/`evidence` above exactly, one axis
@@ -2151,6 +2191,66 @@ export default {
             return Boolean(view && view.state === BitcoinAnchorFundingObservationState.OBSERVED);
         }
 
+        // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
+        //
+        // The ONE place this page ever calls
+        // `bitcoinAnchorTransactionConstructionCoordinator.construct()` —
+        // never triggered automatically by observing or refreshing
+        // funding, never on page load, and never re-run on a timer; only
+        // an explicit "Create Transaction Plan" click, exactly one entry at
+        // a time. `construct()` itself is synchronous (see that class's own
+        // header) — no `await` here, and CONSTRUCTING is set and cleared
+        // within the same synchronous call, existing so the state this
+        // entry's own reactive slot holds is always one of application/
+        // BitcoinAnchorTransactionConstructionState.js's own four named
+        // values, never inferred from a boolean flag.
+        //
+        // Uses the funding observation exactly as last observed —
+        // `bitcoinAnchorFundingState.observation` — never a fresher one
+        // fetched here; see application/
+        // BitcoinAnchorTransactionConstructionCoordinator.js's own header
+        // on why staleness is named (via `bitcoinAnchorFundingView().networkMismatch`
+        // above), never silently resolved by re-observing on this entry's
+        // behalf.
+        //
+        // A thrown error (a caller-contract violation — e.g. no funding has
+        // been observed at all yet) is caught HERE, at the UI boundary, and
+        // turned into its own honest FAILED outcome, mirroring exactly how
+        // `createAnchor()` above already handles
+        // `PublicationAnchorCreationCoordinator`'s own thrown errors.
+        function constructBitcoinAnchorTransaction(entry) {
+            if (!bitcoinAnchorTransactionConstructionCoordinator) return;
+            entry.bitcoinAnchorTransactionConstruction = { state: BitcoinAnchorTransactionConstructionState.CONSTRUCTING, construction: null, reason: null };
+            try {
+                entry.bitcoinAnchorTransactionConstruction = bitcoinAnchorTransactionConstructionCoordinator.construct({
+                    publicationId: entry.publication.id,
+                    contentHash: entry.publication.contentReference.hash,
+                    fundingObservation: bitcoinAnchorFundingState.observation
+                });
+            } catch (error) {
+                entry.bitcoinAnchorTransactionConstruction = { state: BitcoinAnchorTransactionConstructionState.FAILED, construction: null, reason: error.message };
+            }
+        }
+
+        // Pure projection of `entry.bitcoinAnchorTransactionConstruction`
+        // through application/BitcoinAnchorTransactionConstructionView.js's
+        // own `describeBitcoinAnchorTransactionConstruction()` — the
+        // identical "the UI owns no facts of its own, it only projects an
+        // injected collaborator's own result" discipline every other
+        // `*View()` function on this page already holds. `null` whenever
+        // nothing has been constructed for this entry yet — the section
+        // below simply does not render either way.
+        function bitcoinAnchorTransactionConstructionView(entry) {
+            if (!entry.bitcoinAnchorTransactionConstruction) return null;
+            return describeBitcoinAnchorTransactionConstruction(entry.bitcoinAnchorTransactionConstruction);
+        }
+
+        function bitcoinAnchorTransactionConstructionBadgeClass(entry) {
+            const view = bitcoinAnchorTransactionConstructionView(entry);
+            if (!view) return 'peer-badge--pending';
+            return BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES[view.state] || 'peer-badge--pending';
+        }
+
         function evidenceBadgeClass(anchorView) {
             if (anchorView.checking) return 'peer-badge--pending';
             if (!anchorView.verified) return 'peer-badge--unchecked';
@@ -2997,7 +3097,10 @@ export default {
             bitcoinAnchorTransactionReview, bitcoinAnchorTransactionReviewView, bitcoinAnchorTransactionReviewWalletMatchView,
             bitcoinWalletFundingObserver, bitcoinAnchorFundingState, observeBitcoinAnchorFunding,
             bitcoinAnchorFundingView, bitcoinAnchorFundingBadgeClass, isBitcoinAnchorFundingObserved,
-            bitcoinAnchorFundingUtxosExpanded, toggleBitcoinAnchorFundingUtxosExpanded
+            bitcoinAnchorFundingUtxosExpanded, toggleBitcoinAnchorFundingUtxosExpanded,
+            bitcoinAnchorTransactionConstructionCoordinator, constructBitcoinAnchorTransaction,
+            bitcoinAnchorTransactionConstructionView, bitcoinAnchorTransactionConstructionBadgeClass,
+            BitcoinAnchorTransactionConstructionState
         };
     },
     template: `
@@ -3985,6 +4088,94 @@ export default {
                                         {{ creationButtonLabel(entry, anchorType) }}
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- 0.8.61 — Explicit Bitcoin Anchor Transaction
+                             Construction UI. One card per publication,
+                             hidden entirely absent
+                             bitcoinAnchorTransactionConstructionCoordinator
+                             (the identical degrade-gracefully posture every
+                             optional section on this page already holds),
+                             mirroring the "0.8.11 Explicit External
+                             Anchoring UX" card immediately above one step
+                             EARLIER in the pipeline: that card turns a
+                             published anchor into cataloged EVIDENCE;
+                             this one turns OBSERVED funding into an
+                             unsigned transaction PLAN — never a signature,
+                             never a broadcast, never itself an anchor.
+                             "Create Transaction Plan" is disabled until
+                             wallet funding has actually been observed
+                             (the "Bitcoin Funding" panel above) — this
+                             card never observes funding on its own, and
+                             never re-observes it, even when the funding
+                             shown there has gone stale since. See
+                             application/
+                             BitcoinAnchorTransactionConstructionCoordinator.js's
+                             own header. -->
+                        <div v-if="bitcoinAnchorTransactionConstructionCoordinator" class="evidence-list">
+                            <div class="evidence-anchor-card">
+                                <div class="evidence-anchor-header">
+                                    <span class="evidence-anchor-type">Bitcoin Anchor Transaction</span>
+                                    <span v-if="bitcoinAnchorTransactionConstructionView(entry)" class="peer-badge"
+                                        :class="bitcoinAnchorTransactionConstructionBadgeClass(entry)">
+                                        {{ bitcoinAnchorTransactionConstructionView(entry).stateLabel }}
+                                    </span>
+                                </div>
+                                <p class="form-hint form-hint--neutral">
+                                    Turns the wallet funding observed above into an unsigned transaction plan for
+                                    THIS publication's own content hash. Nothing is signed or broadcast by
+                                    constructing this — it only names which observed inputs would be spent, and
+                                    what the resulting fee and change would be.
+                                </p>
+                                <p v-if="!isBitcoinAnchorFundingObserved()" class="form-hint form-hint--neutral">
+                                    Observe wallet funding above before creating a transaction plan.
+                                </p>
+                                <div class="identity-mgmt-actions">
+                                    <button class="action-btn action-btn--primary"
+                                            :disabled="!isBitcoinAnchorFundingObserved() || (bitcoinAnchorTransactionConstructionView(entry) && bitcoinAnchorTransactionConstructionView(entry).state === BitcoinAnchorTransactionConstructionState.CONSTRUCTING)"
+                                            @click="constructBitcoinAnchorTransaction(entry)">
+                                        Create Transaction Plan
+                                    </button>
+                                </div>
+
+                                <template v-if="bitcoinAnchorTransactionConstructionView(entry)">
+                                    <p v-if="bitcoinAnchorTransactionConstructionView(entry).reason" class="form-hint form-hint--neutral">
+                                        {{ bitcoinAnchorTransactionConstructionView(entry).reason }}
+                                    </p>
+
+                                    <template v-if="bitcoinAnchorTransactionConstructionView(entry).state === BitcoinAnchorTransactionConstructionState.CONSTRUCTED">
+                                        <dl class="evidence-fields">
+                                            <div class="evidence-field"><dt>Network</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).network }}</dd></div>
+                                            <div class="evidence-field"><dt>Content hash</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).contentHash }}</dd></div>
+                                            <div class="evidence-field"><dt>Selected inputs</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).selectedInputCount }}</dd></div>
+                                            <div class="evidence-field"><dt>Fee</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).feeSats }} sat</dd></div>
+                                            <div class="evidence-field"><dt>Change</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).changeSats }} sat</dd></div>
+                                            <div class="evidence-field"><dt>Total inputs</dt><dd>{{ bitcoinAnchorTransactionConstructionView(entry).totalInputSats }} sat</dd></div>
+                                        </dl>
+                                        <div class="evidence-inspection-adapter">
+                                            <span class="evidence-inspection-adapter-title">Inputs</span>
+                                            <dl v-for="input in bitcoinAnchorTransactionConstructionView(entry).inputs" :key="input.txid + ':' + input.vout" class="evidence-fields">
+                                                <div class="evidence-field"><dt>{{ shortId(input.txid) }}:{{ input.vout }}</dt><dd>{{ input.valueSats }} sat ({{ input.scriptType }})</dd></div>
+                                            </dl>
+                                        </div>
+                                        <div class="evidence-inspection-adapter">
+                                            <span class="evidence-inspection-adapter-title">Outputs</span>
+                                            <dl v-for="(output, index) in bitcoinAnchorTransactionConstructionView(entry).outputs" :key="index" class="evidence-fields">
+                                                <div class="evidence-field">
+                                                    <dt>{{ output.type === 'change' ? 'Change' : 'OP_RETURN' }}</dt>
+                                                    <dd>{{ output.address ? shortId(output.address) + ' — ' : '' }}{{ output.valueSats }} sat</dd>
+                                                </div>
+                                            </dl>
+                                        </div>
+                                        <p class="form-hint form-hint--neutral">
+                                            Funding observed {{ formatWhen(bitcoinAnchorTransactionConstructionView(entry).fundingObservedAt) }};
+                                            plan constructed {{ formatWhen(bitcoinAnchorTransactionConstructionView(entry).constructedAt) }}.
+                                            The observed funding may already be stale by now — this plan records what it was built from, it
+                                            does not claim those inputs are still spendable.
+                                        </p>
+                                    </template>
+                                </template>
                             </div>
                         </div>
 

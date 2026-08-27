@@ -25818,3 +25818,238 @@ decoding, a "Create Transaction Plan" action wired to this funding and the
 existing 0.8.59 review panel, and the full sign-and-publish flow — 0.8.61's
 own job, exactly as 0.8.59's own "Deliberately excluded" list already named,
 now with real funding available to build from.
+
+## 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI
+
+0.8.60's own "Deliberately excluded" list named this milestone directly:
+"Actually calling `anchoring/BitcoinAnchorTransactionBuilder.js`... or
+wiring a 'Create Transaction Plan' action into this page" was left real,
+separately sized future work. Every piece this milestone needed to close
+that gap already existed — a real funding observation (0.8.60), and the
+unchanged, deterministic builder itself (0.8.47) — but nothing in this
+codebase had ever connected them. This milestone is that one connection,
+and stops exactly there:
+
+```text
+   Bitcoin Wallet
+         │
+         ▼
+   Observe Wallet Funding                          (0.8.60, UNCHANGED)
+         │
+         ▼
+   Funding Observation
+         │
+         │ explicit "Create Transaction Plan"
+         ▼
+   BitcoinAnchorTransactionConstructionCoordinator.construct()   (new)
+         │
+         ▼
+   BitcoinAnchorTransactionBuilder.build()          (0.8.47, UNCHANGED)
+         │                                  plan.built === false ──┐
+         ▼                                                         │
+   { fundingObservation, plan }        a frozen construction        │
+                                        identity                    │
+         │                                                          │
+         ▼                                                          ▼
+   Transaction-plan inspection UI (new)      "Unable to construct transaction"
+```
+
+> A transaction plan records which observed funding facts were used to
+> construct it. It does not claim those UTXOs remain spendable. See
+> `docs/Principles.md`, "A Transaction Plan Records What Produced It; It
+> Does Not Refresh It (0.8.61)."
+
+**Observed funding becomes a transaction plan only through an explicit
+construction action — never automatically.** `application/
+BitcoinAnchorTransactionConstructionCoordinator.js#construct()` is called
+from exactly one place on the whole page: an explicit "Create Transaction
+Plan" click, on one publication at a time. Observing or refreshing funding
+never triggers it, page load never triggers it, and nothing in this
+codebase re-runs it on a timer — the identical restraint 0.8.60's own
+`observeFunding()` already holds toward its own funding source, one step
+earlier in the pipeline.
+
+**A deliberately thin coordinator — orchestration only, never a second
+implementation.** `BitcoinAnchorTransactionConstructionCoordinator` never
+discovers UTXOs, never refreshes funding, never retries with different
+inputs, never selects a different account, never changes the fee policy it
+was constructed with, never generates an address, never signs, and never
+broadcasts. `anchoring/BitcoinAnchorTransactionBuilder.js` remains the sole
+authority for deterministic UTXO selection and fee arithmetic, entirely
+unchanged since 0.8.47 — this milestone reports the resulting selection,
+it never reproduces or second-guesses it.
+
+**"Selected inputs," never "best inputs."** `anchoring/
+BitcoinAnchorTransactionBuilder.js`'s own header has held, unchanged since
+0.8.47: its deterministic largest-value-first accumulation is "a plain
+greedy accumulation, never an optimal... coin selector." `application/
+BitcoinAnchorTransactionConstructionView.js#describeBitcoinAnchorTransactionConstruction()`
+names the resulting field `selectedInputCount` — reporting the size of the
+builder's own selection, never re-describing it with recommendation
+semantics the builder itself has never claimed.
+
+**Construction failures are the end of that attempt, honestly, with no
+automatic recovery of any kind.** A `plan.built === false` result (most
+commonly: insufficient funds) is reported as `FAILED` with the builder's
+own `reason`, carried through verbatim — never rewritten, never
+summarized. There is no automatic re-observation, no fallback account, no
+different UTXO strategy, and no automatic fee adjustment: a failure ends
+that explicit construction attempt, and a person may click "Create
+Transaction Plan" again, explicitly, whenever they choose to.
+
+**A construction identity records what produced it — never a claim that it
+remains valid.** A successful outcome's own `construction` object freezes
+together the EXACT `fundingObservation` used and the EXACT `plan` the
+builder returned from it, plus the moment construction happened
+(`constructedAt`). This is deliberately never collapsed with the funding
+observation's own `observedAt` into one timestamp: the UTXOs a plan spends
+may already be stale by the time it is constructed, and stranger still by
+the time anyone signs it — this milestone names both moments honestly
+rather than implying they were the same instant. See `docs/Principles.md`,
+"A Funding Observation Is Not A Funding Commitment (0.8.60)," extended here
+one domain later.
+
+**A four-value UI state, no more.** `application/
+BitcoinAnchorTransactionConstructionState.js` names exactly `IDLE`,
+`CONSTRUCTING`, `CONSTRUCTED`, `FAILED` — never `READY`, `SAFE`, `VALID`,
+`OPTIMAL`, `BEST`, or `TRUSTED`. Every one of those words would imply a
+judgment this application never makes about a constructed plan; whether
+its inputs, fee, or change are ACCEPTABLE remains entirely a judgment for
+the person reading `application/BitcoinAnchorTransactionConstructionView.js`'s
+own projection of it. See `docs/Principles.md`, "The UI Displays
+Observations; It Does Not Turn Them Into A Verdict (0.8.57)," extended here
+to a transaction plan's own construction.
+
+**`contentHash` is caller-supplied, never looked up from a catalog — a
+deliberate difference from `application/BitcoinAnchorPublicationCoordinator.js`
+(0.8.53).** That coordinator resolves `contentHash` itself from an
+injected `publicationCatalog`, because its whole job is running a full
+plan-through-broadcast pipeline where "which publication" is the only fact
+a caller should need to name. This milestone's coordinator exists one step
+earlier, where the caller (this page, already rendering one publication's
+own evidence card) already has both `publicationId` and `contentHash` on
+screen — adding a catalog dependency here would only duplicate a lookup
+already done.
+
+- `application/BitcoinAnchorTransactionConstructionState.js` — new; the
+  four-value vocabulary (`IDLE`/`CONSTRUCTING`/`CONSTRUCTED`/`FAILED`)
+  described above.
+- `application/BitcoinAnchorTransactionConstructionCoordinator.js` — new;
+  `construct({ publicationId, contentHash, fundingObservation })`, the
+  deliberately thin wiring described above. Synchronous, exactly like the
+  0.8.47 builder it wraps — no network access, no async work of any kind.
+- `application/CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase.js`
+  — new composition-root factory, mirroring `application/
+  CreateBitcoinAnchorPublicationCoordinatorUseCase.js`'s own shape (0.8.53)
+  exactly: takes its one collaborator (`bitcoinAnchorTransactionBuilder`)
+  as a parameter, constructing none of it.
+- `application/BitcoinAnchorTransactionConstructionView.js` — new;
+  `describeBitcoinAnchorTransactionConstructionStateLabel()` and
+  `describeBitcoinAnchorTransactionConstruction()`, mirroring `application/
+  BitcoinAnchorFundingView.js`'s own shape (0.8.60) one domain later —
+  pure, stateless, frozen output, naming `selectedInputCount`,
+  `fundingObservedAt`, and `constructedAt` as described above, and nothing
+  that resembles a verdict.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Bitcoin Anchor
+  Transaction" card, one per publication (unlike the page-level "Bitcoin
+  Funding"/"Review Bitcoin Anchor Transaction" panels, since a transaction
+  plan is necessarily FOR one specific publication's own content hash).
+  Shows the connected wallet's observed funding turned into a plan: network,
+  content hash, selected input count, fee, change, total input value, the
+  full input/output list, and both timestamps named separately. Disabled
+  entirely until funding has been observed, and never re-observes it. A
+  FAILED attempt shows the builder's own reason, honestly, with no retry
+  affordance beyond clicking "Create Transaction Plan" again.
+- `ui/main.js` — the first real wiring of `anchoring/
+  BitcoinAnchorTransactionBuilder.js` (0.8.47) and `application/
+  BitcoinAnchorTransactionConstructionCoordinator.js` into this running
+  app.
+
+- `tests/BitcoinAnchorTransactionConstructionUX.test.js` (new) — the
+  flagship proves a real funding observation, through a real
+  fundingSource, through the unchanged `BitcoinWalletFundingObserver`,
+  produces a plan via this milestone's own coordinator that is
+  byte-identical to calling the unchanged 0.8.47 builder directly with the
+  same facts — and that the view honestly distinguishes when funding was
+  observed from when the plan was constructed. Further sections cover:
+  UTXO order not affecting the resulting plan; the funding observation
+  itself never mutated; construction never re-observing the wallet, on a
+  first attempt or a reused (possibly stale) observation; insufficient
+  funding failing immediately and synchronously with no partial plan; the
+  exact plan reaching the view projection unmodified; no signing or
+  broadcasting material or capability appearing anywhere; no
+  recommendation/ranking vocabulary anywhere in the view or the state
+  vocabulary; full determinism reconstructing from the same observation;
+  and every caller-contract violation refused before the builder is ever
+  consulted.
+
+```text
+0.8.60  Explicit Bitcoin Anchor Funding & Address Preparation          ✓
+             │
+             ▼
+0.8.61  Explicit Bitcoin Anchor Transaction Construction UI            ✓
+             ├── application/BitcoinAnchorTransactionConstructionCoordinator.js
+             │   — new; turns an OBSERVED funding fact into an
+             │   already-built plan through the unchanged 0.8.47 builder
+             ├── application/BitcoinAnchorTransactionConstructionView.js
+             │   — new; "selected," never "best," inputs — no verdict
+             ├── ui/views/DecentralizedPublicationsView.js — new
+             │   per-publication "Bitcoin Anchor Transaction" card:
+             │   Create Transaction Plan, inputs, outputs, fee, change
+             ├── ui/main.js — the first real wiring of the 0.8.47 builder
+             │   into this running app
+             └── ForkBuild can now, for the first time, turn a connected
+                 wallet's own observed funding into a real, inspectable,
+                 unsigned transaction plan for a specific publication —
+                 through one explicit action, never automatically
+```
+
+### Deliberately excluded
+
+- **Wiring this plan into the existing 0.8.59 PSBT-based "Review Bitcoin
+  Anchor Transaction" panel, or into `anchoring/BitcoinAnchorPsbtBuilder.js`
+  at all.** 0.8.60's own header holds, unchanged: a real PSBT input still
+  requires a real `witnessUtxo.scriptPubKey` — actual scriptPubKey bytes,
+  never merely a script TYPE label — and deriving that from an address
+  requires the base58/bech32 decoding this codebase has deliberately never
+  built. The `scriptType` a funding observation carries (and this
+  milestone's own plan, unchanged from it) is sized for exactly what
+  `anchoring/BitcoinAnchorTransactionBuilder.js` already accepts for fee
+  ESTIMATION — never enough, on its own, to construct a signable PSBT
+  input. This milestone's own "Transaction-plan inspection UI" is
+  therefore a NEW, separate projection of the PLAN itself (0.8.47's own
+  output), never a reuse of `application/BitcoinAnchorTransactionReviewView.js`
+  (0.8.59), which projects a PSBT-shaped description one domain later.
+  Address decoding, and the PSBT/signing wiring it would unlock, remain
+  real, separately sized future work — 0.8.62's own concern, not this
+  one's.
+- **Automatic construction the moment funding is observed.** Constructing
+  a plan is always exactly one explicit click, on exactly one publication,
+  exactly as "Create Anchor" (0.8.11) and "Observe Wallet Funding" (0.8.60)
+  already are — never triggered by observing funding, refreshing funding,
+  loading this page, or reconnecting a wallet.
+- **A staleness check, a re-observation, or any other automatic recovery
+  from a stale or insufficient funding observation.** This coordinator uses
+  exactly the `fundingObservation` it is handed — whether that observation
+  is stale (`application/BitcoinAnchorFundingView.js`'s own
+  `networkMismatch`, unchanged) remains a fact the "Bitcoin Funding" panel
+  already names to the person deciding whether to construct; this
+  milestone never checks it, never blocks on it, and never re-observes to
+  find a fresher answer on its own.
+- **Any change to `anchoring/BitcoinAnchorTransactionBuilder.js`,
+  `anchoring/BitcoinWalletFundingObserver.js`, or any class from 0.8.47
+  through 0.8.60.** All of them stay exactly as built — this milestone
+  only ever adds a thin coordinator and a verdict-free view on top of the
+  unchanged 0.8.47 builder.
+- **Signing, broadcasting, or anything resembling either.** This
+  milestone's own flagship test scans every construction outcome for
+  signing/broadcasting vocabulary of any kind, and confirms the
+  coordinator exposes no `sign`/`requestSignature`/`broadcast` method at
+  all — a transaction plan is not a transaction, exactly as `docs/
+  Principles.md`, "A Transaction Plan Is Not A Transaction (0.8.47),"
+  already held, unchanged, fourteen milestones later.
+
+What's left, and deliberately unbuilt: real address-to-scriptPubKey
+decoding, and the PSBT/signing wiring it would unlock — connecting this new
+plan-level construction to the existing 0.8.59 PSBT-based review and a real
+"Sign" action — is 0.8.62's own job, next.

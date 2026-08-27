@@ -14796,3 +14796,92 @@ unchanged and un-duplicated here; this milestone answers only "what does a
 funding source say is spendable," never "what should be spent."
 
 See `docs/Roadmap.md`, 0.8.60, for the full milestone entry.
+
+## A Transaction Plan Records What Produced It; It Does Not Refresh It (0.8.61)
+
+`docs/Principles.md`, "A Transaction Plan Is Not A Transaction (0.8.47),"
+drew the first line in this pipeline: a plan is inputs, outputs, and a fee
+— never signed bytes, never a claim about the network. This milestone
+draws a second line, one step earlier: a plan is also never a claim that
+the funding it was built from is still real. Observing funding and
+constructing a plan from it are two different moments, and this milestone
+insists on naming both, honestly, rather than letting a person mistake one
+for the other.
+
+> A wallet can report UTXOs at 10:00. A plan built from that report at
+> 10:01 is a real, correctly-computed plan — about what the wallet said at
+> 10:00. It is not a plan about what the wallet holds at 10:01, or at
+> whatever moment a person actually reads it.
+
+**Explicit action, all the way down — never inferred from an adjacent
+fact.** `application/BitcoinAnchorTransactionConstructionCoordinator.js#construct()`
+is reachable from exactly one place: a "Create Transaction Plan" click, on
+one publication, using whichever funding observation the page currently
+holds. Observing funding does not construct a plan. Refreshing funding
+does not reconstruct one. Loading the page, reconnecting a wallet, or
+switching to another publication's evidence card does none of it either.
+Every step in this codebase's own Bitcoin pipeline — connect (0.8.58),
+observe (0.8.60), construct (0.8.61), and eventually review and sign
+(0.8.59, 0.8.62) — remains its own deliberate click, never a side effect
+of the one before it.
+
+**A deliberately thin coordinator, proven thin by what it is not allowed to
+do.** `BitcoinAnchorTransactionConstructionCoordinator` cannot discover a
+UTXO, cannot refresh a funding observation, cannot retry with different
+inputs after a failure, cannot pick a different account, cannot change the
+fee policy it was built with, cannot generate an address, cannot sign, and
+cannot broadcast — not because a comment says so, but because its own
+constructor accepts exactly one collaborator (`bitcoinAnchorTransactionBuilder`)
+and its own `construct()` method calls exactly one thing on it, once. This
+milestone's own flagship test asserts the coordinator exposes no
+`sign`/`requestSignature`/`broadcast` method at all, and that no
+signing/broadcasting vocabulary appears anywhere in a construction outcome
+— the same restraint proven structurally, not just documented.
+
+**The builder remains the sole authority for what "selected" means.**
+`anchoring/BitcoinAnchorTransactionBuilder.js`'s own deterministic,
+largest-value-first accumulation is unchanged since 0.8.47, and unchanged
+by this milestone: this coordinator hands it `fundingObservation.utxos`
+and `fundingObservation.changeAccount` exactly as observed, and reports
+back exactly what it returns. `application/
+BitcoinAnchorTransactionConstructionView.js` names the resulting count
+`selectedInputCount` — never `bestInputCount` or `optimalInputCount` —
+because the builder itself has never claimed optimality, and a projection
+of its result is not the place to invent that claim on its behalf.
+
+**A construction identity is a record, not a promise.** A successful
+outcome's own `construction` freezes together the funding observation that
+was used, the plan the builder returned from it, and the moment
+construction happened (`constructedAt`) — separately from the funding
+observation's own `observedAt`. These are never collapsed into one
+timestamp, because they are not one moment: a UTXO a plan spends may
+already be gone by the time the plan exists, and stranger still by the
+time anyone considers signing it. Naming both moments is the entire
+contribution this principle makes — it resolves nothing, and is not meant
+to; a later milestone that actually signs is where re-checking spendability
+would belong, never here.
+
+**A four-value state, deliberately incapable of expressing a verdict.**
+`application/BitcoinAnchorTransactionConstructionState.js` names `IDLE`,
+`CONSTRUCTING`, `CONSTRUCTED`, `FAILED` — and nothing else. There is no
+`READY` a person could mistake for "safe to sign," no `VALID` that would
+imply this application checked something it did not, no `BEST` or
+`OPTIMAL` that would claim a judgment about the selection `anchoring/
+BitcoinAnchorTransactionBuilder.js` itself has never made. See `docs/
+Principles.md`, "The UI Displays Observations; It Does Not Turn Them Into
+A Verdict (0.8.57)," extended here to a plan's own construction — a
+CONSTRUCTED plan is a fact about what the builder computed, never an
+endorsement of it.
+
+**A failure is the end of that attempt — full stop, no invented recovery.**
+A `FAILED` outcome carries `anchoring/BitcoinAnchorTransactionBuilder.js`'s
+own `reason`, verbatim, and nothing else: no partial plan, no fallback
+account, no automatically reduced or increased fee, no silent
+re-observation of funding to try again with a fresher answer. A person who
+wants to try again clicks "Create Transaction Plan" again, explicitly,
+exactly as they clicked it the first time — this milestone adds no
+machinery that would make that second click unnecessary, because inventing
+that machinery is exactly the kind of judgment this principle exists to
+withhold.
+
+See `docs/Roadmap.md`, 0.8.61, for the full milestone entry.
