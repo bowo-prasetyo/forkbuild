@@ -27650,3 +27650,189 @@ history, a combined cross-domain verdict, automatic re-verification, a
 local Kubo publish path's own verification UI, and a unified Bitcoin +
 IPFS evidence screen — each its own, separately sized milestone, exactly
 like every "Deliberately excluded" list in this document before it.
+
+## 0.8.71 — IPFS Publication Record History & Inspection
+
+0.8.70's own "Deliberately excluded" list named exactly this milestone:
+"0.8.56's Bitcoin confirmation observation history has a different
+temporal character than a single IPFS retrieval check — this milestone
+deliberately leaves history out, showing only `current publication` +
+`latest verification observation`." That restraint was correct for
+0.8.70's own, narrower question — but the IPFS side has a different gap
+than the Bitcoin side's own confirmation-history gap 0.8.56 closed:
+publishing again produces a genuinely NEW `IpfsPublicationRecord`, not a
+repeated OBSERVATION of one already-published anchor. Without a history,
+`ui/views/DecentralizedPublicationsView.js`'s own `ipfsPublicationRecord`
+field silently discarded every earlier publish attempt the moment a
+person clicked "Publish Again":
+
+```text
+Publish content A  →  Record A (CID-A, hash H1)
+Publish content A again  →  Record B (CID-B, hash H1)   ← Record A now gone
+```
+
+This milestone closes that gap the same way 0.8.56 closed the confirmation
+one, one domain over — an append-only history that never overwrites an
+earlier record — while keeping content verification a SEPARATE, per-record
+concern, never folded into the history itself:
+
+```text
+IPFS Publishing
+  └── Remote pinning
+        ├── Remote IPFS                                    (0.8.68)
+        ├── Content retrieval                               (0.8.70)
+        │     └── verifies entry.ipfsPublicationRecord — the CURRENT
+        │         publication's own record — unchanged
+        └── Publication History                             (new)
+              ├── application/IpfsPublicationRecordHistory.js — new;
+              │   append-only sequence of every record this entry has
+              │   ever been PUBLISHED under
+              ├── application/IpfsPublicationRecordHistoryView.js — new;
+              │   pure, factual narration — locator / content hash /
+              │   published at / method — never "verified"/"trusted"/
+              │   "current"/"canonical"
+              └── [ Show/Hide Publication History ]  → per record:
+                    [ Inspect ]  (local, synchronous, no network read)
+                    [ Verify Content / Verify Again ]  (calls the SAME
+                      0.8.70 IpfsPublicationContentVerificationCoordinator,
+                      bound to THAT record, never to whichever record is
+                      currently displayed elsewhere on the page)
+```
+
+**A PUBLICATION RECORD IS A HISTORICAL FACT, NEVER JUST CURRENT UI
+STATE.** `application/IpfsPublicationRecordHistory.js` mirrors `application/
+BitcoinAnchorConfirmationObservationHistory.js` (0.8.56) exactly:
+append-only, non-mutating, frozen at every level, no deduplication, no
+reordering, no automatic persistence. Publishing the identical content
+twice produces two DISTINCT records — `appendIpfsPublicationRecordHistoryEntry()`
+never merges them merely because they name the same `contentHash`, the
+identical restraint 0.8.56's own history holds for two `CONFIRMED`
+observations naming the same block.
+
+**A PUBLICATION RECORD'S HISTORY AND ITS VERIFICATION OBSERVATIONS STAY
+TWO SEPARATE, SEPARATELY KEPT THINGS — NEVER ONE COMBINED OBJECT.**
+`entry.ipfsPublicationRecordHistory` (what was published, and when) and
+`entry.ipfsPublicationVerificationsByRecordIndex` (what a later retrieval
+attempt against ONE of those records reported) are deliberately two
+sibling structures, never `{ record, verificationHistory }`. Different
+observations answer different questions and are not collapsed merely
+because they concern the same object — the same restraint `application/
+BitcoinAnchorProofReconciliationView.js`'s own header already holds for
+`confirmation` and `contentProof` staying two sibling fields, never one
+merged verdict.
+
+**VERIFYING A HISTORICAL RECORD VERIFIES EXACTLY THAT RECORD — NEVER
+WHATEVER IS CURRENTLY DISPLAYED.** The one identity boundary 0.8.70's own
+`verifyIpfsPublicationContent()` already held for "the current
+publication," held here per history entry instead. `
+verifyIpfsPublicationRecordHistoryEntry(entry, index)` reads `entry.
+ipfsPublicationRecordHistory[index]` directly — the exact, real `
+IpfsPublicationRecord` instance that array position has always held —
+and passes it straight to the UNCHANGED `
+IpfsPublicationContentVerificationCoordinator` from 0.8.70, which still
+enforces its own genuine-instance check. Clicking "Verify" on history
+entry #0 after entry #1 already exists still verifies exactly entry #0;
+the resulting observation is stored at that SAME index, so verifying
+entry #1 can never appear as entry #0's own result, or vice versa. The
+index is a stable address only because the history itself is append-only
+and never reordered or spliced — the identical precondition `
+bitcoinAnchorConfirmationHistories[anchorId]`'s own per-anchor keying
+already relies on, one axis over.
+
+**A REPUBLISH IS ALWAYS AN APPEND, NEVER A REPLACEMENT — INCLUDING ACROSS
+A RECONFIGURATION.** `publishToRemoteIpfs()` still binds the freshly
+PUBLISHED outcome to `entry.ipfsPublicationRecord` exactly as 0.8.70 left
+it (the "current publication" `Content retrieval` box keeps working
+unchanged), and NOW additionally appends that same record onto `entry.
+ipfsPublicationRecordHistory`. Unlike `ipfsPublicationRecord`/`
+ipfsPublicationContentVerification`, `ipfsPublicationRecordHistory` is
+deliberately NOT cleared by `saveIpfsRemotePublishingConfiguration()` or
+`clearIpfsRemotePublishingConfiguration()` — reconfiguring which provider
+the NEXT publish uses does not erase the historical fact of what was
+already published, under whatever provider was configured at the time.
+
+- `application/IpfsPublicationRecordHistory.js` — new; `
+  appendIpfsPublicationRecordHistoryEntry()`/`latestIpfsPublicationRecord()`,
+  the identical append-only shape `application/
+  BitcoinAnchorConfirmationObservationHistory.js` already established,
+  one domain over — no reorganization-style comparison between records,
+  no reconciliation, no aggregate verdict.
+- `application/IpfsPublicationRecordHistoryView.js` — new; pure
+  projection — `describeIpfsPublicationMethodLabel()`,
+  `describeIpfsPublicationRecordHistoryEntry()`,
+  `describeIpfsPublicationRecordHistory()` — carrying every record field
+  through unchanged, adding only a `publicationMethodLabel` sentence for
+  an existing `publicationMethod`.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Publication
+  History" disclosure inside the existing "IPFS Publishing" section,
+  mirroring the Bitcoin "Show/Hide Confirmation History" disclosure one
+  domain over. New per-entry state: `ipfsPublicationRecordHistory`
+  (append-only, survives reconfiguration), `
+  ipfsPublicationRecordHistoryExpanded`, `
+  ipfsPublicationRecordInspectionExpanded` and `
+  ipfsPublicationVerificationsByRecordIndex` (both keyed by a record's own
+  stable history index). New functions: `ipfsPublicationRecordHistoryView()`,
+  `toggleIpfsPublicationRecordHistory()`, `
+  toggleIpfsPublicationRecordInspection()`/`
+  isIpfsPublicationRecordInspectionExpanded()` (local, synchronous
+  inspection — no network read), and `
+  verifyIpfsPublicationRecordHistoryEntry()`/`
+  ipfsPublicationRecordVerificationView()`/`...BadgeClass()`/`
+  isVerifyingIpfsPublicationRecordHistoryEntry()`/`
+  ipfsPublicationRecordVerifyButtonLabel()` — the per-record counterpart
+  to 0.8.70's own "current publication" verification functions, calling
+  the identical, UNCHANGED `IpfsPublicationContentVerificationCoordinator`.
+  `publishToRemoteIpfs()` is extended to append onto the history exactly
+  when it binds `ipfsPublicationRecord`; `
+  saveIpfsRemotePublishingConfiguration()`/`
+  clearIpfsRemotePublishingConfiguration()` are UNCHANGED in what they
+  clear — the history is deliberately outside what either function
+  retires.
+- ForkBuild can now, for the first time, publish the same content twice
+  and see BOTH publication attempts, each independently inspectable and
+  independently verifiable, without either the "Publish Again" click or a
+  later "Verify" click ever silently discarding the fact of an earlier
+  publication.
+
+### Deliberately excluded
+
+- **Any comparison, reconciliation, or ranking between two history
+  entries.** No "latest verified record," no "preferred locator," no
+  automatic promotion of one record over another because it verified
+  HASH_MATCH while an earlier one verified UNAVAILABLE. A person reading
+  two records side by side draws that conclusion themselves; this
+  milestone's own files never draw it for them. See docs/Principles.md,
+  "Reconciliation Composes Independent Observations; It Does Not Score
+  Them (0.8.55)."
+- **Automatic re-verification, polling, or bulk "Verify All" of any
+  kind.** Every history entry's own "Verify Content"/"Verify Again" stays
+  a single, separately clicked action — nothing in this milestone
+  iterates the history and calls the coordinator on a caller's behalf.
+- **Any change to `application/IpfsPublicationContentVerifier.js`,
+  `application/IpfsPublicationContentVerificationCoordinator.js`,
+  `application/IpfsPublicationRecord.js`, or any other 0.8.69/0.8.70
+  file.** All stay exactly as those milestones left them — this milestone
+  only ever appends records into a new history and reads the existing
+  coordinator, unchanged.
+- **Persisting `IpfsPublicationRecordHistory` anywhere.** No catalog, no
+  store, no localStorage — unchanged from 0.8.69's own identical
+  exclusion, extended to the sequence as a whole. A history lives exactly
+  as long as the reactive UI state holding it.
+- **A record's own verification history.** Each history entry keeps
+  exactly one, most-recent verification outcome — a `latest` observation
+  per record, not an accumulated sequence of observations FOR that
+  record. A full per-record OBSERVATION history (mirroring 0.8.56's own
+  per-anchor confirmation history) is real, separately sized future work,
+  should it prove useful once this milestone's own semantics prove
+  themselves out.
+- **A local Kubo publish path's own history.** Unchanged from 0.8.70's
+  own identical exclusion — only the "Remote pinning" publish path
+  currently produces PUBLISHED outcomes this history can accumulate.
+- **A unified Bitcoin + IPFS evidence inspection screen.** Unchanged from
+  0.8.70's own identical exclusion; see docs/Roadmap.md, 0.8.72.
+
+What's left, and deliberately unbuilt: cross-record reconciliation,
+automatic verification of any kind, a per-record verification history of
+its own, a local Kubo publish path's own history, and a unified Bitcoin +
+IPFS evidence screen — each its own, separately sized milestone, exactly
+like every "Deliberately excluded" list in this document before it.

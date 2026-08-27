@@ -15454,3 +15454,82 @@ no persistence path for it at all — see `docs/Roadmap.md`, 0.8.69's own
 work.
 
 See `docs/Roadmap.md`, 0.8.69, for the full milestone entry.
+
+## A Publication Record Is A Historical Fact; A Republish Never Erases It (0.8.71)
+
+**A history is APPENDED TO, NEVER OVERWRITTEN, NEVER MUTATED — the
+identical restraint held one axis over, for a different kind of
+accumulation.** `docs/Principles.md`, "An Observation Describes The
+Network At The Time It Was Made, Not The Current State Of The Transaction
+(0.8.56)," held this for repeated OBSERVATIONS of one already-existing
+Bitcoin anchor. `application/IpfsPublicationRecordHistory.js` holds it for
+something structurally different: repeated PUBLICATIONS, each one its own
+new `application/IpfsPublicationRecord.js` (0.8.69), not a reading of a
+fact that already existed. Publishing the same content twice produces two
+records with two distinct locators — `appendIpfsPublicationRecordHistoryEntry()`
+never merges them into one entry merely because they share a
+`contentHash`, and a caller asking "what did publication #1 resolve to"
+gets that record's own, unchanged answer forever, even after publication
+#2 exists.
+
+**A record's history and its verification observations are two separate,
+separately kept things — never one combined object.** `entry.
+ipfsPublicationRecordHistory` (what was published, and when) and `entry.
+ipfsPublicationVerificationsByRecordIndex` (what a later, explicit
+retrieval attempt against ONE of those records reported) stay two sibling
+structures on the same UI state, never `{ record, verificationHistory }`.
+This is the identical restraint `docs/Principles.md`, "Reconciliation
+Composes Independent Observations; It Does Not Score Them (0.8.55)," and
+`application/BitcoinAnchorProofReconciliationView.js`'s own header
+already hold for `confirmation` and `contentProof` staying two sibling
+fields rather than one merged verdict — different observations answer
+different questions, and are not collapsed merely because they concern
+the same object.
+
+**Verifying a historical record verifies exactly that record, addressed
+by its own stable position in an append-only sequence — never whatever
+happens to be on screen.** `docs/Principles.md`, "Confirmation Is Bound
+To Broadcast Identity, Not Whatever Is On Screen (0.8.65)," already drew
+this line for one bound record; this milestone draws the identical line
+for MANY records at once, addressed by array index rather than by an
+`anchorId` or a txid, because a history entry has no natural identifier
+of its own — only the fact that `application/IpfsPublicationRecordHistory.js`
+never reorders, splices, or removes an entry makes that index a stable
+address at all. `verifyIpfsPublicationRecordHistoryEntry(entry, index)`
+reads `entry.ipfsPublicationRecordHistory[index]` directly and passes it,
+unmodified, to the UNCHANGED 0.8.70 `IpfsPublicationContentVerificationCoordinator`
+— which still enforces its own genuine-`IpfsPublicationRecord`-instance
+check. A verification observation is stored back at that SAME index, so
+verifying entry #1 can never appear as entry #0's own result.
+
+**A record's history outlives the configuration that produced it.**
+`ui/views/DecentralizedPublicationsView.js`'s own `
+saveIpfsRemotePublishingConfiguration()` and `
+clearIpfsRemotePublishingConfiguration()` retire `ipfsPublicationRecord`
+and `ipfsPublicationContentVerification` — both describe the CURRENT
+publication attempt's own state, which a fresh or cleared configuration
+genuinely starts over. `ipfsPublicationRecordHistory` is deliberately
+excluded from that retirement: it describes PAST publications, made under
+whatever configuration was active at the time, and reconfiguring which
+provider the NEXT publish will use does not retroactively un-happen an
+earlier one.
+
+**No comparison, ranking, or aggregate verdict between two history
+entries, anywhere.** No "latest verified record," no "preferred locator,"
+no automatic promotion of a `HASH_MATCH` record over an `UNAVAILABLE` one
+— the identical restraint 0.8.56's own "no `confidence`/`reliability`/
+`mostReliableObservation` field, anywhere" already holds, applied here to
+records instead of confirmations. `application/
+IpfsPublicationRecordHistoryView.js`'s `describeIpfsPublicationRecordHistory()`
+only ever narrates a single history in isolation — it never accepts two
+records, or two histories, and returns a verdict about their
+relationship.
+
+**Never persisted, never shared, never transmitted.** This history lives
+only in whatever ephemeral component state a caller keeps for the
+lifetime of a page, reset to empty the moment it is reopened — the
+identical restraint `application/IpfsPublicationRecord.js`'s own header
+already holds for a single record, and `application/
+BitcoinAnchorConfirmationObservationHistory.js`'s own header already
+holds for a different sequence entirely, each one domain over. See
+`docs/Roadmap.md`, 0.8.71, for the full milestone entry.
