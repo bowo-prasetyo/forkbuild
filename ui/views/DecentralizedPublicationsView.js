@@ -32,6 +32,8 @@ import { IpfsPublicationContentVerificationCoordinatorState } from '../../applic
 import { describeIpfsPublicationContentVerification } from '../../application/IpfsPublicationContentVerificationView.js';
 import { appendIpfsPublicationRecordHistoryEntry } from '../../application/IpfsPublicationRecordHistory.js';
 import { describeIpfsPublicationRecordHistory } from '../../application/IpfsPublicationRecordHistoryView.js';
+import { appendIpfsPublicationContentVerificationHistoryEntry, latestIpfsPublicationContentVerification } from '../../application/IpfsPublicationContentVerificationHistory.js';
+import { describeIpfsPublicationContentVerificationHistory } from '../../application/IpfsPublicationContentVerificationHistoryView.js';
 import { createResolutionObservation } from '../../application/SnapshotPlacementResolutionObservation.js';
 import { deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote } from '../../application/SnapshotPlacementLifecycleView.js';
 import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/PublicationDecentralizationView.js';
@@ -1437,21 +1439,44 @@ export default {
                 // whatever provider is presently configured.
                 // `ipfsPublicationRecordHistoryExpanded` gates the "Show/
                 // Hide Publication History" disclosure. `
-                // ipfsPublicationRecordInspectionExpanded` and `
-                // ipfsPublicationVerificationsByRecordIndex` are keyed by
-                // a history entry's own stable array index — stable
-                // because this history is append-only and never
-                // reordered — and hold, respectively, that one record's
-                // own "Inspect" disclosure state and that one record's
-                // own, independently kept verification outcome. Verifying
-                // record #0 never touches record #1's own entry in either
-                // map, and vice versa. None of these four fields is ever
-                // read from or written to localStorage, IndexedDB, a
-                // cookie, or anything else durable.
+                // ipfsPublicationRecordInspectionExpanded` is keyed by a
+                // history entry's own stable array index — stable because
+                // this history is append-only and never reordered — and
+                // holds that one record's own "Inspect" disclosure state.
+                // Verifying record #0 never touches record #1's own entry,
+                // and vice versa. None of these three fields is ever read
+                // from or written to localStorage, IndexedDB, a cookie, or
+                // anything else durable.
                 ipfsPublicationRecordHistory: [],
                 ipfsPublicationRecordHistoryExpanded: false,
                 ipfsPublicationRecordInspectionExpanded: {},
-                ipfsPublicationVerificationsByRecordIndex: {},
+                // 0.8.72 — IPFS Publication Verification History &
+                // Inspection UI. 0.8.71's own single-slot `
+                // ipfsPublicationVerificationsByRecordIndex[index]` — one
+                // MOST RECENT observation per history record, silently
+                // overwritten by the next "Verify Again" click — is
+                // replaced by `ipfsPublicationVerificationHistoriesByRecordIndex
+                // [index]`, an append-only application/
+                // IpfsPublicationContentVerificationHistory.js sequence:
+                // EVERY observation a record has ever received, in order,
+                // forever. `ipfsPublicationRecordVerifyingByRecordIndex
+                // [index]` is a transient, ephemeral "a verification is
+                // currently in flight for this record" flag — it is never
+                // itself appended into the history, because "a check is
+                // running" is not an observation about the content.
+                // `ipfsPublicationVerificationHistoryExpandedByRecordIndex
+                // [index]` gates that one record's own "Show/Hide
+                // Verification History" disclosure. All three are keyed
+                // by a history entry's own stable array index, exactly
+                // like `ipfsPublicationRecordInspectionExpanded` above —
+                // verifying record #0 never touches record #1's own entry
+                // in any of these maps, and vice versa. None of these
+                // three fields is ever read from or written to
+                // localStorage, IndexedDB, a cookie, or anything else
+                // durable.
+                ipfsPublicationVerificationHistoriesByRecordIndex: {},
+                ipfsPublicationRecordVerifyingByRecordIndex: {},
+                ipfsPublicationVerificationHistoryExpandedByRecordIndex: {},
                 // 0.8.33 — Local Snapshot Content Availability &
                 // Integrity UX. A single ephemeral attempt object for
                 // THIS entry — `null` until "Check Local Snapshot" is
@@ -3771,56 +3796,117 @@ export default {
             return Boolean(entry.ipfsPublicationRecordInspectionExpanded[index]);
         }
 
-        // THE ONE PLACE THIS PAGE VERIFIES A HISTORICAL RECORD — reads
-        // `entry.ipfsPublicationRecordHistory[index]` directly, the exact
+        // THE ONE PLACE THIS PAGE VERIFIES A HISTORICAL RECORD — unchanged
+        // from 0.8.71's own identical identity boundary: reads `entry.
+        // ipfsPublicationRecordHistory[index]` directly, the exact
         // application/IpfsPublicationRecord.js instance that array
         // position has always held, and passes it straight to the
-        // coordinator. This NEVER reconstructs `{ locator, contentHash }`
-        // from whatever this section currently displays, and never reads
-        // `entry.ipfsPublicationRecord` (the separate "current publication"
+        // UNCHANGED IpfsPublicationContentVerificationCoordinator. This
+        // NEVER reconstructs `{ locator, contentHash }` from whatever this
+        // section currently displays, and never reads `entry.
+        // ipfsPublicationRecord` (the separate "current publication"
         // binding above) — clicking "Verify" on history entry #0 verifies
-        // EXACTLY record #0, even after entries #1, #2, ... exist. The
-        // resulting observation is stored at that SAME index in `entry.
-        // ipfsPublicationVerificationsByRecordIndex`, keeping every
-        // record's own verification history independent of every other
-        // record's — verifying entry #1 never touches entry #0's own
-        // stored observation, and vice versa. A thrown error is caught
-        // HERE, at the UI boundary, mirroring verifyIpfsPublicationContent()'s
-        // own identical restraint.
+        // EXACTLY record #0, even after entries #1, #2, ... exist.
+        //
+        // 0.8.72 — what changes here is what happens to the RESULT.
+        // Instead of overwriting a single slot at `entry.
+        // ipfsPublicationVerificationsByRecordIndex[index]` (0.8.71), the
+        // resolved outcome is APPENDED onto that record's own,
+        // independently kept `entry.
+        // ipfsPublicationVerificationHistoriesByRecordIndex[index]` — an
+        // earlier HASH_MATCH observation for this exact record is never
+        // overwritten or discarded by a later UNAVAILABLE one, or vice
+        // versa; see application/
+        // IpfsPublicationContentVerificationHistory.js's own header.
+        // Verifying entry #1 never touches entry #0's own stored history,
+        // and vice versa. `entry.
+        // ipfsPublicationRecordVerifyingByRecordIndex[index]` is a
+        // transient, ephemeral "in flight" flag for THIS record only — it
+        // is set for the duration of the call and cleared afterward, and
+        // is never itself appended into the history. A thrown error is
+        // caught HERE, at the UI boundary, mirroring
+        // verifyIpfsPublicationContent()'s own identical restraint, and
+        // its FAILED outcome is appended exactly like any other
+        // observation — a caller/UI-boundary failure is still a real,
+        // dated fact about an attempt that was made.
         async function verifyIpfsPublicationRecordHistoryEntry(entry, index) {
             if (!ipfsPublicationContentVerificationCoordinator) return;
             const record = entry.ipfsPublicationRecordHistory[index];
             if (!record) return;
 
-            entry.ipfsPublicationVerificationsByRecordIndex[index] = {
-                state: IpfsPublicationContentVerificationCoordinatorState.VERIFYING,
-                contentHash: null, locator: null, reason: null, observedAt: null
-            };
+            entry.ipfsPublicationRecordVerifyingByRecordIndex[index] = true;
+            let outcome;
             try {
-                entry.ipfsPublicationVerificationsByRecordIndex[index] = await ipfsPublicationContentVerificationCoordinator.verify(record);
+                outcome = await ipfsPublicationContentVerificationCoordinator.verify(record);
             } catch (error) {
-                entry.ipfsPublicationVerificationsByRecordIndex[index] = {
+                outcome = {
                     state: IpfsPublicationContentVerificationCoordinatorState.FAILED,
                     contentHash: null, locator: null, reason: error.message, observedAt: new Date()
                 };
             }
-        }
-
-        function ipfsPublicationRecordVerificationView(entry, index) {
-            return describeIpfsPublicationContentVerification(entry.ipfsPublicationVerificationsByRecordIndex[index] || null);
-        }
-
-        function ipfsPublicationRecordVerificationBadgeClass(entry, index) {
-            return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[ipfsPublicationRecordVerificationView(entry, index).state] || 'peer-badge--pending';
+            entry.ipfsPublicationRecordVerifyingByRecordIndex[index] = false;
+            entry.ipfsPublicationVerificationHistoriesByRecordIndex[index] = appendIpfsPublicationContentVerificationHistoryEntry(
+                entry.ipfsPublicationVerificationHistoriesByRecordIndex[index], outcome
+            );
         }
 
         function isVerifyingIpfsPublicationRecordHistoryEntry(entry, index) {
-            return ipfsPublicationRecordVerificationView(entry, index).state === IpfsPublicationContentVerificationCoordinatorState.VERIFYING;
+            return Boolean(entry.ipfsPublicationRecordVerifyingByRecordIndex[index]);
+        }
+
+        // The FULL, chronological sequence of every observation
+        // verifyIpfsPublicationRecordHistoryEntry() has ever appended for
+        // THIS history record — composes application/
+        // IpfsPublicationContentVerificationHistoryView.js's own
+        // describeIpfsPublicationContentVerificationHistory(), unchanged.
+        function ipfsPublicationRecordVerificationHistoryView(entry, index) {
+            return describeIpfsPublicationContentVerificationHistory(entry.ipfsPublicationVerificationHistoriesByRecordIndex[index]);
+        }
+
+        // The single MOST RECENT observation for THIS history record —
+        // never a live re-verification, only the newest fact this
+        // record's own history happens to have on file. Used for the
+        // "Latest: ..." badge shown alongside "Verify Again" — the
+        // identical single-slot badge 0.8.71 already showed, now sourced
+        // from the history's own latest entry instead of a mutated slot.
+        function latestIpfsPublicationRecordVerificationView(entry, index) {
+            return describeIpfsPublicationContentVerification(
+                latestIpfsPublicationContentVerification(entry.ipfsPublicationVerificationHistoriesByRecordIndex[index])
+            );
+        }
+
+        function ipfsPublicationRecordVerificationBadgeClass(entry, index) {
+            return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[latestIpfsPublicationRecordVerificationView(entry, index).state] || 'peer-badge--pending';
+        }
+
+        // A condensed counterpart for one raw entry of `
+        // ipfsPublicationRecordVerificationHistoryView(entry, index)
+        // .verifications` — used for each individual row of the expanded
+        // "Verification History" disclosure, never for the "Latest: ..."
+        // badge above (see ipfsPublicationRecordVerificationBadgeClass()).
+        function ipfsPublicationVerificationEntryBadgeClass(verification) {
+            return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[verification.state] || 'peer-badge--pending';
         }
 
         function ipfsPublicationRecordVerifyButtonLabel(entry, index) {
             if (isVerifyingIpfsPublicationRecordHistoryEntry(entry, index)) return 'Verifying…';
-            return entry.ipfsPublicationVerificationsByRecordIndex[index] ? 'Verify Again' : 'Verify Content';
+            return ipfsPublicationRecordVerificationHistoryView(entry, index).count > 0 ? 'Verify Again' : 'Verify Content';
+        }
+
+        // Per-record "Show/Hide Verification History" disclosure — mirrors
+        // toggleIpfsPublicationRecordHistory()'s own identical shape, one
+        // level down: gates whether THIS record's own full, chronological
+        // observation sequence is shown, never whether a fresh
+        // verification is triggered. Opening this disclosure never calls
+        // the verification coordinator — see docs/Principles.md, "The UI
+        // Displays Observations; It Does Not Turn Them Into A Verdict
+        // (0.8.57)."
+        function toggleIpfsPublicationRecordVerificationHistory(entry, index) {
+            entry.ipfsPublicationVerificationHistoryExpandedByRecordIndex[index] = !entry.ipfsPublicationVerificationHistoryExpandedByRecordIndex[index];
+        }
+
+        function isIpfsPublicationRecordVerificationHistoryExpanded(entry, index) {
+            return Boolean(entry.ipfsPublicationVerificationHistoryExpandedByRecordIndex[index]);
         }
 
         // 0.8.11 — Explicit External Anchoring UX. The one place this
@@ -4093,9 +4179,11 @@ export default {
             IpfsPublicationContentVerificationCoordinatorState,
             ipfsPublicationRecordHistoryView, toggleIpfsPublicationRecordHistory,
             toggleIpfsPublicationRecordInspection, isIpfsPublicationRecordInspectionExpanded,
-            verifyIpfsPublicationRecordHistoryEntry, ipfsPublicationRecordVerificationView,
-            ipfsPublicationRecordVerificationBadgeClass, isVerifyingIpfsPublicationRecordHistoryEntry,
+            verifyIpfsPublicationRecordHistoryEntry, isVerifyingIpfsPublicationRecordHistoryEntry,
+            ipfsPublicationRecordVerificationHistoryView, latestIpfsPublicationRecordVerificationView,
+            ipfsPublicationRecordVerificationBadgeClass, ipfsPublicationVerificationEntryBadgeClass,
             ipfsPublicationRecordVerifyButtonLabel,
+            toggleIpfsPublicationRecordVerificationHistory, isIpfsPublicationRecordVerificationHistoryExpanded,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -6099,32 +6187,62 @@ export default {
                                             <div v-if="item.publicationMethodLabel" class="evidence-field"><dt>Method</dt><dd>{{ item.publicationMethodLabel }}</dd></div>
                                         </dl>
 
-                                        <!-- This record's OWN, independently kept
-                                             verification observation — never the "current
-                                             publication" verification above, and never any
-                                             other history entry's own observation. Verifying
-                                             record #0 can never appear as record #1's own
-                                             result, and vice versa; see
-                                             verifyIpfsPublicationRecordHistoryEntry()'s own
-                                             header. -->
-                                        <div v-if="ipfsPublicationContentVerificationCoordinator" class="identity-mgmt-actions">
-                                            <button type="button" class="action-btn action-btn--primary"
-                                                    :disabled="isVerifyingIpfsPublicationRecordHistoryEntry(entry, index)"
-                                                    @click="verifyIpfsPublicationRecordHistoryEntry(entry, index)">
-                                                {{ ipfsPublicationRecordVerifyButtonLabel(entry, index) }}
-                                            </button>
-                                        </div>
-                                        <template v-if="entry.ipfsPublicationVerificationsByRecordIndex[index]">
-                                            <span class="peer-badge" :class="ipfsPublicationRecordVerificationBadgeClass(entry, index)">
-                                                {{ ipfsPublicationRecordVerificationView(entry, index).stateLabel }}
+                                        <!-- 0.8.72 — IPFS Publication Verification History &
+                                             Inspection UI. This record's OWN, independently kept,
+                                             APPEND-ONLY verification history — never the "current
+                                             publication" verification above, and never any other
+                                             history entry's own history. Verifying record #0 can
+                                             never appear in record #1's own history, and vice
+                                             versa; see verifyIpfsPublicationRecordHistoryEntry()'s
+                                             own header. These are observations made at different
+                                             times — the latest one never retroactively changes an
+                                             earlier one. -->
+                                        <div v-if="ipfsPublicationContentVerificationCoordinator" class="evidence-inspection-adapter">
+                                            <span class="evidence-inspection-adapter-title">Content retrieval</span>
+                                            <span v-if="ipfsPublicationRecordVerificationHistoryView(entry, index).count > 0"
+                                                  class="peer-badge" :class="ipfsPublicationRecordVerificationBadgeClass(entry, index)">
+                                                Latest: {{ latestIpfsPublicationRecordVerificationView(entry, index).stateLabel }}
                                             </span>
-                                            <p v-if="ipfsPublicationRecordVerificationView(entry, index).reason" class="form-hint form-hint--neutral">
-                                                {{ ipfsPublicationRecordVerificationView(entry, index).reason }}
-                                            </p>
-                                            <p v-if="ipfsPublicationRecordVerificationView(entry, index).observedAt" class="form-hint form-hint--neutral">
-                                                Observed {{ formatWhen(ipfsPublicationRecordVerificationView(entry, index).observedAt) }}
-                                            </p>
-                                        </template>
+
+                                            <div class="identity-mgmt-actions">
+                                                <button type="button" class="action-btn action-btn--primary"
+                                                        :disabled="isVerifyingIpfsPublicationRecordHistoryEntry(entry, index)"
+                                                        @click="verifyIpfsPublicationRecordHistoryEntry(entry, index)">
+                                                    {{ ipfsPublicationRecordVerifyButtonLabel(entry, index) }}
+                                                </button>
+                                            </div>
+
+                                            <!-- No polling, no automatic verification after
+                                                 publication, and no automatic verification merely
+                                                 from expanding this disclosure — opening it only
+                                                 ever reads entry.
+                                                 ipfsPublicationVerificationHistoriesByRecordIndex
+                                                 [index], already in memory. -->
+                                            <div v-if="ipfsPublicationRecordVerificationHistoryView(entry, index).count > 0" class="identity-mgmt-actions">
+                                                <button type="button" class="action-btn action-btn--secondary"
+                                                        @click="toggleIpfsPublicationRecordVerificationHistory(entry, index)">
+                                                    {{ isIpfsPublicationRecordVerificationHistoryExpanded(entry, index) ? 'Hide Verification History' : 'Show Verification History' }}
+                                                </button>
+                                            </div>
+                                            <div v-if="isIpfsPublicationRecordVerificationHistoryExpanded(entry, index)">
+                                                <p class="form-hint form-hint--neutral">
+                                                    These are observations made at different times. A
+                                                    later observation never rewrites or replaces an
+                                                    earlier one.
+                                                </p>
+                                                <ul class="replica-knowledge-claim-list">
+                                                    <li v-for="(verification, vIndex) in ipfsPublicationRecordVerificationHistoryView(entry, index).verifications"
+                                                        :key="vIndex" class="replica-knowledge-claim">
+                                                        <span class="peer-badge" :class="ipfsPublicationVerificationEntryBadgeClass(verification)">
+                                                            {{ formatWhen(verification.observedAt) }} — {{ verification.stateLabel }}
+                                                        </span>
+                                                        <p v-if="verification.reason" class="form-hint form-hint--neutral">
+                                                            {{ verification.reason }}
+                                                        </p>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </li>
                                 </ul>
                             </div>
