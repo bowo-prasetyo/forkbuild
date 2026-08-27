@@ -70,6 +70,7 @@ import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpf
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
 import { CreateSnapshotPlacementViewRegistryUseCase } from '../application/CreateSnapshotPlacementViewRegistryUseCase.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
+import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
 import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
@@ -489,22 +490,38 @@ const { discoveryCoordinator: publicationSnapshotPlacementDiscoveryCoordinator }
 // `stores` registers the SAME `publicationContentStore` (a
 // content/LocalContentStore.js, already this replica's one 'local'
 // content backend — see the 0.7.0 wiring above) for `local` placements,
-// and a real content/IpfsContentStore.js for `ipfs` placements. The
-// latter talks to a Kubo node at its own default `http://127.0.0.1:5001`
-// — almost certainly unreachable from inside a browser with no local
-// IPFS daemon running, exactly the situation anchoring/
-// BitcoinOpReturnProofVerifier.js's own real, live wiring above is
-// already in for a person with no Bitcoin node of their own. Registering
-// it anyway, rather than leaving `ipfs` unregistered, is the more honest
-// choice: a placement that really did claim IPFS storage gets an honest
-// CONTENT_UNAVAILABLE from a real, consulted store when nothing answers,
-// never the different claim STORE_UNAVAILABLE would make ("this replica
-// isn't even configured to try").
+// and, for `ipfs` placements, a real content/IpfsGatewayContentStore.js
+// (0.8.66) rather than content/IpfsContentStore.js.
+//
+// This coordinator is RESOLUTION ONLY — application/
+// SnapshotPlacementResolutionCoordinator.js's own resolve() only ever
+// calls a registered store's get(), never put() — so it is exactly the
+// "ordinary resolution" case docs/Roadmap.md left open at 0.8.65's own
+// close: an ordinary person with no IPFS daemon installed or running
+// should still be able to resolve an `ipfs://` placement. Kubo's own
+// default `http://127.0.0.1:5001` is almost certainly unreachable from
+// inside a browser with no local daemon running; a public HTTPS gateway
+// is reachable from anywhere. Registering it here, rather than leaving
+// `ipfs` unregistered, is the same honest choice this comment already
+// described one milestone ago: a placement that really did claim IPFS
+// storage gets a real, consulted store, so a resolution failure is an
+// honest CONTENT_UNAVAILABLE, never the different claim
+// STORE_UNAVAILABLE would make ("this replica isn't even configured to
+// try").
+//
+// content/IpfsContentStore.js is NOT registered here — this is a
+// SEPARATE `SnapshotPlacementStoreRegistry` instance from the one the
+// CREATION wiring below builds (each call to a `Create*OrchestratorUseCase
+// .execute()`/`Create*ResolutionCoordinatorUseCase.execute()` constructs
+// its own registry — see both use cases' own headers), so choosing the
+// gateway here never silently overwrites or hides Kubo; it stays
+// registered, unchanged, wherever PUBLISHING actually needs put() — see
+// the 0.8.18 comment below.
 const {
     coordinator: publicationSnapshotPlacementResolutionCoordinator
 } = new CreateSnapshotPlacementResolutionCoordinatorUseCase().execute({
     placementCatalog: publicationSnapshotPlacementCatalog,
-    stores: [publicationContentStore, new IpfsContentStore()]
+    stores: [publicationContentStore, new IpfsGatewayContentStore()]
 });
 
 // The presentation-side counterpart of the resolution wiring above: a
@@ -539,12 +556,20 @@ const { placementViewRegistry: snapshotPlacementViewRegistry } = new CreateSnaps
 // PublicationCatalogContentResolver.js's own headers for why that bridge
 // is necessary at all.
 //
-// `stores` registers the SAME two content/ContentStore.js instances
-// (`publicationContentStore` for `local`, a real content/IpfsContentStore
-// .js for `ipfs`) the RESOLUTION wiring above already registers — so a
-// placement created here is, from the moment of its own creation,
-// immediately resolvable through the identical stores, never a
-// coincidence of two independently configured registries agreeing.
+// `stores` registers `publicationContentStore` for `local`, exactly as
+// the RESOLUTION wiring above also does, and a real content/
+// IpfsContentStore.js — Kubo, NOT content/IpfsGatewayContentStore.js —
+// for `ipfs`. 0.8.66 deliberately keeps that difference: this registry
+// backs application/CreateExternalSnapshotPlacementUseCase.js, which
+// PLACES new content by calling a store's put(), and content/
+// IpfsGatewayContentStore.js's own put() is unimplemented on purpose (a
+// read-only HTTPS gateway cannot accept content for publishing — see
+// that class's own header). Creating a NEW `ipfs`-storage placement is
+// therefore still "local capability," requiring a real Kubo node, the
+// same way it always has; only ORDINARY RESOLUTION of an already-placed
+// `ipfs://` locator (the coordinator above) is answered through the
+// gateway, with no daemon required. Two independent registries, two
+// independently made choices — never one silently overwriting the other.
 // `knowledgeStore` threads the SAME `placementKnowledgeStore` instance
 // `publicationSnapshotPlacementPeerExchange` above already writes into,
 // so a locally created placement records its own LOCAL acquisition entry

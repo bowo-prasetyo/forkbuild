@@ -26780,3 +26780,119 @@ What's left, and deliberately unbuilt: a real, remote-gateway-backed IPFS
 content store — so an ordinary person can consume IPFS-addressed content
 without installing and operating Kubo — is a real, separately sized future
 concern, deliberately left unaddressed here.
+
+## 0.8.66 — IPFS Remote Gateway Resolution
+
+0.8.65's own "Deliberately excluded" list named this milestone directly:
+a real, remote-gateway-backed IPFS content store, so an ordinary person
+can consume IPFS-addressed content without installing and operating Kubo.
+`content/IpfsContentStore.js` (0.7.1) talks to a local Kubo node's own RPC
+API at `127.0.0.1:5001` — almost certainly unreachable for anyone who has
+never installed or run an IPFS daemon. `content/IpfsGatewayContentStore.js`
+is a SECOND, independent `content/ContentStore.js` implementation that
+resolves the exact same `ipfs://<cid>` locators over a public HTTPS
+gateway instead:
+
+```text
+ipfs://<CID>
+       │
+       ▼
+https://<gateway>/ipfs/<CID>
+       │
+       ▼
+    bytes
+       │
+       ▼
+core/ContentReference.js#verify() — the SAME check every other
+content/ContentStore.js backend is already held to
+```
+
+The one invariant this milestone exists to protect, structurally, not
+just by convention: the CID stays a locator, never an identity. This
+class never validates what it retrieves — it hands bytes back exactly as
+the gateway served them, and `core/ContentReference.js#verify()` (already
+used by every caller — `application/PublicationResolver.js`, `application/
+SnapshotPlacementResolver.js`) is what catches a gateway that served
+different bytes than what was actually published. A CID resolving
+successfully is never treated as proof of anything; only a matching
+content hash is.
+
+Read-only, on purpose. `put()` is not overridden — it inherits
+`content/ContentStore.js`'s own unimplemented throw, so a caller asking
+this class to publish gets the same honest refusal the abstract base
+class already gives for anything unimplemented, never a fabricated
+success. There is no `pin()`, `unpin()`, or `publish()` — a public
+gateway is fundamentally a different kind of thing than a node that
+accepts content, and this class never pretends otherwise:
+
+```text
+Local Kubo (content/IpfsContentStore.js)     — resolve, publish
+Remote Gateway (content/IpfsGatewayContentStore.js) — resolve only
+```
+
+Every network-shaped failure — an unreachable gateway, a 404, a response
+body that cannot be read — surfaces as the SAME `ContentUnavailableError`
+`content/IpfsContentStore.js` already throws, imported from that file
+rather than reinvented, because a gateway failing to serve a CID right
+now is exactly the same fact as a Kubo node failing to: an unavailable
+acquisition attempt, never a verdict about the content's validity. No new
+"gateway health" concept was added. Exactly one gateway is configured,
+explicitly, at construction — no list, no automatic fallback from one
+gateway to another; a caller that wants several runs several instances of
+this class and decides for itself how to combine their outcomes.
+
+`ui/main.js` wires this class into the RESOLUTION-only composition root
+(`CreateSnapshotPlacementResolutionCoordinatorUseCase`, 0.8.20) in place
+of `content/IpfsContentStore.js`, so resolving an already-placed
+`ipfs://` snapshot placement no longer requires a local daemon. The
+CREATION-side composition root (`CreateSnapshotPlacementOrchestratorUseCase`,
+0.8.18) keeps `content/IpfsContentStore.js` unchanged — placing NEW
+content into IPFS still calls a store's `put()`, which only a real Kubo
+node can honor. These are two separately constructed `application/
+SnapshotPlacementStoreRegistry.js` instances, so choosing the gateway for
+one never silently overwrites or hides Kubo in the other.
+
+```text
+0.8.65  Explicit Bitcoin Anchor Confirmation UI                        ✓
+             │
+             ▼
+0.8.66  IPFS Remote Gateway Resolution                                 ✓
+             ├── content/IpfsGatewayContentStore.js — new; a second,
+             │   independent content/ContentStore.js, read-only, over
+             │   one explicitly configured HTTPS gateway
+             ├── ui/main.js — the RESOLUTION-only registry now resolves
+             │   `ipfs` placements through the gateway; the CREATION
+             │   registry keeps Kubo, unchanged, since only Kubo can
+             │   put()
+             └── An ordinary ForkBuild user can now resolve ipfs://
+                 content with no daemon installed or running — the CID
+                 still never outranks ForkBuild's own content hash
+```
+
+### Deliberately excluded
+
+- **A gateway selection UI.** No dropdown of Cloudflare/Pinata/ipfs.io/
+  Local. First establish that resolution through a gateway works at all;
+  source selection is its own, later concern if it turns out to be
+  needed.
+- **Multiple gateways with automatic fallback or racing.** "Gateway A
+  failed, try Gateway B" is a hidden source-selection/reliability
+  mechanism this milestone deliberately does not build. One gateway
+  configuration, one request, one factual outcome.
+- **Any change to `content/IpfsContentStore.js`, `application/
+  PublicationResolver.js`, `application/SnapshotPlacementResolver.js`, or
+  `core/ContentReference.js`.** All of them stay exactly as built — the
+  existing content-hash verification is what makes a gateway safe to add
+  at all, and this milestone leans on it entirely rather than
+  reimplementing any part of it.
+- **A "gateway health," "gateway quality," or "gateway confidence"
+  concept of any kind.** A gateway either served the requested CID right
+  now or it did not; that is the entire fact this milestone reports.
+- **Remote IPFS publishing.** `content/IpfsGatewayContentStore.js#put()`
+  stays unimplemented — an explicit, write-capable publishing provider is
+  its own, separately sized milestone (0.8.67).
+
+What's left, and deliberately unbuilt: an explicit remote IPFS publishing
+provider — so publishing to IPFS no longer requires a locally running
+Kubo node either — with its own PUBLISHED/UNAVAILABLE/REJECTED outcomes,
+is 0.8.67's own job, next.
