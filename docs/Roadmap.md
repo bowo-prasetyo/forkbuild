@@ -24622,3 +24622,161 @@ reconciling confirmation with OP_RETURN proof verification, and a second
 concrete confirmationSource — each its own, separately sized milestone,
 exactly like every "Deliberately excluded" list in this document before
 it.
+
+## 0.8.55 — Bitcoin Anchor Proof Reconciliation
+
+0.8.54's own "Deliberately excluded" list named exactly this milestone:
+"Reconciling confirmation with OP_RETURN proof verification, or a
+combined 'anchor health' verdict." This is that reconciliation, held to
+the identical restraint its own name promised: a COMPOSITION of the two
+independent observations 0.8.1 and 0.8.54 already produce, never a third,
+new judgment about what their combination means.
+
+```text
+PublicationAnchor { publicationId, contentHash, proof: { txid } }
+        │
+        ├──────────────────────────────┬─────────────────────────────┐
+        ▼                              ▼                              │
+BitcoinAnchorConfirmationObserver   BitcoinOpReturnProofVerifier       │
+.observeConfirmation(txid)          .verify(proof, { contentHash })   │
+     (0.8.54)                            (0.8.1)                      │
+        │                              │                               │
+        ▼                              ▼                               │
+CONFIRMED / NOT_CONFIRMED /     HASH_MATCH / HASH_MISMATCH /          │
+UNAVAILABLE                     UNAVAILABLE            (new vocabulary)│
+        │                              │                               │
+        └──────────────┬───────────────┘                              │
+                        ▼                                             │
+         { transaction: { txid, confirmation },                       │
+           contentProof }        BitcoinAnchorProofReconciliationView ─┘
+```
+
+**NO `valid`, `healthy`, `trusted`, `reliable`, `canonical`, `confidence`,
+OR `status` FIELD, ANYWHERE.** `BitcoinAnchorProofReconciliationView#
+reconcile()` returns `transaction.confirmation.state` and
+`contentProof.state` side by side, unmodified from what each collaborator
+itself reported, and nothing else. A transaction reported `CONFIRMED` and
+simultaneously `HASH_MISMATCH` is not an error this milestone resolves,
+hides, or scores down — it is exactly the honest, structurally legitimate
+combination this milestone exists to make visible. A caller that wants an
+opinion about what a given combination MEANS forms that opinion itself,
+one layer up.
+
+**BOTH OBSERVATIONS RUN CONCURRENTLY AND INDEPENDENTLY.** `reconcile()`
+awaits `observeConfirmation()` and `verify()` together — a slow or failing
+confirmation source never delays the content-proof check, and vice versa.
+Both collaborators already report every distinguishable failure through
+their own return value rather than throwing; this class additionally
+catches a proof verifier that throws anyway, translating it into the
+identical honest `UNAVAILABLE` form a well-behaved verifier would have
+returned itself, mirroring `application/ExternalAnchorVerifier.js`'s own
+treatment of a throwing `proofVerifier`.
+
+**A MALFORMED TXID NEVER REACHES THE CONFIRMATION OBSERVER.**
+`anchoring/BitcoinAnchorConfirmationObserver.js`'s own `txid` parameter is
+a trusted internal artifact — a malformed one is a caller-contract
+violation it throws for, never an observation. This milestone checks the
+format itself first and, on a missing or malformed `proof.txid`, reports
+`transaction.confirmation` as `UNAVAILABLE` with an honest reason, never
+consulting the observer at all. The content-proof side is unaffected: it
+is still asked, independently, and reports its own definite
+`HASH_MISMATCH` for a structurally invalid proof — exactly `anchoring/
+BitcoinOpReturnProofVerifier.js`'s own existing behavior since 0.8.1.
+
+- `application/BitcoinAnchorContentProofState.js` — new; the
+  `HASH_MATCH`/`HASH_MISMATCH`/`UNAVAILABLE` vocabulary, naming the one
+  question `anchoring/BitcoinOpReturnProofVerifier.js` has always
+  answered but this codebase had never given a structural name of its
+  own — the identical discipline `application/
+  BitcoinAnchorConfirmationState.js` (0.8.54) already established, held
+  here for content-hash proof rather than chain inclusion.
+- `application/BitcoinAnchorProofReconciliationView.js` — new; the one
+  domain class. `reconcile(anchor)` validates the anchor is
+  `bitcoin-op-return` (a caller-contract violation throws before either
+  collaborator is consulted), runs the injected
+  `bitcoinAnchorConfirmationObserver` and `bitcoinProofVerifier`
+  concurrently, and composes their two answers into one frozen record —
+  never re-deriving, re-interpreting, or scoring either one.
+- `application/CreateBitcoinAnchorProofReconciliationViewUseCase.js` —
+  new; the identical composition-root shape `application/
+  CreateBitcoinAnchorPublicationCoordinatorUseCase.js` (0.8.53) already
+  established — takes both already-constructed collaborators as
+  parameters, constructing neither itself.
+
+> **Reconciliation composes independent observations; it does not score
+> them.** `BitcoinAnchorProofReconciliationView` never asks whether an
+> anchor is trustworthy, never resolves a disagreement between
+> confirmation and content-proof state, and never collapses two honest
+> "here is what each observation currently says" answers into a single
+> verdict a caller could mistake for a decision this codebase already
+> made on their behalf. See `docs/Principles.md`, "Reconciliation
+> Composes Independent Observations; It Does Not Score Them (0.8.55)."
+
+- `tests/BitcoinAnchorProofReconciliation.test.js` (new) — the flagship
+  runs the REAL `BitcoinAnchorConfirmationObserver` (0.8.54) and the REAL
+  `BitcoinOpReturnProofVerifier` (0.8.1) against a real
+  `core/PublicationAnchor.js`, faking only their own network edges —
+  `confirmationSource`/`fetchImpl` — the identical technique `tests/
+  BitcoinAnchorPublicationLifecycle.test.js` already established, and
+  reaches `CONFIRMED` + `HASH_MATCH`. Further sections cover: the
+  legitimate `CONFIRMED` + `HASH_MISMATCH` combination, reported
+  honestly, neither hidden nor resolved into the other; the two
+  observations drawn from entirely independent sources (`UNAVAILABLE`
+  alongside an independently-reachable `HASH_MATCH`); a malformed/missing
+  txid never reaching the confirmation observer while the content-proof
+  side still runs; only `bitcoin-op-return` anchors ever being
+  reconciled; the constructor requiring both collaborators; every level
+  of the result frozen; an exhaustive sweep confirming no
+  `valid`/`healthy`/`trusted`/`reliable`/`canonical`/`confidence`/
+  `status` field exists anywhere in the result; and a throwing proof
+  verifier translated to `UNAVAILABLE` without propagating and without
+  blocking the independent confirmation observation from succeeding.
+
+```text
+0.8.54  Bitcoin Anchor Confirmation Observation                        ✓
+             │
+             ▼
+0.8.55  Bitcoin Anchor Proof Reconciliation                            ✓
+             ├── application/BitcoinAnchorContentProofState.js — new;
+             │   the named HASH_MATCH/HASH_MISMATCH/UNAVAILABLE
+             │   vocabulary for OP_RETURN content-hash proof
+             ├── application/BitcoinAnchorProofReconciliationView.js —
+             │   new; composes BitcoinAnchorConfirmationObserver and
+             │   BitcoinOpReturnProofVerifier side by side, concurrently,
+             │   never merging their two states into one verdict
+             ├── application/
+             │   CreateBitcoinAnchorProofReconciliationViewUseCase.js —
+             │   new composition-root use case
+             └── ForkBuild can now, for the first time, see what it
+                 independently knows about a Bitcoin anchor's chain
+                 inclusion AND its content-hash proof, side by side,
+                 without either one silently deciding for the other
+```
+
+### Deliberately excluded
+
+- **Any UI surface.** No "Show Anchor Observations" panel, and no change
+  to `ui/DecentralizedPublicationsView.js` exists anywhere in this
+  codebase yet — exactly as every milestone in this Bitcoin sequence has
+  stayed backend-only before it.
+- **A combined "anchor health" verdict, score, or confidence rating.**
+  This milestone's entire point is refusing to build one — see this
+  section's own header.
+- **Confirmation observation history, or reorganization detection.**
+  `reconcile()` performs two fresh reads and returns a new record every
+  call; it keeps no history of its own, and does not compare one
+  reconciliation against an earlier one. A caller that wants a history
+  keeps it — real, separately sized future work.
+- **Automatic re-verification, polling, or retry.** A caller decides for
+  itself when to call `reconcile()` again — this class never loops, backs
+  off, or schedules a future check on the caller's behalf.
+- **Any change to `anchoring/BitcoinAnchorConfirmationObserver.js` or
+  `anchoring/BitcoinOpReturnProofVerifier.js` themselves.** Both stay
+  exactly as 0.8.54 and 0.8.1 left them — this milestone only ever reads
+  their existing outputs.
+
+What's left, and deliberately unbuilt: any UI surface, a combined
+verdict/score, confirmation observation history and reorganization
+detection, and automatic re-verification or polling — each its own,
+separately sized milestone, exactly like every "Deliberately excluded"
+list in this document before it.

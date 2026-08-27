@@ -14333,3 +14333,60 @@ transaction" with "this transaction's OP_RETURN carries the anchor's own
 claimed content hash." See `docs/Principles.md`, "External Anchoring
 Provides Evidence; It Does Not Establish Authority (0.8.0)," and `docs/
 Roadmap.md`, 0.8.54, for the full milestone entry.
+
+## Reconciliation Composes Independent Observations; It Does Not Score Them (0.8.55)
+
+**`application/BitcoinAnchorProofReconciliationView.js#reconcile()` never
+asks whether a Bitcoin anchor is trustworthy — it asks only what two
+already-independent observations currently say, placed side by side.**
+0.8.54's own "Deliberately excluded" list named exactly this restraint in
+advance: "Reconciling confirmation with OP_RETURN proof verification, or
+a combined 'anchor health' verdict." This class is that reconciliation,
+and holds itself to the identical discipline its own name promised — a
+COMPOSITION, never a third, new judgment layered on top of the two
+questions `anchoring/BitcoinAnchorConfirmationObserver.js` (0.8.54) and
+`anchoring/BitcoinOpReturnProofVerifier.js` (0.8.1) already answer on
+their own.
+
+**No `valid`, `healthy`, `trusted`, `reliable`, `canonical`, `confidence`,
+or `status` field, anywhere, at any level.** The reconciliation record
+carries exactly `transaction.confirmation.state` (`application/
+BitcoinAnchorConfirmationState.js`) and `contentProof.state` (`application/
+BitcoinAnchorContentProofState.js`, new this milestone), unmodified from
+what each collaborator itself reported. A transaction reported `CONFIRMED`
+and simultaneously `HASH_MISMATCH` is not an error this class resolves,
+hides, or scores down to a single number — it is exactly the honest,
+structurally legitimate combination this milestone exists to make
+visible: a genuine transaction, mined into a real block, whose OP_RETURN
+output simply does not carry the claimed content hash. A caller that wants
+an opinion about what that combination MEANS forms that opinion itself,
+one layer up — this class never forms it on the caller's behalf.
+
+**Two independent observations, run concurrently, and neither one can
+block or corrupt the other.** `reconcile()` awaits `observeConfirmation()`
+and `verify()` together, never sequentially gated on each other. A slow or
+failing confirmation source never delays the content-proof check, and a
+throwing proof verifier is translated into the identical honest
+`UNAVAILABLE` form a well-behaved verifier would have returned itself —
+mirroring `application/ExternalAnchorVerifier.js`'s own treatment of a
+throwing `proofVerifier` — without ever blocking the independent
+confirmation observation from completing normally. Two facts about the
+same anchor are still two separate acts of observation, not one
+compound one that fails as a unit.
+
+**A malformed txid is a caller-contract violation, checked once, before
+either collaborator is consulted for the transaction side — never a
+reason to skip the content-proof side.** `anchoring/
+BitcoinAnchorConfirmationObserver.js`'s own `txid` parameter is a trusted
+internal artifact; a malformed one is exactly the kind of caller mistake
+that class already throws for, not a network fact. Rather than let that
+throw escape `reconcile()` (which would mean one malformed anchor crashes
+a reconciliation another caller correctly expected to always resolve),
+this class checks the format itself and reports `transaction.confirmation`
+as `UNAVAILABLE` with an honest reason. The content-proof side runs
+anyway, independently, and reaches its own definite verdict — a
+structurally invalid proof was always a `HASH_MISMATCH`
+`anchoring/BitcoinOpReturnProofVerifier.js` could report on its own, since
+0.8.1, and this milestone never suppresses that fact just because the
+transaction side had nothing to say. See `docs/Roadmap.md`, 0.8.55, for
+the full milestone entry.
