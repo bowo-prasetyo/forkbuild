@@ -73,6 +73,8 @@ import { BitcoinAnchorTransactionConstructionState } from '../../application/Bit
 import { describeBitcoinAnchorTransactionConstruction } from '../../application/BitcoinAnchorTransactionConstructionView.js';
 import { BitcoinAnchorReviewedSigningState } from '../../application/BitcoinAnchorReviewedSigningState.js';
 import { describeBitcoinAnchorReviewedSigning } from '../../application/BitcoinAnchorReviewedSigningView.js';
+import { BitcoinAnchorSignedPsbtFinalizationState } from '../../application/BitcoinAnchorSignedPsbtFinalizationState.js';
+import { describeBitcoinAnchorSignedPsbtFinalization } from '../../application/BitcoinAnchorSignedPsbtFinalizationView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -665,6 +667,25 @@ const BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES = {
     [BitcoinAnchorReviewedSigningState.FAILED]: 'peer-badge--failed'
 };
 
+// 0.8.63 — Explicit Signed PSBT Verification & Transaction Finalization UI.
+// Mirrors BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES immediately above,
+// one step later in the same pipeline: FINALIZING reads amber (an attempt
+// is in flight, not yet a fact — necessarily brief, see application/
+// BitcoinAnchorSignedPsbtFinalizationState.js's own header), FINALIZED
+// reads the same "authenticated" green a real cryptographic verification
+// earns, and both INVALID_SIGNATURE and FAILED read the identical
+// "actionable, resolvable failure" red the signing badge map's own DECLINED
+// and FAILED already use — never the softer amber this page reserves for
+// "cannot presently tell," which this boundary never itself produces (see
+// that state's own header on why UNAVAILABLE stays honestly unreached).
+const BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES = {
+    [BitcoinAnchorSignedPsbtFinalizationState.FINALIZING]: 'peer-badge--pending',
+    [BitcoinAnchorSignedPsbtFinalizationState.FINALIZED]: 'peer-badge--authenticated',
+    [BitcoinAnchorSignedPsbtFinalizationState.INVALID_SIGNATURE]: 'peer-badge--failed',
+    [BitcoinAnchorSignedPsbtFinalizationState.UNAVAILABLE]: 'peer-badge--failed',
+    [BitcoinAnchorSignedPsbtFinalizationState.FAILED]: 'peer-badge--failed'
+};
+
 const BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES = {
     [BitcoinAnchorTransactionConstructionState.CONSTRUCTING]: 'peer-badge--pending',
     [BitcoinAnchorTransactionConstructionState.CONSTRUCTED]: 'peer-badge--authenticated',
@@ -846,6 +867,15 @@ export default {
         // and acts only on an explicit click.
         const bitcoinAnchorTransactionReviewCoordinator = inject('bitcoinAnchorTransactionReviewCoordinator', null);
         const bitcoinAnchorReviewedSigningCoordinator = inject('bitcoinAnchorReviewedSigningCoordinator', null);
+        // 0.8.63 — Explicit Signed PSBT Verification & Transaction
+        // Finalization UI. Optional — absent here, no "Verify & Finalize
+        // Transaction" action ever renders, the identical degrade-gracefully
+        // posture every optional coordinator on this page already holds.
+        // `bitcoinAnchorSignedPsbtFinalizationCoordinator` is a thin bridge
+        // to the unchanged 0.8.51 anchoring/BitcoinAnchorSignedPsbtFinalizer.js
+        // — see application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js's
+        // own header on why no new cryptography lives here either.
+        const bitcoinAnchorSignedPsbtFinalizationCoordinator = inject('bitcoinAnchorSignedPsbtFinalizationCoordinator', null);
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
         // Optional — absent here, no "Create Transaction Plan" action ever
         // renders, the identical degrade-gracefully posture every optional
@@ -954,6 +984,21 @@ export default {
         // header requires: "a fresh plan always starts unsigned again,
         // never inheriting a previous plan's own SIGNED outcome."
         const bitcoinAnchorReviewedSigningOutcome = ref(null);
+
+        // 0.8.63 — Explicit Signed PSBT Verification & Transaction
+        // Finalization UI. The single, page-level result of the last
+        // explicit "Verify & Finalize Transaction" click — `null` until one
+        // has ever been made for the CURRENT signed PSBT. Held as a plain
+        // ref, replaced wholesale by `finalizeBitcoinAnchorSignedPsbt()`
+        // below, and reset to `null` by every fresh "Sign Reviewed
+        // Transaction" click AND every fresh "Create Transaction Plan"
+        // click — a newly signed PSBT always starts unfinalized again,
+        // never inheriting a previous attempt's own FINALIZED outcome. See
+        // application/BitcoinAnchorSignedPsbtFinalizationState.js's own
+        // header, and `bitcoinAnchorReviewedSigningOutcome`'s own
+        // declaration immediately above, the identical restraint one stage
+        // earlier.
+        const bitcoinAnchorSignedPsbtFinalizationOutcome = ref(null);
 
         // Every currently AUTHENTICATED peer, in registry order — the
         // full candidate list this page now hands to application/
@@ -2276,15 +2321,18 @@ export default {
             if (!bitcoinAnchorTransactionConstructionCoordinator) return;
             entry.bitcoinAnchorTransactionConstruction = { state: BitcoinAnchorTransactionConstructionState.CONSTRUCTING, construction: null, reason: null };
             // A fresh construction attempt retires whatever was previously
-            // under review/signed — never left showing stale review facts
-            // or a stale SIGNED badge for a transaction this click is about
-            // to replace. See `bitcoinAnchorTransactionReview`'s and
-            // `bitcoinAnchorReviewedSigningOutcome`'s own declarations
-            // above.
+            // under review/signed/finalized — never left showing stale
+            // review facts, a stale SIGNED badge, or a stale FINALIZED
+            // badge for a transaction this click is about to replace. See
+            // `bitcoinAnchorTransactionReview`'s,
+            // `bitcoinAnchorReviewedSigningOutcome`'s, and
+            // `bitcoinAnchorSignedPsbtFinalizationOutcome`'s own
+            // declarations above.
             bitcoinAnchorTransactionReview.description = null;
             bitcoinAnchorTransactionReview.publicationId = null;
             bitcoinAnchorTransactionReview.reason = null;
             bitcoinAnchorReviewedSigningOutcome.value = null;
+            bitcoinAnchorSignedPsbtFinalizationOutcome.value = null;
             try {
                 entry.bitcoinAnchorTransactionConstruction = bitcoinAnchorTransactionConstructionCoordinator.construct({
                     publicationId: entry.publication.id,
@@ -2352,6 +2400,12 @@ export default {
             const review = bitcoinAnchorTransactionReviewView();
             if (!review || !bitcoinAnchorTransactionReview.description) return;
 
+            // A fresh signing attempt retires whatever was previously
+            // finalized — never left showing a stale FINALIZED badge for a
+            // signature this click is about to replace. See
+            // `bitcoinAnchorSignedPsbtFinalizationOutcome`'s own
+            // declaration above.
+            bitcoinAnchorSignedPsbtFinalizationOutcome.value = null;
             bitcoinAnchorReviewedSigningOutcome.value = { state: BitcoinAnchorReviewedSigningState.SIGNING, psbt: null, signedInputs: null, reason: null };
             try {
                 bitcoinAnchorReviewedSigningOutcome.value = await bitcoinAnchorReviewedSigningCoordinator.sign({
@@ -2380,6 +2434,57 @@ export default {
 
         function isBitcoinAnchorReviewedSigning() {
             return bitcoinAnchorReviewedSigningView().state === BitcoinAnchorReviewedSigningState.SIGNING;
+        }
+
+        // 0.8.63 — Explicit Signed PSBT Verification & Transaction
+        // Finalization UI.
+        //
+        // The ONE place this page ever calls
+        // `bitcoinAnchorSignedPsbtFinalizationCoordinator.finalize()` —
+        // never triggered automatically by a SIGNED result; only an
+        // explicit "Verify & Finalize Transaction" click. Exactly as
+        // application/BitcoinAnchorReviewedSigningState.js's own header
+        // names it: "A wallet-returned PSBT is an untrusted artifact until
+        // ForkBuild independently verifies and finalizes it" — the wallet's
+        // own claimed signature (`bitcoinAnchorReviewedSigningOutcome.value.psbt`)
+        // is handed to the finalizer completely unmodified, exactly as the
+        // wallet returned it. Synchronous — see application/
+        // BitcoinAnchorSignedPsbtFinalizationCoordinator.js's own header on
+        // why `finalize()` performs no async work of any kind. A thrown
+        // error is caught HERE, at the UI boundary, and turned into its own
+        // honest FAILED outcome — mirroring exactly how
+        // `signBitcoinAnchorReviewedTransaction()` above already handles
+        // its own coordinator's thrown errors.
+        function finalizeBitcoinAnchorSignedPsbt() {
+            if (!bitcoinAnchorSignedPsbtFinalizationCoordinator) return;
+            const signing = bitcoinAnchorReviewedSigningView();
+            if (signing.state !== BitcoinAnchorReviewedSigningState.SIGNED) return;
+            const signedPsbt = bitcoinAnchorReviewedSigningOutcome.value ? bitcoinAnchorReviewedSigningOutcome.value.psbt : null;
+            if (!signedPsbt || !bitcoinAnchorTransactionReview.description) return;
+
+            bitcoinAnchorSignedPsbtFinalizationOutcome.value = { state: BitcoinAnchorSignedPsbtFinalizationState.FINALIZING, finalized: false, txid: null, rawTransaction: null, verifiedInputCount: null, reason: null };
+            try {
+                bitcoinAnchorSignedPsbtFinalizationOutcome.value = bitcoinAnchorSignedPsbtFinalizationCoordinator.finalize({
+                    description: bitcoinAnchorTransactionReview.description,
+                    signedPsbt
+                });
+            } catch (error) {
+                bitcoinAnchorSignedPsbtFinalizationOutcome.value = { state: BitcoinAnchorSignedPsbtFinalizationState.FAILED, finalized: false, txid: null, rawTransaction: null, verifiedInputCount: null, reason: error.message };
+            }
+        }
+
+        // Pure projection of `bitcoinAnchorSignedPsbtFinalizationOutcome`
+        // through application/BitcoinAnchorSignedPsbtFinalizationView.js's
+        // own `describeBitcoinAnchorSignedPsbtFinalization()` — the
+        // identical "the UI owns no facts of its own, it only projects an
+        // injected collaborator's own result" discipline every other
+        // `*View()` function on this page already holds.
+        function bitcoinAnchorSignedPsbtFinalizationView() {
+            return describeBitcoinAnchorSignedPsbtFinalization(bitcoinAnchorSignedPsbtFinalizationOutcome.value);
+        }
+
+        function bitcoinAnchorSignedPsbtFinalizationBadgeClass() {
+            return BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES[bitcoinAnchorSignedPsbtFinalizationView().state] || 'peer-badge--pending';
         }
 
         // Pure projection of `entry.bitcoinAnchorTransactionConstruction`
@@ -3253,7 +3358,10 @@ export default {
             BitcoinAnchorTransactionConstructionState,
             bitcoinAnchorReviewedSigningCoordinator, signBitcoinAnchorReviewedTransaction,
             bitcoinAnchorReviewedSigningView, bitcoinAnchorReviewedSigningBadgeClass, isBitcoinAnchorReviewedSigning,
-            BitcoinAnchorReviewedSigningState
+            BitcoinAnchorReviewedSigningState,
+            bitcoinAnchorSignedPsbtFinalizationCoordinator, finalizeBitcoinAnchorSignedPsbt,
+            bitcoinAnchorSignedPsbtFinalizationView, bitcoinAnchorSignedPsbtFinalizationBadgeClass,
+            BitcoinAnchorSignedPsbtFinalizationState
         };
     },
     template: `
@@ -3465,6 +3573,63 @@ export default {
                         <p class="form-hint form-hint--neutral">
                             The wallet returned a signed PSBT. ForkBuild has not yet cryptographically verified
                             or finalized it — that is a separate, explicit step.
+                        </p>
+                    </template>
+                </div>
+
+                <!-- 0.8.63 — Explicit Signed PSBT Verification & Transaction
+                     Finalization UI. A wallet-returned PSBT is an untrusted
+                     artifact until ForkBuild independently verifies and
+                     finalizes it — this button is that explicit boundary.
+                     Only ever rendered once the wallet has returned a
+                     SIGNED result; clicking it hands the wallet's own
+                     claimed signature, unmodified, to anchoring/
+                     BitcoinAnchorSignedPsbtFinalizer.js (0.8.51, unchanged)
+                     via the new application/
+                     BitcoinAnchorSignedPsbtFinalizationCoordinator.js. See
+                     that file's own header on why an INVALID_SIGNATURE or
+                     FAILED result here is the end of this attempt — never
+                     retried, re-signed, or reconstructed automatically. -->
+                <div v-if="bitcoinAnchorReviewedSigningView().state === BitcoinAnchorReviewedSigningState.SIGNED" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Verification &amp; Finalization</span>
+                    <p class="form-hint form-hint--neutral">
+                        The wallet returned signing material. ForkBuild has not yet accepted it as a valid
+                        signature.
+                    </p>
+                    <button type="button" class="peer-action-btn" @click="finalizeBitcoinAnchorSignedPsbt">
+                        Verify &amp; Finalize Transaction
+                    </button>
+
+                    <span v-if="bitcoinAnchorSignedPsbtFinalizationView().state !== BitcoinAnchorSignedPsbtFinalizationState.IDLE" class="peer-badge"
+                        :class="bitcoinAnchorSignedPsbtFinalizationBadgeClass()">
+                        {{ bitcoinAnchorSignedPsbtFinalizationView().stateLabel }}
+                    </span>
+                    <p v-if="bitcoinAnchorSignedPsbtFinalizationView().reason" class="form-hint form-hint--neutral">
+                        {{ bitcoinAnchorSignedPsbtFinalizationView().reason }}
+                    </p>
+
+                    <!-- FINALIZED names the one real cryptographic fact this
+                         boundary checks — "Verified" is honest here, unlike
+                         at the signing stage above, because this class
+                         actually performed the verification. It is never
+                         promoted to a broader "safe" or "trusted" claim —
+                         see application/BitcoinAnchorSignedPsbtFinalizationView.js's
+                         own header. -->
+                    <template v-if="bitcoinAnchorSignedPsbtFinalizationView().state === BitcoinAnchorSignedPsbtFinalizationState.FINALIZED">
+                        <dl class="evidence-fields">
+                            <div class="evidence-field"><dt>Signature verification</dt><dd>✓ Verified</dd></div>
+                            <div class="evidence-field">
+                                <dt>Verified inputs</dt>
+                                <dd>{{ bitcoinAnchorSignedPsbtFinalizationView().verifiedInputCount }} / {{ bitcoinAnchorReviewedSigningView().signedInputCount }}</dd>
+                            </div>
+                            <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ bitcoinAnchorSignedPsbtFinalizationView().txid }}</dd></div>
+                        </dl>
+                        <details class="evidence-inspection-proof">
+                            <summary>Raw transaction bytes</summary>
+                            <pre class="evidence-inspection-proof-json">{{ bitcoinAnchorSignedPsbtFinalizationView().rawTransactionHex }}</pre>
+                        </details>
+                        <p class="form-hint form-hint--neutral">
+                            Transaction finalized. Broadcasting it is a separate, explicit step.
                         </p>
                     </template>
                 </div>

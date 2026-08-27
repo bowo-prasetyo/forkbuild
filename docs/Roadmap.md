@@ -26313,6 +26313,124 @@ next step.
   ever adds a decoder, two thin coordinators, and a verdict-free view on top
   of them.
 
-What's left, and deliberately unbuilt: cryptographic verification and
-finalization of a `SIGNED` result, and the explicit action that would
-trigger it, is 0.8.63's own job, next.
+## 0.8.63 — Explicit Signed PSBT Verification & Transaction Finalization UI
+
+- `application/BitcoinAnchorSignedPsbtFinalizationState.js` (new) —
+  IDLE/FINALIZING/FINALIZED/INVALID_SIGNATURE/UNAVAILABLE/FAILED. Mirrors
+  `application/BitcoinAnchorReviewedSigningState.js`'s own shape one stage
+  later in the pipeline; deliberately splits INVALID_SIGNATURE from FAILED
+  so a person can tell "this signature is wrong" from "this could not be
+  checked for some other reason" — see that file's own header on why
+  UNAVAILABLE stays in the vocabulary, honestly unreached, because
+  `anchoring/BitcoinAnchorSignedPsbtFinalizer.js` has no external
+  dependency of any kind to ever be unavailable.
+- `application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js` (new) —
+  the explicit "Verify & Finalize Transaction" action, a deliberately thin
+  bridge to the unchanged 0.8.51 `anchoring/BitcoinAnchorSignedPsbtFinalizer.js`.
+  No new cryptography of any kind; classifies a `{ finalized: false, reason
+  }` outcome into INVALID_SIGNATURE vs. FAILED by recognizing the
+  finalizer's own, already-stable failure phrasing for a genuine
+  cryptographic verification failure — never by re-deriving one.
+- `application/CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase.js`
+  (new) — the composition-root wiring, taking the already-existing 0.8.51
+  finalizer as a parameter rather than reconstructing it.
+- `application/BitcoinAnchorSignedPsbtFinalizationView.js` (new) — the
+  verdict-free-except-for-the-one-real-fact projection: `verified` is
+  honest here, unlike one stage earlier, because this is the boundary that
+  actually performs the cryptographic check. Still carries no `safe`,
+  `secure`, `trusted`, or `recommended` field.
+- `ui/views/DecentralizedPublicationsView.js` — the 0.8.62 review panel
+  gains a "Verify & Finalize Transaction" button, rendered only once the
+  wallet has returned a SIGNED result; a FINALIZED outcome shows the real
+  txid, verified input count, and raw transaction bytes (behind a
+  collapsed `<details>`, exactly like the existing raw-evidence disclosure
+  elsewhere on this page) — and nothing past that. A fresh "Sign Reviewed
+  Transaction" or "Create Transaction Plan" click retires whatever was
+  previously finalized, the identical staleness discipline 0.8.62 already
+  holds toward a stale SIGNED badge.
+- `ui/main.js` — the first real wiring of `anchoring/
+  BitcoinAnchorSignedPsbtFinalizer.js` (0.8.51, previously unused in the
+  running app) into this page.
+- `tests/BitcoinAnchorSignedPsbtFinalizationUX.test.js` (new) — the
+  flagship proves the complete pipeline end to end, one step further than
+  0.8.62 ever took it: a real, OBSERVED funding observation constructs,
+  reviews, and is genuinely, cryptographically signed by a fake
+  UniSat-shaped wallet; the new coordinator independently verifies that
+  signature and produces real transaction bytes — FINALIZED, with a real
+  txid. Further sections cover: a well-formed signature by a key without
+  authority over the script is INVALID_SIGNATURE; a transaction
+  substituted after signing is refused BEFORE any cryptography is
+  attempted (FAILED, never INVALID_SIGNATURE); a cryptographically valid
+  signature over the wrong sighash is INVALID_SIGNATURE; an unsupported
+  script type is refused explicitly (FAILED); every input in a multi-input
+  transaction verifies independently, and one bad input among several
+  otherwise-correct ones is still caught; the finalized bytes contain
+  exactly the reviewed transaction's own inputs and outputs; FINALIZED
+  never itself performs a network call of any kind — proved by making
+  `fetch` throw and finalizing successfully anyway; caller-contract
+  violations throw before the finalizer is ever consulted; and the state
+  vocabulary and view carry no verdict beyond the one real cryptographic
+  fact this boundary checks.
+
+```text
+0.8.62  Explicit Reviewed Bitcoin Anchor Signing UI                    ✓
+             │
+             ▼
+0.8.63  Explicit Signed PSBT Verification & Transaction Finalization UI ✓
+             ├── application/BitcoinAnchorSignedPsbtFinalizationState.js
+             │   — new; IDLE/FINALIZING/FINALIZED/INVALID_SIGNATURE/
+             │   UNAVAILABLE/FAILED
+             ├── application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js
+             │   — new; the explicit "Verify & Finalize Transaction"
+             │   action, wrapping the unchanged 0.8.51 finalizer — no new
+             │   cryptography
+             ├── ui/views/DecentralizedPublicationsView.js — the 0.8.62
+             │   review panel gains an explicit "Verify & Finalize
+             │   Transaction" button, and shows a FINALIZED result's real
+             │   txid and raw transaction bytes
+             ├── ui/main.js — the first real wiring of the 0.8.51
+             │   finalizer into this running app
+             └── ForkBuild can now, for the first time, take a wallet's own
+                 claimed signature all the way to independently,
+                 cryptographically verified and finalized transaction
+                 bytes — never trusting the wallet's own claim, and never
+                 broadcasting anything on its own
+```
+
+### Deliberately excluded
+
+- **Broadcasting, or anything past finalized transaction bytes.**
+  `anchoring/BitcoinAnchorTransactionBroadcaster.js` (0.8.52) is neither
+  imported nor called by anything this milestone adds — a FINALIZED
+  outcome is shown on screen with its own real txid and raw bytes, and
+  stops there. An explicit "Broadcast Transaction" action is its own,
+  separately sized future milestone (0.8.64).
+- **Any retry, re-sign, transaction substitution, wallet switch, or fee
+  adjustment on an INVALID_SIGNATURE or FAILED result.** Cryptographic
+  failure terminates this finalization attempt — a person clicks "Verify &
+  Finalize Transaction" again, explicitly, only after producing a genuinely
+  different signed PSBT (a fresh "Sign Reviewed Transaction" click), never
+  automatically.
+- **A new acquisition-history, placement, or publication record for a
+  finalized transaction.** A `FINALIZED` outcome is an ephemeral,
+  per-attempt fact this page holds only until the next signing or
+  construction click replaces it — it is never appended to any history,
+  and never itself becomes a placement, anchor, or publication claim. That
+  remains 0.8.64's own broadcaster and the unchanged 0.8.8
+  `CreatePublicationAnchorUseCase`'s job, exactly as `application/
+  BitcoinAnchorPublicationCoordinator.js` (0.8.53) already establishes for
+  the all-in-one pipeline.
+- **A `safe`, `trusted`, `secure`, or `recommended` verdict of any kind.**
+  `FINALIZED` names exactly one fact — the signature cryptographically
+  verified — never a broader judgment about the transaction it belongs to.
+  See `application/BitcoinAnchorSignedPsbtFinalizationView.js`'s own
+  header.
+- **Any change to `anchoring/BitcoinAnchorSignedPsbtFinalizer.js`,
+  `anchoring/BitcoinAnchorSignedPsbtInspector.js`, or any class from 0.8.47
+  through 0.8.62.** All of them stay exactly as built — this milestone
+  only ever adds a state vocabulary, one thin coordinator, and a
+  verdict-free view on top of the unchanged 0.8.51 finalizer.
+
+What's left, and deliberately unbuilt: broadcasting a `FINALIZED`
+transaction's own already-finalized bytes, and the explicit action that
+would trigger it, is 0.8.64's own job, next.

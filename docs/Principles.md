@@ -14957,3 +14957,75 @@ codebase a reason to hold a wallet capability any longer than the one call
 that needs it.
 
 See `docs/Roadmap.md`, 0.8.62, for the full milestone entry.
+
+## Cryptographic Failure Terminates This Signing Attempt (0.8.63)
+
+`docs/Principles.md`, "Signing Material Is Not Yet A Signature Until It
+Verifies (0.8.51)," and "Review Is An Authorization Boundary; Signing Is An
+External Capability Invocation (0.8.62)," together left one gap open on
+purpose: a `SIGNED` result on screen was, honestly, still just a wallet's
+own claim, independently inspected for shape but never cryptographically
+checked. This milestone closes that gap with a button, not a shortcut —
+`anchoring/BitcoinAnchorSignedPsbtFinalizer.js`'s own real secp256k1
+verification (0.8.51, unchanged) is finally reachable from the screen a
+person is looking at.
+
+> A wallet-returned PSBT is an untrusted artifact until ForkBuild
+> independently verifies and finalizes it.
+
+**No new cryptography, anywhere.** `application/
+BitcoinAnchorSignedPsbtFinalizationCoordinator.js` computes no hash,
+verifies no signature, and re-implements no part of BIP143 or secp256k1 —
+it calls the unchanged 0.8.51 finalizer exactly once and translates its
+result into a vocabulary a person can read. Every invariant this milestone
+exposes — structural re-validation, sighash calculation, public-key
+authority, signature verification, script-type enforcement — was already
+built, and already tested, in 0.8.51. Nothing about wiring a button to it
+changes what it checks or how.
+
+**INVALID_SIGNATURE and FAILED are different facts, and the difference is
+never guessed at.** A signed PSBT can fail to finalize for reasons that
+have nothing to do with whether any signature is valid — it can simply be
+for the wrong transaction, one the unchanged 0.8.50 inspector refuses
+before any cryptography is even attempted. Collapsing that into the same
+state as "this signature did not verify" would blur a distinction a person
+looking at the screen actually cares about: one names a cryptographic
+fact about signing material that was genuinely checked; the other names
+that checking never happened at all. `BitcoinAnchorSignedPsbtFinalizationCoordinator`
+draws this line by recognizing the finalizer's own, already-stable failure
+phrasing for a genuine cryptographic failure — never by re-deriving one,
+and never by inventing a rule the finalizer itself does not already imply.
+
+**A cryptographic failure is the end of the attempt, not the start of a
+retry loop.** Nothing in this milestone re-signs, re-selects UTXOs,
+substitutes a different transaction, switches wallets, or adjusts a fee on
+a person's behalf after an INVALID_SIGNATURE or FAILED result. The next
+"Verify & Finalize Transaction" click can only ever verify a genuinely new
+signed PSBT — produced by a fresh, explicit "Sign Reviewed Transaction"
+click of its own. Automating any part of that chain would mean this
+application deciding, on a person's behalf, that a failed cryptographic
+check was not really disqualifying — the opposite of what a verification
+boundary is for.
+
+**FINALIZED is an ephemeral fact, not a new kind of record.** A person's
+signed PSBT, once verified, produces real transaction bytes this page
+holds only until the next signing or construction click replaces them —
+never a new acquisition-history entry, never a placement, never a
+publication claim of its own. `application/BitcoinAnchorPublicationCoordinator.js`
+(0.8.53) already drew this exact line for the all-in-one pipeline: a
+transaction becomes a durable record only once `CreatePublicationAnchorUseCase`
+(0.8.8, unchanged) says so, and that has always been broadcast's own job,
+never finalization's.
+
+**"Verified" is finally honest here — and still not a security verdict.**
+`application/BitcoinAnchorReviewedSigningView.js`'s own header (0.8.62)
+forbade a `verified` field because a `SIGNED` result had not earned it.
+`application/BitcoinAnchorSignedPsbtFinalizationView.js` is the one place
+in this whole pipeline that actually performed the check, so naming
+`FINALIZED` as verified is not a claim beyond what was done — but it still
+stops exactly there. No `safe`, `secure`, `trusted`, or `recommended` field
+exists anywhere in this milestone's own view. Cryptographic verification
+of a signature is one narrow, real fact; it is not a judgment about the
+transaction, the wallet, or the person who signed it.
+
+See `docs/Roadmap.md`, 0.8.63, for the full milestone entry.
