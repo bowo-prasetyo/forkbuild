@@ -47,6 +47,9 @@ import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../applicati
 import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePublicationAnchorCreationCoordinatorUseCase.js';
 import { CreateBitcoinAnchorEvidenceViewUseCase } from '../application/CreateBitcoinAnchorEvidenceViewUseCase.js';
 import { CreateExternalAnchorEvidenceViewRegistryUseCase } from '../application/CreateExternalAnchorEvidenceViewRegistryUseCase.js';
+import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../application/CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js';
+import { CreateBitcoinAnchorConfirmationObserverUseCase } from '../application/CreateBitcoinAnchorConfirmationObserverUseCase.js';
+import { CreateBitcoinAnchorProofReconciliationViewUseCase } from '../application/CreateBitcoinAnchorProofReconciliationViewUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -785,6 +788,26 @@ const { evidenceViewRegistry: externalAnchorEvidenceViewRegistry } = new CreateE
     evidenceViews: [bitcoinAnchorEvidenceView]
 });
 
+// 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI. The first UI
+// wiring for 0.8.54's confirmation observer and 0.8.55's reconciliation
+// view, both built with no UI consumer at all (see each of those
+// milestones' own "Deliberately excluded" lists, and 0.8.56's own —
+// "Wiring anchoring/BitcoinAnchorConfirmationObserver.js and anchoring/
+// BitcoinEsploraTransactionConfirmationObserver.js into ui/main.js for the
+// first time... stays real, separately sized future work"). Unlike
+// `bitcoinBroadcaster` above, `bitcoinEsploraTransactionConfirmationObserver`
+// needs no fake standing in for a missing capability — reading public
+// confirmation status requires no wallet and no private key, exactly like
+// `bitcoinProofVerifier` above, which this reconciliation view reuses
+// UNCHANGED rather than constructing a second, disconnected instance.
+const { bitcoinEsploraTransactionConfirmationObserver } = new CreateBitcoinEsploraTransactionConfirmationObserverUseCase().execute();
+const { bitcoinAnchorConfirmationObserver } = new CreateBitcoinAnchorConfirmationObserverUseCase().execute({
+    confirmationSource: bitcoinEsploraTransactionConfirmationObserver
+});
+const { bitcoinAnchorProofReconciliationView } = new CreateBitcoinAnchorProofReconciliationViewUseCase().execute({
+    bitcoinAnchorConfirmationObserver, bitcoinProofVerifier
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -828,6 +851,8 @@ app.provide('publicationKnowledgeSynchronizationCoordinator', publicationKnowled
 app.provide('anchorKnowledgeStore', anchorKnowledgeStore);
 // 0.8.14 — External Evidence Inspection & Locator UX.
 app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegistry);
+// 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
+app.provide('bitcoinAnchorProofReconciliationView', bitcoinAnchorProofReconciliationView);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);

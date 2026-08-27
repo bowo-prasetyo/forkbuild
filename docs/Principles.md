@@ -14471,3 +14471,90 @@ materialization attempts, and `application/
 SnapshotPeerPossessionObservationHistory.js`'s own header already holds
 for peer possession, each one domain over. See `docs/Roadmap.md`, 0.8.56,
 for the full milestone entry.
+
+## The UI Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57)
+
+The Publication Center's new "Bitcoin Anchor" section is the first screen
+in this entire Bitcoin sequence — 0.8.47 through 0.8.56 built every piece
+of the pipeline with no UI consumer at all. What it displays is Confirmation
+(`application/BitcoinAnchorConfirmationState.js`) and Content proof
+(`application/BitcoinAnchorContentProofState.js`) as two separately badged
+facts, side by side, exactly as `application/
+BitcoinAnchorProofReconciliationView.js`'s own header (0.8.55) already
+demanded of any future caller: "no `valid`, `healthy`, `trusted`,
+`reliable`, `canonical`, `confidence`, or `status` field that collapses
+`transaction.confirmation.state` and `contentProof.state` into each
+other." A transaction reported `CONFIRMED` next to a content proof
+reported `HASH_MISMATCH` is not an error this screen resolves, hides, or
+explains away — it is exactly the honest, structurally legitimate
+combination reconciliation exists to make visible, and this milestone's
+own flagship test proves the UI can render it without ever computing an
+aggregate. There is no "Anchor is valid," "Anchor is trustworthy," or
+"Anchor is healthy" label anywhere in this section, and there never will
+be one that merges these two badges — a caller wanting an opinion about
+what a given combination MEANS forms that opinion itself, one layer up,
+exactly as `application/BitcoinAnchorProofReconciliationView.js`'s own
+header already required of the layer beneath this one.
+
+**One explicit action, not two pretending to be independent.** A single
+"Reconcile"/"Reconcile Again" click is the only thing that ever calls
+`bitcoinAnchorProofReconciliationView.reconcile()` — never triggered by
+opening the Publication Center, expanding evidence, or any other
+disclosure on the page. It asks both questions (confirmation status,
+content-hash proof) in the one call the domain layer beneath it already
+offers, because `reconcile()` itself already runs both concurrently,
+exactly as 0.8.55 built it. Rendering two separate buttons here, one per
+observation, would only fake an independence the composed view underneath
+does not actually have — the UI's own action surface must match the shape
+of the collaborator it calls, never invent a finer-grained one for its own
+sake. Nothing polls, retries, rebroadcasts, modifies the anchor, modifies
+the content, or creates a new placement; a timeout or unreachable source
+reads "Confirmation status unavailable"/"Content proof unavailable," the
+identical honest `UNAVAILABLE` vocabulary 0.8.54/0.8.55 already named,
+never a crash and never a guess that a transaction will "never confirm" —
+see `anchoring/BitcoinAnchorConfirmationObserver.js`'s own header, "there
+is no fourth value for 'definitely will never confirm.'"
+
+**Confirmation and content-proof histories stay separate, never unified,
+because they are independent observations.** Every "Reconcile" click's own
+`transaction.confirmation` joins `entry.
+bitcoinAnchorConfirmationHistories[anchorId]` — the SAME append-only
+`application/BitcoinAnchorConfirmationObservationHistory.js` sequence
+0.8.56 already built, never mutated, never reordered, never rewritten by
+a later click, mirrored one-for-one by `application/
+BitcoinAnchorConfirmationObservationHistoryDetailView.js`'s own
+per-observation inspection layer this section simply projects, unchanged.
+There is no equivalent history for `contentProof`, and no unified
+"Bitcoin Anchor History" mixing confirmation and content-proof events: an
+OP_RETURN output's own content-hash match does not evolve the way
+confirmation depth does — it is either present in an immutable output or
+it is not — so this milestone builds no history for it, and only the
+CURRENT reconciliation's own `contentProof` is ever shown. Keeping the two
+apart is not an oversight; it is the same "reconciliation composes
+independent observations, it does not score them" restraint `docs/
+Principles.md`, "Reconciliation Composes Independent Observations; It Does
+Not Score Them (0.8.55)," already established, extended here to the two
+histories that could otherwise tempt a future caller into merging them.
+
+**Inspection adds presentation, not new facts — again, one layer up.**
+`application/BitcoinAnchorContentProofView.js`'s own
+`describeBitcoinAnchorContentProofStateLabel()` and
+`describeBitcoinAnchorContentProof()` are the one new application-layer
+file this milestone adds, and they add exactly one new field —
+`stateLabel` — to an already-existing `contentProof` observation, the
+identical restraint `application/
+BitcoinAnchorConfirmationObservationHistoryView.js`'s own
+`describeBitcoinAnchorConfirmationStateLabel()` (0.8.54) already held for
+confirmation, one domain over. Neither function contacts a block explorer,
+re-verifies a proof, or accepts a proof verifier as an argument — there is
+no way for either one to perform a new network read. Everything else this
+section displays — `bitcoinAnchorReconciliationView()`,
+`bitcoinAnchorConfirmationHistoryView()` — is pure UI-layer composition
+over facts `application/BitcoinAnchorProofReconciliationView.js` and
+`application/BitcoinAnchorConfirmationObservationHistory.js` already
+produced; no new application-layer fact model was needed for the
+confirmation side at all, exactly as this milestone's own design
+conversation anticipated: "You've already created the application-layer
+detail view, so the UI should simply project it."
+
+See `docs/Roadmap.md`, 0.8.57, for the full milestone entry.
