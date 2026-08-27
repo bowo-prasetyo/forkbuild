@@ -34,6 +34,7 @@ import { appendIpfsPublicationRecordHistoryEntry } from '../../application/IpfsP
 import { describeIpfsPublicationRecordHistory } from '../../application/IpfsPublicationRecordHistoryView.js';
 import { appendIpfsPublicationContentVerificationHistoryEntry, latestIpfsPublicationContentVerification } from '../../application/IpfsPublicationContentVerificationHistory.js';
 import { describeIpfsPublicationContentVerificationHistory } from '../../application/IpfsPublicationContentVerificationHistoryView.js';
+import { describeIpfsPublicationObservationTimeline, IpfsPublicationObservationTimelineEntryKind } from '../../application/IpfsPublicationObservationTimelineView.js';
 import { createResolutionObservation } from '../../application/SnapshotPlacementResolutionObservation.js';
 import { deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote } from '../../application/SnapshotPlacementLifecycleView.js';
 import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/PublicationDecentralizationView.js';
@@ -1477,6 +1478,16 @@ export default {
                 ipfsPublicationVerificationHistoriesByRecordIndex: {},
                 ipfsPublicationRecordVerifyingByRecordIndex: {},
                 ipfsPublicationVerificationHistoryExpandedByRecordIndex: {},
+                // 0.8.73 — IPFS Publication Observation Timeline. Gates the
+                // "Show/Hide Timeline" disclosure below the existing
+                // Publication History disclosure. This is the ONLY new
+                // piece of state this milestone adds — the timeline itself
+                // is computed on demand by
+                // ipfsPublicationObservationTimelineView(entry), a pure
+                // projection over the two histories above; nothing here is
+                // fetched, polled, or persisted, and expanding this
+                // disclosure performs zero network operations.
+                ipfsPublicationObservationTimelineExpanded: false,
                 // 0.8.33 — Local Snapshot Content Availability &
                 // Integrity UX. A single ephemeral attempt object for
                 // THIS entry — `null` until "Check Local Snapshot" is
@@ -3909,6 +3920,39 @@ export default {
             return Boolean(entry.ipfsPublicationVerificationHistoryExpandedByRecordIndex[index]);
         }
 
+        // 0.8.73 — IPFS Publication Observation Timeline. Composes
+        // application/IpfsPublicationObservationTimelineView.js's own
+        // describeIpfsPublicationObservationTimeline() over the SAME two
+        // histories the Publication History and per-record Verification
+        // History disclosures above already read — entry.
+        // ipfsPublicationRecordHistory and entry.
+        // ipfsPublicationVerificationHistoriesByRecordIndex — unchanged.
+        // This function reads only what those two histories already hold
+        // in memory; it never fetches, verifies, or appends anything of
+        // its own. Presentation-only: no new domain concept, no new
+        // verdict layer, just a chronological read of two existing,
+        // separately maintained facts.
+        function ipfsPublicationObservationTimelineView(entry) {
+            return describeIpfsPublicationObservationTimeline(
+                entry.ipfsPublicationRecordHistory, entry.ipfsPublicationVerificationHistoriesByRecordIndex
+            );
+        }
+
+        // "Show/Hide Timeline" — mirrors toggleIpfsPublicationRecordHistory()'s
+        // own identical shape. There is deliberately no "refresh" action
+        // here, and no polling: opening the timeline reads whatever the
+        // existing histories already hold; new entries only ever appear
+        // after the existing, explicit "Publish"/"Verify Again" actions
+        // append into one of those two histories.
+        function toggleIpfsPublicationObservationTimeline(entry) {
+            entry.ipfsPublicationObservationTimelineExpanded = !entry.ipfsPublicationObservationTimelineExpanded;
+        }
+
+        function ipfsPublicationObservationTimelineEntryBadgeClass(item) {
+            if (item.kind !== IpfsPublicationObservationTimelineEntryKind.CONTENT_VERIFICATION) return 'peer-badge--pending';
+            return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[item.state] || 'peer-badge--pending';
+        }
+
         // 0.8.11 — Explicit External Anchoring UX. The one place this
         // page calls application/PublicationAnchorCreationCoordinator.js
         // (through the coordinator) — always for exactly ONE anchorType,
@@ -4184,6 +4228,8 @@ export default {
             ipfsPublicationRecordVerificationBadgeClass, ipfsPublicationVerificationEntryBadgeClass,
             ipfsPublicationRecordVerifyButtonLabel,
             toggleIpfsPublicationRecordVerificationHistory, isIpfsPublicationRecordVerificationHistoryExpanded,
+            ipfsPublicationObservationTimelineView, toggleIpfsPublicationObservationTimeline,
+            ipfsPublicationObservationTimelineEntryBadgeClass, IpfsPublicationObservationTimelineEntryKind,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -6243,6 +6289,48 @@ export default {
                                                 </ul>
                                             </div>
                                         </div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- 0.8.73 — IPFS Publication Observation Timeline.
+                                 A pure, presentation-only chronological projection over
+                                 the SAME two histories the "Publication History" disclosure
+                                 above and each record's own "Verification History" already
+                                 read — never a new domain concept, never a new verdict
+                                 layer. Gated on there being at least one publication,
+                                 mirroring "Show/Hide Publication History"'s own restraint.
+                                 Opening this disclosure performs ZERO network operations —
+                                 it only reads entry.ipfsPublicationRecordHistory and entry.
+                                 ipfsPublicationVerificationHistoriesByRecordIndex, already in
+                                 memory. There is no "refresh" action here; new entries only
+                                 ever appear after the existing, explicit "Publish"/"Verify
+                                 Again" actions above. See application/
+                                 IpfsPublicationObservationTimelineView.js's own header. -->
+                            <div v-if="ipfsPublicationObservationTimelineView(entry).count > 0" class="identity-mgmt-actions">
+                                <button type="button" class="action-btn action-btn--secondary"
+                                        @click="toggleIpfsPublicationObservationTimeline(entry)">
+                                    {{ entry.ipfsPublicationObservationTimelineExpanded ? 'Hide Timeline' : 'Show Timeline' }}
+                                </button>
+                            </div>
+                            <div v-if="entry.ipfsPublicationObservationTimelineExpanded" class="evidence-inspection-adapter">
+                                <span class="evidence-inspection-adapter-title">Observation Timeline</span>
+                                <p class="form-hint form-hint--neutral">
+                                    Every publication and every content-retrieval observation for
+                                    this entry, in true chronological order — never a running
+                                    status, and never evidence that one publication record is
+                                    preferable to another.
+                                </p>
+                                <ul class="replica-knowledge-claim-list">
+                                    <li v-for="(item, tIndex) in ipfsPublicationObservationTimelineView(entry).entries"
+                                        :key="tIndex" class="replica-knowledge-claim">
+                                        <span class="peer-badge" :class="ipfsPublicationObservationTimelineEntryBadgeClass(item)">
+                                            {{ formatWhen(item.observedAt) }} — {{ item.kind === IpfsPublicationObservationTimelineEntryKind.PUBLICATION ? 'Published' : item.stateLabel }}
+                                        </span>
+                                        <p class="form-hint form-hint--neutral">{{ item.label }} — {{ item.locator }}</p>
+                                        <p v-if="item.kind === IpfsPublicationObservationTimelineEntryKind.CONTENT_VERIFICATION && item.reason" class="form-hint form-hint--neutral">
+                                            {{ item.reason }}
+                                        </p>
                                     </li>
                                 </ul>
                             </div>

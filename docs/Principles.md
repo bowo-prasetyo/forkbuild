@@ -15601,3 +15601,64 @@ milestone that appends to a history on a caller's behalf.
 **Never persisted, never shared, never transmitted.** The identical
 restraint every history in this codebase already holds. See
 `docs/Roadmap.md`, 0.8.72, for the full milestone entry.
+
+## History Preserves Occurrence Order; A Timeline Is Free To Provide Chronological Presentation (0.8.73)
+
+**A history is an append log; a timeline is a read over it.** `entry.
+ipfsPublicationRecordHistory` (0.8.71) and `entry.
+ipfsPublicationVerificationHistoriesByRecordIndex` (0.8.72) each preserve
+INSERTION order — the order things actually happened to be recorded in,
+which is not always the order they actually happened in wall-clock time
+(a slow verification request can resolve after a faster, later one).
+`application/IpfsPublicationObservationTimelineView.js`'s
+`describeIpfsPublicationObservationTimeline()` is free to re-order that
+same set of facts into true chronological order for display, because it
+returns a brand-new projection array — never the history itself, and
+never by calling `Array#sort()` on a history in place. The flagship test
+proves the distinction directly: Record A verified at T4 then (appended
+SECOND) at T2 keeps `entry.
+ipfsPublicationVerificationHistoriesByRecordIndex[0]` in T4-then-T2
+append order forever, while the timeline projects T2 before T4, because
+T2 actually happened first.
+
+**A projection over two histories is still not a third history.** This
+milestone adds no new append function, no new "record this fact" action,
+and no new place a fact can originate — `describeIpfsPublicationObservationTimeline()`
+only ever reads `application/IpfsPublicationRecordHistory.js`'s own
+records and `application/IpfsPublicationContentVerificationHistory.js`'s
+own observations, exactly as `application/
+IpfsPublicationContentVerificationHistoryView.js`'s own
+`describeIpfsPublicationContentVerificationHistory()` (0.8.72) already
+narrates one history without becoming a second one. A timeline entry is
+never mutated, never appended to independently of its own source history,
+and never outlives the reactive component state holding the two
+histories it was projected from.
+
+**Every entry still names its own record — merging two histories onto one
+view never blurs which fact belongs to which publication.** `recordIndex`
+and `label` on a `CONTENT_VERIFICATION` entry name the exact
+`IpfsPublicationRecord` that observation belongs to, the identical
+restraint 0.8.71's and 0.8.72's own entries above already hold for
+`entry.ipfsPublicationVerificationHistoriesByRecordIndex[index]`, carried
+through into the merged view. A `HASH_MATCH` for Record #0 remains
+provably distinct from a `HASH_MATCH` for Record #1 even when both name
+an identical `contentHash` — interleaving two histories onto one
+timeline is never allowed to erase the boundary between them.
+
+**No aggregate computed by merging two histories together.** Composing a
+Publication History and a Verification History onto one chronological
+view is still composition, not scoring — the identical restraint "No
+comparison, ranking, or aggregate verdict computed from a record's own
+sequence of observations, anywhere (0.8.72)" held for one history, held
+here once more for two read together. `IpfsPublicationObservationTimelineEntryKind`
+tags an entry's own kind for display, and nothing more — it is never a
+`status`, and the timeline as a whole never computes a "latest overall
+state," a health score, or a reason to prefer one publication record over
+another.
+
+**No polling, no automatic re-verification, no refresh action, zero
+network operations.** The identical restraint "No polling, no automatic
+verification, ever (0.8.72)" held for opening a verification history,
+held here once more for opening the merged timeline — it only reads
+state already in memory. See `docs/Roadmap.md`, 0.8.73, for the full
+milestone entry.

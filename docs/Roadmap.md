@@ -28017,3 +28017,134 @@ automatic re-verification of any kind, a unified publication+verification
 timeline, and a unified Bitcoin + IPFS evidence screen — each its own,
 separately sized milestone, exactly like every "Deliberately excluded"
 list in this document before it.
+
+## 0.8.73 — IPFS Publication Observation Timeline
+
+0.8.72's own "Deliberately excluded" list named exactly this milestone: "A
+unified chronological timeline mixing publications and verifications...
+A unified `10:02 Published / 10:08 Verification / ...` timeline view,
+composing both histories without merging their semantics, is real,
+separately sized future work." This milestone builds exactly that, and
+nothing more:
+
+```text
+Publication History (0.8.71)         Verification History (0.8.72, per record)
+  Record #0 (T1)                       Record #0: obs(T4), obs(T2)
+  Record #1 (T3)                       Record #1: obs(T5)
+                    │
+                    ▼ describeIpfsPublicationObservationTimeline()
+Observation Timeline
+  T1  Publication #0
+  T2  Content retrieval — Publication #0
+  T3  Publication #1
+  T4  Content retrieval — Publication #0
+  T5  Content retrieval — Publication #1
+```
+
+**A PROJECTION, NOT A THIRD HISTORY.** `application/
+IpfsPublicationObservationTimelineView.js` is new, and is the only new
+file this milestone adds. It reads the exact same two, already-existing,
+append-only histories every prior milestone since 0.8.71 already
+maintains — `entry.ipfsPublicationRecordHistory` (0.8.71) and `entry.
+ipfsPublicationVerificationHistoriesByRecordIndex` (0.8.72) — and returns
+a brand-new, sorted array. Neither source history is ever mutated,
+sorted in place, or reordered by computing a timeline over it; each keeps
+its own append (insertion) order exactly as before. The flagship test
+(`tests/IpfsPublicationObservationTimelineView.test.js`) proves this with
+deliberately out-of-order timestamps: Record A published at T1, Record B
+published at T3, Record A verified at T4 THEN (appended second) at T2 —
+the timeline still projects the true chronological order T1, T2, T3, T4,
+T5, while `entry.ipfsPublicationVerificationHistoriesByRecordIndex[0]`
+itself keeps its own append order, T4 before T2, unchanged.
+
+**PRESENTATION-ONLY — NO NEW DOMAIN CONCEPT, NO NEW VERDICT LAYER.** Every
+field on every timeline entry is carried through unchanged from what
+`application/IpfsPublicationRecordHistory.js`'s own records and
+`application/IpfsPublicationContentVerificationView.js`'s own
+`describeIpfsPublicationContentVerification()` (0.8.70) already state.
+`IpfsPublicationObservationTimelineEntryKind` (`PUBLICATION` /
+`CONTENT_VERIFICATION`) exists only to keep the two kinds of entry
+distinguishable in one merged list — it is a presentation tag, never a new
+domain state. There is no `status`, `confidence`, `health`, `trusted`,
+`valid`, or `canonical` field anywhere in this milestone's output, and no
+"latest overall state" is computed for a record or for the timeline as a
+whole.
+
+**EVERY VERIFICATION ENTRY NAMES ITS OWN PUBLICATION RECORD.** Each
+entry's own `recordIndex` and `label` (`"Content retrieval — Publication
+#0"`) name exactly which `IpfsPublicationRecord` that observation belongs
+to — the same restraint verifying record #0 never touching record #1's
+own history already held in 0.8.71/0.8.72, carried through into the
+merged view. A HASH_MATCH for Record #0 is never presentable as evidence
+about Record #1, even when both records share an identical
+`contentHash` — proven directly in the flagship test's own Section D.
+
+**ZERO NETWORK OPERATIONS. NO REFRESH ACTION. NO POLLING.** Opening the
+new "Show Timeline" disclosure in `ui/views/DecentralizedPublicationsView
+.js` only calls `describeIpfsPublicationObservationTimeline()` — a pure
+function over state already in memory. New entries only ever appear
+after the existing, explicit "Publish"/"Verify Again" actions (0.8.67–
+0.8.72, unchanged) append into one of the two source histories.
+
+New files:
+- `application/IpfsPublicationObservationTimelineView.js` — new; `
+  IpfsPublicationObservationTimelineEntryKind`,
+  `describeIpfsPublicationObservationTimeline(publicationRecordHistory,
+  verificationHistoriesByRecordIndex)` — the projection this milestone
+  exists to add.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — one new disclosure,
+  "Observation Timeline," placed beneath the existing "Publication
+  History" disclosure. New state: `entry.
+  ipfsPublicationObservationTimelineExpanded`. New functions:
+  `ipfsPublicationObservationTimelineView()`, `
+  toggleIpfsPublicationObservationTimeline()`, `
+  ipfsPublicationObservationTimelineEntryBadgeClass()`. Every other
+  function and every other piece of state from 0.8.67–0.8.72 is
+  unchanged.
+
+New tests:
+- `tests/IpfsPublicationObservationTimelineView.test.js` — the flagship
+  out-of-order-timestamps test described above, plus: source histories
+  are never mutated or reordered; identical timestamps resolve to a
+  fixed, deterministic order; publication/verification entries stay
+  distinguishable and every entry's own `recordIndex` survives
+  projection, including across two records sharing an identical
+  `contentHash`; every field (including an UNAVAILABLE observation's own
+  `reason`) survives projection unchanged; zero network operations and
+  full purity; no aggregate/scoring field anywhere; malformed or missing
+  input degrades to an empty or partial timeline rather than throwing.
+
+Deliberately excluded, exactly as 0.8.73's own proposal named up front:
+- **Automatic re-verification, polling, or persistence of any kind.**
+  Unchanged from every prior milestone's identical exclusion. The
+  timeline is a read over whatever the existing histories already hold in
+  ephemeral component state — nothing here is fetched on a timer, and
+  nothing here is written to localStorage, IndexedDB, a cookie, or
+  anything else durable.
+- **Deletion or editing of either source history.** Unchanged from
+  0.8.71's/0.8.72's own identical exclusion — this milestone only ever
+  reads `entry.ipfsPublicationRecordHistory` and `entry.
+  ipfsPublicationVerificationHistoriesByRecordIndex`, never appends to,
+  clears, or rewrites either one itself.
+- **Cross-record reconciliation, a "latest overall state," health
+  scores, confidence scores, or an "IPFS publication status."** Unchanged
+  from every prior milestone's identical exclusion — see
+  docs/Principles.md, "The UI Displays Observations; It Does Not Turn
+  Them Into A Verdict (0.8.57)."
+- **Declaring one publication record preferable to another.** This
+  milestone composes and orders facts; it does not rank or recommend
+  between the records it orders.
+- **A unified Bitcoin + IPFS evidence inspection screen, or a timeline
+  spanning both domains.** Bitcoin's own Broadcast/Confirmation
+  observations and IPFS's own Publication/Verification observations stay
+  on two entirely separate timelines — a cross-domain timeline placing
+  both on one view, while keeping their facts completely independent, is
+  real, separately sized future work (0.8.74).
+
+What's left, and deliberately unbuilt: cross-observation reconciliation,
+automatic re-verification of any kind, a cross-domain (Bitcoin + IPFS)
+observation timeline, and a unified Bitcoin + IPFS evidence screen — each
+its own, separately sized milestone, exactly like every "Deliberately
+excluded" list in this document before it.
