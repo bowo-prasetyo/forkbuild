@@ -15107,3 +15107,70 @@ already established that duplicate submissions of the same bytes are
 deterministic.
 
 See `docs/Roadmap.md`, 0.8.64, for the full milestone entry.
+
+## Confirmation Is Bound To Broadcast Identity, Not Whatever Is On Screen (0.8.65)
+
+`application/BitcoinAnchorBroadcastCoordinator.js`'s own header (0.8.64)
+required that its caller prove a `txid`/`rawTransaction` genuinely came
+from a real FINALIZED outcome (`finalized: true`) before it would ever
+touch them. This milestone holds the identical line one stage later, for
+the same reason.
+
+> An "Observe Confirmation" click asks about the transaction this page
+> just, explicitly, broadcast — never about whatever txid happens to be
+> displayed anywhere on the same screen.
+
+**`broadcasted: true` is not decoration — it is the entire reason this
+class exists.** `application/BitcoinAnchorConfirmationCoordinator.js`
+could have accepted a bare txid string and called it done; nothing about
+`anchoring/BitcoinAnchorConfirmationObserver.js` (0.8.54) would have
+objected, since that class already treats any well-formed txid as
+legitimate to ask about. But this page shows more than one txid at a time
+— a broadcast transaction's own identity, and, separately, whatever
+anchors the existing 0.8.57 "Reconcile" section happens to be inspecting
+for a persisted `PublicationAnchor`. A coordinator willing to observe any
+string handed to it would have no way to tell "the transaction I just
+broadcast" apart from "a txid that happens to be rendered in a `<dd>` tag
+somewhere below it." `observeConfirmation({ broadcasted, txid })` requires
+`broadcasted === true`, checked before the injected observer is ever
+consulted — the caller-contract proof that this exact `{ broadcasted,
+txid }` pair came from a real `application/BitcoinAnchorBroadcastCoordinator.js`
+BROADCASTED outcome, mirroring `finalized: true` one stage earlier exactly.
+
+**Two independent coordinators, one shared observer, two different bound
+identities.** `application/BitcoinAnchorProofReconciliationView.js`
+(0.8.55) and `application/BitcoinAnchorConfirmationCoordinator.js` (this
+milestone) both read through the SAME `bitcoinAnchorConfirmationObserver`
+instance — `ui/main.js` constructs it once and never a second time. What
+differs is never the observer, and never the underlying Bitcoin fact it
+reports; what differs is which txid each coordinator is willing to ask
+about, and why. The reconciliation view trusts a persisted
+`PublicationAnchor`'s own `proof.txid` — a record this codebase already
+created and stored. This milestone's coordinator trusts only a txid this
+page's own broadcast pipeline just produced, in the current browsing
+session. Two different provenances, two different acceptable inputs, one
+identical, unchanged observer underneath both.
+
+**Reaching BROADCASTED still does not mean asking about it.**
+`application/BitcoinAnchorBroadcastState.js`'s own header (0.8.64) already
+named this the identical way `anchoring/BitcoinAnchorPublisher.js` (0.8.9)
+and `application/BitcoinAnchorPublicationLifecycleState.js` (0.8.53) named
+it before: broadcast acceptance is one observation, mining confirmation is
+another, entirely separate one. This milestone holds that line at the UI
+layer too — `observeBitcoinAnchorBroadcastConfirmation()` is called from
+exactly one place: an explicit "Observe Confirmation" click. Nothing this
+milestone adds calls it from `broadcastBitcoinAnchorTransaction()`, a
+timer, or a watcher of any kind.
+
+**No aggregate verdict, even with three independent facts now on screen
+at once.** Broadcast, Confirmation, and Content proof (via "Reconcile")
+now all render for the same anchor, at the same time, on the same page.
+This milestone deliberately does not add a fourth section that summarizes
+the other three. `CONFIRMED` + `HASH_MISMATCH` is not an error state this
+codebase resolves or hides — it is the honest, structurally legitimate
+report that a genuinely mined transaction's own OP_RETURN output does not
+carry the expected content hash. See "Reconciliation Composes Independent
+Observations; It Does Not Score Them (0.8.55)," held here across one more
+independent axis.
+
+See `docs/Roadmap.md`, 0.8.65, for the full milestone entry.

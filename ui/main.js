@@ -64,6 +64,7 @@ import { CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase } from '../
 import { CreateBitcoinEsploraTransactionBroadcasterUseCase } from '../application/CreateBitcoinEsploraTransactionBroadcasterUseCase.js';
 import { CreateBitcoinAnchorTransactionBroadcasterUseCase } from '../application/CreateBitcoinAnchorTransactionBroadcasterUseCase.js';
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
+import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -938,6 +939,24 @@ const { coordinator: bitcoinAnchorBroadcastCoordinator } = new CreateBitcoinAnch
     bitcoinAnchorTransactionBroadcaster
 });
 
+// 0.8.65 — Explicit Bitcoin Anchor Confirmation UI. Closes the gap 0.8.64's
+// own header named directly: "Whether a broadcasted transaction later gets
+// mined into a block is a separate, later question, asked by a separate,
+// later explicit 'Observe Confirmation' action." Reuses the SAME
+// `bitcoinAnchorConfirmationObserver` instance application/
+// BitcoinAnchorProofReconciliationView.js (0.8.55, wired above at 0.8.57)
+// already reads through — one shared observer, never a second,
+// disconnected instance — `bitcoinAnchorConfirmationCoordinator` is a
+// deliberately thin wiring on top of it, mirroring exactly how
+// `bitcoinAnchorBroadcastCoordinator` immediately above wires the 0.8.52
+// broadcaster one stage earlier. Unlike that reconciliation view, this
+// coordinator requires its caller to prove a `txid` genuinely came from a
+// real BROADCASTED outcome (`broadcasted: true`) before it will ever ask —
+// see application/BitcoinAnchorConfirmationCoordinator.js's own header.
+const { coordinator: bitcoinAnchorConfirmationCoordinator } = new CreateBitcoinAnchorConfirmationCoordinatorUseCase().execute({
+    bitcoinAnchorConfirmationObserver
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -995,6 +1014,8 @@ app.provide('bitcoinAnchorReviewedSigningCoordinator', bitcoinAnchorReviewedSign
 app.provide('bitcoinAnchorSignedPsbtFinalizationCoordinator', bitcoinAnchorSignedPsbtFinalizationCoordinator);
 // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.
 app.provide('bitcoinAnchorBroadcastCoordinator', bitcoinAnchorBroadcastCoordinator);
+// 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
+app.provide('bitcoinAnchorConfirmationCoordinator', bitcoinAnchorConfirmationCoordinator);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
