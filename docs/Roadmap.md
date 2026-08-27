@@ -26612,3 +26612,171 @@ What's left, and deliberately unbuilt: observing whether a broadcasted
 transaction has been confirmed, reusing the existing 0.8.54 confirmation
 observer and 0.8.56 append-only confirmation history, is 0.8.65's own job,
 next.
+
+## 0.8.65 — Explicit Bitcoin Anchor Confirmation UI
+
+0.8.64's own "Deliberately excluded" list named this milestone directly:
+"An explicit 'Observe Confirmation' action reusing the existing 0.8.54-0.8.57
+machinery is its own, separately sized future milestone (0.8.65)." Every
+piece this milestone needs already exists — `anchoring/
+BitcoinAnchorConfirmationObserver.js` (0.8.54) has held "a fresh,
+uncached read, nothing more" since that milestone, `application/
+BitcoinAnchorConfirmationObservationHistory.js` (0.8.56) has held
+"append-only, never rewritten" since that one, and a real BROADCASTED
+outcome, with a real txid, has been reachable from the screen since 0.8.64.
+This milestone adds no new confirmation logic — it binds the existing
+observer to the EXACT transaction identity 0.8.64's own broadcast produced,
+behind one explicit button, deliberately separate from the 0.8.57
+"Reconcile" action that already exists for a persisted `PublicationAnchor`:
+
+```text
+Broadcast (0.8.64)
+        │
+        │ produces a real BROADCASTED outcome — { broadcasted: true, txid }
+        ▼
+        │ explicit "Observe Confirmation" click
+        ▼
+BitcoinAnchorConfirmationCoordinator.observeConfirmation()   (THIS MILESTONE — new)
+        │
+        ▼
+anchoring/BitcoinAnchorConfirmationObserver.js#observeConfirmation()   (0.8.54, UNCHANGED)
+        │
+        ▼
+{ state, txid, blockHash, blockHeight, confirmationCount, reason, observedAt }
+        │
+        ▼
+appendBitcoinAnchorConfirmationObservationHistoryEntry()   (0.8.56, UNCHANGED)
+```
+
+- `application/BitcoinAnchorConfirmationCoordinator.js` (new) — the
+  explicit "Observe Confirmation" action, a deliberately thin bridge to the
+  unchanged 0.8.54 `anchoring/BitcoinAnchorConfirmationObserver.js`. No new
+  confirmation logic of any kind — it calls the observer exactly once per
+  `observeConfirmation()` call and returns its result unmodified. THE ONE
+  THING it adds: `observeConfirmation({ broadcasted, txid })` requires
+  `broadcasted === true` before it will ever touch `txid`, mirroring
+  exactly how `application/BitcoinAnchorBroadcastCoordinator.js`'s own
+  `broadcast()` requires `finalized === true` before it will touch
+  `txid`/`rawTransaction`. This is the caller-contract proof that a txid
+  genuinely came from a real BROADCASTED outcome, refused before the
+  injected observer is ever consulted — never an arbitrary txid a caller
+  merely typed, read from an unrelated anchor on the same screen, or
+  otherwise reconstructed.
+- `application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js` (new)
+  — the composition-root wiring, taking the already-existing 0.8.54
+  observer as a parameter rather than reconstructing it — the SAME
+  instance `application/BitcoinAnchorProofReconciliationView.js` (0.8.55)
+  already reads through, never a second, disconnected one.
+- `ui/views/DecentralizedPublicationsView.js` — the 0.8.64 broadcast panel
+  gains a SEPARATE "Confirmation" section, rendered only once a real
+  BROADCASTED outcome exists, and bound to that outcome's own txid —
+  `bitcoinAnchorBroadcastConfirmationOutcome`/
+  `bitcoinAnchorBroadcastConfirmationHistory`, retired at the identical
+  three points `bitcoinAnchorBroadcastOutcome` itself already is (a fresh
+  "Create Transaction Plan," "Sign Reviewed Transaction," or "Verify &
+  Finalize Transaction" click). Reaching BROADCASTED never triggers this
+  automatically — "Observe Confirmation" is its own, separate, explicit
+  click, exactly as `application/BitcoinAnchorBroadcastState.js`'s own
+  header already required ("THIS IS NOT CONFIRMATION"). Every click
+  appends its own entry to `bitcoinAnchorBroadcastConfirmationHistory` via
+  the unchanged 0.8.56 append function — a later CONFIRMED entry never
+  rewrites or discards an earlier NOT_CONFIRMED one. This history is
+  DELIBERATELY SEPARATE from `entry.bitcoinAnchorConfirmationHistories[anchorId]`,
+  the existing 0.8.56/0.8.57 history kept for "Reconcile" clicks against a
+  persisted `PublicationAnchor` — two independent histories, reusing the
+  identical mechanism, never merged into one.
+- `ui/main.js` — wires `application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js`
+  against the SAME `bitcoinAnchorConfirmationObserver` instance 0.8.57
+  already wired for `bitcoinAnchorProofReconciliationView` — one shared
+  observer, two independent coordinators reading through it for two
+  independent purposes.
+- `tests/BitcoinAnchorConfirmationUX.test.js` (new) — the flagship proves
+  the complete pipeline end to end, one step further than 0.8.64 ever took
+  it: a real, OBSERVED funding observation constructs, reviews, is
+  genuinely, cryptographically signed, finalized, and broadcasts, and the
+  new coordinator observes that exact broadcast txid three times —
+  NOT_CONFIRMED, then CONFIRMED at 1 confirmation, then CONFIRMED at 6 —
+  with all three observations remaining in history, untouched by one
+  another, and reaching BROADCASTED never triggering an observation
+  automatically. Further sections cover: repeated explicit clicks are
+  independent, fresh reads, never deduplicated; caller-contract violations
+  (`broadcasted` not `true`, a missing `txid`, or an arbitrary txid without
+  `broadcasted: true`) throw before the observer is ever consulted;
+  constructing the coordinator without a real observer throws;
+  confirmation observation and OP_RETURN content-proof verification stay
+  fully independent — all four CONFIRMED/NOT_CONFIRMED ×
+  HASH_MATCH/HASH_MISMATCH combinations are legitimate, and neither
+  history is ever merged with the other; and BROADCASTED never implies
+  CONFIRMED.
+
+```text
+0.8.64  Explicit Bitcoin Anchor Broadcast UI                           ✓
+             │
+             ▼
+0.8.65  Explicit Bitcoin Anchor Confirmation UI                        ✓
+             ├── application/BitcoinAnchorConfirmationCoordinator.js
+             │   — new; the explicit "Observe Confirmation" action,
+             │   wrapping the unchanged 0.8.54 observer — no new
+             │   confirmation logic, and refuses to observe unless its
+             │   caller proves broadcasted: true
+             ├── ui/views/DecentralizedPublicationsView.js — the 0.8.64
+             │   broadcast panel gains a SEPARATE "Confirmation" section,
+             │   bound to the exact broadcast transaction's own identity,
+             │   with its own append-only history, never auto-triggered
+             ├── ui/main.js — a second coordinator reading through the
+             │   SAME 0.8.54 observer 0.8.57 already wired, for a second,
+             │   independent purpose
+             └── ForkBuild can now, for the first time, explicitly observe
+                 whether the SPECIFIC transaction it just broadcast has
+                 been mined — and watch that answer change, honestly,
+                 across repeated, independent, never-rewritten observations
+```
+
+### Deliberately excluded
+
+- **Any aggregate "anchor health," "pipeline status," or `valid`/`healthy`/
+  `trusted`/`anchorVerified` field combining Broadcast, Confirmation, and
+  Content proof into one verdict.** The three sections on screen —
+  Broadcast (0.8.64), Confirmation (this milestone), and Content proof
+  (0.8.55/0.8.57, via "Reconcile") — remain three independent facts,
+  displayed side by side, never collapsed into one. CONFIRMED +
+  HASH_MISMATCH and NOT_CONFIRMED + HASH_MATCH are both legitimate,
+  honestly displayed combinations. See `docs/Principles.md`, "Reconciliation
+  Composes Independent Observations; It Does Not Score Them (0.8.55)."
+- **A `PENDING`, `MEMPOOL`, `CONFIRMING`, or `CONFIRMATION_PENDING` state.**
+  `application/BitcoinAnchorConfirmationState.js`'s own three values —
+  CONFIRMED/NOT_CONFIRMED/UNAVAILABLE — stay exactly as 0.8.54 built them.
+  NOT_CONFIRMED already, deliberately, covers "found but not yet mined" —
+  see that state's own header. This milestone adds no new state value, and
+  no state comparison of any kind.
+- **Automatic confirmation observation on reaching BROADCASTED, polling, or
+  a timer of any kind.** Exactly as `application/
+  BitcoinAnchorConfirmationObserver.js`'s own header has required since
+  0.8.54 — "there is no polling loop, timer, or retry anywhere in this
+  file" — this milestone holds the identical line one layer up: reaching a
+  BROADCASTED outcome never itself calls `observeConfirmation()`. A person
+  clicks "Observe Confirmation," explicitly, every time.
+- **Merging this milestone's own confirmation history with the existing
+  0.8.56/0.8.57 "Reconcile" history, or with any content-proof history.**
+  Two independently kept, append-only sequences, reusing the identical
+  0.8.56 mechanism for two different bound identities — a broadcast
+  transaction captured by THIS page's own pipeline, versus a persisted
+  `PublicationAnchor`'s own `proof.txid` — never unified into one array or
+  one record.
+- **Reorganization detection, or comparing this milestone's own
+  observations against one another.** Exactly the restraint `application/
+  BitcoinAnchorConfirmationObservationHistory.js`'s own header already held
+  since 0.8.56 — "no reorganization detection, here or anywhere else in
+  this milestone" — held again, unchanged, one layer up.
+- **Any change to `anchoring/BitcoinAnchorConfirmationObserver.js`,
+  `application/BitcoinAnchorConfirmationObservationHistory.js`,
+  `application/BitcoinAnchorConfirmationState.js`, or any class from 0.8.54
+  through 0.8.64.** All of them stay exactly as built — this milestone only
+  ever adds one thin coordinator, its composition-root wiring, and a new,
+  separate UI section that binds them to a specific broadcast transaction's
+  own identity.
+
+What's left, and deliberately unbuilt: a real, remote-gateway-backed IPFS
+content store — so an ordinary person can consume IPFS-addressed content
+without installing and operating Kubo — is a real, separately sized future
+concern, deliberately left unaddressed here.

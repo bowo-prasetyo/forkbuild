@@ -906,6 +906,21 @@ export default {
         // why no new Bitcoin logic lives here either, and why it only ever
         // accepts the exact output of a successful finalization.
         const bitcoinAnchorBroadcastCoordinator = inject('bitcoinAnchorBroadcastCoordinator', null);
+        // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI. Optional —
+        // absent here, no "Observe Confirmation" action ever renders, the
+        // identical degrade-gracefully posture every optional coordinator
+        // on this page already holds. `bitcoinAnchorConfirmationCoordinator`
+        // is a thin bridge to the unchanged 0.8.54
+        // anchoring/BitcoinAnchorConfirmationObserver.js — see application/
+        // BitcoinAnchorConfirmationCoordinator.js's own header on why it
+        // only ever observes the exact txid a real BROADCASTED outcome
+        // carries, never an arbitrary displayed value. This is a SEPARATE
+        // coordinator instance from `bitcoinAnchorProofReconciliationView`
+        // above, even though both ultimately read through the SAME
+        // injected observer — this one is bound to THIS page's own
+        // captured broadcast identity, that one to a persisted
+        // PublicationAnchor's own `proof.txid`.
+        const bitcoinAnchorConfirmationCoordinator = inject('bitcoinAnchorConfirmationCoordinator', null);
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
         // Optional — absent here, no "Create Transaction Plan" action ever
         // renders, the identical degrade-gracefully posture every optional
@@ -1062,6 +1077,54 @@ export default {
         // declaration immediately above, the identical restraint one stage
         // earlier.
         const bitcoinAnchorBroadcastOutcome = ref(null);
+
+        // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
+        //
+        // `bitcoinAnchorBroadcastConfirmationOutcome` is the single,
+        // page-level result of the MOST RECENT explicit "Observe
+        // Confirmation" click, bound to `bitcoinAnchorBroadcastOutcome`'s
+        // own txid — never to whatever txid happens to be displayed
+        // anywhere else on this page (see `observeBitcoinAnchorBroadcastConfirmation()`
+        // below, and application/BitcoinAnchorConfirmationCoordinator.js's
+        // own header). `null` until a BROADCASTED outcome exists AND at
+        // least one "Observe Confirmation" click has completed for it.
+        // Reaching BROADCASTED never populates this automatically — this
+        // ref is written ONLY by an explicit click, never by
+        // `broadcastBitcoinAnchorTransaction()` itself.
+        //
+        // `bitcoinAnchorBroadcastConfirmationHistory` is the FULL
+        // chronological sequence of every "Observe Confirmation" click's
+        // own observation for the CURRENT broadcast transaction — built
+        // with application/BitcoinAnchorConfirmationObservationHistory.js
+        // (0.8.56) UNCHANGED, the SAME append-only mechanism
+        // `entry.bitcoinAnchorConfirmationHistories[anchorId]` below
+        // already uses for "Reconcile" clicks against a persisted anchor —
+        // a DIFFERENT, separately kept history, never merged with that
+        // one. Every click appends; none is ever rewritten into "the
+        // current one."
+        //
+        // Both, along with the observing/error/disclosure state below, are
+        // reset at the exact same three points `bitcoinAnchorBroadcastOutcome`
+        // itself is retired (a fresh "Create Transaction Plan", "Sign
+        // Reviewed Transaction", or "Verify & Finalize Transaction" click)
+        // — a new transaction, once constructed, reviewed, signed, or
+        // finalized, never leaves a previous transaction's own confirmation
+        // context observable or clickable.
+        const bitcoinAnchorBroadcastConfirmationOutcome = ref(null);
+        const bitcoinAnchorBroadcastConfirmationHistory = ref([]);
+        const bitcoinAnchorBroadcastConfirmationObserving = ref(false);
+        const bitcoinAnchorBroadcastConfirmationError = ref(null);
+        const bitcoinAnchorBroadcastConfirmationHistoryExpanded = ref(false);
+        const bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded = ref({});
+
+        function retireBitcoinAnchorBroadcastConfirmationContext() {
+            bitcoinAnchorBroadcastConfirmationOutcome.value = null;
+            bitcoinAnchorBroadcastConfirmationHistory.value = [];
+            bitcoinAnchorBroadcastConfirmationObserving.value = false;
+            bitcoinAnchorBroadcastConfirmationError.value = null;
+            bitcoinAnchorBroadcastConfirmationHistoryExpanded.value = false;
+            bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded.value = {};
+        }
 
         // Every currently AUTHENTICATED peer, in registry order — the
         // full candidate list this page now hands to application/
@@ -2400,6 +2463,7 @@ export default {
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = null;
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
+            retireBitcoinAnchorBroadcastConfirmationContext();
             try {
                 entry.bitcoinAnchorTransactionConstruction = bitcoinAnchorTransactionConstructionCoordinator.construct({
                     publicationId: entry.publication.id,
@@ -2477,6 +2541,7 @@ export default {
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = null;
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
+            retireBitcoinAnchorBroadcastConfirmationContext();
             bitcoinAnchorReviewedSigningOutcome.value = { state: BitcoinAnchorReviewedSigningState.SIGNING, psbt: null, signedInputs: null, reason: null };
             try {
                 bitcoinAnchorReviewedSigningOutcome.value = await bitcoinAnchorReviewedSigningCoordinator.sign({
@@ -2540,6 +2605,7 @@ export default {
             // own declarations above.
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
+            retireBitcoinAnchorBroadcastConfirmationContext();
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = { state: BitcoinAnchorSignedPsbtFinalizationState.FINALIZING, finalized: false, txid: null, rawTransaction: null, verifiedInputCount: null, reason: null };
             try {
                 bitcoinAnchorSignedPsbtFinalizationOutcome.value = bitcoinAnchorSignedPsbtFinalizationCoordinator.finalize({
@@ -2631,6 +2697,105 @@ export default {
 
         function isBitcoinAnchorBroadcasting() {
             return bitcoinAnchorBroadcastView().state === BitcoinAnchorBroadcastState.BROADCASTING;
+        }
+
+        // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
+        //
+        // THE ONE place this page ever calls
+        // `bitcoinAnchorConfirmationCoordinator.observeConfirmation()` —
+        // never triggered automatically by a BROADCASTED result; only an
+        // explicit "Observe Confirmation" click, and only ever with
+        // `bitcoinAnchorBroadcastView()`'s own bound `txid` — never a txid
+        // read from anywhere else on this page (not an anchor in the list
+        // below, not a field a person could edit). Passing
+        // `broadcasted: true` alongside it mirrors exactly how
+        // `broadcastBitcoinAnchorTransaction()` above hands `finalized: true`
+        // to `bitcoinAnchorBroadcastCoordinator.broadcast()` — a
+        // caller-contract proof that this txid genuinely came from a real
+        // BROADCASTED outcome, checked by the coordinator itself before the
+        // injected confirmation observer is ever consulted. See application/
+        // BitcoinAnchorConfirmationCoordinator.js's own header on why this
+        // is the ONE thing this milestone's coordinator refuses to skip.
+        //
+        // Every explicit click appends its own observation to
+        // `bitcoinAnchorBroadcastConfirmationHistory` via application/
+        // BitcoinAnchorConfirmationObservationHistory.js's own
+        // `appendBitcoinAnchorConfirmationObservationHistoryEntry()`,
+        // UNCHANGED — no observation is ever rewritten into "the current
+        // one"; each click performs its own independent, fresh read, even
+        // when it repeats the identical state as the click before it. A
+        // thrown error (a caller-contract violation this page's own guard
+        // below should already prevent — the injected observer itself
+        // never throws, see anchoring/BitcoinAnchorConfirmationObserver.js's
+        // own header) is caught HERE, at the UI boundary, and surfaced
+        // honestly rather than silently swallowed — mirroring exactly how
+        // `broadcastBitcoinAnchorTransaction()` above already handles its
+        // own coordinator's thrown errors.
+        async function observeBitcoinAnchorBroadcastConfirmation() {
+            if (!bitcoinAnchorConfirmationCoordinator) return;
+            const broadcast = bitcoinAnchorBroadcastView();
+            if (broadcast.state !== BitcoinAnchorBroadcastState.BROADCASTED || !broadcast.txid) return;
+
+            bitcoinAnchorBroadcastConfirmationObserving.value = true;
+            bitcoinAnchorBroadcastConfirmationError.value = null;
+            try {
+                const observation = await bitcoinAnchorConfirmationCoordinator.observeConfirmation({
+                    broadcasted: true,
+                    txid: broadcast.txid
+                });
+                bitcoinAnchorBroadcastConfirmationOutcome.value = observation;
+                bitcoinAnchorBroadcastConfirmationHistory.value =
+                    appendBitcoinAnchorConfirmationObservationHistoryEntry(bitcoinAnchorBroadcastConfirmationHistory.value, observation);
+            } catch (error) {
+                bitcoinAnchorBroadcastConfirmationError.value = error.message;
+            } finally {
+                bitcoinAnchorBroadcastConfirmationObserving.value = false;
+            }
+        }
+
+        // Pure projection of `bitcoinAnchorBroadcastConfirmationOutcome`
+        // through application/
+        // BitcoinAnchorConfirmationObservationHistoryDetailView.js's own
+        // `describeBitcoinAnchorConfirmationObservationDetail()` — the SAME
+        // per-observation projection `bitcoinAnchorReconciliationView()`
+        // below already uses for anchor reconciliation, one context over.
+        // `null` until at least one "Observe Confirmation" click has
+        // completed for the current broadcast transaction.
+        function bitcoinAnchorBroadcastConfirmationView() {
+            return describeBitcoinAnchorConfirmationObservationDetail(bitcoinAnchorBroadcastConfirmationOutcome.value);
+        }
+
+        function bitcoinAnchorBroadcastConfirmationBadgeClass() {
+            const view = bitcoinAnchorBroadcastConfirmationView();
+            return view ? (BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES[view.state] || null) : null;
+        }
+
+        // The FULL chronological narration of every past "Observe
+        // Confirmation" click for the CURRENT broadcast transaction —
+        // composes application/BitcoinAnchorConfirmationObservationHistoryDetailView.js's
+        // own `describeBitcoinAnchorConfirmationObservationHistoryDetails()`
+        // over `bitcoinAnchorBroadcastConfirmationHistory`, the SAME
+        // composition `bitcoinAnchorConfirmationHistoryView(entry, anchorView)`
+        // below already uses for "Reconcile" clicks against a persisted
+        // anchor — a DIFFERENT, separately kept history; never merged with
+        // that one, and never merged with content-proof history either.
+        function bitcoinAnchorBroadcastConfirmationHistoryView() {
+            return describeBitcoinAnchorConfirmationObservationHistoryDetails(bitcoinAnchorBroadcastConfirmationHistory.value);
+        }
+
+        function toggleBitcoinAnchorBroadcastConfirmationHistory() {
+            bitcoinAnchorBroadcastConfirmationHistoryExpanded.value = !bitcoinAnchorBroadcastConfirmationHistoryExpanded.value;
+        }
+
+        function toggleBitcoinAnchorBroadcastConfirmationHistoryEntry(index) {
+            bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded.value = {
+                ...bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded.value,
+                [index]: !bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded.value[index]
+            };
+        }
+
+        function isBitcoinAnchorBroadcastConfirmationHistoryEntryExpanded(index) {
+            return Boolean(bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded.value[index]);
         }
 
         // Pure projection of `entry.bitcoinAnchorTransactionConstruction`
@@ -3510,7 +3675,14 @@ export default {
             BitcoinAnchorSignedPsbtFinalizationState,
             bitcoinAnchorBroadcastCoordinator, bitcoinAnchorFinalizedTransaction, broadcastBitcoinAnchorTransaction,
             bitcoinAnchorBroadcastView, bitcoinAnchorBroadcastBadgeClass, isBitcoinAnchorBroadcasting,
-            BitcoinAnchorBroadcastState
+            BitcoinAnchorBroadcastState,
+            // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
+            bitcoinAnchorConfirmationCoordinator, observeBitcoinAnchorBroadcastConfirmation,
+            bitcoinAnchorBroadcastConfirmationObserving, bitcoinAnchorBroadcastConfirmationError,
+            bitcoinAnchorBroadcastConfirmationView, bitcoinAnchorBroadcastConfirmationBadgeClass,
+            bitcoinAnchorBroadcastConfirmationHistoryView, toggleBitcoinAnchorBroadcastConfirmationHistory,
+            bitcoinAnchorBroadcastConfirmationHistoryExpanded, toggleBitcoinAnchorBroadcastConfirmationHistoryEntry,
+            isBitcoinAnchorBroadcastConfirmationHistoryEntryExpanded
         };
     },
     template: `
@@ -3841,6 +4013,83 @@ export default {
                             separate, explicit step.
                         </p>
                     </template>
+                </div>
+
+                <!-- 0.8.65 — Explicit Bitcoin Anchor Confirmation UI. Only
+                     ever rendered once the Broadcast section immediately
+                     above reaches a real BROADCASTED outcome — reaching it
+                     never triggers this automatically; "Observe
+                     Confirmation" is its own, separate, explicit action,
+                     bound to bitcoinAnchorBroadcastView()'s own txid and
+                     nothing else on this page. Deliberately a SEPARATE
+                     evidence-inspection-adapter box from Broadcast above,
+                     never collapsed into it or into a single pipeline
+                     "status" — see application/
+                     BitcoinAnchorConfirmationCoordinator.js's own header.
+                     Every click appends its own entry to the Confirmation
+                     History disclosure below via application/
+                     BitcoinAnchorConfirmationObservationHistory.js (0.8.56,
+                     unchanged) — a later CONFIRMED entry never rewrites or
+                     discards an earlier NOT_CONFIRMED one. -->
+                <div v-if="bitcoinAnchorBroadcastView().state === BitcoinAnchorBroadcastState.BROADCASTED" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Confirmation</span>
+                    <p class="form-hint form-hint--neutral">
+                        The network accepted this transaction for broadcast. Whether it has since been mined
+                        into a block is a separate, later observation.
+                    </p>
+
+                    <button type="button" class="peer-action-btn"
+                        :disabled="bitcoinAnchorBroadcastConfirmationObserving"
+                        @click="observeBitcoinAnchorBroadcastConfirmation">
+                        {{ bitcoinAnchorBroadcastConfirmationObserving ? 'Observing…' : (bitcoinAnchorBroadcastConfirmationView() ? 'Observe Confirmation Again' : 'Observe Confirmation') }}
+                    </button>
+                    <p v-if="bitcoinAnchorBroadcastConfirmationError" class="form-hint form-hint--neutral">
+                        {{ bitcoinAnchorBroadcastConfirmationError }}
+                    </p>
+
+                    <template v-if="bitcoinAnchorBroadcastConfirmationView()">
+                        <span class="peer-badge" :class="bitcoinAnchorBroadcastConfirmationBadgeClass()">
+                            {{ bitcoinAnchorBroadcastConfirmationView().stateLabel }}
+                        </span>
+                        <dl v-if="bitcoinAnchorBroadcastConfirmationView().blockHeight !== null" class="evidence-fields">
+                            <div class="evidence-field"><dt>Block height</dt><dd>{{ bitcoinAnchorBroadcastConfirmationView().blockHeight }}</dd></div>
+                            <div class="evidence-field"><dt>Block hash</dt><dd>{{ bitcoinAnchorBroadcastConfirmationView().blockHash }}</dd></div>
+                            <div class="evidence-field"><dt>Confirmations</dt><dd>{{ bitcoinAnchorBroadcastConfirmationView().confirmationCount }}</dd></div>
+                        </dl>
+                        <p v-if="bitcoinAnchorBroadcastConfirmationView().reason" class="form-hint form-hint--neutral">
+                            {{ bitcoinAnchorBroadcastConfirmationView().reason }}
+                        </p>
+
+                        <button v-if="bitcoinAnchorBroadcastConfirmationHistoryView().count > 0" type="button" class="peer-action-btn"
+                            @click="toggleBitcoinAnchorBroadcastConfirmationHistory">
+                            {{ bitcoinAnchorBroadcastConfirmationHistoryExpanded ? 'Hide Confirmation History' : 'Show Confirmation History' }}
+                        </button>
+                    </template>
+
+                    <!-- The full chronological narration of every past
+                         "Observe Confirmation" click for THIS broadcast
+                         transaction — a DIFFERENT history from
+                         bitcoinAnchorConfirmationHistoryView(entry, anchorView)
+                         further below, which narrates "Reconcile" clicks
+                         against a persisted PublicationAnchor instead. -->
+                    <div v-if="bitcoinAnchorBroadcastConfirmationHistoryExpanded">
+                        <ul class="replica-knowledge-claim-list">
+                            <li v-for="(item, index) in bitcoinAnchorBroadcastConfirmationHistoryView().entries" :key="index" class="replica-knowledge-claim">
+                                <button type="button" class="peer-action-btn"
+                                    @click="toggleBitcoinAnchorBroadcastConfirmationHistoryEntry(index)">
+                                    {{ formatWhen(item.observedAt) }} — {{ item.stateShortLabel }}
+                                </button>
+                                <dl v-if="isBitcoinAnchorBroadcastConfirmationHistoryEntryExpanded(index)" class="evidence-fields">
+                                    <div class="evidence-field"><dt>State</dt><dd>{{ item.stateLabel }}</dd></div>
+                                    <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ item.txid }}</dd></div>
+                                    <div v-if="item.blockHash" class="evidence-field"><dt>Block hash</dt><dd>{{ item.blockHash }}</dd></div>
+                                    <div v-if="item.blockHeight !== null" class="evidence-field"><dt>Block height</dt><dd>{{ item.blockHeight }}</dd></div>
+                                    <div v-if="item.confirmationCount !== null" class="evidence-field"><dt>Confirmations</dt><dd>{{ item.confirmationCount }}</dd></div>
+                                    <div v-if="item.reason" class="evidence-field"><dt>Reason</dt><dd>{{ item.reason }}</dd></div>
+                                </dl>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
