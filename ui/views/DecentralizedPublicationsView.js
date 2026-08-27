@@ -66,6 +66,7 @@ import { describeBitcoinAnchorConfirmationObservationHistoryDetails, describeBit
 import { describeBitcoinAnchorContentProof } from '../../application/BitcoinAnchorContentProofView.js';
 import { BitcoinWalletConnectionState } from '../../application/BitcoinWalletConnectionState.js';
 import { describeBitcoinWalletConnection } from '../../application/BitcoinWalletConnectionView.js';
+import { describeBitcoinAnchorTransactionReview } from '../../application/BitcoinAnchorTransactionReviewView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -756,6 +757,22 @@ export default {
         // `bitcoinAnchorProofReconciliationView` above being one shared
         // reconciliation view rather than one per card.
         const bitcoinWalletConnection = inject('bitcoinWalletConnection', null);
+        // 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI. Optional
+        // — absent here, the "Review Bitcoin Anchor Transaction" section
+        // simply never renders, the identical degrade-gracefully posture
+        // every optional coordinator on this page already holds. Never one
+        // per evidence card, unlike `bitcoinAnchorProofReconciliationView`
+        // above: a review exists for a transaction that has NOT YET been
+        // published — there is no evidence entry for it to attach to —
+        // so this is a single, page-level object exposing exactly
+        // `.description` (a real anchoring/BitcoinAnchorPsbtBuilder.js
+        // result, or `null` when nothing is presently awaiting review).
+        // Wiring a real "Create Anchor" action into this object, and an
+        // actual "Sign" button, is explicitly deferred to a future
+        // milestone — see docs/Roadmap.md, 0.8.59's own "Deliberately
+        // excluded" list. This page only ever displays what it is handed;
+        // it never builds a plan or a PSBT itself.
+        const bitcoinAnchorTransactionReview = inject('bitcoinAnchorTransactionReview', null);
 
         // 0.8.11 — Explicit External Anchoring UX. Every anchorType this
         // replica can currently ask to create evidence for, read ONCE at
@@ -1995,6 +2012,32 @@ export default {
             return bitcoinWalletConnectionView().state === BitcoinWalletConnectionState.CONNECTING;
         }
 
+        // 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI. A pure
+        // projection of `bitcoinAnchorTransactionReview.description` through
+        // application/BitcoinAnchorTransactionReviewView.js — the identical
+        // "the UI owns no facts of its own, it only projects an injected
+        // collaborator's own state" discipline every other `*View()`
+        // function on this page already holds. `null` whenever no review
+        // injection was provided, or nothing is presently awaiting review —
+        // the section below simply does not render either way.
+        function bitcoinAnchorTransactionReviewView() {
+            if (!bitcoinAnchorTransactionReview || !bitcoinAnchorTransactionReview.description) return null;
+            return describeBitcoinAnchorTransactionReview(bitcoinAnchorTransactionReview.description);
+        }
+
+        // A connected wallet's own network, checked against THIS review's
+        // own transaction network — never the page-wide "Bitcoin Wallet"
+        // section's hardcoded `mainnet` default immediately above, since a
+        // review already names the exact network the transaction it
+        // describes actually belongs to. See application/
+        // BitcoinWalletConnectionView.js's own header, "A MISMATCH IS
+        // REPORTED, NEVER RESOLVED" — unchanged here, one call site over.
+        function bitcoinAnchorTransactionReviewWalletMatchView() {
+            const review = bitcoinAnchorTransactionReviewView();
+            if (!review || !bitcoinWalletConnection) return null;
+            return describeBitcoinWalletConnection(bitcoinWalletConnectionState, { expectedNetwork: review.network });
+        }
+
         function evidenceBadgeClass(anchorView) {
             if (anchorView.checking) return 'peer-badge--pending';
             if (!anchorView.verified) return 'peer-badge--unchecked';
@@ -2837,7 +2880,8 @@ export default {
             bitcoinAnchorConfirmationHistoryView, toggleBitcoinAnchorConfirmationHistory, isBitcoinAnchorConfirmationHistoryExpanded,
             toggleBitcoinAnchorConfirmationHistoryEntry, isBitcoinAnchorConfirmationHistoryEntryExpanded,
             bitcoinWalletConnection, bitcoinWalletConnectionState, connectBitcoinWallet, disconnectBitcoinWallet,
-            bitcoinWalletConnectionView, bitcoinWalletConnectionBadgeClass, isBitcoinWalletConnected, isBitcoinWalletConnecting
+            bitcoinWalletConnectionView, bitcoinWalletConnectionBadgeClass, isBitcoinWalletConnected, isBitcoinWalletConnecting,
+            bitcoinAnchorTransactionReview, bitcoinAnchorTransactionReviewView, bitcoinAnchorTransactionReviewWalletMatchView
         };
     },
     template: `
@@ -2853,6 +2897,83 @@ export default {
                 No authenticated peer is connected right now — "Retrieve from Peers" below will do nothing
                 until one is. Connect to a peer first from <router-link to="/peers">Peers</router-link>.
             </p>
+
+            <!-- 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI. A
+                 page-level panel, deliberately unrelated to any one
+                 publication's own evidence card below: this reviews a
+                 transaction BEFORE it has been published at all, so there
+                 is no evidence entry yet for it to attach to. Absent
+                 `bitcoinAnchorTransactionReview` or its own `.description`,
+                 this section simply never renders — the identical
+                 degrade-gracefully posture every optional section on this
+                 page already holds. See application/
+                 BitcoinAnchorTransactionReviewView.js's own header on why
+                 every field here is read straight off the real transaction
+                 being reviewed, never a verdict about it, and
+                 anchoring/BitcoinAnchorReviewedPsbtSigner.js's own header on
+                 why a wallet is never asked to sign anything other than
+                 exactly what is shown here. Connecting the wallet section
+                 below to a real "Create Anchor" action, and adding a "Sign"
+                 button, is explicitly deferred to a future milestone —
+                 this page only ever displays what it is handed. -->
+            <div v-if="bitcoinAnchorTransactionReviewView()" class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Review Bitcoin Anchor Transaction</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Nothing is signed or published by viewing this review. It names exactly what a wallet
+                    would be asked to sign — nothing more, and nothing assumed.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Network</dt><dd>{{ bitcoinAnchorTransactionReviewView().network }}</dd></div>
+                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ bitcoinAnchorTransactionReviewView().contentHash }}</dd></div>
+                    <div class="evidence-field"><dt>Fee</dt><dd>{{ bitcoinAnchorTransactionReviewView().feeSats }} sat</dd></div>
+                    <div class="evidence-field"><dt>Change</dt><dd>{{ bitcoinAnchorTransactionReviewView().changeSats }} sat</dd></div>
+                    <div class="evidence-field"><dt>Total input</dt><dd>{{ bitcoinAnchorTransactionReviewView().totalInputSats }} sat</dd></div>
+                </dl>
+                <div class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Inputs</span>
+                    <dl v-for="input in bitcoinAnchorTransactionReviewView().inputs" :key="input.txid + ':' + input.vout" class="evidence-fields">
+                        <div class="evidence-field"><dt>{{ shortId(input.txid) }}:{{ input.vout }}</dt><dd>{{ input.valueSats }} sat ({{ input.scriptType }})</dd></div>
+                    </dl>
+                </div>
+                <div class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Outputs</span>
+                    <dl v-for="(output, index) in bitcoinAnchorTransactionReviewView().outputs" :key="index" class="evidence-fields">
+                        <div class="evidence-field">
+                            <dt>{{ output.type === 'change' ? 'Change' : 'OP_RETURN' }}</dt>
+                            <dd>{{ output.address ? shortId(output.address) + ' — ' : '' }}{{ output.valueSats }} sat</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- The wallet's own network is checked against THIS
+                     review's own transaction network — not a page-wide
+                     default — and, exactly as anchoring/
+                     BitcoinWalletConnection.js's own header requires, a
+                     mismatch is only ever named here, never auto-switched,
+                     auto-corrected, or silently allowed to proceed as if it
+                     matched. -->
+                <div v-if="bitcoinAnchorTransactionReviewWalletMatchView()" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Wallet</span>
+                    <span class="peer-badge" :class="bitcoinWalletConnectionBadgeClass()">
+                        {{ bitcoinAnchorTransactionReviewWalletMatchView().stateLabel }}
+                    </span>
+                    <dl v-if="isBitcoinWalletConnected()" class="evidence-fields">
+                        <div class="evidence-field"><dt>Account</dt><dd>{{ shortId(bitcoinAnchorTransactionReviewWalletMatchView().account) }}</dd></div>
+                        <div class="evidence-field"><dt>Wallet network</dt><dd>{{ bitcoinAnchorTransactionReviewWalletMatchView().network }}</dd></div>
+                        <div class="evidence-field"><dt>Transaction network</dt><dd>{{ bitcoinAnchorTransactionReviewWalletMatchView().expectedNetwork }}</dd></div>
+                    </dl>
+                    <p v-if="bitcoinAnchorTransactionReviewWalletMatchView().networkMismatch" class="form-hint form-hint--neutral">
+                        ⚠ Wallet network ({{ bitcoinAnchorTransactionReviewWalletMatchView().network }}) does not match this
+                        transaction's network ({{ bitcoinAnchorTransactionReviewWalletMatchView().expectedNetwork }}).
+                        Signing is unavailable until a wallet on the matching network is connected.
+                    </p>
+                    <p v-else-if="isBitcoinWalletConnected()" class="form-hint form-hint--neutral">
+                        ✓ Network matches.
+                    </p>
+                </div>
+            </div>
 
             <p v-if="loading" class="locations-panel-empty">Checking cataloged publications…</p>
             <p v-else-if="entries.length === 0" class="locations-panel-empty">

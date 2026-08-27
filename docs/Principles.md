@@ -14653,3 +14653,80 @@ or unreachable one is — never a crash, and never a fake capability
 standing in for a missing one.
 
 See `docs/Roadmap.md`, 0.8.58, for the full milestone entry.
+
+## A Transaction Is Signed Only If It Is The Transaction That Was Reviewed (0.8.59)
+
+`docs/Principles.md`, "A Connection Grants A Capability; It Does Not Grant
+Trust (0.8.58)," drew one line: a connected wallet is a signing capability,
+never authorization. This milestone draws the identical line one step
+later, at the moment a signature is actually requested: a transaction being
+REVIEWED — its content hash, its inputs, its outputs, its change, its fee,
+all shown honestly — is a person having seen its own facts, never itself
+consent for any class in this codebase to sign whatever `description` it
+happens to be handed next.
+
+> Connected means "a signing capability is available." Reviewed means "a
+> person has seen these exact facts." Neither means "the user authorized
+> this transaction" — only an explicit sign action, on the EXACT thing that
+> was shown, does.
+
+**A pure projection, never a new source of truth.** `application/
+BitcoinAnchorTransactionReviewView.js#describeBitcoinAnchorTransactionReview()`
+invents no fact about a transaction — every field it returns (`network`,
+`contentHash`, `inputs`, `outputs`, `changeSats`, `feeSats`,
+`totalInputSats`) is read straight off a real anchoring/
+BitcoinAnchorPsbtBuilder.js result, independently re-validated exactly as
+every other consumer of that description already does. It carries no
+`valid`, `safe`, `recommended`, or `confidence` field of any kind — whether
+the facts it names are ACCEPTABLE is entirely a judgment for the person
+reading them, the identical restraint `docs/Principles.md`, "The UI
+Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57),"
+already held for a transaction's own confirmation and content-proof status,
+extended here to a transaction's own construction, before it is ever
+signed.
+
+**Review and sign are bound by the transaction's own exact bytes, not by
+sequence.** `unsignedPsbtHex` — the real BIP174 hex a wallet is about to be
+asked to sign, computed the identical way `anchoring/
+BitcoinAnchorWalletSigner.js` itself already computes it — is the one field
+no earlier "describe*" view in this codebase has needed. `anchoring/
+BitcoinAnchorReviewedPsbtSigner.js` requires that exact hex as
+`reviewedUnsignedPsbtHex` alongside any `description` it is asked to sign,
+independently re-serializes `description`, and refuses — `{ signed: false,
+reason }`, a definite refusal, never "unavailable" — the instant the two
+disagree. This is a structural check on the transaction's own bytes, never
+a trust score, and never merely "the last thing reviewed in this session":
+a stale review reused against a rebuilt plan is refused exactly as loudly
+as a description that was never reviewed at all.
+
+**The wallet is never even asked, on a mismatch.** This is the sharpest
+guarantee this milestone adds: `BitcoinAnchorReviewedPsbtSigner` performs
+its own comparison BEFORE calling `wallet.signPsbt()` at all. A caller
+whose own bookkeeping drifted — a refreshed fee estimate, a rebuilt plan,
+a substituted output — never gets as far as prompting a real wallet's own
+popup for a transaction nobody has reviewed.
+
+**Sits above `anchoring/BitcoinAnchorWalletSigner.js`, never inside it — the
+identical restraint 0.8.58 already held toward this exact class.**
+`BitcoinAnchorWalletSigner` is UNCHANGED by this milestone: still
+constructed with only `{ wallet }`, still never receiving a private key,
+seed, WIF, or wallet password, still independently re-inspecting every
+claimed signature via `anchoring/BitcoinAnchorSignedPsbtInspector.js`
+exactly as 0.8.50 built it. `BitcoinAnchorReviewedPsbtSigner` adds exactly
+one precondition in front of that unchanged class — never a second,
+competing signing pathway. A wallet that, despite matching what was
+reviewed, still claims to have signed a genuinely different transaction is
+caught by that same unchanged 0.8.50 boundary, entirely untouched here —
+this milestone's own flagship test proves both boundaries hold
+independently, at whichever point a mismatch is introduced.
+
+**No automatic network switching, still.** The review page's own
+wallet-network comparison names the transaction's own real network against
+a connected wallet's own reported one — `application/
+BitcoinWalletConnectionView.js#describeBitcoinWalletConnection()`,
+unchanged, called here with the review's own network rather than a
+page-wide default. A mismatch is shown, never resolved on a person's
+behalf; see `anchoring/BitcoinWalletConnection.js`'s own header, unchanged
+since 0.8.58.
+
+See `docs/Roadmap.md`, 0.8.59, for the full milestone entry.

@@ -25406,3 +25406,181 @@ from this UI, automatic network/wallet switching, a second wallet adapter,
 and any persistence or event listening for the connection itself — each
 its own, separately sized milestone, exactly like every "Deliberately
 excluded" list in this document before it.
+
+## 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI
+
+0.8.58's own "Deliberately excluded" list named exactly this milestone:
+"Reviewing a real transaction plan before signing it is real, separately
+sized future work." Every piece needed to build a transaction has existed
+since 0.8.47-0.8.49 — a plan, a PSBT-shaped description, real BIP174 bytes
+— but nothing before this milestone ever turned that description into
+what a PERSON needs to see before authorizing it, or bound "what was shown"
+to "what gets signed." This milestone builds exactly that, and stops there:
+
+```text
+   { globalUnsignedTx, inputs, outputs, feeSats, ... }   a PSBT-SHAPED
+                                                          DESCRIPTION
+                                                          (0.8.48/0.8.49)
+           │
+           ▼
+   describeBitcoinAnchorTransactionReview()               (new)
+           │
+           ▼
+   { network, contentHash, inputs, outputs,
+     changeSats, feeSats, totalInputSats,
+     unsignedPsbtHex }                        shown to a person on screen
+           │
+           │  (a person looks at it, then a caller later asks to sign)
+           ▼
+   BitcoinAnchorReviewedPsbtSigner.requestSignature(          (new)
+       { description, reviewedUnsignedPsbtHex })
+           │
+           ├─ description no longer matches
+           │  reviewedUnsignedPsbtHex ──► { signed: false, reason }
+           │  (the wallet is NEVER consulted for this outcome)
+           ▼
+   BitcoinAnchorWalletSigner.requestSignature()      (0.8.50, UNCHANGED)
+```
+
+> Connected means "a signing capability is available." Reviewed means "a
+> person has seen these exact facts." Neither means "the user authorized
+> this transaction" — only an explicit sign action, on the EXACT thing
+> that was shown, does. See `docs/Principles.md`, "A Transaction Is Signed
+> Only If It Is The Transaction That Was Reviewed (0.8.59)."
+
+**ANCHORING/BITCOINANCHORWALLETSIGNER.JS IS UNCHANGED — THIS MILESTONE
+SITS ABOVE ITS EXISTING BOUNDARY, NEVER INSIDE IT.** Exactly as 0.8.58 held
+toward this same class, `BitcoinAnchorWalletSigner` still requires only
+`{ wallet }` at construction, still never receives a private key, seed,
+WIF, or wallet password, and still independently re-inspects every claimed
+signature via `anchoring/BitcoinAnchorSignedPsbtInspector.js` exactly as
+0.8.50 built it. `anchoring/BitcoinAnchorReviewedPsbtSigner.js` is a new,
+separate class that composes the unchanged one and adds exactly ONE
+precondition in front of it — never a second, competing signing pathway.
+
+**A PURE PROJECTION, NEVER A NEW SOURCE OF TRUTH, NEVER A VERDICT.**
+`application/BitcoinAnchorTransactionReviewView.js#describeBitcoinAnchorTransactionReview()`
+invents no fact — every field is read straight off an already independently
+re-validated `description`. It carries no `valid`, `safe`, `recommended`,
+or `confidence` field: whether the transaction's own facts are acceptable
+is entirely a judgment for the person reading them, the identical restraint
+`docs/Principles.md`, "The UI Displays Observations; It Does Not Turn Them
+Into A Verdict (0.8.57)," already held one domain over.
+
+**THE WALLET IS NEVER EVEN ASKED, ON A MISMATCH.** `BitcoinAnchorReviewedPsbtSigner#requestSignature()`
+independently re-serializes `description` (via the same
+`anchoring/BitcoinAnchorPsbtSerializer.js` every class in this pipeline
+already uses) and compares the result, byte for byte, against the
+caller-supplied `reviewedUnsignedPsbtHex` — BEFORE `wallet.signPsbt()` is
+ever called. A mismatch — a different fee, a substituted output, a
+different UTXO set, a stale review reused against a rebuilt plan — is a
+definite refusal (`{ signed: false, reason }`, never `unavailable: true`),
+and a real wallet's own popup is never even prompted for a transaction
+nobody has reviewed.
+
+**A WALLET SIGNING A DIFFERENT TRANSACTION THAN IT WAS ASKED TO IS STILL
+CAUGHT — BY THE UNCHANGED 0.8.50 BOUNDARY, NOT A NEW ONE.** This
+milestone's own precondition only ever checks the `description` a CALLER
+supplies against what was reviewed. If a wallet, despite being asked to
+sign the correctly-reviewed transaction, instead returns a genuinely
+different signed transaction, `BitcoinAnchorSignedPsbtInspector` — entirely
+untouched by this milestone — still refuses it, exactly as it always has.
+The flagship test proves both boundaries independently: a caller-side
+substitution never reaches the wallet; a wallet-side substitution never
+survives inspection.
+
+**NO AUTOMATIC NETWORK SWITCHING, STILL.** The optional "Review Bitcoin
+Anchor Transaction" panel added to `ui/views/DecentralizedPublicationsView.js`
+compares a connected wallet's own reported network against THIS review's
+own transaction network — `application/BitcoinWalletConnectionView.js#describeBitcoinWalletConnection()`,
+unchanged, called with the review's own network rather than the page's
+existing hardcoded default. A mismatch is shown, never resolved on a
+person's behalf.
+
+- `application/BitcoinAnchorTransactionReviewView.js` — new; the pure
+  `describeBitcoinAnchorTransactionReview()` projection described above.
+- `anchoring/BitcoinAnchorReviewedPsbtSigner.js` — new; the review-bound
+  signing guard described above, composing the unchanged `anchoring/
+  BitcoinAnchorWalletSigner.js`.
+- `application/CreateBitcoinAnchorReviewedPsbtSignerUseCase.js` — new
+  composition-root factory, mirroring `application/
+  CreateBitcoinAnchorWalletSignerUseCase.js`'s own shape exactly.
+- `ui/views/DecentralizedPublicationsView.js` — a new, page-level "Review
+  Bitcoin Anchor Transaction" panel, gated entirely on an optional
+  `bitcoinAnchorTransactionReview` injection exposing `.description`
+  (absent, or with no `.description`, the panel simply never renders).
+  Deliberately page-level rather than per-evidence-card: a review exists
+  for a transaction that has NOT YET been published, so there is no
+  evidence entry for it to attach to. Shows network, content hash, inputs,
+  outputs, change, fee, and the wallet-network match check described
+  above. No "Sign" button — wiring a real "Create Anchor" action into this
+  injection, and an actual sign-and-publish action, is 0.8.60's own job;
+  this page only ever displays what it is handed.
+
+- `tests/BitcoinAnchorTransactionReviewUX.test.js` (new) — the flagship
+  proves transaction identity preservation through the full sequence a real
+  person would experience: build a plan (0.8.47) → build a PSBT description
+  (0.8.48/0.8.49) → review it (new) → connect a wallet (0.8.58) → sign
+  EXACTLY the reviewed transaction (new, wrapping 0.8.50 unchanged) → the
+  wallet's claimed signature is independently inspected (0.8.50, unchanged)
+  → cryptographically finalized (0.8.51, unchanged) → broadcast (0.8.52,
+  unchanged) — the exact same bytes throughout, with a real secp256k1
+  signature, never merely shaped like one. Further sections cover: a
+  caller asking to sign a description different from the one reviewed,
+  refused before the wallet is ever consulted; a wallet that signs a
+  genuinely different transaction than it was asked to, still refused by
+  the unchanged 0.8.50 inspection boundary; the review's own fixed,
+  frozen, verdict-free field set, and a change-less transaction reported
+  honestly; and a missing review commitment or a malformed description
+  each throwing as a caller-contract violation.
+
+```text
+0.8.58  Explicit Bitcoin Wallet Connection & Signing UX                ✓
+             │
+             ▼
+0.8.59  Explicit Bitcoin Anchor Transaction Review UI                  ✓
+             ├── application/BitcoinAnchorTransactionReviewView.js —
+             │   new; a pure, verdict-free projection of a real PSBT
+             │   description into what a person needs to see
+             ├── anchoring/BitcoinAnchorReviewedPsbtSigner.js — new; signs
+             │   only exactly what was reviewed, refusing before the
+             │   wallet is ever consulted on any mismatch
+             ├── ui/views/DecentralizedPublicationsView.js — new,
+             │   page-level "Review Bitcoin Anchor Transaction" panel,
+             │   no Sign button yet
+             └── ForkBuild can now show a person the exact facts of a
+                 transaction, and guarantee a wallet is only ever asked to
+                 sign that exact transaction — never a new signing
+                 pathway, never a new trust judgment, only a precondition
+                 placed in front of 0.8.50's own, unchanged boundary
+```
+
+### Deliberately excluded
+
+- **Actually wiring a "Create Anchor" action into this review, or adding a
+  "Sign"/"Publish" button anywhere on this page.** This milestone reviews
+  and signs a transaction ONLY in its own flagship test, end to end — the
+  page's own "Review Bitcoin Anchor Transaction" panel is deliberately
+  inert until some future caller populates its injection with a real plan.
+  Turning "Create Anchor → Review → Connect wallet → Sign → Verify →
+  Finalize → Broadcast → Show txid → Reconcile" into one real, clickable
+  flow on this page is real, separately sized future work — see
+  `docs/Roadmap.md`, "0.8.60 — Bitcoin Anchor Publication UX Integration."
+- **Automatic re-review, or silently re-signing after a plan changes.** A
+  stale `reviewedUnsignedPsbtHex` is refused, never refreshed on a
+  person's behalf — a caller that rebuilds a plan must show a NEW review
+  before a new signature can ever be requested.
+- **Any change to `anchoring/BitcoinAnchorWalletSigner.js`, `anchoring/
+  BitcoinAnchorSignedPsbtInspector.js`, `anchoring/
+  BitcoinWalletConnection.js`, or any class from 0.8.47 through 0.8.58.**
+  All of them stay exactly as built — this milestone only ever adds a new
+  projection and a new precondition in front of them.
+- **A second, richer review surface** — a fee-rate slider, RBF signaling,
+  coin-selection override, or any control that changes what gets built.
+  This milestone only ever displays and signs a plan that already exists;
+  building one differently is 0.8.47's own concern, unchanged here.
+
+What's left, and deliberately unbuilt: a real "Create Anchor" trigger wired
+to this review, a "Sign" button, and the full publication pipeline this
+page can actually run end to end — 0.8.60's own job, exactly as this
+milestone's own "Deliberately excluded" list already names.
