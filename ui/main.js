@@ -56,6 +56,9 @@ import { CreateBitcoinEsploraWalletFundingSourceUseCase } from '../application/C
 import { CreateBitcoinWalletFundingObserverUseCase } from '../application/CreateBitcoinWalletFundingObserverUseCase.js';
 import { CreateBitcoinAnchorTransactionBuilderUseCase } from '../application/CreateBitcoinAnchorTransactionBuilderUseCase.js';
 import { CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase } from '../application/CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase.js';
+import { CreateBitcoinAnchorPsbtBuilderUseCase } from '../application/CreateBitcoinAnchorPsbtBuilderUseCase.js';
+import { CreateBitcoinAnchorTransactionReviewCoordinatorUseCase } from '../application/CreateBitcoinAnchorTransactionReviewCoordinatorUseCase.js';
+import { CreateBitcoinAnchorReviewedSigningCoordinatorUseCase } from '../application/CreateBitcoinAnchorReviewedSigningCoordinatorUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -868,6 +871,26 @@ const { coordinator: bitcoinAnchorTransactionConstructionCoordinator } = new Cre
     bitcoinAnchorTransactionBuilder
 });
 
+// 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI. Closes the gap
+// 0.8.61's own "Deliberately excluded" list named directly: "Address
+// decoding, and the PSBT/signing wiring it would unlock... 0.8.62's own
+// concern." `bitcoinAnchorPsbtBuilder` is the SAME, unchanged 0.8.48 class
+// every PSBT-shaped description in this codebase has always been built
+// through; `bitcoinAnchorTransactionReviewCoordinator` is the new, thin
+// bridge that finally connects a 0.8.61 plan-level construction to it,
+// deriving the one fact neither ever had a real source for — an account's
+// own scriptPubKey — via the new anchoring/BitcoinSegwitAddressScriptPubKey.js.
+// `bitcoinAnchorReviewedSigningCoordinator` needs no collaborator supplied
+// here at all: it constructs a fresh anchoring/BitcoinAnchorReviewedPsbtSigner.js
+// (0.8.59, unchanged) for whichever wallet it is handed at the moment of
+// each explicit "Sign Reviewed Transaction" click — see that coordinator's
+// own header on why it never holds a wallet reference longer than one call.
+const { bitcoinAnchorPsbtBuilder } = new CreateBitcoinAnchorPsbtBuilderUseCase().execute();
+const { coordinator: bitcoinAnchorTransactionReviewCoordinator } = new CreateBitcoinAnchorTransactionReviewCoordinatorUseCase().execute({
+    bitcoinAnchorPsbtBuilder
+});
+const { coordinator: bitcoinAnchorReviewedSigningCoordinator } = new CreateBitcoinAnchorReviewedSigningCoordinatorUseCase().execute();
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -918,6 +941,9 @@ app.provide('bitcoinWalletConnection', bitcoinWalletConnection);
 app.provide('bitcoinWalletFundingObserver', bitcoinWalletFundingObserver);
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
+// 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
+app.provide('bitcoinAnchorTransactionReviewCoordinator', bitcoinAnchorTransactionReviewCoordinator);
+app.provide('bitcoinAnchorReviewedSigningCoordinator', bitcoinAnchorReviewedSigningCoordinator);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
