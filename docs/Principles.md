@@ -15320,3 +15320,75 @@ layer is not the same thing as every caller already knowing what to do
 with it.
 
 See `docs/Roadmap.md`, 0.8.67, for the full milestone entry.
+
+## A Configured Credential Lives Only As Long As The Capability It Grants (0.8.68)
+
+`content/HttpPinningProvider.js`'s own 0.8.67 header already refused to
+own a credential: "the application receives a capability, not custody."
+That refusal only meant something once a person had a real, safe way to
+supply a credential in the first place — the gap 0.8.67 left open on
+purpose. `application/IpfsRemotePublishingConfiguration.js` (0.8.68) is
+where a person's own endpoint, credential, and field names are finally
+collected, and it holds the identical restraint one step earlier:
+nothing it constructs is ever saved.
+
+**Ephemeral by construction, not by convention.** `application/
+IpfsRemotePublishingConfiguration.js` has no `save()`, no `load()`, no
+static `fromStorage()`/`toStorage()`, and reads nothing from and writes
+nothing to `localStorage`, `sessionStorage`, `IndexedDB`, a cookie, or
+any other persisted medium — none of those words appear anywhere in the
+file. This is the identical discipline `anchoring/
+BitcoinWalletConnection.js`'s own 0.8.58 header already holds for a
+connected wallet's signing capability, applied here to a typed-in
+credential instead of a browser extension's own connection: an instance
+lives exactly as long as whatever reactive UI state a caller chooses to
+hold it in, and is discarded the moment that caller lets go of it — a
+page reload, an explicit "Clear Configuration" click, and simply
+navigating away all discard it identically, because none of them were
+ever asked to persist it in the first place.
+
+**A fresh capability for every attempt, never a remembered one.**
+`application/IpfsRemotePublicationCoordinator.js` never holds a
+configuration, a provider, or a store across calls — `publish()`
+constructs a brand-new `content/HttpPinningProvider.js` from whatever
+configuration is currently in effect, every single time, mirroring
+`application/BitcoinAnchorReviewedSigningCoordinator.js`'s own 0.8.62
+"a fresh signer for every attempt, never a remembered one." A person who
+reconfigures a different endpoint or credential between two publish
+attempts gets exactly that configuration consulted next time — never a
+stale capability from whichever configuration happened to be in effect
+when the coordinator was first constructed. Sharing ONE coordinator
+instance app-wide, the same way `bitcoinAnchorBroadcastCoordinator` is
+already shared, therefore carries none of the risk sharing a connected
+wallet or a live credential would: the shared instance itself never
+holds a secret between calls.
+
+**The credential is never projected back onto a screen.** `application/
+IpfsRemotePublicationView.js#describeIpfsRemotePublishingConfiguration()`
+exposes `hasCredential` — a boolean — and never the credential's own
+value. A caller of this file has no way to put a real credential on
+screen even by accident, the same restraint that already keeps a private
+key, a seed phrase, or a signed PSBT's own raw signature off this
+codebase's Bitcoin-facing screens.
+
+**The state vocabulary a real remote service can produce survives
+unreclassified, all the way to the screen.** `application/
+IpfsRemotePublicationState.js` carries content/HttpPinningProvider.js's
+own 0.8.67 REJECTED/UNAVAILABLE split through completely unmodified — a
+401/403/quota response is never displayed as "network unavailable," and
+a timeout is never displayed as "the provider rejected this." Nothing in
+this vocabulary is ever "verified," "trusted," "safe," "permanent," or
+"guaranteed" — a pinning provider saying it accepted content is an
+observation, not a verdict. See "The UI Displays Observations; It Does
+Not Turn Them Into A Verdict (0.8.57)," extended here exactly as
+`application/BitcoinAnchorBroadcastState.js`'s own header already
+extends it for a different external boundary.
+
+**Capabilities are shown, never chosen for a person.** The UI this
+milestone adds never picks Kubo, a gateway, or remote pinning
+automatically — it shows what each one can and cannot do (resolve,
+publish, both, or neither) and leaves the choice explicit, the identical
+restraint `content/IpfsGatewayContentStore.js`'s own 0.8.66 "two explicit
+registries, never one silent overwrite" already holds for the read side.
+
+See `docs/Roadmap.md`, 0.8.68, for the full milestone entry.

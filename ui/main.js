@@ -65,6 +65,7 @@ import { CreateBitcoinEsploraTransactionBroadcasterUseCase } from '../applicatio
 import { CreateBitcoinAnchorTransactionBroadcasterUseCase } from '../application/CreateBitcoinAnchorTransactionBroadcasterUseCase.js';
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
+import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -982,6 +983,24 @@ const { coordinator: bitcoinAnchorConfirmationCoordinator } = new CreateBitcoinA
     bitcoinAnchorConfirmationObserver
 });
 
+// 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX. The first
+// UI wiring for content/IpfsRemotePinningContentStore.js (0.8.67) — never
+// reachable from this running app before now, exactly as that
+// milestone's own "Deliberately excluded" list named directly: "no
+// credential-entry form... left deliberately unwired until its own UI
+// milestone gives a person a safe, explicit way to supply a credential."
+// `ipfsRemotePublicationCoordinator` needs no collaborator here at all —
+// unlike `bitcoinAnchorBroadcastCoordinator` above, it holds no injected
+// content/PinningProvider.js of its own; it constructs one FRESH, from
+// whichever application/IpfsRemotePublishingConfiguration.js a person
+// supplies, at the moment of each explicit "Publish to Remote IPFS"
+// click (see that coordinator's own header, "A FRESH PROVIDER AND STORE
+// FOR EVERY CALL"). Sharing ONE instance app-wide is therefore exactly as
+// safe as sharing `bitcoinAnchorBroadcastCoordinator` is — this instance
+// itself never holds a credential, a configuration, or any other secret
+// between calls.
+const { coordinator: ipfsRemotePublicationCoordinator } = new CreateIpfsRemotePublicationCoordinatorUseCase().execute();
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -1041,6 +1060,19 @@ app.provide('bitcoinAnchorSignedPsbtFinalizationCoordinator', bitcoinAnchorSigne
 app.provide('bitcoinAnchorBroadcastCoordinator', bitcoinAnchorBroadcastCoordinator);
 // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
 app.provide('bitcoinAnchorConfirmationCoordinator', bitcoinAnchorConfirmationCoordinator);
+// 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
+// `publicationCatalogContentResolver` is the SAME resolver instance
+// application/CreateExternalSnapshotPlacementUseCase.js already reads a
+// publication's own locally stored bytes through above — never a second,
+// disconnected reader — provided directly (not wrapped in a coordinator)
+// exactly as `bitcoinWalletConnection` above is: a plain, already-tested
+// domain collaborator with a narrow `resolve()`/`verify()` contract this
+// milestone's own UI calls directly, the identical restraint content/
+// IpfsRemotePinningContentStore.js's own header already holds toward
+// computing a hash "the same way every other content/ContentStore.js
+// implementation already does" rather than inventing a new one.
+app.provide('publicationCatalogContentResolver', publicationCatalogContentResolver);
+app.provide('ipfsRemotePublicationCoordinator', ipfsRemotePublicationCoordinator);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
