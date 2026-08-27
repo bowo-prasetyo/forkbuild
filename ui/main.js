@@ -52,6 +52,8 @@ import { CreateBitcoinAnchorConfirmationObserverUseCase } from '../application/C
 import { CreateBitcoinAnchorProofReconciliationViewUseCase } from '../application/CreateBitcoinAnchorProofReconciliationViewUseCase.js';
 import { CreateBitcoinInjectedProviderWalletAdapterUseCase } from '../application/CreateBitcoinInjectedProviderWalletAdapterUseCase.js';
 import { CreateBitcoinWalletConnectionUseCase } from '../application/CreateBitcoinWalletConnectionUseCase.js';
+import { CreateBitcoinEsploraWalletFundingSourceUseCase } from '../application/CreateBitcoinEsploraWalletFundingSourceUseCase.js';
+import { CreateBitcoinWalletFundingObserverUseCase } from '../application/CreateBitcoinWalletFundingObserverUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -833,6 +835,22 @@ const { bitcoinWalletConnection } = new CreateBitcoinWalletConnectionUseCase().e
     provider: bitcoinInjectedProviderWalletAdapter
 });
 
+// 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation. Closes
+// the gap anchoring/BitcoinAnchorTransactionBuilder.js's own header (0.8.47)
+// named directly: "Fetching real UTXOs for a real address is a future
+// concern." `bitcoinEsploraWalletFundingSource` needs no wallet and no
+// private key — reading which outputs an address can currently spend is
+// public information, exactly like `bitcoinEsploraTransactionConfirmationObserver`
+// immediately above, which is why this replica reuses the SAME default
+// Esplora-compatible host rather than configuring a second one. See
+// anchoring/BitcoinWalletFundingObserver.js's own header on why this class
+// only ever OBSERVES an account's own spendable outputs — it never selects,
+// signs, or spends anything itself.
+const { bitcoinEsploraWalletFundingSource } = new CreateBitcoinEsploraWalletFundingSourceUseCase().execute();
+const { bitcoinWalletFundingObserver } = new CreateBitcoinWalletFundingObserverUseCase().execute({
+    fundingSource: bitcoinEsploraWalletFundingSource
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -879,6 +897,8 @@ app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegi
 // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
 app.provide('bitcoinAnchorProofReconciliationView', bitcoinAnchorProofReconciliationView);
 app.provide('bitcoinWalletConnection', bitcoinWalletConnection);
+// 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
+app.provide('bitcoinWalletFundingObserver', bitcoinWalletFundingObserver);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);

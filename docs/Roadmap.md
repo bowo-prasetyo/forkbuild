@@ -25379,7 +25379,7 @@ differently-shaped wallet extension is real, separately sized future work.
   plan before signing it is real, separately sized future work — see
   `docs/Roadmap.md`, "0.8.59 — Bitcoin Anchor Transaction Review UI," and
   wiring the full sign-and-publish pipeline into this page is
-  "0.8.60 — Bitcoin Anchor Publication UX Integration."
+  "0.8.61 — Bitcoin Anchor Publication UX Integration."
 - **Automatic network switching, wallet switching, retry, or alternative-
   wallet selection.** A network mismatch is named, never resolved — see
   this entry's own header rule. A person reconnects a different wallet
@@ -25514,7 +25514,7 @@ person's behalf.
   evidence entry for it to attach to. Shows network, content hash, inputs,
   outputs, change, fee, and the wallet-network match check described
   above. No "Sign" button — wiring a real "Create Anchor" action into this
-  injection, and an actual sign-and-publish action, is 0.8.60's own job;
+  injection, and an actual sign-and-publish action, is 0.8.61's own job;
   this page only ever displays what it is handed.
 
 - `tests/BitcoinAnchorTransactionReviewUX.test.js` (new) — the flagship
@@ -25565,7 +25565,10 @@ person's behalf.
   Turning "Create Anchor → Review → Connect wallet → Sign → Verify →
   Finalize → Broadcast → Show txid → Reconcile" into one real, clickable
   flow on this page is real, separately sized future work — see
-  `docs/Roadmap.md`, "0.8.60 — Bitcoin Anchor Publication UX Integration."
+  `docs/Roadmap.md`, "0.8.61 — Bitcoin Anchor Publication UX Integration."
+  Obtaining the real funding (UTXOs, change destination) that flow will
+  need is its own, nearer-term milestone — see `docs/Roadmap.md`, "0.8.60
+  — Explicit Bitcoin Anchor Funding & Address Preparation."
 - **Automatic re-review, or silently re-signing after a plan changes.** A
   stale `reviewedUnsignedPsbtHex` is refused, never refreshed on a
   person's behalf — a caller that rebuilds a plan must show a NEW review
@@ -25582,5 +25585,236 @@ person's behalf.
 
 What's left, and deliberately unbuilt: a real "Create Anchor" trigger wired
 to this review, a "Sign" button, and the full publication pipeline this
-page can actually run end to end — 0.8.60's own job, exactly as this
-milestone's own "Deliberately excluded" list already names.
+page can actually run end to end — 0.8.61's own job, exactly as this
+milestone's own "Deliberately excluded" list already names. The nearer-term
+gap — obtaining real funding for that trigger to build a plan from at all —
+is 0.8.60's own job, next.
+
+## 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation
+
+`anchoring/BitcoinAnchorTransactionBuilder.js`'s own header (0.8.47) named
+this exact gap, twice: "real funding information is always the CALLER's
+own" — and this document's own "Deliberately excluded" list for that
+milestone named it directly: "Fetching real UTXOs for a real address is a
+future concern." Every milestone since 0.8.47 has built the parts of the
+Bitcoin anchoring pipeline that come AFTER a plan exists — construction
+(0.8.47-0.8.49), signing (0.8.50-0.8.51), broadcasting (0.8.52),
+confirmation (0.8.54-0.8.57), and reviewing one before it is signed
+(0.8.59) — but nothing has ever answered the question that has to come
+BEFORE any of them: what can the connected wallet's own account actually
+spend, right now? This milestone answers exactly that, and stops there:
+
+```text
+   a connected wallet's own `account`             (0.8.58, UNCHANGED)
+           │
+           ▼
+   BitcoinWalletFundingObserver.observeFunding()          (new)
+           │
+           ▼
+   injected `fundingSource`
+   (BitcoinEsploraWalletFundingSource — new — or a fake in every test)
+           │
+   ┌───────┴────────┬────────────────┐
+   ▼                 ▼                ▼
+ OBSERVED       UNSUPPORTED       UNAVAILABLE
+   │
+   ▼
+ { utxos, changeAccount: account }        plugs DIRECTLY into the REAL,
+                                          unchanged 0.8.47 builder — see
+                                          this milestone's own flagship test
+```
+
+> A funding observation is a fact about a moment, never a commitment. The
+> UTXOs named here may already be spent, or new ones may have arrived, by
+> the time anyone acts on this — this milestone only ever answers "what did
+> a funding source say, just now," never "what is guaranteed to still be
+> true." See `docs/Principles.md`, "A Funding Observation Is Not A Funding
+> Commitment (0.8.60)."
+
+**Fetches real UTXOs for a real address, closing the exact gap 0.8.47 named
+and deferred.** `anchoring/BitcoinEsploraWalletFundingSource.js` reads
+`GET /address/:address/utxo` — a real, publicly documented Esplora endpoint
+(the same family of server this codebase already trusts for reading
+transaction and confirmation state, via `anchoring/
+BitcoinOpReturnProofVerifier.js` and `anchoring/
+BitcoinEsploraTransactionConfirmationObserver.js`) — and translates it into
+the `fundingSource` protocol `anchoring/BitcoinWalletFundingObserver.js`
+requires. An address with genuinely no spendable output is a real,
+`found: true` empty answer, never confused with an unreachable source.
+
+**Script type is read from the address's own public prefix, never decoded.**
+`anchoring/BitcoinAnchorPsbtBuilder.js`'s own header (0.8.48) — and every
+milestone since — holds, unchanged: "no base58/bech32 decoding exists
+anywhere in this codebase." This milestone does not break that restraint.
+`BitcoinWalletFundingObserver` reads only an address's own human-readable
+prefix and length — the standardized BIP173/BIP350 encoding that already
+names a script type BY CONSTRUCTION (a `bc1q.../tb1q...` address of the
+right length IS a P2WPKH witness program; `bc1p.../tb1p...` IS a P2TR one) —
+never the checksum-and-payload decoding that would be required to derive an
+actual `scriptPubKey`. That gap is unchanged and still unbuilt — see
+"Deliberately excluded" below.
+
+**An unsupported address format is a real, honest outcome, never a silent
+guess.** A P2SH address (`3...`/`2...`) is a completely real, common wallet
+address this codebase simply has no fee-estimation table for (`anchoring/
+BitcoinAnchorTransactionBuilder.js`'s own `INPUT_VBYTES_BY_SCRIPT_TYPE`
+names only p2wpkh/p2pkh/p2tr). Rather than default such an account to
+`p2wpkh` the way that builder's own per-UTXO `scriptType` optionally does
+when omitted, `BitcoinWalletFundingObserver` reports `UNSUPPORTED` and never
+even consults the funding source — an honest refusal, never a fabricated
+answer a later fee estimate would silently rely on.
+
+**Change has no separate wallet capability of its own, deliberately.** The
+architecture note this milestone started from proposed a second class — a
+`BitcoinWalletChangeAddressProvider` — asking a wallet extension which
+address should receive change. This codebase has no documented, verifiable
+API for any real wallet extension to answer that question (`anchoring/
+BitcoinInjectedProviderWalletAdapter.js`'s own header holds that this
+codebase adapts only UniSat's own real, stable, PUBLICLY DOCUMENTED
+`requestAccounts()`/`getNetwork()`/`signPsbt()` — nothing resembling a
+"give me a change address" call exists in that documented API). Rather than
+invent a capability against an API this codebase cannot verify, this
+milestone makes the simpler, equally real choice: change returns to the
+SAME account funding was observed for — `changeAccount` is always exactly
+`account`. A wallet receiving its own change back is standard Bitcoin
+practice, not a compromise.
+
+**A funding observation is not a funding commitment.** `observeFunding()`
+holds no state across calls and returns a new, frozen record every time —
+never a cached one, and never a background poll. See `docs/Principles.md`,
+"A Funding Observation Is Not A Funding Commitment (0.8.60)."
+
+- `anchoring/BitcoinWalletFundingObserver.js` — new; the funding
+  observation lifecycle (`observeFunding({ account, network })`) described
+  above, including the address-prefix script-type inference and the
+  "change has no separate capability" decision.
+- `anchoring/BitcoinEsploraWalletFundingSource.js` — new; the one concrete
+  Esplora-backed `fundingSource` this milestone ships, reading a real,
+  documented `GET /address/:address/utxo` endpoint.
+- `application/BitcoinAnchorFundingObservationState.js` — new; the
+  three-value vocabulary (`OBSERVED`/`UNSUPPORTED`/`UNAVAILABLE`)
+  `BitcoinWalletFundingObserver` reports through.
+- `application/BitcoinAnchorFundingView.js` — new;
+  `describeBitcoinAnchorFundingStateLabel()` and
+  `describeBitcoinAnchorFunding()`, mirroring `application/
+  BitcoinWalletConnectionView.js`'s own shape (0.8.58) one domain over —
+  pure, stateless, frozen output, adding `stateLabel`/`networkMismatch`
+  (naming a wallet reconnected to a different network since this funding
+  was observed) and nothing else.
+- `application/CreateBitcoinWalletFundingObserverUseCase.js` /
+  `application/CreateBitcoinEsploraWalletFundingSourceUseCase.js` — new
+  composition-root factories, mirroring `application/
+  CreateBitcoinAnchorConfirmationObserverUseCase.js`'s own shape exactly.
+- `ui/views/DecentralizedPublicationsView.js` — a new, page-level "Bitcoin
+  Funding" panel (deliberately page-level, not per-evidence-card, for the
+  identical reason the "Review Bitcoin Anchor Transaction" panel already is
+  — funding is being prepared for a transaction that has NOT YET been
+  built), gated entirely on an optional `bitcoinWalletFundingObserver`
+  injection and a CONNECTED wallet. Shows the connected account, an
+  "Observe Wallet Funding"/"Refresh Funding" action, the observed UTXOs
+  (collapsed behind a "Show Funding Inputs" toggle), the total, and the
+  change destination — explicitly labeled as the wallet's own account, and
+  a network-staleness warning when the wallet has since reconnected on a
+  different network. No UTXO selection control, no "Optimize"/"Best"
+  language anywhere, and no "Create Transaction"/"Sign" action.
+- `ui/main.js` — the first real wiring of `anchoring/
+  BitcoinWalletFundingObserver.js`, against a real `anchoring/
+  BitcoinEsploraWalletFundingSource.js` reusing the same default
+  Esplora-compatible host `bitcoinEsploraTransactionConfirmationObserver`
+  (0.8.57) already uses.
+
+- `tests/BitcoinWalletFundingPreparation.test.js` (new) — the flagship
+  proves a real Esplora-shaped `GET /address/:address/utxo` response,
+  through `BitcoinEsploraWalletFundingSource`, through
+  `BitcoinWalletFundingObserver.observeFunding()`, produces an OBSERVED
+  funding snapshot whose own `utxos` and `changeAccount` plug DIRECTLY into
+  a REAL, unchanged `BitcoinAnchorTransactionBuilder.build()` — proving this
+  milestone's own output genuinely satisfies 0.8.47's builder contract, end
+  to end. Further sections cover: every address format the builder can
+  estimate a fee for (p2wpkh, p2tr, p2pkh) recognized correctly, and a real
+  but unsupported one (p2sh) honestly refused without ever consulting the
+  funding source; an unreachable source, a definite refusal, and even one
+  malformed UTXO entry among otherwise good ones all failing the WHOLE
+  observation, never a partial result; a genuinely empty address reported
+  as OBSERVED, never UNAVAILABLE; the label vocabulary, the view's own fixed
+  verdict-free field set, and a wallet reconnected to a different network
+  since an observation was made being named as stale; the concrete Esplora
+  adapter's own faithful wire translation, and that it never throws for any
+  wire-level failure; and that every observation is a fresh, independently
+  frozen record.
+
+```text
+0.8.59  Explicit Bitcoin Anchor Transaction Review UI                  ✓
+             │
+             ▼
+0.8.60  Explicit Bitcoin Anchor Funding & Address Preparation          ✓
+             ├── anchoring/BitcoinWalletFundingObserver.js — new;
+             │   observes a connected wallet's own real, spendable UTXOs
+             │   for the first time in this codebase
+             ├── anchoring/BitcoinEsploraWalletFundingSource.js — new; the
+             │   one concrete, real, documented Esplora adapter this
+             │   milestone ships
+             ├── ui/views/DecentralizedPublicationsView.js — new
+             │   page-level "Bitcoin Funding" panel: Observe/Refresh
+             │   Funding, UTXOs, total, change destination
+             ├── ui/main.js — the first real wiring of a funding
+             │   observation into this running app
+             └── ForkBuild can now, for the first time, show a person
+                 exactly what a connected wallet can currently spend — the
+                 missing input `BitcoinAnchorTransactionBuilder.js` has
+                 required as caller-supplied since 0.8.47, now obtainable
+                 for real, without ever selecting, signing, or spending
+                 anything itself
+```
+
+### Deliberately excluded
+
+- **Actually calling `anchoring/BitcoinAnchorTransactionBuilder.js`,
+  `anchoring/BitcoinAnchorPsbtBuilder.js`, or wiring a "Create Transaction
+  Plan" action into this page.** A real PSBT input still requires a real
+  `witnessUtxo.scriptPubKey` (`anchoring/BitcoinAnchorPsbtBuilder.js`'s own,
+  unchanged requirement) — actual scriptPubKey bytes, not merely a script
+  TYPE label. Deriving that from an address requires the base58/bech32
+  decoding this codebase has deliberately never built (see this milestone's
+  own header, and every 0.8.47-0.8.49 "Deliberately excluded" list before
+  it). This milestone's own `scriptType` field is sized for exactly what
+  `anchoring/BitcoinAnchorTransactionBuilder.js` already accepts for fee
+  ESTIMATION — never enough, on its own, to construct a signable PSBT
+  input. Address decoding, and the transaction-construction wiring it would
+  unlock, is real, separately sized future work.
+- **A second wallet capability for change addresses.** No
+  `BitcoinWalletChangeAddressProvider`, and no attempt to ask a wallet
+  extension which address should receive change — this codebase has no
+  documented, verifiable API for any real wallet to answer that question.
+  `changeAccount` is always exactly the account funding was observed for —
+  see this milestone's own header.
+- **Automatic UTXO selection, ranking, or a "best funding" judgment of any
+  kind.** This milestone only ever reports what a funding source says an
+  account holds — deterministic coin selection remains entirely `anchoring/
+  BitcoinAnchorTransactionBuilder.js`'s own, unchanged concern (0.8.47).
+- **Automatic refresh, background polling, or a "is this UTXO still
+  available?" checker.** A funding observation is a fact about the moment
+  it was made, always growing stale the instant it is made — nothing in
+  this milestone re-checks one on a timer, on reconnect, or before any
+  future action. A caller (eventually 0.8.61's own "Create Anchor" trigger)
+  is expected to require an explicitly CURRENT observation before building
+  a plan; whether and how to enforce that staleness check is that future
+  milestone's own concern, not this one's.
+- **A second wallet-funding adapter.** `BitcoinEsploraWalletFundingSource`
+  adapts exactly one real, documented family of HTTP APIs (Esplora-
+  compatible block explorers) — the identical restraint 0.8.52's own
+  broadcaster and 0.8.54's own confirmation observer already hold. A wallet
+  extension exposing its own UTXO list directly (if and when one's real,
+  documented API supports it) is real, separately sized future work.
+- **Any change to `anchoring/BitcoinAnchorTransactionBuilder.js`,
+  `anchoring/BitcoinAnchorPsbtBuilder.js`, `anchoring/
+  BitcoinWalletConnection.js`, or any class from 0.8.47 through 0.8.59.**
+  All of them stay exactly as built — this milestone only ever adds a new
+  observation that a future caller may choose to feed into the unchanged
+  0.8.47 builder.
+
+What's left, and deliberately unbuilt: real address-to-scriptPubKey
+decoding, a "Create Transaction Plan" action wired to this funding and the
+existing 0.8.59 review panel, and the full sign-and-publish flow — 0.8.61's
+own job, exactly as 0.8.59's own "Deliberately excluded" list already named,
+now with real funding available to build from.

@@ -67,6 +67,8 @@ import { describeBitcoinAnchorContentProof } from '../../application/BitcoinAnch
 import { BitcoinWalletConnectionState } from '../../application/BitcoinWalletConnectionState.js';
 import { describeBitcoinWalletConnection } from '../../application/BitcoinWalletConnectionView.js';
 import { describeBitcoinAnchorTransactionReview } from '../../application/BitcoinAnchorTransactionReviewView.js';
+import { BitcoinAnchorFundingObservationState } from '../../application/BitcoinAnchorFundingObservationState.js';
+import { describeBitcoinAnchorFunding } from '../../application/BitcoinAnchorFundingView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -626,6 +628,22 @@ const BITCOIN_WALLET_CONNECTION_BADGE_CLASSES = {
     [BitcoinWalletConnectionState.UNAVAILABLE]: 'peer-badge--failed'
 };
 
+// 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation. A
+// funding observation's own badge, deliberately unrelated to the wallet
+// connection badge map immediately above: CONNECTED names a signing
+// CAPABILITY; OBSERVED here names only that a funding source answered for
+// the connected account's own address — two independent facts, the
+// identical separation BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES and
+// BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES already hold from each other.
+// UNSUPPORTED reads amber, not red — a real, valid address this codebase
+// simply cannot estimate a fee for is not the actionable, resolvable
+// failure UNAVAILABLE on the wallet-connection map above is.
+const BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES = {
+    [BitcoinAnchorFundingObservationState.OBSERVED]: 'peer-badge--authenticated',
+    [BitcoinAnchorFundingObservationState.UNSUPPORTED]: 'peer-badge--pending',
+    [BitcoinAnchorFundingObservationState.UNAVAILABLE]: 'peer-badge--failed'
+};
+
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
@@ -757,6 +775,20 @@ export default {
         // `bitcoinAnchorProofReconciliationView` above being one shared
         // reconciliation view rather than one per card.
         const bitcoinWalletConnection = inject('bitcoinWalletConnection', null);
+        // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
+        // Optional — absent here, the "Bitcoin Funding" section simply
+        // never renders, the identical degrade-gracefully posture every
+        // optional coordinator on this page already holds. Page-level, not
+        // per evidence card — the identical reasoning
+        // `bitcoinAnchorTransactionReview` below already holds: funding is
+        // being prepared for a transaction that has NOT YET been built, so
+        // there is no evidence entry for it to attach to. This is the ONE
+        // place this page ever asks a funding source what a connected
+        // wallet's own account can currently spend — see anchoring/
+        // BitcoinWalletFundingObserver.js's own header on why that is
+        // always a fresh, explicitly-triggered observation, never a
+        // background poll.
+        const bitcoinWalletFundingObserver = inject('bitcoinWalletFundingObserver', null);
         // 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI. Optional
         // — absent here, the "Review Bitcoin Anchor Transaction" section
         // simply never renders, the identical degrade-gracefully posture
@@ -820,6 +852,24 @@ export default {
             network: null,
             reason: null
         });
+
+        // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
+        // ONE shared reactive holder for the single, page-level funding
+        // observation this page ever asks for — the identical "the UI owns
+        // the reactive result of an injected collaborator's own call"
+        // discipline `bitcoinWalletConnectionState` immediately above
+        // already holds, one level over: `observation` is `null` until
+        // `observeBitcoinAnchorFunding()` below is explicitly clicked, and
+        // is replaced wholesale — never merged or patched — by every
+        // subsequent "Refresh Funding" click, exactly as anchoring/
+        // BitcoinWalletFundingObserver.js's own header requires ("EVERY
+        // OBSERVATION IS A FRESH READ, NEVER... REMEMBERED").
+        const bitcoinAnchorFundingState = reactive({
+            observing: false,
+            observation: null,
+            error: null
+        });
+        const bitcoinAnchorFundingUtxosExpanded = ref(false);
 
         // Every currently AUTHENTICATED peer, in registry order — the
         // full candidate list this page now hands to application/
@@ -2038,6 +2088,69 @@ export default {
             return describeBitcoinWalletConnection(bitcoinWalletConnectionState, { expectedNetwork: review.network });
         }
 
+        // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
+        //
+        // The ONE place this page ever calls
+        // `bitcoinWalletFundingObserver.observeFunding()` — never triggered
+        // automatically on connecting the wallet, on page load, or on a
+        // timer; only an explicit "Observe Wallet Funding"/"Refresh
+        // Funding" click. Mirrors `connectBitcoinWallet()` above: the
+        // injected collaborator performs the observation and returns a
+        // fresh, frozen record, and this page copies it into its own
+        // reactive state wholesale — never merged with whatever the
+        // previous observation said, exactly as anchoring/
+        // BitcoinWalletFundingObserver.js's own header requires.
+        async function observeBitcoinAnchorFunding() {
+            if (!bitcoinWalletFundingObserver || !isBitcoinWalletConnected()) return;
+            bitcoinAnchorFundingState.observing = true;
+            bitcoinAnchorFundingState.error = null;
+            let observation;
+            try {
+                observation = await bitcoinWalletFundingObserver.observeFunding({
+                    account: bitcoinWalletConnectionState.account,
+                    network: bitcoinWalletConnectionState.network
+                });
+            } catch (error) {
+                bitcoinAnchorFundingState.observing = false;
+                bitcoinAnchorFundingState.error = error.message;
+                return;
+            }
+            bitcoinAnchorFundingState.observing = false;
+            bitcoinAnchorFundingState.observation = observation;
+        }
+
+        function toggleBitcoinAnchorFundingUtxosExpanded() {
+            bitcoinAnchorFundingUtxosExpanded.value = !bitcoinAnchorFundingUtxosExpanded.value;
+        }
+
+        // Pure projection of `bitcoinAnchorFundingState.observation` through
+        // application/BitcoinAnchorFundingView.js's own
+        // `describeBitcoinAnchorFunding()` — the identical "the UI owns no
+        // facts of its own, it only projects an injected collaborator's own
+        // state" discipline every other `*View()` function on this page
+        // already holds. `expectedNetwork` is the CONNECTED wallet's own
+        // CURRENT network, so a person who reconnects on a different
+        // network after observing funding sees that staleness named, never
+        // silently ignored — see application/BitcoinAnchorFundingView.js's
+        // own header on `networkMismatch`. `null` whenever nothing has been
+        // observed yet — the section below simply does not render either
+        // way.
+        function bitcoinAnchorFundingView() {
+            if (!bitcoinAnchorFundingState.observation) return null;
+            return describeBitcoinAnchorFunding(bitcoinAnchorFundingState.observation, { expectedNetwork: bitcoinWalletConnectionState.network });
+        }
+
+        function bitcoinAnchorFundingBadgeClass() {
+            const view = bitcoinAnchorFundingView();
+            if (!view) return 'peer-badge--pending';
+            return BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES[view.state] || 'peer-badge--pending';
+        }
+
+        function isBitcoinAnchorFundingObserved() {
+            const view = bitcoinAnchorFundingView();
+            return Boolean(view && view.state === BitcoinAnchorFundingObservationState.OBSERVED);
+        }
+
         function evidenceBadgeClass(anchorView) {
             if (anchorView.checking) return 'peer-badge--pending';
             if (!anchorView.verified) return 'peer-badge--unchecked';
@@ -2881,7 +2994,10 @@ export default {
             toggleBitcoinAnchorConfirmationHistoryEntry, isBitcoinAnchorConfirmationHistoryEntryExpanded,
             bitcoinWalletConnection, bitcoinWalletConnectionState, connectBitcoinWallet, disconnectBitcoinWallet,
             bitcoinWalletConnectionView, bitcoinWalletConnectionBadgeClass, isBitcoinWalletConnected, isBitcoinWalletConnecting,
-            bitcoinAnchorTransactionReview, bitcoinAnchorTransactionReviewView, bitcoinAnchorTransactionReviewWalletMatchView
+            bitcoinAnchorTransactionReview, bitcoinAnchorTransactionReviewView, bitcoinAnchorTransactionReviewWalletMatchView,
+            bitcoinWalletFundingObserver, bitcoinAnchorFundingState, observeBitcoinAnchorFunding,
+            bitcoinAnchorFundingView, bitcoinAnchorFundingBadgeClass, isBitcoinAnchorFundingObserved,
+            bitcoinAnchorFundingUtxosExpanded, toggleBitcoinAnchorFundingUtxosExpanded
         };
     },
     template: `
@@ -2897,6 +3013,79 @@ export default {
                 No authenticated peer is connected right now — "Retrieve from Peers" below will do nothing
                 until one is. Connect to a peer first from <router-link to="/peers">Peers</router-link>.
             </p>
+
+            <!-- 0.8.60 — Explicit Bitcoin Anchor Funding & Address
+                 Preparation. A page-level panel, deliberately unrelated to
+                 any one publication's own evidence card below — this
+                 prepares funding for a transaction that has NOT YET been
+                 built, so there is no evidence entry for it to attach to.
+                 Absent bitcoinWalletFundingObserver, or with no wallet
+                 connected, this section simply never renders — the
+                 identical degrade-gracefully posture every optional
+                 section on this page already holds. Every field shown is
+                 read straight off the last real observation this page
+                 asked for — see application/BitcoinAnchorFundingView.js's
+                 own header. Nothing here selects a UTXO, builds a plan, or
+                 spends anything; "Refresh Funding" asks the SAME question
+                 again, fresh, never "Optimize" or "Best". -->
+            <div v-if="bitcoinWalletFundingObserver && isBitcoinWalletConnected()" class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Bitcoin Funding</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    What the connected wallet's own account can currently spend, as of the moment this was last
+                    observed. Nothing is selected, spent, or committed by observing this — it is a fact about a
+                    moment, not a promise about right now.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Network</dt><dd>{{ bitcoinWalletConnectionState.network }}</dd></div>
+                    <div class="evidence-field"><dt>Account</dt><dd>{{ shortId(bitcoinWalletConnectionState.account) }}</dd></div>
+                </dl>
+                <button type="button" class="peer-action-btn" :disabled="bitcoinAnchorFundingState.observing" @click="observeBitcoinAnchorFunding">
+                    {{ bitcoinAnchorFundingState.observing ? 'Observing…' : (bitcoinAnchorFundingView() ? 'Refresh Funding' : 'Observe Wallet Funding') }}
+                </button>
+                <p v-if="bitcoinAnchorFundingState.error" class="form-hint form-hint--neutral">{{ bitcoinAnchorFundingState.error }}</p>
+
+                <div v-if="bitcoinAnchorFundingView()" class="evidence-inspection-adapter">
+                    <span class="peer-badge" :class="bitcoinAnchorFundingBadgeClass()">{{ bitcoinAnchorFundingView().stateLabel }}</span>
+
+                    <p v-if="bitcoinAnchorFundingView().networkMismatch" class="form-hint form-hint--neutral">
+                        ⚠ This funding was observed on {{ bitcoinAnchorFundingView().network }}, but the connected
+                        wallet is now on {{ bitcoinAnchorFundingView().expectedNetwork }}. Refresh funding before
+                        relying on it.
+                    </p>
+                    <p v-else-if="bitcoinAnchorFundingView().reason" class="form-hint form-hint--neutral">
+                        {{ bitcoinAnchorFundingView().reason }}
+                    </p>
+
+                    <dl v-if="isBitcoinAnchorFundingObserved()" class="evidence-fields">
+                        <div class="evidence-field"><dt>UTXOs observed</dt><dd>{{ bitcoinAnchorFundingView().utxoCount }}</dd></div>
+                        <div class="evidence-field"><dt>Total</dt><dd>{{ bitcoinAnchorFundingView().totalValueSats }} sat</dd></div>
+                        <div class="evidence-field"><dt>Script type</dt><dd>{{ bitcoinAnchorFundingView().scriptType }}</dd></div>
+                    </dl>
+
+                    <button v-if="bitcoinAnchorFundingView().utxoCount > 0" type="button" class="peer-action-btn"
+                        @click="toggleBitcoinAnchorFundingUtxosExpanded">
+                        {{ bitcoinAnchorFundingUtxosExpanded ? 'Hide Funding Inputs' : 'Show Funding Inputs' }}
+                    </button>
+                    <template v-if="bitcoinAnchorFundingUtxosExpanded">
+                        <dl v-for="utxo in bitcoinAnchorFundingView().utxos" :key="utxo.txid + ':' + utxo.vout" class="evidence-fields">
+                            <div class="evidence-field">
+                                <dt>{{ shortId(utxo.txid) }}:{{ utxo.vout }}</dt>
+                                <dd>{{ utxo.valueSats }} sat ({{ utxo.scriptType }}{{ utxo.confirmed ? '' : ', unconfirmed' }})</dd>
+                            </div>
+                        </dl>
+                    </template>
+
+                    <dl v-if="isBitcoinAnchorFundingObserved()" class="evidence-fields">
+                        <div class="evidence-field"><dt>Change destination</dt><dd>{{ shortId(bitcoinAnchorFundingView().changeAccount) }}</dd></div>
+                    </dl>
+                    <p v-if="isBitcoinAnchorFundingObserved()" class="form-hint form-hint--neutral">
+                        Change returns to the connected wallet's own account — no separate change address is
+                        requested from the wallet.
+                    </p>
+                </div>
+            </div>
 
             <!-- 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI. A
                  page-level panel, deliberately unrelated to any one
