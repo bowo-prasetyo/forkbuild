@@ -61,6 +61,9 @@ import { CreateBitcoinAnchorTransactionReviewCoordinatorUseCase } from '../appli
 import { CreateBitcoinAnchorReviewedSigningCoordinatorUseCase } from '../application/CreateBitcoinAnchorReviewedSigningCoordinatorUseCase.js';
 import { CreateBitcoinAnchorSignedPsbtFinalizerUseCase } from '../application/CreateBitcoinAnchorSignedPsbtFinalizerUseCase.js';
 import { CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase } from '../application/CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase.js';
+import { CreateBitcoinEsploraTransactionBroadcasterUseCase } from '../application/CreateBitcoinEsploraTransactionBroadcasterUseCase.js';
+import { CreateBitcoinAnchorTransactionBroadcasterUseCase } from '../application/CreateBitcoinAnchorTransactionBroadcasterUseCase.js';
+import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -907,6 +910,34 @@ const { coordinator: bitcoinAnchorSignedPsbtFinalizationCoordinator } = new Crea
     bitcoinAnchorSignedPsbtFinalizer
 });
 
+// 0.8.64 — Explicit Bitcoin Anchor Broadcast UI. Closes the gap 0.8.63's
+// own "Deliberately excluded" list named directly: "An explicit 'Broadcast
+// Transaction' action is its own, separately sized future milestone
+// (0.8.64)." Unlike `bitcoinBroadcaster` above — deliberately fake because
+// the one-shot "Create Anchor" pipeline it serves has no wallet-signing
+// capability wired into it at all — this pipeline now has one, real,
+// end to end: an OBSERVED funding fact (0.8.60), a CONSTRUCTED plan
+// (0.8.61), a wallet's own SIGNED PSBT (0.8.62), and an independently,
+// cryptographically FINALIZED transaction (0.8.63). Broadcasting those
+// real, already-verified bytes needs no private key and no signing
+// capability of its own — reading and writing through the same public
+// Esplora-compatible host is exactly as safe as the READING this replica
+// already does for `bitcoinEsploraTransactionConfirmationObserver` above,
+// which is why `bitcoinEsploraTransactionBroadcaster` reuses that same
+// default host rather than configuring a second one.
+// `bitcoinAnchorTransactionBroadcaster` is the SAME, unchanged 0.8.52 class
+// that has held "broadcasting submits; it does not decide" since that
+// milestone; `bitcoinAnchorBroadcastCoordinator` is a deliberately thin
+// wiring on top of it, mirroring exactly how `bitcoinAnchorSignedPsbtFinalizationCoordinator`
+// immediately above wires the 0.8.51 finalizer one stage earlier.
+const { bitcoinEsploraTransactionBroadcaster } = new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute();
+const { bitcoinAnchorTransactionBroadcaster } = new CreateBitcoinAnchorTransactionBroadcasterUseCase().execute({
+    broadcaster: bitcoinEsploraTransactionBroadcaster
+});
+const { coordinator: bitcoinAnchorBroadcastCoordinator } = new CreateBitcoinAnchorBroadcastCoordinatorUseCase().execute({
+    bitcoinAnchorTransactionBroadcaster
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -962,6 +993,8 @@ app.provide('bitcoinAnchorTransactionReviewCoordinator', bitcoinAnchorTransactio
 app.provide('bitcoinAnchorReviewedSigningCoordinator', bitcoinAnchorReviewedSigningCoordinator);
 // 0.8.63 — Explicit Signed PSBT Verification & Transaction Finalization UI.
 app.provide('bitcoinAnchorSignedPsbtFinalizationCoordinator', bitcoinAnchorSignedPsbtFinalizationCoordinator);
+// 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.
+app.provide('bitcoinAnchorBroadcastCoordinator', bitcoinAnchorBroadcastCoordinator);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
