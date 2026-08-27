@@ -14390,3 +14390,84 @@ structurally invalid proof was always a `HASH_MISMATCH`
 0.8.1, and this milestone never suppresses that fact just because the
 transaction side had nothing to say. See `docs/Roadmap.md`, 0.8.55, for
 the full milestone entry.
+
+## An Observation Describes The Network At The Time It Was Made, Not The Current State Of The Transaction (0.8.56)
+
+**A history is APPENDED TO, NEVER OVERWRITTEN, NEVER MUTATED.**
+`anchoring/BitcoinAnchorConfirmationObserver.js#observeConfirmation()`
+(0.8.54) already holds no state across calls and returns a fresh, frozen
+record every time; its own header already named this file in advance: "A
+caller that wants a HISTORY of observations... keeps that history
+itself." `application/BitcoinAnchorConfirmationObservationHistory.js` is
+that caller-kept history, and it holds itself to the identical restraint
+`application/SnapshotMaterializationHistory.js` (0.8.38) and `application/
+SnapshotPeerPossessionObservationHistory.js` (0.8.41) already established
+for their own sequences: every explicit `observeConfirmation()` call gets
+its own entry, in the order it happened, even one that reports the
+identical state and block as the entry before it. Given
+`NOT_CONFIRMED` at 10:00, `CONFIRMED` at height 900000 at 10:10, and
+`CONFIRMED` at height 900001 at 10:30, the history holds all three,
+forever — reaching a later, more-confirmed observation never rewrites or
+discards an earlier, less-confirmed one. "What did ForkBuild know at
+10:10?" is answered by reading that entry directly out of the history,
+never by re-deriving it from today's state.
+
+**Reorganization detection is a comparison; this milestone only performs
+accumulation.** A sequence of two `CONFIRMED` observations naming the
+SAME `blockHash` and a climbing `blockHeight`/`confirmationCount` is
+ordinary confirmation progress. A sequence naming two DIFFERENT
+`blockHash` values for the identical txid would be a possible chain
+reorganization — but noticing that difference requires comparing one
+observation against another, which is a judgment this milestone
+deliberately does not make. `application/
+BitcoinAnchorConfirmationObservationHistory.js`,
+`application/BitcoinAnchorConfirmationObservationHistoryView.js`, and
+`application/BitcoinAnchorConfirmationObservationHistoryDetailView.js`
+each only ever read ONE observation, or a whole history in isolation from
+any other history — none of them ever accepts two observations and
+returns a verdict about their relationship. `anchoring/
+BitcoinAnchorConfirmationObserver.js`'s own header already drew this same
+line one milestone earlier, for the identical reason: preserving the
+information a future comparison would need is not the same act as
+performing that comparison.
+
+**Inspection adds presentation, not new facts.** `application/
+BitcoinAnchorConfirmationObservationHistoryView.js`'s
+`describeBitcoinAnchorConfirmationObservationHistory()` and `application/
+BitcoinAnchorConfirmationObservationHistoryDetailView.js`'s
+`describeBitcoinAnchorConfirmationObservationHistoryDetails()` /
+`describeBitcoinAnchorConfirmationObservationDetail()` mirror `application/
+SnapshotMaterializationHistoryView.js` (0.8.38) and `application/
+SnapshotMaterializationHistoryDetailView.js` (0.8.44)'s own identical
+split exactly, one domain over: a full-sentence `stateLabel` ("Transaction
+confirmed") at the history-narration layer, and a short `stateShortLabel`
+("Confirmed") added alongside it, unchanged, at the per-observation
+inspection layer. Every other field — `txid`, `blockHash`, `blockHeight`,
+`confirmationCount`, `reason`, `observedAt` — is carried through from the
+observation itself, verbatim, at both layers. Neither layer contacts a
+confirmationSource, re-queries the Bitcoin network, mutates the
+observation or the history it was given, or accepts an observer,
+coordinator, or use case as an argument — there is no way for either one
+to perform a new network read.
+
+**No `confidence`, `reliability`, `score`, `status`, `reorganization`, or
+`mostReliableObservation` field, anywhere, in either layer.** A history
+showing three `CONFIRMED` entries in a row is not thereby "well
+confirmed" or "secure" — the count is a historical fact, exactly the
+restraint `docs/Principles.md`, "Confirmation Observation Reports What Is;
+It Does Not Decide What It Means (0.8.54)," already held for a single
+observation, held here one layer up for a whole sequence of them, and the
+identical "never a ranking" restraint `docs/Principles.md`,
+"Materialization History Describes Byte Acquisition, Not Source Trust
+(0.8.38)," already held for a different history entirely.
+
+**Never persisted, never shared, never transmitted.** This history lives
+only in whatever ephemeral component state a future caller keeps for the
+lifetime of a page, reset to empty the moment it is reopened — the
+identical restraint `anchoring/BitcoinAnchorConfirmationObserver.js`'s own
+header already holds for a single observation, `application/
+SnapshotMaterializationHistory.js`'s own header already holds for
+materialization attempts, and `application/
+SnapshotPeerPossessionObservationHistory.js`'s own header already holds
+for peer possession, each one domain over. See `docs/Roadmap.md`, 0.8.56,
+for the full milestone entry.
