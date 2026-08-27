@@ -2903,7 +2903,7 @@ export default {
                  publication's own evidence card below: this reviews a
                  transaction BEFORE it has been published at all, so there
                  is no evidence entry yet for it to attach to. Absent
-                 `bitcoinAnchorTransactionReview` or its own `.description`,
+                 bitcoinAnchorTransactionReview or its own .description,
                  this section simply never renders — the identical
                  degrade-gracefully posture every optional section on this
                  page already holds. See application/
