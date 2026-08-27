@@ -3787,7 +3787,7 @@ export default {
                      explicit boundary in this pipeline: nothing above this
                      button ever reaches the network. Only ever rendered
                      once a FINALIZED outcome has bound a real
-                     `bitcoinAnchorFinalizedTransaction` artifact; clicking
+                     bitcoinAnchorFinalizedTransaction artifact; clicking
                      it hands that exact, already-verified txid/rawTransaction
                      to anchoring/BitcoinAnchorTransactionBroadcaster.js
                      (0.8.52, unchanged) via the new application/
