@@ -26434,3 +26434,181 @@ next step.
 What's left, and deliberately unbuilt: broadcasting a `FINALIZED`
 transaction's own already-finalized bytes, and the explicit action that
 would trigger it, is 0.8.64's own job, next.
+
+## 0.8.64 — Explicit Bitcoin Anchor Broadcast UI
+
+0.8.63's own "Deliberately excluded" list named this milestone directly:
+"An explicit 'Broadcast Transaction' action is its own, separately sized
+future milestone (0.8.64)." Every piece this milestone needs already
+exists — anchoring/BitcoinAnchorTransactionBroadcaster.js (0.8.52) has held
+"broadcasting submits; it does not decide" since that milestone, and a real
+FINALIZED transaction, with a real txid, has been reachable from the
+screen since 0.8.63. This milestone adds no new Bitcoin machinery — it
+exposes the existing broadcaster behind one explicit button, and finally
+wires a real, network-backed broadcaster (anchoring/BitcoinEsploraTransactionBroadcaster.js,
+0.8.52, previously built but never wired into this running app) into this
+one, now-complete pipeline:
+
+```text
+Transaction Construction (0.8.61)
+        │
+        ▼
+Transaction Review (0.8.59/0.8.62)
+        │
+        ▼
+Wallet Signing (0.8.62)
+        │
+        ▼
+Cryptographic Finalization (0.8.63)
+        │
+        │ explicit "Broadcast Transaction" click
+        ▼
+BitcoinAnchorBroadcastCoordinator.broadcast()       (THIS MILESTONE — new)
+        │
+        ▼
+anchoring/BitcoinAnchorTransactionBroadcaster.js#broadcast()   (0.8.52, UNCHANGED)
+        │
+        ▼
+{ broadcasted: true, txid }              ──► BROADCASTED
+| { broadcasted: false, unavailable, reason } ──► UNAVAILABLE
+| { broadcasted: false, reason }              ──► REJECTED
+```
+
+- `application/BitcoinAnchorBroadcastState.js` (new) —
+  IDLE/BROADCASTING/BROADCASTED/REJECTED/UNAVAILABLE/FAILED. Mirrors
+  `application/BitcoinAnchorSignedPsbtFinalizationState.js`'s own shape one
+  stage later in the pipeline. `BROADCASTED` deliberately never means
+  confirmed — see that state's own header, and application/
+  BitcoinAnchorPublicationLifecycleState.js's own identical restraint
+  (0.8.53) for the all-in-one pipeline.
+- `application/BitcoinAnchorBroadcastCoordinator.js` (new) — the explicit
+  "Broadcast Transaction" action, a deliberately thin bridge to the
+  unchanged 0.8.52 `anchoring/BitcoinAnchorTransactionBroadcaster.js`. No
+  new Bitcoin logic of any kind; accepts ONLY the exact `{ finalized: true,
+  txid, rawTransaction }` shape a FINALIZED outcome produces — a caller
+  passing anything else (an unfinalized attempt, a missing artifact) is a
+  contract violation, refused by throwing before the injected broadcaster
+  is ever consulted. Never reconstructs, re-signs, re-finalizes, changes
+  fees, retries, or queries confirmation.
+- `application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js` (new) —
+  the composition-root wiring, taking the already-existing 0.8.52
+  broadcaster as a parameter rather than reconstructing it.
+- `application/BitcoinAnchorBroadcastView.js` (new) — the verdict-free
+  projection: `{ state, stateLabel, reason, txid }`. No `successRate`,
+  `confidence`, `trust`, `health`, `safe`, or `recommended` field of any
+  kind — and no `confirmed`/`confirmations`/`blockHeight`/`blockHash`
+  field either, since BROADCASTED is never CONFIRMED.
+- `ui/views/DecentralizedPublicationsView.js` — the 0.8.63 finalization
+  panel gains a "Broadcast" section, rendered only once a FINALIZED outcome
+  has bound a real `bitcoinAnchorFinalizedTransaction` artifact —
+  `{ txid, rawTransaction, finalizedAt }`, captured once at the moment of
+  finalization and handed to the broadcast coordinator completely
+  unmodified, never re-read from whatever the finalization outcome happens
+  to hold at click time. This binds a broadcast attempt to a specific
+  transaction's own identity rather than merely a UI sequence: a fresh
+  "Create Transaction Plan", "Sign Reviewed Transaction", or "Verify &
+  Finalize Transaction" click retires it, exactly the identical staleness
+  discipline every earlier stage in this pipeline already holds toward its
+  own previous outcome. A BROADCASTED result shows the real txid and the
+  finalized transaction's own raw bytes (behind a collapsed `<details>`,
+  exactly like the existing raw-evidence disclosure elsewhere on this
+  page) — and nothing past that; a REJECTED or UNAVAILABLE result is the
+  end of that attempt, and a person clicks "Broadcast Again" explicitly to
+  try once more with the identical, already-finalized bytes.
+- `ui/main.js` — the first real wiring of anchoring/
+  BitcoinEsploraTransactionBroadcaster.js (0.8.52, previously built but
+  never wired into this running app) into this page, via the unchanged
+  0.8.52 `BitcoinAnchorTransactionBroadcaster`. Unlike the deliberately
+  fake `bitcoinBroadcaster` the older, one-shot "Create Anchor" pipeline
+  still uses (0.8.11, unchanged — that pipeline still has no wallet-signing
+  capability wired into it), THIS pipeline now has one, real, end to end:
+  an OBSERVED funding fact, a CONSTRUCTED plan, a wallet's own SIGNED PSBT,
+  and an independently, cryptographically FINALIZED transaction. Reading
+  and writing through the same public Esplora-compatible host this replica
+  already reads confirmation status from needs no private key and no new
+  capability.
+- `tests/BitcoinAnchorBroadcastUX.test.js` (new) — the flagship proves the
+  complete pipeline end to end, one step further than 0.8.63 ever took it:
+  a real, OBSERVED funding observation constructs, reviews, is genuinely,
+  cryptographically signed and finalized, and the new coordinator submits
+  those exact bytes to a fake broadcaster — BROADCASTED, with the same real
+  txid. Further sections cover: a definite rejection is REJECTED with no
+  txid; network unavailable is UNAVAILABLE, never a rejection; no automatic
+  retry — each explicit call reaches the injected broadcaster exactly once,
+  and repeat explicit calls are deterministic; caller-contract violations
+  (`finalized` not `true`, or a missing `txid`/`rawTransaction`) throw
+  before the broadcaster is ever consulted; constructing the coordinator
+  without a real broadcaster throws; a BROADCASTED outcome and its view
+  carry no confirmation-shaped field of any kind; the view is a pure,
+  stateless projection; and the state vocabulary carries no undocumented
+  value and no forbidden verdict word.
+
+```text
+0.8.63  Explicit Signed PSBT Verification & Transaction Finalization UI ✓
+             │
+             ▼
+0.8.64  Explicit Bitcoin Anchor Broadcast UI                           ✓
+             ├── application/BitcoinAnchorBroadcastState.js
+             │   — new; IDLE/BROADCASTING/BROADCASTED/REJECTED/
+             │   UNAVAILABLE/FAILED
+             ├── application/BitcoinAnchorBroadcastCoordinator.js
+             │   — new; the explicit "Broadcast Transaction" action,
+             │   wrapping the unchanged 0.8.52 broadcaster — no new
+             │   Bitcoin logic
+             ├── ui/views/DecentralizedPublicationsView.js — the 0.8.63
+             │   finalization panel gains an explicit "Broadcast
+             │   Transaction" button, bound to the exact finalized
+             │   transaction's own identity
+             ├── ui/main.js — the first real wiring of the 0.8.52 Esplora
+             │   broadcaster into this running app, for the pipeline that
+             │   now has real wallet signing behind it
+             └── ForkBuild can now, for the first time, take a wallet's own
+                 signature all the way from review through cryptographic
+                 finalization to a real, submitted Bitcoin transaction —
+                 entirely from the screen, one explicit action at a time
+```
+
+### Deliberately excluded
+
+- **Confirmation observation, or anything past a BROADCASTED outcome.**
+  `application/BitcoinAnchorConfirmationObserver.js` (0.8.54) is neither
+  imported nor called by anything this milestone adds — a BROADCASTED
+  outcome is shown on screen with its own real txid, and stops there. An
+  explicit "Observe Confirmation" action reusing the existing 0.8.54-0.8.57
+  machinery is its own, separately sized future milestone (0.8.65).
+- **Any retry, re-sign, re-finalize, transaction substitution, or fee
+  adjustment on a REJECTED or UNAVAILABLE result.** A broadcast attempt
+  stopping short of BROADCASTED is the end of that attempt — a person
+  clicks "Broadcast Again," explicitly, to submit the identical,
+  already-finalized bytes once more; this codebase never does so on its
+  own. See anchoring/BitcoinAnchorTransactionBroadcaster.js's own header on
+  why resubmitting identical bytes is always safe when a person chooses
+  to.
+- **A new acquisition-history, placement, or publication record for a
+  broadcast transaction.** This milestone deliberately reuses NOTHING from
+  `application/BitcoinAnchorPublicationCoordinator.js` (0.8.53) and
+  `CreatePublicationAnchorUseCase` (0.8.8) — a BROADCASTED outcome here is
+  an ephemeral, per-attempt fact this page holds only until the next
+  signing or construction click replaces it, never itself a durable
+  anchor record. Connecting this granular, step-by-step pipeline to a real
+  `PublicationAnchor` — so a person's own explicit broadcast produces the
+  same kind of durable record 0.8.53's all-in-one pipeline already does —
+  remains its own, separately sized future concern, deliberately left
+  unaddressed here so this milestone stays exactly what its own name says:
+  a broadcast UI, not a publication-record migration.
+- **A `safe`, `trusted`, `secure`, `recommended`, `successRate`, `confidence`,
+  or `health` verdict of any kind.** `BROADCASTED` names exactly one fact
+  — the network accepted this transaction for broadcast — never a broader
+  judgment about it, and never a claim about eventual confirmation. See
+  `application/BitcoinAnchorBroadcastView.js`'s own header.
+- **Any change to `anchoring/BitcoinAnchorTransactionBroadcaster.js`,
+  `anchoring/BitcoinEsploraTransactionBroadcaster.js`, or any class from
+  0.8.47 through 0.8.63.** All of them stay exactly as built — this
+  milestone only ever adds a state vocabulary, one thin coordinator, a
+  verdict-free view, and the first real wiring of the unchanged 0.8.52
+  Esplora broadcaster into this running app.
+
+What's left, and deliberately unbuilt: observing whether a broadcasted
+transaction has been confirmed, reusing the existing 0.8.54 confirmation
+observer and 0.8.56 append-only confirmation history, is 0.8.65's own job,
+next.

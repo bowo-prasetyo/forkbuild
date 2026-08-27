@@ -75,6 +75,8 @@ import { BitcoinAnchorReviewedSigningState } from '../../application/BitcoinAnch
 import { describeBitcoinAnchorReviewedSigning } from '../../application/BitcoinAnchorReviewedSigningView.js';
 import { BitcoinAnchorSignedPsbtFinalizationState } from '../../application/BitcoinAnchorSignedPsbtFinalizationState.js';
 import { describeBitcoinAnchorSignedPsbtFinalization } from '../../application/BitcoinAnchorSignedPsbtFinalizationView.js';
+import { BitcoinAnchorBroadcastState } from '../../application/BitcoinAnchorBroadcastState.js';
+import { describeBitcoinAnchorBroadcast } from '../../application/BitcoinAnchorBroadcastView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -686,6 +688,24 @@ const BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES = {
     [BitcoinAnchorSignedPsbtFinalizationState.FAILED]: 'peer-badge--failed'
 };
 
+// 0.8.64 — Explicit Bitcoin Anchor Broadcast UI. Mirrors
+// BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES immediately above,
+// one step later in the same pipeline: BROADCASTING reads amber (an
+// attempt is in flight, not yet a fact — genuinely asynchronous, a real
+// network round trip), BROADCASTED reads the same "authenticated" green
+// the finalization badge map's own FINALIZED already uses — never a claim
+// of confirmation, only that the network accepted this transaction — and
+// REJECTED/UNAVAILABLE/FAILED all read the identical "actionable,
+// resolvable failure" red every other failure badge on this page already
+// uses.
+const BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES = {
+    [BitcoinAnchorBroadcastState.BROADCASTING]: 'peer-badge--pending',
+    [BitcoinAnchorBroadcastState.BROADCASTED]: 'peer-badge--authenticated',
+    [BitcoinAnchorBroadcastState.REJECTED]: 'peer-badge--failed',
+    [BitcoinAnchorBroadcastState.UNAVAILABLE]: 'peer-badge--failed',
+    [BitcoinAnchorBroadcastState.FAILED]: 'peer-badge--failed'
+};
+
 const BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES = {
     [BitcoinAnchorTransactionConstructionState.CONSTRUCTING]: 'peer-badge--pending',
     [BitcoinAnchorTransactionConstructionState.CONSTRUCTED]: 'peer-badge--authenticated',
@@ -876,6 +896,16 @@ export default {
         // — see application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js's
         // own header on why no new cryptography lives here either.
         const bitcoinAnchorSignedPsbtFinalizationCoordinator = inject('bitcoinAnchorSignedPsbtFinalizationCoordinator', null);
+        // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI. Optional — absent
+        // here, no "Broadcast Transaction" action ever renders, the
+        // identical degrade-gracefully posture every optional coordinator
+        // on this page already holds. `bitcoinAnchorBroadcastCoordinator`
+        // is a thin bridge to the unchanged 0.8.52
+        // anchoring/BitcoinAnchorTransactionBroadcaster.js — see
+        // application/BitcoinAnchorBroadcastCoordinator.js's own header on
+        // why no new Bitcoin logic lives here either, and why it only ever
+        // accepts the exact output of a successful finalization.
+        const bitcoinAnchorBroadcastCoordinator = inject('bitcoinAnchorBroadcastCoordinator', null);
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
         // Optional — absent here, no "Create Transaction Plan" action ever
         // renders, the identical degrade-gracefully posture every optional
@@ -999,6 +1029,39 @@ export default {
         // declaration immediately above, the identical restraint one stage
         // earlier.
         const bitcoinAnchorSignedPsbtFinalizationOutcome = ref(null);
+
+        // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.
+        //
+        // `bitcoinAnchorFinalizedTransaction` is the exact finalization
+        // ARTIFACT a broadcast attempt is bound to — `{ txid, rawTransaction,
+        // finalizedAt }` — captured once, the moment `finalizeBitcoinAnchorSignedPsbt()`
+        // below produces a FINALIZED outcome, and handed to
+        // `bitcoinAnchorBroadcastCoordinator.broadcast()` completely
+        // unmodified. This is deliberately a SEPARATE fact from
+        // `bitcoinAnchorSignedPsbtFinalizationOutcome` immediately above —
+        // not merely `broadcastReady = true` — so a broadcast attempt is
+        // always tied to a specific transaction's own identity, never to
+        // "whatever this page happens to be displaying right now." Reset to
+        // `null` at the exact same three points `bitcoinAnchorSignedPsbtFinalizationOutcome`
+        // itself is retired (a fresh "Create Transaction Plan", "Sign
+        // Reviewed Transaction", or "Verify & Finalize Transaction" click)
+        // — a new transaction, once constructed, reviewed, or signed, never
+        // leaves a previous transaction's own finalized bytes eligible for
+        // broadcast.
+        const bitcoinAnchorFinalizedTransaction = ref(null);
+
+        // The single, page-level result of the last explicit "Broadcast
+        // Transaction" click — `null` until one has ever been made for the
+        // CURRENT finalized transaction. Held as a plain ref, replaced
+        // wholesale by `broadcastBitcoinAnchorTransaction()` below, and
+        // reset to `null` every time `bitcoinAnchorFinalizedTransaction`
+        // itself is retired — a newly finalized transaction always starts
+        // unbroadcast again, never inheriting a previous attempt's own
+        // BROADCASTED outcome. See application/BitcoinAnchorBroadcastState.js's
+        // own header, and `bitcoinAnchorSignedPsbtFinalizationOutcome`'s own
+        // declaration immediately above, the identical restraint one stage
+        // earlier.
+        const bitcoinAnchorBroadcastOutcome = ref(null);
 
         // Every currently AUTHENTICATED peer, in registry order — the
         // full candidate list this page now hands to application/
@@ -2321,18 +2384,22 @@ export default {
             if (!bitcoinAnchorTransactionConstructionCoordinator) return;
             entry.bitcoinAnchorTransactionConstruction = { state: BitcoinAnchorTransactionConstructionState.CONSTRUCTING, construction: null, reason: null };
             // A fresh construction attempt retires whatever was previously
-            // under review/signed/finalized — never left showing stale
-            // review facts, a stale SIGNED badge, or a stale FINALIZED
-            // badge for a transaction this click is about to replace. See
+            // under review/signed/finalized/broadcast-ready — never left
+            // showing stale review facts, a stale SIGNED badge, a stale
+            // FINALIZED badge, or a stale broadcast result for a
+            // transaction this click is about to replace. See
             // `bitcoinAnchorTransactionReview`'s,
-            // `bitcoinAnchorReviewedSigningOutcome`'s, and
-            // `bitcoinAnchorSignedPsbtFinalizationOutcome`'s own
-            // declarations above.
+            // `bitcoinAnchorReviewedSigningOutcome`'s,
+            // `bitcoinAnchorSignedPsbtFinalizationOutcome`'s, and
+            // `bitcoinAnchorFinalizedTransaction`'s/`bitcoinAnchorBroadcastOutcome`'s
+            // own declarations above.
             bitcoinAnchorTransactionReview.description = null;
             bitcoinAnchorTransactionReview.publicationId = null;
             bitcoinAnchorTransactionReview.reason = null;
             bitcoinAnchorReviewedSigningOutcome.value = null;
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = null;
+            bitcoinAnchorFinalizedTransaction.value = null;
+            bitcoinAnchorBroadcastOutcome.value = null;
             try {
                 entry.bitcoinAnchorTransactionConstruction = bitcoinAnchorTransactionConstructionCoordinator.construct({
                     publicationId: entry.publication.id,
@@ -2401,11 +2468,15 @@ export default {
             if (!review || !bitcoinAnchorTransactionReview.description) return;
 
             // A fresh signing attempt retires whatever was previously
-            // finalized — never left showing a stale FINALIZED badge for a
-            // signature this click is about to replace. See
-            // `bitcoinAnchorSignedPsbtFinalizationOutcome`'s own
-            // declaration above.
+            // finalized or broadcast-ready — never left showing a stale
+            // FINALIZED badge or a stale broadcast result for a signature
+            // this click is about to replace. See
+            // `bitcoinAnchorSignedPsbtFinalizationOutcome`'s and
+            // `bitcoinAnchorFinalizedTransaction`'s/`bitcoinAnchorBroadcastOutcome`'s
+            // own declarations above.
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = null;
+            bitcoinAnchorFinalizedTransaction.value = null;
+            bitcoinAnchorBroadcastOutcome.value = null;
             bitcoinAnchorReviewedSigningOutcome.value = { state: BitcoinAnchorReviewedSigningState.SIGNING, psbt: null, signedInputs: null, reason: null };
             try {
                 bitcoinAnchorReviewedSigningOutcome.value = await bitcoinAnchorReviewedSigningCoordinator.sign({
@@ -2462,6 +2533,13 @@ export default {
             const signedPsbt = bitcoinAnchorReviewedSigningOutcome.value ? bitcoinAnchorReviewedSigningOutcome.value.psbt : null;
             if (!signedPsbt || !bitcoinAnchorTransactionReview.description) return;
 
+            // A fresh finalization attempt retires whatever was previously
+            // broadcast-ready — never left showing a stale broadcast result
+            // for a finalized transaction this click is about to replace.
+            // See `bitcoinAnchorFinalizedTransaction`'s/`bitcoinAnchorBroadcastOutcome`'s
+            // own declarations above.
+            bitcoinAnchorFinalizedTransaction.value = null;
+            bitcoinAnchorBroadcastOutcome.value = null;
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = { state: BitcoinAnchorSignedPsbtFinalizationState.FINALIZING, finalized: false, txid: null, rawTransaction: null, verifiedInputCount: null, reason: null };
             try {
                 bitcoinAnchorSignedPsbtFinalizationOutcome.value = bitcoinAnchorSignedPsbtFinalizationCoordinator.finalize({
@@ -2470,6 +2548,20 @@ export default {
                 });
             } catch (error) {
                 bitcoinAnchorSignedPsbtFinalizationOutcome.value = { state: BitcoinAnchorSignedPsbtFinalizationState.FAILED, finalized: false, txid: null, rawTransaction: null, verifiedInputCount: null, reason: error.message };
+                return;
+            }
+
+            // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI. THE ONE place
+            // this page ever captures a broadcast-eligible artifact — bound
+            // to this exact FINALIZED outcome's own txid/rawTransaction,
+            // never to "whatever this page happens to show right now." See
+            // `bitcoinAnchorFinalizedTransaction`'s own declaration above.
+            if (bitcoinAnchorSignedPsbtFinalizationOutcome.value.state === BitcoinAnchorSignedPsbtFinalizationState.FINALIZED) {
+                bitcoinAnchorFinalizedTransaction.value = Object.freeze({
+                    txid: bitcoinAnchorSignedPsbtFinalizationOutcome.value.txid,
+                    rawTransaction: bitcoinAnchorSignedPsbtFinalizationOutcome.value.rawTransaction,
+                    finalizedAt: Date.now()
+                });
             }
         }
 
@@ -2485,6 +2577,60 @@ export default {
 
         function bitcoinAnchorSignedPsbtFinalizationBadgeClass() {
             return BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES[bitcoinAnchorSignedPsbtFinalizationView().state] || 'peer-badge--pending';
+        }
+
+        // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.
+        //
+        // THE ONE place this page ever calls
+        // `bitcoinAnchorBroadcastCoordinator.broadcast()` — never triggered
+        // automatically by a FINALIZED result; only an explicit "Broadcast
+        // Transaction" click, and only ever with `bitcoinAnchorFinalizedTransaction`'s
+        // own bound `txid`/`rawTransaction` — never re-read from whatever
+        // `bitcoinAnchorSignedPsbtFinalizationOutcome` happens to hold at
+        // click time, exactly so a broadcast attempt is bound to a specific
+        // finalized transaction's own identity. No automatic retry: a
+        // REJECTED or UNAVAILABLE result is the end of this attempt — a
+        // person clicks "Broadcast Transaction" again, explicitly, to make
+        // another one (see anchoring/BitcoinAnchorTransactionBroadcaster.js's
+        // own header on why resubmitting the identical, already-finalized
+        // bytes is always safe when a person chooses to). A thrown error is
+        // caught HERE, at the UI boundary, and turned into its own honest
+        // FAILED outcome — mirroring exactly how
+        // `finalizeBitcoinAnchorSignedPsbt()` above already handles its own
+        // coordinator's thrown errors.
+        async function broadcastBitcoinAnchorTransaction() {
+            if (!bitcoinAnchorBroadcastCoordinator) return;
+            const bound = bitcoinAnchorFinalizedTransaction.value;
+            if (!bound) return;
+
+            bitcoinAnchorBroadcastOutcome.value = { state: BitcoinAnchorBroadcastState.BROADCASTING, broadcasted: false, txid: null, reason: null };
+            try {
+                bitcoinAnchorBroadcastOutcome.value = await bitcoinAnchorBroadcastCoordinator.broadcast({
+                    finalized: true,
+                    txid: bound.txid,
+                    rawTransaction: bound.rawTransaction
+                });
+            } catch (error) {
+                bitcoinAnchorBroadcastOutcome.value = { state: BitcoinAnchorBroadcastState.FAILED, broadcasted: false, txid: null, reason: error.message };
+            }
+        }
+
+        // Pure projection of `bitcoinAnchorBroadcastOutcome` through
+        // application/BitcoinAnchorBroadcastView.js's own
+        // `describeBitcoinAnchorBroadcast()` — the identical "the UI owns no
+        // facts of its own, it only projects an injected collaborator's own
+        // result" discipline every other `*View()` function on this page
+        // already holds.
+        function bitcoinAnchorBroadcastView() {
+            return describeBitcoinAnchorBroadcast(bitcoinAnchorBroadcastOutcome.value);
+        }
+
+        function bitcoinAnchorBroadcastBadgeClass() {
+            return BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES[bitcoinAnchorBroadcastView().state] || 'peer-badge--pending';
+        }
+
+        function isBitcoinAnchorBroadcasting() {
+            return bitcoinAnchorBroadcastView().state === BitcoinAnchorBroadcastState.BROADCASTING;
         }
 
         // Pure projection of `entry.bitcoinAnchorTransactionConstruction`
@@ -3361,7 +3507,10 @@ export default {
             BitcoinAnchorReviewedSigningState,
             bitcoinAnchorSignedPsbtFinalizationCoordinator, finalizeBitcoinAnchorSignedPsbt,
             bitcoinAnchorSignedPsbtFinalizationView, bitcoinAnchorSignedPsbtFinalizationBadgeClass,
-            BitcoinAnchorSignedPsbtFinalizationState
+            BitcoinAnchorSignedPsbtFinalizationState,
+            bitcoinAnchorBroadcastCoordinator, bitcoinAnchorFinalizedTransaction, broadcastBitcoinAnchorTransaction,
+            bitcoinAnchorBroadcastView, bitcoinAnchorBroadcastBadgeClass, isBitcoinAnchorBroadcasting,
+            BitcoinAnchorBroadcastState
         };
     },
     template: `
@@ -3630,6 +3779,66 @@ export default {
                         </details>
                         <p class="form-hint form-hint--neutral">
                             Transaction finalized. Broadcasting it is a separate, explicit step.
+                        </p>
+                    </template>
+                </div>
+
+                <!-- 0.8.64 — Explicit Bitcoin Anchor Broadcast UI. The final
+                     explicit boundary in this pipeline: nothing above this
+                     button ever reaches the network. Only ever rendered
+                     once a FINALIZED outcome has bound a real
+                     `bitcoinAnchorFinalizedTransaction` artifact; clicking
+                     it hands that exact, already-verified txid/rawTransaction
+                     to anchoring/BitcoinAnchorTransactionBroadcaster.js
+                     (0.8.52, unchanged) via the new application/
+                     BitcoinAnchorBroadcastCoordinator.js. BROADCASTED here
+                     means only "the network accepted this transaction" —
+                     never that it has been confirmed; see application/
+                     BitcoinAnchorBroadcastState.js's own header. A REJECTED
+                     or UNAVAILABLE result is the end of this attempt —
+                     never retried automatically; a person clicks "Broadcast
+                     Transaction" again, explicitly, for another one. -->
+                <div v-if="bitcoinAnchorFinalizedTransaction" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Broadcast</span>
+                    <dl class="evidence-fields">
+                        <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ bitcoinAnchorFinalizedTransaction.txid }}</dd></div>
+                        <div class="evidence-field"><dt>Finalized transaction</dt><dd>{{ bitcoinAnchorFinalizedTransaction.rawTransaction.bytes.length }} bytes</dd></div>
+                    </dl>
+                    <p class="form-hint form-hint--neutral">
+                        This is the exact transaction that was reviewed, signed, and cryptographically verified.
+                        Broadcasting submits it; it does not decide whether the network will accept it.
+                    </p>
+                    <button type="button" class="peer-action-btn"
+                        :disabled="isBitcoinAnchorBroadcasting()"
+                        @click="broadcastBitcoinAnchorTransaction">
+                        {{ isBitcoinAnchorBroadcasting() ? 'Broadcasting…' : (bitcoinAnchorBroadcastView().state === BitcoinAnchorBroadcastState.IDLE ? 'Broadcast Transaction' : 'Broadcast Again') }}
+                    </button>
+
+                    <span v-if="bitcoinAnchorBroadcastView().state !== BitcoinAnchorBroadcastState.IDLE" class="peer-badge"
+                        :class="bitcoinAnchorBroadcastBadgeClass()">
+                        {{ bitcoinAnchorBroadcastView().stateLabel }}
+                    </span>
+                    <p v-if="bitcoinAnchorBroadcastView().reason" class="form-hint form-hint--neutral">
+                        {{ bitcoinAnchorBroadcastView().reason }}
+                    </p>
+
+                    <!-- BROADCASTED names exactly one fact — the network
+                         accepted this transaction — never confirmation. See
+                         application/BitcoinAnchorBroadcastView.js's own
+                         header on why no confirmed/confirmations/blockHeight
+                         field exists here; observing confirmation remains
+                         its own, separately sized, explicit next step. -->
+                    <template v-if="bitcoinAnchorBroadcastView().state === BitcoinAnchorBroadcastState.BROADCASTED">
+                        <dl class="evidence-fields">
+                            <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ bitcoinAnchorBroadcastView().txid }}</dd></div>
+                        </dl>
+                        <details class="evidence-inspection-proof">
+                            <summary>Raw transaction bytes</summary>
+                            <pre class="evidence-inspection-proof-json">{{ bitcoinAnchorFinalizedTransaction.rawTransaction.hex }}</pre>
+                        </details>
+                        <p class="form-hint form-hint--neutral">
+                            Transaction broadcasted. This is not yet confirmation — observing confirmation is a
+                            separate, explicit step.
                         </p>
                     </template>
                 </div>

@@ -15029,3 +15029,81 @@ of a signature is one narrow, real fact; it is not a judgment about the
 transaction, the wallet, or the person who signed it.
 
 See `docs/Roadmap.md`, 0.8.63, for the full milestone entry.
+
+## Broadcast Is Bound To Transaction Identity, Not UI Sequence (0.8.64)
+
+`anchoring/BitcoinAnchorTransactionBroadcaster.js`'s own header (0.8.52)
+named "broadcasting submits; it does not decide" as this codebase's
+standing rule for what a broadcaster is even for. This milestone finally
+gives a person a button that reaches it — and the one design question it
+had to answer honestly was what, exactly, that button submits.
+
+> A broadcast attempt is bound to the exact bytes a finalization attempt
+> produced, never to whatever this page happens to be displaying right
+> now.
+
+**`broadcastReady = true` is not enough — the artifact itself has to be
+the fact.** It would have been simpler for the broadcast button to read
+`bitcoinAnchorSignedPsbtFinalizationOutcome.value` fresh at click time and
+call it done. This milestone deliberately does not do that. The moment
+`finalizeBitcoinAnchorSignedPsbt()` produces a FINALIZED outcome,
+`bitcoinAnchorFinalizedTransaction` captures `{ txid, rawTransaction,
+finalizedAt }` as its own, separate, frozen artifact — and every explicit
+"Broadcast Transaction" click hands THAT artifact to `BitcoinAnchorBroadcastCoordinator.broadcast()`,
+never a value re-read from whatever the page happens to be showing at the
+moment of the click. A boolean flag would have been enough to gate a
+button; it would not have been enough to guarantee that the bytes actually
+submitted are the bytes a person actually looked at.
+
+**Every earlier stage in this pipeline already retires its own successor's
+result on a fresh attempt; this milestone extends that chain one stage
+further.** `application/BitcoinAnchorSignedPsbtFinalizationState.js`'s own
+header already required that a fresh "Sign Reviewed Transaction" click
+retires a previous FINALIZED outcome. This milestone's own
+`bitcoinAnchorFinalizedTransaction` and `bitcoinAnchorBroadcastOutcome` are
+retired at the identical three points — a fresh "Create Transaction Plan,"
+"Sign Reviewed Transaction," or "Verify & Finalize Transaction" click —
+so a stale broadcast result, or a broadcast-eligible artifact bound to a
+transaction that no longer exists, can never survive past the moment a
+person moves on to building something new.
+
+**No new Bitcoin logic, anywhere.** `application/BitcoinAnchorBroadcastCoordinator.js`
+selects no UTXO, builds no PSBT, checks no signature, and re-implements no
+part of the broadcast protocol — it calls the unchanged 0.8.52 broadcaster
+exactly once per explicit click and translates its result into a
+vocabulary a person can read. Every invariant this milestone exposes —
+"broadcasting submits; it does not decide," the caller's own txid staying
+authoritative regardless of what the network claims, no retry of any kind
+— was already built, and already tested, in 0.8.52. This milestone also
+finally wires a REAL, network-backed broadcaster (anchoring/
+BitcoinEsploraTransactionBroadcaster.js, built in 0.8.52 but never
+connected to this running app) into this one pipeline — a change in
+wiring, not in behavior: the class itself, and everything it promises,
+stays exactly what 0.8.52 already built and tested.
+
+**BROADCASTED is still not CONFIRMED — the line 0.8.9 drew first is drawn
+again, one stage later.** `anchoring/BitcoinAnchorPublisher.js`'s own
+header (0.8.9) and `application/BitcoinAnchorPublicationLifecycleState.js`'s
+own header (0.8.53) already held that accepting a transaction for
+broadcast is not the same fact as Bitcoin having mined it. `application/
+BitcoinAnchorBroadcastState.js` and `application/BitcoinAnchorBroadcastView.js`
+hold the identical line: no `confirmed`, `confirmations`, `blockHeight`, or
+`blockHash` field exists anywhere in this milestone's own vocabulary or
+view. Observing confirmation stays its own, separate, later, explicit
+action — reusing the unchanged 0.8.54 confirmation observer, never
+duplicating it here.
+
+**A rejection or an unavailable broadcaster is the end of the attempt, not
+the start of a retry loop.** Exactly as `application/
+BitcoinAnchorSignedPsbtFinalizationCoordinator.js`'s own header already
+held one stage earlier — a cryptographic failure is the end of a
+finalization attempt, not the start of an automatic retry — this milestone
+holds the identical line for broadcasting: nothing in it re-submits,
+waits and tries again, or substitutes different bytes after a REJECTED or
+UNAVAILABLE result. A person clicks "Broadcast Again," explicitly, to make
+another attempt with the identical, already-finalized bytes — safe to do,
+because `anchoring/BitcoinAnchorTransactionBroadcaster.js`'s own header
+already established that duplicate submissions of the same bytes are
+deterministic.
+
+See `docs/Roadmap.md`, 0.8.64, for the full milestone entry.
