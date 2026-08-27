@@ -27073,4 +27073,206 @@ content published through this milestone's own pipeline actually
 resolves, through the gateway, to bytes that still hash to what was
 published — binding a ForkBuild `ContentReference` to its own CID with a
 real, re-checked guarantee rather than a one-time trust of whatever the
-provider returned — is 0.8.68's own job, next.
+provider returned — is real, separately sized future work. Building it
+before an ordinary person has any way to actually TRIGGER a real remote
+publish from this running app would mean verifying a pipeline nobody can
+reach yet — so it waits one milestone, for 0.8.68 to open that pipeline
+up first; see that milestone's own header on why the sequence changed
+from what this paragraph originally named.
+
+## 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX
+
+0.8.67's own closing paragraph, immediately above, named identity
+binding and re-verification as "0.8.68's own job, next." That sequencing
+turned out to be one milestone too early. 0.8.67's own "Deliberately
+excluded" list said exactly why, in the same breath: "no
+credential-entry form... left deliberately unwired until its own UI
+milestone gives a person a safe, explicit way to supply a credential."
+An ordinary ForkBuild user, running this app in a browser with no Kubo
+daemon installed, still has no way to reach content/
+IpfsRemotePinningContentStore.js at all — not to publish, and therefore
+not to verify a publish either. Re-checking a publish nobody can trigger
+would be verifying a pipeline this app cannot yet reach from the
+outside. This milestone closes THAT gap first — deliberately narrow,
+deliberately UI/configuration-only — and identity binding moves to
+0.8.69, next, once there is a real, explicit publish result on screen to
+bind an identity to.
+
+> The code can publish remotely, but a normal user still has no
+> explicit, understandable way to configure and invoke that capability.
+
+**Deliberately UI/configuration-only.** This milestone changes nothing
+about `content/PinningProvider.js`, `content/HttpPinningProvider.js`, or
+`content/IpfsRemotePinningContentStore.js` — all three stay exactly as
+0.8.67 built them. Every new file either COLLECTS what a person types in
+(`application/IpfsRemotePublishingConfiguration.js`), NAMES the outcome
+vocabulary an explicit publish attempt can reach
+(`application/IpfsRemotePublicationState.js`), WIRES one explicit click
+to the unchanged 0.8.67 pipeline
+(`application/IpfsRemotePublicationCoordinator.js`), or PROJECTS a
+result onto a screen (`application/IpfsRemotePublicationView.js`).
+
+```text
+content/PinningProvider.js                (0.8.67, UNCHANGED)
+content/HttpPinningProvider.js            (0.8.67, UNCHANGED)
+content/IpfsRemotePinningContentStore.js  (0.8.67, UNCHANGED)
+             │
+             │ a real capability, never reachable from a running screen
+             ▼
+0.8.68  Explicit Remote IPFS Publishing Configuration & UX             ✓
+             ├── application/IpfsRemotePublishingConfiguration.js — new;
+             │   { endpoint, credential, requestField, responseField },
+             │   caller-supplied, ephemeral, never persisted — the exact
+             │   shape content/HttpPinningProvider.js's own constructor
+             │   already accepts, collected from a person rather than
+             │   from a test
+             ├── application/IpfsRemotePublicationState.js — new; the
+             │   familiar six-value shape (IDLE / PUBLISHING / PUBLISHED
+             │   / REJECTED / UNAVAILABLE / FAILED) application/
+             │   BitcoinAnchorBroadcastState.js (0.8.64) already
+             │   established, carrying 0.8.67's own REJECTED/UNAVAILABLE
+             │   split through to the screen unmodified
+             ├── application/IpfsRemotePublicationCoordinator.js — new;
+             │   a deliberately thin wiring — constructs a FRESH
+             │   content/HttpPinningProvider.js from whatever
+             │   configuration is currently in effect, for every single
+             │   explicit "Publish to Remote IPFS" click, and calls
+             │   content/IpfsRemotePinningContentStore.js#put() exactly
+             │   once
+             ├── application/IpfsRemotePublicationView.js — new; the
+             │   label vocabulary and the one place a credential is
+             │   guaranteed never to be projected onto a screen
+             ├── application/CreateIpfsRemotePublicationCoordinatorUseCase.js
+             │   — new; the composition-root shape every coordinator in
+             │   this codebase already gets
+             └── ui/main.js / ui/views/DecentralizedPublicationsView.js
+                 — the first real wiring: an "IPFS Publishing" section on
+                 each publication's own card, entirely separate from
+                 "Snapshot Placements"
+```
+
+**Ephemeral, like the Bitcoin wallet capability — never like a
+placement.** `application/IpfsRemotePublishingConfiguration.js` has no
+`save()`, no `load()`, and touches no localStorage, IndexedDB, or
+cookie — an instance lives exactly as long as the reactive UI state
+holding it, discarded on a page reload, an explicit "Clear
+Configuration" click, or simply navigating away, mirroring anchoring/
+BitcoinWalletConnection.js's own "A CAPABILITY, NEVER A SECRET" restraint
+one domain over:
+
+```text
+User configures endpoint/credential/field names   (ephemeral, this
+        │                                           browsing session only)
+        ▼
+ForkBuild constructs a fresh HttpPinningProvider   (application/
+        │                                           IpfsRemotePublicationCoordinator.js)
+        ▼
+ForkBuild constructs a fresh IpfsRemotePinningContentStore
+        │
+        ▼
+User explicitly clicks "Publish to Remote IPFS"
+        │
+        ▼
+PUBLISHED / REJECTED / UNAVAILABLE / FAILED
+        │
+        ▼
+The capability can be discarded — "Clear Configuration," a reload, or
+navigating away all forget it identically
+```
+
+**A state vocabulary that survives all the way to the screen.**
+`content/HttpPinningProvider.js`'s own 0.8.67 split — a 4xx
+`PinningRejectedError` versus a 5xx/unreachable `ContentUnavailableError`
+— reaches application/IpfsRemotePublicationCoordinator.js completely
+unreclassified, and reaches the screen through application/
+IpfsRemotePublicationView.js exactly as REJECTED/UNAVAILABLE, never
+merged into one undifferentiated failure. A 401/403/quota response never
+reads as "network unavailable"; a timeout never reads as "the provider
+rejected this." FAILED stays honestly reachable here — unlike several
+other coordinators' own FAILED, which stay theoretical until a caller
+mistake — because content/HttpPinningProvider.js's generic,
+provider-neutral wire contract makes a malformed remote response (a
+"successful" reply naming no CID at all) a real possibility, not a
+hypothetical one.
+
+**A thin coordinator, on purpose.** `application/
+IpfsRemotePublicationCoordinator.js#publish()` computes no content hash
+of its own — content/IpfsRemotePinningContentStore.js#put() already
+does, exactly once, before the provider is ever consulted. It never
+retries, never selects a second provider, never silently falls back to
+local Kubo or a gateway, never caches a CID, and never treats a CID as
+this content's own identity — `contentHash` and `locator` stay two
+separate fields on every outcome, exactly as core/ContentReference.js's
+own `hash`/`uri` already are. The existing store remains authoritative
+for content creation; this milestone only ever gives a person an
+explicit way to reach it.
+
+**Capabilities shown, never chosen automatically.** This milestone adds
+no logic anywhere that picks a backend on a person's behalf:
+
+| Backend        | Resolve | Publish |
+| -------------- | ------: | ------: |
+| Local Kubo     |       ✓ |       ✓ |
+| Remote Gateway |       ✓ |       — |
+| Remote Pinning |       — |       ✓ |
+
+A person with no Kubo daemon installed can now explicitly configure and
+use remote pinning; a person running Kubo keeps using it, unchanged and
+untouched by this milestone, exactly as 0.8.66's own "two explicit
+registries, never one silent overwrite" restraint already established
+one axis over.
+
+```text
+0.8.67  Explicit Remote IPFS Publishing via a Pinning Provider         ✓
+             │
+             ▼
+0.8.68  Explicit Remote IPFS Publishing Configuration & UX             ✓
+```
+
+### Deliberately excluded
+
+- **Identity binding, or independently re-verifying a publish by
+  resolving it back through the gateway.** `application/
+  IpfsRemotePublicationCoordinator.js` trusts the CID content/
+  IpfsRemotePinningContentStore.js#put() hands back exactly as much (and
+  as little) as that class already trusts the provider's own — see this
+  milestone's own header on why that verification needed a real, explicit
+  publish path to exist first. This is 0.8.69's own job, next.
+- **A second, explicit `application/SnapshotPlacementStoreRegistry.js`
+  registration, or any integration with `application/
+  CreateExternalSnapshotPlacementUseCase.js`.** A remote publish attempt
+  built here is never cataloged as a `core/PublicationSnapshotPlacement.js`
+  and never persisted anywhere — it is shown, once, as the result of the
+  most recent explicit click, exactly like `application/
+  BitcoinAnchorBroadcastCoordinator.js`'s own outcome one domain over.
+  0.8.67's own "Deliberately excluded" list left this real registry
+  wiring for later, separately sized work; it is STILL left for later —
+  this milestone answers the credential-UI half of that gap without
+  building the other half.
+- **Any change to `content/PinningProvider.js`, `content/
+  HttpPinningProvider.js`, or `content/IpfsRemotePinningContentStore.js`.**
+  All three stay exactly as 0.8.67 built them — this milestone only ever
+  adds an explicit, ephemeral configuration/coordination layer above
+  them.
+- **Automatic backend selection of any kind.** No logic anywhere in this
+  milestone picks Kubo, a gateway, or remote pinning on a person's
+  behalf — the capability table above is shown, never acted on
+  automatically.
+- **A concrete, named commercial pinning-provider preset.** Configuring
+  remote publishing still means typing in an endpoint (and, optionally, a
+  credential and field names) by hand — this milestone adds no
+  "Pinata"/"Filebase"/"web3.storage" quick-select of any kind.
+- **Credential persistence of any kind.** No localStorage, IndexedDB,
+  cookie, or server-side storage — a configured credential lives only as
+  long as the reactive UI state holding it. See docs/Principles.md, "A
+  Configured Credential Lives Only As Long As The Capability It Grants
+  (0.8.68)."
+
+What's left, and deliberately unbuilt: this milestone gives a person an
+explicit, honest way to publish to a remote pinning service and see
+exactly what happened — but it never checks whether the CID that service
+handed back can actually be resolved back into the same bytes.
+`IpfsPublicationRecord`, and the explicit `resolve locator -> retrieve
+bytes -> recompute the ForkBuild content hash -> HASH_MATCH /
+HASH_MISMATCH / UNAVAILABLE` operation that record makes possible, is
+0.8.69's own job, next.

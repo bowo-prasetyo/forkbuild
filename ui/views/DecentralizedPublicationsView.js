@@ -24,6 +24,9 @@ import { describePlacementKnowledge } from '../../application/PublicationSnapsho
 import { SnapshotPlacementCreationUiState } from '../../application/SnapshotPlacementCreationUiState.js';
 import { SnapshotPlacementCreationOutcome } from '../../application/SnapshotPlacementCreationOutcome.js';
 import { describeCreationAttempt as describePlacementCreationAttempt, describeCreationButtonLabel as describePlacementCreationButtonLabel } from '../../application/SnapshotPlacementCreationView.js';
+import { IpfsRemotePublicationState } from '../../application/IpfsRemotePublicationState.js';
+import { describeIpfsRemotePublication, describeIpfsRemotePublishingConfiguration } from '../../application/IpfsRemotePublicationView.js';
+import { IpfsRemotePublishingConfiguration } from '../../application/IpfsRemotePublishingConfiguration.js';
 import { createResolutionObservation } from '../../application/SnapshotPlacementResolutionObservation.js';
 import { deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote } from '../../application/SnapshotPlacementLifecycleView.js';
 import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/PublicationDecentralizationView.js';
@@ -712,6 +715,21 @@ const BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES = {
     [BitcoinAnchorTransactionConstructionState.FAILED]: 'peer-badge--failed'
 };
 
+// 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX. Mirrors
+// BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES immediately above exactly, one
+// external boundary over: PUBLISHING reads pending, PUBLISHED reads the
+// SAME "authenticated" green every other acceptance observation on this
+// page already uses (never a distinct "trusted"/"safe" color — PUBLISHED
+// names one fact, not a verdict), and REJECTED/UNAVAILABLE/FAILED all
+// read the identical "actionable, resolvable failure" red.
+const IPFS_REMOTE_PUBLICATION_BADGE_CLASSES = {
+    [IpfsRemotePublicationState.PUBLISHING]: 'peer-badge--pending',
+    [IpfsRemotePublicationState.PUBLISHED]: 'peer-badge--authenticated',
+    [IpfsRemotePublicationState.REJECTED]: 'peer-badge--failed',
+    [IpfsRemotePublicationState.UNAVAILABLE]: 'peer-badge--failed',
+    [IpfsRemotePublicationState.FAILED]: 'peer-badge--failed'
+};
+
 export default {
     name: 'DecentralizedPublicationsView',
     setup() {
@@ -773,6 +791,20 @@ export default {
         // posture `creationCoordinator` above already holds for
         // `availableAnchorTypes`.
         const placementCreationCoordinator = inject('snapshotPlacementCreationCoordinator', null);
+        // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
+        // Optional — absent here (e.g. a test harness that never provides
+        // either), the "IPFS Publishing" section simply never renders,
+        // the identical degrade-gracefully posture `placementCreationCoordinator`
+        // immediately above already holds. `ipfsRemotePublicationCoordinator`
+        // is the ONE place this page ever calls
+        // application/IpfsRemotePublicationCoordinator.js#publish() —
+        // `publicationCatalogContentResolver` is the SAME resolver
+        // application/CreateExternalSnapshotPlacementUseCase.js already
+        // reads a publication's own locally stored bytes through, reused
+        // here rather than duplicated (see ui/main.js's own 0.8.68
+        // comment).
+        const ipfsRemotePublicationCoordinator = inject('ipfsRemotePublicationCoordinator', null);
+        const publicationCatalogContentResolver = inject('publicationCatalogContentResolver', null);
         // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
         // Optional — absent here (e.g. a test harness that never provides
         // it), "Local Snapshot" simply never renders, the identical
@@ -1315,6 +1347,32 @@ export default {
                 // application/SnapshotPlacementCreationUiState.js's own
                 // header.
                 placementCreationAttempts: {},
+                // 0.8.68 — Explicit Remote IPFS Publishing Configuration &
+                // UX. `ipfsRemotePublishingConfiguration` is an ephemeral
+                // application/IpfsRemotePublishingConfiguration.js instance
+                // for THIS entry — `null` until "Configure Remote
+                // Publishing" is explicitly submitted, and never read from
+                // or written to anything durable (see that class's own
+                // header, and application/IpfsRemotePublishingConfiguration
+                // .js's own header, "EPHEMERAL BY CONSTRUCTION").
+                // `ipfsRemotePublishingConfigureFormOpen`/
+                // `ipfsRemotePublishingDraft` hold only the in-progress
+                // form fields — discarded, never promoted to a real
+                // configuration, unless that submit actually happens.
+                // `ipfsRemotePublicationOutcome` is a single ephemeral
+                // outcome object for THIS entry, `null` until "Publish to
+                // Remote IPFS" is explicitly clicked, and reset to `null`
+                // every time the configuration itself is replaced —
+                // mirroring `bitcoinAnchorBroadcastOutcome`'s own "a fresh
+                // attempt retires whatever was previously in-flight"
+                // restraint, one axis over. None of these four fields is
+                // ever read from or written to localStorage, IndexedDB, a
+                // cookie, or anything else durable — they live exactly as
+                // long as this page does.
+                ipfsRemotePublishingConfiguration: null,
+                ipfsRemotePublishingConfigureFormOpen: false,
+                ipfsRemotePublishingDraft: { endpoint: '', credential: '', requestField: '', responseField: '' },
+                ipfsRemotePublicationOutcome: null,
                 // 0.8.33 — Local Snapshot Content Availability &
                 // Integrity UX. A single ephemeral attempt object for
                 // THIS entry — `null` until "Check Local Snapshot" is
@@ -3372,6 +3430,128 @@ export default {
             return describePlacementCreationButtonLabel(humanizeContentKind(storage), { creating: view.state === SnapshotPlacementCreationUiState.CREATING, hasExisting });
         }
 
+        // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
+        //
+        // "Configure Remote Publishing" opens a small, entry-local form —
+        // draft fields only, never a real application/
+        // IpfsRemotePublishingConfiguration.js until "Save Configuration"
+        // is actually clicked. Opening or canceling the form never
+        // constructs, discards, or touches a configuration that already
+        // exists; canceling simply hides the form again, leaving whatever
+        // was previously configured (if anything) exactly as it was.
+        function openIpfsRemotePublishingConfigureForm(entry) {
+            const existing = entry.ipfsRemotePublishingConfiguration;
+            entry.ipfsRemotePublishingDraft = {
+                endpoint: existing ? existing.endpoint : '',
+                credential: '',
+                requestField: existing ? (existing.requestField || '') : '',
+                responseField: existing ? (existing.responseField || '') : ''
+            };
+            entry.ipfsRemotePublishingConfigureFormOpen = true;
+        }
+
+        function cancelIpfsRemotePublishingConfigureForm(entry) {
+            entry.ipfsRemotePublishingConfigureFormOpen = false;
+        }
+
+        // Mirrors togglePlacements()/toggleEvidence()'s own single-button
+        // shape exactly — opening re-seeds the draft from whatever is
+        // currently configured (see openIpfsRemotePublishingConfigureForm()
+        // above); canceling only hides the form again.
+        function toggleIpfsRemotePublishingConfigureForm(entry) {
+            if (entry.ipfsRemotePublishingConfigureFormOpen) {
+                cancelIpfsRemotePublishingConfigureForm(entry);
+            } else {
+                openIpfsRemotePublishingConfigureForm(entry);
+            }
+        }
+
+        // Constructs a brand-new application/IpfsRemotePublishingConfiguration.js
+        // from this entry's own draft fields — THE ONE place this page
+        // ever constructs one. A (re)configuration always retires whatever
+        // was previously published under the OLD configuration: a newly
+        // configured capability always starts unpublished again, never
+        // inheriting a previous configuration's own PUBLISHED outcome. See
+        // application/IpfsRemotePublicationState.js's own header.
+        function saveIpfsRemotePublishingConfiguration(entry) {
+            const draft = entry.ipfsRemotePublishingDraft;
+            try {
+                entry.ipfsRemotePublishingConfiguration = new IpfsRemotePublishingConfiguration({
+                    endpoint: draft.endpoint,
+                    credential: draft.credential || null,
+                    requestField: draft.requestField || null,
+                    responseField: draft.responseField || null
+                });
+            } catch (error) {
+                entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.FAILED, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: error.message };
+                return;
+            }
+            entry.ipfsRemotePublicationOutcome = null;
+            entry.ipfsRemotePublishingConfigureFormOpen = false;
+        }
+
+        // Discards this entry's own configuration and every fact drawn
+        // from it — mirroring anchoring/BitcoinWalletConnection.js#disconnect()'s
+        // own unconditional discard, one axis over: the capability is
+        // simply given up, never persisted anywhere first.
+        function clearIpfsRemotePublishingConfiguration(entry) {
+            entry.ipfsRemotePublishingConfiguration = null;
+            entry.ipfsRemotePublicationOutcome = null;
+            entry.ipfsRemotePublishingConfigureFormOpen = false;
+        }
+
+        function ipfsRemotePublishingConfigurationView(entry) {
+            return describeIpfsRemotePublishingConfiguration(entry.ipfsRemotePublishingConfiguration);
+        }
+
+        // THE ONE place this page ever calls
+        // application/IpfsRemotePublicationCoordinator.js#publish() —
+        // never triggered automatically by saving a configuration; only an
+        // explicit "Publish to Remote IPFS" click. Bytes are sourced
+        // exactly the way application/CreateExternalSnapshotPlacementUseCase.js
+        // (0.8.18) already sources them for the unrelated Snapshot
+        // Placement pipeline — a local integrity check against this
+        // entry's own claimed content hash, then the same resolver's own
+        // `resolve()` — deliberately NOT by importing that use case
+        // itself, which is bound to application/
+        // SnapshotPlacementStoreRegistry.js and a persisted, cataloged
+        // placement; this milestone's own coordinator never catalogs
+        // anything (see that coordinator's own header). A thrown error is
+        // caught HERE, at the UI boundary, and turned into its own honest
+        // FAILED outcome, mirroring `broadcastBitcoinAnchorTransaction()`'s
+        // own identical restraint above.
+        async function publishToRemoteIpfs(entry) {
+            if (!ipfsRemotePublicationCoordinator || !publicationCatalogContentResolver) return;
+            const configuration = entry.ipfsRemotePublishingConfiguration;
+            if (!configuration) return;
+
+            entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.PUBLISHING, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: null };
+            try {
+                const contentHash = entry.publication.contentReference.hash;
+                const isValid = publicationCatalogContentResolver.verify(entry.publication.id, contentHash);
+                if (!isValid) {
+                    throw new Error('local snapshot integrity check failed — refusing to publish it externally');
+                }
+                const snapshotJson = publicationCatalogContentResolver.resolve(entry.publication.id);
+                const bytes = JSON.stringify(snapshotJson);
+                entry.ipfsRemotePublicationOutcome = await ipfsRemotePublicationCoordinator.publish({ bytes, configuration });
+            } catch (error) {
+                entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.FAILED, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: error.message };
+            }
+        }
+
+        function ipfsRemotePublicationView(entry) {
+            return describeIpfsRemotePublication(entry.ipfsRemotePublicationOutcome);
+        }
+
+        function ipfsRemotePublicationBadgeClass(entry) {
+            return IPFS_REMOTE_PUBLICATION_BADGE_CLASSES[ipfsRemotePublicationView(entry).state] || 'peer-badge--pending';
+        }
+
+        function isIpfsRemotePublishing(entry) {
+            return ipfsRemotePublicationView(entry).state === IpfsRemotePublicationState.PUBLISHING;
+        }
+
         // 0.8.11 — Explicit External Anchoring UX. The one place this
         // page calls application/PublicationAnchorCreationCoordinator.js
         // (through the coordinator) — always for exactly ONE anchorType,
@@ -3629,6 +3809,13 @@ export default {
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
             placementInspectionKnowledge,
             availableStorageTypes, createPlacement, placementCreationView, placementCreationBadgeClass, placementCreationButtonLabel,
+            ipfsRemotePublicationCoordinator, publicationCatalogContentResolver,
+            openIpfsRemotePublishingConfigureForm, cancelIpfsRemotePublishingConfigureForm,
+            toggleIpfsRemotePublishingConfigureForm,
+            saveIpfsRemotePublishingConfiguration, clearIpfsRemotePublishingConfiguration,
+            ipfsRemotePublishingConfigurationView, publishToRemoteIpfs,
+            ipfsRemotePublicationView, ipfsRemotePublicationBadgeClass, isIpfsRemotePublishing,
+            IpfsRemotePublicationState,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -5448,6 +5635,121 @@ export default {
                                         </dl>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
+                         Deliberately a SEPARATE section from "Snapshot Placements" above —
+                         a snapshot placement (0.8.18/0.8.25) is a claim, cataloged and signed,
+                         about where bytes can presently be retrieved; a remote publish attempt
+                         here is neither. It never touches application/
+                         SnapshotPlacementStoreRegistry.js, never calls application/
+                         CreateExternalSnapshotPlacementUseCase.js, and never creates a
+                         core/PublicationSnapshotPlacement.js — see application/
+                         IpfsRemotePublicationCoordinator.js's own header, "The existing store
+                         remains authoritative for content creation." This section only ever
+                         shows the result of the MOST RECENT explicit publish attempt, exactly
+                         like the Bitcoin Broadcast section above, one axis over. Absent
+                         ipfsRemotePublicationCoordinator or publicationCatalogContentResolver,
+                         this section simply never renders — the identical degrade-gracefully
+                         posture every optional section on this page already holds. -->
+                    <div v-if="ipfsRemotePublicationCoordinator && publicationCatalogContentResolver" class="evidence-section">
+                        <div class="evidence-summary">
+                            <span class="evidence-summary-title">IPFS Publishing</span>
+                            <span class="form-hint form-hint--neutral">
+                                Local Kubo can resolve and publish. A remote gateway can only resolve. Remote
+                                pinning, configured below, can only publish.
+                            </span>
+                        </div>
+
+                        <div class="evidence-anchor-card">
+                            <div class="evidence-anchor-header">
+                                <span class="evidence-anchor-type">Remote pinning</span>
+                            </div>
+                            <dl class="evidence-fields">
+                                <div class="evidence-field"><dt>Endpoint</dt><dd>{{ ipfsRemotePublishingConfigurationView(entry).endpoint || 'not configured' }}</dd></div>
+                                <div class="evidence-field"><dt>Credential</dt><dd>{{ ipfsRemotePublishingConfigurationView(entry).hasCredential ? 'configured' : 'not configured' }}</dd></div>
+                            </dl>
+
+                            <div class="identity-mgmt-actions">
+                                <button type="button" class="action-btn action-btn--secondary"
+                                        @click="toggleIpfsRemotePublishingConfigureForm(entry)">
+                                    {{ entry.ipfsRemotePublishingConfigureFormOpen ? 'Cancel' : (ipfsRemotePublishingConfigurationView(entry).configured ? 'Reconfigure Remote Publishing' : 'Configure Remote Publishing') }}
+                                </button>
+                                <button v-if="ipfsRemotePublishingConfigurationView(entry).configured" type="button" class="action-btn action-btn--secondary"
+                                        @click="clearIpfsRemotePublishingConfiguration(entry)">
+                                    Clear Configuration
+                                </button>
+                            </div>
+
+                            <!-- Ephemeral draft fields — nothing here becomes a real
+                                 application/IpfsRemotePublishingConfiguration.js until "Save
+                                 Configuration" is explicitly clicked, and nothing here is ever
+                                 written to localStorage, IndexedDB, a cookie, or any other
+                                 persisted medium. See that class's own header. -->
+                            <div v-if="entry.ipfsRemotePublishingConfigureFormOpen" class="evidence-inspection-adapter">
+                                <label class="form-field">
+                                    <span class="form-label">Endpoint</span>
+                                    <input type="text" class="form-input" v-model="entry.ipfsRemotePublishingDraft.endpoint"
+                                           placeholder="https://your-pinning-service.example/api/pin" />
+                                </label>
+                                <label class="form-field">
+                                    <span class="form-label">Credential (optional)</span>
+                                    <input type="password" class="form-input" v-model="entry.ipfsRemotePublishingDraft.credential"
+                                           placeholder="Bearer token" />
+                                </label>
+                                <label class="form-field">
+                                    <span class="form-label">Request field (optional)</span>
+                                    <input type="text" class="form-input" v-model="entry.ipfsRemotePublishingDraft.requestField" placeholder="file" />
+                                </label>
+                                <label class="form-field">
+                                    <span class="form-label">Response field (optional)</span>
+                                    <input type="text" class="form-input" v-model="entry.ipfsRemotePublishingDraft.responseField" placeholder="cid" />
+                                </label>
+                                <p class="form-hint form-hint--neutral">
+                                    Nothing here is saved anywhere. This configuration lives only in this page's
+                                    own memory for this browsing session, and is discarded the moment the page
+                                    reloads or "Clear Configuration" is clicked.
+                                </p>
+                                <button type="button" class="action-btn action-btn--primary" @click="saveIpfsRemotePublishingConfiguration(entry)">
+                                    Save Configuration
+                                </button>
+                            </div>
+
+                            <div v-if="ipfsRemotePublishingConfigurationView(entry).configured" class="identity-mgmt-actions">
+                                <button type="button" class="action-btn action-btn--primary"
+                                        :disabled="isIpfsRemotePublishing(entry)"
+                                        @click="publishToRemoteIpfs(entry)">
+                                    {{ isIpfsRemotePublishing(entry) ? 'Publishing…' : (ipfsRemotePublicationView(entry).state === IpfsRemotePublicationState.IDLE ? 'Publish to Remote IPFS' : 'Publish Again') }}
+                                </button>
+                            </div>
+
+                            <!-- PUBLISHED names exactly one fact — the configured provider
+                                 accepted these bytes and returned this locator — never
+                                 "verified", "trusted", "safe", "permanent", or "guaranteed". See
+                                 application/IpfsRemotePublicationState.js's own header. -->
+                            <div v-if="ipfsRemotePublicationView(entry).state !== IpfsRemotePublicationState.IDLE" class="evidence-inspection-adapter">
+                                <span class="evidence-inspection-adapter-title">Remote IPFS</span>
+                                <span class="peer-badge" :class="ipfsRemotePublicationBadgeClass(entry)">{{ ipfsRemotePublicationView(entry).stateLabel }}</span>
+                                <p v-if="ipfsRemotePublicationView(entry).reason" class="form-hint form-hint--neutral">
+                                    {{ ipfsRemotePublicationView(entry).reason }}
+                                </p>
+
+                                <template v-if="ipfsRemotePublicationView(entry).state === IpfsRemotePublicationState.PUBLISHED">
+                                    <dl class="evidence-fields">
+                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ ipfsRemotePublicationView(entry).contentHash }}</dd></div>
+                                        <div class="evidence-field"><dt>IPFS locator</dt><dd>{{ ipfsRemotePublicationView(entry).locator }}</dd></div>
+                                        <div class="evidence-field"><dt>Provider</dt><dd>{{ ipfsRemotePublicationView(entry).endpoint }}</dd></div>
+                                        <div class="evidence-field"><dt>Published at</dt><dd>{{ formatWhen(ipfsRemotePublicationView(entry).publishedAt) }}</dd></div>
+                                    </dl>
+                                    <p class="form-hint form-hint--neutral">
+                                        The configured provider accepted these bytes and returned this locator.
+                                        This is an observation of what the provider just said, not a promise
+                                        that it will still be retrievable later, and not a cataloged Snapshot
+                                        Placement.
+                                    </p>
+                                </template>
                             </div>
                         </div>
                     </div>
