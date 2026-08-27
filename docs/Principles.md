@@ -14221,3 +14221,57 @@ through" would be silently anchoring a different hash than the one the
 application believed it was anchoring. A rejected broadcast stays
 rejected; the caller decides what happens next, this class never does.
 See `docs/Roadmap.md`, 0.8.52, for the full milestone entry.
+
+## One Explicit Publication Action, Composed From Existing Primitives (0.8.53)
+
+**`application/BitcoinAnchorPublicationCoordinator.js` adds no new
+Bitcoin primitive.** Six domain classes (`anchoring/
+BitcoinAnchorTransactionBuilder.js` through `anchoring/
+BitcoinAnchorTransactionBroadcaster.js`) and one use case
+(`CreatePublicationAnchorUseCase`) already existed, each independently
+tested, each doing exactly one job. This milestone's only job is
+sequencing calls to them and translating each one's own result into a
+named lifecycle state — no transaction construction, no PSBT encoding, no
+signature checking, no network submission logic lives in this class. A
+caller that already had all seven pieces could, in principle, wire them by
+hand; this coordinator exists so nobody has to, not because the wiring
+requires new domain knowledge.
+
+**Connecting the pipeline does not change what any stage of it means.**
+`publishAnchor()` never re-verifies a signature `BitcoinAnchorSignedPsbtFinalizer`
+already verified, never re-decides a broadcast
+`BitcoinAnchorTransactionBroadcaster` already decided, and never invents a
+second way to construct a `core/PublicationAnchor.js`. `BitcoinAnchorPublisher`
+— unchanged since 0.8.9 — is reconnected for exactly the one thing it has
+always done, deriving `{ locator, proof }` from a txid, using a broadcaster
+adapter that performs no network operation of its own: the real submission
+already happened, once, one step earlier, via `BitcoinAnchorTransactionBroadcaster`.
+Nothing about what any of these six classes verify, decide, or produce is
+altered by being called in sequence instead of by hand.
+
+**Failures stop at the boundary that produced them, named structurally,
+never collapsed into a generic failure.** `application/
+BitcoinAnchorPublicationLifecycleState.js` gives a caller `PLAN_FAILED`,
+`SIGNING_UNAVAILABLE`, `SIGNATURE_INVALID`, `FINALIZATION_FAILED`,
+`BROADCAST_UNAVAILABLE`, and `BROADCAST_REJECTED` as six DIFFERENT
+outcomes, plus a `reachedStage` naming the last stage that genuinely
+succeeded — the identical "name the difference structurally, not by
+convention" discipline `application/AnchorVerificationOutcome.js` already
+established for anchor verification. An unreachable wallet is never
+treated as a declined one; a cryptographically wrong signature never
+reaches the broadcaster; a network rejection of a fully valid, finalized
+transaction never quietly retries with different bytes.
+
+**Broadcast acceptance is recorded as a real `PublicationAnchor`; it is
+never promoted to confirmation.** Reaching `BROADCASTED` creates a signed,
+catalogued anchor — the SAME durable record `core/PublicationAnchor.js`
+has been since 0.8.0, fed real evidence for the first time by a real
+external wallet, never a second, parallel "anchor record" schema this
+milestone invents. That anchor asserts only what `core/PublicationAnchor.js`
+has ever asserted: that an identity attests this contentHash was recorded
+at this locator, with this proof. Whether the underlying transaction is
+later mined into a block is a separate, later question — this class never
+queries Esplora, and no automatic progression from `BROADCASTED` to a
+confirmed state occurs anywhere in this codebase. See `docs/Roadmap.md`,
+0.8.53, for the full milestone entry, and "0.8.54" for the separate,
+explicitly-triggered action confirmation observation belongs to.

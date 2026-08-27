@@ -24248,12 +24248,208 @@ retry/fee-bump logic, any UI surface, and a second concrete broadcasting
 adapter — each its own, separately sized milestone, exactly like every
 "Deliberately excluded" list in this document before it.
 
-## 0.8.53 — Bitcoin Anchor Publication Lifecycle (not yet built)
+## 0.8.53 — Bitcoin Anchor Publication Lifecycle
 
-The next milestone this sequence reserves: connecting 0.8.52's own `{
-broadcasted: true, txid }` result back into `anchoring/
-BitcoinAnchorPublisher.js` and `application/
-CreatePublicationAnchorUseCase.js`, so a successful broadcast can produce
-a real `PublicationAnchor` — without treating broadcast acceptance as
-confirmation, and without changing what a `PublicationAnchor` means. Not
-yet built.
+0.8.52's own "Deliberately excluded" list named exactly what came next:
+"This milestone's `{ broadcasted: true, txid }` is not yet wired into
+anything that produces a real `PublicationAnchor` — that reconnection is
+real, separately sized work. See '0.8.53.'" This milestone is that
+reconnection, held to one governing principle:
+
+> Connecting the pipeline does not change what any stage of it means.
+
+```text
+Publication contentHash
+        │
+        ▼
+BitcoinAnchorTransactionBuilder.build()             (0.8.47)
+        │                                    PLAN_FAILED ──────┐
+        ▼                                                      │
+BitcoinAnchorPsbtBuilder.build()                    (0.8.48)   │
+        │                                                      │
+        ▼                                                      │
+BitcoinAnchorPsbtSerializer.serialize()             (0.8.49)   │
+        │  → PSBT_READY                                        │
+        ▼                                                      │
+BitcoinAnchorWalletSigner.requestSignature()        (0.8.50)   │
+        │                              SIGNING_UNAVAILABLE ────┤
+        │                                 SIGNATURE_INVALID ───┤
+        ▼  → SIGNED                                            │
+BitcoinAnchorSignedPsbtFinalizer.finalize()         (0.8.51)   │
+        │                                FINALIZATION_FAILED ──┤
+        ▼  → FINALIZED                                         │
+BitcoinAnchorTransactionBroadcaster.broadcast()     (0.8.52)   │
+        │                            BROADCAST_UNAVAILABLE ────┤
+        │                               BROADCAST_REJECTED ────┤
+        ▼  → BROADCASTED                                       │
+CreatePublicationAnchorUseCase.execute()          (0.8.8, UNCHANGED)
+        │                                                      │
+        ▼                                                      ▼
+a real, signed, cataloged PublicationAnchor        { state, reachedStage,
+                                                       reason, ... }
+```
+
+**NOT ANOTHER BITCOIN PRIMITIVE.** `application/
+BitcoinAnchorPublicationCoordinator.js` adds no new cryptography, no new
+wire format, and no new domain class in `anchoring/` at all. It composes
+the seven components 0.8.8 and 0.8.47→0.8.52 already built — orchestration
+only, exactly as `application/CreateExternalPublicationAnchorUseCase.js`
+(0.8.10) already connected the SIMPLER, one-shot-broadcaster
+`anchoring/BitcoinAnchorPublisher.js` path to `CreatePublicationAnchorUseCase.js`.
+This milestone makes the identical connection for the granular,
+external-wallet path 0.8.47→0.8.52 built, and never duplicates a byte of
+transaction, PSBT, signature, or broadcasting logic to do it.
+
+**ONE EXPLICIT PUBLICATION ACTION, NOT FIVE.** `publishAnchor()` runs the
+entire plan→PSBT→sign→finalize→broadcast sequence in a single call. Its
+two genuinely external, one-way side effects — asking a wallet to sign,
+submitting to the network — are each already a single, explicit operation
+inside the classes that perform them; there is no reason to force a
+caller through five separate steps to glue primitives together by hand,
+which is exactly what this milestone exists to make unnecessary.
+
+**FAILURES STOP AT THE BOUNDARY THAT PRODUCED THEM.** `publishAnchor()`
+never guesses past a failure: an unreachable wallet never has its
+non-existent signature "assumed good" so finalization can proceed, and a
+finalization failure never reaches the broadcaster with unfinalized bytes.
+Every outcome reports a `state` naming exactly which boundary was reached
+— `application/BitcoinAnchorPublicationLifecycleState.js`'s own
+`PLAN_FAILED` / `SIGNING_UNAVAILABLE` / `SIGNATURE_INVALID` /
+`FINALIZATION_FAILED` / `BROADCAST_UNAVAILABLE` / `BROADCAST_REJECTED` —
+plus a `reachedStage` naming the last stage that DID succeed, never a
+generic true/false collapsing every one of those into "it didn't work."
+
+**BROADCAST ACCEPTANCE IS RECORDED; IT IS NEVER PROMOTED TO
+CONFIRMATION.** `BROADCASTED` — and the `PublicationAnchor` this class
+creates the instant it is reached — means only "ForkBuild associated this
+content hash with this Bitcoin transaction and the network accepted it for
+broadcast," the identical restraint `anchoring/BitcoinAnchorPublisher.js`
+has held since 0.8.9. There is no automatic Esplora query anywhere in this
+class — confirmation stays a separate, later action. See "0.8.54," below.
+
+**THE DURABLE RECORD IS `PublicationAnchor` ITSELF — NEVER A SECOND
+SCHEMA.** A successfully created anchor is something a publication needs
+to remember, unlike the ephemeral possession/materialization observations
+elsewhere in this codebase. `core/PublicationAnchor.js` already IS that
+durable record, and has been since 0.8.0: a signed, catalogued assertion
+that an identity attests a contentHash was recorded at a locator, with a
+proof — nothing about confirmation. This milestone invents no parallel
+"anchor record" shape; it reuses the one 0.8.0 already built, fed real
+evidence for the first time by a real external wallet.
+
+**`BitcoinAnchorPublisher` IS RECONNECTED WITHOUT RE-BROADCASTING.** By
+the time this coordinator's own broadcast stage completes, the real
+network submission has already happened exactly once, via
+`BitcoinAnchorTransactionBroadcaster#broadcast()`. The `BitcoinAnchorPublisher`
+instance this class constructs for that one call is handed a `broadcaster`
+adapter whose own `broadcast()` performs no network operation of its own —
+it reports back the outcome the real broadcast a moment earlier already
+produced. This reuses `BitcoinAnchorPublisher`'s own `{ locator, proof }`
+evidence-shape derivation — the exact shape `anchoring/
+BitcoinOpReturnProofVerifier.js` already expects, unchanged since 0.8.9 —
+rather than re-deriving it by hand, and is never held as long-lived shared
+state across calls.
+
+- `application/BitcoinAnchorPublicationLifecycleState.js` — new; the
+  eleven-value vocabulary above (five success-path stages, six failure
+  boundaries), named structurally rather than by convention, the identical
+  discipline `application/AnchorVerificationOutcome.js` already established
+  for anchor VERIFICATION, held here for anchor PUBLICATION.
+- `application/BitcoinAnchorPublicationCoordinator.js` — the one new
+  orchestration class. `publishAnchor(publicationId, { utxos,
+  changeAddress, utxoDetails, changeScriptPubKey })` sequences the six
+  injected collaborators above and `CreatePublicationAnchorUseCase`,
+  resolving to `{ state, reachedStage, reason, contentHash, unsignedPsbt,
+  txid, anchor }`.
+- `application/CreateBitcoinAnchorPublicationCoordinatorUseCase.js` — the
+  identical composition-root shape `application/
+  CreatePublicationAnchorCreationCoordinatorUseCase.js` (0.8.11) already
+  established: every collaborator is a parameter, none is constructed
+  here.
+
+> **Connecting the pipeline does not change what any stage of it means.**
+> `BitcoinAnchorPublicationCoordinator` sequences six already-tested
+> domain classes and one already-tested use case; it does not re-verify a
+> signature `BitcoinAnchorSignedPsbtFinalizer` already verified, does not
+> re-decide a broadcast `BitcoinAnchorTransactionBroadcaster` already
+> decided, and does not redefine what a `PublicationAnchor` asserts. See
+> `docs/Principles.md`, "One Explicit Publication Action, Composed From
+> Existing Primitives (0.8.53)."
+
+- `tests/BitcoinAnchorPublicationLifecycle.test.js` (new) — the flagship
+  builds the COMPLETE real chain: a real transaction plan, a real
+  serialized PSBT, a fake external wallet that independently decodes those
+  exact bytes and produces a real secp256k1 signature, real cryptographic
+  finalization, and a fake broadcaster that receives the exact raw bytes —
+  reaching `BROADCASTED` with a real, catalogued `PublicationAnchor` that
+  Bob, with none of Alice's local state, independently verifies as `VALID`
+  via `anchoring/BitcoinOpReturnProofVerifier.js`. THE CRITICAL INVARIANT,
+  checked directly against the broadcasted raw bytes: the OP_RETURN output
+  carries EXACTLY the publication's contentHash — not a CID, not a
+  publicationId, not a signature, not a second, application-chosen
+  encoding. Section B: `PLAN_FAILED` (insufficient funds) stops the
+  pipeline before a wallet or broadcaster is ever consulted. Section C:
+  `SIGNING_UNAVAILABLE` (an unreachable wallet). Section D:
+  `SIGNATURE_INVALID` (a definite decline). Section E:
+  `FINALIZATION_FAILED` (a structurally intact but cryptographically wrong
+  signature) never reaches the broadcaster. Sections F/G:
+  `BROADCAST_REJECTED`/`BROADCAST_UNAVAILABLE` — a real, fully finalized
+  transaction the network refuses or cannot presently accept never reaches
+  `CreatePublicationAnchorUseCase`; no anchor is ever created either way.
+
+```text
+0.8.52  Bitcoin Anchor Transaction Broadcasting                        ✓
+             │
+             ▼
+0.8.53  Bitcoin Anchor Publication Lifecycle                           ✓
+             ├── application/BitcoinAnchorPublicationLifecycleState.js —
+             │   new; the named vocabulary every outcome is reported in
+             ├── application/BitcoinAnchorPublicationCoordinator.js — new;
+             │   orchestration only, composes 0.8.8 + 0.8.47→0.8.52
+             │   unchanged, never duplicates their logic
+             ├── one new composition-root use case
+             └── ForkBuild can now, for the first time, run
+                 content hash → plan → PSBT → external wallet signature →
+                 finalization → broadcast → a real, catalogued
+                 PublicationAnchor as ONE explicit publication action
+```
+
+### Deliberately excluded
+
+- **Automatic confirmation observation.** Reaching `BROADCASTED` never
+  triggers a query against Esplora or any other block explorer — that
+  stays a separate, later, explicitly-triggered action. See "0.8.54,"
+  below.
+- **A second "anchor record" schema.** The durable record this milestone
+  produces is `core/PublicationAnchor.js` itself, unchanged — see this
+  milestone's own "The durable record is PublicationAnchor itself," above.
+- **Any UI surface.** No "Publish via Bitcoin" button, and no change to
+  `ui/DecentralizedPublicationsView.js` exists anywhere in this codebase
+  yet — exactly as every milestone in this Bitcoin sequence has stayed
+  backend-only before it.
+- **Automatic UTXO discovery, fee-rate selection, or wallet
+  discovery/pairing UX.** `utxos`, `changeAddress`, `utxoDetails`, and
+  `changeScriptPubKey` remain entirely caller-supplied, exactly as
+  `anchoring/BitcoinAnchorTransactionBuilder.js`/`BitcoinAnchorPsbtBuilder.js`
+  already required them to be.
+- **Retry, or re-running a failed stage in place.** A caller that gets
+  back e.g. `SIGNING_UNAVAILABLE` decides for itself whether and when to
+  call `publishAnchor()` again — this class never loops, backs off, or
+  retries on the caller's behalf, the identical restraint `application/
+  CreateExternalPublicationAnchorUseCase.js` already holds.
+
+What's left, and deliberately unbuilt: automatic confirmation observation,
+any UI surface, automatic UTXO/fee/wallet discovery, and retry logic —
+each its own, separately sized milestone, exactly like every "Deliberately
+excluded" list in this document before it.
+
+## 0.8.54 — Bitcoin Anchor Confirmation Observation (not yet built)
+
+The next milestone this sequence reserves: a separate, explicitly
+triggered "Check Bitcoin Anchor" action that queries `anchoring/
+BitcoinOpReturnProofVerifier.js`'s own Esplora-compatible infrastructure
+and reports factual fields — `txid`, `blockHash`, `blockHeight`,
+`confirmationCount`, `observedAt` — distinguishing `CONFIRMED` /
+`NOT_CONFIRMED` / `UNAVAILABLE`. Never a score, a confidence percentage, or
+a "strength" rating; never automatically triggered by 0.8.53's own
+`publishAnchor()`. Not yet built.
