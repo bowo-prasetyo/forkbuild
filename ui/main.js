@@ -59,6 +59,8 @@ import { CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase } from '..
 import { CreateBitcoinAnchorPsbtBuilderUseCase } from '../application/CreateBitcoinAnchorPsbtBuilderUseCase.js';
 import { CreateBitcoinAnchorTransactionReviewCoordinatorUseCase } from '../application/CreateBitcoinAnchorTransactionReviewCoordinatorUseCase.js';
 import { CreateBitcoinAnchorReviewedSigningCoordinatorUseCase } from '../application/CreateBitcoinAnchorReviewedSigningCoordinatorUseCase.js';
+import { CreateBitcoinAnchorSignedPsbtFinalizerUseCase } from '../application/CreateBitcoinAnchorSignedPsbtFinalizerUseCase.js';
+import { CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase } from '../application/CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -891,6 +893,20 @@ const { coordinator: bitcoinAnchorTransactionReviewCoordinator } = new CreateBit
 });
 const { coordinator: bitcoinAnchorReviewedSigningCoordinator } = new CreateBitcoinAnchorReviewedSigningCoordinatorUseCase().execute();
 
+// 0.8.63 — Explicit Signed PSBT Verification & Transaction Finalization UI.
+// Closes the gap 0.8.62's own "Deliberately excluded" list named directly:
+// "Finalization... is its own, separately sized future milestone."
+// `bitcoinAnchorSignedPsbtFinalizer` is the SAME, unchanged 0.8.51 class
+// that has cryptographically verified and finalized a signed PSBT since
+// that milestone — this is its first real wiring into this running app.
+// `bitcoinAnchorSignedPsbtFinalizationCoordinator` is a deliberately thin
+// wiring on top of it, mirroring exactly how `bitcoinAnchorReviewedSigningCoordinator`
+// immediately above wires the 0.8.59 signer one stage earlier.
+const { bitcoinAnchorSignedPsbtFinalizer } = new CreateBitcoinAnchorSignedPsbtFinalizerUseCase().execute();
+const { coordinator: bitcoinAnchorSignedPsbtFinalizationCoordinator } = new CreateBitcoinAnchorSignedPsbtFinalizationCoordinatorUseCase().execute({
+    bitcoinAnchorSignedPsbtFinalizer
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -944,6 +960,8 @@ app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTran
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
 app.provide('bitcoinAnchorTransactionReviewCoordinator', bitcoinAnchorTransactionReviewCoordinator);
 app.provide('bitcoinAnchorReviewedSigningCoordinator', bitcoinAnchorReviewedSigningCoordinator);
+// 0.8.63 — Explicit Signed PSBT Verification & Transaction Finalization UI.
+app.provide('bitcoinAnchorSignedPsbtFinalizationCoordinator', bitcoinAnchorSignedPsbtFinalizationCoordinator);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
