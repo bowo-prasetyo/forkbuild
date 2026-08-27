@@ -14885,3 +14885,75 @@ that machinery is exactly the kind of judgment this principle exists to
 withhold.
 
 See `docs/Roadmap.md`, 0.8.61, for the full milestone entry.
+
+## Review Is An Authorization Boundary; Signing Is An External Capability Invocation (0.8.62)
+
+`docs/Principles.md`, "A Connection Grants A Capability; It Does Not Grant
+Trust (0.8.58)," drew a line at the moment a wallet becomes reachable: being
+connected is never authorization. "A Transaction Is Signed Only If It Is
+The Transaction That Was Reviewed (0.8.59)" drew a second line at the
+moment a signature is requested: having reviewed a transaction is never
+itself consent to sign whatever a caller hands the signer next. This
+milestone does not draw a third line — it makes the space between those two
+lines a real, visible place on screen, with exactly one door between them.
+
+> Connect a wallet: a capability becomes available. Review a transaction: a
+> person has seen its own facts. Neither, alone or together, moves a single
+> satoshi. Only pressing "Sign Reviewed Transaction" does — and even then,
+> the wallet, not this application, decides whether to comply.
+
+**Explicit action, all the way down — the third in this pipeline's own
+running list.** `docs/Principles.md`, "A Transaction Plan Records What
+Produced It; It Does Not Refresh It (0.8.61)," already named the sequence:
+"connect (0.8.58), observe (0.8.60), construct (0.8.61), and eventually
+review and sign (0.8.59, 0.8.62)." Reviewing is not itself one of the
+gated actions — it runs the moment a plan exists, because it touches no
+wallet and commits to nothing. Signing is the gate: `application/
+BitcoinAnchorReviewedSigningCoordinator.js#sign()` is reachable from exactly
+one place — an explicit "Sign Reviewed Transaction" click — never
+triggered by construction, by review, by a wallet becoming connected, or by
+a network match being confirmed. A person who has done all three of the
+first steps has still authorized nothing until they press this one button.
+
+**The bridge that finally makes a real PSBT possible does not weaken the
+boundary it feeds.** `anchoring/BitcoinSegwitAddressScriptPubKey.js` closes
+a real gap — three prior milestones' own headers named "no base58/bech32
+decoding exists anywhere in this codebase" and left it that way on purpose,
+until a real signable PSBT actually needed it. Building it now does not
+mean the caution behind those headers was wrong; it means the one fact
+those headers were withholding judgment on has finally been given a
+narrow, honest, non-throwing home — a real address either decodes to a
+real scriptPubKey, or it is refused, in both cases before it ever reaches a
+wallet.
+
+**A wallet's claim is still not the signature — this milestone adds a
+button, not a shortcut past that boundary.** `anchoring/
+BitcoinAnchorWalletSigner.js`'s own header (0.8.50) has held since before
+review or signing had any UI at all: a claimed `{ signed: true }` is
+independently re-inspected, never trusted outright. Nothing about adding an
+explicit "Sign Reviewed Transaction" click changes that inspection, and
+nothing about it promotes a `SIGNED` outcome into a claim that ForkBuild has
+cryptographically verified anything. The screen says exactly what is true —
+a wallet returned something that inspects as intact — and no more.
+
+**DECLINED naming two different refusals the same way is honesty, not a
+gap.** A wallet's own definite "no" and `anchoring/
+BitcoinAnchorReviewedPsbtSigner.js`'s own precondition refusing before the
+wallet was ever asked are, to a person looking at a screen, the identical
+fact: this attempt did not produce a signature, and trying again with the
+unchanged inputs will not either. Splitting them into two states would
+imply a distinction this application does not actually act on differently
+— neither is retried automatically, neither switches wallets, neither
+recovers on its own. The `reason` string still tells them apart for anyone
+who reads it; the state does not need to.
+
+**A capability is reconstructed, never remembered, at the one moment it
+matters.** `BitcoinAnchorReviewedSigningCoordinator` takes `wallet` as an
+argument to `sign()` itself, not to its constructor — the identical
+restraint `anchoring/BitcoinWalletConnection.js`'s own header already holds
+toward persisting a wallet reference "only as long as this instance's own
+connected state does." Nothing about adding a signing button gives this
+codebase a reason to hold a wallet capability any longer than the one call
+that needs it.
+
+See `docs/Roadmap.md`, 0.8.62, for the full milestone entry.

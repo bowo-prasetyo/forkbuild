@@ -71,6 +71,8 @@ import { BitcoinAnchorFundingObservationState } from '../../application/BitcoinA
 import { describeBitcoinAnchorFunding } from '../../application/BitcoinAnchorFundingView.js';
 import { BitcoinAnchorTransactionConstructionState } from '../../application/BitcoinAnchorTransactionConstructionState.js';
 import { describeBitcoinAnchorTransactionConstruction } from '../../application/BitcoinAnchorTransactionConstructionView.js';
+import { BitcoinAnchorReviewedSigningState } from '../../application/BitcoinAnchorReviewedSigningState.js';
+import { describeBitcoinAnchorReviewedSigning } from '../../application/BitcoinAnchorReviewedSigningView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -655,6 +657,14 @@ const BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES = {
 // uses, never the softer amber UNSUPPORTED gets on the funding map (a
 // FAILED construction can be retried with different funding, not merely
 // waited out).
+const BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES = {
+    [BitcoinAnchorReviewedSigningState.SIGNING]: 'peer-badge--pending',
+    [BitcoinAnchorReviewedSigningState.SIGNED]: 'peer-badge--authenticated',
+    [BitcoinAnchorReviewedSigningState.DECLINED]: 'peer-badge--failed',
+    [BitcoinAnchorReviewedSigningState.UNAVAILABLE]: 'peer-badge--failed',
+    [BitcoinAnchorReviewedSigningState.FAILED]: 'peer-badge--failed'
+};
+
 const BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES = {
     [BitcoinAnchorTransactionConstructionState.CONSTRUCTING]: 'peer-badge--pending',
     [BitcoinAnchorTransactionConstructionState.CONSTRUCTED]: 'peer-badge--authenticated',
@@ -806,22 +816,36 @@ export default {
         // always a fresh, explicitly-triggered observation, never a
         // background poll.
         const bitcoinWalletFundingObserver = inject('bitcoinWalletFundingObserver', null);
-        // 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI. Optional
-        // — absent here, the "Review Bitcoin Anchor Transaction" section
-        // simply never renders, the identical degrade-gracefully posture
-        // every optional coordinator on this page already holds. Never one
-        // per evidence card, unlike `bitcoinAnchorProofReconciliationView`
-        // above: a review exists for a transaction that has NOT YET been
-        // published — there is no evidence entry for it to attach to —
-        // so this is a single, page-level object exposing exactly
-        // `.description` (a real anchoring/BitcoinAnchorPsbtBuilder.js
-        // result, or `null` when nothing is presently awaiting review).
-        // Wiring a real "Create Anchor" action into this object, and an
-        // actual "Sign" button, is explicitly deferred to a future
-        // milestone — see docs/Roadmap.md, 0.8.59's own "Deliberately
-        // excluded" list. This page only ever displays what it is handed;
-        // it never builds a plan or a PSBT itself.
-        const bitcoinAnchorTransactionReview = inject('bitcoinAnchorTransactionReview', null);
+        // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
+        // Signing UI. `bitcoinAnchorTransactionReview` is now this page's
+        // OWN reactive holder (declared below, alongside
+        // `bitcoinWalletConnectionState`) for the single, page-level
+        // transaction presently under review — never an injected object, a
+        // design 0.8.59 first sketched but never wired (nothing ever
+        // provided it; `describeBitcoinAnchorTransactionReview()` always
+        // saw `null`). This milestone completes that wiring: a review
+        // exists for a transaction that has NOT YET been published — there
+        // is no evidence entry for it to attach to — so, exactly as before,
+        // this stays a single, page-level fact, populated by
+        // `constructBitcoinAnchorTransaction()` below rather than by a
+        // composition root.
+        //
+        // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI. Optional —
+        // absent either coordinator, no PSBT is ever built and no "Sign
+        // Reviewed Transaction" button ever renders, the identical
+        // degrade-gracefully posture every optional coordinator on this
+        // page already holds. `bitcoinAnchorTransactionReviewCoordinator`
+        // is the new bridge that turns an already-CONSTRUCTED plan (0.8.61)
+        // into the PSBT-shaped description 0.8.59's own review and signer
+        // have always required; `bitcoinAnchorReviewedSigningCoordinator`
+        // is the new coordinator behind the explicit signing action itself.
+        // See application/BitcoinAnchorTransactionReviewCoordinator.js and
+        // application/BitcoinAnchorReviewedSigningCoordinator.js's own
+        // headers — neither ever signs, finalizes, or broadcasts anything
+        // on its own; this page still only ever displays what it is handed
+        // and acts only on an explicit click.
+        const bitcoinAnchorTransactionReviewCoordinator = inject('bitcoinAnchorTransactionReviewCoordinator', null);
+        const bitcoinAnchorReviewedSigningCoordinator = inject('bitcoinAnchorReviewedSigningCoordinator', null);
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
         // Optional — absent here, no "Create Transaction Plan" action ever
         // renders, the identical degrade-gracefully posture every optional
@@ -900,6 +924,36 @@ export default {
             error: null
         });
         const bitcoinAnchorFundingUtxosExpanded = ref(false);
+
+        // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
+        // Signing UI. ONE shared reactive holder for the single,
+        // page-level transaction presently under review — see this file's
+        // own `bitcoinAnchorTransactionReviewCoordinator` injection comment
+        // above on why this replaces the never-wired 0.8.59 injection of
+        // the same name. `description` is `null` until
+        // `constructBitcoinAnchorTransaction()` below both constructs a
+        // plan AND successfully bridges it to a signable PSBT description;
+        // `reason` names honestly why bridging failed (e.g. an account this
+        // codebase cannot yet decode a scriptPubKey for) when it did.
+        // Replaced wholesale, never merged, by every subsequent "Create
+        // Transaction Plan" click — exactly as `bitcoinAnchorFundingState`
+        // above already requires of itself.
+        const bitcoinAnchorTransactionReview = reactive({
+            description: null,
+            publicationId: null,
+            reason: null
+        });
+
+        // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI. The single,
+        // page-level result of the last explicit "Sign Reviewed
+        // Transaction" click — `null` until one has ever been made for the
+        // CURRENT review. Held as a plain ref, replaced wholesale by
+        // `signBitcoinAnchorReviewedTransaction()` below and reset to
+        // `null` by every fresh `constructBitcoinAnchorTransaction()` call,
+        // exactly as application/BitcoinAnchorReviewedSigningState.js's own
+        // header requires: "a fresh plan always starts unsigned again,
+        // never inheriting a previous plan's own SIGNED outcome."
+        const bitcoinAnchorReviewedSigningOutcome = ref(null);
 
         // Every currently AUTHENTICATED peer, in registry order — the
         // full candidate list this page now hands to application/
@@ -2221,6 +2275,16 @@ export default {
         function constructBitcoinAnchorTransaction(entry) {
             if (!bitcoinAnchorTransactionConstructionCoordinator) return;
             entry.bitcoinAnchorTransactionConstruction = { state: BitcoinAnchorTransactionConstructionState.CONSTRUCTING, construction: null, reason: null };
+            // A fresh construction attempt retires whatever was previously
+            // under review/signed — never left showing stale review facts
+            // or a stale SIGNED badge for a transaction this click is about
+            // to replace. See `bitcoinAnchorTransactionReview`'s and
+            // `bitcoinAnchorReviewedSigningOutcome`'s own declarations
+            // above.
+            bitcoinAnchorTransactionReview.description = null;
+            bitcoinAnchorTransactionReview.publicationId = null;
+            bitcoinAnchorTransactionReview.reason = null;
+            bitcoinAnchorReviewedSigningOutcome.value = null;
             try {
                 entry.bitcoinAnchorTransactionConstruction = bitcoinAnchorTransactionConstructionCoordinator.construct({
                     publicationId: entry.publication.id,
@@ -2229,7 +2293,93 @@ export default {
                 });
             } catch (error) {
                 entry.bitcoinAnchorTransactionConstruction = { state: BitcoinAnchorTransactionConstructionState.FAILED, construction: null, reason: error.message };
+                return;
             }
+            bridgeBitcoinAnchorTransactionToReview(entry);
+        }
+
+        // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
+        //
+        // The ONE place this page ever calls
+        // `bitcoinAnchorTransactionReviewCoordinator.review()` — always
+        // immediately after a successful construction, never on its own
+        // trigger, and never re-run on a timer. Reviewing a plan is not an
+        // authorization action — unlike signing it, it touches no wallet
+        // and commits to nothing — so, exactly as application/
+        // BitcoinAnchorTransactionReviewView.js's own header already holds,
+        // this runs the moment a plan exists rather than waiting on a
+        // second explicit click. A thrown error (a caller-contract
+        // violation on this page's own, already-CONSTRUCTED entry) is
+        // caught HERE, at the UI boundary, mirroring exactly how
+        // `constructBitcoinAnchorTransaction()` itself handles the
+        // construction coordinator's own thrown errors.
+        function bridgeBitcoinAnchorTransactionToReview(entry) {
+            if (entry.bitcoinAnchorTransactionConstruction.state !== BitcoinAnchorTransactionConstructionState.CONSTRUCTED) return;
+            if (!bitcoinAnchorTransactionReviewCoordinator) return;
+            let outcome;
+            try {
+                outcome = bitcoinAnchorTransactionReviewCoordinator.review({
+                    construction: entry.bitcoinAnchorTransactionConstruction.construction
+                });
+            } catch (error) {
+                bitcoinAnchorTransactionReview.reason = error.message;
+                return;
+            }
+            if (outcome.reviewable) {
+                bitcoinAnchorTransactionReview.description = outcome.description;
+                bitcoinAnchorTransactionReview.publicationId = entry.publication.id;
+            } else {
+                bitcoinAnchorTransactionReview.reason = outcome.reason;
+            }
+        }
+
+        // The ONE place this page ever calls
+        // `bitcoinAnchorReviewedSigningCoordinator.sign()` — never
+        // triggered automatically by construction, by review, or merely by
+        // a wallet being connected; only an explicit "Sign Reviewed
+        // Transaction" click. `reviewedUnsignedPsbtHex` is read fresh from
+        // `bitcoinAnchorTransactionReviewView()` at the moment of THIS
+        // click, never cached earlier — the exact bytes a person is
+        // looking at right now are the exact bytes handed to the signer,
+        // which independently re-serializes and compares them before ever
+        // consulting the wallet (anchoring/BitcoinAnchorReviewedPsbtSigner.js,
+        // 0.8.59, unchanged). A thrown error is caught HERE, at the UI
+        // boundary, and turned into its own honest FAILED outcome —
+        // mirroring exactly how `constructBitcoinAnchorTransaction()` above
+        // already handles its own coordinator's thrown errors.
+        async function signBitcoinAnchorReviewedTransaction() {
+            if (!bitcoinAnchorReviewedSigningCoordinator) return;
+            const review = bitcoinAnchorTransactionReviewView();
+            if (!review || !bitcoinAnchorTransactionReview.description) return;
+
+            bitcoinAnchorReviewedSigningOutcome.value = { state: BitcoinAnchorReviewedSigningState.SIGNING, psbt: null, signedInputs: null, reason: null };
+            try {
+                bitcoinAnchorReviewedSigningOutcome.value = await bitcoinAnchorReviewedSigningCoordinator.sign({
+                    wallet: bitcoinWalletConnection ? bitcoinWalletConnection.wallet : null,
+                    description: bitcoinAnchorTransactionReview.description,
+                    reviewedUnsignedPsbtHex: review.unsignedPsbtHex
+                });
+            } catch (error) {
+                bitcoinAnchorReviewedSigningOutcome.value = { state: BitcoinAnchorReviewedSigningState.FAILED, psbt: null, signedInputs: null, reason: error.message };
+            }
+        }
+
+        // Pure projection of `bitcoinAnchorReviewedSigningOutcome` through
+        // application/BitcoinAnchorReviewedSigningView.js's own
+        // `describeBitcoinAnchorReviewedSigning()` — the identical "the UI
+        // owns no facts of its own, it only projects an injected
+        // collaborator's own result" discipline every other `*View()`
+        // function on this page already holds.
+        function bitcoinAnchorReviewedSigningView() {
+            return describeBitcoinAnchorReviewedSigning(bitcoinAnchorReviewedSigningOutcome.value);
+        }
+
+        function bitcoinAnchorReviewedSigningBadgeClass() {
+            return BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES[bitcoinAnchorReviewedSigningView().state] || 'peer-badge--pending';
+        }
+
+        function isBitcoinAnchorReviewedSigning() {
+            return bitcoinAnchorReviewedSigningView().state === BitcoinAnchorReviewedSigningState.SIGNING;
         }
 
         // Pure projection of `entry.bitcoinAnchorTransactionConstruction`
@@ -3100,7 +3250,10 @@ export default {
             bitcoinAnchorFundingUtxosExpanded, toggleBitcoinAnchorFundingUtxosExpanded,
             bitcoinAnchorTransactionConstructionCoordinator, constructBitcoinAnchorTransaction,
             bitcoinAnchorTransactionConstructionView, bitcoinAnchorTransactionConstructionBadgeClass,
-            BitcoinAnchorTransactionConstructionState
+            BitcoinAnchorTransactionConstructionState,
+            bitcoinAnchorReviewedSigningCoordinator, signBitcoinAnchorReviewedTransaction,
+            bitcoinAnchorReviewedSigningView, bitcoinAnchorReviewedSigningBadgeClass, isBitcoinAnchorReviewedSigning,
+            BitcoinAnchorReviewedSigningState
         };
     },
     template: `
@@ -3190,24 +3343,25 @@ export default {
                 </div>
             </div>
 
-            <!-- 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI. A
-                 page-level panel, deliberately unrelated to any one
-                 publication's own evidence card below: this reviews a
-                 transaction BEFORE it has been published at all, so there
-                 is no evidence entry yet for it to attach to. Absent
-                 bitcoinAnchorTransactionReview or its own .description,
-                 this section simply never renders — the identical
-                 degrade-gracefully posture every optional section on this
-                 page already holds. See application/
-                 BitcoinAnchorTransactionReviewView.js's own header on why
-                 every field here is read straight off the real transaction
-                 being reviewed, never a verdict about it, and
-                 anchoring/BitcoinAnchorReviewedPsbtSigner.js's own header on
-                 why a wallet is never asked to sign anything other than
-                 exactly what is shown here. Connecting the wallet section
-                 below to a real "Create Anchor" action, and adding a "Sign"
-                 button, is explicitly deferred to a future milestone —
-                 this page only ever displays what it is handed. -->
+            <!-- 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review
+                 & Signing UI. A page-level panel, deliberately unrelated to
+                 any one publication's own evidence card below: this
+                 reviews a transaction BEFORE it has been published at all,
+                 so there is no evidence entry yet for it to attach to.
+                 Populated by an explicit "Create Transaction Plan" click
+                 above (see constructBitcoinAnchorTransaction()) — absent
+                 bitcoinAnchorTransactionReview.description, this section
+                 simply never renders, the identical degrade-gracefully
+                 posture every optional section on this page already
+                 holds. See application/BitcoinAnchorTransactionReviewView.js's
+                 own header on why every field here is read straight off
+                 the real transaction being reviewed, never a verdict
+                 about it, and anchoring/BitcoinAnchorReviewedPsbtSigner.js's
+                 own header on why a wallet is never asked to sign anything
+                 other than exactly what is shown here. -->
+            <p v-if="bitcoinAnchorTransactionReview.reason && !bitcoinAnchorTransactionReviewView()" class="form-hint form-hint--neutral">
+                {{ bitcoinAnchorTransactionReview.reason }}
+            </p>
             <div v-if="bitcoinAnchorTransactionReviewView()" class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Review Bitcoin Anchor Transaction</span>
@@ -3264,6 +3418,55 @@ export default {
                     <p v-else-if="isBitcoinWalletConnected()" class="form-hint form-hint--neutral">
                         ✓ Network matches.
                     </p>
+                </div>
+
+                <!-- 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
+                     The ONE explicit action this whole review exists to
+                     gate: nothing above this button ever signs anything.
+                     Disabled whenever no wallet is connected, or the
+                     wallet's own network does not match this transaction's
+                     — a connected wallet is a signing CAPABILITY, never
+                     itself permission to sign (anchoring/
+                     BitcoinWalletConnection.js's own header, unchanged).
+                     Clicking it performs exactly one operation: the
+                     reviewed PSBT, byte for byte, is handed to the wallet —
+                     see anchoring/BitcoinAnchorReviewedPsbtSigner.js's own
+                     header on why a wallet is never asked to sign anything
+                     that has drifted from what is shown above. -->
+                <div class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Signing</span>
+                    <button type="button" class="peer-action-btn"
+                        :disabled="!isBitcoinWalletConnected() || (bitcoinAnchorTransactionReviewWalletMatchView() && bitcoinAnchorTransactionReviewWalletMatchView().networkMismatch) || isBitcoinAnchorReviewedSigning()"
+                        @click="signBitcoinAnchorReviewedTransaction">
+                        {{ isBitcoinAnchorReviewedSigning() ? 'Waiting for wallet…' : 'Sign Reviewed Transaction' }}
+                    </button>
+
+                    <span v-if="bitcoinAnchorReviewedSigningView().state !== BitcoinAnchorReviewedSigningState.IDLE" class="peer-badge"
+                        :class="bitcoinAnchorReviewedSigningBadgeClass()">
+                        {{ bitcoinAnchorReviewedSigningView().stateLabel }}
+                    </span>
+                    <p v-if="bitcoinAnchorReviewedSigningView().reason" class="form-hint form-hint--neutral">
+                        {{ bitcoinAnchorReviewedSigningView().reason }}
+                    </p>
+
+                    <!-- A wallet's claim is not the signature (anchoring/
+                         BitcoinAnchorWalletSigner.js's own header,
+                         unchanged): SIGNED here names only that the wallet
+                         returned a PSBT that independently inspects as
+                         carrying recognized signing material for exactly
+                         this transaction — never that ForkBuild has
+                         cryptographically verified it, and never that it
+                         has been finalized or broadcast. Those remain
+                         their own, separately sized, explicit next steps. -->
+                    <template v-if="bitcoinAnchorReviewedSigningView().state === BitcoinAnchorReviewedSigningState.SIGNED">
+                        <dl class="evidence-fields">
+                            <div class="evidence-field"><dt>Signed inputs</dt><dd>{{ bitcoinAnchorReviewedSigningView().signedInputCount }}</dd></div>
+                        </dl>
+                        <p class="form-hint form-hint--neutral">
+                            The wallet returned a signed PSBT. ForkBuild has not yet cryptographically verified
+                            or finalized it — that is a separate, explicit step.
+                        </p>
+                    </template>
                 </div>
             </div>
 

@@ -26053,3 +26053,266 @@ What's left, and deliberately unbuilt: real address-to-scriptPubKey
 decoding, and the PSBT/signing wiring it would unlock — connecting this new
 plan-level construction to the existing 0.8.59 PSBT-based review and a real
 "Sign" action — is 0.8.62's own job, next.
+
+## 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI
+
+0.8.61's own "Deliberately excluded" list named this milestone directly:
+"Address decoding, and the PSBT/signing wiring it would unlock — connecting
+this new plan-level construction to the existing 0.8.59 PSBT-based review
+and a real 'Sign' action — is 0.8.62's own job, next." Every piece this
+milestone needed already existed — `anchoring/BitcoinAnchorPsbtBuilder.js`
+(0.8.48), `application/BitcoinAnchorTransactionReviewView.js` and
+`anchoring/BitcoinAnchorReviewedPsbtSigner.js` (both 0.8.59), and a
+plan-level construction (0.8.61) — except the ONE fact none of them ever had
+a real source for: an account's own scriptPubKey. This milestone builds
+that missing fact, the bridge it unlocks, and the explicit "Sign Reviewed
+Transaction" button on top of it — nothing more:
+
+```text
+   Transaction Plan                                    (0.8.61, UNCHANGED)
+         │
+         │ (an already-CONSTRUCTED construction identity)
+         ▼
+   anchoring/BitcoinSegwitAddressScriptPubKey.js         (new)
+   decodeP2wpkhScriptPubKey(fundingObservation.account)
+         │
+         ▼
+   BitcoinAnchorTransactionReviewCoordinator.review()   (new)
+         │
+         ▼
+   BitcoinAnchorPsbtBuilder.build()                 (0.8.48, UNCHANGED)
+         │                                reviewable: false ──┐
+         ▼                                                    │
+   { description, review }         a real, signable PSBT      │
+         │                                                    │
+         ▼                                                    ▼
+   Review Bitcoin Anchor Transaction (0.8.59, UNCHANGED)   "cannot yet
+         │                                                  build a signable
+         │ a person reviews real facts,                     PSBT for..."
+         │ then connects a wallet (0.8.58, UNCHANGED)
+         │
+         │ explicit "Sign Reviewed Transaction"
+         ▼
+   BitcoinAnchorReviewedSigningCoordinator.sign()   (new)
+         │
+         ▼
+   BitcoinAnchorReviewedPsbtSigner.requestSignature()   (0.8.59, UNCHANGED)
+         │
+    ┌────┼─────────────┬───────────────┐
+    ▼    ▼             ▼               ▼
+  SIGNED DECLINED  UNAVAILABLE       FAILED
+```
+
+> A connected wallet is a capability, not permission to sign. A reviewed
+> transaction is a person having seen its own facts, not itself
+> authorization to sign whatever a caller hands the signer next. This
+> milestone adds one explicit button between the two — nothing before it
+> ever touches a wallet, and nothing after it happens without it. See
+> `docs/Principles.md`, "Review Is An Authorization Boundary; Signing Is An
+> External Capability Invocation (0.8.62)."
+
+**A hand-rolled bech32 decoder closes a gap three prior milestones named and
+left open, on purpose.** `anchoring/BitcoinAnchorPsbtBuilder.js` (0.8.48),
+`anchoring/BitcoinWalletFundingObserver.js` (0.8.60), and 0.8.61's own
+"Deliberately excluded" list each held the identical restraint: "no
+base58/bech32 decoding exists anywhere in this codebase." `anchoring/
+BitcoinSegwitAddressScriptPubKey.js#decodeP2wpkhScriptPubKey()` is that
+decoding, implemented directly from BIP173 the same way `anchoring/
+BitcoinAnchorSignedPsbtFinalizer.js` (0.8.51) already hand-rolls
+SHA-256/RIPEMD-160/secp256k1 — no package manager, nothing imported. It
+decodes exactly one shape: native segwit v0, a 20-byte program (P2WPKH) —
+the one shape `anchoring/BitcoinAnchorSignedPsbtFinalizer.js` can ever
+cryptographically finalize a signature for. A P2WSH program, a taproot
+address, or any base58check address is refused, honestly, never guessed at.
+
+**A real-but-unsupported address is an operational fact, never a throw.**
+Unlike this codebase's own already-known-good internal artifacts (a plan, a
+PSBT description), an account address is always external, untrusted data —
+`anchoring/BitcoinWalletFundingObserver.js` already treats it that way,
+reading only its public prefix. A malformed, wrong-network, or
+wrong-witness-version address is reported as `{ decoded: false, reason }`,
+never thrown — and `application/BitcoinAnchorTransactionReviewCoordinator.js#review()`
+carries that same honesty upward as `{ reviewable: false, reason }` for a
+p2tr or p2pkh funding observation, which this milestone still cannot bridge
+into a signable PSBT input (see "Deliberately excluded," below).
+
+**Reviewing is not signing, so reviewing runs the moment a plan exists —
+never gated behind a second click.** Unlike signing, building a review
+touches no wallet and commits to nothing; `application/
+BitcoinAnchorTransactionReviewView.js`'s own header already held this.
+`BitcoinAnchorTransactionReviewCoordinator.review()` therefore runs
+immediately after every successful "Create Transaction Plan" click, exactly
+as 0.8.59's own review projection was always meant to run the moment a real
+description existed. Only the actual signing action — the one that reaches
+a wallet — waits on an explicit "Sign Reviewed Transaction" click.
+
+**A fresh signer for every attempt, never a remembered wallet.**
+`BitcoinAnchorReviewedSigningCoordinator` holds no `wallet` reference across
+calls — `sign()` takes one as an explicit argument every time and
+constructs a brand-new `anchoring/BitcoinAnchorReviewedPsbtSigner.js`
+(0.8.59, unchanged, via its own unchanged `CreateBitcoinAnchorReviewedPsbtSignerUseCase`)
+for that one call alone. Reconnecting a different wallet or account between
+two signing attempts is reflected immediately, next time — never a stale
+capability held over from whichever wallet happened to be connected
+earlier.
+
+**Six states, and the two that look alike stay merged on purpose.**
+`application/BitcoinAnchorReviewedSigningState.js` names `IDLE`, `SIGNING`,
+`SIGNED`, `DECLINED`, `UNAVAILABLE`, `FAILED`. `DECLINED` covers both a
+wallet's own definite refusal AND `anchoring/BitcoinAnchorReviewedPsbtSigner.js`'s
+own 0.8.59 precondition refusing before the wallet was ever asked — because
+the class beneath this coordinator already reports both through the
+identical shape, and splitting them apart here would mean re-implementing
+the mismatch check this milestone deliberately never duplicates. `FAILED`
+is reserved for an unacceptable result — most notably a wallet claiming
+`signed: true` while returning no PSBT at all — never for this
+coordinator's own caller-contract violations, which still throw.
+
+**SIGNED is not verified, and the UI says so.** `anchoring/
+BitcoinAnchorWalletSigner.js`'s own header (0.8.50) has always held: "never
+simply trusts a wallet's own `{ signed: true }` claim." A `SIGNED` result
+here means the wallet returned a PSBT that independently inspects
+(`anchoring/BitcoinAnchorSignedPsbtInspector.js`, unchanged) as carrying
+recognized signing material for exactly the reviewed transaction — it does
+NOT mean `anchoring/BitcoinAnchorSignedPsbtFinalizer.js`'s own cryptographic
+verification (0.8.51) has run. The signing card names this honestly on
+screen, and stops there — finalizing is its own, separately sized, explicit
+next step.
+
+- `anchoring/BitcoinSegwitAddressScriptPubKey.js` — new;
+  `decodeP2wpkhScriptPubKey(address)`, the hand-rolled BIP173 bech32 decoder
+  described above. Pure, synchronous, never throws.
+- `application/BitcoinAnchorTransactionReviewCoordinator.js` — new;
+  `review({ construction })`, the bridge from a 0.8.61 construction identity
+  to a real, signable PSBT description via the unchanged 0.8.48
+  `BitcoinAnchorPsbtBuilder` and the new address decoder above.
+- `application/CreateBitcoinAnchorTransactionReviewCoordinatorUseCase.js` —
+  new composition-root factory, mirroring `application/
+  CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase.js`'s own
+  shape (0.8.61) exactly.
+- `application/BitcoinAnchorReviewedSigningState.js` — new; the six-value
+  vocabulary (`IDLE`/`SIGNING`/`SIGNED`/`DECLINED`/`UNAVAILABLE`/`FAILED`)
+  described above.
+- `application/BitcoinAnchorReviewedSigningCoordinator.js` — new;
+  `sign({ wallet, description, reviewedUnsignedPsbtHex })`, the deliberately
+  thin wiring on top of the unchanged 0.8.59 `BitcoinAnchorReviewedPsbtSigner`
+  described above.
+- `application/CreateBitcoinAnchorReviewedSigningCoordinatorUseCase.js` —
+  new composition-root factory; takes no collaborator, since the coordinator
+  it wires constructs its own signer fresh on every call.
+- `application/BitcoinAnchorReviewedSigningView.js` — new;
+  `describeBitcoinAnchorReviewedSigningStateLabel()` and
+  `describeBitcoinAnchorReviewedSigning()`, mirroring `application/
+  BitcoinAnchorTransactionConstructionView.js`'s own shape (0.8.61) one
+  domain later — pure, stateless, frozen output, naming `signedInputCount`
+  and nothing that resembles a verdict, and deliberately never exposing the
+  raw signed PSBT bytes themselves.
+- `ui/views/DecentralizedPublicationsView.js` — the page-level "Review
+  Bitcoin Anchor Transaction" panel (0.8.59) is, for the first time, really
+  populated: `constructBitcoinAnchorTransaction()` now bridges every
+  successful construction into a real review via the new coordinator above,
+  replacing the injected `bitcoinAnchorTransactionReview` object 0.8.59
+  sketched but nothing ever provided. A new "Signing" section adds the
+  explicit "Sign Reviewed Transaction" button — disabled until a wallet is
+  connected on the matching network — and shows the signing outcome's own
+  state, reason, and signed input count. A fresh "Create Transaction Plan"
+  click retires whatever was previously under review or signed, so a stale
+  SIGNED badge never survives past the transaction it belonged to.
+- `ui/main.js` — the first real wiring of `anchoring/BitcoinAnchorPsbtBuilder.js`
+  (0.8.48, previously unused in the running app) and both new coordinators.
+
+- `tests/BitcoinSegwitAddressScriptPubKey.test.js` (new) — direct,
+  isolated coverage of the bech32 decoder: a real mainnet and a real testnet
+  P2WPKH address each decode to their exact scriptPubKey; a corrupted
+  checksum, a mixed-case string, a non-zero witness version, a 32-byte
+  (P2WSH-shaped) program, and an unrecognized human-readable prefix are each
+  refused; and malformed/non-string input never throws.
+- `tests/BitcoinAnchorReviewedSigningUX.test.js` (new) — the flagship
+  proves the full pipeline end to end: a real, OBSERVED funding observation
+  for a real bech32 address constructs, through the unchanged 0.8.47/0.8.61
+  pipeline, into a plan; the new bridge derives that account's own real
+  scriptPubKey (never a placeholder) and produces a real, signable PSBT
+  description; a fake UniSat-shaped wallet genuinely, cryptographically
+  signs exactly the reviewed bytes; the result finalizes into real
+  transaction bytes. Further sections cover: a transaction that no longer
+  matches what was reviewed is DECLINED and the wallet is never consulted;
+  a wallet's definite decline and an unavailable wallet reach this
+  coordinator as DECLINED and UNAVAILABLE respectively, never confused with
+  each other; a wallet claiming success while returning no PSBT is refused
+  as FAILED, never crashing the page; no wallet connected at all is
+  UNAVAILABLE; a wallet that signs a genuinely different transaction is
+  still caught by the unchanged 0.8.50 inspection boundary; the review
+  bridge honestly refuses a p2tr account and a real-but-checksum-failing
+  address, throwing only for genuine caller-contract violations; the
+  signing coordinator's own caller-contract violations throw before any
+  wallet is consulted; and the state vocabulary and view carry no verdict
+  and no undocumented state.
+
+```text
+0.8.61  Explicit Bitcoin Anchor Transaction Construction UI            ✓
+             │
+             ▼
+0.8.62  Explicit Reviewed Bitcoin Anchor Signing UI                    ✓
+             ├── anchoring/BitcoinSegwitAddressScriptPubKey.js — new;
+             │   the hand-rolled BIP173 bech32 decoder closing the gap
+             │   three prior milestones named and left open
+             ├── application/BitcoinAnchorTransactionReviewCoordinator.js
+             │   — new; bridges a 0.8.61 plan into a real, signable PSBT
+             │   description through the unchanged 0.8.48 builder
+             ├── application/BitcoinAnchorReviewedSigningCoordinator.js
+             │   — new; the explicit "Sign Reviewed Transaction" action,
+             │   wrapping the unchanged 0.8.59 review-bound signer
+             ├── application/BitcoinAnchorReviewedSigningState.js — new;
+             │   IDLE/SIGNING/SIGNED/DECLINED/UNAVAILABLE/FAILED
+             ├── ui/views/DecentralizedPublicationsView.js — the 0.8.59
+             │   review panel is finally populated, and gains an explicit
+             │   "Sign Reviewed Transaction" button
+             ├── ui/main.js — the first real wiring of the 0.8.48 PSBT
+             │   builder into this running app
+             └── ForkBuild can now, for the first time, take a real,
+                 connected wallet's own observed funding all the way to
+                 a genuinely, cryptographically signed PSBT — through two
+                 more explicit actions (review, then sign), never
+                 automatically, and never trusting a wallet's own claim
+                 without independently inspecting it
+```
+
+### Deliberately excluded
+
+- **Automatic signing of any kind.** Not after construction, not after
+  review, and not merely because a wallet happens to be connected. `docs/
+  Principles.md`, "A Connection Grants A Capability; It Does Not Grant Trust
+  (0.8.58)," already held this; this milestone's own flagship test proves a
+  substituted transaction is refused before the wallet is ever consulted,
+  and that no wallet call happens without the explicit "Sign Reviewed
+  Transaction" click.
+- **Finalization, broadcasting, or anything past a signed PSBT.**
+  `anchoring/BitcoinAnchorSignedPsbtFinalizer.js` (0.8.51) and `anchoring/
+  BitcoinAnchorTransactionBroadcaster.js` (0.8.52) are both unchanged and
+  uncalled by anything this milestone adds — a `SIGNED` outcome is shown on
+  screen with an honest "not yet verified or finalized" note, and stops
+  there. An explicit "Verify & Finalize Transaction" action is its own,
+  separately sized future milestone.
+- **Taproot (p2tr) or legacy (p2pkh) scriptPubKey derivation.** `anchoring/
+  BitcoinSegwitAddressScriptPubKey.js` decodes exactly one shape: native
+  segwit v0, 20-byte programs. A p2tr account (tweaked-key scriptPubKey
+  derivation) and a p2pkh account (which would require a legacy input's
+  FULL previous transaction, per `anchoring/BitcoinAnchorPsbtBuilder.js`'s
+  own `nonWitnessUtxo` requirement) are both real, valid funding
+  observations this milestone still cannot bridge into a signable PSBT —
+  reported honestly as `reviewable: false`, never guessed at.
+- **Retrying a declined or unavailable signing attempt automatically, or
+  switching wallets, accounts, or networks on a person's behalf.** A
+  `DECLINED` or `UNAVAILABLE` outcome is the end of that attempt; a person
+  clicks "Sign Reviewed Transaction" again, explicitly, exactly as they
+  clicked it the first time.
+- **Any change to `anchoring/BitcoinAnchorPsbtBuilder.js`, `anchoring/
+  BitcoinAnchorReviewedPsbtSigner.js`, `anchoring/BitcoinAnchorWalletSigner.js`,
+  `anchoring/BitcoinAnchorSignedPsbtInspector.js`, or any class from 0.8.47
+  through 0.8.61.** All of them stay exactly as built — this milestone only
+  ever adds a decoder, two thin coordinators, and a verdict-free view on top
+  of them.
+
+What's left, and deliberately unbuilt: cryptographic verification and
+finalization of a `SIGNED` result, and the explicit action that would
+trigger it, is 0.8.63's own job, next.
