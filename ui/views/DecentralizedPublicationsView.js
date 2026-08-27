@@ -3759,8 +3759,8 @@ export default {
                                      SEPARATE section from "Verify Evidence" immediately above and
                                      from "Inspect Evidence" immediately below: this displays what
                                      application/BitcoinAnchorProofReconciliationView.js's own
-                                     `reconcile()` reports RIGHT NOW, side by side, for THIS one
-                                     `bitcoin-op-return` anchor — never a combined verdict. A
+                                     reconcile() reports RIGHT NOW, side by side, for THIS one
+                                     "bitcoin-op-return" anchor — never a combined verdict. A
                                      transaction reported CONFIRMED here and a content proof
                                      reported HASH_MISMATCH right beside it is not an error this
                                      section resolves, hides, or explains away — it is exactly the
