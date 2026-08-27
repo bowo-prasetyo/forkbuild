@@ -27276,3 +27276,177 @@ handed back can actually be resolved back into the same bytes.
 bytes -> recompute the ForkBuild content hash -> HASH_MATCH /
 HASH_MISMATCH / UNAVAILABLE` operation that record makes possible, is
 0.8.69's own job, next.
+
+## 0.8.69 — IPFS Publication Record & Content-Identity Binding
+
+0.8.68's own closing paragraph, immediately above, named this milestone
+exactly: `IpfsPublicationRecord`, and the explicit `resolve locator ->
+retrieve bytes -> recompute the ForkBuild content hash -> HASH_MATCH /
+HASH_MISMATCH / UNAVAILABLE` operation it makes possible. An ordinary
+ForkBuild user can now, since 0.8.68, actually trigger a real remote
+publish and see a real CID come back — but nothing in this codebase yet
+independently checks that the CID a provider handed back can still be
+resolved into the exact bytes that were published. This milestone closes
+that gap, and only that gap:
+
+> The application can publish to IPFS and receive a CID, but nothing yet
+> independently checks that the CID still resolves to the content it was
+> published for.
+
+**The one invariant this milestone exists to make durable, structurally,
+not just by convention** — restated from `core/ContentReference.js`'s own
+header, and held completely unchanged:
+
+```text
+contentHash ───────────► what the bytes are
+      │
+      └──► locator (ipfs://CID) ───► where to retrieve them
+```
+
+Never the other way around. `application/IpfsPublicationRecord.js` is the
+plain, local shape of that pair — `{ contentHash, locator, publishedAt,
+publicationMethod }` — independent of any one coordinator call, and
+`application/IpfsPublicationContentVerifier.js` is the one place a
+`contentHash` and a `locator` are ever brought back together after a
+publish, to ask whether they still agree:
+
+```text
+IpfsPublicationRecord { contentHash, locator }
+        │
+        ▼
+content/IpfsGatewayContentStore.js#get()      (0.8.66, UNCHANGED)
+  or content/IpfsContentStore.js#get()        (0.7.1, UNCHANGED)
+        │
+        ▼
+retrieved bytes, or ContentUnavailableError
+        │
+        ▼
+core/ContentReference.js#verify()             (UNCHANGED)
+        │
+        ▼
+HASH_MATCH / HASH_MISMATCH / UNAVAILABLE
+```
+
+- `application/IpfsPublicationRecord.js` — new; a plain, unsigned value
+  object — `contentHash`, an `ipfs://` `locator`, `publishedAt`, and an
+  optional `publicationMethod` (`kubo` or `remote-pinning`, naming which
+  of this codebase's two existing publish paths produced the locator).
+  No `id`, no signature, no `kind`/`schemaVersion` envelope tag — unlike
+  `core/PublicationAnchor.js` or `core/PublicationSnapshotPlacement.js`,
+  this is never published as content itself and never exchanged with a
+  peer; it carries only what this milestone's own invariant needs, and
+  nothing a provider returned beyond the CID itself — no credential, no
+  raw provider response, no "success score."
+- `application/IpfsPublicationContentVerificationState.js` — new; the
+  `HASH_MATCH`/`HASH_MISMATCH`/`UNAVAILABLE` vocabulary `application/
+  BitcoinAnchorContentProofState.js` (0.8.55) already established for the
+  identical question one domain over — a gateway/node retrieval and a
+  Bitcoin OP_RETURN proof both ultimately ask "does what is being served
+  right now still hash to the claimed identity?" — named identically
+  rather than reinvented.
+- `application/IpfsPublicationContentVerifier.js` — new; the one domain
+  class. `verify(record)` retrieves bytes from an injected `contentStore`
+  (a real `content/IpfsGatewayContentStore.js` or `content/
+  IpfsContentStore.js`, neither one modified or taught anything new about
+  content identity) and checks them against `record.contentHash` using
+  `core/ContentReference.js#verify()`, unchanged. Every kind of retrieval
+  failure — a thrown `ContentUnavailableError`, any other throw, or a
+  store resolving to `null` — reports UNAVAILABLE, never a mismatch; a
+  mismatch is reported only for bytes that were genuinely retrieved.
+- `application/CreateIpfsPublicationContentVerifierUseCase.js` — new; the
+  identical composition-root shape `application/
+  CreateBitcoinAnchorProofReconciliationViewUseCase.js` (0.8.55) already
+  established — takes an already-constructed `contentStore` as a
+  parameter, building nothing itself.
+
+> **Never teach the gateway or the pinning provider about content
+> identity.** `content/IpfsGatewayContentStore.js` and `content/
+> IpfsContentStore.js` stay exactly as 0.8.66 and 0.7.1 built them —
+> neither gains a `verify` option, a callback, or any awareness that
+> `application/IpfsPublicationContentVerifier.js` exists. A gateway only
+> ever moves bytes; deciding whether those bytes are the RIGHT bytes
+> stays, as it always has, one layer up, at the boundary `core/
+> ContentReference.js#verify()` already owns. See `docs/Principles.md`,
+> "A Gateway Moves Bytes; It Never Judges Them (0.8.69)."
+
+```text
+0.8.68  Explicit Remote IPFS Publishing Configuration & UX             ✓
+             │
+             ▼
+0.8.69  IPFS Publication Record & Content-Identity Binding             ✓
+             ├── application/IpfsPublicationRecord.js — new; the plain,
+             │   unsigned { contentHash, locator, publishedAt,
+             │   publicationMethod } shape docs/Roadmap.md's own 0.8.68
+             │   closing paragraph named directly
+             ├── application/
+             │   IpfsPublicationContentVerificationState.js — new;
+             │   HASH_MATCH/HASH_MISMATCH/UNAVAILABLE, the same named
+             │   vocabulary application/BitcoinAnchorContentProofState.js
+             │   (0.8.55) already established one domain over
+             ├── application/IpfsPublicationContentVerifier.js — new;
+             │   resolves a locator through an injected, UNCHANGED
+             │   ContentStore and checks the result against
+             │   core/ContentReference.js#verify(), UNCHANGED
+             ├── application/
+             │   CreateIpfsPublicationContentVerifierUseCase.js — new
+             │   composition-root use case
+             └── ForkBuild can now, for the first time, independently
+                 check whether a published IPFS locator still resolves to
+                 the exact content it was published for — a real,
+                 structural binding between the two, never a one-time
+                 trust of whatever the provider returned
+```
+
+### Deliberately excluded
+
+- **Any UI surface.** No "Observe Content" button, and no change to
+  `ui/main.js` or `ui/views/DecentralizedPublicationsView.js` — exactly
+  as `application/BitcoinAnchorProofReconciliationView.js`'s own 0.8.55
+  "Deliberately excluded" list already held for the identical reason one
+  domain over: a real, fully tested capability, built and left
+  deliberately unwired until its own inspection-UI milestone gives a
+  person a place to see it. This is 0.8.70's own job, next.
+- **Persisting `IpfsPublicationRecord` anywhere.** No catalog, no store,
+  no localStorage, no wiring into `application/
+  SnapshotPlacementStoreRegistry.js` or any publication/evidence history.
+  A record built by this milestone lives exactly as long as whatever
+  local variable or reactive UI state a caller chooses to hold it in —
+  this codebase already has a strong distinction between an observation,
+  a publication action, and historical evidence; this milestone
+  establishes the record and verification semantics first, and leaves
+  deciding how a record enters any of those three existing categories for
+  a later, separately sized milestone.
+- **A combined "IPFS health" verdict, score, or confidence rating,** and
+  **never merging this vocabulary with `application/
+  BitcoinAnchorContentProofState.js`'s own.** A caller wanting both a
+  Bitcoin content-proof state and an IPFS content-verification state
+  simply asks both and places the two results side by side — exactly the
+  restraint `application/BitcoinAnchorProofReconciliationView.js`'s own
+  header already holds for two Bitcoin-side facts, applied here across
+  two entirely separate domains rather than merging them into one
+  invented "evidence" concept.
+- **Automatic re-verification, polling, or retry.** A caller decides for
+  itself when to call `verify()` again — this class never loops, backs
+  off, or schedules a future check on the caller's behalf, the identical
+  restraint `application/BitcoinAnchorProofReconciliationView.js#
+  reconcile()`'s own header already holds one domain over.
+- **Any change to `content/IpfsGatewayContentStore.js`, `content/
+  IpfsContentStore.js`, `core/ContentReference.js`, `application/
+  IpfsRemotePublicationCoordinator.js`, or `application/
+  IpfsRemotePublicationState.js`.** All five stay exactly as built — this
+  milestone only ever reads what they already produce.
+- **Selecting which ContentStore to verify against.** `application/
+  IpfsPublicationContentVerifier.js` never picks Kubo over a gateway, or
+  vice versa, on a caller's behalf — a `contentStore` is always supplied
+  explicitly at construction, mirroring `application/
+  BitcoinAnchorProofReconciliationView.js`'s own required, injected
+  collaborators rather than a default it would have to choose itself.
+
+What's left, and deliberately unbuilt: any UI surface to trigger or
+display a verification, persisting a record into any catalog or history,
+a combined cross-domain verdict, and automatic re-verification or polling
+— each its own, separately sized milestone. `application/
+IpfsPublicationContentVerifier.js` gives ForkBuild, for the first time, a
+real answer to "does this IPFS locator still serve the content it was
+published for?" — but a person still has no screen that asks it. That is
+0.8.70's own job, next.
