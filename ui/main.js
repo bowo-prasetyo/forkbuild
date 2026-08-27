@@ -54,6 +54,8 @@ import { CreateBitcoinInjectedProviderWalletAdapterUseCase } from '../applicatio
 import { CreateBitcoinWalletConnectionUseCase } from '../application/CreateBitcoinWalletConnectionUseCase.js';
 import { CreateBitcoinEsploraWalletFundingSourceUseCase } from '../application/CreateBitcoinEsploraWalletFundingSourceUseCase.js';
 import { CreateBitcoinWalletFundingObserverUseCase } from '../application/CreateBitcoinWalletFundingObserverUseCase.js';
+import { CreateBitcoinAnchorTransactionBuilderUseCase } from '../application/CreateBitcoinAnchorTransactionBuilderUseCase.js';
+import { CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase } from '../application/CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -851,6 +853,21 @@ const { bitcoinWalletFundingObserver } = new CreateBitcoinWalletFundingObserverU
     fundingSource: bitcoinEsploraWalletFundingSource
 });
 
+// 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Closes the
+// gap 0.8.60's own "Deliberately excluded" list named directly: "wiring a
+// 'Create Transaction Plan' action into this page." `bitcoinAnchorTransactionBuilder`
+// is the SAME class every milestone since 0.8.47 has already built plans
+// through — unchanged fee/dust policy, no new Bitcoin primitive — and
+// `bitcoinAnchorTransactionConstructionCoordinator` is a deliberately thin
+// wiring on top of it: it turns an already-OBSERVED funding fact into an
+// already-built plan, and does nothing else. See application/
+// BitcoinAnchorTransactionConstructionCoordinator.js's own header on why it
+// takes no publicationCatalog and never re-observes funding itself.
+const { bitcoinAnchorTransactionBuilder } = new CreateBitcoinAnchorTransactionBuilderUseCase().execute({ network: 'mainnet' });
+const { coordinator: bitcoinAnchorTransactionConstructionCoordinator } = new CreateBitcoinAnchorTransactionConstructionCoordinatorUseCase().execute({
+    bitcoinAnchorTransactionBuilder
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -899,6 +916,8 @@ app.provide('bitcoinAnchorProofReconciliationView', bitcoinAnchorProofReconcilia
 app.provide('bitcoinWalletConnection', bitcoinWalletConnection);
 // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
 app.provide('bitcoinWalletFundingObserver', bitcoinWalletFundingObserver);
+// 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
+app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
