@@ -14730,3 +14730,69 @@ behalf; see `anchoring/BitcoinWalletConnection.js`'s own header, unchanged
 since 0.8.58.
 
 See `docs/Roadmap.md`, 0.8.59, for the full milestone entry.
+
+## A Funding Observation Is Not A Funding Commitment (0.8.60)
+
+`anchoring/BitcoinAnchorTransactionBuilder.js`'s own header (0.8.47) has
+required caller-supplied UTXOs since the day it was built, and this
+document's own roadmap named the gap directly: "Fetching real UTXOs for a
+real address is a future concern." This milestone closes that gap — and, in
+doing so, draws a line identical in shape to every observation this
+codebase has built before it, one domain earlier in the pipeline: a wallet
+can report what it holds at 10:00, and hold something completely different
+at 10:01.
+
+> A wallet can report UTXOs at 10:00, but those UTXOs can disappear at
+> 10:01. Likewise, a wallet can provide an address without committing to
+> use it forever. A funding observation is a fact about a moment, never
+> a commitment about the future.
+
+**Every observation is a fresh read, never a cached or remembered one.**
+`anchoring/BitcoinWalletFundingObserver.js#observeFunding()` holds no state
+across calls and returns a new, independently frozen record every time —
+the identical restraint `anchoring/BitcoinAnchorConfirmationObserver.js`
+(0.8.54) already holds toward its own confirmation checks. It never
+remembers a previous `OBSERVED` result, and nothing in this codebase
+automatically re-checks one on a timer, on wallet reconnect, or before any
+future action that might rely on it. A caller that wants to know whether an
+observation is still trustworthy must ask again, explicitly.
+
+**Script type is read from an address's own public prefix, never decoded —
+the identical restraint held one layer earlier, extended, not broken.**
+`anchoring/BitcoinAnchorPsbtBuilder.js`'s own header (0.8.48) states, and
+every milestone since has held unchanged: "no base58/bech32 decoding exists
+anywhere in this codebase." This milestone's own address-prefix inference
+(a `bc1q...` address of the right length IS, by BIP173's own public
+definition, a P2WPKH witness program) reads only what an address's
+standardized encoding already announces about itself — never the
+checksum-and-payload decoding that would be required to derive an actual
+spendable script. A real but unsupported address format (P2SH, most
+notably) is reported honestly as `UNSUPPORTED`, never silently guessed at
+as whichever script type this codebase happens to already support.
+
+**A capability observed is not a capability invented.** The natural
+instinct, once a wallet is connected, is to ask it a growing list of
+questions: an account, a network, now spendable UTXOs, and — the next
+obvious question — where should change go? This milestone answers that last
+question WITHOUT inventing a new wallet capability to ask it: `anchoring/
+BitcoinInjectedProviderWalletAdapter.js`'s own header holds that this
+codebase adapts only one real wallet extension's own, real, documented API
+— and no such API exposes a "give me a change address" call. Rather than
+build a class against a contract this codebase has no way to verify,
+`changeAccount` is always exactly the same account funding was observed
+for. A real wallet receiving its own change back is standard Bitcoin
+practice, not an architectural compromise — and the discipline this
+codebase has held since 0.8.58 ("adapt only a real, documented API, never a
+speculative one") is what makes that the RIGHT choice here, not merely the
+convenient one.
+
+**An observation is never promoted to a plan.** `application/
+BitcoinAnchorFundingView.js#describeBitcoinAnchorFunding()` invents no
+fact — every field is read straight off a real observation — and carries no
+`best`, `recommended`, or `selected` field of any kind. Which UTXOs are
+actually worth spending remains entirely `anchoring/
+BitcoinAnchorTransactionBuilder.js`'s own deterministic selection (0.8.47),
+unchanged and un-duplicated here; this milestone answers only "what does a
+funding source say is spendable," never "what should be spent."
+
+See `docs/Roadmap.md`, 0.8.60, for the full milestone entry.
