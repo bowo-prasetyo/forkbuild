@@ -15392,3 +15392,65 @@ restraint `content/IpfsGatewayContentStore.js`'s own 0.8.66 "two explicit
 registries, never one silent overwrite" already holds for the read side.
 
 See `docs/Roadmap.md`, 0.8.68, for the full milestone entry.
+
+## A Gateway Moves Bytes; It Never Judges Them (0.8.69)
+
+`content/IpfsGatewayContentStore.js`'s own 0.8.66 header already drew the
+line: "This class never validates the retrieved bytes against any
+expected hash — that discipline belongs, unchanged, to `core/
+ContentReference.js#verify()`." 0.8.66 could only ever point at that
+discipline, because nothing before 0.8.69 actually invoked it against a
+locator a person had explicitly, remotely published. `application/
+IpfsPublicationContentVerifier.js` is that invocation, and it changes
+nothing about where the line sits — it moves to the other side of it.
+
+**The identity check happens exactly once, one layer above every
+content-moving adapter.** `verify()` calls `contentStore.get()` — a real
+`content/IpfsGatewayContentStore.js` or `content/IpfsContentStore.js`,
+neither one modified, neither one taught a `verify` option, a callback,
+or any concept of "expected content" — and then calls `core/
+ContentReference.js#verify(bytes)` itself, on the result. A gateway or a
+Kubo node stays exactly what it has always been: a mechanism for moving
+bytes to and from a locator, with no opinion about whether those bytes
+are the RIGHT bytes. Structurally, this means a caller can point this
+verifier at ANY future `content/ContentStore.js` implementation
+(Arweave, HTTP, whatever `content/ContentStore.js`'s own 0.2.14 header
+already named as future work) without either side of the boundary
+changing.
+
+**The CID stays a locator, all the way through — never re-promoted to
+identity, even at the exact moment it is being checked.** `verify()`
+never asks "does this CID look right"; it asks "does resolving THIS
+locator right now produce bytes that hash to THIS contentHash." The CID
+never appears in the comparison itself — `core/ContentReference.js#
+verify()` only ever compares retrieved bytes against `contentHash`, the
+identical check every other content-addressed retrieval in this codebase
+already performs (`application/PublicationResolver.js#resolve()`'s own
+step 5, unchanged). This milestone adds no second notion of identity
+anywhere.
+
+**Unavailable is never evidence of a mismatch.** `application/
+IpfsPublicationContentVerificationState.js` reuses `application/
+BitcoinAnchorContentProofState.js`'s own three-value vocabulary
+(`HASH_MATCH`/`HASH_MISMATCH`/`UNAVAILABLE`) verbatim rather than
+reinventing it, because it is the identical honest distinction one domain
+over: a `ContentUnavailableError`, any other thrown error, or a store
+resolving to `null` all report UNAVAILABLE — never HASH_MISMATCH. A
+gateway that cannot presently be reached has told this codebase nothing
+about whether the content it would have served is right or wrong; only
+bytes that were actually retrieved are ever compared at all.
+
+**A record is a plain, unsigned local fact — never a second protocol
+envelope.** `application/IpfsPublicationRecord.js` carries no `id`, no
+signature, and no `kind`/`schemaVersion` tag, deliberately unlike `core/
+PublicationAnchor.js` or `core/PublicationSnapshotPlacement.js` — both
+signed, catalogued envelopes meant to be published, exchanged, and
+independently verified by a stranger. A publication record is never any
+of those things: it is this replica's own local statement of what it
+already knows was published, existing only as long as whatever code
+holds a reference to it. This milestone builds no catalog, no store, and
+no persistence path for it at all — see `docs/Roadmap.md`, 0.8.69's own
+"Deliberately excluded" list, for why that step stays separate, later
+work.
+
+See `docs/Roadmap.md`, 0.8.69, for the full milestone entry.
