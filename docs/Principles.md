@@ -15174,3 +15174,80 @@ Observations; It Does Not Score Them (0.8.55)," held here across one more
 independent axis.
 
 See `docs/Roadmap.md`, 0.8.65, for the full milestone entry.
+
+## A Locator Is Not The Content; A Gateway Is Not A Verdict (0.8.66)
+
+`core/ContentReference.js`'s own header has drawn this line since 0.7.0:
+"The cryptographic hash identifies the content. The URI describes one
+retrieval mechanism." `content/IpfsContentStore.js` (0.7.1) already held
+that line for one retrieval mechanism — a local Kubo node's RPC API.
+`content/IpfsGatewayContentStore.js` (0.8.66) holds the identical line for
+a second, completely different one — a public HTTPS gateway — and adds
+nothing new to the discipline itself.
+
+**Resolving through a new transport never earns that transport a new
+kind of trust.** A gateway is not a peer this replica has authenticated,
+not a service it has any relationship with beyond "answer this one HTTP
+request." This class could have treated a 200 response as sufficient —
+the CID resolved, so the content must be right. It does not. Every byte
+this class returns from `get()` still has to pass through the exact same
+`core/ContentReference.js#verify()` every other content/ContentStore.js
+implementation's output is already held to. A gateway that serves
+different bytes than what was actually published produces exactly the
+same outcome a Kubo node serving corrupted bytes would: CONTENT_HASH_
+MISMATCH, from application/PublicationResolver.js or application/
+SnapshotPlacementResolver.js, never a special "gateway said so" bypass.
+The CID a gateway resolved is still, after every step, only a locator.
+
+**Unavailability is one fact, shared across every transport.** `content/
+IpfsContentStore.js`'s own 0.7.1 header established that a network-backed
+ContentStore introduces a new kind of failure — content that is
+completely valid but simply not reachable right now — and that this is
+never conflated with "the content is wrong." This milestone does not
+invent a second version of that fact for gateways specifically. `content/
+IpfsGatewayContentStore.js` throws the SAME `ContentUnavailableError`
+class, imported from `content/IpfsContentStore.js` rather than
+reimplemented, for every network-shaped failure: an unreachable gateway,
+a 404, a response body that cannot be read. A caller downstream — indeed,
+every existing caller, unchanged — cannot tell, and does not need to
+tell, whether an unavailable acquisition attempt came from a Kubo node or
+a gateway. There is no "gateway health," "gateway quality," or "gateway
+confidence" value anywhere in this class. A gateway either served the
+requested CID just now, or it did not; that is the entire fact reported.
+
+**A capability a class does not have is not simulated.** A public HTTPS
+gateway accepts nothing — it only ever serves what was already published
+somewhere else. `content/IpfsGatewayContentStore.js#put()` is not
+overridden with a hand-written "not supported" throw; it simply inherits
+`content/ContentStore.js`'s own unimplemented base method, the identical
+signal every other unbuilt capability in this codebase already gives.
+There is no `pin()`, `unpin()`, or `publish()` at all — not stubbed, not
+present. `content/IpfsContentStore.js` keeps every capability a real
+Kubo node genuinely has (resolve AND publish); this class offers only the
+one capability an HTTPS gateway genuinely has (resolve). Neither
+pretends to be the other.
+
+**One gateway, one request, one outcome — never a hidden reliability
+mechanism.** `content/IpfsGatewayContentStore.js` is constructed against
+exactly one gateway URL. There is no list, no "try the next gateway on
+failure," no ranking of gateways by speed or trust. That kind of
+multi-source acquisition and reconciliation is a real, separately sized
+concern this milestone deliberately leaves unbuilt — see `docs/
+Roadmap.md`, 0.8.66's own "Deliberately excluded" list — rather than
+smuggling a source-selection policy into what is supposed to be one
+narrow content-store adapter.
+
+**Two explicit registries, never one silent overwrite.** `ui/main.js`
+wires `content/IpfsGatewayContentStore.js` into the RESOLUTION-only
+composition root in place of `content/IpfsContentStore.js`, while the
+CREATION-side composition root keeps Kubo, unchanged — because only Kubo
+can `put()`. These are two independently constructed `application/
+SnapshotPlacementStoreRegistry.js` instances (see that class's own
+"UNLIKE ANCHORING, ONE REGISTRY SUFFICES FOR BOTH DIRECTIONS" header, and
+`application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js`'s own
+header on why it is deliberately a separate composition root from
+`application/CreateSnapshotPlacementOrchestratorUseCase.js`), so choosing
+the gateway for ordinary resolution never hides or silently replaces
+Kubo's own publish capability anywhere else in this replica.
+
+See `docs/Roadmap.md`, 0.8.66, for the full milestone entry.
