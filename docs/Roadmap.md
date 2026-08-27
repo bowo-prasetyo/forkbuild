@@ -27450,3 +27450,203 @@ IpfsPublicationContentVerifier.js` gives ForkBuild, for the first time, a
 real answer to "does this IPFS locator still serve the content it was
 published for?" — but a person still has no screen that asks it. That is
 0.8.70's own job, next.
+
+## 0.8.70 — IPFS Publication & Content Verification UI
+
+0.8.69's own "Deliberately excluded" list named exactly this milestone:
+"Any UI surface. No 'Observe Content' button, and no change to
+`ui/main.js` or `ui/views/DecentralizedPublicationsView.js`... a real,
+fully tested capability, built and left deliberately unwired until its
+own inspection-UI milestone gives a person a place to see it." This is
+that UI, and nothing else — the identical shape `application/
+BitcoinAnchorProofReconciliationView.js`'s own 0.8.57 inspection UI
+already gave a Bitcoin content-hash proof, given here to its IPFS-side
+counterpart. It adds no new IPFS primitive, no new network protocol, and
+no new fact: every observation this section displays was already
+produced, unchanged, by `application/IpfsPublicationContentVerifier.js`
+(0.8.69).
+
+```text
+IPFS Publishing
+  └── Remote pinning
+        ├── Remote IPFS                                       (0.8.68)
+        │     └── contentHash / locator / provider / published at
+        └── Content retrieval                                 (new)
+              ├── current: an IpfsPublicationContentVerificationCoordinator
+              │   .verify() outcome, projected through
+              │   describeIpfsPublicationContentVerification()
+              └── [ Verify IPFS Content / Verify Again ]  (new — the ONE
+                    place this page ever calls this coordinator's
+                    verify())
+```
+
+**PUBLICATION AND VERIFICATION ARE TWO SEPARATE PIECES OF UI STATE, NEVER
+ONE.** `entry.ipfsPublicationRecord` (an action's own settled result) and
+`entry.ipfsPublicationContentVerification` (an observation about that
+result, made later, independently) are deliberately never merged into a
+single `ipfsStatus` field. `PUBLISHED` + `UNAVAILABLE` is not an error
+this screen resolves or hides — it honestly means "ForkBuild previously
+received a publication result, but this particular retrieval attempt
+cannot presently establish what bytes the locator serves." `PUBLISHED` +
+`HASH_MISMATCH` remains equally displayable, for the identical reason
+`application/BitcoinAnchorProofReconciliationView.js`'s own header
+already gives for `CONFIRMED` + `HASH_MISMATCH` one domain over. See
+docs/Principles.md, "The UI Displays Observations; It Does Not Turn Them
+Into A Verdict (0.8.57)."
+
+**VERIFICATION IS BOUND TO THE PUBLICATION RECORD, NEVER TO WHATEVER IS
+ON SCREEN.** The one identity boundary this milestone exists to hold.
+`publishToRemoteIpfs()` captures a real `application/
+IpfsPublicationRecord.js` — `{ contentHash, locator, publishedAt,
+publicationMethod }` — the instant a publish attempt reaches `PUBLISHED`,
+and `verifyIpfsPublicationContent()` always reads THAT captured record,
+never a CID or hash reconstructed from the page's own display state. The
+new `application/IpfsPublicationContentVerificationCoordinator.js` holds
+this boundary structurally, not just by UI convention: it requires a
+genuine `IpfsPublicationRecord` INSTANCE, refusing even a plain object
+carrying the identical `contentHash`/`locator` strings the underlying
+0.8.69 verifier would otherwise accept. A later UI change can never
+accidentally verify one publication's locator against a different
+publication's content hash — the Bitcoin-side analogue is
+`application/BitcoinAnchorConfirmationCoordinator.js`'s own
+`broadcasted === true` check (0.8.65), applied here one domain over.
+
+**ONE EXPLICIT ACTION, NEVER AUTOMATIC.** "Verify IPFS Content"/"Verify
+Again" is the only thing that ever calls `IpfsPublicationContentVerificationCoordinator
+.verify()` — never triggered by this page loading, a publish attempt
+finishing, a gateway being configured, opening a different publication,
+or a Bitcoin confirmation being observed elsewhere on the same page.
+Nothing polls, retries, or falls back to a different gateway.
+
+- `application/IpfsPublicationContentVerificationCoordinatorState.js` —
+  new; the six-value UI-facing vocabulary — `IDLE`, `VERIFYING`, and
+  `FAILED` are genuinely new; `HASH_MATCH`/`HASH_MISMATCH`/`UNAVAILABLE`
+  are `application/IpfsPublicationContentVerificationState.js`'s own
+  0.8.69 values, reused verbatim, never redefined. `FAILED` names a
+  caller/UI contract problem, distinct from `UNAVAILABLE`'s "the
+  requested content could not presently be retrieved" — honestly
+  unreached today, kept for the identical reason `application/
+  BitcoinAnchorBroadcastState.js`'s own `FAILED` (0.8.64) is kept.
+- `application/IpfsPublicationContentVerificationCoordinator.js` — new; a
+  deliberately thin wrapper around the UNCHANGED 0.8.69 verifier, mirroring
+  `application/BitcoinAnchorConfirmationCoordinator.js`'s own shape
+  exactly. Adds no hashing, no gateway selection, no retry, no caching, no
+  persistence, and no automatic fallback — its one real job is the
+  `IpfsPublicationRecord` instance check described above.
+- `application/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js`
+  — new; the identical composition-root shape `application/
+  CreateBitcoinAnchorBroadcastCoordinatorUseCase.js` (0.8.64) already
+  established — takes an already-constructed `ipfsPublicationContentVerifier`
+  as a parameter, building nothing itself.
+- `application/IpfsPublicationContentVerificationView.js` — new; the
+  label vocabulary and pure projection `application/
+  BitcoinAnchorContentProofView.js` (0.8.57) already established one
+  domain over, applied to the new six-value coordinator vocabulary.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Content retrieval"
+  sub-section, rendered as its own `evidence-inspection-adapter` box
+  inside the existing "IPFS Publishing" section's "Remote pinning" card,
+  deliberately a SEPARATE box from "Remote IPFS" above rather than
+  collapsed into it — the identical restraint 0.8.65's own Broadcast/
+  Confirmation split already holds. New per-entry state:
+  `ipfsPublicationRecord` (the bound record, replaced by each fresh
+  publish attempt) and `ipfsPublicationContentVerification` (the current
+  observation, replaced by each "Verify"/"Verify Again" click — but NOT
+  by a fresh verification of the SAME record, so a "Verify Again" click
+  never loses the previous observation before the new one lands, no
+  history of prior observations kept). New functions:
+  `verifyIpfsPublicationContent()` (the one explicit action),
+  `ipfsPublicationContentVerificationView()`/`...BadgeClass()` (pure
+  projection), `isVerifyingIpfsPublicationContent()`/
+  `ipfsPublicationContentVerifyButtonLabel()` (the "Verify IPFS Content"/
+  "Verify Again" relabeling, mirroring `bitcoinAnchorReconcileButtonLabel()`
+  one domain over). `publishToRemoteIpfs()`, `saveIpfsRemotePublishingConfiguration()`,
+  and `clearIpfsRemotePublishingConfiguration()` are extended to retire
+  `ipfsPublicationRecord`/`ipfsPublicationContentVerification` exactly
+  when they already retire `ipfsRemotePublicationOutcome` — a fresh
+  publish attempt or a (re)configuration always starts unverified again,
+  never inheriting a stale record's own last observation.
+- `ui/main.js` — the first real wiring of `application/
+  IpfsPublicationContentVerifier.js` into this running app, through a
+  fresh `content/IpfsGatewayContentStore.js` — the SAME class already
+  used to resolve `ipfs://` snapshot placements through a public gateway,
+  never a second, disconnected reader.
+
+> **Publication is an action; verification is an observation.** They stay
+> two separate pieces of UI state, never merged into one `ipfsStatus`
+> field — `PUBLISHED` + `UNAVAILABLE` and `PUBLISHED` + `HASH_MISMATCH`
+> both remain legitimate, honestly displayed combinations. See
+> docs/Principles.md, "The UI Displays Observations; It Does Not Turn
+> Them Into A Verdict (0.8.57)."
+
+```text
+0.8.69  IPFS Publication Record & Content-Identity Binding             ✓
+             │
+             ▼
+0.8.70  IPFS Publication & Content Verification UI                     ✓
+             ├── application/
+             │   IpfsPublicationContentVerificationCoordinatorState.js —
+             │   new; IDLE/VERIFYING/FAILED added to the 0.8.69 vocabulary,
+             │   reused verbatim
+             ├── application/IpfsPublicationContentVerificationCoordinator
+             │   .js — new; a thin wrapper enforcing the one identity
+             │   boundary this milestone exists to hold — a genuine
+             │   IpfsPublicationRecord instance, never a reconstructed
+             │   plain object
+             ├── application/
+             │   CreateIpfsPublicationContentVerificationCoordinatorUseCase.js
+             │   — new composition-root use case
+             ├── application/IpfsPublicationContentVerificationView.js —
+             │   new label vocabulary and pure projection
+             ├── ui/views/DecentralizedPublicationsView.js — new "Content
+             │   retrieval" sub-section, finally on a screen
+             ├── ui/main.js — the first real wiring of application/
+             │   IpfsPublicationContentVerifier.js into this running app
+             └── ForkBuild can now, for the first time, explicitly verify
+                 that a published IPFS locator still serves the content it
+                 was published for — without opening a console, and
+                 without ever collapsing that observation into a "trusted"/
+                 "verified" verdict
+```
+
+### Deliberately excluded
+
+- **Any IPFS content-verification history.** 0.8.56's Bitcoin confirmation
+  observation history has a different temporal character than a single
+  IPFS retrieval check — this milestone deliberately leaves history out,
+  showing only `current publication` + `latest verification observation`.
+  Once this UI's own semantics prove themselves, 0.8.71 can introduce an
+  append-only IPFS content-verification history, if it turns out to
+  provide useful evidence.
+- **A combined "IPFS health" verdict, score, or confidence rating,**
+  anywhere. The entire point of this milestone — see this entry's own
+  header rule, restated at the top of this entry.
+- **Automatic re-verification, polling, or retry of any kind.** "Verify
+  IPFS Content"/"Verify Again" is a single explicit click; nothing in this
+  milestone calls `verify()` on a caller's behalf, on a timer, or in
+  response to any other action on this page.
+- **Any change to `application/IpfsPublicationContentVerifier.js`,
+  `application/IpfsPublicationContentVerificationState.js`,
+  `application/IpfsPublicationRecord.js`, `application/
+  IpfsRemotePublicationCoordinator.js`, or `application/
+  IpfsRemotePublicationState.js` themselves.** All five stay exactly as
+  0.8.68/0.8.69 left them — this milestone only ever reads and displays
+  their existing outputs.
+- **Persisting `IpfsPublicationRecord` anywhere.** No catalog, no store,
+  no localStorage — unchanged from 0.8.69's own identical exclusion. A
+  record lives exactly as long as the reactive UI state holding it.
+- **A local Kubo publish path's own "Content retrieval" section.** Only
+  the existing "Remote pinning" publish path (0.8.67/0.8.68) currently
+  produces a `PUBLISHED` outcome this UI can bind a record to; a local
+  Kubo publish UI is real, separately sized future work, and would reuse
+  this exact same coordinator once it exists.
+- **A unified Bitcoin + IPFS evidence inspection screen.** Confirmation/
+  content-proof and IPFS publication/verification stay two entirely
+  separate sections on this page — a caller wanting both simply looks at
+  both, side by side; see docs/Roadmap.md, 0.8.72, for that later,
+  separately sized composition.
+
+What's left, and deliberately unbuilt: any IPFS content-verification
+history, a combined cross-domain verdict, automatic re-verification, a
+local Kubo publish path's own verification UI, and a unified Bitcoin +
+IPFS evidence screen — each its own, separately sized milestone, exactly
+like every "Deliberately excluded" list in this document before it.
