@@ -9,15 +9,18 @@ one, several independent kinds of optional depth you can attach to it:
 **external evidence** that the claim was recorded somewhere independent of
 ForkBuild, like a Bitcoin transaction that timestamps it; **snapshot
 placements** that name where the claim's own content can currently be
-retrieved from, like an IPFS node; a **Local Snapshot** section that reports
-what your own device already holds and lets you actually pull those bytes
-in, from a placement, from a peer, or from a file someone hands you; and a
-**Decentralization** overview that puts your evidence and placements side by
-side; and, separately, a full [Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)
-that connects a real browser wallet and walks a real transaction all the
-way from observed funding to a broadcast, confirmed anchor on the Bitcoin
-network. None of these are required by any other, and none are required to
-use the rest of ForkBuild.
+retrieved from, like an IPFS node; an [**IPFS Publishing**](#ipfs-publishing)
+section that explicitly publishes a claim's content to a remote pinning
+provider and independently verifies it's still retrievable; a **Local
+Snapshot** section that reports what your own device already holds and lets
+you actually pull those bytes in, from a placement, from a peer, or from a
+file someone hands you; and a **Decentralization** overview that puts your
+evidence and placements side by side; and, separately, a full
+[Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) that connects a real
+browser wallet and walks a real transaction all the way from observed
+funding to a broadcast, confirmed anchor on the Bitcoin network. None of
+these are required by any other, and none are required to use the rest of
+ForkBuild.
 
 None of this is required to use ForkBuild. Skip this guide entirely if you
 just want to build, publish Documents, and explore — everything in
@@ -112,11 +115,12 @@ from last time.
 Below the status badge, every card also has its own **Local Snapshot**
 section (what *this device* actually holds, and how to get it),
 **Decentralization** overview (evidence and placements side by side),
-**External Evidence** section, and **Snapshot Placements** section — four
-independent questions, none of which answer each other. See
-[Local Snapshot](#local-snapshot),
+**External Evidence** section, **Snapshot Placements** section, and
+**IPFS Publishing** section — five independent questions, none of which
+answer each other. See [Local Snapshot](#local-snapshot),
 [Decentralization](#decentralization-evidence-and-placements-at-a-glance),
-and [Snapshot Placements](#snapshot-placements) below.
+[Snapshot Placements](#snapshot-placements), and
+[IPFS Publishing](#ipfs-publishing) below.
 
 Each card shows:
 
@@ -998,6 +1002,17 @@ recorded for `<storage>`."* Never "decentralized," "permanent," or
 "available everywhere" — a created placement only means a storage backend
 accepted these bytes just now.
 
+> **Creating an IPFS placement needs your own IPFS node; resolving one
+> doesn't.** **Create Ipfs Placement** always talks to a real IPFS node's
+> HTTP API on this device (expected at `http://127.0.0.1:5001`) — without
+> one running, you'll see **No placement was created**. **Resolve
+> Snapshot** and **Materialize Snapshot**, just below, are different: they
+> reach a public IPFS gateway (`https://ipfs.io` by default) instead,
+> whether or not you have a node of your own running. That means you can
+> resolve and materialize an `ipfs` placement someone *else* created —
+> theirs or a peer's — without ever installing or running IPFS software
+> yourself; only creating a brand-new IPFS placement still requires it.
+
 ### The Snapshot Placements list
 
 ```
@@ -1114,6 +1129,136 @@ more likely correct — and unlike that comparison, this one is never
 affected by whether you've actually resolved any of the placements; it's
 derived purely from the claims themselves, every time.
 
+## IPFS Publishing
+
+Every publication card also has its own **IPFS Publishing** section,
+directly below Snapshot Placements — a different way of getting a
+publication's content onto IPFS than **Create Ipfs Placement** above.
+
+```
+IPFS Publishing
+
+Local Kubo can resolve and publish. A remote gateway can only resolve.
+Remote pinning, configured below, can only publish.
+
+Remote pinning
+Endpoint: not configured
+Credential: not configured
+
+[Configure Remote Publishing]
+```
+
+A **snapshot placement** (above) is a signed, cataloged claim that gets
+stored, exchanged with peers, and re-inspected later. A **remote
+publish** here is none of that: it's one explicit call to a pinning
+provider you configure yourself, and the result is shown only for as
+long as this page stays open. It never touches the Snapshot Placement
+catalog, and never creates a signed placement claim on its own.
+
+### Configuring a remote pinning provider
+
+This build ships no commercial pinning provider by default — you supply
+one yourself, generically, as an HTTP endpoint. Click **Configure Remote
+Publishing** (or **Reconfigure Remote Publishing**, once you already
+have one) to open a small form:
+
+| Field | Meaning |
+|---|---|
+| **Endpoint** | The pinning service's own upload URL — required. |
+| **Credential** (optional) | Sent as a bearer `Authorization` header. Never displayed back to you once saved — the card only ever shows **Credential: configured** or **not configured**, never the value itself. |
+| **Request field** (optional) | The multipart field name the service expects the file under — defaults to `file`. |
+| **Response field** (optional) | The field name the service returns the CID under — defaults to `cid`. |
+
+Nothing you type here is saved anywhere — not to this device's storage,
+not to a peer, not to the publication catalog. It lives only in this
+page's own memory for as long as this browsing session and this card
+stay open, and is discarded immediately by a page reload or by clicking
+**Clear Configuration**. Click **Save Configuration** to actually commit
+the draft; canceling the form (or never saving it) leaves whatever was
+configured before, if anything, untouched. (Re)configuring always
+retires whatever was previously published under the old configuration —
+a freshly configured provider always starts unpublished again.
+
+### Publishing
+
+Once a provider is configured, a **Publish to Remote IPFS** button
+appears (**Publish Again** after the first attempt). Clicking it always
+starts from this device's own locally held bytes for the publication —
+verified against the publication's own content hash first — and hands
+them to the configured provider. Outcomes:
+
+| Badge | Meaning |
+|---|---|
+| **Published** | The provider accepted the bytes and returned a CID. This is an observation of what the provider just said, not a promise it will still be retrievable later, and not a cataloged Snapshot Placement. |
+| **Publish rejected** | The provider reached a definite no — an invalid or expired credential, a malformed request, or a quota/size limit. Retrying the identical request isn't expected to succeed; the configuration has to change first. |
+| **Publish unavailable** | The provider couldn't currently be reached — an unreachable host, a timeout, or a server error. Retrying later, with **Publish Again**, may succeed. |
+| **Publish failed** | The attempt couldn't be completed for some other reason, including a local integrity check failing before the provider was ever contacted, or a provider response this device couldn't make sense of. |
+
+A **Published** result shows the content hash, the IPFS locator
+(`ipfs://<cid>`), the provider endpoint, and when it happened. As with
+every other outcome on this page, none of this is ever worded as
+"verified," "trusted," "safe," "permanent," or "guaranteed" — only that
+the provider accepted these particular bytes just now.
+
+### Verifying what was published
+
+Once you've published successfully at least once, a separate **Content
+retrieval** box appears with a **Verify IPFS Content** button (**Verify
+Again** afterward). This is an entirely independent check: it goes back
+to the exact record the most recent successful publish produced, fetches
+whatever bytes are presently retrievable at that locator through a
+public IPFS gateway, and compares them against the recorded content
+hash — never assumed just because publishing itself reported success.
+
+| Badge | Meaning |
+|---|---|
+| **Retrieved content matches the recorded content hash** | The gateway served bytes, and they match. |
+| **Retrieved content does not match the recorded content hash** | The gateway served bytes, and they don't — a real, definite finding. |
+| **Content retrieval unavailable** | The gateway couldn't currently be reached, or doesn't currently have the bytes — not the same as a mismatch. |
+| **Verification failed** | Something else prevented a clean answer. |
+
+Nothing here checks automatically — not on publishing, not on opening
+this section, not on a timer. You decide, every time, when it's worth
+the round trip.
+
+### Publication History
+
+Publishing more than once — the same content again, or after
+reconfiguring the provider — never overwrites what came before. Once at
+least one publish has succeeded, a **Show Publication History** button
+appears: click it to see every record this entry has ever published, in
+order, oldest first, with each one's locator and time. Click a row to
+**Inspect** it and see its own Locator, Content hash, Published at, and
+(when known) Method — **Local IPFS node (Kubo)** or **Remote pinning
+provider**, naming which of ForkBuild's two publish paths produced that
+particular record; today, **Publish to Remote IPFS** above is the only
+way this page ever adds to this history, so every record you see here
+reads **Remote pinning provider**. This history alone is never a claim
+about whether a record is "current" or "still good" — only what was
+published, where, and when; see the next paragraph for whether it still
+resolves.
+
+Each history entry also has its **own** independent **Content
+retrieval** box, exactly like the one described above for the most
+recent publish, with its own **Verify Content** / **Verify Again**
+button and its own **Latest: …** badge. Verifying one history entry
+never affects another — checking whether the very first thing you ever
+published to IPFS still resolves today has no bearing on whether a later
+republish does, and vice versa. Every check for a given entry also joins
+that entry's own **Show Verification History** log — a plain,
+chronological list of every observation ever made for that one record,
+oldest first, never rewritten by a later check:
+
+```
+11:03 — Retrieved content matches the recorded content hash
+11:17 — Content retrieval unavailable
+11:31 — Retrieved content matches the recorded content hash
+```
+
+All three of those stand side by side, unchanged — a later observation
+never retroactively edits an earlier one, and there's no averaging,
+scoring, or "current status" computed across them anywhere in this list.
+
 ## What survives a reload
 
 Evidence you've cataloged — your own, a peer's, or something you
@@ -1155,6 +1300,18 @@ recomputed fresh from your own device's catalog every time the page loads,
 so there's nothing to reset. Only an explicit **Synchronize with Peers**
 result (the New claims / Already known breakdown) resets on reload,
 exactly like a verification or resolution result would.
+
+**[IPFS Publishing](#ipfs-publishing) is entirely session-only, with no
+exception, exactly like the Bitcoin Anchor Pipeline below.** Your
+configured pinning provider (endpoint and credential alike), every
+publish outcome, the entire Publication History, and every entry's own
+Verification History all live only in this page's own memory and
+disappear the moment you reload — none of it is ever written to this
+device's storage, exchanged with a peer, or added to the Snapshot
+Placement catalog. The bytes you published stay wherever the provider
+put them, exactly as any real IPFS publish would; only ForkBuild's own
+on-screen record of having done it is gone. Reconfigure the provider and
+publish again to pick up where you left off.
 
 **The [Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) is entirely
 session-only, with no exception.** Unlike Local Snapshot's one exception

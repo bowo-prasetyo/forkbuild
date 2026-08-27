@@ -43,14 +43,19 @@ top-level [docs/](..) folder.
    from peers, verifying, and inspecting anchors like a Bitcoin timestamp,
    optional snapshot placements: creating, inspecting, resolving,
    materializing, and comparing locators like an IPFS node that can
-   currently serve a claim's content, a **Local Snapshot** section for
-   checking, importing, and pulling in the actual bytes this device holds
-   (from a placement, a peer, or an offline file), a **Decentralization**
-   overview comparing your evidence and placements, synchronizing
-   knowledge with peers, and seeing how each claim was learned, and the
-   **Bitcoin Anchor Pipeline** — connecting a real browser wallet and
-   walking a real transaction through funding, construction, review,
-   signing, cryptographic verification, broadcast, and confirmation.
+   currently serve a claim's content (resolving now works through a
+   public IPFS gateway, with no local node required), an **IPFS
+   Publishing** section for explicitly publishing content to a
+   configured remote pinning provider, independently verifying it's
+   still retrievable, and inspecting the full history of both, a
+   **Local Snapshot** section for checking, importing, and pulling in
+   the actual bytes this device holds (from a placement, a peer, or an
+   offline file), a **Decentralization** overview comparing your
+   evidence and placements, synchronizing knowledge with peers, and
+   seeing how each claim was learned, and the **Bitcoin Anchor
+   Pipeline** — connecting a real browser wallet and walking a real
+   transaction through funding, construction, review, signing,
+   cryptographic verification, broadcast, and confirmation.
 
 ## Reference
 
