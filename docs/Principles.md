@@ -14275,3 +14275,61 @@ queries Esplora, and no automatic progression from `BROADCASTED` to a
 confirmed state occurs anywhere in this codebase. See `docs/Roadmap.md`,
 0.8.53, for the full milestone entry, and "0.8.54" for the separate,
 explicitly-triggered action confirmation observation belongs to.
+
+## Confirmation Observation Reports What Is; It Does Not Decide What It Means (0.8.54)
+
+**`anchoring/BitcoinAnchorConfirmationObserver.js#observeConfirmation()`
+never asks whether an anchor is trustworthy — it asks only what the
+Bitcoin network currently reports about one already-broadcast
+transaction.** 0.8.53 deliberately stopped at `BROADCASTED`: "the network
+accepted this transaction for broadcast," nothing about confirmation. This
+class is the separate, explicitly-triggered action that answers the next
+question, and holds itself to the identical restraint: it reports facts,
+never a verdict on whether those facts should be trusted, acted on, or
+mean the anchor is "good."
+
+**Three honest outcomes, never a fourth "definitely rejected" one.**
+Unlike `anchoring/BitcoinAnchorTransactionBroadcaster.js`, which CAN
+receive a real, definite rejection from the network at submission time,
+there is no Bitcoin-network answer that means "this txid will never
+exist." A transaction simply not (yet) found may mean it has not yet
+propagated. `application/BitcoinAnchorConfirmationState.js` therefore
+holds only `CONFIRMED`, `NOT_CONFIRMED` (a transaction genuinely found but
+not yet mined — a real, positive fact), and `UNAVAILABLE` (cannot
+presently tell, for any reason, including "not found") — the same
+restraint `anchoring/BitcoinOpReturnProofVerifier.js` already held for its
+own 404 handling in 0.8.1, applied here to a class built for reading state
+rather than verifying a proof.
+
+**A "confirmed" claim is never taken at face value.** `blockHash`,
+`blockHeight`, and `confirmationCount` are an external system's own
+report, not something this class independently derives. A
+`confirmationSource` that claims `confirmed: true` but supplies missing,
+malformed, or non-positive block fields is reported `UNAVAILABLE` — this
+class never fabricates a placeholder value and never reports `CONFIRMED`
+on partial information, the identical discipline `anchoring/
+BitcoinAnchorTransactionBroadcaster.js` already holds toward a
+broadcaster's own self-reported txid.
+
+**Every observation is a fresh, frozen, independent record — never
+cached, never rewritten.** `observeConfirmation()` holds no state across
+calls. Calling it twice against a source whose answer changed — even one
+naming a DIFFERENT `blockHash` for the identical txid, a possible chain
+reorganization — returns two separate, immutable records; the earlier one
+is never mutated or discarded to make room for the later one. This class
+does not itself detect or reason about a reorganization — that stays
+real, separately sized future work — but it refuses to throw away the one
+piece of information (the block's own identity, not merely "confirmed:
+true") a future caller would need to notice one. See `docs/
+Principles.md`, "A Verification Result Describes What Can Be Established
+Now; It Does Not Rewrite The Historical Claim Being Verified (0.8.12),"
+for the identical discipline held here for a different axis.
+
+**Confirmation status and OP_RETURN proof stay two independent facts,
+never merged into one verdict.** A transaction can be `CONFIRMED` here and
+simultaneously fail `anchoring/BitcoinOpReturnProofVerifier.js`'s own
+content-hash check — this class never conflates "the network mined this
+transaction" with "this transaction's OP_RETURN carries the anchor's own
+claimed content hash." See `docs/Principles.md`, "External Anchoring
+Provides Evidence; It Does Not Establish Authority (0.8.0)," and `docs/
+Roadmap.md`, 0.8.54, for the full milestone entry.
