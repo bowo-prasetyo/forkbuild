@@ -50,6 +50,8 @@ import { CreateExternalAnchorEvidenceViewRegistryUseCase } from '../application/
 import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../application/CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js';
 import { CreateBitcoinAnchorConfirmationObserverUseCase } from '../application/CreateBitcoinAnchorConfirmationObserverUseCase.js';
 import { CreateBitcoinAnchorProofReconciliationViewUseCase } from '../application/CreateBitcoinAnchorProofReconciliationViewUseCase.js';
+import { CreateBitcoinInjectedProviderWalletAdapterUseCase } from '../application/CreateBitcoinInjectedProviderWalletAdapterUseCase.js';
+import { CreateBitcoinWalletConnectionUseCase } from '../application/CreateBitcoinWalletConnectionUseCase.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -808,6 +810,29 @@ const { bitcoinAnchorProofReconciliationView } = new CreateBitcoinAnchorProofRec
     bitcoinAnchorConfirmationObserver, bitcoinProofVerifier
 });
 
+// 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX. The first UI
+// wiring for anchoring/BitcoinAnchorWalletSigner.js (0.8.50) and every
+// stage built on top of it through 0.8.53 — none of them has ever been
+// reachable from this running app before now, exactly as this milestone's
+// own header names: reading confirmation/content-proof status (0.8.54-
+// 0.8.57, wired immediately above) needs no wallet at all, but actually
+// obtaining a `wallet` capable of `signPsbt()` does. `injectedProvider` is
+// `window.unisat` when a compatible extension happens to be installed in
+// this browser, and `null` otherwise — a first-class, expected outcome
+// anchoring/BitcoinInjectedProviderWalletAdapter.js's own header already
+// names, never a condition this file works around. `bitcoinWalletConnection`
+// is provided as ONE shared instance across the whole app, exactly like
+// `bitcoinAnchorProofReconciliationView` immediately above — connecting
+// once is reflected everywhere this page shows wallet status, and nothing
+// here persists it across a reload; see anchoring/BitcoinWalletConnection.js's
+// own header, "A CAPABILITY, NEVER A SECRET."
+const { bitcoinInjectedProviderWalletAdapter } = new CreateBitcoinInjectedProviderWalletAdapterUseCase().execute({
+    injectedProvider: (typeof window !== 'undefined' && window.unisat) ? window.unisat : null
+});
+const { bitcoinWalletConnection } = new CreateBitcoinWalletConnectionUseCase().execute({
+    provider: bitcoinInjectedProviderWalletAdapter
+});
+
 const app = createApp(App);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
@@ -853,6 +878,7 @@ app.provide('anchorKnowledgeStore', anchorKnowledgeStore);
 app.provide('externalAnchorEvidenceViewRegistry', externalAnchorEvidenceViewRegistry);
 // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
 app.provide('bitcoinAnchorProofReconciliationView', bitcoinAnchorProofReconciliationView);
+app.provide('bitcoinWalletConnection', bitcoinWalletConnection);
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
