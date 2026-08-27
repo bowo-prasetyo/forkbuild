@@ -15533,3 +15533,71 @@ already holds for a single record, and `application/
 BitcoinAnchorConfirmationObservationHistory.js`'s own header already
 holds for a different sequence entirely, each one domain over. See
 `docs/Roadmap.md`, 0.8.71, for the full milestone entry.
+
+## An Observation Remains A Dated Fact; A Later Reading Never Erases An Earlier One (0.8.72)
+
+**A verification history is APPENDED TO, NEVER OVERWRITTEN — the
+identical restraint held twice already, applied here to a third axis.**
+"An Observation Describes The Network At The Time It Was Made, Not The
+Current State Of The Transaction (0.8.56)" held this for repeated
+Bitcoin confirmation readings; "A Publication Record Is A Historical
+Fact; A Republish Never Erases It (0.8.71)" held it for repeated
+PUBLICATIONS. `application/IpfsPublicationContentVerificationHistory.js`
+holds it for repeated OBSERVATIONS of one already-published record:
+verifying record A, getting `HASH_MATCH`, verifying it again and getting
+`UNAVAILABLE`, then verifying it a third time and getting `HASH_MATCH`
+again leaves all three readings standing, in order —
+`appendIpfsPublicationContentVerificationHistoryEntry()` never lets the
+third reading retroactively erase the second, and never collapses the
+two `HASH_MATCH` readings into one merely because they share a state.
+
+**A record's verification history stays keyed to that record, never
+folded into the publication history itself.** `entry.
+ipfsPublicationRecordHistory` (what was published, and when, 0.8.71) and
+`entry.ipfsPublicationVerificationHistoriesByRecordIndex` (every
+observation ever made about ONE of those records, in order) remain two
+sibling structures, addressed by the identical stable array index —
+never `{ record, verificationHistory }` merged into one object. This is
+the same restraint 0.8.71's own entry above already holds for `entry.
+ipfsPublicationRecordHistory` and its (then single-slot) verification
+outcome; replacing that single slot with a full history changes nothing
+about which structure owns which fact.
+
+**The most recent observation is a convenience for display, never a
+verdict about the ones before it.** `latestIpfsPublicationContentVerification()`
+answers exactly one narrow question — which entry in this history has the
+latest `observedAt` — the identical restraint
+`latestBitcoinAnchorConfirmationObservation()` and
+`latestIpfsPublicationRecord()` already hold, one axis over each. It is
+never used to discard, hide, or supersede the earlier entries it did not
+return; a "Latest: ..." badge next to a full "Verification History"
+disclosure exists precisely so a reader can see both the newest fact and
+the complete sequence it came from, side by side, never one standing in
+for the other.
+
+**No comparison, ranking, or aggregate verdict computed from a record's
+own sequence of observations, anywhere.** No "flaky," "healthy," or
+"mostly available" label synthesized from a mix of `HASH_MATCH` and
+`UNAVAILABLE` entries — the identical restraint 0.8.56's and 0.8.71's own
+entries above already hold, applied here to one record's own history
+rather than to a set of records. `application/
+IpfsPublicationContentVerificationHistoryView.js`'s
+`describeIpfsPublicationContentVerificationHistory()` only ever narrates
+a single history in isolation, composing the UNCHANGED, existing
+`describeIpfsPublicationContentVerification()` (0.8.70) over each entry —
+it never accepts two histories, and returns no verdict about their
+relationship.
+
+**No polling, no automatic verification, ever.** Reaching a `PUBLISHED`
+outcome, expanding "Publication History," expanding "Verification
+History," or re-rendering this page never itself calls the verification
+coordinator — the identical restraint "The UI Displays Observations; It
+Does Not Turn Them Into A Verdict (0.8.57)" already holds, restated here
+for a disclosure that now has an entire sequence to show rather than one
+slot. Every entry in a verification history traces back to one explicit
+"Verify Content"/"Verify Again" click; there is no code path in this
+milestone that appends to a history on a caller's behalf.
+
+**Never persisted, never shared, never transmitted.** The identical
+restraint every history in this codebase already holds. See
+`docs/Roadmap.md`, 0.8.72, for the full milestone entry.

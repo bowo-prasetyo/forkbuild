@@ -27836,3 +27836,184 @@ automatic verification of any kind, a per-record verification history of
 its own, a local Kubo publish path's own history, and a unified Bitcoin +
 IPFS evidence screen — each its own, separately sized milestone, exactly
 like every "Deliberately excluded" list in this document before it.
+
+## 0.8.72 — IPFS Publication Verification History & Inspection UI
+
+0.8.71's own "Deliberately excluded" list named exactly this milestone: "A
+record's own verification history. Each history entry keeps exactly one,
+most-recent verification outcome... A full per-record OBSERVATION history
+(mirroring 0.8.56's own per-anchor confirmation history) is real,
+separately sized future work." 0.8.71 closed the gap where a second
+PUBLISH silently discarded the first record; this milestone closes the
+matching gap one layer down, where a second VERIFY silently discarded the
+first observation:
+
+```text
+Verify record A     →  HASH_MATCH
+Verify record A again  →  UNAVAILABLE   ← HASH_MATCH now gone
+```
+
+`entry.ipfsPublicationVerificationsByRecordIndex[index]` (0.8.71) kept
+exactly one, most-recent outcome per history record — a single mutable
+slot a "Verify Again" click overwrote outright. This milestone replaces
+that single slot with an append-only history, the same shape 0.8.56 and
+0.8.71 each already established for their own, different axis:
+
+```text
+IPFS Publishing
+  └── Remote pinning
+        ├── Remote IPFS                                    (0.8.68)
+        ├── Content retrieval                               (0.8.70)
+        └── Publication History                             (0.8.71)
+              └── per record:
+                    [ Inspect ]  (unchanged, 0.8.71)
+                    [ Verify Content / Verify Again ]
+                          │
+                          ▼
+                    Content retrieval                       (new)
+                      Latest: <most recent observation>
+                      [ Show/Hide Verification History ]
+                        10:12 — Retrieved content matches...
+                        10:28 — Content retrieval unavailable
+                        10:46 — Retrieved content matches...
+```
+
+**AN OBSERVATION IS A DATED FACT, NEVER A CURRENT STATUS THE NEXT ONE
+OVERWRITES.** `application/IpfsPublicationContentVerificationHistory.js`
+mirrors `application/BitcoinAnchorConfirmationObservationHistory.js`
+(0.8.56) and `application/IpfsPublicationRecordHistory.js` (0.8.71)
+exactly: append-only, non-mutating, frozen at every level, no
+deduplication, no reordering, no automatic persistence. Verifying the
+same record twice and getting the SAME state back still appends a second,
+distinct entry — repeated HASH_MATCH observations are never collapsed
+into one. The flagship sequence this milestone exists to prove:
+
+```text
+Publish #1 -> Record A
+Verify A       -> HASH_MATCH
+Verify A again -> UNAVAILABLE
+Verify A again -> HASH_MATCH
+Publish #2 -> Record B
+Verify B       -> HASH_MISMATCH
+```
+
+leaves Record A's own history holding exactly `[HASH_MATCH, UNAVAILABLE,
+HASH_MATCH]` — the middle UNAVAILABLE reading is never erased by the
+HASH_MATCH that follows it — while Record B's own history holds exactly
+`[HASH_MISMATCH]`, entirely unaffected by anything ever observed about
+Record A.
+
+**A RECORD'S VERIFICATION HISTORY STAYS KEYED TO THAT RECORD, NEVER
+FOLDED INTO THE PUBLICATION HISTORY ITSELF.** Exactly as 0.8.71's own
+header required for `ipfsPublicationRecordHistory` and `
+ipfsPublicationVerificationsByRecordIndex` staying two sibling
+structures, `ipfsPublicationVerificationHistoriesByRecordIndex` is a
+THIRD sibling, still keyed by a history entry's own stable array index —
+never `{ record, verificationHistory }` merged into one combined object.
+The index is merely an address, not a verdict or relationship object:
+publishing record B never touches record A's own key, and reconfiguring
+or clearing the remote pinning provider never touches either — unchanged
+from 0.8.71's own identical restraint, because a past observation remains
+a historical fact regardless of whatever is presently configured.
+
+**VERIFYING A RECORD STILL VERIFIES EXACTLY THAT RECORD — THE ONE
+IDENTITY BOUNDARY EVERY MILESTONE SINCE 0.8.70 HAS HELD, UNCHANGED HERE.**
+`verifyIpfsPublicationRecordHistoryEntry(entry, index)` still reads
+`entry.ipfsPublicationRecordHistory[index]` directly and passes it
+straight to the UNCHANGED `IpfsPublicationContentVerificationCoordinator`
+from 0.8.70. What changes is only where the RESULT lands — appended onto
+`entry.ipfsPublicationVerificationHistoriesByRecordIndex[index]` instead
+of overwriting `entry.ipfsPublicationVerificationsByRecordIndex[index]`.
+
+**NO POLLING. NO AUTOMATIC VERIFICATION AFTER PUBLICATION. NO AUTOMATIC
+VERIFICATION WHEN EXPANDING THE HISTORY DISCLOSURE.** "Show/Hide
+Verification History" is a purely local, synchronous read of whatever
+`entry.ipfsPublicationVerificationHistoriesByRecordIndex[index]` already
+holds in memory — opening it never calls the coordinator, exactly like
+"Show/Hide Publication History" and "Inspect" already never do, one layer
+up. Each "Verify Again" click still performs exactly one fresh retrieval.
+
+- `application/IpfsPublicationContentVerificationHistory.js` — new; `
+  appendIpfsPublicationContentVerificationHistoryEntry()`/`
+  latestIpfsPublicationContentVerification()`, the identical append-only
+  shape `application/BitcoinAnchorConfirmationObservationHistory.js` and
+  `application/IpfsPublicationRecordHistory.js` already established, one
+  axis over — no comparison between observations, no reconciliation, no
+  aggregate verdict.
+- `application/IpfsPublicationContentVerificationHistoryView.js` — new;
+  pure projection — `describeIpfsPublicationContentVerificationHistory()`
+  — composing the UNCHANGED, existing `application/
+  IpfsPublicationContentVerificationView.js#
+  describeIpfsPublicationContentVerification()` (0.8.70) over every
+  entry, oldest first, adding no new field of its own.
+- `ui/views/DecentralizedPublicationsView.js` — the per-record "Content
+  retrieval" box inside the "Publication History" disclosure (0.8.71) now
+  shows a "Latest: ..." observation, a "Verify Again" button (unchanged
+  action), and a "Show/Hide Verification History" disclosure narrating
+  the record's own full, chronological observation sequence. `entry.
+  ipfsPublicationVerificationsByRecordIndex` (0.8.71) is replaced by
+  `entry.ipfsPublicationVerificationHistoriesByRecordIndex` (append-only,
+  keyed the same way); new `entry.
+  ipfsPublicationRecordVerifyingByRecordIndex` (a transient per-record "in
+  flight" flag, never itself appended into the history) and `entry.
+  ipfsPublicationVerificationHistoryExpandedByRecordIndex` (the new
+  disclosure's own expand/collapse state). New functions: `
+  ipfsPublicationRecordVerificationHistoryView()`, `
+  latestIpfsPublicationRecordVerificationView()`, `
+  ipfsPublicationVerificationEntryBadgeClass()`, `
+  toggleIpfsPublicationRecordVerificationHistory()`/`
+  isIpfsPublicationRecordVerificationHistoryExpanded()`. `
+  verifyIpfsPublicationRecordHistoryEntry()`, `
+  isVerifyingIpfsPublicationRecordHistoryEntry()`, and `
+  ipfsPublicationRecordVerifyButtonLabel()` keep their 0.8.71 names and
+  signatures, now backed by the append-only history instead of a single
+  mutable slot. The separate, single-slot "current publication" Content
+  retrieval box (`entry.ipfsPublicationRecord`/`
+  entry.ipfsPublicationContentVerification`, 0.8.70) is UNCHANGED.
+- ForkBuild can now, for the first time, verify one already-published
+  record repeatedly and see EVERY observation it has ever produced —
+  HASH_MATCH, then UNAVAILABLE, then HASH_MATCH again — without a later
+  "Verify Again" click ever silently discarding what an earlier click
+  found.
+
+### Deliberately excluded
+
+- **Any comparison, reconciliation, or ranking between two observations
+  in the same record's own history.** No "healthy" or "flaky" verdict
+  computed from a mix of HASH_MATCH and UNAVAILABLE entries, no automatic
+  promotion of the latest observation as more "true" than an earlier one.
+  A person reading the sequence draws that conclusion themselves; this
+  milestone's own files never draw it for them. See docs/Principles.md,
+  "Reconciliation Composes Independent Observations; It Does Not Score
+  Them (0.8.55)."
+- **Automatic re-verification, polling, or bulk "Verify All" of any
+  kind.** Unchanged from 0.8.70's and 0.8.71's own identical exclusion —
+  "Verify Content"/"Verify Again" stays a single, separately clicked
+  action.
+- **Any change to `application/IpfsPublicationContentVerifier.js`,
+  `application/IpfsPublicationContentVerificationCoordinator.js`,
+  `application/IpfsPublicationContentVerificationView.js`, `application/
+  IpfsPublicationRecord.js`, `application/IpfsPublicationRecordHistory.js`,
+  or any other 0.8.69/0.8.70/0.8.71 file.** All stay exactly as those
+  milestones left them — this milestone only ever appends observations
+  into a new history and reads the existing coordinator and the existing
+  0.8.70 view, unchanged.
+- **Persisting `IpfsPublicationContentVerificationHistory` anywhere.** No
+  catalog, no store, no localStorage — unchanged from every prior
+  milestone's identical exclusion. A history lives exactly as long as the
+  reactive UI state holding it.
+- **A unified chronological timeline mixing publications and
+  verifications.** Publication History and Verification History stay two
+  separate disclosures, each narrating its own sequence — a caller
+  wanting both interleaved on one timeline simply reads both, side by
+  side. A unified `10:02 Published / 10:08 Verification / ...` timeline
+  view, composing both histories without merging their semantics, is
+  real, separately sized future work.
+- **A unified Bitcoin + IPFS evidence inspection screen.** Unchanged from
+  0.8.70's/0.8.71's own identical exclusion.
+
+What's left, and deliberately unbuilt: cross-observation reconciliation,
+automatic re-verification of any kind, a unified publication+verification
+timeline, and a unified Bitcoin + IPFS evidence screen — each its own,
+separately sized milestone, exactly like every "Deliberately excluded"
+list in this document before it.
