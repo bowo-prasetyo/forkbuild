@@ -8112,7 +8112,7 @@ export default {
                                          reviewed plan field-for-field, and
                                          were cryptographically signed by the
                                          exact account the plan names as
-                                         `from`. It does NOT mean broadcast,
+                                         \`from\`. It does NOT mean broadcast,
                                          accepted by Base, included in a
                                          block, or confirmed — those remain
                                          their own, separately sized,
