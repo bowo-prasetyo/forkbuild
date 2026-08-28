@@ -31375,3 +31375,162 @@ exists would this codebase connect a real Base publication into
 `application/PublicationObservationArchive.js` — which observations are
 actually durable is a question this milestone deliberately leaves for
 that later point, exactly as 0.8.90's own header already reserved it.
+
+## 0.8.92 — Explicit Base Transaction Review
+
+0.8.91 gave this codebase a real, immutable, unsigned Base transaction
+plan. Nothing since has ever turned that plan into what a person needs to
+see before authorizing it. This milestone is that missing projection, and
+deliberately nothing more.
+
+```text
+Base account observation
+        │
+        ▼
+Base transaction construction               (0.8.91, unchanged)
+        │
+        ▼
+┌──────────────────────────┐
+│ Explicit review          │                (THIS MILESTONE — new)
+│                          │
+│ from                     │
+│ to                       │
+│ value                    │
+│ nonce                    │
+│ gas limit                │
+│ fee figures              │
+│ commitment               │
+└──────────────────────────┘
+        │
+        ▼
+future signing                               (0.8.93, not yet designed)
+```
+
+**Review is a presentation/inspection boundary, not another
+transaction-processing stage.** `application/
+BasePublicationTransactionReview.js`'s own `describeBasePublicationTransactionReview(plan)`
+performs no RPC call, re-estimates no gas, and re-reads no fee — every
+field it returns is read straight off the exact, already-frozen `plan` a
+caller already holds from a successful 0.8.91 construction. This mirrors
+`application/BitcoinAnchorTransactionReviewView.js`'s own header (0.8.59)
+exactly, one chain over: the review is of the ARTIFACT, never of the
+network's current opinion about it.
+
+**The function requires an actual Base transaction plan, never an
+arbitrary object.** Every field `plan` is expected to carry — `network`,
+`chainId`, `from`, `to`, `value`, `nonce`, `gasLimit`, `maxFeePerGas`,
+`maxPriorityFeePerGas`, `data` — is checked against the exact shape
+`application/BasePublicationTransactionPlanCoordinator.js#construct()`'s
+own `construction.plan` always has, before anything is decoded. A
+malformed plan is a caller-contract violation and throws — there is no
+"review unavailable" operational outcome, because a plan that has already
+reached CONSTRUCTED is this codebase's own already-known-good internal
+artifact.
+
+**The commitment is made visible, not just carried through.**
+`contentHash` is `plan.data` decoded back through the exact inverse of
+`application/BasePublicationCommitmentEncoding.js`'s own encoder (0.8.91,
+unchanged) — a genuine, independent re-validation of the commitment
+bytes, not a courtesy copy. `transactionData` is `plan.data` itself,
+verbatim, shown alongside `contentHash` rather than hidden behind one
+generic "payload" label.
+
+**Self-transfer is shown, never interpreted.** `from` and `to` are both
+reported as plain, separate fields. This file computes no
+`isSelfTransfer` boolean and phrases no sentence about it — `from === to`
+and `value === "0"` are left for whoever reads the review to notice,
+exactly as `docs/Roadmap.md`, 0.8.91's own "self-transfer" decision
+already established the fact this milestone now simply makes legible.
+
+**Never "safe," "validated," or any other verdict.** The review carries
+no `valid`, `safe`, `ready`, `trusted`, or `recommended` field of any
+kind — only the plan's own facts. Whether those facts are acceptable
+remains entirely a judgment for the person reading them. See
+docs/Principles.md, "The UI Displays Observations; It Does Not Turn Them
+Into A Verdict (0.8.57)."
+
+**Review becomes visible automatically after a successful construction —
+no separate "Generate Review" click.** Reviewing a plan is local,
+synchronous, non-committing, non-networking, non-signing, and
+non-mutating, so it carries none of the reasons this codebase makes an
+action explicit (see docs/Principles.md's own recurring "one explicit
+action" discipline for anything that touches a network, a wallet, or
+durable state). `ui/views/DecentralizedPublicationsView.js`'s own
+`basePublicationTransactionReviewView(entry)` is a plain, on-demand
+projection of the already-stored construction — there is no bridging
+function, no separate reactive review state, and no coordinator: unlike
+`application/BitcoinAnchorTransactionReviewCoordinator.js` (which must
+call out to an injected PSBT builder to turn a construction into
+something reviewable), a Base plan already carries every fact its own
+review needs, so there is nothing left for a coordinator to orchestrate.
+
+**No signing, in any form.** No `eth_sendTransaction`, no
+`eth_signTransaction`, no `personal_sign`, no `eth_sendRawTransaction`,
+and no private-key handling of any kind. `base/BaseWalletConnection.js`
+still exposes no signing capability (0.8.90/0.8.91, unchanged). The
+eventual signing milestone introduces a dedicated signing capability,
+separately.
+
+**No publication identity yet.** A reviewed plan is still not a
+publication. `application/BasePublicationTransactionReview.js` never
+constructs an `application/BlockchainPublicationIdentity.js` (0.8.89) —
+there is still no `chainReference`, because nothing has signed or
+broadcast anything. `content → commitment → transaction plan → review →
+signed transaction → broadcast → observation → publication identity`
+gains exactly one more of its arrows here, the fourth.
+
+New files:
+- `application/BasePublicationTransactionReview.js` — new;
+  `describeBasePublicationTransactionReview(plan)`, the pure, synchronous
+  projection of an already-CONSTRUCTED 0.8.91 plan into
+  `{ network, chainId, from, to, value, nonce, gasLimit, maxFeePerGas,
+  maxPriorityFeePerGas, contentHash, transactionData }`. Throws for a
+  malformed plan; never a verdict field of any kind.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — a new, per-publication
+  "Base Transaction Review" card, rendered immediately below the "Base
+  Publication Transaction" card the moment it reaches CONSTRUCTED — no
+  separate action to click. States plainly: "The following transaction
+  plan will be supplied to the signing capability if you explicitly
+  continue."
+
+New tests:
+- `tests/BasePublicationTransactionReview.test.js` — a real 0.8.91
+  construction pipeline reviewed through `describeBasePublicationTransactionReview()`;
+  every individually malformed plan field proven to throw; the fixed,
+  frozen, verdict-free field set. Plus two flagship proofs: (1) reviewing
+  the identical plan twice is byte-identical, and a later, unrelated
+  construction never mutates an earlier plan or its already-taken review;
+  (2) a plan's frozen fee figures survive review untouched even after the
+  network reports genuinely different figures for a fresh construction —
+  and reviewing a plan makes zero calls of any kind against the injected
+  rpc source.
+
+Deliberately excluded, exactly as this milestone's own proposal named up
+front:
+- **Signing, private-key access, or any wallet signing method.** See "No
+  signing, in any form" above.
+- **`eth_sendTransaction`/`eth_signTransaction`/`personal_sign`/
+  `eth_sendRawTransaction`, broadcast, or confirmation observation.**
+- **RPC calls, fee refresh, or gas re-estimation of any kind.** See
+  "Review is a presentation/inspection boundary" above.
+- **Transaction mutation or replacement.** A review only ever describes
+  the exact plan it is handed; it has no path to change it.
+- **Publication identity creation of any kind.** See "No publication
+  identity yet" above.
+- **A `REVIEWING` state, or any state machine beyond what the plan's own
+  construction state already provides.** Reviewing is synchronous and
+  pure — `application/BasePublicationTransactionPlanState.js`'s own
+  CONSTRUCTED already names the one precondition a review needs; this
+  milestone adds no second, parallel state vocabulary for it.
+- **A `safe`/`trusted`/`validated`/`ready` verdict of any kind.** See
+  "Never 'safe,' 'validated,' or any other verdict" above.
+
+What's left, and deliberately unbuilt: this milestone's own proposal
+anticipates 0.8.93 as explicit reviewed-transaction signing — binding the
+signer to the EXACT reviewed plan, rather than letting a signing
+capability receive merely an account address and a content hash and
+reconstruct a transaction independently — mirroring `anchoring/
+BitcoinAnchorReviewedPsbtSigner.js`'s own identity-binding discipline
+(0.8.62) one chain over. No such milestone is designed yet.
