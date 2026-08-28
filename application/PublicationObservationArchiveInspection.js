@@ -69,16 +69,18 @@ import { describePublicationObservationArchiveFingerprint } from './PublicationO
 // for a later, separately sized milestone — see docs/Roadmap.md, 0.8.86,
 // "Deliberately excluded."
 //
-// `bitcoinAnchorIds`/`ipfsPublicationRecordIndexes` ARE IDENTITY LISTS,
-// NOT EVIDENCE. They name which `anchorId`s and which IPFS record
-// positions this archive holds ANY fact for — the same anchor identity
-// discipline application/BitcoinAnchorObservationArchiveView.js's own
-// header already holds (anchorId, never contentHash or txid) — extended
-// here to also include application/BitcoinAnchorPublicationRecord.js's own
-// identity records, which that 0.8.79 file predates. Neither list carries
-// a confirmation count, a chain-placement comparison, or a consistency
-// finding; an inspection is a structural index, not a derived evidence
-// bundle.
+// `bitcoinAnchorIds`/`ipfsPublicationRecordIndexes`/`baseTransactionHashes`
+// ARE IDENTITY LISTS, NOT EVIDENCE. They name which `anchorId`s, which
+// IPFS record positions, and (0.8.97) which Base `txid`s this archive
+// holds ANY fact for — the same explicit-identity discipline application/
+// BitcoinAnchorObservationArchiveView.js's own header already holds
+// (anchorId, never contentHash or txid) — extended here to also include
+// application/BitcoinAnchorPublicationRecord.js's own identity records
+// (which that 0.8.79 file predates) and, one chain over, Base's own
+// `baseTransactionInclusionObservationsByTransactionHash` keys. None of
+// the three lists carries a confirmation count, a chain-placement
+// comparison, or a consistency finding; an inspection is a structural
+// index, not a derived evidence bundle.
 //
 // THE RESULT IS A PLAIN, FROZEN, ONE-LEVEL DATA SHAPE — NEVER A NEW
 // DOMAIN OBJECT, NEVER ANOTHER DURABLE ARCHIVE HISTORY. Deliberately NOT a
@@ -167,6 +169,7 @@ function describeExternalArchiveInspection(archive) {
         bitcoinConfirmationCount: summary.bitcoinConfirmationCount,
         bitcoinContentProofCount: summary.bitcoinContentProofCount,
         bitcoinAnchorPublicationRecordCount: archive.bitcoinAnchorPublicationRecordCount,
+        baseTransactionInclusionObservationCount: summary.baseTransactionInclusionCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,
@@ -178,7 +181,8 @@ function describeExternalArchiveInspection(archive) {
         fingerprintAlgorithm: fingerprint.algorithm,
 
         bitcoinAnchorIds: Object.freeze(collectBitcoinAnchorIds(archive)),
-        ipfsPublicationRecordIndexes: Object.freeze(archive.ipfsPublicationRecords.map((record, index) => index))
+        ipfsPublicationRecordIndexes: Object.freeze(archive.ipfsPublicationRecords.map((record, index) => index)),
+        baseTransactionHashes: Object.freeze(Object.keys(archive.baseTransactionInclusionObservationsByTransactionHash))
     });
 }
 

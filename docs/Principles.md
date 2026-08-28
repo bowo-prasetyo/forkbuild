@@ -17300,3 +17300,92 @@ Verified Against The Exact Reviewed Plan (0.8.94)," already extends it
 one stage earlier.
 
 See `docs/Roadmap.md`, 0.8.95, for the full milestone entry.
+
+## A Durable Archive Entry Requires An Explicit Append; Chain-Specific Observation Models Stay Chain-Specific Even When Made Durable (0.8.97)
+
+**A Base inclusion observation becomes durable only when explicitly
+appended to the publication observation archive — the identical
+observation → archive boundary Bitcoin has held since 0.8.75, extended one
+chain over, never relaxed into automatic persistence of every observation
+a page happens to make.** `base/BaseTransactionInclusionObserver.js`
+(0.8.96) still returns a fresh, uncached read every call, remembering
+nothing across calls — see that class's own header. Whether any given
+observation also becomes durable is a decision made exactly once, at the
+UI boundary, by `ui/views/DecentralizedPublicationsView.js`'s own
+`archiveBaseTransactionInclusionObservation()` — called automatically at
+the end of the SAME explicit "Observe Transaction" click that already
+produces the observation, mirroring the identical automatic-append
+`archiveBitcoinConfirmationObservation()` already performs one chain over.
+Network observation and durable archival remain two different actions,
+bridged by one explicit call site, never merged into one.
+
+**A seventh, independent collection — never a generic
+`blockchainTransactionObservations`, and never folded into
+`bitcoinConfirmationObservationsByAnchorId`.** Bitcoin and Base have
+deliberately different observation models — `application/
+PublicationObservationArchive.js`'s own 0.8.97 header names the specific
+differences: an observer-computed `confirmationCount` instead of a
+separately reported one, no separate `anchorId` identity, `blockNumber`/
+`transactionIndex` instead of `blockHeight`. `docs/Roadmap.md`, 0.8.89,
+"Multi-Blockchain Publication Domain Boundary," already drew this line
+for live observation; this milestone holds the identical line for durable
+storage rather than collapsing the two chains into one shape the moment a
+second chain needed persistence. `baseTransactionInclusionObservationsByTransactionHash`
+sits alongside the six existing collections, compared by its own explicit
+identity, never cross-referenced against any of them.
+
+**Explicit transaction identity remains the key — never `contentHash`, the
+Base extension of the strongest identity rule this codebase has held since
+0.8.78.** Two Base transactions that commit the identical `contentHash`
+under two different `txid`s (`H1`, `H2`) keep two entirely independent
+observation histories, forever — `docs/Principles.md`, "Correlate Evidence
+By Explicit Identity, Never By Resemblance (0.8.78)," restated one chain
+over. Nothing in `appendBaseTransactionInclusionObservation()` infers,
+guesses, or falls back to a shared `contentHash` when a `txid` is
+available; the caller names the exact transaction hash a real BROADCASTED
+outcome produced, every time.
+
+**Every observed state is archived exactly as observed — INCLUDED,
+NOT_INCLUDED, and UNAVAILABLE alike — never filtered down to only
+successful outcomes.** The archive represents what was observed, including
+an inability to obtain the requested observation, rather than silently
+discarding the attempt — the identical convention
+`bitcoinConfirmationObservationsByAnchorId` already holds for
+NOT_CONFIRMED. No new "observation failure" abstraction was introduced to
+achieve this: UNAVAILABLE was already this vocabulary's own closed state,
+one milestone earlier (`docs/Principles.md`, implicitly, via 0.8.96's own
+`BaseTransactionInclusionObservationState`).
+
+**Existing durability machinery is reused verbatim — provenance,
+fingerprint, export/import, difference, and inspection all extend through
+their own established mechanisms, with zero new mechanism of any kind.**
+Provenance follows 0.8.83's own `LOCAL`/`IMPORTED` rule, unchanged, through
+one more parallel collection. The fingerprint (0.8.84) needed no new code
+at all — it already hashes `toJSON()`'s own canonical output, and that
+output now includes the seventh collection, so the existing algorithm is
+automatically sensitive to a Base fact or a Base-only provenance change.
+Export/import (0.8.82) needed no new code either — `toJSON()`/`fromJSON()`
+already carry every field they are given. The difference projection
+(0.8.87) gained one more call to its own existing `diffKeyedCollection()`,
+comparing by `transactionHash` with the identical unchanged/changed/
+provenance-changed/onlyInCurrent/onlyInExternal vocabulary every other
+keyed collection already reports. This is the same restraint every
+archive-extending milestone since 0.8.80 has held: extend the schema,
+reuse the machinery, invent nothing new.
+
+**A durability boundary is not a timeline boundary — the two stay
+separate, deliberately, across two different milestones.** This milestone
+answers exactly one question: can a Base inclusion observation survive
+application restart and archive export/import? `application/
+PublicationObservationTimelineView.js` is byte-for-byte unchanged;
+`describePublicationObservationArchive()`'s own `entries` are provably
+identical whether or not a Base observation exists in the archive (see
+this milestone's own flagship test, Section J) — only a new, separate
+summary COUNT (`baseTransactionInclusionCount`) sees it. Whether Base
+observations participate in the unified chronological timeline is 0.8.98's
+own question, answered later, on its own merits — exactly as `docs/
+Roadmap.md`, 0.8.96, itself already anticipated by naming both 0.8.97 and
+0.8.98 as distinct, future milestones rather than building either
+prematurely.
+
+See `docs/Roadmap.md`, 0.8.97, for the full milestone entry.

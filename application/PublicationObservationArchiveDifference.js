@@ -22,7 +22,8 @@ import { fingerprintPublicationObservationArchive } from './PublicationObservati
 //                      │
 //                      ▼
 //   { currentFingerprint, externalFingerprint, same,
-//     six collection differences, hasFactDifference,
+//     seven collection differences (0.8.97 adds
+//     baseTransactionInclusionObservationsByTransactionHash), hasFactDifference,
 //     hasProvenanceDifference, importEvents }
 //
 // AN ARCHIVE DIFFERENCE DESCRIBES STRUCTURAL DIFFERENCES BETWEEN TWO
@@ -86,6 +87,12 @@ import { fingerprintPublicationObservationArchive } from './PublicationObservati
 //   history. Two anchors holding byte-identical content remain two
 //   distinct identities: nothing here ever merges, deduplicates, or
 //   cross-references by `contentHash`.
+//
+//   `baseTransactionInclusionObservationsByTransactionHash` (0.8.97) —
+//   keyed by the exact `txid` a real BROADCASTED outcome named, never
+//   `contentHash` — the identical explicit-identity restraint held above,
+//   one chain over — then array position within that transaction's own
+//   history.
 //
 // NEVER A SET — DUPLICATES AND POSITION REMAIN MEANINGFUL. This file
 // invents no generic, unordered JSON diff. `[X, X]` and `[X]` differ — the
@@ -190,6 +197,11 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         externalJSON.bitcoinContentProofObservationsByAnchorId, externalJSON.bitcoinContentProofObservationProvenanceByAnchorId,
         'anchorId', (key) => key
     );
+    const baseTransactionInclusionObservationsByTransactionHash = diffKeyedCollection(
+        currentJSON.baseTransactionInclusionObservationsByTransactionHash, currentJSON.baseTransactionInclusionObservationProvenanceByTransactionHash,
+        externalJSON.baseTransactionInclusionObservationsByTransactionHash, externalJSON.baseTransactionInclusionObservationProvenanceByTransactionHash,
+        'transactionHash', (key) => key
+    );
 
     const collections = {
         ipfsPublicationRecords,
@@ -197,7 +209,8 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         bitcoinBroadcastRecords,
         bitcoinConfirmationObservationsByAnchorId,
         bitcoinContentProofObservationsByAnchorId,
-        bitcoinAnchorPublicationRecords
+        bitcoinAnchorPublicationRecords,
+        baseTransactionInclusionObservationsByTransactionHash
     };
 
     const hasFactDifference = Object.values(collections).some(
