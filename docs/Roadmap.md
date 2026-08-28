@@ -33509,3 +33509,174 @@ this addition, Bitcoin and Base each now carry the full identity →
 correlated observations → lifecycle presentation arc, independently and
 without a shared abstraction forcing their genuinely different semantics
 together.
+
+## 0.8.102 — Achievement Event Foundation
+
+A person proposed a decentralized achievement system alongside 0.8.101,
+with one explicit constraint driving its own sequencing: build it bottom
+up, starting from a durable-fact foundation, and deliberately postpone
+badges, points, scoring, subject/user identity, and any leaderboard until
+each of those has something real underneath it. This milestone is that
+foundation — nothing more:
+
+```text
+Durable facts
+  bitcoinAnchorPublicationRecords (0.8.80)
+  baseAnchorPublicationRecords    (0.8.99)
+        │
+        │  describeAchievementEvents() — pure, deterministic, closed vocabulary
+        ▼
+  AchievementEvent[]
+    { achievementKind, label, observedAt, sourcePublicationIdentity, index }
+        │
+        │  (future milestones, deliberately not built here)
+        ▼
+  Achievement definitions → Badge projection → Leaderboard projection
+```
+
+**A PROJECTION OVER ALREADY-DURABLE FACTS, NEVER A NEW DURABLE
+COLLECTION.** `application/PublicationObservationArchive.js` gains nothing
+from this milestone — no ninth collection, no `SCHEMA_VERSION` bump, no
+new `appendXxx()` method. `describeAchievementEvents()` is computed fresh,
+every time, from whatever the archive's own `bitcoinAnchorPublicationRecords`
+and `baseAnchorPublicationRecords` already hold — the identical "zero new
+durable state" restraint 0.8.98/0.8.100/0.8.101 already held, applied to a
+brand-new kind of projection rather than a timeline. An achievement event
+is never itself a fact this replica could disagree with itself about after
+a restart, because there is nothing of this file's own TO restore — only
+the publication records themselves are durable, and they already were,
+before this milestone existed.
+
+**A CLOSED, SIX-VALUE VOCABULARY — `AchievementKind` — EVALUATED
+DETERMINISTICALLY OVER THE CHRONOLOGICAL SEQUENCE OF EVERY BLOCKCHAIN
+PUBLICATION IDENTITY RECORD THIS REPLICA HOLDS:**
+
+```text
+FIRST_PUBLICATION      — this replica's chronologically first blockchain publication record
+BITCOIN_PUBLISHER      — this replica's chronologically first Bitcoin publication record
+BASE_PUBLISHER         — this replica's chronologically first Base publication record
+MULTI_CHAIN_PUBLISHER  — the record that completes having at least one record on each chain
+PUBLICATION_10         — the 10th blockchain publication record, counted across both chains
+PUBLICATION_100        — the 100th blockchain publication record, counted across both chains
+```
+
+Each kind fires EXACTLY ONCE, ever, attributed to the exact record whose
+own `createdAt` crossed its threshold — never re-fired by a later,
+redundant publication, and never attributed to whichever record a caller
+happens to hand in last.
+
+**SCOPED TO DURABLE BLOCKCHAIN PUBLICATION IDENTITY RECORDS ONLY — NEVER
+IPFS PUBLICATION RECORDS.** `bitcoinAnchorPublicationRecords` and
+`baseAnchorPublicationRecords` are the only two of the archive's own
+collections that project onto `application/BlockchainPublicationIdentity.js`
+(via each record's own `toBlockchainPublicationIdentity()`, 0.8.89/0.8.99,
+both unchanged) — the one identity shape `sourcePublicationIdentity` is
+ever stamped with. `IpfsPublicationRecord` carries no `blockchain`/
+`chainReference` of its own to project through that same method, and this
+milestone invents no second, IPFS-shaped identity projection to force it
+in — the identical chain-boundary discipline 0.8.89 already held, applied
+to a new kind of derived fact rather than a new kind of durable one.
+
+**NO SUBJECT/OWNER IDENTITY — DELIBERATELY POSTPONED, NOT FORGOTTEN.**
+Every achievement event here is scoped to this archive's own durable facts
+as a whole, never to a wallet address or any other centralized "user"
+concept. Neither `BitcoinAnchorPublicationRecord` nor
+`BaseAnchorPublicationRecord` carries a publisher/wallet field today —
+inventing one on either class just to give an achievement event a
+`subjectIdentity` would turn this milestone into an identity-management
+project rather than an achievement one, exactly the risk the original
+proposal named and asked to avoid. A future milestone that gives ForkBuild
+a genuine, explicit publisher identity could extend `sourcePublicationIdentity`
+with one, additively — this milestone deliberately does not guess at that
+shape now.
+
+**`sourcePublicationIdentity` REUSES `BlockchainPublicationIdentity` (0.8.89)
+VERBATIM.** No new identity mechanism, no hand-assembled `{ blockchain,
+txid }` pair, no comparison by anything other than that class's own
+`sameAs()`. The flagship test constructs two publications sharing one
+`contentHash` AND one raw `txid`/`chainReference` string across Bitcoin and
+Base, with deliberately out-of-order `createdAt` timestamps and
+interleaved argument-array positions, and proves every achievement event
+is attributed to the chronologically correct record, never conflated
+across chains and never ordered by argument position or array insertion
+order.
+
+**DETERMINISTIC ORDERING.** Every blockchain publication identity record
+is placed into one fixed, reproducible source order — Bitcoin's own array,
+then Base's own array, each in its own existing order — and only that
+fixed-order sequence is ever stably sorted, by `createdAt`, ties broken by
+that same fixed source order. Repeated calls on byte-identical input
+always return byte-identical output.
+
+**NO VERDICT VOCABULARY, NO POINTS, NO SCORE, NO RANK.** `docs/Principles.md`,
+"The UI Displays Observations; It Does Not Turn Them Into A Verdict
+(0.8.57)," held here once more, and now stood behind by its own explicit
+principle — see `docs/Principles.md`, "An Achievement Describes An
+Attributable Fact, Not A Person's Worth (0.8.102)."
+
+New files:
+- `application/AchievementEvent.js` — `AchievementKind` (six values,
+  frozen, closed); `isValidAchievementKind()`; `describeAchievementEvents(bitcoinAnchorPublicationRecords,
+  baseAnchorPublicationRecords)` — the pure projection, no archive access,
+  no network access; and `reconstructAchievementEvents(archive)` — the
+  one, thin archive-reading entry point, mirroring `application/
+  BaseAnchorPublicationLifecycleTimelineView.js`'s own
+  `reconstructBaseAnchorPublicationLifecycleTimeline()` (0.8.101).
+
+Changed: nothing. `application/PublicationObservationArchive.js` and every
+UI file are untouched by this milestone — see "Deliberately excluded"
+below for why UI presentation is not part of this milestone.
+
+New tests:
+- `tests/AchievementEvent.test.js` — an empty archive earns nothing; a
+  single Bitcoin publication earns exactly FIRST_PUBLICATION and
+  BITCOIN_PUBLISHER; a single Base publication earns exactly
+  FIRST_PUBLICATION and BASE_PUBLISHER; MULTI_CHAIN_PUBLISHER fires
+  exactly once, attributed to whichever record actually completed the
+  pair chronologically; PUBLICATION_10/PUBLICATION_100 fire exactly once
+  each, at the exact crossing record; malformed/absent inputs never
+  throw; the flagship two-chains-one-contentHash-one-raw-txid,
+  out-of-order-timestamps, interleaved-argument-position scenario;
+  `reconstructAchievementEvents()`'s own reload equivalence through real,
+  persisted storage, with zero network access; and no verdict/score/
+  points/rank vocabulary anywhere, with `AchievementKind` proven closed at
+  exactly six values.
+
+Deliberately excluded, exactly as the original proposal named up front:
+- **Achievement definitions as a separate, named layer, and any UI/badge
+  presentation of an achievement event.** This milestone is the
+  underlying fact foundation only; a future milestone can compose
+  `describeAchievementEvents()` unchanged into a badge view, the same way
+  `BaseAnchorPublicationLifecycleTimelineView.js` already composes
+  `describeBaseAnchorPublicationObservations()` unchanged.
+- **Points, scores, achievement levels, and any leaderboard or ranking
+  projection.** The proposal was explicit that assigning a point value to
+  an achievement kind is already an economic/reputation interpretation,
+  and that a leaderboard should be a later, clearly separate projection
+  over achievement facts, never folded into the facts themselves.
+- **A subject/owner/user identity field.** See "No Subject/Owner Identity"
+  above.
+- **`REFERENCED_PUBLICATION` and `FORKED_PUBLICATION` achievement kinds.**
+  Both require an explicit, durable reference/fork relationship between
+  two publications — a relationship this codebase has never made durable
+  anywhere. Docs/Principles.md, "Correlate Evidence By Explicit Identity,
+  Never By Resemblance (0.8.78)," forbids inferring such a relationship
+  from a shared `contentHash` or any other resemblance; minting one
+  honestly is real, separately sized future work, not a rule this
+  milestone can evaluate over facts that do not exist yet.
+- **An achievement vocabulary scoped to `ipfsPublicationRecords`.** See
+  "Scoped To Durable Blockchain Publication Identity Records" above.
+- **Cross-replica/cross-archive achievement aggregation of any kind.**
+  Exactly like every projection over `PublicationObservationArchive.js`
+  since 0.8.75, this milestone answers "what can THIS replica's own
+  archive attribute," never "what is true across every replica" — the
+  same INSPECT ≠ IMPORT discipline `docs/Principles.md`, "Inspecting An
+  External Archive Never Touches The Current One (0.8.86)," already holds.
+
+What's left, and deliberately unbuilt: the achievement-definitions layer
+naming which durable facts (beyond blockchain publication identity alone)
+future achievement kinds should read, a badge projection presenting these
+events in the UI, an explicit reference/fork relationship durable enough
+to support `REFERENCED_PUBLICATION`/`FORKED_PUBLICATION`, and — only after
+all of that — a scoring and leaderboard projection the original proposal
+was careful to place last, not first.

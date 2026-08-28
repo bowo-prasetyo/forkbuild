@@ -17533,3 +17533,66 @@ keyed, per-observation collection; this milestone holds the identical
 restraint for a positional, per-identity one.
 
 See `docs/Roadmap.md`, 0.8.99, for the full milestone entry.
+
+## An Achievement Describes An Attributable Fact, Not A Person's Worth (0.8.102)
+
+**An achievement event states that a specific, already-durable record
+caused a specific, named threshold to be crossed — never that a person,
+wallet, or identity is good, trusted, important, or worth more than
+another.** `application/AchievementEvent.js`'s own `AchievementKind` names
+six closed, factual thresholds — a first publication, a chain's own first
+publication, a second chain joining a first, a 10th and a 100th
+publication — and nothing resembling a `points`, `score`, `rank`, `level`,
+`tier`, or `worth` field exists anywhere in what it produces. This extends
+`docs/Principles.md`, "The UI Displays Observations; It Does Not Turn Them
+Into A Verdict (0.8.57)," one layer further: 0.8.57 refused to let an
+observation become a verdict about whether a publication is trustworthy;
+this principle refuses to let an achievement become a verdict about
+whether a PUBLISHER is.
+
+**An achievement is a projection over facts that were already durable,
+never a second, competing source of truth.** `describeAchievementEvents()`
+adds no ninth collection to `application/PublicationObservationArchive.js`,
+no `SCHEMA_VERSION` bump, and no new `appendXxx()` method — it is computed
+fresh, every time, from whatever `bitcoinAnchorPublicationRecords` (0.8.80)
+and `baseAnchorPublicationRecords` (0.8.99) the archive already holds.
+Destroying and restoring the archive can never change the achievement
+events this file produces from the identical underlying publication
+records, because nothing of this file's own is ever stored a second time.
+
+**A leaderboard ranks recorded achievement data; it does not establish
+trustworthiness.** This principle is stated now, ahead of any leaderboard
+existing, precisely so a future scoring or ranking milestone inherits it
+rather than discovering the boundary after the fact — the same forward
+posture `docs/Principles.md`, "An Archive Fingerprint Identifies Durable
+Contents; It Does Not Establish Their Truth Or Origin (0.8.84)," already
+took for fingerprints before any comparison UI existed to misuse one.
+Should a future milestone introduce points, a score, or a rank, it
+computes over already-attributed achievement events — it never becomes
+itself a new kind of fact an achievement event carries.
+
+**Achievements are correlated by explicit identity, never by resemblance
+— the identical restraint held one layer up.** `sourcePublicationIdentity`
+is always the exact `BlockchainPublicationIdentity` (0.8.89) the
+completing record's own `toBlockchainPublicationIdentity()` produces,
+compared only by that class's own `sameAs()`. `docs/Principles.md`,
+"Correlate Evidence By Explicit Identity, Never By Resemblance (0.8.78),"
+and "Blockchain Identity Is Explicit; A Shared Reference Is Never Evidence
+Of A Shared Publication (0.8.89)," both already forbid inferring a shared
+identity from a shared `contentHash` or raw chain-reference string; this
+milestone's own flagship test constructs the adversarial case directly —
+two publications on two chains sharing both an identical `contentHash`
+AND an identical raw `txid`/`chainReference` string — and proves every
+achievement event still names the chronologically and cryptographically
+correct record.
+
+**A subject/owner identity was deliberately left out, not overlooked.**
+Every achievement event here is attributable to a publication record, never
+to a wallet, a signing identity, or any other centralized "user" concept
+this codebase would otherwise have to invent from nothing. Naming one
+prematurely — on a class that has never carried a publisher field — would
+have turned this milestone into an identity-management project rather
+than an achievement one, exactly the risk the original proposal for this
+system named and asked to avoid.
+
+See `docs/Roadmap.md`, 0.8.102, for the full milestone entry.
