@@ -123,6 +123,7 @@ import {
     PublicationObservationArchiveInspectionOutcome,
     inspectPublicationObservationArchive
 } from '../../application/PublicationObservationArchiveInspection.js';
+import { describePublicationObservationArchiveDifference } from '../../application/PublicationObservationArchiveDifference.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1545,9 +1546,28 @@ export default {
         const showPublicationArchiveInspectionForm = ref(false);
         const publicationArchiveInspectionText = ref('');
 
+        // 0.8.87 — Durable Publication Archive Difference Projection.
+        // `publicationArchiveDifferenceResult` is written ONLY by the one
+        // explicit "Compare With Current Archive" click below — never
+        // computed automatically the way `publicationArchiveInspectionOutcome`
+        // re-validates on every keystroke. Any change to the inspected
+        // text (a new paste, a new file, closing the form) invalidates a
+        // stale result via `invalidatePublicationArchiveDifference()`
+        // below, mirroring `onArchiveFingerprintComparisonInputChanged()`'s
+        // own identical "clear on input change, never re-run automatically"
+        // discipline one card above. See application/
+        // PublicationObservationArchiveDifference.js's own header for what
+        // this result does and does not mean.
+        const publicationArchiveDifferenceResult = ref(null);
+
+        function invalidatePublicationArchiveDifference() {
+            publicationArchiveDifferenceResult.value = null;
+        }
+
         function togglePublicationArchiveInspectionForm() {
             showPublicationArchiveInspectionForm.value = !showPublicationArchiveInspectionForm.value;
             publicationArchiveInspectionText.value = '';
+            invalidatePublicationArchiveDifference();
         }
 
         function onPublicationArchiveInspectionFileChosen(event) {
@@ -1556,6 +1576,7 @@ export default {
             const reader = new FileReader();
             reader.onload = () => { publicationArchiveInspectionText.value = String(reader.result || ''); };
             reader.readAsText(file);
+            invalidatePublicationArchiveDifference();
         }
 
         const publicationArchiveInspectionOutcome = computed(() => {
@@ -1563,6 +1584,42 @@ export default {
             if (!text) return null;
             return inspectPublicationObservationArchive(text);
         });
+
+        // THE ONE PLACE THIS CARD EVER COMPUTES A DIFFERENCE — fired only
+        // by an explicit click, never after inspection completes on its
+        // own. Reconstructs the external archive from the SAME text
+        // `publicationArchiveInspectionOutcome` already validated as
+        // INSPECTED above, via `PublicationObservationArchive.fromJSON()`
+        // — the identical faithful reconstruction 0.8.86's own inspection
+        // already performs internally — never a second parsing path. Reads
+        // `publicationObservationArchive.value` as the current archive
+        // stands at the moment of THIS click; touches neither archive.
+        function comparePublicationArchiveDifference() {
+            const outcome = publicationArchiveInspectionOutcome.value;
+            if (!outcome || outcome.outcome !== PublicationObservationArchiveInspectionOutcome.INSPECTED) return;
+            const externalArchive = PublicationObservationArchive.fromJSON(JSON.parse(publicationArchiveInspectionText.value.trim()));
+            publicationArchiveDifferenceResult.value = describePublicationObservationArchiveDifference(
+                publicationObservationArchive.value,
+                externalArchive
+            );
+        }
+
+        // A plain, UI-local list pairing each of the six durable
+        // collections' own difference with its own display label — pure
+        // presentation wiring over `publicationArchiveDifferenceResult`'s
+        // own already-computed counts, computing no new count of its own.
+        function publicationArchiveDifferenceCollectionRows() {
+            const difference = publicationArchiveDifferenceResult.value;
+            if (!difference) return [];
+            return [
+                { label: 'IPFS publication records', collection: difference.ipfsPublicationRecords },
+                { label: 'IPFS verification observations', collection: difference.ipfsContentVerificationObservationsByRecordIndex },
+                { label: 'Bitcoin broadcast observations', collection: difference.bitcoinBroadcastRecords },
+                { label: 'Bitcoin confirmation observations', collection: difference.bitcoinConfirmationObservationsByAnchorId },
+                { label: 'Bitcoin content-proof observations', collection: difference.bitcoinContentProofObservationsByAnchorId },
+                { label: 'Bitcoin publication records', collection: difference.bitcoinAnchorPublicationRecords }
+            ];
+        }
 
         // 0.8.79 — Durable Bitcoin Anchor Evidence Restoration & Historical
         // Inspection.
@@ -5110,6 +5167,8 @@ export default {
             showPublicationArchiveInspectionForm, togglePublicationArchiveInspectionForm,
             publicationArchiveInspectionText, onPublicationArchiveInspectionFileChosen,
             publicationArchiveInspectionOutcome, PublicationObservationArchiveInspectionOutcome,
+            publicationArchiveDifferenceResult, invalidatePublicationArchiveDifference,
+            comparePublicationArchiveDifference, publicationArchiveDifferenceCollectionRows,
             publicationObservationArchiveProvenanceView,
             publicationObservationArchiveFingerprintView, copyArchiveFingerprint, archiveFingerprintCopied,
             archiveFingerprintComparisonInput, archiveFingerprintComparisonResult,
@@ -5761,7 +5820,8 @@ export default {
                         <span class="form-label">Exported archive file</span>
                         <input type="file" accept="application/json" @change="onPublicationArchiveInspectionFileChosen" class="form-input" />
                     </label>
-                    <textarea v-model="publicationArchiveInspectionText" class="form-input identity-export-json" rows="6"
+                    <textarea v-model="publicationArchiveInspectionText" @input="invalidatePublicationArchiveDifference"
+                              class="form-input identity-export-json" rows="6"
                               placeholder="…or paste an exported archive JSON here"></textarea>
 
                     <p v-if="publicationArchiveInspectionOutcome && publicationArchiveInspectionOutcome.outcome === PublicationObservationArchiveInspectionOutcome.INVALID_ARCHIVE"
@@ -5795,6 +5855,55 @@ export default {
                             Observation Archive shown earlier on this page. Use "Import Archive" above
                             if you want this archive to replace it.
                         </p>
+
+                        <!-- 0.8.87 — Durable Publication Archive Difference
+                             Projection. A SEPARATE, explicit click — never
+                             triggered automatically by a successful
+                             inspection above. Describes which durable
+                             facts and which provenance tags differ between
+                             the current archive and the external archive
+                             above; it never says which archive is correct,
+                             newer, or better. See application/
+                             PublicationObservationArchiveDifference.js's
+                             own header. -->
+                        <div class="identity-mgmt-actions">
+                            <button type="button" class="action-btn action-btn--secondary" @click="comparePublicationArchiveDifference">
+                                Compare With Current Archive
+                            </button>
+                        </div>
+
+                        <div v-if="publicationArchiveDifferenceResult" class="evidence-inspection-adapter">
+                            <span class="evidence-inspection-adapter-title">Archive Difference</span>
+                            <p class="form-hint form-hint--neutral">
+                                This describes which durable facts and provenance tags differ between the
+                                current archive and the external archive above — it does not determine
+                                which archive is correct.
+                            </p>
+
+                            <p v-if="!publicationArchiveDifferenceResult.hasFactDifference && !publicationArchiveDifferenceResult.hasProvenanceDifference"
+                               class="form-hint form-hint--neutral">
+                                These two archives hold identical durable facts and provenance.
+                            </p>
+
+                            <ul class="replica-knowledge-claim-list">
+                                <li v-for="row in publicationArchiveDifferenceCollectionRows()" :key="row.label" class="replica-knowledge-claim">
+                                    <span class="peer-badge peer-badge--pending">{{ row.label }}</span>
+                                    <p class="form-hint form-hint--neutral">
+                                        Same: {{ row.collection.unchangedCount }} ·
+                                        Changed: {{ row.collection.changedCount }} ·
+                                        Only in current: {{ row.collection.onlyInCurrentCount }} ·
+                                        Only in external: {{ row.collection.onlyInExternalCount }} ·
+                                        Different provenance: {{ row.collection.provenanceChangedCount }}
+                                    </p>
+                                </li>
+                            </ul>
+
+                            <p class="form-hint form-hint--neutral">
+                                Import events: {{ publicationArchiveDifferenceResult.importEvents.currentCount }} current vs.
+                                {{ publicationArchiveDifferenceResult.importEvents.externalCount }} external — not part of
+                                the content fingerprint (0.8.84).
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
