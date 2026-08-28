@@ -71,6 +71,8 @@ import { CreateBasePublicationTransactionPlannerUseCase } from '../application/C
 import { CreateBasePublicationTransactionPlanCoordinatorUseCase } from '../application/CreateBasePublicationTransactionPlanCoordinatorUseCase.js';
 import { CreateBaseInjectedProviderWalletTransactionSignerUseCase } from '../application/CreateBaseInjectedProviderWalletTransactionSignerUseCase.js';
 import { CreateBaseReviewedSigningCoordinatorUseCase } from '../application/CreateBaseReviewedSigningCoordinatorUseCase.js';
+import { CreateBaseSignedTransactionFinalizerUseCase } from '../application/CreateBaseSignedTransactionFinalizerUseCase.js';
+import { CreateBaseSignedTransactionFinalizationCoordinatorUseCase } from '../application/CreateBaseSignedTransactionFinalizationCoordinatorUseCase.js';
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
@@ -965,6 +967,23 @@ const { baseInjectedProviderWalletTransactionSigner } = new CreateBaseInjectedPr
 });
 const { coordinator: baseReviewedSigningCoordinator } = new CreateBaseReviewedSigningCoordinatorUseCase().execute();
 
+// 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.
+// Closes the gap 0.8.93's own header named directly: "Genuinely
+// confirming a wallet's claimed signature belongs to the exact
+// transaction this milestone asked to have signed is this codebase's own
+// deliberately separate next milestone." `baseSignedTransactionFinalizer`
+// is a pure, offline cryptographic check — RLP decode, Keccak-256, and
+// secp256k1 sender recovery, all from first principles (see `base/
+// BaseSignedTransactionCodec.js`'s own header) — and
+// `baseSignedTransactionFinalizationCoordinator` is a deliberately thin
+// wiring on top of it, mirroring exactly how
+// `bitcoinAnchorSignedPsbtFinalizationCoordinator` below wires the 0.8.51
+// finalizer one chain over.
+const { baseSignedTransactionFinalizer } = new CreateBaseSignedTransactionFinalizerUseCase().execute();
+const { coordinator: baseSignedTransactionFinalizationCoordinator } = new CreateBaseSignedTransactionFinalizationCoordinatorUseCase().execute({
+    baseSignedTransactionFinalizer
+});
+
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Closes the
 // gap 0.8.60's own "Deliberately excluded" list named directly: "wiring a
 // 'Create Transaction Plan' action into this page." `bitcoinAnchorTransactionBuilder`
@@ -1153,6 +1172,8 @@ app.provide('basePublicationTransactionPlanCoordinator', basePublicationTransact
 // 0.8.93 — Explicit Base Reviewed Transaction Signing.
 app.provide('baseInjectedProviderWalletTransactionSigner', baseInjectedProviderWalletTransactionSigner);
 app.provide('baseReviewedSigningCoordinator', baseReviewedSigningCoordinator);
+// 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.
+app.provide('baseSignedTransactionFinalizationCoordinator', baseSignedTransactionFinalizationCoordinator);
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.

@@ -17139,3 +17139,83 @@ the identical hard boundary `anchoring/BitcoinAnchorWalletSigner.js`'s own
 header already holds, unweakened one chain over.
 
 See `docs/Roadmap.md`, 0.8.93, for the full milestone entry.
+
+## A Signed Transaction Is Untrusted Until Independently, Cryptographically Verified Against The Exact Reviewed Plan (0.8.94)
+
+**A wallet's claimed signature is external, untrusted output — never
+accepted merely because it was returned.** `base/
+BaseSignedTransactionFinalizer.js#finalize({ plan, rawTransaction })`
+decodes `rawTransaction` via `base/BaseSignedTransactionCodec.js`,
+compares every structural field (`chainId`, `nonce`, `gasLimit`,
+`maxFeePerGas`, `maxPriorityFeePerGas`, `to`, `value`, `data`, and an
+empty `accessList`) against the reviewed plan's own already-frozen
+fields, and cryptographically recovers the sender to compare against
+`plan.from`. This extends `docs/Roadmap.md`, 0.8.93's own "Signing stops
+at a signed artifact; it neither inspects nor broadcasts it" exactly one
+stage further down the identical pipeline: `content → commitment →
+transaction plan → review → signed transaction → verification &
+finalization → broadcast → observation → publication identity`, and this
+milestone builds exactly one of those arrows, the sixth. Mirrors
+`anchoring/BitcoinAnchorSignedPsbtFinalizer.js`'s own principle (0.8.51),
+"Signing Material Is Not Yet A Signature Until It Verifies," one chain
+over: a claimed signature is not yet a verified one until this codebase
+has independently proven it.
+
+**The sender is recovered, never read.** An EIP-1559 transaction's own
+serialized fields carry no `from` — `chainId, nonce,
+maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data,
+accessList, signatureYParity, signatureR, signatureS`, and nothing else.
+`base/BaseSignedTransactionCodec.js#decodeBaseSignedTransaction()`
+cryptographically recovers the signer via real secp256k1 public-key
+recovery over the exact bytes it just decoded — never a caller-supplied
+string standing in for it, and never trusted from anywhere else. A
+transaction signed by the wrong account is `INVALID_SIGNATURE`, a
+strictly stronger guarantee than comparing a supplied `from` field ever
+could be.
+
+**A structural mismatch is caught before cryptography ever runs.** A
+modified nonce, a substituted destination, a different commitment in
+`data`, or a transaction signed for a different chain id are each caught
+as a structural fact — never a claim about whether the signature math
+itself is sound — mirroring `anchoring/
+BitcoinAnchorSignedPsbtFinalizer.js`'s own structural-inspection-first
+order (0.8.50 before 0.8.51) one chain over. Only two facts are ever
+reported as a genuine cryptographic failure: signature bytes that do not
+recover to any valid public key at all, and a signature that recovers to
+a real account other than the one the reviewed plan names.
+
+**A canonical decoder is a separate boundary from the comparison it
+enables.** `base/BaseSignedTransactionCodec.js` owns RLP decoding,
+Keccak-256, and secp256k1 recovery, and knows nothing about a `plan` or
+what "matches the review" means; `base/
+BaseSignedTransactionFinalizer.js` owns exactly the comparison, and
+performs no cryptography of its own beyond calling the codec. Neither
+duplicates the other's concern — the identical "decode, then compare"
+separation `anchoring/BitcoinAnchorSignedPsbtInspector.js` and `anchoring/
+BitcoinAnchorSignedPsbtFinalizer.js` already hold as two classes one
+chain over, expressed here as two files because an EIP-1559 transaction,
+unlike a PSBT, carries no separate unsigned/signed representation to
+inspect in between.
+
+**Real cryptography, from first principles, cross-checked against
+independent oracles — never a shape check dressed up as verification.**
+Keccak-256 and secp256k1 public-key recovery are implemented in plain
+JavaScript and cross-checked, during this milestone's own development,
+against Node's own OpenSSL-backed secp256k1 support and NIST SHA3-256
+(identical to Keccak-256 except for one domain-separator byte), and
+against well-known public test vectors. This is real verification, not a
+placeholder that merely checks shapes — the identical discipline
+`anchoring/BitcoinAnchorSignedPsbtFinalizer.js`'s own header already
+holds for Bitcoin's secp256k1/SHA-256/RIPEMD-160.
+
+**FINALIZED names exactly one narrow fact, and nothing broader.** The
+signed bytes decode, structurally match the reviewed plan field-for-field,
+and were cryptographically signed by the exact account the plan names.
+It is never broadcast, acceptance, inclusion, or confirmation — those
+remain their own, later, separately established facts. See `docs/
+Principles.md`, "The UI Displays Observations; It Does Not Turn Them Into
+A Verdict (0.8.57)," extended here exactly as `docs/Principles.md`,
+"Signing Authorizes The Exact Reviewed Plan; It Does Not Reconstruct Or
+Modify It (0.8.93)," already extends it one stage earlier.
+
+See `docs/Roadmap.md`, 0.8.94, for the full milestone entry.
