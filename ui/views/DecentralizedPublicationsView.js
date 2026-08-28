@@ -99,6 +99,10 @@ import { PublicationObservationArchive } from '../../application/PublicationObse
 import { describePublicationObservationArchive } from '../../application/PublicationObservationArchiveView.js';
 import { describePublicationObservationArchiveProvenance } from '../../application/PublicationObservationArchiveProvenanceView.js';
 import { describePublicationObservationArchiveFingerprint } from '../../application/PublicationObservationArchiveFingerprintView.js';
+import {
+    PublicationObservationArchiveFingerprintComparisonResult,
+    comparePublicationObservationArchiveFingerprint
+} from '../../application/PublicationObservationArchiveFingerprintComparison.js';
 import { LocalStoragePublicationObservationArchive } from '../../storage/LocalStoragePublicationObservationArchive.js';
 import { describeBitcoinAnchorObservationArchive } from '../../application/BitcoinAnchorObservationArchiveView.js';
 import { reconstructBitcoinAnchorDurableEvidence } from '../../application/BitcoinAnchorDurableEvidenceView.js';
@@ -1400,6 +1404,32 @@ export default {
                 // Clipboard API unavailable or denied — the fingerprint is
                 // already shown as selectable text for manual copy.
             }
+        }
+
+        // 0.8.85 — Explicit Publication Archive Fingerprint Comparison.
+        // `archiveFingerprintComparisonInput` is a person's own pasted or
+        // typed text — never compared automatically. Only
+        // `compareArchiveFingerprint()`, fired by the one explicit
+        // "Compare" click below, ever writes
+        // `archiveFingerprintComparisonResult`. See application/
+        // PublicationObservationArchiveFingerprintComparison.js's own
+        // header for what MATCH/DIFFERENT/INVALID_FINGERPRINT/INVALID_ARCHIVE
+        // do and do not mean.
+        const archiveFingerprintComparisonInput = ref('');
+        const archiveFingerprintComparisonResult = ref(null);
+
+        function onArchiveFingerprintComparisonInputChanged() {
+            // A stale result naming text a person has since edited would
+            // misrepresent what "Compare" actually last checked — clearing
+            // it here is bookkeeping, never a second, implicit comparison.
+            archiveFingerprintComparisonResult.value = null;
+        }
+
+        function compareArchiveFingerprint() {
+            archiveFingerprintComparisonResult.value = comparePublicationObservationArchiveFingerprint(
+                publicationObservationArchive.value,
+                archiveFingerprintComparisonInput.value
+            );
         }
 
         function togglePublicationObservationArchive() {
@@ -5039,6 +5069,9 @@ export default {
             confirmPublicationArchiveImport, PublicationObservationArchiveImportOutcome,
             publicationObservationArchiveProvenanceView,
             publicationObservationArchiveFingerprintView, copyArchiveFingerprint, archiveFingerprintCopied,
+            archiveFingerprintComparisonInput, archiveFingerprintComparisonResult,
+            onArchiveFingerprintComparisonInputChanged, compareArchiveFingerprint,
+            PublicationObservationArchiveFingerprintComparisonResult,
             historicalBitcoinAnchorsExpanded, toggleHistoricalBitcoinAnchors, historicalBitcoinAnchorArchiveView,
             toggleHistoricalBitcoinAnchorEntry, isHistoricalBitcoinAnchorEntryExpanded, historicalBitcoinAnchorEvidenceView,
             bitcoinAnchorPublicationsExpanded, toggleBitcoinAnchorPublications, bitcoinAnchorPublicationRecordHistoryView,
@@ -5696,9 +5729,22 @@ export default {
                  PublicationObservationArchiveFingerprint.js's own header).
                  States only that two matching fingerprints describe the
                  identical durable bytes — never that either archive is
-                 authentic, verified, or trustworthy. Comparing this
-                 fingerprint against another archive is deliberately left
-                 unbuilt — see docs/Principles.md, "An Archive Fingerprint
+                 authentic, verified, or trustworthy.
+
+                 0.8.85 — Explicit Publication Archive Fingerprint
+                 Comparison. Extends this SAME card with one explicit
+                 action: paste a fingerprint obtained elsewhere and click
+                 "Compare" to check it against THIS archive's own current
+                 fingerprint above — computed fresh, never read off a
+                 second archive. Typing or pasting alone compares nothing;
+                 only the "Compare" click ever runs
+                 comparePublicationObservationArchiveFingerprint(), and
+                 it runs exactly once per click. MATCH/DIFFERENT state only
+                 that the two digests are, or are not, byte-identical —
+                 never that either archive is authentic, verified,
+                 trustworthy, newer, or correct. See application/
+                 PublicationObservationArchiveFingerprintComparison.js's own
+                 header, and docs/Principles.md, "An Archive Fingerprint
                  Identifies Durable Contents; It Does Not Establish Their
                  Truth Or Origin (0.8.84)." -->
             <div class="identity-mgmt-card">
@@ -5719,6 +5765,36 @@ export default {
                     <button type="button" class="action-btn action-btn--secondary" @click="copyArchiveFingerprint">
                         {{ archiveFingerprintCopied ? 'Copied!' : 'Copy Fingerprint' }}
                     </button>
+                </div>
+
+                <div class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Compare With Another Fingerprint</span>
+                    <label class="form-field">
+                        <span class="form-label">Fingerprint to compare</span>
+                        <input type="text" class="form-input" v-model="archiveFingerprintComparisonInput"
+                               @input="onArchiveFingerprintComparisonInputChanged"
+                               placeholder="Paste a 64-character SHA-256 fingerprint" />
+                    </label>
+                    <div class="identity-mgmt-actions">
+                        <button type="button" class="action-btn action-btn--secondary" @click="compareArchiveFingerprint">
+                            Compare
+                        </button>
+                    </div>
+
+                    <p v-if="archiveFingerprintComparisonResult === PublicationObservationArchiveFingerprintComparisonResult.MATCH"
+                       class="form-hint form-hint--neutral">
+                        Result: MATCH — the supplied fingerprint is equal to the digest computed from this
+                        archive above. This states nothing about whether either archive's facts are correct.
+                    </p>
+                    <p v-else-if="archiveFingerprintComparisonResult === PublicationObservationArchiveFingerprintComparisonResult.DIFFERENT"
+                       class="form-hint form-hint--neutral">
+                        Result: DIFFERENT — the supplied fingerprint is not equal to the digest computed from
+                        this archive above.
+                    </p>
+                    <p v-else-if="archiveFingerprintComparisonResult === PublicationObservationArchiveFingerprintComparisonResult.INVALID_FINGERPRINT"
+                       class="identity-unlock-error">
+                        This is not a well-formed 64-character SHA-256 fingerprint — nothing was compared.
+                    </p>
                 </div>
             </div>
 

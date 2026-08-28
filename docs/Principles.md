@@ -16514,3 +16514,65 @@ archive or a pasted value is explicitly left for a later, separately sized
 milestone.
 
 See `docs/Roadmap.md`, 0.8.84, for the full milestone entry.
+
+## A Fingerprint Comparison Establishes Equality Of Digests, Not Which Archive Is Correct (0.8.85)
+
+**`MATCH` means the two digests are byte-identical; `DIFFERENT` means they
+are not; neither is a verdict.** `application/
+PublicationObservationArchiveFingerprintComparison.js`'s own
+`comparePublicationObservationArchiveFingerprint()` computes the current
+archive's own fingerprint with 0.8.84's own unchanged algorithm and
+compares it to a normalized, supplied digest. A match never means
+"trusted," "authentic," "verified," "correct," or "newer" — it means
+exactly what 0.8.84 already established a fingerprint means, now checked
+against a second value instead of merely displayed. This is docs/
+Principles.md, "An Archive Fingerprint Identifies Durable Contents; It
+Does Not Establish Their Truth Or Origin (0.8.84)," held once more, one
+layer over a comparison rather than a display.
+
+**The comparison result is one of exactly four small, mechanical
+outcomes: `MATCH`, `DIFFERENT`, `INVALID_FINGERPRINT`,
+`INVALID_ARCHIVE`.** Nothing richer. No confidence score, no "archive
+health," no partial-match percentage, no ranking of which archive is
+more likely correct. A person — or a later milestone — is free to build
+meaning on top of this result; this milestone supplies only the
+equality check itself.
+
+**A malformed or non-string supplied fingerprint is never coerced into a
+comparison.** The input-normalization contract is narrow and explicit: a
+string, trimmed of outer whitespace, lowercased, then checked against
+`/^[0-9a-f]{64}$/`. A number, an object, an array, `null`, or `undefined`
+is `INVALID_FINGERPRINT` — never `String()`-coerced and compared, which
+could otherwise make `"[object Object]"` or a stringified number appear
+to almost-compare against a real digest.
+
+**A non-`PublicationObservationArchive` input is `INVALID_ARCHIVE` — a
+result, not a throw, and not a silent degrade.** application/
+PublicationObservationArchiveFingerprint.js's own algorithm throws for a
+non-archive input; application/PublicationObservationArchiveFingerprintView.js
+instead silently degrades to `PublicationObservationArchive.empty()`'s own
+fingerprint, for display purposes only. Neither fits a comparison:
+throwing would single this one result out from the other three, mechanical
+outcomes this function can return, and silently degrading to the empty
+archive could make a bogus `archive` argument compare as `MATCH` against a
+stray copy of the empty archive's own fingerprint — precisely the
+misleading answer a comparison exists to prevent. `INVALID_ARCHIVE` is
+checked first, before the supplied fingerprint is even normalized.
+
+**No comparison happens unless a person explicitly asks for one.**
+`ui/views/DecentralizedPublicationsView.js`'s own "Compare" button is the
+only thing that ever calls `comparePublicationObservationArchiveFingerprint()`.
+Typing or pasting into the comparison field writes local UI state only;
+editing the field afterward clears a previously shown result rather than
+leaving a stale answer attached to text a person has since changed. No
+automatic comparison after import, after a paste, or on any timer — the
+identical restraint 0.8.84 already held for automatic publication.
+
+**Still not a signature, still no comparison-driven action.** No signing,
+no public/private keys, no automatic archive replacement or merging
+triggered by a `MATCH`, no conflict resolution, no record-level diffing,
+no network fingerprint lookup, no peer discovery. A comparison answers
+"same bytes or not" and stops there — see `docs/Roadmap.md`, 0.8.85,
+"Deliberately excluded," for the complete list.
+
+See `docs/Roadmap.md`, 0.8.85, for the full milestone entry.

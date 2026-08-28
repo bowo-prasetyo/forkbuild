@@ -30117,3 +30117,144 @@ overall Bitcoin-anchor verdict of any kind; and explicit Bitcoin ↔ IPFS
 content-hash reconciliation — each its own, separately sized piece of
 work, exactly like every "Deliberately excluded" list in this document
 before it.
+
+## 0.8.85 — Explicit Publication Archive Fingerprint Comparison
+
+0.8.84 gave a `PublicationObservationArchive` a deterministic identity — a
+64-character SHA-256 digest a person can copy. It answered "what is this
+archive's own fingerprint?" but not the next, narrower question a person
+actually has once two replicas each hold one: does a fingerprint obtained
+elsewhere match the archive in front of them right now? Today they can
+only answer that by eye, comparing two long hex strings character by
+character. This milestone adds exactly the missing comparison, and
+nothing more:
+
+```text
+Current Archive
+      │
+      │ fingerprint (0.8.84, reused, never reimplemented)
+      ▼
+local fingerprint            a fingerprint obtained elsewhere
+      │                      (copied, pasted, read off another
+      │                       replica's own "Archive Fingerprint" card)
+      │                              │
+      └──────────────┬───────────────┘
+                      │ comparison
+                      ▼
+      MATCH · DIFFERENT · INVALID_FINGERPRINT · INVALID_ARCHIVE
+```
+
+**MATCH MEANS "BYTE-IDENTICAL CANONICAL CONTENT"; DIFFERENT MEANS "NOT
+THAT" — NEITHER MEANS WHICH ARCHIVE IS CORRECT, TRUSTWORTHY, NEWER,
+AUTHENTIC, OR SHOULD REPLACE THE OTHER.** This restates docs/
+Principles.md, "An Archive Fingerprint Identifies Durable Contents; It
+Does Not Establish Their Truth Or Origin (0.8.84)," one layer over a
+comparison of two digests rather than the display of one. See application/
+PublicationObservationArchiveFingerprintComparison.js's own header, and
+docs/Principles.md, "A Fingerprint Comparison Establishes Equality Of
+Digests, Not Which Archive Is Correct (0.8.85)."
+
+**REUSES `fingerprintPublicationObservationArchive()` UNCHANGED — NO
+SECOND FINGERPRINTING ALGORITHM.** This milestone computes nothing new
+over the archive's own facts; it calls 0.8.84's own function and compares
+its result to a normalized input string.
+
+**THE INPUT-NORMALIZATION CONTRACT IS EXPLICIT AND NARROW.** A supplied
+fingerprint must be a `string`; it is trimmed of leading/trailing
+whitespace and lowercased (this codebase itself only ever PRODUCES
+lowercase digests, but a fingerprint pasted from another tool's clipboard
+may carry uppercase hex or incidental whitespace); the normalized value
+must then match `/^[0-9a-f]{64}$/` exactly. A non-string input — a
+number, an object, an array, `null`, `undefined` — is never coerced to a
+string and compared; it is `INVALID_FINGERPRINT`, exactly as a malformed
+string is.
+
+**`INVALID_ARCHIVE` IS A RESULT, NEVER A THROW.** application/
+PublicationObservationArchiveFingerprint.js's own algorithm throws for a
+non-`PublicationObservationArchive` input; application/
+PublicationObservationArchiveFingerprintView.js instead silently degrades
+such an input to `PublicationObservationArchive.empty()`'s own
+fingerprint, for display purposes. Neither restraint fits a comparison:
+throwing would make this function behave differently from every other
+small, mechanical result it returns, and silently degrading to the empty
+archive could make a bogus caller's `archive` argument compare as `MATCH`
+against a stray copy of the empty archive's own fingerprint — a
+misleading answer for something that exists specifically to be trusted at
+face value. So `comparePublicationObservationArchiveFingerprint()` never
+throws and never silently degrades: a non-instance `archive` is checked
+first and is its own explicit result.
+
+**SYNCHRONOUS, PURE, NO MUTATION, NO NETWORK, NO CAPABILITY ACCESS.**
+Comparing reads no clock, touches no storage, wallet, signer, IPFS
+provider, pinning provider, or Bitcoin RPC, and never mutates the archive
+it reads.
+
+New files:
+- `application/PublicationObservationArchiveFingerprintComparison.js` —
+  new; `PublicationObservationArchiveFingerprintComparisonResult`
+  (`MATCH` / `DIFFERENT` / `INVALID_FINGERPRINT` / `INVALID_ARCHIVE`) and
+  `comparePublicationObservationArchiveFingerprint(archive,
+  suppliedFingerprint)`. Never throws; a non-`PublicationObservationArchive`
+  input returns `INVALID_ARCHIVE`, checked before the supplied fingerprint
+  is even normalized.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — extends the existing
+  "Archive Fingerprint" card (0.8.84) rather than adding a new one: a
+  single-line "Fingerprint to compare" field and a "Compare" button.
+  Typing or pasting never compares automatically — only the explicit
+  "Compare" click runs one synchronous comparison, writing exactly one
+  result. Editing the field afterward clears the shown result rather than
+  leaving a stale answer attached to changed text. `MATCH`/`DIFFERENT`
+  render as a plain, neutral line — never color-coded as "good" or "bad,"
+  which would smuggle in a verdict this milestone explicitly refuses to
+  make; `INVALID_FINGERPRINT` reuses the same `.identity-unlock-error`
+  styling the "Import Archive" form already uses for a malformed paste.
+
+New tests:
+- `tests/PublicationObservationArchiveFingerprintComparison.test.js` —
+  the flagship scenario described above (two replicas holding identical
+  facts under different provenance, per 0.8.83, correctly compare as
+  `DIFFERENT` against each other's fingerprint, in both directions, even
+  though every fact looks identical; each still `MATCH`es its own), plus:
+  equality against an archive's own fingerprint; one additional
+  observation changes the outcome to `DIFFERENT`; `archiveImportEvents`
+  changes alone never affect the outcome, reasserting 0.8.84's own
+  exclusion boundary; duplicate factual records are significant, not
+  collapsed; two independently constructed empty archives `MATCH`;
+  malformed or non-string fingerprint input is always
+  `INVALID_FINGERPRINT`, never coerced; a non-instance archive is always
+  `INVALID_ARCHIVE`, checked before the fingerprint is normalized;
+  normalization is exactly case-insensitivity plus outer-whitespace
+  trimming, nothing more; determinism, non-mutation, and a read-the-source
+  guarantee that the comparison module's own imports name no wallet,
+  signer, IPFS provider, pinning provider, or Bitcoin RPC symbol; and no
+  trust/confidence/validity/verified/authentic/newer/correct vocabulary
+  exists anywhere in the result outcomes.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Archive loading, replacement, or merging from a supplied fingerprint
+  or a second archive.** A fingerprint alone carries no facts to load —
+  see 0.8.82's own "Deliberately excluded" restraint against merging,
+  unchanged.
+- **Automatic comparison of any kind** — after import, after a paste, or
+  on a timer. A person clicks "Compare" explicitly, every time.
+- **Signing, public/private keys, or any cryptographic identity beyond a
+  content digest.** Unchanged from 0.8.84's own restraint.
+- **"Trusted archive," "verified archive," confidence scores, "archive
+  health," or any vocabulary implying a matching fingerprint means the
+  facts are correct.** See this milestone's own flagship invariant.
+- **Conflict resolution or record-level diffing.** A comparison answers
+  only "same bytes or not" — never which fact differs, or which archive
+  should win.
+- **Remote notarization, network fingerprint lookup, or automatic peer
+  discovery.** Computing and comparing stay entirely local, synchronous,
+  and network-free.
+
+What's left, and deliberately unbuilt: non-replacing external archive
+inspection (loading a second archive's own facts to browse without
+replacing the current one); a durable archive difference projection
+(what, specifically, differs between two archives); and any explicit
+reconciliation model — each its own, separately sized piece of work,
+exactly like every "Deliberately excluded" list in this document before
+it.
