@@ -138,6 +138,9 @@ import { BaseSignedTransactionFinalizationState } from '../../application/BaseSi
 import { describeBaseSignedTransactionFinalization } from '../../application/BaseSignedTransactionFinalizationView.js';
 import { BaseTransactionBroadcastState } from '../../application/BaseTransactionBroadcastState.js';
 import { describeBaseTransactionBroadcast } from '../../application/BaseTransactionBroadcastView.js';
+import { BaseTransactionInclusionObservationState } from '../../application/BaseTransactionInclusionObservationState.js';
+import { describeBaseTransactionInclusionObservation, describeBaseTransactionInclusionObservationHistory } from '../../application/BaseTransactionInclusionObservationView.js';
+import { appendBaseTransactionInclusionObservationHistoryEntry } from '../../application/BaseTransactionInclusionObservationHistory.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -857,6 +860,20 @@ const BASE_TRANSACTION_BROADCAST_BADGE_CLASSES = {
     [BaseTransactionBroadcastState.FAILED]: 'peer-badge--failed'
 };
 
+// 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
+// Mirrors BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES exactly, one chain
+// over: INCLUDED reads the same "authenticated" green every other
+// successful outcome on this page earns, and NOT_INCLUDED/UNAVAILABLE
+// both read the identical neutral "pending" every other REAL-but-not-yet-
+// final observation on this page already reads — never the red reserved
+// for an actionable, resolvable failure, because neither NOT_INCLUDED nor
+// UNAVAILABLE is one.
+const BASE_TRANSACTION_INCLUSION_BADGE_CLASSES = {
+    [BaseTransactionInclusionObservationState.INCLUDED]: 'peer-badge--authenticated',
+    [BaseTransactionInclusionObservationState.NOT_INCLUDED]: 'peer-badge--pending',
+    [BaseTransactionInclusionObservationState.UNAVAILABLE]: 'peer-badge--pending'
+};
+
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX. Mirrors
 // BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES immediately above exactly, one
 // external boundary over: PUBLISHING reads pending, PUBLISHED reads the
@@ -1119,6 +1136,15 @@ export default {
         // "broadcasting submits; it does not decide" boundary — see that
         // file's own header.
         const baseTransactionBroadcastCoordinator = inject('baseTransactionBroadcastCoordinator', null);
+        // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation
+        // Observation. Optional — absent, the "Base Transaction Inclusion"
+        // section simply never renders, the identical degrade-gracefully
+        // posture every optional section on this page already holds.
+        // `baseTransactionInclusionObservationCoordinator` is a thin
+        // bridge to `base/BaseTransactionInclusionObserver.js`'s own
+        // "broadcast ≠ inclusion; inclusion is an independently observed
+        // fact" boundary — see that file's own header.
+        const baseTransactionInclusionObservationCoordinator = inject('baseTransactionInclusionObservationCoordinator', null);
         // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
         // Signing UI. `bitcoinAnchorTransactionReview` is now this page's
         // OWN reactive holder (declared below, alongside
@@ -3754,6 +3780,17 @@ export default {
             // replace. See `application/BaseTransactionBroadcastState.js`'s
             // own header, the identical restraint one stage later still.
             entry.baseTransactionBroadcastOutcome = null;
+            // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation
+            // Observation. A fresh plan always starts unobserved again too
+            // — never leaves a previous plan's own inclusion outcome or
+            // history showing against a transaction this click is about to
+            // replace. See `application/
+            // BaseTransactionInclusionObservationHistory.js`'s own header,
+            // the identical restraint one stage later still.
+            entry.baseTransactionInclusionOutcome = null;
+            entry.baseTransactionInclusionHistory = [];
+            entry.baseTransactionInclusionObserving = false;
+            entry.baseTransactionInclusionError = null;
             try {
                 entry.basePublicationTransactionConstruction = await basePublicationTransactionPlanCoordinator.construct({
                     publicationId: entry.publication.id,
@@ -3847,6 +3884,14 @@ export default {
             // replace. See `entry.baseTransactionBroadcastOutcome`'s own
             // declaration below.
             entry.baseTransactionBroadcastOutcome = null;
+            // 0.8.96 — a fresh signing attempt retires whatever was
+            // previously observed for inclusion — never left showing a
+            // stale observation for a broadcast this click is about to
+            // replace.
+            entry.baseTransactionInclusionOutcome = null;
+            entry.baseTransactionInclusionHistory = [];
+            entry.baseTransactionInclusionObserving = false;
+            entry.baseTransactionInclusionError = null;
             entry.baseReviewedTransactionSigningOutcome = { state: BaseReviewedSigningState.SIGNING, rawTransaction: null, reason: null };
             try {
                 entry.baseReviewedTransactionSigningOutcome = await baseReviewedSigningCoordinator.sign({
@@ -3913,6 +3958,14 @@ export default {
             // replace. See `entry.baseTransactionBroadcastOutcome`'s own
             // declaration below.
             entry.baseTransactionBroadcastOutcome = null;
+            // 0.8.96 — a fresh finalization attempt retires whatever was
+            // previously observed for inclusion — never left showing a
+            // stale observation for a broadcast this click is about to
+            // replace.
+            entry.baseTransactionInclusionOutcome = null;
+            entry.baseTransactionInclusionHistory = [];
+            entry.baseTransactionInclusionObserving = false;
+            entry.baseTransactionInclusionError = null;
             entry.baseSignedTransactionFinalizationOutcome = { state: BaseSignedTransactionFinalizationState.FINALIZING, finalized: false, finalizedTransaction: null, reason: null };
             try {
                 entry.baseSignedTransactionFinalizationOutcome = baseSignedTransactionFinalizationCoordinator.finalize({ plan, rawTransaction });
@@ -3963,6 +4016,17 @@ export default {
                 : null;
             if (!finalizedTransaction) return;
 
+            // 0.8.96 — a fresh broadcast attempt retires whatever was
+            // previously observed for inclusion — the txid a previous
+            // BROADCASTED outcome named is about to be replaced (or
+            // resubmitted as a brand-new attempt), so any inclusion
+            // observation made against it no longer describes the
+            // transaction this entry is now tracking. See `application/
+            // BaseTransactionInclusionObservationHistory.js`'s own header.
+            entry.baseTransactionInclusionOutcome = null;
+            entry.baseTransactionInclusionHistory = [];
+            entry.baseTransactionInclusionObserving = false;
+            entry.baseTransactionInclusionError = null;
             entry.baseTransactionBroadcastOutcome = { state: BaseTransactionBroadcastState.BROADCASTING, broadcasted: false, txid: null, reason: null };
             try {
                 entry.baseTransactionBroadcastOutcome = await baseTransactionBroadcastCoordinator.broadcast({
@@ -3991,6 +4055,92 @@ export default {
 
         function isBaseTransactionBroadcasting(entry) {
             return baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTING;
+        }
+
+        // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation
+        // Observation.
+        //
+        // THE ONE place this page ever calls
+        // `baseTransactionInclusionObservationCoordinator.observeInclusion()`
+        // — never triggered automatically by a BROADCASTED result; only an
+        // explicit "Observe Transaction" click, and only ever with THIS
+        // entry's own `baseTransactionBroadcastView(entry)`'s own bound
+        // `txid` — never a txid read from anywhere else on this page (not
+        // an unrelated entry's own broadcast, not a field a person could
+        // edit). Passing `broadcasted: true` alongside it mirrors exactly
+        // how `broadcastBaseTransaction()` above hands `finalized: true` to
+        // `baseTransactionBroadcastCoordinator.broadcast()` — a
+        // caller-contract proof that this txid genuinely came from a real
+        // BROADCASTED outcome, checked by the coordinator itself before the
+        // injected observer is ever consulted.
+        //
+        // Every explicit click appends its own observation to
+        // `entry.baseTransactionInclusionHistory` via `application/
+        // BaseTransactionInclusionObservationHistory.js`'s own
+        // `appendBaseTransactionInclusionObservationHistoryEntry()`,
+        // UNCHANGED — no observation is ever rewritten into "the current
+        // one"; each click performs its own independent, fresh read, even
+        // when it repeats the identical state as the click before it. A
+        // thrown error (a caller-contract violation this page's own guard
+        // below should already prevent — the injected observer itself
+        // never throws) is caught HERE, at the UI boundary, and surfaced
+        // honestly rather than silently swallowed — mirroring exactly how
+        // `broadcastBaseTransaction()` above already handles its own
+        // coordinator's thrown errors.
+        async function observeBaseTransactionInclusion(entry) {
+            if (!baseTransactionInclusionObservationCoordinator) return;
+            const broadcast = baseTransactionBroadcastView(entry);
+            if (broadcast.state !== BaseTransactionBroadcastState.BROADCASTED || !broadcast.txid) return;
+
+            entry.baseTransactionInclusionObserving = true;
+            entry.baseTransactionInclusionError = null;
+            try {
+                const observation = await baseTransactionInclusionObservationCoordinator.observeInclusion({
+                    broadcasted: true,
+                    txid: broadcast.txid
+                });
+                entry.baseTransactionInclusionOutcome = observation;
+                entry.baseTransactionInclusionHistory =
+                    appendBaseTransactionInclusionObservationHistoryEntry(entry.baseTransactionInclusionHistory || [], observation);
+            } catch (error) {
+                entry.baseTransactionInclusionError = error.message;
+            } finally {
+                entry.baseTransactionInclusionObserving = false;
+            }
+        }
+
+        // Pure projection of `entry.baseTransactionInclusionOutcome`
+        // through `application/BaseTransactionInclusionObservationView.js`'s
+        // own `describeBaseTransactionInclusionObservation()` — the
+        // identical "the UI owns no facts of its own, it only projects an
+        // injected collaborator's own result" discipline every other
+        // `*View()` function on this page already holds. `null` until at
+        // least one "Observe Transaction" click has completed for this
+        // entry's current broadcast transaction.
+        function baseTransactionInclusionView(entry) {
+            return describeBaseTransactionInclusionObservation(entry.baseTransactionInclusionOutcome || null);
+        }
+
+        function baseTransactionInclusionBadgeClass(entry) {
+            const view = baseTransactionInclusionView(entry);
+            return view ? (BASE_TRANSACTION_INCLUSION_BADGE_CLASSES[view.state] || null) : null;
+        }
+
+        function isBaseTransactionInclusionObserving(entry) {
+            return Boolean(entry.baseTransactionInclusionObserving);
+        }
+
+        // The FULL chronological narration of every past "Observe
+        // Transaction" click for THIS entry's current broadcast transaction
+        // — composes `application/BaseTransactionInclusionObservationView.js`'s
+        // own `describeBaseTransactionInclusionObservationHistory()` over
+        // `entry.baseTransactionInclusionHistory`.
+        function baseTransactionInclusionHistoryView(entry) {
+            return describeBaseTransactionInclusionObservationHistory(entry.baseTransactionInclusionHistory || []);
+        }
+
+        function toggleBaseTransactionInclusionHistory(entry) {
+            entry.baseTransactionInclusionHistoryExpanded = !entry.baseTransactionInclusionHistoryExpanded;
         }
 
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
@@ -5885,6 +6035,11 @@ export default {
             baseTransactionBroadcastCoordinator, broadcastBaseTransaction,
             baseTransactionBroadcastView, baseTransactionBroadcastBadgeClass, isBaseTransactionBroadcasting,
             BaseTransactionBroadcastState,
+            // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
+            baseTransactionInclusionObservationCoordinator, observeBaseTransactionInclusion,
+            baseTransactionInclusionView, baseTransactionInclusionBadgeClass, isBaseTransactionInclusionObserving,
+            baseTransactionInclusionHistoryView, toggleBaseTransactionInclusionHistory,
+            BaseTransactionInclusionObservationState,
             bitcoinAnchorTransactionConstructionCoordinator, constructBitcoinAnchorTransaction,
             bitcoinAnchorTransactionConstructionView, bitcoinAnchorTransactionConstructionBadgeClass,
             BitcoinAnchorTransactionConstructionState,
@@ -8286,6 +8441,104 @@ export default {
                                     <dl v-if="baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTED" class="evidence-fields">
                                         <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ baseTransactionBroadcastView(entry).txid }}</dd></div>
                                     </dl>
+                                </div>
+
+                                <!-- 0.8.96 — Explicit Base Transaction
+                                     Inclusion & Confirmation Observation.
+                                     Only ever shown once broadcasting has
+                                     actually reached BROADCASTED — the
+                                     identical gating the Broadcast section
+                                     above already holds toward FINALIZED,
+                                     one stage earlier. Absent
+                                     baseTransactionInclusionObservationCoordinator,
+                                     this section simply never renders.
+                                     Broadcast acceptance is not chain
+                                     inclusion — clicking "Observe
+                                     Transaction" asks Base's own network,
+                                     right now, whether the EXACT broadcast
+                                     transaction hash above has been
+                                     included in a block. Never automatic,
+                                     never polled — one click produces
+                                     exactly one fresh observation, and
+                                     every observation is preserved, never
+                                     overwritten. See base/
+                                     BaseTransactionInclusionObserver.js's
+                                     own header. -->
+                                <div v-if="baseTransactionInclusionObservationCoordinator && baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTED"
+                                     class="evidence-inspection-adapter">
+                                    <span class="evidence-inspection-adapter-title">Base Transaction Inclusion</span>
+                                    <p class="form-hint form-hint--neutral">
+                                        The network accepted this transaction for broadcast. Whether it has
+                                        since been included in a block is a separate, later observation.
+                                    </p>
+
+                                    <button type="button" class="peer-action-btn"
+                                        :disabled="isBaseTransactionInclusionObserving(entry)"
+                                        @click="observeBaseTransactionInclusion(entry)">
+                                        {{ isBaseTransactionInclusionObserving(entry) ? 'Observing…' : (baseTransactionInclusionView(entry) ? 'Observe Transaction Again' : 'Observe Transaction') }}
+                                    </button>
+                                    <p v-if="entry.baseTransactionInclusionError" class="form-hint form-hint--neutral">
+                                        {{ entry.baseTransactionInclusionError }}
+                                    </p>
+
+                                    <template v-if="baseTransactionInclusionView(entry)">
+                                        <span class="peer-badge" :class="baseTransactionInclusionBadgeClass(entry)">
+                                            {{ baseTransactionInclusionView(entry).stateLabel }}
+                                        </span>
+
+                                        <!-- INCLUDED here means, precisely
+                                             and only, that Base's own
+                                             network currently reports a
+                                             receipt for this exact
+                                             transaction hash. It does NOT
+                                             mean safe, final, irreversible,
+                                             or trusted — a chain
+                                             reorganization remains
+                                             possible, and this milestone
+                                             does not detect one. -->
+                                        <dl v-if="baseTransactionInclusionView(entry).state === BaseTransactionInclusionObservationState.INCLUDED" class="evidence-fields">
+                                            <div class="evidence-field"><dt>Block hash</dt><dd>{{ baseTransactionInclusionView(entry).blockHash }}</dd></div>
+                                            <div class="evidence-field"><dt>Block number</dt><dd>{{ baseTransactionInclusionView(entry).blockNumber }}</dd></div>
+                                            <div class="evidence-field"><dt>Transaction index</dt><dd>{{ baseTransactionInclusionView(entry).transactionIndex }}</dd></div>
+                                            <div class="evidence-field"><dt>Confirmations</dt><dd>{{ baseTransactionInclusionView(entry).confirmationCount }}</dd></div>
+                                            <div class="evidence-field"><dt>Observed</dt><dd>{{ formatWhen(baseTransactionInclusionView(entry).observedAt) }}</dd></div>
+                                        </dl>
+                                        <p v-else-if="baseTransactionInclusionView(entry).state === BaseTransactionInclusionObservationState.NOT_INCLUDED" class="form-hint form-hint--neutral">
+                                            No receipt was returned for this transaction at this observation
+                                            ({{ formatWhen(baseTransactionInclusionView(entry).observedAt) }}).
+                                        </p>
+                                        <p v-if="baseTransactionInclusionView(entry).reason" class="form-hint form-hint--neutral">
+                                            {{ baseTransactionInclusionView(entry).reason }}
+                                        </p>
+
+                                        <button v-if="baseTransactionInclusionHistoryView(entry).count > 1" type="button" class="peer-action-btn"
+                                            @click="toggleBaseTransactionInclusionHistory(entry)">
+                                            {{ entry.baseTransactionInclusionHistoryExpanded ? 'Hide Observation History' : ('Show Observation History (' + baseTransactionInclusionHistoryView(entry).count + ')') }}
+                                        </button>
+                                    </template>
+
+                                    <!-- The full chronological narration of
+                                         every past "Observe Transaction"
+                                         click for THIS entry's current
+                                         broadcast transaction — every
+                                         observation is preserved, never
+                                         overwritten. See application/
+                                         BaseTransactionInclusionObservationHistory.js's
+                                         own header. -->
+                                    <div v-if="entry.baseTransactionInclusionHistoryExpanded">
+                                        <ul class="replica-knowledge-claim-list">
+                                            <li v-for="(item, index) in baseTransactionInclusionHistoryView(entry).observations" :key="index" class="replica-knowledge-claim">
+                                                <dl class="evidence-fields">
+                                                    <div class="evidence-field"><dt>Observed</dt><dd>{{ formatWhen(item.observedAt) }}</dd></div>
+                                                    <div class="evidence-field"><dt>State</dt><dd>{{ item.stateShortLabel }}</dd></div>
+                                                    <div v-if="item.blockHash" class="evidence-field"><dt>Block hash</dt><dd>{{ item.blockHash }}</dd></div>
+                                                    <div v-if="item.blockNumber !== null" class="evidence-field"><dt>Block number</dt><dd>{{ item.blockNumber }}</dd></div>
+                                                    <div v-if="item.confirmationCount !== null" class="evidence-field"><dt>Confirmations</dt><dd>{{ item.confirmationCount }}</dd></div>
+                                                    <div v-if="item.reason" class="evidence-field"><dt>Reason</dt><dd>{{ item.reason }}</dd></div>
+                                                </dl>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>

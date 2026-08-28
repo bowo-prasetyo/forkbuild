@@ -75,6 +75,8 @@ import { CreateBaseSignedTransactionFinalizerUseCase } from '../application/Crea
 import { CreateBaseSignedTransactionFinalizationCoordinatorUseCase } from '../application/CreateBaseSignedTransactionFinalizationCoordinatorUseCase.js';
 import { CreateBaseTransactionBroadcasterUseCase } from '../application/CreateBaseTransactionBroadcasterUseCase.js';
 import { CreateBaseTransactionBroadcastCoordinatorUseCase } from '../application/CreateBaseTransactionBroadcastCoordinatorUseCase.js';
+import { CreateBaseTransactionInclusionObserverUseCase } from '../application/CreateBaseTransactionInclusionObserverUseCase.js';
+import { CreateBaseTransactionInclusionObservationCoordinatorUseCase } from '../application/CreateBaseTransactionInclusionObservationCoordinatorUseCase.js';
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
@@ -1006,6 +1008,27 @@ const { coordinator: baseTransactionBroadcastCoordinator } = new CreateBaseTrans
     baseTransactionBroadcaster
 });
 
+// 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
+// Closes the gap 0.8.95's own header named directly: "Whether a broadcasted
+// transaction later gets mined into a block is a separate, later question,
+// asked by a separate, later explicit confirmation-observation action."
+// `baseTransactionInclusionObserver` reuses the SAME `baseJsonRpcClient`
+// instance every other Base capability above already reads through — one
+// shared RPC client, never a second, disconnected one — because observing
+// inclusion needs nothing from a Base RPC endpoint beyond the two reads
+// `base/BaseJsonRpcClient.js`'s own header now documents wrapping,
+// `eth_getTransactionReceipt`/`eth_blockNumber`.
+// `baseTransactionInclusionObservationCoordinator` is a deliberately thin
+// wiring on top of it, mirroring exactly how
+// `bitcoinAnchorConfirmationCoordinator` below wires the 0.8.54 confirmation
+// observer one chain over.
+const { baseTransactionInclusionObserver } = new CreateBaseTransactionInclusionObserverUseCase().execute({
+    rpcSource: baseJsonRpcClient
+});
+const { coordinator: baseTransactionInclusionObservationCoordinator } = new CreateBaseTransactionInclusionObservationCoordinatorUseCase().execute({
+    baseTransactionInclusionObserver
+});
+
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Closes the
 // gap 0.8.60's own "Deliberately excluded" list named directly: "wiring a
 // 'Create Transaction Plan' action into this page." `bitcoinAnchorTransactionBuilder`
@@ -1198,6 +1221,8 @@ app.provide('baseReviewedSigningCoordinator', baseReviewedSigningCoordinator);
 app.provide('baseSignedTransactionFinalizationCoordinator', baseSignedTransactionFinalizationCoordinator);
 // 0.8.95 — Explicit Base Transaction Broadcast.
 app.provide('baseTransactionBroadcastCoordinator', baseTransactionBroadcastCoordinator);
+// 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.
+app.provide('baseTransactionInclusionObservationCoordinator', baseTransactionInclusionObservationCoordinator);
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
