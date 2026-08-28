@@ -29438,3 +29438,152 @@ this one's own explicit identity; an overall Bitcoin-anchor verdict of any
 kind; and explicit Bitcoin ↔ IPFS content-hash reconciliation — each its
 own, separately sized piece of work, exactly like every "Deliberately
 excluded" list in this document before it.
+
+## 0.8.81 — Bitcoin Anchor Publication Lifecycle Timeline
+
+0.8.80 gave this replica a durable IDENTITY for one Bitcoin anchor
+publication attempt — `{ anchorId, contentHash, txid, network, createdAt }`
+— deliberately kept separate from every observation about it. 0.8.78
+already puts that identity's five independent facts side by side, but
+under their own, separate section headings; nothing before this milestone
+ever answered the plain question a person looking at ONE publication
+actually has: "what happened to this, and in what order?" This milestone
+is that one, single, chronological read, scoped to exactly one publication
+record:
+
+```text
+BitcoinAnchorPublicationRecord (0.8.80, identity)
+     │
+     │  createdAt
+     ▼
+Publication record created
+     │
+     ├──► Broadcast observation(s)        (application/BitcoinAnchorBroadcastView.js)
+     ├──► Confirmation observation(s)     (application/BitcoinAnchorConfirmationObservationHistoryView.js)
+     ├──► Content-proof observation(s)    (application/BitcoinAnchorContentProofView.js)
+     ├──► Chain-placement comparison(s)   (application/BitcoinAnchorChainPlacementObserver.js, 0.8.76)
+     └──► Consistency finding(s)          (application/BitcoinAnchorObservationConsistencyAnalyzer.js, 0.8.77)
+                │
+                ▼  chronologically sorted
+     one Publication Lifecycle Timeline
+```
+
+**A LIFECYCLE TIMELINE PRESENTS RECORDED FACTS IN TEMPORAL ORDER; IT DOES
+NOT INFER MISSING STAGES OR INTERPRET THEM.** The single restraint this
+whole milestone exists to hold. A publication with no broadcast
+observation contributes no broadcast entry — never a fabricated "Broadcast
+missing" or "Broadcast failed" standing in for the absence. A publication
+whose UI session happened to pass through a "reviewed" or "signed" stage
+on its way to finalization contributes no entry for either — this file
+reads only what `application/PublicationObservationArchive.js` actually
+chose to make durable (0.8.75), and neither of those two stages is a
+durable, archived fact. Absence is simply absence of a recorded
+observation. See `docs/Principles.md` for the full statement of this
+invariant.
+
+**A COMPOSITION OF ALREADY-ESTABLISHED PROJECTIONS, NEVER A NEW SOURCE OF
+TRUTH.** `describeBitcoinAnchorPublicationLifecycleTimeline()` invents no
+new observation, state, or label of its own. It calls
+`observeBitcoinAnchorChainPlacementChanges()` (0.8.76) and
+`analyzeBitcoinAnchorObservationConsistency()` (0.8.77) over its own
+`confirmationObservations` argument — the identical two calls `application/
+BitcoinAnchorDurableEvidenceView.js#reconstructBitcoinAnchorDurableEvidence()`
+(0.8.79) already makes — then hands everything to
+`composeBitcoinAnchorObservationEvidence()` and
+`describeBitcoinAnchorObservationEvidence()` (0.8.78), UNCHANGED. Its own
+new work is exactly two things: flattening five already-described sections
+into one array of timeline entries, each carrying its own explicit `kind`,
+and sorting that array chronologically.
+
+**A STRONG IDENTITY CONSTRAINT.** `publicationRecord` is required and
+explicit; every entry this function returns is stamped with
+`publicationRecord.anchorId`, and every observation it is handed is
+trusted to already belong to that one `anchorId` — never derived from a
+shared `contentHash` or `txid`. This is 0.8.78's own "Correlate Evidence By
+Explicit Identity, Never By Resemblance," restated a third time, one layer
+up. The flagship test constructs two publications sharing one
+`contentHash`, with deliberately interleaved, out-of-order appended
+observations (a confirmation for A, then a broadcast for B, then a proof
+for A, then a confirmation for B, then a broadcast for A, then a proof for
+B), and proves each publication's own timeline is chronologically correct
+and never leaks into the other's.
+
+**TIMELINE ENTRY IDENTITY NEVER RELIES ON A TIMESTAMP ALONE.** Every
+confirmation, broadcast, and content-proof entry carries the same 1-based
+`index` `composeBitcoinAnchorObservationEvidence()` already assigns it
+(0.8.78) — "Confirmation observation #1," "Confirmation observation #2" —
+never a position inferred from two observations that happen to share an
+identical `observedAt`.
+
+**A CHAIN-PLACEMENT COMPARISON OR CONSISTENCY FINDING HAS NO TIMESTAMP OF
+ITS OWN.** Each compares a PAIR of confirmation observations and carries no
+`observedAt` field. This file places such an entry on the timeline at the
+LATER of its two compared observations' own `observedAt` — the moment this
+replica held enough information to make that comparison at all — a
+placement choice for this timeline alone, never a fact rewritten onto the
+comparison or finding itself.
+
+**ZERO NEW DURABLE STATE.** This milestone adds nothing to `application/
+PublicationObservationArchive.js`. A timeline is computed fresh, every
+time, from whatever the archive's five pre-existing collections plus its
+0.8.80 publication records already hold — destroying and restoring the
+archive can never change a timeline built from the identical underlying
+facts.
+
+New files:
+- `application/BitcoinAnchorPublicationLifecycleTimelineView.js` — new;
+  `BitcoinAnchorPublicationLifecycleTimelineEntryKind` (`PUBLICATION`,
+  `BROADCAST`, `CONFIRMATION`, `CONTENT_PROOF`, `CHAIN_PLACEMENT`,
+  `CONSISTENCY`); `describeBitcoinAnchorPublicationLifecycleTimeline(publicationRecord,
+  broadcastObservations, confirmationObservations, contentProofObservations)`
+  — the pure projection, no archive access, no network access; and
+  `reconstructBitcoinAnchorPublicationLifecycleTimeline(archive, anchorId)`
+  — the one, thin archive-reading entry point, mirroring `application/
+  BitcoinAnchorDurableEvidenceView.js`'s own restraint (0.8.79). Returns
+  `null` when no publication record exists for `anchorId` — the identical
+  "no record, no inspection" restraint `application/
+  BitcoinAnchorPublicationInspectionView.js` already holds (0.8.80).
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — each row in the existing
+  "Bitcoin Anchor Publications" card (0.8.80) gains a second, independent
+  "Show Publication Lifecycle" toggle, collapsed by default, alongside its
+  existing "Inspect Observations" toggle — two different projections over
+  the identical durable facts, neither replacing the other. New state:
+  `bitcoinAnchorPublicationLifecycleExpanded`.
+
+New tests:
+- `tests/BitcoinAnchorPublicationLifecycleTimeline.test.js` — a fresh
+  publication's timeline is exactly one entry; missing stages remain
+  absent; a full, single-publication timeline is chronologically correct
+  and every entry is indexed and stamped with its own anchorId; malformed
+  and absent inputs never throw; the flagship two-publications-one-
+  contentHash-interleaved-histories scenario; and
+  `reconstructBitcoinAnchorPublicationLifecycleTimeline()`'s own reload
+  equivalence through real, persisted storage, with zero network access
+  and "no record, no timeline" for an anchor holding Bitcoin facts but no
+  minted publication identity.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Inferring or fabricating a missing stage.** No "Broadcast missing,"
+  "Broadcast failed," "reviewed," or "signed" entry ever appears for a
+  stage this replica did not durably record — see "A Lifecycle Timeline
+  Presents Recorded Facts..." above.
+- **Any new durable state.** No new collection is added to `application/
+  PublicationObservationArchive.js`; a timeline is derived fresh, every
+  time, exactly like `application/BitcoinAnchorDurableEvidenceView.js`'s
+  own evidence bundle (0.8.79).
+- **Correlating entries by `contentHash` or `txid`.** Every entry is
+  scoped by the publication record's own explicit `anchorId` alone.
+- **Any `status`, `confidence`, `health`, `completed`, `successful`, or
+  verdict field of any kind.** A timeline orders facts; it never scores or
+  concludes anything about them.
+
+What's left, and deliberately unbuilt: durable provenance for the
+transaction itself — whether the exact reviewed unsigned PSBT and
+finalized transaction identity should become durable facts, connecting
+0.8.59's own review-binding guarantee to the durable publication record
+without turning either into a verdict; an overall Bitcoin-anchor verdict of
+any kind; and explicit Bitcoin ↔ IPFS content-hash reconciliation — each
+its own, separately sized piece of work, exactly like every "Deliberately
+excluded" list in this document before it.

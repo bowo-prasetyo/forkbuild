@@ -16235,3 +16235,73 @@ real version bump until now, since 0.8.75 — no migration path exists,
 because none of this codebase's own prior principles ever promised one.
 
 See `docs/Roadmap.md`, 0.8.80, for the full milestone entry.
+
+## A Lifecycle Timeline Presents Recorded Facts In Temporal Order; It Does Not Infer Missing Stages Or Interpret Them (0.8.81)
+
+**A timeline is a re-ordering, never a second analysis.** `application/
+BitcoinAnchorPublicationLifecycleTimelineView.js`'s own
+`describeBitcoinAnchorPublicationLifecycleTimeline()` invents no new
+observation, state, or label of its own — it calls `application/
+BitcoinAnchorChainPlacementObserver.js` (0.8.76), `application/
+BitcoinAnchorObservationConsistencyAnalyzer.js` (0.8.77), and `application/
+BitcoinAnchorObservationEvidence.js`/`application/
+BitcoinAnchorObservationEvidenceView.js` (0.8.78) UNCHANGED, then performs
+exactly two new things over their already-described output: flattening
+five separate sections into one array, and sorting that array
+chronologically. This is docs/Principles.md, "Derived Evidence Is
+Reconstructed From Durable Facts; It Is Not Stored As A Second History
+(0.8.79)," held once more, one presentation layer up.
+
+**Absence is simply absence — never a fabricated "missing" or "failed"
+entry.** A publication with no broadcast observation contributes no
+broadcast entry to its timeline; a publication whose UI session passed
+through a review or signing stage that this codebase deliberately never
+made durable (`application/BitcoinAnchorReviewedSigningState.js`,
+`application/BitcoinAnchorSignedPsbtFinalizationState.js`) contributes no
+entry for either, because this file reads only what `application/
+PublicationObservationArchive.js` actually chose to persist. A gap in the
+timeline names a gap in what was recorded, never a conclusion about why —
+the identical restraint `application/
+BitcoinAnchorObservationEvidence.js`'s own header already holds for a
+publication with zero broadcast observations (0.8.78), extended here to
+the one-dimensional, chronological read of the same facts.
+
+**Every entry carries the same explicit `anchorId`, stamped, never
+inferred from a `contentHash` or `txid` it happens to share with another
+entry.** This is 0.8.78's own "Correlate Evidence By Explicit Identity,
+Never By Resemblance," restated a third time, one layer up again: a
+publication record is required and explicit, every observation the caller
+supplies is trusted to already belong to that one `anchorId`, and every
+entry this function returns is stamped with it. The flagship test proves
+this directly, one layer up from 0.8.78's and 0.8.80's own: two
+publications sharing one `contentHash`, with deliberately interleaved,
+out-of-order appended observations, each produce their own chronologically
+correct timeline, with neither publication's own entries ever appearing on
+the other's.
+
+**A timestamp alone is never an entry's identity.** Two observations can
+legitimately share an `observedAt`, down to the millisecond. Every
+confirmation, broadcast, and content-proof entry instead carries the same
+1-based `index` `application/BitcoinAnchorObservationEvidence.js`'s own
+`composeBitcoinAnchorObservationEvidence()` already assigns it (0.8.78) —
+"Confirmation observation #1," never a position a reader has to infer from
+timestamps alone. A chain-placement comparison or consistency finding
+carries no `observedAt` of its own at all (it compares a PAIR of
+confirmations); this file places it on the timeline at the LATER of its
+two compared observations' own `observedAt` — a placement choice for this
+projection alone, never a fact rewritten onto the comparison or finding
+itself.
+
+**Zero new durable state.** This milestone adds nothing to `application/
+PublicationObservationArchive.js`. A timeline is computed fresh, every
+time, from whatever the archive's five pre-existing collections plus its
+0.8.80 publication records already hold. Destroying and restoring the
+archive cannot change a timeline built from the identical underlying
+facts — `application/
+BitcoinAnchorPublicationLifecycleTimelineView.js`'s own
+`reconstructBitcoinAnchorPublicationLifecycleTimeline()` is the one, thin,
+archive-reading entry point, mirroring `application/
+BitcoinAnchorDurableEvidenceView.js`'s own "restoring a fact is not
+observing it again" restraint (0.8.79) exactly, one presentation layer up.
+
+See `docs/Roadmap.md`, 0.8.81, for the full milestone entry.
