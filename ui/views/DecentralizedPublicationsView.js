@@ -5738,7 +5738,7 @@ export default {
                  Record. A DIFFERENT list than "Historical Bitcoin Anchor
                  Evidence" above: this one holds only the anchors this
                  replica minted an explicit PUBLICATION IDENTITY for —
-                 `{ anchorId, contentHash, txid, network, createdAt }` —
+                 { anchorId, contentHash, txid, network, createdAt } —
                  never a confirmed/valid/trusted/status field of any kind.
                  "Inspect Observations" reconstructs the SAME 0.8.79
                  evidence bundle the card above already shows for this
