@@ -28326,13 +28326,15 @@ Deliberately excluded, exactly as 0.8.74's own proposal named up front:
   OP_RETURN hash and reporting `HASH_MATCH`/`HASH_MISMATCH`/`UNAVAILABLE`).
   This milestone deliberately gives a person the transparent, ordered
   facts first; a deliberate cross-domain comparison over those same facts
-  is real, separately sized future work (0.8.77 — this codebase's own
-  0.8.75 and 0.8.76 each turned out to be different, more urgent gaps
-  instead: first, nothing built since 0.8.56 survived a page reload at
-  all; then, once it did, nothing compared two of those surviving
-  observations against each other at all. See "0.8.75 — Durable
-  Publication Observation Records" and "0.8.76 — Bitcoin Anchor Chain
-  Placement Change Observation" immediately below).
+  is real, separately sized future work (0.8.78 — this codebase's own
+  0.8.75, 0.8.76, and 0.8.77 each turned out to be different, more urgent
+  gaps instead: first, nothing built since 0.8.56 survived a page reload
+  at all; then, once it did, nothing compared two of those surviving
+  observations against each other at all; then, once THAT existed, nothing
+  named when two such comparisons were internally self-contradictory. See
+  "0.8.75 — Durable Publication Observation Records," "0.8.76 — Bitcoin
+  Anchor Chain Placement Change Observation," and "0.8.77 — Bitcoin Anchor
+  Observation Consistency Analysis" immediately below).
 
 What's left, and deliberately unbuilt: explicit Bitcoin ↔ IPFS
 content-hash reconciliation, any form of automatic correlation between the
@@ -28538,10 +28540,12 @@ Deliberately excluded, exactly as this milestone's own proposal named up front:
   forward — see "0.8.76 — Bitcoin Anchor Chain Placement Change
   Observation" immediately below, which claims this milestone's own
   reserved number for a different, now more urgent gap; content-hash
-  reconciliation moves to 0.8.77.
+  reconciliation moves to 0.8.78 (0.8.77 was claimed in turn by "0.8.77 —
+  Bitcoin Anchor Observation Consistency Analysis," a still more urgent
+  gap over the same durable history this milestone produced).
 
 What's left, and deliberately unbuilt: explicit Bitcoin ↔ IPFS
-content-hash reconciliation (0.8.77), any form of automatic correlation
+content-hash reconciliation (0.8.78), any form of automatic correlation
 between the two domains, any combined publication status of any kind, and
 any remote or shared archive — each its own, separately sized milestone,
 exactly like every "Deliberately excluded" list in this document before
@@ -28718,13 +28722,226 @@ Deliberately excluded, exactly as this milestone's own proposal named up front:
   comparisons are never narrated as "stable" or "healthy," and one
   `PLACEMENT_CHANGED` comparison among them is never narrated as
   "unhealthy" or "at risk" — each comparison's own outcome stands alone.
+- **Any analysis of whether a sequence of comparisons is internally
+  self-contradictory** — a decreasing `confirmationCount`, a decreasing
+  `blockHeight`, or two different `blockHash` values at one `blockHeight`,
+  each a shape a real, settled chain state could never itself produce.
+  This milestone names only whether placement stayed the same or changed;
+  naming when a change (or non-change) is self-contradictory is real,
+  separately sized future work — see "0.8.77 — Bitcoin Anchor Observation
+  Consistency Analysis" immediately below.
 - **Explicit Bitcoin ↔ IPFS content-hash reconciliation.** Unchanged,
   separately sized future work — see 0.8.74's own "Deliberately
-  excluded" list, now pointing to 0.8.77.
+  excluded" list, now pointing to 0.8.78.
 
 What's left, and deliberately unbuilt: correlating an observed placement
 change against any additional chain evidence, any automatic
-re-observation of confirmation status, explicit Bitcoin ↔ IPFS
-content-hash reconciliation (0.8.77), and any combined publication status
-of any kind — each its own, separately sized milestone, exactly like
-every "Deliberately excluded" list in this document before it.
+re-observation of confirmation status, analyzing a sequence of
+comparisons for internal self-contradiction (0.8.77), explicit Bitcoin ↔
+IPFS content-hash reconciliation (0.8.78), and any combined publication
+status of any kind — each its own, separately sized milestone, exactly
+like every "Deliberately excluded" list in this document before it.
+
+## 0.8.77 — Bitcoin Anchor Observation Consistency Analysis
+
+application/BitcoinAnchorChainPlacementObservation.js's own header (0.8.76)
+already named the boundary this milestone sits just past it: naming
+`PLACEMENT_CHANGED` for two disagreeing `CONFIRMED` observations is as far
+as that milestone goes, on purpose — it forms no opinion about whether the
+disagreement itself is the kind of thing a real, settled chain state could
+ever actually produce. It cannot: three straight `CONFIRMED` observations
+of the same block, each with a LOWER `confirmationCount` than the one
+before, would report `UNCHANGED` three times over, because `blockHash`/
+`blockHeight` never moved — even though a confirmation count going
+DOWN on an unchanged block is not ordinary progress; it is a shape 0.8.76's
+own vocabulary has no way to name. This milestone is that missing name,
+and nothing more.
+
+```text
+application/BitcoinAnchorConfirmationObservationHistory.js's own
+history array (0.8.56, unchanged; durable since 0.8.75)
+      │
+      │  analyzeBitcoinAnchorObservationConsistency(history)
+      ▼
+application/BitcoinAnchorObservationConsistencyAnalyzer.js   (THIS
+MILESTONE, new) — selects the same-anchor observations, in order, and
+      │  analyzes each adjacent pair via...
+      ▼
+application/BitcoinAnchorObservationConsistencyState.js   (THIS
+MILESTONE, new)
+      │  ...a pure, two-argument analysis —
+      │  CONSISTENT / INCONSISTENT / INSUFFICIENT_OBSERVATIONS / INCOMPARABLE
+      │  — naming, for INCONSISTENT, exactly which of four
+      │  self-contradictory shapes was found
+      ▼
+application/BitcoinAnchorObservationConsistencyView.js   (THIS
+MILESTONE, new) — narrates each finding, preserving both complete
+observations responsible for it in full
+```
+
+**AN INCONSISTENCY IS A DISAGREEMENT WITH FACTS THIS REPLICA ALREADY HELD,
+NEVER A REORGANIZATION, INVALIDATION, DOUBLE SPEND, OR FRAUD VERDICT.** See
+docs/Principles.md, "An Internal Inconsistency Is Not Automatically A
+Reorganization (0.8.77)." A `confirmationCount` that drops, a
+`blockHeight` that changes under an unchanged `blockHash`, or two
+different `blockHash` values reported for one `blockHeight` are all
+shapes a single, real, settled chain state could never itself produce —
+but that only means the two RECORDS disagree with each other, exactly the
+same restraint 0.8.76 already held for `PLACEMENT_CHANGED`. This
+milestone never decides which of the two disagreeing observations (if
+either) is correct, never repairs or deletes either one, and never infers
+that a reorganization, invalidation, double spend, loss of finality, or
+fraud actually occurred on the Bitcoin network. No `REORG_DETECTED`,
+`status`, `confidence`, `health`, `trusted`, `valid`, `canonical`, or
+`reliable` field exists anywhere in this milestone's output.
+
+**FOUR SELF-CONTRADICTORY SHAPES, NAMED EXPLICITLY, NEVER COLLAPSED INTO
+ONE GENERIC "DIFFERS" FINDING.** `BitcoinAnchorObservationConsistencyFindingKind`
+names exactly four: `CONFIRMATION_COUNT_DECREASED` (same blockHash, same
+blockHeight, a lower confirmationCount); `BLOCK_HEIGHT_CHANGED_SAME_HASH`
+(same blockHash, a different blockHeight, in EITHER direction — a single
+blockHash never legitimately gains a second height either way);
+`DIFFERENT_HASH_SAME_HEIGHT` (different blockHash, same blockHeight); and
+`DIFFERENT_HASH_AND_HEIGHT` — kept as its OWN kind, never folded into
+either of the two hash-or-height-alone kinds, so a caller can tell exactly
+which facts changed from a finding's own `kind` alone. Every finding
+carries the plain facts that produced it (both confirmation counts, both
+heights, both hashes, as applicable) — never a diff, never a severity.
+
+**A CHANGED PLACEMENT IS NOT, BY ITSELF, AN INCONSISTENCY.** 0.8.76's own
+`PLACEMENT_CHANGED` outcome and this milestone's own `INCONSISTENT` state
+are DIFFERENT questions answered over the same two observations — a
+changed `blockHash` between two `CONFIRMED` records is `PLACEMENT_CHANGED`
+under 0.8.76 unconditionally, but under THIS milestone's own vocabulary it
+is `CONSISTENT` unless it additionally lands on one of the four specific
+shapes above (e.g. `DIFFERENT_HASH_SAME_HEIGHT`) — a `blockHash` that
+changes alongside an appropriately HIGHER `blockHeight`, naming an
+entirely different block, is not itself a self-contradiction this
+milestone flags; a `blockHash` that changes while `blockHeight` stays
+fixed, or moves the WRONG direction, is. This milestone never overwrites,
+replaces, or deprecates 0.8.76's own outcome — both remain available,
+side by side, answering their own separate questions.
+
+**ONLY CONFIRMED OBSERVATIONS OF THE SAME TXID ARE EVER ANALYZED FOR
+CONSISTENCY.** `compareBitcoinAnchorObservationConsistency(previous,
+later)` reports `INCOMPARABLE` whenever either side is not `CONFIRMED` or
+the two observations name different `txid` values — the identical
+restraint 0.8.76's own comparison already holds, for the identical
+reason: a `NOT_CONFIRMED` observation followed by a `CONFIRMED` one is
+ordinary settling, never an inconsistency; a `CONFIRMED` observation
+followed by an `UNAVAILABLE` one means only that this replica's source
+could not presently answer.
+
+**SELECTING "THE SAME ANCHOR IDENTITY," AND NAMING EVERY FINDING'S OWN
+POSITIONS, WORKS EXACTLY LIKE 0.8.76's OWN OBSERVER.** `analyzeBitcoinAnchorObservationConsistency()`
+accepts exactly the array application/BitcoinAnchorConfirmationObservationHistory.js
+already produces, narrows to observations sharing the first entry's own
+`txid` purely as a defensive guard against a mis-scoped caller-supplied
+history, and every finding's own `previousObservationIndex`/
+`laterObservationIndex` names that observation's own 1-based position in
+the ORIGINAL array the caller supplied — never a position in the filtered
+subset.
+
+**EVERY FINDING PRESERVES THE COMPLETE OBSERVATIONS RESPONSIBLE FOR IT,
+NEVER COLLAPSED TO A BARE STATE STRING.** A caller reading `{ state:
+"inconsistent" }` alone would have to trust this milestone's own verdict
+on faith; this milestone instead returns `previousObservation`/
+`laterObservation` — the two exact, complete, original observation
+objects, by reference, alongside `finding` — so a person can move from
+"an inconsistency was found" back to "these were the two actual
+observations from which that statement was derived," auditable end to
+end.
+
+**NEITHER THE CONFIRMATION HISTORY NOR THE DURABLE ARCHIVE IS EVER
+TOUCHED, AND NOTHING HERE QUERIES BITCOIN OR ESPLORA.** Every function
+this milestone adds only ever reads a `history` argument it is given;
+none of them import `appendBitcoinAnchorConfirmationObservationHistoryEntry()`,
+none of them import anything from `application/PublicationObservationArchive.js`
+or `storage/`, and none of them accept a coordinator, observer, or
+storage provider of their own. Calling `analyzeBitcoinAnchorObservationConsistency()`
+a hundred times over the same history produces the identical result every
+time, and the history array (and every observation object inside it) is
+byte-identical, by reference, before and after every call — proven,
+across a real destroy-and-reload cycle, by feeding this milestone's own
+analyzer an array restored through application/PublicationObservationArchive.js's
+own `toJSON()`/`fromJSON()` (0.8.75) and confirming the result is
+byte-identical to analyzing the live archive directly.
+
+New files:
+- `application/BitcoinAnchorObservationConsistencyState.js` — new;
+  `BitcoinAnchorObservationConsistencyState` (`CONSISTENT`,
+  `INCONSISTENT`, `INSUFFICIENT_OBSERVATIONS`, `INCOMPARABLE`),
+  `BitcoinAnchorObservationConsistencyFindingKind`
+  (`CONFIRMATION_COUNT_DECREASED`, `BLOCK_HEIGHT_CHANGED_SAME_HASH`,
+  `DIFFERENT_HASH_SAME_HEIGHT`, `DIFFERENT_HASH_AND_HEIGHT`),
+  `isValidBitcoinAnchorObservationConsistencyState()`,
+  `isValidBitcoinAnchorObservationConsistencyFindingKind()`, and
+  `compareBitcoinAnchorObservationConsistency(previous, later)` — the
+  pure, two-argument analysis this entire milestone is built around.
+- `application/BitcoinAnchorObservationConsistencyAnalyzer.js` — new;
+  `analyzeBitcoinAnchorObservationConsistency(history)` — selects the
+  same-anchor observations from an existing application/
+  BitcoinAnchorConfirmationObservationHistory.js array, in order, and
+  analyzes each adjacent pair.
+- `application/BitcoinAnchorObservationConsistencyView.js` — new;
+  `describeBitcoinAnchorObservationConsistencyLabel(state, finding, ...)`
+  and `describeBitcoinAnchorObservationConsistency(result)` — pure
+  presentation, preserving both observations of every finding in full.
+- `ui/views/DecentralizedPublicationsView.js` — an "Observation
+  Consistency" button, a sibling to the existing "Compare Confirmation
+  Observations" (0.8.76) button, shown under the identical
+  two-or-more-observations condition; expands to the per-finding
+  narration above, with no "danger" styling of any kind for `INCONSISTENT`.
+- `tests/BitcoinAnchorObservationConsistency.test.js` — new; includes a
+  persistence round-trip section proving analysis over a
+  PublicationObservationArchive-restored history matches analysis over
+  the live archive, byte-for-byte.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Any claim that a reorganization, invalidation, double spend, loss of
+  finality, or fraud occurred.** The single most important exclusion this
+  milestone holds — see docs/Principles.md, "An Internal Inconsistency Is
+  Not Automatically A Reorganization (0.8.77)."
+- **Selecting, repairing, or deleting an observation.** An `INCONSISTENT`
+  finding never decides which of its two observations is correct, never
+  discards either one, and this milestone writes nothing back to any
+  history or archive — it is a read-only analysis, exactly like 0.8.76's
+  own comparison before it.
+- **Confirmation-count-versus-tip-height comparison, or any other
+  analysis requiring evidence beyond what an existing observation already
+  carries.** This milestone's own proposal named this explicitly:
+  comparing a reported `confirmationCount` against a separately observed
+  chain tip would require either a new network request (forbidden, see
+  below) or a tip height an existing CONFIRMED observation does not
+  itself carry — anchoring/BitcoinAnchorConfirmationObserver.js's own
+  (0.8.54) shape has no such field, so this milestone introduces no
+  finding kind that would need one.
+- **Any correlation with additional chain evidence** (competing-chain
+  work, mempool state, a second data source cross-checked against the
+  first). This milestone analyzes exactly the observations this replica
+  already recorded, against each other, and nothing else.
+- **Any automatic analysis, polling, or network call of any kind.**
+  Analysis happens only on an explicit "Observation Consistency" click,
+  exactly like every other explicit action on this page; nothing here
+  re-checks confirmation status itself — that remains
+  `bitcoinAnchorConfirmationCoordinator.observeConfirmation()`'s (0.8.54)
+  own, separate, still-explicit action.
+- **Persistence of any new kind.** This milestone reads application/
+  BitcoinAnchorConfirmationObservationHistory.js's own array (durable
+  since 0.8.75) and writes nothing new of its own anywhere.
+- **A combined score, confidence, or health value over a finding, or over
+  a sequence of findings.** Two straight `CONSISTENT` findings are never
+  narrated as "stable" or "healthy," and one `INCONSISTENT` finding among
+  them is never narrated as "unhealthy" or "at risk" — each finding's own
+  state stands alone.
+- **Explicit Bitcoin ↔ IPFS content-hash reconciliation.** Unchanged,
+  separately sized future work — see 0.8.74's own "Deliberately
+  excluded" list, now pointing to 0.8.78.
+
+What's left, and deliberately unbuilt: selecting, repairing, or deleting
+an inconsistent observation; confirmation-count-versus-tip-height
+comparison; correlating a finding against any additional chain evidence;
+any automatic re-analysis; explicit Bitcoin ↔ IPFS content-hash
+reconciliation (0.8.78); and any combined publication status of any
+kind — each its own, separately sized milestone, exactly like every
+"Deliberately excluded" list in this document before it.
