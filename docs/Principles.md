@@ -16641,3 +16641,77 @@ access.** Inspecting reads no clock, writes nothing to storage, and
 performs no network operation of its own.
 
 See `docs/Roadmap.md`, 0.8.86, for the full milestone entry.
+
+## Archive Differences Describe Durable State Differences Without Selecting A Correct State (0.8.87)
+
+**An archive difference describes structural differences between two
+durable archive states; it does not determine which state is correct.**
+`application/PublicationObservationArchiveDifference.js`'s own
+`describePublicationObservationArchiveDifference(currentArchive, externalArchive)`
+answers exactly one question — which durable facts, and which provenance
+tags, differ between two archives — and stops there. This is docs/
+Principles.md, "An Archive Fingerprint Identifies Durable Contents; It
+Does Not Establish Their Truth Or Origin (0.8.84)," "A Fingerprint
+Comparison Establishes Equality Of Digests, Not Which Archive Is Correct
+(0.8.85)," and "Inspecting An External Archive Never Touches The Current
+One (0.8.86)," held here once more, one layer over a PAIR of archives:
+
+```text
+MATCH / DIFFERENT   (0.8.85)  →  are the two fingerprints equal?
+DIFF                 (0.8.87)  →  which durable facts explain that answer?
+NONE OF THESE                  →  which archive is correct
+```
+
+**Fact difference and provenance difference are two separate questions,
+never collapsed into one.** Two archives can hold the byte-identical fact
+at the byte-identical identity position while disagreeing only about
+WHERE that fact entered each archive (`LOCAL` vs `IMPORTED`, 0.8.83) — see
+docs/Principles.md, "Provenance Describes Where A Fact Entered This
+Archive; It Does Not Establish Whether The Fact Is True (0.8.83)," held
+here once more. That is reported as `unchanged` at the fact level and
+`provenanceChanged` at the provenance level, independently — never as
+"the fact changed." An archive whose every fact is `unchanged` but whose
+provenance is entirely `provenanceChanged` still fingerprints differently
+from its twin (0.8.84's own invariant); this milestone's own diff explains
+why without ever describing the facts themselves as having changed.
+`archiveImportEvents` is a THIRD, entirely separate question — metadata
+about the act of importing, never durable content — reported as
+`importEvents`, outside every fact/provenance count, exactly mirroring
+0.8.84's own exclusion of that field from the fingerprint itself.
+
+**Identity is explicit, never inferred from content.** Every collection is
+compared using the identical identity discipline the rest of this
+codebase already holds for it — array position for the three
+append-only-history collections without a keyed structure of their own,
+`recordIndex` for the IPFS verification collection, `anchorId` (never
+`contentHash` or `txid`) for the two Bitcoin observation collections. Two
+anchors holding byte-identical content remain two distinct identities:
+nothing in this milestone ever merges, deduplicates, or cross-references
+by `contentHash`.
+
+**Never a generic, unordered JSON diff — duplicates and position remain
+meaningful.** `[X, X]` and `[X]` differ. Comparing two collections walks
+their common prefix position-by-position (or key-by-key, then
+position-by-position within a key) — the natural shape for an append-only
+history — reporting anything beyond the shorter side's own length as
+`onlyInCurrent`/`onlyInExternal`. A fact present at the same identity
+position on both sides but differing in content is `changed`, never
+silently ignored; this milestone does not assume every archive comparison
+is a simple prefix relationship, only that a shared identity position is
+always worth comparing.
+
+**A collection-level result, deliberately never a single archive-level
+enum.** `hasFactDifference`/`hasProvenanceDifference` summarize WHETHER
+differences exist; they never collapse WHERE. An archive can
+simultaneously hold identical IPFS facts, an additional Bitcoin
+confirmation, and a changed provenance tag on an existing fact — a single
+top-level `SAME`/`DIFFERENT` verdict would hide exactly which of those
+three is true.
+
+**A difference is never a recommendation.** No "newer," no "better," no
+"more complete," no "should replace," no trust or authenticity
+determination of any kind — the flagship restraint every milestone since
+0.8.84 has held, extended here to a comparison between two full archives
+rather than a single value.
+
+See `docs/Roadmap.md`, 0.8.87, for the full milestone entry.

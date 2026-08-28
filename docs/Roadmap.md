@@ -30409,3 +30409,180 @@ collection (`anchorId` for Bitcoin, IPFS record index, provenance as part
 of fingerprint identity but not observation semantics, `archiveImportEvents`
 outside fingerprint identity entirely) — deliberately not designed yet,
 and any explicit reconciliation model beyond it.
+
+## 0.8.87 — Durable Publication Archive Difference Projection
+
+0.8.84 gave two archives a comparable identity; 0.8.85 let a person check
+one fingerprint against another explicitly; 0.8.86 let a person look
+inside a second archive without ever touching the first. None of the
+three ever answered the question a person actually has the moment 0.8.85
+reports `DIFFERENT`: WHICH durable facts differ, and how? This milestone
+answers exactly that.
+
+```text
+0.8.84  Fingerprint            "These archive states have different identities."
+0.8.85  Fingerprint comparison "MATCH / DIFFERENT"
+0.8.86  External inspection    "What does the external archive contain?"
+0.8.87  Difference projection  "What durable contents differ?"
+```
+
+**An archive difference describes structural differences between two
+durable archive states; it does not determine which state is correct.**
+The flagship invariant, restated here one more time over a PAIR of
+archives rather than one — see docs/Principles.md, "An Archive Fingerprint
+Identifies Durable Contents; It Does Not Establish Their Truth Or Origin
+(0.8.84)," "A Fingerprint Comparison Establishes Equality Of Digests, Not
+Which Archive Is Correct (0.8.85)," and "Inspecting An External Archive
+Never Touches The Current One (0.8.86)" — all three held here once more.
+
+**Fact difference and provenance difference are two separate questions,
+never collapsed into one.** Two archives can hold the byte-identical fact
+at the byte-identical identity position while disagreeing only about
+WHERE that fact entered each archive (`LOCAL` vs `IMPORTED`, 0.8.83). That
+is reported as `unchanged` at the fact level and `provenanceChanged` at
+the provenance level, independently — never as "the fact changed."
+`archiveImportEvents` is a THIRD, entirely separate question — metadata
+about the act of importing, never durable content — reported under
+`importEvents`, outside every fact/provenance count, exactly mirroring
+0.8.84's own exclusion of that field from the fingerprint itself.
+
+**Identity is explicit, never inferred from content, matching each
+collection's own existing discipline.** `ipfsPublicationRecords`/
+`bitcoinBroadcastRecords`/`bitcoinAnchorPublicationRecords` compare by
+array position — this archive's own append-only history position.
+`ipfsContentVerificationObservationsByRecordIndex` compares by
+`recordIndex`, then position within that key's own history.
+`bitcoinConfirmationObservationsByAnchorId`/
+`bitcoinContentProofObservationsByAnchorId` compare by `anchorId` — never
+`contentHash` or `txid` — then position within that anchor's own history.
+Two anchors holding byte-identical content remain two distinct
+identities; nothing here ever merges, deduplicates, or cross-references
+by `contentHash`.
+
+**Never a generic, unordered JSON diff — duplicates and position remain
+meaningful.** `[X, X]` and `[X]` differ: the second `X` has no counterpart
+on the other side, and is reported at its own position, never silently
+absorbed because an `X` already "matched" elsewhere. Comparing two
+collections walks their common prefix position-by-position (or
+key-by-key, then position-by-position within a key), reporting anything
+beyond the shorter side's own length as `onlyInCurrent`/`onlyInExternal`.
+This does not assume every archive comparison IS a simple prefix
+relationship — two archives need not share a common ancestor — only that
+when a fact exists at the same identity position in both, comparing that
+one fact's content is the right question; a differing fact at a shared
+position is reported as `changed`, never silently ignored.
+
+**A collection-level result, deliberately never a single archive-level
+enum.** `hasFactDifference`/`hasProvenanceDifference` summarize WHETHER
+differences exist, but never collapse WHERE: an archive can simultaneously
+hold identical IPFS facts, an additional Bitcoin confirmation, and a
+changed provenance tag on an existing fact — a single top-level
+`SAME`/`DIFFERENT` verdict would hide exactly which of those three is
+true. Every one of the six collections reports its own, independent
+counts and identity lists.
+
+**Reuses `toJSON()`'s own canonical serialization and 0.8.84's own
+fingerprint algorithm — no second schema, no second hash.** Every fact and
+provenance tag compared is read from `PublicationObservationArchive.js`'s
+own `toJSON()` output, unchanged. `currentFingerprint`/`externalFingerprint`
+are computed by calling `fingerprintPublicationObservationArchive()`
+directly; `same` is always derived from THAT comparison, never from the
+collection differences, so it stays the authoritative byte-level answer
+0.8.85 already established.
+
+**Both arguments must be actual `PublicationObservationArchive`
+instances — no duck typing, no JSON parsing.** This milestone performs no
+import operation of its own; reconstructing an external payload into an
+archive instance stays 0.8.86's own `inspectPublicationObservationArchive()`/
+`PublicationObservationArchive.fromJSON()` job. Mirrors 0.8.84's own
+strict, throwing contract exactly.
+
+**A plain, frozen, ephemeral projection — never a new durable domain
+object, never persisted.** A difference is derived from two archives that
+already exist; if either changes, the difference is simply recomputed.
+This milestone introduces no `PublicationObservationArchiveDifferenceHistory`,
+writes nothing to storage, and holds no field in
+`PublicationObservationArchive.js`'s own schema.
+
+**Synchronous, pure, no mutation, no storage, no network, no capability of
+any kind.** Reads no clock, performs no import, and never mutates either
+archive it is given. Calling it twice with byte-identical arguments
+returns a byte-identical result.
+
+New files:
+- `application/PublicationObservationArchiveDifference.js` — new;
+  `describePublicationObservationArchiveDifference(currentArchive, externalArchive)`.
+  Returns a frozen `{ currentFingerprint, externalFingerprint, same,
+  ipfsPublicationRecords, ipfsContentVerificationObservationsByRecordIndex,
+  bitcoinBroadcastRecords, bitcoinConfirmationObservationsByAnchorId,
+  bitcoinContentProofObservationsByAnchorId, bitcoinAnchorPublicationRecords,
+  hasFactDifference, hasProvenanceDifference, importEvents }`. Each of the
+  six collection differences is itself a frozen `{ currentCount,
+  externalCount, unchangedCount, changedCount, onlyInCurrentCount,
+  onlyInExternalCount, provenanceChangedCount, unchanged, changed,
+  onlyInCurrent, onlyInExternal, provenanceChanged }`, where the last five
+  are plain identity lists — array positions for the three positional
+  collections, `{ recordIndex/anchorId, position }` objects for the three
+  keyed collections. `importEvents` is `{ currentCount, externalCount }`.
+  Throws for a non-`PublicationObservationArchive` argument, in either
+  position.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — the existing "Inspect
+  External Archive" card (0.8.86) gains one additional, explicit action —
+  "Compare With Current Archive" — available once an inspection succeeds.
+  Clicking it reconstructs the external archive from the already-inspected
+  text via `PublicationObservationArchive.fromJSON()` and calls this
+  milestone's own `describePublicationObservationArchiveDifference()`
+  against the current archive, rendering each of the six collections' own
+  counts plus the `importEvents` counts. Never computed automatically —
+  any change to the inspected text (a new paste, a new file, closing the
+  form) invalidates a stale result, mirroring 0.8.85's own "Compare"
+  button discipline exactly.
+
+New tests:
+- `tests/PublicationObservationArchiveDifference.test.js` — two flagship
+  scenarios: (1) an archive holding an additional fact PLUS a changed
+  provenance tag on an existing, shared fact reports both as independent,
+  non-collapsed signals, never one "changed" verdict; (2) two archives
+  holding byte-identical facts under different provenance report FACT
+  difference NONE and PROVENANCE difference PRESENT, while their
+  fingerprints still differ, per 0.8.84. Plus: a same-prefix history with
+  one additional entry; `[X, X]` vs `[X]` is a real, reported difference;
+  two Bitcoin anchor publication records sharing an identical `contentHash`
+  remain two distinct identities; `archiveImportEvents` is reported as
+  separate metadata that never affects `hasFactDifference`/
+  `hasProvenanceDifference`/`same`; an archive compared against its own
+  byte-identical twin reports `same === true` with every collection empty,
+  cross-checked against 0.8.85's own `MATCH` result; a non-archive
+  argument always throws, in either position; no mutation of either
+  archive and full determinism; zero network operations and a
+  read-the-source guarantee against wallet/signer/pinning/network/storage
+  imports; no trust/confidence/authentic/newer/better/correct/recommend/
+  winner/merge vocabulary anywhere in the result's own field names; and a
+  changed fact at a shared identity position is reported as `changed`,
+  never silently ignored.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Archive merging, synchronization, reconciliation, or automatic import
+  of any difference found here.** A difference is read-only, exactly like
+  0.8.86's own inspection.
+- **Any "choose current/external" workflow, or archive replacement of any
+  kind.** That stays exactly where 0.8.82 already put it, behind its own
+  explicit confirmation, entirely untouched by this milestone.
+- **Trust, authenticity, freshness, or "newer" determination of any
+  kind.** A difference is never a recommendation.
+- **Network-based archive retrieval, peer exchange, signed archives, or
+  blockchain notarization of the difference itself.**
+- **Automatic comparison after inspection.** This function runs only when
+  a caller explicitly clicks "Compare With Current Archive" — exactly as
+  0.8.85's own comparison and 0.8.86's own inspection already require of
+  their own callers.
+- **A single top-level `SAME`/`FACT_DIFFERENCE`/`PROVENANCE_DIFFERENCE`
+  enum as the primary result.** `hasFactDifference`/`hasProvenanceDifference`
+  summarize; the six collections' own independent counts carry the detail.
+
+What's left, and deliberately unbuilt: any explicit reconciliation model —
+merging, synchronizing, or choosing between two archives' own differing
+facts — now that identity-aware matching rules exist for every collection.
+Deliberately not designed yet.
