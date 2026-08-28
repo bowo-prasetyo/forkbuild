@@ -31768,3 +31768,257 @@ BitcoinAnchorSignedPsbtFinalizer.js`'s own cryptographic verification
 (0.8.51) — one chain over, for an EIP-1559 typed transaction rather than a
 BIP174 PSBT. No such milestone is designed yet. Broadcast (0.8.95) and
 confirmation observation (0.8.96) remain further out still.
+
+## 0.8.94 — Explicit Base Signed Transaction Verification & Finalization
+
+0.8.93 stopped the moment a wallet returned SOME `rawTransaction` — its
+own header named exactly what was still missing: "Genuinely confirming a
+wallet's claimed signature belongs to the exact transaction this
+milestone asked to have signed is this codebase's own deliberately
+separate next milestone." This milestone is that missing capability, held
+to the identical principle `anchoring/BitcoinAnchorSignedPsbtFinalizer.js`
+(0.8.51) already established one chain over:
+
+```text
+A signed transaction must be independently verified against the exact
+reviewed plan before it becomes eligible for broadcast.
+```
+
+```text
+Base account observation                     (0.8.90, unchanged)
+        │
+        ▼
+Base transaction construction                (0.8.91, unchanged)
+        │
+        ▼
+Base transaction review                      (0.8.92, unchanged)
+        │
+        ▼
+Explicit reviewed signing                    (0.8.93, unchanged)
+        │
+        ▼
+┌──────────────────────────┐
+│ Explicit verification &   │               (THIS MILESTONE — new)
+│ finalization               │
+│                          │
+│ base/BaseSignedTransactionCodec.js
+│ base/BaseSignedTransactionFinalizer.js
+└──────────────────────────┘
+        │
+        ▼
+{ finalized: true, finalizedTransaction }
+        │
+        ▼
+future broadcast                              (0.8.95, not yet designed)
+```
+
+**The central invariant: a signed artifact is finalized only when it
+independently, cryptographically corresponds to the exact plan that was
+reviewed — never merely because a wallet returned some bytes.**
+`base/BaseSignedTransactionFinalizer.js#finalize({ plan, rawTransaction })`
+decodes `rawTransaction` via `base/BaseSignedTransactionCodec.js`,
+compares every structural field (`chainId`, `nonce`, `gasLimit`,
+`maxFeePerGas`, `maxPriorityFeePerGas`, `to`, `value`, `data`, and an
+empty `accessList`) against `plan`'s own already-frozen fields, and
+compares the CRYPTOGRAPHICALLY RECOVERED sender against `plan.from`. Any
+disagreement is refused — `{ finalized: false, invalidSignature, reason }`
+— and the plan `finalize()` compares against is always the exact one a
+caller hands it, never a fresher one the network might report later, and
+never re-derived from anything but that argument. No RPC call of any kind
+is ever made.
+
+**Do not trust the signed transaction's claimed `from` — there isn't
+one.** An EIP-1559 transaction's own serialized fields are `chainId,
+nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data,
+accessList, signatureYParity, signatureR, signatureS` — `from` is never
+among them. `base/BaseSignedTransactionCodec.js#decodeBaseSignedTransaction()`
+cryptographically RECOVERS the sender via real secp256k1 public-key
+recovery over the exact bytes it just decoded, and the finalizer compares
+that recovered address against `plan.from` — never a caller-supplied
+string standing in for it. A transaction signed by another account is
+`INVALID_SIGNATURE`, a genuinely stronger guarantee than comparing a
+supplied `from` string ever could be.
+
+**A canonical Base transaction decoder/codec boundary, isolated from the
+finalizer's own comparison logic.** `base/BaseSignedTransactionCodec.js`
+owns RLP decoding (strict, canonical-only — the same posture a real
+Ethereum node's own decoder holds), Keccak-256 hashing (Ethereum's own,
+with the ORIGINAL `0x01` padding — never NIST SHA3's `0x06`), and
+secp256k1 public-key recovery, and knows nothing about a `plan` or what
+"matches the review" means. `base/BaseSignedTransactionFinalizer.js`
+imports it and owns exactly one thing: comparing a decoded, structured
+signed transaction against an already-constructed plan. Neither performs
+cryptography the other also performs; neither duplicates the other's
+concern.
+
+**A structural mismatch is caught before cryptography ever runs — the
+identical order `anchoring/BitcoinAnchorSignedPsbtFinalizer.js`'s own
+structural-inspection-first design already holds.** A modified nonce, a
+substituted destination, a different commitment in `data`, or a
+transaction signed for a different chain id are all caught as a
+structural fact — `invalidSignature: false` — before the recovered `from`
+is ever consulted. Only two cases set `invalidSignature: true`: the
+signature bytes do not cryptographically recover to any valid public key
+at all, or they recover to a real account that is not `plan.from`.
+`base/BaseSignedTransactionFinalizer.js` sets this flag directly,
+structurally — never a coordinator re-deriving the distinction from
+reason-string substrings the way `application/
+BitcoinAnchorSignedPsbtFinalizationCoordinator.js`'s own
+`CRYPTOGRAPHIC_VERIFICATION_FAILURE_MARKERS` had to, because this
+finalizer and its coordinator were designed together.
+
+**Real cryptography, from first principles, zero dependencies — exactly
+as `anchoring/BitcoinAnchorSignedPsbtFinalizer.js` already holds for
+Bitcoin's own secp256k1/SHA-256/RIPEMD-160.** Keccak-256 and secp256k1
+public-key recovery are implemented in plain JavaScript, deliberately
+duplicated rather than imported from the Bitcoin finalizer's own
+(verification-only, not recovery) secp256k1 arithmetic. Cross-checked,
+during this milestone's own development, against Node's own `crypto`
+module (its NIST SHA3-256 for the identical Keccak-f[1600] permutation —
+differing only in the domain-separator byte — and its OpenSSL secp256k1
+support for point arithmetic, ECDSA verification, and public-key
+recovery, across many random keys and messages) and against well-known
+public test vectors: RLP's own canonical `["cat","dog"]` vector,
+`keccak256("")`, and the well-known address belonging to private key `1`.
+
+**FINALIZED means exactly one thing, and nothing broader.** The signed
+artifact was successfully decoded, its structural fields correspond
+field-for-field to the reviewed plan, and the transaction was
+cryptographically signed by the exact account named in `plan.from`. It
+does NOT mean broadcast, accepted by Base, included in a block,
+confirmed, published, or immutable. `FINALIZED ≠ BROADCASTED`,
+`BROADCASTED ≠ CONFIRMED` — the identical discipline this codebase
+already holds for Bitcoin.
+
+**The plan, the signed bytes, and the finalized artifact remain three,
+separate objects.** `finalize()` never mutates `plan`, never mutates or
+wraps `rawTransaction`, and returns a wholly new `finalizedTransaction`
+object a future broadcaster can use without reconstructing anything from
+`plan` or re-decoding `rawTransaction` itself.
+
+**Verification is an explicit, separate action from signing — never
+automatic.** `ui/views/DecentralizedPublicationsView.js`'s own "Verify &
+Finalize Transaction" button appears only once signing has reached
+SIGNED, and is never clicked automatically on that transition. Keeping
+the action explicit makes the lifecycle visible: SIGNING → SIGNED is its
+own attempt, and FINALIZING → FINALIZED is its own, separate attempt —
+even though the finalizer itself is synchronous and offline.
+
+**Finalization result states follow the established vocabulary pattern,
+with INVALID_SIGNATURE and FAILED kept honestly distinct.** `application/
+BaseSignedTransactionFinalizationState.js` names IDLE/FINALIZING/
+FINALIZED/INVALID_SIGNATURE/UNAVAILABLE/FAILED, mirroring `application/
+BitcoinAnchorSignedPsbtFinalizationState.js`'s own vocabulary (0.8.63)
+exactly, one chain over. UNAVAILABLE is honestly unreached — `base/
+BaseSignedTransactionFinalizer.js` is a purely offline, synchronous check
+with no external dependency of any kind — kept in the vocabulary rather
+than removed, exactly as Bitcoin's own identical, identically-unreached
+UNAVAILABLE already is.
+
+**No automatic broadcast, retry, re-sign, or transaction replacement of
+any kind.** A FINALIZED result never itself broadcasts anything —
+`application/BaseSignedTransactionFinalizationCoordinator.js` imports no
+broadcast capability of any kind. An INVALID_SIGNATURE or FAILED result
+is the end of this finalization attempt: this milestone never re-signs,
+never substitutes a different transaction, and never adjusts a fee,
+nonce, or gas value on a person's behalf — transaction replacement and
+fee bumping are deliberately out of scope, exactly as this milestone's
+own proposal named up front.
+
+New files:
+- `base/BaseSignedTransactionCodec.js` — new; the canonical decode
+  boundary. `decodeBaseSignedTransaction(rawTransaction)` RLP-decodes an
+  EIP-1559 signed transaction (strict, canonical-only), recomputes its
+  own signing hash from the raw decoded field bytes, and cryptographically
+  recovers the sender via secp256k1 public-key recovery. Never throws for
+  malformed input; reports `{ decoded: false, reason, cryptographicFailure }`
+  instead. Owns Keccak-256 and secp256k1 arithmetic, implemented from
+  first principles.
+- `base/BaseSignedTransactionFinalizer.js` — new; `finalize({ plan,
+  rawTransaction })` decodes via the codec above, compares every
+  structural field against `plan`, compares the recovered sender against
+  `plan.from`, and assembles a frozen `finalizedTransaction` artifact on
+  success. Re-validates `plan` via `application/
+  BasePublicationTransactionReview.js`'s own exported
+  `requireRealBasePublicationTransactionPlan()`, reused rather than
+  duplicated. Makes no network call, performs no cryptography of its own
+  beyond calling the codec, and never broadcasts.
+- `application/BaseSignedTransactionFinalizationState.js` — new; the
+  closed IDLE/FINALIZING/FINALIZED/INVALID_SIGNATURE/UNAVAILABLE/FAILED
+  vocabulary.
+- `application/BaseSignedTransactionFinalizationCoordinator.js` — new; a
+  deliberately thin `finalize({ plan, rawTransaction })` wiring turning
+  `base/BaseSignedTransactionFinalizer.js`'s own outcome into the
+  six-value state vocabulary, reading `invalidSignature` directly rather
+  than pattern-matching reason text.
+- `application/BaseSignedTransactionFinalizationView.js` — new;
+  `describeBaseSignedTransactionFinalization()`, the pure projection into
+  `{ state, stateLabel, reason, from, transactionHash,
+  hasFinalizedTransaction }`. Never exposes the raw signed or finalized
+  transaction bytes themselves.
+- `application/CreateBaseSignedTransactionFinalizerUseCase.js`,
+  `application/CreateBaseSignedTransactionFinalizationCoordinatorUseCase.js`
+  — new composition-root factories, mirroring this codebase's own
+  established `Create*UseCase.js` pattern.
+
+Changed:
+- `ui/main.js` — wires `baseSignedTransactionFinalizer` and
+  `baseSignedTransactionFinalizationCoordinator`.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Verification &
+  Finalization" section inside the existing "Base Transaction Review"
+  card, shown once signing reaches SIGNED, with an explicit "Verify &
+  Finalize Transaction" button. A fresh "Create Base Transaction Plan" or
+  "Sign Reviewed Transaction" click retires any previous finalization
+  outcome, exactly as `application/
+  BaseSignedTransactionFinalizationState.js`'s own header requires.
+
+New tests:
+- `tests/BaseSignedTransactionFinalization.test.js` — flagship proofs:
+  (A) the finalizer uses only the exact plan it is handed, even after a
+  fresher plan exists, and makes zero network calls; (B) a correctly
+  signed transaction matching the plan finalizes, with a cryptographically
+  recovered `from`; (C) a transaction signed by the wrong account is
+  INVALID_SIGNATURE; (G) a modified commitment (`data`) is refused,
+  explicitly. Plus: modified nonce/gasLimit/fees/to/value each
+  independently refused; chain separation; zero broadcast calls of any
+  kind; artifact isolation across unrelated plans; the full coordinator
+  state mapping; the closed state/view vocabulary; and the codec's own
+  structural-vs-cryptographic decode-failure distinction.
+
+Deliberately excluded, exactly as this milestone's own proposal named up
+front:
+- **Broadcasting, receipt fetching, block confirmation, or any Base
+  publication record.** `base/BaseSignedTransactionFinalizer.js` imports
+  no broadcast capability of any kind. See docs/Roadmap.md, 0.8.95 and
+  0.8.96.
+- **Automatic finalization triggered by a SIGNED result.** Finalization
+  is its own explicit "Verify & Finalize Transaction" click.
+- **Automatic broadcasting, retry, re-signing, or reconstruction of any
+  kind after INVALID_SIGNATURE or FAILED.**
+- **Transaction replacement or fee bumping.** EIP-1559 transactions
+  technically support replacing a pending transaction by nonce — this
+  milestone deliberately does not build that; it is a separate capability
+  with substantial identity implications of its own.
+- **Nonce management or gas repricing of any kind.** Those remain `base/
+  BasePublicationTransactionPlanner.js`'s own job (0.8.91), unchanged.
+- **Cross-chain timeline changes, archive integration, or any
+  publication-identity creation.** `base/BaseSignedTransactionFinalizer.js`
+  creates no `application/BlockchainPublicationIdentity.js` (0.8.89) — a
+  finalized transaction is not yet a publication.
+- **Smart contracts or ERC-20 publication of any kind.** `base/
+  BasePublicationTransactionPlanner.js`'s own self-transfer decision
+  (0.8.91) is unchanged and unrevisited.
+- **A `safe`/`trusted`/`validated`/`ready` verdict of any kind.**
+  `application/BaseSignedTransactionFinalizationState.js`'s own FINALIZED
+  names only the one narrow cryptographic fact this boundary checked —
+  never a broader claim about whether broadcasting is a good idea.
+
+What's left, and deliberately unbuilt: this milestone's own proposal
+anticipates 0.8.95 as an explicit Base transaction broadcast — submitting
+a FINALIZED transaction's own `finalizedTransaction.rawTransaction` to
+Base's own network, mirroring `anchoring/
+BitcoinAnchorTransactionBroadcaster.js`'s own "broadcasting submits; it
+does not decide" discipline (0.8.52) one chain over. No such milestone is
+designed yet. Confirmation observation (0.8.96) and Base publication
+identity + durable archive integration (0.8.97+) remain further out
+still.

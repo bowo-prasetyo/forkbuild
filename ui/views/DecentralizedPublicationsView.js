@@ -134,6 +134,8 @@ import { describeBasePublicationTransactionPlan } from '../../application/BasePu
 import { describeBasePublicationTransactionReview } from '../../application/BasePublicationTransactionReview.js';
 import { BaseReviewedSigningState } from '../../application/BaseReviewedSigningState.js';
 import { describeBaseReviewedSigning } from '../../application/BaseReviewedSigningView.js';
+import { BaseSignedTransactionFinalizationState } from '../../application/BaseSignedTransactionFinalizationState.js';
+import { describeBaseSignedTransactionFinalization } from '../../application/BaseSignedTransactionFinalizationView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -824,6 +826,21 @@ const BASE_REVIEWED_SIGNING_BADGE_CLASSES = {
     [BaseReviewedSigningState.FAILED]: 'peer-badge--failed'
 };
 
+// 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.
+// Mirrors BASE_REVIEWED_SIGNING_BADGE_CLASSES immediately above exactly,
+// one stage later in the identical pipeline: FINALIZING reads pending,
+// FINALIZED reads the same "authenticated" green every other successful
+// cryptographic outcome on this page earns, and INVALID_SIGNATURE/
+// UNAVAILABLE/FAILED all read the identical red every other actionable,
+// resolvable failure on this page already reads.
+const BASE_SIGNED_TRANSACTION_FINALIZATION_BADGE_CLASSES = {
+    [BaseSignedTransactionFinalizationState.FINALIZING]: 'peer-badge--pending',
+    [BaseSignedTransactionFinalizationState.FINALIZED]: 'peer-badge--authenticated',
+    [BaseSignedTransactionFinalizationState.INVALID_SIGNATURE]: 'peer-badge--failed',
+    [BaseSignedTransactionFinalizationState.UNAVAILABLE]: 'peer-badge--failed',
+    [BaseSignedTransactionFinalizationState.FAILED]: 'peer-badge--failed'
+};
+
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX. Mirrors
 // BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES immediately above exactly, one
 // external boundary over: PUBLISHING reads pending, PUBLISHED reads the
@@ -1070,6 +1087,14 @@ export default {
         // identity is never widened into a signing capability.
         const baseInjectedProviderWalletTransactionSigner = inject('baseInjectedProviderWalletTransactionSigner', null);
         const baseReviewedSigningCoordinator = inject('baseReviewedSigningCoordinator', null);
+        // 0.8.94 — Explicit Base Signed Transaction Verification &
+        // Finalization. Optional — absent, the "Verify & Finalize
+        // Transaction" section simply never renders, the identical
+        // degrade-gracefully posture every optional section on this page
+        // already holds. `baseSignedTransactionFinalizationCoordinator` is
+        // a thin bridge to `base/BaseSignedTransactionFinalizer.js`'s own
+        // pure, offline cryptographic check — see that file's own header.
+        const baseSignedTransactionFinalizationCoordinator = inject('baseSignedTransactionFinalizationCoordinator', null);
         // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
         // Signing UI. `bitcoinAnchorTransactionReview` is now this page's
         // OWN reactive holder (declared below, alongside
@@ -3690,6 +3715,14 @@ export default {
             // "IDLE... the state after a person constructs (or
             // reconstructs) a Base transaction plan."
             entry.baseReviewedTransactionSigningOutcome = null;
+            // 0.8.94 — Explicit Base Signed Transaction Verification &
+            // Finalization. A fresh plan always starts unfinalized again
+            // too — never leaves a previous plan's own FINALIZED/
+            // INVALID_SIGNATURE/FAILED outcome showing against a
+            // transaction this click is about to replace. See
+            // `application/BaseSignedTransactionFinalizationState.js`'s
+            // own header, the identical restraint one stage later.
+            entry.baseSignedTransactionFinalizationOutcome = null;
             try {
                 entry.basePublicationTransactionConstruction = await basePublicationTransactionPlanCoordinator.construct({
                     publicationId: entry.publication.id,
@@ -3771,6 +3804,12 @@ export default {
             if (!review || entry.basePublicationTransactionConstruction.state !== BasePublicationTransactionPlanState.CONSTRUCTED) return;
             const plan = entry.basePublicationTransactionConstruction.construction.plan;
 
+            // 0.8.94 — a fresh signing attempt retires whatever was
+            // previously finalized — never left showing a stale
+            // finalization result for a signed artifact this click is
+            // about to replace. See `entry.baseSignedTransactionFinalizationOutcome`'s
+            // own declaration above.
+            entry.baseSignedTransactionFinalizationOutcome = null;
             entry.baseReviewedTransactionSigningOutcome = { state: BaseReviewedSigningState.SIGNING, rawTransaction: null, reason: null };
             try {
                 entry.baseReviewedTransactionSigningOutcome = await baseReviewedSigningCoordinator.sign({
@@ -3800,6 +3839,59 @@ export default {
 
         function isBaseReviewedTransactionSigning(entry) {
             return baseReviewedTransactionSigningView(entry).state === BaseReviewedSigningState.SIGNING;
+        }
+
+        // 0.8.94 — Explicit Base Signed Transaction Verification &
+        // Finalization.
+        //
+        // The ONE place this page ever calls
+        // `baseSignedTransactionFinalizationCoordinator.finalize()` —
+        // never triggered automatically by a SIGNED result; only an
+        // explicit "Verify & Finalize Transaction" click. Exactly as
+        // `application/BaseReviewedSigningState.js`'s own header names it:
+        // "SIGNED IS NOT VERIFIED, AND NOT YET EVEN STRUCTURALLY
+        // INSPECTED" — the wallet's own claimed signature
+        // (`entry.baseReviewedTransactionSigningOutcome.rawTransaction`)
+        // is handed to the finalizer completely unmodified, together with
+        // the EXACT plan it was signed against, exactly as the wallet and
+        // this page's own construction step produced them. Synchronous —
+        // see `application/BaseSignedTransactionFinalizationCoordinator.js`'s
+        // own header on why `finalize()` performs no async work of any
+        // kind. A thrown error is caught HERE, at the UI boundary, and
+        // turned into its own honest FAILED outcome — mirroring exactly
+        // how `signBaseReviewedTransaction()` above already handles its
+        // own coordinator's thrown errors.
+        function finalizeBaseSignedTransaction(entry) {
+            if (!baseSignedTransactionFinalizationCoordinator) return;
+            const signing = baseReviewedTransactionSigningView(entry);
+            if (signing.state !== BaseReviewedSigningState.SIGNED) return;
+            if (!entry.basePublicationTransactionConstruction || entry.basePublicationTransactionConstruction.state !== BasePublicationTransactionPlanState.CONSTRUCTED) return;
+            const plan = entry.basePublicationTransactionConstruction.construction.plan;
+            const rawTransaction = entry.baseReviewedTransactionSigningOutcome ? entry.baseReviewedTransactionSigningOutcome.rawTransaction : null;
+            if (!rawTransaction) return;
+
+            entry.baseSignedTransactionFinalizationOutcome = { state: BaseSignedTransactionFinalizationState.FINALIZING, finalized: false, finalizedTransaction: null, reason: null };
+            try {
+                entry.baseSignedTransactionFinalizationOutcome = baseSignedTransactionFinalizationCoordinator.finalize({ plan, rawTransaction });
+            } catch (error) {
+                entry.baseSignedTransactionFinalizationOutcome = { state: BaseSignedTransactionFinalizationState.FAILED, finalized: false, finalizedTransaction: null, reason: error.message };
+            }
+        }
+
+        // Pure projection of `entry.baseSignedTransactionFinalizationOutcome`
+        // through `application/BaseSignedTransactionFinalizationView.js`'s
+        // own `describeBaseSignedTransactionFinalization()` — the
+        // identical "the UI owns no facts of its own, it only projects an
+        // injected collaborator's own result" discipline every other
+        // `*View()` function on this page already holds. Never `null` —
+        // an entry with no finalization attempt yet simply projects as
+        // IDLE.
+        function baseSignedTransactionFinalizationView(entry) {
+            return describeBaseSignedTransactionFinalization(entry.baseSignedTransactionFinalizationOutcome || null);
+        }
+
+        function baseSignedTransactionFinalizationBadgeClass(entry) {
+            return BASE_SIGNED_TRANSACTION_FINALIZATION_BADGE_CLASSES[baseSignedTransactionFinalizationView(entry).state] || 'peer-badge--pending';
         }
 
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
@@ -5688,6 +5780,9 @@ export default {
             baseReviewedSigningCoordinator, signBaseReviewedTransaction,
             baseReviewedTransactionSigningView, baseReviewedTransactionSigningBadgeClass, isBaseReviewedTransactionSigning,
             BaseReviewedSigningState,
+            baseSignedTransactionFinalizationCoordinator, finalizeBaseSignedTransaction,
+            baseSignedTransactionFinalizationView, baseSignedTransactionFinalizationBadgeClass,
+            BaseSignedTransactionFinalizationState,
             bitcoinAnchorTransactionConstructionCoordinator, constructBitcoinAnchorTransaction,
             bitcoinAnchorTransactionConstructionView, bitcoinAnchorTransactionConstructionBadgeClass,
             BitcoinAnchorTransactionConstructionState,
@@ -7967,6 +8062,72 @@ export default {
                                         inspected, verified, or broadcast it — those are separate, explicit
                                         steps.
                                     </p>
+                                </div>
+
+                                <!-- 0.8.94 — Explicit Base Signed Transaction
+                                     Verification & Finalization. Only ever
+                                     shown once signing has actually reached
+                                     SIGNED — a wallet-returned artifact is
+                                     untrusted until ForkBuild independently,
+                                     cryptographically establishes that it
+                                     corresponds to the exact plan reviewed
+                                     above. Absent
+                                     baseSignedTransactionFinalizationCoordinator,
+                                     this section simply never renders.
+                                     Clicking it performs exactly one
+                                     operation: the wallet's own claimed
+                                     signature, unmodified, is decoded, its
+                                     sender cryptographically recovered, and
+                                     every field compared against the exact
+                                     plan shown above — see base/
+                                     BaseSignedTransactionFinalizer.js's own
+                                     header. Finalizing produces a finalized
+                                     transaction ARTIFACT; it does not
+                                     broadcast it. -->
+                                <div v-if="baseSignedTransactionFinalizationCoordinator && baseReviewedTransactionSigningView(entry).state === BaseReviewedSigningState.SIGNED"
+                                     class="evidence-inspection-adapter">
+                                    <span class="evidence-inspection-adapter-title">Verification & Finalization</span>
+                                    <p class="form-hint form-hint--neutral">
+                                        Finalizing independently, cryptographically verifies the signed
+                                        transaction against the exact plan reviewed above — including
+                                        recovering the actual signer from the signature itself. It does not
+                                        broadcast it.
+                                    </p>
+                                    <button type="button" class="peer-action-btn"
+                                        @click="finalizeBaseSignedTransaction(entry)">
+                                        Verify &amp; Finalize Transaction
+                                    </button>
+
+                                    <span v-if="baseSignedTransactionFinalizationView(entry).state !== BaseSignedTransactionFinalizationState.IDLE" class="peer-badge"
+                                        :class="baseSignedTransactionFinalizationBadgeClass(entry)">
+                                        {{ baseSignedTransactionFinalizationView(entry).stateLabel }}
+                                    </span>
+                                    <p v-if="baseSignedTransactionFinalizationView(entry).reason" class="form-hint form-hint--neutral">
+                                        {{ baseSignedTransactionFinalizationView(entry).reason }}
+                                    </p>
+
+                                    <!-- FINALIZED here means, precisely and
+                                         only, that the signed bytes were
+                                         decoded, structurally match the
+                                         reviewed plan field-for-field, and
+                                         were cryptographically signed by the
+                                         exact account the plan names as
+                                         `from`. It does NOT mean broadcast,
+                                         accepted by Base, included in a
+                                         block, or confirmed — those remain
+                                         their own, separately sized,
+                                         explicit next steps (0.8.95,
+                                         0.8.96). -->
+                                    <template v-if="baseSignedTransactionFinalizationView(entry).state === BaseSignedTransactionFinalizationState.FINALIZED">
+                                        <dl class="evidence-fields">
+                                            <div class="evidence-field"><dt>Recovered signer</dt><dd>{{ baseSignedTransactionFinalizationView(entry).from }}</dd></div>
+                                            <div class="evidence-field"><dt>Transaction hash</dt><dd>{{ baseSignedTransactionFinalizationView(entry).transactionHash }}</dd></div>
+                                        </dl>
+                                        <p class="form-hint form-hint--neutral">
+                                            The signed transaction matches the reviewed transaction and is
+                                            ready for the separate broadcast step.
+                                        </p>
+                                    </template>
                                 </div>
                             </div>
                         </div>
