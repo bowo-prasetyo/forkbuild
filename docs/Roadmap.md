@@ -29102,3 +29102,172 @@ its own inspection UI both exist — chain-event interpretation, a much
 more consequential, and therefore much later, milestone — each its own,
 separately sized piece of work, exactly like every "Deliberately
 excluded" list in this document before it.
+
+## 0.8.79 — Durable Bitcoin Anchor Evidence Restoration & Historical Inspection
+
+0.8.75 made a session's own publication and observation facts durable
+across a page reload. 0.8.76, 0.8.77, and 0.8.78 then built three
+increasingly rich, but purely IN-MEMORY, projections over one anchor's own
+confirmation history — chain-placement comparisons, consistency findings,
+and a five-section composed evidence bundle. Nothing before this milestone
+ever asked what those three projections look like for an anchor that a
+person only knows about because it survived a reload, not because it is
+still sitting in this session's own in-memory histories. This milestone is
+exactly that — reconstructing 0.8.76–0.8.78's own projections from durable
+facts alone, and giving a person a way to browse every archived anchor at
+all:
+
+```text
+Durable Archive (0.8.75)
+├── IPFS publication records
+├── IPFS verification observations
+├── Bitcoin broadcast observations
+├── Bitcoin confirmation observations
+└── Bitcoin content-proof observations
+         │
+         │  derived on read, for one explicit anchorId
+         ▼
+  Chain Placement (0.8.76)   Consistency (0.8.77)
+         └──────────┬──────────┘
+                     ▼
+        Bitcoin Anchor Evidence (0.8.78)
+                     │
+                     ▼
+           Historical Inspection UI (THIS MILESTONE)
+```
+
+**PERSIST OBSERVATIONS, RECONSTRUCT EVIDENCE.** This is the one rule this
+entire milestone exists to hold, and the reason it adds no new field to
+application/PublicationObservationArchive.js at all. Chain-placement
+comparisons and consistency findings were never persisted facts to begin
+with — 0.8.76's own header already says so ("TAKES NO CONFIRMATION SOURCE,
+MAKES NO NETWORK CALL... entirely offline, over whatever `history` a
+caller already has in memory") — they are DERIVATIONS over a durable
+confirmation history, cheap and deterministic enough to recompute on every
+read rather than store. This milestone's own two new files —
+application/BitcoinAnchorDurableEvidenceView.js and application/
+BitcoinAnchorObservationArchiveView.js — call 0.8.76's own
+`observeBitcoinAnchorChainPlacementChanges()` and 0.8.77's own
+`analyzeBitcoinAnchorObservationConsistency()` fresh, every time, over
+exactly the durable confirmation history application/
+PublicationObservationArchive.js already holds — never a second,
+persisted copy of either result, and never a persisted copy of a composed
+`BitcoinAnchorObservationEvidence` bundle either. See docs/Principles.md,
+"Derived Evidence Is Reconstructed From Durable Facts; It Is Not Stored As
+A Second History (0.8.79)."
+
+**NO NEW ANALYSIS LOGIC, ANYWHERE.** application/
+BitcoinAnchorDurableEvidenceView.js's own
+`reconstructBitcoinAnchorDurableEvidence(archive, anchorId)` does exactly
+one new thing: it scopes three of application/
+PublicationObservationArchive.js's own collections down to one explicit
+`anchorId` (a `record.anchorId === anchorId` filter over the archive's own
+flat `bitcoinBroadcastRecords`, and a direct key lookup into the archive's
+own already-anchorId-keyed confirmation/content-proof maps). Everything
+after that — the chain-placement comparison, the consistency analysis, the
+composition, and the presentation — calls 0.8.76's, 0.8.77's, and 0.8.78's
+own unchanged functions, the identical composition ui/views/
+DecentralizedPublicationsView.js's own `bitcoinAnchorObservationEvidenceView()`
+(0.8.78) already used for a LIVE session, now driven by a RESTORED archive
+instead.
+
+**RESTORING A FACT IS NOT OBSERVING IT AGAIN.** Neither new file in this
+milestone, nor the "Historical Bitcoin Anchor Evidence" disclosure built on
+top of them, ever imports or calls anything from anchoring/ or any other
+network-facing module. Expanding an anchor, or the disclosure itself,
+performs zero network operations — the identical restraint the existing
+"Observation Archive" card (0.8.75) already holds, one section over. The
+flagship test in tests/BitcoinAnchorDurableEvidenceRestoration.test.js
+proves this directly, by swapping out `globalThis.fetch` for the duration
+of a restoration and asserting it was never called.
+
+**EXPLICIT IDENTITY, ONCE MORE, ONE LAYER HIGHER.** Both new files key
+every lookup by `anchorId` alone — never `contentHash`, never `txid`,
+never `blockHash` — the identical restraint application/
+BitcoinAnchorObservationEvidence.js's own header (0.8.78) already holds
+for composition, held here for RESTORATION instead. The flagship test
+constructs the identical two-anchors-one-`contentHash` scenario 0.8.78's
+own flagship test used, adds a full persist → restore round trip on top of
+it, and proves the reconstructed evidence is byte-identical before and
+after a simulated reload, for both anchors independently, with zero
+cross-contamination.
+
+New files:
+- `application/BitcoinAnchorDurableEvidenceView.js` — new;
+  `reconstructBitcoinAnchorDurableEvidence(archive, anchorId)` — scopes a
+  `PublicationObservationArchive` down to one anchor's own broadcast,
+  confirmation, and content-proof observations, derives chain-placement
+  comparisons and consistency findings fresh via 0.8.76/0.8.77's own
+  unchanged functions, composes and describes the result via 0.8.78's own
+  unchanged `composeBitcoinAnchorObservationEvidence()`/
+  `describeBitcoinAnchorObservationEvidence()`. Returns `null` for a
+  missing/empty/non-string `anchorId`; a non-archive `archive` degrades to
+  `PublicationObservationArchive.empty()`. No new analysis logic.
+- `application/BitcoinAnchorObservationArchiveView.js` — new;
+  `describeBitcoinAnchorObservationArchive(archive)` — lists every distinct
+  `anchorId` the archive holds any Bitcoin fact for, each with five plain
+  counts (`broadcastObservationCount`, `confirmationObservationCount`,
+  `contentProofObservationCount`, `chainPlacementComparisonCount`,
+  `consistencyFindingCount`) — descriptive only, never a completeness,
+  health, or confidence indicator.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — a new, page-level
+  "Historical Bitcoin Anchor Evidence" card, a sibling to the existing
+  "Observation Archive" card (0.8.75), reading the SAME durable
+  `publicationObservationArchive`. Lists every archived anchor via
+  `historicalBitcoinAnchorArchiveView()`; expanding one via
+  `toggleHistoricalBitcoinAnchorEntry(anchorId)` reveals Broadcast
+  History, Confirmation History, Content-Proof History, Chain Placement
+  Comparisons, Observation Consistency, and Combined Evidence, all read
+  through `historicalBitcoinAnchorEvidenceView(anchorId)`. New state:
+  `historicalBitcoinAnchorsExpanded`, `historicalBitcoinAnchorEntryExpanded`.
+  Restoring the archive at mount (0.8.75's own `onMounted()` wiring) is
+  otherwise unchanged — this milestone adds no second load path.
+
+New tests:
+- `tests/BitcoinAnchorDurableEvidenceRestoration.test.js` — the flagship
+  reload-equivalence scenario described above (two anchors, one shared
+  `contentHash`, different `anchorId`/`txid`, multiple broadcast/
+  confirmation/content-proof observations, persisted and restored into a
+  genuinely separate archive instance, with `globalThis.fetch` swapped out
+  to prove zero network calls occur during restoration), plus:
+  `reconstructBitcoinAnchorDurableEvidence()` matches manual composition
+  byte-for-byte; `describeBitcoinAnchorObservationArchive()`'s per-anchor
+  counts agree with the fully reconstructed evidence for the same anchor;
+  an anchor with only a content-proof observation reports honest zeros for
+  every other section rather than an error; and every malformed or absent
+  input (`null`/plain-object archive, missing/empty/non-string `anchorId`)
+  degrades to an empty result rather than throwing.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Persisting `chainPlacementObservations`, `consistencyFindings`, or a
+  composed evidence object as their own durable facts.** The single most
+  important exclusion this milestone holds — see "Persist Observations,
+  Reconstruct Evidence" above. application/PublicationObservationArchive.js
+  itself is entirely unchanged by this milestone.
+- **Any correlation by `contentHash`, `txid`, or `blockHash`.** Every
+  lookup in both new files is by explicit `anchorId` alone — see
+  "Explicit Identity, Once More" above.
+- **An aggregate verdict over an archived anchor, or over the archive as a
+  whole.** `describeBitcoinAnchorObservationArchive()`'s counts describe
+  how much this replica has recorded, never how complete, reliable, or
+  trustworthy it is — the identical restraint every prior Bitcoin-domain
+  milestone's own principle already holds.
+- **A background or automatic re-observation of a restored anchor.**
+  Opening this milestone's own disclosure never triggers a Bitcoin
+  confirmation check, an IPFS verification, or any other network
+  operation — a restored fact stays exactly the fact it was when it was
+  archived, until a person explicitly reconciles it again elsewhere on
+  this page.
+- **Any new persistence adapter, storage key, or schema version.** This
+  milestone reads `PublicationObservationArchive` exactly as 0.8.75 left
+  it; `storage/LocalStoragePublicationObservationArchive.js` is untouched.
+
+What's left, and deliberately unbuilt: an overall Bitcoin-anchor verdict
+of any kind; explicit Bitcoin ↔ IPFS content-hash reconciliation; and —
+once evidence correlation, its own inspection UI, and durable restoration
+all exist — chain-event interpretation, a much more consequential, and
+therefore much later, milestone — each its own, separately sized piece of
+work, exactly like every "Deliberately excluded" list in this document
+before it.
