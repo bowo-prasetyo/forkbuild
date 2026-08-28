@@ -4,8 +4,12 @@ import { appendIpfsPublicationContentVerificationHistoryEntry } from './IpfsPubl
 import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from './BitcoinAnchorConfirmationObservationHistory.js';
 import { BitcoinAnchorPublicationRecord } from './BitcoinAnchorPublicationRecord.js';
 import { appendBitcoinAnchorPublicationRecordHistoryEntry } from './BitcoinAnchorPublicationRecordHistory.js';
+import {
+    PublicationObservationArchiveProvenanceOrigin,
+    isValidPublicationObservationArchiveProvenanceOrigin
+} from './PublicationObservationArchiveProvenance.js';
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 // 0.8.75 — Durable Publication Observation Records.
 //
@@ -136,39 +140,142 @@ const SCHEMA_VERSION = 2;
 // identical, already-tested "wrong schemaVersion" behavior this class's
 // own `fromJSON()` has held since 0.8.75; no migration path is added,
 // because none of this class's own prior principles ever promised one.
+//
+// 0.8.83 — Publication Archive Provenance & Imported-Fact Boundary. Adds
+// SIX parallel PROVENANCE collections, one per factual collection above —
+// `ipfsPublicationRecordProvenance`, `ipfsContentVerificationObservationProvenanceByRecordIndex`,
+// `bitcoinBroadcastRecordProvenance`, `bitcoinConfirmationObservationProvenanceByAnchorId`,
+// `bitcoinContentProofObservationProvenanceByAnchorId`,
+// `bitcoinAnchorPublicationRecordProvenance` — each holding exactly one
+// application/PublicationObservationArchiveProvenance.js `LOCAL`/`IMPORTED`
+// tag per fact, at the identical array position (or, for a keyed
+// collection, the identical position within that key's own array) as the
+// fact it describes. These are INDEPENDENT of the six factual collections
+// — never merged into them, never read by anything that derives evidence
+// or a timeline from this archive (see application/
+// PublicationObservationArchiveView.js and application/
+// PublicationObservationTimelineView.js, both UNCHANGED by this
+// milestone) — see docs/Principles.md, "Provenance Describes Where A Fact
+// Entered This Archive; It Does Not Establish Whether The Fact Is True
+// (0.8.83)."
+//
+// EVERY `appendXxx()` METHOD BELOW GAINS ONE NEW, OPTIONAL TRAILING
+// `origin` ARGUMENT, DEFAULTING TO `LOCAL`. Every existing call site in
+// this codebase — every one predates this milestone — calls these methods
+// without it, and gets `LOCAL` automatically, which is exactly correct:
+// a live call from application code recording a fact THIS replica just
+// observed, broadcast, or finalized is a `LOCAL` fact by definition. Only
+// application/PublicationObservationArchiveExport.js's own
+// `importPublicationObservationArchive()` ever needs `IMPORTED` — and it
+// reaches it not by passing `origin` to any `appendXxx()` call, but
+// through `withUniformProvenance()` below, applied once to an entire
+// freshly reconstructed archive.
+//
+// A SEVENTH, SEPARATE COLLECTION — `archiveImportEvents` — records THE
+// ACT OF IMPORTING ITSELF, never a verification or a trust judgment about
+// what was imported. Each entry is `{ importedAt, importedArchiveSchemaVersion,
+// importedEntryCount }` — when this replica ingested an archive, which
+// schema version it validated against, and how many facts it held at that
+// moment. `importedAt` is never confused with any fact's own `observedAt`/
+// `publishedAt`/`createdAt` — see `appendArchiveImportEvent()` below.
+//
+// `withUniformProvenance(origin)` IS THE ONE PLACE PROVENANCE CAN BE
+// REWRITTEN WHOLESALE, AND IT NEVER TOUCHES A FACT'S OWN TIMESTAMP.
+// application/PublicationObservationArchiveExport.js's own
+// `importPublicationObservationArchive()` calls this exactly once, with
+// `IMPORTED`, over a freshly `fromJSON()`-reconstructed archive — never
+// per-entry, never conditionally. Whatever provenance the exported JSON
+// itself claimed (e.g. an archive that was already `IMPORTED` once,
+// re-exported, and imported again) is discarded and replaced uniformly:
+// provenance describes how a fact entered THIS archive, not the fact's
+// own history one replica removed. See that method's own header for why
+// this is deliberately NOT the same as `fromJSON()`'s own generic,
+// faithful round trip (used by storage/
+// LocalStoragePublicationObservationArchive.js, where "restoring my own
+// prior state" must NOT relabel anything).
+//
+// THIS MILESTONE BUMPS SCHEMA_VERSION TO 3 — a payload persisted by
+// 0.8.75 through 0.8.82 (schemaVersion 2) degrades to
+// `PublicationObservationArchive.empty()` on load, the identical,
+// already-tested "wrong schemaVersion" behavior held since 0.8.75.
+//
+// PROVENANCE FEEDS NOTHING. No `appendXxx()` method's factual behavior
+// changes; no derived count, evidence bundle, consistency finding, or
+// lifecycle timeline this codebase already computes reads a provenance
+// field. `localFactCount`/`importedFactCount`/`totalFactCount` below are
+// the only new READS of provenance this class itself exposes, and they
+// are never combined with `publicationCount`/`observationCount` into any
+// single "health" number.
 export class PublicationObservationArchive {
     constructor({
         ipfsPublicationRecords = [],
+        ipfsPublicationRecordProvenance = [],
         ipfsContentVerificationObservationsByRecordIndex = {},
+        ipfsContentVerificationObservationProvenanceByRecordIndex = {},
         bitcoinBroadcastRecords = [],
+        bitcoinBroadcastRecordProvenance = [],
         bitcoinConfirmationObservationsByAnchorId = {},
+        bitcoinConfirmationObservationProvenanceByAnchorId = {},
         bitcoinContentProofObservationsByAnchorId = {},
-        bitcoinAnchorPublicationRecords = []
+        bitcoinContentProofObservationProvenanceByAnchorId = {},
+        bitcoinAnchorPublicationRecords = [],
+        bitcoinAnchorPublicationRecordProvenance = [],
+        archiveImportEvents = []
     } = {}) {
         this._ipfsPublicationRecords = Object.freeze([...ipfsPublicationRecords]);
+        this._ipfsPublicationRecordProvenance = Object.freeze([...ipfsPublicationRecordProvenance]);
         this._ipfsContentVerificationObservationsByRecordIndex = Object.freeze(
             Object.fromEntries(Object.entries(ipfsContentVerificationObservationsByRecordIndex)
                 .map(([index, observations]) => [index, Object.freeze([...observations])]))
         );
+        this._ipfsContentVerificationObservationProvenanceByRecordIndex = Object.freeze(
+            Object.fromEntries(Object.entries(ipfsContentVerificationObservationProvenanceByRecordIndex)
+                .map(([index, origins]) => [index, Object.freeze([...origins])]))
+        );
         this._bitcoinBroadcastRecords = Object.freeze([...bitcoinBroadcastRecords]);
+        this._bitcoinBroadcastRecordProvenance = Object.freeze([...bitcoinBroadcastRecordProvenance]);
         this._bitcoinConfirmationObservationsByAnchorId = Object.freeze(
             Object.fromEntries(Object.entries(bitcoinConfirmationObservationsByAnchorId)
                 .map(([anchorId, observations]) => [anchorId, Object.freeze([...observations])]))
+        );
+        this._bitcoinConfirmationObservationProvenanceByAnchorId = Object.freeze(
+            Object.fromEntries(Object.entries(bitcoinConfirmationObservationProvenanceByAnchorId)
+                .map(([anchorId, origins]) => [anchorId, Object.freeze([...origins])]))
         );
         this._bitcoinContentProofObservationsByAnchorId = Object.freeze(
             Object.fromEntries(Object.entries(bitcoinContentProofObservationsByAnchorId)
                 .map(([anchorId, observations]) => [anchorId, Object.freeze([...observations])]))
         );
+        this._bitcoinContentProofObservationProvenanceByAnchorId = Object.freeze(
+            Object.fromEntries(Object.entries(bitcoinContentProofObservationProvenanceByAnchorId)
+                .map(([anchorId, origins]) => [anchorId, Object.freeze([...origins])]))
+        );
         this._bitcoinAnchorPublicationRecords = Object.freeze([...bitcoinAnchorPublicationRecords]);
+        this._bitcoinAnchorPublicationRecordProvenance = Object.freeze([...bitcoinAnchorPublicationRecordProvenance]);
+        this._archiveImportEvents = Object.freeze([...archiveImportEvents]);
         Object.freeze(this);
     }
 
     get ipfsPublicationRecords() { return this._ipfsPublicationRecords; }
+    get ipfsPublicationRecordProvenance() { return this._ipfsPublicationRecordProvenance; }
     get ipfsContentVerificationObservationsByRecordIndex() { return this._ipfsContentVerificationObservationsByRecordIndex; }
+    get ipfsContentVerificationObservationProvenanceByRecordIndex() { return this._ipfsContentVerificationObservationProvenanceByRecordIndex; }
     get bitcoinBroadcastRecords() { return this._bitcoinBroadcastRecords; }
+    get bitcoinBroadcastRecordProvenance() { return this._bitcoinBroadcastRecordProvenance; }
     get bitcoinConfirmationObservationsByAnchorId() { return this._bitcoinConfirmationObservationsByAnchorId; }
+    get bitcoinConfirmationObservationProvenanceByAnchorId() { return this._bitcoinConfirmationObservationProvenanceByAnchorId; }
     get bitcoinContentProofObservationsByAnchorId() { return this._bitcoinContentProofObservationsByAnchorId; }
+    get bitcoinContentProofObservationProvenanceByAnchorId() { return this._bitcoinContentProofObservationProvenanceByAnchorId; }
     get bitcoinAnchorPublicationRecords() { return this._bitcoinAnchorPublicationRecords; }
+    get bitcoinAnchorPublicationRecordProvenance() { return this._bitcoinAnchorPublicationRecordProvenance; }
+    get archiveImportEvents() { return this._archiveImportEvents; }
+
+    // The static schema version this class currently serializes to and
+    // requires on import — exposed so application/
+    // PublicationObservationArchiveExport.js's own
+    // `recordPublicationObservationArchiveImport()` can name it in an
+    // `archiveImportEvents` entry without duplicating the number.
+    static get SCHEMA_VERSION() { return SCHEMA_VERSION; }
 
     // The count of PUBLICATION-shaped facts this archive holds — an IPFS
     // publish and a Bitcoin broadcast attempt each name "the underlying
@@ -207,14 +314,55 @@ export class PublicationObservationArchive {
             + countValues(this._bitcoinContentProofObservationsByAnchorId);
     }
 
+    // The count of every fact in this archive whose provenance is `LOCAL`
+    // — summed across all six factual collections, by way of their own
+    // parallel provenance collections. Never combined with
+    // `publicationCount`/`observationCount`/`bitcoinAnchorPublicationRecordCount`
+    // (which partition the SAME facts by SHAPE, not by provenance), and
+    // never presented as a "health" or "trust" number — see
+    // application/PublicationObservationArchiveProvenance.js's own header.
+    get localFactCount() {
+        return this._countProvenance(PublicationObservationArchiveProvenanceOrigin.LOCAL);
+    }
+
+    // The count of every fact in this archive whose provenance is
+    // `IMPORTED`. See `localFactCount` above for the identical restraints.
+    get importedFactCount() {
+        return this._countProvenance(PublicationObservationArchiveProvenanceOrigin.IMPORTED);
+    }
+
+    // `localFactCount + importedFactCount`, always — every fact this
+    // archive holds carries exactly one provenance tag. Equal to
+    // `publicationCount + observationCount + bitcoinAnchorPublicationRecordCount`
+    // for any archive this class itself produced.
+    get totalFactCount() {
+        return this.localFactCount + this.importedFactCount;
+    }
+
+    _countProvenance(origin) {
+        return countOriginMatches(this._ipfsPublicationRecordProvenance, origin)
+            + countOriginMatchesByKey(this._ipfsContentVerificationObservationProvenanceByRecordIndex, origin)
+            + countOriginMatches(this._bitcoinBroadcastRecordProvenance, origin)
+            + countOriginMatchesByKey(this._bitcoinConfirmationObservationProvenanceByAnchorId, origin)
+            + countOriginMatchesByKey(this._bitcoinContentProofObservationProvenanceByAnchorId, origin)
+            + countOriginMatches(this._bitcoinAnchorPublicationRecordProvenance, origin);
+    }
+
     _fields() {
         return {
             ipfsPublicationRecords: this._ipfsPublicationRecords,
+            ipfsPublicationRecordProvenance: this._ipfsPublicationRecordProvenance,
             ipfsContentVerificationObservationsByRecordIndex: this._ipfsContentVerificationObservationsByRecordIndex,
+            ipfsContentVerificationObservationProvenanceByRecordIndex: this._ipfsContentVerificationObservationProvenanceByRecordIndex,
             bitcoinBroadcastRecords: this._bitcoinBroadcastRecords,
+            bitcoinBroadcastRecordProvenance: this._bitcoinBroadcastRecordProvenance,
             bitcoinConfirmationObservationsByAnchorId: this._bitcoinConfirmationObservationsByAnchorId,
+            bitcoinConfirmationObservationProvenanceByAnchorId: this._bitcoinConfirmationObservationProvenanceByAnchorId,
             bitcoinContentProofObservationsByAnchorId: this._bitcoinContentProofObservationsByAnchorId,
-            bitcoinAnchorPublicationRecords: this._bitcoinAnchorPublicationRecords
+            bitcoinContentProofObservationProvenanceByAnchorId: this._bitcoinContentProofObservationProvenanceByAnchorId,
+            bitcoinAnchorPublicationRecords: this._bitcoinAnchorPublicationRecords,
+            bitcoinAnchorPublicationRecordProvenance: this._bitcoinAnchorPublicationRecordProvenance,
+            archiveImportEvents: this._archiveImportEvents
         };
     }
 
@@ -226,11 +374,16 @@ export class PublicationObservationArchive {
     // A missing/falsy `record` is a no-op, mirroring
     // `appendIpfsPublicationRecordHistoryEntry()`'s own identical
     // tolerance.
-    appendIpfsPublicationRecord(record) {
-        if (!record) return this;
+    //
+    // 0.8.83 — every `appendXxx()` in this file gained this identical,
+    // optional trailing `origin` argument, defaulting to `LOCAL`. See this
+    // file's own header.
+    appendIpfsPublicationRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!record || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
         return new PublicationObservationArchive({
             ...this._fields(),
-            ipfsPublicationRecords: appendIpfsPublicationRecordHistoryEntry(this._ipfsPublicationRecords, record)
+            ipfsPublicationRecords: appendIpfsPublicationRecordHistoryEntry(this._ipfsPublicationRecords, record),
+            ipfsPublicationRecordProvenance: Object.freeze([...this._ipfsPublicationRecordProvenance, origin])
         });
     }
 
@@ -239,14 +392,19 @@ export class PublicationObservationArchive {
     // record this observation is about, never re-derived or guessed from
     // `observation`'s own fields. A non-integer `recordIndex` or a
     // missing/falsy `observation` is a no-op.
-    appendIpfsContentVerificationObservation(recordIndex, observation) {
-        if (!Number.isInteger(recordIndex) || !observation) return this;
+    appendIpfsContentVerificationObservation(recordIndex, observation, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!Number.isInteger(recordIndex) || !observation || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
         const existing = this._ipfsContentVerificationObservationsByRecordIndex[recordIndex] || [];
+        const existingProvenance = this._ipfsContentVerificationObservationProvenanceByRecordIndex[recordIndex] || [];
         return new PublicationObservationArchive({
             ...this._fields(),
             ipfsContentVerificationObservationsByRecordIndex: {
                 ...this._ipfsContentVerificationObservationsByRecordIndex,
                 [recordIndex]: appendIpfsPublicationContentVerificationHistoryEntry(existing, observation)
+            },
+            ipfsContentVerificationObservationProvenanceByRecordIndex: {
+                ...this._ipfsContentVerificationObservationProvenanceByRecordIndex,
+                [recordIndex]: Object.freeze([...existingProvenance, origin])
             }
         });
     }
@@ -263,8 +421,8 @@ export class PublicationObservationArchive {
     // missing `anchorId` or `broadcastedAt` (not a valid Date) is a
     // no-op; a broadcast attempt this replica never actually observed
     // settling has no timestamp to honestly record.
-    appendBitcoinBroadcastRecord({ recordIndex = null, anchorId, txid = null, state = null, reason = null, broadcastedAt } = {}) {
-        if (!anchorId || !(broadcastedAt instanceof Date) || Number.isNaN(broadcastedAt.getTime())) return this;
+    appendBitcoinBroadcastRecord({ recordIndex = null, anchorId, txid = null, state = null, reason = null, broadcastedAt, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL } = {}) {
+        if (!anchorId || !(broadcastedAt instanceof Date) || Number.isNaN(broadcastedAt.getTime()) || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
         const record = Object.freeze({
             recordIndex: Number.isInteger(recordIndex) ? recordIndex : null,
             anchorId,
@@ -275,7 +433,8 @@ export class PublicationObservationArchive {
         });
         return new PublicationObservationArchive({
             ...this._fields(),
-            bitcoinBroadcastRecords: Object.freeze([...this._bitcoinBroadcastRecords, record])
+            bitcoinBroadcastRecords: Object.freeze([...this._bitcoinBroadcastRecords, record]),
+            bitcoinBroadcastRecordProvenance: Object.freeze([...this._bitcoinBroadcastRecordProvenance, origin])
         });
     }
 
@@ -283,14 +442,19 @@ export class PublicationObservationArchive {
     // -shaped `{ state, txid, blockHash, blockHeight, confirmationCount,
     // reason, observedAt }`) under `anchorId`. A missing `anchorId` or
     // `observation` is a no-op.
-    appendBitcoinConfirmationObservation(anchorId, observation) {
-        if (!anchorId || !observation) return this;
+    appendBitcoinConfirmationObservation(anchorId, observation, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!anchorId || !observation || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
         const existing = this._bitcoinConfirmationObservationsByAnchorId[anchorId] || [];
+        const existingProvenance = this._bitcoinConfirmationObservationProvenanceByAnchorId[anchorId] || [];
         return new PublicationObservationArchive({
             ...this._fields(),
             bitcoinConfirmationObservationsByAnchorId: {
                 ...this._bitcoinConfirmationObservationsByAnchorId,
                 [anchorId]: appendBitcoinAnchorConfirmationObservationHistoryEntry(existing, observation)
+            },
+            bitcoinConfirmationObservationProvenanceByAnchorId: {
+                ...this._bitcoinConfirmationObservationProvenanceByAnchorId,
+                [anchorId]: Object.freeze([...existingProvenance, origin])
             }
         });
     }
@@ -310,14 +474,19 @@ export class PublicationObservationArchive {
     // adds a second entry, it never replaces the first, exactly like
     // every other append in this file. A missing `anchorId` or
     // `observation` is a no-op.
-    appendBitcoinContentProofObservation(anchorId, observation) {
-        if (!anchorId || !observation) return this;
+    appendBitcoinContentProofObservation(anchorId, observation, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!anchorId || !observation || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
         const existing = this._bitcoinContentProofObservationsByAnchorId[anchorId] || [];
+        const existingProvenance = this._bitcoinContentProofObservationProvenanceByAnchorId[anchorId] || [];
         return new PublicationObservationArchive({
             ...this._fields(),
             bitcoinContentProofObservationsByAnchorId: {
                 ...this._bitcoinContentProofObservationsByAnchorId,
                 [anchorId]: Object.freeze([...existing, observation])
+            },
+            bitcoinContentProofObservationProvenanceByAnchorId: {
+                ...this._bitcoinContentProofObservationProvenanceByAnchorId,
+                [anchorId]: Object.freeze([...existingProvenance, origin])
             }
         });
     }
@@ -332,11 +501,66 @@ export class PublicationObservationArchive {
     // `contentHash` or `txid`, never replaces a previous record for the
     // same `anchorId` — see application/
     // BitcoinAnchorPublicationRecordHistory.js's own header.
-    appendBitcoinAnchorPublicationRecord(record) {
-        if (!record) return this;
+    appendBitcoinAnchorPublicationRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!record || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
         return new PublicationObservationArchive({
             ...this._fields(),
-            bitcoinAnchorPublicationRecords: appendBitcoinAnchorPublicationRecordHistoryEntry(this._bitcoinAnchorPublicationRecords, record)
+            bitcoinAnchorPublicationRecords: appendBitcoinAnchorPublicationRecordHistoryEntry(this._bitcoinAnchorPublicationRecords, record),
+            bitcoinAnchorPublicationRecordProvenance: Object.freeze([...this._bitcoinAnchorPublicationRecordProvenance, origin])
+        });
+    }
+
+    // Replaces EVERY provenance entry this archive holds — across all six
+    // factual collections — with `origin`, uniformly. `archiveImportEvents`
+    // and every factual collection are untouched; only the six PARALLEL
+    // provenance collections change. An invalid `origin` is a no-op. See
+    // this file's own header for why application/
+    // PublicationObservationArchiveExport.js's own
+    // `importPublicationObservationArchive()` is the one caller expected
+    // to use this — and why `PublicationObservationArchive.fromJSON()`
+    // itself never calls it.
+    withUniformProvenance(origin) {
+        if (!isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
+        return new PublicationObservationArchive({
+            ...this._fields(),
+            ipfsPublicationRecordProvenance: Object.freeze(this._ipfsPublicationRecordProvenance.map(() => origin)),
+            ipfsContentVerificationObservationProvenanceByRecordIndex: mapValues(
+                this._ipfsContentVerificationObservationProvenanceByRecordIndex,
+                (origins) => Object.freeze(origins.map(() => origin))
+            ),
+            bitcoinBroadcastRecordProvenance: Object.freeze(this._bitcoinBroadcastRecordProvenance.map(() => origin)),
+            bitcoinConfirmationObservationProvenanceByAnchorId: mapValues(
+                this._bitcoinConfirmationObservationProvenanceByAnchorId,
+                (origins) => Object.freeze(origins.map(() => origin))
+            ),
+            bitcoinContentProofObservationProvenanceByAnchorId: mapValues(
+                this._bitcoinContentProofObservationProvenanceByAnchorId,
+                (origins) => Object.freeze(origins.map(() => origin))
+            ),
+            bitcoinAnchorPublicationRecordProvenance: Object.freeze(this._bitcoinAnchorPublicationRecordProvenance.map(() => origin))
+        });
+    }
+
+    // Appends ONE `archiveImportEvent` — a durable fact describing THE ACT
+    // OF IMPORTING an archive into this replica, never a verification or
+    // trust judgment about what was imported. `importedAt` is when this
+    // replica performed the import; it is never confused with, and never
+    // overwrites, any fact's own `observedAt`/`publishedAt`/`createdAt`.
+    // `importedArchiveSchemaVersion` and `importedEntryCount` are plain
+    // numbers describing what was imported, at that moment — never
+    // recomputed later, exactly like every other durable fact in this
+    // file. Invalid input (a non-Date `importedAt`, a non-integer or
+    // negative `importedArchiveSchemaVersion`/`importedEntryCount`) is a
+    // no-op, mirroring every other appendXxx() method's identical
+    // tolerance.
+    appendArchiveImportEvent({ importedAt, importedArchiveSchemaVersion, importedEntryCount } = {}) {
+        if (!(importedAt instanceof Date) || Number.isNaN(importedAt.getTime())) return this;
+        if (!Number.isInteger(importedArchiveSchemaVersion) || importedArchiveSchemaVersion < 1) return this;
+        if (!Number.isInteger(importedEntryCount) || importedEntryCount < 0) return this;
+        const event = Object.freeze({ importedAt, importedArchiveSchemaVersion, importedEntryCount });
+        return new PublicationObservationArchive({
+            ...this._fields(),
+            archiveImportEvents: Object.freeze([...this._archiveImportEvents, event])
         });
     }
 
@@ -368,9 +592,14 @@ export class PublicationObservationArchive {
         return {
             schemaVersion: SCHEMA_VERSION,
             ipfsPublicationRecords: this._ipfsPublicationRecords.map((record) => record.toJSON()),
+            ipfsPublicationRecordProvenance: [...this._ipfsPublicationRecordProvenance],
             ipfsContentVerificationObservationsByRecordIndex: mapValues(
                 this._ipfsContentVerificationObservationsByRecordIndex,
                 (observations) => observations.map(serializeObservation)
+            ),
+            ipfsContentVerificationObservationProvenanceByRecordIndex: mapValues(
+                this._ipfsContentVerificationObservationProvenanceByRecordIndex,
+                (origins) => [...origins]
             ),
             bitcoinBroadcastRecords: this._bitcoinBroadcastRecords.map((record) => ({
                 recordIndex: record.recordIndex,
@@ -380,15 +609,26 @@ export class PublicationObservationArchive {
                 reason: record.reason,
                 broadcastedAt: record.broadcastedAt.toISOString()
             })),
+            bitcoinBroadcastRecordProvenance: [...this._bitcoinBroadcastRecordProvenance],
             bitcoinConfirmationObservationsByAnchorId: mapValues(
                 this._bitcoinConfirmationObservationsByAnchorId,
                 (observations) => observations.map(serializeObservation)
+            ),
+            bitcoinConfirmationObservationProvenanceByAnchorId: mapValues(
+                this._bitcoinConfirmationObservationProvenanceByAnchorId,
+                (origins) => [...origins]
             ),
             bitcoinContentProofObservationsByAnchorId: mapValues(
                 this._bitcoinContentProofObservationsByAnchorId,
                 (observations) => observations.map(serializeObservation)
             ),
-            bitcoinAnchorPublicationRecords: this._bitcoinAnchorPublicationRecords.map((record) => record.toJSON())
+            bitcoinContentProofObservationProvenanceByAnchorId: mapValues(
+                this._bitcoinContentProofObservationProvenanceByAnchorId,
+                (origins) => [...origins]
+            ),
+            bitcoinAnchorPublicationRecords: this._bitcoinAnchorPublicationRecords.map((record) => record.toJSON()),
+            bitcoinAnchorPublicationRecordProvenance: [...this._bitcoinAnchorPublicationRecordProvenance],
+            archiveImportEvents: this._archiveImportEvents.map(serializeArchiveImportEvent)
         };
     }
 
@@ -440,10 +680,12 @@ export class PublicationObservationArchive {
 
         return new PublicationObservationArchive({
             ipfsPublicationRecords: validated.ipfsPublicationRecords.map((record) => IpfsPublicationRecord.fromJSON(record)),
+            ipfsPublicationRecordProvenance: validated.ipfsPublicationRecordProvenance,
             ipfsContentVerificationObservationsByRecordIndex: mapValues(
                 validated.ipfsContentVerificationObservationsByRecordIndex,
                 (observations) => observations.map(deserializeObservation)
             ),
+            ipfsContentVerificationObservationProvenanceByRecordIndex: validated.ipfsContentVerificationObservationProvenanceByRecordIndex,
             bitcoinBroadcastRecords: validated.bitcoinBroadcastRecords.map((record) => ({
                 recordIndex: record.recordIndex,
                 anchorId: record.anchorId,
@@ -452,21 +694,34 @@ export class PublicationObservationArchive {
                 reason: record.reason,
                 broadcastedAt: new Date(record.broadcastedAt)
             })),
+            bitcoinBroadcastRecordProvenance: validated.bitcoinBroadcastRecordProvenance,
             bitcoinConfirmationObservationsByAnchorId: mapValues(
                 validated.bitcoinConfirmationObservationsByAnchorId,
                 (observations) => observations.map(deserializeObservation)
             ),
+            bitcoinConfirmationObservationProvenanceByAnchorId: validated.bitcoinConfirmationObservationProvenanceByAnchorId,
             bitcoinContentProofObservationsByAnchorId: mapValues(
                 validated.bitcoinContentProofObservationsByAnchorId,
                 (observations) => observations.map(deserializeObservation)
             ),
-            bitcoinAnchorPublicationRecords: validated.bitcoinAnchorPublicationRecords.map((record) => BitcoinAnchorPublicationRecord.fromJSON(record))
+            bitcoinContentProofObservationProvenanceByAnchorId: validated.bitcoinContentProofObservationProvenanceByAnchorId,
+            bitcoinAnchorPublicationRecords: validated.bitcoinAnchorPublicationRecords.map((record) => BitcoinAnchorPublicationRecord.fromJSON(record)),
+            bitcoinAnchorPublicationRecordProvenance: validated.bitcoinAnchorPublicationRecordProvenance,
+            archiveImportEvents: validated.archiveImportEvents.map(deserializeArchiveImportEvent)
         });
     }
 }
 
 function countValues(byKey) {
     return Object.values(byKey).reduce((total, observations) => total + observations.length, 0);
+}
+
+function countOriginMatches(origins, origin) {
+    return origins.reduce((total, entry) => total + (entry === origin ? 1 : 0), 0);
+}
+
+function countOriginMatchesByKey(originsByKey, origin) {
+    return Object.values(originsByKey).reduce((total, origins) => total + countOriginMatches(origins, origin), 0);
 }
 
 function mapValues(byKey, fn) {
@@ -485,6 +740,22 @@ function deserializeObservation(observation) {
         ...observation,
         observedAt: new Date(observation.observedAt)
     };
+}
+
+function serializeArchiveImportEvent(event) {
+    return {
+        importedAt: event.importedAt.toISOString(),
+        importedArchiveSchemaVersion: event.importedArchiveSchemaVersion,
+        importedEntryCount: event.importedEntryCount
+    };
+}
+
+function deserializeArchiveImportEvent(event) {
+    return Object.freeze({
+        importedAt: new Date(event.importedAt),
+        importedArchiveSchemaVersion: event.importedArchiveSchemaVersion,
+        importedEntryCount: event.importedEntryCount
+    });
 }
 
 // ---------------------------------------------------------------------
@@ -574,14 +845,66 @@ function validateObservationsByKey(value, allowedFields) {
     return validated;
 }
 
+// 0.8.83 — provenance validators. A provenance ARRAY is valid only when it
+// is EXACTLY as long as the factual array it describes — one origin tag
+// per fact, never more, never fewer, and every tag must itself be a
+// genuine `LOCAL`/`IMPORTED` value. A provenance BY-KEY object is valid
+// only when its own keys match the factual by-key object's own keys
+// exactly (same set, same count) and each key's own array satisfies the
+// identical length-and-origin check. Mismatched length or an extra/missing
+// key means the payload was hand-edited or corrupted — `null`, exactly
+// like every other strict check in this section.
+function validateProvenanceArray(value, expectedLength) {
+    if (!Array.isArray(value) || value.length !== expectedLength) return null;
+    if (!value.every(isValidPublicationObservationArchiveProvenanceOrigin)) return null;
+    return value;
+}
+
+function validateProvenanceByKey(value, expectedLengthsByKey) {
+    if (!isPlainObject(value)) return null;
+    const expectedKeys = Object.keys(expectedLengthsByKey);
+    const actualKeys = Object.keys(value);
+    if (expectedKeys.length !== actualKeys.length) return null;
+    if (!expectedKeys.every((key) => key in value)) return null;
+    const validated = {};
+    for (const key of expectedKeys) {
+        const result = validateProvenanceArray(value[key], expectedLengthsByKey[key]);
+        if (!result) return null;
+        validated[key] = result;
+    }
+    return validated;
+}
+
+function lengthsByKey(observationsByKey) {
+    return Object.fromEntries(Object.entries(observationsByKey).map(([key, observations]) => [key, observations.length]));
+}
+
+const ARCHIVE_IMPORT_EVENT_FIELDS = ['importedAt', 'importedArchiveSchemaVersion', 'importedEntryCount'];
+
+function validateArchiveImportEvent(event) {
+    if (!isPlainObject(event) || !hasOnlyKeys(event, ARCHIVE_IMPORT_EVENT_FIELDS)) return null;
+    if (!ARCHIVE_IMPORT_EVENT_FIELDS.every((key) => key in event)) return null;
+    if (!isValidTimestamp(event.importedAt)) return null;
+    if (!Number.isInteger(event.importedArchiveSchemaVersion) || event.importedArchiveSchemaVersion < 1) return null;
+    if (!Number.isInteger(event.importedEntryCount) || event.importedEntryCount < 0) return null;
+    return event;
+}
+
 const TOP_LEVEL_FIELDS = [
     'schemaVersion',
     'ipfsPublicationRecords',
+    'ipfsPublicationRecordProvenance',
     'ipfsContentVerificationObservationsByRecordIndex',
+    'ipfsContentVerificationObservationProvenanceByRecordIndex',
     'bitcoinBroadcastRecords',
+    'bitcoinBroadcastRecordProvenance',
     'bitcoinConfirmationObservationsByAnchorId',
+    'bitcoinConfirmationObservationProvenanceByAnchorId',
     'bitcoinContentProofObservationsByAnchorId',
-    'bitcoinAnchorPublicationRecords'
+    'bitcoinContentProofObservationProvenanceByAnchorId',
+    'bitcoinAnchorPublicationRecords',
+    'bitcoinAnchorPublicationRecordProvenance',
+    'archiveImportEvents'
 ];
 
 function validateArchiveJSON(json) {
@@ -591,34 +914,62 @@ function validateArchiveJSON(json) {
 
     const ipfsPublicationRecords = validateArray(json.ipfsPublicationRecords, validateIpfsPublicationRecord);
     if (!ipfsPublicationRecords) return null;
+    const ipfsPublicationRecordProvenance = validateProvenanceArray(json.ipfsPublicationRecordProvenance, ipfsPublicationRecords.length);
+    if (!ipfsPublicationRecordProvenance) return null;
 
     const ipfsContentVerificationObservationsByRecordIndex = validateObservationsByKey(
         json.ipfsContentVerificationObservationsByRecordIndex, IPFS_VERIFICATION_OBSERVATION_FIELDS
     );
     if (!ipfsContentVerificationObservationsByRecordIndex) return null;
+    const ipfsContentVerificationObservationProvenanceByRecordIndex = validateProvenanceByKey(
+        json.ipfsContentVerificationObservationProvenanceByRecordIndex, lengthsByKey(ipfsContentVerificationObservationsByRecordIndex)
+    );
+    if (!ipfsContentVerificationObservationProvenanceByRecordIndex) return null;
 
     const bitcoinBroadcastRecords = validateArray(json.bitcoinBroadcastRecords, validateBitcoinBroadcastRecord);
     if (!bitcoinBroadcastRecords) return null;
+    const bitcoinBroadcastRecordProvenance = validateProvenanceArray(json.bitcoinBroadcastRecordProvenance, bitcoinBroadcastRecords.length);
+    if (!bitcoinBroadcastRecordProvenance) return null;
 
     const bitcoinConfirmationObservationsByAnchorId = validateObservationsByKey(
         json.bitcoinConfirmationObservationsByAnchorId, BITCOIN_CONFIRMATION_OBSERVATION_FIELDS
     );
     if (!bitcoinConfirmationObservationsByAnchorId) return null;
+    const bitcoinConfirmationObservationProvenanceByAnchorId = validateProvenanceByKey(
+        json.bitcoinConfirmationObservationProvenanceByAnchorId, lengthsByKey(bitcoinConfirmationObservationsByAnchorId)
+    );
+    if (!bitcoinConfirmationObservationProvenanceByAnchorId) return null;
 
     const bitcoinContentProofObservationsByAnchorId = validateObservationsByKey(
         json.bitcoinContentProofObservationsByAnchorId, BITCOIN_CONTENT_PROOF_OBSERVATION_FIELDS
     );
     if (!bitcoinContentProofObservationsByAnchorId) return null;
+    const bitcoinContentProofObservationProvenanceByAnchorId = validateProvenanceByKey(
+        json.bitcoinContentProofObservationProvenanceByAnchorId, lengthsByKey(bitcoinContentProofObservationsByAnchorId)
+    );
+    if (!bitcoinContentProofObservationProvenanceByAnchorId) return null;
 
     const bitcoinAnchorPublicationRecords = validateArray(json.bitcoinAnchorPublicationRecords, validateBitcoinAnchorPublicationRecord);
     if (!bitcoinAnchorPublicationRecords) return null;
+    const bitcoinAnchorPublicationRecordProvenance = validateProvenanceArray(json.bitcoinAnchorPublicationRecordProvenance, bitcoinAnchorPublicationRecords.length);
+    if (!bitcoinAnchorPublicationRecordProvenance) return null;
+
+    const archiveImportEvents = validateArray(json.archiveImportEvents, validateArchiveImportEvent);
+    if (!archiveImportEvents) return null;
 
     return {
         ipfsPublicationRecords,
+        ipfsPublicationRecordProvenance,
         ipfsContentVerificationObservationsByRecordIndex,
+        ipfsContentVerificationObservationProvenanceByRecordIndex,
         bitcoinBroadcastRecords,
+        bitcoinBroadcastRecordProvenance,
         bitcoinConfirmationObservationsByAnchorId,
+        bitcoinConfirmationObservationProvenanceByAnchorId,
         bitcoinContentProofObservationsByAnchorId,
-        bitcoinAnchorPublicationRecords
+        bitcoinContentProofObservationProvenanceByAnchorId,
+        bitcoinAnchorPublicationRecords,
+        bitcoinAnchorPublicationRecordProvenance,
+        archiveImportEvents
     };
 }

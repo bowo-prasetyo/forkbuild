@@ -97,6 +97,7 @@ import { composeBitcoinAnchorObservationEvidence } from '../../application/Bitco
 import { describeBitcoinAnchorObservationEvidence } from '../../application/BitcoinAnchorObservationEvidenceView.js';
 import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
 import { describePublicationObservationArchive } from '../../application/PublicationObservationArchiveView.js';
+import { describePublicationObservationArchiveProvenance } from '../../application/PublicationObservationArchiveProvenanceView.js';
 import { LocalStoragePublicationObservationArchive } from '../../storage/LocalStoragePublicationObservationArchive.js';
 import { describeBitcoinAnchorObservationArchive } from '../../application/BitcoinAnchorObservationArchiveView.js';
 import { reconstructBitcoinAnchorDurableEvidence } from '../../application/BitcoinAnchorDurableEvidenceView.js';
@@ -110,7 +111,8 @@ import {
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
-    importPublicationObservationArchive
+    importPublicationObservationArchive,
+    recordPublicationObservationArchiveImport
 } from '../../application/PublicationObservationArchiveExport.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
@@ -1365,6 +1367,15 @@ export default {
             return describePublicationObservationArchive(publicationObservationArchive.value);
         }
 
+        // 0.8.83 — Publication Archive Provenance & Imported-Fact Boundary.
+        // Pure projection over the SAME `publicationObservationArchive`
+        // the function above already reads — never a second, competing
+        // archive of its own. See application/
+        // PublicationObservationArchiveProvenanceView.js's own header.
+        function publicationObservationArchiveProvenanceView() {
+            return describePublicationObservationArchiveProvenance(publicationObservationArchive.value);
+        }
+
         function togglePublicationObservationArchive() {
             publicationObservationArchiveExpanded.value = !publicationObservationArchiveExpanded.value;
         }
@@ -1445,7 +1456,13 @@ export default {
         function confirmPublicationArchiveImport() {
             const outcome = publicationArchiveImportOutcome.value;
             if (!outcome || outcome.outcome !== PublicationObservationArchiveImportOutcome.IMPORTED) return;
-            publicationObservationArchive.value = outcome.archive;
+            // 0.8.83 — `outcome.archive` already holds every fact stamped
+            // `IMPORTED` (see application/PublicationObservationArchiveExport.js's
+            // own `importPublicationObservationArchive()`). This is the
+            // one place the durable `archiveImportEvents` fact itself gets
+            // minted — at the moment this explicit click actually
+            // replaces the archive, never earlier at preview time.
+            publicationObservationArchive.value = recordPublicationObservationArchiveImport(outcome.archive, { importedAt: new Date() });
             persistPublicationObservationArchive();
             showPublicationArchiveImportForm.value = false;
             publicationArchiveImportText.value = '';
@@ -4994,6 +5011,7 @@ export default {
             publicationArchiveImportText, onPublicationArchiveImportFileChosen,
             publicationArchiveImportOutcome, publicationArchiveImportPreview,
             confirmPublicationArchiveImport, PublicationObservationArchiveImportOutcome,
+            publicationObservationArchiveProvenanceView,
             historicalBitcoinAnchorsExpanded, toggleHistoricalBitcoinAnchors, historicalBitcoinAnchorArchiveView,
             toggleHistoricalBitcoinAnchorEntry, isHistoricalBitcoinAnchorEntryExpanded, historicalBitcoinAnchorEvidenceView,
             bitcoinAnchorPublicationsExpanded, toggleBitcoinAnchorPublications, bitcoinAnchorPublicationRecordHistoryView,
@@ -5601,6 +5619,45 @@ export default {
                             Replace Current Archive
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- 0.8.83 — Publication Archive Provenance & Imported-Fact
+                 Boundary. Reads the SAME durable archive the two cards
+                 immediately above already read — never a second archive.
+                 States only WHERE a fact entered this archive (this
+                 replica's own local observation, or a prior archive
+                 import) — never whether it is trustworthy, verified, or
+                 healthy. See application/
+                 PublicationObservationArchiveProvenanceView.js's own
+                 header, and docs/Principles.md, "Provenance Describes
+                 Where A Fact Entered This Archive; It Does Not Establish
+                 Whether The Fact Is True (0.8.83)." -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Archive Provenance</span>
+                    <span class="peer-badge peer-badge--pending">Where facts entered this archive</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Local facts were observed by this replica directly. Imported facts entered
+                    this archive through a prior "Replace Current Archive" import. Neither is
+                    more trustworthy than the other — this only states where each fact came from.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Local facts</dt><dd>{{ publicationObservationArchiveProvenanceView().localFactCount }}</dd></div>
+                    <div class="evidence-field"><dt>Imported facts</dt><dd>{{ publicationObservationArchiveProvenanceView().importedFactCount }}</dd></div>
+                </dl>
+                <div v-if="publicationObservationArchiveProvenanceView().archiveImportCount > 0" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Archive Imports</span>
+                    <ul class="replica-knowledge-claim-list">
+                        <li v-for="(event, importIndex) in publicationObservationArchiveProvenanceView().archiveImportEvents"
+                            :key="importIndex" class="replica-knowledge-claim">
+                            <span class="peer-badge peer-badge--pending">{{ formatWhen(event.importedAt) }}</span>
+                            <p class="form-hint form-hint--neutral">
+                                {{ event.importedEntryCount }} fact(s) imported (archive schema version {{ event.importedArchiveSchemaVersion }})
+                            </p>
+                        </li>
+                    </ul>
                 </div>
             </div>
 

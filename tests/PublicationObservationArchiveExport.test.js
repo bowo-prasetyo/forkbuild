@@ -51,6 +51,38 @@ function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
+// 0.8.83 — Publication Archive Provenance & Imported-Fact Boundary changed
+// what "restored" means: `importPublicationObservationArchive()` now
+// stamps every fact's provenance `IMPORTED`, regardless of what the
+// exported payload itself held (see application/
+// PublicationObservationArchive.js's own `withUniformProvenance()`, and
+// application/PublicationObservationArchiveExport.js's own header). An
+// archive built through this test file's own `buildFlagshipArchive()` —
+// every fact appended locally — therefore no longer serializes
+// byte-identically to its own reimport: the FACTS are identical, but the
+// PROVENANCE fields legitimately differ. This helper strips exactly the
+// seven provenance-shaped fields `PublicationObservationArchive.js` added
+// in 0.8.83, so this test file's own pre-existing "the facts survive
+// export/import untouched" assertions keep proving exactly that, without
+// this file re-asserting 0.8.83's own, separately tested provenance
+// behavior — see tests/PublicationObservationArchiveProvenance.test.js for
+// that.
+const PROVENANCE_FIELDS = [
+    'ipfsPublicationRecordProvenance',
+    'ipfsContentVerificationObservationProvenanceByRecordIndex',
+    'bitcoinBroadcastRecordProvenance',
+    'bitcoinConfirmationObservationProvenanceByAnchorId',
+    'bitcoinContentProofObservationProvenanceByAnchorId',
+    'bitcoinAnchorPublicationRecordProvenance',
+    'archiveImportEvents'
+];
+
+function stripProvenance(archiveJSON) {
+    const stripped = { ...archiveJSON };
+    for (const field of PROVENANCE_FIELDS) delete stripped[field];
+    return stripped;
+}
+
 const FORBIDDEN_CAPABILITY_KEYS = [
     'signPsbt', 'privateKey', 'seedPhrase', 'wallet', 'walletConnection', 'credential',
     'credentials', 'authHeader', 'authorizationHeader', 'apiKey', 'token', 'secret'
@@ -178,7 +210,8 @@ async function run() {
         assert(importResult.archive instanceof PublicationObservationArchive, '6. import produces a genuine PublicationObservationArchive instance');
 
         const restored = importResult.archive;
-        assert(JSON.stringify(restored.toJSON()) === JSON.stringify(originalArchiveJSON), '7. the restored archive serializes identically to the original');
+        assert(JSON.stringify(stripProvenance(restored.toJSON())) === JSON.stringify(stripProvenance(originalArchiveJSON)), '7. the restored archive\'s FACTS serialize identically to the original (provenance legitimately differs — see 0.8.83)');
+        assert(restored.localFactCount === 0 && restored.importedFactCount === restored.totalFactCount, '7b. every fact in the restored archive is IMPORTED, since it entered this archive through import — see docs/Principles.md, 0.8.83');
 
         const restoredSummary = describePublicationObservationArchive(restored);
         assert(JSON.stringify(restoredSummary) === JSON.stringify(originalSummary), '8. the restored archive\'s reconstructed cross-domain summary is byte-identical to the original');
@@ -293,7 +326,7 @@ async function run() {
 
         assert(resultY.archive.publicationCount === 1, '28. importing archive Y after archive X carries none of X\'s facts — importPublicationObservationArchive() holds no state of its own');
         assert(resultY.archive.bitcoinAnchorPublicationRecordCount === 0, '29. archive Y\'s import holds zero Bitcoin publication records, exactly as archive Y itself did');
-        assert(JSON.stringify(resultY.archive.toJSON()) === JSON.stringify(archiveY.toJSON()), '30. the imported archive Y is exactly archive Y — never archive X merged with archive Y');
+        assert(JSON.stringify(stripProvenance(resultY.archive.toJSON())) === JSON.stringify(stripProvenance(archiveY.toJSON())), '30. the imported archive Y\'s FACTS are exactly archive Y\'s own facts — never archive X merged with archive Y (provenance legitimately differs: archiveY itself is LOCAL, resultY.archive is IMPORTED — see 0.8.83)');
     }
     console.log('✓ Section E: import never merges — each call is independent, with no accumulated state of its own');
 

@@ -1,4 +1,5 @@
 import { PublicationObservationArchive } from './PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from './PublicationObservationArchiveProvenance.js';
 
 // 0.8.82 — Durable Publication Archive Export & Import.
 //
@@ -66,6 +67,27 @@ import { PublicationObservationArchive } from './PublicationObservationArchive.j
 // graceful. `PublicationObservationArchive.isValidJSON()` (0.8.82) is the
 // seam this file uses to tell the two apart before ever calling
 // `fromJSON()` — see that method's own header.
+// 0.8.83 — Publication Archive Provenance & Imported-Fact Boundary.
+//
+// `importPublicationObservationArchive()` gained exactly one new behavior:
+// the archive it returns has EVERY fact's provenance stamped `IMPORTED`,
+// via application/PublicationObservationArchive.js's own
+// `withUniformProvenance()` — regardless of what provenance the exported
+// JSON itself claimed (an archive that already held a mix of `LOCAL` and
+// `IMPORTED` facts, re-exported, and imported again becomes uniformly
+// `IMPORTED` here too). Provenance describes how a fact entered THIS
+// archive, not the fact's own history one replica removed — see
+// application/PublicationObservationArchiveProvenance.js's own header.
+//
+// STILL A PURE, DETERMINISTIC FUNCTION OF THE VALUE IT IS GIVEN.
+// `withUniformProvenance()` reads no clock and touches no fact's own
+// timestamp — calling `importPublicationObservationArchive()` twice on
+// byte-identical input still produces byte-identical output, exactly as
+// this function's own pre-0.8.83 header already promised. The ONE new
+// durable fact this milestone adds — `archiveImportEvents`, recording
+// WHEN this replica performed the import — is deliberately NOT appended
+// here. See `recordPublicationObservationArchiveImport()` below for why
+// that is kept a separate, explicit step.
 export const PublicationObservationArchiveImportOutcome = Object.freeze({
     IMPORTED: 'imported',
     INVALID_ARCHIVE: 'invalid-archive'
@@ -111,7 +133,8 @@ export function importPublicationObservationArchive(payload) {
     if (!PublicationObservationArchive.isValidJSON(json)) {
         return Object.freeze({ outcome: PublicationObservationArchiveImportOutcome.INVALID_ARCHIVE, archive: null });
     }
-    return Object.freeze({ outcome: PublicationObservationArchiveImportOutcome.IMPORTED, archive: PublicationObservationArchive.fromJSON(json) });
+    const archive = PublicationObservationArchive.fromJSON(json).withUniformProvenance(PublicationObservationArchiveProvenanceOrigin.IMPORTED);
+    return Object.freeze({ outcome: PublicationObservationArchiveImportOutcome.IMPORTED, archive });
 }
 
 function parseJSONOrNull(text) {
@@ -120,4 +143,42 @@ function parseJSONOrNull(text) {
     } catch (error) {
         return null;
     }
+}
+
+// 0.8.83 — the ONE durable fact describing THE ACT OF IMPORTING itself,
+// kept deliberately separate from `importPublicationObservationArchive()`
+// above so that function can stay a pure, clock-free transformation of
+// its own input. A caller calls this exactly once, at the moment a person
+// actually confirms the replacement — `ui/views/
+// DecentralizedPublicationsView.js`'s own `confirmPublicationArchiveImport()`
+// is the one place this codebase does — never at preview time, when a
+// person may still change their mind or never click "Replace Current
+// Archive" at all.
+//
+// `importedAt` defaults to "now" for the identical reason application/
+// CreateBitcoinAnchorPublicationRecordUseCase.js's own `createdAt`
+// default does: a caller minting this fact the moment it calls this
+// function has no earlier, more honest instant to name. `importedArchiveSchemaVersion`
+// and `importedEntryCount` are never accepted as arguments — they are
+// read directly off `archive` itself (`PublicationObservationArchive.SCHEMA_VERSION`
+// and the sum of its own `publicationCount`/`observationCount`/
+// `bitcoinAnchorPublicationRecordCount`), so a caller cannot accidentally
+// pass a stale or fabricated count.
+//
+// NEVER A VERIFICATION. This function does not check, re-validate, or
+// pass judgment on anything `archive` holds — it only records that an
+// import happened, and when. `archive` must be a real
+// `PublicationObservationArchive` instance; a non-archive input is
+// returned unchanged, mirroring `exportPublicationObservationArchive()`'s
+// own instance-required contract one door down (that function throws;
+// this one degrades, because a caller here already holds whatever
+// `importPublicationObservationArchive()` itself just returned, never a
+// caller-supplied value to validate).
+export function recordPublicationObservationArchiveImport(archive, { importedAt = new Date() } = {}) {
+    if (!(archive instanceof PublicationObservationArchive)) return archive;
+    return archive.appendArchiveImportEvent({
+        importedAt,
+        importedArchiveSchemaVersion: PublicationObservationArchive.SCHEMA_VERSION,
+        importedEntryCount: archive.publicationCount + archive.observationCount + archive.bitcoinAnchorPublicationRecordCount
+    });
 }

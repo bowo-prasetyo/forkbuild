@@ -29772,3 +29772,202 @@ identity/conflict model; an overall Bitcoin-anchor verdict of any kind; and
 explicit Bitcoin ↔ IPFS content-hash reconciliation — each its own,
 separately sized piece of work, exactly like every "Deliberately excluded"
 list in this document before it.
+
+## 0.8.83 — Durable Publication Archive Provenance & Imported-Fact Boundary
+
+0.8.82 made a `PublicationObservationArchive` portable — it can leave one
+browser and re-enter another. That created a question none of 0.8.75
+through 0.8.82 ever had to answer: once an archive can hold facts this
+replica observed itself AND facts that arrived through an import, how does
+the application tell the two apart? Today it cannot — an imported
+confirmation observation and a locally observed one are indistinguishable
+once they sit in the same archive. This milestone adds exactly that
+distinction, and nothing more:
+
+```text
+PublicationObservationArchive
+        │
+        ├── six factual collections            (0.8.75–0.8.80, unchanged)
+        │
+        ├── six PARALLEL provenance collections  (THIS MILESTONE)
+        │     one LOCAL/IMPORTED tag per fact, at the identical position
+        │
+        └── archiveImportEvents                  (THIS MILESTONE)
+              a durable record of WHEN this replica imported an archive —
+              never a verification of what was imported
+```
+
+**PROVENANCE DESCRIBES WHERE A FACT ENTERED THIS ARCHIVE; IT DOES NOT
+ESTABLISH WHETHER THE FACT IS TRUE — THE FLAGSHIP INVARIANT.** Exactly two
+values exist: `LOCAL` (this replica generated the fact through an explicit
+operation of its own — observing a confirmation, verifying IPFS content,
+broadcasting, finalizing a publication record) and `IMPORTED` (the fact
+entered this archive through 0.8.82 archive import). Neither is "more
+trustworthy," "verified," or "lower confidence" than the other — there is
+no provider reputation, no trust score, no third "unknown" bucket, and
+never will be. See `application/PublicationObservationArchiveProvenance.js`'s
+own header, and docs/Principles.md, "Provenance Describes Where A Fact
+Entered This Archive; It Does Not Establish Whether The Fact Is True
+(0.8.83)."
+
+**PROVENANCE DESCRIBES THIS ARCHIVE'S OWN INGESTION, NEVER A FACT'S
+MULTI-HOP HISTORY.** A confirmation observation minted `LOCAL` in replica A,
+exported, and imported into replica B becomes `IMPORTED` in B — never
+carried forward as "originally local." Replica B has no way to know how
+replica A itself produced the fact; it only knows how the fact entered B's
+own archive. `application/PublicationObservationArchive.js`'s own
+`withUniformProvenance(origin)` is the one place provenance is rewritten
+wholesale, called exactly once by `importPublicationObservationArchive()`,
+over an entire freshly reconstructed archive — never per-entry, and it
+discards whatever provenance the imported JSON itself claimed, even an
+archive that was already a mix of `LOCAL` and `IMPORTED` facts, re-exported,
+and imported again.
+
+**EVERY `appendXxx()` METHOD GAINS ONE NEW, OPTIONAL, TRAILING `origin`
+ARGUMENT, DEFAULTING TO `LOCAL`.** Every call site that predates this
+milestone — every one in this codebase, today — calls these methods
+without it, and gets `LOCAL` automatically, which is exactly correct: a
+live call recording a fact this replica just observed is a `LOCAL` fact by
+definition. No existing call site changes.
+
+**THE CRITICAL INVARIANT: A SEQUENCE THAT MIXES BOTH VALUES, NEVER
+ALL-ONE.** Replica A creates observations, exports, replica B imports, then
+observes one more confirmation for itself. The resulting sequence is
+`[IMPORTED, IMPORTED, LOCAL]` — never all-`LOCAL` (which would erase that
+most of this history arrived from elsewhere) and never all-`IMPORTED`
+(which would erase that the last one is genuinely this replica's own). See
+this milestone's flagship test.
+
+**A SEPARATE, DURABLE FACT DESCRIBES THE ACT OF IMPORTING ITSELF — NEVER A
+VERIFICATION.** `archiveImportEvents` holds `{ importedAt,
+importedArchiveSchemaVersion, importedEntryCount }` entries — when this
+replica ingested an archive, what schema version it validated against, and
+how many facts it held at that moment. `importedAt` is never confused with,
+and never overwrites, any fact's own `observedAt`/`publishedAt`/`createdAt`.
+Recording this event is kept a SEPARATE, explicit step from
+`importPublicationObservationArchive()` itself — the new
+`recordPublicationObservationArchiveImport(archive, { importedAt })` in
+`application/PublicationObservationArchiveExport.js` — so that function
+stays a pure, clock-free transformation of its own input (calling it twice
+on byte-identical input still produces byte-identical output), and so the
+event is minted at the moment a person actually clicks "Replace Current
+Archive," never at preview time.
+
+**DERIVED EVIDENCE IGNORES PROVENANCE ENTIRELY.** Not one line of
+`application/PublicationObservationArchiveView.js`, `application/
+PublicationObservationTimelineView.js`, `application/
+BitcoinAnchorDurableEvidenceView.js`, or `application/
+BitcoinAnchorPublicationLifecycleTimelineView.js` changes. Two archives
+holding byte-identical facts but different provenance produce
+byte-identical chain-placement comparisons, consistency findings, evidence
+bundles, and lifecycle timelines — provenance is additional metadata, never
+an input to analysis. See this milestone's own flagship tests, Sections H
+and I.
+
+**THIS MILESTONE BUMPS `SCHEMA_VERSION` TO 3.** A payload persisted by
+0.8.75 through 0.8.82 (schemaVersion 2) degrades to
+`PublicationObservationArchive.empty()` on load — the identical,
+already-tested "wrong schemaVersion" behavior held since 0.8.75. No
+migration path is added.
+
+New files:
+- `application/PublicationObservationArchiveProvenance.js` — new;
+  `PublicationObservationArchiveProvenanceOrigin` (`LOCAL`, `IMPORTED`),
+  `isValidPublicationObservationArchiveProvenanceOrigin(value)`, and
+  `describePublicationObservationArchiveProvenanceOrigin(origin)` (a plain
+  "Local"/"Imported" label, `null` for anything else).
+- `application/PublicationObservationArchiveProvenanceView.js` — new;
+  `describePublicationObservationArchiveProvenance(archive)` — a pure
+  projection returning `localFactCount`, `importedFactCount`,
+  `totalFactCount`, and `archiveImportEvents`, deliberately kept separate
+  from `describePublicationObservationArchive()`, which this milestone
+  never changes.
+
+Changed:
+- `application/PublicationObservationArchive.js` — `SCHEMA_VERSION` 2 → 3;
+  six new parallel provenance collections (`ipfsPublicationRecordProvenance`,
+  `ipfsContentVerificationObservationProvenanceByRecordIndex`,
+  `bitcoinBroadcastRecordProvenance`,
+  `bitcoinConfirmationObservationProvenanceByAnchorId`,
+  `bitcoinContentProofObservationProvenanceByAnchorId`,
+  `bitcoinAnchorPublicationRecordProvenance`) and a seventh,
+  `archiveImportEvents`; every `appendXxx()` method gains an optional
+  trailing `origin` argument defaulting to `LOCAL`; new
+  `withUniformProvenance(origin)`, `appendArchiveImportEvent({ importedAt,
+  importedArchiveSchemaVersion, importedEntryCount })`, `localFactCount`,
+  `importedFactCount`, `totalFactCount` getters, and a
+  `static SCHEMA_VERSION` getter; `toJSON()`/`fromJSON()` and
+  `validateArchiveJSON()` extended to carry and strictly validate all seven
+  new fields (a provenance array/by-key object must match its paired
+  factual collection's own length/keys exactly, or the whole payload is
+  rejected, mirroring every other field's existing strictness).
+- `application/PublicationObservationArchiveExport.js` —
+  `importPublicationObservationArchive()` now stamps the reconstructed
+  archive's provenance `IMPORTED` uniformly via `withUniformProvenance()`
+  before returning it, while remaining a pure, deterministic function of
+  its own input; new `recordPublicationObservationArchiveImport(archive, {
+  importedAt })`, appending one `archiveImportEvents` entry.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Archive Provenance"
+  card, alongside the existing "Observation Archive" (0.8.75) and
+  "Publication Archive" (0.8.82) cards: local/imported fact counts and a
+  list of past archive imports (when, how many facts, which schema
+  version) — no health indicator, no percentage, no color-coded trust
+  signal. `confirmPublicationArchiveImport()` now calls
+  `recordPublicationObservationArchiveImport()` at the moment of that
+  explicit click, minting the `archiveImportEvents` fact then, never at
+  preview time.
+
+New tests:
+- `tests/PublicationObservationArchiveProvenance.test.js` — the flagship
+  scenario described above (a replica's own local observations, exported,
+  imported into a fresh replica, followed by one more local observation —
+  provenance sequence `[IMPORTED, IMPORTED, LOCAL]`, never all-one-value),
+  plus: `LOCAL` is the default for every existing call site; original
+  timestamps are never rewritten by import; import time is a fact distinct
+  from any observation's own `observedAt`; repeated imports don't merge;
+  two anchors sharing a `contentHash` keep independent provenance;
+  duplicate identities/observations each keep their own provenance entry;
+  derived evidence and lifecycle timelines are byte-identical regardless of
+  provenance; a generic `fromJSON(toJSON())` round trip (as storage/
+  LocalStoragePublicationObservationArchive.js performs) preserves
+  provenance unchanged, while the import boundary always re-stamps to
+  `IMPORTED`; no trust/confidence/validity/verified vocabulary anywhere;
+  malformed provenance (wrong length, mismatched keys, invalid origin
+  string) is rejected exactly like any other malformed archive field; and
+  invalid input to the new methods is a no-op.
+- `tests/PublicationObservationArchiveExport.test.js` — updated for the
+  one legitimate behavior change this milestone introduces: an archive
+  built entirely through local `appendXxx()` calls no longer serializes
+  byte-identically to its own reimport (facts are identical; provenance is
+  not, by design). Assertions 7 and 30 now compare the FACTS with
+  provenance stripped, plus new assertions that a freshly imported archive
+  holds zero `LOCAL` facts. Every other assertion in that file is
+  unchanged and still passes.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Provider reputation, trust scores, "verified source," or any third
+  provenance value beyond `LOCAL`/`IMPORTED`.** See application/
+  PublicationObservationArchiveProvenance.js's own header — this restraint
+  is the entire point of the milestone.
+- **Any provenance field that feeds `chainPlacementObservations`,
+  `consistencyFindings`, evidence, or a lifecycle timeline.** Those stay
+  derived from facts alone, exactly as 0.8.79 and 0.8.81 already
+  established.
+- **Archive merging.** Import is still a full replacement, never a merge —
+  0.8.82's own "Deliberately excluded" restraint is unchanged; provenance
+  says nothing about how two archives' facts might one day be reconciled.
+- **A per-fact "originally local" claim about a fact's history before it
+  ever reached this replica.** Provenance describes entry into THIS
+  archive only — see this milestone's own flagship invariant.
+- **A migration path for schemaVersion 2 archives.** They degrade to
+  `PublicationObservationArchive.empty()` on load, unchanged from every
+  prior schema bump in this file's own history.
+
+What's left, and deliberately unbuilt: archive integrity/fingerprint
+evidence — a deterministic fingerprint letting a person establish that two
+archive snapshots hold exactly the same durable facts, without ever
+claiming either snapshot is authentic or trustworthy; archive merging, with
+its own explicit identity/conflict model; an overall Bitcoin-anchor verdict
+of any kind; and explicit Bitcoin ↔ IPFS content-hash reconciliation — each
+its own, separately sized piece of work, exactly like every "Deliberately
+excluded" list in this document before it.
