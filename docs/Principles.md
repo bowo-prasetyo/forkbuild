@@ -17219,3 +17219,84 @@ A Verdict (0.8.57)," extended here exactly as `docs/Principles.md`,
 Modify It (0.8.93)," already extends it one stage earlier.
 
 See `docs/Roadmap.md`, 0.8.94, for the full milestone entry.
+
+## Broadcast Publishes An Already-Finalized Transaction; It Does Not Construct, Sign, Or Re-Verify One (0.8.95)
+
+**`base/BaseTransactionBroadcaster.js#broadcast()` never asks whether a
+transaction is valid — that question was already closed, cryptographically,
+one milestone earlier.** By the time `finalizedTransaction` reaches this
+class, `base/BaseSignedTransactionFinalizer.js` (0.8.94) has already
+proven the signed bytes correspond, field-for-field, to the exact plan
+that was reviewed, and were signed by the exact account it names. This
+class's only remaining job is mechanical: hand `finalizedTransaction`'s
+own `rawTransaction`, unmodified, to Base's own JSON-RPC endpoint, and
+report exactly what it said. It is, deliberately, the smallest class in
+the entire Base sequence — no encoding, no cryptography, no policy.
+Mirrors `anchoring/BitcoinAnchorTransactionBroadcaster.js`'s own principle
+(0.8.52), "Broadcasting Submits; It Does Not Decide," one chain over.
+
+**Accepts only a finalized artifact — never a plan, never a content hash,
+never a fresh nonce or fee of its own.** `broadcast({ finalizedTransaction
+})` takes exactly the object the finalizer produces on success. There is
+no code path anywhere in this file that reads a plan or asks Base's own
+RPC endpoint for a current nonce, gas price, or priority fee. This
+completes the write-side trust boundary the whole 0.8.91→0.8.94 sequence
+was built toward: construction never signs, review never commits,
+signing never verifies, finalization never broadcasts, and broadcasting
+never reconstructs. Each stage does exactly one thing, and nothing
+upstream of it is ever re-derived by the stage that follows.
+
+**The network's own returned transaction hash is exposed unchanged — a
+deliberate, explained departure from the Bitcoin boundary this milestone
+otherwise mirrors.** An injected Bitcoin broadcaster talks to an
+Esplora-style HTTP endpoint whose self-reported txid is exactly the kind
+of unverified external claim this codebase refuses at every other
+boundary, so `anchoring/BitcoinAnchorTransactionBroadcaster.js` always
+reports back its own, independently-derived txid instead. Base's own
+JSON-RPC contract is different in kind, not merely in convention:
+`eth_sendRawTransaction`'s result, on success, is DEFINED to be the
+transaction hash — the network-returned identifier itself, not a claim
+about it. `base/BaseJsonRpcClient.js#broadcastRawTransaction()` already
+validates it is a genuine 32-byte hex hash before this class ever sees
+it, and this class exposes it exactly as received.
+
+**A definite rejection is reported, not worked around, and never silently
+retried.** This class holds no retry logic, no fee-bump path, and no
+fallback that would ever submit anything other than the exact
+`rawTransaction` it was handed. A transaction's `data` field carries the
+content commitment 0.8.91 through 0.8.94 built and verified; any component
+that quietly substituted different bytes to "get a broadcast through"
+would silently publish a different commitment than the one this
+application believed it was publishing. A rejected or unavailable
+broadcast stays exactly that; the caller — a person, clicking "Broadcast
+Again" — decides what happens next, this class never does.
+
+**A definite RPC rejection is classified distinctly from mere
+unavailability, for the first time in `base/BaseJsonRpcClient.js`'s own
+history.** Every read method this class wraps already collapsed any
+failure into one shape, because no caller of a read ever needed the
+distinction — a failed read is simply retried. A broadcast cannot be
+treated that way: silently resubmitting a transaction the network
+explicitly refused, without a person's own explicit decision, is exactly
+the kind of automatic retry this milestone refuses to build. So, and only
+for `broadcastRawTransaction()`, a real JSON-RPC error object is reported
+as a definite `{ broadcasted: false, reason }`; every other failure this
+class can observe — unreachable, a timeout, a non-2xx response, or a
+malformed result — is `{ broadcasted: false, unavailable: true, reason
+}`, safe to retry with a person's own explicit next click.
+
+**BROADCASTED names exactly one fact, and nothing broader.** Base's own
+JSON-RPC endpoint accepted the finalized transaction submission and
+returned a transaction hash. It is never mined, included in a block,
+confirmed, or published — those remain their own, later, separately
+established facts, asked only by a separate, later, explicit confirmation
+action. `BROADCASTED ≠ CONFIRMED`, the identical discipline this codebase
+already holds for Bitcoin (`docs/Principles.md`, "Broadcast Is Bound To
+Transaction Identity, Not UI Sequence (0.8.64)"). See `docs/
+Principles.md`, "The UI Displays Observations; It Does Not Turn Them Into
+A Verdict (0.8.57)," extended here exactly as `docs/Principles.md`, "A
+Signed Transaction Is Untrusted Until Independently, Cryptographically
+Verified Against The Exact Reviewed Plan (0.8.94)," already extends it
+one stage earlier.
+
+See `docs/Roadmap.md`, 0.8.95, for the full milestone entry.

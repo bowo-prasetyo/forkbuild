@@ -136,6 +136,8 @@ import { BaseReviewedSigningState } from '../../application/BaseReviewedSigningS
 import { describeBaseReviewedSigning } from '../../application/BaseReviewedSigningView.js';
 import { BaseSignedTransactionFinalizationState } from '../../application/BaseSignedTransactionFinalizationState.js';
 import { describeBaseSignedTransactionFinalization } from '../../application/BaseSignedTransactionFinalizationView.js';
+import { BaseTransactionBroadcastState } from '../../application/BaseTransactionBroadcastState.js';
+import { describeBaseTransactionBroadcast } from '../../application/BaseTransactionBroadcastView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -841,6 +843,20 @@ const BASE_SIGNED_TRANSACTION_FINALIZATION_BADGE_CLASSES = {
     [BaseSignedTransactionFinalizationState.FAILED]: 'peer-badge--failed'
 };
 
+// 0.8.95 — Explicit Base Transaction Broadcast. Mirrors
+// BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES exactly, one chain over:
+// BROADCASTING reads pending, BROADCASTED reads the same "authenticated"
+// green every other successful outcome on this page earns, and
+// REJECTED/UNAVAILABLE/FAILED all read the identical red every other
+// actionable, resolvable failure on this page already reads.
+const BASE_TRANSACTION_BROADCAST_BADGE_CLASSES = {
+    [BaseTransactionBroadcastState.BROADCASTING]: 'peer-badge--pending',
+    [BaseTransactionBroadcastState.BROADCASTED]: 'peer-badge--authenticated',
+    [BaseTransactionBroadcastState.REJECTED]: 'peer-badge--failed',
+    [BaseTransactionBroadcastState.UNAVAILABLE]: 'peer-badge--failed',
+    [BaseTransactionBroadcastState.FAILED]: 'peer-badge--failed'
+};
+
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX. Mirrors
 // BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES immediately above exactly, one
 // external boundary over: PUBLISHING reads pending, PUBLISHED reads the
@@ -1095,6 +1111,14 @@ export default {
         // a thin bridge to `base/BaseSignedTransactionFinalizer.js`'s own
         // pure, offline cryptographic check — see that file's own header.
         const baseSignedTransactionFinalizationCoordinator = inject('baseSignedTransactionFinalizationCoordinator', null);
+        // 0.8.95 — Explicit Base Transaction Broadcast. Optional — absent,
+        // the "Broadcast Transaction" section simply never renders, the
+        // identical degrade-gracefully posture every optional section on
+        // this page already holds. `baseTransactionBroadcastCoordinator`
+        // is a thin bridge to `base/BaseTransactionBroadcaster.js`'s own
+        // "broadcasting submits; it does not decide" boundary — see that
+        // file's own header.
+        const baseTransactionBroadcastCoordinator = inject('baseTransactionBroadcastCoordinator', null);
         // 0.8.59/0.8.62 — Explicit Bitcoin Anchor Transaction Review &
         // Signing UI. `bitcoinAnchorTransactionReview` is now this page's
         // OWN reactive holder (declared below, alongside
@@ -3723,6 +3747,13 @@ export default {
             // `application/BaseSignedTransactionFinalizationState.js`'s
             // own header, the identical restraint one stage later.
             entry.baseSignedTransactionFinalizationOutcome = null;
+            // 0.8.95 — Explicit Base Transaction Broadcast. A fresh plan
+            // always starts unbroadcast again too — never leaves a
+            // previous plan's own BROADCASTED/REJECTED/etc. outcome
+            // showing against a transaction this click is about to
+            // replace. See `application/BaseTransactionBroadcastState.js`'s
+            // own header, the identical restraint one stage later still.
+            entry.baseTransactionBroadcastOutcome = null;
             try {
                 entry.basePublicationTransactionConstruction = await basePublicationTransactionPlanCoordinator.construct({
                     publicationId: entry.publication.id,
@@ -3810,6 +3841,12 @@ export default {
             // about to replace. See `entry.baseSignedTransactionFinalizationOutcome`'s
             // own declaration above.
             entry.baseSignedTransactionFinalizationOutcome = null;
+            // 0.8.95 — a fresh signing attempt retires whatever was
+            // previously broadcast — never left showing a stale broadcast
+            // result for a signed artifact this click is about to
+            // replace. See `entry.baseTransactionBroadcastOutcome`'s own
+            // declaration below.
+            entry.baseTransactionBroadcastOutcome = null;
             entry.baseReviewedTransactionSigningOutcome = { state: BaseReviewedSigningState.SIGNING, rawTransaction: null, reason: null };
             try {
                 entry.baseReviewedTransactionSigningOutcome = await baseReviewedSigningCoordinator.sign({
@@ -3870,6 +3907,12 @@ export default {
             const rawTransaction = entry.baseReviewedTransactionSigningOutcome ? entry.baseReviewedTransactionSigningOutcome.rawTransaction : null;
             if (!rawTransaction) return;
 
+            // 0.8.95 — a fresh finalization attempt retires whatever was
+            // previously broadcast — never left showing a stale broadcast
+            // result for a finalized transaction this click is about to
+            // replace. See `entry.baseTransactionBroadcastOutcome`'s own
+            // declaration below.
+            entry.baseTransactionBroadcastOutcome = null;
             entry.baseSignedTransactionFinalizationOutcome = { state: BaseSignedTransactionFinalizationState.FINALIZING, finalized: false, finalizedTransaction: null, reason: null };
             try {
                 entry.baseSignedTransactionFinalizationOutcome = baseSignedTransactionFinalizationCoordinator.finalize({ plan, rawTransaction });
@@ -3892,6 +3935,62 @@ export default {
 
         function baseSignedTransactionFinalizationBadgeClass(entry) {
             return BASE_SIGNED_TRANSACTION_FINALIZATION_BADGE_CLASSES[baseSignedTransactionFinalizationView(entry).state] || 'peer-badge--pending';
+        }
+
+        // 0.8.95 — Explicit Base Transaction Broadcast.
+        //
+        // THE ONE place this page ever calls
+        // `baseTransactionBroadcastCoordinator.broadcast()` — never
+        // triggered automatically by a FINALIZED result; only an explicit
+        // "Broadcast Transaction" click, and only ever with THIS entry's
+        // own `entry.baseSignedTransactionFinalizationOutcome.finalizedTransaction`
+        // — never re-read from anywhere else on this page. No automatic
+        // retry: a REJECTED or UNAVAILABLE result is the end of this
+        // attempt — a person clicks "Broadcast Transaction" again,
+        // explicitly, to make another one (see `base/
+        // BaseTransactionBroadcaster.js`'s own header on why resubmitting
+        // the identical, already-finalized bytes is always safe when a
+        // person chooses to). A thrown error is caught HERE, at the UI
+        // boundary, and turned into its own honest FAILED outcome —
+        // mirroring exactly how `finalizeBaseSignedTransaction()` above
+        // already handles its own coordinator's thrown errors.
+        async function broadcastBaseTransaction(entry) {
+            if (!baseTransactionBroadcastCoordinator) return;
+            const finalization = baseSignedTransactionFinalizationView(entry);
+            if (finalization.state !== BaseSignedTransactionFinalizationState.FINALIZED) return;
+            const finalizedTransaction = entry.baseSignedTransactionFinalizationOutcome
+                ? entry.baseSignedTransactionFinalizationOutcome.finalizedTransaction
+                : null;
+            if (!finalizedTransaction) return;
+
+            entry.baseTransactionBroadcastOutcome = { state: BaseTransactionBroadcastState.BROADCASTING, broadcasted: false, txid: null, reason: null };
+            try {
+                entry.baseTransactionBroadcastOutcome = await baseTransactionBroadcastCoordinator.broadcast({
+                    finalized: true,
+                    finalizedTransaction
+                });
+            } catch (error) {
+                entry.baseTransactionBroadcastOutcome = { state: BaseTransactionBroadcastState.FAILED, broadcasted: false, txid: null, reason: error.message };
+            }
+        }
+
+        // Pure projection of `entry.baseTransactionBroadcastOutcome`
+        // through `application/BaseTransactionBroadcastView.js`'s own
+        // `describeBaseTransactionBroadcast()` — the identical "the UI
+        // owns no facts of its own, it only projects an injected
+        // collaborator's own result" discipline every other `*View()`
+        // function on this page already holds. Never `null` — an entry
+        // with no broadcast attempt yet simply projects as IDLE.
+        function baseTransactionBroadcastView(entry) {
+            return describeBaseTransactionBroadcast(entry.baseTransactionBroadcastOutcome || null);
+        }
+
+        function baseTransactionBroadcastBadgeClass(entry) {
+            return BASE_TRANSACTION_BROADCAST_BADGE_CLASSES[baseTransactionBroadcastView(entry).state] || 'peer-badge--pending';
+        }
+
+        function isBaseTransactionBroadcasting(entry) {
+            return baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTING;
         }
 
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
@@ -5783,6 +5882,9 @@ export default {
             baseSignedTransactionFinalizationCoordinator, finalizeBaseSignedTransaction,
             baseSignedTransactionFinalizationView, baseSignedTransactionFinalizationBadgeClass,
             BaseSignedTransactionFinalizationState,
+            baseTransactionBroadcastCoordinator, broadcastBaseTransaction,
+            baseTransactionBroadcastView, baseTransactionBroadcastBadgeClass, isBaseTransactionBroadcasting,
+            BaseTransactionBroadcastState,
             bitcoinAnchorTransactionConstructionCoordinator, constructBitcoinAnchorTransaction,
             bitcoinAnchorTransactionConstructionView, bitcoinAnchorTransactionConstructionBadgeClass,
             BitcoinAnchorTransactionConstructionState,
@@ -8128,6 +8230,62 @@ export default {
                                             ready for the separate broadcast step.
                                         </p>
                                     </template>
+                                </div>
+
+                                <!-- 0.8.95 — Explicit Base Transaction
+                                     Broadcast. Only ever shown once
+                                     finalization has actually reached
+                                     FINALIZED — the identical gating the
+                                     Verification & Finalization section
+                                     above already holds toward SIGNED, one
+                                     stage later. Absent
+                                     baseTransactionBroadcastCoordinator,
+                                     this section simply never renders.
+                                     Clicking it submits the EXACT
+                                     finalizedTransaction.rawTransaction
+                                     produced above — unmodified, no
+                                     reconstruction, no re-signing, no
+                                     re-verification — to Base's own
+                                     eth_sendRawTransaction. See base/
+                                     BaseTransactionBroadcaster.js's own
+                                     header. BROADCASTED does not mean
+                                     confirmed. -->
+                                <div v-if="baseTransactionBroadcastCoordinator && baseSignedTransactionFinalizationView(entry).state === BaseSignedTransactionFinalizationState.FINALIZED"
+                                     class="evidence-inspection-adapter">
+                                    <span class="evidence-inspection-adapter-title">Broadcast</span>
+                                    <p class="form-hint form-hint--neutral">
+                                        Broadcasting submits the exact finalized transaction above to Base's
+                                        own network. It does not construct, sign, modify, or re-verify it —
+                                        and broadcasting does not mean the transaction has been confirmed.
+                                    </p>
+                                    <button type="button" class="peer-action-btn"
+                                        :disabled="isBaseTransactionBroadcasting(entry)"
+                                        @click="broadcastBaseTransaction(entry)">
+                                        {{ isBaseTransactionBroadcasting(entry) ? 'Broadcasting…' : (baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.IDLE ? 'Broadcast Transaction' : 'Broadcast Again') }}
+                                    </button>
+
+                                    <span v-if="baseTransactionBroadcastView(entry).state !== BaseTransactionBroadcastState.IDLE" class="peer-badge"
+                                        :class="baseTransactionBroadcastBadgeClass(entry)">
+                                        {{ baseTransactionBroadcastView(entry).stateLabel }}
+                                    </span>
+                                    <p v-if="baseTransactionBroadcastView(entry).reason" class="form-hint form-hint--neutral">
+                                        {{ baseTransactionBroadcastView(entry).reason }}
+                                    </p>
+
+                                    <!-- BROADCASTED here means, precisely and
+                                         only, that Base's own JSON-RPC
+                                         endpoint accepted the finalized
+                                         transaction submission and returned
+                                         a transaction hash. It does NOT
+                                         mean mined, included in a block,
+                                         confirmed, finalized by the
+                                         network, or publication completed
+                                         — those remain their own,
+                                         separately sized, explicit next
+                                         step (0.8.96). -->
+                                    <dl v-if="baseTransactionBroadcastView(entry).state === BaseTransactionBroadcastState.BROADCASTED" class="evidence-fields">
+                                        <div class="evidence-field"><dt>Transaction ID</dt><dd>{{ baseTransactionBroadcastView(entry).txid }}</dd></div>
+                                    </dl>
                                 </div>
                             </div>
                         </div>

@@ -73,6 +73,8 @@ import { CreateBaseInjectedProviderWalletTransactionSignerUseCase } from '../app
 import { CreateBaseReviewedSigningCoordinatorUseCase } from '../application/CreateBaseReviewedSigningCoordinatorUseCase.js';
 import { CreateBaseSignedTransactionFinalizerUseCase } from '../application/CreateBaseSignedTransactionFinalizerUseCase.js';
 import { CreateBaseSignedTransactionFinalizationCoordinatorUseCase } from '../application/CreateBaseSignedTransactionFinalizationCoordinatorUseCase.js';
+import { CreateBaseTransactionBroadcasterUseCase } from '../application/CreateBaseTransactionBroadcasterUseCase.js';
+import { CreateBaseTransactionBroadcastCoordinatorUseCase } from '../application/CreateBaseTransactionBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorBroadcastCoordinatorUseCase } from '../application/CreateBitcoinAnchorBroadcastCoordinatorUseCase.js';
 import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../application/CreateBitcoinAnchorConfirmationCoordinatorUseCase.js';
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
@@ -984,6 +986,26 @@ const { coordinator: baseSignedTransactionFinalizationCoordinator } = new Create
     baseSignedTransactionFinalizer
 });
 
+// 0.8.95 — Explicit Base Transaction Broadcast. Closes the gap 0.8.94's
+// own header named directly: "It does NOT mean broadcast, accepted by
+// Base, included in a block, confirmed, published, or immutable... those
+// remain entirely separate, later facts (0.8.95 and 0.8.96)."
+// `baseTransactionBroadcaster` reuses the SAME `baseJsonRpcClient`
+// instance `baseNetworkObserver`/`basePublicationTransactionPlanner`
+// above already read through — one shared RPC client, never a second,
+// disconnected one — because broadcasting needs nothing from a Base RPC
+// endpoint beyond the ONE write `base/BaseJsonRpcClient.js`'s own header
+// now documents wrapping, `eth_sendRawTransaction`.
+// `baseTransactionBroadcastCoordinator` is a deliberately thin wiring on
+// top of it, mirroring exactly how `bitcoinAnchorBroadcastCoordinator`
+// below wires the 0.8.52 broadcaster one chain over.
+const { baseTransactionBroadcaster } = new CreateBaseTransactionBroadcasterUseCase().execute({
+    rpcSource: baseJsonRpcClient
+});
+const { coordinator: baseTransactionBroadcastCoordinator } = new CreateBaseTransactionBroadcastCoordinatorUseCase().execute({
+    baseTransactionBroadcaster
+});
+
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI. Closes the
 // gap 0.8.60's own "Deliberately excluded" list named directly: "wiring a
 // 'Create Transaction Plan' action into this page." `bitcoinAnchorTransactionBuilder`
@@ -1174,6 +1196,8 @@ app.provide('baseInjectedProviderWalletTransactionSigner', baseInjectedProviderW
 app.provide('baseReviewedSigningCoordinator', baseReviewedSigningCoordinator);
 // 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.
 app.provide('baseSignedTransactionFinalizationCoordinator', baseSignedTransactionFinalizationCoordinator);
+// 0.8.95 — Explicit Base Transaction Broadcast.
+app.provide('baseTransactionBroadcastCoordinator', baseTransactionBroadcastCoordinator);
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 app.provide('bitcoinAnchorTransactionConstructionCoordinator', bitcoinAnchorTransactionConstructionCoordinator);
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
