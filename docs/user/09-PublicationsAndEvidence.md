@@ -15,12 +15,16 @@ provider and independently verifies it's still retrievable; a **Local
 Snapshot** section that reports what your own device already holds and lets
 you actually pull those bytes in, from a placement, from a peer, or from a
 file someone hands you; and a **Decentralization** overview that puts your
-evidence and placements side by side; and, separately, a full
-[Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) that connects a real
-browser wallet and walks a real transaction all the way from observed
-funding to a broadcast, confirmed anchor on the Bitcoin network. None of
-these are required by any other, and none are required to use the rest of
-ForkBuild.
+evidence and placements side by side; and, separately, two full,
+independent pipelines that each connect a real browser wallet and walk a
+real transaction all the way from observed funding to a broadcast,
+on-chain-observed anchor — a
+[Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) and, one chain
+over, a [Base Anchor Pipeline](#the-base-anchor-pipeline) — plus the
+durable, cross-chain [Publication Observation Archive](#the-publication-observation-archive)
+both pipelines (and IPFS Publishing) quietly write their own facts into.
+None of these are required by any other, and none are required to use the
+rest of ForkBuild.
 
 None of this is required to use ForkBuild. Skip this guide entirely if you
 just want to build, publish Documents, and explore — everything in
@@ -938,18 +942,348 @@ one is about a transaction you just walked through this pipeline
 yourself, the other about a signed anchor claim someone (possibly you,
 earlier) already published.
 
+Every one of these confirmation observations is also, quietly, written
+into the durable
+[Publication Observation Archive](#the-publication-observation-archive),
+keyed by this exact broadcast's own txid — so, unlike the **Show
+Confirmation History** list on this screen, that copy survives a reload;
+see [What survives a reload](#what-survives-a-reload).
+
 ### What this pipeline does not do
 
 However far you take a transaction through this pipeline — even all the
 way to **Transaction confirmed** — it never, on its own, creates a
 cataloged **External Evidence** entry on this or anyone else's
 Publications page. Nothing here calls the same code
-**Create Bitcoin Op Return Anchor** does, and this pipeline's own
-construction, review, signing, broadcast, and confirmation results are all
-ephemeral: shown for this visit, and replaced or cleared the moment you
-build a new plan, sign again, or reload the page. Publishing your own
-real, on-chain-anchored transaction as an evidence claim other people can
-discover is separate work this build doesn't yet connect for you.
+**Create Bitcoin Op Return Anchor** does, and this pipeline's own review,
+signing, and broadcast/confirmation *screens* are ephemeral: shown for
+this visit, and replaced or cleared the moment you build a new plan, sign
+again, or reload the page. One narrow fact is the exception — see
+**Bitcoin Anchor Publications**, next — and every broadcast and
+confirmation result also joins the durable
+[Publication Observation Archive](#the-publication-observation-archive).
+Publishing your own real, on-chain-anchored transaction as an evidence
+claim other people can discover is separate work this build doesn't yet
+connect for you.
+
+### Bitcoin Anchor Publications: a durable identity and lifecycle
+
+A page-level **Bitcoin Anchor Publications** card, further down the
+Publications page, keeps one small, durable fact this pipeline mints —
+independent of everything else described as ephemeral just above:
+
+```
+Bitcoin Anchor Publications                     [Persisted locally]
+
+Every Bitcoin anchor publication attempt this replica has minted a
+durable identity for — created the moment a transaction is finalized,
+independent of whether its broadcast later succeeds. A publication
+record names WHAT was published, AS WHICH transaction, and on WHICH
+network — never whether it was later confirmed.
+
+Publications: 1
+
+[Show Publications]
+```
+
+The moment **Verify & Finalize Transaction** succeeds (see
+[Verifying and finalizing](#verifying-and-finalizing) above) — never
+earlier, and never re-run on a later broadcast attempt for that same
+finalized transaction — this replica mints itself a durable **publication
+record**: exactly `{ anchor ID, content hash, txid, network, created at }`,
+nothing else. It carries no confirmed/valid/trusted/status field of any
+kind, and whether the broadcast that follows succeeds, fails, or is never
+attempted never retroactively erases it. Click **Show Publications** to
+list every one this replica has ever minted.
+
+Each row has two independent disclosures:
+
+- **Inspect Observations** — a plain count of every broadcast,
+  confirmation, content-proof, chain-placement, and consistency fact this
+  archive holds for that exact anchor ID (see
+  [The Publication Observation Archive](#the-publication-observation-archive)
+  below) — a correlation of independently recorded facts, never a verdict.
+- **Show Publication Lifecycle** — the same facts **Inspect Observations**
+  shows grouped by category, interleaved instead into one chronological
+  read: a **Publication record created** entry, then every broadcast,
+  confirmation, content-proof, chain-placement, and consistency entry this
+  anchor ID has, in the order they actually happened. A stage nothing has
+  recorded yet (say, no content-proof observation) simply produces no
+  entry — never a fabricated "missing" or "failed" row. Collapsed by
+  default; opening or closing it performs zero network operations, since
+  every fact it shows was already durably recorded elsewhere on this page.
+
+## The Base Anchor Pipeline
+
+A second, entirely independent pipeline — one chain over from
+[The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) above — connects
+a real browser wallet to **Base**, an Ethereum-compatible network, and
+walks a real transaction from an observed account all the way to a
+broadcast, network-observed anchor for a publication's content hash.
+Bitcoin and Base are deliberately never merged into one generic
+"blockchain anchor" flow: each gets its own wallet connection, its own
+transaction shape, and its own vocabulary, because the two chains' own
+underlying facts genuinely differ (a Bitcoin PSBT and UTXO set versus a
+Base account nonce, gas price, and self-transfer transaction) — see
+[Bitcoin Anchor: confirmation and content-proof reconciliation](#bitcoin-anchor-confirmation-and-content-proof-reconciliation)
+above for the same restraint stated the other way around.
+
+> **This can move real funds on Base mainnet, or none at all on Base
+> Sepolia testnet — whichever network your connected wallet reports.**
+> Every step from **Create Base Transaction Plan** onward operates on
+> whatever account your wallet connects with, on whatever network that
+> account happens to be on. Connect a testnet account with a testnet
+> wallet and this pipeline spends only test funds; connect a mainnet
+> account and **Broadcast Transaction** submits a real transaction to
+> Base's production network. ForkBuild never switches, defaults, or
+> assumes a network on your behalf — the network shown throughout this
+> pipeline is always whatever your wallet actually reported.
+
+### What you'll need
+
+- A **Base-capable browser wallet extension** implementing the standard
+  [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) `window.ethereum`
+  interface — Coinbase Wallet, MetaMask, and most other injected Ethereum
+  wallets qualify. Unlike the Bitcoin pipeline above, no single named
+  extension is required; without any compatible extension installed,
+  connecting reports the wallet **unavailable** rather than failing
+  silently.
+- A wallet account connected to one of the two chain IDs this app
+  recognizes as genuinely Base — **8453** (mainnet) or **84532** (Base
+  Sepolia testnet). Connecting on any other chain is reported as an
+  explicit **mismatch**, never silently relabeled as Base.
+- At least one publication already on your own Publications page (see
+  [Where a publication comes from](#where-a-publication-comes-from)) — the
+  transaction plan anchors that publication's own content hash, exactly
+  like the Bitcoin pipeline's plan does.
+
+### Connecting a wallet and observing an account
+
+Unlike the Bitcoin pipeline's wallet control — nested inside an existing
+anchor's own card — a page-level **Base Network** panel appears near the
+top of the Publications page on its own, with nothing to expand first:
+
+```
+Base Network
+
+Observing an account here never constructs, signs, or broadcasts a
+transaction — it is a fact about a moment, read fresh every time this
+is asked.
+
+[Connect Base Wallet]
+```
+
+Click **Connect Base Wallet**. Your browser's wallet extension asks you to
+approve the connection — exactly like the Bitcoin pipeline, ForkBuild never
+sees a private key, a seed phrase, or a password; it only ever receives an
+address for as long as the connection stays open. States:
+
+| Badge | Meaning |
+|---|---|
+| **Connected** | Shows the connected **Account**. |
+| **Disconnected** | Not yet connected, or you declined the extension's approval prompt. |
+| **Wallet unavailable** | No compatible extension installed, or it couldn't currently be reached. |
+
+Click **Disconnect** to drop the connection. Nothing about it is remembered
+after you reload the page.
+
+Once connected, click **Observe Base Account** (or **Refresh Observation**)
+to ask, right now, which chain that account is actually on and what it can
+spend — a plain, one-off read that never constructs, signs, or broadcasts
+anything, and never re-checks itself automatically:
+
+| Badge | Meaning |
+|---|---|
+| **Base account observed** | Shows the **Network**, **Chain ID**, **Account**, **Native balance** (in wei), and when it was observed. |
+| **Connected network is not Base** | The wallet answered, but with a chain ID this app doesn't recognize as Base mainnet or testnet — shown with the actual chain ID it found, never silently relabeled. |
+| **Base account unavailable** | The wallet couldn't currently be reached. |
+
+### Building a transaction plan
+
+Each publication's own card also has a **Base Publication Transaction**
+section:
+
+```
+Base Publication Transaction
+
+Turns the Base account observed above into an unsigned, self-transfer
+transaction plan carrying THIS publication's own content hash as raw
+transaction data. Nothing is signed or broadcast by constructing this —
+it only names the nonce, gas limit, and fee figures the account was
+observed with, and the exact bytes the transaction would carry.
+
+[Create Transaction Plan]
+```
+
+Unlike Bitcoin's OP_RETURN output, a Base anchor is a **self-transfer**: an
+ordinary transaction from the observed account back to itself, carrying
+the content hash as its raw transaction data instead of moving value to
+anyone else. **Create Base Transaction Plan** is disabled until you've
+observed an account at least once, and never re-observes it on its own —
+it always plans against whatever observation you most recently made,
+however stale that's become. Outcomes:
+
+| State | Meaning |
+|---|---|
+| **Transaction plan constructed** | Shows the network, chain ID, content hash, from/to (to always equals from), value, nonce, gas limit, max fee per gas, priority fee (all in wei), the transaction data, and separately when the account was observed versus when the plan itself was built. |
+| **Base network unavailable** | The account observation, or a fee/nonce figure needed to build the plan, couldn't currently be obtained. |
+| **Unable to construct transaction** | Construction failed for some other reason. |
+
+A fresh **Create Transaction Plan** click always replaces whatever was
+previously under review, signed, finalized, or broadcast for this
+publication.
+
+### Reviewing and signing
+
+A successful plan immediately populates that same card's **Base
+Transaction Review** section — no extra click, since reviewing a Base
+plan is local and read-only:
+
+```
+Base Transaction Review
+
+The following transaction plan will be supplied to the signing
+capability if you explicitly continue. Reviewing it does not sign,
+broadcast, or validate it against the network — it names exactly what
+a wallet would be asked to sign, nothing more, and nothing assumed.
+
+From: …          To: … (self-transfer)
+Value: 0 wei      Nonce: 4
+Gas limit: 60000  Max fee per gas: … wei   Priority fee: … wei
+
+Content Hash: 9f8e…
+Transaction Data: 0x9f8e…
+
+[Sign Reviewed Transaction]
+```
+
+Click **Sign Reviewed Transaction** and your wallet extension asks you to
+approve signing exactly the plan shown above — nothing is reconstructed or
+modified first. Outcomes:
+
+| State | Meaning |
+|---|---|
+| **Wallet returned a signed transaction** | The wallet signed. This means only that a signed artifact came back for a plan that still matched its own review — **not** that it's been cryptographically verified yet; that's the next, separate step. |
+| **Signing declined** | You (or the wallet) declined. |
+| **Wallet unavailable** | No wallet connected, or it couldn't be reached. |
+| **Signing failed** | The wallet claimed success but returned something unusable. |
+
+### Verifying and finalizing
+
+Once signed, a **Verify & Finalize Transaction** button appears:
+
+```
+[Verify & Finalize Transaction]
+
+Transaction finalized
+Recovered signer: …
+Transaction hash: 7f3a…
+```
+
+This independently, cryptographically verifies the signed transaction
+against the exact plan reviewed above — including recovering the actual
+signer from the signature itself, entirely offline. Outcomes:
+
+| State | Meaning |
+|---|---|
+| **Transaction finalized** | The signature checked out. Shows the recovered signer and the transaction hash. Ready for the separate broadcast step. |
+| **Signature did not verify** | It didn't — a wrong key, a wrong signature, or a signature over the wrong data. |
+| **Finalization unavailable** / **Finalization failed** | Couldn't currently be checked, or some other unacceptable result distinct from a definite bad signature. |
+
+**This is also the one moment this pipeline mints a durable fact** — see
+[Base Anchor Publications](#base-anchor-publications-a-durable-identity-and-lifecycle),
+next.
+
+### Broadcasting
+
+Once finalized, a **Broadcast** section appears with the transaction's own
+hash and a **Broadcast Transaction** button. Click it to submit the exact
+finalized bytes — unmodified — to Base's own network:
+
+| State | Meaning |
+|---|---|
+| **Transaction broadcasted** | The network accepted it for broadcast — **not** that it's been mined yet; see Observing inclusion, next. Shows the **Transaction ID**. |
+| **Transaction rejected** | The network refused it outright. |
+| **Broadcast unavailable** | Couldn't currently reach the network. |
+
+A rejected or unavailable attempt is the end of that attempt — click
+**Broadcast Again** to resubmit the identical, already-finalized bytes.
+
+### Observing inclusion
+
+Once broadcast, a **Base Transaction Inclusion** section appears, with its
+own **Observe Transaction** button — broadcast acceptance is never chain
+inclusion, and reaching a broadcasted state never checks inclusion
+automatically:
+
+| Badge | Meaning |
+|---|---|
+| **Transaction included** | Base's network currently reports a receipt for this exact transaction hash — shown with block hash, block number, transaction index, and confirmation count. This does **not** mean safe, final, or irreversible; a chain reorganization remains possible, and this isn't detected. |
+| **Transaction not included** | No receipt was returned at this observation — this app doesn't distinguish "still pending" from "never broadcast." |
+| **Inclusion status unavailable** | Couldn't currently be checked. |
+
+Every click is preserved, never overwritten — click **Observe Transaction
+Again**, and once more than one observation exists, **Show Observation
+History** to see every past click for this exact transaction, oldest
+first, each with its own state, block details, and timestamp.
+
+Exactly like Bitcoin's own **Observing confirmation** step in its
+pipeline, every one of these observations is also durably archived
+automatically the moment it completes — see
+[The Publication Observation Archive](#the-publication-observation-archive)
+below. That archived copy is what
+[Base Anchor Publications](#base-anchor-publications-a-durable-identity-and-lifecycle),
+next, actually reads from, and it's the one place these facts survive a
+reload — the **Show Observation History** list on this card itself is
+still session-only, exactly like the rest of this pipeline's own screens;
+see [What survives a reload](#what-survives-a-reload).
+
+### Base Anchor Publications: a durable identity and lifecycle
+
+A page-level **Base Anchor Publications** card, further down the page,
+mirrors [Bitcoin Anchor Publications](#bitcoin-anchor-publications-a-durable-identity-and-lifecycle)
+above exactly, one chain over:
+
+```
+Base Anchor Publications                        [Persisted locally]
+
+Every Base publication attempt this replica has minted a durable
+identity for — created the moment a transaction is finalized,
+independent of whether its broadcast later succeeds.
+
+Publications: 1
+
+[Show Publications]
+```
+
+The moment **Verify & Finalize Transaction** succeeds — never earlier, and
+never re-run on a later broadcast attempt for the same finalized
+transaction — this replica mints a durable publication record: exactly
+`{ content hash, txid, network, created at }`. Click **Show Publications**
+to list every one, then **Show Publication Lifecycle** on any row to
+interleave that record with every recorded **Observe Transaction** result
+for its exact txid into one chronological read.
+
+Base's own lifecycle carries only **two** entry kinds — **Publication
+record created** and **Inclusion observation #N** — never a **Broadcast**
+entry the way Bitcoin's six-entry-kind timeline does, because this
+codebase has never made a Base broadcast result itself durable, only the
+inclusion observations that follow it. A stage nothing has recorded yet
+simply produces no entry, and this disclosure performs zero network
+operations of its own — everything it shows was already recorded
+elsewhere on this page.
+
+### What this pipeline does not do
+
+Exactly like the Bitcoin pipeline above: however far you take a
+transaction through this pipeline — even to **Transaction included** — it
+never creates any kind of cataloged **External Evidence** entry, and there
+is no "Create Base Anchor" button anywhere in External Evidence to begin
+with; this whole pipeline lives only here. The review, signing, and
+broadcast/inclusion *screens* are ephemeral, replaced or cleared by a new
+plan, a new sign, or a reload. The two durable exceptions are the
+publication record minted at finalization and the inclusion observations
+archived after every **Observe Transaction** click — both described above.
 
 ## Snapshot Placements
 
@@ -1150,10 +1484,18 @@ Credential: not configured
 
 A **snapshot placement** (above) is a signed, cataloged claim that gets
 stored, exchanged with peers, and re-inspected later. A **remote
-publish** here is none of that: it's one explicit call to a pinning
-provider you configure yourself, and the result is shown only for as
-long as this page stays open. It never touches the Snapshot Placement
-catalog, and never creates a signed placement claim on its own.
+publish** here is a different kind of record: it's one explicit call to a
+pinning provider you configure yourself, and the result is shown only for
+as long as this page stays open (see
+[What survives a reload](#what-survives-a-reload)) — though every
+successful publish and every content-retrieval check against a history
+entry is *also* written, quietly, into the same durable
+[Publication Observation Archive](#the-publication-observation-archive)
+every Bitcoin and Base fact on this page writes into; that copy survives
+a reload even though this card's own on-screen history does not. It
+never touches the Snapshot Placement catalog, and never creates a signed
+placement claim on its own — it's a plain record of "a provider accepted
+these bytes," never a cataloged claim someone else can discover.
 
 ### Configuring a remote pinning provider
 
@@ -1224,8 +1566,13 @@ the round trip.
 ### Publication History
 
 Publishing more than once — the same content again, or after
-reconfiguring the provider — never overwrites what came before. Once at
-least one publish has succeeded, a **Show Publication History** button
+reconfiguring the provider — never overwrites what came before, and every
+successful publish is quietly also recorded in the durable
+[Publication Observation Archive](#the-publication-observation-archive) —
+though, like the rest of this section, the **on-screen** history you're
+about to expand here still resets on reload (see
+[What survives a reload](#what-survives-a-reload)). Once at least one
+publish has succeeded, a **Show Publication History** button
 appears: click it to see every record this entry has ever published, in
 order, oldest first, with each one's locator and time. Click a row to
 **Inspect** it and see its own Locator, Content hash, Published at, and
@@ -1258,6 +1605,181 @@ oldest first, never rewritten by a later check:
 All three of those stand side by side, unchanged — a later observation
 never retroactively edits an earlier one, and there's no averaging,
 scoring, or "current status" computed across them anywhere in this list.
+
+## The Publication Observation Archive
+
+Underneath [External Evidence](#external-evidence),
+[The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline),
+[The Base Anchor Pipeline](#the-base-anchor-pipeline), and
+[IPFS Publishing](#ipfs-publishing), this device keeps one shared,
+page-level, durable record of facts across all three domains — IPFS,
+Bitcoin, and Base alike. It never stores a wallet connection, a signing
+capability, a private key, or a pinning-provider credential; only
+publication identities and observations. A family of cards, further down
+the Publications page, reads and manages this one archive directly.
+
+### Observation Archive
+
+```
+Observation Archive                             [Persisted locally]
+
+Publication and observation facts, kept durable across a page reload.
+
+Publications: 3      Observations: 11
+
+[Show Archive]   [Clear Archive]
+```
+
+Click **Show Archive** to expand an **Archived Observation Timeline** —
+every IPFS publication and content-verification fact, every Bitcoin
+broadcast/confirmation/content-proof fact, and every Base transaction
+inclusion fact this device has ever recorded, chronologically
+interleaved on one list, each entry naming its own domain (IPFS /
+Bitcoin / Base), state, and (where relevant) locator, txid, or block
+height. Nothing here is fetched, verified, or reconciled — expanding it
+performs zero network operations, since every fact shown was already
+recorded elsewhere on this page at the moment it happened.
+
+**Clear Archive** is the *only* action anywhere on this page that
+discards a durably recorded fact — publishing, verifying, broadcasting,
+or observing anything elsewhere only ever *adds* to this archive,
+automatically, never removes from it. It's disabled once the archive is
+already empty.
+
+### Historical Bitcoin Anchor Evidence
+
+A companion card, reading the identical archive, organizes the same
+underlying Bitcoin facts a different way — by their own explicit anchor
+ID, regardless of whether that anchor's own evidence card happens to be
+expanded anywhere else on the page right now:
+
+```
+Historical Bitcoin Anchor Evidence              [Persisted locally]
+
+Anchors: 2
+
+[Show Historical Anchors]
+```
+
+Click **Show Historical Anchors**, then a specific anchor ID, to see —
+grouped under their own headings — that anchor's full **Broadcast
+History**, **Confirmation History**, **Content-Proof History**, **Chain
+Placement Comparisons**, and **Observation Consistency** findings, plus a
+**Combined Evidence** summary restating the same five counts together.
+Counts here describe how much this replica has recorded for that
+anchor — never how complete, reliable, or trustworthy its evidence is,
+and this is a correlation of independently recorded facts by explicit
+anchor ID, never a verdict.
+
+### Exporting, importing, and inspecting the archive
+
+A **Publication Archive** card turns the archive into a portable JSON
+file — publication identities and observations only, never a wallet
+connection, key, or credential:
+
+- **Export Archive** — read-only; produces a JSON blob shown in a text
+  box plus a **Download Archive Export** link. Performs no network
+  operation.
+- **Import Archive** — opens a file picker and paste box. Importing is an
+  explicit **replacement**, never a merge: after choosing a file or
+  pasting JSON, a preview shows how many publications and observations
+  the imported archive holds versus what's currently here, and only a
+  further, explicit **Replace Current Archive** click actually discards
+  the current archive and adopts the new one — this cannot be undone. A
+  file that isn't a valid archive export is rejected outright, with
+  nothing changed.
+
+A separate **Inspect External Archive** card lets you look inside an
+exported archive file *without* importing it — the archive above, and
+everything derived from it, stays exactly as it is:
+
+```
+Inspect External Archive                        [Read-only]
+
+[Inspect Archive]
+```
+
+Choosing a file or pasting JSON and expanding the result shows that
+external archive's own schema version, per-domain fact counts (IPFS
+publication/verification, Bitcoin broadcast/confirmation/content-proof/
+publication-identity, Base transaction-inclusion/publication-identity),
+local-vs-imported fact counts, import-event count, its own fingerprint
+(see below), and — when present — the actual Bitcoin anchor IDs, IPFS
+publication record indexes, and Base transaction hashes it holds. This
+never touches, compares against, or replaces the current archive; there
+is no "Replace" button on this card, and none ever appears here — that
+action stays on **Import Archive** above, behind its own confirmation.
+
+From an inspected external archive, two further, explicit actions are
+available, each its own separate click:
+
+- **Compare With Current Archive** — describes which facts and which
+  provenance tags *differ* between the current archive and this external
+  one, per domain (Same / Changed / Only in current / Only in external /
+  Different provenance) — it never says which archive is correct or
+  newer, only what's different.
+- **Review Replacement** (shown once a comparison exists) — composes that
+  difference with both archives' own publication/observation/local/
+  imported/import-event counts and current vs. external fingerprints
+  into one preview of exactly what replacing would change. Only the
+  explicit **Replace Current Archive** button on this review — reusing
+  the identical import mechanism above — ever actually changes the
+  current archive; reviewing it, however far, changes nothing on its
+  own. Replacing always restamps every fact from the external archive as
+  freshly imported, so the resulting current fingerprint differs from
+  the external archive's own fingerprint shown here, even though the
+  underlying observations are now identical.
+
+### Archive Provenance
+
+An **Archive Provenance** card states, for every fact the archive holds,
+only *where it entered* — never whether it's trustworthy:
+
+```
+Archive Provenance                    [Where facts entered this archive]
+
+Local facts: 9      Imported facts: 2
+```
+
+**Local facts** were observed by this replica directly, through the
+pages described above. **Imported facts** entered through a prior
+**Replace Current Archive** import. Neither is styled or worded as more
+trustworthy than the other. If any import has ever happened, an
+**Archive Imports** list shows each one's timestamp, how many facts it
+brought in, and the imported archive's own schema version.
+
+### Archive Fingerprint
+
+An **Archive Fingerprint** card computes a deterministic digest of every
+fact and provenance tag recorded above:
+
+```
+Archive Fingerprint                                       [SHA-256]
+
+Fingerprint: 9f8e2a1c…
+
+[Copy Fingerprint]
+
+Compare With Another Fingerprint
+[ Paste a 64-character SHA-256 fingerprint ]     [Compare]
+```
+
+Two replicas whose fingerprints match hold byte-identical durable
+archive contents — this states nothing about whether those contents are
+authentic, verified, or correct, only that they're the same bytes. Paste
+a fingerprint you obtained elsewhere (from a peer, say) and click
+**Compare** to check it against this archive's own, computed fresh every
+time — typing or pasting alone compares nothing. Outcomes:
+
+| Result | Meaning |
+|---|---|
+| **MATCH** | The pasted fingerprint equals this archive's own digest. |
+| **DIFFERENT** | It doesn't. |
+| **INVALID_FINGERPRINT** | What was pasted isn't a well-formed 64-character SHA-256 fingerprint — nothing was compared. |
+
+None of MATCH, DIFFERENT, or a difference/replacement review above ever
+states which archive is newer, better, or more correct — only whether
+the two are, or are not, the identical durable bytes.
 
 ## What survives a reload
 
@@ -1301,28 +1823,54 @@ so there's nothing to reset. Only an explicit **Synchronize with Peers**
 result (the New claims / Already known breakdown) resets on reload,
 exactly like a verification or resolution result would.
 
-**[IPFS Publishing](#ipfs-publishing) is entirely session-only, with no
-exception, exactly like the Bitcoin Anchor Pipeline below.** Your
+**[IPFS Publishing](#ipfs-publishing)'s own on-screen record is
+session-only — but a quiet, durable copy of some of it is not.** Your
 configured pinning provider (endpoint and credential alike), every
-publish outcome, the entire Publication History, and every entry's own
-Verification History all live only in this page's own memory and
-disappear the moment you reload — none of it is ever written to this
-device's storage, exchanged with a peer, or added to the Snapshot
-Placement catalog. The bytes you published stay wherever the provider
-put them, exactly as any real IPFS publish would; only ForkBuild's own
-on-screen record of having done it is gone. Reconfigure the provider and
-publish again to pick up where you left off.
+publish outcome shown on this card, the Publication History list itself,
+and every entry's own Verification History list all live only in this
+page's own memory and disappear the moment you reload — reconfigure the
+provider and publish again to pick up where you left off. Underneath
+that, though, every successful publish and every per-history-entry
+verification is *also* written into the durable
+[Publication Observation Archive](#the-publication-observation-archive),
+which does survive a reload — you just won't see it again on this
+particular card; open the Observation Archive card instead. The bytes
+you published stay wherever the provider put them either way, exactly as
+any real IPFS publish would.
 
-**The [Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) is entirely
-session-only, with no exception.** Unlike Local Snapshot's one exception
-for actual bytes, nothing here is ever written anywhere durable: your
-wallet connection, observed funding, transaction plan, review, signature,
-finalized bytes, broadcast result, and confirmation history all disappear
-the moment you reload — even after a real transaction has been broadcast
-to the Bitcoin network. The transaction itself stays on the Bitcoin
-network, of course; only ForkBuild's own on-screen record of walking you
-through it is gone. Reconnect the wallet and observe funding again to
-pick up where you left off.
+**[The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) and
+[The Base Anchor Pipeline](#the-base-anchor-pipeline) follow the identical
+split, one chain each.** Your wallet connection, observed funding/account,
+transaction plan, review, signature, finalized bytes, broadcast result, and
+the on-screen confirmation/inclusion history list all disappear the moment
+you reload — even after a real transaction has been broadcast to the real
+network. Reconnect the wallet and observe funding/an account again to pick
+up where you left off. Two things about each pipeline are durable,
+though, and do survive: the **Bitcoin/Base Anchor Publications** record
+minted the moment a transaction is finalized (see
+[Bitcoin Anchor Publications](#bitcoin-anchor-publications-a-durable-identity-and-lifecycle)
+and
+[Base Anchor Publications](#base-anchor-publications-a-durable-identity-and-lifecycle)),
+and every confirmation/inclusion observation either pipeline makes, which
+is quietly archived into the same
+[Publication Observation Archive](#the-publication-observation-archive)
+by its own txid — visible again after a reload through that archive, the
+publication's own Publication Lifecycle disclosure, or (for Bitcoin)
+Historical Bitcoin Anchor Evidence, even though the pipeline's own
+in-progress wizard screen has gone back to a blank slate.
+
+**[The Publication Observation Archive](#the-publication-observation-archive)
+itself is the one place on this page built to survive a reload with no
+exception.** Every fact described as "also archived durably" above —
+IPFS publications and per-history verifications, Bitcoin broadcast/
+confirmation/content-proof observations (from both the evidence-card
+Reconcile action and the Bitcoin Anchor Pipeline's own confirmation
+step), Base transaction-inclusion observations, and both chains'
+publication-identity records — lives here, persisted on this device,
+until the moment you explicitly click **Clear Archive**: the only action
+on this whole page that ever discards a durably recorded fact. Its own
+export/import, provenance, and fingerprint history (archive import
+events) are durable in exactly the same way.
 
 ## What's next?
 

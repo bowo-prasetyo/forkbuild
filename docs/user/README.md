@@ -52,10 +52,18 @@ top-level [docs/](..) folder.
    the actual bytes this device holds (from a placement, a peer, or an
    offline file), a **Decentralization** overview comparing your
    evidence and placements, synchronizing knowledge with peers, and
-   seeing how each claim was learned, and the **Bitcoin Anchor
-   Pipeline** — connecting a real browser wallet and walking a real
-   transaction through funding, construction, review, signing,
-   cryptographic verification, broadcast, and confirmation.
+   seeing how each claim was learned, two independent, mirrored
+   **Anchor Pipelines** — one for **Bitcoin**, one for **Base** — each
+   connecting a real browser wallet and walking a real transaction
+   through funding/observation, construction, review, signing,
+   cryptographic verification, broadcast, and confirmation/inclusion,
+   with each pipeline minting its own durable publication identity and
+   lifecycle timeline, and the durable, cross-chain **Publication
+   Observation Archive** underlying all of it — a persisted record of
+   IPFS, Bitcoin, and Base facts alike, with its own combined timeline,
+   export/import, non-replacing inspection and comparison of another
+   device's archive, provenance, and a fingerprint you can check
+   against a peer's.
 
 ## Reference
 
