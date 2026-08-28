@@ -15729,11 +15729,12 @@ network operations.** The identical restraint held by every milestone
 before it, extended one more time: this projection only ever reads
 whatever the caller's own already-in-memory IPFS and Bitcoin state
 currently holds, and computes no cross-domain comparison of its own —
-that remains real, separately sized future work (0.8.77; 0.8.76 claimed
-this milestone's own reserved number for a different, more urgent
-same-domain comparison instead — see "A Changed Observation Is Not
-Automatically A Reorganization (0.8.76)" below). See `docs/Roadmap.md`,
-0.8.74, for the full milestone entry.
+that remains real, separately sized future work (0.8.78; 0.8.76 and
+0.8.77 each claimed this milestone's own reserved number in turn for a
+different, more urgent same-domain analysis instead — see "A Changed
+Observation Is Not Automatically A Reorganization (0.8.76)" and "An
+Internal Inconsistency Is Not Automatically A Reorganization (0.8.77)"
+below). See `docs/Roadmap.md`, 0.8.74, for the full milestone entry.
 
 ## A Capability Can Be Ephemeral Even When The Facts Produced By Using It Are Durable (0.8.75)
 
@@ -15911,6 +15912,117 @@ later performs no new work" restraint 0.8.56's own detail view already
 held, extended here to comparing two such moments against each other.
 Every function this milestone adds is pure: the same two observations
 compared twice produce byte-identical output, and neither the history nor
-the observations within it are ever mutated.
+the observations within it are ever mutated. The same-`blockHash`,
+different-`blockHeight` pairing this section calls out as "rare,
+self-contradictory" and deliberately unresolved is exactly the first
+shape "An Internal Inconsistency Is Not Automatically A Reorganization
+(0.8.77)," immediately below, gives an explicit name to — 0.8.76 reports
+it, unresolved, as `PLACEMENT_CHANGED`; 0.8.77 additionally names it
+`INCONSISTENT`, still unresolved, still never arbitrated.
 
 See `docs/Roadmap.md`, 0.8.76, for the full milestone entry.
+
+## An Internal Inconsistency Is Not Automatically A Reorganization (0.8.77)
+
+**A decreased `confirmationCount`, a changed `blockHeight` under an
+unchanged `blockHash`, or two different `blockHash` values reported for
+one `blockHeight` are all shapes a single, real, settled Bitcoin chain
+state could never itself produce — but naming that gap is still not a
+claim about what caused it.** `application/BitcoinAnchorObservationConsistencyState.js`'s
+own `compareBitcoinAnchorObservationConsistency(previous, later)` answers
+a narrow, factual question one step past "A Changed Observation Is Not
+Automatically A Reorganization (0.8.76)" immediately above: not merely
+"did placement change," but "does the change (or non-change) between
+these two already-recorded observations describe a state of affairs a
+real chain could actually be in?" Reporting `INCONSISTENT` names only
+that the two records disagree with each other in a way ordinary
+confirmation-depth progress or an entirely new, later block cannot
+explain — never that a reorganization, invalidation, double spend, or
+loss of finality occurred, and never which of the two observations (if
+either) is correct. The identical `confirmationSource`-is-untrusted
+reasoning `application/BitcoinAnchorChainPlacementObservation.js`'s own
+principle above already holds applies here unchanged: two facts an
+untrusted external source reported at two different moments are compared
+against each other, honestly, and named as self-contradictory — never
+elevated into a claim about why.
+
+**The word is welcome in prose; it is forbidden in output — the identical
+restraint 0.8.76 already holds, held here one layer over.** What never
+appears is a `REORG_DETECTED` enum value, a `reorganization` field, a
+`fraudDetected` boolean, or any sentence a person reading this
+application's own screen could mistake for "ForkBuild has determined a
+reorganization, a double spend, or fraud occurred."
+`BitcoinAnchorObservationConsistencyState` holds exactly four values —
+`CONSISTENT`, `INCONSISTENT`, `INSUFFICIENT_OBSERVATIONS`,
+`INCOMPARABLE` — and `BitcoinAnchorObservationConsistencyFindingKind`
+holds exactly four more — `CONFIRMATION_COUNT_DECREASED`,
+`BLOCK_HEIGHT_CHANGED_SAME_HASH`, `DIFFERENT_HASH_SAME_HEIGHT`,
+`DIFFERENT_HASH_AND_HEIGHT` — each naming what the two observations
+themselves say, never what a person should conclude from them. Reaching a
+conclusion about WHY two observations disagree — a genuine reorganization,
+a confirmation source that queried two different nodes, an operator
+error, a source that changed between two calls — is left entirely to the
+person reading both preserved observations; this milestone forms no
+opinion of its own about which explanation is correct, and does not even
+enumerate the possibilities it declines to choose between.
+
+**A changed placement is not, by itself, an inconsistency — the two
+milestones answer genuinely different questions over the same pair of
+observations.** 0.8.76's own `PLACEMENT_CHANGED` fires unconditionally
+whenever `blockHash` and/or `blockHeight` differ between two `CONFIRMED`
+observations of the same transaction; this milestone's own `INCONSISTENT`
+fires only when that difference additionally lands on one of the four
+specific, self-contradictory shapes above. A `blockHash` that changes
+alongside an appropriately higher `blockHeight` — the ordinary shape of a
+transaction later confirmed into a genuinely different, later block — is
+`PLACEMENT_CHANGED` under 0.8.76 and `CONSISTENT` under this milestone,
+side by side, each answering its own question honestly. Neither milestone
+overwrites, replaces, or supersedes the other.
+
+**Four self-contradictory shapes, named explicitly, never collapsed into
+one generic "differs" finding.** A decreased `confirmationCount` at an
+unchanged block, a changed `blockHeight` under an unchanged `blockHash`
+(in either direction — `heightDecreased` is a plain fact on the finding,
+never a separate kind of its own), two different `blockHash` values at
+one `blockHeight`, and a different `blockHash` AND a different
+`blockHeight` together are FOUR separate kinds, each preserving the exact
+facts that produced it. The fourth is deliberately never folded into
+either of the two hash-or-height-alone kinds — see the flagship test's
+own Section E — so a caller can tell exactly which facts changed from a
+finding's own `kind` alone, before reading a single detail field.
+
+**Every finding preserves the complete observations responsible for it,
+never collapsed to a bare state string.** `application/
+BitcoinAnchorObservationConsistencyAnalyzer.js` returns
+`previousObservation`/`laterObservation` — the two exact, complete,
+original observation objects, by reference — alongside `finding` on every
+result, for every state, not only `INCONSISTENT`. A person reading "an
+inconsistency was found" can always move back to "these were the two
+actual observations from which that statement was derived," the same
+auditability `application/BitcoinAnchorChainPlacementObservationView.js`'s
+own header already demanded of `PLACEMENT_CHANGED`, held here for a
+finding's own more specific claim.
+
+**Comparison happens only between two already-CONFIRMED observations of
+the same transaction; every other pairing is `INCOMPARABLE`, never an
+inconsistency of any kind** — the identical restraint 0.8.76 already
+holds, for the identical reason: a `NOT_CONFIRMED` observation followed by
+a `CONFIRMED` one is ordinary settling, never a self-contradiction, and a
+`CONFIRMED` observation followed by an `UNAVAILABLE` one means only that
+this replica's source could not presently answer.
+
+**An analysis is read-only, both over the history it analyzes and over
+the Bitcoin network — proven across a real persist-and-restore cycle, not
+merely asserted.** `application/BitcoinAnchorObservationConsistencyAnalyzer.js`
+takes no confirmation source, makes no network call, and appends nothing
+to `application/BitcoinAnchorConfirmationObservationHistory.js`'s own
+array or to `application/PublicationObservationArchive.js`'s own durable
+record. The flagship test's own persistence-round-trip section goes one
+step further than 0.8.76's own flagship did: it feeds this milestone's
+own analyzer a history restored through `PublicationObservationArchive`'s
+own `toJSON()`/`fromJSON()` (0.8.75) and confirms the result is
+byte-identical to analyzing the live archive directly — the durability
+0.8.75 built and the comparison 0.8.76 built are not just compatible with
+this milestone, they are what it is built directly on top of.
+
+See `docs/Roadmap.md`, 0.8.77, for the full milestone entry.

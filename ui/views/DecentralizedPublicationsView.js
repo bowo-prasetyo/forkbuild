@@ -76,6 +76,8 @@ import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../../ap
 import { describeBitcoinAnchorConfirmationObservationHistoryDetails, describeBitcoinAnchorConfirmationObservationDetail } from '../../application/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
 import { observeBitcoinAnchorChainPlacementChanges } from '../../application/BitcoinAnchorChainPlacementObserver.js';
 import { describeBitcoinAnchorChainPlacementObservations } from '../../application/BitcoinAnchorChainPlacementObservationView.js';
+import { analyzeBitcoinAnchorObservationConsistency } from '../../application/BitcoinAnchorObservationConsistencyAnalyzer.js';
+import { describeBitcoinAnchorObservationConsistency } from '../../application/BitcoinAnchorObservationConsistencyView.js';
 import { describeBitcoinAnchorContentProof } from '../../application/BitcoinAnchorContentProofView.js';
 import { BitcoinWalletConnectionState } from '../../application/BitcoinWalletConnectionState.js';
 import { describeBitcoinWalletConnection } from '../../application/BitcoinWalletConnectionView.js';
@@ -1856,6 +1858,18 @@ export default {
                 // state the way `bitcoinAnchorReconciliations[anchorId]`
                 // does — there is nothing here that can fail.
                 bitcoinAnchorChainPlacementComparisonExpanded: {},
+                // 0.8.77 — Bitcoin Anchor Observation Consistency Analysis.
+                // Gates only the "Observation Consistency" disclosure — a
+                // SIBLING to "Compare Confirmation Observations" (0.8.76)
+                // above it, never nested inside it. Consuming exactly the
+                // same `bitcoinAnchorConfirmationHistories[anchorId]` array
+                // both disclosures already read, application/
+                // BitcoinAnchorObservationConsistencyAnalyzer.js makes no
+                // network call either, so this key needs no matching "in
+                // flight"/"error" state, the identical reasoning
+                // `bitcoinAnchorChainPlacementComparisonExpanded` above
+                // already holds.
+                bitcoinAnchorObservationConsistencyExpanded: {},
                 // 0.8.74 — Cross-Domain Publication Observation Timeline.
                 // Gates the "Show/Hide Cross-Domain Timeline" disclosure,
                 // placed as a SIBLING to the existing IPFS and Bitcoin
@@ -2647,6 +2661,39 @@ export default {
 
         function isBitcoinAnchorChainPlacementComparisonExpanded(entry, anchorView) {
             return Boolean(entry.bitcoinAnchorChainPlacementComparisonExpanded[anchorView.anchorId]);
+        }
+
+        // 0.8.77 — Bitcoin Anchor Observation Consistency Analysis.
+        //
+        // Pure, synchronous, always re-derived from THIS anchor's own
+        // `bitcoinAnchorConfirmationHistories[anchorId]` — the SAME array
+        // `bitcoinAnchorConfirmationHistoryView()` and
+        // `bitcoinAnchorChainPlacementComparisonView()` above already read,
+        // never a second, separately maintained history. Composes
+        // application/BitcoinAnchorObservationConsistencyAnalyzer.js's own
+        // `analyzeBitcoinAnchorObservationConsistency()` (no network
+        // access — it only analyzes observations this replica already
+        // recorded) with application/BitcoinAnchorObservationConsistencyView.js's
+        // own `describeBitcoinAnchorObservationConsistency()`, exactly
+        // mirroring `bitcoinAnchorChainPlacementComparisonView()`'s own
+        // analyzer-then-view composition, one sibling over. There is no
+        // "Observation Consistency" button handler that performs work of
+        // its own — every click only toggles
+        // `toggleBitcoinAnchorObservationConsistency()` below; the
+        // analysis itself is already complete the moment this function is
+        // called.
+        function bitcoinAnchorObservationConsistencyView(entry, anchorView) {
+            const history = entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || [];
+            return describeBitcoinAnchorObservationConsistency(analyzeBitcoinAnchorObservationConsistency(history));
+        }
+
+        function toggleBitcoinAnchorObservationConsistency(entry, anchorView) {
+            entry.bitcoinAnchorObservationConsistencyExpanded[anchorView.anchorId] =
+                !entry.bitcoinAnchorObservationConsistencyExpanded[anchorView.anchorId];
+        }
+
+        function isBitcoinAnchorObservationConsistencyExpanded(entry, anchorView) {
+            return Boolean(entry.bitcoinAnchorObservationConsistencyExpanded[anchorView.anchorId]);
         }
 
         // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
@@ -4631,6 +4678,7 @@ export default {
             bitcoinAnchorConfirmationHistoryView, toggleBitcoinAnchorConfirmationHistory, isBitcoinAnchorConfirmationHistoryExpanded,
             toggleBitcoinAnchorConfirmationHistoryEntry, isBitcoinAnchorConfirmationHistoryEntryExpanded,
             bitcoinAnchorChainPlacementComparisonView, toggleBitcoinAnchorChainPlacementComparison, isBitcoinAnchorChainPlacementComparisonExpanded,
+            bitcoinAnchorObservationConsistencyView, toggleBitcoinAnchorObservationConsistency, isBitcoinAnchorObservationConsistencyExpanded,
             bitcoinWalletConnection, bitcoinWalletConnectionState, connectBitcoinWallet, disconnectBitcoinWallet,
             bitcoinWalletConnectionView, bitcoinWalletConnectionBadgeClass, isBitcoinWalletConnected, isBitcoinWalletConnecting,
             bitcoinAnchorTransactionReview, bitcoinAnchorTransactionReviewView, bitcoinAnchorTransactionReviewWalletMatchView,
@@ -6206,6 +6254,21 @@ export default {
                                                 @click="toggleBitcoinAnchorChainPlacementComparison(entry, anchorView)">
                                             {{ isBitcoinAnchorChainPlacementComparisonExpanded(entry, anchorView) ? 'Hide Placement Comparison' : 'Compare Confirmation Observations' }}
                                         </button>
+                                        <!-- 0.8.77 — Bitcoin Anchor Observation Consistency
+                                             Analysis. A SIBLING to "Compare Confirmation
+                                             Observations" above, shown under the identical
+                                             two-or-more-observations condition — never before,
+                                             since application/BitcoinAnchorObservationConsistencyAnalyzer.js's
+                                             own INSUFFICIENT_OBSERVATIONS state would be the only
+                                             possible result with fewer. Analyzing is a pure,
+                                             read-only re-derivation of the SAME history "Show
+                                             Confirmation History" already narrates — never a new
+                                             network call. -->
+                                        <button v-if="(entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || []).length > 1"
+                                                class="action-btn action-btn--secondary"
+                                                @click="toggleBitcoinAnchorObservationConsistency(entry, anchorView)">
+                                            {{ isBitcoinAnchorObservationConsistencyExpanded(entry, anchorView) ? 'Hide Observation Consistency' : 'Observation Consistency' }}
+                                        </button>
                                     </div>
 
                                     <!-- Each comparison names only whether the observed block
@@ -6238,6 +6301,46 @@ export default {
                                                             {{ comparison.laterBlock.blockHash || '(not confirmed)' }}
                                                             <span v-if="comparison.laterBlock.blockHeight !== null">— height {{ comparison.laterBlock.blockHeight }}, {{ comparison.laterBlock.confirmationCount }} confirmation(s)</span>
                                                             — observed {{ formatWhen(comparison.laterBlock.observedAt) }}
+                                                        </dd>
+                                                    </div>
+                                                </dl>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- 0.8.77 — Bitcoin Anchor Observation Consistency
+                                         Analysis. Each finding names only whether two
+                                         already-recorded observations are internally consistent
+                                         with each other — never a reorganization, invalidation,
+                                         fraud, or trust verdict, and never a claim about which
+                                         of the two (if either) is correct. See docs/
+                                         Principles.md, "An Internal Inconsistency Is Not
+                                         Automatically A Reorganization (0.8.77)." No "danger"
+                                         styling of any kind is applied to an INCONSISTENT
+                                         finding; it is narrated in the same neutral voice as a
+                                         CONSISTENT one. -->
+                                    <div v-if="isBitcoinAnchorObservationConsistencyExpanded(entry, anchorView)">
+                                        <p v-if="bitcoinAnchorObservationConsistencyView(entry, anchorView).count === 0" class="form-hint form-hint--neutral">
+                                            Not enough confirmed observations exist yet to analyze consistency.
+                                        </p>
+                                        <ul v-else class="replica-knowledge-claim-list">
+                                            <li v-for="(finding, index) in bitcoinAnchorObservationConsistencyView(entry, anchorView).findings" :key="index" class="replica-knowledge-claim">
+                                                <p class="form-hint form-hint--neutral">{{ finding.stateLabel }}</p>
+                                                <dl v-if="finding.previousBlock || finding.laterBlock" class="evidence-fields">
+                                                    <div v-if="finding.previousBlock" class="evidence-field">
+                                                        <dt>Previous block</dt>
+                                                        <dd>
+                                                            {{ finding.previousBlock.blockHash || '(not confirmed)' }}
+                                                            <span v-if="finding.previousBlock.blockHeight !== null">— height {{ finding.previousBlock.blockHeight }}, {{ finding.previousBlock.confirmationCount }} confirmation(s)</span>
+                                                            — observed {{ formatWhen(finding.previousBlock.observedAt) }}
+                                                        </dd>
+                                                    </div>
+                                                    <div v-if="finding.laterBlock" class="evidence-field">
+                                                        <dt>Later block</dt>
+                                                        <dd>
+                                                            {{ finding.laterBlock.blockHash || '(not confirmed)' }}
+                                                            <span v-if="finding.laterBlock.blockHeight !== null">— height {{ finding.laterBlock.blockHeight }}, {{ finding.laterBlock.confirmationCount }} confirmation(s)</span>
+                                                            — observed {{ formatWhen(finding.laterBlock.observedAt) }}
                                                         </dd>
                                                     </div>
                                                 </dl>
