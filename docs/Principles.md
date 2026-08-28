@@ -16096,3 +16096,64 @@ broadcast; its evidence bundle reports `broadcastObservations: { count:
 already holds for the identical fact (0.8.74).
 
 See `docs/Roadmap.md`, 0.8.78, for the full milestone entry.
+
+## Derived Evidence Is Reconstructed From Durable Facts; It Is Not Stored As A Second History (0.8.79)
+
+**A durable archive holds facts; it does not hold conclusions about those
+facts.** `application/PublicationObservationArchive.js` (0.8.75) persists
+exactly five collections of already-observed facts — IPFS publication
+records, IPFS verification observations, Bitcoin broadcast observations,
+Bitcoin confirmation observations, and Bitcoin content-proof observations.
+Chain-placement comparisons (0.8.76), consistency findings (0.8.77), and a
+composed Bitcoin anchor evidence bundle (0.8.78) are not facts of that
+kind — they are DERIVATIONS, computed by comparing facts this replica
+already holds against each other. `application/
+BitcoinAnchorDurableEvidenceView.js` and `application/
+BitcoinAnchorObservationArchiveView.js` (0.8.79) hold the line those three
+milestones' own headers already drew, one layer higher: neither file adds
+a `persistedChainPlacementObservations`, `persistedConsistencyFindings`,
+or `persistedEvidence` field to the archive, or to storage/
+LocalStoragePublicationObservationArchive.js. Both are recomputed, fresh,
+on every single read, by calling 0.8.76's own
+`observeBitcoinAnchorChainPlacementChanges()` and 0.8.77's own
+`analyzeBitcoinAnchorObservationConsistency()` unchanged, over exactly the
+durable confirmation history the archive already holds for one anchor.
+
+**Why this matters: a second durable representation of the same facts is
+a second source of truth, and the two WILL eventually disagree.** Had
+this milestone instead persisted a snapshot of 0.8.78's own composed
+evidence at the moment an anchor was last reconciled, that snapshot would
+silently go stale the instant a NEW confirmation observation was archived
+for the same anchor afterward — two representations of "the evidence for
+this anchor," one fresh and one stale, with nothing in the UI to tell a
+person which one they were looking at. Deriving on read makes that
+scenario structurally impossible: there is only ever one path from
+durable facts to displayed evidence, and it runs through the exact same
+0.8.76/0.8.77/0.8.78 functions every time, live session or restored
+archive alike.
+
+**Restoring a fact is not observing the fact again.** Reconstructing
+evidence for an anchor this replica already recorded facts about is a
+pure, local computation — comparing numbers and strings this replica
+already has, against each other, entirely offline. Neither
+`reconstructBitcoinAnchorDurableEvidence()` nor
+`describeBitcoinAnchorObservationArchive()` imports anything from
+`anchoring/`, `application/BitcoinEsploraTransactionConfirmationObserver.js`,
+or any other network-facing module; opening a "Historical Bitcoin Anchor
+Evidence" disclosure built on either function performs zero network
+operations, proven directly in `tests/BitcoinAnchorDurableEvidenceRestoration.test.js`'s
+own flagship section by swapping out `globalThis.fetch` for the duration
+of a restoration and asserting it was never called.
+
+**Explicit identity survives restoration exactly as it survived
+composition.** `application/BitcoinAnchorObservationEvidence.js`'s own
+principle (0.8.78, "Correlate Evidence By Explicit Identity, Never By
+Resemblance") already established that a shared `contentHash` is never
+evidence of a shared anchor for a LIVE session; this milestone's own
+flagship test proves the identical property survives a full
+persist-then-restore round trip — two anchors sharing one `contentHash`,
+serialized via `toJSON()`, restored into a genuinely separate archive
+instance via `fromJSON()`, still produce two byte-identical-to-pre-reload,
+completely non-overlapping evidence bundles.
+
+See `docs/Roadmap.md`, 0.8.79, for the full milestone entry.

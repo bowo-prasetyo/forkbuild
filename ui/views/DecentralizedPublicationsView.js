@@ -98,6 +98,8 @@ import { describeBitcoinAnchorObservationEvidence } from '../../application/Bitc
 import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
 import { describePublicationObservationArchive } from '../../application/PublicationObservationArchiveView.js';
 import { LocalStoragePublicationObservationArchive } from '../../storage/LocalStoragePublicationObservationArchive.js';
+import { describeBitcoinAnchorObservationArchive } from '../../application/BitcoinAnchorObservationArchiveView.js';
+import { reconstructBitcoinAnchorDurableEvidence } from '../../application/BitcoinAnchorDurableEvidenceView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1337,6 +1339,55 @@ export default {
         function clearPublicationObservationArchive() {
             publicationObservationArchive.value = PublicationObservationArchive.empty();
             publicationObservationArchiveStorage.clear();
+        }
+
+        // 0.8.79 — Durable Bitcoin Anchor Evidence Restoration & Historical
+        // Inspection.
+        //
+        // A second, deliberately separate disclosure over the SAME
+        // `publicationObservationArchive` the "Observation Archive" card
+        // above already reads — never a second archive, never a second
+        // persisted copy. Where that card narrates a single, cross-domain
+        // CHRONOLOGICAL timeline, this one is scoped to Bitcoin anchors
+        // specifically and organized BY ANCHOR: application/
+        // BitcoinAnchorObservationArchiveView.js's own
+        // `describeBitcoinAnchorObservationArchive()` lists every anchorId
+        // this archive holds any Bitcoin fact for, and application/
+        // BitcoinAnchorDurableEvidenceView.js's own
+        // `reconstructBitcoinAnchorDurableEvidence()` reconstructs one
+        // anchor's own full evidence bundle — broadcast, confirmation,
+        // content-proof, chain-placement, consistency — ENTIRELY FROM
+        // ALREADY-PERSISTED FACTS, deriving those last two sections fresh
+        // on every read rather than reading anything this milestone stored
+        // for them, exactly as both files' own headers require. Expanding
+        // an anchor here performs ZERO network operations — the identical
+        // restraint the "Observation Archive" card above already holds.
+        const historicalBitcoinAnchorsExpanded = ref(false);
+        const historicalBitcoinAnchorEntryExpanded = reactive({});
+
+        function toggleHistoricalBitcoinAnchors() {
+            historicalBitcoinAnchorsExpanded.value = !historicalBitcoinAnchorsExpanded.value;
+        }
+
+        // Pure projection — never a second, competing per-anchor index
+        // computed inline here.
+        function historicalBitcoinAnchorArchiveView() {
+            return describeBitcoinAnchorObservationArchive(publicationObservationArchive.value);
+        }
+
+        function toggleHistoricalBitcoinAnchorEntry(anchorId) {
+            historicalBitcoinAnchorEntryExpanded[anchorId] = !historicalBitcoinAnchorEntryExpanded[anchorId];
+        }
+
+        function isHistoricalBitcoinAnchorEntryExpanded(anchorId) {
+            return Boolean(historicalBitcoinAnchorEntryExpanded[anchorId]);
+        }
+
+        // The one anchorId → reconstructed evidence lookup this section
+        // ever performs — never by contentHash, never by txid. See
+        // application/BitcoinAnchorDurableEvidenceView.js's own header.
+        function historicalBitcoinAnchorEvidenceView(anchorId) {
+            return reconstructBitcoinAnchorDurableEvidence(publicationObservationArchive.value, anchorId);
         }
 
         // Every currently AUTHENTICATED peer, in registry order — the
@@ -4720,6 +4771,8 @@ export default {
             PublicationObservationTimelineEntryKind, PublicationObservationTimelineDomain,
             publicationObservationArchiveView, publicationObservationArchiveExpanded,
             togglePublicationObservationArchive, clearPublicationObservationArchive,
+            historicalBitcoinAnchorsExpanded, toggleHistoricalBitcoinAnchors, historicalBitcoinAnchorArchiveView,
+            toggleHistoricalBitcoinAnchorEntry, isHistoricalBitcoinAnchorEntryExpanded, historicalBitcoinAnchorEvidenceView,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -5250,6 +5303,136 @@ export default {
                                 Block height {{ item.blockHeight }}
                             </p>
                             <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 0.8.79 — Durable Bitcoin Anchor Evidence Restoration &
+                 Historical Inspection. Page-level, deliberately unrelated
+                 to any one publication's own card below, mirroring the
+                 "Observation Archive" card immediately above it exactly.
+                 Reads the SAME durable, persisted archive that card
+                 already reads — never a second archive, never a second
+                 persisted representation of derived evidence. See
+                 application/BitcoinAnchorObservationArchiveView.js's and
+                 application/BitcoinAnchorDurableEvidenceView.js's own
+                 headers, and docs/Principles.md, "Derived Evidence Is
+                 Reconstructed From Durable Facts; It Is Not Stored As A
+                 Second History (0.8.79)." Expanding an anchor below
+                 recomputes its chain-placement comparisons and consistency
+                 findings fresh from durable confirmation observations —
+                 nothing here is fetched, verified, or reconciled, and
+                 opening or closing this disclosure performs ZERO network
+                 operations. Combined Evidence, further below, is still
+                 only a correlation of independently recorded facts, never
+                 a verdict. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Historical Bitcoin Anchor Evidence</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Every Bitcoin anchor this archive holds a durable fact for, organized by its own
+                    explicit anchorId. Counts below describe how much this replica has recorded for
+                    each anchor — never how complete, reliable, or trustworthy that anchor's own
+                    evidence is.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Anchors</dt><dd>{{ historicalBitcoinAnchorArchiveView().anchorCount }}</dd></div>
+                </dl>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="toggleHistoricalBitcoinAnchors">
+                        {{ historicalBitcoinAnchorsExpanded ? 'Hide Historical Anchors' : 'Show Historical Anchors' }}
+                    </button>
+                </div>
+                <div v-if="historicalBitcoinAnchorsExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Archived Bitcoin Anchors</span>
+                    <p v-if="historicalBitcoinAnchorArchiveView().anchorCount === 0" class="form-hint form-hint--neutral">
+                        No Bitcoin anchor facts archived yet. Broadcasting a Bitcoin transaction,
+                        observing a confirmation, or recording a content-proof observation elsewhere
+                        on this page adds to this archive automatically.
+                    </p>
+                    <ul v-else class="replica-knowledge-claim-list">
+                        <li v-for="anchorRow in historicalBitcoinAnchorArchiveView().anchors" :key="anchorRow.anchorId" class="replica-knowledge-claim">
+                            <button type="button" class="peer-action-btn" @click="toggleHistoricalBitcoinAnchorEntry(anchorRow.anchorId)">
+                                {{ anchorRow.anchorId }}
+                            </button>
+                            <p class="form-hint form-hint--neutral">
+                                Broadcast observations: {{ anchorRow.broadcastObservationCount }} ·
+                                Confirmation observations: {{ anchorRow.confirmationObservationCount }} ·
+                                Content-proof observations: {{ anchorRow.contentProofObservationCount }} ·
+                                Chain-placement comparisons: {{ anchorRow.chainPlacementComparisonCount }} ·
+                                Consistency findings: {{ anchorRow.consistencyFindingCount }}
+                            </p>
+
+                            <div v-if="isHistoricalBitcoinAnchorEntryExpanded(anchorRow.anchorId) && historicalBitcoinAnchorEvidenceView(anchorRow.anchorId)" class="evidence-list">
+                                <div class="evidence-list">
+                                    <span class="evidence-convergence-title">Broadcast History</span>
+                                    <p v-if="historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).broadcastObservations.count === 0" class="form-hint form-hint--neutral">No broadcast observations recorded.</p>
+                                    <ul v-else class="replica-knowledge-claim-list">
+                                        <li v-for="item in historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).broadcastObservations.observations" :key="item.index" class="replica-knowledge-claim">
+                                            {{ item.stateLabel }} — {{ item.broadcastedAt ? formatWhen(item.broadcastedAt) : 'no timestamp recorded' }}
+                                            <template v-if="item.txid"> — txid {{ item.txid }}</template>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="evidence-list">
+                                    <span class="evidence-convergence-title">Confirmation History</span>
+                                    <p v-if="historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).confirmationObservations.count === 0" class="form-hint form-hint--neutral">No confirmation observations recorded.</p>
+                                    <ul v-else class="replica-knowledge-claim-list">
+                                        <li v-for="item in historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).confirmationObservations.observations" :key="item.index" class="replica-knowledge-claim">
+                                            Confirmation observation #{{ item.index }} — {{ formatWhen(item.observedAt) }} — {{ item.stateLabel }}
+                                            <template v-if="item.blockHeight !== null && item.blockHeight !== undefined"> — height {{ item.blockHeight }}</template>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="evidence-list">
+                                    <span class="evidence-convergence-title">Content-Proof History</span>
+                                    <p v-if="historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).contentProofObservations.count === 0" class="form-hint form-hint--neutral">No content-proof observations recorded.</p>
+                                    <ul v-else class="replica-knowledge-claim-list">
+                                        <li v-for="item in historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).contentProofObservations.observations" :key="item.index" class="replica-knowledge-claim">
+                                            Content-proof observation #{{ item.index }} — {{ formatWhen(item.observedAt) }} — {{ item.stateLabel }}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="evidence-list">
+                                    <span class="evidence-convergence-title">Chain Placement Comparisons</span>
+                                    <p v-if="historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).chainPlacementObservations.count === 0" class="form-hint form-hint--neutral">Not enough confirmed observations exist yet to compare block placement.</p>
+                                    <ul v-else class="replica-knowledge-claim-list">
+                                        <li v-for="(comparison, index) in historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).chainPlacementObservations.comparisons" :key="index" class="replica-knowledge-claim">
+                                            {{ comparison.outcomeLabel }}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="evidence-list">
+                                    <span class="evidence-convergence-title">Observation Consistency</span>
+                                    <p v-if="historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).consistencyFindings.count === 0" class="form-hint form-hint--neutral">Not enough confirmed observations exist yet to analyze consistency.</p>
+                                    <ul v-else class="replica-knowledge-claim-list">
+                                        <li v-for="(finding, index) in historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).consistencyFindings.findings" :key="index" class="replica-knowledge-claim">
+                                            {{ finding.stateLabel }}
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="evidence-list">
+                                    <span class="evidence-convergence-title">Combined Evidence</span>
+                                    <p class="form-hint form-hint--neutral">
+                                        Broadcast: {{ historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).broadcastObservations.count }} ·
+                                        Confirmation: {{ historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).confirmationObservations.count }} ·
+                                        Content-proof: {{ historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).contentProofObservations.count }} ·
+                                        Chain-placement: {{ historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).chainPlacementObservations.count }} ·
+                                        Consistency: {{ historicalBitcoinAnchorEvidenceView(anchorRow.anchorId).consistencyFindings.count }}
+                                    </p>
+                                    <p class="form-hint form-hint--neutral">
+                                        This is a correlation of independently recorded facts by explicit anchorId — not a verdict.
+                                    </p>
+                                </div>
+                            </div>
                         </li>
                     </ul>
                 </div>
