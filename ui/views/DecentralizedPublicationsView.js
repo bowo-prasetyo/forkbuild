@@ -119,6 +119,10 @@ import {
     importPublicationObservationArchive,
     recordPublicationObservationArchiveImport
 } from '../../application/PublicationObservationArchiveExport.js';
+import {
+    PublicationObservationArchiveInspectionOutcome,
+    inspectPublicationObservationArchive
+} from '../../application/PublicationObservationArchiveInspection.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1523,6 +1527,42 @@ export default {
             showPublicationArchiveImportForm.value = false;
             publicationArchiveImportText.value = '';
         }
+
+        // 0.8.86 — Non-Replacing External Publication Archive Inspection.
+        //
+        // A THIRD, deliberately separate action alongside "Export Archive"
+        // and "Import Archive" immediately above — never a mode of either
+        // one. `publicationArchiveInspectionText` is a person's own pasted
+        // or file-chosen text, re-validated on every change through
+        // `inspectPublicationObservationArchive()`, mirroring
+        // `publicationArchiveImportOutcome`'s own computed shape exactly.
+        // Unlike import, there is no confirmation click that ever assigns
+        // anything to `publicationObservationArchive.value` — inspecting
+        // has nothing left to confirm, because it never touches the
+        // current archive in the first place. See application/
+        // PublicationObservationArchiveInspection.js's own header, "INSPECT
+        // != IMPORT."
+        const showPublicationArchiveInspectionForm = ref(false);
+        const publicationArchiveInspectionText = ref('');
+
+        function togglePublicationArchiveInspectionForm() {
+            showPublicationArchiveInspectionForm.value = !showPublicationArchiveInspectionForm.value;
+            publicationArchiveInspectionText.value = '';
+        }
+
+        function onPublicationArchiveInspectionFileChosen(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => { publicationArchiveInspectionText.value = String(reader.result || ''); };
+            reader.readAsText(file);
+        }
+
+        const publicationArchiveInspectionOutcome = computed(() => {
+            const text = publicationArchiveInspectionText.value.trim();
+            if (!text) return null;
+            return inspectPublicationObservationArchive(text);
+        });
 
         // 0.8.79 — Durable Bitcoin Anchor Evidence Restoration & Historical
         // Inspection.
@@ -5067,6 +5107,9 @@ export default {
             publicationArchiveImportText, onPublicationArchiveImportFileChosen,
             publicationArchiveImportOutcome, publicationArchiveImportPreview,
             confirmPublicationArchiveImport, PublicationObservationArchiveImportOutcome,
+            showPublicationArchiveInspectionForm, togglePublicationArchiveInspectionForm,
+            publicationArchiveInspectionText, onPublicationArchiveInspectionFileChosen,
+            publicationArchiveInspectionOutcome, PublicationObservationArchiveInspectionOutcome,
             publicationObservationArchiveProvenanceView,
             publicationObservationArchiveFingerprintView, copyArchiveFingerprint, archiveFingerprintCopied,
             archiveFingerprintComparisonInput, archiveFingerprintComparisonResult,
@@ -5678,6 +5721,80 @@ export default {
                         <button type="button" class="action-btn action-btn--danger" @click="confirmPublicationArchiveImport">
                             Replace Current Archive
                         </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 0.8.86 — Non-Replacing External Publication Archive
+                 Inspection. A THIRD action alongside "Export Archive" and
+                 "Import Archive" immediately above — never a mode of
+                 either one. Choosing a file or pasting JSON below and
+                 clicking "Inspect" reads that EXTERNAL archive only —
+                 nothing here ever touches, compares against, or replaces
+                 the "Observation Archive" above. There is no "Replace
+                 Current Archive" button on this card, and none will ever
+                 appear here — that action stays exactly where 0.8.82 put
+                 it, on the "Import Archive" form above, behind its own
+                 explicit confirmation. See application/
+                 PublicationObservationArchiveInspection.js's own header,
+                 "INSPECT != IMPORT." -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Inspect External Archive</span>
+                    <span class="peer-badge peer-badge--pending">Read-only</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Look inside an exported archive file without importing it — the Observation
+                    Archive above, and everything derived from it, stays exactly as it is. Nothing
+                    here is fetched, verified, or reconciled against the current archive, and
+                    nothing here can ever replace it.
+                </p>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationArchiveInspectionForm">
+                        {{ showPublicationArchiveInspectionForm ? 'Cancel Inspection' : 'Inspect Archive' }}
+                    </button>
+                </div>
+
+                <div v-if="showPublicationArchiveInspectionForm" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Inspect Archive</span>
+                    <label class="form-field">
+                        <span class="form-label">Exported archive file</span>
+                        <input type="file" accept="application/json" @change="onPublicationArchiveInspectionFileChosen" class="form-input" />
+                    </label>
+                    <textarea v-model="publicationArchiveInspectionText" class="form-input identity-export-json" rows="6"
+                              placeholder="…or paste an exported archive JSON here"></textarea>
+
+                    <p v-if="publicationArchiveInspectionOutcome && publicationArchiveInspectionOutcome.outcome === PublicationObservationArchiveInspectionOutcome.INVALID_ARCHIVE"
+                       class="identity-unlock-error">
+                        This is not a valid publication archive export — nothing to inspect.
+                    </p>
+
+                    <div v-if="publicationArchiveInspectionOutcome && publicationArchiveInspectionOutcome.outcome === PublicationObservationArchiveInspectionOutcome.INSPECTED"
+                         class="identity-import-preview">
+                        <dl class="evidence-fields">
+                            <div class="evidence-field"><dt>Schema version</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.schemaVersion }}</dd></div>
+                            <div class="evidence-field"><dt>IPFS publication records</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.ipfsPublicationCount }}</dd></div>
+                            <div class="evidence-field"><dt>IPFS verification observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.ipfsVerificationCount }}</dd></div>
+                            <div class="evidence-field"><dt>Bitcoin broadcast observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinBroadcastCount }}</dd></div>
+                            <div class="evidence-field"><dt>Bitcoin confirmation observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinConfirmationCount }}</dd></div>
+                            <div class="evidence-field"><dt>Bitcoin content-proof observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinContentProofCount }}</dd></div>
+                            <div class="evidence-field"><dt>Bitcoin publication records</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinAnchorPublicationRecordCount }}</dd></div>
+                            <div class="evidence-field"><dt>Local facts</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.localFactCount }}</dd></div>
+                            <div class="evidence-field"><dt>Imported facts</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.importedFactCount }}</dd></div>
+                            <div class="evidence-field"><dt>Import events</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.archiveImportCount }}</dd></div>
+                            <div class="evidence-field"><dt>Archive fingerprint</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.fingerprint }}</dd></div>
+                        </dl>
+                        <p v-if="publicationArchiveInspectionOutcome.inspection.bitcoinAnchorIds.length > 0" class="form-hint form-hint--neutral">
+                            Bitcoin anchor IDs: {{ publicationArchiveInspectionOutcome.inspection.bitcoinAnchorIds.join(', ') }}
+                        </p>
+                        <p v-if="publicationArchiveInspectionOutcome.inspection.ipfsPublicationRecordIndexes.length > 0" class="form-hint form-hint--neutral">
+                            IPFS publication record indexes: {{ publicationArchiveInspectionOutcome.inspection.ipfsPublicationRecordIndexes.join(', ') }}
+                        </p>
+                        <p class="form-hint form-hint--neutral">
+                            This is a read-only look at the file above — it changes nothing about the
+                            Observation Archive shown earlier on this page. Use "Import Archive" above
+                            if you want this archive to replace it.
+                        </p>
                     </div>
                 </div>
             </div>

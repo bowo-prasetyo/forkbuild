@@ -16576,3 +16576,68 @@ no network fingerprint lookup, no peer discovery. A comparison answers
 "Deliberately excluded," for the complete list.
 
 See `docs/Roadmap.md`, 0.8.85, for the full milestone entry.
+
+## Inspecting An External Archive Never Touches The Current One (0.8.86)
+
+**INSPECT is not IMPORT.** `application/
+PublicationObservationArchiveInspection.js`'s own
+`inspectPublicationObservationArchive(payload)` is a pure function of an
+EXTERNAL payload alone — it has no parameter, and no other means, through
+which a caller's own current archive could ever reach it. Nothing an
+inspection call does can become the active archive; only application/
+PublicationObservationArchiveExport.js's own, entirely separate
+`importPublicationObservationArchive()` plus `ui/views/
+DecentralizedPublicationsView.js`'s own `confirmPublicationArchiveImport()`
+click can ever do that, exactly as 0.8.82 already established. This is
+docs/Principles.md, "Persistence Restores Historical Facts; It Never
+Resurrects Invented Ones (0.8.75)," held once more: reading a fact is not
+the same act as adopting it.
+
+**Provenance is read as recorded, never relabeled the way importing
+would.** `importPublicationObservationArchive()` deliberately stamps every
+fact `IMPORTED`, uniformly, via `withUniformProvenance()` (0.8.83) —
+correct once an archive is about to become this replica's own. Inspection
+reconstructs the external archive with `PublicationObservationArchive.js`'s
+own plain `fromJSON()` instead — the identical faithful round trip
+storage/LocalStoragePublicationObservationArchive.js already relies on —
+so an inspection's own `localFactCount`/`importedFactCount` are the
+external archive's OWN recorded provenance, from its own replica's
+perspective, exactly as its own export produced it. Relabeling those
+counts here would answer a different question than the one this milestone
+exists to answer: "what does this archive already say about itself?", not
+"what would this look like after I imported it?"
+
+**An inspection result is a structural index, not evidence, and answers
+no question that requires a second archive.** Every count an inspection
+reports is read straight from three already-existing, unchanged
+projections — application/PublicationObservationArchiveView.js's own
+`describePublicationObservationArchive()`, application/
+PublicationObservationArchiveProvenanceView.js's own
+`describePublicationObservationArchiveProvenance()`, and application/
+PublicationObservationArchiveFingerprintView.js's own
+`describePublicationObservationArchiveFingerprint()` — over the externally
+supplied archive instead of the current one. No diff, no "only in this
+archive," no "newer," no merge preview: comparing what a SECOND archive
+holds against the current one is deliberately left for a later,
+separately sized milestone (0.8.87) — see `docs/Roadmap.md`, 0.8.86,
+"Deliberately excluded."
+
+**The result is a plain, frozen, ephemeral projection — never a new
+durable domain object.** Deliberately not a
+`PublicationObservationArchiveInspectionRecord` class, and never written
+to storage anywhere in this codebase. `ui/views/
+DecentralizedPublicationsView.js`'s own "Inspect External Archive" card
+keeps its result in the same kind of page-local, non-persisted state its
+own "Exported Archive" preview already uses — closing the card, choosing
+a different file, or reloading the page discards it, exactly as it should
+for something that was never meant to be a second archive history.
+
+**Malformed input is `INVALID_ARCHIVE`, never a silently empty
+inspection** — the identical restraint `importPublicationObservationArchive()`
+already holds, and for the identical reason.
+
+**Synchronous, pure, no mutation, no storage, no network, no capability
+access.** Inspecting reads no clock, writes nothing to storage, and
+performs no network operation of its own.
+
+See `docs/Roadmap.md`, 0.8.86, for the full milestone entry.

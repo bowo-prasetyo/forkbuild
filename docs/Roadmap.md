@@ -30258,3 +30258,154 @@ replacing the current one); a durable archive difference projection
 reconciliation model — each its own, separately sized piece of work,
 exactly like every "Deliberately excluded" list in this document before
 it.
+
+## 0.8.86 — Non-Replacing External Publication Archive Inspection
+
+0.8.82 made a `PublicationObservationArchive` portable. 0.8.84/0.8.85 gave
+it a deterministic identity and a way to check that identity against a
+fingerprint obtained elsewhere. But once a comparison reports `DIFFERENT`,
+or a person simply wants to look at a second archive before deciding
+anything, the only tool this codebase offered was
+`importPublicationObservationArchive()` — which REPLACES the current
+archive to find out. This milestone adds the missing, safer step in
+between: look inside an external archive without importing it, without
+replacing the current one, and without changing any durable state at all.
+
+```text
+IMPORT
+external archive ──▶ replaces the current durable archive
+
+INSPECT   (this milestone)
+external archive ──▶ a temporary, read-only projection — nothing durable
+                       changes, nothing is written to storage
+
+COMPARE   (0.8.85, unchanged)
+archive ──▶ fingerprint equality against a second, supplied digest
+```
+
+**INSPECT != IMPORT — the one distinction this milestone exists to draw.**
+`application/PublicationObservationArchiveInspection.js`'s own
+`inspectPublicationObservationArchive(payload)` is a pure function of the
+EXTERNAL payload alone — it never receives, reads, or returns whatever
+archive a caller currently has active, and there is no
+`confirmXxxInspection()` counterpart to `confirmPublicationArchiveImport()`.
+Nothing an inspection call does can ever become the active archive; only a
+separate, later, explicit "Import Archive" click (0.8.82, unchanged) does
+that.
+
+**Provenance is read as recorded, never relabeled.**
+`importPublicationObservationArchive()` deliberately stamps every fact
+`IMPORTED` via `withUniformProvenance()` (0.8.83) — correct once an
+archive is about to become this replica's own. Inspection reconstructs the
+external archive with plain `fromJSON()` instead, so the LOCAL/IMPORTED
+counts an inspection reports are the external archive's OWN recorded
+provenance, exactly as its own export produced it — never what it would
+look like after importing.
+
+**A pure composition of already-existing projections — no new counting
+logic, no semantic difference of any kind.** Every number in an
+inspection result is read straight from application/
+PublicationObservationArchiveView.js's own
+`describePublicationObservationArchive()`, application/
+PublicationObservationArchiveProvenanceView.js's own
+`describePublicationObservationArchiveProvenance()`, and application/
+PublicationObservationArchiveFingerprintView.js's own
+`describePublicationObservationArchiveFingerprint()` — unchanged, over the
+externally supplied archive instead of the current one. This milestone
+invents no second summary algorithm, and computes nothing that requires a
+SECOND archive: no diff, no "only in this archive," no "newer," no merge
+preview. That question is explicitly left for a later, separately sized
+milestone (0.8.87, below).
+
+**The result is a plain, frozen, structural data shape — never a new
+domain object, never another durable archive history.** Deliberately not
+a `PublicationObservationArchiveInspectionRecord` class, and never held
+anywhere a caller's own state could accidentally persist it across a
+reload. `ui/views/DecentralizedPublicationsView.js`'s own "Inspect
+External Archive" card keeps its inspection result in the same kind of
+page-local, non-persisted state its own "Exported Archive" preview
+already uses.
+
+**Malformed input is `INVALID_ARCHIVE`, never a silently empty
+inspection** — the identical restraint `importPublicationObservationArchive()`
+already holds, for the identical reason: treating an unreadable file as
+"an archive with nothing in it" would be misleading, not graceful.
+
+**Synchronous, pure, no mutation, no storage, no network, no capability of
+any kind.** Inspecting reads no clock, writes nothing to storage, and
+performs no network operation — calling it twice on byte-identical input
+produces a byte-identical result.
+
+New files:
+- `application/PublicationObservationArchiveInspection.js` — new;
+  `PublicationObservationArchiveInspectionOutcome` (`INSPECTED` /
+  `INVALID_ARCHIVE`) and `inspectPublicationObservationArchive(payload)`,
+  accepting either a raw JSON string or an already-parsed value, mirroring
+  `importPublicationObservationArchive()`'s own contract. Returns a frozen
+  `{ outcome, inspection }`; `inspection` holds `schemaVersion`,
+  `publicationCount`/`observationCount` and their per-domain breakdowns,
+  `bitcoinAnchorPublicationRecordCount`, `localFactCount`/
+  `importedFactCount`/`totalFactCount`, `archiveImportCount`, `fingerprint`/
+  `fingerprintAlgorithm`, and two plain identity lists — `bitcoinAnchorIds`
+  and `ipfsPublicationRecordIndexes` — never a confirmation count, a
+  chain-placement comparison, or a consistency finding.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — a new "Inspect External
+  Archive" card, placed immediately after the existing "Publication
+  Archive" export/import card and reusing that card's own file-input/paste
+  pattern. "Inspect Archive" reveals a structural summary of the chosen
+  file; there is no "Replace Current Archive" button here, and none will
+  ever appear on this card — that action stays exactly where 0.8.82 put
+  it, on the "Import Archive" form, behind its own explicit confirmation.
+
+New tests:
+- `tests/PublicationObservationArchiveInspection.test.js` — the flagship
+  scenario described above (inspecting an external archive B while a
+  separate "current" archive A is held elsewhere leaves A's own facts and
+  fingerprint byte-identical; only a later, separate import call actually
+  replaces it), plus: the inspection result's own counts match the
+  external archive's own facts exactly; the inspection's own fingerprint
+  equals `fingerprintPublicationObservationArchive()` computed directly
+  over the same archive; provenance is read as recorded on the external
+  archive and differs from what importing the identical payload would
+  produce; `archiveImportEvents` metadata is visible and reported
+  separately from durable factual/provenance counts; malformed or
+  non-archive input is always `INVALID_ARCHIVE`, never a silently empty
+  inspection, while a genuinely empty archive still inspects successfully;
+  zero network operations; a read-the-source guarantee that the module's
+  own imports name no wallet, signer, pinning provider, network, or
+  storage symbol; no mutation of the supplied payload and full
+  determinism; two archives differing only in `archiveImportEvents`
+  inspect to the same fingerprint but different `archiveImportCount`,
+  reasserting 0.8.84's own exclusion boundary; `bitcoinAnchorIds`/
+  `ipfsPublicationRecordIndexes` are plain, deduplicated, first-seen-order
+  identity lists, including an anchor known only through a content-proof
+  observation with no publication record; no trust/confidence/validity/
+  verified/authentic/newer/correct vocabulary anywhere in the outcome; and
+  both a raw JSON string and an already-parsed value are accepted.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Automatic comparison against the current archive.** 0.8.85's own
+  explicit "Compare" click, over a fingerprint, is the one place that
+  already happens — never wired to this card, and never automatic here.
+- **Archive diffing, merging, synchronization, conflict resolution, or
+  record-level reconciliation.** An inspection answers only "what does
+  this archive contain?" — never "how does it differ from mine?" See
+  0.8.87, below.
+- **Automatic import, replacement, or any "Replace Current Archive"
+  action on this card.** That stays exactly where 0.8.82 already put it.
+- **"Newer," "better," "more complete," or any other classification of
+  one archive relative to another.**
+- **Network retrieval of any kind.** The external archive is always a
+  file already chosen, or text already pasted — never fetched.
+- **Signing, public/private keys, or any cryptographic identity beyond
+  what 0.8.84 already established.**
+
+What's left, and deliberately unbuilt: 0.8.87 — Durable Publication
+Archive Difference Projection, answering which durable facts differ
+between two archives, once identity-aware matching rules exist for every
+collection (`anchorId` for Bitcoin, IPFS record index, provenance as part
+of fingerprint identity but not observation semantics, `archiveImportEvents`
+outside fingerprint identity entirely) — deliberately not designed yet,
+and any explicit reconciliation model beyond it.
