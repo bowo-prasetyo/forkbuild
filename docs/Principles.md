@@ -17596,3 +17596,61 @@ than an achievement one, exactly the risk the original proposal for this
 system named and asked to avoid.
 
 See `docs/Roadmap.md`, 0.8.102, for the full milestone entry.
+
+## A Badge Presents An Achievement; It Does Not Redefine It (0.8.103)
+
+**A badge is a human-facing presentation of an achievement event, never a
+second, competing achievement system.** `application/AchievementBadgeView.js`'s
+own `describeAchievementBadges()` composes `application/AchievementEvent.js`'s
+own `describeAchievementEvents()` (0.8.102) UNCHANGED — the same fact, given
+a title, a description, and an icon. A badge's own `achievementKind` is
+always exactly the achievement event's own `achievementKind`; its own
+`title` is always exactly that event's own `label`, verbatim. `AchievementKind`
+still names exactly six values after this milestone — a badge view widens
+the presentation of an achievement, never the vocabulary of what can be
+earned.
+
+**A badge is a projection over facts that were already durable, never a
+second, competing source of truth — the identical restraint held one layer
+down.** `describeAchievementBadges()` adds no tenth collection to
+`application/PublicationObservationArchive.js`, no `SCHEMA_VERSION` bump,
+and no new `appendXxx()` method — it is computed fresh, every time, from
+whatever `describeAchievementEvents()` itself already produces from the
+archive's own durable records. Destroying and restoring the archive can
+never change the badges this file produces from the identical underlying
+achievement events, because nothing of this file's own is ever stored a
+second time. There is no badge database, no server account, no badge
+counter, and no mutable "earned" flag anywhere in this codebase — a badge
+computed today and a badge computed after a restart tomorrow, from the
+identical durable facts, are byte-identical.
+
+**A badge presents a fact; it does not score, rank, or assess trust.** This
+extends `docs/Principles.md`, "An Achievement Describes An Attributable
+Fact, Not A Person's Worth (0.8.102)," one layer further: 0.8.102 refused
+to let an achievement event become a verdict about a publisher; this
+principle refuses to let a badge — the thing a person actually SEES —
+become one either. No badge carries a `points`, `score`, `rank`, `level`,
+`tier`, `status`, `confidence`, `trusted`, or `valid` field. A decorative
+icon is exactly that — decorative — never a rank a person could read as
+"better than" another badge's own glyph.
+
+**An identity a badge names is the exact identity its own achievement event
+already named — never reconstructed, and a navigation aid is never
+mistaken for a second identity.** `sourcePublicationIdentity` is always the
+identical `BlockchainPublicationIdentity` (0.8.89) instance the achievement
+event already carries, passed through unchanged — badge → event → exact
+publication identity → exact blockchain identity. `sourceAnchorId`, the one
+additional field this milestone introduces, is documented plainly as a
+navigation convenience, not a second identity: it lets the UI reopen this
+codebase's own already-existing Bitcoin lifecycle timeline (0.8.81), which
+is keyed by `anchorId` rather than the `chainReference`/`txid` a Bitcoin
+publication identity actually carries. It is resolved by one, local,
+one-off match against `application/BlockchainPublicationIdentity.js`'s own
+`sameAs()` — the one sanctioned equality that class defines — never by a
+new, general lookup exposed on `application/
+BitcoinAnchorPublicationRecordHistory.js`, whose own header still holds
+`findBitcoinAnchorPublicationRecordByAnchorId()` as the ONLY lookup that
+file offers. When no matching record can be found, `sourceAnchorId` is
+`null` — never a guess.
+
+See `docs/Roadmap.md`, 0.8.103, for the full milestone entry.
