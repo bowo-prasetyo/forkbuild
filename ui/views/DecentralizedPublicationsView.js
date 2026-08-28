@@ -100,6 +100,9 @@ import { describePublicationObservationArchive } from '../../application/Publica
 import { LocalStoragePublicationObservationArchive } from '../../storage/LocalStoragePublicationObservationArchive.js';
 import { describeBitcoinAnchorObservationArchive } from '../../application/BitcoinAnchorObservationArchiveView.js';
 import { reconstructBitcoinAnchorDurableEvidence } from '../../application/BitcoinAnchorDurableEvidenceView.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { describeBitcoinAnchorPublicationRecordHistory } from '../../application/BitcoinAnchorPublicationRecordHistoryView.js';
+import { inspectBitcoinAnchorPublication } from '../../application/BitcoinAnchorPublicationInspectionView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1320,6 +1323,31 @@ export default {
             persistPublicationObservationArchive();
         }
 
+        // 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle Record.
+        //
+        // Stateless — application/CreateBitcoinAnchorPublicationRecordUseCase.js
+        // takes no collaborator of its own, so this is constructed directly
+        // rather than injected, exactly like every other pure composition
+        // function this page already calls unwired (e.g.
+        // describeBitcoinAnchorObservationArchive()).
+        const createBitcoinAnchorPublicationRecordUseCase = new CreateBitcoinAnchorPublicationRecordUseCase();
+
+        // Called ONCE, from `finalizeBitcoinAnchorSignedPsbt()` below, the
+        // moment a "Verify & Finalize Transaction" click reaches its own
+        // FINALIZED outcome — never at funding, construction, review, or
+        // signing, and never re-called on a later broadcast attempt for the
+        // SAME finalized transaction. Mints this replica's own durable
+        // identity for this publication attempt; whether the broadcast
+        // that follows succeeds or fails never retroactively erases it. See
+        // application/CreateBitcoinAnchorPublicationRecordUseCase.js's own
+        // header.
+        function archiveBitcoinAnchorPublicationRecord({ anchorId, contentHash, txid, network, createdAt }) {
+            publicationObservationArchive.value = createBitcoinAnchorPublicationRecordUseCase.execute(publicationObservationArchive.value, {
+                anchorId, contentHash, txid, network, createdAt
+            });
+            persistPublicationObservationArchive();
+        }
+
         // Pure projection over `publicationObservationArchive` through
         // application/PublicationObservationArchiveView.js's own
         // `describePublicationObservationArchive()` — never a second,
@@ -1388,6 +1416,46 @@ export default {
         // application/BitcoinAnchorDurableEvidenceView.js's own header.
         function historicalBitcoinAnchorEvidenceView(anchorId) {
             return reconstructBitcoinAnchorDurableEvidence(publicationObservationArchive.value, anchorId);
+        }
+
+        // 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle Record.
+        //
+        // A DIFFERENT INDEX THAN "Historical Bitcoin Anchor Evidence"
+        // ABOVE. That card lists every `anchorId` this archive holds ANY
+        // Bitcoin fact for; this one lists only the `anchorId`s this
+        // replica minted an explicit PUBLICATION IDENTITY for — a
+        // narrower, and deliberately different, question. An anchor
+        // broadcast before this milestone existed (or discovered from
+        // elsewhere, never finalized by this replica) can appear above
+        // without ever appearing here, and that is correct, not a bug.
+        const bitcoinAnchorPublicationsExpanded = ref(false);
+        const bitcoinAnchorPublicationInspectionExpanded = reactive({});
+
+        function toggleBitcoinAnchorPublications() {
+            bitcoinAnchorPublicationsExpanded.value = !bitcoinAnchorPublicationsExpanded.value;
+        }
+
+        // Pure projection — never a second, competing record listing
+        // computed inline here.
+        function bitcoinAnchorPublicationRecordHistoryView() {
+            return describeBitcoinAnchorPublicationRecordHistory(publicationObservationArchive.value.bitcoinAnchorPublicationRecords);
+        }
+
+        function toggleBitcoinAnchorPublicationInspection(anchorId) {
+            bitcoinAnchorPublicationInspectionExpanded[anchorId] = !bitcoinAnchorPublicationInspectionExpanded[anchorId];
+        }
+
+        function isBitcoinAnchorPublicationInspectionExpanded(anchorId) {
+            return Boolean(bitcoinAnchorPublicationInspectionExpanded[anchorId]);
+        }
+
+        // "Inspect Observations" — joins this one publication's own
+        // identity back to application/BitcoinAnchorDurableEvidenceView.js's
+        // own (0.8.79, unchanged) reconstructed evidence for the identical
+        // anchorId. Performs zero network operations, exactly like
+        // `historicalBitcoinAnchorEvidenceView()` above.
+        function bitcoinAnchorPublicationInspectionView(anchorId) {
+            return inspectBitcoinAnchorPublication(publicationObservationArchive.value, anchorId);
         }
 
         // Every currently AUTHENTICATED peer, in registry order — the
@@ -3197,6 +3265,29 @@ export default {
                     rawTransaction: bitcoinAnchorSignedPsbtFinalizationOutcome.value.rawTransaction,
                     finalizedAt: Date.now()
                 });
+
+                // 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle
+                // Record. THE ONE place this page ever mints a durable
+                // publication identity — right here, at successful
+                // finalization, never earlier and never re-run
+                // automatically on a later broadcast attempt for this same
+                // finalized transaction. `anchorId` is this finalized
+                // transaction's own txid — the identical convention
+                // `archiveBitcoinBroadcast()` below already uses for this
+                // same granular pipeline's own `anchorId`. `contentHash`
+                // is looked up from the publication this construction was
+                // originally for, never re-derived from the PSBT itself;
+                // `network` is this exact PSBT description's own network.
+                const finalizedEntry = findEntry(bitcoinAnchorTransactionReview.publicationId);
+                if (finalizedEntry) {
+                    archiveBitcoinAnchorPublicationRecord({
+                        anchorId: bitcoinAnchorSignedPsbtFinalizationOutcome.value.txid,
+                        contentHash: finalizedEntry.publication.contentReference.hash,
+                        txid: bitcoinAnchorSignedPsbtFinalizationOutcome.value.txid,
+                        network: bitcoinAnchorTransactionReview.description.network,
+                        createdAt: new Date()
+                    });
+                }
             }
         }
 
@@ -4773,6 +4864,8 @@ export default {
             togglePublicationObservationArchive, clearPublicationObservationArchive,
             historicalBitcoinAnchorsExpanded, toggleHistoricalBitcoinAnchors, historicalBitcoinAnchorArchiveView,
             toggleHistoricalBitcoinAnchorEntry, isHistoricalBitcoinAnchorEntryExpanded, historicalBitcoinAnchorEvidenceView,
+            bitcoinAnchorPublicationsExpanded, toggleBitcoinAnchorPublications, bitcoinAnchorPublicationRecordHistoryView,
+            toggleBitcoinAnchorPublicationInspection, isBitcoinAnchorPublicationInspectionExpanded, bitcoinAnchorPublicationInspectionView,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -5432,6 +5525,74 @@ export default {
                                         This is a correlation of independently recorded facts by explicit anchorId — not a verdict.
                                     </p>
                                 </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle
+                 Record. A DIFFERENT list than "Historical Bitcoin Anchor
+                 Evidence" above: this one holds only the anchors this
+                 replica minted an explicit PUBLICATION IDENTITY for —
+                 `{ anchorId, contentHash, txid, network, createdAt }` —
+                 never a confirmed/valid/trusted/status field of any kind.
+                 "Inspect Observations" reconstructs the SAME 0.8.79
+                 evidence bundle the card above already shows for this
+                 exact anchorId — evidence stays subordinate to identity,
+                 never becoming a second version of it. Performs ZERO
+                 network operations. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Bitcoin Anchor Publications</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Every Bitcoin anchor publication attempt this replica has minted a durable identity
+                    for — created the moment a transaction is finalized, independent of whether its
+                    broadcast later succeeds. A publication record names WHAT was published, AS WHICH
+                    transaction, and on WHICH network — never whether it was later confirmed.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Publications</dt><dd>{{ bitcoinAnchorPublicationRecordHistoryView().count }}</dd></div>
+                </dl>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="toggleBitcoinAnchorPublications">
+                        {{ bitcoinAnchorPublicationsExpanded ? 'Hide Publications' : 'Show Publications' }}
+                    </button>
+                </div>
+                <div v-if="bitcoinAnchorPublicationsExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Publication Identities</span>
+                    <p v-if="bitcoinAnchorPublicationRecordHistoryView().count === 0" class="form-hint form-hint--neutral">
+                        No Bitcoin anchor publication identity minted yet. Finalizing a Bitcoin anchor
+                        transaction elsewhere on this page creates one automatically.
+                    </p>
+                    <ul v-else class="replica-knowledge-claim-list">
+                        <li v-for="publicationRow in bitcoinAnchorPublicationRecordHistoryView().records" :key="publicationRow.anchorId" class="replica-knowledge-claim">
+                            <button type="button" class="peer-action-btn" @click="toggleBitcoinAnchorPublicationInspection(publicationRow.anchorId)">
+                                {{ publicationRow.anchorId }}
+                            </button>
+                            <p class="form-hint form-hint--neutral">
+                                Content hash: {{ publicationRow.contentHash }} ·
+                                Txid: {{ publicationRow.txid }} ·
+                                Network: {{ publicationRow.network }} ·
+                                Created: {{ formatWhen(publicationRow.createdAt) }}
+                            </p>
+
+                            <div v-if="isBitcoinAnchorPublicationInspectionExpanded(publicationRow.anchorId) && bitcoinAnchorPublicationInspectionView(publicationRow.anchorId)" class="evidence-list">
+                                <span class="evidence-convergence-title">Inspect Observations</span>
+                                <p class="form-hint form-hint--neutral">
+                                    Broadcast: {{ bitcoinAnchorPublicationInspectionView(publicationRow.anchorId).evidence.broadcastObservations.count }} ·
+                                    Confirmation: {{ bitcoinAnchorPublicationInspectionView(publicationRow.anchorId).evidence.confirmationObservations.count }} ·
+                                    Content-proof: {{ bitcoinAnchorPublicationInspectionView(publicationRow.anchorId).evidence.contentProofObservations.count }} ·
+                                    Chain-placement: {{ bitcoinAnchorPublicationInspectionView(publicationRow.anchorId).evidence.chainPlacementObservations.count }} ·
+                                    Consistency: {{ bitcoinAnchorPublicationInspectionView(publicationRow.anchorId).evidence.consistencyFindings.count }}
+                                </p>
+                                <p class="form-hint form-hint--neutral">
+                                    This is a correlation of independently recorded facts by explicit anchorId — not a
+                                    verdict. See "Historical Bitcoin Anchor Evidence" above for the full, per-observation
+                                    breakdown of this same anchorId.
+                                </p>
                             </div>
                         </li>
                     </ul>
