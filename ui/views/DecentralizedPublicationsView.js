@@ -124,6 +124,7 @@ import {
     inspectPublicationObservationArchive
 } from '../../application/PublicationObservationArchiveInspection.js';
 import { describePublicationObservationArchiveDifference } from '../../application/PublicationObservationArchiveDifference.js';
+import { describePublicationObservationArchiveReplacementReview } from '../../application/PublicationObservationArchiveReplacementReview.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1560,8 +1561,22 @@ export default {
         // this result does and does not mean.
         const publicationArchiveDifferenceResult = ref(null);
 
+        // 0.8.88 — Explicit Publication Archive Replacement Review.
+        // `publicationArchiveReplacementReviewResult` is written ONLY by
+        // the one explicit "Review Replacement" click below — never
+        // computed automatically, and never before a difference has
+        // already been computed. It is strictly DOWNSTREAM of
+        // `publicationArchiveDifferenceResult`: anything that invalidates
+        // a stale difference (a new paste, a new file, closing the form, a
+        // fresh "Compare" click) invalidates a stale review the identical
+        // way, below. See application/
+        // PublicationObservationArchiveReplacementReview.js's own header
+        // for what this result composes and does not decide.
+        const publicationArchiveReplacementReviewResult = ref(null);
+
         function invalidatePublicationArchiveDifference() {
             publicationArchiveDifferenceResult.value = null;
+            publicationArchiveReplacementReviewResult.value = null;
         }
 
         function togglePublicationArchiveInspectionForm() {
@@ -1602,6 +1617,10 @@ export default {
                 publicationObservationArchive.value,
                 externalArchive
             );
+            // A fresh comparison invalidates whatever review was shown for
+            // a previous one — the identical "any change invalidates a
+            // stale result" discipline this whole card already holds.
+            publicationArchiveReplacementReviewResult.value = null;
         }
 
         // A plain, UI-local list pairing each of the six durable
@@ -1619,6 +1638,60 @@ export default {
                 { label: 'Bitcoin content-proof observations', collection: difference.bitcoinContentProofObservationsByAnchorId },
                 { label: 'Bitcoin publication records', collection: difference.bitcoinAnchorPublicationRecords }
             ];
+        }
+
+        // 0.8.88 — Explicit Publication Archive Replacement Review.
+        //
+        // A FOURTH, deliberately separate action on this card — "Review
+        // Replacement" — available once a difference has already been
+        // computed above. Reconstructs the external archive from the SAME
+        // already-inspected text `comparePublicationArchiveDifference()`
+        // itself reads, via `PublicationObservationArchive.fromJSON()` —
+        // never a second parsing path — and calls this milestone's own
+        // `describePublicationObservationArchiveReplacementReview()`. Reads
+        // `publicationObservationArchive.value` as the current archive
+        // stands at the moment of THIS click; touches neither archive. See
+        // application/PublicationObservationArchiveReplacementReview.js's
+        // own header — a review composes existing information, it never
+        // decides whether replacement should happen.
+        function reviewPublicationArchiveReplacement() {
+            const outcome = publicationArchiveInspectionOutcome.value;
+            if (!outcome || outcome.outcome !== PublicationObservationArchiveInspectionOutcome.INSPECTED) return;
+            const externalArchive = PublicationObservationArchive.fromJSON(JSON.parse(publicationArchiveInspectionText.value.trim()));
+            publicationArchiveReplacementReviewResult.value = describePublicationObservationArchiveReplacementReview(
+                publicationObservationArchive.value,
+                externalArchive
+            );
+        }
+
+        // Dismisses the review without replacing anything — the current
+        // archive was never touched by reviewing it in the first place, so
+        // "Cancel" here is pure UI bookkeeping, not an undo.
+        function cancelPublicationArchiveReplacementReview() {
+            publicationArchiveReplacementReviewResult.value = null;
+        }
+
+        // THE ONE PLACE THIS CARD EVER REPLACES THE CURRENT ARCHIVE — and
+        // it does so through 0.8.82/0.8.83's own EXISTING, UNCHANGED
+        // import mechanism, never a second replacement implementation of
+        // its own. Re-runs `importPublicationObservationArchive()` on the
+        // SAME inspected text a person has already reviewed, rather than
+        // trusting `publicationArchiveReplacementReviewResult` alone, so a
+        // stale click can never replace the archive with something that
+        // fails validation — mirrors `confirmPublicationArchiveImport()`'s
+        // own identical re-check discipline exactly. `recordPublicationObservationArchiveImport()`
+        // mints the one durable `archiveImportEvents` fact for this act of
+        // importing, at the moment it actually happens — never earlier, at
+        // review time.
+        function confirmPublicationArchiveReplacementFromReview() {
+            const outcome = importPublicationObservationArchive(publicationArchiveInspectionText.value.trim());
+            if (!outcome || outcome.outcome !== PublicationObservationArchiveImportOutcome.IMPORTED) return;
+            publicationObservationArchive.value = recordPublicationObservationArchiveImport(outcome.archive, { importedAt: new Date() });
+            persistPublicationObservationArchive();
+            publicationArchiveReplacementReviewResult.value = null;
+            publicationArchiveDifferenceResult.value = null;
+            showPublicationArchiveInspectionForm.value = false;
+            publicationArchiveInspectionText.value = '';
         }
 
         // 0.8.79 — Durable Bitcoin Anchor Evidence Restoration & Historical
@@ -5169,6 +5242,8 @@ export default {
             publicationArchiveInspectionOutcome, PublicationObservationArchiveInspectionOutcome,
             publicationArchiveDifferenceResult, invalidatePublicationArchiveDifference,
             comparePublicationArchiveDifference, publicationArchiveDifferenceCollectionRows,
+            publicationArchiveReplacementReviewResult, reviewPublicationArchiveReplacement,
+            cancelPublicationArchiveReplacementReview, confirmPublicationArchiveReplacementFromReview,
             publicationObservationArchiveProvenanceView,
             publicationObservationArchiveFingerprintView, copyArchiveFingerprint, archiveFingerprintCopied,
             archiveFingerprintComparisonInput, archiveFingerprintComparisonResult,
@@ -5903,6 +5978,88 @@ export default {
                                 {{ publicationArchiveDifferenceResult.importEvents.externalCount }} external — not part of
                                 the content fingerprint (0.8.84).
                             </p>
+
+                            <!-- 0.8.88 — Explicit Publication Archive
+                                 Replacement Review. A FOURTH, deliberately
+                                 separate action — never triggered
+                                 automatically by a successful comparison
+                                 above. Composes the difference above with
+                                 both archives' own factual and provenance
+                                 counts; it never says which archive should
+                                 replace the other. Only the explicit
+                                 "Replace Current Archive" button below —
+                                 reusing 0.8.82/0.8.83's own existing import
+                                 mechanism — ever changes the current
+                                 archive. See application/
+                                 PublicationObservationArchiveReplacementReview.js's
+                                 own header. -->
+                            <div class="identity-mgmt-actions">
+                                <button type="button" class="action-btn action-btn--secondary" @click="reviewPublicationArchiveReplacement">
+                                    Review Replacement
+                                </button>
+                            </div>
+
+                            <div v-if="publicationArchiveReplacementReviewResult" class="evidence-inspection-adapter">
+                                <span class="evidence-inspection-adapter-title">Replacement Review</span>
+                                <p class="form-hint form-hint--neutral">
+                                    What replacing the current archive with the external archive above would
+                                    change — the current archive stays exactly as it is until "Replace Current
+                                    Archive" below is clicked explicitly.
+                                </p>
+
+                                <dl class="evidence-fields">
+                                    <div class="evidence-field"><dt>Current fingerprint</dt><dd>{{ publicationArchiveReplacementReviewResult.currentFingerprint }}</dd></div>
+                                    <div class="evidence-field"><dt>External fingerprint</dt><dd>{{ publicationArchiveReplacementReviewResult.externalFingerprint }}</dd></div>
+                                </dl>
+
+                                <ul class="replica-knowledge-claim-list">
+                                    <li class="replica-knowledge-claim">
+                                        <span class="peer-badge peer-badge--pending">Facts</span>
+                                        <p class="form-hint form-hint--neutral">
+                                            Publications — current: {{ publicationArchiveReplacementReviewResult.current.publicationCount }},
+                                            external: {{ publicationArchiveReplacementReviewResult.external.publicationCount }}
+                                        </p>
+                                        <p class="form-hint form-hint--neutral">
+                                            Observations — current: {{ publicationArchiveReplacementReviewResult.current.observationCount }},
+                                            external: {{ publicationArchiveReplacementReviewResult.external.observationCount }}
+                                        </p>
+                                    </li>
+                                    <li class="replica-knowledge-claim">
+                                        <span class="peer-badge peer-badge--pending">Provenance</span>
+                                        <p class="form-hint form-hint--neutral">
+                                            Local facts — current: {{ publicationArchiveReplacementReviewResult.current.localFactCount }},
+                                            external: {{ publicationArchiveReplacementReviewResult.external.localFactCount }}
+                                        </p>
+                                        <p class="form-hint form-hint--neutral">
+                                            Imported facts — current: {{ publicationArchiveReplacementReviewResult.current.importedFactCount }},
+                                            external: {{ publicationArchiveReplacementReviewResult.external.importedFactCount }}
+                                        </p>
+                                    </li>
+                                    <li class="replica-knowledge-claim">
+                                        <span class="peer-badge peer-badge--pending">Import events</span>
+                                        <p class="form-hint form-hint--neutral">
+                                            Current: {{ publicationArchiveReplacementReviewResult.current.archiveImportCount }},
+                                            external: {{ publicationArchiveReplacementReviewResult.external.archiveImportCount }}
+                                        </p>
+                                    </li>
+                                </ul>
+
+                                <p class="form-hint form-hint--neutral">
+                                    Replacing restamps every fact in the external archive above IMPORTED
+                                    (0.8.83) — the resulting current fingerprint will therefore differ from
+                                    "External fingerprint" shown above, even though the underlying
+                                    observations are identical.
+                                </p>
+
+                                <div class="identity-mgmt-actions">
+                                    <button type="button" class="action-btn action-btn--secondary" @click="cancelPublicationArchiveReplacementReview">
+                                        Cancel
+                                    </button>
+                                    <button type="button" class="action-btn action-btn--danger" @click="confirmPublicationArchiveReplacementFromReview">
+                                        Replace Current Archive
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
