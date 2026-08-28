@@ -162,8 +162,9 @@ function parseJSONOrNull(text) {
 // and `importedEntryCount` are never accepted as arguments — they are
 // read directly off `archive` itself (`PublicationObservationArchive.SCHEMA_VERSION`
 // and the sum of its own `publicationCount`/`observationCount`/
-// `bitcoinAnchorPublicationRecordCount`), so a caller cannot accidentally
-// pass a stale or fabricated count.
+// `bitcoinAnchorPublicationRecordCount`/`baseAnchorPublicationRecordCount`
+// (0.8.99)), so a caller cannot accidentally pass a stale or fabricated
+// count.
 //
 // NEVER A VERIFICATION. This function does not check, re-validate, or
 // pass judgment on anything `archive` holds — it only records that an
@@ -179,6 +180,6 @@ export function recordPublicationObservationArchiveImport(archive, { importedAt 
     return archive.appendArchiveImportEvent({
         importedAt,
         importedArchiveSchemaVersion: PublicationObservationArchive.SCHEMA_VERSION,
-        importedEntryCount: archive.publicationCount + archive.observationCount + archive.bitcoinAnchorPublicationRecordCount
+        importedEntryCount: archive.publicationCount + archive.observationCount + archive.bitcoinAnchorPublicationRecordCount + archive.baseAnchorPublicationRecordCount
     });
 }

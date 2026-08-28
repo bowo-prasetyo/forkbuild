@@ -248,10 +248,14 @@ async function run() {
 
     // ---------------------------------------------------------------
     // Section F — schemaVersion 3 → 4; a pre-0.8.97 payload degrades to an
-    // empty archive.
+    // empty archive. SCHEMA_VERSION itself has since been bumped again, to
+    // 5, by 0.8.99's own baseAnchorPublicationRecords collection — this
+    // section still only asserts the ONE fact that stays true regardless:
+    // a schemaVersion-3 payload (predating 0.8.97 entirely) is not valid
+    // under whatever the CURRENT schema is.
     // ---------------------------------------------------------------
     {
-        assert(PublicationObservationArchive.SCHEMA_VERSION === 4, '35. SCHEMA_VERSION is now 4');
+        assert(PublicationObservationArchive.SCHEMA_VERSION === 5, '35. SCHEMA_VERSION is now 5 (bumped to 4 by 0.8.97, then to 5 by 0.8.99)');
 
         let archive = PublicationObservationArchive.empty();
         archive = archive.appendBaseTransactionInclusionObservation(TXID_H, included({ txid: TXID_H, blockNumber: 1, confirmationCount: 1, observedAt: new Date('2026-08-05T00:00:00Z') }));
@@ -264,7 +268,7 @@ async function run() {
 
         assert(PublicationObservationArchive.isValidJSON(preMilestoneJson) === false, '37. isValidJSON() agrees — a schemaVersion-3 payload is not a valid current-schema archive');
     }
-    console.log('✓ Section F: SCHEMA_VERSION is 4; a pre-0.8.97 (schemaVersion 3) payload degrades to an empty archive, never a partial migration');
+    console.log('✓ Section F: SCHEMA_VERSION is now 5; a pre-0.8.97 (schemaVersion 3) payload degrades to an empty archive, never a partial migration');
 
     // ---------------------------------------------------------------
     // Section G — PublicationObservationArchiveDifference reports the new
