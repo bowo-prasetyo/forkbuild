@@ -131,6 +131,7 @@ import { BaseNetworkObservationState } from '../../application/BaseNetworkObserv
 import { describeBaseAccountObservation } from '../../application/BaseAccountObservationView.js';
 import { BasePublicationTransactionPlanState } from '../../application/BasePublicationTransactionPlanState.js';
 import { describeBasePublicationTransactionPlan } from '../../application/BasePublicationTransactionPlanView.js';
+import { describeBasePublicationTransactionReview } from '../../application/BasePublicationTransactionReview.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -3684,6 +3685,34 @@ export default {
             return BASE_PUBLICATION_TRANSACTION_PLAN_BADGE_CLASSES[view.state] || 'peer-badge--pending';
         }
 
+        // 0.8.92 — Explicit Base Transaction Review.
+        //
+        // A PURE PROJECTION OF THE ALREADY-CONSTRUCTED PLAN — NEVER A
+        // SEPARATE ACTION. Unlike `bridgeBitcoinAnchorTransactionToReview()`
+        // below (which must call out to an injected PSBT builder to turn a
+        // construction into something reviewable), reviewing a Base plan
+        // needs no collaborator and no additional step at all: 0.8.91's own
+        // `construction.plan` already carries every fact a review needs.
+        // So there is no "review coordinator," no separate reactive review
+        // state, and no bridging function to call after construction — this
+        // function simply reads `entry.basePublicationTransactionConstruction`
+        // fresh, every time it is called, through `application/
+        // BasePublicationTransactionReview.js`'s own
+        // `describeBasePublicationTransactionReview()`. That already makes
+        // review "automatically available after construction" (this
+        // milestone's own architectural point) — there is no click that
+        // could be missing, because there is nothing here TO click.
+        //
+        // `null` whenever construction has not reached CONSTRUCTED — the
+        // review section below simply does not render either way, the
+        // identical degrade-gracefully posture every other `*View()`
+        // function on this page already holds.
+        function basePublicationTransactionReviewView(entry) {
+            if (!entry.basePublicationTransactionConstruction) return null;
+            if (entry.basePublicationTransactionConstruction.state !== BasePublicationTransactionPlanState.CONSTRUCTED) return null;
+            return describeBasePublicationTransactionReview(entry.basePublicationTransactionConstruction.construction.plan);
+        }
+
         // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
         //
         // The ONE place this page ever calls
@@ -5566,6 +5595,7 @@ export default {
             basePublicationTransactionPlanCoordinator, constructBasePublicationTransaction,
             basePublicationTransactionPlanView, basePublicationTransactionPlanBadgeClass,
             BasePublicationTransactionPlanState,
+            basePublicationTransactionReviewView,
             bitcoinAnchorTransactionConstructionCoordinator, constructBitcoinAnchorTransaction,
             bitcoinAnchorTransactionConstructionView, bitcoinAnchorTransactionConstructionBadgeClass,
             BitcoinAnchorTransactionConstructionState,
@@ -7746,6 +7776,52 @@ export default {
                                         </p>
                                     </template>
                                 </template>
+                            </div>
+
+                            <!-- 0.8.92 — Explicit Base Transaction Review.
+                                 Appears automatically the moment the card
+                                 above reaches CONSTRUCTED — no separate
+                                 "Generate Review" click, since reviewing a
+                                 Base plan is local, synchronous, and
+                                 read-only (see basePublicationTransactionReviewView()'s
+                                 own header above). This card never signs,
+                                 never broadcasts, and never re-estimates
+                                 anything — every field below is read
+                                 straight off the exact plan the card above
+                                 constructed; see application/
+                                 BasePublicationTransactionReview.js's own
+                                 header. -->
+                            <div v-if="basePublicationTransactionReviewView(entry)" class="evidence-anchor-card">
+                                <div class="evidence-anchor-header">
+                                    <span class="evidence-anchor-type">Base Transaction Review</span>
+                                </div>
+                                <p class="form-hint form-hint--neutral">
+                                    The following transaction plan will be supplied to the signing capability if
+                                    you explicitly continue. Reviewing it does not sign, broadcast, or validate it
+                                    against the network — it names exactly what a wallet would be asked to sign,
+                                    nothing more, and nothing assumed.
+                                </p>
+                                <dl class="evidence-fields">
+                                    <div class="evidence-field"><dt>From</dt><dd>{{ basePublicationTransactionReviewView(entry).from }}</dd></div>
+                                    <div class="evidence-field"><dt>To</dt><dd>{{ basePublicationTransactionReviewView(entry).to }}</dd></div>
+                                    <div class="evidence-field"><dt>Value</dt><dd>{{ basePublicationTransactionReviewView(entry).value }} wei</dd></div>
+                                    <div class="evidence-field"><dt>Nonce</dt><dd>{{ basePublicationTransactionReviewView(entry).nonce }}</dd></div>
+                                    <div class="evidence-field"><dt>Gas limit</dt><dd>{{ basePublicationTransactionReviewView(entry).gasLimit }}</dd></div>
+                                    <div class="evidence-field"><dt>Max fee per gas</dt><dd>{{ basePublicationTransactionReviewView(entry).maxFeePerGas }} wei</dd></div>
+                                    <div class="evidence-field"><dt>Priority fee</dt><dd>{{ basePublicationTransactionReviewView(entry).maxPriorityFeePerGas }} wei</dd></div>
+                                </dl>
+                                <div class="evidence-inspection-adapter">
+                                    <span class="evidence-inspection-adapter-title">Content Hash</span>
+                                    <dl class="evidence-fields">
+                                        <div class="evidence-field"><dd>{{ basePublicationTransactionReviewView(entry).contentHash }}</dd></div>
+                                    </dl>
+                                </div>
+                                <div class="evidence-inspection-adapter">
+                                    <span class="evidence-inspection-adapter-title">Transaction Data</span>
+                                    <dl class="evidence-fields">
+                                        <div class="evidence-field"><dd>{{ basePublicationTransactionReviewView(entry).transactionData }}</dd></div>
+                                    </dl>
+                                </div>
                             </div>
                         </div>
 

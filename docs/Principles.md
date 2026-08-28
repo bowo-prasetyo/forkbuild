@@ -16985,3 +16985,71 @@ performed entirely in `BigInt`, never a floating-point `Number`, at any
 point in the pipeline from RPC response to the view a person reads.
 
 See `docs/Roadmap.md`, 0.8.91, for the full milestone entry.
+
+## Review Describes The Transaction Plan; It Does Not Commit It (0.8.92)
+
+**A Base transaction plan must be explicitly reviewed before signing, and
+review must never modify, sign, or broadcast the plan.** `application/
+BasePublicationTransactionReview.js#describeBasePublicationTransactionReview()`
+turns an already-CONSTRUCTED 0.8.91 plan into `{ network, chainId, from,
+to, value, nonce, gasLimit, maxFeePerGas, maxPriorityFeePerGas,
+contentHash, transactionData }` and stops exactly there — no RPC call, no
+re-estimation, no mutation of the plan it is handed. This extends
+`docs/Roadmap.md`, 0.8.91's own "A Transaction Plan Is Not A Publication,"
+one arrow further down the same pipeline — `content → commitment →
+transaction plan → review → signed transaction → broadcast → observation
+→ publication identity` — and this milestone builds exactly one of those
+arrows, the fourth. Together the two read: `construction ≠ review ≠
+signing ≠ publication`.
+
+**Review is a presentation/inspection boundary, not another
+transaction-processing stage.** Calling `describeBasePublicationTransactionReview()`
+twice with the byte-identical plan returns a byte-identical result — no
+network access, no caching, no async work of any kind. Reviewing an
+OLDER plan after a NEWER, unrelated one has since been constructed still
+reports the older plan's own frozen figures, never the network's current
+opinion — the review is of the artifact a caller already holds, never a
+second, silent observation of the network underneath it.
+
+**The commitment is made visible, not just carried through.**
+`contentHash` is the plan's own `data` decoded back through the exact
+inverse of `application/BasePublicationCommitmentEncoding.js`'s own
+encoder (0.8.91, unchanged) — a genuine, independent re-validation of the
+commitment bytes, mirroring the identical role `anchoring/
+BitcoinAnchorPsbtSerializer.js#serialize()` already plays inside
+`describeBitcoinAnchorTransactionReview()` (0.8.59), one chain over.
+`transactionData` carries the same bytes verbatim, alongside the decoded
+hash, rather than hidden behind one generic "payload" label.
+
+**Self-transfer is shown, never interpreted.** `from` and `to` are both
+reported as plain, separate fields — this file computes no
+`isSelfTransfer` boolean and phrases no sentence naming the self-transfer
+decision 0.8.91 already made. `from === to` and `value === "0"` are left
+for whoever reads the review to notice for themselves, exactly as this
+codebase's own established restraint (`docs/Principles.md`, "The UI
+Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57)")
+already holds toward every other computed interpretation this codebase
+has declined to make on a person's behalf.
+
+**Review becomes visible automatically after construction; signing stays
+explicit.** Because reviewing a plan is local, synchronous, non-committing,
+non-networking, non-signing, and non-mutating, it carries none of the
+reasons this codebase makes an action require its own explicit click —
+unlike observing a network, constructing a plan, or (eventually) signing
+one, none of which this milestone ever performs on a person's behalf.
+`ui/views/DecentralizedPublicationsView.js`'s own
+`basePublicationTransactionReviewView(entry)` is a plain, on-demand
+projection of the already-stored construction, with no separate
+"Generate Review" action anywhere in this milestone.
+
+**A malformed plan is a caller-contract violation, never an operational
+"review unavailable" outcome.** A plan that has already reached
+CONSTRUCTED is this codebase's own already-known-good internal artifact —
+unlike a 0.8.91 construction attempt itself, which can genuinely be
+UNAVAILABLE or FAILED because a real network was asked something, nothing
+about turning an already-produced plan into its own review can fail for
+an operational reason. `describeBasePublicationTransactionReview()`
+throws instead, checked field by field, before `plan.data` is ever handed
+to the commitment decoder.
+
+See `docs/Roadmap.md`, 0.8.92, for the full milestone entry.
