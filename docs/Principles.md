@@ -15729,5 +15729,95 @@ network operations.** The identical restraint held by every milestone
 before it, extended one more time: this projection only ever reads
 whatever the caller's own already-in-memory IPFS and Bitcoin state
 currently holds, and computes no cross-domain comparison of its own —
-that remains real, separately sized future work (0.8.75). See
+that remains real, separately sized future work (0.8.76). See
 `docs/Roadmap.md`, 0.8.74, for the full milestone entry.
+
+## A Capability Can Be Ephemeral Even When The Facts Produced By Using It Are Durable (0.8.75)
+
+**Persistence is drawn around FACTS, never around the CAPABILITIES that
+produced them.** Every history this codebase has kept since 0.8.56 — an
+IPFS publication, a content-verification observation, a Bitcoin broadcast,
+a confirmation, a content-proof reconciliation — is a plain, already-settled
+record of something that happened. A wallet connection, a `signPsbt`
+function, a private key, a seed phrase, and a pinning-provider credential
+are not records of something that happened; they are standing PERMISSION
+to make something happen next. `application/PublicationObservationArchive.js`
+persists the first kind of thing across a page reload for the first time
+in this codebase's history, and this milestone exists specifically to draw
+that line precisely: nothing on that class, or on `storage/
+LocalStoragePublicationObservationArchive.js` below it, can ever hold the
+second kind, because neither file accepts a wallet, a signer, or a
+credential as an argument anywhere — a caller has no way to hand one in
+even if it tried. This is the same restraint 0.8.58's own wallet-connection
+boundary and 0.8.68's own credential-entry boundary each already held for
+NOT storing a capability in the first place; this milestone is the first
+to actually persist something across a reload, so it is the first place
+that restraint had to be proven under a new kind of pressure — "but it
+would be so convenient to remember" — and held anyway.
+
+**A reload restores what was OBSERVED, never what was AUTHORIZED.** After
+a reload, a person can see "Bitcoin — Broadcasted — Confirmed —
+HASH_MATCH" for a publication they archived last session, exactly as
+`application/PublicationObservationTimelineView.js`'s own vocabulary
+already states these facts. The application never infers from this that a
+wallet is presently connected, that a signing authorization still exists,
+or that this transaction should or even could be rebroadcast — every
+Bitcoin/IPFS coordinator on `ui/views/DecentralizedPublicationsView.js`
+still requires its own live collaborator (an injected wallet, an injected
+broadcaster) to do anything at all, completely unchanged by this
+milestone, and a fresh page load starts every one of those collaborators
+exactly as absent as a person who has never visited the page before. The
+archive is read-only history to every part of this codebase except the
+`archiveXxx()` helpers that append to it — it is never consulted to
+decide whether an action is currently permitted.
+
+**Persistence restores historical facts; it never resurrects invented
+ones.** `application/PublicationObservationArchive.js#fromJSON()`
+validates its ENTIRE input strictly — the right `schemaVersion`, every
+required field present on every nested record and observation, no
+unexpected extra field anywhere, every timestamp a real, parseable date —
+and the moment any part of that fails, the result is
+`PublicationObservationArchive.empty()`, never a partial archive holding
+whichever entries happened to still parse. This is deliberately a
+different, STRICTER contract than every append method on the same class:
+an in-session `appendXxx()` call ignores one bad argument and keeps every
+fact the archive already held, because in-memory state built up through
+this session's own explicit actions is trusted; a `fromJSON()` payload
+came from OUTSIDE this process's own memory — a browser's localStorage,
+editable by hand, corrupted by a browser bug, or written by some earlier,
+differently-shaped version of this same archive — and gets no such benefit
+of the doubt. `storage/LocalStoragePublicationObservationArchive.js`
+extends the identical restraint one layer further out: a storage provider
+whose `load()` itself throws (truly invalid JSON text, the way `storage/
+LocalStorageProvider.js`'s own `JSON.parse()` would) is caught and
+degrades to the same empty archive, never a crashed page and never a
+half-restored one.
+
+**A domain class stays ignorant of storage; only one adapter is ever
+allowed to know it exists.** `application/PublicationObservationArchive.js`
+imports nothing from `storage/`, and computes its own `toJSON()`/
+`fromJSON()` using nothing but plain data — the identical
+domain-stays-storage-agnostic discipline `core/Document.js` and
+`serializer/DocumentSerializer.js` already hold for a document, one
+milestone family over. `storage/LocalStoragePublicationObservationArchive.js`
+is the ONE file allowed to know that "durable" currently means "an
+injected `storage/StorageProvider.js`" — and even it only ever calls that
+provider's own generic `save(name, data)`/`load(name)`/`remove(name)`
+contract, the identical seam `application/SaveDocumentUseCase.js` already
+uses for a document. `window.localStorage` itself is never referenced by
+name outside `storage/LocalStorageProvider.js`.
+
+**Clearing an archive is the one action a person must take on purpose.**
+Every `archiveXxx()` append happens automatically, as a side effect of an
+action a person already took for an entirely different, already-explicit
+reason — publishing, verifying, broadcasting, observing a confirmation.
+Nothing on this page ever clears the archive automatically: not a fresh
+publish, not reconfiguring a pinning provider, not disconnecting a wallet,
+not a page reload. `clearPublicationObservationArchive()` is reachable
+from exactly one place — an explicit "Clear Archive" click — mirroring
+the same "destructive action requires its own explicit gesture, never a
+side effect of something else" restraint `ui/components/StructureLibraryCard.js`'s
+own delete button and `ui/views/PeerConnectionsView.js`'s own disconnect
+button already hold, one UI surface over.
+
+See `docs/Roadmap.md`, 0.8.75, for the full milestone entry.
