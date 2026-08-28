@@ -30920,3 +30920,229 @@ beside `BitcoinAnchorPublicationRecord` in the same archive, in the same
 evidence layer, in the same timeline, without either chain's own
 publications ever being merged, reconciled, or mistaken for the other's,
 even under a coincidental shared `contentHash` or `chainReference`.
+
+## 0.8.90 — Explicit Base Network & Account Observation
+
+0.8.89 named `BlockchainKind.BASE` and built nothing behind it. This
+milestone builds the first real thing: an explicit, read-only capability
+that reaches an actual Base JSON-RPC endpoint and a person's own Base
+account, and reports exactly the facts a future publication would need to
+know before anyone can even begin constructing one — never the
+construction itself.
+
+```text
+address (a connected Base wallet's own account)
+    │
+    ▼
+BaseNetworkObserver.observeAccount({ address })
+    │
+    ▼
+injected BaseJsonRpcClient (eth_chainId, eth_getBalance — nothing else)
+    │
+┌───┴───────────────┬────────────────┐
+▼                    ▼                ▼
+OBSERVED       CHAIN_MISMATCH    UNAVAILABLE
+```
+
+**Why observation, and why now.** The Bitcoin pipeline (0.8.47 onward)
+already demonstrated the semantic lifecycle a blockchain capability
+travels: funding observation, then construction, review, signing,
+finalization, broadcast, confirmation. This milestone reproduces the
+FIRST stage of that lifecycle for Base — never the whole pipeline at once
+— and answers the one question genuinely prior to everything else: can
+ForkBuild explicitly determine the network and account facts a future Base
+publication transaction would need? Base's own account/gas model is
+different enough from Bitcoin's UTXO/PSBT model that this milestone builds
+no `FundingObservation`-shaped abstraction for it — see "Deliberately
+excluded" below.
+
+**Read-only, and nothing wider.** Every new class in this milestone can
+only read: `base/BaseJsonRpcClient.js` wraps exactly `eth_chainId` and
+`eth_getBalance`, `base/BaseWalletConnection.js` exposes an account address
+and no signing method of any kind, and `base/BaseNetworkObserver.js`
+constructs, signs, estimates gas for, and broadcasts nothing. This is a
+deliberate security boundary this milestone establishes before any write
+path exists: `Base RPC → READ → observations`, never `Base RPC → READ +
+WRITE`.
+
+**Account identity is not signing capability.** anchoring/
+BitcoinWalletConnection.js's own CONNECTED pairs an account with a real
+`.wallet.signPsbt()` capability, because that class exists specifically to
+feed anchoring/BitcoinAnchorWalletSigner.js. `base/BaseWalletConnection.js`
+is deliberately narrower: CONNECTED here names only that an address is
+known. It has no `.wallet` getter, no `signTransaction()`, and no other
+method that could be mistaken for one — a browser's injected EIP-1193
+provider (`window.ethereum`) genuinely can expose an address without
+exposing a signing capability ForkBuild ever touches, and this milestone's
+own `base/BaseInjectedProviderWalletAdapter.js` calls exactly one method on
+it, `request({ method: 'eth_requestAccounts' })`.
+
+**No publication identity is manufactured by observing an account.**
+`application/BaseAccountObservation.js` (new) carries `address`, `network`,
+`chainId`, `nativeBalanceWei`, and `observedAt` — nothing resembling
+`application/BlockchainPublicationIdentity.js`'s own `contentHash`/
+`chainReference` pair. Observing an account is not publishing anything;
+`BlockchainKind.BASE` still names no capability that constructs, signs, or
+broadcasts a Base transaction after this milestone ships, exactly as
+0.8.89's own header requires remain true until a milestone actually builds
+one.
+
+**A connected network is never labeled Base by resemblance.** Ethereum
+mainnet, Optimism, and every other EVM chain answer `eth_chainId` and
+`eth_getBalance` exactly as readily as Base does — EVM compatibility is
+not Base membership. `application/BaseChainId.js` (new) is the closed map
+of chain ids this codebase recognizes as genuinely Base (8453 mainnet,
+84532 the Sepolia testnet); `BaseNetworkObserver#observeAccount()` checks
+every observed chain id against it BEFORE ever reading a balance, and
+reports `CHAIN_MISMATCH` — never `OBSERVED`, never a guessed `network`
+value — for anything else. The actually-observed chain id is still always
+carried on a mismatch, never discarded, so a person can see exactly what
+their wallet was connected to. This extends docs/Principles.md, "Correlate
+Evidence By Explicit Identity, Never By Resemblance (0.8.78)," across a
+third axis — chain identity itself is never inferred from a superficially
+compatible RPC surface answering.
+
+**A single explicit action, never two, never automatic.** This milestone's
+own proposal sketched a separate `observeChain()` alongside
+`observeAccount()`; the shipped shape is one method, because every field
+the proposal's own UI mockup shows (network, chain id, account, balance,
+observed-at) belongs to one observation of one address. Nothing here polls,
+retries, auto-refreshes, or auto-connects — "Connect Base Wallet" and
+"Observe Base Account" are two separate, explicit clicks in ui/views/
+DecentralizedPublicationsView.js's own new "Base Network" panel, mirroring
+exactly the explicit-action discipline anchoring/BitcoinWalletConnection.js
+and anchoring/BitcoinWalletFundingObserver.js already hold.
+
+**`nativeBalanceWei` is a decimal-digit string, never a Number.** A wei
+balance routinely exceeds `Number.MAX_SAFE_INTEGER` once an account holds
+even a modest amount of ETH; `base/BaseJsonRpcClient.js` decodes the RPC's
+own hex quantity through `BigInt` and renders it back out as base-10
+digits, at no point passing it through a floating-point `Number`.
+
+New files:
+- `application/BaseNetworkObservationState.js` — new; `BaseNetworkObservationState`
+  (frozen `{ OBSERVED, CHAIN_MISMATCH, UNAVAILABLE }`) and
+  `isValidBaseNetworkObservationState(value)`.
+- `application/BaseChainId.js` — new; `BaseChainId` (frozen
+  `{ MAINNET: 8453, TESTNET: 84532 }`) and `baseNetworkForBaseChainId(chainId)`,
+  `null` for any chain id not in the map.
+- `application/BaseAccountObservation.js` — new; the immutable
+  `BaseAccountObservation` record (`{ state, address, network, chainId,
+  nativeBalanceWei, reason, observedAt }`, frozen, one constructor path,
+  `toJSON()`/`fromJSON()`). Throws for a malformed `address`, an invalid
+  `observedAt`, or a field set inconsistent with `state` (e.g. an OBSERVED
+  observation missing `network`/`chainId`/`nativeBalanceWei`, or a
+  CHAIN_MISMATCH observation missing the actually-observed `chainId`).
+- `application/BaseAccountObservationView.js` — new;
+  `describeBaseAccountObservationStateLabel(state)` and
+  `describeBaseAccountObservation(observation)`, mirroring application/
+  BitcoinAnchorFundingView.js's own shape.
+- `application/BaseWalletConnectionState.js` — new; `BaseWalletConnectionState`
+  (frozen `{ DISCONNECTED, CONNECTING, CONNECTED, UNAVAILABLE }`) — a
+  separate vocabulary from application/BitcoinWalletConnectionState.js,
+  never a reused or imported one, even though the string values coincide.
+- `application/BaseWalletConnectionView.js` — new;
+  `describeBaseWalletConnectionStateLabel(state)` and
+  `describeBaseWalletConnection(connection)` — `{ state, stateLabel,
+  address }`, deliberately with no `networkMismatch` field (see this
+  milestone's own header, "Account identity is not signing capability").
+- `base/BaseWalletConnection.js` — new (new top-level directory, mirroring
+  `anchoring/` one chain over); `BaseWalletConnection`, exposing
+  `.status`/`.account`, `connect()`, `disconnect()`. No `.wallet` getter
+  and no signing method of any kind.
+- `base/BaseInjectedProviderWalletAdapter.js` — new; adapts a real,
+  standard EIP-1193 `window.ethereum`-shaped provider's own
+  `request({ method: 'eth_requestAccounts' })` into
+  `BaseWalletConnection`'s own `provider.connect()` contract. No extension
+  installed, and a thrown/rejected request, are both reported
+  `unavailable`; an empty account array is a definite decline.
+- `base/BaseJsonRpcClient.js` — new; `BaseJsonRpcClient`, wrapping exactly
+  `eth_chainId` and `eth_getBalance` against a real Base RPC endpoint
+  (`https://mainnet.base.org` by default), via an injected `fetchImpl`.
+  Never throws for an operational failure — every failure is reported
+  `{ available: false, reason }`.
+- `base/BaseNetworkObserver.js` — new; `BaseNetworkObserver#observeAccount({ address })`,
+  the coordinator wiring an injected `rpcSource` (any object shaped like
+  `BaseJsonRpcClient`) into a `BaseAccountObservation`. Throws only for a
+  malformed `address`; every RPC-level failure is reported through the
+  returned observation's own state.
+- `application/CreateBaseInjectedProviderWalletAdapterUseCase.js`,
+  `application/CreateBaseWalletConnectionUseCase.js`,
+  `application/CreateBaseJsonRpcClientUseCase.js`,
+  `application/CreateBaseNetworkObserverUseCase.js` — new; the identical
+  composition-root wiring shape every Bitcoin domain class already has its
+  own `Create*UseCase.js` for.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — a new, page-level "Base
+  Network" panel (rendered only when `baseWalletConnection` is provided),
+  with an explicit "Connect Base Wallet"/"Disconnect" action and, once
+  connected, an explicit "Observe Base Account"/"Refresh Observation"
+  action. Entirely independent of every existing Bitcoin section on this
+  page — no shared reactive state, no shared badge-class map.
+- `ui/main.js` — wires `baseInjectedProviderWalletAdapter`,
+  `baseWalletConnection`, `baseJsonRpcClient`, and `baseNetworkObserver` as
+  real, `app.provide()`d instances, mirroring the Bitcoin wallet/funding
+  wiring immediately above it. `injectedProvider` is `window.ethereum` when
+  present, `null` otherwise.
+
+New tests:
+- `tests/BaseNetworkObservation.test.js` — `BaseChainId`/
+  `BaseNetworkObservationState` construction and validation;
+  `BaseAccountObservation` construction, validation (every state/field
+  combination), immutability, and JSON round trip; `BaseJsonRpcClient`'s
+  real wire behavior against a fake `fetchImpl` (never throwing, decoding
+  wei as a decimal string, reporting a non-2xx status/JSON-RPC error/
+  malformed quantity as unavailable); `BaseNetworkObserver`'s OBSERVED/
+  CHAIN_MISMATCH/UNAVAILABLE outcomes, proving the chain check always gates
+  the balance read and every call is a fresh, uncached read;
+  `BaseWalletConnection`/`BaseInjectedProviderWalletAdapter`'s decline-vs-
+  unavailable distinction and the total absence of any signing capability;
+  both describe*() views' fixed field sets. Plus two flagship proofs: (1) a
+  full, explicit Base wallet-connect-then-observe flow never touches a
+  real `anchoring/BitcoinWalletConnection.js` instance sitting right beside
+  it in the same test, even though nothing prevents it structurally except
+  this milestone's own restraint; and (2) 0.8.89's own same-`contentHash`-
+  same-`chainReference`-different-`blockchain` invariant still holds with
+  this milestone's real Base implementation now present, not merely a
+  hypothetical one.
+
+Deliberately excluded, exactly as this milestone's own proposal named up
+front:
+- **Any Base transaction construction, gas/fee estimation, signing,
+  finalization, broadcast, or confirmation observation.** Every one of
+  those is real, separately sized future work for a later milestone —
+  this one stops at reading a chain id and a balance.
+- **A `GenericEvmNetworkObserver`/`EvmWallet`/`EvmTransaction`/
+  `EvmPublisher` abstraction.** This codebase has exactly two blockchains,
+  Bitcoin and Base — not "all EVM chains." A generic abstraction is
+  deferred until a THIRD chain's own concrete implementation demonstrates
+  which parts of `base/*` genuinely generalize, exactly as docs/
+  Principles.md, "Blockchain Identity Is Explicit; A Shared Reference Is
+  Never Evidence Of A Shared Publication (0.8.89)," already rejects doing
+  from anticipation alone.
+- **A `BaseAccountObservationHistory` or any persisted archive
+  collection.** This observation is never written to
+  `application/PublicationObservationArchive.js` — there is no
+  publication yet for it to be evidence about. A caller that wants a
+  history of observations keeps one itself, exactly as application/
+  BitcoinAnchorConfirmationObserver.js's own header already establishes
+  for its own, unrelated observation.
+- **A smart contract of any kind, on any chain.**
+- **Private key storage, seed derivation, or any wallet secret of any
+  kind.** `base/BaseWalletConnection.js` never receives one — see this
+  milestone's own header, "Account identity is not signing capability."
+- **Cross-chain evidence convergence, or "N chains confirm this account"
+  language of any kind.**
+
+What's left, and deliberately unbuilt: this milestone's own proposal
+anticipates 0.8.91 as explicit Base publication transaction construction —
+including gas/fee estimation as part of that construction, since an EVM
+transaction needs fee parameters rather than Bitcoin-style UTXO selection,
+producing something like a "Base publication transaction plan" rather than
+a `BitcoinAnchorTransactionPlan`-shaped clone — but no such milestone is
+designed yet. What this milestone did establish: a real, explicit,
+read-only Base capability exists, isolated from every Bitcoin capability
+already in this codebase, that a future construction milestone can build
+on top of without having invented any of its own network or account
+observation machinery from scratch.
