@@ -16789,3 +16789,68 @@ is what a review reports; a person reading those numbers, not the review
 itself, decides what they mean.
 
 See `docs/Roadmap.md`, 0.8.88, for the full milestone entry.
+
+## Blockchain Identity Is Explicit; A Shared Reference Is Never Evidence Of A Shared Publication (0.8.89)
+
+**A publication's identity always names which blockchain recorded it —
+never only what was published or where.** `application/
+BlockchainPublicationIdentity.js` introduces the one field every
+Bitcoin-domain class since 0.8.0 was written without needing: `blockchain`.
+`application/BitcoinAnchorPublicationRecord.js`'s own `{ anchorId,
+contentHash, txid, network, createdAt }` (0.8.80) never once says
+"Bitcoin" as data — only as a class name. That silence was harmless with
+one blockchain in the codebase. `BlockchainPublicationIdentity` closes it
+before it becomes harmful: `blockchain` and `chainReference` together are
+the only fields two publications are ever compared by, and `contentHash`
+— carried, always present, never omitted — is never part of that
+comparison.
+
+**This extends "Correlate Evidence By Explicit Identity, Never By
+Resemblance (0.8.78)" across a second axis.** 0.8.78 established that a
+shared `contentHash` is never evidence of a shared Bitcoin anchor — two
+anchors can carry byte-identical `contentHash` values and remain two
+completely independent anchors. `BlockchainPublicationIdentity#sameAs()`
+holds the identical restraint across chains: a Bitcoin publication and a
+(future) Base publication sharing the same `contentHash` — even sharing
+the same `chainReference` string, the coincidence this milestone's own
+flagship test deliberately constructs — are still never the same
+publication, because `blockchain` must also match. `sameAs()` returns
+true only when both `blockchain` and `chainReference` agree; it is never
+computed from `contentHash` alone, in either direction.
+
+**Blockchain-specific mechanics stay blockchain-specific; only identity
+vocabulary is shared.** `BlockchainPublicationIdentity` carries exactly
+four fields — `blockchain`, `contentHash`, `chainReference`, `createdAt`
+— and nothing about PSBTs, UTXOs, gas, signers, or wallet adapters. Every
+one of those stays exactly where Bitcoin's own, already-complete
+implementation already put it. This is a deliberate rejection of a
+generic `BlockchainTransactionBuilder`/`Signer`/`Broadcaster` layer that
+would read as chain-agnostic while actually being semantically weak the
+moment Bitcoin's UTXO model and an EVM chain's account model both had to
+fit through it.
+
+**A projection target, never a second construction path.** A caller never
+assembles a `BlockchainPublicationIdentity` by hand from a chain-specific
+record's own fields. `BitcoinAnchorPublicationRecord#toBlockchainPublicationIdentity()`
+(new in this milestone) is the one, additive projection — mapping `txid`
+onto the shared shape's `chainReference` slot — mirroring the identical
+discipline this codebase already holds for a signed envelope's own
+`get*SigningDescriptor()` free function (core/PublicationAnchor.js). A
+future Base publication record gains the identical kind of projection
+method; this milestone builds no path for constructing an identity that
+could drift out of sync with the record it describes.
+
+**Naming a reserved blockchain is not building a capability.**
+`application/BlockchainKind.js` names `BASE` alongside `BITCOIN` so a
+future implementation has a fixed identifier to build against — never a
+signal that a Base publisher, signer, broadcaster, or confirmation
+observer exists. Nothing in this milestone constructs, signs, or
+broadcasts anything on any second chain.
+
+**Additive, with no persisted schema change.** `BitcoinAnchorPublicationRecord#blockchain`
+is a computed getter, never a stored field — `toJSON()`'s own shape is
+byte-identical to the one 0.8.80 shipped, so no already-persisted
+`PublicationObservationArchive` needs migrating, and no existing test
+needed to change to keep passing.
+
+See `docs/Roadmap.md`, 0.8.89, for the full milestone entry.

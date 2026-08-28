@@ -30738,3 +30738,185 @@ facts — now that identity-aware matching rules exist for every collection,
 and a review step exists to inform, but never make, an explicit
 replacement decision. Deliberately not designed yet; the next
 architectural need may become clearer from actual usage.
+
+## 0.8.89 — Multi-Blockchain Publication Domain Boundary
+
+Every Bitcoin-domain milestone from 0.8.0 through 0.8.88 was written for a
+codebase with exactly one blockchain in it. That was never a problem
+until now: nothing in `application/BitcoinAnchorPublicationRecord.js`'s
+own `{ anchorId, contentHash, txid, network, createdAt }` identity, or in
+any of the sixty-plus files built on top of it, ever needed to say
+"Bitcoin" as DATA — only as a class name. The moment a second blockchain
+becomes a real possibility, that silence stops being harmless: a caller
+holding a bare `{ contentHash, chainReference }` pair has no way to state,
+in data, which chain it came from, and therefore no way to prove that two
+such pairs — one from Bitcoin, one from a future second chain — are not
+secretly the same publication.
+
+This milestone closes exactly that gap, and nothing more. It does not add
+Base. It does not add a second blockchain's publisher, signer,
+broadcaster, or confirmation observer. It adds the one missing field a
+future Base implementation would need to exist safely alongside Bitcoin's
+own, already-complete implementation: an explicit `blockchain` tag on
+every publication identity, and a chain-independent shape narrow enough
+to carry it without pretending Bitcoin's UTXO/PSBT model and an EVM
+chain's account/gas model are the same thing.
+
+```text
+Publication
+    │
+    ├── contentHash        "what was published"          chain-independent
+    ├── blockchain          "which chain recorded it"      chain-independent
+    ├── chainReference      "that chain's own pointer"      chain-independent SHAPE,
+    │                                                        chain-specific VALUE
+    └── createdAt           "when this replica minted it"  chain-independent
+
+         Bitcoin (0.8.0–0.8.88, complete)      Base (RESERVED — no implementation)
+              │                                      │
+        txid, PSBT, UTXO, Esplora            tx hash, EVM account, gas,
+        broadcast/confirmation               JSON-RPC broadcast/confirmation
+```
+
+**Blockchain-specific capabilities remain blockchain-specific; only
+identity vocabulary is shared.** `application/BlockchainPublicationIdentity.js`
+carries exactly four fields — `blockchain`, `contentHash`,
+`chainReference`, `createdAt` — and nothing else: no PSBT, no UTXO, no gas
+price, no signer, no wallet adapter, no confirmation state. Every one of
+those stays exactly where 0.8.0–0.8.88 already put it, underneath
+Bitcoin's own implementation. This is a deliberate rejection of a
+`GenericBlockchainTransactionBuilder`/`GenericBlockchainSigner`/
+`GenericBlockchainBroadcaster` layer: those abstractions read as generic
+but would be semantically weak the moment Bitcoin's UTXO model and an EVM
+chain's account model both had to fit through them. A shared IDENTITY
+shape does not require a shared MECHANICS shape.
+
+**`blockchain` + `chainReference` is the only identity a publication is
+ever compared by — `contentHash` is carried, never compared.** This
+extends docs/Principles.md, "Correlate Evidence By Explicit Identity,
+Never By Resemblance (0.8.78)," across a second axis. 0.8.78 already
+established that a shared `contentHash` is never evidence of a shared
+Bitcoin anchor; `BlockchainPublicationIdentity#sameAs()` extends that
+identical restraint across chains: a Bitcoin publication and a (future)
+Base publication that happen to carry the exact same `contentHash` — the
+same content, independently published on two networks — are never merged,
+never reconciled, and never treated as corroborating or contradicting one
+another. See the flagship test in
+`tests/BlockchainPublicationIdentity.test.js`, which goes one step
+further than that and proves it even when both sides ALSO share the same
+`chainReference` string — `blockchain` alone is what still tells them
+apart.
+
+**A projection target, never a second construction path.** A
+`BlockchainPublicationIdentity` is never assembled by hand from a caller's
+own guess at a chain-specific record's fields. It is reached by calling
+that record's own projection method —
+`BitcoinAnchorPublicationRecord#toBlockchainPublicationIdentity()`, new in
+this milestone — which maps `txid` onto the shared shape's
+`chainReference` slot. A future Base publication record would gain the
+identical kind of projection method; this milestone builds no second
+identity-construction path a caller could get out of sync with the record
+it was supposed to describe.
+
+**Additive only — no persisted schema changes, no migration.**
+`BitcoinAnchorPublicationRecord#blockchain` is a computed getter
+(`BlockchainKind.BITCOIN`, always), never a stored field, so
+`toJSON()`'s own shape — unchanged since 0.8.80 — needs no migration and
+no already-persisted `PublicationObservationArchive` needs rewriting.
+Every existing Bitcoin test, and every existing persisted archive,
+continues to work exactly as it did before this milestone.
+
+**`BlockchainKind.BASE` is named, reserved, and unimplemented — that
+distinction is load-bearing.** Naming a constant is not building a
+capability. `application/BlockchainKind.js`'s own header says explicitly
+what naming `BASE` does NOT do — see "Deliberately excluded" below for
+the concrete list. The constant exists so a future Base implementation
+has a fixed, stable identifier to construct its own identities against
+from day one, not as a signal that any Base capability exists in 0.8.89.
+
+New files:
+- `application/BlockchainKind.js` — new; `BlockchainKind` (frozen
+  `{ BITCOIN: 'bitcoin', BASE: 'base' }`) and `isValidBlockchainKind(value)`.
+  A closed vocabulary, never an open-ended free-text field; a new value
+  is added only when this codebase deliberately decides to represent a
+  new chain's publications, never inferred from a locator, network name,
+  or any other resemblance.
+- `application/BlockchainPublicationIdentity.js` — new;
+  `BlockchainPublicationIdentity` (`{ blockchain, contentHash,
+  chainReference, createdAt }`, immutable, frozen, one constructor path,
+  `toJSON()`/`fromJSON()`) and its own `sameAs(other)` — true only when
+  `blockchain` AND `chainReference` both match; `contentHash` is
+  deliberately excluded from the comparison. Throws for an unknown
+  `blockchain`, a missing/empty `contentHash` or `chainReference`, or an
+  invalid `createdAt`.
+
+Changed:
+- `application/BitcoinAnchorPublicationRecord.js` — gains a `blockchain`
+  getter (always `BlockchainKind.BITCOIN`, computed, never stored) and a
+  `toBlockchainPublicationIdentity()` method projecting `contentHash`/
+  `txid`/`createdAt` onto the new shared shape (`txid` fills
+  `chainReference`). `toJSON()`, `fromJSON()`, the constructor, and every
+  other existing member are completely unchanged — this is a purely
+  additive change to an already-frozen, already-shipping class.
+
+New tests:
+- `tests/BlockchainPublicationIdentity.test.js` — the flagship: a real
+  Bitcoin publication (projected from a real `BitcoinAnchorPublicationRecord`)
+  and a simulated Base publication, sharing both the identical
+  `contentHash` AND the identical `chainReference` string, are proven
+  never to be the same publication (`sameAs()` false in both directions)
+  — `blockchain` alone is what keeps them apart. Plus:
+  `BlockchainKind`/`isValidBlockchainKind()` construction and validation;
+  `BlockchainPublicationIdentity` construction, validation, immutability,
+  and a `toJSON()`/`fromJSON()` round trip that itself `sameAs()`s the
+  original; `BitcoinAnchorPublicationRecord`'s new `blockchain` getter and
+  `toBlockchainPublicationIdentity()` projection, plus direct proof that
+  `toJSON()` gains no new field and stays byte-shape-identical to the
+  pre-0.8.89 schema; two genuinely distinct same-chain, same-`contentHash`
+  Bitcoin publications (different `txid`) still reported as distinct,
+  extending 0.8.78/0.8.80's own invariant through the new shape; and a
+  scan of every result for `status`/`confidence`/`trusted`/`verdict`/
+  `better`/`newer`/`recommended` and similar scoring vocabulary, which
+  never appears.
+- `tests/BitcoinAnchorPublicationRecord.test.js` — unchanged; re-run in
+  full as regression coverage proving the additive change breaks nothing
+  in the existing suite.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Any Base publisher, signer, broadcaster, confirmation observer, RPC
+  client, or wallet adapter.** Naming `BlockchainKind.BASE` is not
+  building a capability. Nothing in `anchoring/` or `application/` in
+  this milestone constructs, signs, or broadcasts an EVM transaction of
+  any kind.
+- **A `baseAnchorPublicationRecords` collection, or any other change to
+  `application/PublicationObservationArchive.js`.** The archive's own six
+  collections are unchanged; a real second-chain collection is a decision
+  for the milestone that actually implements one, informed by whatever
+  that chain's own concrete lifecycle turns out to need — not guessed at
+  here.
+- **A universal `GenericBlockchainTransactionBuilder`/`GenericBlockchainSigner`/
+  `GenericBlockchainBroadcaster` abstraction.** Blockchain-specific
+  mechanics stay blockchain-specific; only the four-field identity shape
+  above is shared.
+- **A smart contract of any kind, on any chain.** Out of scope for a
+  domain-boundary milestone, and out of scope for a first concrete Base
+  milestone too, per this milestone's own proposal.
+- **Fee estimation, gas pricing, or any Base-specific UI.** There is
+  nothing for a person to see in this milestone — no new view, no new UI
+  affordance. This is application/domain-layer vocabulary only.
+- **Cross-chain evidence convergence, corroboration, or "N blockchains
+  confirm this content" language of any kind.** `sameAs()` proves two
+  identities are NOT the same publication; it says nothing about whether
+  independent publications on two chains should ever be presented
+  together, which stays unbuilt and undesigned.
+
+What's left, and deliberately unbuilt: a concrete second blockchain
+implementation. The next milestone this proposal anticipates is a single,
+narrow capability — an explicit Base publication funding observation,
+mirroring `application/BitcoinAnchorFundingObservationState.js`'s own
+0.8.54 scope exactly, one stage at a time, rather than the whole EVM
+pipeline in one PR — but no such milestone is designed yet. What this
+milestone did establish: any future Base publication record can exist
+beside `BitcoinAnchorPublicationRecord` in the same archive, in the same
+evidence layer, in the same timeline, without either chain's own
+publications ever being merged, reconciled, or mistaken for the other's,
+even under a coincidental shared `contentHash` or `chainReference`.
