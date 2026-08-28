@@ -5,6 +5,7 @@ import {
 import { describeBitcoinAnchorBroadcast } from './BitcoinAnchorBroadcastView.js';
 import { describeBitcoinAnchorConfirmationObservationHistory } from './BitcoinAnchorConfirmationObservationHistoryView.js';
 import { describeBitcoinAnchorContentProof } from './BitcoinAnchorContentProofView.js';
+import { describeBaseTransactionInclusionObservationHistory } from './BaseTransactionInclusionObservationView.js';
 
 // 0.8.74 — Cross-Domain Publication Observation Timeline.
 //
@@ -144,9 +145,71 @@ import { describeBitcoinAnchorContentProof } from './BitcoinAnchorContentProofVi
 // own — this file performs ZERO network operations. Opening a timeline
 // built from this projection reads only whatever the caller's own
 // already-in-memory histories currently hold.
+//
+// 0.8.98 — Base Transaction Inclusion Observation Timeline. Adds a THIRD
+// domain, `BASE`, and a THIRD source of already-described entries —
+// `base/BaseTransactionInclusionObserver.js` (0.8.96) observations, via
+// application/BaseTransactionInclusionObservationView.js's own, UNCHANGED
+// `describeBaseTransactionInclusionObservationHistory()` — mirroring
+// exactly how every Bitcoin confirmation entry above already reuses
+// `describeBitcoinAnchorConfirmationObservationHistory()` unchanged. This
+// milestone is PRESENTATION OF ALREADY-EXISTING OBSERVATIONS, not a fourth
+// observation mechanism: application/PublicationObservationArchive.js
+// (0.8.97) already durably holds `baseTransactionInclusionObservationsByTransactionHash`
+// — this file adds no new durable collection, and requires no archive
+// schema change (see application/PublicationObservationArchive.js's own
+// SCHEMA_VERSION, unchanged at 4 by this milestone).
+//
+// BASE'S OWN IDENTITY IS `transactionHash` — NEVER `contentHash`, THE
+// IDENTICAL RESTRAINT THIS FILE ALREADY HOLDS FOR `recordIndex`/`anchorId`.
+// Every Base entry below carries the EXACT key its own
+// `base.observationsByTransactionHash` object was found under — never
+// re-derived from any field on the observation itself, and never
+// associated with an IPFS record or a Bitcoin anchor by a shared
+// `contentHash`. Two Base transactions that commit byte-identical content
+// under two different transaction hashes project as two entirely
+// independent sequences of entries here, exactly like two Bitcoin anchors
+// sharing a `contentHash` already do — see docs/Principles.md, "Correlate
+// Evidence By Explicit Identity, Never By Resemblance (0.8.78)."
+//
+// ONE ENTRY PER OBSERVATION, NEVER A SYNTHETIC ONE. An observation naming
+// `confirmationCount: 7` projects as exactly ONE `BASE_TRANSACTION_INCLUSION`
+// entry carrying `confirmationCount: 7` — never seven separate entries.
+// This file computes no confirmation count of its own and generates no
+// entry this caller's own history does not already, separately, hold.
+//
+// EVERY OBSERVED STATE PROJECTS — INCLUDED, NOT_INCLUDED, AND UNAVAILABLE
+// ALIKE. `describeBaseTransactionInclusionObservationHistory()` already
+// narrates all three without filtering; this file carries that unchanged —
+// an UNAVAILABLE observation is a real timeline entry, not a gap. See
+// docs/Principles.md, "An Observation Remains A Dated Fact; A Later
+// Reading Never Erases An Earlier One (0.8.72)."
+//
+// NO GENERIC `BLOCKCHAIN_PLACEMENT` ABSTRACTION, AND NO CONFIRMATION/
+// PLACEMENT DERIVED FROM A BASE OBSERVATION. Bitcoin's own
+// `BITCOIN_CHAIN_PLACEMENT`/`BITCOIN_CONSISTENCY` machinery (application/
+// BitcoinAnchorObservationConsistency.js) stays exactly Bitcoin's own —
+// this file mints no Base counterpart, and no shared abstraction merging
+// the two. `BASE_TRANSACTION_INCLUSION` is Base's own, single entry kind,
+// carrying Base's own vocabulary (`INCLUDED`/`NOT_INCLUDED`/`UNAVAILABLE`),
+// never translated into Bitcoin's.
+//
+// THE FIXED PRE-SORT ORDER GAINS ONE MORE STAGE, APPENDED LAST: every IPFS
+// entry, then every Bitcoin anchor's own entries (unchanged from 0.8.74),
+// THEN every Base transaction hash's own entries — in
+// `base.observationsByTransactionHash`'s own key order (a plain object's
+// own insertion order, exactly as durably maintained by application/
+// PublicationObservationArchive.js's own `appendBaseTransactionInclusionObservation()`),
+// and within one transaction hash: its own observation history in that
+// history's own append order. Only the resulting, fixed-order array is
+// ever sorted, by the SAME stable `observedAt`-then-source-position sort
+// this file already used before this milestone — no second, competing
+// sorting policy is introduced. Calling this function twice on
+// byte-identical input still always returns a byte-identical result.
 export const PublicationObservationTimelineDomain = Object.freeze({
     IPFS: 'ipfs',
-    BITCOIN: 'bitcoin'
+    BITCOIN: 'bitcoin',
+    BASE: 'base'
 });
 
 export const PublicationObservationTimelineEntryKind = Object.freeze({
@@ -154,7 +217,8 @@ export const PublicationObservationTimelineEntryKind = Object.freeze({
     IPFS_CONTENT_VERIFICATION: IpfsPublicationObservationTimelineEntryKind.CONTENT_VERIFICATION,
     BITCOIN_BROADCAST: 'bitcoin-broadcast',
     BITCOIN_CONFIRMATION: 'bitcoin-confirmation',
-    BITCOIN_CONTENT_PROOF: 'bitcoin-content-proof'
+    BITCOIN_CONTENT_PROOF: 'bitcoin-content-proof',
+    BASE_TRANSACTION_INCLUSION: 'base-transaction-inclusion'
 });
 
 function normalizedRecordIndex(recordIndex) {
@@ -216,6 +280,36 @@ function bitcoinContentProofEntry(described, { recordIndex, anchorId, txid }) {
     });
 }
 
+// 0.8.98 — one Base timeline entry, built from an ALREADY-DESCRIBED
+// observation (`describeBaseTransactionInclusionObservationHistory()`'s own
+// output — `stateLabel` already resolved, exactly like `bitcoinConfirmationEntry()`
+// above consumes an already-described confirmation observation). Every
+// field but `domain`/`kind`/`label`/`transactionHash` is carried through
+// UNCHANGED from that projection — no field is recomputed here.
+function baseTransactionInclusionEntry(observation, transactionHash) {
+    return Object.freeze({
+        observedAt: observation.observedAt,
+        domain: PublicationObservationTimelineDomain.BASE,
+        kind: PublicationObservationTimelineEntryKind.BASE_TRANSACTION_INCLUSION,
+        transactionHash,
+        label: 'Base transaction inclusion',
+        txid: observation.txid,
+        state: observation.state,
+        stateLabel: observation.stateLabel,
+        blockHash: observation.blockHash,
+        blockNumber: observation.blockNumber,
+        transactionIndex: observation.transactionIndex,
+        confirmationCount: observation.confirmationCount,
+        reason: observation.reason
+    });
+}
+
+function baseEntriesForTransactionHash(transactionHash, observations) {
+    if (!transactionHash) return [];
+    return describeBaseTransactionInclusionObservationHistory(observations).observations
+        .map((observation) => baseTransactionInclusionEntry(observation, transactionHash));
+}
+
 function observedAtMillis(entry) {
     return entry.observedAt instanceof Date ? entry.observedAt.getTime() : 0;
 }
@@ -250,9 +344,10 @@ function bitcoinEntriesForAnchor(anchor, { confirmationHistoriesByAnchorId, proo
     return entries;
 }
 
-export function describePublicationObservationTimeline({ ipfs, bitcoin } = {}) {
+export function describePublicationObservationTimeline({ ipfs, bitcoin, base } = {}) {
     const ipfsInput = ipfs && typeof ipfs === 'object' ? ipfs : {};
     const bitcoinInput = bitcoin && typeof bitcoin === 'object' ? bitcoin : {};
+    const baseInput = base && typeof base === 'object' ? base : {};
 
     const ipfsTimeline = describeIpfsPublicationObservationTimeline(
         ipfsInput.publicationRecords,
@@ -276,7 +371,13 @@ export function describePublicationObservationTimeline({ ipfs, bitcoin } = {}) {
         proofObservationsByAnchorId
     }));
 
-    const insertionOrder = [...ipfsEntries, ...bitcoinEntries];
+    const baseObservationsByTransactionHash = (baseInput.observationsByTransactionHash && typeof baseInput.observationsByTransactionHash === 'object')
+        ? baseInput.observationsByTransactionHash
+        : {};
+    const baseEntries = Object.entries(baseObservationsByTransactionHash)
+        .flatMap(([transactionHash, observations]) => baseEntriesForTransactionHash(transactionHash, observations));
+
+    const insertionOrder = [...ipfsEntries, ...bitcoinEntries, ...baseEntries];
     const entries = insertionOrder
         .map((entry, sourceIndex) => ({ entry, sourceIndex }))
         .sort((a, b) => {

@@ -50,9 +50,13 @@ import { LocalStoragePublicationObservationArchive } from '../storage/LocalStora
 //   Section I: PublicationObservationArchiveInspection exposes
 //              baseTransactionInclusionObservationCount/baseTransactionHashes
 //   Section J: the cross-domain timeline (PublicationObservationArchiveView's
-//              own entries) is completely untouched by Base facts — this
-//              milestone answers durability only, never timeline
-//              integration
+//              own entries) is UNTOUCHED by this milestone's own count field
+//              — this milestone answers durability only, never timeline
+//              integration; see docs/Roadmap.md, 0.8.98, "Base Transaction
+//              Inclusion Observation Timeline," for where entries/entryCount
+//              gained Base facts one milestone later — this file's own
+//              assertions below are updated accordingly, without changing
+//              this milestone's own scope
 //   Section K: no trust/verdict vocabulary anywhere in this milestone's
 //              own new surface
 
@@ -327,8 +331,13 @@ async function run() {
     console.log('✓ Section I: PublicationObservationArchiveInspection exposes baseTransactionInclusionObservationCount and a baseTransactionHashes identity list, mirroring bitcoinAnchorIds');
 
     // ---------------------------------------------------------------
-    // Section J — the cross-domain timeline is completely untouched by
-    // Base facts.
+    // Section J — as of 0.8.98, the cross-domain timeline DOES compose
+    // durably archived Base facts (see
+    // tests/BaseTransactionInclusionObservationTimeline.test.js for that
+    // milestone's own flagship coverage); this file's own remaining
+    // assertion is narrower — that the summary COUNT this milestone (0.8.97)
+    // introduced counts Base observations independently of whatever the
+    // timeline separately does with them.
     // ---------------------------------------------------------------
     {
         let withoutBase = PublicationObservationArchive.empty();
@@ -337,11 +346,11 @@ async function run() {
         const summaryWithout = describePublicationObservationArchive(withoutBase);
         const summaryWith = describePublicationObservationArchive(withBase);
 
-        assert(summaryWithout.entryCount === 0 && summaryWith.entryCount === 0, '49. the timeline entryCount is unaffected by a Base observation — this milestone never integrates it');
-        assert(JSON.stringify(summaryWithout.entries) === JSON.stringify(summaryWith.entries), '50. the timeline entries themselves are byte-identical whether or not a Base observation exists');
-        assert(summaryWith.baseTransactionInclusionCount === 1, '51. yet the summary COUNT does see it — a deliberate, narrow exception: durability and a count are this milestone\'s scope, the unified timeline is not');
+        assert(summaryWithout.entryCount === 0 && summaryWith.entryCount === 1, '49. (0.8.98) the timeline entryCount now sees a Base observation — one entry, never a synthetic multiple');
+        assert(summaryWith.entries[0].domain === 'base' && summaryWith.entries[0].transactionHash === TXID_H, '50. (0.8.98) the one new entry names the Base domain and this observation\'s own transactionHash, never contentHash');
+        assert(summaryWith.baseTransactionInclusionCount === 1, '51. the summary COUNT this milestone introduced also sees it — a count and a timeline entry are two independent projections of the same durable fact, never merged into one');
     }
-    console.log('✓ Section J: the cross-domain timeline (entries/entryCount) is completely untouched by Base facts — this milestone answers durability only, never timeline integration');
+    console.log('✓ Section J: baseTransactionInclusionCount (0.8.97) and the cross-domain timeline (0.8.98) both independently see a durably archived Base observation');
 
     // ---------------------------------------------------------------
     // Section K — no trust/verdict vocabulary anywhere in this milestone's

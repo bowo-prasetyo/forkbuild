@@ -17388,4 +17388,72 @@ Roadmap.md`, 0.8.96, itself already anticipated by naming both 0.8.97 and
 0.8.98 as distinct, future milestones rather than building either
 prematurely.
 
+## Unify The Timeline, Not The Meanings, Holds For A Third Domain Too (0.8.98)
+
+**A cross-domain timeline projects WHEN observations occurred; it never
+translates WHAT they mean into a shared vocabulary — the same rule (0.8.74)
+held for two domains now holds for three.** `application/
+PublicationObservationTimelineView.js`'s own `describePublicationObservationTimeline()`
+gains a `BASE` domain and a `BASE_TRANSACTION_INCLUSION` entry kind,
+sitting alongside IPFS's and Bitcoin's own — never translated into either
+domain's own words, and never reduced to a shared `status`. An IPFS
+`HASH_MATCH`, a Bitcoin `CONFIRMED`, and a Base `INCLUDED` sit on the same
+chronological list, each still carrying its own domain's own vocabulary,
+unchanged. This milestone answers exactly one question — presenting
+already-durable Base observations (0.8.97) on the timeline IPFS and
+Bitcoin facts have shared since 0.8.74 — and answers no other.
+
+**Identity generalizes where useful; mechanics and meanings do not
+generalize merely for symmetry.** `transactionHash` plays the identical
+structural role `recordIndex` plays for an IPFS record and `anchorId`
+plays for a Bitcoin anchor — an explicit, caller-supplied, never-inferred
+key naming exactly which real-world thing an entry is about, never guessed
+from a shared `contentHash` (`docs/Principles.md`, "Correlate Evidence By
+Explicit Identity, Never By Resemblance (0.8.78)," held here once more).
+But Bitcoin's own `CHAIN_PLACEMENT`/`CONSISTENCY` observations (0.8.76/
+0.8.77) gain no generic `BLOCKCHAIN_PLACEMENT` counterpart for Base. A
+Base transaction's inclusion in a block is not the same domain concept as
+comparing a claimed Bitcoin anchor against what a second, independent
+source reports about the same chain position — the two mechanics stay
+exactly as distinct as they always were, sitting side by side on one
+timeline only because they both name something that happened at a
+particular time, never because they mean the same thing.
+
+**No observation is ever multiplied into several, and none is ever
+filtered down to only the reassuring ones.** An observation naming
+`confirmationCount: 10` projects as exactly one timeline entry carrying
+`confirmationCount: 10`, never ten synthetic confirmation entries — this
+codebase generates no fact a caller's own observation history does not
+already, separately, hold. In the other direction, `INCLUDED`,
+`NOT_INCLUDED`, and `UNAVAILABLE` all project identically — an UNAVAILABLE
+observation is a genuine timeline entry, not a gap that quietly
+disappears for carrying less information than an INCLUDED one. Both
+restraints are the same rule seen from two sides: the timeline shows
+exactly the facts a caller's own histories hold, no more entries and no
+fewer.
+
+**A durability boundary and a presentation boundary are different
+questions, and closing the second one requires no new archive schema.**
+0.8.97 deliberately left `application/PublicationObservationTimelineView.js`
+untouched, answering only whether a Base observation could survive
+restart and export/import. This milestone answers the presentation
+question 0.8.97 left open, and needs no new durable collection or
+`SCHEMA_VERSION` bump to do it — the seventh collection 0.8.97 already
+wrote is simply read by one more projection, exactly the same "extend the
+composition, not the schema" restraint 0.8.75's own header first
+established for reading an existing history into a new view. A capability
+being added in stages across milestones does not imply the underlying
+data model needs to grow in step with it.
+
+**A single unified timeline stays single — a new domain is never reason
+enough to add a second, competing timeline surface.** `ui/views/
+DecentralizedPublicationsView.js`'s own "Archived Observation Timeline"
+disclosure needed no new card and no new section to show Base facts — the
+same `v-for` over the same projection's own `entries` simply renders one
+more kind of row, using one more badge-class lookup and one more domain
+label. The whole architectural point of 0.8.74 was collapsing what had
+been separate, single-domain views into one chronological read; holding
+that point for a third domain, rather than relaxing it, is this
+milestone's own UI contribution in full.
+
 See `docs/Roadmap.md`, 0.8.97, for the full milestone entry.
