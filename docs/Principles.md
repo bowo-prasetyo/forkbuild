@@ -16375,3 +16375,69 @@ enforcement of that boundary, because the boundary already existed one
 layer down.
 
 See `docs/Roadmap.md`, 0.8.82, for the full milestone entry.
+
+## Provenance Describes Where A Fact Entered This Archive; It Does Not Establish Whether The Fact Is True (0.8.83)
+
+**Two values, deliberately, forever.** `application/
+PublicationObservationArchiveProvenance.js`'s own
+`PublicationObservationArchiveProvenanceOrigin` holds exactly `LOCAL` and
+`IMPORTED` — never a provider reputation, a trust score, a "verified
+source," or a third "unknown" bucket for facts predating this milestone.
+`LOCAL` means this replica generated the fact through an explicit
+operation of its own; `IMPORTED` means the fact entered this archive
+through 0.8.82 archive import. Neither is "more trustworthy" than the
+other — an `IMPORTED` confirmation observation is not unverified or
+lower-confidence, it simply arrived at this archive by a different route.
+This is docs/Principles.md, "The UI Displays Observations; It Does Not
+Turn Them Into A Verdict (0.8.57)," held once more, one layer over an
+entire archive's own ingestion history rather than over a single
+observation.
+
+**Provenance describes THIS archive's own ingestion, never a fact's
+multi-hop history.** A confirmation observation minted `LOCAL` in replica
+A, exported, and imported into replica B becomes `IMPORTED` in B — never
+carried forward as "originally local, but now imported here too." Replica
+B has no way to know, and does not claim to know, how replica A itself
+produced the fact; it only knows how the fact entered B's own archive.
+`application/PublicationObservationArchive.js`'s own
+`withUniformProvenance(origin)` is the one place provenance is ever
+rewritten wholesale — called exactly once by `importPublicationObservationArchive()`,
+over an entire freshly reconstructed archive, discarding whatever
+provenance the imported JSON itself claimed. An archive that already held
+a mix of `LOCAL` and `IMPORTED` facts, re-exported and imported again,
+becomes uniformly `IMPORTED` — provenance is not additive or
+inheritable across an import boundary.
+
+**A fact's own timestamp and the moment this replica imported it are two
+different facts, never confused.** `archiveImportEvents` records `{
+importedAt, importedArchiveSchemaVersion, importedEntryCount }` — a
+durable fact about THE ACT OF IMPORTING, never a verification of what was
+imported and never a rewrite of any fact's own `observedAt`/`publishedAt`/
+`createdAt`. Recording it is kept a deliberately separate step from
+`importPublicationObservationArchive()` itself, so that function stays a
+pure, clock-free transformation of its own input — calling it twice on
+byte-identical input still produces byte-identical output, exactly as it
+did before this milestone.
+
+**The critical invariant: a sequence that mixes both values, never
+all-one.** Replica A creates observations, exports, replica B imports,
+then observes one more confirmation for itself. The resulting sequence is
+`[IMPORTED, IMPORTED, LOCAL]` — never all-`LOCAL` (erasing that most of
+this history arrived from elsewhere) and never all-`IMPORTED` (erasing
+that the last one is genuinely this replica's own). Every `appendXxx()`
+method on `PublicationObservationArchive` gained one new, optional,
+trailing `origin` argument, defaulting to `LOCAL` — every call site that
+predates this milestone gets that default automatically, and correctly.
+
+**Provenance is additional metadata; it is never an input to analysis.**
+Not one line of `application/PublicationObservationArchiveView.js`,
+`application/PublicationObservationTimelineView.js`, `application/
+BitcoinAnchorDurableEvidenceView.js`, or `application/
+BitcoinAnchorPublicationLifecycleTimelineView.js` changed. Two archives
+holding byte-identical facts but different provenance produce
+byte-identical chain-placement comparisons, consistency findings, evidence
+bundles, and lifecycle timelines. Provenance answers "where did this fact
+enter this archive"; it has no vote in "what does this archive's evidence
+show."
+
+See `docs/Roadmap.md`, 0.8.83, for the full milestone entry.
