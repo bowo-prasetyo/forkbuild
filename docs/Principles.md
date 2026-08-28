@@ -15662,3 +15662,72 @@ verification, ever (0.8.72)" held for opening a verification history,
 held here once more for opening the merged timeline — it only reads
 state already in memory. See `docs/Roadmap.md`, 0.8.73, for the full
 milestone entry.
+
+## Unify The Timeline, Not The Meanings (0.8.74)
+
+**Merging two domains' own facts onto one chronological view is
+composition of WHEN, never composition of WHAT.** `application/
+PublicationObservationTimelineView.js`'s `describePublicationObservationTimeline()`
+places IPFS's own Publication/Content-Verification facts (0.8.73) and
+Bitcoin's own Broadcast/Confirmation/Content-Proof facts (0.8.56/0.8.57/
+0.8.64) on one merged, chronological list. It answers exactly one
+question — "in what order were these facts observed?" — and never the
+different question "what do these facts, taken together, mean?" An IPFS
+`HASH_MATCH` and a Bitcoin `HASH_MISMATCH` for the same publication sit
+next to each other on the same list, each in its own domain's own
+vocabulary, unresolved and unscored — the identical restraint
+"Reconciliation Composes Independent Observations; It Does Not Score Them
+(0.8.55)" held for two Bitcoin-only observations, extended here across
+two entire, independently maintained domains. There is no
+`PUBLISHED_AND_CONFIRMED`, no `status`, no `confidence`, and no `health`
+anywhere in this milestone's output — a caller that wants an opinion about
+what a given cross-domain combination means forms that opinion itself,
+one layer up.
+
+**A shared content hash is never evidence of shared publication identity.**
+`application/IpfsPublicationRecord.js` identifies a record only by its own
+position (`recordIndex`) in a caller's own history; `core/
+PublicationAnchor.js` identifies a Bitcoin anchor by its own `anchorId`/
+`publicationId` — two entirely separate identity schemes, native to two
+entirely separate domains, and this milestone introduces no third, unifying
+one. Every Bitcoin anchor a caller supplies must carry its own EXPLICIT
+`recordIndex` — the exact IPFS record it belongs to, stated by the caller,
+never computed. The flagship test proves this is not a theoretical
+concern: two publications built with byte-identical content, their
+observations deliberately interleaved out of order, stay completely
+distinguishable by `recordIndex` alone throughout — a `HASH_MISMATCH` for
+Publication A's own Bitcoin content proof is never mistakable for
+Publication B's own `CONFIRMED` Bitcoin confirmation, despite both
+publications sharing an identical `contentHash`. A caller with no real
+cross-domain association to report supplies `recordIndex: null`, honestly,
+rather than this projection guessing one.
+
+**A fact with no domain field gets its timestamp from the caller,
+honestly labeled as such, never fabricated from an unrelated field.**
+Bitcoin's own broadcast outcome (application/BitcoinAnchorBroadcastCoordinator
+.js) carries no timestamp — broadcasting is a one-time action a caller
+observes once. This milestone requires the caller to supply
+`broadcastedAt` itself, the identical restraint already applied when
+`ui/views/DecentralizedPublicationsView.js` captures `finalizedAt:
+Date.now()` at PSBT finalization, one stage earlier in the same pipeline.
+An anchor with no `broadcastedAt` contributes no broadcast entry to the
+timeline at all — this milestone never substitutes a different field (an
+anchor's own signing time, say) to manufacture one.
+
+**Every entry still names its own domain — merging two domains onto one
+view never blurs which system a fact came from.** `domain: 'ipfs'` or
+`domain: 'bitcoin'` accompanies every entry, alongside its own `kind`, the
+identical restraint 0.8.73 already held for `recordIndex` distinguishing
+two IPFS records on one merged view, now extended to distinguishing two
+entire domains on one merged view. `PublicationObservationTimelineEntryKind`
+re-exports 0.8.73's own IPFS vocabulary unchanged and adds new,
+Bitcoin-only kinds alongside it — never a shared, domain-agnostic kind
+that could blur which system produced a given entry.
+
+**No polling, no automatic verification, no automatic reconciliation, zero
+network operations.** The identical restraint held by every milestone
+before it, extended one more time: this projection only ever reads
+whatever the caller's own already-in-memory IPFS and Bitcoin state
+currently holds, and computes no cross-domain comparison of its own —
+that remains real, separately sized future work (0.8.75). See
+`docs/Roadmap.md`, 0.8.74, for the full milestone entry.

@@ -88,6 +88,7 @@ import { BitcoinAnchorSignedPsbtFinalizationState } from '../../application/Bitc
 import { describeBitcoinAnchorSignedPsbtFinalization } from '../../application/BitcoinAnchorSignedPsbtFinalizationView.js';
 import { BitcoinAnchorBroadcastState } from '../../application/BitcoinAnchorBroadcastState.js';
 import { describeBitcoinAnchorBroadcast } from '../../application/BitcoinAnchorBroadcastView.js';
+import { describePublicationObservationTimeline, PublicationObservationTimelineDomain, PublicationObservationTimelineEntryKind } from '../../application/PublicationObservationTimelineView.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -1140,6 +1141,29 @@ export default {
         // earlier.
         const bitcoinAnchorBroadcastOutcome = ref(null);
 
+        // 0.8.74 — Cross-Domain Publication Observation Timeline.
+        //
+        // `bitcoinAnchorBroadcastedAt` is the ONE new piece of state this
+        // milestone adds to the broadcast flow above — the moment THIS
+        // replica observed `bitcoinAnchorBroadcastOutcome` settle, captured
+        // once, in `broadcastBitcoinAnchorTransaction()` below. Application/
+        // BitcoinAnchorBroadcastCoordinator.js's own outcome carries no
+        // timestamp of its own (see that file's own header) — broadcasting
+        // is a one-time action a caller observes once, not a durable,
+        // timestamped domain fact — so this page captures it itself,
+        // mirroring exactly how `bitcoinAnchorFinalizedTransaction`'s own
+        // `finalizedAt: Date.now()` above already captures an equivalent
+        // fact one stage earlier in the identical pipeline. Reset to `null`
+        // at the exact same three points `bitcoinAnchorBroadcastOutcome`
+        // itself is retired, immediately below each of those. See
+        // application/PublicationObservationTimelineView.js's own header —
+        // `crossDomainPublicationObservationTimelineView()` further below
+        // reads this to build one, and only one, Bitcoin broadcast entry
+        // for the session's own freshly broadcast transaction; a discovered,
+        // already-catalogued anchor never gets one, because no independent
+        // broadcast observation exists for it in this replica.
+        const bitcoinAnchorBroadcastedAt = ref(null);
+
         // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
         //
         // `bitcoinAnchorBroadcastConfirmationOutcome` is the single,
@@ -1688,7 +1712,20 @@ export default {
                 bitcoinAnchorReconciliations: {},
                 bitcoinAnchorConfirmationHistories: {},
                 bitcoinAnchorConfirmationHistoryExpanded: {},
-                bitcoinAnchorConfirmationHistoryEntryExpanded: {}
+                bitcoinAnchorConfirmationHistoryEntryExpanded: {},
+                // 0.8.74 — Cross-Domain Publication Observation Timeline.
+                // Gates the "Show/Hide Cross-Domain Timeline" disclosure,
+                // placed as a SIBLING to the existing IPFS and Bitcoin
+                // cards below — never nested inside either one, because the
+                // timeline this disclosure shows is a view over BOTH of
+                // this entry's own domains at once. This is the ONLY new
+                // piece of per-entry state this milestone adds; the
+                // timeline itself is computed on demand by
+                // crossDomainPublicationObservationTimelineView(entry), a
+                // pure projection over state already held above. Nothing
+                // here is fetched, polled, or persisted, and expanding this
+                // disclosure performs zero network operations.
+                crossDomainPublicationObservationTimelineExpanded: false
             })));
             await Promise.all(entries.filter((entry) => !entry.view && !entry.checking).map(resolveEntry));
             entries.forEach(loadEvidence);
@@ -2636,6 +2673,7 @@ export default {
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = null;
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
+            bitcoinAnchorBroadcastedAt.value = null;
             retireBitcoinAnchorBroadcastConfirmationContext();
             try {
                 entry.bitcoinAnchorTransactionConstruction = bitcoinAnchorTransactionConstructionCoordinator.construct({
@@ -2714,6 +2752,7 @@ export default {
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = null;
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
+            bitcoinAnchorBroadcastedAt.value = null;
             retireBitcoinAnchorBroadcastConfirmationContext();
             bitcoinAnchorReviewedSigningOutcome.value = { state: BitcoinAnchorReviewedSigningState.SIGNING, psbt: null, signedInputs: null, reason: null };
             try {
@@ -2778,6 +2817,7 @@ export default {
             // own declarations above.
             bitcoinAnchorFinalizedTransaction.value = null;
             bitcoinAnchorBroadcastOutcome.value = null;
+            bitcoinAnchorBroadcastedAt.value = null;
             retireBitcoinAnchorBroadcastConfirmationContext();
             bitcoinAnchorSignedPsbtFinalizationOutcome.value = { state: BitcoinAnchorSignedPsbtFinalizationState.FINALIZING, finalized: false, txid: null, rawTransaction: null, verifiedInputCount: null, reason: null };
             try {
@@ -2852,6 +2892,10 @@ export default {
             } catch (error) {
                 bitcoinAnchorBroadcastOutcome.value = { state: BitcoinAnchorBroadcastState.FAILED, broadcasted: false, txid: null, reason: error.message };
             }
+            // 0.8.74 — captured once, the moment this outcome settled (see
+            // `bitcoinAnchorBroadcastedAt`'s own declaration above) — never
+            // re-captured by anything that merely reads the outcome later.
+            bitcoinAnchorBroadcastedAt.value = new Date();
         }
 
         // Pure projection of `bitcoinAnchorBroadcastOutcome` through
@@ -3953,6 +3997,113 @@ export default {
             return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[item.state] || 'peer-badge--pending';
         }
 
+        // 0.8.74 — Cross-Domain Publication Observation Timeline. Composes
+        // application/PublicationObservationTimelineView.js's own
+        // describePublicationObservationTimeline() over this entry's own
+        // IPFS histories (the SAME two ipfsPublicationObservationTimelineView()
+        // immediately above already reads) and this entry's own Bitcoin
+        // facts. Nothing here is fetched, verified, or appended — it only
+        // reads what is already held in memory.
+        //
+        // ONLY A DISCOVERED ANCHOR'S OWN CONFIRMATION/CONTENT-PROOF FACTS
+        // EVER APPEAR — never a fabricated broadcast entry for it. A
+        // discovered anchor (entry.evidence.anchors, bitcoin-op-return) is
+        // an already-catalogued, signed claim; this replica never itself
+        // observed application/BitcoinAnchorBroadcastCoordinator.js accept
+        // it for broadcast, so it carries no `broadcastedAt` here at all —
+        // see application/PublicationObservationTimelineView.js's own
+        // header, "an anchor with no broadcastedAt contributes no broadcast
+        // entry." Its own confirmation history (entry.
+        // bitcoinAnchorConfirmationHistories[anchorId], from "Reconcile"
+        // clicks) and its own current content proof (entry.
+        // bitcoinAnchorReconciliations[anchorId].contentProof — there is no
+        // history for this one, by 0.8.57's own deliberate design) are both
+        // real, independently observed facts, and both appear unchanged.
+        //
+        // A SEPARATE, HONEST FACT FOR THE SESSION'S OWN FRESHLY BROADCAST
+        // TRANSACTION. When this page's own transaction-creation wizard
+        // (0.8.60–0.8.65) was used for THIS entry's own publicationId, and
+        // a broadcast attempt has actually been made
+        // (`bitcoinAnchorBroadcastOutcome`/`bitcoinAnchorBroadcastedAt`,
+        // both page-level, declared above), that real, independently
+        // observed outcome — and its own confirmation history,
+        // `bitcoinAnchorBroadcastConfirmationHistory` — is included too,
+        // keyed by its own txid. This wizard flow performs no content-proof
+        // check of its own, so it never contributes a content-proof entry.
+        //
+        // NO `recordIndex` LINKAGE IS SUPPLIED for any Bitcoin fact here —
+        // this page has never tracked which of an entry's own (possibly
+        // several) IPFS publication records a given Bitcoin anchor
+        // corresponds to, and application/PublicationObservationTimelineView
+        // .js's own header is explicit that this file must never guess one
+        // from a shared contentHash. Every Bitcoin entry below therefore
+        // projects with `recordIndex: null` — an honest "belongs to this
+        // publication, not further linked within it" — never a fabricated
+        // link.
+        function crossDomainPublicationObservationTimelineView(entry) {
+            const discoveredAnchors = (entry.evidence && Array.isArray(entry.evidence.anchors) ? entry.evidence.anchors : [])
+                .filter((anchorView) => anchorView.anchorType === 'bitcoin-op-return')
+                .map((anchorView) => ({
+                    recordIndex: null,
+                    anchorId: anchorView.anchorId,
+                    txid: null,
+                    broadcastedAt: null,
+                    broadcast: null
+                }));
+
+            const confirmationHistoriesByAnchorId = { ...entry.bitcoinAnchorConfirmationHistories };
+            const proofObservationsByAnchorId = {};
+            discoveredAnchors.forEach((anchor) => {
+                const reconciliation = entry.bitcoinAnchorReconciliations[anchor.anchorId];
+                proofObservationsByAnchorId[anchor.anchorId] = (reconciliation && reconciliation.contentProof) ? [reconciliation.contentProof] : [];
+            });
+
+            const anchors = discoveredAnchors;
+            const bound = bitcoinAnchorFinalizedTransaction.value;
+            if (bound && bitcoinAnchorTransactionReview.publicationId === entry.publication.id) {
+                anchors.push({
+                    recordIndex: null,
+                    anchorId: bound.txid,
+                    txid: bound.txid,
+                    broadcastedAt: bitcoinAnchorBroadcastedAt.value,
+                    broadcast: bitcoinAnchorBroadcastOutcome.value
+                });
+                confirmationHistoriesByAnchorId[bound.txid] = bitcoinAnchorBroadcastConfirmationHistory.value;
+                proofObservationsByAnchorId[bound.txid] = [];
+            }
+
+            return describePublicationObservationTimeline({
+                ipfs: {
+                    publicationRecords: entry.ipfsPublicationRecordHistory,
+                    verificationHistoriesByRecordIndex: entry.ipfsPublicationVerificationHistoriesByRecordIndex
+                },
+                bitcoin: { anchors, confirmationHistoriesByAnchorId, proofObservationsByAnchorId }
+            });
+        }
+
+        function toggleCrossDomainPublicationObservationTimeline(entry) {
+            entry.crossDomainPublicationObservationTimelineExpanded = !entry.crossDomainPublicationObservationTimelineExpanded;
+        }
+
+        function crossDomainPublicationObservationTimelineEntryBadgeClass(item) {
+            switch (item.kind) {
+                case PublicationObservationTimelineEntryKind.IPFS_CONTENT_VERIFICATION:
+                    return IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES[item.state] || 'peer-badge--pending';
+                case PublicationObservationTimelineEntryKind.BITCOIN_BROADCAST:
+                    return BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES[item.state] || 'peer-badge--pending';
+                case PublicationObservationTimelineEntryKind.BITCOIN_CONFIRMATION:
+                    return BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES[item.state] || 'peer-badge--pending';
+                case PublicationObservationTimelineEntryKind.BITCOIN_CONTENT_PROOF:
+                    return BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES[item.state] || 'peer-badge--pending';
+                default:
+                    return 'peer-badge--pending';
+            }
+        }
+
+        function crossDomainPublicationObservationTimelineEntryDomainLabel(item) {
+            return item.domain === PublicationObservationTimelineDomain.BITCOIN ? 'Bitcoin' : 'IPFS';
+        }
+
         // 0.8.11 — Explicit External Anchoring UX. The one place this
         // page calls application/PublicationAnchorCreationCoordinator.js
         // (through the coordinator) — always for exactly ONE anchorType,
@@ -4230,6 +4381,9 @@ export default {
             toggleIpfsPublicationRecordVerificationHistory, isIpfsPublicationRecordVerificationHistoryExpanded,
             ipfsPublicationObservationTimelineView, toggleIpfsPublicationObservationTimeline,
             ipfsPublicationObservationTimelineEntryBadgeClass, IpfsPublicationObservationTimelineEntryKind,
+            crossDomainPublicationObservationTimelineView, toggleCrossDomainPublicationObservationTimeline,
+            crossDomainPublicationObservationTimelineEntryBadgeClass, crossDomainPublicationObservationTimelineEntryDomainLabel,
+            PublicationObservationTimelineEntryKind, PublicationObservationTimelineDomain,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -6334,6 +6488,58 @@ export default {
                                     </li>
                                 </ul>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 0.8.74 — Cross-Domain Publication Observation Timeline.
+                         Deliberately a SIBLING evidence-section, placed after both the
+                         "Bitcoin Anchor"/evidence card above and the "IPFS Publishing"
+                         card immediately above — never nested inside either one, because
+                         this disclosure is a view over BOTH of this entry's own domains at
+                         once. A pure, presentation-only chronological projection over
+                         application/PublicationObservationTimelineView.js's own
+                         describePublicationObservationTimeline() — it invents no new fact
+                         either domain's own cards above do not already show, and computes
+                         no combined status, confidence, or health of any kind. Opening
+                         this disclosure performs ZERO network operations. See that file's
+                         own header, and docs/Principles.md, "Unify The Timeline, Not The
+                         Meanings (0.8.74)." -->
+                    <div v-if="crossDomainPublicationObservationTimelineView(entry).count > 0" class="evidence-section">
+                        <div class="evidence-summary">
+                            <span class="evidence-summary-title">Cross-Domain Observation Timeline</span>
+                            <span class="form-hint form-hint--neutral">
+                                Every IPFS and Bitcoin observation for this publication, in one true
+                                chronological order. Each entry keeps its own domain's own vocabulary —
+                                this is never a combined status, and an IPFS fact is never presented as
+                                evidence about a Bitcoin fact, or the other way around.
+                            </span>
+                        </div>
+                        <div class="identity-mgmt-actions">
+                            <button type="button" class="action-btn action-btn--secondary"
+                                    @click="toggleCrossDomainPublicationObservationTimeline(entry)">
+                                {{ entry.crossDomainPublicationObservationTimelineExpanded ? 'Hide Cross-Domain Timeline' : 'Show Cross-Domain Timeline' }}
+                            </button>
+                        </div>
+                        <div v-if="entry.crossDomainPublicationObservationTimelineExpanded" class="evidence-inspection-adapter">
+                            <span class="evidence-inspection-adapter-title">Cross-Domain Observation Timeline</span>
+                            <ul class="replica-knowledge-claim-list">
+                                <li v-for="(item, cdIndex) in crossDomainPublicationObservationTimelineView(entry).entries"
+                                    :key="cdIndex" class="replica-knowledge-claim">
+                                    <span class="peer-badge" :class="crossDomainPublicationObservationTimelineEntryBadgeClass(item)">
+                                        {{ formatWhen(item.observedAt) }} — {{ crossDomainPublicationObservationTimelineEntryDomainLabel(item) }} —
+                                        {{ item.kind === PublicationObservationTimelineEntryKind.IPFS_PUBLICATION ? 'Published' : item.stateLabel }}
+                                    </span>
+                                    <p class="form-hint form-hint--neutral">
+                                        {{ item.label }}
+                                        <template v-if="item.domain === PublicationObservationTimelineDomain.IPFS"> — {{ item.locator }}</template>
+                                        <template v-else-if="item.txid"> — txid {{ item.txid }}</template>
+                                    </p>
+                                    <p v-if="item.kind === PublicationObservationTimelineEntryKind.BITCOIN_CONFIRMATION && item.blockHeight != null" class="form-hint form-hint--neutral">
+                                        Block height {{ item.blockHeight }}
+                                    </p>
+                                    <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
