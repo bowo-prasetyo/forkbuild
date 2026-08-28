@@ -32270,3 +32270,230 @@ integration (0.8.98) remain further out still — and, per this milestone's
 own proposal, worth revisiting on their own merits once 0.8.96 exists,
 rather than mechanically copying every remaining Bitcoin milestone onto
 Base.
+
+## 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation
+
+0.8.95's own header named exactly what a BROADCASTED result does NOT mean:
+"accepted by Base, included in a block, confirmed, published, or
+immutable... those remain entirely separate, later facts." This milestone
+is that missing capability, held to the identical principle
+`anchoring/BitcoinAnchorConfirmationObserver.js` (0.8.54) already
+established one chain over:
+
+```text
+Broadcast acceptance is not chain inclusion. Chain inclusion is an
+independently observed fact.
+```
+
+```text
+Explicit broadcast                           (0.8.95, unchanged)
+        │
+        ▼
+{ broadcasted: true, txid }
+        │
+┌───────────────────────────┐
+│ Explicit inclusion observation │        (THIS MILESTONE — new)
+│                             │
+│ base/BaseTransactionInclusionObserver.js
+│ base/BaseJsonRpcClient.js#fetchTransactionReceipt()/fetchLatestBlockNumber()
+└───────────────────────────┘
+        │
+        ▼
+INCLUDED / NOT_INCLUDED / UNAVAILABLE
+```
+
+**The central invariant: the observer is bound to the exact transaction
+hash a real BROADCASTED outcome named, and reads only what Base's network
+currently reports about it — nothing is reconstructed, re-signed, or
+re-derived.** `base/BaseTransactionInclusionObserver.js#observeInclusion(txid)`
+asks an injected `rpcSource` for exactly one receipt, for exactly the txid
+it was given — never a replacement transaction, never a search by content
+hash, sender, or nonce, never "the latest transaction." `application/
+BaseTransactionInclusionObservationCoordinator.js` requires `broadcasted
+=== true` before it will ever touch a `txid`, mirroring exactly how
+`application/BaseTransactionBroadcastCoordinator.js` requires `finalized
+=== true` one stage earlier — proof the caller is handing over a real
+BROADCASTED outcome, never a value it invented.
+
+**Exactly two new reads, and no others.** `base/BaseJsonRpcClient.js` grows
+from seven wrapped methods to nine: `fetchTransactionReceipt(txid)` wraps
+`eth_getTransactionReceipt`, and `fetchLatestBlockNumber()` wraps
+`eth_blockNumber`. Still never `eth_getTransactionByHash`, still never
+`eth_getBlockByNumber`. A genuine `null` receipt result — Base's own
+JSON-RPC contract's honest way of saying "no receipt yet" — is decoded as
+`{ available: true, found: false }`, a real, positive, available answer,
+never confused with the endpoint being unreachable (`{ available: false,
+reason }`). The seven existing methods are entirely unchanged — see this
+milestone's own test "P."
+
+**`confirmationCount` is a mechanical derivation from two independent
+reads, computed fresh every call — never a separately reported fact and
+never cached.** Unlike Bitcoin, where an external confirmation source
+reports its own confirmation count directly, Base's JSON-RPC surface
+reports only a receipt's block number and, separately, the chain's current
+head: `confirmationCount = latestBlockNumber - blockNumber + 1`. If either
+read fails, or the two reads land on a momentarily inconsistent view of
+the chain (a computed count below 1), the observation is UNAVAILABLE
+rather than a fabricated or negative count — an INCLUDED outcome always
+carries a genuine, positive `confirmationCount`, exactly as `blockHash`,
+`blockNumber`, and `transactionIndex` are all-or-nothing, mirroring
+`anchoring/BitcoinAnchorConfirmationObserver.js`'s own "a CONFIRMED report
+with incomplete block metadata is never taken at face value."
+
+**A three-value, verdict-free vocabulary — no fourth value for "will never
+be included."** `application/BaseTransactionInclusionObservationState.js`
+holds exactly `INCLUDED`/`NOT_INCLUDED`/`UNAVAILABLE`, mirroring
+`application/BitcoinAnchorConfirmationState.js` (0.8.54) exactly, one
+chain over. `NOT_INCLUDED` is a real, positive fact — Base's own endpoint,
+reached, genuinely reports no receipt exists yet — never described as
+failed, rejected, lost, invalid, or abandoned, and never conflated with
+`UNAVAILABLE`, which is reserved for when the endpoint could not be
+consulted at all, or a found receipt's own metadata could not be
+completed into a trustworthy INCLUDED fact. Never `CONFIRMED`, `SAFE`,
+`VALID`, or `TRUSTED` — see this milestone's own test "M."
+
+**Execution outcome is deliberately not observed.**
+`fetchTransactionReceipt()` decodes no `status` field, and no file in this
+milestone carries one — "was the transaction included" and "what
+execution result did the receipt report" are two different questions;
+this milestone answers only the first, keeping the boundary narrow.
+Preserving a raw `receiptStatus` fact remains its own, later, separately
+sized milestone, should a genuine need for it arise.
+
+**No automatic activity, of any kind, ever.** Reaching BROADCASTED never
+triggers an inclusion check automatically — `application/
+BaseTransactionBroadcastState.js`'s own "THIS IS NOT CONFIRMATION" holds
+unchanged. One explicit "Observe Transaction" click means exactly one
+receipt fetch (and, only when a receipt is found, exactly one
+latest-block-number fetch) — no polling, no timer, no retry of any kind.
+A person clicks "Observe Transaction Again," explicitly, for a fresher
+answer.
+
+**Every observation is preserved, never overwritten — kept entirely as
+ephemeral, caller-held state, never durably archived.** `application/
+BaseTransactionInclusionObservationHistory.js` mirrors `application/
+BitcoinAnchorConfirmationObservationHistory.js` (0.8.56) exactly, one
+chain over: `appendBaseTransactionInclusionObservationHistoryEntry()`
+never mutates the array it is given, and a later INCLUDED observation
+never rewrites or discards an earlier NOT_INCLUDED one, or one with a
+lower `confirmationCount`. This history lives only in `ui/views/
+DecentralizedPublicationsView.js`'s own per-entry component state — reset
+whenever a fresh plan, signature, finalization, or broadcast replaces the
+transaction it was about — never written onto a durable publication
+record. Durable archive integration, and any correlation with a
+`BasePublicationRecord`, is deliberately deferred to a later, separately
+sized milestone (0.8.97+), exactly as this milestone's own proposal named
+up front — this milestone builds and tests the observation capability on
+its own merits first.
+
+New files:
+- `base/BaseTransactionInclusionObserver.js` — new; `observeInclusion(txid)`
+  asks an injected `rpcSource` for exactly one receipt fetch (and, when
+  found, exactly one latest-block-number fetch) for the exact txid it is
+  given, and translates the result into `{ state, txid, blockHash,
+  blockNumber, transactionIndex, confirmationCount, reason, observedAt }`.
+  Throws only for a malformed `txid` — a caller-contract violation,
+  checked before the injected `rpcSource` is ever consulted. Imports no
+  broadcaster, signer, or finalizer of any kind.
+- `application/BaseTransactionInclusionObservationState.js` — new; the
+  closed `INCLUDED`/`NOT_INCLUDED`/`UNAVAILABLE` vocabulary, mirroring
+  `application/BitcoinAnchorConfirmationState.js` (0.8.54) exactly, one
+  chain over.
+- `application/BaseTransactionInclusionObservationCoordinator.js` — new; a
+  deliberately thin `observeInclusion({ broadcasted, txid })` wiring,
+  mirroring `application/BitcoinAnchorConfirmationCoordinator.js` (0.8.65)
+  exactly. Requires `broadcasted === true` and a real `txid`, thrown as a
+  caller-contract violation otherwise.
+- `application/BaseTransactionInclusionObservationView.js` — new;
+  `describeBaseTransactionInclusionObservation()` and
+  `describeBaseTransactionInclusionObservationHistory()`, the pure
+  projections into a labeled single observation and a labeled full
+  history. Never exposes a verdict-shaped field of any kind.
+- `application/BaseTransactionInclusionObservationHistory.js` — new;
+  `appendBaseTransactionInclusionObservationHistoryEntry()` and
+  `latestBaseTransactionInclusionObservation()`, mirroring `application/
+  BitcoinAnchorConfirmationObservationHistory.js` (0.8.56) exactly, one
+  chain over.
+- `application/CreateBaseTransactionInclusionObserverUseCase.js`,
+  `application/CreateBaseTransactionInclusionObservationCoordinatorUseCase.js`
+  — new composition-root factories, mirroring this codebase's own
+  established `Create*UseCase.js` pattern.
+
+Changed:
+- `base/BaseJsonRpcClient.js` — adds exactly two reads,
+  `fetchTransactionReceipt(txid)` and `fetchLatestBlockNumber()`, wrapping
+  `eth_getTransactionReceipt` and `eth_blockNumber`. The seven existing
+  methods are byte-for-byte unchanged in their own return shape.
+- `ui/main.js` — wires `baseTransactionInclusionObserver` (reusing the
+  SAME shared `baseJsonRpcClient` instance every other Base capability
+  already reads through) and
+  `baseTransactionInclusionObservationCoordinator`.
+- `ui/views/DecentralizedPublicationsView.js` — a new "Base Transaction
+  Inclusion" section, shown once broadcasting reaches BROADCASTED, with an
+  explicit "Observe Transaction" / "Observe Transaction Again" button and
+  a per-entry, chronological observation history disclosure. A fresh
+  plan, signature, finalization, or broadcast retires any previous
+  inclusion outcome and history, exactly as `application/
+  BaseTransactionInclusionObservationHistory.js`'s own header requires.
+
+New tests:
+- `tests/BaseTransactionInclusionObservation.test.js` — flagship proofs:
+  (A) identity/isolation — observing one txid asks the rpcSource for
+  exactly that txid, never an unrelated one; (B) broadcast ≠ inclusion — a
+  BROADCASTED result followed by NOT_INCLUDED is completely legitimate;
+  (C) repeated explicit observations of the identical txid each produce
+  their own independent, immutable observation; (D) confirmation growth —
+  two observations against two different current block numbers produce
+  two independent, immutable records with two different confirmation
+  counts; (E) RPC unavailability is never reported as NOT_INCLUDED. Plus:
+  no re-reading of nonce/gas/fees/account/plan/signing artifact; no
+  automatic activity — one call performs exactly the reads it needs;
+  Bitcoin observer isolation; an INCLUDED report is never surfaced on
+  incomplete or mechanically inconsistent block metadata; caller-contract
+  violations for a malformed txid or missing rpcSource; a throwing or
+  malformed rpcSource response always reported as UNAVAILABLE, never
+  propagated; the coordinator's thin pass-through and its own
+  caller-contract violations; the closed, verdict-free state vocabulary;
+  the view's pure single-observation and full-history projections; the
+  history's strictly append-only, never-mutating discipline; and
+  `base/BaseJsonRpcClient.js#fetchTransactionReceipt()`/
+  `fetchLatestBlockNumber()`'s own found/not-found/unavailable
+  classification, proven not to have changed the seven existing methods'
+  own return shape.
+
+Deliberately excluded, exactly as this milestone's own proposal named up
+front:
+- **Automatic polling, timers, or retry of any kind.** One explicit
+  "Observe Transaction" click means exactly one observation attempt.
+- **Transaction replacement, fee bumping, or nonce management of any
+  kind.** Those remain `base/BasePublicationTransactionPlanner.js`'s own
+  job (0.8.91), unchanged and unrevisited.
+- **Execution-result interpretation.** `base/BaseJsonRpcClient.js#fetchTransactionReceipt()`
+  decodes no `status` field; whether a receipt's own execution succeeded
+  or reverted is a separate, later, separately sized question.
+- **Reorganization detection.** A later INCLUDED observation naming a
+  different `blockHash` than an earlier one is preserved, unflagged, in
+  history — comparing observations against one another and naming what a
+  disagreement means is real, separately sized future work.
+- **Durable archive integration, or any correlation with a
+  `BasePublicationRecord`.** Every observation and its history live only
+  in `ui/views/DecentralizedPublicationsView.js`'s own ephemeral
+  component state. See `docs/Roadmap.md`, 0.8.80, "A Publication Record
+  Establishes Identity," for the identical distinction already held for
+  Bitcoin.
+- **Cross-chain publication evidence/timeline integration, and a
+  confirmation-count policy ("6 confirmations is safe").** `application/
+  BaseTransactionInclusionObservationState.js`'s own INCLUDED names only
+  the one narrow fact this boundary checked — Base's own network currently
+  reports this transaction as part of a specific block, with this many
+  confirmations — never a broader claim about what happens to it next.
+- **A `safe`/`trusted`/`confirmed`/`ready` verdict of any kind, or a
+  generic cross-blockchain confirmation abstraction.**
+
+What's left, and deliberately unbuilt: durable Base inclusion observation
+history (0.8.97) and cross-chain publication evidence/timeline integration
+(0.8.98) remain further out still — worth revisiting on their own merits
+once this milestone's own observation capability has been exercised, per
+this milestone's own proposal, rather than prematurely modifying
+`application/PublicationObservationArchive.js`'s own schema every time a
+new Base observation capability appears.
