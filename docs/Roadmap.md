@@ -33198,3 +33198,166 @@ foundation: `BitcoinAnchorPublicationRecord` and `BaseAnchorPublicationRecord`
 each project onto the identical, chain-independent
 `BlockchainPublicationIdentity` (0.8.89), while the actual transaction
 mechanics of each chain remain completely separate.
+
+## 0.8.100 — Publication Identity–Scoped Observation Correlation
+
+0.8.99 gave a Base publication its own durable IDENTITY
+(`BaseAnchorPublicationRecord`). 0.8.96/0.8.97 already gave Base
+inclusion observations their own durable HISTORY
+(`baseTransactionInclusionObservationsByTransactionHash`, keyed by
+`txid`). Nothing before this milestone ever connected the two directly —
+a caller holding one particular publication record has only ever been
+able to ask "what observations exist in the archive, for this txid string
+I happen to be carrying separately," never "what observations exist FOR
+THIS PUBLICATION." This milestone is exactly that one, narrow connection,
+and nothing else:
+
+```text
+BaseAnchorPublicationRecord
+            +
+Base inclusion observation history (baseTransactionInclusionObservationsByTransactionHash)
+            ↓
+describeBaseAnchorPublicationObservations()
+            ↓
+{ publication, observations }
+```
+
+**THE CORRELATION KEY IS `publicationRecord.txid` — NEVER `contentHash`,
+AND NEVER TEMPORAL PROXIMITY.** This is the one rule this milestone exists
+to enforce, extending `docs/Principles.md`, "Correlate Evidence By
+Explicit Identity, Never By Resemblance (0.8.78)," to the publication-
+record layer 0.8.99 introduced. The flagship proves it directly: two Base
+publication records sharing an identical `contentHash`, under two
+different `txid`s, each with their own independent observation history —
+requesting Publication A's observations returns exactly Publication A's
+own list, never Publication B's, even though `contentHash(A) ===
+contentHash(B)`. A second, cross-chain section proves the same rule one
+axis further: a Bitcoin publication and a Base publication sharing an
+identical `contentHash` AND an identical *raw* `txid`/`chainReference`
+string — the Base projection still only ever reads the Base-domain
+observation collection, and Bitcoin's own, entirely separate
+`bitcoinConfirmationObservationsByAnchorId` collection never leaks into
+it. See `tests/BaseAnchorPublicationObservation.test.js`'s own Sections B
+and C for both proofs.
+
+**`application/BaseAnchorPublicationObservation.js` — A PURE PROJECTION,
+NEVER A NEW SOURCE OF TRUTH.** `describeBaseAnchorPublicationObservations(publicationRecord,
+observationsByTransactionHash)` invents nothing: every observation it
+returns is exactly the object `observationsByTransactionHash` already
+held under `publicationRecord.txid`, reused unchanged, never recreated,
+relabeled, or given an altered meaning. It performs no network access,
+appends nothing to any archive, and returns a brand-new, frozen result
+every call. A publication whose own `txid` has no entry at all in
+`observationsByTransactionHash` projects to `{ publication, observations:
+[] }` — an honest empty list, never an error or a fabricated entry. It
+throws only when `publicationRecord` is not a genuine
+`BaseAnchorPublicationRecord` — never for a bare txid string, a bare
+object, or `null` standing in for one — because a caller passing anything
+else has no publication identity to scope observations to in the first
+place.
+
+**`application/BaseAnchorPublicationObservationView.js` — A COMPOSITION OF
+ALREADY-EXISTING VIEWS, NOT A NEW VOCABULARY.** Mirroring
+`BitcoinAnchorObservationEvidenceView.js`'s own (0.8.78) "compose existing
+describe functions, invent no new vocabulary" shape, one chain over:
+`publication` is exactly what `BaseAnchorPublicationRecordHistoryView.js`'s
+own `describeBaseAnchorPublicationRecordHistoryEntry()` (0.8.99) already
+produces; `observations` is exactly what `BaseTransactionInclusionObservationView.js`'s
+own `describeBaseTransactionInclusionObservationHistory()` (0.8.96)
+already produces. This file adds no label, no count, and no field beyond
+placing those two, already-established projections next to each other.
+
+**NO AGGREGATE PUBLICATION STATUS, HERE OR ANYWHERE ELSE IN THIS
+MILESTONE.** There is no `status`, `confirmed`, `included` (as a
+publication-level field), `health`, `confidence`, `trust`, or verdict
+field anywhere in either new file's own output — see `docs/Principles.md`,
+"The UI Displays Observations; It Does Not Turn Them Into A Verdict
+(0.8.57)," held here once more. `observations` remains exactly what
+`BaseTransactionInclusionObservationHistory.js` already produced: a plain,
+chronological list of historical facts, never collapsed into
+
+```text
+publication.status = INCLUDED
+```
+
+or any other combined verdict.
+
+**NO NEW ARCHIVE COLLECTION, NO NEW PERSISTENCE, NO NEW ARCHIVE METHOD.**
+`application/PublicationObservationArchive.js` is entirely untouched —
+this milestone reads its existing `baseAnchorPublicationRecords` and
+`baseTransactionInclusionObservationsByTransactionHash` collections
+exactly as 0.8.99 and 0.8.97 already produce them, and writes nothing back
+to either. A caller wanting a projection over the live archive passes
+`archive.baseTransactionInclusionObservationsByTransactionHash` in
+directly — proven in this milestone's own flagship Section F, which
+builds a real archive via `appendBaseAnchorPublicationRecord()`/
+`appendBaseTransactionInclusionObservation()` and correlates over its own,
+real collections rather than a hand-assembled stand-in.
+
+**NO GENERIC `PublicationObservationRepository`, NO CROSS-CHAIN
+CORRELATION, NO CONTENT-HASH MATCHING, NO AUTOMATIC OBSERVATION
+DISCOVERY.** This milestone adds exactly one Base-specific projection
+function and its one narration companion — nothing that would let a
+Bitcoin anchor and a Base publication be looked up through one shared
+interface, and nothing that infers a correlation from anything but the
+explicit `txid` a caller already holds. `docs/Principles.md`'s own
+restraint against a universal transaction abstraction (0.8.89) extends
+here unchanged: Bitcoin keeps `anchorId` as its correlation key
+(`BitcoinAnchorObservationEvidence.js`, 0.8.78), Base keeps `txid`
+(this milestone) — neither is normalized toward the other merely because
+their own UI narrations end up looking similar.
+
+New files:
+- `application/BaseAnchorPublicationObservation.js` — the one correlation
+  function, `describeBaseAnchorPublicationObservations()`.
+- `application/BaseAnchorPublicationObservationView.js` — its narration
+  companion, `describeBaseAnchorPublicationObservationProjection()`,
+  composing `BaseAnchorPublicationRecordHistoryView.js` and
+  `BaseTransactionInclusionObservationView.js` unchanged.
+- `tests/BaseAnchorPublicationObservation.test.js` — the flagship: basic
+  correlation and an honest empty projection (Section A), two
+  publications sharing one `contentHash` under two different `txid`s
+  never leaking observations into one another (Section B, FLAGSHIP), a
+  Bitcoin and a Base publication sharing an identical `contentHash` AND
+  raw `txid`/`chainReference` string still never leaking Bitcoin's own
+  confirmation observations into a Base projection (Section C), argument
+  validation (Section D), purity/immutability/no persistence (Section E),
+  correlation over a real `PublicationObservationArchive` (Section F),
+  the view layer (Section G), and no verdict vocabulary anywhere
+  (Section H).
+
+Changed: nothing. Every existing file — including
+`application/PublicationObservationArchive.js`,
+`application/BaseAnchorPublicationRecord.js`, and
+`application/BaseTransactionInclusionObservationHistory.js` — is
+untouched.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **A generic `PublicationObservationRepository`, or generic cross-chain
+  observation correlation.** Base keeps `txid` as its own correlation
+  key; Bitcoin keeps `anchorId` as its own — see "No Generic
+  `PublicationObservationRepository`" above.
+- **Content-hash matching, or automatic observation discovery.** Every
+  lookup is by the caller's own already-known `publicationRecord.txid`,
+  never inferred from `contentHash` or from any other resemblance.
+- **New archive schema, or new persistence.** See "No New Archive
+  Collection" above — `PublicationObservationArchive.js`'s own
+  `SCHEMA_VERSION` is unchanged.
+- **New timeline entries.** `application/PublicationObservationTimelineView.js`
+  and `BitcoinAnchorPublicationLifecycleTimelineView.js` are both
+  untouched; whether Base publication identities eventually gain an
+  equivalent lifecycle timeline projection remains the deliberate,
+  separate follow-up 0.8.99 already named.
+- **Aggregate publication status, "confirmed" publication state,
+  confidence, health, trust, or scoring of any kind.** See "No Aggregate
+  Publication Status" above, and this milestone's own flagship Section H.
+- **Automatic correlation, or observation deduplication.** Every
+  observation `observationsByTransactionHash` already holds under a
+  `txid` is projected through unchanged, in its own recorded order —
+  nothing is merged, collapsed, or discarded.
+
+With this addition, the gap 0.8.99's own closing paragraph named — a
+publication identity with no direct way to ask "what have I observed
+about THIS ONE" — is closed, for Base, in the narrowest possible way: one
+pure projection function, keyed by the one identity Base has always used,
+leaking nothing between publications that merely resemble one another.
