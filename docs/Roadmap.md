@@ -28326,10 +28326,218 @@ Deliberately excluded, exactly as 0.8.74's own proposal named up front:
   OP_RETURN hash and reporting `HASH_MATCH`/`HASH_MISMATCH`/`UNAVAILABLE`).
   This milestone deliberately gives a person the transparent, ordered
   facts first; a deliberate cross-domain comparison over those same facts
-  is real, separately sized future work (0.8.75).
+  is real, separately sized future work (0.8.76 — this codebase's own
+  0.8.75 turned out to be a different, more urgent gap instead: nothing
+  built since 0.8.56 survived a page reload at all. See "0.8.75 — Durable
+  Publication Observation Records" immediately below).
 
 What's left, and deliberately unbuilt: explicit Bitcoin ↔ IPFS
 content-hash reconciliation, any form of automatic correlation between the
 two domains, and any combined publication status of any kind — each its
 own, separately sized milestone, exactly like every "Deliberately
 excluded" list in this document before it.
+
+## 0.8.75 — Durable Publication Observation Records
+
+Every history this codebase has kept since 0.8.56 — through 0.8.71,
+0.8.72, and 0.8.74's own cross-domain timeline — has held the identical
+"never persisted" restraint, each file's own header saying so almost
+verbatim: reset the moment the Publication Center reopens. That was
+deliberate at the time, but it leaves the actual milestone this
+progression has been building toward still undone: a person who spends a
+session publishing to IPFS, verifying it, broadcasting a Bitcoin
+transaction, and watching it confirm loses every one of those facts the
+moment they reload the page — the very histories 0.8.56 through 0.8.74
+worked to keep from being silently overwritten are just as silently
+erased by a refresh. This milestone is the first to relax that restraint,
+narrowly: durable storage for exactly the facts those histories already
+hold, and nothing else.
+
+```text
+UI (explicit publish / verify / broadcast / confirm actions)
+      │
+      │  archivePublishIpfsRecord() / archiveIpfsVerificationObservation() /
+      │  archiveBitcoinBroadcast() / archiveBitcoinConfirmationObservation() /
+      │  archiveBitcoinContentProofObservation()
+      ▼
+PublicationObservationArchive        (pure, storage-agnostic, immutable)
+      │  toJSON() / fromJSON()
+      ▼
+LocalStoragePublicationObservationArchive   (the ONE file allowed to know
+      │  save(name,data)/load(name)/remove(name)   storage exists at all)
+      ▼
+storage/StorageProvider.js (generic, JSON-safe, injected)
+```
+
+**A COMPOSITION OF EXISTING HISTORIES, NOT A NEW SOURCE OF TRUTH.**
+`application/PublicationObservationArchive.js`'s own append methods call
+straight through to each domain's own, UNCHANGED append function wherever
+one already exists — `appendIpfsPublicationRecordHistoryEntry()` (0.8.71),
+`appendIpfsPublicationContentVerificationHistoryEntry()` (0.8.72),
+`appendBitcoinAnchorConfirmationObservationHistoryEntry()` (0.8.56). Only
+two Bitcoin facts with no existing append function of their own — a
+broadcast attempt and a content-proof observation, neither historized
+anywhere else in this codebase — get this file's own small, equally
+unscored append helpers. `application/PublicationObservationArchiveView.js`
+extends the identical restraint one layer up: its own chronological
+`entries` are produced by calling application/
+PublicationObservationTimelineView.js's own
+`describePublicationObservationTimeline()` (0.8.74) completely unchanged,
+over the archive's own collections reshaped through its own
+`toBitcoinAnchors()` method — restoring an archive from storage and
+opening its timeline uses the EXACT SAME projection code a live,
+never-persisted session already used. No second, competing timeline
+algorithm exists anywhere in this milestone.
+
+**THE ARCHIVE PRESERVES THE DISTINCTION BETWEEN PUBLICATION FACTS,
+VERIFICATION FACTS, BROADCAST FACTS, AND CONFIRMATION FACTS, AND COMPUTES
+NO AGGREGATE STATUS.** `ipfsPublicationRecords`, `bitcoinBroadcastRecords`,
+`ipfsContentVerificationObservationsByRecordIndex`,
+`bitcoinConfirmationObservationsByAnchorId`, and
+`bitcoinContentProofObservationsByAnchorId` are five separately-keyed
+collections; none is ever merged into another, and `publicationCount`/
+`observationCount` are two DIFFERENT numbers, never added into one. There
+is no `status`, `confidence`, `health`, `trusted`, `valid`, `canonical`,
+or `reliable` field anywhere in this milestone's output — the identical
+restraint every prior milestone since 0.8.57 already holds, extended here
+to an archive's own summary counts as well as its own entries.
+
+**THE ONE BOUNDARY THIS ENTIRE MILESTONE EXISTS TO HOLD: NO CAPABILITIES,
+NO CREDENTIALS, EVER.** Neither `PublicationObservationArchive` nor
+`LocalStoragePublicationObservationArchive` accepts a wallet reference, a
+`signPsbt` function, a private key, a seed phrase, or a pinning-provider
+credential as an argument anywhere — there is no field on either class a
+caller could even attempt to smuggle one into. See docs/Principles.md, "A
+Capability Can Be Ephemeral Even When The Facts Produced By Using It Are
+Durable (0.8.75)." A person who reloads the page after a session sees
+"Bitcoin — Broadcasted — Confirmed — HASH_MATCH" exactly as those
+vocabularies already state it, and the application infers NOTHING further
+from that: not that a wallet is connected, not that a signing
+authorization still exists, not that the transaction should be
+rebroadcast. Every wallet/broadcaster/verifier coordinator on `ui/views/
+DecentralizedPublicationsView.js` is completely unchanged by this
+milestone and still requires its own live collaborator to do anything.
+
+**MALFORMED PERSISTED DATA NEVER RESURRECTS A PARTIAL ARCHIVE.**
+`PublicationObservationArchive.fromJSON()` validates its entire input
+strictly — schema version, every required field on every nested record,
+no unexpected extra field anywhere, every timestamp a genuinely parseable
+date — and degrades to `PublicationObservationArchive.empty()` the moment
+any part fails, never a partial reconstruction of whichever entries
+happened to validate. `LocalStoragePublicationObservationArchive.load()`
+extends this to storage itself failing outright (a storage provider whose
+`load()` throws, simulating truly corrupted raw JSON text) — caught, and
+degraded to the same empty archive. Neither ever throws.
+
+**CLEARING THE ARCHIVE IS THE ONE EXPLICIT, DESTRUCTIVE ACTION.**
+`LocalStoragePublicationObservationArchive#clear()` is called from exactly
+one place on `ui/views/DecentralizedPublicationsView.js`: an explicit
+"Clear Archive" click. Every `archiveXxx()` append happens automatically,
+as a side effect of an action already explicit for its own reason
+(publishing, verifying, broadcasting, confirming) — but nothing on this
+page ever clears the archive automatically, not a fresh publish, not
+reconfiguring a pinning provider, not disconnecting a wallet, not a page
+reload.
+
+New files:
+- `application/PublicationObservationArchive.js` — new;
+  `PublicationObservationArchive` — the append-oriented, immutable archive
+  model. `appendIpfsPublicationRecord()`, `appendIpfsContentVerificationObservation()`,
+  `appendBitcoinBroadcastRecord()`, `appendBitcoinConfirmationObservation()`,
+  `appendBitcoinContentProofObservation()`, `toBitcoinAnchors()`,
+  `publicationCount`/`observationCount`, `toJSON()`, `static fromJSON()`
+  (strict, whole-archive validation), `static empty()`.
+- `application/PublicationObservationArchiveView.js` — new;
+  `describePublicationObservationArchive(archive)` — a pure projection
+  exposing `publicationCount`, `observationCount`, per-domain breakdowns,
+  and `entries` (delegating to 0.8.74's own
+  `describePublicationObservationTimeline()` unchanged).
+- `storage/LocalStoragePublicationObservationArchive.js` — new;
+  `LocalStoragePublicationObservationArchive` — the one file allowed to
+  know that persistence means an injected `storage/StorageProvider.js`
+  (defaulting to the real `storage/LocalStorageProvider.js`).
+  `load()`/`save(archive)`/`clear()`.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — one new, page-level
+  "Observation Archive" section (a sibling to the existing page-level
+  Bitcoin Funding panel, never nested inside any one publication's own
+  card), showing `Publications: N` / `Observations: N` and a "Show/Hide
+  Archive" disclosure over the archive's own chronological timeline, plus
+  an explicit, destructive "Clear Archive" button. New state:
+  `publicationObservationArchive`, `publicationObservationArchiveExpanded`,
+  and `entry.archiveIpfsRecordIndexByLocalIndex` (mapping this entry's own
+  local publication-history index to the archive's own, separate index
+  for the same record). New functions: `persistPublicationObservationArchive()`,
+  `archivePublishIpfsRecord()`, `archiveIpfsVerificationObservation()`,
+  `archiveBitcoinBroadcast()`, `archiveBitcoinConfirmationObservation()`,
+  `archiveBitcoinContentProofObservation()`, `publicationObservationArchiveView()`,
+  `togglePublicationObservationArchive()`, `clearPublicationObservationArchive()`.
+  The archive is loaded once, in `onMounted()`, from the newly injected
+  `publicationObservationArchiveStorage` (defaulting to a real
+  `LocalStoragePublicationObservationArchive` when not provided). Every
+  existing history on this page — `entry.ipfsPublicationRecordHistory`,
+  `entry.ipfsPublicationVerificationHistoriesByRecordIndex`, `entry.
+  bitcoinAnchorConfirmationHistories`, `bitcoinAnchorBroadcastConfirmationHistory`
+  — is completely unchanged, and stays exactly as ephemeral as before;
+  every append site now ALSO appends into the durable archive, side by
+  side, never replacing the existing ephemeral append.
+- `ui/main.js` — provides one shared `publicationObservationArchiveStorage`
+  instance app-wide, exactly like every other coordinator.
+
+New tests:
+- `tests/PublicationObservationArchive.test.js` — the flagship: publish
+  one IPFS record, verify it twice, broadcast a Bitcoin transaction,
+  observe confirmation twice, reconcile a content-proof observation,
+  build the cross-domain timeline, persist through a real,
+  JSON-round-tripping storage provider, destroy all in-memory state,
+  reload, reconstruct, and produce the timeline again — every historical
+  fact byte-identical. Plus: no capability or credential field anywhere in
+  serialized output, even under a targeted sweep for wallet/signing/key/
+  credential-shaped keys; corrupted storage (a throwing storage provider,
+  an invalid schema version, a missing top-level field, an unexpected
+  extra field at the top level and on a nested record, a malformed
+  timestamp, a missing field on a nested observation, a non-object
+  payload, and no persisted value at all) degrades to an empty archive in
+  every case, never a thrown error and never a partial reconstruction;
+  append methods never mutate the receiver and a missing/invalid argument
+  is a no-op; `publicationCount`/`observationCount` never combine and no
+  scoring vocabulary exists anywhere; `clear()` is the only destructive
+  action, never called by `save()`/`load()`.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Persistence of any capability or credential** — a wallet reference,
+  `signPsbt`, a private key, a seed phrase, a pinning-provider credential,
+  or a configured authentication header. The single most important
+  exclusion this milestone holds — see docs/Principles.md, "A Capability
+  Can Be Ephemeral Even When The Facts Produced By Using It Are Durable
+  (0.8.75)."
+- **Any inference of standing authority from a restored fact.** Seeing a
+  restored `BROADCASTED`/`CONFIRMED`/`HASH_MATCH` fact after a reload
+  never implies a wallet is connected, a signing authorization still
+  exists, or a transaction should be rebroadcast — every coordinator this
+  page depends on still requires its own live collaborator, unchanged.
+- **A combined publication status, a confidence score, a trust score, or a
+  health score over the archive.** `publicationCount` and
+  `observationCount` are two separate numbers; there is no third,
+  combined one.
+- **Automatic synchronization, background polling, or a remote/shared
+  database.** This archive is local-only, single-browser-profile, and
+  never contacted except through an explicit "Publish"/"Verify"/
+  "Broadcast"/"Observe Confirmation" click, exactly like every history it
+  composes.
+- **Reorganization detection, aggregate confidence over repeated
+  observations, or any new domain vocabulary.** This milestone persists
+  facts; it does not reinterpret them — see docs/Principles.md, "No
+  Reorganization Detection" (0.8.56) and "The UI Displays Observations; It
+  Does Not Turn Them Into A Verdict" (0.8.57), both held here unchanged.
+- **Explicit Bitcoin ↔ IPFS content-hash reconciliation.** Pushed to
+  0.8.76 — see that milestone's own placeholder above, updated to point
+  here.
+
+What's left, and deliberately unbuilt: explicit Bitcoin ↔ IPFS
+content-hash reconciliation (0.8.76), any form of automatic correlation
+between the two domains, any combined publication status of any kind, and
+any remote or shared archive — each its own, separately sized milestone,
+exactly like every "Deliberately excluded" list in this document before
+it.

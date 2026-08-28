@@ -89,6 +89,9 @@ import { describeBitcoinAnchorSignedPsbtFinalization } from '../../application/B
 import { BitcoinAnchorBroadcastState } from '../../application/BitcoinAnchorBroadcastState.js';
 import { describeBitcoinAnchorBroadcast } from '../../application/BitcoinAnchorBroadcastView.js';
 import { describePublicationObservationTimeline, PublicationObservationTimelineDomain, PublicationObservationTimelineEntryKind } from '../../application/PublicationObservationTimelineView.js';
+import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
+import { describePublicationObservationArchive } from '../../application/PublicationObservationArchiveView.js';
+import { LocalStoragePublicationObservationArchive } from '../../storage/LocalStoragePublicationObservationArchive.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
 // 0.7.6 — Multi-Peer Publication Retrieval & Replication.
@@ -836,6 +839,17 @@ export default {
         // identical degrade-gracefully posture every other optional
         // coordinator on this page already holds.
         const ipfsPublicationContentVerificationCoordinator = inject('ipfsPublicationContentVerificationCoordinator', null);
+        // 0.8.75 — Durable Publication Observation Records. Unlike every
+        // other injected coordinator on this page, this one has a real,
+        // safe, zero-config default: storage/
+        // LocalStoragePublicationObservationArchive.js's own constructor
+        // already defaults to a real, browser-backed storage/
+        // LocalStorageProvider.js. A caller (a test harness, most likely)
+        // can still inject its own instance — over an in-memory
+        // StorageProvider, say — to keep persistence out of a real
+        // browser's localStorage entirely.
+        const publicationObservationArchiveStorage = inject('publicationObservationArchiveStorage', null)
+            || new LocalStoragePublicationObservationArchive();
         // 0.8.33 — Local Snapshot Content Availability & Integrity UX.
         // Optional — absent here (e.g. a test harness that never provides
         // it), "Local Snapshot" simply never renders, the identical
@@ -1212,6 +1226,113 @@ export default {
             bitcoinAnchorBroadcastConfirmationHistoryEntryExpanded.value = {};
         }
 
+        // 0.8.75 — Durable Publication Observation Records. The one
+        // piece of page-level state this milestone adds: a durable,
+        // cross-domain application/PublicationObservationArchive.js
+        // instance, loaded once from `publicationObservationArchiveStorage`
+        // at mount (see onMounted() below) and kept in sync with it by
+        // every explicit `archiveXxx()` helper further down this file —
+        // never a second, separate in-memory history of its own.
+        //
+        // EVERY EXISTING HISTORY ON THIS PAGE STAYS EXACTLY AS EPHEMERAL
+        // AS ITS OWN HEADER ALREADY SAYS. `entry.ipfsPublicationRecordHistory`,
+        // `entry.ipfsPublicationVerificationHistoriesByRecordIndex`,
+        // `entry.bitcoinAnchorConfirmationHistories`, and
+        // `bitcoinAnchorBroadcastConfirmationHistory` are UNCHANGED by
+        // this milestone — still reset the moment this page reloads,
+        // still never themselves read from or written to anything
+        // durable. `publicationObservationArchive` is a SEPARATE,
+        // ADDITIONAL copy of the same underlying facts, kept durable —
+        // appending to it never touches any of those existing histories,
+        // and vice versa; every append site below does both, explicitly,
+        // side by side.
+        const publicationObservationArchive = ref(PublicationObservationArchive.empty());
+        const publicationObservationArchiveExpanded = ref(false);
+
+        // Best-effort: a failed save (a full or disabled localStorage) is
+        // never allowed to interrupt the in-memory fact this page just
+        // observed, or the explicit action that produced it — it only
+        // means this one fact will not survive a reload.
+        function persistPublicationObservationArchive() {
+            try {
+                publicationObservationArchiveStorage.save(publicationObservationArchive.value);
+            } catch (error) {
+                // Intentionally swallowed — see this function's own comment above.
+            }
+        }
+
+        // Called immediately after `entry.ipfsPublicationRecordHistory` is
+        // appended to, with that SAME record and its SAME newly-appended
+        // `localIndex` in `entry.ipfsPublicationRecordHistory`. Records
+        // `entry.archiveIpfsRecordIndexByLocalIndex[localIndex]` — the
+        // position the record landed at in the shared, page-level
+        // archive's own `ipfsPublicationRecords`, a DIFFERENT index than
+        // `localIndex` itself, since the archive holds every entry's own
+        // records together — so a later verification of this exact
+        // record can find its way back to this exact archive position.
+        function archivePublishIpfsRecord(entry, localIndex, record) {
+            publicationObservationArchive.value = publicationObservationArchive.value.appendIpfsPublicationRecord(record);
+            entry.archiveIpfsRecordIndexByLocalIndex[localIndex] = publicationObservationArchive.value.ipfsPublicationRecords.length - 1;
+            persistPublicationObservationArchive();
+        }
+
+        // Called immediately after `entry.ipfsPublicationVerificationHistoriesByRecordIndex[localIndex]`
+        // is appended to. A record this replica never itself archived (this
+        // entry's own `archiveIpfsRecordIndexByLocalIndex[localIndex]` is
+        // unset — e.g. a record discovered from elsewhere rather than
+        // published by this page) contributes no archived observation
+        // either — this function never guesses an archive position.
+        function archiveIpfsVerificationObservation(entry, localIndex, observation) {
+            const archiveIndex = entry.archiveIpfsRecordIndexByLocalIndex[localIndex];
+            if (!Number.isInteger(archiveIndex)) return;
+            publicationObservationArchive.value = publicationObservationArchive.value.appendIpfsContentVerificationObservation(archiveIndex, observation);
+            persistPublicationObservationArchive();
+        }
+
+        // `recordIndex` is always `null` here — this page has never
+        // tracked which IPFS publication record a given Bitcoin anchor
+        // corresponds to (see crossDomainPublicationObservationTimelineView()'s
+        // own header below, "NO recordIndex LINKAGE IS SUPPLIED"), and
+        // this archive holds the identical restraint rather than guessing
+        // one from a shared contentHash.
+        function archiveBitcoinBroadcast({ anchorId, txid, state, reason, broadcastedAt }) {
+            publicationObservationArchive.value = publicationObservationArchive.value.appendBitcoinBroadcastRecord({
+                recordIndex: null, anchorId, txid, state, reason, broadcastedAt
+            });
+            persistPublicationObservationArchive();
+        }
+
+        function archiveBitcoinConfirmationObservation(anchorId, observation) {
+            publicationObservationArchive.value = publicationObservationArchive.value.appendBitcoinConfirmationObservation(anchorId, observation);
+            persistPublicationObservationArchive();
+        }
+
+        function archiveBitcoinContentProofObservation(anchorId, observation) {
+            publicationObservationArchive.value = publicationObservationArchive.value.appendBitcoinContentProofObservation(anchorId, observation);
+            persistPublicationObservationArchive();
+        }
+
+        // Pure projection over `publicationObservationArchive` through
+        // application/PublicationObservationArchiveView.js's own
+        // `describePublicationObservationArchive()` — never a second,
+        // competing summary computed inline here.
+        function publicationObservationArchiveView() {
+            return describePublicationObservationArchive(publicationObservationArchive.value);
+        }
+
+        function togglePublicationObservationArchive() {
+            publicationObservationArchiveExpanded.value = !publicationObservationArchiveExpanded.value;
+        }
+
+        // THE ONE EXPLICIT, DESTRUCTIVE ACTION IN THIS MILESTONE. Never
+        // called by anything above — not a fresh publish, not a
+        // reconfiguration, not a page reload. A person clicks "Clear
+        // Archive" to reach this, and only this.
+        function clearPublicationObservationArchive() {
+            publicationObservationArchive.value = PublicationObservationArchive.empty();
+            publicationObservationArchiveStorage.clear();
+        }
+
         // Every currently AUTHENTICATED peer, in registry order — the
         // full candidate list this page now hands to application/
         // PublicationResolutionCoordinator.js#resolve() as `peers`. See
@@ -1512,6 +1633,14 @@ export default {
                 // fetched, polled, or persisted, and expanding this
                 // disclosure performs zero network operations.
                 ipfsPublicationObservationTimelineExpanded: false,
+                // 0.8.75 — Durable Publication Observation Records. Maps
+                // THIS entry's own local `ipfsPublicationRecordHistory`
+                // index to the position the same record landed at in the
+                // shared, page-level `publicationObservationArchive` —
+                // see archivePublishIpfsRecord()'s own header below. Never
+                // itself read from or written to anything durable; only
+                // the page-level archive it points into is.
+                archiveIpfsRecordIndexByLocalIndex: [],
                 // 0.8.33 — Local Snapshot Content Availability &
                 // Integrity UX. A single ephemeral attempt object for
                 // THIS entry — `null` until "Check Local Snapshot" is
@@ -2377,6 +2506,17 @@ export default {
                 const history = entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] || [];
                 entry.bitcoinAnchorConfirmationHistories[anchorView.anchorId] =
                     appendBitcoinAnchorConfirmationObservationHistoryEntry(history, result.transaction.confirmation);
+                // 0.8.75 — both facts this SAME reconcile() result carries
+                // are archived durably, side by side with the ephemeral
+                // state above — a content-proof observation has no
+                // history of its own anywhere else in this codebase (see
+                // application/PublicationObservationArchive.js's own
+                // header, "NO HISTORY IS INVENTED FOR CONTENT PROOF"), but
+                // this archive still records every one it is given.
+                archiveBitcoinConfirmationObservation(anchorView.anchorId, result.transaction.confirmation);
+                if (result.contentProof) {
+                    archiveBitcoinContentProofObservation(anchorView.anchorId, result.contentProof);
+                }
             } catch (error) {
                 entry.bitcoinAnchorReconciliations[anchorView.anchorId] = { reconciling: false, error: error.message };
             }
@@ -2896,6 +3036,16 @@ export default {
             // `bitcoinAnchorBroadcastedAt`'s own declaration above) — never
             // re-captured by anything that merely reads the outcome later.
             bitcoinAnchorBroadcastedAt.value = new Date();
+            // 0.8.75 — archived durably, keyed by this transaction's own
+            // txid, exactly as crossDomainPublicationObservationTimelineView()
+            // below already keys this same wizard flow's own facts.
+            archiveBitcoinBroadcast({
+                anchorId: bound.txid,
+                txid: bitcoinAnchorBroadcastOutcome.value.txid,
+                state: bitcoinAnchorBroadcastOutcome.value.state,
+                reason: bitcoinAnchorBroadcastOutcome.value.reason,
+                broadcastedAt: bitcoinAnchorBroadcastedAt.value
+            });
         }
 
         // Pure projection of `bitcoinAnchorBroadcastOutcome` through
@@ -2963,6 +3113,9 @@ export default {
                 bitcoinAnchorBroadcastConfirmationOutcome.value = observation;
                 bitcoinAnchorBroadcastConfirmationHistory.value =
                     appendBitcoinAnchorConfirmationObservationHistoryEntry(bitcoinAnchorBroadcastConfirmationHistory.value, observation);
+                // 0.8.75 — archived durably, keyed by the SAME txid this
+                // wizard flow's own broadcast fact was archived under.
+                archiveBitcoinConfirmationObservation(broadcast.txid, observation);
             } catch (error) {
                 bitcoinAnchorBroadcastConfirmationError.value = error.message;
             } finally {
@@ -3743,6 +3896,10 @@ export default {
                     entry.ipfsPublicationRecordHistory = appendIpfsPublicationRecordHistoryEntry(
                         entry.ipfsPublicationRecordHistory, entry.ipfsPublicationRecord
                     );
+                    // 0.8.75 — the newly bound record is ALSO archived
+                    // durably, side by side with the ephemeral history
+                    // above — see archivePublishIpfsRecord()'s own header.
+                    archivePublishIpfsRecord(entry, entry.ipfsPublicationRecordHistory.length - 1, entry.ipfsPublicationRecord);
                 }
             } catch (error) {
                 entry.ipfsRemotePublicationOutcome = { state: IpfsRemotePublicationState.FAILED, published: false, contentHash: null, locator: null, endpoint: null, publishedAt: null, reason: error.message };
@@ -3903,6 +4060,10 @@ export default {
             entry.ipfsPublicationVerificationHistoriesByRecordIndex[index] = appendIpfsPublicationContentVerificationHistoryEntry(
                 entry.ipfsPublicationVerificationHistoriesByRecordIndex[index], outcome
             );
+            // 0.8.75 — archived durably, side by side with the ephemeral
+            // per-record history above — see
+            // archiveIpfsVerificationObservation()'s own header.
+            archiveIpfsVerificationObservation(entry, index, outcome);
         }
 
         function isVerifyingIpfsPublicationRecordHistoryEntry(entry, index) {
@@ -4322,6 +4483,14 @@ export default {
         let unsubscribeReceived = null;
         let unsubscribeContent = null;
         onMounted(async () => {
+            // 0.8.75 — the ONE place this page ever reads
+            // `publicationObservationArchiveStorage`. `load()` never
+            // throws (see storage/LocalStoragePublicationObservationArchive
+            // .js's own header) — corrupted or missing storage simply
+            // starts this session with an empty archive, never a crashed
+            // page.
+            publicationObservationArchive.value = publicationObservationArchiveStorage.load();
+
             loading.value = true;
             await refreshList();
             loading.value = false;
@@ -4384,6 +4553,8 @@ export default {
             crossDomainPublicationObservationTimelineView, toggleCrossDomainPublicationObservationTimeline,
             crossDomainPublicationObservationTimelineEntryBadgeClass, crossDomainPublicationObservationTimelineEntryDomainLabel,
             PublicationObservationTimelineEntryKind, PublicationObservationTimelineDomain,
+            publicationObservationArchiveView, publicationObservationArchiveExpanded,
+            togglePublicationObservationArchive, clearPublicationObservationArchive,
             decentralizationContrast,
             knowledgeSynchronizationCoordinator, synchronizeWithPeers, synchronizationView, synchronizationBadgeClass, synchronizationButtonLabel,
             toggleReplicaKnowledge, acquisitionBreakdownSentence,
@@ -4845,6 +5016,74 @@ export default {
                             </li>
                         </ul>
                     </div>
+                </div>
+            </div>
+
+            <!-- 0.8.75 — Durable Publication Observation Records.
+                 Page-level, deliberately unrelated to any one
+                 publication's own card below — this section reads
+                 application/PublicationObservationArchive.js's own
+                 durable, cross-domain archive, persisted via storage/
+                 LocalStoragePublicationObservationArchive.js. See that
+                 file's own header, and docs/Principles.md, "Persistence
+                 Restores Historical Facts; It Never Resurrects Invented
+                 Ones (0.8.75)." Nothing here is fetched, verified, or
+                 reconciled — opening or closing this disclosure performs
+                 ZERO network operations, and "Clear Archive" is the ONLY
+                 action on this page that discards a persisted fact;
+                 publishing, verifying, broadcasting, or observing a
+                 confirmation elsewhere on this page only ever ADDS to
+                 this archive, automatically, never removes from it. -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Observation Archive</span>
+                    <span class="peer-badge peer-badge--pending">Persisted locally</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Publication and observation facts, kept durable across a page reload. Never a
+                    wallet connection, a signing capability, a private key, or any other
+                    credential — this archive never stores one, and reloading this page never
+                    restores one.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Publications</dt><dd>{{ publicationObservationArchiveView().publicationCount }}</dd></div>
+                    <div class="evidence-field"><dt>Observations</dt><dd>{{ publicationObservationArchiveView().observationCount }}</dd></div>
+                </dl>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="togglePublicationObservationArchive">
+                        {{ publicationObservationArchiveExpanded ? 'Hide Archive' : 'Show Archive' }}
+                    </button>
+                    <button type="button" class="action-btn action-btn--danger"
+                            :disabled="publicationObservationArchiveView().publicationCount === 0 && publicationObservationArchiveView().observationCount === 0"
+                            @click="clearPublicationObservationArchive">
+                        Clear Archive
+                    </button>
+                </div>
+                <div v-if="publicationObservationArchiveExpanded" class="evidence-inspection-adapter">
+                    <span class="evidence-inspection-adapter-title">Archived Observation Timeline</span>
+                    <p v-if="publicationObservationArchiveView().entryCount === 0" class="form-hint form-hint--neutral">
+                        Nothing archived yet. Publishing to IPFS, verifying content, broadcasting a
+                        Bitcoin transaction, or observing a confirmation on this page adds to this
+                        archive automatically.
+                    </p>
+                    <ul v-else class="replica-knowledge-claim-list">
+                        <li v-for="(item, archiveIndex) in publicationObservationArchiveView().entries"
+                            :key="archiveIndex" class="replica-knowledge-claim">
+                            <span class="peer-badge" :class="crossDomainPublicationObservationTimelineEntryBadgeClass(item)">
+                                {{ formatWhen(item.observedAt) }} — {{ crossDomainPublicationObservationTimelineEntryDomainLabel(item) }} —
+                                {{ item.kind === PublicationObservationTimelineEntryKind.IPFS_PUBLICATION ? 'Published' : item.stateLabel }}
+                            </span>
+                            <p class="form-hint form-hint--neutral">
+                                {{ item.label }}
+                                <template v-if="item.domain === PublicationObservationTimelineDomain.IPFS"> — {{ item.locator }}</template>
+                                <template v-else-if="item.txid"> — txid {{ item.txid }}</template>
+                            </p>
+                            <p v-if="item.kind === PublicationObservationTimelineEntryKind.BITCOIN_CONFIRMATION && item.blockHeight != null" class="form-hint form-hint--neutral">
+                                Block height {{ item.blockHeight }}
+                            </p>
+                            <p v-if="item.reason" class="form-hint form-hint--neutral">{{ item.reason }}</p>
+                        </li>
+                    </ul>
                 </div>
             </div>
 

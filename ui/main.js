@@ -68,6 +68,7 @@ import { CreateBitcoinAnchorConfirmationCoordinatorUseCase } from '../applicatio
 import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
 import { CreateIpfsPublicationContentVerifierUseCase } from '../application/CreateIpfsPublicationContentVerifierUseCase.js';
 import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../application/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js';
+import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 import { CreateIpfsSnapshotPlacementViewUseCase } from '../application/CreateIpfsSnapshotPlacementViewUseCase.js';
 import { CreateLocalSnapshotPlacementViewUseCase } from '../application/CreateLocalSnapshotPlacementViewUseCase.js';
@@ -1096,6 +1097,14 @@ app.provide('publicationCatalogContentResolver', publicationCatalogContentResolv
 app.provide('ipfsRemotePublicationCoordinator', ipfsRemotePublicationCoordinator);
 // 0.8.70 — IPFS Publication & Content Verification UI.
 app.provide('ipfsPublicationContentVerificationCoordinator', ipfsPublicationContentVerificationCoordinator);
+// 0.8.75 — Durable Publication Observation Records. ui/views/
+// DecentralizedPublicationsView.js's own inject() already falls back to a
+// real, browser-backed instance on its own if this is never provided —
+// this app.provide() call exists only so every part of the running app
+// shares the ONE instance, exactly like every other coordinator above,
+// rather than each caller reading and writing localStorage through a
+// separate object of its own.
+app.provide('publicationObservationArchiveStorage', new LocalStoragePublicationObservationArchive());
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
