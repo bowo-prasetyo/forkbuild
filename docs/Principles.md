@@ -15729,8 +15729,11 @@ network operations.** The identical restraint held by every milestone
 before it, extended one more time: this projection only ever reads
 whatever the caller's own already-in-memory IPFS and Bitcoin state
 currently holds, and computes no cross-domain comparison of its own —
-that remains real, separately sized future work (0.8.76). See
-`docs/Roadmap.md`, 0.8.74, for the full milestone entry.
+that remains real, separately sized future work (0.8.77; 0.8.76 claimed
+this milestone's own reserved number for a different, more urgent
+same-domain comparison instead — see "A Changed Observation Is Not
+Automatically A Reorganization (0.8.76)" below). See `docs/Roadmap.md`,
+0.8.74, for the full milestone entry.
 
 ## A Capability Can Be Ephemeral Even When The Facts Produced By Using It Are Durable (0.8.75)
 
@@ -15821,3 +15824,93 @@ own delete button and `ui/views/PeerConnectionsView.js`'s own disconnect
 button already hold, one UI surface over.
 
 See `docs/Roadmap.md`, 0.8.75, for the full milestone entry.
+
+## A Changed Observation Is Not Automatically A Reorganization (0.8.76)
+
+**A changed `blockHash` is an observed change in placement; it is not,
+by itself, a chain reorganization, an invalidation, a double spend, a
+loss of finality, a canonicality verdict, a safety verdict, or a trust
+verdict.** `application/BitcoinAnchorChainPlacementObservation.js`'s own
+`compareBitcoinAnchorChainPlacementObservations(previous, later)` answers
+exactly one narrow, factual question — "did these two already-recorded
+observations of the same transaction name the same block, or a different
+one?" — and reports `PLACEMENT_CHANGED` or `UNCHANGED` accordingly,
+nothing more. `application/BitcoinAnchorConfirmationObservationHistory.js`'s
+own header named this exact boundary the day it was written, 0.8.20
+milestones earlier: a later CONFIRMED observation naming a different
+`blockHash` than an earlier one "would look different — a possible chain
+reorganization" — and drew the line at "looks like" on purpose. This
+milestone is the first to actually compare those two observations against
+each other, and it draws the identical line, now enforced in code rather
+than only promised in a comment: two facts an untrusted external
+`confirmationSource` reported at two different moments are compared
+against each other, honestly, and named as differing — never elevated
+into a claim about WHY they differ or WHAT that difference means for the
+transaction's safety.
+
+**The word is welcome in prose; it is forbidden in output.** "Chain
+reorganization" is the right, precise technical term for one possible
+explanation of a `PLACEMENT_CHANGED` result, and this document, this
+milestone's own `docs/Roadmap.md` entry, and this codebase's comments use
+it freely, exactly as 0.8.56's own header already did. What never
+appears is a `REORG_DETECTED` enum value, a `reorganization` field, a
+`reorgDetected` boolean, or any sentence a person reading this
+application's own screen could mistake for "ForkBuild has determined a
+reorganization occurred." `BitcoinAnchorChainPlacementObservationOutcome`
+holds exactly four values — `UNCHANGED`, `PLACEMENT_CHANGED`,
+`INSUFFICIENT_OBSERVATIONS`, `INCOMPARABLE` — each naming what the two
+observations themselves say, never what a person should conclude from
+them. Reaching a conclusion about WHY a placement changed — a genuine
+reorganization, a confirmation source that queried two different nodes,
+an operator error, a source that changed between two calls — is left
+entirely to the person reading both preserved observations; this
+milestone forms no opinion of its own about which explanation is correct,
+and does not even enumerate the possibilities it declines to choose
+between.
+
+**Comparison happens only between two already-CONFIRMED observations of
+the same transaction; every other pairing is `INCOMPARABLE`, never a
+placement claim of any kind.** A `NOT_CONFIRMED` observation followed by
+a `CONFIRMED` one is the ordinary, expected shape of a transaction
+settling — never treated as a placement changing, because there was no
+prior block placement to change FROM. A `CONFIRMED` observation followed
+by an `UNAVAILABLE` one means only that this replica's confirmation
+source could not presently answer — never treated as evidence the
+transaction "disappeared" from the block it was previously observed in,
+the identical restraint `anchoring/BitcoinAnchorConfirmationObserver.js`'s
+own header already holds for why "not found" is never a definite verdict
+about non-existence. And a rise in `confirmationCount` alone, with
+`blockHash` and `blockHeight` unchanged, is exactly the ordinary
+confirmation-depth progress `application/
+BitcoinAnchorConfirmationObservationHistoryView.js`'s own vocabulary
+already narrates — never itself a placement change.
+
+**Both observations are always preserved, in full, on either side of a
+comparison — never collapsed to "before" and "after" values with the
+rest of the record discarded, and never resolved into a single "current"
+answer.** `application/BitcoinAnchorChainPlacementObservationView.js`
+carries `previous` and `later` through a `PLACEMENT_CHANGED` comparison
+completely unchanged — hash, height, confirmation count, and the moment
+each was observed, for BOTH observations — so a person sees the actual
+disagreement between two real, dated facts this replica already held,
+rather than a single verdict that silently picked one side as
+authoritative. This holds even when the two observations agree on
+`blockHash` but disagree on `blockHeight` — a rare, self-contradictory
+pairing this milestone does not attempt to resolve; it reports
+`PLACEMENT_CHANGED` and shows both records, letting the disagreement
+itself be visible rather than quietly choosing one field as ground
+truth.
+
+**A comparison is read-only, both over the history it compares and over
+the Bitcoin network.** `application/BitcoinAnchorChainPlacementObserver.js`
+takes no confirmation source, makes no network call, and appends nothing
+to `application/BitcoinAnchorConfirmationObservationHistory.js`'s own
+array or to `application/PublicationObservationArchive.js`'s own durable
+record — the identical "an observation describes a moment; inspecting it
+later performs no new work" restraint 0.8.56's own detail view already
+held, extended here to comparing two such moments against each other.
+Every function this milestone adds is pure: the same two observations
+compared twice produce byte-identical output, and neither the history nor
+the observations within it are ever mutated.
+
+See `docs/Roadmap.md`, 0.8.76, for the full milestone entry.
