@@ -98,6 +98,7 @@ import { describeBitcoinAnchorObservationEvidence } from '../../application/Bitc
 import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
 import { describePublicationObservationArchive } from '../../application/PublicationObservationArchiveView.js';
 import { describePublicationObservationArchiveProvenance } from '../../application/PublicationObservationArchiveProvenanceView.js';
+import { describePublicationObservationArchiveFingerprint } from '../../application/PublicationObservationArchiveFingerprintView.js';
 import { LocalStoragePublicationObservationArchive } from '../../storage/LocalStoragePublicationObservationArchive.js';
 import { describeBitcoinAnchorObservationArchive } from '../../application/BitcoinAnchorObservationArchiveView.js';
 import { reconstructBitcoinAnchorDurableEvidence } from '../../application/BitcoinAnchorDurableEvidenceView.js';
@@ -1374,6 +1375,31 @@ export default {
         // PublicationObservationArchiveProvenanceView.js's own header.
         function publicationObservationArchiveProvenanceView() {
             return describePublicationObservationArchiveProvenance(publicationObservationArchive.value);
+        }
+
+        // 0.8.84 — Durable Publication Archive Fingerprint. Pure
+        // projection over the SAME `publicationObservationArchive` every
+        // card above already reads — never a second, competing archive of
+        // its own. See application/
+        // PublicationObservationArchiveFingerprintView.js's own header.
+        function publicationObservationArchiveFingerprintView() {
+            return describePublicationObservationArchiveFingerprint(publicationObservationArchive.value);
+        }
+
+        // Copy-to-clipboard for the fingerprint only — mirrors ui/views/
+        // PeerConnectionsView.js's own `copyText()`/`copiedKey` pattern
+        // exactly, scoped to this one value since it is the only thing on
+        // this page a person copies verbatim.
+        const archiveFingerprintCopied = ref(false);
+        async function copyArchiveFingerprint() {
+            try {
+                await navigator.clipboard.writeText(publicationObservationArchiveFingerprintView().fingerprint);
+                archiveFingerprintCopied.value = true;
+                setTimeout(() => { archiveFingerprintCopied.value = false; }, 1500);
+            } catch {
+                // Clipboard API unavailable or denied — the fingerprint is
+                // already shown as selectable text for manual copy.
+            }
         }
 
         function togglePublicationObservationArchive() {
@@ -5012,6 +5038,7 @@ export default {
             publicationArchiveImportOutcome, publicationArchiveImportPreview,
             confirmPublicationArchiveImport, PublicationObservationArchiveImportOutcome,
             publicationObservationArchiveProvenanceView,
+            publicationObservationArchiveFingerprintView, copyArchiveFingerprint, archiveFingerprintCopied,
             historicalBitcoinAnchorsExpanded, toggleHistoricalBitcoinAnchors, historicalBitcoinAnchorArchiveView,
             toggleHistoricalBitcoinAnchorEntry, isHistoricalBitcoinAnchorEntryExpanded, historicalBitcoinAnchorEvidenceView,
             bitcoinAnchorPublicationsExpanded, toggleBitcoinAnchorPublications, bitcoinAnchorPublicationRecordHistoryView,
@@ -5658,6 +5685,40 @@ export default {
                             </p>
                         </li>
                     </ul>
+                </div>
+            </div>
+
+            <!-- 0.8.84 — Durable Publication Archive Fingerprint. Reads the
+                 SAME durable archive every card above already reads —
+                 never a second archive. A deterministic SHA-256 digest of
+                 this archive's own canonical facts and provenance
+                 (archiveImportEvents excluded — see application/
+                 PublicationObservationArchiveFingerprint.js's own header).
+                 States only that two matching fingerprints describe the
+                 identical durable bytes — never that either archive is
+                 authentic, verified, or trustworthy. Comparing this
+                 fingerprint against another archive is deliberately left
+                 unbuilt — see docs/Principles.md, "An Archive Fingerprint
+                 Identifies Durable Contents; It Does Not Establish Their
+                 Truth Or Origin (0.8.84)." -->
+            <div class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Archive Fingerprint</span>
+                    <span class="peer-badge peer-badge--pending">{{ publicationObservationArchiveFingerprintView().algorithm }}</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    A deterministic digest of every fact and provenance tag recorded above.
+                    Two replicas whose fingerprints match hold exactly the same durable archive
+                    contents — this states nothing about whether those contents are authentic,
+                    verified, or correct.
+                </p>
+                <dl class="evidence-fields">
+                    <div class="evidence-field"><dt>Fingerprint</dt><dd>{{ publicationObservationArchiveFingerprintView().fingerprint }}</dd></div>
+                </dl>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="copyArchiveFingerprint">
+                        {{ archiveFingerprintCopied ? 'Copied!' : 'Copy Fingerprint' }}
+                    </button>
                 </div>
             </div>
 

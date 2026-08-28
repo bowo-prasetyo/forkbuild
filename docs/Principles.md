@@ -16441,3 +16441,76 @@ enter this archive"; it has no vote in "what does this archive's evidence
 show."
 
 See `docs/Roadmap.md`, 0.8.83, for the full milestone entry.
+
+## An Archive Fingerprint Identifies Durable Contents; It Does Not Establish Their Truth Or Origin (0.8.84)
+
+**A matching fingerprint means "byte-identical canonical content" and
+nothing else.** `application/PublicationObservationArchiveFingerprint.js`'s
+own `fingerprintPublicationObservationArchive()` hashes a
+`PublicationObservationArchive`'s own canonical `toJSON()` output (minus
+`archiveImportEvents`, see below) with SHA-256. Two archives fingerprint
+identically if and only if that canonical content is byte-identical. This
+never means "verified," "authentic," or "trusted" — those words do not
+appear anywhere near this concept, and never will. This is docs/
+Principles.md, "The UI Displays Observations; It Does Not Turn Them Into A
+Verdict (0.8.57)," held once more, one layer over an entire archive's own
+identity rather than over a single observation or a single ingestion
+history.
+
+**Reuses `toJSON()`'s own canonical serialization; invents no second
+schema.** `application/PublicationObservationArchive.js`'s own `toJSON()`
+already serializes deterministically — identical facts, identical field
+order, identical output, every time. This milestone's only job is to hash
+exactly that output. No `toFingerprintJSON()`, no competing field order,
+no second notion of "the archive's own shape" for this milestone to get
+out of sync with the first.
+
+**`archiveImportEvents` is excluded — it is metadata about THIS replica's
+own ingestion history, never about the durable facts an archive
+represents.** Two replicas holding identical facts and identical
+provenance, but that happened to import them at different real moments or
+a different number of times, fingerprint identically — the alternative
+would make an archive's own identity depend on when a person happened to
+click "Import," which has nothing to do with what either replica actually
+knows. Every other field `toJSON()` produces — all six factual
+collections AND all six parallel provenance collections from 0.8.83 —
+participates in the fingerprint unchanged.
+
+**Provenance is deliberately included, not excluded.** 0.8.83 made
+provenance itself durable archive data: an archive whose facts are
+`IMPORTED` is not the same durable archive as one whose identical-looking
+facts are `LOCAL`. Two archives holding byte-identical facts under
+different provenance fingerprint DIFFERENTLY — even though `application/
+BitcoinAnchorDurableEvidenceView.js`'s own reconstructed evidence and
+`application/PublicationObservationArchiveView.js`'s own cross-domain
+summary stay byte-identical between them, exactly as 0.8.83 already
+established. Provenance affects archive IDENTITY; it still has no vote in
+the INTERPRETATION of the underlying facts — the same restraint 0.8.83
+drew, now visible in a second, independent way.
+
+**Synchronous, pure, self-contained — SHA-256 from first principles,
+deliberately duplicated rather than imported.** `crypto.subtle.digest()`
+is Promise-only; a fingerprint meant to sit alongside every other
+synchronous `describeXxx()` projection in this codebase has no honest use
+for an asynchronous one. `application/
+PublicationObservationArchiveFingerprint.js` implements SHA-256 itself,
+copied from — never imported from — anchoring/
+BitcoinAnchorSignedPsbtFinalizer.js's own from-scratch implementation. This
+is the identical self-containment every `anchoring/` class already holds
+one directory over (see that file's own "Byte-level primitives —
+deliberately duplicated, not imported" header), extended to `application/`
+for the first time. The digest was independently cross-checked against
+Node's own `crypto.createHash('sha256')` while authoring this milestone's
+own tests — proof the implementation is correct, not merely
+self-consistent.
+
+**A fingerprint is not a signature, and this milestone builds no
+comparison UX.** No signing, no public/private keys, no "trusted archive,"
+no remote notarization, no blockchain anchoring of the fingerprint itself,
+no automatic publication or comparison, no automatic synchronization
+between replicas, no archive merging. The UI shows exactly one
+fingerprint, for the current archive — comparing it against a second
+archive or a pasted value is explicitly left for a later, separately sized
+milestone.
+
+See `docs/Roadmap.md`, 0.8.84, for the full milestone entry.
