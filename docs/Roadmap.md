@@ -29271,3 +29271,170 @@ all exist — chain-event interpretation, a much more consequential, and
 therefore much later, milestone — each its own, separately sized piece of
 work, exactly like every "Deliberately excluded" list in this document
 before it.
+
+## 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle Record
+
+0.8.53 through 0.8.79 built a long, real Bitcoin anchoring pipeline —
+funding, construction, review, signing, finalization, broadcast,
+confirmation, content proof, chain-placement comparison, consistency
+analysis, and (0.8.79) durable restoration of all of it — but every stage
+is connected only by whatever ephemeral UI state a page keeps and by a
+shared `anchorId` string a caller happens to pass consistently between
+them. Nothing durable has ever said, in one place: "this particular
+Bitcoin anchor publication attempt is THIS thing." This milestone
+introduces exactly that — a small, explicit identity object, deliberately
+kept separate from every observation about it:
+
+```text
+Funding → Construction → Review → Signing → Finalization
+                                                  │
+                                                  │  CREATE PUBLICATION RECORD
+                                                  ▼
+                                     BitcoinAnchorPublicationRecord
+                                     { anchorId, contentHash, txid,
+                                       network, createdAt }
+                                                  │
+                                                  ▼
+                                              Broadcast
+                                                  │
+                                                  ▼
+                                        Observations (0.8.75–0.8.79,
+                                        unchanged) — keyed by the SAME
+                                        anchorId, never merged with the
+                                        record itself
+```
+
+**IDENTITY, NOT A VERDICT — THE FLAGSHIP INVARIANT.** A publication record
+establishes identity; observations establish what was subsequently
+observed about that identity. `BitcoinAnchorPublicationRecord` carries
+exactly `anchorId`, `contentHash`, `txid`, `network`, and `createdAt` —
+never `confirmed`, `valid`, `trusted`, `safe`, `healthy`, `canonical`, or
+`status`, and never any mutable confirmation state. See
+`docs/Principles.md` for the full statement of this invariant.
+
+**WHY `txid` BELONGS HERE, UNLIKE 0.8.78'S OWN anchorId-ONLY
+RESTRAINT.** application/BitcoinAnchorObservationEvidence.js's own header
+(0.8.78) deliberately correlates observations by `anchorId` alone, never
+by `contentHash` or `txid` — a restraint this milestone does not relax.
+A publication record is a different kind of fact: it is the one place
+this codebase states, once, which concrete `contentHash`/`txid`/`network`
+a given `anchorId` actually named at the moment it was minted. Two
+publication records naming an identical `contentHash` — even an identical
+`txid` — are never merged, grouped, or reconciled; each stays its own,
+independent identity, forever:
+
+```text
+Publication A                      Publication B
+anchorId = A                       anchorId = B
+contentHash = X          ≠         contentHash = X   (same!)
+txid = TX-A                        txid = TX-B
+```
+
+**CREATED ONLY AT SUCCESSFUL FINALIZATION — NEVER EARLIER, NEVER
+AUTOMATICALLY RETRIED.** A publication record names a concrete `txid`; one
+only exists once application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js
+(0.8.63) has actually produced one. `ui/views/DecentralizedPublicationsView.js`'s
+own `finalizeBitcoinAnchorSignedPsbt()` mints the record the moment its
+own FINALIZED outcome settles — never at funding, construction, review,
+or signing. A subsequent broadcast failure never erases the record: a
+publication's own identity does not depend on the network later accepting
+the broadcast. `anchorId` reuses this pipeline's own existing convention
+(the finalized transaction's own `txid`, the identical value
+`archiveBitcoinBroadcast()` already keys broadcast facts by).
+
+**A SIXTH, INDEPENDENT COLLECTION — NEVER A MERGE INTO THE FIVE THAT
+ALREADY EXIST.** `application/PublicationObservationArchive.js` gains
+`bitcoinAnchorPublicationRecords`, an append-only sequence of records,
+alongside its five existing collections — never keyed by, cross-referenced
+against, or folded into any of them. `publicationCount`/`observationCount`
+are deliberately unaffected; a new, separate `bitcoinAnchorPublicationRecordCount`
+getter exists instead. This milestone bumps `SCHEMA_VERSION` from 1 to 2 —
+a payload persisted by 0.8.75–0.8.79 degrades to
+`PublicationObservationArchive.empty()` on load, the identical,
+already-tested "wrong schemaVersion" behavior this class has held since
+0.8.75; no migration path is added.
+
+New files:
+- `application/BitcoinAnchorPublicationRecord.js` — new;
+  `BitcoinAnchorPublicationRecord` — the immutable identity value object
+  (`anchorId`, `contentHash`, `txid`, `network`, `createdAt`), validated
+  and frozen at construction, with `toJSON()`/`fromJSON()`.
+- `application/BitcoinAnchorPublicationRecordHistory.js` — new;
+  `appendBitcoinAnchorPublicationRecordHistoryEntry()` (append-only, never
+  mutates, never deduplicates) and
+  `findBitcoinAnchorPublicationRecordByAnchorId()`/
+  `findBitcoinAnchorPublicationRecordsByAnchorId()` (lookup by explicit
+  `anchorId` alone — never `contentHash` or `txid`).
+- `application/BitcoinAnchorPublicationRecordHistoryView.js` — new;
+  `describeBitcoinAnchorPublicationRecordHistoryEntry()`/
+  `describeBitcoinAnchorPublicationRecordHistory()` — plain, oldest-first
+  narration, every field carried through unchanged.
+- `application/CreateBitcoinAnchorPublicationRecordUseCase.js` — new;
+  `CreateBitcoinAnchorPublicationRecordUseCase#execute(archive, {...})` —
+  THE ONE place this codebase constructs a record before appending it to
+  an archive. Throws for an invalid identity; never mutates the archive
+  it was given.
+- `application/BitcoinAnchorPublicationInspectionView.js` — new;
+  `inspectBitcoinAnchorPublication(archive, anchorId)` — joins one
+  publication's own identity back to application/
+  BitcoinAnchorDurableEvidenceView.js's own (0.8.79, unchanged)
+  reconstructed evidence for the identical `anchorId`. Returns `null` when
+  no publication record exists for that `anchorId` — never composes
+  evidence for an identity that was never actually minted. Zero network
+  operations.
+
+Changed:
+- `application/PublicationObservationArchive.js` — the new
+  `bitcoinAnchorPublicationRecords` collection, `appendBitcoinAnchorPublicationRecord()`,
+  `bitcoinAnchorPublicationRecordCount`, `SCHEMA_VERSION` 1 → 2, and the
+  matching `toJSON()`/`fromJSON()`/validation wiring. Every one of the
+  five pre-existing collections is otherwise untouched.
+- `ui/views/DecentralizedPublicationsView.js` — `finalizeBitcoinAnchorSignedPsbt()`
+  now mints a publication record on a successful FINALIZED outcome, via
+  the new `archiveBitcoinAnchorPublicationRecord()` helper (mirroring
+  `archiveBitcoinBroadcast()`'s own shape). A new, page-level "Bitcoin
+  Anchor Publications" card lists every minted record; an "Inspect
+  Observations" toggle per row calls `inspectBitcoinAnchorPublication()`
+  to show that same anchorId's evidence summary, cross-referencing the
+  existing "Historical Bitcoin Anchor Evidence" card (0.8.79) for the full
+  per-observation breakdown rather than duplicating it. New state:
+  `bitcoinAnchorPublicationsExpanded`, `bitcoinAnchorPublicationInspectionExpanded`.
+
+New tests:
+- `tests/BitcoinAnchorPublicationRecord.test.js` — the flagship scenario
+  described above (two publications, one shared `contentHash`, different
+  `anchorId`/`txid`, independent observation histories, persisted through
+  real storage, destroyed, reloaded, and re-reloaded a second time, with
+  `globalThis.fetch` swapped out to prove zero network calls occur), plus
+  full coverage of the record's own validation/immutability/JSON round
+  trip, the history's append-only/no-deduplication discipline, the
+  archive's new collection (including a pre-0.8.80 schemaVersion-1 payload
+  degrading to empty), the use case's construction boundary, and the
+  inspection view's malformed/absent-input handling.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Any `confirmed`, `valid`, `trusted`, `safe`, `healthy`, `canonical`,
+  `status`, or mutable confirmation-state field on the record itself.**
+  The single most important exclusion this milestone holds — see "Identity,
+  Not A Verdict" above.
+- **Grouping, merging, or reconciling publication records by `contentHash`
+  or `txid`.** Two records sharing either value stay two, independent
+  identities, forever — see "Why txid Belongs Here" above.
+- **Creating a publication record at funding, construction, review, or
+  signing.** Only a successful finalization — a concrete, cryptographically
+  produced `txid` — mints one.
+- **Persisting observations, evidence, or any derived projection ON the
+  publication record itself.** The record holds identity fields only;
+  every observation stays in its own, separately kept collection, exactly
+  as 0.8.75 through 0.8.79 already established.
+- **A migration path for schemaVersion 1 archives.** A pre-0.8.80 payload
+  degrades to an empty archive, the identical behavior this class has
+  held for an unrecognized schemaVersion since 0.8.75.
+
+What's left, and deliberately unbuilt: a per-publication lifecycle
+timeline showing missing stages as missing facts rather than failures —
+0.8.81, a separately sized presentation milestone building directly on
+this one's own explicit identity; an overall Bitcoin-anchor verdict of any
+kind; and explicit Bitcoin ↔ IPFS content-hash reconciliation — each its
+own, separately sized piece of work, exactly like every "Deliberately
+excluded" list in this document before it.

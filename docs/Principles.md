@@ -16157,3 +16157,81 @@ instance via `fromJSON()`, still produce two byte-identical-to-pre-reload,
 completely non-overlapping evidence bundles.
 
 See `docs/Roadmap.md`, 0.8.79, for the full milestone entry.
+
+## A Publication Record Establishes Identity; Observations Establish What Was Subsequently Observed About It (0.8.80)
+
+**Identity and observation are two different kinds of fact, and this
+codebase now names both, separately.** Every stage from `application/
+BitcoinAnchorFundingObservationState.js` through `application/
+BitcoinAnchorObservationEvidence.js` (0.8.78) was already, individually,
+an honest fact. What none of them ever did was say, durably, in one
+place: "this particular Bitcoin anchor publication attempt is THIS
+thing." `application/BitcoinAnchorPublicationRecord.js`'s own `{ anchorId,
+contentHash, txid, network, createdAt }` is that one thing — and, per its
+own header, nothing else. It never carries `confirmed`, `valid`,
+`trusted`, `safe`, `healthy`, `canonical`, or `status`, and never any
+derived, mutable confirmation state. Whether this publication was later
+confirmed, whether its placement stayed stable, whether its observations
+stay consistent — every one of those questions still belongs entirely to
+`application/PublicationObservationArchive.js`'s own, separately kept
+observation collections and to `application/
+BitcoinAnchorDurableEvidenceView.js`'s own reconstruction over them
+(0.8.79, unchanged). This is docs/Principles.md, "The UI Displays
+Observations; It Does Not Turn Them Into A Verdict (0.8.57)," held once
+more, one layer higher.
+
+**A shared `contentHash`, or even a shared `txid`, never merges two
+publication identities.** `application/BitcoinAnchorObservationEvidence.js`'s
+own principle (0.8.78, "Correlate Evidence By Explicit Identity, Never By
+Resemblance") already established that two anchors sharing a `contentHash`
+are never assumed to be the same anchor for the purpose of correlating
+OBSERVATIONS. This milestone extends the identical restraint one layer up,
+to IDENTITY itself: `application/BitcoinAnchorPublicationRecordHistory.js`'s
+own `findBitcoinAnchorPublicationRecordByAnchorId()` looks up a record by
+explicit `anchorId` alone — never by `contentHash` or `txid` — and its own
+append function never deduplicates, merges, or reconciles two records
+sharing either value. The flagship test in `tests/
+BitcoinAnchorPublicationRecord.test.js` proves this directly: two
+publication records, anchorId A and anchorId B, sharing one byte-identical
+`contentHash` but naming different `txid` values and carrying completely
+independent, differently-sized observation histories, survive a full
+persist/destroy/reload/re-reload cycle as two, entirely distinct
+identities, with neither's own evidence ever leaking into the other's.
+
+**`txid` belongs on the identity record even though `anchorId` alone
+governs correlation.** This is not a relaxation of 0.8.78's own
+restraint — it is a different concern entirely. `anchorId` stays this
+replica's own arbitrary correlation key, exactly as before; `contentHash`,
+`txid`, and `network` are the three concrete facts a publication attempt
+actually recorded about itself the moment it came to exist, named once,
+together, so a caller can state plainly "anchorId A is publication A, and
+publication A used txid TX-A for content X" — without that statement ever
+being read backward as "any other anchor using content X, or txid TX-A,
+must be this same publication."
+
+**Created only at successful finalization — never earlier, and a
+broadcast failure never erases it.** A publication record's own identity
+does not depend on the network later accepting the broadcast.
+`ui/views/DecentralizedPublicationsView.js`'s own
+`finalizeBitcoinAnchorSignedPsbt()` mints the record the instant its own
+FINALIZED outcome settles — the first point in this whole pipeline a
+concrete, cryptographically produced `txid` exists at all — never at
+funding, construction, review, or signing, and never retried
+automatically. A subsequent BROADCAST_REJECTED or BROADCAST_UNAVAILABLE
+outcome leaves the already-minted record exactly as it was: a historical
+fact about what this replica attempted, regardless of whether the network
+later agreed to relay it.
+
+**A sixth, independent collection — never a seventh source of truth.**
+`application/PublicationObservationArchive.js`'s own `bitcoinAnchorPublicationRecords`
+sits alongside its five pre-existing collections, contributing to neither
+`publicationCount` nor `observationCount` — see that file's own header on
+why blurring that distinction would undo the very thing this milestone
+exists to draw. Persisting it required bumping `SCHEMA_VERSION` from 1 to
+2; a payload persisted by 0.8.75 through 0.8.79 degrades to
+`PublicationObservationArchive.empty()` on load, the identical
+"unrecognized schemaVersion" behavior that class has held, untested for a
+real version bump until now, since 0.8.75 — no migration path exists,
+because none of this codebase's own prior principles ever promised one.
+
+See `docs/Roadmap.md`, 0.8.80, for the full milestone entry.

@@ -2,8 +2,10 @@ import { IpfsPublicationRecord } from './IpfsPublicationRecord.js';
 import { appendIpfsPublicationRecordHistoryEntry } from './IpfsPublicationRecordHistory.js';
 import { appendIpfsPublicationContentVerificationHistoryEntry } from './IpfsPublicationContentVerificationHistory.js';
 import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from './BitcoinAnchorConfirmationObservationHistory.js';
+import { BitcoinAnchorPublicationRecord } from './BitcoinAnchorPublicationRecord.js';
+import { appendBitcoinAnchorPublicationRecordHistoryEntry } from './BitcoinAnchorPublicationRecordHistory.js';
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 // 0.8.75 — Durable Publication Observation Records.
 //
@@ -116,13 +118,32 @@ const SCHEMA_VERSION = 1;
 // already describe honestly on its own. See storage/
 // LocalStoragePublicationObservationArchive.js's own header for why that
 // property is exactly what makes this class safe to persist verbatim.
+//
+// 0.8.80 — Explicit Bitcoin Anchor Publication Lifecycle Record. Adds a
+// SIXTH, independent collection: `bitcoinAnchorPublicationRecords`, an
+// append-only sequence of application/BitcoinAnchorPublicationRecord.js
+// instances — durable IDENTITY (`anchorId`, `contentHash`, `txid`,
+// `network`, `createdAt`), never an observation and never a verdict. It is
+// never merged into, keyed by, or cross-referenced against any of the five
+// collections above — a publication record establishes identity;
+// `bitcoinBroadcastRecords`/`bitcoinConfirmationObservationsByAnchorId`/
+// `bitcoinContentProofObservationsByAnchorId` establish what was
+// subsequently observed about that identity, exactly as they already did
+// before this milestone. See application/BitcoinAnchorPublicationRecord.js's
+// own header for the full rationale. THIS MILESTONE BUMPS SCHEMA_VERSION
+// TO 2 — a payload persisted by 0.8.75 through 0.8.79 (schemaVersion 1)
+// degrades to `PublicationObservationArchive.empty()` on load, the
+// identical, already-tested "wrong schemaVersion" behavior this class's
+// own `fromJSON()` has held since 0.8.75; no migration path is added,
+// because none of this class's own prior principles ever promised one.
 export class PublicationObservationArchive {
     constructor({
         ipfsPublicationRecords = [],
         ipfsContentVerificationObservationsByRecordIndex = {},
         bitcoinBroadcastRecords = [],
         bitcoinConfirmationObservationsByAnchorId = {},
-        bitcoinContentProofObservationsByAnchorId = {}
+        bitcoinContentProofObservationsByAnchorId = {},
+        bitcoinAnchorPublicationRecords = []
     } = {}) {
         this._ipfsPublicationRecords = Object.freeze([...ipfsPublicationRecords]);
         this._ipfsContentVerificationObservationsByRecordIndex = Object.freeze(
@@ -138,6 +159,7 @@ export class PublicationObservationArchive {
             Object.fromEntries(Object.entries(bitcoinContentProofObservationsByAnchorId)
                 .map(([anchorId, observations]) => [anchorId, Object.freeze([...observations])]))
         );
+        this._bitcoinAnchorPublicationRecords = Object.freeze([...bitcoinAnchorPublicationRecords]);
         Object.freeze(this);
     }
 
@@ -146,13 +168,31 @@ export class PublicationObservationArchive {
     get bitcoinBroadcastRecords() { return this._bitcoinBroadcastRecords; }
     get bitcoinConfirmationObservationsByAnchorId() { return this._bitcoinConfirmationObservationsByAnchorId; }
     get bitcoinContentProofObservationsByAnchorId() { return this._bitcoinContentProofObservationsByAnchorId; }
+    get bitcoinAnchorPublicationRecords() { return this._bitcoinAnchorPublicationRecords; }
 
     // The count of PUBLICATION-shaped facts this archive holds — an IPFS
     // publish and a Bitcoin broadcast attempt each name "the underlying
     // thing was published," one domain apiece. Never combined with
     // `observationCount` into one number.
+    //
+    // DELIBERATELY UNCHANGED BY 0.8.80. `bitcoinAnchorPublicationRecords`
+    // is a durable IDENTITY record, not a repeatable "this got published"
+    // observation the way an IPFS publish or a Bitcoin broadcast attempt
+    // is — folding it into this count would blur exactly the distinction
+    // this milestone exists to draw. See
+    // `bitcoinAnchorPublicationRecordCount` below for its own, entirely
+    // separate count.
     get publicationCount() {
         return this._ipfsPublicationRecords.length + this._bitcoinBroadcastRecords.length;
+    }
+
+    // The count of durable Bitcoin anchor PUBLICATION IDENTITY records this
+    // archive holds — never combined with `publicationCount` or
+    // `observationCount`, and never treated as a measure of how many of
+    // them were ever confirmed, broadcast successfully, or observed at
+    // all. See application/BitcoinAnchorPublicationRecord.js's own header.
+    get bitcoinAnchorPublicationRecordCount() {
+        return this._bitcoinAnchorPublicationRecords.length;
     }
 
     // The count of OBSERVATION-shaped facts this archive holds — every
@@ -173,7 +213,8 @@ export class PublicationObservationArchive {
             ipfsContentVerificationObservationsByRecordIndex: this._ipfsContentVerificationObservationsByRecordIndex,
             bitcoinBroadcastRecords: this._bitcoinBroadcastRecords,
             bitcoinConfirmationObservationsByAnchorId: this._bitcoinConfirmationObservationsByAnchorId,
-            bitcoinContentProofObservationsByAnchorId: this._bitcoinContentProofObservationsByAnchorId
+            bitcoinContentProofObservationsByAnchorId: this._bitcoinContentProofObservationsByAnchorId,
+            bitcoinAnchorPublicationRecords: this._bitcoinAnchorPublicationRecords
         };
     }
 
@@ -281,6 +322,24 @@ export class PublicationObservationArchive {
         });
     }
 
+    // Appends `record` (an application/BitcoinAnchorPublicationRecord.js
+    // instance) and returns a NEW archive. This is the ONE durable write
+    // path for Bitcoin anchor publication IDENTITY — see application/
+    // CreateBitcoinAnchorPublicationRecordUseCase.js for the one place
+    // this codebase constructs a record before appending it here. A
+    // missing/falsy `record` is a no-op, mirroring every other appendXxx()
+    // method's identical tolerance. Never deduplicates, never merges by
+    // `contentHash` or `txid`, never replaces a previous record for the
+    // same `anchorId` — see application/
+    // BitcoinAnchorPublicationRecordHistory.js's own header.
+    appendBitcoinAnchorPublicationRecord(record) {
+        if (!record) return this;
+        return new PublicationObservationArchive({
+            ...this._fields(),
+            bitcoinAnchorPublicationRecords: appendBitcoinAnchorPublicationRecordHistoryEntry(this._bitcoinAnchorPublicationRecords, record)
+        });
+    }
+
     // Maps `bitcoinBroadcastRecords` into the `{ recordIndex, anchorId,
     // broadcastedAt, txid, broadcast: { state, txid, reason } }` shape
     // application/PublicationObservationTimelineView.js's own
@@ -328,7 +387,8 @@ export class PublicationObservationArchive {
             bitcoinContentProofObservationsByAnchorId: mapValues(
                 this._bitcoinContentProofObservationsByAnchorId,
                 (observations) => observations.map(serializeObservation)
-            )
+            ),
+            bitcoinAnchorPublicationRecords: this._bitcoinAnchorPublicationRecords.map((record) => record.toJSON())
         };
     }
 
@@ -382,7 +442,8 @@ export class PublicationObservationArchive {
             bitcoinContentProofObservationsByAnchorId: mapValues(
                 validated.bitcoinContentProofObservationsByAnchorId,
                 (observations) => observations.map(deserializeObservation)
-            )
+            ),
+            bitcoinAnchorPublicationRecords: validated.bitcoinAnchorPublicationRecords.map((record) => BitcoinAnchorPublicationRecord.fromJSON(record))
         });
     }
 }
@@ -422,6 +483,7 @@ const BITCOIN_BROADCAST_RECORD_FIELDS = ['recordIndex', 'anchorId', 'txid', 'sta
 const IPFS_VERIFICATION_OBSERVATION_FIELDS = ['state', 'contentHash', 'locator', 'reason', 'observedAt'];
 const BITCOIN_CONFIRMATION_OBSERVATION_FIELDS = ['state', 'txid', 'blockHash', 'blockHeight', 'confirmationCount', 'reason', 'observedAt'];
 const BITCOIN_CONTENT_PROOF_OBSERVATION_FIELDS = ['state', 'contentHash', 'reason', 'observedAt'];
+const BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS = ['anchorId', 'contentHash', 'txid', 'network', 'createdAt'];
 
 function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -462,6 +524,17 @@ function validateBitcoinBroadcastRecord(record) {
     return record;
 }
 
+function validateBitcoinAnchorPublicationRecord(record) {
+    if (!isPlainObject(record) || !hasOnlyKeys(record, BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS)) return null;
+    if (!BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS.every((key) => key in record)) return null;
+    if (typeof record.anchorId !== 'string' || !record.anchorId) return null;
+    if (typeof record.contentHash !== 'string' || !record.contentHash) return null;
+    if (typeof record.txid !== 'string' || !record.txid) return null;
+    if (typeof record.network !== 'string' || !record.network) return null;
+    if (!isValidTimestamp(record.createdAt)) return null;
+    return record;
+}
+
 function validateArray(value, itemValidator) {
     if (!Array.isArray(value)) return null;
     const validated = [];
@@ -490,7 +563,8 @@ const TOP_LEVEL_FIELDS = [
     'ipfsContentVerificationObservationsByRecordIndex',
     'bitcoinBroadcastRecords',
     'bitcoinConfirmationObservationsByAnchorId',
-    'bitcoinContentProofObservationsByAnchorId'
+    'bitcoinContentProofObservationsByAnchorId',
+    'bitcoinAnchorPublicationRecords'
 ];
 
 function validateArchiveJSON(json) {
@@ -519,11 +593,15 @@ function validateArchiveJSON(json) {
     );
     if (!bitcoinContentProofObservationsByAnchorId) return null;
 
+    const bitcoinAnchorPublicationRecords = validateArray(json.bitcoinAnchorPublicationRecords, validateBitcoinAnchorPublicationRecord);
+    if (!bitcoinAnchorPublicationRecords) return null;
+
     return {
         ipfsPublicationRecords,
         ipfsContentVerificationObservationsByRecordIndex,
         bitcoinBroadcastRecords,
         bitcoinConfirmationObservationsByAnchorId,
-        bitcoinContentProofObservationsByAnchorId
+        bitcoinContentProofObservationsByAnchorId,
+        bitcoinAnchorPublicationRecords
     };
 }
