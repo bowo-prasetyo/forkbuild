@@ -29971,3 +29971,149 @@ its own explicit identity/conflict model; an overall Bitcoin-anchor verdict
 of any kind; and explicit Bitcoin ↔ IPFS content-hash reconciliation — each
 its own, separately sized piece of work, exactly like every "Deliberately
 excluded" list in this document before it.
+
+## 0.8.84 — Durable Publication Archive Fingerprint
+
+0.8.82 made a `PublicationObservationArchive` portable — it can leave one
+browser and re-enter another. 0.8.83 taught that portable archive to say
+WHERE each fact it holds entered it. Neither ever answered a third,
+simpler question a person asks the moment an archive becomes portable:
+once this archive has left the browser, how does a person tell whether
+what came back is the SAME durable archive? Today they cannot — two
+archives that look the same in the UI have no shared, comparable identity.
+This milestone adds exactly that, and nothing more:
+
+```text
+PublicationObservationArchive
+        │  toJSON()                                (0.8.75, unchanged)
+        ▼
+   { six factual collections, six provenance collections,
+     archiveImportEvents }
+        │
+        │  THIS MILESTONE — strip archiveImportEvents, hash the rest
+        ▼
+fingerprintPublicationObservationArchive()
+        │
+        ▼
+   a 64-character lowercase SHA-256 hex digest
+```
+
+**AN ARCHIVE FINGERPRINT IDENTIFIES THE EXACT DURABLE FACTS REPRESENTED BY
+AN ARCHIVE; IT DOES NOT AUTHENTICATE THEIR ORIGIN OR ESTABLISH THEIR TRUTH
+— THE FLAGSHIP INVARIANT.** Two archives fingerprint identically if and
+only if their canonical content is byte-identical. That is ALL a matching
+fingerprint means — never "verified," "authentic," or "trusted." See
+application/PublicationObservationArchiveFingerprint.js's own header, and
+docs/Principles.md, "An Archive Fingerprint Identifies Durable Contents;
+It Does Not Establish Their Truth Or Origin (0.8.84)."
+
+**REUSES `toJSON()`'S OWN CANONICAL SERIALIZATION — NO SECOND SCHEMA.** No
+`toFingerprintJSON()`, no competing field order, no second notion of "the
+archive's own shape." `application/PublicationObservationArchive.js`'s own
+`toJSON()` already serializes deterministically; this milestone's only job
+is to hash exactly that output, minus one field.
+
+**EXCLUDES `archiveImportEvents` — INGESTION METADATA, NOT FACTUAL
+CONTENT.** `archiveImportEvents` records WHEN this replica happened to
+import an archive — a fact about this replica's own history with the
+archive, never about the durable publication facts it represents. Two
+replicas holding identical facts and identical provenance, but that
+imported them at different moments or a different number of times, still
+fingerprint identically. Every other field `toJSON()` produces — all six
+factual collections AND all six parallel provenance collections —
+participates unchanged.
+
+**PROVENANCE IS DELIBERATELY INCLUDED.** 0.8.83 made provenance itself
+durable archive data — an archive whose facts are `IMPORTED` is not the
+same durable archive as one whose identical-looking facts are `LOCAL`, so
+their fingerprints correctly differ, even though `application/
+BitcoinAnchorDurableEvidenceView.js`'s own reconstructed evidence and
+`application/PublicationObservationArchiveView.js`'s own cross-domain
+summary stay byte-identical between them (0.8.83's own invariant,
+untouched). See this milestone's own flagship test, Section B.
+
+**SYNCHRONOUS, PURE, DETERMINISTIC, SELF-CONTAINED.** SHA-256 is
+implemented from first principles, right in application/
+PublicationObservationArchiveFingerprint.js, rather than through the
+browser's own Promise-only `crypto.subtle.digest()` — a fingerprint
+computed for display alongside every other synchronous `describeXxx()`
+projection in this codebase has no honest use for an asynchronous one.
+This is DELIBERATELY DUPLICATED from anchoring/
+BitcoinAnchorSignedPsbtFinalizer.js's own from-scratch SHA-256, never
+imported from it — the identical self-containment every anchoring/ class
+already holds one directory over, extended here to application/ for the
+first time. The digest was cross-checked against Node's own
+`crypto.createHash('sha256')` while authoring the milestone's own tests —
+not merely self-consistent, but independently correct.
+
+New files:
+- `application/PublicationObservationArchiveFingerprint.js` — new;
+  `PublicationObservationArchiveFingerprintAlgorithm` (`'SHA-256'`) and
+  `fingerprintPublicationObservationArchive(archive)` — throws for a
+  non-`PublicationObservationArchive` input, mirroring application/
+  PublicationObservationArchiveExport.js's own
+  `exportPublicationObservationArchive()`. Contains a self-contained,
+  from-scratch SHA-256 implementation.
+- `application/PublicationObservationArchiveFingerprintView.js` — new;
+  `describePublicationObservationArchiveFingerprint(archive)` — a pure
+  projection returning `{ fingerprint, algorithm }`; a non-archive input
+  never throws, degrading to `PublicationObservationArchive.empty()`'s own
+  fingerprint, mirroring every other `describeXxx(archive)` projection in
+  this codebase.
+
+Changed:
+- `ui/views/DecentralizedPublicationsView.js` — a new "Archive
+  Fingerprint" card, alongside the existing "Publication Archive" (0.8.82)
+  and "Archive Provenance" (0.8.83) cards: the SHA-256 digest and a "Copy
+  Fingerprint" button, reusing ui/views/PeerConnectionsView.js's own
+  `copyText()`/`copiedKey` clipboard pattern, scoped to this one value.
+  Comparing a fingerprint against a second archive or a pasted value is
+  NOT built — see "Deliberately excluded" below.
+
+New tests:
+- `tests/PublicationObservationArchiveFingerprint.test.js` — the flagship
+  scenario described above (a replica holding a mix of LOCAL/IMPORTED
+  facts and multiple archiveImportEvents restores, via the identical
+  `fromJSON(toJSON())` round trip storage/
+  LocalStoragePublicationObservationArchive.js already performs, into a
+  fresh replica with a byte-identical fingerprint; a new local fact
+  afterward changes it; the SEPARATE cross-replica `importPublicationObservationArchive()`
+  boundary, which 0.8.83 already established always re-stamps provenance
+  to `IMPORTED`, correctly produces a different fingerprint instead), plus:
+  identical facts under different provenance fingerprint differently while
+  evidence/timelines stay byte-identical; archiveImportEvents is excluded
+  regardless of import time or count; known SHA-256 vectors independently
+  computed via Node's own `crypto`, proving correctness rather than mere
+  self-consistency; determinism and non-mutation; every single new or
+  duplicate fact changes the fingerprint; a non-instance input throws at
+  the algorithm level but never through the view; format is always exactly
+  64 lowercase hex characters; and no trust/confidence/validity/verified/
+  authentic vocabulary exists anywhere near the fingerprint view.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Fingerprint comparison — pasted, or against a second imported
+  archive.** The UI displays exactly one fingerprint, for the current
+  archive, and nothing to compare it against. A later, separately sized
+  milestone can add that; this one only establishes the digest itself.
+- **Signing, public/private keys, or any cryptographic identity beyond a
+  content digest.** A fingerprint is not a signature and proves nothing
+  about who produced an archive — only what bytes it currently holds.
+- **"Trusted archive," "verified archive," or any vocabulary implying a
+  matching fingerprint means the facts are correct.** See this milestone's
+  own flagship invariant — the entire point of the milestone.
+- **Remote notarization or blockchain anchoring of the fingerprint
+  itself.** Computing it stays entirely local, synchronous, and
+  network-free, exactly like every `describeXxx()` projection before it.
+- **Automatic fingerprint publication, automatic comparison, or automatic
+  synchronization between replicas.** A person reads and copies a
+  fingerprint explicitly; nothing here acts on their behalf.
+- **Archive merging.** Unrelated to fingerprinting — 0.8.82's own
+  "Deliberately excluded" restraint stands, unchanged.
+
+What's left, and deliberately unbuilt: fingerprint comparison UX (pasting
+a second fingerprint, or a second archive, to check against the current
+one); archive merging, with its own explicit identity/conflict model; an
+overall Bitcoin-anchor verdict of any kind; and explicit Bitcoin ↔ IPFS
+content-hash reconciliation — each its own, separately sized piece of
+work, exactly like every "Deliberately excluded" list in this document
+before it.
