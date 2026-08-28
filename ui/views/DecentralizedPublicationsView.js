@@ -5681,13 +5681,21 @@ export default {
                     return BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES[item.state] || 'peer-badge--pending';
                 case PublicationObservationTimelineEntryKind.BITCOIN_CONTENT_PROOF:
                     return BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES[item.state] || 'peer-badge--pending';
+                // 0.8.98 — Base Transaction Inclusion Observation Timeline.
+                // Reuses BASE_TRANSACTION_INCLUSION_BADGE_CLASSES (0.8.96)
+                // unchanged — the identical badge a lone "Observe
+                // Transaction" click already earns, now also read here.
+                case PublicationObservationTimelineEntryKind.BASE_TRANSACTION_INCLUSION:
+                    return BASE_TRANSACTION_INCLUSION_BADGE_CLASSES[item.state] || 'peer-badge--pending';
                 default:
                     return 'peer-badge--pending';
             }
         }
 
         function crossDomainPublicationObservationTimelineEntryDomainLabel(item) {
-            return item.domain === PublicationObservationTimelineDomain.BITCOIN ? 'Bitcoin' : 'IPFS';
+            if (item.domain === PublicationObservationTimelineDomain.BITCOIN) return 'Bitcoin';
+            if (item.domain === PublicationObservationTimelineDomain.BASE) return 'Base';
+            return 'IPFS';
         }
 
         // 0.8.11 — Explicit External Anchoring UX. The one place this
@@ -6588,7 +6596,16 @@ export default {
                  action on this page that discards a persisted fact;
                  publishing, verifying, broadcasting, or observing a
                  confirmation elsewhere on this page only ever ADDS to
-                 this archive, automatically, never removes from it. -->
+                 this archive, automatically, never removes from it.
+
+                 0.8.98 — Base Transaction Inclusion Observation Timeline.
+                 The "Archived Observation Timeline" disclosure below now
+                 also narrates every durably archived Base transaction
+                 inclusion observation (0.8.97), on this SAME list,
+                 chronologically interleaved with IPFS and Bitcoin facts —
+                 never a separate "Base Timeline" section. See
+                 application/PublicationObservationArchiveView.js's own
+                 0.8.98 header. -->
             <div class="identity-mgmt-card">
                 <div class="identity-mgmt-card-header">
                     <span class="identity-mgmt-name">Observation Archive</span>

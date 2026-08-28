@@ -38,17 +38,27 @@ import { describePublicationObservationTimeline } from './PublicationObservation
 // "The UI Displays Observations; It Does Not Turn Them Into A Verdict
 // (0.8.57)," held here once more for an archive's own summary counts.
 //
-// 0.8.97 — `baseTransactionInclusionCount` IS A SUMMARY COUNT ONLY; THE
-// `entries` TIMELINE BELOW STAYS UNTOUCHED. Base transaction inclusion
-// observations are NOT folded into `timeline`/`entries` below — this
-// milestone deliberately answers only "can a Base observation survive
-// restart and export/import," never "does it participate in the unified
-// chronological timeline." See application/PublicationObservationArchive.js's
-// own 0.8.97 header, and docs/Roadmap.md, 0.8.97, "Deliberately excluded,"
-// for why `application/PublicationObservationTimelineView.js`'s own
-// `describePublicationObservationTimeline()` is called with the identical
-// IPFS/Bitcoin arguments it already took before this milestone — a Base
-// collection intentionally never reaches it.
+// 0.8.97 — `baseTransactionInclusionCount` is a summary count over the
+// archive's own `baseTransactionInclusionObservationsByTransactionHash`
+// collection, mirroring `bitcoinConfirmationCount`.
+//
+// 0.8.98 — Base Transaction Inclusion Observation Timeline. `timeline`/
+// `entries` below now ALSO compose the archive's own
+// `baseTransactionInclusionObservationsByTransactionHash` collection,
+// through `describePublicationObservationTimeline()`'s new, THIRD `base`
+// argument — the identical "call the existing projection unchanged, over
+// one more of the archive's own already-durable collections" composition
+// this file already performs for the six IPFS/Bitcoin collections above.
+// No new projection algorithm is added here or in that file; this file's
+// own new work is exactly the same two things 0.8.75's own header already
+// named for the five collections before it: reading one more of the
+// archive's own collections, and handing it to the existing function
+// unchanged. `baseTransactionInclusionCount` above is UNAFFECTED — it
+// remains its own, separate summary count, never combined with
+// `entryCount`. See application/PublicationObservationArchive.js's own
+// 0.8.97 header for why this required no archive schema change: the data
+// this milestone projects already existed, durably, before this milestone
+// began.
 //
 // A NON-ARCHIVE INPUT NEVER THROWS. `describePublicationObservationArchive()`
 // treats anything that is not a genuine `PublicationObservationArchive`
@@ -80,6 +90,9 @@ export function describePublicationObservationArchive(archive) {
             anchors: safeArchive.toBitcoinAnchors(),
             confirmationHistoriesByAnchorId: safeArchive.bitcoinConfirmationObservationsByAnchorId,
             proofObservationsByAnchorId: safeArchive.bitcoinContentProofObservationsByAnchorId
+        },
+        base: {
+            observationsByTransactionHash: safeArchive.baseTransactionInclusionObservationsByTransactionHash
         }
     });
 
