@@ -5,12 +5,14 @@ import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from './Bitcoi
 import { BitcoinAnchorPublicationRecord } from './BitcoinAnchorPublicationRecord.js';
 import { appendBitcoinAnchorPublicationRecordHistoryEntry } from './BitcoinAnchorPublicationRecordHistory.js';
 import { appendBaseTransactionInclusionObservationHistoryEntry } from './BaseTransactionInclusionObservationHistory.js';
+import { BaseAnchorPublicationRecord } from './BaseAnchorPublicationRecord.js';
+import { appendBaseAnchorPublicationRecordHistoryEntry } from './BaseAnchorPublicationRecordHistory.js';
 import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin
 } from './PublicationObservationArchiveProvenance.js';
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 // 0.8.75 — Durable Publication Observation Records.
 //
@@ -285,6 +287,52 @@ const SCHEMA_VERSION = 4;
 // survive application restart and archive export/import? Whether Base
 // observations participate in the unified chronological timeline is real,
 // separately sized future work.
+//
+// 0.8.99 — Durable Base Publication Identity Record. Adds an EIGHTH,
+// independent collection: `baseAnchorPublicationRecords` — an append-only
+// sequence of application/BaseAnchorPublicationRecord.js instances,
+// mirroring `bitcoinAnchorPublicationRecords` (0.8.80) exactly, one chain
+// over: durable IDENTITY (`contentHash`, `txid`, `network`, `createdAt`),
+// never an observation and never a verdict. It is never merged into, keyed
+// by, or cross-referenced against `baseTransactionInclusionObservationsByTransactionHash`
+// (0.8.97) — a publication record establishes identity; that collection
+// establishes what was subsequently observed about it, exactly the
+// separation `bitcoinAnchorPublicationRecords` already holds toward
+// `bitcoinConfirmationObservationsByAnchorId`. See application/
+// BaseAnchorPublicationRecord.js's own header for the full rationale, and
+// for why this record carries `txid` alone as its own identity key —
+// never a second, Bitcoin-style `anchorId` Base's own observation
+// vocabulary never introduced.
+//
+// `appendBaseAnchorPublicationRecord()` REUSES `application/
+// BaseAnchorPublicationRecordHistory.js`'s OWN, UNCHANGED
+// `appendBaseAnchorPublicationRecordHistoryEntry()` — mirroring exactly
+// how `appendBitcoinAnchorPublicationRecord()` above already reuses
+// `appendBitcoinAnchorPublicationRecordHistoryEntry()`. This class invents
+// no new identity-construction behavior of its own.
+//
+// THIS MILESTONE BUMPS SCHEMA_VERSION TO 5 — a payload persisted by 0.8.75
+// through 0.8.98 (schemaVersion 4) degrades to
+// `PublicationObservationArchive.empty()` on load, the identical,
+// already-tested "wrong schemaVersion" behavior this class's own
+// `fromJSON()` has held since 0.8.75; no migration path is added, because
+// none of this class's own prior principles ever promised one.
+//
+// `publicationCount`/`observationCount` STAY UNCHANGED — `bitcoinAnchorPublicationRecordCount`'s
+// OWN 0.8.80 RESTRAINT, HELD HERE ONCE MORE. A `baseAnchorPublicationRecords`
+// entry is a durable IDENTITY record, exactly like a
+// `bitcoinAnchorPublicationRecords` entry, never a repeatable "this got
+// published" or "this got observed" fact — folding it into either count
+// would blur exactly the distinction 0.8.80 already drew. See
+// `baseAnchorPublicationRecordCount` below for its own, entirely separate
+// count.
+//
+// PROVENANCE EXTENDS IDENTICALLY — an EIGHTH parallel provenance
+// collection, `baseAnchorPublicationRecordProvenance`, holds one
+// `LOCAL`/`IMPORTED` tag per record at the identical array position,
+// exactly like `bitcoinAnchorPublicationRecordProvenance` already does.
+// `withUniformProvenance()` now also restamps this eighth collection
+// uniformly; nothing else about that method changes.
 export class PublicationObservationArchive {
     constructor({
         ipfsPublicationRecords = [],
@@ -301,6 +349,8 @@ export class PublicationObservationArchive {
         bitcoinAnchorPublicationRecordProvenance = [],
         baseTransactionInclusionObservationsByTransactionHash = {},
         baseTransactionInclusionObservationProvenanceByTransactionHash = {},
+        baseAnchorPublicationRecords = [],
+        baseAnchorPublicationRecordProvenance = [],
         archiveImportEvents = []
     } = {}) {
         this._ipfsPublicationRecords = Object.freeze([...ipfsPublicationRecords]);
@@ -341,6 +391,8 @@ export class PublicationObservationArchive {
             Object.fromEntries(Object.entries(baseTransactionInclusionObservationProvenanceByTransactionHash)
                 .map(([transactionHash, origins]) => [transactionHash, Object.freeze([...origins])]))
         );
+        this._baseAnchorPublicationRecords = Object.freeze([...baseAnchorPublicationRecords]);
+        this._baseAnchorPublicationRecordProvenance = Object.freeze([...baseAnchorPublicationRecordProvenance]);
         this._archiveImportEvents = Object.freeze([...archiveImportEvents]);
         Object.freeze(this);
     }
@@ -359,6 +411,8 @@ export class PublicationObservationArchive {
     get bitcoinAnchorPublicationRecordProvenance() { return this._bitcoinAnchorPublicationRecordProvenance; }
     get baseTransactionInclusionObservationsByTransactionHash() { return this._baseTransactionInclusionObservationsByTransactionHash; }
     get baseTransactionInclusionObservationProvenanceByTransactionHash() { return this._baseTransactionInclusionObservationProvenanceByTransactionHash; }
+    get baseAnchorPublicationRecords() { return this._baseAnchorPublicationRecords; }
+    get baseAnchorPublicationRecordProvenance() { return this._baseAnchorPublicationRecordProvenance; }
     get archiveImportEvents() { return this._archiveImportEvents; }
 
     // The static schema version this class currently serializes to and
@@ -391,6 +445,18 @@ export class PublicationObservationArchive {
     // all. See application/BitcoinAnchorPublicationRecord.js's own header.
     get bitcoinAnchorPublicationRecordCount() {
         return this._bitcoinAnchorPublicationRecords.length;
+    }
+
+    // The count of durable Base PUBLICATION IDENTITY records this archive
+    // holds — the identical, entirely separate count application/
+    // BitcoinAnchorPublicationRecord.js's own `bitcoinAnchorPublicationRecordCount`
+    // already holds, one chain over. Never combined with `publicationCount`,
+    // `observationCount`, or `bitcoinAnchorPublicationRecordCount`, and
+    // never treated as a measure of how many of them were ever included in
+    // a block, broadcast successfully, or observed at all. See application/
+    // BaseAnchorPublicationRecord.js's own header.
+    get baseAnchorPublicationRecordCount() {
+        return this._baseAnchorPublicationRecords.length;
     }
 
     // The count of OBSERVATION-shaped facts this archive holds — every
@@ -439,7 +505,8 @@ export class PublicationObservationArchive {
             + countOriginMatchesByKey(this._bitcoinConfirmationObservationProvenanceByAnchorId, origin)
             + countOriginMatchesByKey(this._bitcoinContentProofObservationProvenanceByAnchorId, origin)
             + countOriginMatches(this._bitcoinAnchorPublicationRecordProvenance, origin)
-            + countOriginMatchesByKey(this._baseTransactionInclusionObservationProvenanceByTransactionHash, origin);
+            + countOriginMatchesByKey(this._baseTransactionInclusionObservationProvenanceByTransactionHash, origin)
+            + countOriginMatches(this._baseAnchorPublicationRecordProvenance, origin);
     }
 
     _fields() {
@@ -458,6 +525,8 @@ export class PublicationObservationArchive {
             bitcoinAnchorPublicationRecordProvenance: this._bitcoinAnchorPublicationRecordProvenance,
             baseTransactionInclusionObservationsByTransactionHash: this._baseTransactionInclusionObservationsByTransactionHash,
             baseTransactionInclusionObservationProvenanceByTransactionHash: this._baseTransactionInclusionObservationProvenanceByTransactionHash,
+            baseAnchorPublicationRecords: this._baseAnchorPublicationRecords,
+            baseAnchorPublicationRecordProvenance: this._baseAnchorPublicationRecordProvenance,
             archiveImportEvents: this._archiveImportEvents
         };
     }
@@ -640,10 +709,30 @@ export class PublicationObservationArchive {
         });
     }
 
+    // 0.8.99 — Appends `record` (an application/BaseAnchorPublicationRecord.js
+    // instance) and returns a NEW archive. This is the ONE durable write
+    // path for Base publication IDENTITY — mirroring
+    // `appendBitcoinAnchorPublicationRecord()` above exactly, one chain
+    // over. See application/CreateBaseAnchorPublicationRecordUseCase.js for
+    // the one place this codebase constructs a record before appending it
+    // here. A missing/falsy `record` is a no-op, mirroring every other
+    // appendXxx() method's identical tolerance. Never deduplicates, never
+    // merges by `contentHash` or `txid`, never replaces a previous record
+    // for the same `txid` — see application/
+    // BaseAnchorPublicationRecordHistory.js's own header.
+    appendBaseAnchorPublicationRecord(record, origin = PublicationObservationArchiveProvenanceOrigin.LOCAL) {
+        if (!record || !isValidPublicationObservationArchiveProvenanceOrigin(origin)) return this;
+        return new PublicationObservationArchive({
+            ...this._fields(),
+            baseAnchorPublicationRecords: appendBaseAnchorPublicationRecordHistoryEntry(this._baseAnchorPublicationRecords, record),
+            baseAnchorPublicationRecordProvenance: Object.freeze([...this._baseAnchorPublicationRecordProvenance, origin])
+        });
+    }
+
     // Replaces EVERY provenance entry this archive holds — across all
-    // seven factual collections — with `origin`, uniformly.
+    // EIGHT factual collections — with `origin`, uniformly.
     // `archiveImportEvents` and every factual collection are untouched;
-    // only the seven PARALLEL provenance collections change. An invalid
+    // only the eight PARALLEL provenance collections change. An invalid
     // `origin` is a no-op. See this file's own header for why application/
     // PublicationObservationArchiveExport.js's own
     // `importPublicationObservationArchive()` is the one caller expected
@@ -671,7 +760,8 @@ export class PublicationObservationArchive {
             baseTransactionInclusionObservationProvenanceByTransactionHash: mapValues(
                 this._baseTransactionInclusionObservationProvenanceByTransactionHash,
                 (origins) => Object.freeze(origins.map(() => origin))
-            )
+            ),
+            baseAnchorPublicationRecordProvenance: Object.freeze(this._baseAnchorPublicationRecordProvenance.map(() => origin))
         });
     }
 
@@ -770,6 +860,8 @@ export class PublicationObservationArchive {
                 this._baseTransactionInclusionObservationProvenanceByTransactionHash,
                 (origins) => [...origins]
             ),
+            baseAnchorPublicationRecords: this._baseAnchorPublicationRecords.map((record) => record.toJSON()),
+            baseAnchorPublicationRecordProvenance: [...this._baseAnchorPublicationRecordProvenance],
             archiveImportEvents: this._archiveImportEvents.map(serializeArchiveImportEvent)
         };
     }
@@ -854,6 +946,8 @@ export class PublicationObservationArchive {
                 (observations) => observations.map(deserializeObservation)
             ),
             baseTransactionInclusionObservationProvenanceByTransactionHash: validated.baseTransactionInclusionObservationProvenanceByTransactionHash,
+            baseAnchorPublicationRecords: validated.baseAnchorPublicationRecords.map((record) => BaseAnchorPublicationRecord.fromJSON(record)),
+            baseAnchorPublicationRecordProvenance: validated.baseAnchorPublicationRecordProvenance,
             archiveImportEvents: validated.archiveImportEvents.map(deserializeArchiveImportEvent)
         });
     }
@@ -920,6 +1014,7 @@ const BITCOIN_CONFIRMATION_OBSERVATION_FIELDS = ['state', 'txid', 'blockHash', '
 const BITCOIN_CONTENT_PROOF_OBSERVATION_FIELDS = ['state', 'contentHash', 'reason', 'observedAt'];
 const BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS = ['anchorId', 'contentHash', 'txid', 'network', 'createdAt'];
 const BASE_TRANSACTION_INCLUSION_OBSERVATION_FIELDS = ['state', 'txid', 'blockHash', 'blockNumber', 'transactionIndex', 'confirmationCount', 'reason', 'observedAt'];
+const BASE_ANCHOR_PUBLICATION_RECORD_FIELDS = ['contentHash', 'txid', 'network', 'createdAt'];
 
 function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -964,6 +1059,16 @@ function validateBitcoinAnchorPublicationRecord(record) {
     if (!isPlainObject(record) || !hasOnlyKeys(record, BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS)) return null;
     if (!BITCOIN_ANCHOR_PUBLICATION_RECORD_FIELDS.every((key) => key in record)) return null;
     if (typeof record.anchorId !== 'string' || !record.anchorId) return null;
+    if (typeof record.contentHash !== 'string' || !record.contentHash) return null;
+    if (typeof record.txid !== 'string' || !record.txid) return null;
+    if (typeof record.network !== 'string' || !record.network) return null;
+    if (!isValidTimestamp(record.createdAt)) return null;
+    return record;
+}
+
+function validateBaseAnchorPublicationRecord(record) {
+    if (!isPlainObject(record) || !hasOnlyKeys(record, BASE_ANCHOR_PUBLICATION_RECORD_FIELDS)) return null;
+    if (!BASE_ANCHOR_PUBLICATION_RECORD_FIELDS.every((key) => key in record)) return null;
     if (typeof record.contentHash !== 'string' || !record.contentHash) return null;
     if (typeof record.txid !== 'string' || !record.txid) return null;
     if (typeof record.network !== 'string' || !record.network) return null;
@@ -1054,6 +1159,8 @@ const TOP_LEVEL_FIELDS = [
     'bitcoinAnchorPublicationRecordProvenance',
     'baseTransactionInclusionObservationsByTransactionHash',
     'baseTransactionInclusionObservationProvenanceByTransactionHash',
+    'baseAnchorPublicationRecords',
+    'baseAnchorPublicationRecordProvenance',
     'archiveImportEvents'
 ];
 
@@ -1113,6 +1220,11 @@ function validateArchiveJSON(json) {
     );
     if (!baseTransactionInclusionObservationProvenanceByTransactionHash) return null;
 
+    const baseAnchorPublicationRecords = validateArray(json.baseAnchorPublicationRecords, validateBaseAnchorPublicationRecord);
+    if (!baseAnchorPublicationRecords) return null;
+    const baseAnchorPublicationRecordProvenance = validateProvenanceArray(json.baseAnchorPublicationRecordProvenance, baseAnchorPublicationRecords.length);
+    if (!baseAnchorPublicationRecordProvenance) return null;
+
     const archiveImportEvents = validateArray(json.archiveImportEvents, validateArchiveImportEvent);
     if (!archiveImportEvents) return null;
 
@@ -1131,6 +1243,8 @@ function validateArchiveJSON(json) {
         bitcoinAnchorPublicationRecordProvenance,
         baseTransactionInclusionObservationsByTransactionHash,
         baseTransactionInclusionObservationProvenanceByTransactionHash,
+        baseAnchorPublicationRecords,
+        baseAnchorPublicationRecordProvenance,
         archiveImportEvents
     };
 }

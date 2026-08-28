@@ -71,16 +71,17 @@ import { describePublicationObservationArchiveFingerprint } from './PublicationO
 //
 // `bitcoinAnchorIds`/`ipfsPublicationRecordIndexes`/`baseTransactionHashes`
 // ARE IDENTITY LISTS, NOT EVIDENCE. They name which `anchorId`s, which
-// IPFS record positions, and (0.8.97) which Base `txid`s this archive
-// holds ANY fact for — the same explicit-identity discipline application/
-// BitcoinAnchorObservationArchiveView.js's own header already holds
-// (anchorId, never contentHash or txid) — extended here to also include
-// application/BitcoinAnchorPublicationRecord.js's own identity records
-// (which that 0.8.79 file predates) and, one chain over, Base's own
-// `baseTransactionInclusionObservationsByTransactionHash` keys. None of
-// the three lists carries a confirmation count, a chain-placement
-// comparison, or a consistency finding; an inspection is a structural
-// index, not a derived evidence bundle.
+// IPFS record positions, and (0.8.97/0.8.99) which Base `txid`s this
+// archive holds ANY fact for — the same explicit-identity discipline
+// application/BitcoinAnchorObservationArchiveView.js's own header already
+// holds (anchorId, never contentHash or txid) — extended here to also
+// include application/BitcoinAnchorPublicationRecord.js's own identity
+// records (which that 0.8.79 file predates), Base's own
+// `baseTransactionInclusionObservationsByTransactionHash` keys (0.8.97),
+// and application/BaseAnchorPublicationRecord.js's own identity records
+// (0.8.99). None of the three lists carries a confirmation count, a
+// chain-placement comparison, or a consistency finding; an inspection is a
+// structural index, not a derived evidence bundle.
 //
 // THE RESULT IS A PLAIN, FROZEN, ONE-LEVEL DATA SHAPE — NEVER A NEW
 // DOMAIN OBJECT, NEVER ANOTHER DURABLE ARCHIVE HISTORY. Deliberately NOT a
@@ -170,6 +171,7 @@ function describeExternalArchiveInspection(archive) {
         bitcoinContentProofCount: summary.bitcoinContentProofCount,
         bitcoinAnchorPublicationRecordCount: archive.bitcoinAnchorPublicationRecordCount,
         baseTransactionInclusionObservationCount: summary.baseTransactionInclusionCount,
+        baseAnchorPublicationRecordCount: archive.baseAnchorPublicationRecordCount,
 
         localFactCount: provenance.localFactCount,
         importedFactCount: provenance.importedFactCount,
@@ -182,7 +184,7 @@ function describeExternalArchiveInspection(archive) {
 
         bitcoinAnchorIds: Object.freeze(collectBitcoinAnchorIds(archive)),
         ipfsPublicationRecordIndexes: Object.freeze(archive.ipfsPublicationRecords.map((record, index) => index)),
-        baseTransactionHashes: Object.freeze(Object.keys(archive.baseTransactionInclusionObservationsByTransactionHash))
+        baseTransactionHashes: Object.freeze(collectBaseTransactionHashes(archive))
     });
 }
 
@@ -213,6 +215,29 @@ function collectBitcoinAnchorIds(archive) {
     collect(Object.keys(archive.bitcoinContentProofObservationsByAnchorId));
     collect(archive.bitcoinAnchorPublicationRecords.map((record) => record.anchorId));
     return anchorIds;
+}
+
+// 0.8.99 — every distinct `txid` the archive holds ANY Base fact for — an
+// inclusion observation history (0.8.97) or a durable publication-identity
+// record — in first-seen order across those two collections, never
+// re-sorted. Mirrors `collectBitcoinAnchorIds()` above exactly, one chain
+// over Base's own already-established `txid`-only correlation key (see
+// application/BaseAnchorPublicationRecord.js's own header, "No `anchorId`
+// field").
+function collectBaseTransactionHashes(archive) {
+    const seen = new Set();
+    const txids = [];
+    function collect(ids) {
+        for (const txid of ids) {
+            if (!seen.has(txid)) {
+                seen.add(txid);
+                txids.push(txid);
+            }
+        }
+    }
+    collect(Object.keys(archive.baseTransactionInclusionObservationsByTransactionHash));
+    collect(archive.baseAnchorPublicationRecords.map((record) => record.txid));
+    return txids;
 }
 
 function parseJSONOrNull(text) {

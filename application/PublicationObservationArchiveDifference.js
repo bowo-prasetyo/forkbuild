@@ -22,8 +22,9 @@ import { fingerprintPublicationObservationArchive } from './PublicationObservati
 //                      │
 //                      ▼
 //   { currentFingerprint, externalFingerprint, same,
-//     seven collection differences (0.8.97 adds
-//     baseTransactionInclusionObservationsByTransactionHash), hasFactDifference,
+//     eight collection differences (0.8.97 adds
+//     baseTransactionInclusionObservationsByTransactionHash; 0.8.99 adds
+//     baseAnchorPublicationRecords), hasFactDifference,
 //     hasProvenanceDifference, importEvents }
 //
 // AN ARCHIVE DIFFERENCE DESCRIBES STRUCTURAL DIFFERENCES BETWEEN TWO
@@ -71,10 +72,11 @@ import { fingerprintPublicationObservationArchive } from './PublicationObservati
 // codebase already holds for it:
 //
 //   `ipfsPublicationRecords` / `bitcoinBroadcastRecords` /
-//   `bitcoinAnchorPublicationRecords` — array POSITION (this archive's own
-//   append-only history position — the identical meaning
-//   `ipfsPublicationRecords`' own `recordIndex` already carries, see
-//   application/PublicationObservationArchive.js's own header).
+//   `bitcoinAnchorPublicationRecords` / `baseAnchorPublicationRecords`
+//   (0.8.99) — array POSITION (this archive's own append-only history
+//   position — the identical meaning `ipfsPublicationRecords`' own
+//   `recordIndex` already carries, see application/
+//   PublicationObservationArchive.js's own header).
 //
 //   `ipfsContentVerificationObservationsByRecordIndex` — keyed by
 //   `recordIndex`, then array position within that key's own history.
@@ -202,6 +204,10 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         externalJSON.baseTransactionInclusionObservationsByTransactionHash, externalJSON.baseTransactionInclusionObservationProvenanceByTransactionHash,
         'transactionHash', (key) => key
     );
+    const baseAnchorPublicationRecords = diffPositionalCollection(
+        currentJSON.baseAnchorPublicationRecords, currentJSON.baseAnchorPublicationRecordProvenance,
+        externalJSON.baseAnchorPublicationRecords, externalJSON.baseAnchorPublicationRecordProvenance
+    );
 
     const collections = {
         ipfsPublicationRecords,
@@ -210,7 +216,8 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
         bitcoinConfirmationObservationsByAnchorId,
         bitcoinContentProofObservationsByAnchorId,
         bitcoinAnchorPublicationRecords,
-        baseTransactionInclusionObservationsByTransactionHash
+        baseTransactionInclusionObservationsByTransactionHash,
+        baseAnchorPublicationRecords
     };
 
     const hasFactDifference = Object.values(collections).some(
@@ -244,8 +251,9 @@ export function describePublicationObservationArchiveDifference(currentArchive, 
 }
 
 // Compares two ARRAY-shaped collections (`ipfsPublicationRecords`,
-// `bitcoinBroadcastRecords`, `bitcoinAnchorPublicationRecords`) by array
-// position — this archive's own append-only history position, per this
+// `bitcoinBroadcastRecords`, `bitcoinAnchorPublicationRecords`,
+// `baseAnchorPublicationRecords`) by array position — this archive's own
+// append-only history position, per this
 // file's own header. `currentFacts`/`externalFacts` are already-canonical
 // `toJSON()` output (plain, JSON-serializable objects); `currentProvenance`/
 // `externalProvenance` are the parallel origin-tag arrays at the identical

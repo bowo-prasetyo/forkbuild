@@ -32922,3 +32922,279 @@ feature to add to this timeline — it is what would make a Base transaction
 a durable ForkBuild PUBLICATION in the first place, mirroring
 `BitcoinAnchorPublicationRecord`. That deserves a focused architectural
 discussion of its own before any further Base milestone is built.
+
+## 0.8.99 — Durable Base Publication Identity Record
+
+0.8.98's own closing paragraph named the real gap left after Base's
+publication lifecycle became fully observable: nothing in this codebase
+ever said, in one durable place, "this particular Base publication attempt
+is THIS thing" — independently of whatever was subsequently observed
+about it. Bitcoin closed the identical gap at 0.8.80
+(`BitcoinAnchorPublicationRecord`), then 0.8.89 gave that identity a
+chain-independent projection (`BlockchainPublicationIdentity`). Base has
+had every concrete lifecycle stage since 0.8.90 — account observation,
+construction, review, signing, finalization, broadcast, inclusion
+observation, and (0.8.97) durable inclusion archival — but never its own
+identity record:
+
+```text
+Bitcoin publication
+    ↓
+BitcoinAnchorPublicationRecord    (0.8.80)
+    ↓
+BlockchainPublicationIdentity     (0.8.89)
+
+Base publication
+    ↓
+                    ????
+    ↓
+BlockchainPublicationIdentity     (0.8.89, reachable, unreached)
+```
+
+This milestone closes exactly that gap, and only that gap.
+
+**`application/BaseAnchorPublicationRecord.js` — MIRRORS
+`BitcoinAnchorPublicationRecord.js` CLOSELY, BUT IS NOT A GENERIC
+`AnchorPublicationRecord`.** Its identity is `{ contentHash, txid, network,
+createdAt }`, `blockchain` a computed `BlockchainKind.BASE` constant (never
+a stored field), and `toBlockchainPublicationIdentity()` projects `txid`
+onto `BlockchainPublicationIdentity`'s own `chainReference` slot — the
+identical projection `BitcoinAnchorPublicationRecord` already performs, one
+chain over. IDENTITY, NOT A VERDICT: no `included`, `confirmed`, `valid`,
+`trusted`, `safe`, `healthy`, `canonical`, or `status` field exists
+anywhere on it, or on anything this milestone adds — whether a Base
+publication was later included in a block, and whether that placement
+stayed stable, belongs entirely to `PublicationObservationArchive`'s own,
+separately kept `baseTransactionInclusionObservationsByTransactionHash`
+(0.8.96/0.8.97), never to this record.
+
+**NO `anchorId` FIELD — A DELIBERATE DIFFERENCE FROM BITCOIN, NOT AN
+OVERSIGHT.** `BitcoinAnchorPublicationRecord` carries both an `anchorId`
+(an arbitrary, caller-supplied correlation key) and a `txid`, because
+Bitcoin's own observation vocabulary (0.8.78 onward) already correlates
+every observation by `anchorId` alone. Base's own observation vocabulary
+never introduced an equivalent second key — `base/
+BaseTransactionInclusionObserver.js` (0.8.96) and the archive's own
+`baseTransactionInclusionObservationsByTransactionHash` (0.8.97) are both
+keyed by `txid` alone, by 0.8.96's own explicit design choice ("this class
+still names its own field `txid`, not `transactionHash`, purely to stay
+the SAME field name `application/BaseTransactionBroadcastView.js` already
+exposes"). This milestone holds that already-established Base convention
+rather than importing Bitcoin's own two-key shape where Base has never
+needed one — `txid` is this record's own correlation key, for identity and
+for lookup alike (`application/BaseAnchorPublicationRecordHistory.js`'s
+own `findBaseAnchorPublicationRecordByTxid()`).
+
+**THE TRANSACTION IDENTITY COMES FROM THE FINALIZED ARTIFACT, NEVER FROM
+THE BROADCASTER OR AN RPC LOOKUP.** `base/BaseSignedTransactionFinalizer.js`
+(0.8.94) already exposed `finalizedTransaction.transactionHash`, computed
+deterministically from the signed bytes themselves — no network call,
+before broadcast ever happens — so no change to that file, or to any
+finalization coordinator, was needed. `application/
+CreateBaseAnchorPublicationRecordUseCase.js` accepts that value as its own
+`txid` argument directly; it performs no RPC call, imports no `base/
+BaseJsonRpcClient.js`, and never "discovers" a transaction's identity from
+the network. The dependency stays exactly
+`finalized artifact -> publication identity`, never
+`publication identity -> RPC -> "discover" its transaction`.
+
+**CALL THIS AT SUCCESSFUL FINALIZATION, NEVER EARLIER** — the identical
+boundary `CreateBitcoinAnchorPublicationRecordUseCase` already holds.
+`ui/views/DecentralizedPublicationsView.js`'s own `finalizeBaseSignedTransaction()`
+mints the record the moment its own FINALIZED outcome is reached, never at
+construction, review, or signing, and never re-run automatically on a
+later broadcast attempt for the same finalized transaction — mirroring
+`finalizeBitcoinAnchorSignedPsbt()`'s own identical 0.8.80 wiring, one
+chain over. `FINALIZED` does not mean `BROADCASTED`, and certainly does
+not mean `INCLUDED` — the identical separation this codebase already holds
+for Bitcoin:
+
+```text
+Publication Record   = what publication transaction was created
+Broadcast Observation = what the network reported when submission occurred
+Inclusion Observation = what the chain was observed to contain later
+```
+
+**AN EIGHTH, INDEPENDENT ARCHIVE COLLECTION — NEVER MERGED INTO, KEYED BY,
+OR CROSS-REFERENCED AGAINST `baseTransactionInclusionObservationsByTransactionHash`.**
+`application/PublicationObservationArchive.js` gains
+`baseAnchorPublicationRecords`/`baseAnchorPublicationRecordProvenance`,
+mirroring `bitcoinAnchorPublicationRecords`/
+`bitcoinAnchorPublicationRecordProvenance` exactly:
+
+```text
+1. ipfsPublicationRecords
+2. ipfsContentVerificationObservations
+3. bitcoinBroadcastRecords
+4. bitcoinConfirmationObservations
+5. bitcoinContentProofObservations
+6. bitcoinAnchorPublicationRecords
+7. baseTransactionInclusionObservations
+8. baseAnchorPublicationRecords          (THIS MILESTONE)
+```
+
+A publication record establishes identity; the inclusion-observation
+collection establishes what was subsequently observed about it — the
+identical separation `bitcoinAnchorPublicationRecords` already holds
+toward `bitcoinConfirmationObservationsByAnchorId`, since 0.8.80.
+
+**`publicationCount`/`observationCount`/`bitcoinAnchorPublicationRecordCount`
+STAY UNCHANGED — 0.8.80's OWN RESTRAINT, HELD HERE ONCE MORE.** A
+`baseAnchorPublicationRecords` entry is a durable IDENTITY record, never a
+repeatable "this got published" or "this got observed" fact — folding it
+into either existing count would blur exactly the distinction 0.8.80
+already drew. `baseAnchorPublicationRecordCount` is its own, entirely
+separate count.
+
+**IDENTITY ISOLATION, PROVEN ON TWO SEPARATE AXES.** (1) Two Base
+publications sharing the identical `contentHash` under two different
+`txid`s remain two entirely independent records, each with its own
+independently sized inclusion-observation history, surviving a full
+persist/destroy/reload cycle. (2) A Bitcoin publication and a Base
+publication sharing the identical `contentHash` AND — the harder, more
+adversarial case — the identical *raw* `chainReference` string never
+compare equal through `BlockchainPublicationIdentity#sameAs()`, because
+`blockchain` must also match. See `tests/BaseAnchorPublicationRecord.test.js`'s
+own Sections F and G for both proofs.
+
+**PROVENANCE, FINGERPRINT, EXPORT/IMPORT, DIFFERENCE, AND INSPECTION ALL
+EXTEND THROUGH THEIR OWN EXISTING MACHINERY — NO SECOND MECHANISM OF ANY
+KIND**, mirroring 0.8.97's own identical restraint. An eighth parallel
+provenance collection follows 0.8.83's own `LOCAL`/`IMPORTED` rule
+unchanged. 0.8.84's own fingerprint algorithm needs no change: it hashes
+`toJSON()`'s own canonical output, which now includes the eighth
+collection. `application/PublicationObservationArchiveDifference.js` gains
+one more POSITIONAL-collection comparison (array position, like
+`bitcoinAnchorPublicationRecords`, never a keyed one — Base publication
+records have no natural grouping key of their own beyond `txid`, and
+`txid` is already this record's own array-position identity, not a
+grouping dimension). `application/PublicationObservationArchiveInspection.js`
+gains `baseAnchorPublicationRecordCount`, and its own `baseTransactionHashes`
+identity list is extended to also collect `txid`s from
+`baseAnchorPublicationRecords` — the identical extension `bitcoinAnchorIds`
+already received from `bitcoinAnchorPublicationRecords` at 0.8.80.
+`application/PublicationObservationArchiveExport.js`'s own
+`recordPublicationObservationArchiveImport()` now also sums
+`baseAnchorPublicationRecordCount` into `importedEntryCount` — the
+identical extension it received when `bitcoinAnchorPublicationRecordCount`
+was introduced.
+
+**THIS MILESTONE BUMPS SCHEMA_VERSION TO 5** — a payload persisted by
+0.8.75 through 0.8.98 (schemaVersion 4) degrades to
+`PublicationObservationArchive.empty()` on load, the identical,
+already-tested "wrong schemaVersion" behavior this class has held since
+0.8.75; no migration path is added, because none of this class's own prior
+principles ever promised one.
+
+**CREATING A PUBLICATION RECORD NEVER MANUFACTURES AN OBSERVATION, A
+TIMELINE ENTRY, OR A VERDICT — AND AN INCLUSION OBSERVATION NEVER
+MANUFACTURES A PUBLICATION RECORD — IN EITHER DIRECTION.** Minting a Base
+publication record leaves `baseTransactionInclusionObservationsByTransactionHash`,
+`observationCount`, and the cross-domain timeline's own `entries` entirely
+untouched — the identity boundary this record establishes carries no
+side effect. Symmetrically, an inclusion observation naming a `txid` this
+replica never minted a publication record for is archived exactly as
+observed, and never retroactively manufactures one: an observation can say
+"transaction TX was observed in block B," but it cannot say "this was a
+publication created by ForkBuild" unless an explicit publication identity
+record already exists. See `tests/BaseAnchorPublicationRecord.test.js`'s
+own Section H for both directions, proven directly.
+
+**THE CROSS-DOMAIN TIMELINE IS DELIBERATELY, ENTIRELY UNTOUCHED.**
+`application/PublicationObservationTimelineView.js` is not modified, and
+`describePublicationObservationArchive()`'s own `entries` are provably
+identical whether or not a Base publication record exists — see this
+milestone's own flagship Section H. The existing Bitcoin lifecycle timeline
+(`BitcoinAnchorPublicationLifecycleTimelineView.js`) already contains a
+`PUBLICATION` entry kind projected from `bitcoinAnchorPublicationRecords`,
+so there is eventually a legitimate question about whether Base publication
+identities should participate in an equivalent lifecycle projection — but
+that is a deliberate, separate follow-up, exactly as 0.8.97 held the
+identical restraint toward the (then-future) observation timeline.
+
+New files:
+- `application/BaseAnchorPublicationRecord.js` — the identity record
+  itself, mirroring `BitcoinAnchorPublicationRecord.js`.
+- `application/BaseAnchorPublicationRecordHistory.js` — the append-only
+  history, looked up by `txid` alone (no `anchorId`).
+- `application/BaseAnchorPublicationRecordHistoryView.js` — plain,
+  never-scored narration, mirroring `BitcoinAnchorPublicationRecordHistoryView.js`.
+- `application/CreateBaseAnchorPublicationRecordUseCase.js` — the one
+  construction boundary, called only at successful finalization.
+- `tests/BaseAnchorPublicationRecord.test.js` — the flagship: construction/
+  validation/immutability/JSON round trip and multi-blockchain projection
+  (Section A), append-only history semantics (Section B), narration
+  (Section C), the archive's own eighth collection surviving real
+  persistence and a pre-0.8.99 payload degrading honestly (Section D), the
+  one construction boundary (Section E), two Base publications sharing one
+  `contentHash` surviving a full persist/destroy/reload cycle as
+  independent identities with independently scoped inclusion histories
+  (Section F, FLAGSHIP), a Bitcoin and a Base publication sharing an
+  identical `contentHash` AND raw `chainReference` never comparing equal
+  (Section G), minting a record and archiving an observation staying two
+  entirely independent actions in both directions (Section H), and no
+  verdict vocabulary anywhere (Section I).
+
+Changed:
+- `application/PublicationObservationArchive.js` — the new
+  `baseAnchorPublicationRecords`/`baseAnchorPublicationRecordProvenance`
+  collections, `appendBaseAnchorPublicationRecord()` (reusing `application/
+  BaseAnchorPublicationRecordHistory.js`'s own append function),
+  `baseAnchorPublicationRecordCount`, `withUniformProvenance()`'s
+  extension, `SCHEMA_VERSION` 4 → 5, and the matching `toJSON()`/
+  `fromJSON()`/validation wiring. Every one of the seven pre-existing
+  collections is otherwise untouched.
+- `application/PublicationObservationArchiveDifference.js` — one more
+  positional-collection comparison, `baseAnchorPublicationRecords`, using
+  the identical `diffPositionalCollection()` `bitcoinAnchorPublicationRecords`
+  already uses.
+- `application/PublicationObservationArchiveInspection.js` — a new
+  `baseAnchorPublicationRecordCount` field, and `baseTransactionHashes` now
+  also collects `txid`s from `baseAnchorPublicationRecords`.
+- `application/PublicationObservationArchiveReplacementReview.js` — a new
+  `baseAnchorPublicationRecordCount` field on each side's own summary.
+- `application/PublicationObservationArchiveExport.js` —
+  `recordPublicationObservationArchiveImport()`'s own `importedEntryCount`
+  now also sums `baseAnchorPublicationRecordCount`.
+- `ui/views/DecentralizedPublicationsView.js` — a new
+  `archiveBaseAnchorPublicationRecord()` helper, called once from
+  `finalizeBaseSignedTransaction()` at its own FINALIZED outcome; the
+  "Inspect External Archive" card's own dl gains a "Base publication
+  records" row.
+
+Deliberately excluded, exactly as this milestone's own proposal named up front:
+- **Base inclusion consistency analysis, or Base reorganization
+  interpretation.** No generic "chain placement" abstraction was
+  introduced for Base — an inclusion observation naming a different
+  `blockHash` than an earlier one is preserved, unflagged, exactly as
+  0.8.96/0.8.97 already held.
+- **Base publication timeline entries.** See "The Cross-Domain Timeline Is
+  Deliberately, Entirely Untouched" above.
+- **Automatic publication-record creation from an inclusion observation, in
+  either direction.** See "Creating A Publication Record Never
+  Manufactures..." above — proven directly in this milestone's own
+  flagship Section H.
+- **Archive merging.** Import still replaces, never merges — 0.8.82's own
+  boundary, untouched.
+- **Cross-chain publication matching, or publication deduplication.** A
+  Bitcoin and a Base publication sharing an identical `contentHash` remain
+  two entirely separate identities — see this milestone's own flagship
+  Section G.
+- **Smart-contract publishing, Base token/ERC-20 publication, Base fee
+  optimization, or automatic retries.** None of Base's own underlying
+  transaction mechanics change; this milestone touches identity vocabulary
+  only.
+- **Trust/authenticity scoring, archive signing, or cross-chain
+  convergence.** See this milestone's own flagship Section I, and
+  `docs/Principles.md`, "The UI Displays Observations; It Does Not Turn
+  Them Into A Verdict (0.8.57)," held here once more.
+
+What's left, and deliberately unbuilt: whether Base publication identities
+should participate in an equivalent lifecycle timeline projection to
+Bitcoin's own `BitcoinAnchorPublicationLifecycleTimelineView.js` is a real,
+deliberate follow-up — not silently expanded into this milestone. With
+this addition, Bitcoin and Base now share a genuinely symmetrical
+foundation: `BitcoinAnchorPublicationRecord` and `BaseAnchorPublicationRecord`
+each project onto the identical, chain-independent
+`BlockchainPublicationIdentity` (0.8.89), while the actual transaction
+mechanics of each chain remain completely separate.

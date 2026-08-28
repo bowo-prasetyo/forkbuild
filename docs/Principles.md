@@ -17457,3 +17457,79 @@ that point for a third domain, rather than relaxing it, is this
 milestone's own UI contribution in full.
 
 See `docs/Roadmap.md`, 0.8.97, for the full milestone entry.
+
+## A Publication Record Establishes Identity; It Never Manufactures, Or Is Manufactured By, An Observation — Held For A Second Chain (0.8.99)
+
+**Identity generalizes across chains through one projection, never through
+one shared record shape.** `application/BitcoinAnchorPublicationRecord.js`
+(0.8.80) and `application/BaseAnchorPublicationRecord.js` (this milestone)
+are NOT two implementations of a common `AnchorPublicationRecord` base —
+each keeps its own, chain-specific identity shape (Bitcoin's own
+`anchorId`/`txid` pair; Base's own `txid` alone, because Base's own
+observation vocabulary never introduced a second correlation key — see
+`docs/Roadmap.md`, 0.8.90 onward), and each projects independently onto
+`application/BlockchainPublicationIdentity.js`'s (0.8.89) chain-independent
+shape. Generalization happens exactly once, at the one seam 0.8.89 already
+built for it — never by forcing two genuinely different domains into one
+shared class merely because both now need durable identity.
+
+**A publication record names what was created; it is never inferred from
+what was later observed, in either direction.** Minting a Base publication
+record — at successful finalization, and only there — never appends to
+`baseTransactionInclusionObservationsByTransactionHash`, never changes
+`observationCount`, and never produces a cross-domain timeline entry: an
+identity fact and an observation fact stay two, entirely independent kinds
+of durable record, the same separation `docs/Principles.md`, "The UI
+Displays Observations; It Does Not Turn Them Into A Verdict (0.8.57),"
+already drew between a fact and a judgment about it, held here one layer
+over between two kinds of fact. The rule holds symmetrically: a
+`txid` this replica happens to observe inclusion for, but for which it
+never minted a publication record, stays exactly that — an observation
+about a transaction — and is never retroactively promoted into "a
+publication ForkBuild created." An inclusion observation can say a
+transaction was included in a block; only an explicit publication record,
+minted by this replica at the moment it finalized that exact transaction,
+can say ForkBuild published it.
+
+**A shared raw identifier across two chains is not evidence of a shared
+publication — the strongest form of this rule this codebase has tested.**
+`application/BlockchainPublicationIdentity.js`'s own `sameAs()` already
+compares `blockchain` + `chainReference` together, never `chainReference`
+alone (0.8.89) — this milestone's own flagship test exercises the
+adversarial case directly: a Bitcoin publication record and a Base
+publication record constructed with the byte-identical raw string in both
+`contentHash` and `chainReference` still report `sameAs() === false`,
+because `blockchain` itself must also match. Two independent identifier
+namespaces (a Bitcoin txid; a Base/EVM transaction hash) happening to
+collide as strings is exactly the kind of resemblance `docs/Principles.md`,
+"Correlate Evidence By Explicit Identity, Never By Resemblance (0.8.78),"
+already refuses to treat as identity — held here at its most literal.
+
+**An identity's own source data comes from the artifact that created it,
+never from a later network round trip.** `base/BaseSignedTransactionFinalizer.js`
+(0.8.94) already computed a Base transaction's own hash deterministically,
+offline, from the signed bytes themselves, before this milestone existed —
+so minting a Base publication identity needed no new RPC call, no new
+field on the finalizer, and no reach backward into `base/
+BaseTransactionBroadcaster.js` or `base/BaseJsonRpcClient.js` to
+"discover" a transaction's own identity. `application/
+CreateBaseAnchorPublicationRecordUseCase.js` reads that value the identical
+way `application/CreateBitcoinAnchorPublicationRecordUseCase.js` already
+reads a finalized PSBT's own txid — as a fact its own upstream artifact
+already established, never as a fact this construction boundary reaches
+out to acquire.
+
+**Extending a durable archive by one more collection never requires a
+second extension mechanism.** The eighth collection this milestone adds —
+`baseAnchorPublicationRecords` — reuses every existing seam
+`bitcoinAnchorPublicationRecords` (0.8.80) already established: the
+identical positional-diff comparison, the identical parallel provenance
+array, the identical fingerprint inclusion via `toJSON()`'s own canonical
+output, the identical `SCHEMA_VERSION` bump-and-degrade discipline held
+since 0.8.75. `docs/Principles.md`, "A Durable Archive Entry Requires An
+Explicit Append; Chain-Specific Observation Models Stay Chain-Specific
+Even When Made Durable (0.8.97)," already held this restraint for a
+keyed, per-observation collection; this milestone holds the identical
+restraint for a positional, per-identity one.
+
+See `docs/Roadmap.md`, 0.8.99, for the full milestone entry.

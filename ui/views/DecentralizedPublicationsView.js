@@ -107,6 +107,7 @@ import { LocalStoragePublicationObservationArchive } from '../../storage/LocalSt
 import { describeBitcoinAnchorObservationArchive } from '../../application/BitcoinAnchorObservationArchiveView.js';
 import { reconstructBitcoinAnchorDurableEvidence } from '../../application/BitcoinAnchorDurableEvidenceView.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../../application/CreateBaseAnchorPublicationRecordUseCase.js';
 import { describeBitcoinAnchorPublicationRecordHistory } from '../../application/BitcoinAnchorPublicationRecordHistoryView.js';
 import { inspectBitcoinAnchorPublication } from '../../application/BitcoinAnchorPublicationInspectionView.js';
 import {
@@ -1593,6 +1594,32 @@ export default {
         // established behavior rather than inventing a second UX.
         function archiveBaseTransactionInclusionObservation(transactionHash, observation) {
             publicationObservationArchive.value = publicationObservationArchive.value.appendBaseTransactionInclusionObservation(transactionHash, observation);
+            persistPublicationObservationArchive();
+        }
+
+        // 0.8.99 — Durable Base Publication Identity Record.
+        //
+        // Stateless — application/CreateBaseAnchorPublicationRecordUseCase.js
+        // takes no collaborator of its own, so this is constructed directly
+        // rather than injected, mirroring exactly how
+        // `createBitcoinAnchorPublicationRecordUseCase` above is already
+        // constructed.
+        const createBaseAnchorPublicationRecordUseCase = new CreateBaseAnchorPublicationRecordUseCase();
+
+        // Called ONCE, from `finalizeBaseSignedTransaction()` below, the
+        // moment a "Verify & Finalize Transaction" click reaches its own
+        // FINALIZED outcome — never at construction, review, or signing,
+        // and never re-called on a later broadcast attempt for the SAME
+        // finalized transaction. Mints this replica's own durable identity
+        // for this Base publication attempt; whether the broadcast that
+        // follows succeeds or fails never retroactively erases it. Mirrors
+        // `archiveBitcoinAnchorPublicationRecord()` above exactly, one
+        // chain over — see application/
+        // CreateBaseAnchorPublicationRecordUseCase.js's own header.
+        function archiveBaseAnchorPublicationRecord({ contentHash, txid, network, createdAt }) {
+            publicationObservationArchive.value = createBaseAnchorPublicationRecordUseCase.execute(publicationObservationArchive.value, {
+                contentHash, txid, network, createdAt
+            });
             persistPublicationObservationArchive();
         }
 
@@ -3993,6 +4020,32 @@ export default {
                 entry.baseSignedTransactionFinalizationOutcome = baseSignedTransactionFinalizationCoordinator.finalize({ plan, rawTransaction });
             } catch (error) {
                 entry.baseSignedTransactionFinalizationOutcome = { state: BaseSignedTransactionFinalizationState.FAILED, finalized: false, finalizedTransaction: null, reason: error.message };
+                return;
+            }
+
+            // 0.8.99 — Durable Base Publication Identity Record. THE ONE
+            // place this page ever mints a durable Base publication
+            // identity — right here, at successful finalization, never
+            // earlier and never re-run automatically on a later broadcast
+            // attempt. `txid` is `base/BaseSignedTransactionFinalizer.js`'s
+            // (0.8.94, unchanged) own deterministically computed
+            // `transactionHash` — never a network-returned value, and
+            // never looked up separately — see application/
+            // CreateBaseAnchorPublicationRecordUseCase.js's own header,
+            // "The transaction identity comes from the finalized artifact,
+            // never from the broadcaster or an RPC lookup." `contentHash`
+            // is this entry's own already-known publication content
+            // reference, never re-derived from the transaction's own
+            // `data`; `network` is this exact plan's own network. Mirrors
+            // `finalizeBitcoinAnchorSignedPsbt()`'s own identical 0.8.80
+            // wiring above, one chain over.
+            if (entry.baseSignedTransactionFinalizationOutcome.state === BaseSignedTransactionFinalizationState.FINALIZED) {
+                archiveBaseAnchorPublicationRecord({
+                    contentHash: entry.publication.contentReference.hash,
+                    txid: entry.baseSignedTransactionFinalizationOutcome.finalizedTransaction.transactionHash,
+                    network: plan.network,
+                    createdAt: new Date()
+                });
             }
         }
 
@@ -6783,6 +6836,7 @@ export default {
                             <div class="evidence-field"><dt>Bitcoin content-proof observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinContentProofCount }}</dd></div>
                             <div class="evidence-field"><dt>Bitcoin publication records</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.bitcoinAnchorPublicationRecordCount }}</dd></div>
                             <div class="evidence-field"><dt>Base transaction inclusion observations</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.baseTransactionInclusionObservationCount }}</dd></div>
+                            <div class="evidence-field"><dt>Base publication records</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.baseAnchorPublicationRecordCount }}</dd></div>
                             <div class="evidence-field"><dt>Local facts</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.localFactCount }}</dd></div>
                             <div class="evidence-field"><dt>Imported facts</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.importedFactCount }}</dd></div>
                             <div class="evidence-field"><dt>Import events</dt><dd>{{ publicationArchiveInspectionOutcome.inspection.archiveImportCount }}</dd></div>
